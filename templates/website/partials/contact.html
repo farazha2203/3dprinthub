@@ -1,0 +1,77 @@
+<section id="contact" class="py-24 bg-slate-950">
+    <div class="container mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-10">
+            <div>
+                <span class="text-cyan-300 font-bold">تماس با ما</span>
+                <h2 class="text-3xl md:text-5xl font-black mt-3 mb-6 section-title">
+                    آماده بررسی پروژه شما هستیم
+                </h2>
+
+                <p class="text-slate-400 leading-9 mb-8">
+                    برای طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات با ما در ارتباط باشید.
+                </p>
+
+                <div class="space-y-4">
+                    <div class="glass rounded-2xl p-5">
+                        <div class="text-slate-400 text-sm mb-1">شماره تماس</div>
+                        <div class="font-black text-lg">
+                            {% if settings and settings.phone %}{{ settings.phone }}{% else %}شماره تماس را از پنل مدیریت وارد کنید{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-5">
+                        <div class="text-slate-400 text-sm mb-1">واتساپ</div>
+                        <div class="font-black text-lg">
+                            {% if settings and settings.whatsapp %}{{ settings.whatsapp }}{% else %}شماره واتساپ را وارد کنید{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-5">
+                        <div class="text-slate-400 text-sm mb-1">ایمیل</div>
+                        <div class="font-black text-lg">
+                            {% if settings and settings.email %}{{ settings.email }}{% else %}ایمیل را وارد کنید{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-5">
+                        <div class="text-slate-400 text-sm mb-1">آدرس</div>
+                        <div class="font-black leading-8">
+                            {% if settings and settings.address %}{{ settings.address }}{% else %}آدرس را از پنل مدیریت وارد کنید{% endif %}
+                        </div>
+                    </div>
+
+                    {% if settings and settings.working_hours %}
+                        <div class="glass rounded-2xl p-5">
+                            <div class="text-slate-400 text-sm mb-1">ساعت کاری</div>
+                            <div class="font-black">{{ settings.working_hours }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="glass rounded-[2rem] p-6 min-h-[420px] flex items-center justify-center">
+                {% if settings and settings.map_embed_url %}
+                    {{ settings.map_embed_url|safe }}
+                {% else %}
+                    <div class="text-center">
+                        <div class="text-7xl mb-6">📍</div>
+                        <h3 class="text-2xl font-black mb-3">محل فعالیت 3DprintHub.ir</h3>
+                        <p class="text-slate-400 leading-8">
+                            نقشه یا آدرس را از بخش تنظیمات سایت در پنل مدیریت وارد کنید.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <footer class="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row gap-4 md:items-center md:justify-between text-slate-500 text-sm">
+            <div>
+                © تمام حقوق برای 3DprintHub.ir محفوظ است.
+            </div>
+
+            <div>
+                طراحی و توسعه با Django
+            </div>
+        </footer>
+    </div>
+</section>

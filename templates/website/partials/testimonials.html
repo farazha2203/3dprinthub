@@ -1,0 +1,44 @@
+{% load rating_tags %}
+
+<section class="py-24 bg-slate-900">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <span class="text-cyan-300 font-bold">رضایت مشتریان</span>
+            <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
+                تجربه مشتریان از همکاری با ما
+            </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for testimonial in testimonials %}
+                <div class="glass rounded-3xl p-7">
+                    <div class="text-yellow-400 mb-4">{{ testimonial.rating|stars }}</div>
+                    <p class="text-slate-300 leading-8 mb-6">
+                        “{{ testimonial.text }}”
+                    </p>
+
+                    <div class="flex items-center gap-4">
+                        {% if testimonial.image %}
+                            <img src="{{ testimonial.image.url }}" alt="{{ testimonial.customer_name }}" class="w-12 h-12 rounded-full object-cover">
+                        {% else %}
+                            <div class="w-12 h-12 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center font-black">
+                                {{ testimonial.customer_name|first }}
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <div class="font-black">{{ testimonial.customer_name }}</div>
+                            {% if testimonial.company_name %}
+                                <div class="text-sm text-slate-400">{{ testimonial.company_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full rounded-3xl border border-dashed border-slate-700 p-10 text-center text-slate-400">
+                    هنوز رضایت مشتری ثبت نشده است.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

@@ -1,0 +1,285 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>جزئیات سفارش #{{ order.id }} | 3DprintHub.ir</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">
+
+    {% include "website/partials/header.html" %}
+
+    <main class="container mx-auto px-6 pt-32 pb-16">
+        <div class="max-w-5xl mx-auto">
+
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for message in messages %}
+                        <div class="rounded-2xl px-4 py-3 text-white {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-black">
+                        جزئیات سفارش #{{ order.id }}
+                    </h1>
+
+                    <p class="text-slate-500 mt-2">
+                        تاریخ ثبت: {{ order.created_at|date:"Y/m/d H:i" }}
+                    </p>
+                </div>
+
+                <a href="{% url 'website:customer_dashboard' %}" class="text-orange-500 font-bold">
+                    بازگشت به پنل
+                </a>
+            </div>
+
+            <section class="grid md:grid-cols-3 gap-5 mb-6">
+                <div class="glass rounded-3xl p-5">
+                    <div class="text-slate-500 text-sm">وضعیت سفارش</div>
+                    <div class="text-xl font-black mt-2 text-orange-500">
+                        {{ order.get_status_display }}
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl p-5">
+                    <div class="text-slate-500 text-sm">نوع خدمت</div>
+                    <div class="text-xl font-black mt-2">
+                        {{ order.get_service_type_display }}
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl p-5">
+                    <div class="text-slate-500 text-sm">تعداد</div>
+                    <div class="text-xl font-black mt-2">
+                        {{ order.quantity }}
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                <h2 class="text-2xl font-black mb-6">مشخصات سفارش</h2>
+
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div>
+                        <div class="text-slate-500 text-sm mb-1">نام مشتری</div>
+                        <div class="font-bold">
+                            {{ order.first_name }} {{ order.last_name }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-sm mb-1">شماره تماس</div>
+                        <div class="font-bold">
+                            {{ order.phone }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-sm mb-1">متریال انتخابی</div>
+                        <div class="font-bold">
+                            {% if order.material %}
+                                {{ order.material.name }}
+                            {% else %}
+                                انتخاب نشده
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-sm mb-1">رنگ</div>
+                        <div class="font-bold">
+                            {% if order.color %}
+                                {{ order.color }}
+                            {% else %}
+                                ثبت نشده
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <div class="text-slate-500 text-sm mb-1">توضیحات سفارش</div>
+                    <p class="leading-8 text-slate-700">
+                        {{ order.description }}
+                    </p>
+                </div>
+            </section>
+
+            {% if order.images.all %}
+                <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                    <h2 class="text-2xl font-black mb-6">تصاویر ارسالی</h2>
+
+                    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {% for item in order.images.all %}
+                            <a href="{{ item.image.url }}" target="_blank" class="block rounded-3xl overflow-hidden border border-slate-200 bg-white">
+                                <img src="{{ item.image.url }}" alt="تصویر سفارش" class="w-full aspect-square object-cover">
+                            </a>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            {% if quote %}
+                <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-black">پیش‌فاکتور سفارش</h2>
+                            <p class="text-slate-500 mt-2">
+                                هزینه‌ها بر اساس متریال، وزن، زمان پرینت و دستمزد محاسبه شده است.
+                            </p>
+                        </div>
+
+                        <span class="rounded-full bg-orange-100 text-orange-600 px-4 py-2 font-bold">
+                            {{ quote.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-6">
+                        <div class="rounded-3xl bg-white border border-slate-200 p-5">
+                            <div class="text-slate-500 text-sm">هزینه متریال</div>
+                            <div class="text-xl font-black mt-2">
+                                {{ quote.material_cost|intcomma }} تومان
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl bg-white border border-slate-200 p-5">
+                            <div class="text-slate-500 text-sm">هزینه دستگاه</div>
+                            <div class="text-xl font-black mt-2">
+                                {{ quote.machine_cost|intcomma }} تومان
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl bg-white border border-slate-200 p-5">
+                            <div class="text-slate-500 text-sm">دستمزد</div>
+                            <div class="text-xl font-black mt-2">
+                                {{ quote.labor_fee|intcomma }} تومان
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl bg-orange-500 text-white p-5">
+                            <div class="text-white/80 text-sm">مبلغ نهایی</div>
+                            <div class="text-2xl font-black mt-2">
+                                {{ quote.total_price|intcomma }} تومان
+                            </div>
+                        </div>
+
+                        {% if quote.price_tolerance_percent %}
+                            <div class="rounded-3xl bg-white border border-orange-200 p-5 md:col-span-2">
+                                <div class="text-slate-500 text-sm">تلورانس قیمت</div>
+
+                                <div class="text-xl font-black mt-2 text-orange-500">
+                                    ± {{ quote.price_tolerance_percent }}٪
+                                </div>
+
+                                <p class="text-slate-500 text-sm mt-3 leading-7">
+                                    بازه تقریبی قیمت:
+                                    <strong>{{ quote.min_estimated_price|floatformat:0|intcomma }}</strong>
+                                    تا
+                                    <strong>{{ quote.max_estimated_price|floatformat:0|intcomma }}</strong>
+                                    تومان
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <a href="{{ order.get_quote_url }}" class="inline-flex rounded-2xl btn-primary px-6 py-4 font-black">
+                        مشاهده و تأیید پیش‌فاکتور
+                    </a>
+                </section>
+            {% else %}
+                <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                    <h2 class="text-2xl font-black mb-3">پیش‌فاکتور هنوز صادر نشده</h2>
+                    <p class="text-slate-500 leading-8">
+                        سفارش شما ثبت شده و پس از بررسی فنی، پیش‌فاکتور برایتان آماده خواهد شد.
+                    </p>
+                </section>
+            {% endif %}
+
+            <section class="glass rounded-[2rem] p-6 md:p-8 mt-6">
+                <h2 class="text-2xl font-black mb-4">
+                    نظر شما درباره این سفارش
+                </h2>
+
+                {% if review %}
+                    <div class="rounded-3xl bg-white border border-slate-200 p-5">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                            <div class="font-black text-orange-500">
+                                امتیاز: {{ review.rating }} از 5
+                            </div>
+
+                            {% if review.is_approved %}
+                                <span class="rounded-full bg-emerald-100 text-emerald-600 px-3 py-1 text-sm font-bold">
+                                    تأیید شده و قابل نمایش در سایت
+                                </span>
+                            {% else %}
+                                <span class="rounded-full bg-yellow-100 text-yellow-700 px-3 py-1 text-sm font-bold">
+                                    در انتظار تأیید ادمین
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-orange-500 text-xl mb-4">
+                            {% if review.rating >= 1 %}★{% endif %}
+                            {% if review.rating >= 2 %}★{% endif %}
+                            {% if review.rating >= 3 %}★{% endif %}
+                            {% if review.rating >= 4 %}★{% endif %}
+                            {% if review.rating >= 5 %}★{% endif %}
+                        </div>
+
+                        <p class="text-slate-700 leading-8">
+                            {{ review.comment }}
+                        </p>
+                    </div>
+
+                {% elif review_form %}
+                    <p class="text-slate-500 leading-8 mb-5">
+                        سفارش شما تکمیل شده است. لطفاً تجربه خود را از کیفیت ساخت، زمان تحویل، دقت قطعه و پشتیبانی ثبت کنید.
+                    </p>
+
+                    <form method="post" action="{% url 'website:customer_order_review_create' order.id %}" class="space-y-5">
+                        {% csrf_token %}
+
+                        <div>
+                            <label class="block mb-2 text-sm text-slate-600">
+                                امتیاز شما
+                            </label>
+                            {{ review_form.rating }}
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm text-slate-600">
+                                نظر شما
+                            </label>
+                            {{ review_form.comment }}
+                        </div>
+
+                        <button type="submit" class="rounded-2xl btn-primary px-6 py-4 font-black">
+                            ثبت نظر
+                        </button>
+                    </form>
+
+                {% else %}
+                    <p class="text-slate-500 leading-8">
+                        ثبت نظر بعد از تکمیل سفارش فعال می‌شود.
+                    </p>
+                {% endif %}
+            </section>
+
+        </div>
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

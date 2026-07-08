@@ -1,0 +1,69 @@
+{% load rating_tags %}
+{% load humanize %}
+
+<section id="materials" class="py-24 bg-slate-900">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-12">
+      <span class="text-cyan-300 font-bold">انتخاب متریال</span>
+      <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
+        مقایسه متریال‌های قابل استفاده
+      </h2>
+      <p class="text-slate-400 max-w-3xl mx-auto mt-5 leading-8">
+        انتخاب صحیح متریال، کیفیت نهایی قطعه را تعیین می‌کند. این جدول برای
+        تصمیم‌گیری سریع‌تر طراحی شده است.
+      </p>
+    </div>
+
+    <div class="overflow-x-auto rounded-3xl border border-slate-700 shadow-2xl">
+      <table class="w-full min-w-[1150px] text-sm">
+        <thead class="bg-slate-800 text-cyan-300">
+          <tr>
+            <th class="p-4 text-right">متریال</th>
+            <th class="p-4">قیمت هر کیلو</th>
+            <th class="p-4">استحکام</th>
+            <th class="p-4">مقاومت حرارتی</th>
+            <th class="p-4">انعطاف</th>
+            <th class="p-4">مقاومت شیمیایی</th>
+            <th class="p-4">سختی/سهولت چاپ</th>
+            <th class="p-4 text-right">کاربردهای اصلی</th>
+            <th class="p-4 text-right">نمونه قطعات</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-800 bg-slate-950">
+          {% for material in materials %}
+          <tr class="hover:bg-slate-800/70 transition">
+            <td class="p-4 font-black text-cyan-300">{{ material.name }}</td>
+            <td class="p-4 text-center">{{ material.strength|stars }}</td>
+            <td class="p-4 text-center">
+              {{ material.heat_resistance|stars }}
+            </td>
+            <td class="p-4 text-center">{{ material.flexibility|stars }}</td>
+            <td class="p-4 text-center">
+              {{ material.chemical_resistance|stars }}
+            </td>
+            <td class="p-4 text-center">{{ material.printability|stars }}</td>
+            <td class="p-4">{{ material.main_usage }}</td>
+            <td class="p-4 text-slate-300">{{ material.sample_parts }}</td>
+          </tr>
+          {% empty %}
+          <td class="p-4 text-center text-slate-300">
+            {% if material.price_per_kg %} {{ material.price_per_kg }} تومان {%
+            else %} استعلامی {% endif %}
+          </td>
+          <tr>
+            <td colspan="8" class="p-6 text-center text-slate-400">
+              هنوز متریالی ثبت نشده است.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-slate-500 text-sm mt-4">
+      نکته: امتیازها نسبی هستند و انتخاب نهایی متریال باید بر اساس شرایط کاری
+      قطعه انجام شود.
+    </p>
+  </div>
+</section>

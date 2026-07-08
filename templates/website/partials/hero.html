@@ -1,0 +1,66 @@
+<section id="home" class="relative min-h-screen flex items-center overflow-hidden pt-24">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950"></div>
+    <div class="absolute w-[30rem] h-[30rem] bg-cyan-500/20 rounded-full blur-3xl top-20 right-10"></div>
+    <div class="absolute w-[28rem] h-[28rem] bg-blue-600/20 rounded-full blur-3xl bottom-20 left-10"></div>
+
+    <div class="relative container mx-auto px-6 py-24 grid lg:grid-cols-2 gap-14 items-center">
+        <div>
+            <span class="inline-flex px-4 py-2 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 mb-6">
+                3DprintHub.ir | مرکز طراحی و ساخت قطعات صنعتی
+            </span>
+
+            <h1 class="text-4xl md:text-6xl font-black section-title mb-6">
+                {% if settings %}
+                    {{ settings.hero_title }}
+                {% else %}
+                    طراحی، چاپ سه‌بعدی و مهندسی معکوس قطعات صنعتی
+                {% endif %}
+            </h1>
+
+            <p class="text-lg text-slate-300 leading-9 mb-9">
+                {% if settings %}
+                    {{ settings.hero_subtitle }}
+                {% else %}
+                    از نمونه‌سازی اولیه تا ساخت قطعات کاربردی صنعتی با متریال‌های مهندسی مانند PET-CF، PA12-CF، PA6-CF، PPS-CF، PC-FR و TPU.
+                {% endif %}
+            </p>
+
+            <div class="flex flex-wrap gap-4 mb-10">
+                <a href="#order" class="px-7 py-4 rounded-2xl bg-cyan-400 text-slate-950 font-black hover:bg-cyan-300 transition">
+                    ثبت سفارش ساخت قطعه
+                </a>
+
+                <a href="#portfolio" class="px-7 py-4 rounded-2xl border border-slate-600 hover:border-cyan-400 transition">
+                    مشاهده نمونه‌کارها
+                </a>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 max-w-xl">
+                <div class="glass rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-cyan-300">+10</div>
+                    <div class="text-xs text-slate-400 mt-1">متریال صنعتی</div>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-cyan-300">CAD</div>
+                    <div class="text-xs text-slate-400 mt-1">طراحی دقیق</div>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-cyan-300">Reverse</div>
+                    <div class="text-xs text-slate-400 mt-1">مهندسی معکوس</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass rounded-[2rem] p-6 shadow-2xl">
+            <div class="aspect-square rounded-[1.5rem] bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center border border-white/10">
+                <div class="text-center px-6">
+                    <div class="text-8xl mb-6">⚙️</div>
+                    <h2 class="text-2xl font-black mb-3">ساخت قطعات دقیق و سفارشی</h2>
+                    <p class="text-slate-400 leading-8">
+                        طراحی، انتخاب متریال، پرینت سه‌بعدی، تست و تحویل قطعه
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

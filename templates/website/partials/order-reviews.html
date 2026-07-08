@@ -1,0 +1,57 @@
+<section id="customer-reviews" class="py-24 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <span class="text-orange-500 font-bold">بازخورد مشتریان</span>
+
+            <h2 class="text-3xl md:text-5xl font-black mt-3">
+                تجربه مشتریان از سفارشات انجام‌شده
+            </h2>
+
+            <p class="text-slate-500 max-w-3xl mx-auto mt-5 leading-8">
+                نظرات واقعی مشتریان پس از تکمیل سفارش و تأیید نهایی در سایت نمایش داده می‌شود.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for review in order_reviews %}
+                <article class="glass rounded-[2rem] p-6">
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                            <div class="font-black text-slate-950">
+                                {{ review.order.first_name }} {{ review.order.last_name }}
+                            </div>
+
+                            <div class="text-sm text-slate-500 mt-1">
+                                سفارش #{{ review.order.id }}
+                            </div>
+                        </div>
+
+                        <div class="rounded-full bg-orange-100 text-orange-600 px-3 py-1 text-sm font-black">
+                            {{ review.rating }}/5
+                        </div>
+                    </div>
+
+                    <div class="text-orange-500 text-lg mb-4">
+                        {% if review.rating >= 1 %}★{% endif %}
+                        {% if review.rating >= 2 %}★{% endif %}
+                        {% if review.rating >= 3 %}★{% endif %}
+                        {% if review.rating >= 4 %}★{% endif %}
+                        {% if review.rating >= 5 %}★{% endif %}
+                    </div>
+
+                    <p class="text-slate-600 leading-8">
+                        {{ review.comment|truncatewords:35 }}
+                    </p>
+
+                    <div class="mt-5 text-xs text-slate-400">
+                        {{ review.created_at|date:"Y/m/d" }}
+                    </div>
+                </article>
+            {% empty %}
+                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
+                    هنوز بازخوردی از سفارشات ثبت نشده است.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

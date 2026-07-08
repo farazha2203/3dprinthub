@@ -1,0 +1,158 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        {% if settings %}
+            {{ settings.meta_title }}
+        {% else %}
+            3DprintHub.ir | طراحی، چاپ سه‌بعدی و مهندسی معکوس قطعات صنعتی
+        {% endif %}
+    </title>
+
+    <meta name="description" content="{% if settings %}{{ settings.meta_description }}{% else %}خدمات طراحی سه‌بعدی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی.{% endif %}">
+    <meta name="keywords" content="چاپ سه بعدی, چاپ سه‌بعدی صنعتی, طراحی قطعه صنعتی, مهندسی معکوس, ساخت قطعه سفارشی, PET-CF, PA12-CF, PPS-CF, PC-FR, TPU, جیگ و فیکسچر">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:title" content="3DprintHub.ir | طراحی و ساخت قطعات صنعتی">
+    <meta property="og:description" content="طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://3dprinthub.ir">
+
+    <link rel="canonical" href="https://3dprinthub.ir">
+    <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <meta name="theme-color" content="#FF9800">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <style>
+    :root {
+        --brand-primary: #FF9800;
+        --brand-primary-dark: #F57C00;
+        --brand-secondary: #111111;
+        --brand-graphite: #2B2B2B;
+        --brand-silver: #C9CDD2;
+        --brand-light: #F8FAFC;
+        --brand-accent: #FF9800;
+    }
+</style>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "3DprintHub.ir",
+      "url": "https://3dprinthub.ir",
+      "description": "طراحی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی",
+      "areaServed": "IR",
+      "serviceType": [
+        "طراحی سه‌بعدی",
+        "چاپ سه‌بعدی صنعتی",
+        "مهندسی معکوس",
+        "ساخت قطعات سفارشی",
+        "ساخت جیگ و فیکسچر"
+      ]
+    }
+    </script>
+</head>
+
+<body class="bg-[#f6f9fc] text-slate-950 selection:bg-cyan-400 selection:text-white">
+
+    {% if messages %}
+        <div class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-xl">
+            {% for message in messages %}
+                <div class="rounded-2xl px-5 py-4 shadow-2xl text-center
+                    {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}
+                    text-white">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% include "website/partials/header.html" %}
+
+    <main>
+        {% include "website/partials/hero.html" %}
+        {% include "website/partials/services.html" %}
+        {% include "website/partials/materials.html" %}
+        {% include "website/partials/recommendations.html" %}
+        {% include "website/partials/portfolio.html" %}
+        {% include "website/partials/products.html" %}
+        {% include "website/partials/testimonials.html" %}
+        {% include "website/partials/faq.html" %}
+        {% include "website/partials/order-form.html" %}
+        {% include "website/partials/contact.html" %}
+        {% include "website/partials/order-reviews.html" %}
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+
+<!-- FAQ_SCHEMA_3DPRINTHUB_AUTO -->
+<script>
+(function () {
+    var faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "قیمت پرینت سه‌بعدی چگونه محاسبه می‌شود؟",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "قیمت پرینت سه‌بعدی بر اساس نوع متریال، وزن مصرفی، زمان چاپ، پیچیدگی قطعه، کیفیت چاپ، تعداد قطعات، نیاز به ساپورت، پرداخت نهایی و دستمزد آماده‌سازی محاسبه می‌شود."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "اگر فایل سه‌بعدی نداشته باشم، می‌توانید طراحی انجام دهید؟",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "بله. اگر فایل سه‌بعدی آماده ندارید، تیم 3DprintHub می‌تواند بر اساس عکس، نقشه، نمونه فیزیکی، ابعاد یا توضیحات شما مدل سه‌بعدی قطعه را طراحی کند."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "چه متریالی برای قطعه من مناسب‌تر است؟",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "انتخاب متریال به کاربرد قطعه بستگی دارد. برای نمونه‌سازی PLA، برای قطعات مقاوم‌تر PETG یا ABS، برای قطعات انعطاف‌پذیر TPU و برای قطعات صنعتی متریال‌هایی مانند PA-CF، PET-CF، PC-FR یا PPS-CF پیشنهاد می‌شود."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "آیا قطعات پرینت سه‌بعدی برای استفاده صنعتی قابل اعتماد هستند؟",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "بله، اگر طراحی قطعه، جهت چاپ، درصد پرشدگی، نوع متریال و تنظیمات چاپ درست انتخاب شوند، قطعات پرینت سه‌بعدی می‌توانند در بسیاری از کاربردهای صنعتی استفاده شوند."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "آیا امکان ساخت قطعه از روی نمونه فیزیکی وجود دارد؟",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "بله. امکان بررسی، اندازه‌برداری، مدل‌سازی سه‌بعدی و ساخت مجدد قطعه از روی نمونه فیزیکی وجود دارد."
+                }
+            }
+        ]
+    };
+
+    var script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(faqSchema);
+    document.head.appendChild(script);
+})();
+</script>
+<!-- /FAQ_SCHEMA_3DPRINTHUB_AUTO -->
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+{% load static %}
+
+<header class="site-header fixed top-0 right-0 left-0 z-50 border-b border-slate-200/80">
+    <div class="container mx-auto px-6">
+
+        <div class="py-4 flex items-center justify-between gap-4">
+
+            <!-- Logo / Brand -->
+            <a href="/#home" data-scroll-to="home" class="flex items-center gap-3 shrink-0">
+
+                {% if settings and settings.logo %}
+                    <img 
+                        src="{{ settings.logo.url }}" 
+                        alt="3DprintHub.ir"
+                        class="h-12 w-auto rounded-2xl object-contain bg-[#111111] px-2 py-1 shadow"
+                    >
+                {% else %}
+                    <img 
+                        src="{% static 'img/brand/logo-header.png' %}" 
+                        alt="3DprintHub.ir"
+                        class="h-12 w-auto rounded-2xl object-contain bg-[#111111] px-2 py-1 shadow"
+                    >
+                {% endif %}
+
+                <div class="hidden sm:block">
+                    <div class="font-black text-lg leading-6 text-slate-950">
+                        {% if settings and settings.brand_name %}
+                            {{ settings.brand_name }}
+                        {% else %}
+                            3DprintHub.ir
+                        {% endif %}
+                    </div>
+
+                    <div class="text-xs text-slate-500">
+                        طراحی، چاپ سه‌بعدی و ساخت قطعات صنعتی
+                    </div>
+                </div>
+            </a>
+
+            <!-- Desktop Menu -->
+            <nav class="hidden lg:flex items-center gap-7 text-sm text-slate-700">
+                <a href="/#services" data-scroll-to="services" class="hover:text-orange-500 transition">
+                    خدمات
+                </a>
+
+                <a href="/#materials" data-scroll-to="materials" class="hover:text-orange-500 transition">
+                    متریال‌ها
+                </a>
+
+                <a href="/#portfolio" data-scroll-to="portfolio" class="hover:text-orange-500 transition">
+                    نمونه‌کارها
+                </a>
+
+                <a href="/#products" data-scroll-to="products" class="hover:text-orange-500 transition">
+                    محصولات
+                </a>
+
+                <a href="/#order" data-scroll-to="order" class="hover:text-orange-500 transition">
+                    ثبت سفارش
+                </a>
+
+                <a href="/#contact" data-scroll-to="contact" class="hover:text-orange-500 transition">
+                    تماس
+                </a>
+            </nav>
+
+            <!-- Desktop Buttons -->
+            <div class="hidden lg:flex items-center gap-3">
+
+                {% if settings and settings.phone %}
+                    <a 
+                        href="tel:{{ settings.phone }}"
+                        class="hidden xl:inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
+                    >
+                        {{ settings.phone }}
+                    </a>
+                {% endif %}
+
+                {% if request.user.is_authenticated %}
+                    <a 
+                        href="/customer/dashboard/"
+                        class="inline-flex px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition font-bold"
+                    >
+                        پنل مشتری
+                    </a>
+
+                    <a 
+                        href="/customer/logout/"
+                        class="inline-flex px-5 py-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition font-bold"
+                    >
+                        خروج
+                    </a>
+                {% else %}
+                    <a 
+                        href="/customer/login/"
+                        class="inline-flex px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition font-bold"
+                    >
+                        ورود مشتری
+                    </a>
+                {% endif %}
+
+                <a 
+                    href="/#order"
+                    data-scroll-to="order"
+                    class="inline-flex px-5 py-3 rounded-2xl btn-primary font-black transition shadow"
+                >
+                    ثبت سفارش
+                </a>
+            </div>
+
+            <!-- Tablet Buttons -->
+            <div class="hidden sm:flex lg:hidden items-center gap-3">
+                {% if request.user.is_authenticated %}
+                    <a 
+                        href="/customer/dashboard/"
+                        class="inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
+                    >
+                        پنل
+                    </a>
+                {% else %}
+                    <a 
+                        href="/customer/login/"
+                        class="inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
+                    >
+                        ورود
+                    </a>
+                {% endif %}
+
+                <a 
+                    href="/#order"
+                    data-scroll-to="order"
+                    class="inline-flex px-4 py-3 rounded-2xl btn-primary font-black transition shadow text-sm"
+                >
+                    سفارش
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button 
+                type="button"
+                id="mobile-menu-button"
+                class="lg:hidden w-11 h-11 rounded-2xl border border-slate-300 flex items-center justify-center text-slate-800 bg-white shadow-sm"
+                aria-label="باز کردن منو"
+            >
+                <span class="text-2xl leading-none">☰</span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu lg:hidden pb-4">
+            <nav class="rounded-3xl bg-white border border-slate-200 p-4 grid gap-2 text-slate-700 shadow-xl">
+
+                <a 
+                    href="/#services"
+                    data-scroll-to="services"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    خدمات
+                </a>
+
+                <a 
+                    href="/#materials"
+                    data-scroll-to="materials"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    متریال‌ها
+                </a>
+
+                <a 
+                    href="/#portfolio"
+                    data-scroll-to="portfolio"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    نمونه‌کارها
+                </a>
+
+                <a 
+                    href="/#products"
+                    data-scroll-to="products"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    محصولات
+                </a>
+
+                <a 
+                    href="/#order"
+                    data-scroll-to="order"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    ثبت سفارش
+                </a>
+
+                <a 
+                    href="/#contact"
+                    data-scroll-to="contact"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    تماس
+                </a>
+
+                <div class="h-px bg-slate-200 my-2"></div>
+
+                {% if request.user.is_authenticated %}
+                    <a 
+                        href="/customer/dashboard/"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                    >
+                        پنل مشتری
+                    </a>
+
+                    <a 
+                        href="/customer/profile/"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                    >
+                        مشخصات من
+                    </a>
+
+                    <a 
+                        href="/customer/logout/"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-bold text-center"
+                    >
+                        خروج از حساب
+                    </a>
+                {% else %}
+                    <a 
+                        href="/customer/login/"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                    >
+                        ورود مشتری
+                    </a>
+
+                    <a 
+                        href="/customer/register/"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                    >
+                        ثبت‌نام مشتری
+                    </a>
+                {% endif %}
+
+                {% if settings and settings.phone %}
+                    <a 
+                        href="tel:{{ settings.phone }}"
+                        class="mobile-menu-link rounded-2xl px-4 py-3 border border-slate-200 text-center font-bold hover:border-orange-400 hover:text-orange-500 transition"
+                    >
+                        تماس: {{ settings.phone }}
+                    </a>
+                {% endif %}
+
+                <a 
+                    href="/#order"
+                    data-scroll-to="order"
+                    class="mobile-menu-link mt-2 text-center rounded-2xl btn-primary font-black px-4 py-3 transition"
+                >
+                    ثبت سفارش ساخت قطعه
+                </a>
+            </nav>
+        </div>
+
+    </div>
+</header>

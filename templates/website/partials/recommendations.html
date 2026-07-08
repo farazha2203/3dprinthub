@@ -1,0 +1,70 @@
+<section class="py-24 bg-slate-950">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <span class="text-cyan-300 font-bold">راهنمای انتخاب</span>
+            <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
+                برای هر صنعت و هر قطعه چه متریالی مناسب است؟
+            </h2>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900">
+                <div class="p-6 border-b border-slate-800">
+                    <h3 class="text-2xl font-black">متریال مناسب برای صنایع</h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[500px] text-sm">
+                        <thead class="bg-slate-800 text-cyan-300">
+                            <tr>
+                                <th class="p-4 text-right">صنعت</th>
+                                <th class="p-4 text-right">متریال مناسب</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            {% for item in industry_recommendations %}
+                                <tr class="hover:bg-slate-800/60">
+                                    <td class="p-4 font-bold">{{ item.industry }}</td>
+                                    <td class="p-4 text-slate-300">{{ item.recommended_materials }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2" class="p-6 text-center text-slate-400">اطلاعاتی ثبت نشده است.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900">
+                <div class="p-6 border-b border-slate-800">
+                    <h3 class="text-2xl font-black">بهترین متریال برای قطعات</h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[500px] text-sm">
+                        <thead class="bg-slate-800 text-cyan-300">
+                            <tr>
+                                <th class="p-4 text-right">قطعه</th>
+                                <th class="p-4 text-right">بهترین متریال</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            {% for item in part_recommendations %}
+                                <tr class="hover:bg-slate-800/60">
+                                    <td class="p-4 font-bold">{{ item.part_name }}</td>
+                                    <td class="p-4 text-slate-300">{{ item.best_material }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2" class="p-6 text-center text-slate-400">اطلاعاتی ثبت نشده است.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

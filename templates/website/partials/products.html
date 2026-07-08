@@ -1,0 +1,63 @@
+{% load humanize %}
+
+<section id="products" class="py-24 bg-slate-950">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <span class="text-cyan-300 font-bold">محصولات سفارشی</span>
+            <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
+                ساخت محصولات سفارشی با متریال و رنگ دلخواه
+            </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for product in products %}
+                <div class="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-cyan-400/60 transition shadow-xl">
+                    <div class="aspect-[4/3] overflow-hidden bg-slate-800">
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-full object-cover hover:scale-110 transition duration-500">
+                    </div>
+
+                    <div class="p-6">
+                        <h3 class="text-xl font-black mb-3">{{ product.title }}</h3>
+                        <p class="text-slate-400 text-sm leading-7 mb-5">{{ product.description|truncatewords:25 }}</p>
+
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="flex justify-between gap-4">
+                                <span class="text-slate-400">قیمت پایه:</span>
+                                <span class="font-bold text-cyan-300">
+                                    {% if product.base_price %}
+                                        {{ product.base_price|intcomma }} تومان
+                                    {% else %}
+                                        استعلام قیمت
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="flex justify-between gap-4">
+                                <span class="text-slate-400">زمان آماده‌سازی:</span>
+                                <span>{{ product.delivery_time }}</span>
+                            </div>
+
+                            <div>
+                                <span class="text-slate-400">متریال‌ها:</span>
+                                <p class="mt-1">{{ product.materials }}</p>
+                            </div>
+
+                            <div>
+                                <span class="text-slate-400">رنگ‌بندی:</span>
+                                <p class="mt-1">{{ product.colors }}</p>
+                            </div>
+                        </div>
+
+                        <a href="#order" class="block text-center rounded-2xl bg-cyan-400 text-slate-950 font-black py-3 hover:bg-cyan-300 transition">
+                            سفارش این محصول
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full rounded-3xl border border-dashed border-slate-700 p-10 text-center text-slate-400">
+                    هنوز محصول سفارشی ثبت نشده است.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

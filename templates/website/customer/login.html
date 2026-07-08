@@ -1,0 +1,70 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>ورود مشتری | 3DprintHub.ir</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">
+
+    {% include "website/partials/header.html" %}
+
+    <main class="container mx-auto px-6 pt-32 pb-16">
+        <div class="max-w-xl mx-auto glass rounded-[2rem] p-6 md:p-8">
+            <h1 class="text-3xl font-black mb-3">ورود مشتری</h1>
+            <p class="text-slate-500 mb-8">
+                برای مشاهده تاریخچه سفارشات و پیش‌فاکتورها وارد حساب خود شوید.
+            </p>
+
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for message in messages %}
+                        <div class="rounded-2xl px-4 py-3 text-white {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="mb-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 text-rose-600">
+                    شماره تماس یا رمز عبور اشتباه است.
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block mb-2 text-sm text-slate-600">شماره تماس</label>
+                    {{ form.username }}
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm text-slate-600">رمز عبور</label>
+                    {{ form.password }}
+                </div>
+
+                <button type="submit" class="w-full rounded-2xl btn-primary font-black py-4">
+                    ورود به پنل مشتری
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-slate-500">
+                حساب ندارید؟
+                <a href="{% url 'website:customer_register' %}" class="text-orange-500 font-bold">
+                    ثبت‌نام کنید
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>پیش‌فاکتور سفارش | 3DprintHub.ir</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <style>
+        :root {
+            --brand-primary: {% if settings and settings.primary_color %}{{ settings.primary_color }}{% else %}#38BDF8{% endif %};
+            --brand-secondary: {% if settings and settings.secondary_color %}{{ settings.secondary_color }}{% else %}#0F172A{% endif %};
+            --brand-accent: {% if settings and settings.accent_color %}{{ settings.accent_color }}{% else %}#22C55E{% endif %};
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+    {% if messages %}
+        <div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-xl">
+            {% for message in messages %}
+                <div class="rounded-2xl px-5 py-4 shadow-2xl text-center
+                    {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}
+                    text-white">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="container mx-auto px-6 py-10">
+        <div class="max-w-5xl mx-auto">
+
+            <div class="flex items-center justify-between gap-4 mb-8">
+                <a href="/" class="flex items-center gap-3">
+                    {% if settings and settings.logo %}
+                        <img src="{{ settings.logo.url }}" alt="3DprintHub.ir" class="w-12 h-12 rounded-2xl object-contain bg-white p-1">
+                    {% else %}
+                        <div class="w-12 h-12 rounded-2xl brand-logo-box flex items-center justify-center font-black">3D</div>
+                    {% endif %}
+
+                    <div>
+                        <div class="font-black text-xl">3DprintHub.ir</div>
+                        <div class="text-xs text-slate-400">پیش‌فاکتور سفارش</div>
+                    </div>
+                </a>
+
+                <a href="/" class="text-sm text-slate-400 hover:text-cyan-300">
+                    بازگشت به سایت
+                </a>
+            </div>
+
+            <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                <h1 class="text-3xl md:text-4xl font-black mb-4">
+                    پیش‌فاکتور سفارش
+                </h1>
+
+                <p class="text-slate-400 leading-8">
+                    مشتری گرامی، جزئیات سفارش و محاسبه قیمت در این صفحه نمایش داده می‌شود.
+                    در صورت تأیید، سفارش وارد مرحله پرداخت و تولید خواهد شد.
+                </p>
+            </section>
+
+            <section class="grid lg:grid-cols-3 gap-6 mb-6">
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-slate-400 text-sm mb-2">نام مشتری</div>
+                    <div class="font-black">{{ order.first_name }} {{ order.last_name }}</div>
+                </div>
+
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-slate-400 text-sm mb-2">شماره تماس</div>
+                    <div class="font-black">{{ order.phone }}</div>
+                </div>
+
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-slate-400 text-sm mb-2">وضعیت سفارش</div>
+                    <div class="font-black text-cyan-300">{{ order.get_status_display }}</div>
+                </div>
+            </section>
+
+            <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                <h2 class="text-2xl font-black mb-6">اطلاعات سفارش</h2>
+
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div>
+                        <div class="text-slate-400 text-sm mb-1">نوع خدمت</div>
+                        <div>{{ order.get_service_type_display }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-400 text-sm mb-1">متریال انتخابی مشتری</div>
+                        <div>{% if order.material %}{{ order.material.name }}{% else %}انتخاب نشده{% endif %}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-400 text-sm mb-1">رنگ</div>
+                        <div>{% if order.color %}{{ order.color }}{% else %}ثبت نشده{% endif %}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-400 text-sm mb-1">تعداد</div>
+                        <div>{{ order.quantity }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <div class="text-slate-400 text-sm mb-1">توضیحات مشتری</div>
+                    <p class="text-slate-300 leading-8">{{ order.description }}</p>
+                </div>
+            </section>
+
+            {% if quote %}
+                <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-black">جزئیات محاسبه قیمت</h2>
+                            <p class="text-slate-400 mt-2">
+                                قیمت نهایی بر اساس متریال، وزن قطعه، زمان پرینت و هزینه‌های جانبی محاسبه شده است.
+                            </p>
+                        </div>
+
+                        <span class="inline-flex px-4 py-2 rounded-2xl bg-slate-800 text-cyan-300 text-sm">
+                            {{ quote.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-3xl border border-slate-800">
+                        <table class="w-full min-w-[720px] text-sm">
+                            <tbody class="divide-y divide-slate-800">
+                                <tr>
+                                    <td class="p-4 text-slate-400">متریال نهایی</td>
+                                    <td class="p-4 font-bold">
+                                        {% if quote.selected_material %}
+                                            {{ quote.selected_material.name }}
+                                        {% else %}
+                                            مشخص نشده
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">قیمت هر کیلو متریال</td>
+                                    <td class="p-4">{{ quote.material_price_per_kg|intcomma }} تومان</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">قیمت هر گرم متریال</td>
+                                    <td class="p-4">{{ quote.material_price_per_gram|floatformat:0|intcomma }} تومان</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">وزن هر قطعه</td>
+                                    <td class="p-4">{{ quote.weight_grams }} گرم</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">تعداد</td>
+                                    <td class="p-4">{{ order.quantity }}</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه متریال</td>
+                                    <td class="p-4">{{ quote.material_cost|intcomma }} تومان</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">زمان چاپ</td>
+                                    <td class="p-4">{{ quote.print_time_minutes }} دقیقه</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه ساعتی دستگاه</td>
+                                    <td class="p-4">{{ quote.machine_hourly_rate|intcomma }} تومان</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه دستگاه</td>
+                                    <td class="p-4">{{ quote.machine_cost|intcomma }} تومان</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="p-4 text-slate-400">دستمزد ساخت/اپراتوری</td>
+                                    <td class="p-4">{{ quote.labor_fee|intcomma }} تومان</td>
+                                </tr>
+
+                                {% if quote.design_fee %}
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه طراحی/مهندسی معکوس</td>
+                                    <td class="p-4">{{ quote.design_fee|intcomma }} تومان</td>
+                                </tr>
+                                {% endif %}
+
+                                {% if quote.post_processing_fee %}
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه پرداخت‌کاری/مونتاژ</td>
+                                    <td class="p-4">{{ quote.post_processing_fee|intcomma }} تومان</td>
+                                </tr>
+                                {% endif %}
+
+                                {% if quote.shipping_fee %}
+                                <tr>
+                                    <td class="p-4 text-slate-400">هزینه ارسال</td>
+                                    <td class="p-4">{{ quote.shipping_fee|intcomma }} تومان</td>
+                                </tr>
+                                {% endif %}
+
+                                {% if quote.discount %}
+                                <tr>
+                                    <td class="p-4 text-slate-400">تخفیف</td>
+                                    <td class="p-4 text-emerald-400">{{ quote.discount|intcomma }} تومان</td>
+                                </tr>
+                                {% endif %}
+
+                                <tr class="bg-slate-900">
+                                    <td class="p-5 text-lg font-black">مبلغ نهایی</td>
+                                    <td class="p-5 text-2xl font-black text-cyan-300">
+                                        {{ quote.total_price|intcomma }} تومان
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if quote.customer_note %}
+                        <div class="mt-6 rounded-3xl bg-slate-900 border border-slate-800 p-5">
+                            <div class="font-black mb-2">توضیحات فنی</div>
+                            <p class="text-slate-400 leading-8">{{ quote.customer_note }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-8">
+                        {% if quote.status == "draft" or quote.status == "sent" %}
+                            <form method="post" action="{% url 'website:accept_quote' order.public_token %}">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full md:w-auto rounded-2xl btn-primary px-8 py-4 font-black transition">
+                                    تأیید پیش‌فاکتور و ادامه پرداخت
+                                </button>
+                            </form>
+                        {% elif quote.status == "accepted" %}
+                            <div class="rounded-3xl bg-emerald-500/10 border border-emerald-500/30 p-5 text-emerald-300">
+                                پیش‌فاکتور توسط شما تأیید شده است. اتصال به درگاه پرداخت در مرحله بعد فعال می‌شود.
+                            </div>
+                        {% else %}
+                            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-5 text-slate-400">
+                                این پیش‌فاکتور در وضعیت قابل پرداخت نیست.
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+            {% else %}
+                <section class="glass rounded-[2rem] p-6 md:p-8">
+                    <h2 class="text-2xl font-black mb-4">پیش‌فاکتور هنوز آماده نیست</h2>
+                    <p class="text-slate-400 leading-8">
+                        سفارش شما ثبت شده و در حال بررسی است. بعد از محاسبه وزن، زمان پرینت و هزینه‌ها،
+                        پیش‌فاکتور در همین صفحه قابل مشاهده خواهد بود.
+                    </p>
+                </section>
+            {% endif %}
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<section class="py-24 bg-slate-950">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12">
+            <span class="text-cyan-300 font-bold">سوالات متداول</span>
+            <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
+                قبل از ثبت سفارش بهتر است بدانید
+            </h2>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-4">
+            {% for faq in faqs %}
+                <details class="glass rounded-2xl p-5 group">
+                    <summary class="cursor-pointer font-black text-lg">
+                        {{ faq.question }}
+                    </summary>
+                    <p class="text-slate-400 leading-8 mt-4">
+                        {{ faq.answer }}
+                    </p>
+                </details>
+            {% empty %}
+                <div class="rounded-3xl border border-dashed border-slate-700 p-10 text-center text-slate-400">
+                    هنوز سوالی ثبت نشده است.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

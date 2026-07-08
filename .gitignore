@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+venv/
+env/
+.venv/
+virtualenv/
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Static / media build artifacts
+staticfiles/
+media/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backups / temp files
+*.bak
+*.bak_*
+*.tmp
+tmp/
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+
+# Uploads / secrets / certificates
+*.pem
+*.key
+*.crt
