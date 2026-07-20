@@ -134,3 +134,10 @@
     .store-main-image { border-radius: 1.35rem; }
     .store-product-card { border-radius: 1.35rem; }
 }
+
+/* BEGIN STORE COMMERCE PHASE 2 */
+.store-content-card input[type="radio"] { margin-left: .5rem; }
+.store-content-card ul.errorlist { color: #e11d48; font-size: .875rem; margin-top: .35rem; }
+.store-content-card a { transition: .2s ease; }
+.store-content-card a:hover { color: var(--brand-primary, #FF9800); }
+/* END STORE COMMERCE PHASE 2 */

@@ -154,3 +154,86 @@ class ProductRequestAdmin(admin.ModelAdmin):
     list_filter = ["request_type", "status", "created_at"]
     search_fields = ["title", "full_name", "phone", "brand", "model", "description"]
     inlines = [ProductRequestImageInline]
+
+# BEGIN STORE COMMERCE PHASE 2
+from django.utils import timezone
+from .models import ShippingMethod, StoreAddress, StoreOrder, StoreOrderItem, StorePayment
+
+
+class StoreOrderItemInline(admin.TabularInline):
+    model = StoreOrderItem
+    extra = 0
+    can_delete = False
+    readonly_fields = [
+        "product", "variant", "product_title", "product_sku", "variant_code",
+        "material_name", "quality_name", "unit_price", "quantity", "line_total",
+        "unit_weight_grams",
+    ]
+
+
+@admin.register(ShippingMethod)
+class ShippingMethodAdmin(admin.ModelAdmin):
+    list_display = ["title", "code", "flat_fee", "free_over", "sort_order", "is_active"]
+    list_editable = ["flat_fee", "free_over", "sort_order", "is_active"]
+    prepopulated_fields = {"code": ("title",)}
+
+
+@admin.register(StoreAddress)
+class StoreAddressAdmin(admin.ModelAdmin):
+    list_display = ["user", "title", "full_name", "phone", "province", "city", "is_default"]
+    list_filter = ["province", "city", "is_default"]
+    search_fields = ["user__username", "full_name", "phone", "address", "postal_code"]
+
+
+@admin.register(StoreOrder)
+class StoreOrderAdmin(admin.ModelAdmin):
+    list_display = ["order_number", "user", "total_amount", "status", "payment_status", "shipping_title", "created_at"]
+    list_filter = ["status", "payment_status", "shipping_method", "created_at"]
+    search_fields = ["order_number", "user__username", "full_name", "phone", "tracking_code"]
+    readonly_fields = [
+        "order_number", "subtotal", "packaging_fee", "shipping_fee", "tax_amount",
+        "discount_amount", "total_amount", "total_weight_grams", "paid_at", "created_at", "updated_at",
+    ]
+    inlines = [StoreOrderItemInline]
+    actions = ["mark_processing", "mark_ready", "mark_shipped", "mark_delivered"]
+
+    @admin.action(description="انتقال به در حال تولید")
+    def mark_processing(self, request, queryset):
+        queryset.filter(payment_status="paid").update(status="processing")
+
+    @admin.action(description="علامت‌گذاری آماده ارسال")
+    def mark_ready(self, request, queryset):
+        queryset.update(status="ready")
+
+    @admin.action(description="علامت‌گذاری ارسال شده")
+    def mark_shipped(self, request, queryset):
+        queryset.update(status="shipped")
+
+    @admin.action(description="علامت‌گذاری تحویل شده")
+    def mark_delivered(self, request, queryset):
+        queryset.update(status="delivered")
+
+
+@admin.register(StorePayment)
+class StorePaymentAdmin(admin.ModelAdmin):
+    list_display = ["order", "amount", "method", "status", "ref_id", "created_at", "paid_at"]
+    list_filter = ["method", "status", "created_at"]
+    search_fields = ["order__order_number", "ref_id", "card_holder"]
+    readonly_fields = ["idempotency_key", "created_at", "updated_at", "paid_at"]
+    actions = ["approve_payments", "reject_payments"]
+
+    @admin.action(description="تأیید پرداخت‌های انتخاب‌شده")
+    def approve_payments(self, request, queryset):
+        for payment in queryset.select_related("order"):
+            if payment.status != "paid":
+                payment.mark_paid(payment.ref_id or f"ADMIN-{payment.pk}")
+
+    @admin.action(description="رد پرداخت‌های انتخاب‌شده")
+    def reject_payments(self, request, queryset):
+        for payment in queryset.select_related("order"):
+            payment.status = "failed"
+            payment.save(update_fields=["status", "updated_at"])
+            payment.order.payment_status = "failed"
+            payment.order.status = "awaiting_payment"
+            payment.order.save(update_fields=["payment_status", "status", "updated_at"])
+# END STORE COMMERCE PHASE 2

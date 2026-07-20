@@ -529,3 +529,258 @@ class ProductRequestImage(models.Model):
     class Meta:
         verbose_name = "تصویر درخواست"
         verbose_name_plural = "تصاویر درخواست"
+
+# BEGIN STORE COMMERCE PHASE 2
+import uuid
+
+
+def generate_store_order_number():
+    return f"SPH-{timezone.now():%y%m%d}-{uuid.uuid4().hex[:8].upper()}"
+
+
+class ShippingMethod(models.Model):
+    code = models.SlugField(max_length=50, unique=True, verbose_name="کد روش ارسال")
+    title = models.CharField(max_length=120, verbose_name="عنوان روش ارسال")
+    description = models.CharField(max_length=300, blank=True, verbose_name="توضیحات")
+    flat_fee = models.PositiveIntegerField(default=0, verbose_name="هزینه ثابت ارسال به تومان")
+    free_over = models.PositiveIntegerField(default=0, verbose_name="ارسال رایگان از مبلغ")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="ترتیب")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+
+    class Meta:
+        ordering = ["sort_order", "title"]
+        verbose_name = "روش ارسال فروشگاه"
+        verbose_name_plural = "روش‌های ارسال فروشگاه"
+
+    def __str__(self):
+        return self.title
+
+    def calculate_fee(self, subtotal, total_weight_grams=0):
+        if self.free_over and int(subtotal) >= self.free_over:
+            return 0
+        return self.flat_fee
+
+
+class StoreAddress(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="store_addresses",
+        verbose_name="کاربر",
+    )
+    title = models.CharField(max_length=80, default="آدرس اصلی", verbose_name="عنوان آدرس")
+    full_name = models.CharField(max_length=150, verbose_name="نام تحویل‌گیرنده")
+    phone = models.CharField(max_length=20, verbose_name="شماره تماس")
+    province = models.CharField(max_length=100, verbose_name="استان")
+    city = models.CharField(max_length=100, verbose_name="شهر")
+    address = models.TextField(verbose_name="نشانی کامل")
+    postal_code = models.CharField(max_length=20, blank=True, verbose_name="کد پستی")
+    is_default = models.BooleanField(default=False, db_index=True, verbose_name="آدرس پیش‌فرض")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-is_default", "-updated_at"]
+        verbose_name = "آدرس فروشگاهی مشتری"
+        verbose_name_plural = "آدرس‌های فروشگاهی مشتریان"
+
+    def __str__(self):
+        return f"{self.user} - {self.title}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_default:
+            type(self).objects.filter(user=self.user).exclude(pk=self.pk).update(is_default=False)
+
+
+class StoreOrder(models.Model):
+    STATUS_CHOICES = [
+        ("awaiting_payment", "در انتظار پرداخت"),
+        ("payment_review", "در انتظار بررسی پرداخت"),
+        ("paid", "پرداخت شده"),
+        ("processing", "در حال تولید"),
+        ("ready", "آماده ارسال"),
+        ("shipped", "ارسال شده"),
+        ("delivered", "تحویل شده"),
+        ("cancelled", "لغو شده"),
+        ("refunded", "مسترد شده"),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ("pending", "در انتظار پرداخت"),
+        ("awaiting_review", "در انتظار بررسی رسید"),
+        ("paid", "پرداخت موفق"),
+        ("failed", "پرداخت ناموفق"),
+        ("refunded", "مسترد شده"),
+    ]
+
+    order_number = models.CharField(
+        max_length=40,
+        default=generate_store_order_number,
+        unique=True,
+        editable=False,
+        db_index=True,
+        verbose_name="شماره سفارش فروشگاه",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="store_orders",
+        verbose_name="مشتری",
+    )
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="awaiting_payment",
+        db_index=True,
+        verbose_name="وضعیت سفارش",
+    )
+    payment_status = models.CharField(
+        max_length=30,
+        choices=PAYMENT_STATUS_CHOICES,
+        default="pending",
+        db_index=True,
+        verbose_name="وضعیت پرداخت",
+    )
+    shipping_method = models.ForeignKey(
+        ShippingMethod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+        verbose_name="روش ارسال",
+    )
+    shipping_title = models.CharField(max_length=120, verbose_name="عنوان روش ارسال هنگام سفارش")
+    full_name = models.CharField(max_length=150, verbose_name="نام تحویل‌گیرنده")
+    phone = models.CharField(max_length=20, db_index=True, verbose_name="شماره تماس")
+    email = models.EmailField(blank=True, verbose_name="ایمیل")
+    province = models.CharField(max_length=100, verbose_name="استان")
+    city = models.CharField(max_length=100, verbose_name="شهر")
+    address = models.TextField(verbose_name="نشانی کامل")
+    postal_code = models.CharField(max_length=20, blank=True, verbose_name="کد پستی")
+    customer_note = models.TextField(blank=True, verbose_name="توضیحات مشتری")
+    admin_note = models.TextField(blank=True, verbose_name="یادداشت داخلی")
+    tracking_code = models.CharField(max_length=100, blank=True, verbose_name="کد رهگیری ارسال")
+    subtotal = models.PositiveBigIntegerField(default=0, verbose_name="جمع کالاها")
+    packaging_fee = models.PositiveBigIntegerField(default=0, verbose_name="هزینه بسته‌بندی")
+    shipping_fee = models.PositiveBigIntegerField(default=0, verbose_name="هزینه ارسال")
+    tax_amount = models.PositiveBigIntegerField(default=0, verbose_name="مالیات")
+    discount_amount = models.PositiveBigIntegerField(default=0, verbose_name="تخفیف")
+    total_amount = models.PositiveBigIntegerField(default=0, verbose_name="مبلغ نهایی")
+    total_weight_grams = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="وزن ارسال")
+    paid_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پرداخت")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"], name="store_order_user_created_idx"),
+            models.Index(fields=["status", "payment_status"], name="store_order_status_pay_idx"),
+        ]
+        verbose_name = "سفارش فروشگاهی"
+        verbose_name_plural = "سفارش‌های فروشگاهی"
+
+    def __str__(self):
+        return self.order_number
+
+    def get_absolute_url(self):
+        return reverse("store:order_detail", kwargs={"order_number": self.order_number})
+
+    @property
+    def can_pay(self):
+        return self.payment_status in {"pending", "failed"} and self.status not in {"cancelled", "refunded"}
+
+    def mark_paid(self, *, ref_id=""):
+        self.payment_status = "paid"
+        if self.status in {"awaiting_payment", "payment_review"}:
+            self.status = "paid"
+        self.paid_at = timezone.now()
+        self.save(update_fields=["payment_status", "status", "paid_at", "updated_at"])
+
+
+class StoreOrderItem(models.Model):
+    order = models.ForeignKey(StoreOrder, on_delete=models.CASCADE, related_name="items", verbose_name="سفارش")
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="store_order_items",
+        verbose_name="محصول",
+    )
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="store_order_items",
+        verbose_name="تنوع",
+    )
+    product_title = models.CharField(max_length=220, verbose_name="نام محصول هنگام سفارش")
+    product_sku = models.CharField(max_length=80, verbose_name="کد محصول هنگام سفارش")
+    variant_code = models.CharField(max_length=100, verbose_name="کد تنوع هنگام سفارش")
+    material_name = models.CharField(max_length=100, verbose_name="متریال هنگام سفارش")
+    quality_name = models.CharField(max_length=100, verbose_name="کیفیت هنگام سفارش")
+    unit_price = models.PositiveBigIntegerField(verbose_name="قیمت واحد هنگام سفارش")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="تعداد")
+    line_total = models.PositiveBigIntegerField(verbose_name="جمع ردیف")
+    unit_weight_grams = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="وزن واحد")
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "ردیف سفارش فروشگاهی"
+        verbose_name_plural = "ردیف‌های سفارش فروشگاهی"
+
+    def __str__(self):
+        return f"{self.product_title} × {self.quantity}"
+
+    def save(self, *args, **kwargs):
+        self.line_total = int(self.unit_price) * int(self.quantity)
+        super().save(*args, **kwargs)
+
+
+class StorePayment(models.Model):
+    METHOD_CHOICES = [
+        ("bank_transfer", "کارت به کارت / واریز بانکی"),
+        ("gateway", "درگاه آنلاین"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "در انتظار پرداخت"),
+        ("awaiting_review", "در انتظار بررسی رسید"),
+        ("paid", "پرداخت موفق"),
+        ("failed", "پرداخت ناموفق"),
+        ("cancelled", "لغو شده"),
+        ("refunded", "مسترد شده"),
+    ]
+
+    order = models.ForeignKey(StoreOrder, on_delete=models.CASCADE, related_name="payments", verbose_name="سفارش")
+    amount = models.PositiveBigIntegerField(verbose_name="مبلغ")
+    method = models.CharField(max_length=30, choices=METHOD_CHOICES, default="bank_transfer", verbose_name="روش")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending", db_index=True, verbose_name="وضعیت")
+    idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    authority = models.CharField(max_length=255, blank=True, verbose_name="Authority")
+    ref_id = models.CharField(max_length=255, blank=True, db_index=True, verbose_name="کد پیگیری")
+    card_holder = models.CharField(max_length=150, blank=True, verbose_name="نام صاحب حساب")
+    receipt_image = models.ImageField(upload_to="store/payments/receipts/", blank=True, null=True, verbose_name="تصویر رسید")
+    note = models.TextField(blank=True, verbose_name="توضیحات پرداخت")
+    raw_response = models.JSONField(default=dict, blank=True, verbose_name="پاسخ خام درگاه")
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "پرداخت فروشگاهی"
+        verbose_name_plural = "پرداخت‌های فروشگاهی"
+
+    def __str__(self):
+        return f"{self.order.order_number} - {self.get_status_display()}"
+
+    def mark_paid(self, ref_id=""):
+        self.status = "paid"
+        if ref_id:
+            self.ref_id = ref_id
+        self.paid_at = timezone.now()
+        self.save(update_fields=["status", "ref_id", "paid_at", "updated_at"])
+        self.order.mark_paid(ref_id=ref_id)
+# END STORE COMMERCE PHASE 2

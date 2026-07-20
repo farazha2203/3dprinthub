@@ -101,18 +101,19 @@
                 <p id="variant-meta" class="text-xs text-slate-500 mt-3"></p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-6">
-                <button type="button" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>
-                    افزودن به سفارش
-                </button>
-                <form action="{% url 'store:toggle_like' product.slug %}" method="post">
-                    {% csrf_token %}
-                    <button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">
-                        {% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}
-                    </button>
-                </form>
-            </div>
-            <p class="text-xs text-slate-500 leading-6 mt-3">در این مرحله دکمه سفارش به سبد خرید فاز بعد متصل می‌شود. قیمت نمایش‌داده‌شده از سرور محاسبه شده است.</p>
+            <div class="mt-6">
+                            <form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="variant_id" id="cart-variant-id" value="">
+                                <input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد">
+                                <button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button>
+                            </form>
+                            <div class="grid grid-cols-2 gap-3 mt-3">
+                                <a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a>
+                                <form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form>
+                            </div>
+                            {% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}
+                        </div>
         </div>
     </div>
 

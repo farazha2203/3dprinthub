@@ -1,0 +1,26 @@
+{% extends "store/base.html" %}
+{% load humanize %}
+{% block title %}تکمیل سفارش | 3DprintHub{% endblock %}
+{% block content %}
+<section class="container mx-auto px-4 md:px-6 py-10">
+  <h1 class="text-3xl font-black mb-7">اطلاعات ارسال و پرداخت</h1>
+  <form method="post" class="grid lg:grid-cols-[1fr_380px] gap-7 items-start">{% csrf_token %}
+    <div class="store-content-card grid md:grid-cols-2 gap-5">
+      {% for field in form %}
+        {% if field.name != 'payment_method' and field.name != 'save_address' %}
+        <div class="{% if field.name == 'address' or field.name == 'customer_note' %}md:col-span-2{% endif %}"><label class="block font-bold mb-2">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 text-sm mt-1">{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+      {% endfor %}
+      <div class="md:col-span-2"><label class="block font-bold mb-2">{{ form.payment_method.label }}</label>{{ form.payment_method }}</div>
+      <label class="md:col-span-2 flex gap-2 items-center">{{ form.save_address }} <span>{{ form.save_address.label }}</span></label>
+    </div>
+    <aside class="store-content-card sticky top-32">
+      <h2 class="text-xl font-black">خلاصه کالاها</h2>
+      {% for item in cart.items %}<div class="flex justify-between gap-3 text-sm mt-4"><span>{{ item.product.title }} × {{ item.quantity }}</span><strong>{{ item.line_total|intcomma }}</strong></div>{% endfor %}
+      <div class="border-t border-slate-200 mt-5 pt-5 flex justify-between"><span>جمع کالاها</span><strong>{{ cart.subtotal|intcomma }} تومان</strong></div>
+      <p class="text-xs text-slate-500 mt-4 leading-6">مبلغ نهایی پس از انتخاب روش ارسال، با هزینه بسته‌بندی و مالیات محاسبه و در صفحه پرداخت نمایش داده می‌شود.</p>
+      <button class="btn-primary w-full rounded-2xl px-5 py-4 font-black mt-6">ثبت قطعی سفارش</button>
+    </aside>
+  </form>
+</section>
+{% endblock %}
