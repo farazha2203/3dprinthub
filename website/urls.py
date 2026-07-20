@@ -40,3 +40,32 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
 ]
+
+# BEGIN CUSTOMER PORTAL PHASE 3 URLS
+from .views import (
+    customer_addresses_view,
+    customer_address_create_view,
+    customer_address_edit_view,
+    customer_address_delete_view,
+    customer_address_default_view,
+)
+
+urlpatterns += [
+    path("customer/addresses/", customer_addresses_view, name="customer_addresses"),
+    path("customer/addresses/new/", customer_address_create_view, name="customer_address_create"),
+    path("customer/addresses/<int:address_id>/edit/", customer_address_edit_view, name="customer_address_edit"),
+    path("customer/addresses/<int:address_id>/delete/", customer_address_delete_view, name="customer_address_delete"),
+    path("customer/addresses/<int:address_id>/default/", customer_address_default_view, name="customer_address_default"),
+]
+# END CUSTOMER PORTAL PHASE 3 URLS
+
+# BEGIN PHASE 4 URLS
+from .views_phase4 import customer_appearance_view, customer_theme_update_view, iran_cities_view, robots_txt_response, sitemap_xml_response
+urlpatterns += [
+    path("customer/appearance/", customer_appearance_view, name="customer_appearance"),
+    path("customer/theme/", customer_theme_update_view, name="customer_theme_update"),
+    path("customer/locations/cities/", iran_cities_view, name="iran_cities"),
+    path("robots.txt", robots_txt_response, name="robots_txt_phase4"),
+    path("sitemap.xml", sitemap_xml_response, name="sitemap_xml_phase4"),
+]
+# END PHASE 4 URLS

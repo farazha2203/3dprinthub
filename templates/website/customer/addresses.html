@@ -1,0 +1,36 @@
+{% extends 'website/customer/account_base.html' %}
+{% block title %}آدرس‌های ارسال{% endblock %}
+{% block account_content %}
+<div class="customer-page-title">
+  <div><h1>آدرس‌های ارسال کالا</h1><p>استان، شهر، کد پستی و مشخصات تحویل‌گیرنده را مدیریت کنید.</p></div>
+  <a class="customer-button primary" href="{% url 'website:customer_address_create' %}">افزودن آدرس</a>
+</div>
+<div class="grid lg:grid-cols-2 gap-5">
+  {% for item in addresses %}
+    <article class="customer-card customer-address-card">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2"><h2>{{ item.title }}</h2>{% if item.is_default %}<span class="default-badge">پیش‌فرض</span>{% endif %}</div>
+          <p class="mt-2">{{ item.full_name }} • {{ item.phone }}</p>
+        </div>
+        <a href="{% url 'website:customer_address_edit' item.id %}">ویرایش</a>
+      </div>
+      <div class="address-body">
+        <strong>{{ item.province }}، {{ item.city }}</strong>
+        {% if item.district %}<span>محله {{ item.district }}</span>{% endif %}
+        <p>{{ item.address }}{% if item.plaque %}، پلاک {{ item.plaque }}{% endif %}{% if item.unit %}، واحد {{ item.unit }}{% endif %}</p>
+        <span>کد پستی: {{ item.postal_code }}</span>
+        {% if item.delivery_notes %}<small>{{ item.delivery_notes }}</small>{% endif %}
+      </div>
+      <div class="flex gap-2 mt-5">
+        {% if not item.is_default %}
+          <form method="post" action="{% url 'website:customer_address_default' item.id %}">{% csrf_token %}<button class="customer-button secondary small">انتخاب به‌عنوان پیش‌فرض</button></form>
+        {% endif %}
+        <form method="post" action="{% url 'website:customer_address_delete' item.id %}" onsubmit="return confirm('این آدرس حذف شود؟')">{% csrf_token %}<button class="customer-button danger small">حذف</button></form>
+      </div>
+    </article>
+  {% empty %}
+    <div class="customer-card customer-empty lg:col-span-2">هنوز آدرس ارسال ثبت نشده است. برای تکمیل خرید، اولین آدرس را اضافه کنید.</div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -425,3 +425,109 @@ def product_review_view(request, slug):
         return redirect(product.get_absolute_url())
     return render(request, "store/review_form.html", {"product": product, "form": form})
 # END STORE COMMERCE PHASE 2
+
+# BEGIN CUSTOMER PORTAL PHASE 3 CHECKOUT VIEW
+@login_required
+def checkout_view(request):
+    cart = Cart(request)
+    initial_summary = cart.summary()
+    if not initial_summary["items"]:
+        messages.error(request, "سبد خرید شما خالی است.")
+        return redirect("store:product_list")
+
+    form = CheckoutForm(request.POST or None, user=request.user, subtotal=initial_summary["subtotal"])
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                cart_data = dict(cart.data)
+                ids = [int(key) for key in cart_data if str(key).isdigit()]
+                locked_variants = ProductVariant.objects.select_for_update().filter(
+                    pk__in=ids, is_active=True, product__is_active=True,
+                ).select_related("product", "material", "quality")
+                variants = {str(v.pk): v for v in locked_variants}
+                lines, subtotal = [], 0
+                total_weight = Decimal("0")
+                for key, raw_quantity in cart_data.items():
+                    variant = variants.get(str(key))
+                    if not variant or variant.stock_status == "out_of_stock":
+                        raise ValidationError("یکی از محصولات سبد خرید دیگر قابل سفارش نیست.")
+                    quantity = int(raw_quantity)
+                    if quantity < variant.minimum_quantity:
+                        raise ValidationError(f"حداقل تعداد {variant.product.title} برابر {variant.minimum_quantity} است.")
+                    if variant.maximum_quantity and quantity > variant.maximum_quantity:
+                        raise ValidationError(f"حداکثر تعداد {variant.product.title} برابر {variant.maximum_quantity} است.")
+                    unit_price = int(variant.price_breakdown()["unit_price"])
+                    unit_weight = Decimal(variant.shipping_weight_grams or variant.final_weight_grams or variant.material_weight_grams or 0)
+                    line_total = unit_price * quantity
+                    subtotal += line_total
+                    total_weight += unit_weight * quantity
+                    lines.append((variant, quantity, unit_price, line_total, unit_weight))
+
+                pricing = PricingSetting.load()
+                shipping = form.cleaned_data["shipping_method"]
+                packaging_fee = int(pricing.packaging_fee)
+                shipping_fee = int(shipping.calculate_fee(subtotal, total_weight))
+                tax_base = subtotal + packaging_fee + shipping_fee
+                tax_amount = _money_round(Decimal(tax_base) * Decimal(pricing.tax_percent) / Decimal("100"))
+                total_amount = subtotal + packaging_fee + shipping_fee + tax_amount
+
+                order = StoreOrder(
+                    user=request.user,
+                    shipping_method=shipping,
+                    shipping_title=shipping.title,
+                    full_name=form.cleaned_data["full_name"],
+                    phone=form.cleaned_data["phone"],
+                    email=form.cleaned_data.get("email", ""),
+                    province=form.cleaned_data["province"],
+                    city=form.cleaned_data["city"],
+                    address=form.cleaned_data["address"],
+                    postal_code=form.cleaned_data["postal_code"],
+                    customer_note=form.cleaned_data.get("customer_note", ""),
+                    subtotal=subtotal,
+                    packaging_fee=packaging_fee,
+                    shipping_fee=shipping_fee,
+                    tax_amount=tax_amount,
+                    total_amount=total_amount,
+                    total_weight_grams=total_weight,
+                    status="awaiting_payment",
+                    payment_status="pending",
+                )
+                order.save()
+                StoreOrderItem.objects.bulk_create([
+                    StoreOrderItem(
+                        order=order, product=variant.product, variant=variant,
+                        product_title=variant.product.title, product_sku=variant.product.sku,
+                        variant_code=variant.code, material_name=variant.material.name,
+                        quality_name=variant.quality.name, unit_price=unit_price,
+                        quantity=quantity, line_total=line_total, unit_weight_grams=unit_weight,
+                    )
+                    for variant, quantity, unit_price, line_total, unit_weight in lines
+                ])
+                StorePayment.objects.create(
+                    order=order, amount=total_amount,
+                    method=form.cleaned_data["payment_method"], status="pending",
+                )
+                if form.cleaned_data.get("save_address") and not form.cleaned_data.get("saved_address"):
+                    StoreAddress.objects.create(
+                        user=request.user,
+                        title="آدرس سفارش",
+                        full_name=order.full_name,
+                        phone=order.phone,
+                        province=order.province,
+                        city=order.city,
+                        address=order.address,
+                        postal_code=order.postal_code,
+                        is_default=not StoreAddress.objects.filter(user=request.user).exists(),
+                    )
+                cart.clear()
+        except ValidationError as exc:
+            messages.error(request, exc.message)
+        else:
+            return redirect("store:manual_payment", order_number=order.order_number)
+
+    return render(request, "store/checkout.html", {
+        "form": form,
+        "cart": initial_summary,
+        "pricing": PricingSetting.load(),
+    })
+# END CUSTOMER PORTAL PHASE 3 CHECKOUT VIEW

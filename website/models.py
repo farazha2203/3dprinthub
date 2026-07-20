@@ -19,6 +19,35 @@ class CustomerProfile(models.Model):
     address = models.TextField(blank=True, verbose_name="آدرس")
     company_name = models.CharField(max_length=150, blank=True, verbose_name="نام شرکت")
     national_code = models.CharField(max_length=20, blank=True, verbose_name="کد ملی / شناسه")
+    # BEGIN CUSTOMER PORTAL PHASE 3 PROFILE FIELDS
+    avatar = models.ImageField(
+        upload_to="customers/avatars/",
+        blank=True,
+        null=True,
+        verbose_name="تصویر پروفایل",
+    )
+    father_name = models.CharField(max_length=100, blank=True, verbose_name="نام پدر")
+    birth_date = models.DateField(blank=True, null=True, verbose_name="تاریخ تولد")
+    gender = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=[("male", "مرد"), ("female", "زن"), ("other", "سایر")],
+        verbose_name="جنسیت",
+    )
+    landline = models.CharField(max_length=20, blank=True, verbose_name="تلفن ثابت")
+    occupation = models.CharField(max_length=120, blank=True, verbose_name="شغل / سمت")
+    # END CUSTOMER PORTAL PHASE 3 PROFILE FIELDS
+
+    # BEGIN PHASE 4 CUSTOMER THEME
+    theme_preference = models.CharField(
+        max_length=20,
+        default="original",
+        choices=[("original", "رنگ‌بندی اصلی"), ("brand-gold", "طلایی و سرمه‌ای"), ("hybrid", "ترکیبی")],
+        verbose_name="رنگ‌بندی انتخابی",
+    )
+    theme_prompt_seen = models.BooleanField(default=False, verbose_name="انتخاب رنگ نمایش داده شده")
+    # END PHASE 4 CUSTOMER THEME
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ عضویت")
 
     class Meta:
@@ -598,4 +627,33 @@ class OrderReview(models.Model):
 
     def __str__(self):
         return f"نظر سفارش #{self.order_id} - {self.customer}"
-        
+
+# BEGIN PHASE 4 SEO SETTINGS
+class SEOSettings(models.Model):
+    site_name = models.CharField(max_length=120, default="3DprintHub.ir", verbose_name="نام سایت")
+    site_url = models.URLField(default="https://3dprinthub.ir", verbose_name="آدرس اصلی سایت")
+    default_meta_title = models.CharField(max_length=180, default="3DprintHub.ir | طراحی و چاپ سه‌بعدی", verbose_name="عنوان پیش‌فرض سئو")
+    default_meta_description = models.CharField(max_length=320, default="طراحی، چاپ سه‌بعدی، مهندسی معکوس و ساخت قطعات صنعتی و سفارشی.", verbose_name="توضیح پیش‌فرض سئو")
+    default_og_image = models.ImageField(upload_to="seo/", blank=True, null=True, verbose_name="تصویر پیش‌فرض اشتراک‌گذاری")
+    organization_name = models.CharField(max_length=180, default="3DprintHub", verbose_name="نام سازمان در اسکیما")
+    organization_logo = models.ImageField(upload_to="seo/", blank=True, null=True, verbose_name="لوگوی سازمان در اسکیما")
+    google_site_verification = models.CharField(max_length=255, blank=True, verbose_name="کد تأیید Google Search Console")
+    bing_site_verification = models.CharField(max_length=255, blank=True, verbose_name="کد تأیید Bing Webmaster")
+    allow_search_indexing = models.BooleanField(default=True, verbose_name="اجازه ایندکس سایت")
+    twitter_card = models.CharField(max_length=30, default="summary_large_image", choices=[("summary", "Summary"), ("summary_large_image", "Summary Large Image")], verbose_name="نوع Twitter Card")
+    robots_extra = models.TextField(blank=True, verbose_name="دستورات اضافه robots.txt")
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "تنظیمات سئو سایت"
+        verbose_name_plural = "تنظیمات سئو سایت"
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+    def __str__(self):
+        return "تنظیمات سئو 3DprintHub"
+# END PHASE 4 SEO SETTINGS
+

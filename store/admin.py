@@ -237,3 +237,7 @@ class StorePaymentAdmin(admin.ModelAdmin):
             payment.order.status = "awaiting_payment"
             payment.order.save(update_fields=["payment_status", "status", "updated_at"])
 # END STORE COMMERCE PHASE 2
+
+# BEGIN PHASE 4 SEO ADMIN
+from . import admin_seo  # noqa: F401
+# END PHASE 4 SEO ADMIN

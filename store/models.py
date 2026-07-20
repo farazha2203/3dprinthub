@@ -47,6 +47,15 @@ class Category(models.Model):
     image = models.ImageField(upload_to="store/categories/", blank=True, null=True, verbose_name="تصویر")
     meta_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان سئو")
     meta_description = models.CharField(max_length=320, blank=True, verbose_name="توضیحات سئو")
+    # BEGIN PHASE 4 SEO FIELDS
+    seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
+    canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
+    robots_index = models.BooleanField(default=True, db_index=True, verbose_name="اجازه ایندکس")
+    robots_follow = models.BooleanField(default=True, verbose_name="اجازه دنبال‌کردن لینک‌ها")
+    og_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان Open Graph")
+    og_description = models.CharField(max_length=320, blank=True, verbose_name="توضیح Open Graph")
+    og_image = models.ImageField(upload_to="store/seo/", blank=True, null=True, verbose_name="تصویر Open Graph")
+    # END PHASE 4 SEO FIELDS
     sort_order = models.PositiveIntegerField(default=0, verbose_name="ترتیب")
     is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
 
@@ -156,6 +165,15 @@ class Product(models.Model):
     view_count = models.PositiveBigIntegerField(default=0, db_index=True, verbose_name="تعداد بازدید")
     meta_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان سئو")
     meta_description = models.CharField(max_length=320, blank=True, verbose_name="توضیحات سئو")
+    # BEGIN PHASE 4 SEO FIELDS
+    seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
+    canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
+    robots_index = models.BooleanField(default=True, db_index=True, verbose_name="اجازه ایندکس")
+    robots_follow = models.BooleanField(default=True, verbose_name="اجازه دنبال‌کردن لینک‌ها")
+    og_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان Open Graph")
+    og_description = models.CharField(max_length=320, blank=True, verbose_name="توضیح Open Graph")
+    og_image = models.ImageField(upload_to="store/seo/", blank=True, null=True, verbose_name="تصویر Open Graph")
+    # END PHASE 4 SEO FIELDS
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -442,6 +460,15 @@ class ServicePage(models.Model):
     hero_image = models.ImageField(upload_to="store/services/", blank=True, null=True, verbose_name="تصویر اصلی")
     meta_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان سئو")
     meta_description = models.CharField(max_length=320, blank=True, verbose_name="توضیحات سئو")
+    # BEGIN PHASE 4 SEO FIELDS
+    seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
+    canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
+    robots_index = models.BooleanField(default=True, db_index=True, verbose_name="اجازه ایندکس")
+    robots_follow = models.BooleanField(default=True, verbose_name="اجازه دنبال‌کردن لینک‌ها")
+    og_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان Open Graph")
+    og_description = models.CharField(max_length=320, blank=True, verbose_name="توضیح Open Graph")
+    og_image = models.ImageField(upload_to="store/seo/", blank=True, null=True, verbose_name="تصویر Open Graph")
+    # END PHASE 4 SEO FIELDS
     sort_order = models.PositiveIntegerField(default=0, verbose_name="ترتیب")
     is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -574,7 +601,14 @@ class StoreAddress(models.Model):
     province = models.CharField(max_length=100, verbose_name="استان")
     city = models.CharField(max_length=100, verbose_name="شهر")
     address = models.TextField(verbose_name="نشانی کامل")
-    postal_code = models.CharField(max_length=20, blank=True, verbose_name="کد پستی")
+    postal_code = models.CharField(max_length=20, verbose_name="کد پستی")
+    # BEGIN CUSTOMER PORTAL PHASE 3 ADDRESS FIELDS
+    district = models.CharField(max_length=120, blank=True, verbose_name="منطقه / محله")
+    plaque = models.CharField(max_length=20, blank=True, verbose_name="پلاک")
+    unit = models.CharField(max_length=20, blank=True, verbose_name="واحد")
+    recipient_national_code = models.CharField(max_length=10, blank=True, verbose_name="کد ملی تحویل‌گیرنده")
+    delivery_notes = models.CharField(max_length=300, blank=True, verbose_name="توضیحات تحویل")
+    # END CUSTOMER PORTAL PHASE 3 ADDRESS FIELDS
     is_default = models.BooleanField(default=False, db_index=True, verbose_name="آدرس پیش‌فرض")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -656,7 +690,7 @@ class StoreOrder(models.Model):
     province = models.CharField(max_length=100, verbose_name="استان")
     city = models.CharField(max_length=100, verbose_name="شهر")
     address = models.TextField(verbose_name="نشانی کامل")
-    postal_code = models.CharField(max_length=20, blank=True, verbose_name="کد پستی")
+    postal_code = models.CharField(max_length=20, verbose_name="کد پستی")
     customer_note = models.TextField(blank=True, verbose_name="توضیحات مشتری")
     admin_note = models.TextField(blank=True, verbose_name="یادداشت داخلی")
     tracking_code = models.CharField(max_length=100, blank=True, verbose_name="کد رهگیری ارسال")

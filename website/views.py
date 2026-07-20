@@ -331,3 +331,183 @@ def customer_order_review_create_view(request, order_id):
             messages.error(request, "لطفاً متن نظر و امتیاز را بررسی کنید.")
 
     return redirect("website:customer_order_detail", order_id=order.id)
+
+# BEGIN CUSTOMER PORTAL PHASE 3 VIEWS
+from django.db.models import Sum
+from django.views.decorators.http import require_POST
+
+from store.models import StoreAddress, StoreOrder
+from .forms import StoreAddressForm
+
+
+def _phase3_profile(user):
+    profile, _ = CustomerProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            "phone": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        },
+    )
+    return profile
+
+
+def _profile_completion(profile):
+    user = profile.user
+    checks = [
+        profile.avatar,
+        profile.first_name,
+        profile.last_name,
+        profile.father_name,
+        profile.birth_date,
+        profile.phone,
+        profile.national_code,
+        user.email,
+        profile.user.store_addresses.exists(),
+    ]
+    completed = sum(bool(item) for item in checks)
+    return round(completed * 100 / len(checks))
+
+
+@login_required
+def customer_dashboard_view(request):
+    site_settings = SiteSetting.objects.first()
+    profile = _phase3_profile(request.user)
+
+    custom_orders = Order.objects.filter(customer=request.user).select_related("material").prefetch_related("images")
+    store_orders = StoreOrder.objects.filter(user=request.user).prefetch_related("items", "payments")
+    addresses = StoreAddress.objects.filter(user=request.user)
+
+    custom_stats = {
+        "all": custom_orders.count(),
+        "active": custom_orders.exclude(status__in=["done", "cancelled"]).count(),
+        "done": custom_orders.filter(status="done").count(),
+    }
+    store_stats = {
+        "all": store_orders.count(),
+        "awaiting_payment": store_orders.filter(payment_status__in=["pending", "awaiting_review"]).count(),
+        "active": store_orders.filter(status__in=["paid", "processing", "ready", "shipped"]).count(),
+        "delivered": store_orders.filter(status="delivered").count(),
+    }
+    paid_total = store_orders.filter(payment_status="paid").aggregate(total=Sum("total_amount"))["total"] or 0
+
+    return render(request, "website/customer/dashboard.html", {
+        "settings": site_settings,
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "custom_orders": custom_orders[:6],
+        "store_orders": store_orders[:6],
+        "addresses": addresses[:3],
+        "custom_stats": custom_stats,
+        "store_stats": store_stats,
+        "paid_total": paid_total,
+    })
+
+
+@login_required
+def customer_profile_view(request):
+    site_settings = SiteSetting.objects.first()
+    profile = _phase3_profile(request.user)
+    if request.method == "POST":
+        form = CustomerProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "مشخصات حساب شما با موفقیت به‌روزرسانی شد.")
+            return redirect("website:customer_profile")
+        messages.error(request, "اطلاعات واردشده را بررسی کنید.")
+    else:
+        form = CustomerProfileForm(instance=profile)
+    return render(request, "website/customer/profile.html", {
+        "settings": site_settings,
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "form": form,
+    })
+
+
+@login_required
+def customer_addresses_view(request):
+    profile = _phase3_profile(request.user)
+    return render(request, "website/customer/addresses.html", {
+        "settings": SiteSetting.objects.first(),
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "addresses": StoreAddress.objects.filter(user=request.user),
+    })
+
+
+@login_required
+def customer_address_create_view(request):
+    profile = _phase3_profile(request.user)
+    initial = {
+        "full_name": f"{profile.first_name} {profile.last_name}".strip(),
+        "phone": profile.phone,
+        "is_default": not StoreAddress.objects.filter(user=request.user).exists(),
+    }
+    form = StoreAddressForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        address = form.save(commit=False)
+        address.user = request.user
+        if not StoreAddress.objects.filter(user=request.user).exists():
+            address.is_default = True
+        address.save()
+        messages.success(request, "آدرس ارسال با موفقیت ثبت شد.")
+        return redirect("website:customer_addresses")
+    return render(request, "website/customer/address_form.html", {
+        "settings": SiteSetting.objects.first(),
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "form": form,
+        "page_title": "افزودن آدرس ارسال",
+    })
+
+
+@login_required
+def customer_address_edit_view(request, address_id):
+    profile = _phase3_profile(request.user)
+    address = get_object_or_404(StoreAddress, pk=address_id, user=request.user)
+    form = StoreAddressForm(request.POST or None, instance=address)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "آدرس ارسال ویرایش شد.")
+        return redirect("website:customer_addresses")
+    return render(request, "website/customer/address_form.html", {
+        "settings": SiteSetting.objects.first(),
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "form": form,
+        "address": address,
+        "page_title": "ویرایش آدرس ارسال",
+    })
+
+
+@login_required
+@require_POST
+def customer_address_delete_view(request, address_id):
+    address = get_object_or_404(StoreAddress, pk=address_id, user=request.user)
+    was_default = address.is_default
+    address.delete()
+    if was_default:
+        replacement = StoreAddress.objects.filter(user=request.user).first()
+        if replacement:
+            replacement.is_default = True
+            replacement.save(update_fields=["is_default", "updated_at"])
+    messages.success(request, "آدرس حذف شد.")
+    return redirect("website:customer_addresses")
+
+
+@login_required
+@require_POST
+def customer_address_default_view(request, address_id):
+    address = get_object_or_404(StoreAddress, pk=address_id, user=request.user)
+    address.is_default = True
+    address.save()
+    messages.success(request, "آدرس پیش‌فرض تغییر کرد.")
+    return redirect("website:customer_addresses")
+# END CUSTOMER PORTAL PHASE 3 VIEWS
+
+# BEGIN PHASE 4 ROBOTS
+from .views_phase4 import robots_txt_response, sitemap_xml_response
+robots_txt = robots_txt_response
+sitemap_xml = sitemap_xml_response
+# END PHASE 4 ROBOTS

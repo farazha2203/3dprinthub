@@ -1,264 +1,90 @@
 {% load static %}
-
 <header class="site-header fixed top-0 right-0 left-0 z-50 border-b border-slate-200/80">
-    <div class="container mx-auto px-6">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="py-3 md:py-4 flex items-center justify-between gap-3">
+      <a href="/#home" data-scroll-to="home" class="flex items-center gap-3 shrink-0">
+        <img src="{% static 'img/brand/logo-header.png' %}" alt="3DprintHub.ir" class="h-11 md:h-14 w-auto object-contain" width="360" height="96">
+        <div class="hidden xl:block">
+          <div class="font-black text-lg text-slate-950">{% if settings and settings.brand_name %}{{ settings.brand_name }}{% else %}3DprintHub.ir{% endif %}</div>
+          <div class="text-xs text-slate-500">طراحی، چاپ سه‌بعدی و ساخت قطعات صنعتی</div>
+        </div>
+      </a>
 
-        <div class="py-4 flex items-center justify-between gap-4">
+      <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-sm text-slate-700">
+        <a href="/#services" data-scroll-to="services" class="hover:text-orange-500 transition">خدمات</a>
+        <a href="/#materials" data-scroll-to="materials" class="hover:text-orange-500 transition">متریال‌ها</a>
+        <a href="/#portfolio" data-scroll-to="portfolio" class="hover:text-orange-500 transition">نمونه‌کارها</a>
+        <a href="{% url 'store:product_list' %}" class="hover:text-orange-500 transition font-bold">فروشگاه قطعات</a>
+        <a href="/#order" data-scroll-to="order" class="hover:text-orange-500 transition">ثبت سفارش</a>
+        <a href="/#contact" data-scroll-to="contact" class="hover:text-orange-500 transition">تماس</a>
+      </nav>
 
-            <!-- Logo / Brand -->
-            <a href="/#home" data-scroll-to="home" class="flex items-center gap-3 shrink-0">
-                <img
-                    src="{% static 'img/brand/logo-header.png' %}"
-                    alt="3DprintHub.ir | طراحی و چاپ سه‌بعدی"
-                    class="h-12 md:h-14 w-auto object-contain"
-                    width="360"
-                    height="96"
-                >
-
-                <div class="hidden sm:block">
-                    <div class="font-black text-lg leading-6 text-slate-950">
-                        {% if settings and settings.brand_name %}
-                            {{ settings.brand_name }}
-                        {% else %}
-                            3DprintHub.ir
-                        {% endif %}
-                    </div>
-
-                    <div class="text-xs text-slate-500">
-                        طراحی، چاپ سه‌بعدی و ساخت قطعات صنعتی
-                    </div>
+      <div class="hidden sm:flex items-center gap-2 md:gap-3">
+        {% if request.user.is_authenticated %}
+          {% with profile=request.user.customer_profile %}
+            <details class="relative group">
+              <summary class="list-none cursor-pointer flex items-center gap-2 rounded-2xl border border-slate-200 bg-white py-2 px-2.5 shadow-sm hover:border-orange-300 transition">
+                {% if profile.avatar %}
+                  <img src="{{ profile.avatar.url }}" alt="{{ profile.first_name }} {{ profile.last_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-orange-200">
+                {% else %}
+                  <span class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/></svg>
+                  </span>
+                {% endif %}
+                <span class="hidden md:block text-right leading-5 max-w-28 truncate">
+                  <strong class="block text-sm text-slate-900">{% if profile.first_name or profile.last_name %}{{ profile.first_name }} {{ profile.last_name }}{% elif request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}مشتری{% endif %}</strong>
+                  <small class="text-slate-500">حساب کاربری</small>
+                </span>
+                <svg viewBox="0 0 20 20" class="hidden md:block w-4 h-4 fill-current text-slate-400"><path d="m5.5 7.5 4.5 4 4.5-4"/></svg>
+              </summary>
+              <div class="absolute left-0 mt-3 w-64 rounded-3xl border border-slate-200 bg-white p-3 shadow-2xl z-[70]">
+                <div class="px-3 py-2 border-b border-slate-100 mb-2">
+                  <div class="font-black">{{ profile.first_name }} {{ profile.last_name }}</div>
+                  <div class="text-xs text-slate-500 mt-1">{{ profile.phone }}</div>
                 </div>
-            </a>
+                <a href="{% url 'website:customer_dashboard' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600 font-bold">داشبورد مشتری</a>
+                <a href="{% url 'website:customer_profile' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">مشخصات و تصویر</a>
+                <a href="{% url 'website:customer_addresses' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">آدرس‌های ارسال</a>
+                <a href="{% url 'store:my_orders' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">سفارش‌های فروشگاه</a>
+                <a href="{% url 'website:customer_logout' %}" class="block rounded-xl px-3 py-2.5 mt-2 bg-slate-900 text-white text-center font-bold">خروج از حساب</a>
+              </div>
+            </details>
+          {% endwith %}
+        {% else %}
+          <a href="{% url 'website:customer_login' %}" class="inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold">ورود مشتری</a>
+        {% endif %}
+        <a href="/#order" data-scroll-to="order" class="hidden lg:inline-flex px-5 py-3 rounded-2xl btn-primary font-black transition shadow">ثبت سفارش</a>
+      </div>
 
-            <!-- Desktop Menu -->
-            <nav class="hidden lg:flex items-center gap-7 text-sm text-slate-700">
-                <a href="/#services" data-scroll-to="services" class="hover:text-orange-500 transition">
-                    خدمات
-                </a>
-
-                <a href="/#materials" data-scroll-to="materials" class="hover:text-orange-500 transition">
-                    متریال‌ها
-                </a>
-
-                <a href="/#portfolio" data-scroll-to="portfolio" class="hover:text-orange-500 transition">
-                    نمونه‌کارها
-                </a>
-
-                <a href="/#products" data-scroll-to="products" class="hover:text-orange-500 transition">
-                    محصولات
-                </a>
-
-                <a href="{% url 'store:product_list' %}" class="hover:text-orange-500 transition font-bold">
-                    فروشگاه قطعات
-                </a>
-
-                <a href="/#order" data-scroll-to="order" class="hover:text-orange-500 transition">
-                    ثبت سفارش
-                </a>
-
-                <a href="/#contact" data-scroll-to="contact" class="hover:text-orange-500 transition">
-                    تماس
-                </a>
-            </nav>
-
-            <!-- Desktop Buttons -->
-            <div class="hidden lg:flex items-center gap-3">
-
-                {% if settings and settings.phone %}
-                    <a 
-                        href="tel:{{ settings.phone }}"
-                        class="hidden xl:inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
-                    >
-                        {{ settings.phone }}
-                    </a>
-                {% endif %}
-
-                {% if request.user.is_authenticated %}
-                    <a 
-                        href="/customer/dashboard/"
-                        class="inline-flex px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition font-bold"
-                    >
-                        پنل مشتری
-                    </a>
-
-                    <a 
-                        href="/customer/logout/"
-                        class="inline-flex px-5 py-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition font-bold"
-                    >
-                        خروج
-                    </a>
-                {% else %}
-                    <a 
-                        href="/customer/login/"
-                        class="inline-flex px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition font-bold"
-                    >
-                        ورود مشتری
-                    </a>
-                {% endif %}
-
-                <a 
-                    href="/#order"
-                    data-scroll-to="order"
-                    class="inline-flex px-5 py-3 rounded-2xl btn-primary font-black transition shadow"
-                >
-                    ثبت سفارش
-                </a>
-            </div>
-
-            <!-- Tablet Buttons -->
-            <div class="hidden sm:flex lg:hidden items-center gap-3">
-                {% if request.user.is_authenticated %}
-                    <a 
-                        href="/customer/dashboard/"
-                        class="inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
-                    >
-                        پنل
-                    </a>
-                {% else %}
-                    <a 
-                        href="/customer/login/"
-                        class="inline-flex px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:border-orange-400 hover:text-orange-500 transition text-sm font-bold"
-                    >
-                        ورود
-                    </a>
-                {% endif %}
-
-                <a 
-                    href="/#order"
-                    data-scroll-to="order"
-                    class="inline-flex px-4 py-3 rounded-2xl btn-primary font-black transition shadow text-sm"
-                >
-                    سفارش
-                </a>
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <button 
-                type="button"
-                id="mobile-menu-button"
-                class="lg:hidden w-11 h-11 rounded-2xl border border-slate-300 flex items-center justify-center text-slate-800 bg-white shadow-sm"
-                aria-label="باز کردن منو"
-            >
-                <span class="text-2xl leading-none">☰</span>
-            </button>
-        </div>
-
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="mobile-menu lg:hidden pb-4">
-            <nav class="rounded-3xl bg-white border border-slate-200 p-4 grid gap-2 text-slate-700 shadow-xl">
-
-                <a 
-                    href="/#services"
-                    data-scroll-to="services"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    خدمات
-                </a>
-
-                <a 
-                    href="/#materials"
-                    data-scroll-to="materials"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    متریال‌ها
-                </a>
-
-                <a 
-                    href="/#portfolio"
-                    data-scroll-to="portfolio"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    نمونه‌کارها
-                </a>
-
-                <a 
-                    href="/#products"
-                    data-scroll-to="products"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    محصولات
-                </a>
-
-                <a
-                    href="{% url 'store:product_list' %}"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    فروشگاه قطعات آماده چاپ
-                </a>
-
-                <a 
-                    href="/#order"
-                    data-scroll-to="order"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    ثبت سفارش
-                </a>
-
-                <a 
-                    href="/#contact"
-                    data-scroll-to="contact"
-                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                >
-                    تماس
-                </a>
-
-                <div class="h-px bg-slate-200 my-2"></div>
-
-                {% if request.user.is_authenticated %}
-                    <a 
-                        href="/customer/dashboard/"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                    >
-                        پنل مشتری
-                    </a>
-
-                    <a 
-                        href="/customer/profile/"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                    >
-                        مشخصات من
-                    </a>
-
-                    <a 
-                        href="/customer/logout/"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-bold text-center"
-                    >
-                        خروج از حساب
-                    </a>
-                {% else %}
-                    <a 
-                        href="/customer/login/"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                    >
-                        ورود مشتری
-                    </a>
-
-                    <a 
-                        href="/customer/register/"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
-                    >
-                        ثبت‌نام مشتری
-                    </a>
-                {% endif %}
-
-                {% if settings and settings.phone %}
-                    <a 
-                        href="tel:{{ settings.phone }}"
-                        class="mobile-menu-link rounded-2xl px-4 py-3 border border-slate-200 text-center font-bold hover:border-orange-400 hover:text-orange-500 transition"
-                    >
-                        تماس: {{ settings.phone }}
-                    </a>
-                {% endif %}
-
-                <a 
-                    href="/#order"
-                    data-scroll-to="order"
-                    class="mobile-menu-link mt-2 text-center rounded-2xl btn-primary font-black px-4 py-3 transition"
-                >
-                    ثبت سفارش ساخت قطعه
-                </a>
-            </nav>
-        </div>
-
+      <button type="button" id="mobile-menu-button" class="sm:hidden w-11 h-11 rounded-2xl border border-slate-300 flex items-center justify-center text-slate-800 bg-white shadow-sm" aria-label="باز کردن منو"><span class="text-2xl leading-none">☰</span></button>
     </div>
+
+    <div id="mobile-menu" class="mobile-menu sm:hidden pb-4">
+      <nav class="rounded-3xl bg-white border border-slate-200 p-4 grid gap-2 text-slate-700 shadow-xl">
+        {% if request.user.is_authenticated %}
+          {% with profile=request.user.customer_profile %}
+            <div class="flex items-center gap-3 rounded-2xl bg-orange-50 border border-orange-100 p-3 mb-2">
+              {% if profile.avatar %}<img src="{{ profile.avatar.url }}" class="w-12 h-12 rounded-full object-cover">{% else %}<span class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><svg viewBox="0 0 24 24" class="w-7 h-7 fill-current"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/></svg></span>{% endif %}
+              <div><strong class="block">{{ profile.first_name }} {{ profile.last_name }}</strong><small class="text-slate-500">{{ profile.phone }}</small></div>
+            </div>
+          {% endwith %}
+        {% endif %}
+        <a href="/#services" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">خدمات</a>
+        <a href="/#materials" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">متریال‌ها</a>
+        <a href="{% url 'store:product_list' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 font-bold">فروشگاه قطعات</a>
+        <a href="/#order" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">ثبت سفارش</a>
+        <div class="h-px bg-slate-200 my-2"></div>
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'website:customer_dashboard' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 font-bold">داشبورد مشتری</a>
+          <a href="{% url 'website:customer_profile' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">مشخصات و تصویر</a>
+          <a href="{% url 'website:customer_addresses' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">آدرس‌های ارسال</a>
+          <a href="{% url 'store:my_orders' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">سفارش‌های فروشگاه</a>
+          <a href="{% url 'website:customer_logout' %}" class="mobile-menu-link rounded-2xl px-4 py-3 bg-slate-900 text-white text-center font-bold">خروج</a>
+        {% else %}
+          <a href="{% url 'website:customer_login' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 font-bold">ورود مشتری</a>
+          <a href="{% url 'website:customer_register' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">ثبت‌نام مشتری</a>
+        {% endif %}
+      </nav>
+    </div>
+  </div>
 </header>

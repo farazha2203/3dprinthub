@@ -228,3 +228,154 @@ class OrderReviewForm(forms.ModelForm):
                 "placeholder": "تجربه خود از کیفیت ساخت، زمان تحویل، دقت قطعه و پشتیبانی را بنویسید...",
             }),
         }
+
+# BEGIN CUSTOMER PORTAL PHASE 3 FORMS
+import re
+
+from store.models import StoreAddress
+
+
+IRAN_PROVINCES = [
+    ("", "انتخاب استان"),
+    ("آذربایجان شرقی", "آذربایجان شرقی"), ("آذربایجان غربی", "آذربایجان غربی"),
+    ("اردبیل", "اردبیل"), ("اصفهان", "اصفهان"), ("البرز", "البرز"),
+    ("ایلام", "ایلام"), ("بوشهر", "بوشهر"), ("تهران", "تهران"),
+    ("چهارمحال و بختیاری", "چهارمحال و بختیاری"), ("خراسان جنوبی", "خراسان جنوبی"),
+    ("خراسان رضوی", "خراسان رضوی"), ("خراسان شمالی", "خراسان شمالی"),
+    ("خوزستان", "خوزستان"), ("زنجان", "زنجان"), ("سمنان", "سمنان"),
+    ("سیستان و بلوچستان", "سیستان و بلوچستان"), ("فارس", "فارس"),
+    ("قزوین", "قزوین"), ("قم", "قم"), ("کردستان", "کردستان"),
+    ("کرمان", "کرمان"), ("کرمانشاه", "کرمانشاه"),
+    ("کهگیلویه و بویراحمد", "کهگیلویه و بویراحمد"), ("گلستان", "گلستان"),
+    ("گیلان", "گیلان"), ("لرستان", "لرستان"), ("مازندران", "مازندران"),
+    ("مرکزی", "مرکزی"), ("هرمزگان", "هرمزگان"), ("همدان", "همدان"), ("یزد", "یزد"),
+]
+
+_PERSIAN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
+
+
+def normalize_digits(value):
+    return (value or "").translate(_PERSIAN_DIGITS).strip()
+
+
+def validate_national_code_value(value):
+    value = normalize_digits(value)
+    if not value:
+        return value
+    if not re.fullmatch(r"\d{10}", value) or len(set(value)) == 1:
+        raise forms.ValidationError("کد ملی باید ۱۰ رقم معتبر باشد.")
+    check = int(value[-1])
+    remainder = sum(int(value[i]) * (10 - i) for i in range(9)) % 11
+    expected = remainder if remainder < 2 else 11 - remainder
+    if check != expected:
+        raise forms.ValidationError("کد ملی واردشده معتبر نیست.")
+    return value
+
+
+class CustomerProfileForm(forms.ModelForm):
+    email = forms.EmailField(
+        required=False,
+        label="ایمیل",
+        widget=forms.EmailInput(attrs={"class": "form-input", "placeholder": "name@example.com"}),
+    )
+
+    class Meta:
+        model = CustomerProfile
+        fields = [
+            "avatar", "first_name", "last_name", "father_name", "birth_date", "gender",
+            "phone", "email", "national_code", "landline", "occupation", "company_name",
+        ]
+        widgets = {
+            "avatar": forms.ClearableFileInput(attrs={"class": "form-input", "accept": "image/jpeg,image/png,image/webp"}),
+            "first_name": forms.TextInput(attrs={"class": "form-input", "autocomplete": "given-name"}),
+            "last_name": forms.TextInput(attrs={"class": "form-input", "autocomplete": "family-name"}),
+            "father_name": forms.TextInput(attrs={"class": "form-input"}),
+            "birth_date": forms.DateInput(attrs={"class": "form-input", "type": "date"}),
+            "gender": forms.Select(attrs={"class": "form-input"}),
+            "phone": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric", "placeholder": "09123456789"}),
+            "national_code": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric", "maxlength": "10"}),
+            "landline": forms.TextInput(attrs={"class": "form-input", "inputmode": "tel", "placeholder": "031..."}),
+            "occupation": forms.TextInput(attrs={"class": "form-input", "placeholder": "شغل یا سمت"}),
+            "company_name": forms.TextInput(attrs={"class": "form-input", "placeholder": "اختیاری"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user_id:
+            self.fields["email"].initial = self.instance.user.email
+
+    def clean_phone(self):
+        phone = normalize_digits(self.cleaned_data.get("phone"))
+        if not re.fullmatch(r"09\d{9}", phone):
+            raise forms.ValidationError("شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.")
+        duplicate = CustomerProfile.objects.filter(phone=phone).exclude(pk=self.instance.pk).exists()
+        if duplicate:
+            raise forms.ValidationError("این شماره موبایل قبلاً استفاده شده است.")
+        return phone
+
+    def clean_national_code(self):
+        return validate_national_code_value(self.cleaned_data.get("national_code"))
+
+    def clean_landline(self):
+        return normalize_digits(self.cleaned_data.get("landline"))
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if avatar and getattr(avatar, "size", 0) > 3 * 1024 * 1024:
+            raise forms.ValidationError("حجم تصویر پروفایل نباید بیشتر از ۳ مگابایت باشد.")
+        return avatar
+
+    def save(self, commit=True):
+        profile = super().save(commit=commit)
+        user = profile.user
+        user.first_name = profile.first_name
+        user.last_name = profile.last_name
+        user.username = profile.phone
+        user.email = self.cleaned_data.get("email", "")
+        user.save(update_fields=["first_name", "last_name", "username", "email"])
+        return profile
+
+
+class StoreAddressForm(forms.ModelForm):
+    class Meta:
+        model = StoreAddress
+        fields = [
+            "title", "full_name", "phone", "recipient_national_code", "province", "city",
+            "district", "address", "plaque", "unit", "postal_code", "delivery_notes", "is_default",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-input", "placeholder": "مثلاً منزل یا محل کار"}),
+            "full_name": forms.TextInput(attrs={"class": "form-input", "autocomplete": "name"}),
+            "phone": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric"}),
+            "recipient_national_code": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric", "maxlength": "10"}),
+            "province": forms.Select(choices=IRAN_PROVINCES, attrs={"class": "form-input"}),
+            "city": forms.TextInput(attrs={"class": "form-input", "autocomplete": "address-level2"}),
+            "district": forms.TextInput(attrs={"class": "form-input", "placeholder": "منطقه یا محله"}),
+            "address": forms.Textarea(attrs={"class": "form-input min-h-28", "placeholder": "خیابان، کوچه و نشانی کامل"}),
+            "plaque": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric"}),
+            "unit": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric"}),
+            "postal_code": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric", "maxlength": "10"}),
+            "delivery_notes": forms.Textarea(attrs={"class": "form-input min-h-20", "placeholder": "توضیحات لازم برای تحویل"}),
+            "is_default": forms.CheckboxInput(attrs={"class": "h-5 w-5 accent-orange-500"}),
+        }
+
+    def clean_phone(self):
+        phone = normalize_digits(self.cleaned_data.get("phone"))
+        if not re.fullmatch(r"09\d{9}", phone):
+            raise forms.ValidationError("شماره تحویل‌گیرنده باید ۱۱ رقم و با 09 شروع شود.")
+        return phone
+
+    def clean_postal_code(self):
+        value = normalize_digits(self.cleaned_data.get("postal_code"))
+        if not re.fullmatch(r"\d{10}", value):
+            raise forms.ValidationError("کد پستی باید دقیقاً ۱۰ رقم باشد.")
+        return value
+
+    def clean_recipient_national_code(self):
+        value = self.cleaned_data.get("recipient_national_code")
+        return validate_national_code_value(value) if value else ""
+# END CUSTOMER PORTAL PHASE 3 FORMS
+
+# BEGIN PHASE 4 FORM OVERRIDES
+from .forms_phase4 import CustomerProfileForm, StoreAddressForm, AppearancePreferenceForm
+# END PHASE 4 FORM OVERRIDES

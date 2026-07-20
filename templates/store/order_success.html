@@ -1,6 +1,7 @@
 {% extends "store/base.html" %}
 {% load humanize %}
 {% block title %}سفارش ثبت شد{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <section class="container mx-auto px-4 md:px-6 py-16 max-w-3xl text-center">
   <div class="store-content-card py-12"><div class="text-5xl">✓</div><h1 class="text-3xl font-black mt-5">سفارش با موفقیت ثبت شد</h1><p class="text-slate-600 mt-4">شماره سفارش: <strong>{{ order.order_number }}</strong></p><p class="mt-2">وضعیت پرداخت: {{ order.get_payment_status_display }}</p><a href="{{ order.get_absolute_url }}" class="btn-primary inline-block rounded-2xl px-6 py-3 font-black mt-7">مشاهده سفارش</a></div>

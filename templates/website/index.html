@@ -1,7 +1,7 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-customer-theme="{{ customer_theme|default:'original' }}" data-theme-prompt="{{ customer_theme_prompt|yesno:'1,0' }}" data-theme-endpoint="{{ customer_theme_endpoint }}" data-authenticated="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
 <head>
     <meta charset="UTF-8">
 

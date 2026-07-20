@@ -22,9 +22,21 @@ from .models import (
 
 @admin.register(CustomerProfile)
 class CustomerProfileAdmin(admin.ModelAdmin):
-    list_display = ["first_name", "last_name", "phone", "company_name", "created_at"]
-    search_fields = ["first_name", "last_name", "phone", "company_name", "national_code"]
-    list_filter = ["created_at"]
+    list_display = ["avatar_preview", "first_name", "last_name", "phone", "national_code", "company_name", "created_at"]
+    search_fields = ["first_name", "last_name", "father_name", "phone", "company_name", "national_code"]
+    list_filter = ["gender", "created_at"]
+    readonly_fields = ["avatar_preview", "created_at"]
+    fieldsets = (
+        ("حساب کاربری", {"fields": ("user", "avatar", "avatar_preview", "phone")}),
+        ("مشخصات هویتی", {"fields": ("first_name", "last_name", "father_name", "birth_date", "gender", "national_code")}),
+        ("اطلاعات تکمیلی", {"fields": ("landline", "occupation", "company_name", "address", "created_at")}),
+    )
+
+    @admin.display(description="تصویر")
+    def avatar_preview(self, obj):
+        if obj and obj.avatar:
+            return format_html('<img src="{}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">', obj.avatar.url)
+        return "—"
 
 @admin.register(OrderReview)
 class OrderReviewAdmin(admin.ModelAdmin):
@@ -287,3 +299,12 @@ from django.contrib import admin
 # =========================
 # =========================
 
+# BEGIN PHASE 4 SEO ADMIN
+from .models import SEOSettings
+@admin.register(SEOSettings)
+class SEOSettingsAdmin(admin.ModelAdmin):
+    fieldsets=(("تنظیمات اصلی",{"fields":("site_name","site_url","default_meta_title","default_meta_description","default_og_image")}), ("اسکیما سازمان",{"fields":("organization_name","organization_logo")}), ("موتورهای جستجو",{"fields":("google_site_verification","bing_site_verification","allow_search_indexing","twitter_card","robots_extra")}),)
+    list_display=("site_name","site_url","allow_search_indexing","updated_at")
+    def has_add_permission(self,request): return not SEOSettings.objects.exists()
+    def has_delete_permission(self,request,obj=None): return False
+# END PHASE 4 SEO ADMIN

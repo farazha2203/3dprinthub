@@ -1,6 +1,7 @@
 {% extends "store/base.html" %}
 {% load humanize %}
 {% block title %}پرداخت سفارش {{ order.order_number }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <section class="container mx-auto px-4 md:px-6 py-10 max-w-4xl">
   <div class="store-content-card">

@@ -1,6 +1,7 @@
 {% extends "store/base.html" %}
 {% load humanize %}
 {% block title %}سفارش‌های فروشگاه{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <section class="container mx-auto px-4 md:px-6 py-10"><h1 class="text-3xl font-black mb-7">سفارش‌های فروشگاه</h1><div class="space-y-4">{% for order in orders %}<a href="{{ order.get_absolute_url }}" class="store-content-card flex flex-wrap justify-between gap-4 items-center"><div><div class="font-black text-lg">{{ order.order_number }}</div><div class="text-sm text-slate-500 mt-1">{{ order.created_at|date:'Y/m/d H:i' }} • {{ order.items.count }} ردیف</div></div><div class="text-left"><div class="font-black">{{ order.total_amount|intcomma }} تومان</div><div class="text-sm text-orange-600 mt-1">{{ order.get_status_display }} / {{ order.get_payment_status_display }}</div></div></a>{% empty %}<div class="store-content-card text-center">هنوز سفارش فروشگاهی ثبت نکرده‌اید.</div>{% endfor %}</div></section>
 {% endblock %}

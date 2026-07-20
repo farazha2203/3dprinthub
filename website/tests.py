@@ -227,7 +227,7 @@ class CustomerDashboardTests(TestCase, WebsiteTestHelpers):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/customer/dashboard.html")
-        self.assertContains(response, "پنل مشتری")
+        self.assertContains(response, "داشبورد مشتری")
 
     def test_dashboard_shows_customer_orders(self):
         user = self.create_user(phone="09130000002")
@@ -274,7 +274,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/customer/profile.html")
-        self.assertContains(response, "مشخصات مشتری")
+        self.assertContains(response, "مشخصات مشتری و حساب")
 
     def test_customer_can_update_profile(self):
         user = self.create_user(phone="09130000006")
@@ -285,8 +285,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
             "last_name": "رضایی",
             "phone": "09130000066",
             "company_name": "شرکت تست",
-            "national_code": "1234567890",
-            "address": "تهران، آدرس تست",
+            "national_code": "",
         }
 
         response = self.client.post(reverse("website:customer_profile"), data)
@@ -300,7 +299,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
         self.assertEqual(user.first_name, "نیما")
         self.assertEqual(user.last_name, "رضایی")
         self.assertEqual(profile.company_name, "شرکت تست")
-        self.assertEqual(profile.address, "تهران، آدرس تست")
+        self.assertEqual(profile.phone, "09130000066")
 
 
 class CustomerOrderDetailTests(TestCase, WebsiteTestHelpers):

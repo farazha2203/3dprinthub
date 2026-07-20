@@ -1,7 +1,7 @@
 {% extends "store/base.html" %}
 {% load humanize %}
 
-{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endblock %}
+{% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}{% endblock %}
 
 {% block title %}{{ product.seo_title }}{% endblock %}
 {% block meta_description %}{{ product.seo_description }}{% endblock %}
@@ -25,6 +25,12 @@
 }
 </script>
 {% endblock %}
+
+{% block robots %}{% if product.robots_index %}index{% else %}noindex{% endif %},{% if product.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.og_title|default:product.seo_title }}{% endblock %}
+{% block og_description %}{{ product.og_description|default:product.seo_description }}{% endblock %}
+{% block og_image %}{% if product.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ product.og_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="container mx-auto px-4 md:px-6 py-8 md:py-12">

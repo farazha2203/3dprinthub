@@ -167,3 +167,99 @@ class ProductReviewForm(forms.ModelForm):
             "body": forms.Textarea(attrs={"class": "form-input min-h-32"}),
         }
 # END STORE COMMERCE PHASE 2
+
+# BEGIN CUSTOMER PORTAL PHASE 3 CHECKOUT FORM
+from website.forms import IRAN_PROVINCES, normalize_digits
+
+
+class CheckoutForm(forms.ModelForm):
+    saved_address = forms.ModelChoiceField(
+        required=False,
+        queryset=StoreAddress.objects.none(),
+        label="آدرس ذخیره‌شده",
+        empty_label="ورود آدرس جدید",
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    payment_method = forms.ChoiceField(
+        choices=[("bank_transfer", "کارت به کارت / واریز بانکی")],
+        widget=forms.RadioSelect,
+        label="روش پرداخت",
+    )
+    save_address = forms.BooleanField(required=False, initial=True, label="ذخیره این آدرس برای خریدهای بعدی")
+
+    class Meta:
+        model = StoreOrder
+        fields = [
+            "shipping_method", "full_name", "phone", "email", "province", "city",
+            "address", "postal_code", "customer_note",
+        ]
+        widgets = {
+            "shipping_method": forms.Select(attrs={"class": "form-input"}),
+            "full_name": forms.TextInput(attrs={"class": "form-input"}),
+            "phone": forms.TextInput(attrs={"class": "form-input", "placeholder": "09123456789", "inputmode": "numeric"}),
+            "email": forms.EmailInput(attrs={"class": "form-input"}),
+            "province": forms.Select(choices=IRAN_PROVINCES, attrs={"class": "form-input"}),
+            "city": forms.TextInput(attrs={"class": "form-input"}),
+            "address": forms.Textarea(attrs={"class": "form-input min-h-28"}),
+            "postal_code": forms.TextInput(attrs={"class": "form-input", "inputmode": "numeric", "maxlength": "10"}),
+            "customer_note": forms.Textarea(attrs={"class": "form-input min-h-24"}),
+        }
+
+    def __init__(self, *args, user=None, subtotal=0, **kwargs):
+        self.user = user
+        self.subtotal = subtotal
+        super().__init__(*args, **kwargs)
+        self.fields["shipping_method"].queryset = ShippingMethod.objects.filter(is_active=True)
+        if user and user.is_authenticated:
+            self.fields["saved_address"].queryset = StoreAddress.objects.filter(user=user)
+            if self.is_bound and self.data.get("saved_address"):
+                for field_name in ["full_name", "phone", "province", "city", "address", "postal_code"]:
+                    self.fields[field_name].required = False
+            if not self.is_bound:
+                saved = StoreAddress.objects.filter(user=user, is_default=True).first()
+                profile = getattr(user, "customer_profile", None)
+                if saved:
+                    self.fields["saved_address"].initial = saved
+                    self._set_address_initial(saved)
+                else:
+                    self.fields["full_name"].initial = user.get_full_name().strip()
+                    self.fields["email"].initial = user.email
+                    if profile:
+                        self.fields["full_name"].initial = f"{profile.first_name} {profile.last_name}".strip()
+                        self.fields["phone"].initial = profile.phone
+
+    def _set_address_initial(self, saved):
+        for field in ["full_name", "phone", "province", "city", "address", "postal_code"]:
+            self.fields[field].initial = getattr(saved, field)
+
+    def clean_phone(self):
+        value = normalize_digits(self.cleaned_data.get("phone"))
+        if len(value) != 11 or not value.startswith("09"):
+            raise forms.ValidationError("شماره تماس معتبر نیست.")
+        return value
+
+    def clean_postal_code(self):
+        value = normalize_digits(self.cleaned_data.get("postal_code"))
+        if len(value) != 10 or not value.isdigit():
+            raise forms.ValidationError("کد پستی باید دقیقاً ۱۰ رقم باشد.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        saved = cleaned.get("saved_address")
+        if saved and saved.user_id == getattr(self.user, "id", None):
+            cleaned["full_name"] = saved.full_name
+            cleaned["phone"] = saved.phone
+            cleaned["province"] = saved.province
+            cleaned["city"] = saved.city
+            parts = [saved.address]
+            if saved.district:
+                parts.append(f"محله {saved.district}")
+            if saved.plaque:
+                parts.append(f"پلاک {saved.plaque}")
+            if saved.unit:
+                parts.append(f"واحد {saved.unit}")
+            cleaned["address"] = "، ".join(parts)
+            cleaned["postal_code"] = saved.postal_code
+        return cleaned
+# END CUSTOMER PORTAL PHASE 3 CHECKOUT FORM

@@ -1,0 +1,5 @@
+(function(){"use strict";
+function fill(citySelect,cities,selected){citySelect.innerHTML='<option value="">انتخاب شهر</option>';cities.forEach(function(city){var o=document.createElement('option');o.value=city;o.textContent=city;if(city===selected)o.selected=true;citySelect.appendChild(o);});citySelect.disabled=!cities.length;}
+function init(){var province=document.querySelector('[data-iran-province]'),city=document.querySelector('[data-iran-city]');if(!province||!city)return;var endpoint=city.dataset.cityEndpoint||'/customer/locations/cities/';var initial=city.value;function load(selected){if(!province.value){fill(city,[],"");return;}city.disabled=true;fetch(endpoint+'?province='+encodeURIComponent(province.value),{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(data){fill(city,data.cities||[],selected||"");}).catch(function(){city.disabled=false;});}province.addEventListener('change',function(){load("");});load(initial);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();

@@ -1,5 +1,5 @@
 {% extends "store/base.html" %}
-{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ page.get_absolute_url }}{% endblock %}
+{% block canonical %}{% if page.canonical_url %}{{ page.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ page.get_absolute_url }}{% endif %}{% endblock %}
 
 {% block title %}{{ page.meta_title|default:page.title }}{% endblock %}
 {% block meta_description %}{{ page.meta_description|default:page.short_description }}{% endblock %}
@@ -16,6 +16,11 @@
 }
 </script>
 {% endblock %}
+
+{% block robots %}{% if page.robots_index %}index{% else %}noindex{% endif %},{% if page.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}
+{% block og_title %}{{ page.og_title|default:page.meta_title|default:page.title }}{% endblock %}
+{% block og_description %}{{ page.og_description|default:page.meta_description|default:page.short_description }}{% endblock %}
+{% block og_image %}{% if page.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}{% elif page.hero_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.hero_image.url }}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="store-service-hero">
