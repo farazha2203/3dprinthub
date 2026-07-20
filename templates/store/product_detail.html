@@ -1,0 +1,172 @@
+{% extends "store/base.html" %}
+{% load humanize %}
+
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endblock %}
+
+{% block title %}{{ product.seo_title }}{% endblock %}
+{% block meta_description %}{{ product.seo_description }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.title|escapejs }}",
+  "sku": "{{ product.sku|escapejs }}",
+  "description": "{{ product.short_description|escapejs }}",
+  "image": ["{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}"],
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "IRR",
+    "lowPrice": "{% if product.min_price %}{{ product.min_price }}0{% else %}0{% endif %}",
+    "offerCount": "{{ variants|length }}",
+    "availability": "https://schema.org/InStock"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="container mx-auto px-4 md:px-6 py-8 md:py-12">
+    <nav class="text-sm text-slate-500 mb-6">
+        <a href="{% url 'store:product_list' %}">فروشگاه</a>
+        <span class="px-2">/</span>
+        <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+        <span class="px-2">/</span>
+        <span>{{ product.title }}</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        <div>
+            <div class="store-main-image">
+                <img src="{{ product.main_image.url }}" alt="{{ product.title }}" width="1000" height="750" class="w-full h-full object-cover">
+            </div>
+            {% if product.images.all %}
+                <div class="grid grid-cols-4 gap-3 mt-3">
+                    {% for image in product.images.all %}
+                        <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" loading="lazy" class="rounded-xl aspect-square object-cover border border-slate-200">
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="store-product-panel">
+            <div class="text-orange-500 font-bold">{{ product.category.name }}</div>
+            <h1 class="text-3xl md:text-4xl font-black mt-3 leading-tight">{{ product.title }}</h1>
+            <p class="text-slate-600 leading-8 mt-5">{{ product.short_description }}</p>
+
+            {% if product.compatibilities.all %}
+                <div class="store-compatibility mt-6">
+                    <div class="font-black mb-3">سازگاری محصول</div>
+                    <div class="flex flex-wrap gap-2">
+                        {% for item in product.compatibilities.all %}
+                            <span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mt-7">
+                <label for="variant-select" class="block font-black mb-2">انتخاب متریال و کیفیت چاپ</label>
+                <select id="variant-select" class="form-input">
+                    <option value="">انتخاب کنید</option>
+                    {% for variant in variants %}
+                        {% with price=variant.price_breakdown %}
+                            <option
+                                value="{{ variant.id }}"
+                                data-material="{{ variant.material.name }}"
+                                data-quality="{{ variant.quality.name }}"
+                                data-material-cost="{{ price.material_cost }}"
+                                data-machine-cost="{{ price.machine_cost }}"
+                                data-labor-cost="{{ price.labor_cost }}"
+                                data-post-fee="{{ price.post_processing_fee }}"
+                                data-fixed-fee="{{ price.fixed_fee }}"
+                                data-total="{{ price.unit_price }}"
+                                data-print-time="{{ variant.print_time_minutes }}"
+                                data-weight="{{ variant.material_weight_grams }}"
+                            >
+                                {{ variant.material.name }} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان
+                            </option>
+                        {% endwith %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="price-breakdown" class="store-price-breakdown hidden mt-5">
+                <div><span>هزینه متریال</span><strong id="price-material">—</strong></div>
+                <div><span>هزینه زمان دستگاه</span><strong id="price-machine">—</strong></div>
+                <div><span>دستمزد ساخت</span><strong id="price-labor">—</strong></div>
+                <div><span>پرداخت‌کاری و هزینه ثابت</span><strong id="price-extra">—</strong></div>
+                <div class="total"><span>قیمت واحد</span><strong id="price-total">—</strong></div>
+                <p id="variant-meta" class="text-xs text-slate-500 mt-3"></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button type="button" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>
+                    افزودن به سفارش
+                </button>
+                <form action="{% url 'store:toggle_like' product.slug %}" method="post">
+                    {% csrf_token %}
+                    <button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">
+                        {% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}
+                    </button>
+                </form>
+            </div>
+            <p class="text-xs text-slate-500 leading-6 mt-3">در این مرحله دکمه سفارش به سبد خرید فاز بعد متصل می‌شود. قیمت نمایش‌داده‌شده از سرور محاسبه شده است.</p>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6 mt-10">
+        <section class="lg:col-span-2 store-content-card">
+            <h2 class="text-2xl font-black">توضیحات و مشخصات محصول</h2>
+            <div class="prose-content mt-5">{{ product.description|linebreaks }}</div>
+            {% if product.technical_notes %}<div class="mt-6"><h3 class="font-black text-lg">نکات فنی</h3><div class="prose-content mt-2">{{ product.technical_notes|linebreaks }}</div></div>{% endif %}
+            {% if product.installation_guide %}<div class="mt-6"><h3 class="font-black text-lg">راهنمای نصب</h3><div class="prose-content mt-2">{{ product.installation_guide|linebreaks }}</div></div>{% endif %}
+        </section>
+        <aside class="store-content-card">
+            <h2 class="text-xl font-black">اطلاعات سریع</h2>
+            <dl class="store-spec-list mt-4">
+                <div><dt>کد محصول</dt><dd>{{ product.sku }}</dd></div>
+                <div><dt>ابعاد</dt><dd>{{ product.dimensions|default:'طبق مشخصات سفارش' }}</dd></div>
+                <div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div>
+                <div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div>
+            </dl>
+        </aside>
+    </div>
+
+    <section class="store-content-card mt-8">
+        <h2 class="text-2xl font-black">پرسش و دیدگاه کاربران</h2>
+        {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'store:add_comment' product.slug %}" class="mt-5">
+                {% csrf_token %}
+                {{ comment_form.body }}
+                <button class="btn-primary rounded-2xl px-6 py-3 font-black mt-3" type="submit">ثبت دیدگاه</button>
+            </form>
+        {% else %}
+            <p class="mt-4 text-slate-600">برای ثبت دیدگاه ابتدا <a class="text-orange-500 font-bold" href="{% url 'website:customer_login' %}">وارد حساب شوید</a>.</p>
+        {% endif %}
+        <div class="space-y-4 mt-7">
+            {% for comment in comments %}
+                <article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="font-black">{{ comment.user.get_full_name|default:comment.user.username }}</div>
+                    <p class="text-slate-600 leading-7 mt-2">{{ comment.body }}</p>
+                </article>
+            {% empty %}<p class="text-slate-500">هنوز دیدگاهی ثبت نشده است.</p>{% endfor %}
+        </div>
+    </section>
+
+    {% if related_products %}
+        <section class="mt-10">
+            <h2 class="text-2xl font-black mb-5">محصولات مرتبط</h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {% for item in related_products %}
+                    <a href="{{ item.get_absolute_url }}" class="store-related-card">
+                        <img src="{{ item.main_image.url }}" alt="{{ item.title }}" loading="lazy">
+                        <div class="p-4 font-black">{{ item.title }}</div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

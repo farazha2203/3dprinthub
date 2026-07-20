@@ -51,3 +51,10 @@ tmp/
 *.pem
 *.key
 *.crt
+file_structure.txt
+_local_backups/
+apply_foundation.py
+patches/
+requirements.bad.txt~
+3dprinthub_revenue_foundation/
+3dprinthub_brand_preview_patch/

@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}فروشگاه قطعات آماده چاپ | 3DprintHub{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}سفارش قطعات آماده چاپ خودرو، موتورسیکلت، لوازم خانگی، صنعتی، ماکت و محصولات شخصی‌سازی‌شده.{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'store/css/store.css' %}">
+    <link rel="stylesheet" href="{% static 'css/brand-theme-preview.css' %}">
+    {% block structured_data %}{% endblock %}
+</head>
+<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">
+    {% include "website/partials/header.html" %}
+
+    {% if messages %}
+        <div class="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-xl space-y-3">
+            {% for message in messages %}
+                <div class="rounded-2xl px-5 py-4 text-white shadow-2xl {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="pt-28 md:pt-32">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'store/js/store.js' %}"></script>
+    <script src="{% static 'js/theme-preview.js' %}"></script>
+</body>
+</html>

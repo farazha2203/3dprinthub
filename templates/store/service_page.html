@@ -1,0 +1,49 @@
+{% extends "store/base.html" %}
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ page.get_absolute_url }}{% endblock %}
+
+{% block title %}{{ page.meta_title|default:page.title }}{% endblock %}
+{% block meta_description %}{{ page.meta_description|default:page.short_description }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "{{ page.title|escapejs }}",
+  "description": "{{ page.short_description|escapejs }}",
+  "provider": {"@type": "Organization", "name": "3DprintHub"},
+  "areaServed": "IR"
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="store-service-hero">
+    <div class="container mx-auto px-4 md:px-6 py-14 md:py-20 grid lg:grid-cols-2 gap-10 items-center">
+        <div>
+            <span class="store-eyebrow">خدمات تخصصی 3DprintHub</span>
+            <h1 class="text-3xl md:text-5xl font-black leading-tight mt-4">{{ page.title }}</h1>
+            <p class="text-slate-600 leading-8 mt-5">{{ page.short_description }}</p>
+            <div class="flex flex-wrap gap-3 mt-7">
+                <a href="{% url 'store:product_request' %}" class="btn-primary rounded-2xl px-6 py-3 font-black">ثبت درخواست پروژه</a>
+                <a href="{% url 'store:product_list' %}" class="rounded-2xl bg-white border border-slate-300 px-6 py-3 font-bold">مشاهده محصولات آماده</a>
+            </div>
+        </div>
+        {% if page.hero_image %}<img src="{{ page.hero_image.url }}" alt="{{ page.title }}" class="rounded-[2rem] shadow-2xl w-full">{% endif %}
+    </div>
+</section>
+<section class="container mx-auto px-4 md:px-6 py-10 md:py-14">
+    <article class="store-content-card prose-content">{{ page.content|linebreaks }}</article>
+    {% if related_products %}
+        <h2 class="text-2xl font-black mt-10 mb-5">محصولات مرتبط با این خدمت</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for product in related_products %}
+                <a href="{{ product.get_absolute_url }}" class="store-product-card overflow-hidden">
+                    <img src="{{ product.main_image.url }}" alt="{{ product.title }}" class="aspect-[4/3] object-cover w-full">
+                    <div class="p-5 font-black">{{ product.title }}</div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

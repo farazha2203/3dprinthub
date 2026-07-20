@@ -7,20 +7,13 @@
 
             <!-- Logo / Brand -->
             <a href="/#home" data-scroll-to="home" class="flex items-center gap-3 shrink-0">
-
-                {% if settings and settings.logo %}
-                    <img 
-                        src="{{ settings.logo.url }}" 
-                        alt="3DprintHub.ir"
-                        class="h-12 w-auto rounded-2xl object-contain bg-[#111111] px-2 py-1 shadow"
-                    >
-                {% else %}
-                    <img 
-                        src="{% static 'img/brand/logo-header.png' %}" 
-                        alt="3DprintHub.ir"
-                        class="h-12 w-auto rounded-2xl object-contain bg-[#111111] px-2 py-1 shadow"
-                    >
-                {% endif %}
+                <img
+                    src="{% static 'img/brand/logo-header.png' %}"
+                    alt="3DprintHub.ir | طراحی و چاپ سه‌بعدی"
+                    class="h-12 md:h-14 w-auto object-contain"
+                    width="360"
+                    height="96"
+                >
 
                 <div class="hidden sm:block">
                     <div class="font-black text-lg leading-6 text-slate-950">
@@ -53,6 +46,10 @@
 
                 <a href="/#products" data-scroll-to="products" class="hover:text-orange-500 transition">
                     محصولات
+                </a>
+
+                <a href="{% url 'store:product_list' %}" class="hover:text-orange-500 transition font-bold">
+                    فروشگاه قطعات
                 </a>
 
                 <a href="/#order" data-scroll-to="order" class="hover:text-orange-500 transition">
@@ -180,6 +177,13 @@
                     class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
                 >
                     محصولات
+                </a>
+
+                <a
+                    href="{% url 'store:product_list' %}"
+                    class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 hover:text-orange-500 transition font-bold"
+                >
+                    فروشگاه قطعات آماده چاپ
                 </a>
 
                 <a 

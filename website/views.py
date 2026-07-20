@@ -26,6 +26,7 @@ from .models import (
     OrderReview,
     OrderImage,
     Quote,
+    Payment,
 )
 
 def home_view(request):
@@ -40,7 +41,7 @@ def home_view(request):
             if request.user.is_authenticated:
                 order.customer = request.user
 
-            order = form.save()
+            order.save()
 
             images = request.FILES.getlist("images")
             for image in images:

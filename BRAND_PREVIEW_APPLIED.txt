@@ -1,0 +1,5 @@
+3DprintHub brand preview patch applied successfully.
+Backup: D:\projects\3DprintHub\_local_backups\before-brand-preview-20260720-182713
+Default design: original committed design.
+Local preview: http://127.0.0.1:8000/?theme-preview=1
+Store preview: http://127.0.0.1:8000/store/?theme-preview=1

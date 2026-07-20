@@ -1,25 +1,33 @@
 from pathlib import Path
 import os
-import sys
+
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+DEBUG = os.getenv("DJANGO_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "unsafe-development-key-change-me"
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured in the environment.")
 
 
-SECRET_KEY = "dev-secret-key-change-in-production"
+def csv_env(name, default=""):
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
-DEBUG = False
 
-ALLOWED_HOSTS = [
-    "3dprinthub.ir",
-    "www.3dprinthub.ir",
-    "127.0.0.1",
-    "localhost",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://3dprinthub.ir",
-    "https://www.3dprinthub.ir",
-]
+ALLOWED_HOSTS = csv_env(
+    "DJANGO_ALLOWED_HOSTS",
+    "3dprinthub.ir,www.3dprinthub.ir,127.0.0.1,localhost",
+)
+CSRF_TRUSTED_ORIGINS = csv_env(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    "https://3dprinthub.ir,https://www.3dprinthub.ir",
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -29,8 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
-
+    "django.contrib.sitemaps",
     "website",
+    "store.apps.StoreConfig",
 ]
 
 MIDDLEWARE = [
@@ -48,9 +57,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            BASE_DIR / "templates",
-        ],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -65,62 +72,55 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-#DATABASES = {
- #   "default": {
-  #      "ENGINE": "django.db.backends.sqlite3",
-   #     "NAME": BASE_DIR / "db.sqlite3",
-   # }
-#}
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "sfkilvrs_EmiAdmin_3dprinthub",
-        "USER": "sfkilvrs_EmiAdmin",
-        "PASSWORD": "115599AS@@papari",
-        "HOST": "localhost",
-        "PORT": "3306",
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+DB_NAME = os.getenv("DB_NAME", "").strip()
+if DB_NAME:
+    DATABASES = {
+        "default": {
+            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.mysql"),
+            "NAME": DB_NAME,
+            "USER": os.getenv("DB_USER", ""),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "3306"),
+            "OPTIONS": {"charset": "utf8mb4"},
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 LANGUAGE_CODE = "fa-ir"
-
 TIME_ZONE = "Asia/Tehran"
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATIC_ROOT = "/home/sfkilvrs/public_html/static"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+STATIC_ROOT = Path(os.getenv("STATIC_ROOT", "/home/sfkilvrs/public_html/static"))
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/home/sfkilvrs/public_html/media"
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", "/home/sfkilvrs/public_html/media"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 LOGIN_URL = "/customer/login/"
 LOGIN_REDIRECT_URL = "/customer/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
+
+if not DEBUG:
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+    X_FRAME_OPTIONS = "DENY"
