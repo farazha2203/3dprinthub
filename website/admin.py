@@ -303,8 +303,30 @@ from django.contrib import admin
 from .models import SEOSettings
 @admin.register(SEOSettings)
 class SEOSettingsAdmin(admin.ModelAdmin):
-    fieldsets=(("تنظیمات اصلی",{"fields":("site_name","site_url","default_meta_title","default_meta_description","default_og_image")}), ("اسکیما سازمان",{"fields":("organization_name","organization_logo")}), ("موتورهای جستجو",{"fields":("google_site_verification","bing_site_verification","allow_search_indexing","twitter_card","robots_extra")}),)
+    fieldsets=(("تنظیمات اصلی",{"fields":("site_name","site_url","default_meta_title","default_meta_description","default_og_image")}), ("اسکیما سازمان و فروشنده",{"fields":("organization_name","organization_logo","organization_phone","organization_email","street_address","address_locality","address_region","organization_postal_code","country_code","same_as","merchant_return_days","shipping_rate","handling_min_days","handling_max_days","transit_min_days","transit_max_days")}), ("موتورهای جستجو",{"fields":("google_site_verification","bing_site_verification","allow_search_indexing","twitter_card","robots_extra")}),)
     list_display=("site_name","site_url","allow_search_indexing","updated_at")
     def has_add_permission(self,request): return not SEOSettings.objects.exists()
     def has_delete_permission(self,request,obj=None): return False
 # END PHASE 4 SEO ADMIN
+
+# BEGIN PHASE 5 LOCATION ADMIN
+from .models import IranProvince, IranCounty, IranCity
+
+@admin.register(IranProvince)
+class IranProvinceAdmin(admin.ModelAdmin):
+    list_display = ("name", "code", "is_active", "sort_order")
+    list_editable = ("is_active", "sort_order")
+    search_fields = ("name", "code")
+
+@admin.register(IranCounty)
+class IranCountyAdmin(admin.ModelAdmin):
+    list_display = ("name", "province", "code", "is_active")
+    list_filter = ("province", "is_active")
+    search_fields = ("name", "province__name", "code")
+
+@admin.register(IranCity)
+class IranCityAdmin(admin.ModelAdmin):
+    list_display = ("name", "county", "province", "district_name", "is_active")
+    list_filter = ("province", "county", "is_active")
+    search_fields = ("name", "county__name", "province__name", "division_code")
+# END PHASE 5 LOCATION ADMIN

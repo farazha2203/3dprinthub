@@ -60,6 +60,7 @@ class CustomerPortalPhase3Tests(TestCase):
             "phone": "09120000000",
             "recipient_national_code": "0084575948",
             "province": "اصفهان",
+            "county": "اصفهان",
             "city": "اصفهان",
             "district": "مرکز",
             "address": "خیابان تست",

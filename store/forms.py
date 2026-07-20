@@ -263,3 +263,153 @@ class CheckoutForm(forms.ModelForm):
             cleaned["postal_code"] = saved.postal_code
         return cleaned
 # END CUSTOMER PORTAL PHASE 3 CHECKOUT FORM
+
+# BEGIN STORE OPERATIONS PHASE 6 FORMS
+from .models import ReturnRequest
+from website.iran_locations import IRAN_LOCATIONS
+from website.models import IranCity, IranCounty, IranProvince
+
+
+class CheckoutOperationsForm(forms.Form):
+    saved_address = forms.ModelChoiceField(
+        required=False,
+        queryset=StoreAddress.objects.none(),
+        label="آدرس ذخیره‌شده",
+        empty_label="ورود آدرس جدید",
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    shipping_method = forms.ModelChoiceField(
+        queryset=ShippingMethod.objects.none(),
+        label="روش ارسال",
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    full_name = forms.CharField(label="نام تحویل‌گیرنده", max_length=150, widget=forms.TextInput(attrs={"class":"form-input"}))
+    phone = forms.CharField(label="شماره تماس", max_length=20, widget=forms.TextInput(attrs={"class":"form-input","inputmode":"numeric","placeholder":"09123456789"}))
+    email = forms.EmailField(required=False, label="ایمیل", widget=forms.EmailInput(attrs={"class":"form-input"}))
+    province = forms.ChoiceField(required=False, label="استان", widget=forms.Select(attrs={"class":"form-input","data-iran-province":"1"}))
+    county = forms.ChoiceField(required=False, label="شهرستان", widget=forms.Select(attrs={"class":"form-input","data-iran-county":"1","data-county-endpoint":"/customer/locations/counties/"}))
+    city = forms.ChoiceField(required=False, label="شهر", widget=forms.Select(attrs={"class":"form-input","data-iran-city":"1","data-city-endpoint":"/customer/locations/cities-v2/"}))
+    address = forms.CharField(required=False, label="نشانی کامل", widget=forms.Textarea(attrs={"class":"form-input min-h-28"}))
+    postal_code = forms.CharField(required=False, label="کد پستی", max_length=10, widget=forms.TextInput(attrs={"class":"form-input","inputmode":"numeric","maxlength":"10"}))
+    customer_note = forms.CharField(required=False, label="توضیحات سفارش", widget=forms.Textarea(attrs={"class":"form-input min-h-24"}))
+    coupon_code = forms.CharField(required=False, label="کد تخفیف", max_length=50, widget=forms.TextInput(attrs={"class":"form-input","placeholder":"در صورت داشتن کد وارد کنید","autocomplete":"off"}))
+    payment_method = forms.ChoiceField(choices=[("bank_transfer", "کارت به کارت / واریز بانکی")], widget=forms.RadioSelect, label="روش پرداخت")
+    save_address = forms.BooleanField(required=False, initial=True, label="ذخیره این آدرس برای خریدهای بعدی")
+
+    def __init__(self, *args, user=None, subtotal=0, **kwargs):
+        self.user = user
+        self.subtotal = subtotal
+        super().__init__(*args, **kwargs)
+        self.fields["shipping_method"].queryset = ShippingMethod.objects.filter(is_active=True)
+        if user and user.is_authenticated:
+            self.fields["saved_address"].queryset = StoreAddress.objects.filter(user=user)
+
+        saved = None
+        if user and user.is_authenticated:
+            raw_saved = self.data.get("saved_address") if self.is_bound else None
+            if raw_saved:
+                saved = StoreAddress.objects.filter(user=user, pk=raw_saved).first()
+            elif not self.is_bound:
+                saved = StoreAddress.objects.filter(user=user, is_default=True).first()
+                if saved:
+                    self.fields["saved_address"].initial = saved
+
+        province = (self.data.get("province") if self.is_bound else getattr(saved, "province", "")) or ""
+        county = (self.data.get("county") if self.is_bound else getattr(saved, "county", "")) or ""
+        city = (self.data.get("city") if self.is_bound else getattr(saved, "city", "")) or ""
+        provinces = list(IranProvince.objects.filter(is_active=True).values_list("name", flat=True)) or list(IRAN_LOCATIONS.keys())
+        self.fields["province"].choices = [("", "انتخاب استان")] + [(x, x) for x in sorted(set(provinces))]
+        counties = list(IranCounty.objects.filter(province__name=province, is_active=True).values_list("name", flat=True)) if province else []
+        if province and not counties:
+            counties = IRAN_LOCATIONS.get(province, [])
+        self.fields["county"].choices = [("", "ابتدا استان را انتخاب کنید" if not province else "انتخاب شهرستان")] + [(x, x) for x in sorted(set(counties))]
+        cities = list(IranCity.objects.filter(province__name=province, county__name=county, is_active=True).values_list("name", flat=True)) if province and county else []
+        if province and county and not cities and county in IRAN_LOCATIONS.get(province, []):
+            cities = [county]
+        self.fields["city"].choices = [("", "ابتدا شهرستان را انتخاب کنید" if not county else "انتخاب شهر")] + [(x, x) for x in sorted(set(cities))]
+        for name, selected in (("province", province), ("county", county), ("city", city)):
+            if selected and selected not in dict(self.fields[name].choices):
+                self.fields[name].choices.append((selected, selected))
+
+        if saved and not self.is_bound:
+            for name in ("full_name", "phone", "province", "county", "city", "address", "postal_code"):
+                self.fields[name].initial = getattr(saved, name, "")
+        elif user and user.is_authenticated and not self.is_bound:
+            profile = getattr(user, "customer_profile", None)
+            self.fields["full_name"].initial = user.get_full_name().strip()
+            self.fields["email"].initial = user.email
+            if profile:
+                self.fields["full_name"].initial = f"{profile.first_name} {profile.last_name}".strip()
+                self.fields["phone"].initial = profile.phone
+
+    def clean_phone(self):
+        value = normalize_digits(self.cleaned_data.get("phone", ""))
+        if len(value) != 11 or not value.startswith("09"):
+            raise forms.ValidationError("شماره موبایل معتبر نیست.")
+        return value
+
+    def clean_postal_code(self):
+        value = normalize_digits(self.cleaned_data.get("postal_code", ""))
+        if self.cleaned_data.get("saved_address"):
+            return value
+        if len(value) != 10 or not value.isdigit() or value.startswith("0"):
+            raise forms.ValidationError("کد پستی باید ۱۰ رقم و بدون صفر ابتدایی باشد.")
+        return value
+
+    def clean_coupon_code(self):
+        return (self.cleaned_data.get("coupon_code") or "").strip().upper()
+
+    def clean(self):
+        cleaned = super().clean()
+        saved = cleaned.get("saved_address")
+        if saved:
+            if saved.user_id != getattr(self.user, "id", None):
+                raise forms.ValidationError("آدرس انتخاب‌شده متعلق به این حساب نیست.")
+            return cleaned
+        province, county, city = cleaned.get("province"), cleaned.get("county"), cleaned.get("city")
+        if province and city and not county:
+            if IranProvince.objects.exists():
+                matches = list(IranCity.objects.filter(province__name=province, name=city, is_active=True).select_related("county")[:2])
+                if len(matches) == 1:
+                    county = matches[0].county.name
+                    cleaned["county"] = county
+            elif province in IRAN_LOCATIONS and city in IRAN_LOCATIONS.get(province, []):
+                county = city
+                cleaned["county"] = county
+        required = ("full_name", "phone", "province", "county", "city", "address", "postal_code")
+        for name in required:
+            if not cleaned.get(name):
+                self.add_error(name, "این فیلد الزامی است.")
+        if IranProvince.objects.exists() and province and county and city:
+            province_obj = IranProvince.objects.filter(name=province, is_active=True).first()
+            county_obj = IranCounty.objects.filter(province=province_obj, name=county, is_active=True).first() if province_obj else None
+            city_ok = IranCity.objects.filter(province=province_obj, county=county_obj, name=city, is_active=True).exists() if county_obj else False
+            if not province_obj:
+                self.add_error("province", "استان انتخاب‌شده معتبر نیست.")
+            elif not county_obj:
+                self.add_error("county", "شهرستان انتخاب‌شده مربوط به این استان نیست.")
+            elif not city_ok:
+                self.add_error("city", "شهر انتخاب‌شده مربوط به این شهرستان نیست.")
+        return cleaned
+
+
+CheckoutForm = CheckoutOperationsForm
+
+
+class ReturnRequestForm(forms.ModelForm):
+    class Meta:
+        model = ReturnRequest
+        fields = ["item", "reason", "description", "image"]
+        widgets = {
+            "item": forms.Select(attrs={"class":"form-input"}),
+            "reason": forms.Select(attrs={"class":"form-input"}),
+            "description": forms.Textarea(attrs={"class":"form-input min-h-36","placeholder":"شرح دقیق مشکل و شرایط کالا را بنویسید."}),
+            "image": forms.ClearableFileInput(attrs={"class":"form-input","accept":"image/jpeg,image/png,image/webp"}),
+        }
+
+    def __init__(self, *args, order=None, **kwargs):
+        self.order = order
+        super().__init__(*args, **kwargs)
+        self.fields["item"].queryset = order.items.all() if order else StoreOrder.objects.none()
+        self.fields["item"].required = False
+# END STORE OPERATIONS PHASE 6 FORMS

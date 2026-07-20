@@ -642,6 +642,20 @@ class SEOSettings(models.Model):
     allow_search_indexing = models.BooleanField(default=True, verbose_name="اجازه ایندکس سایت")
     twitter_card = models.CharField(max_length=30, default="summary_large_image", choices=[("summary", "Summary"), ("summary_large_image", "Summary Large Image")], verbose_name="نوع Twitter Card")
     robots_extra = models.TextField(blank=True, verbose_name="دستورات اضافه robots.txt")
+    organization_phone = models.CharField(max_length=30, blank=True, verbose_name="تلفن سازمان")
+    organization_email = models.EmailField(blank=True, verbose_name="ایمیل سازمان")
+    street_address = models.CharField(max_length=255, blank=True, verbose_name="نشانی سازمان")
+    address_locality = models.CharField(max_length=100, blank=True, verbose_name="شهر سازمان")
+    address_region = models.CharField(max_length=100, blank=True, verbose_name="استان سازمان")
+    organization_postal_code = models.CharField(max_length=20, blank=True, verbose_name="کد پستی سازمان")
+    country_code = models.CharField(max_length=2, default="IR", verbose_name="کد کشور")
+    same_as = models.TextField(blank=True, verbose_name="شبکه‌های اجتماعی", help_text="هر لینک در یک خط")
+    merchant_return_days = models.PositiveSmallIntegerField(default=7, verbose_name="مهلت بازگشت کالا (روز)")
+    shipping_rate = models.PositiveIntegerField(default=0, verbose_name="هزینه پایه ارسال در اسکیما (تومان)")
+    handling_min_days = models.PositiveSmallIntegerField(default=1, verbose_name="حداقل زمان آماده‌سازی")
+    handling_max_days = models.PositiveSmallIntegerField(default=3, verbose_name="حداکثر زمان آماده‌سازی")
+    transit_min_days = models.PositiveSmallIntegerField(default=1, verbose_name="حداقل زمان حمل")
+    transit_max_days = models.PositiveSmallIntegerField(default=7, verbose_name="حداکثر زمان حمل")
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         verbose_name = "تنظیمات سئو سایت"
@@ -657,3 +671,53 @@ class SEOSettings(models.Model):
         return "تنظیمات سئو 3DprintHub"
 # END PHASE 4 SEO SETTINGS
 
+# BEGIN PHASE 5 IRAN LOCATION MODELS
+class IranProvince(models.Model):
+    name = models.CharField(max_length=100, unique=True, db_index=True, verbose_name="استان")
+    code = models.CharField(max_length=20, blank=True, db_index=True, verbose_name="کد استان")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+    sort_order = models.PositiveSmallIntegerField(default=0, verbose_name="ترتیب")
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "استان ایران"
+        verbose_name_plural = "استان‌های ایران"
+
+    def __str__(self):
+        return self.name
+
+
+class IranCounty(models.Model):
+    province = models.ForeignKey(IranProvince, on_delete=models.CASCADE, related_name="counties", verbose_name="استان")
+    name = models.CharField(max_length=120, db_index=True, verbose_name="شهرستان")
+    code = models.CharField(max_length=30, blank=True, db_index=True, verbose_name="کد شهرستان")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+
+    class Meta:
+        ordering = ["province__sort_order", "name"]
+        constraints = [models.UniqueConstraint(fields=["province", "name"], name="unique_iran_county_per_province")]
+        verbose_name = "شهرستان ایران"
+        verbose_name_plural = "شهرستان‌های ایران"
+
+    def __str__(self):
+        return f"{self.province} - {self.name}"
+
+
+class IranCity(models.Model):
+    province = models.ForeignKey(IranProvince, on_delete=models.CASCADE, related_name="cities", verbose_name="استان")
+    county = models.ForeignKey(IranCounty, on_delete=models.CASCADE, related_name="cities", verbose_name="شهرستان")
+    name = models.CharField(max_length=120, db_index=True, verbose_name="شهر")
+    district_name = models.CharField(max_length=120, blank=True, verbose_name="بخش")
+    division_code = models.CharField(max_length=30, blank=True, db_index=True, verbose_name="کد تقسیمات کشوری")
+    source_id = models.CharField(max_length=100, blank=True, db_index=True, verbose_name="شناسه منبع")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+
+    class Meta:
+        ordering = ["province__sort_order", "county__name", "name"]
+        constraints = [models.UniqueConstraint(fields=["province", "county", "name"], name="unique_iran_city_per_county")]
+        verbose_name = "شهر ایران"
+        verbose_name_plural = "شهرهای ایران"
+
+    def __str__(self):
+        return f"{self.province} - {self.county.name} - {self.name}"
+# END PHASE 5 IRAN LOCATION MODELS

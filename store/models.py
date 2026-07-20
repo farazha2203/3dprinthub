@@ -165,6 +165,10 @@ class Product(models.Model):
     view_count = models.PositiveBigIntegerField(default=0, db_index=True, verbose_name="تعداد بازدید")
     meta_title = models.CharField(max_length=180, blank=True, verbose_name="عنوان سئو")
     meta_description = models.CharField(max_length=320, blank=True, verbose_name="توضیحات سئو")
+    brand_name = models.CharField(max_length=120, default="3DprintHub", verbose_name="برند محصول")
+    mpn = models.CharField(max_length=100, blank=True, verbose_name="کد MPN")
+    gtin = models.CharField(max_length=14, blank=True, verbose_name="GTIN / بارکد")
+    schema_enabled = models.BooleanField(default=True, verbose_name="ساخت اسکیما محصول")
     # BEGIN PHASE 4 SEO FIELDS
     seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
     canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
@@ -318,6 +322,11 @@ class ProductVariant(models.Model):
     )
     lead_time_min_days = models.PositiveSmallIntegerField(default=1, verbose_name="حداقل زمان آماده‌سازی")
     lead_time_max_days = models.PositiveSmallIntegerField(default=3, verbose_name="حداکثر زمان آماده‌سازی")
+    track_inventory = models.BooleanField(default=False, verbose_name="کنترل موجودی عددی")
+    stock_quantity = models.PositiveIntegerField(default=0, verbose_name="موجودی فیزیکی")
+    reserved_quantity = models.PositiveIntegerField(default=0, editable=False, verbose_name="موجودی رزروشده")
+    low_stock_threshold = models.PositiveIntegerField(default=2, verbose_name="آستانه هشدار موجودی")
+    allow_backorder = models.BooleanField(default=False, verbose_name="اجازه سفارش بیشتر از موجودی")
     is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
 
     class Meta:
@@ -599,6 +608,7 @@ class StoreAddress(models.Model):
     full_name = models.CharField(max_length=150, verbose_name="نام تحویل‌گیرنده")
     phone = models.CharField(max_length=20, verbose_name="شماره تماس")
     province = models.CharField(max_length=100, verbose_name="استان")
+    county = models.CharField(max_length=120, blank=True, verbose_name="شهرستان")
     city = models.CharField(max_length=100, verbose_name="شهر")
     address = models.TextField(verbose_name="نشانی کامل")
     postal_code = models.CharField(max_length=20, verbose_name="کد پستی")
@@ -688,6 +698,7 @@ class StoreOrder(models.Model):
     phone = models.CharField(max_length=20, db_index=True, verbose_name="شماره تماس")
     email = models.EmailField(blank=True, verbose_name="ایمیل")
     province = models.CharField(max_length=100, verbose_name="استان")
+    county = models.CharField(max_length=120, blank=True, verbose_name="شهرستان")
     city = models.CharField(max_length=100, verbose_name="شهر")
     address = models.TextField(verbose_name="نشانی کامل")
     postal_code = models.CharField(max_length=20, verbose_name="کد پستی")
@@ -699,6 +710,10 @@ class StoreOrder(models.Model):
     shipping_fee = models.PositiveBigIntegerField(default=0, verbose_name="هزینه ارسال")
     tax_amount = models.PositiveBigIntegerField(default=0, verbose_name="مالیات")
     discount_amount = models.PositiveBigIntegerField(default=0, verbose_name="تخفیف")
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="orders", verbose_name="کد تخفیف")
+    coupon_code = models.CharField(max_length=50, blank=True, verbose_name="کد تخفیف هنگام سفارش")
+    inventory_reserved = models.BooleanField(default=False, verbose_name="موجودی رزرو شده")
+    reservation_expires_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name="پایان اعتبار رزرو")
     total_amount = models.PositiveBigIntegerField(default=0, verbose_name="مبلغ نهایی")
     total_weight_grams = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="وزن ارسال")
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پرداخت")
@@ -817,4 +832,230 @@ class StorePayment(models.Model):
         self.paid_at = timezone.now()
         self.save(update_fields=["status", "ref_id", "paid_at", "updated_at"])
         self.order.mark_paid(ref_id=ref_id)
+        from .services import finalize_paid_order
+        finalize_paid_order(self.order)
 # END STORE COMMERCE PHASE 2
+
+# BEGIN STORE OPERATIONS PHASE 6
+
+
+def generate_invoice_number():
+    return f"INV-{timezone.now():%y%m%d}-{uuid.uuid4().hex[:8].upper()}"
+
+
+class Coupon(models.Model):
+    DISCOUNT_CHOICES = [("percent", "درصدی"), ("fixed", "مبلغ ثابت")]
+    code = models.CharField(max_length=50, unique=True, db_index=True, verbose_name="کد تخفیف")
+    title = models.CharField(max_length=150, verbose_name="عنوان")
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_CHOICES, default="percent", verbose_name="نوع تخفیف")
+    value = models.PositiveBigIntegerField(verbose_name="مقدار تخفیف")
+    minimum_order_amount = models.PositiveBigIntegerField(default=0, verbose_name="حداقل مبلغ سفارش")
+    maximum_discount = models.PositiveBigIntegerField(default=0, verbose_name="سقف تخفیف؛ صفر یعنی بدون سقف")
+    usage_limit = models.PositiveIntegerField(default=0, verbose_name="سقف کل استفاده؛ صفر یعنی نامحدود")
+    per_user_limit = models.PositiveIntegerField(default=1, verbose_name="سقف استفاده هر مشتری")
+    used_count = models.PositiveIntegerField(default=0, editable=False, verbose_name="تعداد استفاده قطعی")
+    starts_at = models.DateTimeField(null=True, blank=True, verbose_name="شروع اعتبار")
+    ends_at = models.DateTimeField(null=True, blank=True, verbose_name="پایان اعتبار")
+    categories = models.ManyToManyField(Category, blank=True, related_name="coupons", verbose_name="دسته‌های مجاز")
+    products = models.ManyToManyField(Product, blank=True, related_name="coupons", verbose_name="محصولات مجاز")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "کد تخفیف"
+        verbose_name_plural = "کدهای تخفیف"
+
+    def __str__(self):
+        return f"{self.code} - {self.title}"
+
+    @property
+    def is_currently_valid(self):
+        now = timezone.now()
+        if not self.is_active:
+            return False
+        if self.starts_at and self.starts_at > now:
+            return False
+        if self.ends_at and self.ends_at < now:
+            return False
+        if self.usage_limit and self.used_count >= self.usage_limit:
+            return False
+        return True
+
+
+class CouponUsage(models.Model):
+    coupon = models.ForeignKey(Coupon, on_delete=models.PROTECT, related_name="usages", verbose_name="کد تخفیف")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="coupon_usages", verbose_name="مشتری")
+    order = models.OneToOneField("StoreOrder", on_delete=models.CASCADE, related_name="coupon_usage", verbose_name="سفارش")
+    discount_amount = models.PositiveBigIntegerField(default=0, verbose_name="مبلغ تخفیف")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "استفاده از کد تخفیف"
+        verbose_name_plural = "استفاده‌های کد تخفیف"
+
+
+class InventoryMovement(models.Model):
+    TYPE_CHOICES = [
+        ("stock_in", "ورود موجودی"), ("stock_out", "خروج موجودی"),
+        ("reserve", "رزرو سفارش"), ("release", "آزادسازی رزرو"),
+        ("sale", "فروش قطعی"), ("return", "بازگشت کالا"),
+        ("adjustment", "اصلاح دستی"),
+    ]
+    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="inventory_movements", verbose_name="تنوع محصول")
+    order = models.ForeignKey("StoreOrder", on_delete=models.SET_NULL, null=True, blank=True, related_name="inventory_movements", verbose_name="سفارش")
+    movement_type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True, verbose_name="نوع گردش")
+    quantity = models.IntegerField(verbose_name="تعداد تغییر")
+    stock_after = models.PositiveIntegerField(default=0, verbose_name="موجودی پس از تغییر")
+    reserved_after = models.PositiveIntegerField(default=0, verbose_name="رزرو پس از تغییر")
+    note = models.CharField(max_length=300, blank=True, verbose_name="توضیح")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="inventory_actions", verbose_name="ثبت‌کننده")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "گردش موجودی"
+        verbose_name_plural = "گردش‌های موجودی"
+
+
+class StoreOrderEvent(models.Model):
+    order = models.ForeignKey("StoreOrder", on_delete=models.CASCADE, related_name="events", verbose_name="سفارش")
+    status = models.CharField(max_length=30, blank=True, verbose_name="وضعیت")
+    title = models.CharField(max_length=180, verbose_name="عنوان رویداد")
+    description = models.TextField(blank=True, verbose_name="توضیحات")
+    is_public = models.BooleanField(default=True, verbose_name="قابل نمایش به مشتری")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="store_order_events", verbose_name="ثبت‌کننده")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "رویداد سفارش"
+        verbose_name_plural = "رویدادهای سفارش"
+
+
+class Shipment(models.Model):
+    STATUS_CHOICES = [("preparing", "در حال آماده‌سازی"), ("shipped", "تحویل شرکت حمل"), ("delivered", "تحویل مشتری"), ("returned", "مرجوع‌شده")]
+    order = models.OneToOneField("StoreOrder", on_delete=models.CASCADE, related_name="shipment", verbose_name="سفارش")
+    carrier = models.CharField(max_length=120, blank=True, verbose_name="شرکت حمل")
+    service_name = models.CharField(max_length=120, blank=True, verbose_name="نوع سرویس")
+    tracking_code = models.CharField(max_length=120, blank=True, db_index=True, verbose_name="کد رهگیری")
+    tracking_url = models.URLField(blank=True, verbose_name="لینک رهگیری")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="preparing", db_index=True, verbose_name="وضعیت ارسال")
+    shipped_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان ارسال")
+    estimated_delivery_date = models.DateField(null=True, blank=True, verbose_name="تحویل تخمینی")
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان تحویل")
+    note = models.TextField(blank=True, verbose_name="توضیحات")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "مرسوله"
+        verbose_name_plural = "مرسوله‌ها"
+
+
+class StoreInvoice(models.Model):
+    order = models.OneToOneField("StoreOrder", on_delete=models.PROTECT, related_name="invoice", verbose_name="سفارش")
+    invoice_number = models.CharField(max_length=40, default=generate_invoice_number, unique=True, db_index=True, editable=False, verbose_name="شماره فاکتور")
+    seller_name = models.CharField(max_length=180, verbose_name="نام فروشنده")
+    seller_phone = models.CharField(max_length=30, blank=True, verbose_name="تلفن فروشنده")
+    seller_address = models.TextField(blank=True, verbose_name="آدرس فروشنده")
+    buyer_name = models.CharField(max_length=180, verbose_name="نام خریدار")
+    buyer_phone = models.CharField(max_length=30, verbose_name="تلفن خریدار")
+    buyer_address = models.TextField(verbose_name="آدرس خریدار")
+    subtotal = models.PositiveBigIntegerField(default=0, verbose_name="جمع کالا")
+    discount_amount = models.PositiveBigIntegerField(default=0, verbose_name="تخفیف")
+    shipping_fee = models.PositiveBigIntegerField(default=0, verbose_name="هزینه ارسال")
+    packaging_fee = models.PositiveBigIntegerField(default=0, verbose_name="هزینه بسته‌بندی")
+    tax_amount = models.PositiveBigIntegerField(default=0, verbose_name="مالیات")
+    total_amount = models.PositiveBigIntegerField(default=0, verbose_name="مبلغ نهایی")
+    issued_at = models.DateTimeField(default=timezone.now, db_index=True, verbose_name="تاریخ صدور")
+
+    class Meta:
+        ordering = ["-issued_at"]
+        verbose_name = "فاکتور فروش"
+        verbose_name_plural = "فاکتورهای فروش"
+
+
+class CustomerNotification(models.Model):
+    TYPE_CHOICES = [("order", "سفارش"), ("payment", "پرداخت"), ("shipping", "ارسال"), ("system", "سیستمی")]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="store_notifications", verbose_name="مشتری")
+    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="system", db_index=True, verbose_name="نوع")
+    title = models.CharField(max_length=180, verbose_name="عنوان")
+    message = models.TextField(verbose_name="پیام")
+    url = models.CharField(max_length=500, blank=True, verbose_name="لینک")
+    read_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name="زمان مشاهده")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "اعلان مشتری"
+        verbose_name_plural = "اعلان‌های مشتریان"
+
+    @property
+    def is_read(self):
+        return bool(self.read_at)
+
+
+class ReturnRequest(models.Model):
+    REASON_CHOICES = [("defect", "ایراد یا شکستگی"), ("wrong_item", "کالای اشتباه"), ("not_as_described", "مغایرت با توضیحات"), ("other", "سایر")]
+    STATUS_CHOICES = [("submitted", "ثبت‌شده"), ("reviewing", "در حال بررسی"), ("approved", "تأیید مرجوعی"), ("rejected", "ردشده"), ("received", "کالا دریافت شد"), ("refunded", "وجه مسترد شد"), ("closed", "بسته‌شده")]
+    order = models.ForeignKey("StoreOrder", on_delete=models.PROTECT, related_name="return_requests", verbose_name="سفارش")
+    item = models.ForeignKey(StoreOrderItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="return_requests", verbose_name="ردیف سفارش")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="store_return_requests", verbose_name="مشتری")
+    reason = models.CharField(max_length=30, choices=REASON_CHOICES, verbose_name="دلیل")
+    description = models.TextField(verbose_name="شرح درخواست")
+    image = models.ImageField(upload_to="store/returns/", blank=True, null=True, verbose_name="تصویر")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="submitted", db_index=True, verbose_name="وضعیت")
+    admin_response = models.TextField(blank=True, verbose_name="پاسخ مدیریت")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "درخواست مرجوعی"
+        verbose_name_plural = "درخواست‌های مرجوعی"
+
+
+class ProductFAQ(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="faqs", verbose_name="محصول")
+    question = models.CharField(max_length=300, verbose_name="سؤال")
+    answer = models.TextField(verbose_name="پاسخ")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="ترتیب")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "پرسش متداول محصول"
+        verbose_name_plural = "پرسش‌های متداول محصول"
+
+
+class StoreOperationsDashboard(StoreOrder):
+    class Meta:
+        proxy = True
+        verbose_name = "داشبورد عملیات فروشگاه"
+        verbose_name_plural = "داشبورد عملیات فروشگاه"
+
+
+# Runtime helpers are attached here to keep the phase additive and migration-safe.
+def _variant_available_quantity(self):
+    if not getattr(self, "track_inventory", False):
+        return None
+    return max(0, int(self.stock_quantity) - int(self.reserved_quantity))
+
+
+def _variant_is_low_stock(self):
+    available = _variant_available_quantity(self)
+    return available is not None and available <= int(self.low_stock_threshold)
+
+
+ProductVariant.available_quantity = property(_variant_available_quantity)
+ProductVariant.is_low_stock = property(_variant_is_low_stock)
+
+
+def _order_can_request_return(self):
+    return self.status == "delivered" and self.payment_status == "paid"
+
+
+StoreOrder.can_request_return = property(_order_can_request_return)
+# END STORE OPERATIONS PHASE 6

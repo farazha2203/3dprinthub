@@ -1,20 +1,13 @@
 {% extends "store/base.html" %}
+{% load store_seo %}
 {% block canonical %}{% if page.canonical_url %}{{ page.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ page.get_absolute_url }}{% endif %}{% endblock %}
 
 {% block title %}{{ page.meta_title|default:page.title }}{% endblock %}
 {% block meta_description %}{{ page.meta_description|default:page.short_description }}{% endblock %}
 
 {% block structured_data %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Service",
-  "name": "{{ page.title|escapejs }}",
-  "description": "{{ page.short_description|escapejs }}",
-  "provider": {"@type": "Organization", "name": "3DprintHub"},
-  "areaServed": "IR"
-}
-</script>
+{% service_schema_json page request seo_settings as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
 {% endblock %}
 
 {% block robots %}{% if page.robots_index %}index{% else %}noindex{% endif %},{% if page.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}

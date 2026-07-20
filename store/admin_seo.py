@@ -37,5 +37,5 @@ def _register_enhanced(model, fieldsets):
     admin.site.register(model,cls)
 
 _register_enhanced(Category,(("اطلاعات دسته",{"fields":("parent","section","name","slug","description","image","sort_order","is_active")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)})))
-_register_enhanced(Product,(("اطلاعات محصول",{"fields":("category","title","slug","sku","short_description","description","main_image","model_file","dimensions","technical_notes","installation_guide","is_featured","is_active","published_at")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)}), ("آمار",{"fields":("view_count","created_at","updated_at")})))
+_register_enhanced(Product,(("اطلاعات محصول",{"fields":("category","title","slug","sku","short_description","description","main_image","model_file","dimensions","technical_notes","installation_guide","brand_name","mpn","gtin","schema_enabled","is_featured","is_active","published_at")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)}), ("آمار",{"fields":("view_count","created_at","updated_at")})))
 _register_enhanced(ServicePage,(("اطلاعات خدمت",{"fields":("service_type","title","slug","short_description","content","hero_image","sort_order","is_active")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)}), ("زمان‌ها",{"fields":("created_at","updated_at")})))

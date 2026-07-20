@@ -69,3 +69,11 @@ urlpatterns += [
     path("sitemap.xml", sitemap_xml_response, name="sitemap_xml_phase4"),
 ]
 # END PHASE 4 URLS
+
+# BEGIN PHASE 5 LOCATION URLS
+from .views_phase5 import iran_counties_view, iran_cities_v2_view
+urlpatterns += [
+    path("customer/locations/counties/", iran_counties_view, name="iran_counties"),
+    path("customer/locations/cities-v2/", iran_cities_v2_view, name="iran_cities_v2"),
+]
+# END PHASE 5 LOCATION URLS

@@ -1,1 +1,22 @@
-{% extends 'website/customer/account_base.html' %}{% load static %}{% block title %}{{ page_title }}{% endblock %}{% block account_content %}<div class="customer-page-title"><div><h1>{{ page_title }}</h1><p>استان را انتخاب کنید تا فهرست شهرهای همان استان نمایش داده شود. کد پستی ۱۰ رقمی الزامی است.</p></div></div><form method="post" class="customer-card">{% csrf_token %}{% if form.errors %}<div class="rounded-2xl bg-rose-50 text-rose-700 p-4 mb-5">{{ form.errors }}</div>{% endif %}<div class="customer-form-grid"><div><label>عنوان آدرس</label>{{ form.title }}</div><div><label>نام تحویل‌گیرنده</label>{{ form.full_name }}</div><div><label>موبایل تحویل‌گیرنده</label>{{ form.phone }}</div><div><label>کد ملی تحویل‌گیرنده</label>{{ form.recipient_national_code }}</div><div><label>استان</label>{{ form.province }}</div><div><label>شهر</label>{{ form.city }}</div><div><label>منطقه / محله</label>{{ form.district }}</div><div><label>کد پستی ۱۰ رقمی <strong class="text-rose-600">*</strong></label>{{ form.postal_code }}</div><div><label>پلاک</label>{{ form.plaque }}</div><div><label>واحد</label>{{ form.unit }}</div></div><div class="mt-4"><label>نشانی کامل</label>{{ form.address }}</div><div class="mt-4"><label>توضیحات تحویل</label>{{ form.delivery_notes }}</div><label class="flex items-center gap-2 mt-4">{{ form.is_default }} آدرس پیش‌فرض باشد</label><div class="flex justify-end gap-3 mt-6"><a class="customer-button secondary" href="{% url 'website:customer_addresses' %}">انصراف</a><button class="customer-button primary">ذخیره آدرس</button></div></form>{% endblock %}{% block extra_scripts %}<script src="{% static 'js/iran-address.js' %}"></script>{% endblock %}
+{% extends 'website/customer/account_base.html' %}{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block account_content %}
+<div class="customer-page-title"><div><h1>{{ page_title }}</h1><p>استان، شهرستان و شهر را به‌ترتیب انتخاب کنید. کد پستی ۱۰ رقمی الزامی است.</p></div></div>
+<form method="post" class="customer-card">{% csrf_token %}
+{% if form.errors %}<div class="rounded-2xl bg-rose-50 text-rose-700 p-4 mb-5">{{ form.errors }}</div>{% endif %}
+<div class="customer-form-grid">
+<div><label>عنوان آدرس</label>{{ form.title }}</div><div><label>نام تحویل‌گیرنده</label>{{ form.full_name }}</div>
+<div><label>موبایل تحویل‌گیرنده</label>{{ form.phone }}</div><div><label>کد ملی تحویل‌گیرنده</label>{{ form.recipient_national_code }}</div>
+<div><label>استان <strong class="text-rose-600">*</strong></label>{{ form.province }}</div>
+<div><label>شهرستان <strong class="text-rose-600">*</strong></label>{{ form.county }}</div>
+<div><label>شهر <strong class="text-rose-600">*</strong></label>{{ form.city }}</div>
+<div><label>منطقه / محله</label>{{ form.district }}</div>
+<div><label>کد پستی ۱۰ رقمی <strong class="text-rose-600">*</strong></label>{{ form.postal_code }}</div>
+<div><label>پلاک</label>{{ form.plaque }}</div><div><label>واحد</label>{{ form.unit }}</div>
+</div>
+<div class="mt-4"><label>نشانی کامل</label>{{ form.address }}</div><div class="mt-4"><label>توضیحات تحویل</label>{{ form.delivery_notes }}</div>
+<label class="flex items-center gap-2 mt-4">{{ form.is_default }} آدرس پیش‌فرض باشد</label>
+<div class="flex justify-end gap-3 mt-6"><a class="customer-button secondary" href="{% url 'website:customer_addresses' %}">انصراف</a><button class="customer-button primary">ذخیره آدرس</button></div>
+</form>
+{% endblock %}
+{% block extra_scripts %}<script src="{% static 'js/iran-address-v2.js' %}"></script>{% endblock %}

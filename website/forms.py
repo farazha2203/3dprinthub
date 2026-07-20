@@ -379,3 +379,7 @@ class StoreAddressForm(forms.ModelForm):
 # BEGIN PHASE 4 FORM OVERRIDES
 from .forms_phase4 import CustomerProfileForm, StoreAddressForm, AppearancePreferenceForm
 # END PHASE 4 FORM OVERRIDES
+
+# BEGIN PHASE 5 LOCATION FORM OVERRIDE
+from .forms_phase5 import StoreAddressForm
+# END PHASE 5 LOCATION FORM OVERRIDE

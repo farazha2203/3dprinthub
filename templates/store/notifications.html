@@ -1,0 +1,6 @@
+{% extends "website/customer/account_base.html" %}
+{% block title %}اعلان‌ها{% endblock %}
+{% block account_content %}
+<div class="customer-page-title flex items-center justify-between gap-4"><div><h1>اعلان‌ها و پیام‌های حساب</h1><p>آخرین تغییرات سفارش، پرداخت و ارسال را اینجا مشاهده کنید.</p></div><form method="post" action="{% url 'store:notifications_read_all' %}">{% csrf_token %}<button class="customer-button secondary">خواندن همه</button></form></div>
+<div class="space-y-4">{% for item in notifications %}<article class="customer-card {% if not item.read_at %}border-orange-300 bg-orange-50/40{% endif %}"><div class="flex justify-between gap-4"><div><h2 class="font-black">{{ item.title }}</h2><p class="text-slate-600 mt-2 leading-7">{{ item.message }}</p><small class="text-slate-400">{{ item.created_at|date:'Y/m/d H:i' }}</small></div>{% if not item.read_at %}<form method="post" action="{% url 'store:notification_read' item.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ item.url }}"><button class="text-orange-600 font-bold">مشاهده</button></form>{% elif item.url %}<a class="text-orange-600 font-bold" href="{{ item.url }}">جزئیات</a>{% endif %}</div></article>{% empty %}<div class="customer-empty">هنوز اعلانی برای شما ثبت نشده است.</div>{% endfor %}</div>
+{% endblock %}

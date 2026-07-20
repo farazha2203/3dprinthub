@@ -1,5 +1,5 @@
 {% extends "store/base.html" %}
-{% load humanize %}
+{% load humanize store_seo %}
 
 {% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}{% endblock %}
 
@@ -7,23 +7,10 @@
 {% block meta_description %}{{ product.seo_description }}{% endblock %}
 
 {% block structured_data %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "{{ product.title|escapejs }}",
-  "sku": "{{ product.sku|escapejs }}",
-  "description": "{{ product.short_description|escapejs }}",
-  "image": ["{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}"],
-  "offers": {
-    "@type": "AggregateOffer",
-    "priceCurrency": "IRR",
-    "lowPrice": "{% if product.min_price %}{{ product.min_price }}0{% else %}0{% endif %}",
-    "offerCount": "{{ variants|length }}",
-    "availability": "https://schema.org/InStock"
-  }
-}
-</script>
+{% product_schema_json product variants request seo_settings as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
+{% product_faq_schema_json product request as faq_schema_json %}
+{% if product.faqs.all %}<script type="application/ld+json">{{ faq_schema_json }}</script>{% endif %}
 {% endblock %}
 
 {% block robots %}{% if product.robots_index %}index{% else %}noindex{% endif %},{% if product.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}
@@ -140,6 +127,15 @@
             </dl>
         </aside>
     </div>
+
+    {% if product.faqs.all %}
+    <section class="store-content-card mt-8">
+        <h2 class="text-2xl font-black">پرسش‌های متداول درباره {{ product.title }}</h2>
+        <div class="space-y-3 mt-5">
+            {% for faq in product.faqs.all %}{% if faq.is_active %}<details class="rounded-2xl border border-slate-200 bg-white p-5"><summary class="font-black cursor-pointer">{{ faq.question }}</summary><div class="text-slate-600 leading-8 mt-3">{{ faq.answer|linebreaks }}</div></details>{% endif %}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     <section class="store-content-card mt-8">
         <h2 class="text-2xl font-black">پرسش و دیدگاه کاربران</h2>

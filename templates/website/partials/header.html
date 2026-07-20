@@ -45,6 +45,7 @@
                 <a href="{% url 'website:customer_dashboard' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600 font-bold">داشبورد مشتری</a>
                 <a href="{% url 'website:customer_profile' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">مشخصات و تصویر</a>
                 <a href="{% url 'website:customer_addresses' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">آدرس‌های ارسال</a>
+                <a href="{% url 'store:notifications' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">اعلان‌ها{% if unread_store_notifications %} ({{ unread_store_notifications }}){% endif %}</a>
                 <a href="{% url 'store:my_orders' %}" class="block rounded-xl px-3 py-2.5 hover:bg-orange-50 hover:text-orange-600">سفارش‌های فروشگاه</a>
                 <a href="{% url 'website:customer_logout' %}" class="block rounded-xl px-3 py-2.5 mt-2 bg-slate-900 text-white text-center font-bold">خروج از حساب</a>
               </div>
@@ -78,6 +79,7 @@
           <a href="{% url 'website:customer_dashboard' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 font-bold">داشبورد مشتری</a>
           <a href="{% url 'website:customer_profile' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">مشخصات و تصویر</a>
           <a href="{% url 'website:customer_addresses' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">آدرس‌های ارسال</a>
+          <a href="{% url 'store:notifications' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">اعلان‌ها{% if unread_store_notifications %} ({{ unread_store_notifications }}){% endif %}</a>
           <a href="{% url 'store:my_orders' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">سفارش‌های فروشگاه</a>
           <a href="{% url 'website:customer_logout' %}" class="mobile-menu-link rounded-2xl px-4 py-3 bg-slate-900 text-white text-center font-bold">خروج</a>
         {% else %}

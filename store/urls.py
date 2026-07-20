@@ -43,3 +43,23 @@ urlpatterns += [
     path("product/<slug:slug>/review/", product_review_view, name="product_review"),
 ]
 # END STORE COMMERCE PHASE 2
+
+# BEGIN STORE OPERATIONS PHASE 6 URLS
+from .views import (
+    invoice_view,
+    merchant_feed_view,
+    notification_read_view,
+    notifications_read_all_view,
+    notifications_view,
+    return_request_view,
+)
+
+urlpatterns += [
+    path("account/notifications/", notifications_view, name="notifications"),
+    path("account/notifications/<int:notification_id>/read/", notification_read_view, name="notification_read"),
+    path("account/notifications/read-all/", notifications_read_all_view, name="notifications_read_all"),
+    path("account/orders/<str:order_number>/invoice/", invoice_view, name="invoice"),
+    path("account/orders/<str:order_number>/return/", return_request_view, name="return_request"),
+    path("feeds/google-merchant.xml", merchant_feed_view, name="merchant_feed"),
+]
+# END STORE OPERATIONS PHASE 6 URLS

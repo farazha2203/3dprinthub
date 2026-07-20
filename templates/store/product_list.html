@@ -1,5 +1,5 @@
 {% extends "store/base.html" %}
-{% load humanize %}
+{% load humanize store_seo %}
 
 {% block canonical %}{% if current_category and current_category.canonical_url %}{{ current_category.canonical_url }}{% elif current_category %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.get_absolute_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% url 'store:product_list' %}{% endif %}{% endblock %}
 
@@ -11,6 +11,11 @@
 {% block og_description %}{% if current_category %}{{ current_category.og_description|default:current_category.meta_description|default:current_category.description }}{% else %}قطعات آماده چاپ و محصولات سفارشی سه‌بعدی{% endif %}{% endblock %}
 {% block og_image %}{% if current_category.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.og_image.url }}{% elif current_category.image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.image.url }}{% endif %}{% endblock %}
 
+
+{% block structured_data %}
+{% product_list_schema_json products request current_category as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
+{% endblock %}
 {% block content %}
 <section class="store-hero">
     <div class="container mx-auto px-4 md:px-6 py-12 md:py-16">
