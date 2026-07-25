@@ -1,0 +1,138 @@
+{% load i18n static %}<!doctype html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'fa' }}" dir="rtl"
+      data-layout="vertical"
+      data-layout-width="fluid"
+      data-layout-position="fixed"
+      data-topbar="light"
+      data-sidebar="dark"
+      data-sidebar-size="lg"
+      data-sidebar-image="none"
+      data-preloader="disable"
+      data-theme="default"
+      data-theme-colors="default">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <meta name="theme-color" content="#071d2d">
+    <title>{% block title %}پنل مدیریت 3DPrintHub{% endblock %}</title>
+    <link rel="shortcut icon" href="{% static 'admin/brand/icon.png' %}">
+
+    {# Resolve the persisted Velzon layout before CSS to prevent an RTL/layout flash. #}
+    <script src="{% static 'velzon/js/layout.js' %}"></script>
+    <link href="{% static 'velzon/css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet">
+    <link href="{% static 'velzon/css/icons.min.css' %}" rel="stylesheet">
+    <link href="{% static 'velzon/css/app-rtl.min.css' %}" id="app-style" rel="stylesheet">
+    <link href="{% static 'velzon/css/custom-rtl.min.css' %}" rel="stylesheet">
+    <link href="{% static 'velzon/libs/choices.js/public/assets/styles/choices.min.css' %}" rel="stylesheet">
+    <link href="{% static 'velzon/libs/flatpickr/dist/flatpickr.min.css' %}" rel="stylesheet">
+
+    {# Django supplies the admin table/form structure; the final bridge owns presentation. #}
+    <link rel="stylesheet" href="{% block stylesheet %}{% static 'admin/css/base.css' %}{% endblock %}">
+    {% block dark-mode-vars %}{% endblock %}
+    {% block extrastyle %}{% endblock %}
+    <link href="{% static 'admin/velzon-admin.css' %}" rel="stylesheet">
+    {% block extrahead %}{% endblock %}
+    {% block responsive %}{% endblock %}
+</head>
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}" data-admin-utc-offset="{% now 'Z' %}">
+<a href="#content-start" class="skip-to-content-link">رفتن به محتوای اصلی</a>
+
+{% if has_permission %}
+<div id="layout-wrapper">
+    {% block header %}{% include "admin/partials/topbar.html" %}{% endblock %}
+    {% include "admin/partials/sidebar.html" %}
+    <div class="vertical-overlay" aria-hidden="true"></div>
+
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                {% block nav-breadcrumbs %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        {% block breadcrumbs %}
+                        <nav class="admin-breadcrumb" aria-label="مسیر صفحه">
+                            <a href="{% url 'admin:index' %}"><i class="ri-home-4-line"></i> داشبورد</a>
+                            {% if title %}<i class="ri-arrow-left-s-line"></i><span>{{ title }}</span>{% endif %}
+                        </nav>
+                        {% endblock %}
+                    </div>
+                </div>
+                {% endblock %}
+
+                {% block messages %}
+                {% if messages %}
+                <div class="admin-message-stack">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message|capfirst }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endblock messages %}
+
+                <main id="content-start" tabindex="-1">
+                    <div id="content" class="admin-content-card {% block coltype %}colM{% endblock %}">
+                        {% block pretitle %}{% endblock %}
+                        {% block content_title %}
+                            {% if title %}
+                            <div class="admin-page-heading">
+                                <div>
+                                    <span class="admin-heading-kicker">مدیریت سامانه</span>
+                                    <h1>{{ title }}</h1>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endblock %}
+                        {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}
+                        {% block content %}{% block object-tools %}{% endblock %}{{ content }}{% endblock %}
+                        {% block sidebar %}{% endblock %}
+                        <br class="clear">
+                    </div>
+                </main>
+            </div>
+        </div>
+        <footer class="footer">
+            {% block footer %}
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">پنل مدیریت 3DPrintHub</div>
+                    <div class="col-sm-6"><div class="text-sm-end d-none d-sm-block">طراحی، مهندسی معکوس و چاپ سه‌بعدی</div></div>
+                </div>
+            </div>
+            {% endblock %}
+        </footer>
+    </div>
+</div>
+{% else %}
+<div id="container" class="admin-standalone">
+    {% block standalone_header %}{% endblock %}
+    {% block standalone_messages %}
+        {% if messages %}{% for message in messages %}<div class="alert alert-info">{{ message }}</div>{% endfor %}{% endif %}
+    {% endblock %}
+    <main id="content-start" class="content" tabindex="-1">
+        <div id="content" class="{% block standalone_coltype %}colM{% endblock %}">
+            {% block standalone_content %}
+                {% block standalone_content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+                {% block standalone_main %}{{ content }}{% endblock %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+{% endif %}
+
+<script src="{% static 'velzon/libs/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'velzon/libs/simplebar/dist/simplebar.min.js' %}"></script>
+<script src="{% static 'velzon/libs/node-waves/dist/waves.min.js' %}"></script>
+<script src="{% static 'velzon/libs/feather-icons/dist/feather.min.js' %}"></script>
+<script src="{% static 'velzon/libs/choices.js/public/assets/scripts/choices.min.js' %}"></script>
+<script src="{% static 'velzon/libs/flatpickr/dist/flatpickr.min.js' %}"></script>
+<script src="{% static 'velzon/libs/flatpickr/dist/l10n/fa.js' %}"></script>
+<script src="{% static 'velzon/libs/apexcharts/apexcharts.min.js' %}"></script>
+<script src="{% static 'admin/velzon-admin.js' %}"></script>
+{% block extrabody %}{% endblock extrabody %}
+</body>
+</html>
