@@ -1,0 +1,94 @@
+{% extends 'website/customer/account_base.html' %}
+{% load humanize static %}
+{% block title %}تحلیل لینک‌ها و برآوردها{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/phase23-catalog-link.css' %}">
+<link rel="stylesheet" href="{% static 'css/phase24-link-queue.css' %}">
+{% endblock %}
+{% block account_content %}
+<div class="customer-welcome">
+  <div>
+    <span>Link Intelligence</span>
+    <h1>تحلیل لینک‌ها و برآوردهای چاپ</h1>
+    <p>لینک‌های بررسی‌شده، اطلاعات استخراج‌شده، وضعیت تکمیل و پیش‌فاکتورهای ساخته‌شده را یکجا مدیریت کنید.</p>
+  </div>
+  <a class="customer-button primary" href="{% url 'store:external_link_analyzer' %}">تحلیل لینک جدید</a>
+</div>
+
+<div class="customer-stats">
+  <article><span>همه تحلیل‌ها</span><strong>{{ analysis_stats.all }}</strong><small>لینک ثبت‌شده</small></article>
+  <article><span>آماده برآورد</span><strong>{{ analysis_stats.ready }}</strong><small>دارای اطلاعات کافی</small></article>
+  <article><span>نیازمند تکمیل</span><strong>{{ analysis_stats.needs_input }}</strong><small>وزن، زمان یا متریال</small></article>
+  <article><span>تبدیل‌شده به سفارش</span><strong>{{ analysis_stats.converted }}</strong><small>وارد جریان پیش‌فاکتور</small></article>
+</div>
+
+<section class="customer-card mt-6">
+  <div class="customer-card-head gap-4 flex-wrap">
+    <div><h2>تاریخچه تحلیل لینک</h2><p>هر تحلیل فقط برای حساب شما و کارکنان مجاز قابل مشاهده است.</p></div>
+    <form method="get" class="flex items-center gap-2">
+      <label class="sr-only" for="analysis-status">فیلتر وضعیت</label>
+      <select id="analysis-status" name="status" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" onchange="this.form.submit()">
+        <option value="">همه وضعیت‌ها</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    {% for analysis in page_obj %}
+      <article class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+        <a href="{% url 'store:external_link_analysis' analysis.public_token %}" class="block aspect-[16/9] bg-slate-100 overflow-hidden">
+          {% if analysis.display_image_url %}
+            <img src="{{ analysis.display_image_url }}" alt="{{ analysis.title|default:'تصویر محصول' }}" class="w-full h-full object-cover" loading="lazy" referrerpolicy="no-referrer">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-slate-400 text-sm">تصویر از منبع دریافت نشد</div>
+          {% endif %}
+        </a>
+        <div class="p-5 space-y-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h3 class="font-black text-base truncate">{{ analysis.title|default:'محصول بدون عنوان' }}</h3>
+              <p class="text-xs text-slate-500 mt-1 truncate" dir="ltr">{{ analysis.source_domain }}</p>
+            </div>
+            <span class="shrink-0 rounded-full px-3 py-1 text-xs font-bold {% if analysis.status == 'converted' %}bg-emerald-100 text-emerald-700{% elif analysis.status == 'ready' %}bg-blue-100 text-blue-700{% elif analysis.status == 'failed' %}bg-rose-100 text-rose-700{% else %}bg-amber-100 text-amber-800{% endif %}">{{ analysis.get_status_display }}</span>
+          </div>
+
+          {% if analysis.job.status == 'queued' or analysis.job.status == 'running' or analysis.job.status == 'retry' %}
+          <div class="rounded-2xl border border-sky-100 bg-sky-50 p-3">
+            <div class="flex items-center justify-between text-xs text-sky-800"><span>{{ analysis.job.progress_message|default:analysis.job.get_status_display }}</span><strong>{{ analysis.job.progress_percent }}٪</strong></div>
+            <div class="p24-progress mt-2"><i style="width:{{ analysis.job.progress_percent }}%"></i></div>
+          </div>
+          {% endif %}
+
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="rounded-2xl bg-slate-50 px-2 py-3"><span class="block text-slate-500">متریال</span><strong class="block mt-1">{% if analysis.material %}{{ analysis.material.name }}{% else %}—{% endif %}</strong></div>
+            <div class="rounded-2xl bg-slate-50 px-2 py-3"><span class="block text-slate-500">وزن</span><strong class="block mt-1">{% if analysis.estimated_weight_grams %}{{ analysis.estimated_weight_grams|floatformat:0 }} گرم{% else %}—{% endif %}</strong></div>
+            <div class="rounded-2xl bg-slate-50 px-2 py-3"><span class="block text-slate-500">تعداد</span><strong class="block mt-1">{{ analysis.quantity }}</strong></div>
+          </div>
+
+          <div class="flex items-end justify-between gap-3 border-t border-slate-100 pt-4">
+            <div>
+              <span class="text-xs text-slate-500">برآورد میانی</span>
+              <strong class="block text-lg">{% if analysis.estimated_price %}{{ analysis.estimated_price|intcomma }} تومان{% else %}هنوز محاسبه نشده{% endif %}</strong>
+            </div>
+            <a class="customer-button secondary" href="{% url 'store:external_link_analysis' analysis.public_token %}">{% if analysis.order_id %}مشاهده سفارش{% else %}ادامه بررسی{% endif %}</a>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="md:col-span-2 customer-empty py-12">
+        هنوز لینکی تحلیل نکرده‌اید. لینک محصول یا فایل را ثبت کنید تا اطلاعات و برآورد اولیه چاپ استخراج شود.
+        <div class="mt-4"><a class="customer-button primary" href="{% url 'store:external_link_analyzer' %}">شروع تحلیل لینک</a></div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="flex items-center justify-center gap-3 mt-7" aria-label="صفحه‌بندی تحلیل لینک‌ها">
+      {% if page_obj.has_previous %}<a class="customer-button secondary" href="?status={{ status_filter|urlencode }}&page={{ page_obj.previous_page_number }}">قبلی</a>{% endif %}
+      <span class="text-sm text-slate-600">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a class="customer-button secondary" href="?status={{ status_filter|urlencode }}&page={{ page_obj.next_page_number }}">بعدی</a>{% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}

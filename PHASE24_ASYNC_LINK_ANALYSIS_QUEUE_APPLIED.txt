@@ -1,0 +1,7 @@
+Phase 24 - Async Link Analysis Queue
+- Fixed Phase 23 DNS-isolation test without weakening SSRF protection.
+- Added database-backed jobs and attempt history.
+- Added retry/backoff and stale-worker lock recovery.
+- Added progress API and customer-side polling.
+- Removed remote page analysis from the web request lifecycle.
+- Added worker, audit, verification, install and GitHub publish scripts.

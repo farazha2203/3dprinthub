@@ -847,3 +847,771 @@ def merchant_feed_view(request):
     )
     return HttpResponse(body, content_type="application/xml; charset=utf-8")
 # END STORE OPERATIONS PHASE 6 VIEWS
+
+# BEGIN AFFILIATE PARTNER PROGRAM PHASE 7 VIEWS
+from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Count, Sum
+from django.views.decorators.http import require_http_methods
+
+from .affiliate_services import (
+    COOKIE_NAME as AFFILIATE_COOKIE_NAME,
+    capture_referral,
+    masked_customer,
+    request_partner_payout,
+    safe_campaign_target,
+    signed_referral_payload,
+)
+from .forms import AffiliateCampaignForm, AffiliatePartnerApplicationForm, AffiliatePayoutRequestForm
+from .models import AffiliateAttribution, AffiliateCampaign, AffiliateCommission, AffiliatePartner, AffiliatePayout
+
+
+def _active_partner_for(user):
+    return AffiliatePartner.objects.select_related("tier").filter(user=user, status="active", tier__is_active=True).first()
+
+
+def _partner_account_context(user):
+    from website.views import _phase3_profile, _profile_completion
+    profile = _phase3_profile(user)
+    return {"profile": profile, "profile_completion": _profile_completion(profile)}
+
+
+def affiliate_referral_view(request, code, campaign_slug=""):
+    partner, campaign, _ = capture_referral(request, code, campaign_slug, landing_path=request.get_full_path())
+    if not partner:
+        messages.error(request, "لینک معرفی معتبر یا فعال نیست.")
+        return redirect("store:product_list")
+    target = safe_campaign_target(campaign, request)
+    response = redirect(target)
+    response.set_cookie(
+        AFFILIATE_COOKIE_NAME,
+        signed_referral_payload(partner.code, campaign.slug if campaign else ""),
+        max_age=int(partner.effective_attribution_days) * 86400,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite="Lax",
+    )
+    return response
+
+
+@login_required
+def partner_apply_view(request):
+    partner = AffiliatePartner.objects.select_related("tier").filter(user=request.user).first()
+    if partner and partner.status == "active":
+        return redirect("store:partner_dashboard")
+    form = AffiliatePartnerApplicationForm(request.POST or None, user=request.user, instance=partner)
+    if request.method == "POST" and form.is_valid():
+        partner = form.save()
+        messages.success(request, "درخواست همکاری ثبت شد و پس از بررسی مدیریت نتیجه اعلام می‌شود.")
+        return redirect("store:partner_apply")
+    context = {"form": form, "partner": partner, **_partner_account_context(request.user)}
+    return render(request, "store/partner/application.html", context)
+
+
+@login_required
+def partner_dashboard_view(request):
+    partner = _active_partner_for(request.user)
+    if not partner:
+        messages.error(request, "برای مشاهده پنل همکاری باید درخواست شما توسط مدیریت تأیید شود.")
+        return redirect("store:partner_apply")
+    commissions = AffiliateCommission.objects.filter(partner=partner)
+    status_totals = {
+        row["status"]: row["value"] or 0
+        for row in commissions.values("status").annotate(value=Sum("amount"))
+    }
+    paid_orders = partner.referred_orders.filter(payment_status="paid")
+    campaigns = list(partner.campaigns.annotate(click_total=Count("clicks"), customer_total=Count("attributions", distinct=True), order_total=Count("orders", distinct=True)).order_by("-created_at"))
+    base_url = request.build_absolute_uri("/").rstrip("/")
+    campaign_rows = []
+    for campaign in campaigns:
+        campaign_rows.append({
+            "obj": campaign,
+            "url": request.build_absolute_uri(reverse("store:affiliate_referral_campaign", kwargs={"code": partner.code, "campaign_slug": campaign.slug})),
+        })
+    attributions = AffiliateAttribution.objects.filter(partner=partner).select_related("customer", "campaign").order_by("-attributed_at")[:20]
+    customer_rows = [{"label": masked_customer(item.customer), "campaign": item.campaign, "date": item.attributed_at} for item in attributions]
+    context = {
+        "partner": partner,
+        "main_referral_url": request.build_absolute_uri(reverse("store:affiliate_referral", kwargs={"code": partner.code})),
+        "campaign_rows": campaign_rows,
+        "customer_rows": customer_rows,
+        "recent_commissions": commissions.select_related("order", "campaign").order_by("-created_at")[:20],
+        "recent_payouts": AffiliatePayout.objects.filter(partner=partner).order_by("-requested_at")[:10],
+        "clicks": partner.clicks.count(),
+        "unique_clicks": partner.clicks.values("visitor_hash").distinct().count(),
+        "customers": partner.attributions.count(),
+        "paid_orders": paid_orders.count(),
+        "referred_revenue": paid_orders.aggregate(value=Sum("total_amount"))["value"] or 0,
+        "pending_amount": status_totals.get("pending", 0),
+        "available_amount": status_totals.get("approved", 0),
+        "requested_amount": status_totals.get("requested", 0),
+        "paid_amount": status_totals.get("paid", 0),
+        "ledger_balance": partner.ledger_balance,
+        "payout_form": AffiliatePayoutRequestForm(),
+        "base_url": base_url,
+        **_partner_account_context(request.user),
+    }
+    return render(request, "store/partner/dashboard.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def partner_campaign_create_view(request):
+    partner = _active_partner_for(request.user)
+    if not partner:
+        return redirect("store:partner_apply")
+    form = AffiliateCampaignForm(request.POST or None, partner=partner)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "کمپین و لینک اختصاصی ایجاد شد.")
+        return redirect("store:partner_dashboard")
+    context = {"form": form, "partner": partner, "editing": False, **_partner_account_context(request.user)}
+    return render(request, "store/partner/campaign_form.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def partner_campaign_edit_view(request, campaign_id):
+    partner = _active_partner_for(request.user)
+    if not partner:
+        return redirect("store:partner_apply")
+    campaign = get_object_or_404(AffiliateCampaign, pk=campaign_id, partner=partner)
+    form = AffiliateCampaignForm(request.POST or None, instance=campaign, partner=partner)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "کمپین بروزرسانی شد.")
+        return redirect("store:partner_dashboard")
+    context = {"form": form, "partner": partner, "editing": True, "campaign": campaign, **_partner_account_context(request.user)}
+    return render(request, "store/partner/campaign_form.html", context)
+
+
+@login_required
+@require_POST
+def partner_payout_request_view(request):
+    partner = _active_partner_for(request.user)
+    if not partner:
+        return redirect("store:partner_apply")
+    form = AffiliatePayoutRequestForm(request.POST)
+    if form.is_valid():
+        try:
+            payout = request_partner_payout(partner, note=form.cleaned_data.get("note", ""))
+        except DjangoValidationError as exc:
+            messages.error(request, "; ".join(exc.messages))
+        else:
+            messages.success(request, f"درخواست تسویه {payout.payout_number} به مبلغ {payout.amount:,} تومان ثبت شد.")
+    return redirect("store:partner_dashboard")
+# END AFFILIATE PARTNER PROGRAM PHASE 7 VIEWS
+
+# BEGIN MULTI SOURCE CATALOG PHASE 9 VIEWS
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, render
+
+from .catalog_sync import public_catalog_queryset
+from .models import CatalogCategoryRule, CatalogSourcePolicy
+
+
+def external_print_catalog(request):
+    queryset = public_catalog_queryset().filter(preview_image__isnull=False).exclude(preview_image="")
+    query = (request.GET.get("q") or "").strip()
+    segment = (request.GET.get("segment") or "").strip()
+    source_kind = (request.GET.get("source") or "").strip()
+    sort_mode = (request.GET.get("sort") or "downloads").strip()
+
+    if query:
+        queryset = queryset.filter(
+            Q(title__icontains=query)
+            | Q(description__icontains=query)
+            | Q(tags__icontains=query)
+            | Q(author_name__icontains=query)
+            | Q(metrics__source_category__icontains=query)
+        )
+    if segment:
+        queryset = queryset.filter(metrics__segment=segment)
+    if source_kind:
+        queryset = queryset.filter(metrics__source_kind=source_kind)
+
+    ordering = {
+        "downloads": ("-metrics__downloads_count", "metrics__popularity_rank"),
+        "likes": ("-metrics__likes_count", "metrics__popularity_rank"),
+        "views": ("-metrics__views_count", "metrics__popularity_rank"),
+        "newest": ("-imported_at",),
+    }.get(sort_mode, ("-metrics__downloads_count", "metrics__popularity_rank"))
+    queryset = queryset.order_by(*ordering)
+
+    paginator = Paginator(queryset, 24)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    return render(
+        request,
+        "store/external_catalog.html",
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "segment": segment,
+            "source_kind": source_kind,
+            "sort_mode": sort_mode,
+            "segment_choices": CatalogCategoryRule.SEGMENT_CHOICES,
+            "source_choices": CatalogSourcePolicy.SOURCE_KIND_CHOICES[:3],
+        },
+    )
+
+
+def external_print_catalog_detail(request, pk):
+    asset = get_object_or_404(
+        public_catalog_queryset().filter(preview_image__isnull=False).exclude(preview_image=""),
+        pk=pk,
+    )
+    return render(request, "store/external_catalog_detail.html", {"asset": asset})
+
+# END MULTI SOURCE CATALOG PHASE 9 VIEWS
+
+# BEGIN PHASE 10 PUBLIC CATALOG SEO AND SITEMAP VIEWS
+import json as _phase10_json
+from xml.sax.saxutils import escape as _phase10_xml_escape
+
+from django.utils.safestring import mark_safe as _phase10_mark_safe
+
+
+def _phase10_catalog_schema(request, asset):
+    publication = getattr(asset.metrics, "publication", None)
+    image_url = request.build_absolute_uri(asset.preview_image.url) if asset.preview_image else ""
+    detail_url = request.build_absolute_uri(reverse("store:external_catalog_detail", args=[asset.pk]))
+    schema = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CreativeWork",
+                "@id": detail_url + "#model",
+                "name": asset.title,
+                "description": (publication.seo_description if publication else "") or asset.short_description or asset.description[:320],
+                "url": detail_url,
+                "image": image_url,
+                "creator": {"@type": "Person", "name": asset.author_name or "طراح منبع"},
+                "license": asset.license_url or asset.license_name,
+                "isPartOf": {"@type": "CollectionPage", "name": "مدل‌های آماده چاپ سه‌بعدی", "url": request.build_absolute_uri(reverse("store:external_catalog"))},
+                "potentialAction": {"@type": "OrderAction", "target": request.build_absolute_uri(f"/?ready_model={asset.pk}#order")},
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "خانه", "item": request.build_absolute_uri("/")},
+                    {"@type": "ListItem", "position": 2, "name": "مدل‌های آماده", "item": request.build_absolute_uri(reverse("store:external_catalog"))},
+                    {"@type": "ListItem", "position": 3, "name": asset.title, "item": detail_url},
+                ],
+            },
+        ],
+    }
+    return _phase10_mark_safe(_phase10_json.dumps(schema, ensure_ascii=False))
+
+
+def external_print_catalog(request):
+    queryset = public_catalog_queryset().filter(preview_image__isnull=False).exclude(preview_image="").select_related("metrics__publication")
+    query = (request.GET.get("q") or "").strip()
+    segment = (request.GET.get("segment") or "").strip()
+    source_kind = (request.GET.get("source") or "").strip()
+    sort_mode = (request.GET.get("sort") or "downloads").strip()
+    if query:
+        queryset = queryset.filter(
+            Q(title__icontains=query) | Q(description__icontains=query) | Q(tags__icontains=query)
+            | Q(author_name__icontains=query) | Q(metrics__source_category__icontains=query)
+        )
+    if segment:
+        queryset = queryset.filter(metrics__segment=segment)
+    if source_kind:
+        queryset = queryset.filter(metrics__source_kind=source_kind)
+    ordering = {
+        "downloads": ("-metrics__downloads_count", "metrics__popularity_rank"),
+        "likes": ("-metrics__likes_count", "metrics__popularity_rank"),
+        "views": ("-metrics__views_count", "metrics__popularity_rank"),
+        "newest": ("-imported_at",),
+    }.get(sort_mode, ("-metrics__downloads_count", "metrics__popularity_rank"))
+    paginator = Paginator(queryset.order_by(*ordering), 24)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    return render(request, "store/external_catalog.html", {
+        "page_obj": page_obj,
+        "query": query,
+        "segment": segment,
+        "source_kind": source_kind,
+        "sort_mode": sort_mode,
+        "segment_choices": CatalogCategoryRule.SEGMENT_CHOICES,
+        "source_choices": CatalogSourcePolicy.SOURCE_KIND_CHOICES[:3],
+        "meta_title": "مدل‌های آماده برای سفارش چاپ سه‌بعدی | 3DprintHub",
+        "meta_description": "جستجو و سفارش چاپ مدل‌های سه‌بعدی صنعتی، کاربردی و تزئینی با متریال و کیفیت دلخواه.",
+    })
+
+
+def external_print_catalog_detail(request, pk):
+    asset = get_object_or_404(
+        public_catalog_queryset().filter(preview_image__isnull=False).exclude(preview_image="").select_related("metrics__publication"),
+        pk=pk,
+    )
+    publication = getattr(asset.metrics, "publication", None)
+    return render(request, "store/external_catalog_detail.html", {
+        "asset": asset,
+        "publication": publication,
+        "meta_title": (publication.seo_title if publication else "") or f"سفارش چاپ سه‌بعدی {asset.title}",
+        "meta_description": (publication.seo_description if publication else "") or asset.short_description or asset.description[:320],
+        "canonical_url": request.build_absolute_uri(reverse("store:external_catalog_detail", args=[asset.pk])),
+        "catalog_schema": _phase10_catalog_schema(request, asset),
+    })
+
+
+def external_catalog_sitemap(request):
+    rows = []
+    for asset in public_catalog_queryset().filter(preview_image__isnull=False).exclude(preview_image="").select_related("metrics__publication"):
+        loc = request.build_absolute_uri(reverse("store:external_catalog_detail", args=[asset.pk]))
+        lastmod = asset.updated_at.date().isoformat() if asset.updated_at else asset.imported_at.date().isoformat()
+        image = request.build_absolute_uri(asset.preview_image.url)
+        title = getattr(getattr(asset.metrics, "publication", None), "image_alt_text", "") or asset.title
+        rows.append(
+            "<url><loc>{}</loc><lastmod>{}</lastmod><changefreq>weekly</changefreq>"
+            "<image:image><image:loc>{}</image:loc><image:title>{}</image:title></image:image></url>".format(
+                _phase10_xml_escape(loc), lastmod, _phase10_xml_escape(image), _phase10_xml_escape(title)
+            )
+        )
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' + "".join(rows) + "</urlset>"
+    return HttpResponse(xml, content_type="application/xml; charset=utf-8")
+# END PHASE 10 PUBLIC CATALOG SEO AND SITEMAP VIEWS
+
+# BEGIN PHASE 14 IMAGE SITEMAP
+from django.http import HttpResponse as _phase14_HttpResponse
+from django.urls import reverse as _phase14_reverse
+from django.utils.html import escape as _phase14_escape
+
+
+def external_catalog_sitemap(request):
+    from store.catalog_sync import public_catalog_queryset
+    assets = (
+        public_catalog_queryset()
+        .select_related("metrics", "metrics__publication", "source")
+        .prefetch_related("images")
+        .order_by("pk")[:5000]
+    )
+    rows = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+    ]
+    for asset in assets:
+        loc = request.build_absolute_uri(_phase14_reverse("store:external_catalog_detail", args=[asset.pk]))
+        rows.append("<url>")
+        rows.append(f"<loc>{_phase14_escape(loc)}</loc>")
+        rows.append(f"<lastmod>{asset.updated_at.date().isoformat()}</lastmod>")
+        if asset.catalog_image_url:
+            image_url = asset.catalog_image_url
+            if image_url.startswith("/"):
+                image_url = request.build_absolute_uri(image_url)
+            try:
+                caption = asset.metrics.publication.image_alt_text or asset.title
+            except Exception:
+                caption = asset.title
+            rows.append("<image:image>")
+            rows.append(f"<image:loc>{_phase14_escape(image_url)}</image:loc>")
+            rows.append(f"<image:title>{_phase14_escape(caption)}</image:title>")
+            rows.append("</image:image>")
+        for image in asset.images.all()[:6]:
+            if not image.image:
+                continue
+            rows.append("<image:image>")
+            rows.append(f"<image:loc>{_phase14_escape(request.build_absolute_uri(image.image.url))}</image:loc>")
+            rows.append(f"<image:title>{_phase14_escape(image.alt_text or asset.title)}</image:title>")
+            rows.append("</image:image>")
+        rows.append("</url>")
+    rows.append("</urlset>")
+    return _phase14_HttpResponse("\n".join(rows), content_type="application/xml; charset=utf-8")
+# END PHASE 14 IMAGE SITEMAP
+
+# BEGIN PHASE 18 NINE ITEM CATALOG AND DEFAULT NEWEST
+import random as _phase18_random
+
+
+def external_print_catalog(request):
+    queryset = (
+        public_catalog_queryset()
+        .filter(preview_image__isnull=False)
+        .exclude(preview_image="")
+        .select_related("source", "metrics", "metrics__publication")
+    )
+    query = (request.GET.get("q") or "").strip()
+    segment = (request.GET.get("segment") or "").strip()
+    source_kind = (request.GET.get("source") or "").strip()
+    sort_was_selected = "sort" in request.GET
+    sort_mode = (request.GET.get("sort") or "newest").strip()
+
+    if query:
+        queryset = queryset.filter(
+            Q(title__icontains=query)
+            | Q(description__icontains=query)
+            | Q(tags__icontains=query)
+            | Q(author_name__icontains=query)
+            | Q(metrics__source_category__icontains=query)
+        )
+    if segment:
+        queryset = queryset.filter(metrics__segment=segment)
+    if source_kind:
+        queryset = queryset.filter(metrics__source_kind=source_kind)
+
+    ordering = {
+        "newest": ("-imported_at", "-id"),
+        "views": ("-metrics__views_count", "metrics__popularity_rank", "-id"),
+        "downloads": ("-metrics__downloads_count", "metrics__popularity_rank", "-id"),
+        "likes": ("-metrics__likes_count", "metrics__popularity_rank", "-id"),
+    }.get(sort_mode, ("-imported_at", "-id"))
+
+    paginator = Paginator(queryset.order_by(*ordering), 9)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    default_randomized = not any((query, segment, source_kind, sort_was_selected))
+    page_obj.object_list = list(page_obj.object_list)
+    if default_randomized and len(page_obj.object_list) > 1:
+        _phase18_random.SystemRandom().shuffle(page_obj.object_list)
+
+    return render(request, "store/external_catalog.html", {
+        "page_obj": page_obj,
+        "query": query,
+        "segment": segment,
+        "source_kind": source_kind,
+        "sort_mode": sort_mode,
+        "default_randomized": default_randomized,
+        "segment_choices": CatalogCategoryRule.SEGMENT_CHOICES,
+        "source_choices": CatalogSourcePolicy.SOURCE_KIND_CHOICES[:3],
+        "meta_title": "جدیدترین مدل‌های آماده چاپ سه‌بعدی | 3DprintHub",
+        "meta_description": "مشاهده ۹ مدل آماده چاپ در هر صفحه با فیلتر منبع، گروه، بازدید، دانلود و جدیدترین مدل‌ها.",
+    })
+# END PHASE 18 NINE ITEM CATALOG AND DEFAULT NEWEST
+
+# BEGIN PHASE 23 RESILIENT CATALOG AND CUSTOMER LINK INTELLIGENCE VIEWS
+from datetime import timedelta as _phase23_timedelta
+
+from django.utils import timezone as _phase23_timezone
+
+
+def _phase23_link_rate_allowed(request):
+    """Bound queued remote analyses per user/session to protect workers."""
+    from .models import CustomerLinkAnalysis
+
+    since = _phase23_timezone.now() - _phase23_timedelta(hours=1)
+    if request.user.is_authenticated:
+        count = CustomerLinkAnalysis.objects.filter(user=request.user, created_at__gte=since).count()
+        return count < 30
+    session_key = _phase23_session_key(request)
+    count = CustomerLinkAnalysis.objects.filter(session_key=session_key, created_at__gte=since).count()
+    return count < 10
+
+
+import urllib.parse
+
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.contrib.auth.decorators import login_required as _phase23_login_required
+from django.core.paginator import Paginator as _Phase23Paginator
+from django.db.models import Q as _Phase23Q
+from django.http import Http404 as _Phase23Http404
+from django.views.decorators.http import require_POST as _phase23_require_POST
+
+
+def _phase23_session_key(request):
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key or ""
+
+
+def external_print_catalog(request):
+    from .catalog_sync import public_catalog_queryset
+    from .models import CatalogCategoryRule, PrintCatalogSource
+
+    queryset = public_catalog_queryset().select_related("source", "source__sync_policy", "metrics")
+    query = (request.GET.get("q") or "").strip()
+    segment = (request.GET.get("segment") or "").strip()
+    source_code = (request.GET.get("source") or "").strip()
+    availability = (request.GET.get("availability") or "all").strip()
+    sort_mode = (request.GET.get("sort") or "newest").strip()
+
+    if query:
+        queryset = queryset.filter(
+            _Phase23Q(title__icontains=query)
+            | _Phase23Q(short_description__icontains=query)
+            | _Phase23Q(description__icontains=query)
+            | _Phase23Q(tags__icontains=query)
+            | _Phase23Q(author_name__icontains=query)
+            | _Phase23Q(source__name__icontains=query)
+            | _Phase23Q(metrics__source_category__icontains=query)
+        )
+    if segment:
+        queryset = queryset.filter(metrics__segment=segment)
+    if source_code:
+        queryset = queryset.filter(source__code=source_code)
+    printable_filter = (
+        _Phase23Q(metrics__public_approved=True)
+        & _Phase23Q(metrics__commercial_use_allowed=True)
+        & _Phase23Q(metrics__license_review_status="allowed")
+        & (
+            ~_Phase23Q(private_download_url="")
+            | ~_Phase23Q(file_format="")
+            | ~_Phase23Q(metrics__file_links=[])
+            | ~_Phase23Q(metrics__file_formats=[])
+        )
+    )
+    if availability == "printable":
+        queryset = queryset.filter(printable_filter)
+    elif availability == "reference":
+        queryset = queryset.exclude(printable_filter)
+
+    ordering = {
+        "newest": ("-imported_at", "-id"),
+        "views": ("-metrics__views_count", "-imported_at"),
+        "downloads": ("-metrics__downloads_count", "-imported_at"),
+        "likes": ("-metrics__likes_count", "-imported_at"),
+        "title": ("title", "-imported_at"),
+    }.get(sort_mode, ("-imported_at", "-id"))
+
+    page_obj = _Phase23Paginator(queryset.order_by(*ordering), 18).get_page(request.GET.get("page"))
+    return render(request, "store/external_catalog.html", {
+        "page_obj": page_obj,
+        "query": query,
+        "segment": segment,
+        "source_code": source_code,
+        "availability": availability,
+        "sort_mode": sort_mode,
+        "segment_choices": CatalogCategoryRule.SEGMENT_CHOICES,
+        "source_choices": PrintCatalogSource.objects.filter(
+            is_active=True,
+            sync_policy__is_active=True,
+            sync_policy__public_reference_enabled=True,
+        ).order_by("name"),
+        "meta_title": "کاتالوگ مرجع مدل‌ها و محصولات قابل سفارش چاپ | 3DprintHub",
+        "meta_description": "مدل‌ها و محصولات دریافت‌شده از منابع معتبر، حتی در صورت نبود لینک مستقیم فایل، با نام، تصویر، مشخصات و لینک منبع نمایش داده می‌شوند.",
+    })
+
+
+def external_print_catalog_detail(request, pk):
+    from .catalog_sync import public_catalog_queryset
+    from .forms import CatalogRefreshRequestForm
+
+    asset = get_object_or_404(
+        public_catalog_queryset().prefetch_related("images", "print_profiles", "refresh_requests"),
+        pk=pk,
+    )
+    latest_refresh = asset.refresh_requests.order_by("-requested_at").first()
+    return render(request, "store/external_catalog_detail.html", {
+        "asset": asset,
+        "refresh_form": CatalogRefreshRequestForm(),
+        "latest_refresh": latest_refresh,
+        "meta_title": f"{asset.title} | بررسی و سفارش چاپ سه‌بعدی",
+        "meta_description": asset.short_description or asset.description[:300],
+        "canonical_url": request.build_absolute_uri(reverse("store:external_catalog_detail", args=[asset.pk])),
+    })
+
+
+@_phase23_require_POST
+def external_catalog_refresh_request(request, pk):
+    from .catalog_sync import public_catalog_queryset
+    from .forms import CatalogRefreshRequestForm
+    from .link_intelligence import enqueue_catalog_refresh
+
+    asset = get_object_or_404(public_catalog_queryset(), pk=pk)
+    from .models import CatalogRefreshRequest
+
+    since = _phase23_timezone.now() - _phase23_timedelta(hours=1)
+    refresh_qs = CatalogRefreshRequest.objects.filter(requested_at__gte=since)
+    if request.user.is_authenticated:
+        refresh_qs = refresh_qs.filter(requested_by=request.user)
+        limit = 20
+    else:
+        refresh_qs = refresh_qs.filter(session_key=_phase23_session_key(request))
+        limit = 5
+    if refresh_qs.count() >= limit:
+        messages.error(request, "سقف درخواست بروزرسانی در یک ساعت تکمیل شده است.")
+        return redirect("store:external_catalog_detail", pk=asset.pk)
+
+    form = CatalogRefreshRequestForm(request.POST)
+    if form.is_valid():
+        refresh_request = enqueue_catalog_refresh(
+            asset,
+            user=request.user,
+            session_key=_phase23_session_key(request),
+            note=form.cleaned_data.get("customer_note", ""),
+        )
+        messages.success(request, f"درخواست بروزرسانی ثبت شد؛ وضعیت فعلی: {refresh_request.get_status_display()}.")
+    else:
+        messages.error(request, "توضیح درخواست بروزرسانی معتبر نیست.")
+    return redirect("store:external_catalog_detail", pk=asset.pk)
+
+
+def external_link_analyzer(request):
+    from .forms import ExternalLinkSubmitForm
+    from .link_analysis_queue import enqueue_link_analysis
+    from .models import CustomerLinkAnalysis
+
+    initial_url = (request.GET.get("url") or "").strip()
+    form = ExternalLinkSubmitForm(request.POST or None, initial={"source_url": initial_url})
+    if request.method == "POST" and form.is_valid():
+        if not _phase23_link_rate_allowed(request):
+            messages.error(request, "سقف تحلیل لینک در یک ساعت تکمیل شده است؛ کمی بعد دوباره تلاش کنید.")
+            return render(request, "store/external_link_analyzer.html", {"form": form}, status=429)
+        analysis = CustomerLinkAnalysis.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=_phase23_session_key(request),
+            source_url=form.cleaned_data["source_url"],
+            normalized_url=form.cleaned_data["source_url"],
+            source_domain=urllib.parse.urlsplit(form.cleaned_data["source_url"]).hostname or "",
+            status="pending",
+        )
+        enqueue_link_analysis(analysis)
+        messages.success(request, "لینک وارد صف تحلیل شد؛ پیشرفت بدون معطل‌کردن صفحه نمایش داده می‌شود.")
+        return redirect("store:external_link_analysis", token=analysis.public_token)
+    return render(request, "store/external_link_analyzer.html", {"form": form})
+
+
+def external_link_analysis_detail(request, token):
+    from .forms import ExternalLinkEstimateForm
+    from .link_analysis_queue import link_analysis_job_payload
+    from .link_intelligence import analysis_owned_by, calculate_link_estimate, create_order_from_analysis
+    from .models import CustomerLinkAnalysis, CustomerLinkAnalysisJob
+
+    analysis = get_object_or_404(
+        CustomerLinkAnalysis.objects.select_related("user", "material", "order"),
+        public_token=token,
+    )
+    if not analysis_owned_by(analysis, request):
+        raise _Phase23Http404("تحلیل لینک پیدا نشد.")
+
+    analysis_job = CustomerLinkAnalysisJob.objects.filter(analysis=analysis).first()
+    queue_payload = link_analysis_job_payload(analysis_job, analysis)
+    queue_active = bool(analysis_job and analysis_job.status in {"queued", "running", "retry"})
+    if request.method == "POST" and queue_active:
+        messages.error(request, "تحلیل هنوز در صف یا در حال اجراست؛ پس از تکمیل، قیمت را محاسبه کنید.")
+        return redirect("store:external_link_analysis", token=analysis.public_token)
+
+    action = request.POST.get("action") if request.method == "POST" else ""
+    pending_data = request.session.get("pending_link_order_data") or {}
+    if pending_data.get("token") != str(analysis.public_token):
+        pending_data = {}
+    form = ExternalLinkEstimateForm(
+        request.POST or None,
+        analysis=analysis,
+        user=request.user,
+        require_customer=(action == "create_order" and request.user.is_authenticated),
+        initial={
+            "full_name": pending_data.get("full_name", ""),
+            "phone": pending_data.get("phone", ""),
+        } if pending_data else None,
+    )
+    if request.method == "POST" and form.is_valid():
+        analysis.material = form.cleaned_data["material"]
+        analysis.estimated_weight_grams = form.cleaned_data["estimated_weight_grams"]
+        analysis.estimated_print_minutes = form.cleaned_data["estimated_print_minutes"]
+        analysis.quantity = form.cleaned_data["quantity"]
+        analysis.status = "ready"
+        analysis.save(update_fields=[
+            "material", "estimated_weight_grams", "estimated_print_minutes", "quantity", "status", "updated_at"
+        ])
+        calculate_link_estimate(analysis)
+        if action == "create_order":
+            if not request.user.is_authenticated:
+                request.session["pending_link_analysis_token"] = str(analysis.public_token)
+                request.session["pending_link_order_data"] = {
+                    "token": str(analysis.public_token),
+                    "full_name": form.cleaned_data.get("full_name", ""),
+                    "phone": form.cleaned_data.get("phone", ""),
+                }
+                next_url = reverse("store:external_link_analysis", args=[analysis.public_token])
+                return redirect(f"{reverse('website:customer_login')}?next={urllib.parse.quote(next_url)}")
+            try:
+                order = create_order_from_analysis(
+                    analysis,
+                    user=request.user,
+                    full_name=form.cleaned_data["full_name"],
+                    phone=form.cleaned_data["phone"],
+                )
+            except (ValidationError, PermissionDenied) as exc:
+                messages.error(request, str(exc))
+            else:
+                request.session.pop("pending_link_order_data", None)
+                messages.success(request, "پیش‌فاکتور اولیه ساخته شد؛ جزئیات را بررسی و تأیید کنید.")
+                return redirect("website:quote_detail", token=order.public_token)
+        else:
+            messages.success(request, "برآورد قیمت با اطلاعات جدید محاسبه شد.")
+            return redirect("store:external_link_analysis", token=analysis.public_token)
+
+    return render(request, "store/external_link_analysis.html", {
+        "analysis": analysis,
+        "analysis_job": analysis_job,
+        "queue_payload": queue_payload,
+        "queue_active": queue_active,
+        "form": form,
+    })
+
+
+@_phase23_require_POST
+def external_link_reanalyze(request, token):
+    from .link_analysis_queue import enqueue_link_analysis
+    from .link_intelligence import analysis_owned_by
+    from .models import CustomerLinkAnalysis
+
+    analysis = get_object_or_404(CustomerLinkAnalysis, public_token=token)
+    if not analysis_owned_by(analysis, request):
+        raise _Phase23Http404("تحلیل لینک پیدا نشد.")
+    if analysis.order_id:
+        messages.error(request, "این تحلیل قبلاً به سفارش تبدیل شده است.")
+        return redirect("store:external_link_analysis", token=analysis.public_token)
+    enqueue_link_analysis(analysis, force=True, priority=120)
+    messages.success(request, "لینک برای تحلیل مجدد وارد صف شد.")
+    return redirect("store:external_link_analysis", token=analysis.public_token)
+
+
+def external_link_analysis_status(request, token):
+    from .link_analysis_queue import link_analysis_job_payload
+    from .link_intelligence import analysis_owned_by
+    from .models import CustomerLinkAnalysis, CustomerLinkAnalysisJob
+
+    analysis = get_object_or_404(
+        CustomerLinkAnalysis.objects.select_related("material", "order"),
+        public_token=token,
+    )
+    if not analysis_owned_by(analysis, request):
+        raise _Phase23Http404("تحلیل لینک پیدا نشد.")
+    job = CustomerLinkAnalysisJob.objects.filter(analysis=analysis).first()
+    payload = link_analysis_job_payload(job, analysis)
+    payload.update({
+        "analysis_title": analysis.title or "",
+        "can_estimate": bool(analysis.can_estimate),
+        "estimated_price": int(analysis.estimated_price or 0),
+        "result_url": reverse("store:external_link_analysis", args=[analysis.public_token]),
+        "updated_at": analysis.updated_at.isoformat() if analysis.updated_at else None,
+    })
+    response = JsonResponse(payload)
+    response["Cache-Control"] = "no-store, max-age=0"
+    return response
+
+
+@login_required
+def customer_link_analyses_view(request):
+    """نمایش امن تاریخچه تحلیل لینک‌های متعلق به مشتری واردشده."""
+    from django.core.paginator import Paginator
+    from website.views import _phase3_profile, _profile_completion
+    from .models import CustomerLinkAnalysis
+
+    status_filter = (request.GET.get("status") or "").strip()
+    queryset = CustomerLinkAnalysis.objects.filter(user=request.user).select_related(
+        "material", "order", "related_asset", "job"
+    )
+    if status_filter in dict(CustomerLinkAnalysis.STATUS_CHOICES):
+        queryset = queryset.filter(status=status_filter)
+
+    page_obj = Paginator(queryset.order_by("-created_at", "-id"), 12).get_page(request.GET.get("page"))
+    profile = _phase3_profile(request.user)
+    return render(request, "store/customer_link_analyses.html", {
+        "profile": profile,
+        "profile_completion": _profile_completion(profile),
+        "page_obj": page_obj,
+        "status_filter": status_filter,
+        "status_choices": CustomerLinkAnalysis.STATUS_CHOICES,
+        "analysis_stats": {
+            "all": CustomerLinkAnalysis.objects.filter(user=request.user).count(),
+            "ready": CustomerLinkAnalysis.objects.filter(user=request.user, status="ready").count(),
+            "needs_input": CustomerLinkAnalysis.objects.filter(
+                user=request.user, status__in=["needs_input", "partial"]
+            ).count(),
+            "converted": CustomerLinkAnalysis.objects.filter(user=request.user, status="converted").count(),
+        },
+    })
+
+# END PHASE 23 RESILIENT CATALOG AND CUSTOMER LINK INTELLIGENCE VIEWS

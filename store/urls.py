@@ -63,3 +63,61 @@ urlpatterns += [
     path("feeds/google-merchant.xml", merchant_feed_view, name="merchant_feed"),
 ]
 # END STORE OPERATIONS PHASE 6 URLS
+
+# BEGIN AFFILIATE PARTNER PROGRAM PHASE 7 URLS
+from .views import (
+    affiliate_referral_view,
+    partner_apply_view,
+    partner_campaign_create_view,
+    partner_campaign_edit_view,
+    partner_dashboard_view,
+    partner_payout_request_view,
+)
+
+urlpatterns += [
+    path("ref/<slug:code>/", affiliate_referral_view, name="affiliate_referral"),
+    path("ref/<slug:code>/<slug:campaign_slug>/", affiliate_referral_view, name="affiliate_referral_campaign"),
+    path("partner/apply/", partner_apply_view, name="partner_apply"),
+    path("partner/dashboard/", partner_dashboard_view, name="partner_dashboard"),
+    path("partner/campaigns/new/", partner_campaign_create_view, name="partner_campaign_create"),
+    path("partner/campaigns/<int:campaign_id>/edit/", partner_campaign_edit_view, name="partner_campaign_edit"),
+    path("partner/payout/request/", partner_payout_request_view, name="partner_payout_request"),
+]
+# END AFFILIATE PARTNER PROGRAM PHASE 7 URLS
+
+from .views import external_print_catalog, external_print_catalog_detail
+
+# BEGIN MULTI SOURCE CATALOG PHASE 9 URLS
+urlpatterns += [
+    path("ready-models/", external_print_catalog, name="external_catalog"),
+    path("ready-models/<int:pk>/", external_print_catalog_detail, name="external_catalog_detail"),
+]
+# END MULTI SOURCE CATALOG PHASE 9 URLS
+
+# BEGIN PHASE 10 PUBLIC CATALOG SITEMAP URL
+from .views import external_catalog_sitemap
+
+urlpatterns += [
+    path("ready-models-sitemap.xml", external_catalog_sitemap, name="external_catalog_sitemap"),
+]
+# END PHASE 10 PUBLIC CATALOG SITEMAP URL
+
+# BEGIN PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE URLS
+from .views import (
+    external_catalog_refresh_request,
+    external_link_analysis_detail,
+    external_link_analysis_status,
+    external_link_analyzer,
+    external_link_reanalyze,
+    customer_link_analyses_view,
+)
+
+urlpatterns += [
+    path("ready-models/<int:pk>/refresh/", external_catalog_refresh_request, name="external_catalog_refresh"),
+    path("link-analyzer/", external_link_analyzer, name="external_link_analyzer"),
+    path("link-analyzer/<uuid:token>/", external_link_analysis_detail, name="external_link_analysis"),
+    path("link-analyzer/<uuid:token>/status/", external_link_analysis_status, name="external_link_analysis_status"),
+    path("link-analyzer/<uuid:token>/reanalyze/", external_link_reanalyze, name="external_link_reanalyze"),
+    path("account/link-analyses/", customer_link_analyses_view, name="customer_link_analyses"),
+]
+# END PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE URLS

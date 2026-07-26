@@ -413,3 +413,249 @@ class ReturnRequestForm(forms.ModelForm):
         self.fields["item"].queryset = order.items.all() if order else StoreOrder.objects.none()
         self.fields["item"].required = False
 # END STORE OPERATIONS PHASE 6 FORMS
+
+# BEGIN AFFILIATE PARTNER PROGRAM PHASE 7 FORMS
+import re
+
+from .models import AffiliateCampaign, AffiliatePartner, AffiliateTier, generate_affiliate_code
+
+
+class AffiliatePartnerApplicationForm(forms.ModelForm):
+    class Meta:
+        model = AffiliatePartner
+        fields = [
+            "partner_type", "display_name", "company_name", "website", "channel",
+            "description", "code", "sheba_number", "card_number", "account_holder", "terms_accepted",
+        ]
+        widgets = {
+            "partner_type": forms.Select(attrs={"class": "form-input"}),
+            "display_name": forms.TextInput(attrs={"class": "form-input", "placeholder": "نام شخص، مجموعه یا رسانه"}),
+            "company_name": forms.TextInput(attrs={"class": "form-input"}),
+            "website": forms.URLInput(attrs={"class": "form-input", "placeholder": "https://example.com"}),
+            "channel": forms.TextInput(attrs={"class": "form-input", "placeholder": "اینستاگرام، تلگرام، وب‌سایت یا شبکه فروش"}),
+            "description": forms.Textarea(attrs={"class": "form-input min-h-28", "placeholder": "روش معرفی مشتری و زمینه همکاری را توضیح دهید."}),
+            "code": forms.TextInput(attrs={"class": "form-input", "dir": "ltr", "placeholder": "مثلاً FARAZ3D"}),
+            "sheba_number": forms.TextInput(attrs={"class": "form-input", "dir": "ltr", "placeholder": "IR000000000000000000000000"}),
+            "card_number": forms.TextInput(attrs={"class": "form-input", "dir": "ltr", "placeholder": "شماره کارت ۱۶ رقمی"}),
+            "account_holder": forms.TextInput(attrs={"class": "form-input"}),
+            "terms_accepted": forms.CheckboxInput(),
+        }
+        labels = {"terms_accepted": "قوانین همکاری، محاسبه پورسانت و تسویه را می‌پذیرم"}
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        self.fields["code"].required = False
+        if not self.instance.pk and user:
+            self.fields["display_name"].initial = user.get_full_name().strip() or user.username
+
+    def clean_code(self):
+        code = (self.cleaned_data.get("code") or "").strip().upper()
+        if not code:
+            return generate_affiliate_code()
+        if not re.fullmatch(r"[A-Z0-9_-]{4,30}", code):
+            raise forms.ValidationError("کد معرف باید ۴ تا ۳۰ کاراکتر انگلیسی، عدد، خط تیره یا زیرخط باشد.")
+        qs = AffiliatePartner.objects.filter(code__iexact=code)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("این کد معرف قبلاً استفاده شده است.")
+        return code
+
+    def clean_sheba_number(self):
+        value = normalize_digits(self.cleaned_data.get("sheba_number", "")).replace(" ", "").upper()
+        if value and not re.fullmatch(r"IR\d{24}", value):
+            raise forms.ValidationError("شماره شبا باید با IR شروع شود و پس از آن ۲۴ رقم داشته باشد.")
+        return value
+
+    def clean_card_number(self):
+        value = normalize_digits(self.cleaned_data.get("card_number", "")).replace("-", "").replace(" ", "")
+        if value and not re.fullmatch(r"\d{16}", value):
+            raise forms.ValidationError("شماره کارت باید ۱۶ رقمی باشد.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("terms_accepted"):
+            self.add_error("terms_accepted", "پذیرش قوانین همکاری الزامی است.")
+        if not cleaned.get("sheba_number") and not cleaned.get("card_number"):
+            raise forms.ValidationError("برای تسویه حداقل شماره شبا یا شماره کارت را وارد کنید.")
+        return cleaned
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        if self.user:
+            obj.user = self.user
+        if not obj.tier_id:
+            tier = AffiliateTier.objects.filter(is_active=True).order_by("id").first()
+            if not tier:
+                tier = AffiliateTier.objects.create(name="همکار پایه", slug="default", commission_value=5)
+            obj.tier = tier
+        if obj.pk and obj.status == "rejected":
+            obj.status = "pending"
+        if commit:
+            obj.save()
+        return obj
+
+
+class AffiliateCampaignForm(forms.ModelForm):
+    class Meta:
+        model = AffiliateCampaign
+        fields = ["name", "slug", "target_path", "utm_source", "utm_medium", "utm_campaign", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-input"}),
+            "slug": forms.TextInput(attrs={"class": "form-input", "dir": "ltr"}),
+            "target_path": forms.TextInput(attrs={"class": "form-input", "dir": "ltr", "placeholder": "/store/ یا /store/product/.../"}),
+            "utm_source": forms.TextInput(attrs={"class": "form-input", "dir": "ltr"}),
+            "utm_medium": forms.TextInput(attrs={"class": "form-input", "dir": "ltr"}),
+            "utm_campaign": forms.TextInput(attrs={"class": "form-input", "dir": "ltr"}),
+            "is_active": forms.CheckboxInput(),
+        }
+
+    def __init__(self, *args, partner=None, **kwargs):
+        self.partner = partner
+        super().__init__(*args, **kwargs)
+
+    def clean_slug(self):
+        slug = (self.cleaned_data.get("slug") or "").strip()
+        qs = AffiliateCampaign.objects.filter(partner=self.partner, slug=slug)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("این شناسه کمپین قبلاً استفاده شده است.")
+        return slug
+
+    def clean_target_path(self):
+        path = (self.cleaned_data.get("target_path") or "/").strip()
+        if not path.startswith("/") or path.startswith("//"):
+            raise forms.ValidationError("مقصد باید یک مسیر داخلی سایت باشد و با / شروع شود.")
+        return path
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.partner = self.partner
+        if commit:
+            obj.save()
+        return obj
+
+
+class AffiliatePayoutRequestForm(forms.Form):
+    note = forms.CharField(required=False, label="توضیحات درخواست", widget=forms.Textarea(attrs={"class": "form-input min-h-24", "placeholder": "توضیح اختیاری برای واحد مالی"}))
+# END AFFILIATE PARTNER PROGRAM PHASE 7 FORMS
+
+# BEGIN PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE FORMS
+import re
+from decimal import Decimal
+
+from website.models import Material
+
+from .link_intelligence import normalize_public_url
+
+
+class ExternalLinkSubmitForm(forms.Form):
+    source_url = forms.CharField(
+        label="لینک محصول یا مدل",
+        max_length=2000,
+        widget=forms.URLInput(attrs={
+            "class": "form-input",
+            "placeholder": "https://example.com/model/...",
+            "inputmode": "url",
+            "autocomplete": "url",
+        }),
+        help_text="لینک عمومی محصول، مدل یا صفحه فایل را وارد کنید. نبود لینک مستقیم STL مانع تحلیل نیست.",
+    )
+
+    def clean_source_url(self):
+        return normalize_public_url(self.cleaned_data["source_url"], resolve_dns=False)
+
+
+class ExternalLinkEstimateForm(forms.Form):
+    material = forms.ModelChoiceField(
+        label="متریال پیشنهادی",
+        queryset=Material.objects.none(),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    estimated_weight_grams = forms.DecimalField(
+        label="وزن تقریبی هر قطعه (گرم)",
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        widget=forms.NumberInput(attrs={"class": "form-input", "min": "0.01", "step": "0.01"}),
+    )
+    estimated_print_minutes = forms.IntegerField(
+        label="زمان تقریبی چاپ هر قطعه (دقیقه)",
+        min_value=1,
+        widget=forms.NumberInput(attrs={"class": "form-input", "min": "1"}),
+    )
+    quantity = forms.IntegerField(
+        label="تعداد",
+        min_value=1,
+        max_value=1000,
+        initial=1,
+        widget=forms.NumberInput(attrs={"class": "form-input", "min": "1", "max": "1000"}),
+    )
+    full_name = forms.CharField(
+        label="نام و نام خانوادگی",
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-input", "autocomplete": "name"}),
+    )
+    phone = forms.CharField(
+        label="شماره تماس",
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-input", "inputmode": "tel", "autocomplete": "tel"}),
+    )
+
+    def __init__(self, *args, analysis=None, user=None, require_customer=False, **kwargs):
+        self.analysis = analysis
+        self.require_customer = bool(require_customer)
+        super().__init__(*args, **kwargs)
+        self.fields["material"].queryset = Material.objects.filter(is_active=True).order_by("sort_order", "name")
+        self.fields["full_name"].required = self.require_customer
+        self.fields["phone"].required = self.require_customer
+        if analysis and not self.is_bound:
+            self.initial.update({
+                "material": analysis.material_id,
+                "estimated_weight_grams": analysis.estimated_weight_grams,
+                "estimated_print_minutes": analysis.estimated_print_minutes,
+                "quantity": analysis.quantity or 1,
+            })
+        if user and getattr(user, "is_authenticated", False) and not self.is_bound:
+            profile = getattr(user, "customer_profile", None)
+            full_name = user.get_full_name().strip()
+            if profile:
+                full_name = f"{profile.first_name} {profile.last_name}".strip() or full_name
+                self.initial["phone"] = profile.phone
+            self.initial.setdefault("full_name", full_name or user.username)
+            self.initial.setdefault("phone", "")
+
+    def clean_full_name(self):
+        value = str(self.cleaned_data.get("full_name") or "").strip()
+        if self.require_customer and len(value) < 3:
+            raise forms.ValidationError("نام و نام خانوادگی را وارد کنید.")
+        return value[:200]
+
+    def clean_phone(self):
+        value = str(self.cleaned_data.get("phone") or "").strip()
+        if not value and not self.require_customer:
+            return ""
+        normalized = value.translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
+        normalized = re.sub(r"[^0-9+]", "", normalized)
+        if len(re.sub(r"\D", "", normalized)) < 10:
+            raise forms.ValidationError("شماره تماس معتبر وارد کنید.")
+        return normalized[:20]
+
+
+class CatalogRefreshRequestForm(forms.Form):
+    customer_note = forms.CharField(
+        required=False,
+        max_length=500,
+        label="چه چیزی بروزرسانی شود؟",
+        widget=forms.Textarea(attrs={
+            "class": "form-input",
+            "rows": 3,
+            "placeholder": "مثلاً وزن، فایل جدید، تصاویر یا مشخصات چاپ",
+        }),
+    )
+# END PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE FORMS
