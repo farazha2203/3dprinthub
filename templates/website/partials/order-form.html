@@ -1,239 +1,146 @@
+{% if user.is_authenticated %}
 {% load humanize %}
+<section id="order" class="p13-section p13-order">
+  <div class="p13-container p13-order-layout">
+    <aside class="p13-order-info">
+      <span class="p13-kicker">سفارش تخصصی چاپ سه‌بعدی</span>
+      <h2 class="p13-title">هر اطلاعاتی که برای ساخت دقیق لازم است، مرحله‌به‌مرحله</h2>
+      <p class="p13-lead">برای قطعه جدید، چهار نمای اصلی و اطلاعات شرایط کاری را دریافت می‌کنیم. برای مدل آماده یا فایل قبلی، مراحل اضافی حذف می‌شوند و سفارش با نرخ روز ثبت می‌شود.</p>
+      <div class="p13-order-benefits">
+        <div class="p13-order-benefit"><span class="p13-order-benefit__num">۱</span><div><strong>انتخاب مسیر سفارش</strong><br>قطعه جدید، مدل آماده یا سفارش مجدد فایل محفوظ.</div></div>
+        <div class="p13-order-benefit"><span class="p13-order-benefit__num">۲</span><div><strong>بررسی مهندسی</strong><br>ابعاد، دما، فشار، تماس با روغن، بنزین، گریس و مواد شیمیایی.</div></div>
+        <div class="p13-order-benefit"><span class="p13-order-benefit__num">۳</span><div><strong>قیمت‌گذاری شفاف</strong><br>متریال، زمان دستگاه، طراحی، پرداخت‌کاری و ارسال جدا بررسی می‌شوند.</div></div>
+      </div>
+      {% if has_reusable_models %}<a class="p13-button p13-button--ghost" style="margin-top:1rem" href="{% url 'website:customer_reusable_models' %}">مدل‌های محفوظ من</a>{% endif %}
+    </aside>
 
-<section id="order" class="py-24 bg-slate-900">
-    <div class="container mx-auto px-6">
-        <div class="grid lg:grid-cols-2 gap-12 items-start">
-
-            <div>
-                <span class="text-cyan-300 font-bold">ثبت سفارش</span>
-
-                <h2 class="text-3xl md:text-5xl font-black mt-3 mb-6 section-title">
-                    عکس قطعه را بفرست، بررسی و قیمت‌گذاری می‌کنیم
-                </h2>
-
-                <p class="text-slate-400 leading-9 mb-8">
-                    نوع خدمت، متریال، رنگ، تعداد و تصاویر قطعه را ارسال کنید.
-                    بعد از بررسی وزن، زمان چاپ و هزینه‌ها، پیش‌فاکتور دقیق صادر می‌شود.
-                    هزینه متریال، زمان دستگاه و دستمزد به‌صورت جداگانه محاسبه و اعلام خواهد شد.
-                </p>
-
-                <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                    <div class="glass rounded-3xl p-5">
-                        <div class="text-3xl mb-3">🧪</div>
-                        <h3 class="font-black mb-2">انتخاب متریال</h3>
-                        <p class="text-slate-400 text-sm leading-7">
-                            PLA، PET-CF، PA12-CF، TPU، PPS-CF و سایر متریال‌های صنعتی.
-                        </p>
-                    </div>
-
-                    <div class="glass rounded-3xl p-5">
-                        <div class="text-3xl mb-3">💰</div>
-                        <h3 class="font-black mb-2">محاسبه شفاف قیمت</h3>
-                        <p class="text-slate-400 text-sm leading-7">
-                            قیمت متریال، هزینه ساعتی دستگاه و دستمزد به‌صورت جدا نمایش داده می‌شود.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="glass rounded-3xl p-5">
-                    <h3 class="font-black mb-4">فرمول محاسبه قیمت</h3>
-
-                    <div class="space-y-3 text-sm text-slate-300 leading-7">
-                        <div class="flex items-start gap-2">
-                            <span class="text-cyan-300">1.</span>
-                            <span>
-                                هزینه متریال = قیمت هر گرم متریال × وزن قطعه × تعداد
-                            </span>
-                        </div>
-
-                        <div class="flex items-start gap-2">
-                            <span class="text-cyan-300">2.</span>
-                            <span>
-                                هزینه دستگاه = هزینه ساعتی × زمان چاپ × تعداد
-                            </span>
-                        </div>
-
-                        <div class="flex items-start gap-2">
-                            <span class="text-cyan-300">3.</span>
-                            <span>
-                                قیمت نهایی = هزینه متریال + هزینه دستگاه + دستمزد + طراحی/پرداخت‌کاری/ارسال
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 rounded-2xl bg-slate-950 border border-slate-800 p-4 text-sm text-slate-400 leading-7">
-                        مثال: اگر PET-CF کیلویی ۴,۰۰۰,۰۰۰ تومان باشد، هر گرم حدوداً ۴,۰۰۰ تومان می‌شود.
-                        قطعه ۱۰ گرمی یعنی ۴۰,۰۰۰ تومان هزینه متریال، سپس هزینه چاپ و دستمزد جدا اضافه می‌شود.
-                    </div>
-                </div>
-            </div>
-
-            <form 
-                method="post" 
-                enctype="multipart/form-data" 
-                class="glass rounded-[2rem] p-6 md:p-8 shadow-2xl"
-                novalidate
-            >
-                {% csrf_token %}
-
-                {% if form.errors %}
-                    <div class="mb-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 text-rose-300">
-                        <div class="font-black mb-2">لطفاً خطاهای زیر را اصلاح کنید:</div>
-
-                        <ul class="list-disc pr-5 space-y-1 text-sm leading-7">
-                            {% for field in form %}
-                                {% for error in field.errors %}
-                                    <li>{{ field.label }}: {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-
-                            {% for error in form.non_field_errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="{{ form.first_name.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                            نام
-                        </label>
-                        {{ form.first_name }}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.last_name.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                            نام خانوادگی
-                        </label>
-                        {{ form.last_name }}
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="{{ form.phone.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                        شماره تماس
-                    </label>
-                    {{ form.phone }}
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="{{ form.service_type.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                            نوع خدمت
-                        </label>
-                        {{ form.service_type }}
-                    </div>
-
-                    <div>
-                        <label for="id_material" class="block mb-2 text-sm text-slate-300">
-                            متریال موردنظر
-                        </label>
-
-                        <select 
-                            name="material" 
-                            id="id_material" 
-                            class="form-input"
-                        >
-                            <option value="">متریال موردنظر را انتخاب کنید</option>
-
-                            {% for material in materials %}
-                                <option 
-                                    value="{{ material.id }}"
-                                    data-name="{{ material.name }}"
-                                    data-price-kg="{{ material.price_per_kg }}"
-                                    data-price-gram="{{ material.price_per_gram }}"
-                                    {% if form.material.value|stringformat:"s" == material.id|stringformat:"s" %}selected{% endif %}
-                                >
-                                    {{ material.name }}
-                                    {% if material.price_per_kg %}
-                                        - کیلویی {{ material.price_per_kg|intcomma }} تومان
-                                    {% else %}
-                                        - استعلامی
-                                    {% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div id="material-price-preview" class="hidden mb-4 rounded-2xl bg-slate-950 border border-slate-800 p-4">
-                    <div class="flex items-center justify-between gap-4 mb-3">
-                        <div class="text-sm text-slate-400">متریال انتخابی</div>
-                        <div id="material-preview-name" class="font-black text-cyan-300">-</div>
-                    </div>
-
-                    <div class="grid sm:grid-cols-2 gap-3 text-sm">
-                        <div class="rounded-2xl bg-slate-900 p-4">
-                            <div class="text-slate-400 mb-1">قیمت هر کیلو</div>
-                            <div id="material-preview-kg" class="font-black">-</div>
-                        </div>
-
-                        <div class="rounded-2xl bg-slate-900 p-4">
-                            <div class="text-slate-400 mb-1">قیمت هر گرم</div>
-                            <div id="material-preview-gram" class="font-black">-</div>
-                        </div>
-                    </div>
-
-                    <p class="text-xs text-slate-500 mt-3 leading-6">
-                        قیمت نهایی بعد از بررسی وزن واقعی قطعه، زمان چاپ، دستمزد و هزینه‌های جانبی اعلام می‌شود.
-                    </p>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="{{ form.color.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                            رنگ موردنظر
-                        </label>
-                        {{ form.color }}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.quantity.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                            تعداد
-                        </label>
-                        {{ form.quantity }}
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="{{ form.description.id_for_label }}" class="block mb-2 text-sm text-slate-300">
-                        توضیحات سفارش
-                    </label>
-                    {{ form.description }}
-
-                    <p class="text-xs text-slate-500 mt-2 leading-6">
-                        لطفاً کاربرد قطعه، ابعاد حدودی، شرایط کاری، دما، فشار، تماس با مواد شیمیایی و نکات مهم را بنویسید.
-                    </p>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block mb-2 text-sm text-slate-300">
-                        تصاویر محصول یا قطعه
-                    </label>
-
-                    <input 
-                        type="file" 
-                        name="images" 
-                        multiple 
-                        accept="image/*"
-                        class="w-full rounded-2xl border border-slate-700 bg-slate-950 text-slate-300 p-4"
-                    >
-
-                    <p class="text-xs text-slate-500 mt-2 leading-6">
-                        می‌توانید چند تصویر از زوایای مختلف قطعه، محل نصب، قطعه شکسته یا نمونه مشابه ارسال کنید.
-                    </p>
-                </div>
-
-                <div class="mb-6 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 p-4 text-sm text-slate-300 leading-7">
-                    بعد از ثبت سفارش، اطلاعات شما در دیتابیس ذخیره می‌شود و از پنل مدیریت بررسی می‌کنیم.
-                    سپس پیش‌فاکتور شامل هزینه متریال، هزینه دستگاه و دستمزد برای مشتری آماده می‌شود.
-                </div>
-
-                <button type="submit" class="w-full rounded-2xl btn-primary font-black py-4 transition">
-                    ثبت سفارش و دریافت پیش‌فاکتور
-                </button>
-            </form>
+    <form method="post" enctype="multipart/form-data" class="p13-wizard" novalidate data-p13-order-form data-current-step="1">
+      {% csrf_token %}
+      <div class="p13-wizard__top">
+        <div class="p13-wizard__steps" aria-label="مراحل ثبت سفارش">
+          <button type="button" class="p13-wizard__step is-active" data-p13-step="1"><span>۱</span>نوع سفارش</button>
+          <button type="button" class="p13-wizard__step" data-p13-step="2"><span>۲</span>مشخصات</button>
+          <button type="button" class="p13-wizard__step" data-p13-step="3"><span>۳</span>شرایط کاری</button>
+          <button type="button" class="p13-wizard__step" data-p13-step="4"><span>۴</span>تصاویر و ثبت</button>
         </div>
-    </div>
+      </div>
+
+      <div class="p13-wizard__body">
+        {% if form.errors %}
+          <div class="p13-form-error">
+            <strong>اطلاعات فرم نیاز به اصلاح دارد:</strong>
+            <ul style="margin-top:.6rem;padding-right:1.2rem;list-style:disc">
+              {% for field in form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+              {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <section class="p13-wizard-panel" data-p13-panel="1">
+          <h3 class="p13-panel-title">چه نوع سفارشی ثبت می‌کنید؟</h3>
+          <p class="p13-panel-note">مسیر مناسب را انتخاب کنید تا فقط اطلاعات لازم نمایش داده شود.</p>
+          <div class="p13-mode-grid">
+            {% for radio in form.request_mode %}
+              {% if radio.data.value != 'reorder_model' or has_reusable_models %}
+                <label class="p13-mode-card">{{ radio.tag }}<strong>{{ radio.choice_label }}</strong>
+                  {% if radio.data.value == 'new_part' %}<small>ساخت از روی عکس، نمونه فیزیکی یا اندازه‌برداری.</small>{% elif radio.data.value == 'reorder_model' %}<small>فایل محفوظ است و به مشتری نمایش داده یا تحویل نمی‌شود.</small>{% else %}<small>مدل آماده انتخاب‌شده با متریال و رنگ دلخواه چاپ می‌شود.</small>{% endif %}
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {{ form.ready_catalog_asset_id }}
+          <div class="p13-field" style="margin-top:1rem" data-p13-reorder-only hidden><label>{{ form.reusable_model.label }}</label>{{ form.reusable_model }}<small style="display:block;margin-top:.4rem;color:#929aa6">{{ form.reusable_model.help_text }}</small></div>
+          <div data-p13-ready-only hidden style="margin-top:1rem;border:1px solid rgba(56,217,150,.35);border-radius:16px;background:rgba(56,217,150,.07);padding:1rem;color:#9bf0cd">مدل آماده از کاتالوگ انتخاب شده است. در مراحل بعد متریال، رنگ و تعداد را مشخص کنید.</div>
+        </section>
+
+        <section class="p13-wizard-panel" data-p13-panel="2" hidden>
+          <h3 class="p13-panel-title">مشخصات تماس و انتخاب چاپ</h3>
+          <p class="p13-panel-note">قیمت هر گرم متریال در فهرست نمایش داده می‌شود؛ مبلغ نهایی بعد از تحلیل وزن و زمان چاپ تعیین خواهد شد.</p>
+          <div class="p13-form-grid">
+            <div class="p13-field"><label for="{{ form.first_name.id_for_label }}">نام</label>{{ form.first_name }}</div>
+            <div class="p13-field"><label for="{{ form.last_name.id_for_label }}">نام خانوادگی</label>{{ form.last_name }}</div>
+            <div class="p13-field"><label for="{{ form.phone.id_for_label }}">شماره تماس</label>{{ form.phone }}</div>
+            <div class="p13-field"><label for="{{ form.service_type.id_for_label }}">نوع خدمت</label>{{ form.service_type }}</div>
+            <div class="p13-field"><label for="id_material">متریال موردنظر</label>
+              <select name="material" id="id_material" class="form-input">
+                <option value="">انتخاب متریال</option>
+                {% for material in materials %}<option value="{{ material.id }}" data-price-gram="{{ material.public_sale_price_per_gram }}" {% if form.material.value|stringformat:'s' == material.id|stringformat:'s' %}selected{% endif %}>{{ material.name }}{% if material.public_sale_price_per_gram %} — هر گرم {{ material.public_sale_price_per_gram|intcomma }} تومان{% endif %}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="p13-field"><label for="{{ form.color.id_for_label }}">رنگ</label>{{ form.color }}</div>
+            <div class="p13-field"><label for="{{ form.quantity.id_for_label }}">تعداد</label>{{ form.quantity }}</div>
+            <div class="p13-field"><label for="{{ form.usage_environment.id_for_label }}">محیط استفاده</label>{{ form.usage_environment }}</div>
+            <div class="p13-field p13-field--full"><div data-p13-material-preview style="border-radius:14px;background:rgba(255,255,255,.055);padding:.9rem;color:#c8ced6;font-size:.78rem">قیمت نهایی پس از انتخاب متریال و بررسی فنی اعلام می‌شود.</div></div>
+          </div>
+        </section>
+
+        <section class="p13-wizard-panel" data-p13-panel="3" hidden>
+          <h3 class="p13-panel-title">شرایط کارکرد و اندازه‌های قطعه</h3>
+          <p class="p13-panel-note">این اطلاعات برای انتخاب متریال و جهت چاپ حیاتی است. موارد نامشخص را خالی بگذارید تا کارشناس بررسی کند.</p>
+          <div class="p13-check-grid">
+            <label class="p13-check">{{ form.contact_with_gasoline }} تماس با بنزین</label>
+            <label class="p13-check">{{ form.contact_with_oil }} تماس با روغن</label>
+            <label class="p13-check">{{ form.contact_with_grease }} تماس با گریس</label>
+            <label class="p13-check">{{ form.contact_with_water }} تماس با آب یا رطوبت</label>
+            <label class="p13-check">{{ form.contact_with_chemicals }} تماس با مواد شیمیایی</label>
+            <label class="p13-check">{{ form.has_physical_sample }} نمونه فیزیکی موجود است</label>
+          </div>
+          <div class="p13-form-grid">
+            <div class="p13-field"><label>{{ form.chemical_details.label }}</label>{{ form.chemical_details }}</div>
+            <div class="p13-field"><label>{{ form.dimensional_tolerance.label }}</label>{{ form.dimensional_tolerance }}</div>
+            <div class="p13-field"><label>{{ form.operating_temperature_min.label }}</label>{{ form.operating_temperature_min }}</div>
+            <div class="p13-field"><label>{{ form.operating_temperature_max.label }}</label>{{ form.operating_temperature_max }}</div>
+            <div class="p13-field"><label>{{ form.exact_dimensions.label }}</label>{{ form.exact_dimensions }}</div>
+            <div class="p13-field"><label>{{ form.required_properties.label }}</label>{{ form.required_properties }}</div>
+            <div class="p13-field"><label>{{ form.installation_location.label }}</label>{{ form.installation_location }}</div>
+            <div class="p13-field"><label>{{ form.load_conditions.label }}</label>{{ form.load_conditions }}</div>
+            <div class="p13-field p13-field--full"><label>{{ form.sample_delivery_method.label }}</label>{{ form.sample_delivery_method }}</div>
+          </div>
+        </section>
+
+        <section class="p13-wizard-panel" data-p13-panel="4" hidden>
+          <h3 class="p13-panel-title">تصاویر مرجع و توضیحات نهایی</h3>
+          <p class="p13-panel-note">برای قطعه جدید چهار نمای اصلی الزامی است. عکس‌ها را در نور مناسب و کنار خط‌کش یا کولیس ثبت کنید.</p>
+          <div data-p13-new-part-only>
+            <div class="p13-photo-grid">
+              <div class="p13-photo-field"><label>نمای بالا *</label><p>دوربین عمود بر سطح بالایی</p>{{ form.photo_top }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+              <div class="p13-photo-field"><label>نمای روبه‌رو *</label><p>نمای اصلی و مستقیم قطعه</p>{{ form.photo_front }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+              <div class="p13-photo-field"><label>نمای راست *</label><p>سمت راست قطعه یا محل نصب</p>{{ form.photo_right }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+              <div class="p13-photo-field"><label>نمای چپ *</label><p>سمت چپ قطعه یا محل نصب</p>{{ form.photo_left }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+              <div class="p13-photo-field"><label>تصویر تکمیلی اول</label><p>جزئیات شکستگی، سوراخ یا اتصال</p>{{ form.photo_extra_1 }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+              <div class="p13-photo-field"><label>تصویر تکمیلی دوم</label><p>قطعه کنار خط‌کش، کولیس یا نمونه مشابه</p>{{ form.photo_extra_2 }}<span class="p13-photo-name" data-p13-file-name>فایلی انتخاب نشده است</span></div>
+            </div>
+          </div>
+          <div class="p13-field p13-field--full" style="margin-top:1rem">
+            <label>{{ form.documents.label }}</label>
+            {{ form.documents }}
+            <small style="display:block;margin-top:.45rem;color:#929aa6">{{ form.documents.help_text }}</small>
+            <div class="p13-document-list" data-p13-document-list></div>
+          </div>
+          <div class="p13-form-grid">
+            <div class="p13-field p13-field--full"><label>{{ form.description.label }}</label>{{ form.description }}</div>
+            <div class="p13-field p13-field--full"><label>{{ form.extra_notes.label }}</label>{{ form.extra_notes }}</div>
+          </div>
+          <div style="margin-top:1rem;border-radius:16px;background:rgba(255,138,0,.09);padding:1rem;color:#d9dde3;font-size:.78rem;line-height:1.85">با ثبت سفارش، فایل‌ها و تصاویر فقط برای بررسی فنی مجموعه استفاده می‌شوند. فایل سه‌بعدی ساخته‌شده به مشتری یا نماینده تحویل داده نمی‌شود مگر با توافق کتبی جداگانه.</div>
+        </section>
+      </div>
+
+      <div class="p13-wizard__footer">
+        <button type="button" class="p13-button p13-button--ghost" data-p13-prev-step>مرحله قبل</button>
+        <button type="button" class="p13-button p13-button--orange" data-p13-next-step>مرحله بعد</button>
+        <button type="submit" class="p13-button p13-button--orange">ثبت سفارش و بررسی با نرخ روز</button>
+      </div>
+    </form>
+  </div>
 </section>
+
+{% else %}
+<section id="order" class="p14-section p14-login-order">
+  <div class="p14-container">
+    <div class="p14-login-order__card">
+      <div><span class="p14-eyebrow">ثبت و پیگیری امن سفارش</span><h2>برای سفارش وارد حساب مشتری شوید</h2><p>پس از ورود، تصاویر قطعه، شرایط کاری و مشخصات فنی را ثبت می‌کنید و تمام پیش‌فاکتورها و مراحل تولید در پنل شما باقی می‌ماند.</p></div>
+      <div class="p14-login-order__actions"><a class="p14-btn p14-btn--primary" href="{% url 'website:customer_login' %}?next=/%23order">ورود به حساب</a><a class="p14-btn p14-btn--ghost" href="{% url 'website:customer_register' %}?next=/%23order">ساخت حساب مشتری</a></div>
+    </div>
+  </div>
+</section>
+{% endif %}

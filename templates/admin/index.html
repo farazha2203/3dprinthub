@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load admin_dashboard humanize static %}
+
+{% block bodyclass %}admin-dashboard-page{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+{% admin_dashboard_data as dashboard %}
+<div class="velzon-dashboard">
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <p class="text-uppercase fw-semibold text-muted mb-1">مرکز فرمان کسب‌وکار</p>
+            <h4 class="fs-24 mb-1">سلام {% firstof request.user.get_short_name request.user.get_username %}</h4>
+            <p class="text-muted mb-0">سفارش، تولید، فروش، موجودی و محتوای 3DPrintHub را از یک نقطه کنترل کنید.</p>
+        </div>
+        <div class="col-auto">
+            <div class="d-flex gap-2 flex-wrap">
+                {% if perms.website.add_order %}<a href="{% url 'admin:website_order_add' %}" class="btn btn-primary"><i class="ri-add-line align-bottom me-1"></i> سفارش خدمات</a>{% endif %}
+                {% if perms.store.add_product %}<a href="{% url 'admin:store_product_add' %}" class="btn btn-outline-primary"><i class="ri-store-2-line align-bottom me-1"></i> محصول جدید</a>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-3 col-md-6"><div class="card card-animate"><div class="card-body"><div class="d-flex align-items-center"><div class="flex-grow-1 overflow-hidden"><p class="text-uppercase fw-medium text-muted text-truncate mb-0">درآمد ۳۰ روز اخیر</p></div><div class="flex-shrink-0"><span class="badge bg-success-subtle text-success">پرداخت موفق</span></div></div><div class="d-flex align-items-end justify-content-between mt-4"><div><h4 class="fs-22 fw-semibold ff-secondary mb-1"><span class="counter-value">{{ dashboard.revenue_30|intcomma }}</span></h4><span class="text-muted">تومان</span></div><div class="avatar-sm flex-shrink-0"><span class="avatar-title bg-success-subtle rounded fs-3"><i class="bx bx-wallet text-success"></i></span></div></div></div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card card-animate"><div class="card-body"><div class="d-flex align-items-center"><div class="flex-grow-1 overflow-hidden"><p class="text-uppercase fw-medium text-muted text-truncate mb-0">سفارش‌های امروز</p></div></div><div class="d-flex align-items-end justify-content-between mt-4"><div><h4 class="fs-22 fw-semibold ff-secondary mb-1">{{ dashboard.today_orders|intcomma }}</h4><span class="text-muted">خدمات و فروشگاه</span></div><div class="avatar-sm flex-shrink-0"><span class="avatar-title bg-info-subtle rounded fs-3"><i class="bx bx-shopping-bag text-info"></i></span></div></div></div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card card-animate"><div class="card-body"><div class="d-flex align-items-center"><div class="flex-grow-1 overflow-hidden"><p class="text-uppercase fw-medium text-muted text-truncate mb-0">سفارش فعال</p></div></div><div class="d-flex align-items-end justify-content-between mt-4"><div><h4 class="fs-22 fw-semibold ff-secondary mb-1">{{ dashboard.active_orders|intcomma }}</h4><span class="text-muted">در جریان عملیات</span></div><div class="avatar-sm flex-shrink-0"><span class="avatar-title bg-primary-subtle rounded fs-3"><i class="bx bx-layer text-primary"></i></span></div></div></div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card card-animate"><div class="card-body"><div class="d-flex align-items-center"><div class="flex-grow-1 overflow-hidden"><p class="text-uppercase fw-medium text-muted text-truncate mb-0">نیازمند پیگیری</p></div></div><div class="d-flex align-items-end justify-content-between mt-4"><div><h4 class="fs-22 fw-semibold ff-secondary mb-1">{{ dashboard.follow_up_count|intcomma }}</h4><span class="text-muted">پرداخت و مرجوعی</span></div><div class="avatar-sm flex-shrink-0"><span class="avatar-title bg-warning-subtle rounded fs-3"><i class="bx bx-error-circle text-warning"></i></span></div></div></div></div></div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card"><div class="card-header border-0 align-items-center d-flex"><h4 class="card-title mb-0 flex-grow-1">درآمد هفت روز اخیر</h4><span class="badge bg-primary-subtle text-primary">داده واقعی</span></div><div class="card-body"><div id="admin-revenue-chart" class="apex-charts"></div></div></div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card"><div class="card-header"><h4 class="card-title mb-0">وضعیت سریع</h4></div><div class="card-body">
+                <div class="d-flex align-items-center mb-4"><div class="avatar-xs flex-shrink-0"><span class="avatar-title bg-danger-subtle text-danger rounded-circle"><i class="ri-alarm-warning-line"></i></span></div><div class="flex-grow-1 ms-3"><p class="mb-0">هشدار موجودی</p></div><div class="fw-semibold">{{ dashboard.low_stock_count }}</div></div>
+                <div class="d-flex align-items-center mb-4"><div class="avatar-xs flex-shrink-0"><span class="avatar-title bg-info-subtle text-info rounded-circle"><i class="ri-user-add-line"></i></span></div><div class="flex-grow-1 ms-3"><p class="mb-0">مشتری جدید در ۳۰ روز</p></div><div class="fw-semibold">{{ dashboard.new_customers_30 }}</div></div>
+                <div class="d-flex align-items-center mb-4"><div class="avatar-xs flex-shrink-0"><span class="avatar-title bg-warning-subtle text-warning rounded-circle"><i class="ri-bank-card-line"></i></span></div><div class="flex-grow-1 ms-3"><p class="mb-0">پرداخت در انتظار</p></div><div class="fw-semibold">{{ dashboard.pending_payments }}</div></div>
+                <div class="d-flex align-items-center"><div class="avatar-xs flex-shrink-0"><span class="avatar-title bg-success-subtle text-success rounded-circle"><i class="ri-arrow-go-back-line"></i></span></div><div class="flex-grow-1 ms-3"><p class="mb-0">مرجوعی باز</p></div><div class="fw-semibold">{{ dashboard.open_returns }}</div></div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header d-flex align-items-center"><h4 class="card-title mb-0 flex-grow-1">آخرین سفارش‌ها</h4>{% if dashboard.permissions.store_orders %}<a href="{% url 'admin:store_storeorder_changelist' %}" class="btn btn-soft-primary btn-sm">مشاهده سفارش‌های فروشگاه</a>{% endif %}</div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover table-nowrap align-middle mb-0"><thead class="table-light"><tr><th>شناسه</th><th>مسیر</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>{% for order in dashboard.recent_orders %}<tr><td><a class="fw-medium link-primary" href="{{ order.url }}">{{ order.number }}</a></td><td>{{ order.kind }}</td><td>{{ order.customer }}</td><td>{% if order.amount is not None %}{{ order.amount|intcomma }} تومان{% else %}—{% endif %}</td><td><span class="badge bg-primary-subtle text-primary">{{ order.status }}</span></td><td class="text-muted">{{ order.timestamp|date:"Y/m/d H:i" }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-5">هنوز سفارشی ثبت نشده است.</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card"><div class="card-header"><h4 class="card-title mb-0">دسترسی سریع</h4></div><div class="card-body"><div class="admin-app-launcher">
+                {% if perms.website.view_order %}<a href="{% url 'admin:website_order_changelist' %}"><span class="avatar-md"><span class="avatar-title bg-info-subtle text-info rounded"><i class="ri-tools-line"></i></span></span><strong>سفارش خدمات</strong></a>{% endif %}
+                {% if perms.store.view_storeorder %}<a href="{% url 'admin:store_storeorder_changelist' %}"><span class="avatar-md"><span class="avatar-title bg-warning-subtle text-warning rounded"><i class="ri-shopping-cart-line"></i></span></span><strong>سفارش فروشگاه</strong></a>{% endif %}
+                {% if perms.store.view_productionjob %}<a href="{% url 'admin:store_productionjob_changelist' %}"><span class="avatar-md"><span class="avatar-title bg-success-subtle text-success rounded"><i class="ri-printer-line"></i></span></span><strong>تولید</strong></a>{% endif %}
+                {% if perms.website.view_sitesetting %}<a href="{% url 'admin:website_sitesetting_changelist' %}"><span class="avatar-md"><span class="avatar-title bg-primary-subtle text-primary rounded"><i class="ri-settings-3-line"></i></span></span><strong>مدیریت سایت</strong></a>{% endif %}
+            </div></div></div>
+        </div>
+    </div>
+
+    {% if dashboard.permissions.inventory and dashboard.low_stock_variants %}
+    <div class="card border-danger"><div class="card-header bg-danger-subtle"><h4 class="card-title text-danger mb-0"><i class="ri-alarm-warning-line align-middle me-1"></i> موجودی‌های بحرانی</h4></div><div class="card-body"><div class="row g-3">{% for variant in dashboard.low_stock_variants %}<div class="col-lg-4"><a class="inventory-warning" href="{% url 'admin:store_productvariant_change' variant.pk %}"><span><strong>{{ variant.product.title }}</strong><small>{{ variant.code }}</small></span><b>{{ variant.available_for_dashboard }} عدد قابل فروش</b></a></div>{% endfor %}</div></div></div>
+    {% endif %}
+
+    <div class="card"><div class="card-header"><h4 class="card-title mb-0">همه ماژول‌های مدیریتی</h4></div><div class="card-body admin-native-app-list">{% if app_list %}{% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}{% else %}<p class="text-muted mb-0">برای حساب شما ماژول فعالی تعریف نشده است.</p>{% endif %}</div></div>
+</div>
+{{ dashboard.chart_labels|json_script:"admin-revenue-labels" }}
+{{ dashboard.chart_values|json_script:"admin-revenue-values" }}
+{% endblock %}
+

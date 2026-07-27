@@ -1,0 +1,5 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}خروج از پنل مدیریت{% endblock %}
+{% block standalone_content %}<div class="admin-logout-card"><img src="{% static 'admin/brand/icon.png' %}" alt="3DPrintHub"><h1>با موفقیت خارج شدید</h1><p>نشست مدیریتی شما پایان یافت.</p><a class="btn btn-primary" href="{% url 'admin:login' %}">ورود دوباره</a></div>{% endblock %}
+

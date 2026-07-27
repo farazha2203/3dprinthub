@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">خانه</a> &rsaquo; <a href="{% url 'admin:app_list' app_label='store' %}">فروشگاه</a> &rsaquo; {{ title }}</div>{% endblock %}
+{% block content %}
+<style>
+.catalog-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:22px}.catalog-card{padding:18px;border:1px solid var(--hairline-color);border-radius:14px;background:var(--body-bg)}.catalog-card strong{display:block;font-size:24px;margin-top:8px}.catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.catalog-table{width:100%;border-collapse:collapse}.catalog-table th,.catalog-table td{padding:10px;border-bottom:1px solid var(--hairline-color);text-align:right}.policy-warning{background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:14px;margin-bottom:20px;color:#9a3412}@media(max-width:1000px){.catalog-cards{grid-template-columns:1fr 1fr}.catalog-grid{grid-template-columns:1fr}}
+</style>
+<div class="policy-warning"><strong>کنترل مجوز فعال است.</strong> فقط فایل‌هایی که مجوز فروش چاپ فیزیکی آن‌ها تأیید شده، امکان نمایش عمومی دارند. GrabCAD همیشه فقط مرجع داخلی است و Thingiverse فقط از API رسمی دریافت می‌شود.</div>
+<div class="catalog-cards">
+<div class="catalog-card"><span>منبع فعال</span><strong>{{ source_count|intcomma }}</strong></div>
+<div class="catalog-card"><span>فایل دریافت‌شده</span><strong>{{ asset_count|intcomma }}</strong></div>
+<div class="catalog-card"><span>عمومی و مجاز</span><strong>{{ public_count|intcomma }}</strong></div>
+<div class="catalog-card"><span>نیازمند بررسی</span><strong>{{ pending_count|intcomma }}</strong></div>
+<div class="catalog-card"><span>مسدود</span><strong>{{ blocked_count|intcomma }}</strong></div>
+</div>
+<div class="catalog-grid">
+<div class="module"><h2>منابع</h2><table class="catalog-table"><thead><tr><th>منبع</th><th>روش</th><th>تعداد پیش‌فرض</th><th>آخرین اجرا</th></tr></thead><tbody>{% for item in source_policies %}<tr><td><a href="{% url 'admin:store_catalogsourcepolicy_change' item.pk %}">{{ item.source.name }}</a></td><td>{{ item.get_discovery_mode_display }}</td><td>{{ item.default_limit }}</td><td>{{ item.last_synced_at|default:"-" }}</td></tr>{% empty %}<tr><td colspan="4">منبعی تنظیم نشده است.</td></tr>{% endfor %}</tbody></table></div>
+<div class="module"><h2>آخرین اجراها</h2><table class="catalog-table"><thead><tr><th>منبع</th><th>تعداد</th><th>ثبت</th><th>خطا</th><th>وضعیت</th></tr></thead><tbody>{% for run in recent_runs %}<tr><td><a href="{% url 'admin:store_catalogsyncrun_change' run.pk %}">{{ run.source.name }}</a></td><td>{{ run.requested_limit }}</td><td>{{ run.imported_count }}</td><td>{{ run.failed_count }}</td><td>{{ run.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5">هنوز اجرایی ثبت نشده است.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+<p style="margin-top:20px"><a class="button" href="{% url 'admin:store_catalogsyncrun_changelist' %}">ایجاد و اجرای دریافت جدید</a> <a class="button" href="{% url 'admin:store_catalogassetmetrics_changelist' %}">بررسی مجوز و فایل‌ها</a></p>
+{% endblock %}

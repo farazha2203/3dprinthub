@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="52" viewBox="0 0 240 52" role="img" aria-label="3DPrintHub">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#ff8a00"/><stop offset="1" stop-color="#696cff"/></linearGradient></defs>
+  <g fill="none" stroke="url(#g)" stroke-width="3" stroke-linejoin="round">
+    <path d="M26 4 45 15v22L26 48 7 37V15Z"/>
+    <path d="m7 15 19 11 19-11M26 26v22"/>
+  </g>
+  <text x="58" y="24" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#263238">3DPrintHub</text>
+  <text x="58" y="42" font-family="Tahoma, Arial, sans-serif" font-size="12" fill="#697a8d">پنل مدیریت حرفه‌ای</text>
+</svg>

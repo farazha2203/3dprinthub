@@ -1,0 +1,71 @@
+{% extends "website/customer/account_base.html" %}
+{% load static %}
+
+{% block title %}گفت‌وگو با پشتیبانی{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/support-chat.css' %}">
+{% endblock %}
+
+{% block account_content %}
+<section class="customer-card customer-support-page">
+    <div class="customer-section-head">
+        <div>
+            <span class="customer-eyebrow">پشتیبانی آنلاین</span>
+            <h1>گفت‌وگو با کارشناسان 3DPrintHub</h1>
+            <p>پیام، تصویر یا فایل فنی را ارسال کنید. تمام مکالمات در حساب شما محفوظ می‌ماند.</p>
+        </div>
+        <span class="support-status support-status--{{ conversation.status }}">{{ conversation.get_status_display }}</span>
+    </div>
+
+    <div class="customer-chat-layout">
+        <aside class="customer-chat-conversations">
+            <h2>گفت‌وگوهای من</h2>
+            {% for item in conversations %}
+            <a href="?conversation={{ item.public_token }}" class="customer-chat-conversation {% if item.pk == conversation.pk %}is-active{% endif %}">
+                <strong>{{ item.subject }}</strong>
+                <span>{% if item.last_message_at %}{{ item.last_message_at|date:"Y/m/d H:i" }}{% else %}گفت‌وگوی جدید{% endif %}</span>
+                {% if item.unread_for_customer %}<em>{{ item.unread_for_customer }}</em>{% endif %}
+            </a>
+            {% empty %}
+            <p class="text-slate-500 text-sm">هنوز گفت‌وگویی ثبت نشده است.</p>
+            {% endfor %}
+        </aside>
+
+        <div class="customer-chat-room"
+             data-support-chat
+             data-messages-url="{% url 'website:support_messages_api' conversation.public_token %}"
+             data-send-url="{% url 'website:support_send_api' conversation.public_token %}">
+            <div class="customer-chat-room__head">
+                <div>
+                    <strong>{{ conversation.subject }}</strong>
+                    {% if conversation.order %}<a href="{% url 'website:customer_order_detail' conversation.order_id %}">سفارش مرتبط #{{ conversation.order_id }}</a>{% endif %}
+                </div>
+                <small>پاسخ‌ها به‌صورت خودکار بروزرسانی می‌شوند.</small>
+            </div>
+
+            <div class="customer-chat-messages" data-support-messages aria-live="polite">
+                <div class="customer-chat-loading">در حال دریافت پیام‌ها…</div>
+            </div>
+
+            <form class="customer-chat-form" data-support-form enctype="multipart/form-data">
+                {% csrf_token %}
+                <textarea name="body" rows="2" placeholder="پیام خود را بنویسید…" aria-label="متن پیام">{{ support_prefill }}</textarea>
+                <div class="customer-chat-form__actions">
+                    <label class="customer-chat-attach">
+                        <input type="file" name="attachment" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.7z,.stl,.obj,.3mf,.step,.stp,.iges,.igs">
+                        <span>پیوست فایل</span>
+                    </label>
+                    <span data-support-file-name></span>
+                    <button type="submit">ارسال پیام</button>
+                </div>
+                <div class="customer-chat-error" data-support-error hidden></div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/support-chat.js' %}"></script>
+{% endblock %}

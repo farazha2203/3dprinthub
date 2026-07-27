@@ -1,0 +1,24 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/support-chat-widget.css' %}">
+{% if request.user.is_authenticated and not request.user.is_staff %}
+<div class="support-widget" data-support-widget data-state-url="{% url 'website:support_widget_state' %}">
+    <button type="button" class="support-widget__toggle" data-support-toggle aria-expanded="false" aria-controls="support-widget-panel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 5h10V7H7v2Zm0 4h7v-2H7v2Z"/></svg>
+        <span>پشتیبانی</span><em data-support-widget-badge {% if not unread_support_messages %}hidden{% endif %}>{{ unread_support_messages }}</em>
+    </button>
+    <section class="support-widget__panel" id="support-widget-panel" data-support-panel hidden>
+        <header><div><strong>پشتیبانی آنلاین</strong><small>گفت‌وگو با کارشناسان 3DPrintHub</small></div><button type="button" data-support-close aria-label="بستن">×</button></header>
+        <div class="support-widget__messages" data-support-widget-messages><p>در حال دریافت پیام‌ها…</p></div>
+        <form data-support-widget-form enctype="multipart/form-data">
+            {% csrf_token %}
+            <textarea name="body" rows="2" placeholder="پیام خود را بنویسید…"></textarea>
+            <div class="support-widget__actions"><label><input type="file" name="attachment" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar,.7z,.stl,.obj,.3mf,.step,.stp,.iges,.igs"><span>پیوست</span></label><button type="submit">ارسال</button></div>
+            <p data-support-widget-error hidden></p>
+        </form>
+        <a class="support-widget__full" data-support-widget-page href="{% url 'website:customer_support' %}">مشاهده صفحه کامل گفت‌وگو</a>
+    </section>
+</div>
+<script defer src="{% static 'js/support-chat-widget.js' %}"></script>
+{% else %}
+<a class="support-widget support-widget--guest" href="{% url 'website:customer_login' %}?next={% url 'website:customer_support' %}" aria-label="ورود و گفت‌وگو با پشتیبانی"><span class="support-widget__toggle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 5h10V7H7v2Zm0 4h7v-2H7v2Z"/></svg><span>گفت‌وگو</span></span></a>
+{% endif %}

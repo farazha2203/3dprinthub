@@ -1,0 +1,221 @@
+{% extends "admin/base_site.html" %}
+{% load i18n humanize %}
+
+{% block title %}{{ title }} | {{ site_title|default:"مدیریت 3DprintHub" }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">خانه</a>
+    &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='store' %}">فروشگاه</a>
+    &rsaquo;
+    {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .aff-admin-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0 0 20px;
+    }
+
+    .aff-admin-actions a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: var(--button-bg, #417690);
+        color: var(--button-fg, #fff);
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .aff-admin-actions a:hover {
+        background: var(--button-hover-bg, #205067);
+        color: var(--button-fg, #fff);
+    }
+
+    .aff-admin-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .aff-admin-card {
+        background: var(--body-bg, #fff);
+        border: 1px solid var(--hairline-color, #ddd);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .aff-admin-card span {
+        display: block;
+        color: var(--body-quiet-color, #777);
+    }
+
+    .aff-admin-card strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 24px;
+    }
+
+    .aff-admin-cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .aff-admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .aff-admin-table td,
+    .aff-admin-table th {
+        padding: 9px;
+        border-bottom: 1px solid var(--hairline-color, #eee);
+        text-align: right;
+    }
+
+    .aff-admin-empty {
+        padding: 18px;
+        color: var(--body-quiet-color, #777);
+        text-align: center;
+    }
+
+    @media (max-width: 900px) {
+        .aff-admin-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .aff-admin-cols {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .aff-admin-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="aff-admin-actions">
+    <a href="{% url 'admin:store_affiliatepartner_changelist' %}">
+        مدیریت همکاران
+    </a>
+    <a href="{% url 'admin:store_affiliatecommission_changelist' %}">
+        مدیریت پورسانت‌ها
+    </a>
+    <a href="{% url 'admin:store_affiliatepayout_changelist' %}">
+        مدیریت تسویه‌ها
+    </a>
+    <a href="{% url 'admin:store_affiliatecampaign_changelist' %}">
+        کمپین‌ها و لینک‌ها
+    </a>
+</div>
+
+<div class="aff-admin-grid">
+    <div class="aff-admin-card">
+        <span>همکار فعال</span>
+        <strong>{{ active_partners|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>درخواست در انتظار</span>
+        <strong>{{ pending_partners|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>کلیک ۳۰ روز</span>
+        <strong>{{ clicks_30|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>مشتری زیرمجموعه</span>
+        <strong>{{ customers_total|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>فروش معرفی‌شده</span>
+        <strong>{{ referred_revenue|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>پورسانت در انتظار</span>
+        <strong>{{ pending_commissions|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>پورسانت قابل تسویه</span>
+        <strong>{{ approved_commissions|intcomma }}</strong>
+    </div>
+    <div class="aff-admin-card">
+        <span>تسویه باز</span>
+        <strong>{{ open_payouts|intcomma }}</strong>
+    </div>
+</div>
+
+<div class="aff-admin-cols">
+    <div class="module">
+        <h2>آخرین همکاران</h2>
+        <table class="aff-admin-table">
+            <thead>
+                <tr>
+                    <th>نام</th>
+                    <th>سطح</th>
+                    <th>وضعیت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recent_partners %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'admin:store_affiliatepartner_change' item.id %}">
+                                {{ item.display_name }}
+                            </a>
+                        </td>
+                        <td>{{ item.tier.name|default:"-" }}</td>
+                        <td>{{ item.get_status_display }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="aff-admin-empty">
+                            هنوز همکاری ثبت نشده است.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="module">
+        <h2>آخرین پورسانت‌ها</h2>
+        <table class="aff-admin-table">
+            <thead>
+                <tr>
+                    <th>همکار</th>
+                    <th>سفارش</th>
+                    <th>مبلغ</th>
+                    <th>وضعیت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recent_commissions %}
+                    <tr>
+                        <td>{{ item.partner.display_name }}</td>
+                        <td>{{ item.order.order_number }}</td>
+                        <td>{{ item.amount|intcomma }}</td>
+                        <td>{{ item.get_status_display }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="aff-admin-empty">
+                            هنوز پورسانتی ثبت نشده است.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

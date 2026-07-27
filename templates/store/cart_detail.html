@@ -1,0 +1,42 @@
+{% extends "store/base.html" %}
+{% load humanize %}
+{% block title %}سبد خرید | 3DprintHub{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<section class="container mx-auto px-4 md:px-6 py-10">
+  <h1 class="text-3xl font-black mb-7">سبد خرید</h1>
+  {% if cart.items %}
+  <div class="grid lg:grid-cols-[1fr_360px] gap-7 items-start">
+    <div class="space-y-4">
+      {% for item in cart.items %}
+      <article class="store-content-card flex flex-col md:flex-row gap-5 items-start">
+        <img src="{{ item.product.main_image.url }}" alt="{{ item.product.title }}" class="w-full md:w-32 aspect-square object-cover rounded-2xl">
+        <div class="flex-1">
+          <a href="{{ item.product.get_absolute_url }}" class="text-xl font-black">{{ item.product.title }}</a>
+          <p class="text-sm text-slate-500 mt-2">{{ item.variant.material.name }} • {{ item.variant.quality.name }}</p>
+          <p class="font-black text-orange-600 mt-3">{{ item.unit_price|intcomma }} تومان</p>
+        </div>
+        <div class="w-full md:w-44 space-y-2">
+          <form method="post" action="{% url 'store:cart_update' item.variant.id %}" class="flex gap-2">
+            {% csrf_token %}<input type="number" name="quantity" value="{{ item.quantity }}" min="{{ item.variant.minimum_quantity }}" {% if item.variant.maximum_quantity %}max="{{ item.variant.maximum_quantity }}"{% endif %} class="form-input w-24">
+            <button class="rounded-xl border border-slate-300 px-3 font-bold">ثبت</button>
+          </form>
+          <form method="post" action="{% url 'store:cart_remove' item.variant.id %}">{% csrf_token %}<button class="text-rose-600 text-sm font-bold">حذف</button></form>
+          <div class="text-sm font-black">جمع: {{ item.line_total|intcomma }} تومان</div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <aside class="store-content-card sticky top-32">
+      <h2 class="text-xl font-black">خلاصه سفارش</h2>
+      <div class="flex justify-between mt-5"><span>تعداد</span><strong>{{ cart.count }}</strong></div>
+      <div class="flex justify-between mt-3"><span>جمع کالاها</span><strong>{{ cart.subtotal|intcomma }} تومان</strong></div>
+      <p class="text-xs text-slate-500 leading-6 mt-4">هزینه ارسال، بسته‌بندی و مالیات در مرحله بعد محاسبه می‌شود.</p>
+      <a href="{% url 'store:checkout' %}" class="btn-primary block text-center rounded-2xl px-5 py-4 font-black mt-6">ادامه و ثبت سفارش</a>
+    </aside>
+  </div>
+  {% else %}
+    <div class="store-content-card text-center py-14"><p class="text-xl font-black">سبد خرید خالی است.</p><a href="{% url 'store:product_list' %}" class="btn-primary inline-block rounded-2xl px-6 py-3 font-black mt-5">مشاهده محصولات</a></div>
+  {% endif %}
+</section>
+{% endblock %}

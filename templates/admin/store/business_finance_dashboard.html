@@ -1,0 +1,99 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">خانه</a>
+    &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='store' %}">فروشگاه</a>
+    &rsaquo;
+    {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dph-dashboard-actions">
+    <a class="button" href="{% url 'admin:store_filamentpurchase_changelist' %}">ثبت خرید فیلامنت</a>
+    <a class="button" href="{% url 'admin:store_filamentspool_changelist' %}">رول‌های انبار</a>
+    <a class="button" href="{% url 'admin:store_productionjob_changelist' %}">پروژه‌های تولید</a>
+    <a class="button" href="{% url 'admin:store_costentry_changelist' %}">هزینه‌ها</a>
+    <a class="button" href="{% url 'admin:store_importedprintasset_changelist' %}">فایل‌های واردشده</a>
+</div>
+
+<div class="dph-kpi-grid">
+    <article class="dph-kpi"><span>درآمد ۳۰ روز</span><strong>{{ summary_30.revenue|intcomma }}</strong><small>تومان</small></article>
+    <article class="dph-kpi"><span>هزینه پروژه ۳۰ روز</span><strong>{{ summary_30.project_cost|intcomma }}</strong><small>تومان</small></article>
+    <article class="dph-kpi"><span>هزینه عمومی ۳۰ روز</span><strong>{{ summary_30.general_expenses|intcomma }}</strong><small>تومان</small></article>
+    <article class="dph-kpi {% if summary_30.net_profit < 0 %}danger{% else %}success{% endif %}"><span>سود خالص ۳۰ روز</span><strong>{{ summary_30.net_profit|intcomma }}</strong><small>تومان</small></article>
+    <article class="dph-kpi"><span>پروژه باز</span><strong>{{ open_jobs|intcomma }}</strong><small>پروژه</small></article>
+    <article class="dph-kpi"><span>تکمیل‌شده ۳۰ روز</span><strong>{{ completed_30|intcomma }}</strong><small>پروژه</small></article>
+    <article class="dph-kpi {% if low_stock %}danger{% endif %}"><span>هشدار خرید متریال</span><strong>{{ low_stock|length|intcomma }}</strong><small>متریال</small></article>
+</div>
+
+<div class="dph-dashboard-cols">
+    <section class="module dph-panel">
+        <h2>موجودی متریال</h2>
+        <div class="dph-table-wrap">
+            <table>
+                <thead><tr><th>متریال</th><th>رول</th><th>وزن باقی‌مانده</th><th>وضعیت</th></tr></thead>
+                <tbody>
+                {% for row in stock_rows %}
+                    <tr>
+                        <td>{{ row.material.name }}</td>
+                        <td>{{ row.rolls|intcomma }}</td>
+                        <td>{{ row.grams|floatformat:2|intcomma }} گرم</td>
+                        <td>{% if row.needs_reorder %}<span class="dph-badge danger">سفارش مجدد</span>{% else %}<span class="dph-badge success">کافی</span>{% endif %}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="dph-empty">متریالی ثبت نشده است.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="module dph-panel">
+        <h2>آخرین پروژه‌ها</h2>
+        <div class="dph-table-wrap">
+            <table>
+                <thead><tr><th>پروژه</th><th>وضعیت</th><th>درآمد</th><th>سود</th></tr></thead>
+                <tbody>
+                {% for job in recent_jobs %}
+                    <tr>
+                        <td><a href="{% url 'admin:store_productionjob_change' job.id %}">{{ job.job_number }}</a><br><small>{{ job.title }}</small></td>
+                        <td>{{ job.get_status_display }}</td>
+                        <td>{{ job.total_revenue|intcomma }}</td>
+                        <td class="{% if job.net_profit < 0 %}dph-negative{% else %}dph-positive{% endif %}">{{ job.net_profit|intcomma }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="dph-empty">پروژه‌ای ثبت نشده است.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<section class="module dph-panel">
+    <h2>آخرین هزینه‌ها</h2>
+    <div class="dph-table-wrap">
+        <table>
+            <thead><tr><th>تاریخ</th><th>نوع</th><th>شرح</th><th>پروژه</th><th>هزینه واقعی</th><th>دریافتی مشتری</th></tr></thead>
+            <tbody>
+            {% for expense in recent_expenses %}
+                <tr>
+                    <td>{{ expense.incurred_at }}</td>
+                    <td>{{ expense.get_category_display }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{% if expense.job %}<a href="{% url 'admin:store_productionjob_change' expense.job.id %}">{{ expense.job.job_number }}</a>{% else %}هزینه عمومی{% endif %}</td>
+                    <td>{{ expense.actual_cost|intcomma }}</td>
+                    <td>{{ expense.customer_charge|intcomma }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="dph-empty">هزینه‌ای ثبت نشده است.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

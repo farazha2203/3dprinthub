@@ -1,0 +1,121 @@
+{% extends "store/base.html" %}
+{% load humanize store_seo store_consultation %}
+
+{% block canonical %}{% if current_category and current_category.canonical_url %}{{ current_category.canonical_url }}{% elif current_category %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.get_absolute_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% url 'store:product_list' %}{% endif %}{% endblock %}
+
+{% block title %}{% if current_category %}{{ current_category.meta_title|default:current_category.name }}{% else %}فروشگاه قطعات آماده چاپ سه‌بعدی{% endif %} | 3DprintHub{% endblock %}
+{% block meta_description %}{% if current_category %}{{ current_category.meta_description|default:current_category.description }}{% else %}قطعات آماده چاپ خودرو، موتورسیکلت، لوازم خانگی، صنعتی، ماکت و محصولات خلاقانه را با متریال و کیفیت دلخواه سفارش دهید.{% endif %}{% endblock %}
+
+{% block robots %}{% if current_category and not current_category.robots_index %}noindex{% else %}index{% endif %},{% if current_category and not current_category.robots_follow %}nofollow{% else %}follow{% endif %}{% endblock %}
+{% block og_title %}{% if current_category %}{{ current_category.og_title|default:current_category.meta_title|default:current_category.name }}{% else %}فروشگاه قطعات سه‌بعدی 3DprintHub{% endif %}{% endblock %}
+{% block og_description %}{% if current_category %}{{ current_category.og_description|default:current_category.meta_description|default:current_category.description }}{% else %}قطعات آماده چاپ و محصولات سفارشی سه‌بعدی{% endif %}{% endblock %}
+{% block og_image %}{% if current_category.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.og_image.url }}{% elif current_category.image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.image.url }}{% endif %}{% endblock %}
+
+
+{% block structured_data %}
+{% product_list_schema_json products request current_category as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
+{% endblock %}
+{% block content %}
+<section class="store-hero">
+    <div class="container mx-auto px-4 md:px-6 py-12 md:py-16">
+        <div class="max-w-4xl">
+            <span class="store-eyebrow">بانک دیجیتال قطعات 3DprintHub</span>
+            <h1 class="text-3xl md:text-5xl font-black leading-tight mt-4">
+                {% if current_category %}{{ current_category.name }}{% else %}قطعات آماده چاپ و محصولات سفارشی{% endif %}
+            </h1>
+            <p class="text-slate-600 leading-8 mt-5 max-w-3xl">
+                {% if current_category and current_category.description %}
+                    {{ current_category.description }}
+                {% else %}
+                    محصول را انتخاب کنید، متریال و کیفیت چاپ را تغییر دهید و هزینه متریال، زمان دستگاه و دستمزد را شفاف ببینید.
+                {% endif %}
+            </p>
+            <div class="flex flex-wrap gap-3 mt-7">
+                <a href="{% url 'store:product_request' %}" class="btn-primary rounded-2xl px-6 py-3 font-black">قطعه‌ام را پیدا نکردم</a>
+                <a href="/#order" class="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-bold">سفارش طراحی اختصاصی</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div class="store-category-strip">
+        {% for category in categories %}
+            <a href="{{ category.get_absolute_url }}" class="store-category-pill {% if current_category.id == category.id %}is-active{% endif %}">
+                {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <form method="get" class="store-filter-panel mt-7">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <input type="search" name="q" value="{{ query }}" class="form-input" placeholder="جست‌وجوی قطعه، برند یا مدل...">
+            <select name="section" class="form-input">
+                <option value="">همه بخش‌ها</option>
+                <option value="automotive" {% if section == 'automotive' %}selected{% endif %}>خودرو</option>
+                <option value="motorcycle" {% if section == 'motorcycle' %}selected{% endif %}>موتورسیکلت</option>
+                <option value="home_appliance" {% if section == 'home_appliance' %}selected{% endif %}>لوازم خانگی</option>
+                <option value="industrial" {% if section == 'industrial' %}selected{% endif %}>صنعتی</option>
+                <option value="academic" {% if section == 'academic' %}selected{% endif %}>ماکت و دانشگاهی</option>
+                <option value="creative" {% if section == 'creative' %}selected{% endif %}>خلاقانه</option>
+            </select>
+            <select name="material" class="form-input">
+                <option value="">همه متریال‌ها</option>
+                {% for material in materials %}
+                    <option value="{{ material.id }}" {% if selected_material == material.id|stringformat:'s' %}selected{% endif %}>{{ material.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="quality" class="form-input">
+                <option value="">همه کیفیت‌ها</option>
+                {% for quality in qualities %}
+                    <option value="{{ quality.id }}" {% if selected_quality == quality.id|stringformat:'s' %}selected{% endif %}>{{ quality.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="sort" class="form-input">
+                <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>جدیدترین</option>
+                <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>پربازدیدترین</option>
+                <option value="liked" {% if current_sort == 'liked' %}selected{% endif %}>محبوب‌ترین</option>
+                <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>بالاترین امتیاز</option>
+                <option value="cheapest" {% if current_sort == 'cheapest' %}selected{% endif %}>ارزان‌ترین</option>
+                <option value="expensive" {% if current_sort == 'expensive' %}selected{% endif %}>گران‌ترین</option>
+            </select>
+        </div>
+        <button class="btn-primary rounded-2xl px-7 py-3 font-black mt-4" type="submit">اعمال فیلتر</button>
+    </form>
+
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+        {% for product in products %}
+            <article class="store-product-card">
+                <a href="{{ product.get_absolute_url }}" class="block overflow-hidden aspect-[4/3] bg-slate-100">
+                    <img src="{{ product.main_image.url }}" alt="{{ product.title }}" width="720" height="540" loading="lazy" class="w-full h-full object-cover transition duration-500 hover:scale-105">
+                </a>
+                {% consultation_links product.title product.get_absolute_url as consult %}
+                {% if consult.has_any %}<div class="p28-store-consult">{% if consult.whatsapp %}<a class="p28-store-consult__wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">مشاوره واتساپ</a>{% endif %}{% if consult.telegram %}<a class="p28-store-consult__tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">مشاوره تلگرام</a>{% endif %}{% if consult.support %}<a class="p28-store-consult__site" href="{{ consult.support }}">پشتیبانی سایت</a>{% endif %}</div>{% endif %}
+                <div class="p-5 md:p-6">
+                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
+                        <span>{{ product.category.name }}</span>
+                        <span>{{ product.view_count|intcomma }} بازدید</span>
+                    </div>
+                    <h2 class="font-black text-xl mt-3 leading-8"><a href="{{ product.get_absolute_url }}">{{ product.title }}</a></h2>
+                    <p class="text-slate-600 text-sm leading-7 mt-3">{{ product.short_description|truncatewords:22 }}</p>
+                    <div class="flex items-end justify-between gap-4 mt-5">
+                        <div>
+                            <div class="text-xs text-slate-500">قیمت از</div>
+                            <div class="text-orange-500 font-black text-lg">
+                                {% if product.min_price %}{{ product.min_price|intcomma }} تومان{% else %}در انتظار قیمت‌گذاری{% endif %}
+                            </div>
+                        </div>
+                        <a href="{{ product.get_absolute_url }}" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-bold text-sm">مشاهده</a>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="col-span-full store-empty-state">
+                محصولی مطابق فیلتر پیدا نشد.
+                <a href="{% url 'store:product_request' %}" class="text-orange-500 font-black">درخواست ساخت قطعه ثبت کنید.</a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

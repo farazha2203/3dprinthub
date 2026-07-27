@@ -1,0 +1,4 @@
+{% extends "store/base.html" %}
+{% block title %}درخواست مرجوعی {{ order.order_number }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}<section class="container mx-auto px-4 md:px-6 py-10"><div class="store-content-card max-w-3xl mx-auto"><h1 class="text-3xl font-black">درخواست مرجوعی</h1><p class="text-slate-500 mt-2">سفارش {{ order.order_number }}</p><form method="post" enctype="multipart/form-data" class="space-y-5 mt-7">{% csrf_token %}{% for field in form %}<div><label class="block font-bold mb-2">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 mt-1 text-sm">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn-primary rounded-2xl px-6 py-4 font-black">ثبت درخواست برای بررسی</button></form></div></section>{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">خانه</a> &rsaquo; <a href="{% url 'admin:app_list' app_label='store' %}">فروشگاه</a> &rsaquo; {{ title }}</div>{% endblock %}
+{% block content %}
+<style>
+.p25-wrap{display:grid;gap:18px}.p25-alert{padding:14px 16px;border-radius:14px;border:1px solid #d9e0ea;background:#f8fafc;line-height:2}.p25-alert.pause{background:#fff7ed;border-color:#fdba74;color:#9a3412}.p25-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.p25-card{border:1px solid #d9e0ea;background:#fff;border-radius:16px;padding:15px;box-shadow:0 6px 20px rgba(15,23,42,.05)}.p25-card span{display:block;color:#64748b;font-size:12px}.p25-card strong{display:block;font-size:25px;margin-top:8px;color:#0f172a}.p25-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.p25-actions form{display:flex;gap:7px;align-items:center}.p25-btn{border:0;border-radius:10px;padding:9px 13px;color:#fff;background:#0f2745;font-weight:800;cursor:pointer;text-decoration:none}.p25-btn.gold{background:#b88925}.p25-btn.red{background:#b42318}.p25-btn.green{background:#17785a}.p25-btn.gray{background:#475569}.p25-btn.small{font-size:11px;padding:6px 9px}.p25-input{border:1px solid #cbd5e1;border-radius:9px;padding:8px 10px;max-width:250px}.p25-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}.p25-module{border:1px solid #d9e0ea;background:#fff;border-radius:16px;overflow:hidden}.p25-module h2{margin:0;padding:13px 15px;background:#f1f5f9;color:#0f2745;font-size:15px}.p25-scroll{overflow:auto}.p25-table{width:100%;border-collapse:collapse;min-width:720px}.p25-table th,.p25-table td{padding:10px 12px;border-bottom:1px solid #e8edf3;text-align:right;vertical-align:top}.p25-table th{font-size:12px;color:#64748b;background:#fafcff}.p25-pill{display:inline-flex;border-radius:30px;padding:4px 9px;font-size:11px;font-weight:800;background:#e2e8f0;color:#334155}.p25-pill.running,.p25-pill.completed,.p25-pill.success,.p25-pill.idle{background:#dcfce7;color:#166534}.p25-pill.failed,.p25-pill.error,.p25-pill.permanent_failure{background:#fee2e2;color:#991b1b}.p25-pill.retry,.p25-pill.transient_failure,.p25-pill.starting{background:#fef3c7;color:#92400e}.p25-pill.queued{background:#dbeafe;color:#1e40af}.p25-error{color:#b42318;max-width:300px;white-space:normal;font-size:11px}.p25-muted{color:#64748b;font-size:12px}.p25-bar{height:7px;background:#e2e8f0;border-radius:20px;overflow:hidden;width:110px}.p25-bar span{display:block;height:100%;background:#b88925}.p25-adapter{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e8edf3}.p25-adapter:last-child{border:0}@media(max-width:1200px){.p25-grid{grid-template-columns:repeat(3,1fr)}.p25-columns{grid-template-columns:1fr}}@media(max-width:640px){.p25-grid{grid-template-columns:repeat(2,1fr)}.p25-actions form{width:100%;flex-wrap:wrap}.p25-input{max-width:none;flex:1}}
+</style>
+<div class="p25-wrap">
+  <div class="p25-alert {% if control.is_paused %}pause{% endif %}">
+    <strong>وضعیت صف:</strong>
+    {% if control.is_paused %}متوقف — {{ control.pause_reason|default:"بدون دلیل ثبت‌شده" }}{% else %}فعال{% endif %}
+    <span class="p25-muted"> | Worker فعال: {{ active_workers }} | Health JSON: <a href="{% url 'admin:store_linkanalysisoperationsdashboard_health' %}" target="_blank">مشاهده</a></span>
+  </div>
+
+  <div class="p25-actions">
+    {% if control.is_paused %}
+      <form method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_resume' %}">{% csrf_token %}<button class="p25-btn green">ادامه صف</button></form>
+    {% else %}
+      <form method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_pause' %}">{% csrf_token %}<input class="p25-input" name="reason" placeholder="دلیل توقف اختیاری"><button class="p25-btn red">توقف صف</button></form>
+    {% endif %}
+    <form method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_process_now' %}">{% csrf_token %}<input class="p25-input" style="width:75px" type="number" name="limit" min="1" max="10" value="1"><button class="p25-btn gold">پردازش فوری</button></form>
+    <form method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_release_stale' %}">{% csrf_token %}<button class="p25-btn gray">بازیابی Worker/قفل منقضی</button></form>
+    <form method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_retry_failed' %}">{% csrf_token %}<button class="p25-btn">Retry همه ناموفق‌ها</button></form>
+    <a class="p25-btn gray" href="{% url 'admin:store_customerlinkanalysisjob_changelist' %}">فهرست Jobها</a>
+    <a class="p25-btn gray" href="{% url 'admin:store_linkanalysisadapterpolicy_changelist' %}">تنظیم Adapterها</a>
+  </div>
+
+  <div class="p25-grid">
+    <div class="p25-card"><span>در صف</span><strong>{{ queued|intcomma }}</strong></div>
+    <div class="p25-card"><span>در حال اجرا</span><strong>{{ running|intcomma }}</strong></div>
+    <div class="p25-card"><span>انتظار Retry</span><strong>{{ retry|intcomma }}</strong></div>
+    <div class="p25-card"><span>تکمیل کل</span><strong>{{ completed|intcomma }}</strong></div>
+    <div class="p25-card"><span>ناموفق کل</span><strong>{{ failed|intcomma }}</strong></div>
+    <div class="p25-card"><span>موفق ۲۴ ساعت</span><strong>{{ success_24h|intcomma }}</strong><span>خطا: {{ failure_24h|intcomma }}</span></div>
+  </div>
+
+  <div class="p25-columns">
+    <section class="p25-module">
+      <h2>Workerها و Heartbeat</h2>
+      <div class="p25-scroll"><table class="p25-table"><thead><tr><th>Worker</th><th>وضعیت</th><th>آخرین Heartbeat</th><th>Job فعلی</th><th>موفق/ناموفق</th><th>خطا</th></tr></thead><tbody>
+      {% for worker in workers %}<tr><td><strong>{{ worker.worker_id }}</strong><br><span class="p25-muted">{{ worker.hostname }} / PID {{ worker.process_id }}</span></td><td><span class="p25-pill {{ worker.status }}">{{ worker.get_status_display }}</span></td><td>{{ worker.last_seen_at }}</td><td>{{ worker.current_job|default:"-" }}</td><td>{{ worker.succeeded_count|intcomma }} / {{ worker.failed_count|intcomma }}</td><td class="p25-error">{{ worker.last_error|truncatechars:120|default:"-" }}</td></tr>{% empty %}<tr><td colspan="6">هنوز Worker ثبت نشده است. سرویس Worker را اجرا کنید.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+
+    <section class="p25-module">
+      <h2>کنترل Adapterهای سایت‌ها</h2>
+      {% for policy in policies %}<div class="p25-adapter"><div><strong>{{ policy }}</strong><br><span class="p25-muted">موفق {{ policy.success_count|intcomma }} | ناموفق {{ policy.failure_count|intcomma }} | Timeout {{ policy.request_timeout_seconds }}s</span>{% if policy.last_error %}<div class="p25-error">{{ policy.last_error|truncatechars:110 }}</div>{% endif %}</div><div><span class="p25-pill {% if policy.is_available %}completed{% else %}failed{% endif %}">{% if policy.is_available %}فعال{% else %}متوقف{% endif %}</span><form style="display:inline" method="post" action="{% url 'admin:store_linkanalysisoperationsdashboard_toggle_adapter' policy.adapter_key %}">{% csrf_token %}<button class="p25-btn small {% if policy.is_enabled %}red{% else %}green{% endif %}">{% if policy.is_enabled %}غیرفعال کن{% else %}فعال کن{% endif %}</button></form></div></div>{% endfor %}
+    </section>
+  </div>
+
+  <section class="p25-module">
+    <h2>آخرین Jobها</h2>
+    <div class="p25-scroll"><table class="p25-table"><thead><tr><th>شناسه</th><th>تحلیل</th><th>Adapter</th><th>وضعیت</th><th>پیشرفت</th><th>تلاش</th><th>بروزرسانی</th></tr></thead><tbody>
+    {% for job in recent_jobs %}<tr><td><a href="{% url 'admin:store_customerlinkanalysisjob_change' job.pk %}">#{{ job.pk }}</a></td><td>{{ job.analysis.title|default:job.analysis.source_domain }}<br><span class="p25-muted">{{ job.analysis.user|default:"مهمان" }}</span></td><td>{{ job.adapter_key }}</td><td><span class="p25-pill {{ job.status }}">{{ job.get_status_display }}</span></td><td><div class="p25-bar"><span style="width:{{ job.progress_percent }}%"></span></div><span class="p25-muted">{{ job.progress_stage }} — {{ job.progress_message }}</span></td><td>{{ job.attempt_count }}/{{ job.max_attempts }}</td><td>{{ job.updated_at }}</td></tr>{% empty %}<tr><td colspan="7">Jobی ثبت نشده است.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <section class="p25-module">
+    <h2>آخرین Attemptها</h2>
+    <div class="p25-scroll"><table class="p25-table"><thead><tr><th>Job</th><th>تلاش</th><th>وضعیت</th><th>مرحله</th><th>مدت</th><th>Worker</th><th>خطا</th></tr></thead><tbody>
+    {% for attempt in recent_attempts %}<tr><td>#{{ attempt.job_id }} — {{ attempt.job.analysis.title|default:attempt.job.analysis.source_domain }}</td><td>{{ attempt.attempt_number }}</td><td><span class="p25-pill {{ attempt.status }}">{{ attempt.get_status_display }}</span></td><td>{{ attempt.stage }}</td><td>{{ attempt.duration_ms|intcomma }} ms</td><td>{{ attempt.worker_id }}</td><td class="p25-error">{{ attempt.error_message|truncatechars:120|default:"-" }}</td></tr>{% empty %}<tr><td colspan="7">Attemptی ثبت نشده است.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

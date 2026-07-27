@@ -452,3 +452,8 @@ table tr:hover {
     background: #FF9800;
     color: #ffffff;
 }
+/* PHASE 19: unified form typography and Google authentication */
+html,body,button,input,textarea,select,option{font-family:"IRANSans",Tahoma,Arial,sans-serif}.google-auth-button{display:flex;width:100%;align-items:center;justify-content:center;gap:.75rem;border:1px solid #cbd5e1;border-radius:1rem;padding:.85rem 1rem;background:#fff;color:#0f172a;font-weight:900;transition:.2s}.google-auth-button:hover{border-color:#94a3b8;background:#f8fafc}.google-auth-button svg{width:1.5rem;height:1.5rem}
+
+/* Google/social authentication status pages */
+.auth-status-page{display:grid;min-height:100vh;place-items:center;margin:0;padding:1.25rem;background:linear-gradient(135deg,#f8fafc,#fff7ed);color:#0f172a}.auth-status-card{width:min(540px,100%);border:1px solid #e2e8f0;border-radius:2rem;padding:2rem;background:#fff;box-shadow:0 25px 70px rgba(15,23,42,.12);text-align:center}.auth-status-icon{display:grid;width:64px;height:64px;place-items:center;margin:0 auto 1rem;border-radius:50%;color:#fff;background:#0f2f46;font-size:2rem;font-weight:900}.auth-status-card h1{margin:0 0 .75rem;font-size:1.65rem;font-weight:900}.auth-status-card p{margin:0;color:#64748b;line-height:2}.auth-status-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.8rem;margin-top:1.5rem}.auth-status-actions a{border-radius:.9rem;padding:.75rem 1rem;text-decoration:none;font-weight:800}.auth-status-actions a:not(.btn-primary){color:#334155;background:#f1f5f9}

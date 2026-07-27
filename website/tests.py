@@ -1,3 +1,7 @@
+from io import BytesIO
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -6,6 +10,18 @@ from .models import CustomerProfile, Material, Order, Quote, OrderReview
 
 
 class WebsiteTestHelpers:
+    # BEGIN PHASE 12 ORDER SUBMISSION TEST COMPATIBILITY
+    def create_test_image(self, name):
+        """Create a valid in-memory JPEG for order form tests."""
+        buffer = BytesIO()
+        Image.new("RGB", (32, 32), "white").save(buffer, format="JPEG")
+        return SimpleUploadedFile(
+            name,
+            buffer.getvalue(),
+            content_type="image/jpeg",
+        )
+    # END PHASE 12 ORDER SUBMISSION TEST COMPATIBILITY
+
     def create_user(self, phone="09120000000", password="StrongPass123!", first_name="علی", last_name="احمدی"):
         user = User.objects.create_user(
             username=phone,
@@ -100,6 +116,7 @@ class CustomerRegisterTests(TestCase, WebsiteTestHelpers):
             "first_name": "مهدی",
             "last_name": "کریمی",
             "phone": "09123334455",
+            "email": "mehdi@example.com",
             "password": "StrongPass123!",
             "password_confirm": "StrongPass123!",
         }
@@ -119,6 +136,7 @@ class CustomerRegisterTests(TestCase, WebsiteTestHelpers):
             "first_name": "سارا",
             "last_name": "محمدی",
             "phone": "09124445566",
+            "email": "sara@example.com",
             "password": "StrongPass123!",
             "password_confirm": "StrongPass123!",
         }
@@ -134,6 +152,7 @@ class CustomerRegisterTests(TestCase, WebsiteTestHelpers):
             "first_name": "رضا",
             "last_name": "اکبری",
             "phone": "09125556677",
+            "email": "reza@example.com",
             "password": "StrongPass123!",
             "password_confirm": "StrongPass123!",
         }
@@ -157,6 +176,7 @@ class CustomerRegisterTests(TestCase, WebsiteTestHelpers):
             "first_name": "حسین",
             "last_name": "مرادی",
             "phone": "09126667788",
+            "email": "hossein@example.com",
             "password": "StrongPass123!",
             "password_confirm": "StrongPass123!",
         }
@@ -227,7 +247,7 @@ class CustomerDashboardTests(TestCase, WebsiteTestHelpers):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/customer/dashboard.html")
-        self.assertContains(response, "پنل مشتری")
+        self.assertContains(response, "داشبورد مشتری")
 
     def test_dashboard_shows_customer_orders(self):
         user = self.create_user(phone="09130000002")
@@ -274,7 +294,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/customer/profile.html")
-        self.assertContains(response, "مشخصات مشتری")
+        self.assertContains(response, "مشخصات مشتری و حساب")
 
     def test_customer_can_update_profile(self):
         user = self.create_user(phone="09130000006")
@@ -285,8 +305,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
             "last_name": "رضایی",
             "phone": "09130000066",
             "company_name": "شرکت تست",
-            "national_code": "1234567890",
-            "address": "تهران، آدرس تست",
+            "national_code": "",
         }
 
         response = self.client.post(reverse("website:customer_profile"), data)
@@ -300,7 +319,7 @@ class CustomerProfileTests(TestCase, WebsiteTestHelpers):
         self.assertEqual(user.first_name, "نیما")
         self.assertEqual(user.last_name, "رضایی")
         self.assertEqual(profile.company_name, "شرکت تست")
-        self.assertEqual(profile.address, "تهران، آدرس تست")
+        self.assertEqual(profile.phone, "09130000066")
 
 
 class CustomerOrderDetailTests(TestCase, WebsiteTestHelpers):
@@ -368,6 +387,13 @@ class OrderSubmissionTests(TestCase, WebsiteTestHelpers):
             "color": "مشکی",
             "quantity": 2,
             "description": "ثبت سفارش تستی در حالت لاگین",
+            "request_mode": "new_part",
+            "usage_environment": "indoor",
+            "exact_dimensions": "100x50x20 mm",
+            "photo_top": self.create_test_image("authenticated-top.jpg"),
+            "photo_front": self.create_test_image("authenticated-front.jpg"),
+            "photo_right": self.create_test_image("authenticated-right.jpg"),
+            "photo_left": self.create_test_image("authenticated-left.jpg"),
         }
 
         response = self.client.post(reverse("website:home"), data)
@@ -396,12 +422,21 @@ class OrderSubmissionTests(TestCase, WebsiteTestHelpers):
 
         response = self.client.post(reverse("website:home"), data)
 
-        self.assertIn(response.status_code, [200, 302])
+        # در فاز ۱۴ ثبت سفارش فقط برای کاربر واردشده مجاز است.
+        self.assertIn(response.status_code, (200, 302))
+        self.assertFalse(
+            Order.objects.filter(phone="09130000012").exists()
+        )
 
-        order = Order.objects.filter(phone="09130000012").latest("id")
+        login_url = reverse("website:customer_login")
 
-        self.assertIsNone(order.customer)
-        self.assertEqual(order.material, material)
+        if response.status_code == 302:
+            self.assertTrue(
+                response["Location"].startswith(login_url),
+                response["Location"],
+            )
+        else:
+            self.assertContains(response, login_url)
 
 class QuoteToleranceTests(TestCase, WebsiteTestHelpers):
     def test_quote_tolerance_price_range_is_calculated(self):

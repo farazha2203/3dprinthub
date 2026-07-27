@@ -1,0 +1,10 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{% block title %}ورود به پنل مدیریت 3DPrintHub{% endblock %}
+{% block bodyclass %}admin-login-page{% endblock %}
+{% block standalone_content %}
+<div class="auth-page-wrapper pt-5">
+    <div class="auth-one-bg-position auth-one-bg" id="auth-particles"><div class="bg-overlay"></div><div class="shape"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120"><path d="M0,36L48,42C96,48,192,60,288,72C384,84,480,96,576,90C672,84,768,60,864,54C960,48,1056,60,1152,66C1248,72,1344,72,1392,72L1440,72L1440,120L0,120Z"></path></svg></div></div>
+    <div class="auth-page-content"><div class="container"><div class="row"><div class="col-lg-12"><div class="text-center mt-sm-5 mb-4 text-white-50"><div class="admin-login-brand"><img src="{% static 'admin/brand/icon.png' %}" alt="3DPrintHub"><div><strong><b>3D</b>PrintHub<em>.ir</em></strong><p>مرکز کنترل طراحی، تولید و فروش</p></div></div></div></div></div><div class="row justify-content-center"><div class="col-md-8 col-lg-6 col-xl-5"><div class="card mt-4"><div class="card-body p-4"><div class="text-center mt-2"><h5 class="text-primary">ورود مدیران</h5><p class="text-muted">اطلاعات حساب مدیریتی خود را وارد کنید.</p></div><div class="p-2 mt-4">{% if form.errors %}<div class="alert alert-danger">نام کاربری یا رمز عبور صحیح نیست.</div>{% endif %}{% if user.is_authenticated %}<div class="alert alert-warning">این حساب اجازه ورود به پنل مدیریت را ندارد.</div>{% endif %}<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}<div class="mb-3"><label for="id_username" class="form-label">نام کاربری</label>{{ form.username }}</div><div class="mb-3"><label for="id_password" class="form-label">رمز عبور</label>{{ form.password }}<input type="hidden" name="next" value="{{ next }}"></div><div class="mt-4"><button class="btn btn-primary w-100" type="submit"><i class="ri-login-box-line align-bottom me-1"></i> ورود امن</button></div></form></div></div></div><div class="mt-4 text-center"><p class="mb-0 text-muted">دسترسی فقط برای کاربران مجاز 3DPrintHub</p></div></div></div></div></div>
+</div>
+{% endblock %}

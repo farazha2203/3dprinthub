@@ -1,0 +1,8 @@
+{% extends "website/customer/account_base.html" %}
+{% load static %}
+{% block title %}{% if editing %}ویرایش کمپین{% else %}کمپین جدید{% endif %}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'store/css/affiliate.css' %}">{% endblock %}
+{% block account_content %}
+<div class="affiliate-card"><div class="affiliate-card-head"><div><h1 class="text-2xl font-black">{% if editing %}ویرایش لینک کمپین{% else %}ساخت لینک کمپین جدید{% endif %}</h1><p class="text-slate-500 mt-2">برای هر وب‌سایت، شبکه اجتماعی یا تبلیغ یک لینک مستقل بسازید.</p></div><a href="{% url 'store:partner_dashboard' %}" class="affiliate-secondary">بازگشت</a></div>
+<form method="post">{% csrf_token %}<div class="affiliate-form-grid">{% for field in form %}<div class="{% if field.name == 'target_path' %}full{% endif %}"><label class="block font-bold mb-2">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 text-sm mt-1">{{ error }}</p>{% endfor %}</div>{% endfor %}</div><button class="affiliate-primary rounded-2xl px-6 py-4 font-black mt-6">ذخیره کمپین</button></form></div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "store/base.html" %}
+{% block title %}درخواست ثبت شد | 3DprintHub{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<section class="container mx-auto px-4 md:px-6 py-20">
+    <div class="max-w-2xl mx-auto text-center store-content-card">
+        <div class="text-6xl">✓</div>
+        <h1 class="text-3xl font-black mt-5">درخواست شما ثبت شد</h1>
+        <p class="text-slate-600 leading-8 mt-4">اطلاعات و تصاویر برای بررسی فنی ثبت شدند. نتیجه بررسی و مراحل بعدی از طریق شماره تماس اعلام می‌شود.</p>
+        <div class="flex flex-wrap justify-center gap-3 mt-7"><a href="{% url 'store:product_list' %}" class="btn-primary rounded-2xl px-6 py-3 font-black">بازگشت به فروشگاه</a><a href="/" class="rounded-2xl border border-slate-300 px-6 py-3 font-bold">صفحه اصلی</a></div>
+    </div>
+</section>
+{% endblock %}

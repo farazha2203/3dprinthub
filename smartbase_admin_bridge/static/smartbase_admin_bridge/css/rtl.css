@@ -1,0 +1,124 @@
+html,
+body {
+  direction: rtl;
+}
+
+body {
+  font-family: IRANSans, Vazirmatn, Tahoma, Arial, sans-serif;
+  text-align: right;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+#main-navigation {
+  right: 0;
+  left: auto;
+  border-right: 0;
+  border-left-width: 1px;
+}
+
+#main-navigation .menu-item > a,
+#main-navigation .collapse-btn {
+  text-align: right;
+}
+
+#main-navigation .collapse-btn svg,
+#main-navigation .menu-item > a > svg {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+#main-navigation .collapse ul a {
+  padding-left: 0.5rem;
+  padding-right: 2.25rem;
+}
+
+#main-navigation footer .dropdown-btn > div + div {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+#main-navigation footer .dropdown-btn > svg {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+#main-navigation footer li svg {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+.tabulator,
+.tabulator .tabulator-header,
+.tabulator .tabulator-tableholder,
+.change-form,
+.list-action-wrapper,
+.modal-dialog,
+.dropdown-menu {
+  direction: rtl;
+  text-align: right;
+}
+
+.tabulator .tabulator-header .tabulator-col,
+.tabulator-row .tabulator-cell {
+  text-align: right;
+}
+
+.choices,
+.choices__inner,
+.choices__list,
+.select2-container,
+.flatpickr-calendar {
+  direction: rtl;
+  text-align: right;
+}
+
+.form-row label,
+.fieldBox label,
+fieldset label {
+  text-align: right;
+}
+
+#notification-messages,
+#messaging-toasts {
+  direction: rtl;
+}
+
+@media (min-width: 1200px) {
+  .xl\:pl-260 {
+    padding-left: 0 !important;
+    padding-right: 16.25rem !important;
+  }
+
+  .xl\:left-260 {
+    left: auto !important;
+    right: 16.25rem !important;
+  }
+
+  .xl\:\!left-0 {
+    left: auto !important;
+    right: 0 !important;
+  }
+
+  #notification-messages {
+    left: 1.5rem;
+    right: calc(16.25rem + 1.5rem);
+  }
+}
+
+@media (max-width: 1199px) {
+  .max-lg\:sidebar {
+    right: 0;
+    left: auto;
+    --tw-translate-x: 100%;
+  }
+
+  .max-lg\:sidebar.active {
+    --tw-translate-x: 0;
+  }
+}

@@ -1,0 +1,33 @@
+{% extends "website/customer/account_base.html" %}
+{% load static humanize %}
+{% block title %}پنل همکاری در فروش{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'store/css/affiliate.css' %}">{% endblock %}
+{% block account_content %}
+<div class="affiliate-hero"><div><span class="affiliate-badge">{{ partner.get_partner_type_display }} • {{ partner.tier.name }}</span><h1 class="mt-3">پنل همکاری {{ partner.display_name }}</h1><p class="text-slate-300 mt-2">کد معرف: <strong dir="ltr">{{ partner.code }}</strong> • نرخ فعلی: {% if partner.effective_commission_type == 'percent' %}{{ partner.effective_commission_value }}٪{% else %}{{ partner.effective_commission_value|intcomma }} تومان{% endif %}</p></div><div class="affiliate-actions"><a class="affiliate-primary" href="{% url 'store:partner_campaign_create' %}">لینک کمپین جدید</a></div></div>
+
+<div class="affiliate-card mt-6"><div class="affiliate-card-head"><h2>لینک اصلی معرفی</h2><span class="affiliate-status">اعتبار {{ partner.effective_attribution_days }} روز</span></div><div class="affiliate-link"><input id="main-ref-link" value="{{ main_referral_url }}" readonly><button type="button" class="affiliate-copy" data-copy="#main-ref-link">کپی لینک</button></div></div>
+
+<div class="affiliate-grid mt-5">
+<article class="affiliate-stat"><span>کلیک / بازدید یکتا</span><strong>{{ clicks|intcomma }} / {{ unique_clicks|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>مشتریان زیرمجموعه</span><strong>{{ customers|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>سفارش پرداخت‌شده</span><strong>{{ paid_orders|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>فروش معرفی‌شده</span><strong>{{ referred_revenue|intcomma }} <small>تومان</small></strong></article>
+<article class="affiliate-stat"><span>پورسانت در انتظار</span><strong>{{ pending_amount|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>قابل تسویه</span><strong>{{ available_amount|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>درخواست تسویه</span><strong>{{ requested_amount|intcomma }}</strong></article>
+<article class="affiliate-stat"><span>پرداخت‌شده</span><strong>{{ paid_amount|intcomma }}</strong></article>
+</div>
+
+<div class="grid xl:grid-cols-3 gap-5 mt-5">
+<section class="affiliate-card xl:col-span-2"><div class="affiliate-card-head"><h2>کمپین‌ها و لینک‌های تبلیغاتی</h2><a href="{% url 'store:partner_campaign_create' %}" class="text-orange-600 font-bold">ایجاد کمپین</a></div>{% for row in campaign_rows %}<div class="border-t py-4 first:border-0"><div class="flex justify-between gap-3"><div><strong>{{ row.obj.name }}</strong><div class="text-xs text-slate-500 mt-1">{{ row.obj.click_total }} کلیک • {{ row.obj.customer_total }} مشتری • {{ row.obj.order_total }} سفارش</div></div><a href="{% url 'store:partner_campaign_edit' row.obj.id %}" class="text-orange-600">ویرایش</a></div><div class="affiliate-link mt-3"><input id="campaign-{{ row.obj.id }}" value="{{ row.url }}" readonly><button type="button" class="affiliate-copy" data-copy="#campaign-{{ row.obj.id }}">کپی</button></div></div>{% empty %}<div class="affiliate-empty">هنوز کمپین جداگانه‌ای نساخته‌اید.</div>{% endfor %}</section>
+<aside class="affiliate-card"><div class="affiliate-card-head"><h2>درخواست تسویه</h2><span class="affiliate-status">مانده دفتر: {{ ledger_balance|intcomma }}</span></div><p class="text-sm text-slate-600 leading-7">حداقل تسویه حساب شما {{ partner.effective_minimum_payout|intcomma }} تومان است. فقط پورسانت‌های تأییدشده وارد درخواست می‌شوند.</p><form method="post" action="{% url 'store:partner_payout_request' %}" class="mt-4">{% csrf_token %}{{ payout_form.note }}<button class="affiliate-primary w-full mt-3">ثبت درخواست کل مبلغ قابل تسویه</button></form></aside>
+</div>
+
+<section class="affiliate-card mt-5"><div class="affiliate-card-head"><h2>پورسانت سفارش‌ها</h2></div><div class="affiliate-table-wrap"><table class="affiliate-table"><thead><tr><th>سفارش</th><th>مبنای محاسبه</th><th>پورسانت</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>{% for item in recent_commissions %}<tr><td>{{ item.order.order_number }}</td><td>{{ item.basis_amount|intcomma }}</td><td><strong>{{ item.amount|intcomma }}</strong></td><td><span class="affiliate-status">{{ item.get_status_display }}</span></td><td>{{ item.created_at|date:'Y/m/d' }}</td></tr>{% empty %}<tr><td colspan="5">هنوز پورسانتی ثبت نشده است.</td></tr>{% endfor %}</tbody></table></div></section>
+
+<div class="grid xl:grid-cols-2 gap-5 mt-5">
+<section class="affiliate-card"><div class="affiliate-card-head"><h2>مشتریان معرفی‌شده</h2><span class="text-xs text-slate-500">اطلاعات برای حفظ حریم خصوصی ماسک شده است</span></div>{% for row in customer_rows %}<div class="flex justify-between gap-3 border-t py-3 first:border-0"><span>{{ row.label }}</span><small class="text-slate-500">{% if row.campaign %}{{ row.campaign.name }} • {% endif %}{{ row.date|date:'Y/m/d' }}</small></div>{% empty %}<div class="affiliate-empty">هنوز مشتری ثبت‌شده‌ای از لینک شما وارد نشده است.</div>{% endfor %}</section>
+<section class="affiliate-card"><div class="affiliate-card-head"><h2>سوابق تسویه</h2></div>{% for payout in recent_payouts %}<div class="flex justify-between gap-3 border-t py-3 first:border-0"><div><strong>{{ payout.payout_number }}</strong><small class="block text-slate-500 mt-1">{{ payout.get_status_display }}</small></div><strong>{{ payout.amount|intcomma }} تومان</strong></div>{% empty %}<div class="affiliate-empty">درخواست تسویه‌ای ثبت نشده است.</div>{% endfor %}</section>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>document.querySelectorAll('[data-copy]').forEach(function(btn){btn.addEventListener('click',function(){var el=document.querySelector(btn.dataset.copy);if(!el)return;navigator.clipboard.writeText(el.value).then(function(){var old=btn.textContent;btn.textContent='کپی شد';setTimeout(function(){btn.textContent=old},1400)});});});</script>{% endblock %}

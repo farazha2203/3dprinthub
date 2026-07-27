@@ -1,0 +1,304 @@
+{% load static %}
+<div class="app-menu navbar-menu">
+    <div class="navbar-brand-box">
+        <a href="{% url 'admin:index' %}" class="logo logo-dark">
+            <span class="logo-sm"><img src="{% static 'admin/brand/icon.png' %}" alt="3DPrintHub" height="36"></span>
+            <span class="logo-lg admin-master-logo"><img src="{% static 'admin/brand/icon.png' %}" alt="" height="34"><span><b>3D</b>PrintHub<em>.ir</em></span></span>
+        </a>
+        <a href="{% url 'admin:index' %}" class="logo logo-light">
+            <span class="logo-sm"><img src="{% static 'admin/brand/icon.png' %}" alt="3DPrintHub" height="36"></span>
+            <span class="logo-lg admin-master-logo"><img src="{% static 'admin/brand/icon.png' %}" alt="" height="34"><span><b>3D</b>PrintHub<em>.ir</em></span></span>
+        </a>
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover" aria-label="نمایش فشرده منو">
+            <i class="ri-record-circle-line"></i>
+        </button>
+    </div>
+
+    <div class="dropdown sidebar-user m-1 rounded">
+        <button type="button" class="btn material-shadow-none w-100" id="sidebar-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="d-flex align-items-center gap-2">
+                <span class="avatar-sm"><span class="avatar-title rounded-circle bg-warning-subtle text-warning"><i class="ri-user-3-line fs-20"></i></span></span>
+                <span class="text-start overflow-hidden">
+                    <span class="d-block fw-medium sidebar-user-name-text text-truncate">{% firstof request.user.get_full_name request.user.get_username %}</span>
+                    <span class="d-block fs-12 sidebar-user-name-sub-text"><i class="ri-circle-fill fs-10 text-success align-baseline"></i> مدیر سامانه</span>
+                </span>
+            </span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end">
+            <h6 class="dropdown-header">حساب مدیریتی</h6>
+            <a class="dropdown-item" href="{% url 'admin:password_change' %}"><i class="mdi mdi-lock-reset text-muted fs-16 align-middle me-1"></i><span>تغییر رمز عبور</span></a>
+            <a class="dropdown-item" href="/" target="_blank" rel="noopener"><i class="mdi mdi-open-in-new text-muted fs-16 align-middle me-1"></i><span>مشاهده سایت</span></a>
+            <div class="dropdown-divider"></div>
+            <form method="post" action="{% url 'admin:logout' %}" class="px-2">{% csrf_token %}<button class="dropdown-item text-danger" type="submit"><i class="mdi mdi-logout text-danger fs-16 align-middle me-1"></i><span>خروج</span></button></form>
+        </div>
+    </div>
+
+    <div class="admin-master-menu-search px-3 pb-2">
+        <div class="position-relative">
+            <input id="admin-menu-search" type="search" class="form-control form-control-sm" placeholder="جست‌وجو در منوها..." autocomplete="off">
+            <i class="ri-search-line search-icon"></i>
+        </div>
+    </div>
+
+    <div id="scrollbar">
+        <div class="container-fluid">
+            <div id="two-column-menu"></div>
+<ul class="navbar-nav" id="navbar-nav">
+                <li class="menu-title"><span>مرکز فرمان</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'admin:index' %}">
+                        <i class="ri-dashboard-2-line"></i><span>داشبورد مدیریتی</span>
+                    </a>
+                </li>
+                {% if perms.store.view_storeoperationsdashboard %}
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'admin:store_storeoperationsdashboard_changelist' %}">
+                        <i class="ri-pulse-line"></i><span>عملیات فروشگاه</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.store.view_businessfinancedashboard %}
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'admin:store_businessfinancedashboard_changelist' %}">
+                        <i class="ri-funds-line"></i><span>داشبورد مالی</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="menu-title"><span>مشتریان و ارتباطات</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarCustomers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
+                        <i class="ri-customer-service-2-line"></i><span>مشتریان و پشتیبانی</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarCustomers">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.website.view_customerprofile %}<li class="nav-item"><a href="{% url 'admin:website_customerprofile_changelist' %}" class="nav-link">پرونده مشتریان</a></li>{% endif %}
+                            {% if perms.website.view_supportconversation %}<li class="nav-item"><a href="{% url 'admin:website_supportconversation_changelist' %}" class="nav-link">گفت‌وگوهای پشتیبانی <span class="badge bg-danger ms-auto" id="admin-chat-unread-badge" data-url="{% url 'admin:website_supportconversation_unread_count' %}" hidden></span></a></li>{% endif %}
+                            {% if perms.website.view_supportmessage %}<li class="nav-item"><a href="{% url 'admin:website_supportmessage_changelist' %}" class="nav-link">همه پیام‌ها</a></li>{% endif %}
+                            {% if perms.website.view_customerreusablemodel %}<li class="nav-item"><a href="{% url 'admin:website_customerreusablemodel_changelist' %}" class="nav-link">مدل‌های ذخیره‌شده مشتری</a></li>{% endif %}
+                            {% if perms.website.view_orderreview %}<li class="nav-item"><a href="{% url 'admin:website_orderreview_changelist' %}" class="nav-link">نظرهای سفارش</a></li>{% endif %}
+                            {% if perms.store.view_customernotification %}<li class="nav-item"><a href="{% url 'admin:store_customernotification_changelist' %}" class="nav-link">اعلان‌های مشتری</a></li>{% endif %}
+                            {% if perms.store.view_productrequest %}<li class="nav-item"><a href="{% url 'admin:store_productrequest_changelist' %}" class="nav-link">درخواست محصول</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>سفارش، پیش‌فاکتور و ارسال</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarServiceOrders" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarServiceOrders">
+                        <i class="ri-tools-line"></i><span>سفارش‌های خدمات</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarServiceOrders">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.website.view_order %}<li class="nav-item"><a href="{% url 'admin:website_order_changelist' %}" class="nav-link">سفارش‌ها</a></li>{% endif %}
+                            {% if perms.website.view_orderintakedetail %}<li class="nav-item"><a href="{% url 'admin:website_orderintakedetail_changelist' %}" class="nav-link">مشخصات فنی سفارش</a></li>{% endif %}
+                            {% if perms.website.view_orderreferencephoto %}<li class="nav-item"><a href="{% url 'admin:website_orderreferencephoto_changelist' %}" class="nav-link">تصاویر مرجع</a></li>{% endif %}
+                            {% if perms.website.view_orderattachment %}<li class="nav-item"><a href="{% url 'admin:website_orderattachment_changelist' %}" class="nav-link">مدارک و فایل‌های سفارش</a></li>{% endif %}
+                            {% if perms.website.view_quote %}<li class="nav-item"><a href="{% url 'admin:website_quote_changelist' %}" class="nav-link">پیش‌فاکتورها</a></li>{% endif %}
+                            {% if perms.website.view_payment %}<li class="nav-item"><a href="{% url 'admin:website_payment_changelist' %}" class="nav-link">پرداخت خدمات</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarStoreOrders" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarStoreOrders">
+                        <i class="ri-shopping-bag-3-line"></i><span>سفارش‌های فروشگاه</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarStoreOrders">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_storeorder %}<li class="nav-item"><a href="{% url 'admin:store_storeorder_changelist' %}" class="nav-link">سفارش‌ها</a></li>{% endif %}
+                            {% if perms.store.view_storepayment %}<li class="nav-item"><a href="{% url 'admin:store_storepayment_changelist' %}" class="nav-link">پرداخت‌ها</a></li>{% endif %}
+                            {% if perms.store.view_storeinvoice %}<li class="nav-item"><a href="{% url 'admin:store_storeinvoice_changelist' %}" class="nav-link">فاکتورها</a></li>{% endif %}
+                            {% if perms.store.view_storeorderevent %}<li class="nav-item"><a href="{% url 'admin:store_storeorderevent_changelist' %}" class="nav-link">رویدادهای سفارش</a></li>{% endif %}
+                            {% if perms.store.view_shipment %}<li class="nav-item"><a href="{% url 'admin:store_shipment_changelist' %}" class="nav-link">ارسال و رهگیری</a></li>{% endif %}
+                            {% if perms.store.view_returnrequest %}<li class="nav-item"><a href="{% url 'admin:store_returnrequest_changelist' %}" class="nav-link">مرجوعی‌ها</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>محصول، تولید و انبار</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarCatalog" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCatalog">
+                        <i class="ri-store-2-line"></i><span>فروشگاه و کاتالوگ</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarCatalog">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_product %}<li class="nav-item"><a href="{% url 'admin:store_product_changelist' %}" class="nav-link">محصولات فروشگاه</a></li>{% endif %}
+                            {% if perms.store.view_category %}<li class="nav-item"><a href="{% url 'admin:store_category_changelist' %}" class="nav-link">دسته‌بندی‌ها</a></li>{% endif %}
+                            {% if perms.store.view_productvariant %}<li class="nav-item"><a href="{% url 'admin:store_productvariant_changelist' %}" class="nav-link">تنوع و موجودی</a></li>{% endif %}
+                            {% if perms.store.view_printquality %}<li class="nav-item"><a href="{% url 'admin:store_printquality_changelist' %}" class="nav-link">کیفیت‌های چاپ</a></li>{% endif %}
+                            {% if perms.store.view_pricingsetting %}<li class="nav-item"><a href="{% url 'admin:store_pricingsetting_changelist' %}" class="nav-link">تنظیمات قیمت‌گذاری</a></li>{% endif %}
+                            {% if perms.store.view_servicepage %}<li class="nav-item"><a href="{% url 'admin:store_servicepage_changelist' %}" class="nav-link">صفحات خدمات</a></li>{% endif %}
+                            {% if perms.store.view_shippingmethod %}<li class="nav-item"><a href="{% url 'admin:store_shippingmethod_changelist' %}" class="nav-link">روش‌های ارسال</a></li>{% endif %}
+                            {% if perms.store.view_storeaddress %}<li class="nav-item"><a href="{% url 'admin:store_storeaddress_changelist' %}" class="nav-link">آدرس‌های فروشگاه</a></li>{% endif %}
+                            {% if perms.store.view_coupon %}<li class="nav-item"><a href="{% url 'admin:store_coupon_changelist' %}" class="nav-link">کدهای تخفیف</a></li>{% endif %}
+                            {% if perms.store.view_couponusage %}<li class="nav-item"><a href="{% url 'admin:store_couponusage_changelist' %}" class="nav-link">مصرف کدهای تخفیف</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarProduction" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarProduction">
+                        <i class="ri-printer-line"></i><span>تولید و مواد مصرفی</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarProduction">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_productionjob %}<li class="nav-item"><a href="{% url 'admin:store_productionjob_changelist' %}" class="nav-link">پروژه‌های تولید</a></li>{% endif %}
+                            {% if perms.store.view_filamentpurchase %}<li class="nav-item"><a href="{% url 'admin:store_filamentpurchase_changelist' %}" class="nav-link">خرید فیلامنت</a></li>{% endif %}
+                            {% if perms.store.view_filamentspool %}<li class="nav-item"><a href="{% url 'admin:store_filamentspool_changelist' %}" class="nav-link">رول‌های فیلامنت</a></li>{% endif %}
+                            {% if perms.store.view_filamentmovement %}<li class="nav-item"><a href="{% url 'admin:store_filamentmovement_changelist' %}" class="nav-link">گردش فیلامنت</a></li>{% endif %}
+                            {% if perms.store.view_inventorymovement %}<li class="nav-item"><a href="{% url 'admin:store_inventorymovement_changelist' %}" class="nav-link">گردش موجودی</a></li>{% endif %}
+                            {% if perms.store.view_costentry %}<li class="nav-item"><a href="{% url 'admin:store_costentry_changelist' %}" class="nav-link">هزینه‌های تولید</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>داده خارجی و اتوماسیون</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarExternalSources" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarExternalSources">
+                        <i class="ri-global-line"></i><span>منابع و همگام‌سازی</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarExternalSources">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_printcatalogsource %}<li class="nav-item"><a href="{% url 'admin:store_printcatalogsource_changelist' %}" class="nav-link">منابع کاتالوگ</a></li>{% endif %}
+                            {% if perms.store.view_catalogsourcepolicy %}<li class="nav-item"><a href="{% url 'admin:store_catalogsourcepolicy_changelist' %}" class="nav-link">سیاست منابع</a></li>{% endif %}
+                            {% if perms.store.view_catalogcategoryrule %}<li class="nav-item"><a href="{% url 'admin:store_catalogcategoryrule_changelist' %}" class="nav-link">قواعد دسته‌بندی</a></li>{% endif %}
+                            {% if perms.store.view_importedprintasset %}<li class="nav-item"><a href="{% url 'admin:store_importedprintasset_changelist' %}" class="nav-link">مدل‌های دریافت‌شده</a></li>{% endif %}
+                            {% if perms.store.view_printcatalogimportjob %}<li class="nav-item"><a href="{% url 'admin:store_printcatalogimportjob_changelist' %}" class="nav-link">کارهای دریافت کاتالوگ</a></li>{% endif %}
+                            {% if perms.store.view_catalogsyncrun %}<li class="nav-item"><a href="{% url 'admin:store_catalogsyncrun_changelist' %}" class="nav-link">اجرای همگام‌سازی</a></li>{% endif %}
+                            {% if perms.store.view_catalogassetmetrics %}<li class="nav-item"><a href="{% url 'admin:store_catalogassetmetrics_changelist' %}" class="nav-link">آمار مدل‌ها</a></li>{% endif %}
+                            {% if perms.store.view_catalogsyncdashboard %}<li class="nav-item"><a href="{% url 'admin:store_catalogsyncdashboard_changelist' %}" class="nav-link">داشبورد همگام‌سازی</a></li>{% endif %}
+                            {% if perms.store.view_externalsourcefetchlog %}<li class="nav-item"><a href="{% url 'admin:store_externalsourcefetchlog_changelist' %}" class="nav-link">لاگ دریافت منابع</a></li>{% endif %}
+                            {% if perms.store.view_catalogseedurl %}<li class="nav-item"><a href="{% url 'admin:store_catalogseedurl_changelist' %}" class="nav-link">لینک‌های بذر</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarAutomation" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAutomation">
+                        <i class="ri-robot-2-line"></i><span>اتوماسیون کاتالوگ</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAutomation">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_catalogautomationdashboard %}<li class="nav-item"><a href="{% url 'admin:store_catalogautomationdashboard_changelist' %}" class="nav-link">داشبورد اتوماسیون</a></li>{% endif %}
+                            {% if perms.store.view_catalogautomationsetting %}<li class="nav-item"><a href="{% url 'admin:store_catalogautomationsetting_changelist' %}" class="nav-link">تنظیمات اتوماسیون</a></li>{% endif %}
+                            {% if perms.store.view_catalogsourceschedule %}<li class="nav-item"><a href="{% url 'admin:store_catalogsourceschedule_changelist' %}" class="nav-link">زمان‌بندی منابع</a></li>{% endif %}
+                            {% if perms.store.view_catalogqueuedjob %}<li class="nav-item"><a href="{% url 'admin:store_catalogqueuedjob_changelist' %}" class="nav-link">صف پردازش</a></li>{% endif %}
+                            {% if perms.store.view_catalogassetpublication %}<li class="nav-item"><a href="{% url 'admin:store_catalogassetpublication_changelist' %}" class="nav-link">انتشار مدل‌ها</a></li>{% endif %}
+                            {% if perms.store.view_linkanalysisoperationsdashboard %}<li class="nav-item"><a href="{% url 'admin:store_linkanalysisoperationsdashboard_changelist' %}" class="nav-link">عملیات تحلیل لینک</a></li>{% endif %}
+                            {% if perms.store.view_customerlinkanalysis %}<li class="nav-item"><a href="{% url 'admin:store_customerlinkanalysis_changelist' %}" class="nav-link">تحلیل لینک مشتریان</a></li>{% endif %}
+                            {% if perms.store.view_customerlinkanalysisjob %}<li class="nav-item"><a href="{% url 'admin:store_customerlinkanalysisjob_changelist' %}" class="nav-link">صف تحلیل لینک</a></li>{% endif %}
+                            {% if perms.store.view_linkanalysisadapterpolicy %}<li class="nav-item"><a href="{% url 'admin:store_linkanalysisadapterpolicy_changelist' %}" class="nav-link">کنترل Adapterها</a></li>{% endif %}
+                            {% if perms.store.view_linkanalysisworkerheartbeat %}<li class="nav-item"><a href="{% url 'admin:store_linkanalysisworkerheartbeat_changelist' %}" class="nav-link">سلامت Workerها</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarMarketPricing" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMarketPricing">
+                        <i class="ri-exchange-dollar-line"></i><span>نرخ ارز و قیمت بازار</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarMarketPricing">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_marketpricingsetting %}<li class="nav-item"><a href="{% url 'admin:store_marketpricingsetting_changelist' %}" class="nav-link">تنظیمات قیمت بازار</a></li>{% endif %}
+                            {% if perms.store.view_exchangerateprovider %}<li class="nav-item"><a href="{% url 'admin:store_exchangerateprovider_changelist' %}" class="nav-link">منابع نرخ ارز</a></li>{% endif %}
+                            {% if perms.store.view_exchangeratesnapshot %}<li class="nav-item"><a href="{% url 'admin:store_exchangeratesnapshot_changelist' %}" class="nav-link">تاریخچه نرخ ارز</a></li>{% endif %}
+                            {% if perms.store.view_materialmarketpricesnapshot %}<li class="nav-item"><a href="{% url 'admin:store_materialmarketpricesnapshot_changelist' %}" class="nav-link">تاریخچه قیمت متریال</a></li>{% endif %}
+                            {% if perms.store.view_bambufilamentcatalogitem %}<li class="nav-item"><a href="{% url 'admin:store_bambufilamentcatalogitem_changelist' %}" class="nav-link">کاتالوگ فیلامنت Bambu</a></li>{% endif %}
+                            {% if perms.store.view_bambufilamentpricehistory %}<li class="nav-item"><a href="{% url 'admin:store_bambufilamentpricehistory_changelist' %}" class="nav-link">تاریخچه قیمت Bambu</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>بازاریابی و همکاری فروش</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarAffiliate" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAffiliate">
+                        <i class="ri-hand-coin-line"></i><span>همکاری در فروش</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAffiliate">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_affiliateprogramdashboard %}<li class="nav-item"><a href="{% url 'admin:store_affiliateprogramdashboard_changelist' %}" class="nav-link">داشبورد همکاری فروش</a></li>{% endif %}
+                            {% if perms.store.view_affiliatetier %}<li class="nav-item"><a href="{% url 'admin:store_affiliatetier_changelist' %}" class="nav-link">سطح همکاران</a></li>{% endif %}
+                            {% if perms.store.view_affiliatepartner %}<li class="nav-item"><a href="{% url 'admin:store_affiliatepartner_changelist' %}" class="nav-link">همکاران فروش</a></li>{% endif %}
+                            {% if perms.store.view_affiliatecampaign %}<li class="nav-item"><a href="{% url 'admin:store_affiliatecampaign_changelist' %}" class="nav-link">کمپین‌ها</a></li>{% endif %}
+                            {% if perms.store.view_affiliatecommission %}<li class="nav-item"><a href="{% url 'admin:store_affiliatecommission_changelist' %}" class="nav-link">کمیسیون‌ها</a></li>{% endif %}
+                            {% if perms.store.view_affiliatepayout %}<li class="nav-item"><a href="{% url 'admin:store_affiliatepayout_changelist' %}" class="nav-link">تسویه همکاران</a></li>{% endif %}
+                            {% if perms.store.view_affiliateledgerentry %}<li class="nav-item"><a href="{% url 'admin:store_affiliateledgerentry_changelist' %}" class="nav-link">دفتر مالی همکاران</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>محتوا و سایت</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarWebsite" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWebsite">
+                        <i class="ri-layout-4-line"></i><span>محتوای سایت و سئو</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarWebsite">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.website.view_portfolioitem %}<li class="nav-item"><a href="{% url 'admin:website_portfolioitem_changelist' %}" class="nav-link">نمونه‌کارها</a></li>{% endif %}
+                            {% if perms.website.view_product %}<li class="nav-item"><a href="{% url 'admin:website_product_changelist' %}" class="nav-link">محصولات سفارشی سایت</a></li>{% endif %}
+                            {% if perms.website.view_material %}<li class="nav-item"><a href="{% url 'admin:website_material_changelist' %}" class="nav-link">متریال‌ها</a></li>{% endif %}
+                            {% if perms.website.view_industryrecommendation %}<li class="nav-item"><a href="{% url 'admin:website_industryrecommendation_changelist' %}" class="nav-link">پیشنهاد متریال صنایع</a></li>{% endif %}
+                            {% if perms.website.view_partrecommendation %}<li class="nav-item"><a href="{% url 'admin:website_partrecommendation_changelist' %}" class="nav-link">پیشنهاد متریال قطعات</a></li>{% endif %}
+                            {% if perms.website.view_testimonial %}<li class="nav-item"><a href="{% url 'admin:website_testimonial_changelist' %}" class="nav-link">رضایت مشتریان</a></li>{% endif %}
+                            {% if perms.website.view_faq %}<li class="nav-item"><a href="{% url 'admin:website_faq_changelist' %}" class="nav-link">پرسش‌های متداول</a></li>{% endif %}
+                            {% if perms.website.view_homepresentationsetting %}<li class="nav-item"><a href="{% url 'admin:website_homepresentationsetting_changelist' %}" class="nav-link">تنظیمات صفحه اصلی</a></li>{% endif %}
+                            {% if perms.website.view_teammember %}<li class="nav-item"><a href="{% url 'admin:website_teammember_changelist' %}" class="nav-link">اعضای تیم</a></li>{% endif %}
+                            {% if perms.website.view_clientreference %}<li class="nav-item"><a href="{% url 'admin:website_clientreference_changelist' %}" class="nav-link">مشتریان مرجع</a></li>{% endif %}
+                            {% if perms.website.view_sitesetting %}<li class="nav-item"><a href="{% url 'admin:website_sitesetting_changelist' %}" class="nav-link">تنظیمات سایت</a></li>{% endif %}
+                            {% if perms.website.view_seosettings %}<li class="nav-item"><a href="{% url 'admin:website_seosettings_changelist' %}" class="nav-link">تنظیمات سئو</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarEngagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarEngagement">
+                        <i class="ri-heart-3-line"></i><span>تعاملات فروشگاه</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarEngagement">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.store.view_productcomment %}<li class="nav-item"><a href="{% url 'admin:store_productcomment_changelist' %}" class="nav-link">دیدگاه‌ها</a></li>{% endif %}
+                            {% if perms.store.view_productreview %}<li class="nav-item"><a href="{% url 'admin:store_productreview_changelist' %}" class="nav-link">امتیازها و نقدها</a></li>{% endif %}
+                            {% if perms.store.view_productlike %}<li class="nav-item"><a href="{% url 'admin:store_productlike_changelist' %}" class="nav-link">علاقه‌مندی‌ها</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><span>تنظیمات سامانه</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarLocations" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarLocations">
+                        <i class="ri-map-pin-2-line"></i><span>استان، شهرستان و شهر</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarLocations">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.website.view_iranprovince %}<li class="nav-item"><a href="{% url 'admin:website_iranprovince_changelist' %}" class="nav-link">استان‌ها</a></li>{% endif %}
+                            {% if perms.website.view_irancounty %}<li class="nav-item"><a href="{% url 'admin:website_irancounty_changelist' %}" class="nav-link">شهرستان‌ها</a></li>{% endif %}
+                            {% if perms.website.view_irancity %}<li class="nav-item"><a href="{% url 'admin:website_irancity_changelist' %}" class="nav-link">شهرها</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item admin-registry-root">
+                    <a class="nav-link menu-link collapsed" href="#sidebarAllModules" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAllModules">
+                        <i class="ri-stack-line"></i><span>تمام مدل‌های ثبت‌شده</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAllModules">
+                        <ul class="nav nav-sm flex-column">
+                            {% for app in available_apps %}
+                            <li class="nav-item admin-registry-app">
+                                <a class="nav-link collapsed" href="#registry-{{ app.app_label }}" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="registry-{{ app.app_label }}">{{ app.name }}</a>
+                                <div class="collapse menu-dropdown admin-registry-models" id="registry-{{ app.app_label }}">
+                                    <ul class="nav nav-sm flex-column">
+                                        {% for model in app.models %}{% if model.admin_url %}<li class="nav-item"><a href="{{ model.admin_url }}" class="nav-link">{{ model.name }}</a></li>{% endif %}{% endfor %}
+                                    </ul>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </li>
+
+                {% if request.user.is_superuser %}
+                <li class="nav-item"><a class="nav-link menu-link" href="/smart-admin/"><i class="ri-shield-check-line"></i><span>SmartBase پشتیبان</span></a></li>
+                {% endif %}
+                <li class="nav-item mt-3 mb-4"><a class="nav-link menu-link sidebar-site-link" href="/" target="_blank" rel="noopener"><i class="ri-external-link-line"></i><span>مشاهده سایت</span></a></li>
+            </ul>
+            <div id="admin-menu-empty" class="admin-menu-empty" hidden>موردی در منو پیدا نشد.</div>
+        </div>
+    </div>
+    <div class="sidebar-background"></div>
+</div>

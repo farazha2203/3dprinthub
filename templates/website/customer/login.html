@@ -1,70 +1,9 @@
-{% load static %}
-
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>ورود مشتری | 3DprintHub.ir</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
-
-<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">
-
-    {% include "website/partials/header.html" %}
-
-    <main class="container mx-auto px-6 pt-32 pb-16">
-        <div class="max-w-xl mx-auto glass rounded-[2rem] p-6 md:p-8">
-            <h1 class="text-3xl font-black mb-3">ورود مشتری</h1>
-            <p class="text-slate-500 mb-8">
-                برای مشاهده تاریخچه سفارشات و پیش‌فاکتورها وارد حساب خود شوید.
-            </p>
-
-            {% if messages %}
-                <div class="mb-6 space-y-3">
-                    {% for message in messages %}
-                        <div class="rounded-2xl px-4 py-3 text-white {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% if form.errors %}
-                <div class="mb-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 text-rose-600">
-                    شماره تماس یا رمز عبور اشتباه است.
-                </div>
-            {% endif %}
-
-            <form method="post" class="space-y-5">
-                {% csrf_token %}
-
-                <div>
-                    <label class="block mb-2 text-sm text-slate-600">شماره تماس</label>
-                    {{ form.username }}
-                </div>
-
-                <div>
-                    <label class="block mb-2 text-sm text-slate-600">رمز عبور</label>
-                    {{ form.password }}
-                </div>
-
-                <button type="submit" class="w-full rounded-2xl btn-primary font-black py-4">
-                    ورود به پنل مشتری
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-sm text-slate-500">
-                حساب ندارید؟
-                <a href="{% url 'website:customer_register' %}" class="text-orange-500 font-bold">
-                    ثبت‌نام کنید
-                </a>
-            </div>
-        </div>
-    </main>
-
-    <script src="{% static 'js/main.js' %}"></script>
-</body>
-</html>
+{% load static socialaccount %}
+<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>ورود مشتری | 3DprintHub.ir</title><meta name="description" content="ورود مشتری برای ثبت، پیگیری و سفارش مجدد قطعات چاپ سه‌بعدی"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="{% static 'css/main.css' %}"><link rel="stylesheet" href="{% static 'css/phase14-presentation.css' %}"><meta name="robots" content="noindex,follow"></head>
+<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">{% include "website/partials/header.html" %}<main class="container mx-auto px-6 pt-32 pb-16"><div class="max-w-xl mx-auto glass rounded-[2rem] p-6 md:p-8"><h1 class="text-3xl font-black mb-3">ورود مشتری</h1><p class="text-slate-500 mb-8">برای ثبت سفارش، مشاهده سوابق و سفارش مجدد فایل‌های محفوظ وارد شوید.</p>{% if messages %}<div class="mb-6 space-y-3">{% for message in messages %}<div class="rounded-2xl px-4 py-3 text-white {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">{{ message }}</div>{% endfor %}</div>{% endif %}{% if form.errors %}<div class="mb-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 text-rose-600">شماره تماس، ایمیل یا رمز عبور اشتباه است.</div>{% endif %}<form method="post" class="space-y-5">{% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}"><div><label class="block mb-2 text-sm text-slate-600">شماره تماس یا ایمیل</label>{{ form.username }}</div><div><label class="block mb-2 text-sm text-slate-600">رمز عبور</label>{{ form.password }}</div><button type="submit" class="w-full rounded-2xl btn-primary font-black py-4">ورود و ادامه</button></form><div class="mt-4 text-left"><a href="{% url 'website:customer_password_reset' %}" class="text-sm text-orange-500 font-bold">رمز عبور را فراموش کرده‌اید؟</a></div>{% if google_login_enabled %}
+<div class="my-6 flex items-center gap-3 text-xs text-slate-400"><span class="h-px flex-1 bg-slate-200"></span><span>یا ورود سریع</span><span class="h-px flex-1 bg-slate-200"></span></div>
+<form method="post" action="{% provider_login_url 'google' process='login' next=next_url %}">
+    {% csrf_token %}
+    <button type="submit" class="google-auth-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.36l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.6 0-4.81-1.76-5.6-4.12H3.05v2.62A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 13.94A6 6 0 0 1 6.09 12c0-.67.11-1.32.31-1.94V7.44H3.05A10 10 0 0 0 2 12c0 1.61.39 3.13 1.05 4.56l3.35-2.62Z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.79.51 3.83 1.5l2.87-2.87A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.95 5.44l3.35 2.62c.79-2.36 3-4.12 5.6-4.12Z"/></svg><span>ادامه با حساب گوگل</span></button>
+</form>
+{% endif %}<div class="mt-6 text-center text-sm text-slate-500">حساب ندارید؟ <a href="{% url 'website:customer_register' %}{% if next_url %}?next={{ next_url|urlencode }}{% endif %}" class="text-orange-500 font-bold">ثبت‌نام کنید</a></div></div></main><script src="{% static 'js/main.js' %}"></script></body></html>

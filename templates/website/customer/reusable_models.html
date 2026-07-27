@@ -1,0 +1,25 @@
+{% extends "website/customer/base.html" %}
+{% load humanize %}
+{% block customer_content %}
+<section class="p13-section" style="padding-top:1rem">
+  <div class="p13-heading-row">
+    <div><span class="p13-kicker">آرشیو خصوصی</span><h1 class="p13-title" style="font-size:clamp(2rem,4vw,3.2rem)">مدل‌های سه‌بعدی محفوظ من</h1><p class="p13-lead">فایل اصلی فقط در فضای خصوصی مجموعه نگهداری می‌شود. شما نام مدل، وضعیت موجودبودن و اطلاعات چاپ قبلی را می‌بینید و می‌توانید با نرخ روز سفارش مجدد ثبت کنید.</p></div>
+    <a class="p13-button p13-button--orange" href="{% url 'website:home' %}#order">ثبت سفارش جدید</a>
+  </div>
+  <div style="display:grid;gap:1rem">
+    {% for model in saved_models %}
+      <article style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;border:1px solid #e1e4e9;border-radius:24px;background:#fff;padding:1.2rem;box-shadow:0 15px 40px rgba(16,17,20,.06)">
+        <div>
+          <div style="display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.7rem"><span class="p13-tag">{{ model.get_source_kind_display }}</span>{% if model.file_is_available %}<span class="p13-tag" style="background:#e9fbf4;color:#087a54">فایل در آرشیو موجود است</span>{% else %}<span class="p13-tag" style="background:#fff5df;color:#9a5a00">نیازمند بررسی فایل</span>{% endif %}{% if model.available_for_reorder %}<span class="p13-tag">قابل سفارش مجدد</span>{% endif %}</div>
+          <h2 style="font-size:1.2rem;font-weight:900">{{ model.display_name }}</h2>
+          <div style="display:flex;flex-wrap:wrap;gap:.7rem;margin-top:.6rem;color:#6f7681;font-size:.76rem"><span>کد: {{ model.internal_code }}</span>{% if model.file_format %}<span>فرمت داخلی: {{ model.file_format }}</span>{% endif %}{% if model.material_hint %}<span>متریال قبلی: {{ model.material_hint.name }}</span>{% endif %}{% if model.last_known_weight_grams %}<span>وزن قبلی: {{ model.last_known_weight_grams|floatformat:0 }} گرم</span>{% endif %}</div>
+          {% if model.customer_note %}<p style="margin-top:.8rem;color:#58606b;line-height:1.9">{{ model.customer_note }}</p>{% endif %}
+        </div>
+        {% if model.available_for_reorder %}<a class="p13-button p13-button--orange" href="{% url 'website:customer_reorder_model' model.public_token %}">سفارش مجدد با نرخ روز</a>{% else %}<span style="color:#7b828d;font-size:.8rem">فعلاً قابل سفارش نیست</span>{% endif %}
+      </article>
+    {% empty %}
+      <div class="p13-empty"><div class="p13-empty__icon">🗂️</div><h3>هنوز مدل محفوظی به حساب شما متصل نشده است</h3><p>مدیریت می‌تواند سفارش حضوری، فایل طراحی‌شده یا سفارش قبلی شما را با نام قابل‌تشخیص به این حساب متصل کند.</p><a class="p13-button p13-button--orange" style="margin-top:1rem" href="{% url 'website:home' %}#order">ثبت اولین سفارش</a></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

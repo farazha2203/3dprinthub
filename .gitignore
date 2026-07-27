@@ -3,16 +3,23 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Django
+# Django/runtime
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
+media/
+private_media/
 
-# Env files
+# Environment and secrets
 .env
 .env.*
 !.env.example
+!.env.production.example
+*.pem
+*.key
+*.crt
 
 # Virtual environments
 venv/
@@ -20,34 +27,45 @@ env/
 .venv/
 virtualenv/
 
-# VSCode / IDE
+# IDE / OS
 .vscode/
 .idea/
-
-# Static / media build artifacts
-staticfiles/
-media/
-
-# Python packaging
-build/
-dist/
-*.egg-info/
-
-# OS files
 .DS_Store
 Thumbs.db
 
-# Backups / temp files
+# Packaging, cache, temp
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
 *.bak
 *.bak_*
 *.tmp
 tmp/
 
-# Caches
-.pytest_cache/
-.mypy_cache/
+# Local project backups and generated patch artifacts
+.phase-backups/
+_local_backups/
+patches/
+*.zip
+/Pasted text*.txt
+/PHASE*_PATCH_MANIFEST.json
+/PHASE*_VERIFICATION_REPORT.json
+/PHASE*_VERIFICATION_REPORT.txt
+/PHASE*_HOTFIX_REPORT.json
+/PHASE*_DELETE_PATHS.txt
+/phase*_fixture.html
+/file_structure.txt
+/requirements.bad.txt~
 
-# Uploads / secrets / certificates
-*.pem
-*.key
-*.crt
+# Purchased/private vendor assets.
+# Keep these locally and upload them privately to the server; do not publish
+# them in this public repository.
+/static/velzon/
+/static/velzon_master/
+/static/fonts/
+
+# Historical local patch workspaces
+/3dprinthub_revenue_foundation/
+/3dprinthub_brand_preview_patch/

@@ -1,0 +1,22 @@
+{% load humanize %}
+<section id="live-material-prices" class="p13-section p13-materials">
+  <div class="p13-container">
+    <span class="p13-kicker">قیمت فروش متریال</span>
+    <h2 class="p13-title">قیمت هر گرم، شفاف و به‌روز</h2>
+    <p class="p13-lead">قیمت نمایش‌داده‌شده برای مشتری، نرخ فروش هر گرم است. قیمت دلاری منبع، نرخ ارز، هزینه واردات و حاشیه سود فقط در پنل مدیریت باقی می‌ماند.</p>
+    <div class="p13-material-grid">
+      {% for material in materials|slice:":8" %}
+        <article class="p13-material-card">
+          <h3>{{ material.name }}</h3>
+          <p>{{ material.main_usage|default:"متریال مناسب چاپ سه‌بعدی و ساخت قطعات سفارشی"|truncatewords:16 }}</p>
+          <div class="p13-material-price">
+            {% if material.public_sale_price_per_gram %}{{ material.public_sale_price_per_gram|intcomma }} <small>تومان / گرم</small>{% else %}استعلام قیمت{% endif %}
+          </div>
+        </article>
+      {% empty %}
+        <div class="p13-material-card" style="grid-column:1/-1"><h3>هنوز متریال فعال ثبت نشده است</h3><p>پس از ثبت متریال و قیمت فروش هر گرم در پنل مدیریت، قیمت‌ها در این قسمت نمایش داده می‌شوند.</p></div>
+      {% endfor %}
+    </div>
+    <div class="p13-material-note">قیمت نهایی قطعه علاوه بر وزن متریال، به زمان دستگاه، درصد پرشدگی، ساپورت، کیفیت چاپ، طراحی، پرداخت‌کاری، تعداد و هزینه ارسال وابسته است.</div>
+  </div>
+</section>

@@ -1,0 +1,16 @@
+[Unit]
+Description=3DPrintHub ASGI and WebSocket server
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/3dprinthub
+EnvironmentFile=/var/www/3dprinthub/.env
+ExecStart=/var/www/3dprinthub/.venv/bin/daphne -b 127.0.0.1 -p 8000 config.asgi:application
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

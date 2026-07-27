@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>لغو ورود با گوگل | 3DPrintHub</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body class="auth-status-page">
+<main class="auth-status-card">
+    <div class="auth-status-icon">×</div>
+    <h1>ورود با گوگل لغو شد</h1>
+    <p>هیچ تغییری در حساب شما انجام نشد. می‌توانید دوباره ورود با گوگل را آغاز کنید یا با شماره تماس وارد شوید.</p>
+    <div class="auth-status-actions">
+        <a class="btn-primary" href="{% url 'website:customer_login' %}">بازگشت به ورود</a>
+        <a href="{% url 'website:home' %}">صفحه اصلی</a>
+    </div>
+</main>
+</body>
+</html>

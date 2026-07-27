@@ -1,7 +1,7 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-customer-theme="{{ customer_theme|default:'original' }}" data-theme-prompt="{{ customer_theme_prompt|yesno:'1,0' }}" data-theme-endpoint="{{ customer_theme_endpoint }}" data-authenticated="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
 <head>
     <meta charset="UTF-8">
 
@@ -62,6 +62,21 @@
       ]
     }
     </script>
+    <link rel="stylesheet" href="{% static 'css/brand-theme-preview.css' %}">
+
+    <!-- PHASE10_READY_MODELS_SCHEMA -->
+    {% if ready_models_schema %}<script type="application/ld+json">{{ ready_models_schema|safe }}</script>{% endif %}
+    <!-- PHASE13_FRONTEND_CSS -->
+    <link rel="stylesheet" href="{% static 'css/phase13-frontend.css' %}">
+    <!-- PHASE14_PRESENTATION_CSS -->
+    <link rel="stylesheet" href="{% static 'css/phase14-presentation.css' %}">
+    <!-- PHASE14_PRESENTATION_SCHEMA -->
+    {% if presentation_schema %}<script type="application/ld+json">{{ presentation_schema|safe }}</script>{% endif %}
+    <!-- PHASE18_SLIDER_GRID_CSS -->
+    <link rel="stylesheet" href="{% static 'css/phase18-catalog-display.css' %}">
+    <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
+    {% if hero_model_slider.0.catalog_image_url %}<link rel="preload" as="image" href="{{ hero_model_slider.0.catalog_image_url }}" fetchpriority="high">{% endif %}
+    <link rel="stylesheet" href="{% static 'css/phase27-home-hero.css' %}">
 </head>
 
 <body class="bg-[#f6f9fc] text-slate-950 selection:bg-cyan-400 selection:text-white">
@@ -87,6 +102,10 @@
         {% include "website/partials/recommendations.html" %}
         {% include "website/partials/portfolio.html" %}
         {% include "website/partials/products.html" %}
+        {% include "website/partials/external-models-home.html" %}
+        {% include "website/partials/team-showcase.html" %}
+        {% include "website/partials/client-showcase.html" %}
+        {% include "website/partials/phase13-material-pricing.html" %}
         {% include "website/partials/testimonials.html" %}
         {% include "website/partials/faq.html" %}
         {% include "website/partials/order-form.html" %}
@@ -154,5 +173,12 @@
 </script>
 <!-- /FAQ_SCHEMA_3DPRINTHUB_AUTO -->
 
+    <script src="{% static 'js/theme-preview.js' %}"></script>
+    <!-- PHASE13_FRONTEND_JS -->
+    <script src="{% static 'js/phase13-frontend.js' %}" defer></script>
+    <!-- PHASE14_PRESENTATION_JS -->
+    <script src="{% static 'js/phase14-presentation.js' %}" defer></script>
+    <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
+    <script src="{% static 'js/phase27-home-hero.js' %}" defer></script>
 </body>
 </html>

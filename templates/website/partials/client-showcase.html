@@ -1,0 +1,19 @@
+{% if presentation_setting.show_clients_section and client_references %}
+<section id="clients" class="p14-section p14-clients-section">
+  <div class="p14-container">
+    <div class="p14-section-head">
+      <div><span class="p14-eyebrow">اعتماد کسب‌وکارها</span><h2>مشتریان و همکاران مجموعه</h2><p>نمونه‌ای از مجموعه‌هایی که با مجوز خودشان نام یا لوگوی آن‌ها نمایش داده می‌شود.</p></div>
+    </div>
+    <div class="p14-client-strip">
+      {% for client in client_references %}
+        <article class="p14-client-card">
+          {% if client.website_url %}<a href="{{ client.website_url }}" rel="noopener noreferrer" target="_blank">{% endif %}
+          <div class="p14-client-card__logo">{% if client.logo %}<img src="{{ client.logo.url }}" alt="لوگوی {{ client.name }}" width="220" height="100" loading="lazy">{% else %}<strong>{{ client.name }}</strong>{% endif %}</div>
+          <div><h3>{{ client.name }}</h3>{% if client.industry %}<small>{{ client.industry }}</small>{% endif %}{% if client.project_summary %}<p>{{ client.project_summary }}</p>{% endif %}</div>
+          {% if client.website_url %}</a>{% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

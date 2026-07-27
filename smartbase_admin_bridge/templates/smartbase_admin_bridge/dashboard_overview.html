@@ -1,0 +1,72 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-16 mb-24" dir="rtl">
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">کل سفارش‌ها</div>
+    <div class="text-30 font-semibold text-dark-900">{{ total_orders }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">سفارش‌های امروز</div>
+    <div class="text-30 font-semibold text-notice">{{ today_orders }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">منتظر بررسی</div>
+    <div class="text-30 font-semibold text-warning">{{ pending_orders }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">در حال تولید</div>
+    <div class="text-30 font-semibold text-primary">{{ active_orders }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">آماده تحویل</div>
+    <div class="text-30 font-semibold text-success">{{ ready_orders }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">پیام خوانده‌نشده</div>
+    <div class="text-30 font-semibold text-negative">{{ unread_messages }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">کاربران فعال</div>
+    <div class="text-30 font-semibold text-dark-900">{{ active_users }}</div>
+  </div>
+  <div class="rounded-6 border border-dark-200 bg-light p-20">
+    <div class="text-12 text-dark-600 mb-8">بخش‌های ثبت‌شده</div>
+    <div class="text-30 font-semibold text-dark-900">{{ registered_views }}</div>
+  </div>
+</div>
+
+<div class="rounded-6 border border-dark-200 bg-light overflow-hidden" dir="rtl">
+  <div class="flex items-center justify-between p-16 border-b border-dark-200">
+    <div>
+      <div class="text-16 font-semibold text-dark-900">آخرین سفارش‌ها و پروژه‌ها</div>
+      <div class="text-12 text-dark-600 mt-4">آخرین رکوردهای شناسایی‌شده در پروژه</div>
+    </div>
+    <div class="text-12 text-dark-600">{{ audit_count }} رویداد ثبت‌شده</div>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-14">
+      <thead class="bg-dark-50 text-dark-700">
+        <tr>
+          <th class="text-right p-12">عنوان</th>
+          <th class="text-right p-12">وضعیت</th>
+          <th class="text-right p-12">زمان</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+          <tr class="border-t border-dark-100">
+            <td class="p-12">
+              {% if order.url %}
+                <a href="{{ order.url }}" class="text-primary hover:underline">{{ order.title }}</a>
+              {% else %}
+                {{ order.title }}
+              {% endif %}
+            </td>
+            <td class="p-12"><span class="badge badge-simple badge-primary">{{ order.status }}</span></td>
+            <td class="p-12 text-dark-600">{{ order.created_at|date:"Y/m/d H:i"|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="p-24 text-center text-dark-600">هنوز سفارش یا پروژه‌ای برای نمایش پیدا نشد.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

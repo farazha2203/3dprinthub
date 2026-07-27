@@ -1,0 +1,4 @@
+{% extends "store/base.html" %}
+{% block title %}ثبت نظر برای {{ product.title }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}<section class="container mx-auto px-4 md:px-6 py-10 max-w-3xl"><div class="store-content-card"><h1 class="text-2xl font-black">ثبت نظر برای {{ product.title }}</h1><p class="text-emerald-700 font-bold mt-3">خرید شما برای این محصول تأیید شده است.</p><form method="post" class="grid gap-5 mt-6">{% csrf_token %}{% for field in form %}<div><label class="block font-bold mb-2">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 text-sm">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn-primary rounded-2xl px-6 py-4 font-black">ثبت نظر</button></form></div></section>{% endblock %}

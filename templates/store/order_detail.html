@@ -1,0 +1,39 @@
+{% extends "store/base.html" %}
+{% load humanize %}
+{% block title %}سفارش {{ order.order_number }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<section class="container mx-auto px-4 md:px-6 py-10">
+  <div class="flex flex-wrap justify-between gap-4 mb-7">
+    <div><h1 class="text-3xl font-black">سفارش {{ order.order_number }}</h1><p class="text-slate-500 mt-2">{{ order.created_at|date:'Y/m/d H:i' }}</p></div>
+    <div class="rounded-2xl bg-orange-50 border border-orange-200 px-5 py-3 font-bold">{{ order.get_status_display }} / {{ order.get_payment_status_display }}</div>
+  </div>
+  <div class="grid lg:grid-cols-[1fr_360px] gap-7">
+    <div class="space-y-6">
+      <section class="space-y-4">
+        {% for item in order.items.all %}<div class="store-content-card flex justify-between gap-4"><div><div class="font-black">{{ item.product_title }}</div><div class="text-sm text-slate-500 mt-2">{{ item.material_name }} • {{ item.quality_name }} • تعداد {{ item.quantity }}</div></div><strong>{{ item.line_total|intcomma }} تومان</strong></div>{% endfor %}
+      </section>
+      <section class="store-content-card">
+        <h2 class="text-xl font-black mb-5">روند اجرای سفارش</h2>
+        <div class="space-y-4">
+          {% for event in events %}<div class="border-r-4 border-orange-400 pr-4"><div class="font-black">{{ event.title }}</div>{% if event.description %}<p class="text-slate-600 mt-1 leading-7">{{ event.description }}</p>{% endif %}<small class="text-slate-400">{{ event.created_at|date:'Y/m/d H:i' }}</small></div>{% empty %}<p class="text-slate-500">رویدادی ثبت نشده است.</p>{% endfor %}
+        </div>
+      </section>
+      {% if shipment %}<section class="store-content-card"><h2 class="text-xl font-black">اطلاعات مرسوله</h2><div class="grid md:grid-cols-2 gap-3 mt-4 text-sm"><div><strong>وضعیت:</strong> {{ shipment.get_status_display }}</div><div><strong>شرکت حمل:</strong> {{ shipment.carrier|default:'-' }}</div><div><strong>کد رهگیری:</strong> {{ shipment.tracking_code|default:'-' }}</div><div><strong>تحویل تخمینی:</strong> {{ shipment.estimated_delivery_date|date:'Y/m/d'|default:'-' }}</div></div>{% if shipment.tracking_url %}<a class="inline-block mt-4 text-orange-600 font-bold" href="{{ shipment.tracking_url }}" rel="nofollow noopener" target="_blank">رهگیری مرسوله</a>{% endif %}</section>{% endif %}
+      {% if return_requests %}<section class="store-content-card"><h2 class="text-xl font-black">درخواست‌های مرجوعی</h2>{% for item in return_requests %}<div class="mt-4 rounded-2xl bg-slate-50 border p-4"><strong>{{ item.get_status_display }}</strong><p class="mt-2">{{ item.description }}</p>{% if item.admin_response %}<p class="mt-2 text-emerald-700"><strong>پاسخ مدیریت:</strong> {{ item.admin_response }}</p>{% endif %}</div>{% endfor %}</section>{% endif %}
+    </div>
+    <aside class="store-content-card h-fit">
+      <div class="flex justify-between"><span>جمع کالاها</span><strong>{{ order.subtotal|intcomma }}</strong></div>
+      {% if order.discount_amount %}<div class="flex justify-between mt-3 text-emerald-700"><span>تخفیف{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span><strong>-{{ order.discount_amount|intcomma }}</strong></div>{% endif %}
+      <div class="flex justify-between mt-3"><span>بسته‌بندی</span><strong>{{ order.packaging_fee|intcomma }}</strong></div>
+      <div class="flex justify-between mt-3"><span>ارسال</span><strong>{{ order.shipping_fee|intcomma }}</strong></div>
+      <div class="flex justify-between mt-3"><span>مالیات</span><strong>{{ order.tax_amount|intcomma }}</strong></div>
+      <div class="border-t mt-5 pt-5 flex justify-between text-lg"><span>مبلغ نهایی</span><strong>{{ order.total_amount|intcomma }} تومان</strong></div>
+      {% if order.can_pay %}<a href="{% url 'store:manual_payment' order.order_number %}" class="btn-primary block text-center rounded-2xl px-5 py-3 font-black mt-6">تکمیل پرداخت</a>{% endif %}
+      {% if invoice %}<a href="{% url 'store:invoice' order.order_number %}" class="block text-center rounded-2xl border border-slate-300 px-5 py-3 font-bold mt-3">مشاهده و چاپ فاکتور</a>{% endif %}
+      {% if order.can_request_return %}<a href="{% url 'store:return_request' order.order_number %}" class="block text-center rounded-2xl border border-rose-200 text-rose-600 px-5 py-3 font-bold mt-3">درخواست مرجوعی</a>{% endif %}
+      <div class="text-sm text-slate-600 leading-7 mt-6"><strong>ارسال:</strong> {{ order.shipping_title }}<br><strong>نشانی:</strong> {{ order.province }}، {{ order.county }}، {{ order.city }}، {{ order.address }}<br><strong>کد پستی:</strong> {{ order.postal_code }}{% if order.tracking_code %}<br><strong>کد رهگیری:</strong> {{ order.tracking_code }}{% endif %}</div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

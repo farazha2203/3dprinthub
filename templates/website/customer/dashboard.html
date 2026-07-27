@@ -1,162 +1,83 @@
-{% load static %}
+{% extends 'website/customer/account_base.html' %}
 {% load humanize %}
+{% block title %}داشبورد مشتری{% endblock %}
+{% block account_content %}
+<div class="customer-welcome">
+  <div>
+    <span>حساب کاربری 3DprintHub</span>
+    <h1>سلام {{ profile.first_name|default:'دوست عزیز' }}، خوش آمدید</h1>
+    <p>سفارش‌های چاپ سفارشی، خریدهای فروشگاه، پرداخت‌ها و آدرس‌های ارسال را از اینجا مدیریت کنید.</p>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <a class="customer-button secondary" href="{% url 'store:external_link_analyzer' %}">تحلیل لینک و برآورد قیمت</a>
+    <a class="customer-button secondary" href="{% url 'store:product_list' %}">مشاهده فروشگاه</a>
+    <a class="customer-button primary" href="/#order">ثبت سفارش ساخت</a>
+  </div>
+</div>
 
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>پنل مشتری | 3DprintHub.ir</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div class="customer-stats">
+  <article><span>سفارش ساخت</span><strong>{{ custom_stats.all }}</strong><small>{{ custom_stats.active }} سفارش فعال</small></article>
+  <article><span>سفارش فروشگاه</span><strong>{{ store_stats.all }}</strong><small>{{ store_stats.active }} در حال انجام</small></article>
+  <article><span>در انتظار پرداخت</span><strong>{{ store_stats.awaiting_payment }}</strong><small>نیازمند اقدام شما</small></article>
+  <article><span>خرید پرداخت‌شده</span><strong>{{ paid_total|intcomma }}</strong><small>تومان</small></article>
+</div>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
+<div class="grid xl:grid-cols-3 gap-6 mt-6">
+  <section class="customer-card xl:col-span-2">
+    <div class="customer-card-head">
+      <div><h2>آخرین سفارش‌های فروشگاه</h2><p>وضعیت تولید، پرداخت و ارسال</p></div>
+      <a href="{% url 'store:my_orders' %}">مشاهده همه</a>
+    </div>
+    <div class="space-y-3">
+      {% for order in store_orders %}
+        <a href="{{ order.get_absolute_url }}" class="customer-order-row">
+          <div><strong>{{ order.order_number }}</strong><span>{{ order.created_at|date:'Y/m/d H:i' }} • {{ order.items.count }} ردیف</span></div>
+          <div><strong>{{ order.total_amount|intcomma }} تومان</strong><span>{{ order.get_status_display }} / {{ order.get_payment_status_display }}</span></div>
+        </a>
+      {% empty %}
+        <div class="customer-empty">هنوز خریدی از فروشگاه ثبت نشده است.</div>
+      {% endfor %}
+    </div>
+  </section>
+  <aside class="customer-card">
+    <div class="customer-card-head">
+      <div><h2>آدرس‌های ارسال</h2><p>{{ addresses|length }} آدرس اخیر</p></div>
+      <a href="{% url 'website:customer_address_create' %}">افزودن</a>
+    </div>
+    {% for item in addresses %}
+      <div class="customer-address-mini">
+        <div><strong>{{ item.title }}</strong>{% if item.is_default %}<em>پیش‌فرض</em>{% endif %}</div>
+        <p>{{ item.province }}، {{ item.city }}، {{ item.address|truncatechars:70 }}</p>
+      </div>
+    {% empty %}
+      <div class="customer-empty">آدرس ارسال را تکمیل کنید.</div>
+    {% endfor %}
+    <a class="customer-button secondary w-full text-center mt-4" href="{% url 'website:customer_addresses' %}">مدیریت آدرس‌ها</a>
+  </aside>
+</div>
 
-<body class="bg-[#f6f7f9] text-slate-950 min-h-screen">
-
-    {% include "website/partials/header.html" %}
-
-    <main class="container mx-auto px-6 pt-32 pb-16">
-
-        {% if messages %}
-            <div class="mb-6 space-y-3">
-                {% for message in messages %}
-                    <div class="rounded-2xl px-4 py-3 text-white {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-black">
-                    پنل مشتری
-                </h1>
-                <p class="text-slate-500 mt-2">
-                    خوش آمدید {{ profile.first_name }} {{ profile.last_name }}
-                </p>
-            </div>
-
-            <div class="flex flex-wrap gap-3">
-                <a href="{% url 'website:customer_profile' %}" class="rounded-2xl border border-slate-300 px-5 py-3 font-bold hover:border-orange-400 hover:text-orange-500 transition">
-                    ویرایش مشخصات
-                </a>
-
-                <a href="/#order" class="rounded-2xl btn-primary px-5 py-3 font-bold">
-                    ثبت سفارش جدید
-                </a>
-
-                <a href="{% url 'website:customer_logout' %}" class="rounded-2xl bg-slate-900 text-white px-5 py-3 font-bold">
-                    خروج
-                </a>
-            </div>
-        </div>
-
-        <section class="grid sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">همه سفارشات</div>
-                <div class="text-3xl font-black mt-2">{{ stats.all }}</div>
-            </div>
-
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">جدید</div>
-                <div class="text-3xl font-black mt-2">{{ stats.new }}</div>
-            </div>
-
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">پیش‌فاکتور</div>
-                <div class="text-3xl font-black mt-2">{{ stats.quoted }}</div>
-            </div>
-
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">تأیید شده</div>
-                <div class="text-3xl font-black mt-2">{{ stats.accepted }}</div>
-            </div>
-
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">پرداخت شده</div>
-                <div class="text-3xl font-black mt-2">{{ stats.paid }}</div>
-            </div>
-
-            <div class="glass rounded-3xl p-5">
-                <div class="text-slate-500 text-sm">انجام شده</div>
-                <div class="text-3xl font-black mt-2">{{ stats.done }}</div>
-            </div>
-        </section>
-
-        <section class="glass rounded-[2rem] p-6 md:p-8">
-            <div class="flex items-center justify-between gap-4 mb-6">
-                <h2 class="text-2xl font-black">تاریخچه سفارشات</h2>
-            </div>
-
-            <div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white">
-                <table class="w-full min-w-[900px] text-sm">
-                    <thead>
-                        <tr>
-                            <th class="p-4 text-right">شماره</th>
-                            <th class="p-4 text-right">نوع خدمت</th>
-                            <th class="p-4 text-right">متریال</th>
-                            <th class="p-4 text-center">تعداد</th>
-                            <th class="p-4 text-center">وضعیت</th>
-                            <th class="p-4 text-center">تاریخ ثبت</th>
-                            <th class="p-4 text-center">عملیات</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-slate-200">
-                        {% for order in orders %}
-                            <tr>
-                                <td class="p-4 font-bold">
-                                    #{{ order.id }}
-                                </td>
-
-                                <td class="p-4">
-                                    {{ order.get_service_type_display }}
-                                </td>
-
-                                <td class="p-4">
-                                    {% if order.material %}
-                                        {{ order.material.name }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-
-                                <td class="p-4 text-center">
-                                    {{ order.quantity }}
-                                </td>
-
-                                <td class="p-4 text-center">
-                                    <span class="inline-flex rounded-full bg-orange-100 text-orange-600 px-3 py-1 font-bold">
-                                        {{ order.get_status_display }}
-                                    </span>
-                                </td>
-
-                                <td class="p-4 text-center">
-                                    {{ order.created_at|date:"Y/m/d H:i" }}
-                                </td>
-
-                                <td class="p-4 text-center">
-                                    <a href="{% url 'website:customer_order_detail' order.id %}" class="text-orange-500 font-bold">
-                                        مشاهده جزئیات
-                                    </a>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-500">
-                                    هنوز سفارشی ثبت نکرده‌اید.
-                                    <a href="/#order" class="text-orange-500 font-bold">ثبت سفارش جدید</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <script src="{% static 'js/main.js' %}"></script>
-</body>
-</html>
+<section class="customer-card mt-6">
+  <div class="customer-card-head">
+    <div><h2>سفارش‌های ساخت و مهندسی معکوس</h2><p>درخواست‌های ثبت‌شده از فرم اصلی سایت</p></div>
+    <a href="/#order">سفارش جدید</a>
+  </div>
+  <div class="customer-table-wrap">
+    <table class="customer-table">
+      <thead><tr><th>شماره</th><th>خدمت</th><th>متریال</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead>
+      <tbody>
+        {% for order in custom_orders %}
+          <tr>
+            <td>#{{ order.id }}</td><td>{{ order.get_service_type_display }}</td>
+            <td>{% if order.material %}{{ order.material.name }}{% else %}—{% endif %}</td>
+            <td><span class="customer-status">{{ order.get_status_display }}</span></td>
+            <td>{{ order.created_at|date:'Y/m/d' }}</td>
+            <td><a href="{% url 'website:customer_order_detail' order.id %}">جزئیات</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-slate-500">هنوز سفارش ساخت ثبت نکرده‌اید.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

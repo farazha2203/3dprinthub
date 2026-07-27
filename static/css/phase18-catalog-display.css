@@ -1,0 +1,6 @@
+/* PHASE 18 SLIDER AND 3x3 CATALOG */
+.p14-model-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.p13-catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.p18-random-note{margin-top:.25rem;color:#b45309;font-size:.7rem;font-weight:800}
+@media(max-width:1024px){.p14-model-grid,.p13-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:720px){.p14-model-grid,.p13-catalog-grid{grid-template-columns:1fr!important}}

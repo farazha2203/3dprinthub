@@ -131,6 +131,38 @@
                 </section>
             {% endif %}
 
+
+            {% if order.attachments.all %}
+                <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
+                    <h2 class="text-2xl font-black mb-2">مدارک و فایل‌های فنی</h2>
+                    <p class="text-slate-500 mb-5">این فایل‌ها خصوصی هستند و فقط از داخل حساب شما یا پنل مدیریت قابل دریافت‌اند.</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        {% for attachment in order.attachments.all %}
+                            <article class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                                {% if attachment.is_image %}
+                                    <a href="{% url 'website:order_attachment_preview' attachment.public_token %}" target="_blank" class="block bg-slate-100">
+                                        <img src="{% url 'website:order_attachment_preview' attachment.public_token %}" alt="{{ attachment.original_name }}" class="w-full aspect-video object-contain">
+                                    </a>
+                                {% elif attachment.is_pdf %}
+                                    <a href="{% url 'website:order_attachment_preview' attachment.public_token %}" target="_blank" class="flex min-h-28 items-center justify-center gap-3 bg-rose-50 text-rose-600 font-black">
+                                        <span class="text-3xl">PDF</span><span>مشاهده پیش‌نمایش</span>
+                                    </a>
+                                {% endif %}
+                                <div class="flex items-center justify-between gap-3 p-4">
+                                    <span class="min-w-0"><strong class="block truncate">{{ attachment.original_name }}</strong><small class="text-slate-500">{{ attachment.size_label }}</small></span>
+                                    <a href="{% url 'website:order_attachment_download' attachment.public_token %}" class="shrink-0 text-orange-500 font-black">دریافت</a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <section class="glass rounded-[2rem] p-6 md:p-8 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div><h2 class="text-xl font-black mb-2">درباره این سفارش سؤال دارید؟</h2><p class="text-slate-500">در گفت‌وگوی خصوصی، تصویر یا فایل تکمیلی را برای کارشناسان ارسال کنید.</p></div>
+                <a href="{% url 'website:customer_support' %}?order={{ order.id }}" class="inline-flex justify-center rounded-2xl btn-primary px-6 py-4 font-black">گفت‌وگو با پشتیبانی</a>
+            </section>
+
             {% if quote %}
                 <section class="glass rounded-[2rem] p-6 md:p-8 mb-6">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

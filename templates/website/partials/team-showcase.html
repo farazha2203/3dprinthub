@@ -1,0 +1,17 @@
+{% if presentation_setting.show_team_section and team_members %}
+<section id="specialists" class="p14-section p14-team-section">
+  <div class="p14-container">
+    <div class="p14-section-head p14-section-head--center">
+      <div><span class="p14-eyebrow">تخصص پشت هر قطعه</span><h2>متخصصان مجموعه</h2><p>ترکیب تجربه طراحی، مهندسی معکوس، انتخاب متریال، چاپ و کنترل کیفیت.</p></div>
+    </div>
+    <div class="p14-team-grid">
+      {% for member in team_members %}
+        <article class="p14-team-card">
+          <div class="p14-team-card__photo">{% if member.photo %}<img src="{{ member.photo.url }}" alt="{{ member.name }}، {{ member.role }} در 3DprintHub" width="420" height="500" loading="lazy">{% else %}<span>{{ member.name|slice:":1" }}</span>{% endif %}</div>
+          <div class="p14-team-card__body"><h3>{{ member.name }}</h3><strong>{{ member.role }}</strong>{% if member.years_experience %}<small>{{ member.years_experience }} سال سابقه تخصصی</small>{% endif %}{% if member.short_bio %}<p>{{ member.short_bio|truncatewords:34 }}</p>{% endif %}{% if member.expertise_list %}<div class="p14-skill-list">{% for skill in member.expertise_list|slice:":4" %}<span>{{ skill }}</span>{% endfor %}</div>{% endif %}</div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

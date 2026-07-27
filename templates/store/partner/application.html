@@ -1,0 +1,15 @@
+{% extends "website/customer/account_base.html" %}
+{% load static %}
+{% block title %}درخواست همکاری در فروش{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'store/css/affiliate.css' %}">{% endblock %}
+{% block account_content %}
+<div class="affiliate-hero"><div><span class="affiliate-badge">برنامه همکاری 3DprintHub</span><h1 class="mt-3">همکاری در فروش و معرفی مشتری</h1><p class="text-slate-300 mt-2 leading-7">لینک اختصاصی دریافت کنید، مشتری معرفی کنید و پورسانت هر سفارش را شفاف در پنل ببینید.</p></div>{% if partner %}<span class="affiliate-badge">وضعیت: {{ partner.get_status_display }}</span>{% endif %}</div>
+<form method="post" class="affiliate-card mt-6">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 p-4 mb-5">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="affiliate-form-grid">
+  {% for field in form %}<div class="{% if field.name == 'description' or field.name == 'terms_accepted' %}full{% endif %}"><label class="block font-bold mb-2">{{ field.label }}{% if field.field.required %}<span class="text-rose-500"> *</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 text-sm mt-1">{{ error }}</p>{% endfor %}</div>{% endfor %}
+  </div>
+  <button class="affiliate-primary rounded-2xl px-6 py-4 font-black mt-6">{% if partner %}بروزرسانی درخواست{% else %}ثبت درخواست همکاری{% endif %}</button>
+</form>
+{% if partner and partner.status == 'pending' %}<div class="affiliate-card mt-5 border-amber-200 bg-amber-50"><strong>درخواست شما در حال بررسی است.</strong><p class="text-sm text-slate-600 mt-2">پس از تأیید مدیریت، لینک اختصاصی و پنل پورسانت فعال می‌شود.</p></div>{% elif partner and partner.status == 'rejected' %}<div class="affiliate-card mt-5 border-rose-200 bg-rose-50"><strong>درخواست قبلی رد شده است.</strong><p class="text-sm text-slate-600 mt-2">اطلاعات را اصلاح و دوباره ارسال کنید.</p></div>{% endif %}
+{% endblock %}
