@@ -2141,6 +2141,7 @@ class CatalogSyncRun(models.Model):
         ("completed", "تکمیل‌شده"),
         ("partial", "نیمه‌کامل"),
         ("failed", "ناموفق"),
+        ("cancelled", "متوقف‌شده"),
     ]
 
     source = models.ForeignKey(
@@ -2169,6 +2170,9 @@ class CatalogSyncRun(models.Model):
     )
     started_at = models.DateTimeField(blank=True, null=True)
     finished_at = models.DateTimeField(blank=True, null=True)
+    deadline_at = models.DateTimeField(blank=True, null=True, db_index=True, verbose_name="مهلت پایان")
+    heartbeat_at = models.DateTimeField(blank=True, null=True, db_index=True, verbose_name="آخرین فعالیت")
+    cancelled_at = models.DateTimeField(blank=True, null=True, verbose_name="زمان توقف دستی")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -2695,6 +2699,7 @@ class ExternalSourceFetchLog(models.Model):
         ("success", "موفق"),
         ("partial", "نسبی"),
         ("failed", "ناموفق"),
+        ("cancelled", "متوقف‌شده"),
     ]
     source_key = models.CharField(max_length=30, choices=SOURCE_CHOICES, db_index=True, verbose_name="منبع")
     action = models.CharField(max_length=30, choices=ACTION_CHOICES, db_index=True, verbose_name="عملیات")
@@ -2712,6 +2717,9 @@ class ExternalSourceFetchLog(models.Model):
     details = models.JSONField(default=dict, blank=True, verbose_name="خلاصه فنی")
     started_at = models.DateTimeField(blank=True, null=True, verbose_name="شروع")
     finished_at = models.DateTimeField(blank=True, null=True, verbose_name="پایان")
+    deadline_at = models.DateTimeField(blank=True, null=True, db_index=True, verbose_name="مهلت پایان")
+    heartbeat_at = models.DateTimeField(blank=True, null=True, db_index=True, verbose_name="آخرین فعالیت")
+    cancelled_at = models.DateTimeField(blank=True, null=True, verbose_name="زمان توقف دستی")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="external_source_logs", verbose_name="اجراکننده")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

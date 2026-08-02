@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from store.catalog_automation import process_catalog_queue, queue_due_catalog_sources
+from store.automation_watchdog import expire_stale_automation
 from store.link_intelligence import process_catalog_refresh_requests
 from store.link_analysis_queue import process_link_analysis_queue
 from store.market_pricing import refresh_fx_rates, refresh_material_market_prices
@@ -21,6 +22,12 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=None)
 
     def handle(self, *args, **options):
+        watchdog = expire_stale_automation()
+        self.stdout.write(
+            "Watchdog "
+            f"source_stopped={watchdog['source_stopped']} "
+            f"catalog_stopped={watchdog['catalog_stopped']}"
+        )
         queued = []
         processed = []
         if not options["process_only"]:

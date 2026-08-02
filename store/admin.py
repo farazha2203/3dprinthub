@@ -3126,3 +3126,231 @@ class CatalogPricingReviewAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f"اعلان {count} مورد ارسال شد.")
 # END PHASE 29 VERIFIED PRICING ADMIN
+
+# BEGIN PHASE 33 AUTOMATION DEADLINES AND OPERATOR CONTROLS
+from django.shortcuts import get_object_or_404 as _phase33_get_object_or_404
+from django.core.exceptions import PermissionDenied as _phase33_PermissionDenied
+
+from .automation_watchdog import (
+    catalog_deadline_state as _phase33_catalog_deadline_state,
+    expire_stale_automation as _phase33_expire_stale_automation,
+    source_deadline_state as _phase33_source_deadline_state,
+    stop_catalog_run as _phase33_stop_catalog_run,
+    stop_source_log as _phase33_stop_source_log,
+)
+
+
+
+def _phase33_require_operator(request):
+    if not (request.user and request.user.is_active and request.user.is_superuser):
+        raise _phase33_PermissionDenied
+
+
+def _phase33_duration_label(seconds):
+    if seconds is None:
+        return "-"
+    seconds = int(seconds)
+    if seconds <= 0:
+        return "مهلت تمام شده"
+    minutes = max(seconds // 60, 1)
+    if minutes < 60:
+        return f"{minutes} دقیقه مانده"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours} ساعت مانده"
+    return f"{hours // 24} روز مانده"
+
+
+def _phase33_attach_source_state(log):
+    state = _phase33_source_deadline_state(log)
+    log.phase33_can_stop = state.active
+    log.phase33_deadline_label = _phase33_duration_label(state.seconds_remaining) if state.active else "-"
+    log.phase33_deadline_class = "expired" if state.stale else ("active" if state.active else "terminal")
+    return log
+
+
+def _phase33_attach_catalog_state(run):
+    state = _phase33_catalog_deadline_state(run)
+    run.phase33_can_stop = state.active
+    run.phase33_deadline_label = _phase33_duration_label(state.seconds_remaining) if state.active else "-"
+    run.phase33_deadline_class = "expired" if state.stale else ("active" if state.active else "terminal")
+    return run
+
+
+@admin.action(description="توقف اجراهای انتخاب‌شده")
+def _phase33_stop_selected_catalog_runs(modeladmin, request, queryset):
+    stopped = 0
+    for run in queryset.filter(status__in=["queued", "running"]):
+        if _phase33_stop_catalog_run(
+            run,
+            reason="OperatorCancelled: stopped from Django admin action.",
+            actor=request.user,
+        ):
+            stopped += 1
+    modeladmin.message_user(request, f"{stopped} اجرا متوقف شد.", level=messages.WARNING)
+
+
+@admin.display(description="مهلت اجرا")
+def _phase33_catalog_deadline_display(self, obj):
+    state = _phase33_catalog_deadline_state(obj)
+    if not state.active:
+        return "-"
+    color = "#d1242f" if state.stale else "#bf8700"
+    return format_html(
+        '<strong style="color:{}">{}</strong>',
+        color,
+        _phase33_duration_label(state.seconds_remaining),
+    )
+
+
+CatalogSyncRunAdmin.phase33_deadline_display = _phase33_catalog_deadline_display
+CatalogSyncRunAdmin.list_display = tuple(CatalogSyncRunAdmin.list_display) + ("phase33_deadline_display",)
+CatalogSyncRunAdmin.readonly_fields = tuple(CatalogSyncRunAdmin.readonly_fields) + (
+    "deadline_at", "heartbeat_at", "cancelled_at",
+)
+CatalogSyncRunAdmin.actions = tuple(CatalogSyncRunAdmin.actions) + (_phase33_stop_selected_catalog_runs,)
+
+
+@admin.action(description="توقف گزارش‌های فعال انتخاب‌شده")
+def _phase33_stop_selected_source_logs(modeladmin, request, queryset):
+    stopped = 0
+    for log in queryset.filter(status__in=["queued", "running"]):
+        if _phase33_stop_source_log(
+            log,
+            reason="OperatorCancelled: stopped from Django admin action.",
+            actor=request.user,
+        ):
+            stopped += 1
+    modeladmin.message_user(request, f"{stopped} عملیات متوقف شد.", level=messages.WARNING)
+
+
+@admin.display(description="مهلت اجرا")
+def _phase33_source_deadline_display(self, obj):
+    state = _phase33_source_deadline_state(obj)
+    if not state.active:
+        return "-"
+    color = "#d1242f" if state.stale else "#bf8700"
+    return format_html(
+        '<strong style="color:{}">{}</strong>',
+        color,
+        _phase33_duration_label(state.seconds_remaining),
+    )
+
+
+def _phase33_source_log_change_permission(self, request, obj=None):
+    return bool(request.user and request.user.is_active and request.user.is_superuser)
+
+
+ExternalSourceFetchLogAdmin.phase33_deadline_display = _phase33_source_deadline_display
+ExternalSourceFetchLogAdmin.list_display = tuple(ExternalSourceFetchLogAdmin.list_display) + ("phase33_deadline_display",)
+ExternalSourceFetchLogAdmin.readonly_fields = tuple(
+    field.name for field in ExternalSourceFetchLog._meta.fields
+)
+ExternalSourceFetchLogAdmin.actions = (_phase33_stop_selected_source_logs,)
+ExternalSourceFetchLogAdmin.has_change_permission = _phase33_source_log_change_permission
+
+
+_phase33_old_dashboard_get_urls = CatalogAutomationDashboardAdmin.get_urls
+_phase33_old_dashboard_changelist = CatalogAutomationDashboardAdmin.changelist_view
+
+
+def _phase33_stop_stale_view(self, request):
+    _phase33_require_operator(request)
+    if request.method != "POST":
+        self.message_user(request, "این عملیات فقط با POST اجرا می‌شود.", level=messages.WARNING)
+        return _phase11_dashboard_redirect()
+    summary = _phase33_expire_stale_automation(actor=request.user)
+    self.message_user(
+        request,
+        (
+            f"منبع متوقف‌شده: {summary['source_stopped']}؛ "
+            f"اجرای کاتالوگ متوقف‌شده: {summary['catalog_stopped']}."
+        ),
+        level=messages.SUCCESS if summary["source_stopped"] or summary["catalog_stopped"] else messages.INFO,
+    )
+    return _phase11_dashboard_redirect()
+
+
+def _phase33_stop_source_log_view(self, request, log_id):
+    _phase33_require_operator(request)
+    if request.method != "POST":
+        self.message_user(request, "این عملیات فقط با POST اجرا می‌شود.", level=messages.WARNING)
+        return _phase11_dashboard_redirect()
+    log = _phase33_get_object_or_404(ExternalSourceFetchLog, pk=log_id)
+    stopped = _phase33_stop_source_log(
+        log,
+        reason="OperatorCancelled: stopped from automation dashboard.",
+        actor=request.user,
+    )
+    self.message_user(
+        request,
+        "عملیات متوقف شد." if stopped else "عملیات قبلاً پایان یافته بود.",
+        level=messages.WARNING if stopped else messages.INFO,
+    )
+    return _phase11_dashboard_redirect()
+
+
+def _phase33_stop_catalog_run_view(self, request, run_id):
+    _phase33_require_operator(request)
+    if request.method != "POST":
+        self.message_user(request, "این عملیات فقط با POST اجرا می‌شود.", level=messages.WARNING)
+        return _phase11_dashboard_redirect()
+    run = _phase33_get_object_or_404(CatalogSyncRun, pk=run_id)
+    stopped = _phase33_stop_catalog_run(
+        run,
+        reason="OperatorCancelled: stopped from automation dashboard.",
+        actor=request.user,
+    )
+    self.message_user(
+        request,
+        "اجرای کاتالوگ متوقف شد." if stopped else "اجرا قبلاً پایان یافته بود.",
+        level=messages.WARNING if stopped else messages.INFO,
+    )
+    return _phase11_dashboard_redirect()
+
+
+def _phase33_dashboard_get_urls(self):
+    urls = [
+        path(
+            "stop-stale/",
+            self.admin_site.admin_view(self.stop_stale_view),
+            name="store_catalogautomationdashboard_stop_stale",
+        ),
+        path(
+            "stop-source-log/<int:log_id>/",
+            self.admin_site.admin_view(self.stop_source_log_view),
+            name="store_catalogautomationdashboard_stop_source_log",
+        ),
+        path(
+            "stop-catalog-run/<int:run_id>/",
+            self.admin_site.admin_view(self.stop_catalog_run_view),
+            name="store_catalogautomationdashboard_stop_catalog_run",
+        ),
+    ]
+    return urls + _phase33_old_dashboard_get_urls(self)
+
+
+def _phase33_dashboard_changelist(self, request, extra_context=None):
+    source_logs = [
+        _phase33_attach_source_state(item)
+        for item in ExternalSourceFetchLog.objects.select_related("created_by")[:20]
+    ]
+    catalog_runs = [
+        _phase33_attach_catalog_state(item)
+        for item in CatalogSyncRun.objects.select_related("source").order_by("-created_at")[:10]
+    ]
+    context = dict(extra_context or {})
+    context.update({
+        "recent_source_logs": source_logs,
+        "recent_runs": catalog_runs,
+        "phase33_watchdog": _phase33_expire_stale_automation(dry_run=True),
+    })
+    return _phase33_old_dashboard_changelist(self, request, extra_context=context)
+
+
+CatalogAutomationDashboardAdmin.stop_stale_view = _phase33_stop_stale_view
+CatalogAutomationDashboardAdmin.stop_source_log_view = _phase33_stop_source_log_view
+CatalogAutomationDashboardAdmin.stop_catalog_run_view = _phase33_stop_catalog_run_view
+CatalogAutomationDashboardAdmin.get_urls = _phase33_dashboard_get_urls
+CatalogAutomationDashboardAdmin.changelist_view = _phase33_dashboard_changelist
+# END PHASE 33 AUTOMATION DEADLINES AND OPERATOR CONTROLS

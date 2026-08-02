@@ -1,3 +1,27 @@
+@font-face {
+  font-family: "IRANSans";
+  src: url("/static/fonts/iransans/IRANSansWeb_FaNum.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IRANSans";
+  src: url("/static/fonts/iransans/IRANSansWeb_FaNum_Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IRANSans";
+  src: url("/static/fonts/iransans/IRANSansWeb_FaNum_Bold.woff") format("woff");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 html,
 body {
   direction: rtl;
@@ -121,4 +145,20 @@ fieldset label {
   .max-lg\:sidebar.active {
     --tw-translate-x: 0;
   }
+}
+
+
+/* Phase 33: typography for SmartBase navigation, tables, forms and dialogs. */
+body,
+#main-navigation,
+#main-navigation a,
+#main-navigation span,
+#main-navigation button,
+main,main h1,main h2,main h3,main h4,main h5,main h6,
+main p,main a,main label,main small,main strong,main b,
+main input,main textarea,main select,main option,main button,
+.tabulator,.tabulator *,.change-form,.change-form *,
+.list-action-wrapper,.list-action-wrapper *,
+.modal-dialog,.modal-dialog *,.dropdown-menu,.dropdown-menu * {
+  font-family:"IRANSans",Tahoma,Arial,sans-serif!important;
 }

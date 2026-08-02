@@ -16,6 +16,12 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from .catalog_classification import classify_external_asset
+from .automation_watchdog import (
+    CatalogRunCancelled,
+    CatalogRunDeadlineExceeded,
+    initialize_catalog_run_deadline,
+    touch_catalog_run,
+)
 from .catalog_site_adapters import get_source_adapter
 from .catalog_site_adapters.common import (
     all_values,
@@ -309,12 +315,18 @@ def sync_catalog_source(*, source: PrintCatalogSource, requested_limit=None, sor
     )
     run.status = "running"
     run.started_at = timezone.now()
+    run.cancelled_at = None
     run.log = "شروع دریافت\n"
-    run.save(update_fields=["status", "started_at", "log"])
+    initialize_catalog_run_deadline(run, now=run.started_at)
+    run.save(update_fields=[
+        "status", "started_at", "cancelled_at", "deadline_at",
+        "heartbeat_at", "log",
+    ])
 
     adapter = get_source_adapter(source, policy)
     errors: list[str] = []
     try:
+        touch_catalog_run(run)
         try:
             candidates = adapter.discover(limit=limit, sort_mode=sort_mode)
         except ValueError as exc:
@@ -323,11 +335,12 @@ def sync_catalog_source(*, source: PrintCatalogSource, requested_limit=None, sor
                 run.status = "partial"
                 run.log = "نیازمند تنظیمات: " + message
                 run.finished_at = timezone.now()
-                run.save(update_fields=["status", "log", "finished_at"])
+                run.heartbeat_at = run.finished_at
+                run.save(update_fields=["status", "log", "finished_at", "heartbeat_at"])
                 return run
             raise
         run.discovered_count = len(candidates)
-        run.save(update_fields=["discovered_count"])
+        touch_catalog_run(run, update_fields=["discovered_count"])
         if not candidates:
             if policy.source_kind in {"makerworld", "grabcad"}:
                 run.status = "partial"
@@ -336,24 +349,27 @@ def sync_catalog_source(*, source: PrintCatalogSource, requested_limit=None, sor
                     "دورزدن انجام نشد؛ لینک بذر عمومی را از ادمین ثبت کنید."
                 )
                 run.finished_at = timezone.now()
-                run.save(update_fields=["status", "log", "finished_at"])
+                run.heartbeat_at = run.finished_at
+                run.save(update_fields=["status", "log", "finished_at", "heartbeat_at"])
                 return run
             raise ValidationError(
                 "هیچ مدل عمومی کشف نشد؛ ساختار منبع، robots.txt، دسترسی شبکه یا تنظیم URL فهرست را بررسی کنید."
             )
         for rank, candidate in enumerate(candidates, start=1):
+            touch_catalog_run(run)
             try:
                 parsed = adapter.fetch_record(candidate, hydrate_files=hydrate_files)
+                touch_catalog_run(run)
                 asset, metrics = save_external_record(source=source, policy=policy, parsed=parsed, rank=rank)
-                # تصویر جزئی از هویت آیتم است؛ دانلود آن best-effort است و نبودش واردسازی را متوقف نمی‌کند.
                 if source.download_preview_images and not asset.preview_image and metrics.image_urls:
                     try:
                         _download_approved_image(asset, metrics.image_urls[0], adapter)
                     except Exception as image_exc:
                         errors.append(f"{candidate.url}: image warning: {image_exc}")
                 run.imported_count += 1
+            except (CatalogRunCancelled, CatalogRunDeadlineExceeded):
+                raise
             except Exception as exc:
-                # حتی اگر صفحه جزئیات یا فایل سه‌بعدی قابل دریافت نبود، مرجع کشف‌شده را از دست نده.
                 fallback = _fallback_candidate_record(candidate, source_name=source.name, error=exc)
                 try:
                     save_external_record(source=source, policy=policy, parsed=fallback, rank=rank)
@@ -364,16 +380,51 @@ def sync_catalog_source(*, source: PrintCatalogSource, requested_limit=None, sor
                 else:
                     run.failed_count += 1
                     errors.append(f"{candidate.url}: partial: {type(exc).__name__}: {exc}")
+            run.current_page = rank
             if rank % 10 == 0:
                 run.log = "\n".join(["در حال اجرا", *errors[-20:]])
-                run.save(update_fields=["imported_count", "failed_count", "log"])
+            touch_catalog_run(
+                run,
+                update_fields=[
+                    "current_page", "imported_count", "failed_count", "log"
+                ],
+            )
         run.status = "completed" if not errors else ("partial" if run.imported_count else "failed")
+    except CatalogRunCancelled:
+        run.refresh_from_db()
+        if run.status != "cancelled":
+            run.status = "cancelled"
+            run.cancelled_at = timezone.now()
+            run.finished_at = run.cancelled_at
+            run.heartbeat_at = run.cancelled_at
+            run.log = "اجرای کاتالوگ توسط اپراتور متوقف شد."
+            run.save(update_fields=[
+                "status", "cancelled_at", "finished_at", "heartbeat_at", "log"
+            ])
+        return run
+    except CatalogRunDeadlineExceeded as exc:
+        run.status = "failed"
+        errors.append(f"{type(exc).__name__}: {exc}")
     except Exception as exc:
         run.status = "failed"
         errors.append(f"{type(exc).__name__}: {exc}")
+
+    persisted_state = CatalogSyncRun.objects.filter(pk=run.pk).values(
+        "status", "cancelled_at"
+    ).first()
+    if persisted_state and (
+        persisted_state["status"] == "cancelled"
+        or persisted_state["cancelled_at"]
+    ):
+        run.refresh_from_db()
+        return run
     run.log = "\n".join(errors[-100:]) or "بدون خطا"
     run.finished_at = timezone.now()
-    run.save(update_fields=["status", "imported_count", "failed_count", "log", "finished_at"])
+    run.heartbeat_at = run.finished_at
+    run.save(update_fields=[
+        "status", "imported_count", "failed_count", "current_page",
+        "log", "finished_at", "heartbeat_at",
+    ])
     policy.last_synced_at = run.finished_at
     policy.save(update_fields=["last_synced_at"])
     return run

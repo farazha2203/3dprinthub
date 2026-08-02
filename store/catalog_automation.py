@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .catalog_sync import approve_asset_for_public, public_catalog_queryset, sync_catalog_source
+from .automation_watchdog import expire_stale_automation
 from .models import (
     CatalogAssetMetrics,
     CatalogAssetPublication,
@@ -134,18 +135,8 @@ def postprocess_sync_run(run: CatalogSyncRun, schedule: CatalogSourceSchedule | 
 
 
 def reset_stale_catalog_runs(*, now=None):
-    now = now or timezone.now()
-    setting = CatalogAutomationSetting.load()
-    stale_before = now - timedelta(minutes=max(setting.stale_run_minutes, 10))
-    stale = CatalogSyncRun.objects.filter(status="running", started_at__lt=stale_before)
-    count = 0
-    for run in stale:
-        run.status = "failed"
-        run.finished_at = now
-        run.log = (run.log + "\nاجرای گیرکرده توسط اتوماسیون متوقف شد.").strip()
-        run.save(update_fields=["status", "finished_at", "log"])
-        count += 1
-    return count
+    summary = expire_stale_automation(now=now)
+    return int(summary.get("catalog_stopped") or 0)
 
 
 def process_catalog_queue(*, limit=None):
@@ -184,10 +175,13 @@ def process_catalog_queue(*, limit=None):
             )
             postprocess_sync_run(run, schedule)
         except Exception as exc:
-            run.status = "failed"
-            run.finished_at = timezone.now()
-            run.log = f"{type(exc).__name__}: {exc}"
-            run.save(update_fields=["status", "finished_at", "log"])
+            run.refresh_from_db()
+            if run.status != "cancelled":
+                run.status = "failed"
+                run.finished_at = timezone.now()
+                run.heartbeat_at = run.finished_at
+                run.log = f"{type(exc).__name__}: {exc}"
+                run.save(update_fields=["status", "finished_at", "heartbeat_at", "log"])
         processed.append(run)
     return processed
 

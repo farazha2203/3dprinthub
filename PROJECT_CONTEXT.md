@@ -68,3 +68,14 @@ IRANSans enforcement across the management dashboard and sidebar.
 11. Run migrations and collectstatic.
 12. Run runtime verification and smoke tests.
 13. Record the result here.
+
+
+## Phase 33 implementation
+
+- Adds deadlines and heartbeats to catalog runs and external source logs.
+- Adds cancelled terminal status.
+- Adds stale-run watchdog and a management command.
+- Adds superuser stop controls to the automation dashboard.
+- Applies IRANSans to management navigation, tables, forms, and dialogs while
+  preserving icon font families.
+- Production cron entry can run the watchdog independently every five minutes.

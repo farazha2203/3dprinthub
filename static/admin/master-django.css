@@ -1,8 +1,8 @@
 /* 3DPrintHub controlled adapter for Velzon Master assets. */
-@font-face{font-family:"IRANSans";src:url("../fonts/iransans/IRANSansWeb_FaNum.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:"IRANSans";src:url("../fonts/iransans/IRANSansWeb_FaNum_Medium.woff") format("woff");font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:"IRANSans";src:url("../fonts/iransans/IRANSansWeb_FaNum_Bold.woff") format("woff");font-weight:700;font-style:normal;font-display:swap}
-@font-face{font-family:"IRANSans";src:url("../fonts/iransans/IRANSansWeb_FaNum_Black.woff") format("woff");font-weight:900;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans";src:url("/static/fonts/iransans/IRANSansWeb_FaNum.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans";src:url("/static/fonts/iransans/IRANSansWeb_FaNum_Medium.woff") format("woff");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans";src:url("/static/fonts/iransans/IRANSansWeb_FaNum_Bold.woff") format("woff");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans";src:url("/static/fonts/iransans/IRANSansWeb_FaNum_Black.woff") format("woff");font-weight:900;font-style:normal;font-display:swap}
 :root{--vz-primary:#c8a24b;--vz-primary-rgb:200,162,75;--vz-link-color:#9f7923;--vz-link-hover-color:#715719;--vz-vertical-menu-bg:#071d2d;--vz-vertical-menu-item-color:#b7c5ce;--vz-vertical-menu-item-hover-color:#fff;--vz-vertical-menu-item-active-color:#f0ca72;--vz-header-bg:#fff;--admin-brand-gold:#c8a24b;--admin-brand-gold-soft:rgba(200,162,75,.16);--admin-brand-navy:#071d2d;--admin-menu-open:#102f43;--admin-submenu-bg:#061824}
 html,body{min-height:100%;font-family:"IRANSans",Tahoma,Arial,sans-serif}body,button,input,select,textarea,table,.form-control,.form-select,.dropdown-menu,.modal,.tooltip,.popover{font-family:"IRANSans",Tahoma,Arial,sans-serif}
 /* Never overwrite icon font families. */
@@ -58,3 +58,26 @@ body{direction:rtl;text-align:right;background:var(--vz-body-bg);overflow-y:auto
 
 /* Phase 22 support chat */
 .admin-support-chat{overflow:hidden}.admin-support-chat__messages{height:min(58vh,620px);min-height:360px;overflow-y:auto;padding:1rem;background:linear-gradient(180deg,rgba(7,29,45,.035),rgba(7,29,45,.085));scrollbar-gutter:stable}.admin-chat-message{max-width:min(78%,720px);margin:0 0 .8rem auto;padding:.75rem .9rem;border:1px solid #dce4e8;border-radius:14px 14px 4px 14px;background:#fff;box-shadow:0 3px 12px rgba(7,29,45,.055)}.admin-chat-message.is-mine{margin-right:0;margin-left:auto;border-color:rgba(200,162,75,.42);border-radius:14px 14px 14px 4px;background:#fff9e8}.admin-chat-message__meta{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.4rem;color:#69808d;font-size:.72rem}.admin-chat-message p{margin:0;line-height:1.9;white-space:pre-wrap}.admin-chat-attachment{display:inline-flex;align-items:center;gap:.4rem;margin-top:.65rem;padding:.5rem .7rem;border:1px solid #d7e1e6;border-radius:9px;background:#f8fafb;color:#173d53}.admin-chat-attachment--image{display:flex;max-width:280px;flex-direction:column;align-items:stretch}.admin-chat-attachment--image img{width:100%;max-height:220px;object-fit:cover;border-radius:7px}.admin-chat-attachment--image span{padding-top:.35rem;font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:575.98px){.admin-support-chat__messages{height:52vh;min-height:300px}.admin-chat-message{max-width:92%}}
+
+
+/* Phase 33: enforce IRANSans across the complete management UI. */
+html,body,
+.page-content,.admin-master-content,.admin-master-content h1,.admin-master-content h2,
+.admin-master-content h3,.admin-master-content h4,.admin-master-content h5,
+.admin-master-content h6,.admin-master-content p,.admin-master-content span,
+.admin-master-content a,.admin-master-content label,.admin-master-content small,
+.admin-master-content strong,.admin-master-content b,.admin-master-content code,
+.admin-master-content table,.admin-master-content th,.admin-master-content td,
+.admin-master-content input,.admin-master-content textarea,.admin-master-content select,
+.admin-master-content option,.admin-master-content button,.admin-master-content .button,
+.app-menu .navbar-nav .nav-link,.app-menu .navbar-nav .nav-link span,
+.app-menu .menu-title,.app-menu .sidebar-user,.app-menu .sidebar-user *,
+.admin-master-menu-search input,.admin-topbar-title,.admin-topbar-title *,
+.dropdown-menu,.dropdown-menu *,.modal,.modal *,.offcanvas,.offcanvas *,
+.card,.card *,.table,.table *,.form-control,.form-select,.choices,.choices * {
+  font-family:"IRANSans",Tahoma,Arial,sans-serif!important;
+}
+/* Keep icon fonts intact after the global typography override. */
+.ri,[class^="ri-"],[class*=" ri-"] {font-family:remixicon!important;}
+.bx,[class^="bx-"],[class*=" bx-"] {font-family:boxicons!important;}
+.mdi,[class^="mdi-"],[class*=" mdi-"] {font-family:"Material Design Icons"!important;}
