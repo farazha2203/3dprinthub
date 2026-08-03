@@ -3354,3 +3354,66 @@ CatalogAutomationDashboardAdmin.stop_catalog_run_view = _phase33_stop_catalog_ru
 CatalogAutomationDashboardAdmin.get_urls = _phase33_dashboard_get_urls
 CatalogAutomationDashboardAdmin.changelist_view = _phase33_dashboard_changelist
 # END PHASE 33 AUTOMATION DEADLINES AND OPERATOR CONTROLS
+
+# BEGIN PHASE 34B MAKERWORLD EDITORIAL AND COMMERCE
+from .phase34b_publishing import convert_to_fixed_product, convert_to_portfolio, ensure_persian_draft
+
+
+def _phase34b_draft_persian(modeladmin, request, queryset):
+    count = 0
+    for asset in queryset.select_related("source"):
+        ensure_persian_draft(asset)
+        count += 1
+    modeladmin.message_user(request, f"{count} پیش‌نویس فارسی ایجاد یا تکمیل شد.", level=messages.SUCCESS)
+_phase34b_draft_persian.short_description = "ساخت پیش‌نویس فارسی قابل ویرایش"
+
+
+def _phase34b_convert_fixed(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset:
+        try:
+            convert_to_fixed_product(asset)
+            success += 1
+        except Exception as exc:
+            modeladmin.message_user(request, f"{asset}: {exc}", level=messages.ERROR)
+    if success:
+        modeladmin.message_user(request, f"{success} محصول قیمت‌ثابت غیرفعال ساخته شد.", level=messages.SUCCESS)
+_phase34b_convert_fixed.short_description = "تبدیل به محصول چاپی قیمت‌ثابت"
+
+
+def _phase34b_convert_portfolio(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset:
+        try:
+            convert_to_portfolio(asset)
+            success += 1
+        except Exception as exc:
+            modeladmin.message_user(request, f"{asset}: {exc}", level=messages.ERROR)
+    if success:
+        modeladmin.message_user(request, f"{success} نمونه‌کار غیرفعال ساخته شد.", level=messages.SUCCESS)
+_phase34b_convert_portfolio.short_description = "تبدیل به نمونه‌کار"
+
+if "_phase34b_draft_persian" not in ImportedPrintAssetAdmin.actions:
+    ImportedPrintAssetAdmin._phase34b_draft_persian = _phase34b_draft_persian
+    ImportedPrintAssetAdmin._phase34b_convert_fixed = _phase34b_convert_fixed
+    ImportedPrintAssetAdmin._phase34b_convert_portfolio = _phase34b_convert_portfolio
+    ImportedPrintAssetAdmin.actions = list(ImportedPrintAssetAdmin.actions) + [
+        "_phase34b_draft_persian", "_phase34b_convert_fixed", "_phase34b_convert_portfolio"
+    ]
+    ImportedPrintAssetAdmin.list_display = list(ImportedPrintAssetAdmin.list_display) + [
+        "editorial_status", "commercial_license_status", "fixed_print_price"
+    ]
+    ImportedPrintAssetAdmin.list_filter = list(ImportedPrintAssetAdmin.list_filter) + [
+        "editorial_status", "commercial_license_status"
+    ]
+    ImportedPrintAssetAdmin.fieldsets = tuple(ImportedPrintAssetAdmin.fieldsets) + (
+        ("تحریریه فارسی و انتشار", {"fields": (
+            "source_title", "source_description", "persian_title",
+            "persian_short_description", "persian_description", "editorial_status",
+        )}),
+        ("فروش چاپ و مجوز تجاری", {"fields": (
+            "fixed_print_price", "commercial_license_status", "commercial_license_source",
+            "commercial_license_note", "commercial_license_evidence", "portfolio_item",
+        )}),
+    )
+# END PHASE 34B MAKERWORLD EDITORIAL AND COMMERCE

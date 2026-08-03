@@ -35,7 +35,7 @@
                 <img src="{{ product.main_image.url }}" alt="{{ product.title }}" width="1000" height="750" class="w-full h-full object-cover">
             </div>
             {% consultation_links product.title product.get_absolute_url as consult %}
-            {% if consult.has_any %}<div class="p28-store-consult p28-store-consult--detail">{% if consult.whatsapp %}<a class="p28-store-consult__wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در واتساپ</a>{% endif %}{% if consult.telegram %}<a class="p28-store-consult__tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در تلگرام</a>{% endif %}{% if consult.support %}<a class="p28-store-consult__site" href="{{ consult.support }}">ارسال محصول برای پشتیبانی سایت</a>{% endif %}</div>{% endif %}
+            {% if consult.has_any and product.consultation_required %}<div class="p28-store-consult p28-store-consult--detail">{% if consult.whatsapp %}<a class="p28-store-consult__wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در واتساپ</a>{% endif %}{% if consult.telegram %}<a class="p28-store-consult__tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در تلگرام</a>{% endif %}{% if consult.support %}<a class="p28-store-consult__site" href="{{ consult.support }}">ارسال محصول برای پشتیبانی سایت</a>{% endif %}</div>{% endif %}
             {% if product.images.all %}
                 <div class="grid grid-cols-4 gap-3 mt-3">
                     {% for image in product.images.all %}

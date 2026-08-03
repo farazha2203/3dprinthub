@@ -182,6 +182,14 @@ class Product(models.Model):
     mpn = models.CharField(max_length=100, blank=True, verbose_name="کد MPN")
     gtin = models.CharField(max_length=14, blank=True, verbose_name="GTIN / بارکد")
     schema_enabled = models.BooleanField(default=True, verbose_name="ساخت اسکیما محصول")
+    ORDER_MODE_CHOICES = [
+        ("variant", "قیمت‌گذاری بر اساس تنوع"),
+        ("fixed", "قیمت ثابت و سفارش مستقیم"),
+    ]
+    order_mode = models.CharField(max_length=20, choices=ORDER_MODE_CHOICES, default="variant", db_index=True, verbose_name="روش سفارش")
+    fixed_price = models.PositiveBigIntegerField(default=0, verbose_name="قیمت ثابت به تومان")
+    fixed_delivery_days = models.PositiveIntegerField(default=3, verbose_name="زمان آماده‌سازی به روز")
+    consultation_required = models.BooleanField(default=True, verbose_name="نیازمند مشاوره")
     # BEGIN PHASE 4 SEO FIELDS
     seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
     canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
@@ -1483,6 +1491,49 @@ class ImportedPrintAsset(models.Model):
         verbose_name="حفظ نمایش در صورت قطع منبع",
         help_text="برای مدل‌هایی که فایل آن‌ها موجود یا قبلاً سفارش گرفته شده فعال می‌شود.",
     )
+    source_title = models.CharField(max_length=260, blank=True, verbose_name="عنوان اصلی منبع")
+    source_description = models.TextField(blank=True, verbose_name="توضیحات اصلی منبع")
+    persian_title = models.CharField(max_length=260, blank=True, verbose_name="عنوان فارسی پیشنهادی")
+    persian_short_description = models.CharField(max_length=500, blank=True, verbose_name="توضیح کوتاه فارسی")
+    persian_description = models.TextField(blank=True, verbose_name="توضیحات فارسی")
+    EDITORIAL_STATUS_CHOICES = [
+        ("imported", "واردشده"),
+        ("review", "در انتظار بررسی"),
+        ("license_review", "نیازمند بررسی مجوز"),
+        ("reference", "مرجع قابل نمایش"),
+        ("printable", "مجاز برای فروش چاپ"),
+        ("product", "تبدیل‌شده به محصول"),
+        ("portfolio", "تبدیل‌شده به نمونه‌کار"),
+        ("rejected", "ردشده"),
+        ("archived", "بایگانی‌شده"),
+    ]
+    editorial_status = models.CharField(
+        max_length=24, choices=EDITORIAL_STATUS_CHOICES, default="imported", db_index=True,
+        verbose_name="وضعیت تحریریه",
+    )
+    fixed_print_price = models.PositiveBigIntegerField(default=0, verbose_name="قیمت ثابت چاپ به تومان")
+    COMMERCIAL_LICENSE_CHOICES = [
+        ("unknown", "نامشخص"),
+        ("blocked", "غیرمجاز"),
+        ("review", "نیازمند بررسی"),
+        ("allowed", "مجاز برای فروش چاپ"),
+        ("owned", "طراحی متعلق به مجموعه"),
+        ("public_domain", "مالکیت عمومی"),
+    ]
+    commercial_license_status = models.CharField(
+        max_length=20, choices=COMMERCIAL_LICENSE_CHOICES, default="unknown", db_index=True,
+        verbose_name="وضعیت مجوز تجاری",
+    )
+    commercial_license_source = models.CharField(max_length=300, blank=True, verbose_name="منبع تأیید مجوز")
+    commercial_license_note = models.TextField(blank=True, verbose_name="یادداشت مجوز تجاری")
+    commercial_license_evidence = models.FileField(
+        upload_to="store/private-license-evidence/", blank=True, null=True,
+        verbose_name="مدرک مجوز تجاری",
+    )
+    portfolio_item = models.OneToOneField(
+        "website.PortfolioItem", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="imported_source_asset", verbose_name="نمونه‌کار ساخته‌شده",
+    )
     source_payload = models.JSONField(default=dict, blank=True, verbose_name="داده خام استخراج")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True, verbose_name="وضعیت")
     product = models.OneToOneField(
@@ -1555,6 +1606,18 @@ class ImportedPrintAsset(models.Model):
         )
 
     @property
+    def can_convert_to_fixed_product(self):
+        return self.commercial_license_status in {"allowed", "owned", "public_domain"} and self.fixed_print_price > 0
+
+    @property
+    def display_title(self):
+        return self.persian_title or self.title
+
+    @property
+    def display_description(self):
+        return self.persian_description or self.description
+
+    @property
     def public_display_mode(self):
         """Return hidden, reference, or printable based on source policy and retained files."""
         retained = self.has_retained_local_file
@@ -1579,6 +1642,13 @@ class ImportedPrintAssetImage(models.Model):
     remote_url = models.URLField(max_length=1000, blank=True, verbose_name="آدرس تصویر منبع")
     image = models.ImageField(upload_to="store/imported-models/gallery/", blank=True, null=True, verbose_name="تصویر ذخیره‌شده")
     alt_text = models.CharField(max_length=260, blank=True, verbose_name="متن جایگزین")
+    source_name = models.CharField(max_length=120, blank=True, verbose_name="نام منبع تصویر")
+    source_page_url = models.URLField(max_length=1000, blank=True, verbose_name="صفحه منبع تصویر")
+    source_content_type = models.CharField(max_length=80, blank=True, verbose_name="نوع محتوای تصویر")
+    source_width = models.PositiveIntegerField(default=0, verbose_name="عرض تصویر منبع")
+    source_height = models.PositiveIntegerField(default=0, verbose_name="ارتفاع تصویر منبع")
+    is_selected = models.BooleanField(default=True, db_index=True, verbose_name="انتخاب برای انتشار")
+    is_primary = models.BooleanField(default=False, db_index=True, verbose_name="تصویر اصلی")
     sort_order = models.PositiveIntegerField(default=0, verbose_name="ترتیب")
 
     class Meta:

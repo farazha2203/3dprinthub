@@ -230,6 +230,11 @@ def save_external_record(*, source: PrintCatalogSource, policy, parsed: dict[str
             "remote_image_url": image_urls[0] if image_urls else "",
             "private_download_url": first_download[:2000],
             "file_format": ", ".join(parsed.get("file_formats") or [])[:80],
+            "source_title": title,
+            "source_description": str(parsed.get("description") or ""),
+            "editorial_status": "license_review" if str(parsed.get("license_review_status") or "manual") != "allowed" else "review",
+            "commercial_license_status": "allowed" if parsed.get("commercial_use_allowed") is True else ("blocked" if str(parsed.get("license_review_status") or "") == "blocked" else "review"),
+            "commercial_license_note": str(parsed.get("license_text") or parsed.get("blocked_reason") or ""),
             "source_payload": parsed.get("raw_payload") or {},
         },
     )
@@ -287,11 +292,20 @@ def save_external_record(*, source: PrintCatalogSource, policy, parsed: dict[str
     existing_urls = set(asset.images.values_list("remote_url", flat=True))
     for index, image_url in enumerate(image_urls):
         if image_url not in existing_urls:
+            image_records = parsed.get("image_records") or []
+            image_meta = image_records[index] if index < len(image_records) and isinstance(image_records[index], dict) else {}
             ImportedPrintAssetImage.objects.create(
                 asset=asset,
                 remote_url=image_url,
-                alt_text=title,
+                alt_text=str(image_meta.get("name") or title)[:260],
                 sort_order=index,
+                source_name=source.name,
+                source_page_url=source_url,
+                source_content_type=str(image_meta.get("content_type") or "")[:80],
+                source_width=int(image_meta.get("width") or 0),
+                source_height=int(image_meta.get("height") or 0),
+                is_primary=index == 0,
+                is_selected=True,
             )
     return asset, metrics
 
