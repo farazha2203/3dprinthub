@@ -1,0 +1,13 @@
+{
+  "phase": "43.1",
+  "version": "43.1.0",
+  "purpose": "MakerWorld print-time unit normalization and safe historical data repair",
+  "generated_at_utc": "2026-08-11T11:12:32.488588+00:00",
+  "source_consolidated_from": "D:\\projects\\3DPrintHub-hostbase",
+  "database_migration": false,
+  "database_write_during_install": false,
+  "protected_files": [
+    "APIKEY-AVAL.txt",
+    "APIKEY.txt"
+  ]
+}

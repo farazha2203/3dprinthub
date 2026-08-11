@@ -5,7 +5,7 @@ import mimetypes
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -188,6 +188,35 @@ def _download_approved_image(asset: ImportedPrintAsset, image_url: str, adapter,
 
 
 @transaction.atomic
+def _normalize_asset_source_url(value: str) -> str:
+    parsed = urlparse(str(value or "").strip())
+    path = parsed.path.rstrip("/") or "/"
+    query_pairs = [
+        (key, item)
+        for key, item in parse_qsl(parsed.query, keep_blank_values=True)
+        if key.lower() not in {
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_term",
+            "utm_content",
+            "ref",
+            "source",
+        }
+    ]
+    normalized_query = urlencode(sorted(query_pairs))
+    return urlunparse(
+        (
+            (parsed.scheme or "https").lower(),
+            parsed.netloc.lower(),
+            path,
+            "",
+            normalized_query,
+            "",
+        )
+    )
+
+
 def save_external_record(*, source: PrintCatalogSource, policy, parsed: dict[str, Any], rank: int = 0):
     source_url = parsed.get("source_url")
     if not source_url:
@@ -202,10 +231,18 @@ def save_external_record(*, source: PrintCatalogSource, policy, parsed: dict[str
     file_links = [url for url in parsed.get("file_links", []) if isinstance(url, str)][:100]
     first_download = file_links[0] if file_links and source.store_private_download_url and policy.store_download_links else ""
 
-    asset, _created = ImportedPrintAsset.objects.update_or_create(
-        source=source,
-        source_url=source_url,
-        defaults={
+    normalized_source_url = _normalize_asset_source_url(source_url)
+
+    identity_queryset = ImportedPrintAsset.objects.filter(source=source)
+    asset = None
+
+    if external_id:
+        asset = identity_queryset.filter(external_id=external_id).order_by("pk").first()
+
+    if asset is None:
+        asset = identity_queryset.filter(source_url=normalized_source_url).order_by("pk").first()
+
+    defaults = {
             "external_id": external_id,
             "title": title,
             "slug": _safe_slug(title, source.code, external_id or source_url),
@@ -236,8 +273,19 @@ def save_external_record(*, source: PrintCatalogSource, policy, parsed: dict[str
             "commercial_license_status": "allowed" if parsed.get("commercial_use_allowed") is True else ("blocked" if str(parsed.get("license_review_status") or "") == "blocked" else "review"),
             "commercial_license_note": str(parsed.get("license_text") or parsed.get("blocked_reason") or ""),
             "source_payload": parsed.get("raw_payload") or {},
-        },
-    )
+        }
+
+    if asset is None:
+        asset = ImportedPrintAsset.objects.create(
+            source=source,
+            source_url=normalized_source_url,
+            **defaults,
+        )
+    else:
+        asset.source_url = normalized_source_url
+        for field_name, value in defaults.items():
+            setattr(asset, field_name, value)
+        asset.save()
 
     classification = classify_external_asset(
         source_kind=policy.source_kind,

@@ -1,7 +1,16 @@
 {% extends "store/base.html" %}
 {% load humanize store_seo store_consultation %}
 
-{% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}{% endblock %}
+{% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}
+{% if user.is_authenticated and product.source_url %}
+<div class="alert alert-secondary mt-3" role="note">
+  <strong>منبع مدل:</strong> <a href="{{ product.source_url }}" target="_blank" rel="noopener noreferrer">{{ product.source_name|default:"مشاهده سایت مرجع" }}</a>
+</div>
+{% endif %}
+{% if product.fixed_price and not product.price_is_final %}
+<div class="alert alert-warning mt-3">{{ product.price_note|default:"قیمت علی‌الحساب است و پس از بررسی اپراتور قطعی می‌شود." }}</div>
+{% endif %}
+{% endblock %}
 
 {% block title %}{{ product.seo_title }}{% endblock %}
 {% block meta_description %}{{ product.seo_description }}{% endblock %}
@@ -50,6 +59,10 @@
             <h1 class="text-3xl md:text-4xl font-black mt-3 leading-tight">{{ product.title }}</h1>
             <p class="text-slate-600 leading-8 mt-5">{{ product.short_description }}</p>
 
+            {% if active_promotions %}<div class="phase39-promo-row">{% for promo in active_promotions %}<span class="phase39-promo-badge">{{ promo.title|default:promo.get_kind_display }}{% if promo.discount_percent %} • {{ promo.discount_percent }}٪ تخفیف{% endif %}{% if promo.stock_limit %} • {{ promo.remaining_quantity }} عدد باقی‌مانده{% endif %}</span>{% endfor %}</div>{% endif %}
+            {% if product.show_public_order_count %}<div class="phase39-order-proof">بیش از {{ public_order_count }} سفارش ثبت‌شده برای این محصول</div>{% endif %}
+            {% if product.editorial_source_url %}<div class="phase39-source"><span>منبع اطلاعات:</span> <a href="{{ product.editorial_source_url }}" target="_blank" rel="nofollow noopener">مشاهده منبع اصلی</a>{% if product.source_attribution %} • {{ product.source_attribution }}{% endif %}</div>{% endif %}
+
             {% if product.compatibilities.all %}
                 <div class="store-compatibility mt-6">
                     <div class="font-black mb-3">سازگاری محصول</div>
@@ -61,6 +74,8 @@
                 </div>
             {% endif %}
 
+            {% if material_options %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
+
             <div class="mt-7">
                 <label for="variant-select" class="block font-black mb-2">انتخاب متریال و کیفیت چاپ</label>
                 <select id="variant-select" class="form-input">
@@ -71,6 +86,8 @@
                                 value="{{ variant.id }}"
                                 data-material="{{ variant.material.name }}"
                                 data-quality="{{ variant.quality.name }}"
+                                data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
+                                {% if variant.color and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
                                 data-material-cost="{{ price.material_cost }}"
                                 data-machine-cost="{{ price.machine_cost }}"
                                 data-labor-cost="{{ price.labor_cost }}"
@@ -80,20 +97,18 @@
                                 data-print-time="{{ variant.print_time_minutes }}"
                                 data-weight="{{ variant.material_weight_grams }}"
                             >
-                                {{ variant.material.name }} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان
+                                {{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان
                             </option>
                         {% endwith %}
                     {% endfor %}
                 </select>
             </div>
 
-            <div id="price-breakdown" class="store-price-breakdown hidden mt-5">
-                <div><span>هزینه متریال</span><strong id="price-material">—</strong></div>
-                <div><span>هزینه زمان دستگاه</span><strong id="price-machine">—</strong></div>
-                <div><span>دستمزد ساخت</span><strong id="price-labor">—</strong></div>
-                <div><span>پرداخت‌کاری و هزینه ثابت</span><strong id="price-extra">—</strong></div>
-                <div class="total"><span>قیمت واحد</span><strong id="price-total">—</strong></div>
-                <p id="variant-meta" class="text-xs text-slate-500 mt-3"></p>
+            <div id="price-breakdown" class="store-price-breakdown phase39-customer-price hidden mt-5">
+                <div class="total"><span>قیمت نهایی قبل از مالیات و ارسال</span><strong id="price-total">—</strong></div>
+                <p id="variant-meta" class="text-sm text-slate-600 mt-3"></p>
+                <p class="text-xs text-slate-500 mt-2">مالیات ارزش افزوده و هزینه ارسال در مرحله تسویه‌حساب جداگانه محاسبه می‌شود.</p>
+                <span id="price-material" hidden></span><span id="price-machine" hidden></span><span id="price-labor" hidden></span><span id="price-extra" hidden></span>
             </div>
 
             <div class="mt-6">
@@ -127,6 +142,7 @@
                 <div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div>
                 <div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div>
             </dl>
+            {% if product.hashtags %}<div class="phase39-hashtags">{{ product.hashtags }}</div>{% endif %}
         </aside>
     </div>
 
@@ -151,6 +167,7 @@
             <p class="mt-4 text-slate-600">برای ثبت دیدگاه ابتدا <a class="text-orange-500 font-bold" href="{% url 'website:customer_login' %}">وارد حساب شوید</a>.</p>
         {% endif %}
         <div class="space-y-4 mt-7">
+            {% if product.customer_gallery_enabled %}<div class="phase39-customer-gallery">{% for review in reviews %}{% for photo in review.images.all %}{% if photo.is_approved %}<img src="{{ photo.image.url }}" alt="{{ photo.alt_text|default:product.title }} - تصویر مشتری" loading="lazy">{% endif %}{% endfor %}{% endfor %}</div>{% endif %}
             {% for comment in comments %}
                 <article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                     <div class="font-black">{{ comment.user.get_full_name|default:comment.user.username }}</div>

@@ -83,6 +83,19 @@
                     </div>
                 </li>
 
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarCommunications" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCommunications">
+                        <i class="ri-message-3-line"></i><span>ارتباطات و اعلان‌ها</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarCommunications">
+                        <ul class="nav nav-sm flex-column">
+                            {% if perms.website.view_supportconversation %}<li class="nav-item"><a href="{% url 'admin:website_supportconversation_changelist' %}" class="nav-link">گفت‌وگوهای پشتیبانی <span class="badge bg-danger ms-auto" id="admin-chat-unread-badge" hidden></span></a></li>{% endif %}
+                            {% if perms.website.change_sitesetting %}<li class="nav-item"><a href="{% url 'admin:website_sitesetting_changelist' %}" class="nav-link">تماس، تلگرام و اطلاعات سایت</a></li>{% endif %}
+                            {% if perms.store.view_customernotification %}<li class="nav-item"><a href="{% url 'admin:store_customernotification_changelist' %}" class="nav-link">اعلان‌های مشتری</a></li>{% endif %}
+                        </ul>
+                    </div>
+                </li>
+
                 <li class="menu-title"><span>سفارش، پیش‌فاکتور و ارسال</span></li>
                 <li class="nav-item">
                     <a class="nav-link menu-link collapsed" href="#sidebarServiceOrders" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarServiceOrders">

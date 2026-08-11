@@ -81,3 +81,14 @@ html,body,
 .ri,[class^="ri-"],[class*=" ri-"] {font-family:remixicon!important;}
 .bx,[class^="bx-"],[class*=" bx-"] {font-family:boxicons!important;}
 .mdi,[class^="mdi-"],[class*=" mdi-"] {font-family:"Material Design Icons"!important;}
+
+/* Phase 38 host-authoritative readable Persian typography. */
+html,body{font-size:14px!important}
+.navbar-menu .navbar-nav .menu-title{font-family:"IRANSans",Tahoma,Arial,sans-serif!important;font-size:12.5px!important;line-height:1.7!important;font-weight:700!important;color:#9fb1bc!important}
+.navbar-menu .navbar-nav>.nav-item>.nav-link.menu-link{font-family:"IRANSans",Tahoma,Arial,sans-serif!important;font-size:14.5px!important;line-height:1.8!important;font-weight:500!important;min-height:46px!important}
+.navbar-menu .navbar-nav .menu-dropdown .nav-link{font-family:"IRANSans",Tahoma,Arial,sans-serif!important;font-size:13.5px!important;line-height:1.85!important;min-height:38px!important;padding-top:.5rem!important;padding-bottom:.5rem!important}
+#content,.admin-master-content,.admin-master-content table,.admin-master-content input,.admin-master-content textarea,.admin-master-content select,.admin-master-content button{font-family:"IRANSans",Tahoma,Arial,sans-serif!important;font-size:14px}
+#result_list thead th{font-size:13px!important;font-weight:700!important}
+#result_list tbody td,#result_list tbody th{font-size:13.5px!important;line-height:1.75!important}
+.aligned label{font-size:13.5px!important;line-height:1.8!important}
+.app-menu .sidebar-user-name-text{font-size:13.5px!important}.app-menu .sidebar-user-name-sub-text{font-size:11.5px!important}

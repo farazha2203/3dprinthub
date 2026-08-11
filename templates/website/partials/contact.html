@@ -2,13 +2,13 @@
     <div class="container mx-auto px-6">
         <div class="grid lg:grid-cols-2 gap-10">
             <div>
-                <span class="text-cyan-300 font-bold">تماس با ما</span>
+                <span class="text-cyan-300 font-bold">{% if settings and settings.contact_eyebrow %}{{ settings.contact_eyebrow }}{% else %}تماس با ما{% endif %}</span>
                 <h2 class="text-3xl md:text-5xl font-black mt-3 mb-6 section-title">
-                    آماده بررسی پروژه شما هستیم
+                    {% if settings and settings.contact_title %}{{ settings.contact_title }}{% else %}آماده بررسی پروژه شما هستیم{% endif %}
                 </h2>
 
                 <p class="text-slate-400 leading-9 mb-8">
-                    برای طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات با ما در ارتباط باشید.
+                    {% if settings and settings.contact_description %}{{ settings.contact_description }}{% else %}برای طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات با ما در ارتباط باشید.{% endif %}
                 </p>
 
                 <div class="space-y-4">
@@ -55,7 +55,7 @@
                 {% else %}
                     <div class="text-center">
                         <div class="text-7xl mb-6">📍</div>
-                        <h3 class="text-2xl font-black mb-3">محل فعالیت 3DprintHub.ir</h3>
+                        <h3 class="text-2xl font-black mb-3">{% if settings and settings.contact_location_title %}{{ settings.contact_location_title }}{% else %}محل فعالیت 3DprintHub.ir{% endif %}</h3>
                         <p class="text-slate-400 leading-8">
                             نقشه یا آدرس را از بخش تنظیمات سایت در پنل مدیریت وارد کنید.
                         </p>

@@ -1,0 +1,93 @@
+{
+  "name": "phase39",
+  "project_root": "D:/projects/3DPrintHub-hostbase",
+  "connection_config": "D:/projects/3dprinthub-houst/.vscode/sftp.json",
+  "remote_root": "/3dprinthub",
+  "backup_root": "D:/projects/3DPrintHub/deploy_backups",
+  "preflight": [
+    {
+      "name": "python_compile",
+      "cmd": [
+        "{python}",
+        "-m",
+        "compileall",
+        "-q",
+        "config",
+        "smartbase_admin_bridge",
+        "website",
+        "store"
+      ]
+    },
+    {
+      "name": "django_check",
+      "cmd": [
+        "{python}",
+        "manage.py",
+        "check"
+      ]
+    },
+    {
+      "name": "migration_drift",
+      "cmd": [
+        "{python}",
+        "manage.py",
+        "makemigrations",
+        "--check",
+        "--dry-run"
+      ]
+    },
+    {
+      "name": "phase39_tests",
+      "cmd": [
+        "{python}",
+        "manage.py",
+        "test",
+        "store.test_phase39",
+        "--verbosity",
+        "1"
+      ]
+    },
+    {
+      "name": "phase39_regression",
+      "cmd": [
+        "{python}",
+        "manage.py",
+        "test",
+        "store.test_phase34b",
+        "store.test_phase35",
+        "store.test_phase39",
+        "website.test_admin_velzon",
+        "website.test_phase38_admin_integration",
+        "--verbosity",
+        "1"
+      ]
+    }
+  ],
+  "files": [
+    "store/models.py",
+    "store/admin.py",
+    "store/forms.py",
+    "store/views.py",
+    "store/phase39_models.py",
+    "store/phase39_admin.py",
+    "store/test_phase39.py",
+    "store/management/commands/phase39_sync_material_colors.py",
+    "store/management/commands/phase39_recalculate_prices.py",
+    "store/management/commands/phase39_repair_partial_mysql.py",
+    "store/management/commands/phase39_reconcile_local_history.py",
+    "store/management/commands/phase39_mysql_engine_audit.py",
+    "store/migrations/0026_phase39_smart_commerce_engine.py",
+    "store/migrations/0027_phase39_variant_color_fk.py",
+    "store/templatetags/store_seo.py",
+    "templates/store/product_detail.html",
+    "templates/store/review_form.html",
+    "templates/store/invoice.html",
+    "static/store/js/store.js",
+    "static/store/css/store.css"
+  ],
+  "expected_sha256": {
+    "store/migrations/0026_phase39_smart_commerce_engine.py": "f506f37f029671f0631216f928a8817fe79cfe8160c8b778f533ded532206dec",
+    "store/migrations/0027_phase39_variant_color_fk.py": "6757cf89cc602a2161dd319fce897084780f6dfd90d867746680dc11329366ab",
+    "store/management/commands/phase39_mysql_engine_audit.py": "b9e66ecaff8b0fc7df218727c83ce25d41eff4ff91f2e39d776aad87a1f6d6fe"
+  }
+}

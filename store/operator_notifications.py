@@ -37,16 +37,45 @@ def _post_json(url: str, payload: dict, headers: dict | None = None, timeout: in
             raise RuntimeError(f"notification endpoint returned HTTP {response.status}")
 
 
+def _site_notification_settings():
+    try:
+        from website.models import SiteSetting
+        return SiteSetting.objects.first()
+    except Exception:
+        return None
+
+
+def _telegram_credentials() -> tuple[bool, str, str]:
+    row = _site_notification_settings()
+    enabled_env = os.getenv("TELEGRAM_OPERATOR_ENABLED", "").strip().lower()
+    if row is not None:
+        enabled = bool(getattr(row, "telegram_operator_enabled", False))
+    else:
+        enabled = enabled_env in {"1", "true", "yes", "on"}
+    token = os.getenv("TELEGRAM_OPERATOR_BOT_TOKEN", "").strip() or str(getattr(row, "telegram_operator_bot_token", "") or "").strip()
+    chat_id = os.getenv("TELEGRAM_OPERATOR_CHAT_ID", "").strip() or str(getattr(row, "telegram_operator_chat_id", "") or "").strip()
+    return enabled, token, chat_id
+
+
 def _telegram(text: str) -> bool:
-    token = os.getenv("TELEGRAM_OPERATOR_BOT_TOKEN", "").strip()
-    chat_id = os.getenv("TELEGRAM_OPERATOR_CHAT_ID", "").strip()
-    if not token or not chat_id:
+    enabled, token, chat_id = _telegram_credentials()
+    if not enabled or not token or not chat_id:
         return False
     _post_json(
         f"https://api.telegram.org/bot{token}/sendMessage",
         {"chat_id": chat_id, "text": text[:3900], "disable_web_page_preview": False},
     )
     return True
+
+
+def send_telegram_message(text: str) -> tuple[bool, str]:
+    try:
+        sent = _telegram(text)
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+    if not sent:
+        return False, "تلگرام غیرفعال است یا Bot Token / Chat ID تنظیم نشده است."
+    return True, ""
 
 
 def _whatsapp(text: str) -> bool:
@@ -90,7 +119,11 @@ def _whatsapp(text: str) -> bool:
 
 
 def _email(text: str, subject: str) -> bool:
-    recipients = [x.strip() for x in os.getenv("OPERATOR_ALERT_EMAILS", "").split(",") if x.strip()]
+    raw = os.getenv("OPERATOR_ALERT_EMAILS", "").strip()
+    if not raw:
+        row = _site_notification_settings()
+        raw = str(getattr(row, "operator_alert_emails", "") or "")
+    recipients = [x.strip() for x in raw.split(",") if x.strip()]
     if not recipients:
         return False
     send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, recipients, fail_silently=False)
@@ -176,3 +209,21 @@ def process_pending_operator_notifications(*, limit: int = 10) -> dict[str, int]
         else:
             stats["failed"] += 1
     return stats
+
+def notify_support_message(message) -> None:
+    if not getattr(message, "sender_id", None) or getattr(message.sender, "is_staff", False):
+        return
+    conversation = message.conversation
+    base = _site_base_url()
+    admin_url = f"{base}/admin/website/supportconversation/{conversation.pk}/chat/"
+    customer = conversation.customer
+    name = customer.get_full_name() or customer.get_username()
+    body = (message.body or "").strip()
+    text = (
+        "💬 پیام جدید پشتیبانی 3DPrintHub\n"
+        f"مشتری: {name}\n"
+        f"موضوع: {conversation.subject}\n"
+        f"پیام: {body[:1200] or '[پیوست]'}\n"
+        f"باز کردن گفت‌وگو: {admin_url}"
+    )
+    send_operator_message(text=text, subject="پیام جدید پشتیبانی 3DPrintHub")

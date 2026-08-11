@@ -69,3 +69,18 @@ patches/
 # Historical local patch workspaces
 /3dprinthub_revenue_foundation/
 /3dprinthub_brand_preview_patch/
+
+# Protected local API files and Phase43 backups
+APIKEY-AVAL.txt
+APIKEY.txt
+phase43_reports/
+.phase39_backup_*/
+*.backup_*
+PHASE39_LOCAL_OK.txt
+DEPLOY_PHASE34B_SERVER_NO_RSYNC*.sh
+.phase38_mirror_backup_*/
+phase44_reports/
+.host-state/
+.release-staging/
+imports/
+transfer/

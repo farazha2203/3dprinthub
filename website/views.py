@@ -1010,3 +1010,21 @@ def customer_register_view(request):
         "next_url": requested_next,
     })
 # END PHASE 14 AUTHENTICATED ORDERING AND PRESENTATION VIEWS
+
+@login_required
+def customer_avatar_view(request):
+    from django.http import FileResponse, Http404
+    import mimetypes
+
+    profile = _phase3_profile(request.user)
+    if not profile.avatar:
+        raise Http404("avatar not found")
+    try:
+        handle = profile.avatar.open("rb")
+    except (FileNotFoundError, OSError, ValueError):
+        raise Http404("avatar file not found")
+    content_type = mimetypes.guess_type(profile.avatar.name)[0] or "application/octet-stream"
+    response = FileResponse(handle, content_type=content_type)
+    response["Cache-Control"] = "private, no-store, max-age=0"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import ProductCommentForm, ProductRequestForm
+from .phase39_models import ProductReviewImage
 from .models import (
     Category,
     PrintQuality,
@@ -30,7 +31,7 @@ def _product_queryset():
     return (
         Product.objects.filter(is_active=True, category__is_active=True)
         .select_related("category")
-        .prefetch_related("images", "compatibilities", "variants__material", "variants__quality")
+        .prefetch_related("images", "compatibilities", "variants__material", "variants__quality", "variants__color", "material_options__material", "promotions", "reviews__images")
         .annotate(
             like_count=Count("likes", distinct=True),
             review_average=Avg("reviews__rating", filter=Q(reviews__is_approved=True)),
@@ -94,7 +95,7 @@ def product_detail_view(request, slug):
     product = get_object_or_404(_product_queryset(), slug=slug)
     Product.objects.filter(pk=product.pk).update(view_count=F("view_count") + 1)
 
-    variants = product.variants.filter(is_active=True).select_related("material", "quality").order_by(
+    variants = product.variants.filter(is_active=True).select_related("material", "quality", "color").order_by(
         "quality__sort_order", "material__sort_order"
     )
     comments = product.comments.filter(is_approved=True).select_related("user")
@@ -109,6 +110,9 @@ def product_detail_view(request, slug):
         "comment_form": ProductCommentForm(),
         "is_liked": is_liked,
         "related_products": _product_queryset().filter(category=product.category).exclude(pk=product.pk)[:4],
+        "material_options": product.material_options.filter(is_customer_selectable=True).select_related("material"),
+        "active_promotions": [p for p in product.promotions.all() if p.is_current],
+        "public_order_count": product.store_order_items.filter(order__payment_status="paid").aggregate(v=Count("id"))["v"] or 0,
     }
     return render(request, "store/product_detail.html", context)
 
@@ -286,7 +290,7 @@ def checkout_view(request):
                 packaging_fee = int(pricing.packaging_fee)
                 shipping_fee = int(shipping.calculate_fee(subtotal, total_weight))
                 tax_base = subtotal + packaging_fee + shipping_fee
-                tax_amount = _money_round(Decimal(tax_base) * Decimal(pricing.tax_percent) / Decimal("100"))
+                tax_amount = _money_round(Decimal(tax_base) * Decimal(pricing.tax_percent) / Decimal("100")) if pricing.vat_enabled else 0
                 total_amount = subtotal + packaging_fee + shipping_fee + tax_amount
 
                 order = form.save(commit=False)
@@ -312,6 +316,15 @@ def checkout_view(request):
                         variant_code=variant.code,
                         material_name=variant.material.name,
                         quality_name=variant.quality.name,
+                        color_name=variant.color.name if variant.color_id else "",
+                        unit_cost_snapshot=int(variant.price_breakdown().get("estimated_cost") or 0),
+                        gross_profit=(unit_price - int(variant.price_breakdown().get("estimated_cost") or 0)) * quantity,
+                        material_charge_snapshot=int(variant.price_breakdown().get("material_cost") or 0),
+                        machine_charge_snapshot=int(variant.price_breakdown().get("machine_cost") or 0),
+                        labor_charge_snapshot=int(variant.price_breakdown().get("labor_cost") or 0),
+                        accessory_charge_snapshot=int(variant.price_breakdown().get("accessory_sale") or 0),
+                        assembly_charge_snapshot=int(variant.price_breakdown().get("assembly_cost") or 0),
+                        color_adjustment_snapshot=int(variant.price_breakdown().get("color_price_adjustment") or 0),
                         unit_price=unit_price,
                         quantity=quantity,
                         line_total=line_total,
@@ -413,7 +426,7 @@ def product_review_view(request, slug):
         messages.error(request, "ثبت امتیاز فقط برای خریداران تأییدشده این محصول امکان‌پذیر است.")
         return redirect(product.get_absolute_url())
     review = ProductReview.objects.filter(product=product, user=request.user).first()
-    form = ProductReviewForm(request.POST or None, instance=review)
+    form = ProductReviewForm(request.POST or None, request.FILES or None, instance=review)
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
         obj.product = product
@@ -421,7 +434,9 @@ def product_review_view(request, slug):
         obj.is_verified_purchase = True
         obj.is_approved = False
         obj.save()
-        messages.success(request, "نظر شما ثبت شد و پس از تأیید نمایش داده می‌شود.")
+        for image in request.FILES.getlist("images")[:8]:
+            ProductReviewImage.objects.create(review=obj, image=image, is_approved=False)
+        messages.success(request, "نظر و تصاویر شما ثبت شد و پس از تأیید نمایش داده می‌شود.")
         return redirect(product.get_absolute_url())
     return render(request, "store/review_form.html", {"product": product, "form": form})
 # END STORE COMMERCE PHASE 2
@@ -468,7 +483,7 @@ def checkout_view(request):
                 packaging_fee = int(pricing.packaging_fee)
                 shipping_fee = int(shipping.calculate_fee(subtotal, total_weight))
                 tax_base = subtotal + packaging_fee + shipping_fee
-                tax_amount = _money_round(Decimal(tax_base) * Decimal(pricing.tax_percent) / Decimal("100"))
+                tax_amount = _money_round(Decimal(tax_base) * Decimal(pricing.tax_percent) / Decimal("100")) if pricing.vat_enabled else 0
                 total_amount = subtotal + packaging_fee + shipping_fee + tax_amount
 
                 order = StoreOrder(
@@ -585,6 +600,8 @@ def checkout_view(request):
                         available = max(0, int(variant.stock_quantity) - int(variant.reserved_quantity))
                         if quantity > available:
                             raise ValidationError(f"موجودی {variant.product.title} کافی نیست؛ فقط {available} عدد قابل سفارش است.")
+                    if variant.color_id and Decimal(variant.color.current_stock_grams or 0) < (Decimal(variant.material_weight_grams or 0) * quantity):
+                        raise ValidationError(f"موجودی رنگ {variant.color.name} برای {variant.product.title} کافی نیست.")
                     unit_price = int(variant.price_breakdown()["unit_price"])
                     unit_weight = Decimal(variant.shipping_weight_grams or variant.final_weight_grams or variant.material_weight_grams or 0)
                     line_total = unit_price * quantity
@@ -603,7 +620,7 @@ def checkout_view(request):
                 packaging_fee = int(pricing.packaging_fee)
                 shipping_fee = int(shipping.calculate_fee(subtotal - discount_amount, total_weight))
                 taxable_amount = max(0, subtotal - discount_amount) + packaging_fee + shipping_fee
-                tax_amount = _money_round(Decimal(taxable_amount) * Decimal(pricing.tax_percent) / Decimal("100"))
+                tax_amount = _money_round(Decimal(taxable_amount) * Decimal(pricing.tax_percent) / Decimal("100")) if pricing.vat_enabled else 0
                 total_amount = max(0, subtotal - discount_amount) + packaging_fee + shipping_fee + tax_amount
 
                 saved = form.cleaned_data.get("saved_address")
@@ -655,6 +672,15 @@ def checkout_view(request):
                         variant_code=variant.code,
                         material_name=variant.material.name,
                         quality_name=variant.quality.name,
+                        color_name=variant.color.name if variant.color_id else "",
+                        unit_cost_snapshot=int(variant.price_breakdown().get("estimated_cost") or 0),
+                        gross_profit=(unit_price - int(variant.price_breakdown().get("estimated_cost") or 0)) * quantity,
+                        material_charge_snapshot=int(variant.price_breakdown().get("material_cost") or 0),
+                        machine_charge_snapshot=int(variant.price_breakdown().get("machine_cost") or 0),
+                        labor_charge_snapshot=int(variant.price_breakdown().get("labor_cost") or 0),
+                        accessory_charge_snapshot=int(variant.price_breakdown().get("accessory_sale") or 0),
+                        assembly_charge_snapshot=int(variant.price_breakdown().get("assembly_cost") or 0),
+                        color_adjustment_snapshot=int(variant.price_breakdown().get("color_price_adjustment") or 0),
                         unit_price=unit_price,
                         quantity=quantity,
                         line_total=line_total,

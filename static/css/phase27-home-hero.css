@@ -215,3 +215,90 @@
 @media(max-width:720px){.p27-home-hero__consult{flex-wrap:wrap}.p27-home-hero__consult a{flex:1 1 calc(50% - .25rem)}}
 /* END PHASE 28 HERO CONSULTATION */
 .p27-home-hero__product-main{display:grid;gap:.18rem;color:inherit;text-decoration:none}
+
+/* BEGIN PHASE 44.0.1 CLEAR HERO */
+.p27-home-hero{
+  background:
+    radial-gradient(circle at 18% 18%,rgba(14,165,233,.08),transparent 32%),
+    radial-gradient(circle at 84% 82%,rgba(34,197,94,.07),transparent 32%),
+    #eef3f7;
+}
+.p27-home-hero__background{z-index:0!important;background:transparent!important;}
+.p27-home-hero__slide{z-index:0;}
+.p27-home-hero__backdrop{display:none!important;opacity:0!important;visibility:hidden!important;filter:none!important;transform:none!important;}
+.p27-home-hero__veil{display:none!important;opacity:0!important;background:transparent!important;}
+.p27-home-hero__texture{z-index:1!important;opacity:.035!important;background-size:64px 64px!important;}
+.p27-home-hero__content{z-index:4!important;}
+.p27-home-hero__subject-frame{
+  z-index:2!important;
+  opacity:1!important;
+  visibility:visible!important;
+  display:flex!important;
+  background:radial-gradient(circle at 50% 42%,#ffffff 0%,#f8fafc 70%,#eef2f7 100%)!important;
+  border:1px solid rgba(15,23,42,.09)!important;
+  box-shadow:0 24px 66px rgba(15,23,42,.16)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.p27-home-hero__subject{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  opacity:1!important;
+  visibility:visible!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:drop-shadow(0 18px 28px rgba(15,23,42,.16))!important;
+}
+.p27-home-hero__copy{
+  position:relative;
+  padding:clamp(1.1rem,2.4vw,2rem);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:clamp(22px,2.4vw,32px);
+  background:linear-gradient(135deg,rgba(7,12,20,.91),rgba(15,23,42,.78));
+  box-shadow:0 18px 48px rgba(15,23,42,.17);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.p27-home-hero__copy>p{color:rgba(255,255,255,.92)!important;text-shadow:none!important;}
+.p27-home-hero__product-card{background:rgba(7,12,20,.90)!important;border-color:rgba(255,255,255,.16)!important;box-shadow:0 16px 40px rgba(15,23,42,.16)!important;}
+.p27-home-hero__dots button{background:rgba(15,23,42,.25)!important;}
+.p27-home-hero__dots button.is-active{background:#16a34a!important;}
+@media(max-width:900px){
+  .p27-home-hero{min-height:auto!important;padding:5.35rem 0 2.8rem!important;}
+  .p27-home-hero__background{position:absolute!important;inset:0!important;z-index:0!important;overflow:visible!important;}
+  .p27-home-hero__slide{overflow:visible!important;}
+  .p27-home-hero__subject-frame{
+    top:5.35rem!important;
+    right:clamp(.75rem,3vw,1.35rem)!important;
+    left:clamp(.75rem,3vw,1.35rem)!important;
+    bottom:auto!important;
+    width:auto!important;
+    height:clamp(280px,43svh,420px)!important;
+    min-height:280px!important;
+    padding:.45rem!important;
+    border-radius:24px!important;
+    transform:none!important;
+  }
+  .p27-home-hero__content{min-height:auto!important;padding-top:clamp(294px,44svh,438px)!important;}
+  .p27-home-hero__copy{max-width:100%!important;margin-top:1rem;padding:1.25rem;border-radius:22px;}
+  .p27-home-hero__product{width:100%!important;max-width:520px;}
+  .p27-home-hero__controls{z-index:6!important;}
+}
+@media(max-width:680px){
+  .p27-home-hero{padding-top:5rem!important;}
+  .p27-home-hero__subject-frame{top:5rem!important;height:clamp(250px,38svh,340px)!important;min-height:250px!important;border-radius:20px!important;}
+  .p27-home-hero__content{padding-top:clamp(264px,39svh,355px)!important;}
+  .p27-home-hero__copy{margin-top:.7rem;padding:1rem;}
+  .p27-home-hero__copy h1{font-size:clamp(1.9rem,9.5vw,2.9rem)!important;line-height:1.18!important;letter-spacing:-.025em!important;}
+  .p27-home-hero__copy>p{font-size:.92rem!important;line-height:1.85!important;}
+  .p27-home-hero__actions{display:grid!important;grid-template-columns:1fr!important;gap:.65rem!important;}
+  .p27-home-hero__actions .p14-btn{width:100%!important;justify-content:center!important;}
+}
+@media(max-width:420px){
+  .p27-home-hero__subject-frame{height:260px!important;min-height:260px!important;}
+  .p27-home-hero__content{padding-top:274px!important;}
+}
+/* END PHASE 44.0.1 CLEAR HERO */

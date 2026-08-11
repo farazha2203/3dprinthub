@@ -126,10 +126,13 @@ class PricingSetting(models.Model):
     tax_percent = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0,
+        default=Decimal("10.00"),
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         verbose_name="درصد مالیات",
     )
+    vat_enabled = models.BooleanField(default=True, verbose_name="اعمال مالیات ارزش افزوده")
+    assembly_hourly_rate = models.PositiveIntegerField(default=100_000, verbose_name="نرخ ساعتی مونتاژ")
+    default_margin_percent = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal("30.00"), verbose_name="حاشیه سود هدف درصدی")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -182,6 +185,12 @@ class Product(models.Model):
     mpn = models.CharField(max_length=100, blank=True, verbose_name="کد MPN")
     gtin = models.CharField(max_length=14, blank=True, verbose_name="GTIN / بارکد")
     schema_enabled = models.BooleanField(default=True, verbose_name="ساخت اسکیما محصول")
+    editorial_source_url = models.URLField(blank=True, verbose_name="لینک منبع محتوا")
+    source_attribution = models.CharField(max_length=220, blank=True, verbose_name="اعتبار/منبع")
+    hashtags = models.TextField(blank=True, verbose_name="هشتگ‌ها")
+    material_selection_intro = models.TextField(blank=True, verbose_name="راهنمای انتخاب متریال")
+    show_public_order_count = models.BooleanField(default=False, verbose_name="نمایش تعداد سفارش به مشتری")
+    customer_gallery_enabled = models.BooleanField(default=True, verbose_name="نمایش تصاویر مشتریان")
     ORDER_MODE_CHOICES = [
         ("variant", "قیمت‌گذاری بر اساس تنوع"),
         ("fixed", "قیمت ثابت و سفارش مستقیم"),
@@ -190,6 +199,21 @@ class Product(models.Model):
     fixed_price = models.PositiveBigIntegerField(default=0, verbose_name="قیمت ثابت به تومان")
     fixed_delivery_days = models.PositiveIntegerField(default=3, verbose_name="زمان آماده‌سازی به روز")
     consultation_required = models.BooleanField(default=True, verbose_name="نیازمند مشاوره")
+    # BEGIN PHASE 35 BILINGUAL CATALOG FIELDS
+    title_en = models.CharField(max_length=220, blank=True, verbose_name="عنوان انگلیسی")
+    short_description_en = models.CharField(max_length=500, blank=True, verbose_name="توضیح کوتاه انگلیسی")
+    description_en = models.TextField(blank=True, verbose_name="توضیحات انگلیسی")
+    source_url = models.URLField(max_length=1000, blank=True, verbose_name="لینک مرجع اصلی")
+    source_name = models.CharField(max_length=120, blank=True, verbose_name="نام منبع")
+    source_external_id = models.CharField(max_length=160, blank=True, db_index=True, verbose_name="شناسه منبع")
+    price_is_final = models.BooleanField(default=False, db_index=True, verbose_name="قیمت قطعی است")
+    price_note = models.CharField(
+        max_length=300,
+        blank=True,
+        default="قیمت علی‌الحساب است و پس از بررسی اپراتور قطعی می‌شود.",
+        verbose_name="یادداشت قیمت",
+    )
+    # END PHASE 35 BILINGUAL CATALOG FIELDS
     # BEGIN PHASE 4 SEO FIELDS
     seo_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اصلی")
     canonical_url = models.URLField(blank=True, verbose_name="Canonical اختصاصی")
@@ -294,6 +318,11 @@ class ProductVariant(models.Model):
         related_name="variants",
         verbose_name="کیفیت چاپ",
     )
+    color = models.ForeignKey("store.MaterialColorOption", on_delete=models.PROTECT, related_name="variants", blank=True, null=True, verbose_name="رنگ")
+    material_price_per_gram_override = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, verbose_name="قیمت اختصاصی هر گرم")
+    color_price_adjustment = models.BigIntegerField(default=0, verbose_name="تعدیل قیمت رنگ")
+    assembly_fee_override = models.PositiveBigIntegerField(blank=True, null=True, verbose_name="هزینه مونتاژ اختصاصی")
+    cached_cost_price = models.PositiveBigIntegerField(default=0, editable=False, verbose_name="بهای تمام‌شده تخمینی")
     code = models.CharField(max_length=100, unique=True, verbose_name="کد تنوع")
     material_weight_grams = models.DecimalField(
         max_digits=10,
@@ -353,8 +382,8 @@ class ProductVariant(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["product", "material", "quality"],
-                name="unique_store_product_material_quality",
+                fields=["product", "material", "quality", "color"],
+                name="uniq_product_material_quality_color",
             )
         ]
         ordering = ["product", "quality__sort_order", "material__sort_order"]
@@ -362,7 +391,14 @@ class ProductVariant(models.Model):
         verbose_name_plural = "تنوع‌های قابل سفارش محصولات"
 
     def __str__(self):
-        return f"{self.product} | {self.material} | {self.quality}"
+        color = f" | {self.color.name}" if self.color_id else ""
+        return f"{self.product} | {self.material} | {self.quality}{color}"
+
+    @property
+    def color_stock_sufficient(self):
+        if not self.color_id:
+            return True
+        return Decimal(self.color.current_stock_grams or 0) >= Decimal(self.material_weight_grams or 0)
 
     @staticmethod
     def _round_money(value: Decimal) -> int:
@@ -377,8 +413,12 @@ class ProductVariant(models.Model):
             else pricing.default_labor_percent
         )
 
+        color_sale = getattr(self.color, "sale_price_per_gram_override", None) if self.color_id else None
         material_sale_per_gram = Decimal(
-            getattr(self.material, "sale_price_per_gram", 0)
+            self.material_price_per_gram_override
+            or color_sale
+            or getattr(self.material, "effective_sale_price_per_gram", 0)
+            or getattr(self.material, "sale_price_per_gram", 0)
             or getattr(self.material, "price_per_gram", 0)
             or 0
         )
@@ -394,8 +434,26 @@ class ProductVariant(models.Model):
         material_cost = self._round_money(material_cost_decimal)
         machine_cost = self._round_money(machine_cost_decimal)
         labor_cost = self._round_money(labor_cost_decimal)
-        subtotal = material_cost + machine_cost + labor_cost + self.post_processing_fee + self.fixed_fee
-        unit_price = max(subtotal, pricing.minimum_order_amount)
+        bom_items = list(self.product.bom_items.filter(is_active=True, is_required=True).select_related("component")) if self.product_id else []
+        accessory_sale = sum(item.sale_total for item in bom_items)
+        accessory_cost = sum(item.cost_total for item in bom_items)
+        assembly_minutes = sum(int(item.assembly_minutes or 0) for item in bom_items)
+        if self.assembly_fee_override is not None:
+            assembly_cost = int(self.assembly_fee_override)
+        else:
+            assembly_cost = self._round_money(Decimal(pricing.assembly_hourly_rate) * Decimal(assembly_minutes) / MINUTES_PER_HOUR)
+        subtotal = material_cost + machine_cost + labor_cost + self.post_processing_fee + self.fixed_fee + int(self.color_price_adjustment or 0) + accessory_sale + assembly_cost
+        unit_price_before_discount = max(subtotal, pricing.minimum_order_amount)
+        unit_price = unit_price_before_discount
+        promotion = None
+        if self.product_id:
+            promotion = next((item for item in self.product.promotions.filter(is_active=True).order_by("-created_at") if item.is_current), None)
+        if promotion:
+            unit_price = promotion.apply(unit_price_before_discount)
+        purchase_per_gram = Decimal(getattr(self.material, "purchase_cost_per_gram", 0) or 0)
+        direct_material_cost = self._round_money(purchase_per_gram * Decimal(self.material_weight_grams))
+        estimated_cost = direct_material_cost + machine_cost + accessory_cost + assembly_cost + self.post_processing_fee + self.fixed_fee
+        gross_profit = int(unit_price) - int(estimated_cost)
 
         return {
             "material_cost": material_cost,
@@ -404,6 +462,13 @@ class ProductVariant(models.Model):
             "post_processing_fee": self.post_processing_fee,
             "fixed_fee": self.fixed_fee,
             "unit_price": unit_price,
+            "unit_price_before_discount": unit_price_before_discount,
+            "accessory_sale": accessory_sale,
+            "accessory_cost": accessory_cost,
+            "assembly_cost": assembly_cost,
+            "color_price_adjustment": int(self.color_price_adjustment or 0),
+            "estimated_cost": estimated_cost,
+            "gross_profit": gross_profit,
             "hourly_rate": hourly_rate,
             "labor_percent": str(labor_percent),
         }
@@ -411,8 +476,10 @@ class ProductVariant(models.Model):
     def recalculate_price(self, *, save=True) -> int:
         price = int(self.price_breakdown()["unit_price"])
         self.cached_unit_price = price
+        cost = int(self.price_breakdown().get("estimated_cost") or 0)
+        self.cached_cost_price = cost
         if save:
-            type(self).objects.filter(pk=self.pk).update(cached_unit_price=price)
+            type(self).objects.filter(pk=self.pk).update(cached_unit_price=price, cached_cost_price=cost)
         return price
 
     def save(self, *args, **kwargs):
@@ -616,6 +683,13 @@ class ShippingMethod(models.Model):
     def calculate_fee(self, subtotal, total_weight_grams=0):
         if self.free_over and int(subtotal) >= self.free_over:
             return 0
+        weight = Decimal(total_weight_grams or 0)
+        rules = self.rate_rules.filter(is_active=True, min_weight_grams__lte=weight).filter(
+            models.Q(max_weight_grams=0) | models.Q(max_weight_grams__gte=weight)
+        ).order_by("-min_weight_grams", "sort_order")
+        rule = rules.first()
+        if rule:
+            return rule.calculate(weight)
         return self.flat_fee
 
 
@@ -795,6 +869,15 @@ class StoreOrderItem(models.Model):
     variant_code = models.CharField(max_length=100, verbose_name="کد تنوع هنگام سفارش")
     material_name = models.CharField(max_length=100, verbose_name="متریال هنگام سفارش")
     quality_name = models.CharField(max_length=100, verbose_name="کیفیت هنگام سفارش")
+    color_name = models.CharField(max_length=100, blank=True, verbose_name="رنگ هنگام سفارش")
+    unit_cost_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="بهای تمام‌شده واحد")
+    gross_profit = models.BigIntegerField(default=0, verbose_name="سود ناخالص ردیف")
+    material_charge_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="هزینه فروش متریال")
+    machine_charge_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="هزینه زمان دستگاه")
+    labor_charge_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="دستمزد ساخت")
+    accessory_charge_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="لوازم جانبی")
+    assembly_charge_snapshot = models.PositiveBigIntegerField(default=0, verbose_name="مونتاژ")
+    color_adjustment_snapshot = models.BigIntegerField(default=0, verbose_name="تعدیل قیمت رنگ")
     unit_price = models.PositiveBigIntegerField(verbose_name="قیمت واحد هنگام سفارش")
     quantity = models.PositiveIntegerField(default=1, verbose_name="تعداد")
     line_total = models.PositiveBigIntegerField(verbose_name="جمع ردیف")
@@ -1512,6 +1595,34 @@ class ImportedPrintAsset(models.Model):
         verbose_name="وضعیت تحریریه",
     )
     fixed_print_price = models.PositiveBigIntegerField(default=0, verbose_name="قیمت ثابت چاپ به تومان")
+    TRANSLATION_STATUS_CHOICES = [
+        ("missing", "ترجمه نشده"),
+        ("draft", "پیش‌نویس خودکار"),
+        ("translated", "ترجمه ماشینی"),
+        ("reviewed", "ترجمه بازبینی‌شده"),
+    ]
+    translation_status = models.CharField(
+        max_length=20, choices=TRANSLATION_STATUS_CHOICES, default="missing", db_index=True,
+        verbose_name="وضعیت ترجمه",
+    )
+    translation_provider = models.CharField(max_length=40, blank=True, verbose_name="موتور ترجمه")
+    translated_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان ترجمه")
+    PRICE_STATUS_CHOICES = [
+        ("unset", "قیمت‌گذاری نشده"),
+        ("estimated", "علی‌الحساب"),
+        ("final", "قطعی"),
+    ]
+    price_status = models.CharField(
+        max_length=20, choices=PRICE_STATUS_CHOICES, default="unset", db_index=True,
+        verbose_name="وضعیت قیمت",
+    )
+    price_is_final = models.BooleanField(default=False, db_index=True, verbose_name="قیمت قطعی است")
+    pricing_note = models.CharField(
+        max_length=300, blank=True,
+        default="قیمت علی‌الحساب است و پس از بررسی اپراتور قطعی می‌شود.",
+        verbose_name="یادداشت قیمت",
+    )
+    estimated_material_cost = models.PositiveBigIntegerField(default=0, verbose_name="برآورد هزینه متریال به تومان")
     COMMERCIAL_LICENSE_CHOICES = [
         ("unknown", "نامشخص"),
         ("blocked", "غیرمجاز"),
@@ -3525,3 +3636,10 @@ class LinkAnalysisManualReview(models.Model):
     def operator_pricing_complete(self):
         return bool(self.operator_material_id and self.operator_weight_grams and self.operator_print_minutes)
 # END PHASE 26 REALTIME AND MANUAL REVIEW
+
+# BEGIN PHASE39_SMART_COMMERCE_ENGINE
+from .phase39_models import (
+    AccessoryComponent, MaterialColorOption, ProductBOMItem, ProductMaterialRecommendation,
+    ProductPromotion, ProductReviewImage, ShippingRateRule,
+)
+# END PHASE39_SMART_COMMERCE_ENGINE

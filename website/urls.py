@@ -59,7 +59,10 @@ from .views import (
     customer_address_default_view,
 )
 
+from .views import customer_avatar_view
+
 urlpatterns += [
+    path("customer/avatar/", customer_avatar_view, name="customer_avatar"),
     path("customer/addresses/", customer_addresses_view, name="customer_addresses"),
     path("customer/addresses/new/", customer_address_create_view, name="customer_address_create"),
     path("customer/addresses/<int:address_id>/edit/", customer_address_edit_view, name="customer_address_edit"),

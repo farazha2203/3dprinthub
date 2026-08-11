@@ -100,6 +100,45 @@ class SiteSetting(models.Model):
     email = models.EmailField(blank=True, verbose_name="ایمیل")
     instagram = models.URLField(blank=True, verbose_name="لینک اینستاگرام")
     telegram = models.URLField(blank=True, verbose_name="لینک تلگرام")
+    contact_eyebrow = models.CharField(
+        max_length=120,
+        default="تماس با ما",
+        verbose_name="برچسب بخش تماس",
+    )
+    contact_title = models.CharField(
+        max_length=255,
+        default="آماده بررسی پروژه شما هستیم",
+        verbose_name="عنوان بخش تماس",
+    )
+    contact_description = models.TextField(
+        default="برای طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات با ما در ارتباط باشید.",
+        verbose_name="توضیح بخش تماس",
+    )
+    contact_location_title = models.CharField(
+        max_length=180,
+        default="محل فعالیت 3DprintHub.ir",
+        verbose_name="عنوان محل فعالیت",
+    )
+    telegram_operator_enabled = models.BooleanField(
+        default=False,
+        verbose_name="اعلان تلگرام برای اپراتور فعال باشد؟",
+    )
+    telegram_operator_bot_token = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="توکن ربات تلگرام اپراتور",
+        help_text="توکن BotFather؛ فقط مدیر ارشد باید به این مقدار دسترسی داشته باشد.",
+    )
+    telegram_operator_chat_id = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Chat ID تلگرام اپراتور",
+    )
+    operator_alert_emails = models.TextField(
+        blank=True,
+        verbose_name="ایمیل‌های اعلان اپراتور",
+        help_text="چند ایمیل را با ویرگول جدا کنید.",
+    )
     payment_card_number = models.CharField(max_length=32, blank=True, verbose_name="شماره کارت دریافت وجه")
     payment_card_holder = models.CharField(max_length=150, blank=True, verbose_name="نام صاحب کارت")
     default_deposit_percent = models.PositiveSmallIntegerField(default=30, verbose_name="درصد پیش‌فرض بیعانه")

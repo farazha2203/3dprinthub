@@ -1,0 +1,14 @@
+@font-face{font-family:"IRANSansX";src:local("IRANSansX"),local("IRANSans"),local("Vazirmatn");font-display:swap;}
+:root{--phase35-admin-font:"IRANSansX","Vazirmatn","Tahoma",sans-serif;}
+html,body,input,select,textarea,button,.app-menu,.navbar-menu,.menu-title,.nav-link,.dropdown-menu,.form-control,.form-select,.table{font-family:var(--phase35-admin-font)!important;}
+.app-menu .menu-title{font-size:13px!important;font-weight:800!important;line-height:1.8!important;letter-spacing:0!important;color:#a8bdd0!important;margin-top:12px!important;}
+.app-menu .nav-link{font-size:14px!important;font-weight:600!important;line-height:1.75!important;padding-top:.58rem!important;padding-bottom:.58rem!important;}
+.app-menu .nav-sm .nav-link{font-size:13.5px!important;font-weight:500!important;line-height:1.7!important;padding:.45rem 2.7rem .45rem 1rem!important;}
+.app-menu .nav-link span{white-space:normal!important;}
+#changelist-form .results{overflow:auto;}
+#result_list th,#result_list td{font-size:13px!important;vertical-align:middle!important;min-width:105px;}
+#result_list input[type=text],#result_list input[type=number],#result_list select{min-width:125px;font-size:13px!important;padding:6px 8px!important;}
+#result_list td.field-persian_title{min-width:260px;}
+.phase35-translate-button{display:inline-flex;align-items:center;gap:6px;margin:6px 0 10px;padding:7px 12px;border:0;border-radius:8px;background:#0d6efd;color:#fff;font-family:var(--phase35-admin-font);font-size:13px;font-weight:700;cursor:pointer;}
+.phase35-translate-button:disabled{opacity:.6;cursor:wait;}
+.phase35-price-estimated{color:#b45309;font-weight:700}.phase35-price-final{color:#15803d;font-weight:700}

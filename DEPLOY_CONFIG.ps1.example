@@ -1,0 +1,15 @@
+@{
+    SshHost = "3dprinthub.ir"
+    SshUser = "sfkilvrs"
+    SshPort = 22
+    PrivateKeyPath = "$HOME\.ssh\3dprinthub_ed25519"
+    RemoteProjectDir = "/home/sfkilvrs/3dprinthub"
+    RemoteVenvDir = "/home/sfkilvrs/virtualenv/3dprinthub/3.12"
+    Branch = "feature/phase30-online-payment-gateway"
+    RunFullTests = $true
+    HealthUrls = @(
+        "https://3dprinthub.ir/",
+        "https://3dprinthub.ir/store/",
+        "https://3dprinthub.ir/customer/login/"
+    )
+}

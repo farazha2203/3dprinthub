@@ -3417,3 +3417,282 @@ if "_phase34b_draft_persian" not in ImportedPrintAssetAdmin.actions:
         )}),
     )
 # END PHASE 34B MAKERWORLD EDITORIAL AND COMMERCE
+
+
+# BEGIN PHASE 35 BILINGUAL CATALOG EDITOR
+from django.contrib.admin import SimpleListFilter as _Phase35SimpleListFilter
+from django.http import JsonResponse as _Phase35JsonResponse
+from django.urls import path as _phase35_path
+from django.utils.html import format_html as _phase35_format_html
+from .phase35_catalog_editor import (
+    apply_provisional_price as _phase35_apply_price,
+    mark_price_final as _phase35_mark_price_final,
+    prepare_asset as _phase35_prepare_asset,
+    translate_asset as _phase35_translate_asset,
+)
+
+
+class _Phase35TranslationFilter(_Phase35SimpleListFilter):
+    title = "ترجمه فارسی"
+    parameter_name = "phase35_translation"
+    def lookups(self, request, model_admin):
+        return (("missing", "ترجمه‌نشده"), ("draft", "پیش‌نویس"), ("ready", "ترجمه‌شده"))
+    def queryset(self, request, queryset):
+        if self.value() == "missing":
+            return queryset.filter(translation_status="missing")
+        if self.value() == "draft":
+            return queryset.filter(translation_status="draft")
+        if self.value() == "ready":
+            return queryset.filter(translation_status__in=["translated", "reviewed"])
+        return queryset
+
+
+class _Phase35SaleFilter(_Phase35SimpleListFilter):
+    title = "آمادگی فروش"
+    parameter_name = "phase35_sale"
+    def lookups(self, request, model_admin):
+        return (("unapproved", "تأییدنشده برای فروش"), ("ready", "آماده تبدیل"), ("converted", "تبدیل‌شده"))
+    def queryset(self, request, queryset):
+        if self.value() == "unapproved":
+            return queryset.exclude(commercial_license_status__in=["allowed", "owned", "public_domain"])
+        if self.value() == "ready":
+            return queryset.filter(commercial_license_status__in=["allowed", "owned", "public_domain"], fixed_print_price__gt=0, product__isnull=True)
+        if self.value() == "converted":
+            return queryset.filter(product__isnull=False)
+        return queryset
+
+
+class _Phase35PriceFilter(_Phase35SimpleListFilter):
+    title = "وضعیت قیمت"
+    parameter_name = "phase35_price"
+    def lookups(self, request, model_admin):
+        return (("unset", "بدون قیمت"), ("estimated", "علی‌الحساب"), ("final", "قطعی"))
+    def queryset(self, request, queryset):
+        if self.value() == "unset":
+            return queryset.filter(fixed_print_price=0)
+        if self.value() == "estimated":
+            return queryset.filter(price_is_final=False, fixed_print_price__gt=0)
+        if self.value() == "final":
+            return queryset.filter(price_is_final=True)
+        return queryset
+
+
+@admin.display(description="عنوان اصلی", ordering="source_title")
+def _phase35_source_title_admin(self, obj):
+    title = obj.source_title or obj.title
+    return _phase35_format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', obj.source_url, title)
+
+
+@admin.display(description="قیمت", ordering="fixed_print_price")
+def _phase35_price_admin(self, obj):
+    label = "قطعی" if obj.price_is_final else "علی‌الحساب"
+    return f"{obj.fixed_print_price:,} تومان — {label}" if obj.fixed_print_price else "بدون قیمت"
+
+
+def _phase35_prepare_selected(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset.select_related("source"):
+        try:
+            _phase35_prepare_asset(asset)
+            success += 1
+        except Exception as exc:
+            modeladmin.message_user(request, f"{asset}: {exc}", level=messages.ERROR)
+    modeladmin.message_user(request, f"{success} مدل ترجمه و قیمت‌گذاری اولیه شد.", level=messages.SUCCESS)
+_phase35_prepare_selected.short_description = "ترجمه خودکار + قیمت علی‌الحساب"
+
+
+def _phase35_translate_selected(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset.select_related("source"):
+        try:
+            _phase35_translate_asset(asset, force=True)
+            success += 1
+        except Exception as exc:
+            modeladmin.message_user(request, f"{asset}: {exc}", level=messages.ERROR)
+    modeladmin.message_user(request, f"{success} ترجمه بازسازی شد.", level=messages.SUCCESS)
+_phase35_translate_selected.short_description = "ترجمه مجدد متن‌های انتخاب‌شده"
+
+
+def _phase35_price_selected(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset:
+        _phase35_apply_price(asset, force=True)
+        success += 1
+    modeladmin.message_user(request, f"برای {success} مدل قیمت علی‌الحساب محاسبه شد.", level=messages.SUCCESS)
+_phase35_price_selected.short_description = "محاسبه قیمت علی‌الحساب"
+
+
+def _phase35_finalize_price_selected(modeladmin, request, queryset):
+    success = 0
+    for asset in queryset:
+        try:
+            _phase35_mark_price_final(asset)
+            success += 1
+        except Exception as exc:
+            modeladmin.message_user(request, f"{asset}: {exc}", level=messages.ERROR)
+    modeladmin.message_user(request, f"قیمت {success} مدل قطعی شد.", level=messages.SUCCESS)
+_phase35_finalize_price_selected.short_description = "قطعی‌کردن قیمت انتخاب‌شده‌ها"
+
+
+_phase35_old_get_urls = ImportedPrintAssetAdmin.get_urls
+
+def _phase35_get_urls(self):
+    return [
+        _phase35_path("<int:object_id>/translate/", self.admin_site.admin_view(self.phase35_translate_view), name="store_importedprintasset_translate"),
+    ] + _phase35_old_get_urls(self)
+
+
+def _phase35_translate_view(self, request, object_id):
+    if request.method != "POST":
+        return _Phase35JsonResponse({"ok": False, "error": "POST required"}, status=405)
+    asset = self.get_queryset(request).select_related("source").filter(pk=object_id).first()
+    if asset is None:
+        return _Phase35JsonResponse({"ok": False, "error": "not found"}, status=404)
+    try:
+        _phase35_translate_asset(asset, force=True)
+    except Exception as exc:
+        return _Phase35JsonResponse({"ok": False, "error": str(exc)}, status=400)
+    return _Phase35JsonResponse({
+        "ok": True,
+        "persian_title": asset.persian_title,
+        "persian_short_description": asset.persian_short_description,
+        "persian_description": asset.persian_description,
+        "translation_status": asset.translation_status,
+        "translation_provider": asset.translation_provider,
+    })
+
+
+ImportedPrintAssetAdmin.source_title_admin = _phase35_source_title_admin
+ImportedPrintAssetAdmin.price_admin = _phase35_price_admin
+ImportedPrintAssetAdmin.phase35_translate_view = _phase35_translate_view
+ImportedPrintAssetAdmin.get_urls = _phase35_get_urls
+ImportedPrintAssetAdmin.list_display = [
+    "preview_thumbnail",
+    "source_title_admin",
+    "persian_title",
+    "source",
+    "description_excerpt",
+    "weight_summary",
+    "image_count_admin",
+    "source_views",
+    "source_downloads",
+    "source_likes",
+    "license_summary",
+    "is_publicly_approved",
+    "translation_status",
+    "editorial_status",
+    "commercial_license_status",
+    "fixed_print_price",
+    "price_is_final",
+    "product",
+    "imported_at",
+]
+ImportedPrintAssetAdmin.list_display_links = ["source_title_admin"]
+ImportedPrintAssetAdmin.list_editable = [
+    "persian_title", "editorial_status", "commercial_license_status",
+    "fixed_print_price", "price_is_final",
+]
+ImportedPrintAssetAdmin.list_filter = [
+    _Phase35TranslationFilter, _Phase35SaleFilter, _Phase35PriceFilter,
+    "source", "editorial_status", "commercial_license_status",
+    "translation_status", "price_status", "price_is_final", "product", "imported_at",
+]
+ImportedPrintAssetAdmin.search_fields = [
+    "source_title", "title", "persian_title", "source_description",
+    "persian_description", "tags", "author_name", "source_url", "external_id",
+]
+ImportedPrintAssetAdmin.list_per_page = 50
+ImportedPrintAssetAdmin.actions = list(dict.fromkeys(list(ImportedPrintAssetAdmin.actions) + [
+    "_phase35_prepare_selected", "_phase35_translate_selected",
+    "_phase35_price_selected", "_phase35_finalize_price_selected",
+]))
+ImportedPrintAssetAdmin._phase35_prepare_selected = _phase35_prepare_selected
+ImportedPrintAssetAdmin._phase35_translate_selected = _phase35_translate_selected
+ImportedPrintAssetAdmin._phase35_price_selected = _phase35_price_selected
+ImportedPrintAssetAdmin._phase35_finalize_price_selected = _phase35_finalize_price_selected
+ImportedPrintAssetAdmin.readonly_fields = list(dict.fromkeys(list(ImportedPrintAssetAdmin.readonly_fields) + [
+    "translation_provider", "translated_at", "estimated_material_cost",
+]))
+ImportedPrintAssetAdmin.fieldsets = (
+    ("متن اصلی منبع ـ انگلیسی", {"fields": (
+        "source", "source_url_link", "external_id", "source_title", "source_description",
+        "short_description", "technical_specs", "tags", "author_name", "license_name", "license_url",
+    )}),
+    ("نسخه فارسی قابل ویرایش", {"fields": (
+        "persian_title", "persian_short_description", "persian_description",
+        "translation_status", "translation_provider", "translated_at", "editorial_status",
+    )}),
+    ("قیمت‌گذاری و فروش", {"fields": (
+        "fixed_print_price", "price_is_final", "price_status", "estimated_material_cost", "pricing_note",
+        "commercial_license_status", "commercial_license_source", "commercial_license_note",
+        "commercial_license_evidence", "product", "portfolio_item",
+    )}),
+    ("فایل و تصاویر", {"fields": (
+        "preview_image", "remote_image_url", "file_format", "private_download_link",
+        "archive_status", "archived_model_file", "keep_public_when_source_disabled",
+    )}),
+    ("اطلاعات سیستمی", {"classes": ("collapse",), "fields": (
+        "status", "admin_note", "source_payload", "imported_at", "updated_at",
+    )}),
+)
+
+class _Phase35ImportedAdminMedia:
+    css = {"all": ("admin/phase35-admin.css",)}
+    js = ("admin/phase35-translation.js",)
+ImportedPrintAssetAdmin.Media = _Phase35ImportedAdminMedia
+
+_phase35_product_list_display = [
+    "title", "title_en", "sku", "category", "minimum_price",
+    "price_is_final", "is_featured", "is_active", "published_at",
+]
+_phase35_product_list_editable = ["price_is_final", "is_featured", "is_active"]
+_phase35_product_list_filter = [
+    "price_is_final", "order_mode", "category__section", "category",
+    "is_featured", "is_active",
+]
+_phase35_product_search_fields = [
+    "title", "title_en", "sku", "short_description", "short_description_en",
+    "description", "description_en", "source_url", "source_external_id",
+]
+_phase35_product_fieldsets = (
+    ("متن فارسی", {"fields": ("title", "slug", "short_description", "description")}),
+    ("متن اصلی انگلیسی", {"fields": ("title_en", "short_description_en", "description_en")}),
+    ("منبع", {"fields": ("source_name", "source_external_id", "source_url")}),
+    ("فروش و قیمت", {"fields": (
+        "category", "sku", "order_mode", "fixed_price", "price_is_final", "price_note",
+        "fixed_delivery_days", "consultation_required",
+    )}),
+    ("رسانه و مشخصات", {"fields": (
+        "main_image", "model_file", "dimensions", "technical_notes", "installation_guide",
+    )}),
+    ("سئو و شبکه‌های اجتماعی", {"fields": (
+        "seo_focus_keyword", "meta_title", "meta_description", "canonical_url",
+        "robots_index", "robots_follow", "og_title", "og_description", "og_image",
+        "seo_preview",
+    )}),
+    ("انتشار و آمار", {"fields": (
+        "is_featured", "is_active", "published_at", "view_count", "created_at", "updated_at",
+    )}),
+)
+
+
+def _phase35_apply_product_admin_configuration(admin_class):
+    admin_class.list_display = list(_phase35_product_list_display)
+    admin_class.list_display_links = ("title",)
+    admin_class.list_editable = list(_phase35_product_list_editable)
+    admin_class.list_filter = list(_phase35_product_list_filter)
+    admin_class.search_fields = list(_phase35_product_search_fields)
+    admin_class.fieldsets = _phase35_product_fieldsets
+
+
+_phase35_apply_product_admin_configuration(ProductAdmin)
+_phase35_registered_product_admin = admin.site._registry.get(Product)
+if _phase35_registered_product_admin is not None:
+    _phase35_apply_product_admin_configuration(
+        _phase35_registered_product_admin.__class__
+    )
+# END PHASE 35 BILINGUAL CATALOG EDITOR
+
+# BEGIN PHASE39_ADMIN
+from . import phase39_admin  # noqa: E402,F401
+# END PHASE39_ADMIN

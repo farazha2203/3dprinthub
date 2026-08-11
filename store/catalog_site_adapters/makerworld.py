@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+
+import math
 import re
 from urllib.error import HTTPError
 from urllib.parse import urljoin
@@ -8,6 +10,21 @@ from .common import CatalogCandidate
 from .html_site import HTMLCatalogAdapter
 from ..makerworld_next_data import extract_record
 
+
+
+# BEGIN PHASE 43.1 MAKERWORLD PRINT TIME NORMALIZATION
+def _makerworld_print_time_minutes(value):
+    "Convert MakerWorld raw seconds to whole minutes."
+    if isinstance(value, bool):
+        return None
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(seconds) or seconds <= 0:
+        return None
+    return max(1, math.ceil(seconds / 60))
+# END PHASE 43.1 MAKERWORLD PRINT TIME NORMALIZATION
 
 class MakerWorldAdapter(HTMLCatalogAdapter):
     key = "makerworld"
@@ -159,7 +176,7 @@ class MakerWorldAdapter(HTMLCatalogAdapter):
             "file_links": [],
             "file_formats": ["3MF"] if record.get("is_printable") else [],
             "estimated_weight_grams": first_profile.get("weight"),
-            "estimated_print_minutes": first_profile.get("print_time"),
+            "estimated_print_minutes": _makerworld_print_time_minutes(first_profile.get("print_time")),
             "estimate_source": "makerworld_profile" if first_profile else "",
             "commercial_use_allowed": commercial_allowed,
             "license_review_status": review_status,

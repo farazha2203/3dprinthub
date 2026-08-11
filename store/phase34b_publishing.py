@@ -68,10 +68,16 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
     product=Product(
         category=category,
         title=(asset.persian_title or asset.title)[:220],
+        title_en=(asset.source_title or asset.title)[:220],
         slug=slug,
         sku=f"MW-FIX-{asset.pk:07d}",
         short_description=(asset.persian_short_description or asset.short_description or asset.title)[:350],
+        short_description_en=(asset.short_description or asset.source_title or asset.title)[:500],
         description=asset.persian_description or asset.description,
+        description_en=asset.source_description or asset.description,
+        source_url=asset.source_url,
+        source_name=asset.source.name,
+        source_external_id=asset.external_id,
         technical_notes=(
             f"منبع: {asset.source.name}\nصفحه اصلی: {asset.source_url}\n"
             f"طراح: {asset.author_name or '-'}\nمجوز: {asset.license_name or '-'}\n"
@@ -83,7 +89,9 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
         robots_follow=False,
         order_mode="fixed",
         fixed_price=asset.fixed_print_price,
-        consultation_required=False,
+        price_is_final=asset.price_is_final,
+        price_note=asset.pricing_note,
+        consultation_required=not asset.price_is_final,
     )
     _copy_image(asset.preview_image,product.main_image,Path(asset.preview_image.name).name)
     product.save()

@@ -65,7 +65,7 @@ def product_schema_json(product, variants, request, seo):
     images += [_absolute(request, obj.image.url) for obj in product.images.all()[:8]]
     url=_absolute(request, product.get_absolute_url())
     group_id=f"{url}#product"
-    group={"@type":"ProductGroup", "@id":group_id, "name":product.title, "description":product.short_description, "url":url, "image":images, "productGroupID":product.sku, "brand":{"@type":"Brand", "name":product.brand_name or "3DprintHub"}, "category":product.category.name, "variesBy":["https://schema.org/material"]}
+    group={"@type":"ProductGroup", "@id":group_id, "name":product.title, "description":product.short_description, "url":url, "image":images, "productGroupID":product.sku, "brand":{"@type":"Brand", "name":product.brand_name or "3DprintHub"}, "category":product.category.name, "variesBy":["https://schema.org/material", "https://schema.org/color"]}
     has_variant=[]
     availability={"in_stock":"https://schema.org/InStock", "made_to_order":"https://schema.org/PreOrder", "preorder":"https://schema.org/PreOrder", "out_of_stock":"https://schema.org/OutOfStock"}
     for variant in variants:
@@ -77,7 +77,9 @@ def product_schema_json(product, variants, request, seo):
         offer={"@type":"Offer", "url":url, "priceCurrency":"IRR", "price":int(variant.cached_unit_price)*10, "availability":availability.get(stock_key, "https://schema.org/InStock"), "itemCondition":"https://schema.org/NewCondition", "seller":{"@id":(seo.site_url.rstrip("/") + "/#organization") if seo else url + "#seller"}}
         if seo:
             offer["shippingDetails"]={"@type":"OfferShippingDetails", "shippingRate":{"@type":"MonetaryAmount", "value":int(seo.shipping_rate)*10, "currency":"IRR"}, "shippingDestination":{"@type":"DefinedRegion", "addressCountry":seo.country_code or "IR"}, "deliveryTime":{"@type":"ShippingDeliveryTime", "handlingTime":{"@type":"QuantitativeValue", "minValue":seo.handling_min_days, "maxValue":seo.handling_max_days, "unitCode":"DAY"}, "transitTime":{"@type":"QuantitativeValue", "minValue":seo.transit_min_days, "maxValue":seo.transit_max_days, "unitCode":"DAY"}}}
-        item={"@type":"Product", "name":f"{product.title} - {variant.material.name} - {variant.quality.name}", "sku":variant.code, "material":variant.material.name, "isVariantOf":{"@id":group_id}, "offers":offer}
+        variant_name=f"{product.title} - {variant.material.name}" + (f" - {variant.color.name}" if getattr(variant, "color_id", None) else "") + f" - {variant.quality.name}"
+        item={"@type":"Product", "name":variant_name, "sku":variant.code, "material":variant.material.name, "isVariantOf":{"@id":group_id}, "offers":offer}
+        if getattr(variant, "color_id", None): item["color"]=variant.color.name
         if product.mpn: item["mpn"]=product.mpn
         if product.gtin: item["gtin"]=product.gtin
         has_variant.append(item)

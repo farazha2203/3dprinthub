@@ -157,7 +157,32 @@ class ManualPaymentForm(forms.ModelForm):
         return image
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.ImageField):
+    MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput(attrs={"class": "form-input", "accept": "image/*"}))
+        super().__init__(*args, **kwargs)
+
+    def _clean_one(self, item, initial=None):
+        value = super().clean(item, initial)
+        if value and getattr(value, "size", 0) > self.MAX_IMAGE_BYTES:
+            raise forms.ValidationError("حجم هر تصویر باید حداکثر ۸ مگابایت باشد.")
+        return value
+
+    def clean(self, data, initial=None):
+        if isinstance(data, (list, tuple)):
+            return [self._clean_one(item, initial) for item in data]
+        return [self._clean_one(data, initial)] if data else []
+
+
 class ProductReviewForm(forms.ModelForm):
+    images = MultipleFileField(required=False, label="تصاویر تجربه واقعی شما")
+
     class Meta:
         model = ProductReview
         fields = ["rating", "title", "body"]

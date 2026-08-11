@@ -1,7 +1,8 @@
+from django import forms
 from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.urls import reverse
+from django.urls import path, reverse
 
 
 
@@ -80,7 +81,77 @@ class OrderReviewAdmin(admin.ModelAdmin):
 
 @admin.register(SiteSetting)
 class SiteSettingAdmin(admin.ModelAdmin):
-    list_display = ["brand_name", "phone", "whatsapp", "telegram", "email", "default_deposit_percent", "online_payment_enabled", "online_payment_provider", "primary_color", "secondary_color"]
+    change_form_template = "admin/website/sitesetting/change_form.html"
+    list_display = [
+        "brand_name", "phone", "whatsapp", "telegram", "email",
+        "telegram_operator_enabled", "default_deposit_percent",
+        "online_payment_enabled", "online_payment_provider",
+    ]
+    readonly_fields = ["telegram_status"]
+    fieldsets = (
+        ("برند و ظاهر", {
+            "fields": ("brand_name", "logo", "primary_color", "secondary_color", "accent_color"),
+        }),
+        ("صفحه اصلی", {
+            "fields": ("hero_title", "hero_subtitle"),
+        }),
+        ("تماس با ما", {
+            "fields": (
+                "contact_eyebrow", "contact_title", "contact_description", "contact_location_title",
+                "phone", "whatsapp", "email", "instagram", "telegram",
+                "address", "working_hours", "map_embed_url",
+            ),
+            "description": "متن، تلفن، واتساپ، ایمیل، آدرس، ساعت کاری و نقشه بخش تماس سایت از همین قسمت مدیریت می‌شود.",
+        }),
+        ("تلگرام و اعلان اپراتور", {
+            "fields": (
+                "telegram_operator_enabled", "telegram_operator_bot_token",
+                "telegram_operator_chat_id", "operator_alert_emails", "telegram_status",
+            ),
+            "description": "برای سفارش، قیمت‌گذاری و پیام جدید پشتیبانی. Environment در صورت تعریف، اولویت دارد.",
+        }),
+        ("پرداخت", {
+            "fields": (
+                "payment_card_number", "payment_card_holder", "default_deposit_percent",
+                "online_payment_enabled", "online_payment_provider", "online_payment_title",
+                "online_payment_minimum_toman",
+            ),
+        }),
+        ("SEO", {"fields": ("meta_title", "meta_description")}),
+    )
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "telegram_operator_bot_token" and formfield is not None:
+            formfield.widget = forms.PasswordInput(render_value=True, attrs={"autocomplete": "new-password"})
+        return formfield
+
+    @admin.display(description="وضعیت تلگرام")
+    def telegram_status(self, obj):
+        if not obj or not obj.telegram_operator_enabled:
+            return "غیرفعال"
+        if obj.telegram_operator_bot_token and obj.telegram_operator_chat_id:
+            return format_html('<span style="color:#15803d;font-weight:700">آماده تست</span>')
+        return format_html('<span style="color:#b45309;font-weight:700">توکن یا Chat ID ناقص است</span>')
+
+    def get_urls(self):
+        return [
+            path("test-telegram/", self.admin_site.admin_view(self.test_telegram_view), name="website_sitesetting_test_telegram"),
+        ] + super().get_urls()
+
+    def test_telegram_view(self, request):
+        if not self.has_change_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        from django.shortcuts import redirect
+        from store.operator_notifications import send_telegram_message
+        sent, error = send_telegram_message("✅ پیام آزمایشی 3DPrintHub: اتصال تلگرام پنل مدیریت برقرار است.")
+        if sent:
+            self.message_user(request, "پیام آزمایشی تلگرام با موفقیت ارسال شد.", level=messages.SUCCESS)
+        else:
+            self.message_user(request, f"ارسال تلگرام ناموفق بود: {error}", level=messages.ERROR)
+        row = SiteSetting.objects.first()
+        return redirect("admin:website_sitesetting_change", row.pk) if row else redirect("admin:website_sitesetting_changelist")
 
 
 @admin.register(Material)

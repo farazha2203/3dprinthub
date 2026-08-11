@@ -90,7 +90,13 @@ if DB_NAME:
             "PASSWORD": os.getenv("DB_PASSWORD", ""),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4"},
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": (
+                    "SET SESSION default_storage_engine='InnoDB', "
+                    "SESSION sql_mode='STRICT_TRANS_TABLES'"
+                ),
+            },
             "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
         }
     }

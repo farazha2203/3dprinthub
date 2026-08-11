@@ -14,12 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         const extra = Number(option.dataset.postFee || 0) + Number(option.dataset.fixedFee || 0);
-        document.getElementById("price-material").textContent = formatToman(option.dataset.materialCost);
-        document.getElementById("price-machine").textContent = formatToman(option.dataset.machineCost);
-        document.getElementById("price-labor").textContent = formatToman(option.dataset.laborCost);
-        document.getElementById("price-extra").textContent = formatToman(extra);
-        document.getElementById("price-total").textContent = formatToman(option.dataset.total);
-        document.getElementById("variant-meta").textContent = `وزن مصرفی ${option.dataset.weight} گرم • زمان چاپ ${option.dataset.printTime} دقیقه • ${option.dataset.material} • ${option.dataset.quality}`;
+        const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        setText("price-material", formatToman(option.dataset.materialCost));
+        setText("price-machine", formatToman(option.dataset.machineCost));
+        setText("price-labor", formatToman(option.dataset.laborCost));
+        setText("price-extra", formatToman(extra));
+        setText("price-total", formatToman(option.dataset.total));
+        const color = option.dataset.color ? ` • رنگ ${option.dataset.color}` : "";
+        setText("variant-meta", `وزن مصرفی ${option.dataset.weight} گرم • زمان چاپ ${option.dataset.printTime} دقیقه • ${option.dataset.material}${color} • ${option.dataset.quality}`);
         breakdown.classList.remove("hidden");
         if (orderButton) orderButton.disabled = false;
         if (variantInput) variantInput.value = option.value;
