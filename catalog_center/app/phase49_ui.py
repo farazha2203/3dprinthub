@@ -52,6 +52,32 @@ def keep_only_gallery_urls(urls, selected, primary: str, keep_urls) -> tuple[lis
     return ordered, selected_ordered, primary
 
 
+def _ack_summary(row) -> list[str]:
+    if row is None:
+        return []
+    try:
+        ack = json.loads(row["server_ack_json"] or "{}")
+    except Exception:
+        ack = {}
+    if not isinstance(ack, dict) or not ack:
+        return []
+    public = ack.get("public_http_checks") if isinstance(ack.get("public_http_checks"), dict) else {}
+    product_check = public.get("product") if isinstance(public.get("product"), dict) else {}
+    image_checks = public.get("images") if isinstance(public.get("images"), list) else []
+    main_check = image_checks[0] if image_checks and isinstance(image_checks[0], dict) else {}
+    return [
+        "=== Final Store Acceptance ===",
+        f"Store visible: {ack.get('visible_on_store', '—')}",
+        f"Public HTTP OK: {ack.get('public_http_ok', '—')}",
+        f"Product HTTP: {ack.get('public_product_http_status') or product_check.get('http_status') or '—'}",
+        f"Main image HTTP: {ack.get('public_main_image_http_status') or main_check.get('http_status') or '—'}",
+        f"Product URL: {ack.get('product_url') or '—'}",
+        f"Main image URL: {ack.get('public_main_image_url') or public.get('main_image_url') or '—'}",
+        f"Diagnostic: {ack.get('diagnostic_id') or '—'}",
+        "",
+    ]
+
+
 def receipt_lines(row, receipts) -> str:
     parts = [
         f"Product ID: {row['id'] if row is not None else '—'}",
@@ -60,8 +86,9 @@ def receipt_lines(row, receipts) -> str:
         f"Last sync: {(row['last_synced_at'] if row is not None else '') or '—'}",
         f"Error: {(row['product_sync_error'] if row is not None else '') or '—'}",
         "",
-        "=== Receipts ===",
     ]
+    parts.extend(_ack_summary(row))
+    parts.append("=== Receipts ===")
     for receipt in receipts:
         try:
             payload = json.loads(receipt["payload_json"] or "{}")
