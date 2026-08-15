@@ -1,0 +1,15 @@
+{
+  "phase": "48.2-v2.1",
+  "source": "D:\\projects\\3dprinthub_catalog_center",
+  "destination": "D:\\projects\\3DPrintHub\\catalog_center",
+  "copied_file_count": 88,
+  "excluded_entry_count": 53,
+  "runtime_secret_files_included": false,
+  "database_files_included": false,
+  "expected_source_hashes": {
+    "app\\main.py": "35122d5f539e5fc00f428a534f99a5df128d07854e19cc318ec93a748d48404e",
+    "app\\crawler.py": "2938f80cf70f3848233176445484f36976b588720dcc345d1a2ba8efb8e8a825",
+    "app\\site_connection.py": "fa935555e882066885b88bf53a91a22ce809ddc0d7a5d1bd7f715c1ac9253328",
+    "app\\batch_packaging.py": "864aedd8a6b7807edf753cf927710702afb158e90a0fc878d8df00d5f66d3c66"
+  }
+}
