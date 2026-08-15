@@ -128,6 +128,19 @@ def upsert_asset(source: PrintCatalogSource, data: dict):
         "fingerprint": data.get("fingerprint") or "",
         "source_hash": data.get("source_hash") or "",
         "batch_uuid": data.get("batch_uuid") or "",
+        "product_type": data.get("product_type") or "ready_product",
+        "use_description": data.get("use_description") or "",
+        "dimensions": data.get("dimensions") or "",
+        "materials": safe_json(data.get("materials_json"), []),
+        "colors": safe_json(data.get("colors_json"), []),
+        "availability_status": data.get("availability_status") or "made_to_order",
+        "stock_quantity": data.get("stock_quantity") or 0,
+        "lead_time_min_days": data.get("lead_time_min_days") or 1,
+        "lead_time_max_days": data.get("lead_time_max_days") or 1,
+        "has_3d_file": bool(data.get("has_3d_file")),
+        "source_name": data.get("source_name") or "",
+        "technical_features": safe_json(data.get("technical_features_json"), {}),
+        "keywords": safe_json(data.get("keywords_json"), []),
     }
     values = {
         "source_url": url,
@@ -150,7 +163,7 @@ def upsert_asset(source: PrintCatalogSource, data: dict):
         "commercial_license_status": commercial,
         "editorial_status": editorial,
         "status": "reviewed" if approved else "pending",
-        "source_payload": {"desktop_catalog_v84": data, "content_pack": content_pack},
+        "source_payload": {"desktop_catalog_v85": data, "content_pack": content_pack},
     }
     if asset is None:
         asset = ImportedPrintAsset.objects.create(source=source, **values)
@@ -217,6 +230,43 @@ def apply_phase39_product_intelligence(product, data: dict) -> None:
         )
 
 
+def apply_phase43_product_details(product, data: dict) -> None:
+    """Preserve v8.5 commerce details without requiring a production schema migration."""
+    if not product:
+        return
+    details = {
+        "product_type": data.get("product_type") or "ready_product",
+        "use_description": data.get("use_description") or "",
+        "dimensions": data.get("dimensions") or "",
+        "materials": safe_json(data.get("materials_json"), []),
+        "colors": safe_json(data.get("colors_json"), []),
+        "availability_status": data.get("availability_status") or "made_to_order",
+        "stock_quantity": int(data.get("stock_quantity") or 0),
+        "lead_time_min_days": max(0, int(data.get("lead_time_min_days") or 0)),
+        "lead_time_max_days": max(0, int(data.get("lead_time_max_days") or 0)),
+        "has_3d_file": bool(data.get("has_3d_file")),
+        "source_name": data.get("source_name") or "",
+        "technical_features": safe_json(data.get("technical_features_json"), {}),
+        "keywords": safe_json(data.get("keywords_json"), []),
+    }
+    note_marker = "\n\n[Catalog Intelligence v8.5]\n"
+    existing_notes = str(getattr(product, "technical_notes", "") or "")
+    if note_marker in existing_notes:
+        existing_notes = existing_notes.split(note_marker, 1)[0]
+    product.technical_notes = existing_notes + note_marker + json.dumps(details, ensure_ascii=False, indent=2)
+    update_fields = ["technical_notes"]
+    if hasattr(product, "fixed_delivery_days"):
+        product.fixed_delivery_days = max(1, details["lead_time_max_days"] or details["lead_time_min_days"] or 1)
+        update_fields.append("fixed_delivery_days")
+    if hasattr(product, "consultation_required"):
+        product.consultation_required = details["product_type"] == "custom_order" or details["availability_status"] == "quote_required"
+        update_fields.append("consultation_required")
+    if details["use_description"] and hasattr(product, "short_description"):
+        product.short_description = details["use_description"][:350]
+        update_fields.append("short_description")
+    product.save(update_fields=list(dict.fromkeys(update_fields + (["updated_at"] if hasattr(product, "updated_at") else []))))
+
+
 def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int:
     urls = safe_json(data.get("images_json"), [])
     alt_texts = safe_json(data.get("image_alt_texts_json"), [])
@@ -258,7 +308,7 @@ def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int
 
 
 class Command(BaseCommand):
-    help = "Import a v8.4 batch created by 3DPrintHub Catalog Intelligence and emit machine-readable ACK."
+    help = "Import a v8.5 batch created by 3DPrintHub Catalog Intelligence and emit machine-readable ACK."
 
     def add_arguments(self, parser):
         parser.add_argument("batch_path")
@@ -270,8 +320,8 @@ class Command(BaseCommand):
         if not batch_file.is_file():
             raise CommandError(f"Batch manifest not found: {batch_file}")
         batch = json.loads(batch_file.read_text(encoding="utf-8"))
-        if str(batch.get("schema_version") or "") != "8.4":
-            raise CommandError("Unsupported batch schema; expected 8.4.")
+        if str(batch.get("schema_version") or "") != "8.5":
+            raise CommandError("Unsupported batch schema; expected 8.5.")
         batch_uuid = str(batch.get("batch_uuid") or "")
         imported = failed = products = portfolios = 0
         ack_items = []
@@ -299,6 +349,7 @@ class Command(BaseCommand):
                     if data.get("publish_as_product") and data.get("approved_for_sale") and license_ok:
                         product = convert_to_fixed_product(asset)
                         apply_phase39_product_intelligence(product, data)
+                        apply_phase43_product_details(product, data)
                         products += 1
                     if data.get("publish_as_portfolio") and license_ok:
                         portfolio = convert_to_portfolio(asset)
@@ -343,7 +394,7 @@ class Command(BaseCommand):
                     break
 
         ack_payload = {
-            "schema_version": "8.4",
+            "schema_version": "8.5",
             "batch_uuid": batch_uuid,
             "imported_count": imported,
             "failed_count": failed,
@@ -361,4 +412,4 @@ class Command(BaseCommand):
         # Backward compatibility markers retained for older desktop contract tests.
         # "schema_version": "8.3"
         # CATALOG_INTELLIGENCE_V8_3_IMPORT=OK
-        self.stdout.write("CATALOG_INTELLIGENCE_V8_4_IMPORT=OK")
+        self.stdout.write("CATALOG_INTELLIGENCE_V8_5_IMPORT=OK")

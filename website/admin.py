@@ -954,3 +954,138 @@ class SupportMessageAdmin(admin.ModelAdmin):
     def short_body(self, obj):
         return (obj.body[:80] + "…") if len(obj.body) > 80 else obj.body
 # END PHASE 19 SUPPORT CHAT AND PRIVATE ORDER ATTACHMENT ADMIN
+
+# BEGIN PHASE 45 MANAGED HOMEPAGE HERO ADMIN
+import html as _phase45_html
+from django.utils.safestring import mark_safe as _phase45_mark_safe
+from .models import HomepageHeroSlide
+
+
+@admin.register(HomepageHeroSlide)
+class HomepageHeroSlideAdmin(admin.ModelAdmin):
+    list_display = (
+        "slide_preview",
+        "effective_title_display",
+        "group_display",
+        "asset",
+        "sort_order",
+        "is_active",
+        "updated_at",
+    )
+    list_editable = ("sort_order", "is_active")
+    list_filter = ("is_active", "object_fit", "focal_position", "updated_at")
+    search_fields = (
+        "title_override",
+        "group_title",
+        "description",
+        "asset__title",
+        "asset__external_id",
+        "asset__source_url",
+    )
+    autocomplete_fields = ("asset",)
+    readonly_fields = ("selected_image_preview", "candidate_image_gallery", "created_at", "updated_at")
+    actions = ("activate_selected", "deactivate_selected")
+    list_select_related = ("asset", "asset__source")
+
+    fieldsets = (
+        ("۱. انتخاب محصول", {
+            "fields": ("asset", "candidate_image_gallery"),
+            "description": "محصول را جستجو و ذخیره کنید. سپس از گالری پیشنهادی، عکس موردنظر Hero را با یک کلیک انتخاب کنید.",
+        }),
+        ("۲. تصویر Hero", {
+            "fields": ("image_url", "selected_image_preview", "image_alt_text", "object_fit", "focal_position"),
+            "description": "Cover برای عکس‌های عریض تمام‌صفحه مناسب است؛ برای محصولاتی که نباید برش بخورند Contain را انتخاب کنید.",
+        }),
+        ("۳. نوشته روی عکس", {
+            "fields": ("group_title", "title_override", "description", "button_text"),
+            "description": "این نوشته‌ها فقط اطلاعات همان محصول هستند. معرفی اصلی مجموعه در بخش جداگانه زیر اسلایدر نمایش داده می‌شود.",
+        }),
+        ("۴. تأیید انتشار", {
+            "fields": ("sort_order", "is_active", "created_at", "updated_at"),
+            "description": "تا زمانی که «تأیید و نمایش در اسلایدر» فعال نباشد، اسلاید در صفحه اصلی دیده نمی‌شود.",
+        }),
+    )
+
+    class Media:
+        css = {"all": ("css/admin-phase45-hero.css",)}
+        js = ("js/admin-phase45-hero.js",)
+
+    @admin.display(description="تصویر")
+    def slide_preview(self, obj):
+        url = obj.effective_image_url
+        if not url:
+            return "—"
+        return format_html('<img src="{}" class="p45-admin-list-thumb" alt="">', url)
+
+    @admin.display(description="عنوان")
+    def effective_title_display(self, obj):
+        return obj.effective_title
+
+    @admin.display(description="گروه")
+    def group_display(self, obj):
+        return obj.effective_group_title
+
+    @admin.display(description="پیش‌نمایش عکس انتخاب‌شده")
+    def selected_image_preview(self, obj):
+        if not obj:
+            return "بعد از انتخاب محصول، پیش‌نمایش در این قسمت نمایش داده می‌شود."
+        url = obj.effective_image_url
+        if not url:
+            return "برای این محصول تصویر قابل نمایش پیدا نشد."
+        return format_html(
+            '<div class="p45-admin-selected"><img id="p45-selected-preview" src="{}" alt=""><span>تصویری که در Hero استفاده می‌شود</span></div>',
+            url,
+        )
+
+    @admin.display(description="گالری تصاویر همین محصول")
+    def candidate_image_gallery(self, obj):
+        if not obj or not obj.pk or not obj.asset_id:
+            return "ابتدا محصول را انتخاب و یک‌بار ذخیره کنید؛ سپس تصاویر همان محصول اینجا قابل انتخاب می‌شوند."
+        urls = obj.candidate_image_urls()
+        if not urls:
+            return "تصویر پیشنهادی برای این محصول پیدا نشد؛ می‌توانید URL تصویر را دستی وارد کنید."
+        cards = []
+        selected = obj.effective_image_url
+        for index, url in enumerate(urls, start=1):
+            safe_url = _phase45_html.escape(url, quote=True)
+            selected_class = " is-selected" if url == selected else ""
+            cards.append(
+                '<button type="button" class="p45-admin-image-choice{}" data-image-url="{}" title="انتخاب تصویر {}">'
+                '<img src="{}" alt="تصویر {}"><span>{}</span></button>'.format(
+                    selected_class,
+                    safe_url,
+                    index,
+                    safe_url,
+                    index,
+                    index,
+                )
+            )
+        return _phase45_mark_safe('<div class="p45-admin-gallery">' + "".join(cards) + "</div>")
+
+    @admin.action(description="تأیید و فعال‌سازی اسلایدهای انتخاب‌شده")
+    def activate_selected(self, request, queryset):
+        queryset.update(is_active=True)
+
+    @admin.action(description="غیرفعال‌کردن اسلایدهای انتخاب‌شده")
+    def deactivate_selected(self, request, queryset):
+        queryset.update(is_active=False)
+
+
+# The legacy presentation setting no longer controls which assets enter Hero.
+_phase45_presentation_admin = admin.site._registry.get(HomePresentationSetting)
+if _phase45_presentation_admin is not None:
+    _phase45_presentation_admin.fieldsets = (
+        ("معرفی صفحه اول", {
+            "fields": ("hero_badge", "catalog_heading", "catalog_preview_count"),
+            "description": "انتخاب تصاویر Hero از بخش «اسلایدهای صفحه اصلی» انجام می‌شود. این قسمت فقط متن معرفی و تعداد مدل‌های بخش‌های پایین صفحه را کنترل می‌کند.",
+        }),
+        ("بخش‌های اعتماد", {
+            "fields": ("show_team_section", "show_clients_section"),
+        }),
+        ("تنظیمات قدیمی نمایش مدل", {
+            "fields": ("hero_slider_count", "randomize_hero"),
+            "classes": ("collapse",),
+            "description": "این دو گزینه برای سازگاری بخش‌های قدیمی نگه داشته شده‌اند و دیگر انتخاب اسلاید Hero را انجام نمی‌دهند.",
+        }),
+    )
+# END PHASE 45 MANAGED HOMEPAGE HERO ADMIN

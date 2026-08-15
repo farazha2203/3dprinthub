@@ -382,3 +382,15 @@ ZARINPAL_SANDBOX_REQUEST_URL = os.getenv("ZARINPAL_SANDBOX_REQUEST_URL", "https:
 ZARINPAL_SANDBOX_VERIFY_URL = os.getenv("ZARINPAL_SANDBOX_VERIFY_URL", "https://sandbox.zarinpal.com/pg/v4/payment/verify.json").strip()
 ZARINPAL_SANDBOX_START_URL = os.getenv("ZARINPAL_SANDBOX_START_URL", "https://sandbox.zarinpal.com/pg/StartPay/").strip()
 # END PHASE 30 ONLINE PAYMENT GATEWAY
+
+# BEGIN PHASE 48 CATALOG PUBLISHING BRIDGE
+CATALOG_BRIDGE_TOKEN = os.getenv("CATALOG_BRIDGE_TOKEN", "").strip()
+CATALOG_BRIDGE_PENDING_ROOT = Path(
+    os.getenv(
+        "CATALOG_BRIDGE_PENDING_ROOT",
+        str(BASE_DIR / "imports" / "desktop_catalog" / "pending"),
+    )
+)
+if "catalog_bridge.apps.CatalogBridgeConfig" not in INSTALLED_APPS:
+    INSTALLED_APPS.append("catalog_bridge.apps.CatalogBridgeConfig")
+# END PHASE 48 CATALOG PUBLISHING BRIDGE

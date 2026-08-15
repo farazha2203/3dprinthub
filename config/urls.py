@@ -27,6 +27,7 @@ urlpatterns = [
     path("smart-admin/", sb_admin_site.urls),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("store/", include("store.urls")),
+    path("api/catalog-bridge/v1/", include("catalog_bridge.urls")),
     path("", include("website.urls")),
 ]
 

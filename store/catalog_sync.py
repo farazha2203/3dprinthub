@@ -600,3 +600,47 @@ def public_catalog_queryset():
         )
         .order_by("source_priority_order", "metrics__popularity_rank", "-metrics__downloads_count", "-imported_at", "title")
     )
+
+
+# BEGIN PHASE 46 READY ORDER CATALOG
+def public_catalog_order_code(asset_or_pk) -> str:
+    """Stable public order code derived from the existing catalog asset primary key."""
+    value = getattr(asset_or_pk, "pk", asset_or_pk)
+    try:
+        pk = int(value)
+    except (TypeError, ValueError):
+        return ""
+    if pk < 1:
+        return ""
+    return f"PH-{pk:06d}"
+
+
+def ready_order_catalog_queryset():
+    """Catalog items with a retained local model file eligible for direct ordering."""
+    return public_catalog_queryset().filter(
+        Q(archive_status__in=["downloaded", "archived", "ordered"])
+        | (Q(archived_model_file__isnull=False) & ~Q(archived_model_file=""))
+        | (Q(product__model_file__isnull=False) & ~Q(product__model_file=""))
+    )
+
+
+def resolve_ready_order_asset(value):
+    """Resolve PH-xxxxxx, numeric asset id, or attached Product SKU."""
+    import re as _phase46_re
+
+    token = str(value or "").strip()
+    if not token:
+        return None
+
+    normalized = token.upper().replace(" ", "")
+    qs = ready_order_catalog_queryset()
+
+    match = _phase46_re.fullmatch(r"PH-(\d{1,12})", normalized)
+    if match:
+        return qs.filter(pk=int(match.group(1))).first()
+
+    if normalized.isdigit():
+        return qs.filter(pk=int(normalized)).first()
+
+    return qs.filter(product__sku__iexact=token).first()
+# END PHASE 46 READY ORDER CATALOG

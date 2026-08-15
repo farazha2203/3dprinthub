@@ -82,6 +82,18 @@ class Phase10OrderForm(forms.ModelForm):
         help_text="فایل برای شما نمایش یا ارسال نمی‌شود؛ فقط نام مدل موجود را انتخاب می‌کنید.",
     )
     ready_catalog_asset_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    ready_catalog_code = forms.CharField(
+        required=False,
+        label="کد محصول آماده",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-input p46-ready-code-input",
+                "placeholder": "مثلاً PH-000123 یا SKU محصول",
+                "autocomplete": "off",
+                "data-p46-ready-code": "",
+            }
+        ),
+    )
     usage_environment = forms.ChoiceField(
         choices=OrderIntakeDetail.ENVIRONMENT_CHOICES,
         initial="unknown",
@@ -202,8 +214,13 @@ class Phase10OrderForm(forms.ModelForm):
             self.fields["color"].initial = initial_reusable.default_color
             self.fields["quantity"].initial = initial_reusable.default_quantity
         if ready_catalog_asset_id and not self.is_bound:
-            self.fields["request_mode"].initial = "ready_catalog"
-            self.fields["ready_catalog_asset_id"].initial = ready_catalog_asset_id
+            from store.catalog_sync import public_catalog_order_code, ready_order_catalog_queryset
+
+            ready_asset = ready_order_catalog_queryset().filter(pk=ready_catalog_asset_id).first()
+            if ready_asset is not None:
+                self.fields["request_mode"].initial = "ready_catalog"
+                self.fields["ready_catalog_asset_id"].initial = ready_asset.pk
+                self.fields["ready_catalog_code"].initial = public_catalog_order_code(ready_asset)
 
     def clean(self):
         cleaned = super().clean()
@@ -222,14 +239,25 @@ class Phase10OrderForm(forms.ModelForm):
             elif not self.user or not self.user.is_authenticated or model.customer_id != self.user.id:
                 self.add_error("reusable_model", "این مدل متعلق به حساب شما نیست.")
         elif mode == "ready_catalog":
-            asset_id = cleaned.get("ready_catalog_asset_id")
-            if not asset_id:
-                self.add_error("ready_catalog_asset_id", "مدل آماده انتخاب نشده است.")
-            else:
-                from store.catalog_sync import public_catalog_queryset
+            from store.catalog_sync import public_catalog_order_code, ready_order_catalog_queryset, resolve_ready_order_asset
 
-                if not public_catalog_queryset().filter(pk=asset_id).exists():
-                    self.add_error("ready_catalog_asset_id", "این مدل آماده قابل سفارش عمومی نیست.")
+            asset = None
+            asset_id = cleaned.get("ready_catalog_asset_id")
+            code = cleaned.get("ready_catalog_code")
+
+            if asset_id:
+                asset = ready_order_catalog_queryset().filter(pk=asset_id).first()
+            if asset is None and code:
+                asset = resolve_ready_order_asset(code)
+
+            if asset is None:
+                self.add_error(
+                    "ready_catalog_code",
+                    "مدل آماده معتبر انتخاب نشده است. از فهرست انتخاب کنید یا کد محصول را وارد کنید.",
+                )
+            else:
+                cleaned["ready_catalog_asset_id"] = asset.pk
+                cleaned["ready_catalog_code"] = public_catalog_order_code(asset)
 
         if cleaned.get("contact_with_chemicals") and not cleaned.get("chemical_details"):
             self.add_error("chemical_details", "نوع ماده شیمیایی را توضیح دهید.")

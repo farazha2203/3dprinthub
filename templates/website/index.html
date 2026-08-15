@@ -75,10 +75,12 @@
     <!-- PHASE18_SLIDER_GRID_CSS -->
     <link rel="stylesheet" href="{% static 'css/phase18-catalog-display.css' %}">
     <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
-    {% if hero_model_slider.0.catalog_image_url %}<link rel="preload" as="image" href="{{ hero_model_slider.0.catalog_image_url }}" fetchpriority="high">{% endif %}
-    <link rel="stylesheet" href="{% static 'css/phase27-home-hero.css' %}">
+    {% if homepage_hero_slides.0.effective_image_url %}<link rel="preload" as="image" href="{{ homepage_hero_slides.0.effective_image_url }}" fetchpriority="high">{% endif %}
+    <link rel="stylesheet" href="{% static 'css/phase45-home-hero.css' %}?v=45.0.0">
+    <link rel="stylesheet" href="{% static 'css/phase46-home-experience.css' %}?v=46.0.0">
+    <!-- PHASE47_HOME_POLISH -->
+    <link rel="stylesheet" href="{% static 'css/phase47-home-polish.css' %}?v=47.0.0">
     <!-- PHASE44_HERO_GALLERY_CLEAR -->
-    <link rel="stylesheet" href="{% static 'css/phase44-hero-gallery-clear.css' %}?v=44.0.2">
 </head>
 
 <body class="bg-[#f6f9fc] text-slate-950 selection:bg-cyan-400 selection:text-white">
@@ -97,7 +99,7 @@
 
     {% include "website/partials/header.html" %}
 
-    <main>
+    <main class="p45-home">
         {% include "website/partials/hero.html" %}
         {% include "website/partials/services.html" %}
         {% include "website/partials/materials.html" %}
@@ -181,6 +183,9 @@
     <!-- PHASE14_PRESENTATION_JS -->
     <script src="{% static 'js/phase14-presentation.js' %}" defer></script>
     <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
-    <script src="{% static 'js/phase27-home-hero.js' %}" defer></script>
+    <script src="{% static 'js/phase45-home-hero.js' %}?v=45.0.0" defer></script>
+    <script src="{% static 'js/phase46-home-experience.js' %}?v=46.0.0" defer></script>
+    <!-- PHASE47_HOME_POLISH -->
+    <script src="{% static 'js/phase47-home-polish.js' %}?v=47.0.0" defer></script>
 </body>
 </html>

@@ -1,70 +1,61 @@
-<section class="py-24 bg-slate-950">
-    <div class="container mx-auto px-6">
-        <div class="text-center mb-12">
-            <span class="text-cyan-300 font-bold">راهنمای انتخاب</span>
-            <h2 class="text-3xl md:text-5xl font-black mt-3 section-title">
-                برای هر صنعت و هر قطعه چه متریالی مناسب است؟
-            </h2>
-        </div>
+{% load static %}
+<!-- PHASE46_MATERIAL_GUIDE -->
+<section class="p46-guide" data-p46-guide>
+  <div class="p46-shell">
+    <header class="p46-guide__head">
+      <span class="p46-eyebrow">راهنمای انتخاب</span>
+      <h2>برای هر صنعت و هر قطعه چه متریالی مناسب است؟</h2>
+      <p>راهنمای سریع برای شروع انتخاب متریال؛ انتخاب نهایی بر اساس دما، بار، سایش، مواد شیمیایی و شرایط واقعی کار توسط تیم فنی بررسی می‌شود.</p>
+    </header>
 
-        <div class="grid lg:grid-cols-2 gap-8">
-            <div class="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900">
-                <div class="p-6 border-b border-slate-800">
-                    <h3 class="text-2xl font-black">متریال مناسب برای صنایع</h3>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[500px] text-sm">
-                        <thead class="bg-slate-800 text-cyan-300">
-                            <tr>
-                                <th class="p-4 text-right">صنعت</th>
-                                <th class="p-4 text-right">متریال مناسب</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            {% for item in industry_recommendations %}
-                                <tr class="hover:bg-slate-800/60">
-                                    <td class="p-4 font-bold">{{ item.industry }}</td>
-                                    <td class="p-4 text-slate-300">{{ item.recommended_materials }}</td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="2" class="p-6 text-center text-slate-400">اطلاعاتی ثبت نشده است.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900">
-                <div class="p-6 border-b border-slate-800">
-                    <h3 class="text-2xl font-black">بهترین متریال برای قطعات</h3>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[500px] text-sm">
-                        <thead class="bg-slate-800 text-cyan-300">
-                            <tr>
-                                <th class="p-4 text-right">قطعه</th>
-                                <th class="p-4 text-right">بهترین متریال</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            {% for item in part_recommendations %}
-                                <tr class="hover:bg-slate-800/60">
-                                    <td class="p-4 font-bold">{{ item.part_name }}</td>
-                                    <td class="p-4 text-slate-300">{{ item.best_material }}</td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="2" class="p-6 text-center text-slate-400">اطلاعاتی ثبت نشده است.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <div class="p46-tabs" role="tablist" aria-label="راهنمای انتخاب متریال">
+      <button type="button" class="p46-tab is-active" id="p46-tab-industries"
+              role="tab" aria-selected="true" aria-controls="p46-panel-industries"
+              data-p46-tab="industries"><span>01</span>متریال مناسب برای صنایع</button>
+      <button type="button" class="p46-tab" id="p46-tab-parts"
+              role="tab" aria-selected="false" aria-controls="p46-panel-parts"
+              data-p46-tab="parts"><span>02</span>بهترین متریال برای قطعات</button>
     </div>
+
+    <div class="p46-guide__panel is-active" id="p46-panel-industries"
+         role="tabpanel" aria-labelledby="p46-tab-industries" data-p46-panel="industries">
+      <div class="p46-guide-grid">
+        {% for item in industry_recommendations %}
+          <article class="p46-guide-card">
+            <div class="p46-guide-card__index">{{ forloop.counter|stringformat:"02d" }}</div>
+            <div class="p46-guide-card__content">
+              <small>صنعت</small>
+              <h3>{{ item.industry }}</h3>
+              <div class="p46-material-pills" data-p46-materials>{{ item.recommended_materials }}</div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="p46-guide-empty">هنوز راهنمای صنعتی ثبت نشده است.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="p46-guide__panel" id="p46-panel-parts"
+         role="tabpanel" aria-labelledby="p46-tab-parts" data-p46-panel="parts" hidden>
+      <div class="p46-guide-grid">
+        {% for item in part_recommendations %}
+          <article class="p46-guide-card p46-guide-card--part">
+            <div class="p46-guide-card__index">{{ forloop.counter|stringformat:"02d" }}</div>
+            <div class="p46-guide-card__content">
+              <small>قطعه</small>
+              <h3>{{ item.part_name }}</h3>
+              <div class="p46-material-pills p46-material-pills--accent" data-p46-materials>{{ item.best_material }}</div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="p46-guide-empty">هنوز راهنمای قطعات ثبت نشده است.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <footer class="p46-guide__foot">
+      <span>انتخاب متریال نهایی فقط با نام قطعه انجام نمی‌شود.</span>
+      <a href="#order">مشخصات قطعه را برای بررسی مهندسی ثبت کنید</a>
+    </footer>
+  </div>
 </section>

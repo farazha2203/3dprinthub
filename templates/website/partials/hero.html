@@ -1,108 +1,80 @@
-{% load static humanize store_consultation %}
-<section id="home" class="p14-hero p27-home-hero" data-p27-home-hero>
-  <div class="p27-home-hero__background" data-p27-hero-slider data-p14-hero-slider aria-label="جدیدترین مدل‌های کاتالوگ چاپ سه‌بعدی">
-    {% if hero_model_slider %}
-      {% for asset in hero_model_slider %}
-        <a
-          class="p27-home-hero__slide{% if forloop.first %} is-active{% endif %}"
-          data-p27-hero-slide
-          href="{% url 'store:external_catalog_detail' asset.pk %}"
-          aria-label="مشاهده محصول {{ asset.title }}"
-        >
-          <img
-            class="p27-home-hero__backdrop"
-            src="{{ asset.catalog_image_url }}"
-            data-p27-fallback="{% static 'img/brand/logo-full.png' %}"
-            alt=""
-            width="1920"
-            height="1080"
-            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-            decoding="async"
-            aria-hidden="true"
-          >
-          <span class="p27-home-hero__subject-frame" aria-hidden="true">
-            <img
-              class="p27-home-hero__subject"
-              src="{{ asset.catalog_image_url }}"
-              data-p27-fallback="{% static 'img/brand/logo-full.png' %}"
-              alt="{{ asset.metrics.publication.image_alt_text|default:asset.title }}"
-              width="1920"
-              height="1080"
-              loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-              decoding="async"
-              {% if forloop.first %}fetchpriority="high"{% endif %}
-            >
-          </span>
-        </a>
-      {% endfor %}
-    {% else %}
-      <span class="p27-home-hero__slide is-active p27-home-hero__slide--fallback" aria-hidden="true">
-        <img class="p27-home-hero__backdrop" src="{% static 'img/brand/logo-full.png' %}" alt="" width="1920" height="1080">
-        <span class="p27-home-hero__subject-frame" aria-hidden="true">
-          <img class="p27-home-hero__subject" src="{% static 'img/brand/logo-full.png' %}" alt="" width="1920" height="1080">
-        </span>
-      </span>
-    {% endif %}
-  </div>
-
-  <div class="p27-home-hero__veil" aria-hidden="true"></div>
-  <div class="p27-home-hero__texture" aria-hidden="true"></div>
-
-  <div class="p14-container p27-home-hero__content">
-    <div class="p27-home-hero__copy">
-      <span class="p14-eyebrow p27-home-hero__eyebrow">{{ presentation_setting.hero_badge|default:"مرکز تخصصی طراحی، مهندسی معکوس و چاپ سه‌بعدی" }}</span>
-      <h1>{% if settings and settings.hero_title %}{{ settings.hero_title }}{% else %}طراحی و ساخت قطعات دقیق؛ از ایده تا قطعه نهایی{% endif %}</h1>
-      <p>{% if settings and settings.hero_subtitle %}{{ settings.hero_subtitle }}{% else %}طراحی CAD، مهندسی معکوس، انتخاب متریال مهندسی و چاپ سه‌بعدی قطعات صنعتی، کاربردی و سفارشی.{% endif %}</p>
-
-      <div class="p14-hero__actions p27-home-hero__actions">
-        {% if user.is_authenticated %}
-          <a class="p14-btn p14-btn--primary" href="#order">ثبت سفارش ساخت قطعه</a>
-          <a class="p14-btn p27-home-hero__ghost" href="{% url 'website:customer_dashboard' %}">پیگیری سفارش‌ها</a>
-        {% else %}
-          <a class="p14-btn p14-btn--primary" href="{% url 'website:customer_login' %}?next=/%23order">ورود و ثبت سفارش</a>
-          <a class="p14-btn p27-home-hero__ghost" href="{% url 'store:external_catalog' %}">دیدن مدل‌های آماده</a>
-        {% endif %}
-      </div>
-
-      <div class="p14-hero__proof p27-home-hero__proof">
-        <span><strong>طراحی دقیق</strong> CAD و مهندسی معکوس</span>
-        <span><strong>متریال مهندسی</strong> متناسب با کاربرد</span>
-        <span><strong>ساخت امن</strong> فایل داخلی تحویل داده نمی‌شود</span>
-      </div>
-    </div>
-
-    {% if hero_model_slider %}
-      <div class="p27-home-hero__product" aria-live="polite">
-        {% for asset in hero_model_slider %}
-          <div class="p27-home-hero__product-card{% if forloop.first %} is-active{% endif %}" data-p27-hero-caption>
-            {% url 'store:external_catalog_detail' asset.pk as hero_asset_url %}
-            <a href="{{ hero_asset_url }}" class="p27-home-hero__product-main">
-              <span class="p27-home-hero__product-source">{{ asset.source.name }}</span>
-              <strong>{{ asset.title }}</strong>
-              <small>{% if asset.metrics.downloads_count %}{{ asset.metrics.downloads_count|intcomma }} دانلود{% else %}جدیدترین ورودی کاتالوگ{% endif %}<span aria-hidden="true">←</span></small>
+{% load static %}
+<section id="home" class="p45-hero" data-p45-hero aria-label="مدل‌های منتخب 3DPrintHub">
+  <div class="p45-hero__viewport">
+    {% if homepage_hero_slides %}
+      <div class="p45-hero__track" data-p45-track>
+        {% for slide in homepage_hero_slides %}
+          <article class="p45-hero__slide{% if forloop.first %} is-active{% endif %}" data-p45-slide aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+            <a class="p45-hero__media" href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
+              <img
+                src="{{ slide.effective_image_url }}"
+                alt="{{ slide.effective_alt_text }}"
+                width="1920"
+                height="1080"
+                loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                decoding="async"
+                {% if forloop.first %}fetchpriority="high"{% endif %}
+                style="--p45-fit:{{ slide.object_fit }};--p45-position:{{ slide.focal_position }}"
+              >
             </a>
-            {% consultation_links asset.title hero_asset_url as consult %}
-            {% if consult.has_any %}<div class="p27-home-hero__consult">{% if consult.whatsapp %}<a class="wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">واتساپ</a>{% endif %}{% if consult.telegram %}<a class="tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">تلگرام</a>{% endif %}{% if consult.support %}<a class="site" href="{{ consult.support }}">پشتیبانی سایت</a>{% endif %}</div>{% endif %}
-          </div>
+            <div class="p45-hero__caption">
+              <span class="p45-hero__group">{{ slide.effective_group_title }}</span>
+              <h2>{{ slide.effective_title }}</h2>
+              {% if slide.description %}<p>{{ slide.description }}</p>{% endif %}
+              <a class="p45-hero__product-link" href="{{ slide.target_url }}">
+                <span>{{ slide.button_text|default:"مشاهده محصول" }}</span>
+                <span aria-hidden="true">←</span>
+              </a>
+            </div>
+          </article>
         {% endfor %}
       </div>
 
-      {% if hero_model_slider|length > 1 %}
-        <div class="p27-home-hero__controls" aria-label="کنترل اسلایدر">
-          <button type="button" data-p27-hero-prev aria-label="اسلاید قبلی">›</button>
-          <div class="p27-home-hero__dots">
-            {% for asset in hero_model_slider %}
-              <button type="button" class="{% if forloop.first %}is-active{% endif %}" data-p27-hero-dot="{{ forloop.counter0 }}" aria-label="نمایش اسلاید {{ forloop.counter }}"></button>
+      {% if homepage_hero_slides|length > 1 %}
+        <div class="p45-hero__controls" aria-label="کنترل اسلایدر">
+          <button type="button" class="p45-hero__arrow" data-p45-prev aria-label="اسلاید قبلی">›</button>
+          <div class="p45-hero__dots" role="tablist" aria-label="انتخاب اسلاید">
+            {% for slide in homepage_hero_slides %}
+              <button type="button" class="p45-hero__dot{% if forloop.first %} is-active{% endif %}" data-p45-dot="{{ forloop.counter0 }}" aria-label="اسلاید {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}"></button>
             {% endfor %}
           </div>
-          <button type="button" data-p27-hero-next aria-label="اسلاید بعدی">‹</button>
+          <button type="button" class="p45-hero__arrow" data-p45-next aria-label="اسلاید بعدی">‹</button>
         </div>
       {% endif %}
-    {% endif %}
-  </div>
 
-  <a class="p27-home-hero__scroll" href="#services" aria-label="رفتن به بخش خدمات">
-    <span>مشاهده خدمات</span>
-    <i aria-hidden="true"></i>
-  </a>
+      <div class="p45-hero__counter" aria-hidden="true"><span data-p45-current>01</span><i></i><span>{{ homepage_hero_slides|length|stringformat:"02d" }}</span></div>
+    {% else %}
+      <div class="p45-hero__fallback">
+        <img src="{% static 'img/brand/logo-full.png' %}" alt="3DPrintHub" width="720" height="360">
+      </div>
+    {% endif %}
+
+    <a href="#home-intro" class="p45-hero__scroll" aria-label="ادامه صفحه"><span>ادامه</span><i></i></a>
+  </div>
+</section>
+
+<section id="home-intro" class="p45-intro" aria-labelledby="home-intro-title">
+  <div class="p45-intro__shell">
+    <div class="p45-intro__heading">
+      <span class="p45-intro__eyebrow">{{ presentation_setting.hero_badge|default:"مرکز تخصصی طراحی، مهندسی معکوس و چاپ سه‌بعدی" }}</span>
+      <h1 id="home-intro-title">{% if settings and settings.hero_title %}{{ settings.hero_title }}{% else %}طراحی، چاپ سه‌بعدی و مهندسی معکوس قطعات صنعتی{% endif %}</h1>
+      <p>{% if settings and settings.hero_subtitle %}{{ settings.hero_subtitle }}{% else %}از نمونه‌سازی اولیه تا ساخت قطعات کاربردی صنعتی با متریال‌های مهندسی.{% endif %}</p>
+    </div>
+
+    <div class="p45-intro__actions">
+      {% if user.is_authenticated %}
+        <a class="p45-btn p45-btn--primary" href="#order">ثبت سفارش ساخت قطعه</a>
+        <a class="p45-btn p45-btn--secondary" href="{% url 'website:customer_dashboard' %}">پیگیری سفارش‌ها</a>
+      {% else %}
+        <a class="p45-btn p45-btn--primary" href="{% url 'website:customer_login' %}?next=/%23order">ورود و ثبت سفارش</a>
+        <a class="p45-btn p45-btn--secondary" href="{% url 'store:external_catalog' %}">دیدن مدل‌های آماده</a>
+      {% endif %}
+    </div>
+
+    <div class="p45-intro__proof" aria-label="مزیت‌های 3DPrintHub">
+      <article><span>01</span><div><strong>طراحی دقیق</strong><small>CAD و مهندسی معکوس</small></div></article>
+      <article><span>02</span><div><strong>متریال مهندسی</strong><small>متناسب با کاربرد واقعی</small></div></article>
+      <article><span>03</span><div><strong>ساخت امن</strong><small>حفاظت از فایل و اطلاعات پروژه</small></div></article>
+    </div>
+  </div>
 </section>

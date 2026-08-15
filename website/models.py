@@ -1334,6 +1334,145 @@ class ClientReference(models.Model):
 
     def __str__(self):
         return self.name
+# BEGIN PHASE 45 MANAGED HOMEPAGE HERO
+class HomepageHeroSlide(models.Model):
+    """A manually approved homepage hero slide backed by one catalog asset."""
+
+    OBJECT_FIT_CHOICES = [
+        ("cover", "پر کردن تمام صفحه (Cover)"),
+        ("contain", "نمایش کامل تصویر (Contain)"),
+    ]
+    FOCAL_POSITION_CHOICES = [
+        ("center", "وسط"),
+        ("top", "بالا"),
+        ("bottom", "پایین"),
+        ("left", "چپ"),
+        ("right", "راست"),
+    ]
+
+    asset = models.ForeignKey(
+        "store.ImportedPrintAsset",
+        on_delete=models.CASCADE,
+        related_name="homepage_hero_slides",
+        verbose_name="محصول / مدل کاتالوگ",
+        help_text="فقط محصولی را انتخاب کنید که خودتان برای نمایش در اسلایدر صفحه اصلی تأیید کرده‌اید.",
+    )
+    image_url = models.URLField(
+        max_length=2000,
+        blank=True,
+        verbose_name="عکس انتخابی اسلایدر",
+        help_text="اگر خالی باشد، تصویر اصلی همان محصول استفاده می‌شود. بعد از انتخاب محصول و ذخیره، تصاویر پیشنهادی پایین فرم نمایش داده می‌شوند.",
+    )
+    image_alt_text = models.CharField(
+        max_length=240,
+        blank=True,
+        verbose_name="Alt تصویر برای SEO",
+        help_text="اگر خالی باشد از عنوان اسلاید و محصول ساخته می‌شود.",
+    )
+    title_override = models.CharField(
+        max_length=220,
+        blank=True,
+        verbose_name="عنوان نمایشی",
+        help_text="اگر خالی باشد عنوان اصلی محصول نمایش داده می‌شود.",
+    )
+    group_title = models.CharField(
+        max_length=160,
+        blank=True,
+        verbose_name="عنوان گروه / دسته",
+        help_text="مثلاً قطعات خودرو، ابزار کارگاهی یا دکوراسیون. اگر خالی باشد دسته یا منبع محصول استفاده می‌شود.",
+    )
+    description = models.CharField(
+        max_length=480,
+        blank=True,
+        verbose_name="توضیح کوتاه روی اسلاید",
+        help_text="حداکثر یک یا دو جمله کوتاه؛ برای خوانایی موبایل متن طولانی ننویسید.",
+    )
+    button_text = models.CharField(
+        max_length=80,
+        default="مشاهده محصول",
+        verbose_name="متن دکمه",
+    )
+    object_fit = models.CharField(
+        max_length=12,
+        choices=OBJECT_FIT_CHOICES,
+        default="cover",
+        verbose_name="نحوه نمایش عکس",
+    )
+    focal_position = models.CharField(
+        max_length=12,
+        choices=FOCAL_POSITION_CHOICES,
+        default="center",
+        verbose_name="نقطه تمرکز عکس",
+    )
+    sort_order = models.PositiveIntegerField(default=100, db_index=True, verbose_name="ترتیب نمایش")
+    is_active = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="تأیید و نمایش در اسلایدر",
+        help_text="فقط اسلایدهای فعال در سایت عمومی نمایش داده می‌شوند.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین ویرایش")
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "اسلاید صفحه اصلی"
+        verbose_name_plural = "اسلایدهای صفحه اصلی"
+
+    def __str__(self):
+        return f"{self.effective_title} — {self.sort_order}"
+
+    @property
+    def effective_image_url(self):
+        if self.image_url:
+            return self.image_url
+        return getattr(self.asset, "catalog_image_url", "") or ""
+
+    @property
+    def effective_title(self):
+        return self.title_override.strip() or getattr(self.asset, "title", "") or "مدل منتخب"
+
+    @property
+    def effective_group_title(self):
+        if self.group_title.strip():
+            return self.group_title.strip()
+        metrics = getattr(self.asset, "metrics", None)
+        if metrics is not None:
+            display = getattr(metrics, "get_segment_display", None)
+            if callable(display):
+                try:
+                    value = display()
+                    if value:
+                        return value
+                except Exception:
+                    pass
+        source = getattr(self.asset, "source", None)
+        return getattr(source, "name", "") or "مدل منتخب"
+
+    @property
+    def effective_alt_text(self):
+        return self.image_alt_text.strip() or f"{self.effective_title} - {self.effective_group_title}"
+
+    @property
+    def target_url(self):
+        return reverse("store:external_catalog_detail", args=[self.asset_id])
+
+    def candidate_image_urls(self):
+        urls = []
+
+        def add(value):
+            value = str(value or "").strip()
+            if value and value not in urls:
+                urls.append(value)
+
+        add(getattr(self.asset, "catalog_image_url", ""))
+        add(getattr(self.asset, "remote_image_url", ""))
+        metrics = getattr(self.asset, "metrics", None)
+        for value in (getattr(metrics, "image_urls", None) or []):
+            add(value)
+        return urls[:24]
+# END PHASE 45 MANAGED HOMEPAGE HERO
+
 # END PHASE 14 PRESENTATION MODELS
 
 

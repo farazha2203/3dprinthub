@@ -27,11 +27,16 @@
           </a>
           <div class="p14-model-card__body">
             <small>{{ asset.source.name }} · {{ asset.author_name|default:"طراح منبع" }}</small>
+            <div class="p46-product-code p47-product-code">کد سفارش <strong>PH-{{ asset.pk|stringformat:"06d" }}</strong><button type="button" data-p47-copy-code="PH-{{ asset.pk|stringformat:'06d' }}" aria-label="کپی کد سفارش PH-{{ asset.pk|stringformat:'06d' }}">کپی</button></div>
             <h3><a href="{% url 'store:external_catalog_detail' asset.pk %}">{{ asset.title }}</a></h3>
             <div class="p14-model-card__stats"><span>{{ asset.metrics.downloads_count|intcomma }} دانلود</span><span>{{ asset.metrics.likes_count|intcomma }} لایک</span></div>
             <div class="p14-model-card__actions">
               <a href="{% url 'store:external_catalog_detail' asset.pk %}">جزئیات</a>
-              {% if user.is_authenticated %}<a class="is-primary" href="/?ready_model={{ asset.pk }}#order">سفارش چاپ</a>{% else %}<a class="is-primary" href="{% url 'website:customer_login' %}?next=/%3Fready_model%3D{{ asset.pk }}%23order">ورود و سفارش</a>{% endif %}
+              {% if asset.has_retained_local_file %}
+                {% if user.is_authenticated %}<a class="is-primary" href="/?ready_model={{ asset.pk }}#order">سفارش با کد PH-{{ asset.pk|stringformat:"06d" }}</a>{% else %}<a class="is-primary" href="{% url 'website:customer_login' %}?next=/%3Fready_model%3D{{ asset.pk }}%23order">ورود و سفارش</a>{% endif %}
+              {% else %}
+                <a class="is-primary" href="{% url 'store:external_catalog_detail' asset.pk %}">بررسی برای سفارش</a>
+              {% endif %}
             </div>
           </div>
         </article>

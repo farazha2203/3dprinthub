@@ -690,6 +690,7 @@ def home_view(request):
     from store.catalog_sync import public_catalog_queryset
     from store.market_pricing import ensure_fx_fresh
     from website.order_intake import Phase10OrderForm
+    from website.models import HomepageHeroSlide
 
     site_settings = SiteSetting.objects.first()
     try:
@@ -848,7 +849,7 @@ def _phase14_presentation_schema(request, hero_assets, team_members):
 
 
 def home_view(request):
-    from store.catalog_sync import public_catalog_queryset
+    from store.catalog_sync import public_catalog_order_code, public_catalog_queryset, ready_order_catalog_queryset
     from store.market_pricing import ensure_fx_fresh
     from store.presentation import categorized_presentation, presentation_assets
     from website.models import (
@@ -867,6 +868,7 @@ def home_view(request):
         Testimonial,
     )
     from website.order_intake import Phase10OrderForm
+    from website.models import HomepageHeroSlide
 
     site_settings = SiteSetting.objects.first()
     presentation_setting = HomePresentationSetting.load()
@@ -890,7 +892,7 @@ def home_view(request):
     if ready_asset_id:
         try:
             ready_asset_id = int(ready_asset_id)
-            if not public_catalog_queryset().filter(pk=ready_asset_id).exists():
+            if not ready_order_catalog_queryset().filter(pk=ready_asset_id).exists():
                 ready_asset_id = None
         except (TypeError, ValueError):
             ready_asset_id = None
@@ -917,10 +919,43 @@ def home_view(request):
     else:
         form = None
 
+    # PHASE46_READY_ORDER_OPTIONS
+    ready_order_assets = []
+    ready_order_count = 0
+    selected_ready_asset = None
+    if request.user.is_authenticated:
+        ready_order_qs = ready_order_catalog_queryset()
+        ready_order_count = ready_order_qs.count()
+        ready_order_assets = list(ready_order_qs[:60])
+        if ready_asset_id:
+            selected_ready_asset = ready_order_qs.filter(pk=ready_asset_id).first()
+            if selected_ready_asset is not None and all(
+                item.pk != selected_ready_asset.pk for item in ready_order_assets
+            ):
+                ready_order_assets.insert(0, selected_ready_asset)
+
+    ready_order_options = [
+        {
+            "id": asset.pk,
+            "code": public_catalog_order_code(asset),
+            "sku": asset.product.sku if asset.product_id and asset.product else "",
+            "title": asset.title,
+            "source": asset.source.name if asset.source_id and asset.source else "",
+            "image_url": asset.catalog_image_url or "",
+        }
+        for asset in ready_order_assets
+    ]
+
     hero_assets = presentation_assets(
         limit=presentation_setting.hero_slider_count,
         randomize=False,
         newest_first=True,
+    )
+    # PHASE45_MANAGED_HERO_QUERY
+    homepage_hero_slides = list(
+        HomepageHeroSlide.objects.filter(is_active=True)
+        .select_related("asset", "asset__source", "asset__metrics", "asset__metrics__publication")
+        .order_by("sort_order", "id")
     )
     catalog_groups, catalog_preview = categorized_presentation(
         limit=presentation_setting.catalog_preview_count,
@@ -944,6 +979,7 @@ def home_view(request):
         "products": Product.objects.filter(is_active=True),
         "faqs": FAQ.objects.filter(is_active=True),
         "order_reviews": OrderReview.objects.filter(is_approved=True, display_on_site=True).select_related("order", "customer")[:6],
+        "homepage_hero_slides": homepage_hero_slides,
         "hero_model_slider": hero_assets,
         "ready_model_slider": hero_assets,
         "ready_model_grid": catalog_preview,
@@ -954,7 +990,10 @@ def home_view(request):
         "has_reusable_models": has_reusable_models,
         "initial_reusable_model": initial_reusable,
         "selected_ready_asset_id": ready_asset_id,
-        "presentation_schema": _phase14_presentation_schema(request, hero_assets, team_members),
+        "selected_ready_asset": selected_ready_asset,
+        "ready_order_options": ready_order_options,
+        "ready_order_asset_count": ready_order_count,
+        "presentation_schema": _phase14_presentation_schema(request, [slide.asset for slide in homepage_hero_slides], team_members),
         "login_next_url": f"{_phase14_reverse('website:customer_login')}?{_phase14_urlencode({'next': request.get_full_path() or '/#order'})}",
     }
     return _phase14_render(request, "website/index.html", context)

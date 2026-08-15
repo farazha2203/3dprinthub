@@ -1,0 +1,12 @@
+{
+  "phase": 45,
+  "version": "45.0.0",
+  "name": "Managed Fullscreen Homepage Hero",
+  "manual_approval_only": true,
+  "fullscreen_desktop": true,
+  "fullscreen_mobile": true,
+  "site_intro_below_slider": true,
+  "migration": "website.0019_phase45_managed_homepage_hero",
+  "database_write_during_local_install": false,
+  "generated_at_utc": "2026-08-11T14:40:50.555550+00:00"
+}
