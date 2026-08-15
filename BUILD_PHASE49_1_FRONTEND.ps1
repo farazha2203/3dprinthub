@@ -6,6 +6,7 @@ $Branch = "agent/phase49-1-media-frontend-cleanup"
 $OutputRel = "static/css/tailwind-production.css"
 $Output = Join-Path $Root "static\css\tailwind-production.css"
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
+$Committed = $false
 Set-Location $Root
 
 if ((git branch --show-current).Trim() -ne $Branch) { throw "Branch must be $Branch" }
@@ -69,15 +70,24 @@ try {
         }
         git commit -m "Phase 49.1B: replace Tailwind CDN with production bundle"
         if ($LASTEXITCODE -ne 0) { throw "Tailwind commit failed" }
+        $Committed = $true
+        Write-Host "TAILWIND_LOCAL_COMMIT=$((git rev-parse HEAD).Trim())"
+
         git push origin $Branch
-        if ($LASTEXITCODE -ne 0) { throw "Tailwind branch push failed" }
+        if ($LASTEXITCODE -ne 0) {
+            throw "Tailwind branch push failed; local commit is preserved. Re-run only: git push origin $Branch"
+        }
         Write-Host "TAILWIND_GIT_COMMIT=$((git rev-parse HEAD).Trim())"
     }
 }
 catch {
-    git restore -- templates 2>$null
-    git restore --staged -- $OutputRel templates 2>$null
-    if (Test-Path -LiteralPath $Output) { Remove-Item -LiteralPath $Output -Force }
+    if (-not $Committed) {
+        git restore --staged -- $OutputRel templates 2>$null
+        git restore --source=HEAD --worktree -- templates 2>$null
+        if (Test-Path -LiteralPath $Output) { Remove-Item -LiteralPath $Output -Force }
+    } else {
+        Write-Host "TAILWIND_LOCAL_COMMIT_PRESERVED=$((git rev-parse HEAD).Trim())"
+    }
     throw
 }
 
