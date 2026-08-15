@@ -3,6 +3,7 @@ Set-StrictMode -Version Latest
 
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
+$CanonicalCatalog = "D:\projects\3dprinthub_catalog_center"
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $Branch = "epic/phase49-finalization"
 
@@ -26,12 +27,13 @@ if ($LASTEXITCODE -ne 0) { throw "Git diff check failed" }
   -q
 if ($LASTEXITCODE -ne 0) { throw "Python compileall failed" }
 
+# First QA the exact Git source. Canonical Windows files are touched only after this suite is green.
 Set-Location $Catalog
 & $Python launch.py --verify-only
-if ($LASTEXITCODE -ne 0) { throw "Catalog launcher verification failed" }
+if ($LASTEXITCODE -ne 0) { throw "Git Catalog launcher verification failed" }
 
 & $Python -m unittest discover -s tests -p "test_*.py" -v
-if ($LASTEXITCODE -ne 0) { throw "Catalog Center full test suite failed" }
+if ($LASTEXITCODE -ne 0) { throw "Git Catalog Center full test suite failed" }
 
 Set-Location $Root
 & $Python manage.py check
@@ -55,9 +57,29 @@ if ($LASTEXITCODE -ne 0) { throw "Django Epic49 regression tests failed" }
 & $Python manage.py epic49_archive_failed_batches --all-failed
 if ($LASTEXITCODE -ne 0) { throw "Epic49 failed-batch dry-run failed" }
 
+# Only after Git-side QA passes, sync tracked Catalog source into the actual Windows application source.
+& (Join-Path $Root "SYNC_EPIC49_CATALOG_WINDOWS.ps1")
+if ($LASTEXITCODE -ne 0) { throw "Canonical Windows Catalog sync failed" }
+
+if (-not (Test-Path -LiteralPath $CanonicalCatalog)) {
+    throw "Canonical Catalog source missing after sync: $CanonicalCatalog"
+}
+& $Python -m compileall (Join-Path $CanonicalCatalog "app") -q
+if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog compileall failed" }
+
+Set-Location $CanonicalCatalog
+& $Python launch.py --verify-only
+if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog launcher verification failed" }
+
+& $Python -m unittest discover -s tests -p "test_*.py" -v
+if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite failed" }
+
+Set-Location $Root
 Write-Host "DATABASE_MIGRATE=NO"
 Write-Host "DATABASE_DATA_WRITE=NO"
-Write-Host "CATALOG_CENTER_FULL_SUITE=OK"
+Write-Host "GIT_CATALOG_FULL_SUITE=OK"
+Write-Host "WINDOWS_CATALOG_SYNC=OK"
+Write-Host "WINDOWS_CATALOG_FULL_SUITE=OK"
 Write-Host "DJANGO_EPIC49_REGRESSION=OK"
 Write-Host "BRIDGE_VERSION=1.2.0"
 Write-Host "PUBLISH_CONTRACT=epic49-final"
