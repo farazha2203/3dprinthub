@@ -27,6 +27,10 @@ env/
 .venv/
 virtualenv/
 
+# Node/frontend build
+node_modules/
+.npm/
+
 # IDE / OS
 .vscode/
 .idea/

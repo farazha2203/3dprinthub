@@ -1,0 +1,11 @@
+{
+  "name": "3dprinthub-frontend-build",
+  "private": true,
+  "version": "49.1.0",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i ./static/css/tailwind-input.css -o ./static/css/tailwind-production.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

@@ -33,14 +33,25 @@ def _safe_product_url(product) -> str:
         return ""
 
 
-def evaluate_catalog_product_visibility(product, asset, data: dict) -> VisibilityDecision:
-    """Return a fail-closed visibility decision for a desktop-published product.
+def _main_image_exists(field_file) -> bool:
+    if not field_file:
+        return False
+    name = str(getattr(field_file, "name", "") or field_file or "").strip()
+    if not name:
+        return False
+    storage = getattr(field_file, "storage", None)
+    if storage is None:
+        # Compatibility for contract-test fakes; real Django ImageFieldFile
+        # instances always expose storage and are checked physically below.
+        return True
+    try:
+        return bool(storage.exists(name))
+    except Exception:
+        return False
 
-    The desktop contract is explicit: only an item that was requested as a
-    product, approved for sale and has an allowed commercial license may become
-    public.  Store-level readiness is checked independently so an incomplete
-    product can never be activated merely because an ACK was requested.
-    """
+
+def evaluate_catalog_product_visibility(product, asset, data: dict) -> VisibilityDecision:
+    """Return a fail-closed visibility decision for a desktop-published product."""
 
     requested = bool(data.get("publish_as_product") and data.get("approved_for_sale"))
     license_status = str(getattr(asset, "commercial_license_status", "") or "")
@@ -58,7 +69,9 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
         variant_exists = False
         priced_variant = False
 
-    main_image = bool(getattr(product, "main_image", None))
+    main_image_field = getattr(product, "main_image", None)
+    main_image = bool(main_image_field)
+    main_image_storage = _main_image_exists(main_image_field)
     fixed_price = int(getattr(product, "fixed_price", 0) or 0)
 
     checks = {
@@ -67,6 +80,7 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
         "commercial_license": license_status in ALLOWED_LICENSES,
         "category_active": category_active,
         "main_image": main_image,
+        "main_image_storage": main_image_storage,
         "active_variant": variant_exists,
         "price_available": bool(fixed_price > 0 or priced_variant),
     }
@@ -81,21 +95,13 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
 
 
 def publish_catalog_product_to_store(product, asset, data: dict) -> VisibilityDecision:
-    """Activate a desktop-approved product or fail before ACK success.
-
-    This function is deliberately called *after* conversion and intelligence
-    application but inside the import transaction.  A new product therefore
-    cannot be committed as "published" while being invisible on /store/.
-    Existing converted products are also reconciled when they are re-sent.
-    """
+    """Activate a desktop-approved product or fail before ACK success."""
 
     decision = evaluate_catalog_product_visibility(product, asset, data)
     if not decision.requested:
         return decision
     if not decision.visible:
-        raise ValidationError(
-            "STORE_VISIBILITY_BLOCKED: " + ", ".join(decision.reasons)
-        )
+        raise ValidationError("STORE_VISIBILITY_BLOCKED: " + ", ".join(decision.reasons))
 
     update_fields: list[str] = []
     if not product.is_active:
