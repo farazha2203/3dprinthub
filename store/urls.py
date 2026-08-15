@@ -1,4 +1,8 @@
-from django.urls import path
+from django.urls import path, register_converter
+
+from .converters import UnicodeSlugConverter
+
+register_converter(UnicodeSlugConverter, "uslug")
 
 from .views import (
     add_comment_view,
@@ -14,10 +18,10 @@ app_name = "store"
 
 urlpatterns = [
     path("", product_list_view, name="product_list"),
-    path("category/<slug:slug>/", product_list_view, name="category"),
-    path("product/<slug:slug>/", product_detail_view, name="product_detail"),
-    path("product/<slug:slug>/like/", toggle_like_view, name="toggle_like"),
-    path("product/<slug:slug>/comment/", add_comment_view, name="add_comment"),
+    path("category/<uslug:slug>/", product_list_view, name="category"),
+    path("product/<uslug:slug>/", product_detail_view, name="product_detail"),
+    path("product/<uslug:slug>/like/", toggle_like_view, name="toggle_like"),
+    path("product/<uslug:slug>/comment/", add_comment_view, name="add_comment"),
     path("services/<slug:slug>/", service_page_view, name="service_page"),
     path("request-a-part/", product_request_view, name="product_request"),
     path("request-a-part/success/", product_request_success_view, name="product_request_success"),
@@ -32,7 +36,7 @@ from .views import (
 
 urlpatterns += [
     path("cart/", cart_detail_view, name="cart_detail"),
-    path("cart/add/<slug:slug>/", cart_add_view, name="cart_add"),
+    path("cart/add/<uslug:slug>/", cart_add_view, name="cart_add"),
     path("cart/update/<int:variant_id>/", cart_update_view, name="cart_update"),
     path("cart/remove/<int:variant_id>/", cart_remove_view, name="cart_remove"),
     path("checkout/", checkout_view, name="checkout"),
@@ -40,7 +44,7 @@ urlpatterns += [
     path("order/success/<str:order_number>/", order_success_view, name="order_success"),
     path("account/orders/", my_orders_view, name="my_orders"),
     path("account/orders/<str:order_number>/", order_detail_view, name="order_detail"),
-    path("product/<slug:slug>/review/", product_review_view, name="product_review"),
+    path("product/<uslug:slug>/review/", product_review_view, name="product_review"),
 ]
 # END STORE COMMERCE PHASE 2
 
