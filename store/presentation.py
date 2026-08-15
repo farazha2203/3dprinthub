@@ -3,6 +3,8 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from store.catalog_sync import public_catalog_queryset
 from store.models import CatalogCategoryRule
 
@@ -49,7 +51,11 @@ def categorized_presentation(*, limit=9, randomize=True):
     groups = OrderedDict()
     labels = dict(CatalogCategoryRule.SEGMENT_CHOICES)
     for asset in assets:
-        segment = asset.metrics.segment or "other"
+        try:
+            metrics = asset.metrics
+        except ObjectDoesNotExist:
+            metrics = None
+        segment = getattr(metrics, "segment", None) or "other"
         group = groups.setdefault(segment, {
             "key": segment,
             "label": labels.get(segment, "سایر"),
