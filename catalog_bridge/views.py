@@ -14,8 +14,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
+from .diagnostics import write_import_diagnostic
 
-VERSION = "1.0.0"
+
+VERSION = "1.1.0"
 BATCH_NAME = re.compile(r"^desktop_catalog_v85_[0-9]{8}_[0-9]{6}$")
 ACK_MARKER = "CATALOG_ACK_JSON="
 
@@ -65,6 +67,30 @@ def health_view(request):
     })
 
 
+@require_GET
+def diagnostic_view(request, batch_name: str):
+    if not _authorized(request):
+        return _unauthorized()
+    batch_name = str(batch_name or "").strip()
+    if not BATCH_NAME.fullmatch(batch_name):
+        return JsonResponse({"status": "invalid_batch", "detail": "Batch name is invalid."}, status=400)
+    path = _pending_root().parent / "diagnostics" / f"{batch_name}.json"
+    try:
+        path = path.resolve()
+        path.relative_to((_pending_root().parent / "diagnostics").resolve())
+    except ValueError:
+        return JsonResponse({"status": "invalid_batch", "detail": "Diagnostic path is invalid."}, status=400)
+    if not path.is_file():
+        return JsonResponse({"status": "not_found", "detail": "Diagnostic is not available yet."}, status=404)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return JsonResponse({"status": "invalid_diagnostic", "detail": "Diagnostic file is invalid."}, status=500)
+    if not isinstance(payload, dict):
+        return JsonResponse({"status": "invalid_diagnostic", "detail": "Diagnostic payload is invalid."}, status=500)
+    return JsonResponse(payload)
+
+
 @csrf_exempt
 @require_POST
 def import_view(request):
@@ -107,6 +133,7 @@ def import_view(request):
         try:
             cached = json.loads(ack_path.read_text(encoding="utf-8"))
             cached["bridge_status"] = "cached"
+            cached.setdefault("diagnostic_id", batch_name)
             return JsonResponse(cached)
         except Exception:
             pass
@@ -126,16 +153,34 @@ def import_view(request):
             call_command("phase37_import_catalog_center", str(batch_root), continue_on_error=True, stdout=stdout, stderr=stderr)
         except CommandError as exc:
             command_error = str(exc)
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            write_import_diagnostic(
+                pending_root, batch_name, batch_uuid=requested_uuid, status="bridge_exception",
+                stdout=stdout.getvalue(), stderr=stderr.getvalue(), detail=detail,
+            )
+            return JsonResponse({"status": "import_failed", "detail": detail, "diagnostic_id": batch_name}, status=500)
         ack = _ack_from_output(stdout.getvalue())
         if ack is None:
+            detail = command_error or "Importer did not return a structured ACK."
+            write_import_diagnostic(
+                pending_root, batch_name, batch_uuid=requested_uuid, status="import_failed",
+                command_error=command_error, stdout=stdout.getvalue(), stderr=stderr.getvalue(), detail=detail,
+            )
             return JsonResponse({
                 "status": "import_failed",
-                "detail": command_error or "Importer did not return a structured ACK.",
+                "detail": detail,
                 "stderr_tail": stderr.getvalue()[-3000:],
+                "diagnostic_id": batch_name,
             }, status=500)
         ack["bridge_status"] = "completed" if not ack.get("failed_count") else "completed_with_errors"
+        ack["diagnostic_id"] = batch_name
         if command_error:
             ack["command_error"] = command_error[:1000]
+        write_import_diagnostic(
+            pending_root, batch_name, batch_uuid=requested_uuid, status=ack["bridge_status"],
+            ack=ack, command_error=command_error, stdout=stdout.getvalue(), stderr=stderr.getvalue(),
+        )
         if not ack.get("failed_count"):
             ack_path.write_text(json.dumps(ack, ensure_ascii=False, indent=2), encoding="utf-8")
         return JsonResponse(ack)

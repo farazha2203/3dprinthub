@@ -175,8 +175,18 @@ def commercial_license_allows_publish(status: Any) -> bool:
     return str(status or "").strip().lower() in ALLOWED_COMMERCIAL_STATUSES
 
 
-def ack_item_confirms_publish(item: dict[str, Any], row: Any) -> bool:
-    """Return True only when the ACK contains every requested publish target."""
+def ack_item_confirms_publish(
+    item: dict[str, Any],
+    row: Any,
+    *,
+    require_store_visibility: bool = False,
+) -> bool:
+    """Return True only when the ACK contains every requested publish target.
+
+    Legacy callers keep the pre-Phase49 contract by default. Phase49 publish
+    paths opt in to strict store visibility, which prevents an inactive Product
+    from being marked as published on the desktop.
+    """
     if str(item.get("status") or "") not in {"created", "updated"}:
         return False
     if not str(item.get("server_id") or "").strip():
@@ -193,6 +203,8 @@ def ack_item_confirms_publish(item: dict[str, Any], row: Any) -> bool:
     if not (wants_product or wants_portfolio):
         return False
     if wants_product and not item.get("product_id"):
+        return False
+    if require_store_visibility and wants_product and item.get("visible_on_store") is not True:
         return False
     if wants_portfolio and not item.get("portfolio_id"):
         return False

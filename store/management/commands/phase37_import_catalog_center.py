@@ -10,6 +10,7 @@ from django.db import transaction
 
 from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource
 from store.phase34b_publishing import convert_to_fixed_product, convert_to_portfolio
+from store.phase49_catalog_visibility import publish_catalog_product_to_store
 
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
 VALID_LICENSES = ALLOWED_LICENSES | {"review", "blocked", "unknown"}
@@ -345,11 +346,13 @@ class Command(BaseCommand):
                     asset, created = upsert_asset(source, data)
                     image_count = import_images(asset, editorial_path.parent, data)
                     product = portfolio = None
+                    visibility = None
                     license_ok = asset.commercial_license_status in ALLOWED_LICENSES
                     if data.get("publish_as_product") and data.get("approved_for_sale") and license_ok:
                         product = convert_to_fixed_product(asset)
                         apply_phase39_product_intelligence(product, data)
                         apply_phase43_product_details(product, data)
+                        visibility = publish_catalog_product_to_store(product, asset, data)
                         products += 1
                     if data.get("publish_as_portfolio") and license_ok:
                         portfolio = convert_to_portfolio(asset)
@@ -375,6 +378,9 @@ class Command(BaseCommand):
                     "product_id": product.pk if product else None,
                     "portfolio_id": portfolio.pk if portfolio else None,
                     "images": image_count,
+                    "visible_on_store": bool(visibility.visible) if visibility else False,
+                    "product_url": visibility.product_url if visibility else "",
+                    "visibility_checks": visibility.checks if visibility else {},
                     "source_hash": data.get("source_hash") or "",
                 }
                 ack_items.append(ack)

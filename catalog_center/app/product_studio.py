@@ -16,6 +16,10 @@ from PIL import Image, ImageTk
 
 from .db import normalize_url, utc_now
 from .openai_content import OpenAIContentService
+from .phase49_ui import (
+    first_site_images, gallery_page, keep_only_gallery_urls,
+    receipt_lines, remove_gallery_urls,
+)
 from .v8_features import commercial_license_allows_publish, product_fingerprint
 from .workflow import pricing_suggestion, product_state, STATUS_LABELS
 from .version import APP_VERSION
@@ -60,6 +64,9 @@ class ProductStudio(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.close)
         self._photos: list[ImageTk.PhotoImage] = []
         self._gallery_cards: list[dict] = []
+        self._bulk_image_urls: set[str] = set()
+        self.gallery_page = 0
+        self.gallery_page_size = 40
         self._ai_busy = False
         self._build_ui()
         self.reload()
@@ -127,6 +134,8 @@ class ProductStudio(tk.Toplevel):
         ttk.Button(actions, text="✨ ترجمه فارسی", command=lambda: self.generate_ai("translate"), style="Primary.TButton").pack(side="left", padx=3)
         ttk.Button(actions, text="✨ تولید محتوای کامل", command=lambda: self.generate_ai("commerce"), style="Success.TButton").pack(side="left", padx=3)
         ttk.Button(actions, text="💰 قیمت پیشنهادی", command=self.calculate_price).pack(side="left", padx=3)
+        ttk.Button(actions, text="🧾 گزارش ارسال", command=self.open_sync_log).pack(side="left", padx=3)
+        ttk.Button(actions, text="🚀 ارسال همین محصول", command=self.publish_now, style="Success.TButton").pack(side="left", padx=3)
         ttk.Button(actions, text="💾 ذخیره", command=self.save).pack(side="left", padx=3)
 
         source_bar = ttk.Frame(self, padding=(16, 0, 16, 8))
@@ -163,6 +172,7 @@ class ProductStudio(tk.Toplevel):
         footer.pack(fill="x")
         self.footer_status = tk.StringVar(value="آماده")
         ttk.Label(footer, textvariable=self.footer_status, style="SubHeader.TLabel").pack(side="left", fill="x", expand=True)
+        ttk.Button(footer, text="🚀 ارسال همین محصول", command=self.publish_now, style="Success.TButton").pack(side="right", padx=4)
         ttk.Button(footer, text="✅ آماده انتشار", command=self.queue_for_publish, style="Success.TButton").pack(side="right", padx=4)
         ttk.Button(footer, text="ذخیره", command=self.save).pack(side="right", padx=4)
 
@@ -228,12 +238,26 @@ class ProductStudio(tk.Toplevel):
         bar = ttk.Frame(self.images_tab)
         bar.pack(fill="x", pady=(0, 8))
         self.gallery_info = tk.StringVar(value="0 تصویر")
+        self.gallery_page_info = tk.StringVar(value="صفحه 1 از 1")
         ttk.Label(bar, textvariable=self.gallery_info).pack(side="left")
-        ttk.Button(bar, text="انتخاب همه", command=lambda: self.select_all_images(True)).pack(side="right", padx=3)
-        ttk.Button(bar, text="عدم انتخاب همه", command=lambda: self.select_all_images(False)).pack(side="right", padx=3)
+        ttk.Label(bar, textvariable=self.gallery_page_info, style="SubHeader.TLabel").pack(side="left", padx=12)
+
+        ttk.Button(bar, text="◀ صفحه قبل", command=lambda: self.change_gallery_page(-1)).pack(side="right", padx=2)
+        ttk.Button(bar, text="صفحه بعد ▶", command=lambda: self.change_gallery_page(1)).pack(side="right", padx=2)
+        ttk.Button(bar, text="۵ عکس اول برای سایت", command=self.keep_first_five_for_site, style="Success.TButton").pack(side="right", padx=3)
+        ttk.Button(bar, text="فقط ۵ عکس اول بماند", command=self.keep_first_five_only, style="Danger.TButton").pack(side="right", padx=3)
         ttk.Button(bar, text="+ عکس از فایل", command=self.add_local_images).pack(side="right", padx=3)
         ttk.Button(bar, text="+ عکس با URL", command=self.add_url_image).pack(side="right", padx=3)
-        ttk.Button(bar, text="♻ دانلود/نمایش مجدد", command=self.refresh_gallery).pack(side="right", padx=3)
+
+        bulk = ttk.Frame(self.images_tab)
+        bulk.pack(fill="x", pady=(0, 8))
+        ttk.Button(bulk, text="انتخاب گروهی همه صفحه", command=lambda: self.bulk_select_page(True)).pack(side="left", padx=3)
+        ttk.Button(bulk, text="پاک کردن انتخاب گروهی", command=lambda: self.bulk_select_page(False)).pack(side="left", padx=3)
+        ttk.Button(bulk, text="حذف گروهی از محصول", command=self.bulk_remove_images, style="Danger.TButton").pack(side="left", padx=3)
+        ttk.Button(bulk, text="فقط انتخاب‌شده‌های گروهی بماند", command=self.bulk_keep_only).pack(side="left", padx=3)
+        ttk.Button(bulk, text="همه برای سایت", command=lambda: self.select_all_images(True)).pack(side="right", padx=3)
+        ttk.Button(bulk, text="هیچکدام برای سایت", command=lambda: self.select_all_images(False)).pack(side="right", padx=3)
+        ttk.Button(bulk, text="♻ تازه‌سازی", command=self.refresh_gallery).pack(side="right", padx=3)
 
         shell = ttk.Frame(self.images_tab)
         shell.pack(fill="both", expand=True)
@@ -367,6 +391,8 @@ class ProductStudio(tk.Toplevel):
         buttons.pack(fill="x", pady=18)
         ttk.Button(buttons, text="💾 ذخیره", command=self.save).pack(side="left", padx=4)
         ttk.Button(buttons, text="✅ تأیید و افزودن به صف انتشار", command=self.queue_for_publish, style="Success.TButton").pack(side="left", padx=4)
+        ttk.Button(buttons, text="🚀 ارسال همین محصول به سایت", command=self.publish_now, style="Success.TButton").pack(side="left", padx=4)
+        ttk.Button(buttons, text="🧾 گزارش ارسال", command=self.open_sync_log).pack(side="left", padx=4)
         ttk.Button(buttons, text="رفتن به صف انتشار", command=self.open_upload_tab, style="Primary.TButton").pack(side="left", padx=4)
 
     # ---------- loading / save ----------
@@ -411,7 +437,10 @@ class ProductStudio(tk.Toplevel):
         self.source_categories_label.set("دسته‌های منبع: " + (" > ".join(map(str, src_cats)) if src_cats else (row["source_category"] or "—")))
         self.fa_categories_label.set("ترجمه دسته‌ها: " + (" > ".join(map(str, fa_cats)) if fa_cats else "—"))
         self.publish_source.set(f"منبع: {row['source_url'] or '—'}")
-        self.publish_server.set(f"Server ID: {row['server_id'] or '—'} | آخرین Sync: {row['last_synced_at'] or '—'}")
+        ack = self._json_dict(row["server_ack_json"] or "{}")
+        visible = ack.get("visible_on_store")
+        visible_text = " | فروشگاه: نمایش داده می‌شود" if visible is True else (" | فروشگاه: مخفی/ناموفق" if visible is False and ack else "")
+        self.publish_server.set(f"Server ID: {row['server_id'] or '—'} | آخرین Sync: {row['last_synced_at'] or '—'}{visible_text}")
         self.product_type_var.set(PRODUCT_TYPE_LABELS.get(row["product_type"] or "ready_product", PRODUCT_TYPE_LABELS["ready_product"]))
         self.dimensions_var.set(row["dimensions"] or "")
         self.availability_var.set(AVAILABILITY_LABELS.get(row["availability_status"] or "made_to_order", AVAILABILITY_LABELS["made_to_order"]))
@@ -596,21 +625,29 @@ class ProductStudio(tk.Toplevel):
         if not selected and urls:
             selected = set(urls)
         primary = self.row["primary_image_url"] or (urls[0] if urls else "")
-        self.gallery_info.set(f"{len(urls)} تصویر • {len(selected)} انتخاب‌شده")
+        page = gallery_page(len(urls), self.gallery_page, self.gallery_page_size)
+        self.gallery_page = page.page
+        self.gallery_info.set(f"{len(urls)} تصویر • {len(selected)} انتخاب‌شده برای سایت • {len(self._bulk_image_urls)} انتخاب گروهی")
+        self.gallery_page_info.set(f"صفحه {page.page + 1} از {page.total_pages} • نمایش {page.start + 1 if urls else 0} تا {page.end}")
         if not urls:
             ttk.Label(self.gallery_inner, text="هنوز تصویر واقعی برای این محصول ذخیره نشده است. بازیابی کامل را اجرا کن یا عکس اضافه کن.", style="SubHeader.TLabel").grid(row=0, column=0, padx=20, pady=30)
             return
-        cols = 5
-        for index, url in enumerate(urls):
+        cols = 4
+        for offset, url in enumerate(urls[page.start:page.end]):
+            index = page.start + offset
             card = ttk.Frame(self.gallery_inner, padding=7, style="Card.TFrame")
-            card.grid(row=index // cols, column=index % cols, padx=7, pady=7, sticky="n")
+            card.grid(row=offset // cols, column=offset % cols, padx=7, pady=7, sticky="n")
+            bulk_var = tk.IntVar(value=1 if url in self._bulk_image_urls else 0)
+            ttk.Checkbutton(
+                card,
+                text=f"انتخاب گروهی • #{index + 1}",
+                variable=bulk_var,
+                command=lambda u=url, v=bulk_var: self._set_bulk_image(u, bool(v.get())),
+            ).pack(fill="x")
             image_label = ttk.Label(card, text=f"تصویر {index + 1}", anchor="center")
             image_label.pack(fill="both")
-            status = tk.StringVar(value=("★ اصلی" if url == primary else "") + ("  ✓ سایت" if url in selected else "  ✗ حذف از سایت"))
+            status = tk.StringVar(value=("★ اصلی" if url == primary else "") + ("  ✓ سایت" if url in selected else "  ✗ خارج از سایت"))
             ttk.Label(card, textvariable=status, style="SubHeader.TLabel").pack(fill="x", pady=(4, 2))
-            url_var = tk.StringVar(value=url)
-            entry = ttk.Entry(card, textvariable=url_var, width=30, state="readonly")
-            entry.pack(fill="x", pady=2)
             buttons1 = ttk.Frame(card)
             buttons1.pack(fill="x", pady=2)
             ttk.Button(buttons1, text="★ اصلی", command=lambda u=url: self.set_primary(u)).pack(side="left", padx=2)
@@ -618,11 +655,107 @@ class ProductStudio(tk.Toplevel):
             buttons2 = ttk.Frame(card)
             buttons2.pack(fill="x", pady=2)
             ttk.Button(buttons2, text="باز کردن", command=lambda u=url: self.open_image(u)).pack(side="left", padx=2)
-            ttk.Button(buttons2, text="حذف از محصول", command=lambda u=url: self.remove_image(u)).pack(side="left", padx=2)
+            ttk.Button(buttons2, text="حذف", command=lambda u=url: self.remove_image(u)).pack(side="left", padx=2)
             local = self._resolve_local(self.row, url, index)
             meta = {"url": url, "selected": url in selected, "primary": url == primary, "label": image_label, "status": status, "local": local}
             self._gallery_cards.append(meta)
             self._load_thumbnail(meta)
+        for col in range(cols):
+            self.gallery_inner.columnconfigure(col, weight=1)
+
+    def change_gallery_page(self, delta: int):
+        row = self.db.product(self.product_id)
+        urls = self._json_list(row["images_json"]) if row else []
+        current = gallery_page(len(urls), self.gallery_page, self.gallery_page_size)
+        self.gallery_page = max(0, min(current.total_pages - 1, current.page + int(delta)))
+        self.refresh_gallery()
+
+    def _set_bulk_image(self, url: str, flag: bool):
+        if flag:
+            self._bulk_image_urls.add(url)
+        else:
+            self._bulk_image_urls.discard(url)
+        self.gallery_info.set(
+            f"{len(self._json_list(self.db.product(self.product_id)['images_json']))} تصویر • {len(self._bulk_image_urls)} انتخاب گروهی"
+        )
+
+    def bulk_select_page(self, flag: bool):
+        row = self.db.product(self.product_id)
+        urls = self._json_list(row["images_json"]) if row else []
+        page = gallery_page(len(urls), self.gallery_page, self.gallery_page_size)
+        page_urls = urls[page.start:page.end]
+        if flag:
+            self._bulk_image_urls.update(page_urls)
+        else:
+            self._bulk_image_urls.difference_update(page_urls)
+        self.refresh_gallery()
+
+    def keep_first_five_for_site(self):
+        row = self.db.product(self.product_id)
+        if row is None:
+            return
+        urls = self._json_list(row["images_json"])
+        selected = first_site_images(urls, 5, row["primary_image_url"] or "")
+        primary = selected[0] if selected else ""
+        self._persist_images(urls, selected, primary)
+        self.footer_status.set(f"{len(selected)} تصویر اول برای سایت انتخاب شد")
+
+    def keep_first_five_only(self):
+        row = self.db.product(self.product_id)
+        if row is None:
+            return
+        urls = self._json_list(row["images_json"])
+        keep = first_site_images(urls, 5, row["primary_image_url"] or "")
+        if len(urls) <= len(keep):
+            self._persist_images(urls, keep, keep[0] if keep else "")
+            self.footer_status.set("محصول بیش از ۵ تصویر نداشت")
+            return
+        remove_count = len(urls) - len(keep)
+        if not messagebox.askyesno(
+            "3DPrintHub",
+            f"فقط {len(keep)} تصویر اول باقی بماند و {remove_count} تصویر دیگر از لیست محصول حذف شود؟\n\nفایل‌های Cache فیزیکی پاک نمی‌شوند.",
+            parent=self,
+        ):
+            return
+        self._bulk_image_urls.clear()
+        self.gallery_page = 0
+        self._persist_images(keep, keep, keep[0] if keep else "")
+        self.footer_status.set(f"فقط {len(keep)} تصویر در محصول باقی ماند")
+
+    def bulk_remove_images(self):
+        if not self._bulk_image_urls:
+            messagebox.showwarning("3DPrintHub", "ابتدا تصاویر موردنظر را با «انتخاب گروهی» مشخص کنید.", parent=self)
+            return
+        if not messagebox.askyesno("3DPrintHub", f"{len(self._bulk_image_urls)} تصویر از لیست محصول حذف شود؟ فایل‌های Cache پاک نمی‌شوند.", parent=self):
+            return
+        row = self.db.product(self.product_id)
+        urls, selected, primary = remove_gallery_urls(
+            self._json_list(row["images_json"]),
+            self._json_list(row["selected_images_json"]),
+            row["primary_image_url"] or "",
+            self._bulk_image_urls,
+        )
+        self._bulk_image_urls.clear()
+        self._persist_images(urls, selected, primary)
+        self.footer_status.set("حذف گروهی تصاویر انجام شد")
+
+    def bulk_keep_only(self):
+        if not self._bulk_image_urls:
+            messagebox.showwarning("3DPrintHub", "برای نگه‌داشتن گروهی، ابتدا چند تصویر را انتخاب کنید.", parent=self)
+            return
+        if not messagebox.askyesno("3DPrintHub", f"فقط {len(self._bulk_image_urls)} تصویر انتخاب‌شده در محصول باقی بماند؟", parent=self):
+            return
+        row = self.db.product(self.product_id)
+        urls, selected, primary = keep_only_gallery_urls(
+            self._json_list(row["images_json"]),
+            self._json_list(row["selected_images_json"]),
+            row["primary_image_url"] or "",
+            self._bulk_image_urls,
+        )
+        self._bulk_image_urls.intersection_update(urls)
+        self.gallery_page = 0
+        self._persist_images(urls, selected, primary)
+        self.footer_status.set("فقط تصاویر انتخاب‌شده نگه داشته شدند")
 
     def _load_thumbnail(self, meta):
         label = meta["label"]
@@ -919,9 +1052,9 @@ class ProductStudio(tk.Toplevel):
         self.quick_checklist.set(text)
         self.publish_checklist.set(text)
 
-    def queue_for_publish(self):
+    def queue_for_publish(self, notify=True):
         if not self.save(silent=True):
-            return
+            return False
         row = self.db.product(self.product_id)
         selected = self._json_list(row["selected_images_json"])
         missing = []
@@ -931,24 +1064,26 @@ class ProductStudio(tk.Toplevel):
             missing.append("عنوان")
         if not (row["description_fa"] or "").strip():
             missing.append("توضیحات فارسی")
-        if not (row["local_category_slug"] or "").strip():
-            missing.append("گروه")
+        if not (row["local_category_slug"] or "").strip() or row["local_category_slug"] == "external-other":
+            missing.append("گروه سایت")
         if row["product_type"] == "ready_product" and int(row["final_price"] or row["suggested_price"] or 0) <= 0:
             missing.append("قیمت")
         if not commercial_license_allows_publish(row["commercial_status"]):
             missing.append("مجوز تجاری مجاز (allowed / owned / public_domain)")
         if missing:
             messagebox.showwarning("3DPrintHub", "برای انتشار این موارد ناقص است:\n- " + "\n- ".join(missing), parent=self)
-            return
+            return False
         fp = row["fingerprint"] or product_fingerprint(row["source_code"], row["external_id"], row["source_url"])
         dup = self.db.find_duplicate(row["source_code"], row["external_id"], normalize_url(row["source_url"]), fp, exclude_id=self.product_id)
         if dup:
             messagebox.showerror("3DPrintHub", f"محصول تکراری شناسایی شد: #{dup['id']}", parent=self)
-            return
-        approved=int(self.approved_var.get())
+            return False
+        approved = int(self.approved_var.get())
         if row["product_type"] != "portfolio" and not approved:
-            approved=1 if messagebox.askyesno("3DPrintHub", "این محصول برای فروش تأیید نشده است. همین حالا برای فروش تأیید شود؟", parent=self) else 0
+            approved = 1 if messagebox.askyesno("3DPrintHub", "این محصول برای فروش تأیید نشده است. همین حالا برای فروش تأیید شود؟", parent=self) else 0
             self.approved_var.set(approved)
+            if not approved:
+                return False
         self.db.update_product(self.product_id, {
             "upload_ready": 1,
             "workflow_status": "approved",
@@ -956,12 +1091,58 @@ class ProductStudio(tk.Toplevel):
             "publish_as_portfolio": int(row["product_type"] == "portfolio"),
             "approved_for_sale": approved,
             "fingerprint": fp,
+            "product_sync_error": "",
         })
         self.app.refresh_products()
         self.app.refresh_upload_queue()
         self.reload()
-        self.footer_status.set("محصول به صف انتشار اضافه شد")
-        messagebox.showinfo("3DPrintHub", "محصول آماده است و به صف انتشار اضافه شد.\nبعد از ACK سایت به «منتشرشده‌ها» منتقل می‌شود.", parent=self)
+        self.footer_status.set("محصول آماده ارسال است")
+        if notify:
+            messagebox.showinfo("3DPrintHub", "محصول آماده است و به صف انتشار اضافه شد.\nبعد از ACK سایت به «منتشرشده‌ها» منتقل می‌شود.", parent=self)
+        return True
+
+    def publish_now(self):
+        if not self.queue_for_publish(notify=False):
+            return
+        self.footer_status.set("در حال ارسال همین محصول به سایت...")
+        self.app.publish_product_now(self.product_id, parent=self)
+
+    def open_sync_log(self):
+        win = tk.Toplevel(self)
+        win.title(f"گزارش ارسال محصول #{self.product_id}")
+        win.geometry("1040x720")
+        win.transient(self)
+        top = ttk.Frame(win, padding=10)
+        top.pack(fill="x")
+        ttk.Label(top, text="گزارش Windows → FTP → Bridge → Import → Store", style="Header.TLabel").pack(side="left")
+        text = tk.Text(win, wrap="word", font=("Consolas", 10))
+        text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+        def refresh():
+            row = self.db.product(self.product_id)
+            receipts = self.db.sync_receipts(self.product_id, limit=30)
+            text.delete("1.0", "end")
+            text.insert("1.0", receipt_lines(row, receipts))
+            text.see("1.0")
+
+        def fetch_server_log():
+            current=self.app.current_product
+            try:
+                self.app.current_product=self.product_id
+                self.app.open_current_publish_log()
+            finally:
+                self.app.current_product=current
+        ttk.Button(top, text="تازه‌سازی", command=refresh).pack(side="right", padx=3)
+        ttk.Button(top, text="لاگ سرور/کامل", command=fetch_server_log).pack(side="right", padx=3)
+        ttk.Button(top, text="باز کردن پوشه لاگ", command=self.app.open_log_folder).pack(side="right", padx=3)
+        try:
+            ack = self._json_dict((self.db.product(self.product_id)["server_ack_json"] or "{}"))
+            product_url = str(ack.get("product_url") or "")
+        except Exception:
+            product_url = ""
+        if product_url:
+            ttk.Button(top, text="باز کردن محصول در سایت", command=lambda: webbrowser.open(self.app.site_url.get().rstrip("/") + product_url)).pack(side="right", padx=3)
+        refresh()
 
     def open_upload_tab(self):
         self.app.main_notebook.select(self.app.upload_tab)

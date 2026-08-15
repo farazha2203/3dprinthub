@@ -16,7 +16,7 @@ from .secure_secrets import (
     set_provider_key, set_secret,
 )
 from .runtime_logging import close_logging, configure_logging, redact
-from .site_connection import SiteConnection, import_batch, test_bridge, test_ftp, upload_batch
+from .site_connection import SiteConnection, get_batch_diagnostic, import_batch, test_bridge, test_ftp, upload_batch
 from .batch_packaging import (
     BatchImagePackagingError, copy_images_into_model,
     materialize_selected_images, validate_batch_package,
@@ -28,6 +28,7 @@ from .v8_features import (
 )
 from .workflow import STATUS_LABELS, image_count, product_state, pricing_suggestion, should_mark_needs_update
 from .product_studio import ProductStudio
+from .phase49_ui import receipt_lines
 from .classic_methods import (
     discover_classic,
     collect_classic_exact,
@@ -414,6 +415,8 @@ class App(tk.Tk):
         ttk.Button(bar2,text="استودیوی محتوا",command=self.open_content_studio).pack(side="left",padx=4)
         ttk.Button(bar2,text="تاریخچه",command=self.open_product_history).pack(side="left",padx=4)
         ttk.Button(bar2,text="تأیید و صف انتشار",command=self.approve_to_upload_queue,style="Success.TButton").pack(side="left",padx=4)
+        ttk.Button(bar2,text="🚀 ارسال همین محصول",command=self.publish_product_now,style="Success.TButton").pack(side="left",padx=4)
+        ttk.Button(bar2,text="🧾 گزارش ارسال",command=self.open_current_publish_log).pack(side="left",padx=4)
         ttk.Button(bar2,text="محاسبه قیمت",command=self.estimate_product_price).pack(side="left",padx=4)
         ttk.Button(bar2,text="صفحه منبع",command=self.open_source_product).pack(side="left",padx=4)
         ttk.Button(bar2,text="مشخصات و فایل‌ها",command=self.open_technical_details).pack(side="left",padx=4)
@@ -446,22 +449,23 @@ class App(tk.Tk):
 
         preview=ttk.LabelFrame(right,text="تصاویر محصول",padding=8,style="Card.TLabelframe")
         preview.grid(row=0,column=0,columnspan=2,sticky="nsew",pady=(0,8))
+        self.selected_images_text=tk.StringVar(value="انتخاب‌شده: 0")
+        ttk.Label(preview,textvariable=self.selected_images_text).pack(anchor="w",pady=(0,4))
+        self.inline_gallery=ttk.Frame(preview); self.inline_gallery.pack(fill="x",pady=(0,5))
+        self._inline_thumb_photos=[]
         self.preview_label=ttk.Label(preview,text="محصولی انتخاب نشده است",anchor="center")
-        self.preview_label.pack(fill="both",expand=True)
-        nav=ttk.Frame(preview); nav.pack(fill="x",pady=(6,0))
+        self.preview_label.pack(fill="x",expand=False,pady=(2,0))
+        nav=ttk.Frame(preview); nav.pack(fill="x",pady=(4,0))
         ttk.Button(nav,text="◀",command=lambda:self.change_preview(-1)).pack(side="left")
         self.preview_counter=tk.StringVar(value="0 / 0"); ttk.Label(nav,textvariable=self.preview_counter,anchor="center").pack(side="left",expand=True)
         ttk.Button(nav,text="▶",command=lambda:self.change_preview(1)).pack(side="right")
-        image_actions=ttk.Frame(preview); image_actions.pack(fill="x",pady=(6,0))
-        ttk.Button(image_actions,text="گالری",command=self.open_image_manager,style="Primary.TButton").pack(side="left")
+        image_actions=ttk.Frame(preview); image_actions.pack(fill="x",pady=(5,0))
+        ttk.Button(image_actions,text="گالری گروهی",command=self.open_image_manager,style="Primary.TButton").pack(side="left")
         ttk.Button(image_actions,text="Primary",command=self.set_current_preview_primary).pack(side="left",padx=3)
-        ttk.Button(image_actions,text="انتخاب/حذف",command=self.toggle_current_image_selection).pack(side="left",padx=3)
+        ttk.Button(image_actions,text="انتخاب/حذف سایت",command=self.toggle_current_image_selection).pack(side="left",padx=3)
         ttk.Button(image_actions,text="باز کردن",command=self.open_current_preview).pack(side="left",padx=3)
-        self.selected_images_text=tk.StringVar(value="انتخاب‌شده: 0"); ttk.Label(preview,textvariable=self.selected_images_text).pack(anchor="w",pady=(5,0))
-        self.inline_gallery=ttk.Frame(preview); self.inline_gallery.pack(fill="x",pady=(5,2))
-        self._inline_thumb_photos=[]
         self.current_image_text=tk.StringVar(value=""); ttk.Entry(preview,textvariable=self.current_image_text,state="readonly").pack(fill="x",pady=(3,0))
-        source_row=ttk.Frame(preview); source_row.pack(fill="x",pady=(6,0))
+        source_row=ttk.Frame(preview); source_row.pack(fill="x",pady=(5,0))
         self.source_url_text=tk.StringVar(value=""); ttk.Entry(source_row,textvariable=self.source_url_text).pack(side="left",fill="x",expand=True)
         ttk.Button(source_row,text="لینک منبع",command=self.open_source_product).pack(side="left",padx=(5,0))
         self._preview_photo=None; self._preview_urls=[]; self._preview_index=0; self._preview_local=[]; self._preview_current=""; self._preview_items=[]
@@ -1716,9 +1720,25 @@ class App(tk.Tk):
         items=list(getattr(self,"_preview_items",[]))
         if not items:
             ttk.Label(frame,text="تصویری برای نمایش نیست",style="SubHeader.TLabel").pack(side="left");return
-        for idx,item in enumerate(items[:8]):
-            holder=ttk.Frame(frame,padding=2,style="Card.TFrame");holder.pack(side="left",padx=2)
-            lbl=ttk.Label(holder,text=str(idx+1),anchor="center",width=10)
+
+        shell=ttk.Frame(frame)
+        shell.pack(fill="x",expand=True)
+        canvas=tk.Canvas(shell,height=92,highlightthickness=0,bg="#ffffff")
+        hbar=ttk.Scrollbar(shell,orient="horizontal",command=canvas.xview)
+        canvas.configure(xscrollcommand=hbar.set)
+        canvas.pack(fill="x",expand=True)
+        hbar.pack(fill="x")
+        inner=ttk.Frame(canvas)
+        window=canvas.create_window((0,0),window=inner,anchor="nw")
+        inner.bind("<Configure>",lambda e:canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>",lambda e:canvas.itemconfigure(window,height=e.height))
+
+        # Rendering thousands of Tk widgets freezes the editor.  The first 24
+        # thumbnails stay scrollable here; the paged Product Studio manages all images.
+        visible_items=items[:24]
+        for idx,item in enumerate(visible_items):
+            holder=ttk.Frame(inner,padding=2,style="Card.TFrame");holder.pack(side="left",padx=3,pady=2)
+            lbl=ttk.Label(holder,text=str(idx+1),anchor="center",width=12)
             lbl.pack()
             lbl.bind("<Button-1>",lambda e,i=idx:self._select_inline_image(i))
             local=item.get("local") or ""
@@ -1727,7 +1747,7 @@ class App(tk.Tk):
                 except Exception:pass
             elif str(item.get("url") or "").startswith(("http://","https://")):
                 self._load_inline_thumb_async(lbl,item.get("url"))
-        ttk.Button(frame,text=f"همه {len(items)} عکس ←",command=self.open_product_studio,style="Primary.TButton").pack(side="left",padx=5)
+        ttk.Button(inner,text=f"مدیریت همه {len(items)} عکس ←",command=self.open_image_manager,style="Primary.TButton").pack(side="left",padx=8,pady=12)
 
     def _select_inline_image(self,index):
         self._preview_index=int(index);self.show_preview_image()
@@ -1780,7 +1800,7 @@ class App(tk.Tk):
 
     def apply_preview_bytes(self,raw):
         try:
-            image=Image.open(io.BytesIO(raw)); image.thumbnail((520,330),Image.Resampling.LANCZOS)
+            image=Image.open(io.BytesIO(raw)); image.thumbnail((360,210),Image.Resampling.LANCZOS)
             self._preview_photo=ImageTk.PhotoImage(image)
             self.preview_label.configure(image=self._preview_photo,text="")
         except Exception as exc:
@@ -1899,67 +1919,13 @@ class App(tk.Tk):
         self.prepare_product_gallery(self.db.product(self.current_product));self.refresh_products()
 
     def open_image_manager(self):
-        if not self.current_product:return
-        self.prepare_product_gallery(self.db.product(self.current_product))
-        items=getattr(self,"_preview_items",[])
-        win=tk.Toplevel(self); win.title("گالری تصاویر محصول — 3DPrintHub"); win.geometry("1320x820"); win.configure(bg="#f2f5f8")
-        top=ttk.Frame(win,padding=10); top.pack(fill="x")
-        title=tk.StringVar(value=f"تصاویر پیدا شده: {len(items)} — فقط تصاویر تیک‌خورده به سایت می‌روند")
-        ttk.Label(top,textvariable=title,font=("Tahoma",11,"bold")).pack(side="left")
-        ttk.Button(top,text="+ عکس از کامپیوتر",command=lambda:(self.add_local_images_to_product(win),win.destroy(),self.open_image_manager()),style="Success.TButton").pack(side="right",padx=3)
-        ttk.Button(top,text="+ URL عکس",command=lambda:(self.add_image_url_to_product(win),win.destroy(),self.open_image_manager()),style="Primary.TButton").pack(side="right",padx=3)
-        canvas=tk.Canvas(win,highlightthickness=0,bg="#f2f5f8");scroll=ttk.Scrollbar(win,orient="vertical",command=canvas.yview)
-        canvas.configure(yscrollcommand=scroll.set);scroll.pack(side="right",fill="y");canvas.pack(side="left",fill="both",expand=True)
-        inner=ttk.Frame(canvas,padding=8);wid=canvas.create_window((0,0),window=inner,anchor="nw")
-        inner.bind("<Configure>",lambda e:canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>",lambda e:canvas.itemconfigure(wid,width=e.width))
-        vars_=[];photos=[];labels=[]
-        rowdata=self.db.product(self.current_product); primary=rowdata["primary_image_url"] or ""
-        def render_image(label,raw):
-            try:
-                image=Image.open(io.BytesIO(raw));image.thumbnail((250,170),Image.Resampling.LANCZOS);photo=ImageTk.PhotoImage(image);photos.append(photo);label.configure(image=photo,text="")
-            except Exception:pass
-        def fetch_remote(label,url):
-            try:
-                req=urllib_request.Request(url,headers={"User-Agent":"Mozilla/5.0","Referer":self.source_url_text.get().strip()})
-                with urllib_request.urlopen(req,timeout=20) as response:raw=response.read(15_000_000)
-                if win.winfo_exists():win.after(0,lambda:render_image(label,raw))
-            except Exception:
-                if win.winfo_exists():win.after(0,lambda:label.configure(text="پیش‌نمایش آنلاین ناموفق"))
-        def set_primary(index):
-            self._preview_index=index;self.set_current_preview_primary();win.destroy();self.open_image_manager()
-        def remove_index(index):
-            self._preview_index=index;self.remove_current_image_from_product();win.destroy();self.open_image_manager()
-        for idx,item in enumerate(items):
-            style="Card.TLabelframe"
-            card=ttk.LabelFrame(inner,text=f"#{idx+1}"+("  ★ Primary" if item.get("url")==primary else ""),padding=7,style=style);card.grid(row=idx//4,column=idx%4,sticky="nsew",padx=6,pady=6)
-            label=ttk.Label(card,text="در حال آماده‌سازی تصویر…",anchor="center");label.pack(fill="both",expand=True);labels.append(label)
-            local=item.get("local") or ""
-            if local and Path(local).is_file():
-                try:render_image(label,Path(local).read_bytes())
-                except Exception:label.configure(text="فایل تصویر خراب")
-            elif item.get("url","").startswith(("http://","https://")):
-                threading.Thread(target=fetch_remote,args=(label,item["url"]),daemon=True).start()
-            else:label.configure(text="تصویر محلی")
-            var=tk.IntVar(value=1 if item.get("selected") else 0);vars_.append(var)
-            ttk.Checkbutton(card,text="✓ ارسال به سایت",variable=var).pack(anchor="w")
-            actions=ttk.Frame(card);actions.pack(fill="x",pady=3)
-            ttk.Button(actions,text="★ اصلی",command=lambda i=idx:set_primary(i)).pack(side="left",padx=2)
-            ttk.Button(actions,text="حذف",command=lambda i=idx:remove_index(i),style="Danger.TButton").pack(side="left",padx=2)
-            if item.get("url","").startswith(("http://","https://")):
-                ttk.Button(actions,text="لینک",command=lambda u=item["url"]:webbrowser.open(u)).pack(side="left",padx=2)
-            url=item.get("url") or item.get("local") or "";ttk.Label(card,text=(url[:62]+"…") if len(url)>63 else url,wraplength=250,style="SubHeader.TLabel").pack(anchor="w")
-        for col in range(4):inner.columnconfigure(col,weight=1)
-        footer=ttk.Frame(win,padding=10);footer.place(relx=0,rely=1,anchor="sw")
-        def select_all(value):
-            for var in vars_:var.set(value)
-        def save():
-            for item,var in zip(items,vars_):item["selected"]=bool(var.get())
-            self._persist_gallery_urls(items);self.prepare_product_gallery(self.db.product(self.current_product));self.refresh_products();win.destroy()
-        ttk.Button(footer,text="انتخاب همه",command=lambda:select_all(1)).pack(side="left",padx=3)
-        ttk.Button(footer,text="هیچکدام",command=lambda:select_all(0)).pack(side="left",padx=3)
-        ttk.Button(footer,text="ذخیره انتخاب‌ها",command=save,style="Success.TButton").pack(side="left",padx=5)
-        win._photos=photos
+        if not self.current_product:
+            messagebox.showwarning(APP,"ابتدا یک محصول را انتخاب کنید.")
+            return
+        studio=ProductStudio(self,int(self.current_product))
+        studio.nb.select(studio.images_tab)
+        studio.lift()
+        studio.focus_force()
 
     def open_technical_details(self):
         if not self.current_product:return
@@ -2102,6 +2068,81 @@ class App(tk.Tk):
             self.db.update_product(int(iid),{"upload_ready":0,"workflow_status":"review"})
         self.refresh_upload_queue(); self.refresh_products()
 
+    def publish_product_now(self, product_id=None, parent=None):
+        product_id=int(product_id or self.current_product or 0)
+        if not product_id:
+            messagebox.showwarning(APP,"ابتدا یک محصول را انتخاب کنید.",parent=parent or self);return
+        row=self.db.product(product_id)
+        if row is None:
+            messagebox.showerror(APP,"محصول انتخاب‌شده پیدا نشد.",parent=parent or self);return
+        if not int(row["upload_ready"] or 0):
+            if product_id != self.current_product:
+                messagebox.showwarning(APP,"محصول هنوز آماده انتشار نیست. در استودیوی محصول ابتدا اطلاعات را تأیید کنید.",parent=parent or self);return
+            self.approve_to_upload_queue()
+            row=self.db.product(product_id)
+            if row is None or not int(row["upload_ready"] or 0):return
+        try:
+            self._site_connection(require_bridge=True)
+            result=self.build_batch(product_ids=[product_id],quiet=True)
+        except Exception as exc:
+            self.db.update_product(product_id,{"product_sync_error":f"{type(exc).__name__}: {exc}"[:1000]})
+            self.db.record_sync_receipt(product_id,"","desktop_batch_failed","",{"error":f"{type(exc).__name__}: {exc}"})
+            self.logger.exception("PRODUCT_PUBLISH_PREP_FAILED product_id=%s error=%s",product_id,redact(exc))
+            messagebox.showerror(APP,f"ارسال محصول قبل از FTP متوقف شد:\n{type(exc).__name__}: {exc}\n\nجزئیات در گزارش ارسال ثبت شد.",parent=parent or self)
+            return
+        self.db.record_sync_receipt(product_id,result["batch_uuid"],"desktop_batch_ready","",{
+            "batch_name":result["batch"].name,
+            "models":result["validation"].get("models"),
+            "images":result["validation"].get("images"),
+        })
+        self.status.set(f"ارسال محصول #{product_id} شروع شد")
+        self.upload_last_batch()
+
+    def open_current_publish_log(self):
+        product_id=int(self.current_product or 0)
+        if not product_id:
+            messagebox.showwarning(APP,"ابتدا یک محصول را انتخاب کنید.");return
+        win=tk.Toplevel(self);win.title(f"گزارش ارسال محصول #{product_id}");win.geometry("1040x720")
+        top=ttk.Frame(win,padding=10);top.pack(fill="x")
+        ttk.Label(top,text="Windows → Batch → FTP → Bridge → Import → Store",style="Header.TLabel").pack(side="left")
+        text=tk.Text(win,wrap="word",font=("Consolas",10));text.pack(fill="both",expand=True,padx=10,pady=(0,10))
+        def refresh():
+            row=self.db.product(product_id);receipts=self.db.sync_receipts(product_id,limit=30)
+            text.delete("1.0","end");text.insert("1.0",receipt_lines(row,receipts));text.see("1.0")
+        def open_site():
+            row=self.db.product(product_id)
+            try:ack=json.loads(row["server_ack_json"] or "{}")
+            except Exception:ack={}
+            path=str(ack.get("product_url") or "")
+            if path:webbrowser.open(self.site_url.get().rstrip("/")+path)
+            else:messagebox.showwarning(APP,"لینک محصول هنوز از سرور دریافت نشده است.",parent=win)
+        def fetch_server_log():
+            receipts=self.db.sync_receipts(product_id,limit=30)
+            batch_name=""
+            for receipt in receipts:
+                try:payload=json.loads(receipt["payload_json"] or "{}")
+                except Exception:payload={}
+                candidate=str(payload.get("diagnostic_id") or payload.get("batch_name") or "")
+                if candidate.startswith("desktop_catalog_v85_"):
+                    batch_name=candidate;break
+            if not batch_name:
+                messagebox.showwarning(APP,"شناسه Diagnostic برای این محصول هنوز ثبت نشده است.",parent=win);return
+            try:cfg=self._site_connection(require_bridge=True)
+            except Exception as exc:messagebox.showerror(APP,str(exc),parent=win);return
+            def work():
+                try:
+                    diagnostic=get_batch_diagnostic(cfg,batch_name)
+                    rendered="\n\n=== HOST DIAGNOSTIC ===\n"+json.dumps(diagnostic,ensure_ascii=False,indent=2)
+                    self.after(0,lambda:(text.insert("end",rendered),text.see("end")))
+                except Exception as exc:
+                    self.after(0,lambda:messagebox.showerror(APP,f"دریافت لاگ سرور ناموفق بود:\n{type(exc).__name__}: {exc}",parent=win))
+            threading.Thread(target=work,daemon=True).start()
+        ttk.Button(top,text="تازه‌سازی",command=refresh).pack(side="right",padx=3)
+        ttk.Button(top,text="لاگ سرور",command=fetch_server_log).pack(side="right",padx=3)
+        ttk.Button(top,text="پوشه لاگ",command=self.open_log_folder).pack(side="right",padx=3)
+        ttk.Button(top,text="باز کردن محصول سایت",command=open_site).pack(side="right",padx=3)
+        refresh()
+
     def translate_product(self):
         if not self.current_product:return
         translation_provider=self.translation_provider.get(); title=self.val("source_title"); desc=self.val("source_description")
@@ -2127,17 +2168,25 @@ class App(tk.Tk):
         src=Path(row["local_dir"] or "")
         return materialize_selected_images(row,src,downloader=self._download_batch_image)
 
-    def build_batch(self):
-        if self.current_product:self.save_product()
+    def build_batch(self, product_ids=None, quiet=False):
+        if product_ids is None and self.current_product:
+            self.save_product()
         rows=self.db.exportable()
+        if product_ids is not None:
+            wanted={int(x) for x in product_ids}
+            rows=[r for r in rows if int(r["id"]) in wanted]
         if not rows:
-            messagebox.showwarning(APP,"صف آپلود خالی است. ابتدا محصول را تأیید و به صف انتشار اضافه کنید."); return
+            message="محصول آماده‌ای برای Batch انتخاب‌شده وجود ندارد. ابتدا اطلاعات، تصاویر، قیمت و مجوز را تأیید کنید."
+            if quiet:raise RuntimeError(message)
+            messagebox.showwarning(APP,message); return None
         batch_uuid=new_batch_uuid()
         name="desktop_catalog_v85_"+time.strftime("%Y%m%d_%H%M%S")
         batch=BATCH_ROOT/name
         building=BATCH_ROOT/(name+".building")
         if batch.exists() or building.exists():
-            messagebox.showerror(APP,f"مسیر Batch از قبل وجود دارد:\n{batch}"); return
+            message=f"مسیر Batch از قبل وجود دارد:\n{batch}"
+            if quiet:raise RuntimeError(message)
+            messagebox.showerror(APP,message); return None
         models=building/"models"; manifest=[]; batched_ids=[]
         try:
             models.mkdir(parents=True,exist_ok=False)
@@ -2179,15 +2228,20 @@ class App(tk.Tk):
             shutil.rmtree(building,ignore_errors=True)
             self.logger.exception("BATCH_BUILD_FAILED name=%s error=%s",name,redact(exc))
             self.log(f"BATCH_BUILD_FAILED {redact(exc)}")
+            if quiet:
+                raise
             if isinstance(exc,BatchImagePackagingError) or "IMAGE_NOT_PACKAGED" in str(exc):
                 messagebox.showerror(APP,"ساخت Batch متوقف شد چون تصویر محلی کامل نیست.\n\n"+str(exc)+"\n\nهیچ Batch ناقصی برای FTP ساخته نشد.")
             else:
                 messagebox.showerror(APP,f"ساخت Batch ناموفق بود:\n{exc}")
-            return
+            return None
         for product_id in batched_ids:self.db.update_product(product_id,{"workflow_status":"batched"})
         self.db.set_setting("last_batch_dir",str(batch)); self.db.set_setting("last_batch_uuid",batch_uuid)
         self.refresh_products(); self.refresh_upload_queue()
-        messagebox.showinfo(APP,f"Batch v8.5 ساخته و اعتبارسنجی شد:\n{batch}\n\nمحصولات: {validation['models']}\nتصاویر محلی: {validation['images']}\nBatch UUID: {batch_uuid}")
+        result={"batch":batch,"batch_uuid":batch_uuid,"validation":validation,"product_ids":[int(x) for x in batched_ids]}
+        if not quiet:
+            messagebox.showinfo(APP,f"Batch v8.5 ساخته و اعتبارسنجی شد:\n{batch}\n\nمحصولات: {validation['models']}\nتصاویر محلی: {validation['images']}\nBatch UUID: {batch_uuid}")
+        return result
 
     def save_settings(self):
         for k,v in [("google_api_key",self.google_key.get()),
@@ -2283,23 +2337,42 @@ class App(tk.Tk):
         self.status.set("Batch آماده است؛ شروع ارسال به سایت")
         self.upload_last_batch()
 
+    def _batch_product_ids(self,batch):
+        try:
+            payload=json.loads((Path(batch)/"batch_manifest.json").read_text(encoding="utf-8"))
+            return [int(item.get("desktop_product_id")) for item in payload.get("models",[]) if item.get("desktop_product_id")]
+        except Exception:
+            return []
+
+    def _record_batch_stage(self,batch,batch_uuid,status,payload=None):
+        for pid in self._batch_product_ids(batch):
+            self.db.record_sync_receipt(pid,batch_uuid,status,"",payload or {"batch_name":Path(batch).name})
+
     def upload_last_batch(self):
         batch=Path(self.db.setting("last_batch_dir"))
         if not batch.is_dir(): messagebox.showwarning(APP,"Batch ساخته نشده است."); return
         try:cfg=self._site_connection(require_bridge=True)
         except Exception as exc:messagebox.showwarning(APP,str(exc));return
         batch_uuid=self.db.setting("last_batch_uuid")
+        product_ids=self._batch_product_ids(batch)
+        self._record_batch_stage(batch,batch_uuid,"desktop_publish_started",{"batch_name":batch.name,"stage":"publish_start"})
         def work():
             try:
                 self.logger.info("PUBLISH_START batch=%s uuid=%s",batch.name,batch_uuid)
                 result=upload_batch(cfg,batch,lambda line:(self.logger.info(redact(line)),self.events.put(("log",line))))
                 self.logger.info("FTP_UPLOAD_OK batch=%s files=%s remote=%s",batch.name,result["uploaded_files"],result["remote_batch"])
+                self._record_batch_stage(batch,batch_uuid,"desktop_ftp_uploaded",result)
                 ack=import_batch(cfg,batch.name,batch_uuid)
                 self.logger.info("BRIDGE_IMPORT_ACK batch=%s ack=%s",batch.name,redact(ack))
                 self.events.put(("upload_v8",(0,json.dumps(ack,ensure_ascii=False),"",ack)))
             except Exception as exc:
+                error=f"{type(exc).__name__}: {exc}"
                 self.logger.exception("PUBLISH_FAILED batch=%s error=%s",batch.name,redact(exc))
-                self.events.put(("error",f"انتشار ناموفق بود: {type(exc).__name__}: {exc}\nجزئیات: {self.log_path}"))
+                for pid in product_ids:
+                    self.db.record_sync_receipt(pid,batch_uuid,"desktop_publish_failed","",{"batch_name":batch.name,"error":error})
+                    self.db.update_product(pid,{"server_status":"failed","product_sync_error":error[:1000],"last_synced_at":utc_now()})
+                self.events.put(("error",f"انتشار ناموفق بود: {error}\nجزئیات: {self.log_path}"))
+                self.events.put(("refresh",None))
         threading.Thread(target=work,daemon=True).start(); self.status.set("FTP Upload + Import Bridge + انتظار ACK سایت")
 
     def refresh_runs(self):
@@ -2362,18 +2435,27 @@ class App(tk.Tk):
                         self.status.set("ACK دریافت نشد")
                     else:
                         batch_uuid=ack.get("batch_uuid") or self.db.setting("last_batch_uuid")
-                        success=failed=0
+                        success=failed=visible_count=0
+                        product_links=[]
                         for item in ack.get("items") or []:
                             pid=item.get("desktop_product_id")
                             state=str(item.get("status") or "")
                             server_id=str(item.get("server_id") or "")
                             if pid:
-                                self.db.record_sync_receipt(pid,batch_uuid,state,server_id,item)
+                                item_payload=dict(item)
+                                item_payload["diagnostic_id"]=ack.get("diagnostic_id") or ""
+                                item_payload["bridge_status"]=ack.get("bridge_status") or ""
+                                item_payload["batch_name"]=ack.get("diagnostic_id") or ""
+                                self.db.record_sync_receipt(pid,batch_uuid,state,server_id,item_payload)
                                 now=utc_now(); row_now=self.db.product(pid)
-                                values={"server_id":server_id,"server_status":state,"server_ack_json":json.dumps(item,ensure_ascii=False),"last_synced_at":now}
-                                if row_now is not None and ack_item_confirms_publish(item,row_now):
+                                values={"server_id":server_id,"server_status":state,"server_ack_json":json.dumps(item_payload,ensure_ascii=False),"last_synced_at":now}
+                                if row_now is not None and ack_item_confirms_publish(item,row_now,require_store_visibility=True):
                                     values.update({"workflow_status":"uploaded","upload_ready":0,"needs_update":0,"product_sync_error":"",
                                                    "published_at":row_now["published_at"] or now,"last_synced_source_hash":item.get("source_hash") or row_now["source_hash"] or ""}); success+=1
+                                    if item.get("visible_on_store") is True:
+                                        visible_count+=1
+                                    if item.get("product_url"):
+                                        product_links.append(str(item.get("product_url")))
                                 else:
                                     values["product_sync_error"]=str(
                                         item.get("error")
@@ -2381,7 +2463,9 @@ class App(tk.Tk):
                                     )[:1000]; failed+=1
                                 self.db.update_product(pid,values)
                         self.refresh_upload_queue(); self.refresh_products(); self.status.set("ACK سایت دریافت شد")
-                        msg=f"ACK سایت دریافت شد.\nموفق/ثبت‌شده: {success}\nناموفق: {failed}\nBatch: {batch_uuid}"
+                        msg=f"ACK سایت دریافت شد.\nموفق/ثبت‌شده: {success}\nقابل نمایش در فروشگاه: {visible_count}\nناموفق: {failed}\nBatch: {batch_uuid}"
+                        if product_links:
+                            msg += "\nلینک: " + self.site_url.get().rstrip("/") + product_links[0]
                         if status==0:
                             messagebox.showinfo(APP,msg)
                         else:

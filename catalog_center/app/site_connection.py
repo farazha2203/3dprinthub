@@ -175,3 +175,17 @@ def import_batch(settings: SiteConnection, batch_name: str, batch_uuid: str) -> 
         {"batch_name": batch_name, "batch_uuid": batch_uuid, "schema_version": "8.5"},
         max(60, cfg.timeout),
     )
+
+
+def get_batch_diagnostic(settings: SiteConnection, batch_name: str) -> dict:
+    cfg = settings.normalized()
+    if not cfg.bridge_token:
+        raise ValueError("Bridge token is empty")
+    if not BATCH_NAME.fullmatch(str(batch_name or "")):
+        raise ValueError("Batch name is not valid for diagnostics")
+    return _json_request(
+        f"{cfg.site_url}/api/catalog-bridge/v1/diagnostics/{batch_name}/",
+        cfg.bridge_token,
+        None,
+        cfg.timeout,
+    )
