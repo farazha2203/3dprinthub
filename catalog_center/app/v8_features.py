@@ -114,8 +114,10 @@ def diff_summary(diff: dict[str, dict[str, Any]]) -> str:
         else:
             before = str(change["before"] or "")
             after = str(change["after"] or "")
-            if len(before) > 70: before = before[:67] + "…"
-            if len(after) > 70: after = after[:67] + "…"
+            if len(before) > 70:
+                before = before[:67] + "…"
+            if len(after) > 70:
+                after = after[:67] + "…"
             lines.append(f"• {labels.get(key,key)}: {before!r} → {after!r}")
     return "\n".join(lines)
 
@@ -184,8 +186,9 @@ def ack_item_confirms_publish(
     """Return True only when the ACK contains every requested publish target.
 
     Legacy callers keep the pre-Phase49 contract by default. Phase49 publish
-    paths opt in to strict store visibility, which prevents an inactive Product
-    from being marked as published on the desktop.
+    paths opt in to strict store visibility. Epic49 additionally honors the
+    desktop's public HTTP verification when that newer field is present, while
+    keeping historical ACK compatibility when it is absent.
     """
     if str(item.get("status") or "") not in {"created", "updated"}:
         return False
@@ -204,8 +207,11 @@ def ack_item_confirms_publish(
         return False
     if wants_product and not item.get("product_id"):
         return False
-    if require_store_visibility and wants_product and item.get("visible_on_store") is not True:
-        return False
+    if require_store_visibility and wants_product:
+        if item.get("visible_on_store") is not True:
+            return False
+        if "public_http_ok" in item and item.get("public_http_ok") is not True:
+            return False
     if wants_portfolio and not item.get("portfolio_id"):
         return False
     return True
