@@ -22,6 +22,7 @@ if ($LASTEXITCODE -ne 0) { throw "Git diff check failed" }
   (Join-Path $Catalog "app") `
   (Join-Path $Root "store") `
   (Join-Path $Root "catalog_bridge") `
+  (Join-Path $Root "deploy") `
   -q
 if ($LASTEXITCODE -ne 0) { throw "Python compileall failed" }
 
@@ -45,6 +46,7 @@ if ($LASTEXITCODE -ne 0) { throw "Migration drift detected" }
   store.test_phase49_unicode_routes `
   catalog_bridge.tests.test_bridge `
   catalog_bridge.tests.test_phase49_diagnostics `
+  catalog_bridge.tests.test_epic49_contract `
   website.test_phase48_operational_release `
   --verbosity 2
 if ($LASTEXITCODE -ne 0) { throw "Django Epic49 regression tests failed" }
@@ -57,6 +59,8 @@ Write-Host "DATABASE_MIGRATE=NO"
 Write-Host "DATABASE_DATA_WRITE=NO"
 Write-Host "CATALOG_CENTER_FULL_SUITE=OK"
 Write-Host "DJANGO_EPIC49_REGRESSION=OK"
+Write-Host "BRIDGE_VERSION=1.2.0"
+Write-Host "PUBLISH_CONTRACT=epic49-final"
 Write-Host "PUBLIC_HTTP_ACCEPTANCE_CONTRACT=ENABLED"
 Write-Host "EXISTING_PRODUCT_RESYNC=ENABLED"
 Write-Host "FAILED_BATCH_ARCHIVE=DRY_RUN_OK"
