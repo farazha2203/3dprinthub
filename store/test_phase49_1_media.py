@@ -24,8 +24,14 @@ class Phase491PublicMediaTests(SimpleTestCase):
                     RequestFactory().get("/media/store/products/demo.webp"),
                     "store/products/demo.webp",
                 )
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("max-age=86400", response["Cache-Control"])
+            try:
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("max-age=86400", response["Cache-Control"])
+            finally:
+                # django.views.static.serve() returns a FileResponse that keeps
+                # its file handle open until response.close(). Windows refuses
+                # to delete the TemporaryDirectory while that handle is open.
+                response.close()
 
     def test_private_and_traversal_paths_are_rejected(self):
         for path in ("store/private-models/secret.stl", "../.env", "website/orders/a.jpg"):
