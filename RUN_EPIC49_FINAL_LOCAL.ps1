@@ -41,19 +41,18 @@ if ($LASTEXITCODE -ne 0) { throw "Django check failed" }
 & $Python manage.py makemigrations --check --dry-run
 if ($LASTEXITCODE -ne 0) { throw "Migration drift detected" }
 
-$MigrationPlan = @(& $Python manage.py migrate store 0028 --plan)
-if ($LASTEXITCODE -ne 0) { throw "Migration 0028 plan failed" }
+$MigrationPlan = @(& $Python manage.py migrate store 0029 --plan)
+if ($LASTEXITCODE -ne 0) { throw "Epic49 migration plan failed" }
 $MigrationPlan | ForEach-Object { Write-Host $_ }
-if (($MigrationPlan -join "`n") -notmatch "0028_epic49_catalog_product_schema") {
-    $Show = @(& $Python manage.py showmigrations store)
-    $Show | ForEach-Object { Write-Host $_ }
-    if (($Show -join "`n") -notmatch "0028_epic49_catalog_product_schema") {
-        throw "Migration 0028 is not registered"
-    }
-}
+$Show = @(& $Python manage.py showmigrations store)
+if ($LASTEXITCODE -ne 0) { throw "showmigrations failed" }
+$Show | ForEach-Object { Write-Host $_ }
+$ShowText = $Show -join "`n"
+if ($ShowText -notmatch "0028_epic49_catalog_product_schema") { throw "Migration 0028 is not registered" }
+if ($ShowText -notmatch "0029_epic49_catalog_product_backfill") { throw "Migration 0029 is not registered" }
 
-# Test DB creation applies the real migration chain, including 0028, without
-# writing to the developer's runtime database.
+# Test DB creation applies the real migration chain, including 0028 + 0029,
+# without writing to the developer's runtime database.
 & $Python manage.py test `
   store.test_phase49_catalog_visibility `
   store.test_phase49_1_media `
@@ -101,7 +100,9 @@ if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Verified portable EXE 
 if ($Manifest.stable_exe_updated -eq $true -and -not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing after successful alias update: $StableExe" }
 
 Set-Location $Root
-Write-Host "DATABASE_MIGRATION_0028=READY"
+Write-Host "DATABASE_MIGRATION_0028_SCHEMA=READY"
+Write-Host "DATABASE_MIGRATION_0029_BACKFILL=READY"
+Write-Host "DATABASE_MYSQL_DDL_DATA_SPLIT=ENABLED"
 Write-Host "DATABASE_LOCAL_RUNTIME_WRITE=NO"
 Write-Host "GIT_CATALOG_FULL_SUITE=OK"
 Write-Host "WINDOWS_CATALOG_SYNC=OK"
