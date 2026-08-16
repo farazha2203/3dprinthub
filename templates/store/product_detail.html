@@ -1,16 +1,7 @@
 {% extends "store/base.html" %}
 {% load humanize store_seo store_consultation %}
 
-{% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}
-{% if user.is_authenticated and product.source_url %}
-<div class="alert alert-secondary mt-3" role="note">
-  <strong>منبع مدل:</strong> <a href="{{ product.source_url }}" target="_blank" rel="noopener noreferrer">{{ product.source_name|default:"مشاهده سایت مرجع" }}</a>
-</div>
-{% endif %}
-{% if product.fixed_price and not product.price_is_final %}
-<div class="alert alert-warning mt-3">{{ product.price_note|default:"قیمت علی‌الحساب است و پس از بررسی اپراتور قطعی می‌شود." }}</div>
-{% endif %}
-{% endblock %}
+{% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}{% endblock %}
 
 {% block title %}{{ product.seo_title }}{% endblock %}
 {% block meta_description %}{{ product.seo_description }}{% endblock %}
@@ -31,10 +22,8 @@
 {% block content %}
 <section class="container mx-auto px-4 md:px-6 py-8 md:py-12">
     <nav class="text-sm text-slate-500 mb-6">
-        <a href="{% url 'store:product_list' %}">فروشگاه</a>
-        <span class="px-2">/</span>
-        <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
-        <span class="px-2">/</span>
+        <a href="{% url 'store:product_list' %}">فروشگاه</a><span class="px-2">/</span>
+        <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a><span class="px-2">/</span>
         <span>{{ product.title }}</span>
     </nav>
 
@@ -45,62 +34,49 @@
             </div>
             {% consultation_links product.title product.get_absolute_url as consult %}
             {% if consult.has_any and product.consultation_required %}<div class="p28-store-consult p28-store-consult--detail">{% if consult.whatsapp %}<a class="p28-store-consult__wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در واتساپ</a>{% endif %}{% if consult.telegram %}<a class="p28-store-consult__tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در تلگرام</a>{% endif %}{% if consult.support %}<a class="p28-store-consult__site" href="{{ consult.support }}">ارسال محصول برای پشتیبانی سایت</a>{% endif %}</div>{% endif %}
-            {% if product.images.all %}
-                <div class="grid grid-cols-4 gap-3 mt-3">
-                    {% for image in product.images.all %}
-                        <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" loading="lazy" class="rounded-xl aspect-square object-cover border border-slate-200">
-                    {% endfor %}
-                </div>
-            {% endif %}
+            {% if product.images.all %}<div class="grid grid-cols-4 gap-3 mt-3">{% for image in product.images.all %}<img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" loading="lazy" class="rounded-xl aspect-square object-cover border border-slate-200">{% endfor %}</div>{% endif %}
         </div>
 
         <div class="store-product-panel">
             <div class="text-orange-500 font-bold">{{ product.category.name }}</div>
             <h1 class="text-3xl md:text-4xl font-black mt-3 leading-tight">{{ product.title }}</h1>
             <p class="text-slate-600 leading-8 mt-5">{{ product.short_description }}</p>
+            {% if product.fixed_price %}
+              <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-5 text-slate-700">
+                <strong class="text-orange-700">قیمت پایه: {{ product.fixed_price|intcomma }} تومان</strong>
+                {% if product.price_note %}<div class="text-sm leading-7 mt-1">{{ product.price_note }}</div>{% endif %}
+              </div>
+            {% endif %}
+            {% if user.is_authenticated and product.source_url %}<div class="phase39-source mt-4"><strong>منبع مدل:</strong> <a href="{{ product.source_url }}" target="_blank" rel="noopener noreferrer">{{ product.source_name|default:"مشاهده سایت مرجع" }}</a></div>{% endif %}
 
             {% if active_promotions %}<div class="phase39-promo-row">{% for promo in active_promotions %}<span class="phase39-promo-badge">{{ promo.title|default:promo.get_kind_display }}{% if promo.discount_percent %} • {{ promo.discount_percent }}٪ تخفیف{% endif %}{% if promo.stock_limit %} • {{ promo.remaining_quantity }} عدد باقی‌مانده{% endif %}</span>{% endfor %}</div>{% endif %}
             {% if product.show_public_order_count %}<div class="phase39-order-proof">بیش از {{ public_order_count }} سفارش ثبت‌شده برای این محصول</div>{% endif %}
             {% if product.editorial_source_url %}<div class="phase39-source"><span>منبع اطلاعات:</span> <a href="{{ product.editorial_source_url }}" target="_blank" rel="nofollow noopener">مشاهده منبع اصلی</a>{% if product.source_attribution %} • {{ product.source_attribution }}{% endif %}</div>{% endif %}
 
-            {% if product.compatibilities.all %}
-                <div class="store-compatibility mt-6">
-                    <div class="font-black mb-3">سازگاری محصول</div>
-                    <div class="flex flex-wrap gap-2">
-                        {% for item in product.compatibilities.all %}
-                            <span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
-
+            {% if product.compatibilities.all %}<div class="store-compatibility mt-6"><div class="font-black mb-3">سازگاری محصول</div><div class="flex flex-wrap gap-2">{% for item in product.compatibilities.all %}<span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
             {% if material_options %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
 
             <div class="mt-7">
-                <label for="variant-select" class="block font-black mb-2">انتخاب متریال و کیفیت چاپ</label>
+                <label for="variant-select" class="block font-black mb-2">انتخاب متریال، رنگ و کیفیت چاپ</label>
                 <select id="variant-select" class="form-input">
                     <option value="">انتخاب کنید</option>
-                    {% for variant in variants %}
-                        {% with price=variant.price_breakdown %}
-                            <option
-                                value="{{ variant.id }}"
-                                data-material="{{ variant.material.name }}"
-                                data-quality="{{ variant.quality.name }}"
-                                data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
-                                {% if variant.color and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
-                                data-material-cost="{{ price.material_cost }}"
-                                data-machine-cost="{{ price.machine_cost }}"
-                                data-labor-cost="{{ price.labor_cost }}"
-                                data-post-fee="{{ price.post_processing_fee }}"
-                                data-fixed-fee="{{ price.fixed_fee }}"
-                                data-total="{{ price.unit_price }}"
-                                data-print-time="{{ variant.print_time_minutes }}"
-                                data-weight="{{ variant.material_weight_grams }}"
-                            >
-                                {{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان
-                            </option>
-                        {% endwith %}
-                    {% endfor %}
+                    {% for variant in variants %}{% with price=variant.price_breakdown %}
+                        <option value="{{ variant.id }}"
+                            data-material="{{ variant.material.name }}"
+                            data-quality="{{ variant.quality.name }}"
+                            data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
+                            {% if variant.color and variant.material.track_filament_inventory and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
+                            data-material-cost="{{ price.material_cost }}"
+                            data-machine-cost="{{ price.machine_cost }}"
+                            data-labor-cost="{{ price.labor_cost }}"
+                            data-post-fee="{{ price.post_processing_fee }}"
+                            data-fixed-fee="{{ price.fixed_fee }}"
+                            data-total="{{ price.unit_price }}"
+                            data-print-time="{{ variant.print_time_minutes }}"
+                            data-weight="{{ variant.material_weight_grams }}">
+                            {{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان
+                        </option>
+                    {% endwith %}{% endfor %}
                 </select>
             </div>
 
@@ -112,18 +88,17 @@
             </div>
 
             <div class="mt-6">
-                            <form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">
-                                {% csrf_token %}
-                                <input type="hidden" name="variant_id" id="cart-variant-id" value="">
-                                <input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد">
-                                <button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button>
-                            </form>
-                            <div class="grid grid-cols-2 gap-3 mt-3">
-                                <a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a>
-                                <form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form>
-                            </div>
-                            {% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}
-                        </div>
+                <form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">
+                    {% csrf_token %}<input type="hidden" name="variant_id" id="cart-variant-id" value="">
+                    <input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد">
+                    <button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button>
+                </form>
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a>
+                    <form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form>
+                </div>
+                {% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}
+            </div>
         </div>
     </div>
 
@@ -136,59 +111,22 @@
         </section>
         <aside class="store-content-card">
             <h2 class="text-xl font-black">اطلاعات سریع</h2>
-            <dl class="store-spec-list mt-4">
-                <div><dt>کد محصول</dt><dd>{{ product.sku }}</dd></div>
-                <div><dt>ابعاد</dt><dd>{{ product.dimensions|default:'طبق مشخصات سفارش' }}</dd></div>
-                <div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div>
-                <div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div>
-            </dl>
+            <dl class="store-spec-list mt-4"><div><dt>کد محصول</dt><dd>{{ product.sku }}</dd></div><div><dt>ابعاد</dt><dd>{{ product.dimensions|default:'طبق مشخصات سفارش' }}</dd></div><div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div><div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div></dl>
             {% if product.hashtags %}<div class="phase39-hashtags">{{ product.hashtags }}</div>{% endif %}
         </aside>
     </div>
 
-    {% if product.faqs.all %}
-    <section class="store-content-card mt-8">
-        <h2 class="text-2xl font-black">پرسش‌های متداول درباره {{ product.title }}</h2>
-        <div class="space-y-3 mt-5">
-            {% for faq in product.faqs.all %}{% if faq.is_active %}<details class="rounded-2xl border border-slate-200 bg-white p-5"><summary class="font-black cursor-pointer">{{ faq.question }}</summary><div class="text-slate-600 leading-8 mt-3">{{ faq.answer|linebreaks }}</div></details>{% endif %}{% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    {% if product.faqs.all %}<section class="store-content-card mt-8"><h2 class="text-2xl font-black">پرسش‌های متداول درباره {{ product.title }}</h2><div class="space-y-3 mt-5">{% for faq in product.faqs.all %}{% if faq.is_active %}<details class="rounded-2xl border border-slate-200 bg-white p-5"><summary class="font-black cursor-pointer">{{ faq.question }}</summary><div class="text-slate-600 leading-8 mt-3">{{ faq.answer|linebreaks }}</div></details>{% endif %}{% endfor %}</div></section>{% endif %}
 
     <section class="store-content-card mt-8">
         <h2 class="text-2xl font-black">پرسش و دیدگاه کاربران</h2>
-        {% if request.user.is_authenticated %}
-            <form method="post" action="{% url 'store:add_comment' product.slug %}" class="mt-5">
-                {% csrf_token %}
-                {{ comment_form.body }}
-                <button class="btn-primary rounded-2xl px-6 py-3 font-black mt-3" type="submit">ثبت دیدگاه</button>
-            </form>
-        {% else %}
-            <p class="mt-4 text-slate-600">برای ثبت دیدگاه ابتدا <a class="text-orange-500 font-bold" href="{% url 'website:customer_login' %}">وارد حساب شوید</a>.</p>
-        {% endif %}
+        {% if request.user.is_authenticated %}<form method="post" action="{% url 'store:add_comment' product.slug %}" class="mt-5">{% csrf_token %}{{ comment_form.body }}<button class="btn-primary rounded-2xl px-6 py-3 font-black mt-3" type="submit">ثبت دیدگاه</button></form>{% else %}<p class="mt-4 text-slate-600">برای ثبت دیدگاه ابتدا <a class="text-orange-500 font-bold" href="{% url 'website:customer_login' %}">وارد حساب شوید</a>.</p>{% endif %}
         <div class="space-y-4 mt-7">
             {% if product.customer_gallery_enabled %}<div class="phase39-customer-gallery">{% for review in reviews %}{% for photo in review.images.all %}{% if photo.is_approved %}<img src="{{ photo.image.url }}" alt="{{ photo.alt_text|default:product.title }} - تصویر مشتری" loading="lazy">{% endif %}{% endfor %}{% endfor %}</div>{% endif %}
-            {% for comment in comments %}
-                <article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <div class="font-black">{{ comment.user.get_full_name|default:comment.user.username }}</div>
-                    <p class="text-slate-600 leading-7 mt-2">{{ comment.body }}</p>
-                </article>
-            {% empty %}<p class="text-slate-500">هنوز دیدگاهی ثبت نشده است.</p>{% endfor %}
+            {% for comment in comments %}<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5"><div class="font-black">{{ comment.user.get_full_name|default:comment.user.username }}</div><p class="text-slate-600 leading-7 mt-2">{{ comment.body }}</p></article>{% empty %}<p class="text-slate-500">هنوز دیدگاهی ثبت نشده است.</p>{% endfor %}
         </div>
     </section>
 
-    {% if related_products %}
-        <section class="mt-10">
-            <h2 class="text-2xl font-black mb-5">محصولات مرتبط</h2>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {% for item in related_products %}
-                    <a href="{{ item.get_absolute_url }}" class="store-related-card">
-                        <img src="{{ item.main_image.url }}" alt="{{ item.title }}" loading="lazy">
-                        <div class="p-4 font-black">{{ item.title }}</div>
-                    </a>
-                {% endfor %}
-            </div>
-        </section>
-    {% endif %}
+    {% if related_products %}<section class="mt-10"><h2 class="text-2xl font-black mb-5">محصولات مرتبط</h2><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{% for item in related_products %}<a href="{{ item.get_absolute_url }}" class="store-related-card"><img src="{{ item.main_image.url }}" alt="{{ item.title }}" loading="lazy"><div class="p-4 font-black">{{ item.title }}</div></a>{% endfor %}</div></section>{% endif %}
 </section>
 {% endblock %}
