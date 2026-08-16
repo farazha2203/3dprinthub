@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from tkinter import ttk
+
 from .epic49_product_studio import (
     LICENSE_CODE_TO_LABEL,
     LICENSE_LABEL_TO_CODE,
@@ -9,6 +11,16 @@ from .epic49_product_studio import (
 
 class ProductStudio(EditableProductStudio):
     """Final Epic49 studio with two-way license synchronization."""
+
+    def _content_ui(self):
+        super()._content_ui()
+        legacy = ttk.Frame(self.content_tab)
+        legacy.pack(fill="x", pady=(6, 0))
+        ttk.Button(
+            legacy,
+            text="باز کردن استودیوی کامل SEO",
+            command=lambda: self.app.open_content_studio(self.product_id),
+        ).pack(side="right")
 
     def _reconcile_license_controls(self) -> str:
         if not hasattr(self, "publish_license_label_var"):
