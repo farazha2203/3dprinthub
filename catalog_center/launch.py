@@ -35,6 +35,7 @@ def main() -> int:
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
     print("UX87_SHELL=ENABLED", flush=True)
+    print("PRODUCT_WORKSPACE_V87=ENABLED", flush=True)
     print("PRODUCT_WORKSPACE_V871=ENABLED", flush=True)
     print("HOMEPAGE_SLIDER_SEO_V871=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
