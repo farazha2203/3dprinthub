@@ -45,6 +45,7 @@ def backfill_catalog_profiles(apps, schema_editor):
     assets = ImportedPrintAsset.objects.exclude(product_id=None).select_related("product", "source").order_by("pk")
     for asset in assets.iterator():
         product = asset.product
+        legacy_slug = str(getattr(product, "slug", "") or "")[:240]
         payload = asset.source_payload or {}
         data = payload.get("desktop_catalog_v85") if isinstance(payload, dict) else {}
         data = data if isinstance(data, dict) else {}
@@ -75,6 +76,7 @@ def backfill_catalog_profiles(apps, schema_editor):
             product_id=product.pk,
             defaults={
                 "public_slug": public_slug,
+                "legacy_slug": legacy_slug if legacy_slug != public_slug else "",
                 "desktop_product_id": int(data.get("desktop_product_id") or 0) or None,
                 "batch_uuid": str(data.get("batch_uuid") or "")[:80],
                 "source_hash": str(data.get("source_hash") or "")[:64],
@@ -136,6 +138,7 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("public_slug", models.SlugField(max_length=220, unique=True, verbose_name="اسلاگ عمومی امن")),
+                ("legacy_slug", models.CharField(blank=True, db_index=True, max_length=240, verbose_name="اسلاگ قبلی برای Redirect")),
                 ("desktop_product_id", models.PositiveBigIntegerField(blank=True, db_index=True, null=True, verbose_name="شناسه محصول دسکتاپ")),
                 ("batch_uuid", models.CharField(blank=True, db_index=True, max_length=80, verbose_name="شناسه Batch")),
                 ("source_hash", models.CharField(blank=True, db_index=True, max_length=64, verbose_name="هش منبع")),
