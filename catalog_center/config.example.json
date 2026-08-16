@@ -12,13 +12,7 @@
       "code": "makerworld",
       "name": "MakerWorld",
       "enabled": true,
-      "methods": [
-        "classic_isolated",
-        "classic_exact",
-        "network_capture",
-        "chrome_attached",
-        "saved_html"
-      ],
+      "methods": ["classic_isolated", "classic_exact", "network_capture", "chrome_attached", "saved_html"],
       "listing_urls": [
         "https://makerworld.com/en/3d-models?orderBy=downloadCount&page={page}",
         "https://makerworld.com/en/3d-models?orderBy=likeCount&page={page}",
@@ -33,13 +27,8 @@
       "code": "printables",
       "name": "Printables",
       "enabled": true,
-      "methods": [
-        "public_http",
-        "browser_dom"
-      ],
-      "listing_urls": [
-        "https://www.printables.com/model?ordering=popular"
-      ],
+      "methods": ["public_http", "browser_dom"],
+      "listing_urls": ["https://www.printables.com/model?ordering=popular"],
       "model_url_pattern": "https?://(?:www\\.)?printables\\.com/model/(?P<external_id>\\d+)[^\\s\\\"'<>]*",
       "requires_login": false,
       "daily_limit": 20
@@ -48,13 +37,8 @@
       "code": "thingiverse",
       "name": "Thingiverse",
       "enabled": true,
-      "methods": [
-        "official_api",
-        "browser_dom"
-      ],
-      "listing_urls": [
-        "https://www.thingiverse.com/search?q={query}&page={page}&type=things"
-      ],
+      "methods": ["official_api", "browser_dom"],
+      "listing_urls": ["https://www.thingiverse.com/search?q={query}&page={page}&type=things"],
       "model_url_pattern": "https?://(?:www\\.)?thingiverse\\.com/thing:(?P<external_id>\\d+)",
       "requires_login": false,
       "daily_limit": 20
@@ -63,12 +47,8 @@
       "code": "grabcad",
       "name": "GrabCAD Library",
       "enabled": true,
-      "methods": [
-        "browser_dom"
-      ],
-      "listing_urls": [
-        "https://grabcad.com/library"
-      ],
+      "methods": ["browser_dom"],
+      "listing_urls": ["https://grabcad.com/library"],
       "model_url_pattern": "https?://grabcad\\.com/library/(?P<external_id>[^/?#]+)",
       "requires_login": true,
       "reference_only": true,
@@ -78,11 +58,7 @@
       "code": "custom",
       "name": "منبع سفارشی",
       "enabled": true,
-      "methods": [
-        "browser_dom",
-        "public_http",
-        "sitemap"
-      ],
+      "methods": ["browser_dom", "public_http", "sitemap"],
       "listing_urls": [],
       "model_url_pattern": "",
       "requires_login": false,
@@ -92,10 +68,7 @@
       "code": "web_free_3d",
       "name": "جست‌وجوی وب مدل‌های رایگان",
       "enabled": true,
-      "methods": [
-        "browser_dom",
-        "public_http"
-      ],
+      "methods": ["browser_dom", "public_http"],
       "listing_urls": [],
       "model_url_pattern": "",
       "requires_login": false,
@@ -103,110 +76,36 @@
       "daily_limit": 20
     }
   ],
-  "package_version": "8.5.4",
-  "portfolio_harvest_sources": [
-    "makerworld",
-    "printables",
-    "thingiverse",
-    "grabcad"
-  ],
+  "package_version": "8.6.0",
+  "portfolio_harvest_sources": ["makerworld", "printables", "thingiverse", "grabcad"],
   "local_categories": [
-    {
-      "slug": "external-other",
-      "name": "سایر محصولات"
-    },
-    {
-      "slug": "automotive",
-      "name": "قطعات خودرو"
-    },
-    {
-      "slug": "replacement-parts",
-      "name": "قطعات جایگزین و نایاب"
-    },
-    {
-      "slug": "gears",
-      "name": "چرخ‌دنده و انتقال قدرت"
-    },
-    {
-      "slug": "industrial-parts",
-      "name": "قطعات صنعتی"
-    },
-    {
-      "slug": "tools-jigs",
-      "name": "ابزار، جیگ و فیکسچر"
-    },
-    {
-      "slug": "electronics-cases",
-      "name": "قاب و قطعات الکترونیکی"
-    },
-    {
-      "slug": "home-decor",
-      "name": "دکور و لوازم خانه"
-    },
-    {
-      "slug": "organizers",
-      "name": "نظم‌دهنده و نگهدارنده"
-    },
-    {
-      "slug": "plant-pots",
-      "name": "گلدان و لوازم گیاه"
-    },
-    {
-      "slug": "toys-games",
-      "name": "اسباب‌بازی و بازی"
-    },
-    {
-      "slug": "figurines",
-      "name": "فیگور و مجسمه"
-    },
-    {
-      "slug": "office",
-      "name": "لوازم اداری"
-    },
-    {
-      "slug": "workshop",
-      "name": "کارگاه و ابزار"
-    },
-    {
-      "slug": "automotive-dashboard",
-      "name": "خودرو - داشبورد و تریم"
-    },
-    {
-      "slug": "automotive-clips",
-      "name": "خودرو - خار، بست و کلیپس"
-    },
-    {
-      "slug": "automotive-air-vents",
-      "name": "خودرو - دریچه و قطعات کابین"
-    },
-    {
-      "slug": "mounts-brackets",
-      "name": "براکت، پایه و نگهدارنده"
-    },
-    {
-      "slug": "adapters-couplers",
-      "name": "آداپتور، تبدیل و کوپلینگ"
-    },
-    {
-      "slug": "robotics",
-      "name": "رباتیک و مکانیزم"
-    },
-    {
-      "slug": "cosplay",
-      "name": "کازپلی و پوشیدنی"
-    },
-    {
-      "slug": "education",
-      "name": "آموزشی و ماکت علمی"
-    },
-    {
-      "slug": "spare-parts",
-      "name": "قطعات یدکی عمومی"
-    }
+    {"slug": "external-other", "name": "سایر محصولات"},
+    {"slug": "automotive", "name": "قطعات خودرو"},
+    {"slug": "replacement-parts", "name": "قطعات جایگزین و نایاب"},
+    {"slug": "gears", "name": "چرخ‌دنده و انتقال قدرت"},
+    {"slug": "industrial-parts", "name": "قطعات صنعتی"},
+    {"slug": "tools-jigs", "name": "ابزار، جیگ و فیکسچر"},
+    {"slug": "electronics-cases", "name": "قاب و قطعات الکترونیکی"},
+    {"slug": "home-decor", "name": "دکور و لوازم خانه"},
+    {"slug": "organizers", "name": "نظم‌دهنده و نگهدارنده"},
+    {"slug": "plant-pots", "name": "گلدان و لوازم گیاه"},
+    {"slug": "toys-games", "name": "اسباب‌بازی و بازی"},
+    {"slug": "figurines", "name": "فیگور و مجسمه"},
+    {"slug": "office", "name": "لوازم اداری"},
+    {"slug": "workshop", "name": "کارگاه و ابزار"},
+    {"slug": "automotive-dashboard", "name": "خودرو - داشبورد و تریم"},
+    {"slug": "automotive-clips", "name": "خودرو - خار، بست و کلیپس"},
+    {"slug": "automotive-air-vents", "name": "خودرو - دریچه و قطعات کابین"},
+    {"slug": "mounts-brackets", "name": "براکت، پایه و نگهدارنده"},
+    {"slug": "adapters-couplers", "name": "آداپتور، تبدیل و کوپلینگ"},
+    {"slug": "robotics", "name": "رباتیک و مکانیزم"},
+    {"slug": "cosplay", "name": "کازپلی و پوشیدنی"},
+    {"slug": "education", "name": "آموزشی و ماکت علمی"},
+    {"slug": "spare-parts", "name": "قطعات یدکی عمومی"}
   ],
   "direct_link": {
     "headed": true,
-    "image_limit": 60,
+    "image_limit": 10,
     "download_images": true
   },
   "ai": {
@@ -215,19 +114,11 @@
     "providers": {
       "avalai": {
         "base_url": "https://api.avalai.ir/v1",
-        "key_sources": [
-          "Windows Credential Store",
-          "AVALAI_API_KEY",
-          "D:\\projects\\3DPrintHub\\APIKEY-AVAL.txt"
-        ]
+        "key_sources": ["Windows Credential Store", "AVALAI_API_KEY", "D:\\projects\\3DPrintHub\\APIKEY-AVAL.txt"]
       },
       "openai": {
         "base_url": "https://api.openai.com/v1",
-        "key_sources": [
-          "Windows Credential Store",
-          "OPENAI_API_KEY",
-          "D:\\projects\\3DPrintHub\\APIKEY.txt"
-        ]
+        "key_sources": ["Windows Credential Store", "OPENAI_API_KEY", "D:\\projects\\3DPrintHub\\APIKEY.txt"]
       }
     },
     "dynamic_model_discovery": true,
@@ -241,7 +132,5 @@
     "bulk_content_enabled": true,
     "bulk_pricing_enabled": true
   },
-  "ui": {
-    "theme": "light"
-  }
+  "ui": {"theme": "light"}
 }
