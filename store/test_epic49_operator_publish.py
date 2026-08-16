@@ -20,10 +20,13 @@ class Epic49UnicodeProductionRouteTests(SimpleTestCase):
         mojibake = original.encode("utf-8").decode("latin-1")
         self.assertEqual(UnicodeSlugConverter().to_python(mojibake), original)
 
-    def test_percent_encoded_store_route_resolves_to_decoded_slug(self):
+    def test_percent_encoded_store_route_is_intercepted_by_compatibility_view(self):
         match = resolve("/store/product/%D8%A2%D8%A8%D8%A7%DA%98%D9%88%D8%B1/")
-        self.assertEqual(match.view_name, "store:product_detail")
-        self.assertEqual(match.kwargs["slug"], "آباژور")
+        self.assertEqual(match.view_name, "epic49_product_compat")
+        self.assertEqual(
+            UnicodeSlugConverter().to_python(match.kwargs["slug"]),
+            "آباژور",
+        )
 
     def test_stable_product_id_fallback_is_registered(self):
         path = reverse("epic49_product_by_id", kwargs={"pk": 4})
@@ -70,6 +73,8 @@ class Epic49OperatorPublishContractTests(SimpleTestCase):
         self.assertIn("{{ product.price_note }}", template)
         self.assertIn("variant.material.track_filament_inventory", template)
         self.assertIn("{{ variant.color.name }}", template)
+        self.assertIn("product.catalog_profile.price_min", template)
+        self.assertIn("product.catalog_profile.technical_features", template)
 
     def test_hero_links_to_store_product_when_published(self):
         from pathlib import Path
