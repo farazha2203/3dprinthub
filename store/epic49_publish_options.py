@@ -18,6 +18,16 @@ def _safe_list(value):
         return []
 
 
+def _safe_dict(value):
+    if isinstance(value, dict):
+        return value
+    try:
+        parsed = json.loads(value or "{}")
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
+
+
 def _desktop_data(asset) -> dict:
     payload = asset.source_payload or {}
     data = payload.get("desktop_catalog_v85") if isinstance(payload, dict) else {}
@@ -55,6 +65,60 @@ def normalized_material_color_options(data: dict) -> list[dict]:
         seen.add(key)
         output.append({"material": material, "color": color, "hex": str(item.get("hex") or item.get("hex_code") or "").strip()})
     return output
+
+
+def _homepage_slider_seo(data: dict, product) -> dict:
+    """Return operator-approved 8.7.1 slider copy with AI-pack fallback.
+
+    The desktop app writes dedicated columns when the operator saves. Older/bulk
+    AI flows may only have content_pack_json, so the server also accepts the
+    nested homepage_slider_seo object without requiring a new MySQL migration.
+    """
+    content_pack = _safe_dict(data.get("content_pack_json"))
+    ai = content_pack.get("homepage_slider_seo") or {}
+    if not isinstance(ai, dict):
+        ai = {}
+    image_alts = _safe_list(data.get("image_alt_texts_json"))
+    title = str(
+        data.get("homepage_slider_title_fa")
+        or ai.get("title_fa")
+        or data.get("title_fa")
+        or getattr(product, "title", "")
+        or ""
+    ).strip()
+    description = str(
+        data.get("homepage_slider_description_fa")
+        or ai.get("description_fa")
+        or data.get("short_description_fa")
+        or data.get("seo_description_fa")
+        or getattr(product, "short_description", "")
+        or ""
+    ).strip()
+    alt_text = str(
+        data.get("homepage_slider_alt_text")
+        or ai.get("image_alt_fa")
+        or (image_alts[0] if image_alts else "")
+        or title
+        or getattr(product, "title", "")
+        or ""
+    ).strip()
+    button = str(
+        data.get("homepage_slider_button_text")
+        or ai.get("button_text_fa")
+        or "مشاهده محصول"
+    ).strip()
+    focus = str(
+        data.get("homepage_slider_focus_keyword")
+        or ai.get("focus_keyword_fa")
+        or ""
+    ).strip()
+    return {
+        "title_fa": title[:220],
+        "description_fa": description[:480],
+        "image_alt_fa": alt_text[:240],
+        "button_text_fa": button[:80] or "مشاهده محصول",
+        "focus_keyword_fa": focus[:180],
+    }
 
 
 def apply_price_range(product, asset, data: dict) -> tuple[int, int]:
@@ -230,14 +294,14 @@ def apply_homepage_slider(product, asset, data: dict) -> dict:
     if not image_url and asset.preview_image:
         image_url = _absolute_internal_media_url(asset.preview_image.url)
 
-    use_description = str(data.get("use_description") or "").strip()
+    slider_seo = _homepage_slider_seo(data, product)
     defaults = {
         "image_url": image_url,
-        "image_alt_text": (data.get("image_alt_text") or product.title)[:240],
-        "title_override": product.title[:220],
+        "image_alt_text": slider_seo["image_alt_fa"],
+        "title_override": slider_seo["title_fa"],
         "group_title": getattr(product.category, "name", "")[:160],
-        "description": (use_description or product.short_description or "")[:480],
-        "button_text": "مشاهده محصول",
+        "description": slider_seo["description_fa"],
+        "button_text": slider_seo["button_text_fa"],
         "sort_order": max(0, _positive_int(data.get("homepage_slider_sort_order"), 100)),
         "is_active": True,
     }
@@ -248,7 +312,16 @@ def apply_homepage_slider(product, asset, data: dict) -> dict:
             setattr(slide, key, value)
         slide.save()
     existing.exclude(pk=slide.pk).update(is_active=False)
-    return {"enabled": True, "slide_id": slide.pk, "image_url": image_url}
+    return {
+        "enabled": True,
+        "slide_id": slide.pk,
+        "image_url": image_url,
+        "title": slider_seo["title_fa"],
+        "description": slider_seo["description_fa"],
+        "image_alt": slider_seo["image_alt_fa"],
+        "button_text": slider_seo["button_text_fa"],
+        "focus_keyword": slider_seo["focus_keyword_fa"],
+    }
 
 
 def sync_epic49_publish_options(asset) -> dict:
