@@ -11,6 +11,8 @@ class StoreConfig(AppConfig):
         # mature store/models.py remains stable. Importing it here registers
         # the model under the `store` app before commands/views use it.
         from . import epic49_catalog_profile  # noqa: F401
+        from .epic49_runtime_contract import install as install_epic49_runtime_contract
+        install_epic49_runtime_contract()
         from . import signals  # noqa: F401
         from . import epic49_publish_signals  # noqa: F401
         from . import checks  # noqa: F401
