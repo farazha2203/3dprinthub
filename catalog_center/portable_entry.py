@@ -17,7 +17,7 @@ from app.runtime_paths import (
 def _configure_main_runtime():
     from app.env_settings import env_value
     from app import main as app_main
-    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
+    from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
 
     data = data_root()
     data.mkdir(parents=True, exist_ok=True)
@@ -38,7 +38,7 @@ def _configure_main_runtime():
 def _portable_verify() -> int:
     from app.env_settings import ENV_FILE
     from app.version import APP_NAME, APP_VERSION, BUILD_ID
-    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
+    from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
 
     payload = {
         "app_name": APP_NAME,
@@ -51,7 +51,7 @@ def _portable_verify() -> int:
         "brand_icon_exists": (asset_root() / "brand_icon.png").is_file(),
         "env_file": str(ENV_FILE),
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
-        "product_studio_epic49": Epic49ProductStudio.__module__ == "app.epic49_product_studio",
+        "product_studio_epic49": Epic49ProductStudio.__module__ == "app.epic49_product_studio_final",
     }
     ok = bool(
         payload["config_template_exists"]
