@@ -131,6 +131,28 @@ class ProductWorkspace(ProductWorkspace87):
                 style="Primary.TButton" if active else "TButton",
             ).pack(fill="x", pady=(3, 0))
 
+    def _persist_images(self, urls, selected, primary):
+        """Keep the selected slider image physically eligible for the site batch."""
+        urls = list(dict.fromkeys([str(value) for value in urls if value]))
+        selected = list(dict.fromkeys([str(value) for value in selected if value]))
+        row = self.db.product(self.product_id)
+        slider_enabled = bool(row["homepage_slider_enabled"]) if row is not None else False
+        slider_url = str(row["homepage_slider_image_url"] or "").strip() if row is not None else ""
+
+        if slider_url and slider_url in urls:
+            if slider_url not in selected:
+                selected.append(slider_url)
+        elif slider_enabled:
+            replacement = primary if primary in urls else (selected[0] if selected else (urls[0] if urls else ""))
+            self.db.update_product(self.product_id, {"homepage_slider_image_url": replacement})
+            slider_url = replacement
+            if replacement and replacement not in selected:
+                selected.append(replacement)
+        elif slider_url and slider_url not in urls:
+            self.db.update_product(self.product_id, {"homepage_slider_image_url": ""})
+
+        super()._persist_images(urls, selected, primary)
+
     def set_slider_image_from_gallery(self, url: str):
         row = self.db.product(self.product_id)
         if row is None:
@@ -172,10 +194,11 @@ class ProductWorkspace(ProductWorkspace87):
             or row["seo_description_fa"]
             or ""
         ).strip()
+        image_alts = self._json_list(row["image_alt_texts_json"])
         alt_text = str(
             row["homepage_slider_alt_text"]
             or ai.get("image_alt_fa")
-            or (self._json_list(row["image_alt_texts_json"])[0] if self._json_list(row["image_alt_texts_json"]) else "")
+            or (image_alts[0] if image_alts else "")
             or row["title_fa"]
             or row["source_title"]
             or ""
