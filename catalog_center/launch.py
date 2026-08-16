@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.7.0"
+EXPECTED_VERSION = "8.7.1"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -18,7 +18,7 @@ def main() -> int:
     load_project_env(ENV_FILE)
 
     from app.version import APP_VERSION, BUILD_ID, SOURCE_ROOT
-    from app.product_workspace_v87 import ProductWorkspace
+    from app.product_workspace_v871 import ProductWorkspace
     from app.ux87_shell import build_app_class
 
     if APP_VERSION != EXPECTED_VERSION:
@@ -35,7 +35,8 @@ def main() -> int:
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
     print("UX87_SHELL=ENABLED", flush=True)
-    print("PRODUCT_WORKSPACE_V87=ENABLED", flush=True)
+    print("PRODUCT_WORKSPACE_V871=ENABLED", flush=True)
+    print("HOMEPAGE_SLIDER_SEO_V871=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
