@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.urls import include, path, re_path
 
 from store.public_media import serve_public_store_media
-from store.epic49_routes import product_detail_by_id_view
+from store.epic49_routes import product_detail_by_id_view, product_detail_compat_view
 from store.sitemaps import CategorySitemap, ExternalCatalogSitemap, ProductSitemap, ServicePageSitemap, StaticViewSitemap
 from django_smartbase_admin.admin.site import sb_admin_site
 admin.site.site_header = "مدیریت 3DPrintHub"
@@ -36,6 +36,7 @@ urlpatterns = [
     path("smart-admin/", sb_admin_site.urls),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("store/p/<int:pk>/", product_detail_by_id_view, name="epic49_product_by_id"),
+    re_path(r"^store/product/(?P<slug>[^/]+)/$", product_detail_compat_view, name="epic49_product_compat"),
     path("store/", include("store.urls")),
     path("api/catalog-bridge/v1/", include("catalog_bridge.urls")),
     path("", include("website.urls")),
