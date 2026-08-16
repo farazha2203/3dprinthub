@@ -77,6 +77,59 @@ def safe_list(value) -> list:
         return []
 
 
+def safe_dict(value) -> dict:
+    if isinstance(value, dict):
+        return value
+    try:
+        result = json.loads(value or "{}")
+        return result if isinstance(result, dict) else {}
+    except Exception:
+        return {}
+
+
+def expected_slider_copy(data: dict, product) -> dict:
+    content_pack = safe_dict(data.get("content_pack_json"))
+    ai = content_pack.get("homepage_slider_seo") or {}
+    if not isinstance(ai, dict):
+        ai = {}
+    alts = safe_list(data.get("image_alt_texts_json"))
+    return {
+        "title": str(
+            data.get("homepage_slider_title_fa")
+            or ai.get("title_fa")
+            or data.get("title_fa")
+            or product.title
+            or ""
+        ).strip()[:220],
+        "description": str(
+            data.get("homepage_slider_description_fa")
+            or ai.get("description_fa")
+            or data.get("short_description_fa")
+            or data.get("seo_description_fa")
+            or product.short_description
+            or ""
+        ).strip()[:480],
+        "alt": str(
+            data.get("homepage_slider_alt_text")
+            or ai.get("image_alt_fa")
+            or (alts[0] if alts else "")
+            or data.get("title_fa")
+            or product.title
+            or ""
+        ).strip()[:240],
+        "button": str(
+            data.get("homepage_slider_button_text")
+            or ai.get("button_text_fa")
+            or "مشاهده محصول"
+        ).strip()[:80] or "مشاهده محصول",
+        "focus": str(
+            data.get("homepage_slider_focus_keyword")
+            or ai.get("focus_keyword_fa")
+            or ""
+        ).strip()[:180],
+    }
+
+
 def is_ascii_slug(value: str) -> bool:
     try:
         str(value or "").encode("ascii")
@@ -209,22 +262,40 @@ def main() -> int:
         slide = HomepageHeroSlide.objects.filter(asset=asset).order_by("id").first()
         slider_ok = True
         if slider_requested:
+            expected_copy = expected_slider_copy(data, product)
+            slider_copy_ok = bool(
+                slide
+                and str(slide.effective_title or "").strip()
+                and str(slide.description or "").strip()
+                and str(slide.effective_alt_text or "").strip()
+                and str(slide.button_text or "").strip()
+                and str(slide.effective_title or "").strip() == expected_copy["title"]
+                and str(slide.description or "").strip() == expected_copy["description"]
+                and str(slide.effective_alt_text or "").strip() == expected_copy["alt"]
+                and str(slide.button_text or "").strip() == expected_copy["button"]
+            )
             slider_ok = bool(
                 slide
                 and slide.is_active
                 and slide.effective_image_url
                 and slide.target_url == product.get_absolute_url()
+                and slider_copy_ok
             )
             if slider_ok:
                 slider_url = urljoin(BASE_URL, slide.effective_image_url)
                 slider_status, slider_type, slider_bytes = fetch(slider_url, expect_image=True)
                 slider_ok = slider_status == 200 and slider_type.startswith("image/") and slider_bytes > 0
                 print(
-                    f"SLIDER PRODUCT={product.pk} ACTIVE=1 TARGET={slide.target_url} HTTP={slider_status} "
-                    f"CONTENT_TYPE={slider_type or '-'} URL={slider_url}"
+                    f"SLIDER PRODUCT={product.pk} ACTIVE=1 COPY_OK={int(slider_copy_ok)} TARGET={slide.target_url} "
+                    f"HTTP={slider_status} CONTENT_TYPE={slider_type or '-'} URL={slider_url} "
+                    f"TITLE={slide.effective_title!r} ALT={slide.effective_alt_text!r} BUTTON={slide.button_text!r} "
+                    f"FOCUS={expected_copy['focus']!r}"
                 )
             else:
-                print(f"SLIDER PRODUCT={product.pk} ACTIVE=0/TARGET_MISMATCH HTTP=0 URL=-")
+                print(
+                    f"SLIDER PRODUCT={product.pk} ACTIVE=0/TARGET_OR_COPY_MISMATCH COPY_OK={int(slider_copy_ok)} "
+                    f"HTTP=0 URL=-"
+                )
         elif slide:
             print(f"SLIDER PRODUCT={product.pk} REQUESTED=0 ACTIVE={int(slide.is_active)} TARGET={slide.target_url}")
 
@@ -266,7 +337,7 @@ def main() -> int:
         if requested_price_min and int(product.fixed_price or 0) != requested_price_min:
             failures.append(f"product {product.pk} fixed_price {product.fixed_price} != requested minimum {requested_price_min}")
         if slider_requested and not slider_ok:
-            failures.append(f"product {product.pk} homepage slider is not publicly healthy")
+            failures.append(f"product {product.pk} homepage slider image/link/copy is not publicly healthy")
 
     if failures:
         print("EPIC49_FAILURES_BEGIN")
@@ -283,6 +354,7 @@ def main() -> int:
     print("EPIC49_STORE=OK")
     print("EPIC49_OPERATOR_OPTIONS=OK")
     print("EPIC49_SLIDER=OK")
+    print("EPIC49_SLIDER_SEO_COPY=OK")
     print("EPIC49_SEO=OK")
     print("EPIC49_SITEMAP=OK")
     print("EPIC49_RUNTIME_VERIFY=OK")
