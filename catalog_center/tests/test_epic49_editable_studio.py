@@ -105,16 +105,18 @@ class Epic49EditablePublishTests(unittest.TestCase):
 
 
 class Epic49StudioActivationTests(unittest.TestCase):
-    def test_normal_launcher_activates_enhanced_studio(self):
+    def test_normal_launcher_activates_v87_workspace(self):
         source = (ROOT / "launch.py").read_text(encoding="utf-8")
-        self.assertIn("app.epic49_product_studio", source)
-        self.assertIn("app_module.ProductStudio = Epic49ProductStudio", source)
-        self.assertIn("PRODUCT_STUDIO_EPIC49=ENABLED", source)
+        self.assertIn("app.product_workspace_v87", source)
+        self.assertIn("app_module.ProductStudio = ProductWorkspace", source)
+        self.assertIn("PRODUCT_WORKSPACE_V87=ENABLED", source)
+        self.assertIn("UX87_SHELL=ENABLED", source)
 
-    def test_portable_exe_activates_and_verifies_enhanced_studio(self):
+    def test_portable_exe_activates_and_verifies_v87_workspace(self):
         source = (ROOT / "portable_entry.py").read_text(encoding="utf-8")
-        self.assertIn("app_main.ProductStudio = Epic49ProductStudio", source)
-        self.assertIn('"product_studio_epic49"', source)
+        self.assertIn("app_main.ProductStudio = ProductWorkspace", source)
+        self.assertIn('"product_workspace_v87"', source)
+        self.assertIn('"ux87_shell"', source)
 
 
 if __name__ == "__main__":
