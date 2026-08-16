@@ -8,7 +8,8 @@ from pathlib import Path
 from unittest import mock
 
 from app.site_connection import SiteConnection, upload_batch
-from app.upgrade import install, rollback
+from app.upgrade import VERSION as UPGRADE_VERSION, install, rollback
+from app.version import APP_VERSION
 
 
 VERSION = "8.7.0"
@@ -33,6 +34,18 @@ def write_minimal_package(source: Path) -> None:
 
 
 class V85UpgradeTests(unittest.TestCase):
+    def test_upgrade_version_is_derived_from_app_version(self):
+        root = Path(__file__).resolve().parents[1]
+        upgrade_source = (root / "app" / "upgrade.py").read_text(encoding="utf-8")
+        installer = (root / "INSTALL_OR_UPGRADE.ps1").read_text(encoding="utf-8")
+        self.assertEqual(UPGRADE_VERSION, APP_VERSION)
+        self.assertEqual(APP_VERSION, VERSION)
+        self.assertIn("APP_VERSION as VERSION", upgrade_source)
+        self.assertNotIn('VERSION = "8.6.0"', upgrade_source)
+        self.assertIn('$VersionScript = Join-Path $PackageRoot "app\\version.py"', installer)
+        self.assertIn('$ExpectedVersion = $VersionLine.Substring("APP_VERSION=".Length).Trim()', installer)
+        self.assertNotIn('$ExpectedVersion = "8.6.0"', installer)
+
     def test_powershell_installer_invokes_upgrade_by_absolute_script_path(self):
         root = Path(__file__).resolve().parents[1]
         installer = (root / "INSTALL_OR_UPGRADE.ps1").read_text(encoding="utf-8")
