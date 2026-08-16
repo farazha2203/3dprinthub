@@ -10,14 +10,27 @@ from app.runtime_paths import (
     config_template,
     data_root,
     default_host_mirror,
+    migrate_legacy_portable_data,
+    persistent_data_root,
     runtime_summary,
 )
 
 
 def _configure_main_runtime():
-    from app.env_settings import env_value
+    # Migrate old release-local data before env/settings modules are imported.
+    migration = migrate_legacy_portable_data()
+
+    from app.env_settings import ENV_FILE, env_value, load_project_env
+    load_project_env(ENV_FILE)
+
+    # If an older portable .env carried connection secrets, move them into the
+    # Windows Credential Store and scrub the plaintext lines only after success.
+    from app.secure_secrets import migrate_connection_env_to_keyring
+    migrated_secrets = migrate_connection_env_to_keyring(ENV_FILE)
+
     from app import main as app_main
     from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
+    from app.persistent_connection_profile import install as install_persistent_connection_profile
 
     data = data_root()
     data.mkdir(parents=True, exist_ok=True)
@@ -32,6 +45,9 @@ def _configure_main_runtime():
     app_main.BATCH_ROOT = host_mirror / "imports" / "desktop_catalog" / "pending"
     app_main.ASSET_ROOT = asset_root()
     app_main.ProductStudio = Epic49ProductStudio
+    app_main.PORTABLE_PROFILE_MIGRATION = migration
+    app_main.PORTABLE_SECRET_MIGRATION = migrated_secrets
+    install_persistent_connection_profile(app_main)
     return app_main
 
 
@@ -51,12 +67,14 @@ def _portable_verify() -> int:
         "brand_icon_exists": (asset_root() / "brand_icon.png").is_file(),
         "env_file": str(ENV_FILE),
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
+        "data_is_release_independent": data_root().resolve() == persistent_data_root().resolve(),
         "product_studio_epic49": Epic49ProductStudio.__module__ == "app.epic49_product_studio_final",
     }
     ok = bool(
         payload["config_template_exists"]
         and payload["brand_icon_exists"]
         and payload["data_is_outside_bundle"]
+        and payload["data_is_release_independent"]
         and payload["product_studio_epic49"]
     )
     payload["ok"] = ok
