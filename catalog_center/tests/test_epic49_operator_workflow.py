@@ -57,8 +57,10 @@ class Epic49OperatorDatabaseTests(unittest.TestCase):
 
 
 class Epic49OperatorUIContractTests(unittest.TestCase):
-    def test_final_studio_exposes_requested_operator_controls(self):
-        source = (ROOT / "app" / "epic49_product_studio_final.py").read_text(encoding="utf-8")
+    def test_v87_workspace_exposes_requested_operator_controls(self):
+        source = (ROOT / "app" / "product_workspace_v87.py").read_text(encoding="utf-8")
+        final_source = (ROOT / "app" / "epic49_product_studio_final.py").read_text(encoding="utf-8")
+        combined = source + "\n" + final_source
         for marker in [
             "حداکثر تعداد عکس در هر بازیابی",
             "افزودن عکس از کامپیوتر",
@@ -70,7 +72,7 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
             "download_image_limit",
             "material_color_options_json",
         ]:
-            self.assertIn(marker, source)
+            self.assertIn(marker, combined)
 
     def test_manual_images_are_copied_and_use_local_scheme(self):
         source = (ROOT / "app" / "product_studio.py").read_text(encoding="utf-8")
@@ -78,14 +80,23 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
         self.assertIn("local://", source)
         self.assertIn("shutil.copy2", source)
 
-    def test_86_release_and_resilient_staged_exe_build_are_enabled(self):
+    def test_87_release_and_resilient_staged_exe_build_are_enabled(self):
         from app.version import APP_VERSION
-        self.assertEqual(APP_VERSION, "8.6.0")
+        self.assertEqual(APP_VERSION, "8.7.0")
         builder = (ROOT / "build_portable_exe.py").read_text(encoding="utf-8")
         self.assertIn("staging_dir", builder)
         self.assertIn("except PermissionError", builder)
         self.assertIn("stable_exe_updated", builder)
         self.assertIn("--portable-verify", builder)
+
+    def test_workspace_avoids_pack_grid_collision_in_commerce_page(self):
+        source = (ROOT / "app" / "product_workspace_v87.py").read_text(encoding="utf-8")
+        start = source.index("def _commerce_ui")
+        end = source.index("def select_section", start)
+        method = source[start:end]
+        self.assertIn("panel.grid", method)
+        self.assertNotIn("panel.pack", method)
+        self.assertIn("super(Epic49ProductStudio, self)._commerce_ui()", method)
 
 
 if __name__ == "__main__":
