@@ -44,10 +44,12 @@ def main() -> int:
         os.environ["CATALOG_DEBUG"] = "1"
 
     from app import main as app_module
+    from app.persistent_connection_profile import install as install_persistent_connection_profile
 
     # Keep the large stable application shell untouched and replace only the
     # Product Studio implementation before any studio window can be opened.
     app_module.ProductStudio = Epic49ProductStudio
+    install_persistent_connection_profile(app_module)
     app_module.main()
     return 0
 
