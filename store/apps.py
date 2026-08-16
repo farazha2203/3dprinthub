@@ -7,6 +7,10 @@ class StoreConfig(AppConfig):
     verbose_name = "فروشگاه و بانک قطعات"
 
     def ready(self):
+        # ProductCatalogProfile intentionally lives in its own module so the
+        # mature store/models.py remains stable. Importing it here registers
+        # the model under the `store` app before commands/views use it.
+        from . import epic49_catalog_profile  # noqa: F401
         from . import signals  # noqa: F401
         from . import epic49_publish_signals  # noqa: F401
         from . import checks  # noqa: F401
