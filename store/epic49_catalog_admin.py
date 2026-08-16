@@ -7,6 +7,7 @@ from .epic49_catalog_profile import ProductCatalogProfile
 class ProductCatalogProfileAdmin(admin.ModelAdmin):
     list_display = [
         "product",
+        "public_slug",
         "product_type",
         "availability_status",
         "price_mode",
@@ -28,14 +29,15 @@ class ProductCatalogProfileAdmin(admin.ModelAdmin):
         "product__title",
         "product__sku",
         "public_slug",
+        "legacy_slug",
         "desktop_product_id",
         "batch_uuid",
         "source_hash",
     ]
-    readonly_fields = ["created_at", "updated_at", "last_synced_at"]
+    readonly_fields = ["legacy_slug", "created_at", "updated_at", "last_synced_at"]
     raw_id_fields = ["product"]
     fieldsets = [
-        ("اتصال محصول", {"fields": ["product", "public_slug", "desktop_product_id", "batch_uuid", "source_hash"]}),
+        ("اتصال محصول", {"fields": ["product", "public_slug", "legacy_slug", "desktop_product_id", "batch_uuid", "source_hash"]}),
         ("فروش و سفارش", {"fields": ["product_type", "use_description", "availability_status", "stock_quantity", "lead_time_min_days", "lead_time_max_days", "has_3d_file"]}),
         ("قیمت", {"fields": ["price_mode", "price_min", "price_max"]}),
         ("مجوز", {"fields": ["commercial_license_status", "license_name", "license_url"]}),
