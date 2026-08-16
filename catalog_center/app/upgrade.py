@@ -8,9 +8,22 @@ import sqlite3
 import time
 from pathlib import Path
 
+try:
+    # Normal package import (tests / module use).
+    from .version import APP_VERSION as VERSION
+except ImportError:  # pragma: no cover - exercised by the absolute script launcher on Windows.
+    # INSTALL_OR_UPGRADE.ps1 executes this file directly, so the app directory is
+    # sys.path[0] and the sibling version module is importable without a package.
+    from version import APP_VERSION as VERSION
 
-VERSION = "8.6.0"
-VERSION_TAG = "v86"
+
+def _version_tag(version: str) -> str:
+    parts = [part for part in str(version).split(".") if part.isdigit()]
+    return "v" + "".join(parts[:2] or ["0"])
+
+
+VERSION_TAG = _version_tag(VERSION)
+VERSION_MARKER = str(VERSION).replace(".", "_")
 DEFAULT_TARGET = Path(r"D:\projects\3dprinthub_catalog_center")
 DEFAULT_DATA = Path(r"D:\projects\3dprinthub-catalog-manager")
 DEFAULT_BACKUP_ROOT = Path(r"D:\projects\3dprinthub-backups")
@@ -170,7 +183,7 @@ def rollback(backup_root: Path = DEFAULT_BACKUP_ROOT) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=f"Install or roll back 3DPrintHub Catalog Intelligence v{VERSION}")
+    parser = argparse.ArgumentParser(description=f"Install or roll back 3DPrintHub Catalog Center v{VERSION}")
     parser.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA)
@@ -180,13 +193,13 @@ def main() -> int:
     if args.rollback:
         result = rollback(args.backup_root)
         print(f"ROLLBACK_MANIFEST={result['manifest']}")
-        print("CATALOG_INTELLIGENCE_V8_6_0_ROLLBACK=OK")
+        print(f"CATALOG_CENTER_V{VERSION_MARKER}_ROLLBACK=OK")
         return 0
     result = install(args.source, args.target, args.data_root, args.backup_root)
     print(f"BACKUP_ROOT={result['backup_root']}")
     print(f"DATABASE_BACKUP={'OK' if result['db_saved'] else 'NOT_PRESENT'}")
     print(f"PREVIOUS_APP_BACKUP={'OK' if result['old_app_saved'] else 'FRESH_INSTALL'}")
-    print("CATALOG_INTELLIGENCE_V8_6_0_INSTALL=OK")
+    print(f"CATALOG_CENTER_V{VERSION_MARKER}_INSTALL=OK")
     return 0
 
 
