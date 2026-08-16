@@ -10,8 +10,12 @@ USERS = {
 }
 
 CONNECTION_USERS = {
-    "ftp_password": "FTP_PASSWORD",
+    "ftp_password": "CATALOG_FTP_PASSWORD",
     "bridge_token": "CATALOG_BRIDGE_TOKEN",
+}
+LEGACY_CONNECTION_USERS = {
+    "ftp_password": ["FTP_PASSWORD"],
+    "bridge_token": [],
 }
 
 LEGACY_FILES = {
@@ -28,19 +32,37 @@ def _keyring():
         return None
 
 
+def _connection_usernames(name: str) -> list[str]:
+    primary = CONNECTION_USERS.get(name, name.upper())
+    return [primary, *LEGACY_CONNECTION_USERS.get(name, [])]
+
+
 def get_secret(name: str) -> str:
     """Read a connection secret without touching SQLite or log files."""
-    env_name = CONNECTION_USERS.get(name, name.upper())
-    env = (os.getenv(env_name) or "").strip()
-    if env:
-        return env
+    usernames = _connection_usernames(name)
+    for env_name in usernames:
+        env = (os.getenv(env_name) or "").strip()
+        if env:
+            return env
+
     kr = _keyring()
     if not kr:
         return ""
+    primary = usernames[0]
     try:
-        return (kr.get_password(SERVICE_NAME, env_name) or "").strip()
+        value = (kr.get_password(SERVICE_NAME, primary) or "").strip()
+        if value:
+            return value
+        for legacy in usernames[1:]:
+            value = (kr.get_password(SERVICE_NAME, legacy) or "").strip()
+            if not value:
+                continue
+            # Upgrade the legacy Credential Manager username in place.
+            kr.set_password(SERVICE_NAME, primary, value)
+            return value
     except Exception:
         return ""
+    return ""
 
 
 def set_secret(name: str, value: str) -> None:
@@ -55,25 +77,27 @@ def set_secret(name: str, value: str) -> None:
 
 
 def delete_secret(name: str) -> None:
-    env_name = CONNECTION_USERS.get(name, name.upper())
     kr = _keyring()
     if not kr:
         return
-    try:
-        kr.delete_password(SERVICE_NAME, env_name)
-    except Exception:
-        pass
+    for username in _connection_usernames(name):
+        try:
+            kr.delete_password(SERVICE_NAME, username)
+        except Exception:
+            pass
 
 
 def secret_source(name: str) -> str:
-    env_name = CONNECTION_USERS.get(name, name.upper())
-    if (os.getenv(env_name) or "").strip():
-        return env_name
+    usernames = _connection_usernames(name)
+    for env_name in usernames:
+        if (os.getenv(env_name) or "").strip():
+            return env_name
     kr = _keyring()
     if kr:
         try:
-            if (kr.get_password(SERVICE_NAME, env_name) or "").strip():
-                return "Windows Credential Store"
+            for username in usernames:
+                if (kr.get_password(SERVICE_NAME, username) or "").strip():
+                    return "Windows Credential Store"
         except Exception:
             pass
     return "Not configured"
@@ -82,15 +106,20 @@ def secret_source(name: str) -> str:
 def migrate_connection_env_to_keyring(env_path: str | Path) -> list[str]:
     """Move FTP/Bridge secrets from a portable .env into Windows Credential Store.
 
-    The source file is scrubbed only after every discovered secret is saved successfully.
-    No secret value is returned or logged.
+    Both current and legacy environment names are accepted. The source file is
+    scrubbed only after every discovered secret is saved successfully. No secret
+    value is returned or logged.
     """
     path = Path(env_path)
     if not path.is_file():
         return []
 
     original_lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
-    reverse = {env_name: name for name, env_name in CONNECTION_USERS.items()}
+    reverse: dict[str, str] = {}
+    for secret_name in CONNECTION_USERS:
+        for env_name in _connection_usernames(secret_name):
+            reverse[env_name] = secret_name
+
     discovered: dict[str, str] = {}
     secret_line_indexes: set[int] = set()
 
