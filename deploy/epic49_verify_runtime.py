@@ -22,7 +22,9 @@ django.setup()
 from django.core.management import get_commands
 
 from catalog_bridge.views import PUBLISH_CONTRACT, VERSION
+from store.epic49_catalog_profile import ProductCatalogProfile
 from store.models import ImportedPrintAsset
+from store.sitemaps import ProductSitemap
 from store.views import _product_queryset
 from website.models import HomepageHeroSlide
 
@@ -42,7 +44,7 @@ def fetch(url: str, *, expect_image: bool = False) -> tuple[int, str, int]:
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "3DPrintHub-Epic49-Runtime/1.1",
+            "User-Agent": "3DPrintHub-Epic49-Runtime/1.2",
             "Accept": "image/avif,image/webp,image/*,*/*;q=0.8" if expect_image else "text/html,*/*;q=0.8",
             "Cache-Control": "no-cache",
         },
@@ -75,6 +77,14 @@ def safe_list(value) -> list:
         return []
 
 
+def is_ascii_slug(value: str) -> bool:
+    try:
+        str(value or "").encode("ascii")
+        return bool(value) and "%" not in value and "/" not in value
+    except UnicodeEncodeError:
+        return False
+
+
 def main() -> int:
     failures: list[str] = []
     print("=== EPIC49 FINAL PRODUCTION VERIFY ===")
@@ -89,11 +99,17 @@ def main() -> int:
         failures.append(f"publish contract is {PUBLISH_CONTRACT}")
     if "epic49_archive_failed_batches" not in get_commands():
         failures.append("epic49_archive_failed_batches command is not registered")
+    if "epic49_backfill_server_catalog" not in get_commands():
+        failures.append("epic49_backfill_server_catalog command is not registered")
 
     store_status, store_type, store_bytes = fetch(f"{BASE_URL}/store/?epic49=1")
+    sitemap_status, sitemap_type, sitemap_bytes = fetch(f"{BASE_URL}/sitemap.xml?epic49=1")
     print(f"STORE_HTTP_STATUS={store_status} CONTENT_TYPE={store_type} BYTES={store_bytes}")
+    print(f"SITEMAP_HTTP_STATUS={sitemap_status} CONTENT_TYPE={sitemap_type} BYTES={sitemap_bytes}")
     if store_status != 200:
         failures.append(f"store HTTP {store_status}")
+    if sitemap_status != 200:
+        failures.append(f"sitemap HTTP {sitemap_status}")
 
     visible_ids = set(_product_queryset().values_list("id", flat=True))
     assets = list(
@@ -112,6 +128,13 @@ def main() -> int:
         product = asset.product
         data = desktop_payload(asset)
         query_visible = product.pk in visible_ids
+        profile = ProductCatalogProfile.objects.filter(product=product).first()
+        profile_ok = profile is not None
+        ascii_slug_ok = is_ascii_slug(product.slug)
+        slug_match = bool(profile and product.slug == profile.public_slug)
+        sitemap_path = ProductSitemap().location(product)
+        sitemap_match = sitemap_path == product.get_absolute_url()
+
         product_url = urljoin(BASE_URL, product.get_absolute_url())
         product_status, product_type, product_bytes = fetch(product_url)
         fallback_url = f"{BASE_URL}/store/p/{product.pk}/"
@@ -150,10 +173,29 @@ def main() -> int:
             product.variants.filter(is_active=True, code__startswith=f"EP49-{product.pk}-")
             .select_related("material", "color", "quality")
         )
-        price_min = int(data.get("price_min") or 0)
-        price_max = int(data.get("price_max") or price_min or 0)
+        requested_price_min = int(data.get("price_min") or 0)
+        requested_price_max = int(data.get("price_max") or requested_price_min or 0)
+        profile_price_ok = bool(
+            profile
+            and (not requested_price_min or profile.price_min == requested_price_min)
+            and (not requested_price_max or profile.price_max == requested_price_max)
+        )
+        seo_ok = bool(
+            product.meta_title
+            and product.meta_description
+            and product.seo_focus_keyword
+            and product.robots_index
+            and product.robots_follow
+        )
+
         print(
-            f"OPERATOR_OPTIONS PRODUCT={product.pk} PRICE_MIN={price_min} PRICE_MAX={price_max} "
+            f"PROFILE PRODUCT={product.pk} EXISTS={int(profile_ok)} ASCII_SLUG={int(ascii_slug_ok)} "
+            f"SLUG_MATCH={int(slug_match)} SITEMAP_MATCH={int(sitemap_match)} "
+            f"PRICE_OK={int(profile_price_ok)} SEO_OK={int(seo_ok)} "
+            f"PUBLIC_SLUG={getattr(profile, 'public_slug', '-') if profile else '-'}"
+        )
+        print(
+            f"OPERATOR_OPTIONS PRODUCT={product.pk} PRICE_MIN={requested_price_min} PRICE_MAX={requested_price_max} "
             f"REQUESTED_MATERIAL_COLORS={len(selected_material_colors)} ACTIVE_OPERATOR_VARIANTS={len(active_operator_variants)}"
         )
         for variant in active_operator_variants:
@@ -167,19 +209,24 @@ def main() -> int:
         slide = HomepageHeroSlide.objects.filter(asset=asset).order_by("id").first()
         slider_ok = True
         if slider_requested:
-            slider_ok = bool(slide and slide.is_active and slide.effective_image_url)
+            slider_ok = bool(
+                slide
+                and slide.is_active
+                and slide.effective_image_url
+                and slide.target_url == product.get_absolute_url()
+            )
             if slider_ok:
                 slider_url = urljoin(BASE_URL, slide.effective_image_url)
                 slider_status, slider_type, slider_bytes = fetch(slider_url, expect_image=True)
                 slider_ok = slider_status == 200 and slider_type.startswith("image/") and slider_bytes > 0
                 print(
-                    f"SLIDER PRODUCT={product.pk} ACTIVE=1 HTTP={slider_status} "
+                    f"SLIDER PRODUCT={product.pk} ACTIVE=1 TARGET={slide.target_url} HTTP={slider_status} "
                     f"CONTENT_TYPE={slider_type or '-'} URL={slider_url}"
                 )
             else:
-                print(f"SLIDER PRODUCT={product.pk} ACTIVE=0 HTTP=0 URL=-")
+                print(f"SLIDER PRODUCT={product.pk} ACTIVE=0/TARGET_MISMATCH HTTP=0 URL=-")
         elif slide:
-            print(f"SLIDER PRODUCT={product.pk} REQUESTED=0 ACTIVE={int(slide.is_active)}")
+            print(f"SLIDER PRODUCT={product.pk} REQUESTED=0 ACTIVE={int(slide.is_active)} TARGET={slide.target_url}")
 
         print(
             f"PRODUCT={product.pk} QUERY_VISIBLE={int(query_visible)} PRODUCT_HTTP={product_status} "
@@ -190,6 +237,18 @@ def main() -> int:
 
         if not query_visible:
             failures.append(f"product {product.pk} missing from Store queryset")
+        if not profile_ok:
+            failures.append(f"product {product.pk} missing ProductCatalogProfile")
+        if not ascii_slug_ok:
+            failures.append(f"product {product.pk} slug is not ASCII-safe: {product.slug!r}")
+        if not slug_match:
+            failures.append(f"product {product.pk} slug/profile mismatch")
+        if not sitemap_match:
+            failures.append(f"product {product.pk} sitemap URL differs from canonical URL")
+        if not profile_price_ok:
+            failures.append(f"product {product.pk} structured price range differs from desktop payload")
+        if not seo_ok:
+            failures.append(f"product {product.pk} SEO fields are incomplete")
         if product_status != 200:
             failures.append(f"product {product.pk} canonical page HTTP {product_status}")
         if fallback_status != 200:
@@ -204,8 +263,8 @@ def main() -> int:
             failures.append(
                 f"product {product.pk} requested {len(selected_material_colors)} material/color options but has {len(active_operator_variants)} active operator variants"
             )
-        if price_min and int(product.fixed_price or 0) != price_min:
-            failures.append(f"product {product.pk} fixed_price {product.fixed_price} != requested minimum {price_min}")
+        if requested_price_min and int(product.fixed_price or 0) != requested_price_min:
+            failures.append(f"product {product.pk} fixed_price {product.fixed_price} != requested minimum {requested_price_min}")
         if slider_requested and not slider_ok:
             failures.append(f"product {product.pk} homepage slider is not publicly healthy")
 
@@ -218,10 +277,14 @@ def main() -> int:
 
     print("EPIC49_WINDOWS_CONTRACT=READY")
     print("EPIC49_BRIDGE=OK")
+    print("EPIC49_CATALOG_PROFILE=OK")
+    print("EPIC49_ASCII_ROUTE=OK")
     print("EPIC49_MEDIA=OK")
     print("EPIC49_STORE=OK")
-    print("EPIC49_UNICODE_ROUTE=OK")
     print("EPIC49_OPERATOR_OPTIONS=OK")
+    print("EPIC49_SLIDER=OK")
+    print("EPIC49_SEO=OK")
+    print("EPIC49_SITEMAP=OK")
     print("EPIC49_RUNTIME_VERIFY=OK")
     return 0
 
