@@ -9,11 +9,12 @@ import time
 from pathlib import Path
 
 
-VERSION = "8.5.4"
+VERSION = "8.6.0"
+VERSION_TAG = "v86"
 DEFAULT_TARGET = Path(r"D:\projects\3dprinthub_catalog_center")
 DEFAULT_DATA = Path(r"D:\projects\3dprinthub-catalog-manager")
 DEFAULT_BACKUP_ROOT = Path(r"D:\projects\3dprinthub-backups")
-IGNORED_NAMES = {"__pycache__", ".git", ".pytest_cache", "build", "dist", ".env", ".env.local"}
+IGNORED_NAMES = {"__pycache__", ".git", ".pytest_cache", "build", "dist", ".env", ".env.local", "release"}
 
 
 def _timestamp() -> str:
@@ -54,22 +55,16 @@ def _validate_source(source: Path) -> dict:
         )
     run_text = (source / "RUN.ps1").read_text(encoding="utf-8")
     if '"$Root\\launch.py"' not in run_text or "-m app.main" in run_text:
-        raise RuntimeError("RUN.ps1 does not use the absolute v8.5.4 launcher")
+        raise RuntimeError("RUN.ps1 does not use the absolute launcher")
     main_text = (source / "app" / "main.py").read_text(encoding="utf-8")
     paste_contract = [
-        "self.bridge_token_entry",
-        "paste_bridge_token",
-        "<Control-v>",
-        "<Shift-Insert>",
-        "open_bridge_token_menu",
-        "toggle_bridge_token_visibility",
+        "self.bridge_token_entry", "paste_bridge_token", "<Control-v>",
+        "<Shift-Insert>", "open_bridge_token_menu", "toggle_bridge_token_visibility",
         "normalize_bridge_token_input",
     ]
     missing_paste_contract = [marker for marker in paste_contract if marker not in main_text]
     if missing_paste_contract:
-        raise RuntimeError(
-            "Bridge Token paste contract is incomplete: " + ", ".join(missing_paste_contract)
-        )
+        raise RuntimeError("Bridge Token paste contract is incomplete: " + ", ".join(missing_paste_contract))
     return manifest
 
 
@@ -91,53 +86,36 @@ def _sqlite_backup(source: Path, destination: Path) -> bool:
     return True
 
 
-def install(
-    source: Path,
-    target: Path = DEFAULT_TARGET,
-    data_root: Path = DEFAULT_DATA,
-    backup_root: Path = DEFAULT_BACKUP_ROOT,
-    stamp: str | None = None,
-) -> dict:
-    source = source.resolve()
-    target = target.resolve()
-    data_root = data_root.resolve()
-    backup_root = backup_root.resolve()
+def install(source: Path, target: Path = DEFAULT_TARGET, data_root: Path = DEFAULT_DATA, backup_root: Path = DEFAULT_BACKUP_ROOT, stamp: str | None = None) -> dict:
+    source = source.resolve(); target = target.resolve(); data_root = data_root.resolve(); backup_root = backup_root.resolve()
     _validate_source(source)
     if target != source and target.is_relative_to(source):
         raise RuntimeError("The package source cannot contain the installation target")
-
     stamp = stamp or _timestamp()
-    release_backup = backup_root / f"v85-{stamp}"
+    release_backup = backup_root / f"{VERSION_TAG}-{stamp}"
     if release_backup.exists():
         raise FileExistsError(f"Backup already exists: {release_backup}")
     release_backup.mkdir(parents=True)
-
-    stage = target.parent / f".{target.name}.v85-stage-{stamp}"
+    stage = target.parent / f".{target.name}.{VERSION_TAG}-stage-{stamp}"
     if stage.exists():
         raise FileExistsError(f"Install stage already exists: {stage}")
-
     db_path = data_root / "catalog.sqlite3"
     db_backup = release_backup / "data" / "catalog.sqlite3"
     db_saved = _sqlite_backup(db_path, db_backup)
     shutil.copytree(source, stage, ignore=_ignore)
-    # Persistent local settings always come from the installed target, never from a release package.
     for persistent_name in (".env", ".env.local"):
         current_file = target / persistent_name
         staged_file = stage / persistent_name
         if current_file.is_file():
             shutil.copy2(current_file, staged_file)
     _validate_source(stage)
-
     app_backup = release_backup / "app_previous"
-    old_app_saved = False
-    switched = False
+    old_app_saved = False; switched = False
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists():
-            target.rename(app_backup)
-            old_app_saved = True
-        stage.rename(target)
-        switched = True
+            target.rename(app_backup); old_app_saved = True
+        stage.rename(target); switched = True
     except Exception:
         if old_app_saved and not target.exists() and app_backup.exists():
             app_backup.rename(target)
@@ -145,30 +123,19 @@ def install(
     finally:
         if not switched and stage.exists():
             shutil.rmtree(stage)
-
     record = {
-        "version": VERSION,
-        "created_at": stamp,
-        "source": str(source),
-        "target": str(target),
-        "data_root": str(data_root),
-        "app_backup": str(app_backup) if old_app_saved else "",
-        "db_path": str(db_path),
-        "db_backup": str(db_backup) if db_saved else "",
-        "status": "installed",
+        "version": VERSION, "created_at": stamp, "source": str(source), "target": str(target),
+        "data_root": str(data_root), "app_backup": str(app_backup) if old_app_saved else "",
+        "db_path": str(db_path), "db_backup": str(db_backup) if db_saved else "", "status": "installed",
     }
-    (release_backup / "rollback-manifest.json").write_text(
-        json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    (release_backup / "rollback-manifest.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"backup_root": release_backup, "db_saved": db_saved, "old_app_saved": old_app_saved}
 
 
 def _latest_record(backup_root: Path) -> tuple[Path, dict]:
-    candidates = sorted(
-        path for path in backup_root.glob("v85-*/rollback-manifest.json") if path.is_file()
-    )
+    candidates = sorted(path for path in backup_root.glob(f"{VERSION_TAG}-*/rollback-manifest.json") if path.is_file())
     if not candidates:
-        raise FileNotFoundError(f"No v8.5 rollback manifest found under {backup_root}")
+        raise FileNotFoundError(f"No {VERSION} rollback manifest found under {backup_root}")
     manifest_path = candidates[-1]
     return manifest_path, json.loads(manifest_path.read_text(encoding="utf-8"))
 
@@ -177,14 +144,13 @@ def rollback(backup_root: Path = DEFAULT_BACKUP_ROOT) -> dict:
     backup_root = backup_root.resolve()
     manifest_path, record = _latest_record(backup_root)
     if record.get("status") != "installed":
-        raise RuntimeError("The latest v8.5 backup is not in an installed state")
+        raise RuntimeError("The latest backup is not in an installed state")
     target = Path(record["target"])
     app_backup = Path(record["app_backup"]) if record.get("app_backup") else None
     db_path = Path(record["db_path"])
     db_backup = Path(record["db_backup"]) if record.get("db_backup") else None
     release_backup = manifest_path.parent
-    displaced = release_backup / f"app_v85_before_rollback_{_timestamp()}"
-
+    displaced = release_backup / f"app_{VERSION_TAG}_before_rollback_{_timestamp()}"
     if target.exists():
         target.rename(displaced)
     try:
@@ -198,16 +164,13 @@ def rollback(backup_root: Path = DEFAULT_BACKUP_ROOT) -> dict:
         if not target.exists() and displaced.exists():
             displaced.rename(target)
         raise
-
-    record["status"] = "rolled_back"
-    record["rolled_back_at"] = _timestamp()
-    record["displaced_v85"] = str(displaced)
+    record["status"] = "rolled_back"; record["rolled_back_at"] = _timestamp(); record["displaced_release"] = str(displaced)
     manifest_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"manifest": manifest_path, "target_restored": bool(app_backup), "db_restored": bool(db_backup)}
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Install or roll back 3DPrintHub Catalog Intelligence v8.5.4")
+    parser = argparse.ArgumentParser(description=f"Install or roll back 3DPrintHub Catalog Intelligence v{VERSION}")
     parser.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA)
@@ -217,13 +180,13 @@ def main() -> int:
     if args.rollback:
         result = rollback(args.backup_root)
         print(f"ROLLBACK_MANIFEST={result['manifest']}")
-        print("CATALOG_INTELLIGENCE_V8_5_4_ROLLBACK=OK")
+        print("CATALOG_INTELLIGENCE_V8_6_0_ROLLBACK=OK")
         return 0
     result = install(args.source, args.target, args.data_root, args.backup_root)
     print(f"BACKUP_ROOT={result['backup_root']}")
     print(f"DATABASE_BACKUP={'OK' if result['db_saved'] else 'NOT_PRESENT'}")
     print(f"PREVIOUS_APP_BACKUP={'OK' if result['old_app_saved'] else 'FRESH_INSTALL'}")
-    print("CATALOG_INTELLIGENCE_V8_5_4_INSTALL=OK")
+    print("CATALOG_INTELLIGENCE_V8_6_0_INSTALL=OK")
     return 0
 
 
