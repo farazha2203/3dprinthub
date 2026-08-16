@@ -5,7 +5,7 @@ $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $CanonicalCatalog = "D:\projects\3dprinthub_catalog_center"
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
-$Branch = "epic/phase49-finalization"
+$Branch = "release/catalog-center-8.7.1-slider-seo"
 
 Set-Location $Root
 
@@ -33,14 +33,15 @@ if ($LASTEXITCODE -ne 0) { throw "Git Catalog launcher verification failed" }
 $GitVerify | ForEach-Object { Write-Host $_ }
 $GitVerifyText = $GitVerify -join "`n"
 foreach ($Marker in @(
-  "ACTIVE_VERSION=8.7.0",
+  "ACTIVE_VERSION=8.7.1",
   "UX87_SHELL=ENABLED",
-  "PRODUCT_WORKSPACE_V87=ENABLED",
+  "PRODUCT_WORKSPACE_V871=ENABLED",
+  "HOMEPAGE_SLIDER_SEO_V871=ENABLED",
   "AI_PROFILE_MIGRATION=PRESERVED",
   "HOST_PROFILE_MIGRATION=PRESERVED",
   "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
-    if ($GitVerifyText -notmatch [regex]::Escape($Marker)) { throw "Missing v8.7 launcher marker: $Marker" }
+    if ($GitVerifyText -notmatch [regex]::Escape($Marker)) { throw "Missing v8.7.1 launcher marker: $Marker" }
 }
 
 & $Python -m unittest discover -s tests -p "test_*.py" -v
@@ -69,6 +70,7 @@ if ($ShowText -notmatch "0029_epic49_catalog_product_backfill") { throw "Migrati
   store.test_phase49_unicode_routes `
   store.test_epic49_operator_publish `
   store.test_epic49_server_schema `
+  store.test_v871_slider_seo `
   catalog_bridge.tests.test_bridge `
   catalog_bridge.tests.test_phase49_diagnostics `
   catalog_bridge.tests.test_epic49_contract `
@@ -95,14 +97,15 @@ if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog launcher verification failed
 $CanonicalVerify | ForEach-Object { Write-Host $_ }
 $CanonicalVerifyText = $CanonicalVerify -join "`n"
 foreach ($Marker in @(
-  "ACTIVE_VERSION=8.7.0",
+  "ACTIVE_VERSION=8.7.1",
   "UX87_SHELL=ENABLED",
-  "PRODUCT_WORKSPACE_V87=ENABLED",
+  "PRODUCT_WORKSPACE_V871=ENABLED",
+  "HOMEPAGE_SLIDER_SEO_V871=ENABLED",
   "AI_PROFILE_MIGRATION=PRESERVED",
   "HOST_PROFILE_MIGRATION=PRESERVED",
   "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
-    if ($CanonicalVerifyText -notmatch [regex]::Escape($Marker)) { throw "Canonical source missing v8.7 marker: $Marker" }
+    if ($CanonicalVerifyText -notmatch [regex]::Escape($Marker)) { throw "Canonical source missing v8.7.1 marker: $Marker" }
 }
 
 & $Python -m unittest discover -s tests -p "test_*.py" -v
@@ -112,7 +115,7 @@ if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite faile
 if ($LASTEXITCODE -ne 0) { throw "Portable EXE build or self-verification failed" }
 
 $Version = (& $Python -c "import sys; sys.path.insert(0, r'$CanonicalCatalog'); from app.version import APP_VERSION; print(APP_VERSION)").Trim()
-if ($Version -ne "8.7.0") { throw "Expected portable release 8.7.0, got $Version" }
+if ($Version -ne "8.7.1") { throw "Expected portable release 8.7.1, got $Version" }
 $ReleaseDir = Join-Path $CanonicalCatalog ("release\" + $Version)
 $ReleaseManifest = Join-Path $ReleaseDir "release-manifest.json"
 if (-not (Test-Path -LiteralPath $ReleaseManifest)) { throw "Release manifest missing: $ReleaseManifest" }
@@ -123,18 +126,22 @@ if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Verified portable EXE 
 if ($Manifest.stable_exe_updated -eq $true -and -not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing after successful alias update: $StableExe" }
 
 Set-Location $Root
-Write-Host "CATALOG_VERSION=8.7.0"
+Write-Host "CATALOG_VERSION=8.7.1"
 Write-Host "UX87_WINDOWS_REBUILD=OK"
 Write-Host "UX87_SIDEBAR_SHELL=OK"
 Write-Host "UX87_NATIVE_ICONS=OK"
 Write-Host "UX87_PRODUCT_WORKSPACE=OK"
 Write-Host "UX87_AI_CENTER=OK"
 Write-Host "UX87_CONNECTION_CENTER=OK"
+Write-Host "HOMEPAGE_SLIDER_DIRECT_IMAGE=OK"
+Write-Host "HOMEPAGE_SLIDER_DEDICATED_AI_SEO=OK"
+Write-Host "HOMEPAGE_SLIDER_EDITABLE_COPY=OK"
+Write-Host "HOMEPAGE_SLIDER_SERVER_SYNC=OK"
 Write-Host "AI_PROFILE_PRESERVED=YES"
 Write-Host "HOST_PROFILE_PRESERVED=YES"
 Write-Host "DATABASE_MIGRATION_0028_SCHEMA=READY"
 Write-Host "DATABASE_MIGRATION_0029_BACKFILL=READY"
-Write-Host "DATABASE_MYSQL_DDL_DATA_SPLIT=ENABLED"
+Write-Host "DATABASE_NEW_MIGRATION=NO"
 Write-Host "DATABASE_LOCAL_RUNTIME_WRITE=NO"
 Write-Host "GIT_CATALOG_FULL_SUITE=OK"
 Write-Host "WINDOWS_CATALOG_SYNC=OK"
