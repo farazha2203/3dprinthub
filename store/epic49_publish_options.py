@@ -105,6 +105,8 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
     specs = asset.technical_specs or {}
     weight = Decimal(str(specs.get("estimated_weight_grams") or 1))
     minutes = max(1, _positive_int(specs.get("estimated_print_minutes"), 60))
+    lead_min = max(1, _positive_int(data.get("lead_time_min_days"), getattr(product, "fixed_delivery_days", 1) or 1))
+    lead_max = max(lead_min, _positive_int(data.get("lead_time_max_days"), lead_min))
     selected_codes = []
     output = []
     material_seen = set()
@@ -177,8 +179,8 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
             "print_time_minutes": minutes,
             "fixed_fee": minimum_price or getattr(product, "fixed_price", 0) or 0,
             "cached_unit_price": minimum_price or getattr(product, "fixed_price", 0) or 0,
-            "lead_time_min_days": max(1, int(getattr(product, "fixed_delivery_days", 1) or 1)),
-            "lead_time_max_days": max(1, int(getattr(product, "fixed_delivery_days", 1) or 1)),
+            "lead_time_min_days": lead_min,
+            "lead_time_max_days": lead_max,
             "stock_status": "made_to_order",
             "is_active": True,
         }
