@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .env_settings import ENV_FILE, env_value
-from .secure_secrets import get_provider_key, get_secret
+from .secure_secrets import get_provider_key, get_secret, set_secret
 from .ux87_icons import IconRegistry
 from .product_workspace_v87 import ProductWorkspace
 from .version import APP_VERSION, BUILD_ID
@@ -93,7 +93,7 @@ def build_app_class(BaseApp):
             ]
             for key, page in page_defs:
                 self._pages[key] = page
-                self.main_notebook.add(page, text=key)
+                self.main_notebook.add(page, text="")
 
             tk.Label(sidebar, text="مرکز مدیریت", bg="#0b2238", fg="#f6d77a", font=("Tahoma", 11, "bold")).pack(anchor="e", padx=8, pady=(2, 8))
             for key, label, icon_name in NAV_ITEMS:
@@ -138,6 +138,23 @@ def build_app_class(BaseApp):
             tk.Label(footer, text="Data: %LOCALAPPDATA%\\3DPrintHub\\CatalogCenter", bg="#071827", fg="#91a4b5", font=("Consolas", 8)).pack(side="right")
             self.show_ux87_page("dashboard")
 
+        def _migrate_legacy_google_key(self) -> str:
+            env_key = env_value("GOOGLE_API_KEY", "").strip()
+            secure_key = get_secret("google_api_key").strip()
+            legacy_key = str(self.db.setting("google_api_key", "") or "").strip()
+            if secure_key or env_key:
+                if legacy_key:
+                    self.db.set_setting("google_api_key", "")
+                return env_key or secure_key
+            if not legacy_key:
+                return ""
+            try:
+                set_secret("google_api_key", legacy_key)
+            except Exception:
+                return legacy_key
+            self.db.set_setting("google_api_key", "")
+            return legacy_key
+
         def _init_ux87_settings_state(self):
             self.ai_provider = tk.StringVar(value=env_value("CATALOG_AI_PROVIDER", self.db.setting("ai_provider", self.config.get("ai", {}).get("provider", "auto"))))
             if self.ai_provider.get() not in {"auto", "avalai", "openai"}:
@@ -146,8 +163,10 @@ def build_app_class(BaseApp):
             self.openai_model = self.ai_model
             self.ai_key = tk.StringVar(value="")
             self.openai_key = self.ai_key
-            self.google_key = tk.StringVar(value=env_value("GOOGLE_API_KEY", self.db.setting("google_api_key")))
+            self.google_key = tk.StringVar(value=self._migrate_legacy_google_key())
             self.translation_provider = tk.StringVar(value=self.db.setting("translation_provider", "ai"))
+            if self.translation_provider.get() not in {"ai", "google"}:
+                self.translation_provider.set("ai")
             self.ftp_protocol = tk.StringVar(value="FTP")
             self.ftp_host = tk.StringVar(value=env_value("CATALOG_FTP_HOST", self.db.setting("ftp_host", "ftp.3dprinthub.ir")))
             self.ftp_port = tk.StringVar(value=env_value("CATALOG_FTP_PORT", self.db.setting("ftp_port", "21")))
@@ -188,9 +207,6 @@ def build_app_class(BaseApp):
 
         def _modernize_products_page(self):
             children = list(self.products_tab.winfo_children())
-            # Legacy builder creates cards, two dense toolbars, then the editor pane.
-            # Keep cards/editor widgets (and therefore all stable behavior), replace only
-            # the two dense toolbars with one concise bar + complete overflow menu.
             pane = next((x for x in children if isinstance(x, ttk.Panedwindow)), None)
             frames_before = [x for x in children if isinstance(x, ttk.Frame) and x is not pane]
             for frame in frames_before[1:3]:
@@ -246,8 +262,8 @@ def build_app_class(BaseApp):
 
         def _build_ux87_ai_center(self):
             ttk.Label(self.ai_tab, text="مرکز هوش مصنوعی", style="UX87Title.TLabel").grid(row=0, column=0, columnspan=3, sticky="w")
-            ttk.Label(self.ai_tab, text="OpenAI و AvalAI از همان Credentialهای نسخه‌های قبلی استفاده می‌کنند.", style="UX87Muted.TLabel").grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 12))
-            card = ttk.LabelFrame(self.ai_tab, text="Provider و مدل", padding=14, style="Card.TLabelframe")
+            ttk.Label(self.ai_tab, text="OpenAI، AvalAI و تنظیمات ترجمه از پروفایل نسخه‌های قبلی خوانده می‌شوند.", style="UX87Muted.TLabel").grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 12))
+            card = ttk.LabelFrame(self.ai_tab, text="Provider، مدل و ترجمه", padding=14, style="Card.TLabelframe")
             card.grid(row=2, column=0, columnspan=3, sticky="ew", pady=6)
             ttk.Label(card, text="Provider").grid(row=0, column=0, sticky="w", pady=5)
             provider = ttk.Combobox(card, textvariable=self.ai_provider, values=["auto", "avalai", "openai"], state="readonly", width=20)
@@ -270,15 +286,40 @@ def build_app_class(BaseApp):
             ttk.Button(keyrow, text="نمایش/مخفی", command=self.toggle_openai_key_visibility).pack(side="left", padx=3)
             self.openai_key_source = tk.StringVar(value="")
             ttk.Label(card, textvariable=self.openai_key_source, style="SubHeader.TLabel").grid(row=3, column=1, columnspan=2, sticky="w", padx=6)
+
+            ttk.Label(card, text="موتور ترجمه").grid(row=4, column=0, sticky="w", pady=5)
+            ttk.Combobox(card, textvariable=self.translation_provider, values=["ai", "google"], state="readonly", width=20).grid(row=4, column=1, sticky="w", padx=6)
+            ttk.Label(card, text="Google API Key").grid(row=5, column=0, sticky="w", pady=5)
+            google_row = ttk.Frame(card)
+            google_row.grid(row=5, column=1, columnspan=2, sticky="ew", padx=6)
+            self.google_key_entry = ttk.Entry(google_row, textvariable=self.google_key, show="•")
+            self.google_key_entry.pack(side="left", fill="x", expand=True)
+            google_source = "Windows Credential Store" if get_secret("google_api_key") else ("GOOGLE_API_KEY" if env_value("GOOGLE_API_KEY", "") else "Legacy profile / new input")
+            ttk.Label(google_row, text=f"منبع: {google_source}", style="SubHeader.TLabel").pack(side="left", padx=6)
+
             actions = ttk.Frame(card)
-            actions.grid(row=4, column=1, columnspan=2, sticky="w", pady=8)
-            ttk.Button(actions, text="ذخیره امن", command=self.save_openai_secret, style="Primary.TButton").pack(side="left", padx=3)
+            actions.grid(row=6, column=1, columnspan=2, sticky="w", pady=8)
+            ttk.Button(actions, text="ذخیره امن AI", command=self._save_ux87_ai_settings, style="Primary.TButton").pack(side="left", padx=3)
             ttk.Button(actions, text="تست زنده AI", command=self.test_openai_api, style="Success.TButton").pack(side="left", padx=3)
             ttk.Button(actions, text="انتقال کلید قدیمی", command=self.migrate_ai_key_file).pack(side="left", padx=3)
-            ttk.Button(actions, text="حذف کلید امن", command=self.clear_openai_secret, style="Danger.TButton").pack(side="left", padx=3)
-            ttk.Button(actions, text="ذخیره تنظیمات Provider", command=self.save_settings).pack(side="left", padx=3)
+            ttk.Button(actions, text="حذف کلید OpenAI/AvalAI", command=self.clear_openai_secret, style="Danger.TButton").pack(side="left", padx=3)
             card.columnconfigure(1, weight=1)
             self._refresh_ai_key_source()
+
+        def _save_ux87_ai_settings(self):
+            if self.ai_key.get().strip():
+                self.save_openai_secret()
+            google = self.google_key.get().strip()
+            if google:
+                set_secret("google_api_key", google)
+                self.db.set_setting("google_api_key", "")
+            self.db.set_setting("translation_provider", self.translation_provider.get())
+            self.db.set_setting("ai_provider", self.ai_provider.get())
+            self.db.set_setting("ai_model", self.ai_model.get())
+            self.db.set_setting("openai_model", self.ai_model.get())
+            self._refresh_ux87_status()
+            from tkinter import messagebox
+            messagebox.showinfo("3DPrintHub", "تنظیمات AI و ترجمه ذخیره شد. کلیدها در Windows Credential Manager نگه‌داری می‌شوند.")
 
         def _build_ux87_connection_center(self):
             ttk.Label(self.connection_tab, text="مرکز اتصال سایت", style="UX87Title.TLabel").grid(row=0, column=0, columnspan=3, sticky="w")
@@ -314,6 +355,7 @@ def build_app_class(BaseApp):
             ttk.Button(actions, text="تست FTP", command=self.test_ftp_connection).pack(side="left", padx=3)
             ttk.Button(actions, text="تست Bridge", command=self.test_site_connection, style="Success.TButton").pack(side="left", padx=3)
             ttk.Button(actions, text="گزارش‌ها", command=self.open_log_folder).pack(side="left", padx=3)
+            ttk.Button(card, text="ارسال آخرین Batch و دریافت ACK", command=self.upload_last_batch, style="Success.TButton").grid(row=token_row_index + 3, column=1, sticky="w", padx=5, pady=(4, 0))
             card.columnconfigure(1, weight=1)
             self._refresh_connection_secret_source()
 
@@ -347,7 +389,6 @@ def build_app_class(BaseApp):
 
         def _refresh_ux87_status(self):
             provider = self.ai_provider.get() if hasattr(self, "ai_provider") else "auto"
-            has_ai = False
             if provider == "avalai":
                 has_ai = bool(get_provider_key("avalai"))
             elif provider == "openai":
