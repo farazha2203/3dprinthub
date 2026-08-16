@@ -31,8 +31,6 @@ class ProductWorkspace(Epic49ProductStudio):
 
     def _build_ui(self):
         style = ttk.Style(self)
-        # Keep a Notebook internally because many stable workflows select a page by
-        # widget reference; hide the tab strip and use the right-hand workflow rail.
         try:
             style.layout("Workspace87.TNotebook.Tab", [])
         except Exception:
@@ -121,7 +119,6 @@ class ProductWorkspace(Epic49ProductStudio):
             font=("Tahoma", 9),
         ).pack(anchor="e")
 
-        # Build all inherited controls so no existing field or workflow disappears.
         self._quick_ui()
         self._commerce_ui()
         self._images_ui()
@@ -139,6 +136,53 @@ class ProductWorkspace(Epic49ProductStudio):
         ttk.Button(footer, text="آماده‌سازی انتشار", command=self.queue_for_publish, style="Success.TButton").pack(side="right", padx=3)
         ttk.Button(footer, text="انتشار روی سایت", command=self.publish_now, style="Publish.TButton").pack(side="right", padx=3)
         self.select_section("quick")
+
+    def _commerce_ui(self):
+        # Skip the 8.6 final wrapper here: it appended a pack-managed panel to a
+        # grid-managed parent, which can raise a TclError at runtime. Build the base
+        # commerce editor, then append all Epic49 controls with grid only.
+        super(Epic49ProductStudio, self)._commerce_ui()
+        frame = self.commerce_tab
+        self.price_min_var = tk.StringVar(value="0")
+        self.price_max_var = tk.StringVar(value="0")
+
+        panel = ttk.LabelFrame(
+            frame,
+            text="بازه قیمت و متریال/رنگ قابل فروش",
+            padding=10,
+            style="Card.TLabelframe",
+        )
+        panel.grid(row=7, column=0, columnspan=4, sticky="nsew", pady=(12, 0))
+        panel.columnconfigure(1, weight=1)
+        panel.columnconfigure(3, weight=1)
+        panel.rowconfigure(2, weight=1)
+
+        ttk.Label(panel, text="حداقل قیمت (تومان)").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(panel, textvariable=self.price_min_var).grid(row=0, column=1, sticky="ew", padx=5, pady=5)
+        ttk.Label(panel, text="حداکثر قیمت (تومان)").grid(row=0, column=2, sticky="w", padx=5, pady=5)
+        ttk.Entry(panel, textvariable=self.price_max_var).grid(row=0, column=3, sticky="ew", padx=5, pady=5)
+        ttk.Label(
+            panel,
+            text="برای قیمت ثابت، حداقل و حداکثر را برابر قرار بده.",
+            style="SubHeader.TLabel",
+        ).grid(row=1, column=0, columnspan=4, sticky="w", padx=5, pady=(0, 6))
+
+        self.material_color_list = tk.Listbox(
+            panel,
+            selectmode="extended",
+            exportselection=False,
+            height=7,
+            font=("Tahoma", 10),
+        )
+        self.material_color_list.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
+        actions = ttk.Frame(panel)
+        actions.grid(row=2, column=3, sticky="nsew", padx=5, pady=5)
+        ttk.Button(actions, text="افزودن متریال/رنگ", command=self._add_material_color, style="Primary.TButton").pack(fill="x", pady=2)
+        ttk.Button(actions, text="غیرفعال‌کردن انتخاب‌شده", command=self._deactivate_material_colors, style="Danger.TButton").pack(fill="x", pady=2)
+        ttk.Button(actions, text="تازه‌سازی فهرست", command=self._refresh_material_inventory).pack(fill="x", pady=2)
+        ttk.Label(actions, text="نمونه:\nPLA / صورتی\nPETG / مشکی", style="SubHeader.TLabel", justify="left").pack(anchor="w", pady=(8, 0))
+        frame.rowconfigure(6, weight=1)
+        frame.rowconfigure(7, weight=1)
 
     def select_section(self, key: str):
         page_map = {
@@ -160,15 +204,12 @@ class ProductWorkspace(Epic49ProductStudio):
             )
 
     def _remove_duplicate_legacy_actions(self):
-        # The quick page used to carry another 4-button workflow box. The 8.7 rail
-        # replaces it, while all underlying operations stay available elsewhere.
         for child in self.quick_tab.winfo_children():
             try:
                 if isinstance(child, ttk.LabelFrame) and str(child.cget("text")) == "مسیر یک‌دقیقه‌ای":
                     child.grid_remove()
             except Exception:
                 pass
-        # The former separate SEO studio duplicates the integrated content page.
         for child in self._walk(self.content_tab):
             if isinstance(child, ttk.Button):
                 try:
