@@ -70,6 +70,17 @@ def _json_value(value, default):
         return default
 
 
+def _positive_int(value, default=0) -> int:
+    try:
+        normalized = str(value if value not in (None, "") else default).replace(",", "").strip()
+        return max(0, int(float(normalized or 0)))
+    except Exception:
+        try:
+            return max(0, int(default or 0))
+        except Exception:
+            return 0
+
+
 def _slug_base(product) -> str:
     for value in [getattr(product, "title_en", ""), getattr(product, "source_external_id", ""), getattr(product, "sku", "")]:
         base = slugify(str(value or ""), allow_unicode=False).strip("-")
@@ -125,8 +136,8 @@ def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0
     if not profile.legacy_slug and original_slug and original_slug != profile.public_slug:
         profile.legacy_slug = original_slug
 
-    minimum = max(0, int(price_min or data.get("price_min") or getattr(product, "fixed_price", 0) or 0))
-    maximum = max(0, int(price_max or data.get("price_max") or minimum or 0))
+    minimum = _positive_int(price_min or data.get("price_min"), getattr(product, "fixed_price", 0))
+    maximum = _positive_int(price_max or data.get("price_max"), minimum)
     if minimum and maximum and maximum < minimum:
         minimum, maximum = maximum, minimum
     options = _json_value(data.get("material_color_options_json"), [])
@@ -139,15 +150,19 @@ def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0
     else:
         price_mode = "fixed"
 
-    profile.desktop_product_id = int(data.get("desktop_product_id") or 0) or None
+    desktop_id = _positive_int(data.get("desktop_product_id"), 0)
+    profile.desktop_product_id = desktop_id or None
     profile.batch_uuid = str(data.get("batch_uuid") or "")[:80]
     profile.source_hash = str(data.get("source_hash") or "")[:64]
     profile.product_type = str(data.get("product_type") or "ready_product")[:40]
     profile.use_description = str(data.get("use_description") or "")
     profile.availability_status = str(data.get("availability_status") or "made_to_order")[:40]
-    profile.stock_quantity = max(0, int(data.get("stock_quantity") or 0))
-    profile.lead_time_min_days = max(0, int(data.get("lead_time_min_days") or 0))
-    profile.lead_time_max_days = max(profile.lead_time_min_days, int(data.get("lead_time_max_days") or profile.lead_time_min_days or 0))
+    profile.stock_quantity = _positive_int(data.get("stock_quantity"), 0)
+    profile.lead_time_min_days = _positive_int(data.get("lead_time_min_days"), 0)
+    profile.lead_time_max_days = max(
+        profile.lead_time_min_days,
+        _positive_int(data.get("lead_time_max_days"), profile.lead_time_min_days),
+    )
     profile.has_3d_file = bool(data.get("has_3d_file"))
     profile.commercial_license_status = str(data.get("commercial_status") or getattr(asset, "commercial_license_status", "unknown"))[:30]
     profile.license_name = str(data.get("license_name") or getattr(asset, "license_name", ""))[:200]
@@ -157,10 +172,10 @@ def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0
     profile.price_min = minimum
     profile.price_max = maximum
     profile.price_mode = price_mode
-    profile.download_image_limit = min(200, max(1, int(data.get("download_image_limit") or 10)))
+    profile.download_image_limit = min(200, max(1, _positive_int(data.get("download_image_limit"), 10)))
     profile.homepage_slider_enabled = bool(data.get("homepage_slider_enabled"))
     profile.homepage_slider_image_url = str(data.get("homepage_slider_image_url") or "")[:2000]
-    profile.homepage_slider_sort_order = max(0, int(data.get("homepage_slider_sort_order") or 100))
+    profile.homepage_slider_sort_order = _positive_int(data.get("homepage_slider_sort_order"), 100)
     profile.last_synced_at = timezone.now()
     profile.save()
 
