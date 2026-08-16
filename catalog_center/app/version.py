@@ -3,9 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 
-APP_NAME = "3DPrintHub Catalog Intelligence"
-APP_VERSION = "8.6.0"
-BUILD_ID = "2026.08.16.1"
+APP_NAME = "3DPrintHub Catalog Center"
+APP_VERSION = "8.7.0"
+BUILD_ID = "2026.08.16.2"
 APP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 
