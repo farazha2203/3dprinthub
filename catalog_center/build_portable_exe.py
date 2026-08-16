@@ -175,7 +175,9 @@ def build(python: Path) -> Path:
         "single_file": True,
         "installer_required": False,
         "python_required_on_target": False,
-        "data_directory": "3DPrintHub-CatalogCenter-Data",
+        "data_profile": r"%LOCALAPPDATA%\3DPrintHub\CatalogCenter",
+        "profile_persists_across_releases": True,
+        "connection_secrets": "Windows Credential Store",
         "versioned_exe": versioned_exe.name,
         "stable_exe": stable_exe.name,
         "sha256": versioned_sha,
@@ -192,6 +194,8 @@ def build(python: Path) -> Path:
     print(f"PORTABLE_EXE_LATEST={stable_exe}")
     print(f"PORTABLE_EXE_SHA256={versioned_sha}")
     print(f"PORTABLE_EXE_SIZE={versioned_exe.stat().st_size}")
+    print(r"PORTABLE_DATA_PROFILE=%LOCALAPPDATA%\3DPrintHub\CatalogCenter")
+    print("PORTABLE_SECRET_STORE=WINDOWS_CREDENTIAL_MANAGER")
     print("PORTABLE_EXE_VERIFY=OK")
     return versioned_exe
 
