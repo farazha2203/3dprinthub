@@ -11,7 +11,7 @@ from app.site_connection import SiteConnection, upload_batch
 from app.upgrade import install, rollback
 
 
-VERSION = "8.6.0"
+VERSION = "8.7.0"
 
 
 def write_minimal_package(source: Path) -> None:
@@ -65,7 +65,7 @@ class V85UpgradeTests(unittest.TestCase):
 
     def test_install_works_when_extracted_package_is_nested_inside_old_target(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); target = root / "installed"; source = target / "3DPrintHub_Catalog_Intelligence_v8.6.0"
+            root = Path(temporary); target = root / "installed"; source = target / "3DPrintHub_Catalog_Center_v8.7.0"
             write_minimal_package(source); (target / "old-root.txt").write_text("old", encoding="utf-8")
             result = install(source, target, root / "data", root / "backups", stamp="20260816-181000")
             self.assertEqual((target / "app" / "version.py").read_text(encoding="utf-8"), f'APP_VERSION = "{VERSION}"\n')
