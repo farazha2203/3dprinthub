@@ -79,6 +79,57 @@ def secret_source(name: str) -> str:
     return "Not configured"
 
 
+def migrate_connection_env_to_keyring(env_path: str | Path) -> list[str]:
+    """Move FTP/Bridge secrets from a portable .env into Windows Credential Store.
+
+    The source file is scrubbed only after every discovered secret is saved successfully.
+    No secret value is returned or logged.
+    """
+    path = Path(env_path)
+    if not path.is_file():
+        return []
+
+    original_lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+    reverse = {env_name: name for name, env_name in CONNECTION_USERS.items()}
+    discovered: dict[str, str] = {}
+    secret_line_indexes: set[int] = set()
+
+    for index, raw_line in enumerate(original_lines):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.lower().startswith("export "):
+            line = line[7:].lstrip()
+        if "=" not in line:
+            continue
+        key, raw_value = line.split("=", 1)
+        key = key.strip()
+        if key not in reverse:
+            continue
+        value = raw_value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1].strip()
+        if value:
+            discovered[reverse[key]] = value
+            secret_line_indexes.add(index)
+
+    if not discovered:
+        return []
+
+    kr = _keyring()
+    if not kr:
+        raise RuntimeError("Windows Credential Store backend is unavailable; portable secrets were not migrated.")
+
+    for secret_name, value in discovered.items():
+        env_name = CONNECTION_USERS[secret_name]
+        kr.set_password(SERVICE_NAME, env_name, value)
+
+    cleaned = [line for index, line in enumerate(original_lines) if index not in secret_line_indexes]
+    cleaned.append("# Connection secrets migrated to Windows Credential Store.")
+    path.write_text("\n".join(cleaned).rstrip() + "\n", encoding="utf-8")
+    return sorted(discovered)
+
+
 def _project_root(project_root: str | Path | None = None) -> Path:
     if project_root:
         return Path(project_root)
