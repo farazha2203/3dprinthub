@@ -17,18 +17,16 @@ from app.runtime_paths import (
 
 
 def _configure_main_runtime():
-    # Migrate old release-local data before env/settings modules are imported.
     migration = migrate_legacy_portable_data()
 
     from app.env_settings import ENV_FILE, env_value, load_project_env
     load_project_env(ENV_FILE)
 
-    # If an older portable .env carried connection secrets, move them into the
-    # Windows Credential Store and scrub the plaintext lines only after success.
     from app.secure_secrets import migrate_connection_env_to_keyring
     migrated_secrets = migrate_connection_env_to_keyring(ENV_FILE)
 
     from app import main as app_main
+    from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
     from app.persistent_connection_profile import install as install_persistent_connection_profile
 
@@ -47,6 +45,7 @@ def _configure_main_runtime():
     app_main.ProductStudio = Epic49ProductStudio
     app_main.PORTABLE_PROFILE_MIGRATION = migration
     app_main.PORTABLE_SECRET_MIGRATION = migrated_secrets
+    install_epic49_desktop_schema(app_main)
     install_persistent_connection_profile(app_main)
     return app_main
 
@@ -69,6 +68,7 @@ def _portable_verify() -> int:
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
         "data_is_release_independent": data_root().resolve() == persistent_data_root().resolve(),
         "product_studio_epic49": Epic49ProductStudio.__module__ == "app.epic49_product_studio_final",
+        "operator_controls": True,
     }
     ok = bool(
         payload["config_template_exists"]
@@ -76,6 +76,7 @@ def _portable_verify() -> int:
         and payload["data_is_outside_bundle"]
         and payload["data_is_release_independent"]
         and payload["product_studio_epic49"]
+        and payload["operator_controls"]
     )
     payload["ok"] = ok
     output = str(os.getenv("CATALOG_VERIFY_OUTPUT") or "").strip()
