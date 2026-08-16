@@ -20,6 +20,7 @@ def main() -> int:
     load_project_env(ENV_FILE)
 
     from app.version import APP_VERSION, BUILD_ID, SOURCE_ROOT
+    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
@@ -34,6 +35,7 @@ def main() -> int:
     print(f"ACTIVE_VERSION={APP_VERSION}", flush=True)
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
+    print("PRODUCT_STUDIO_EPIC49=ENABLED", flush=True)
 
     if "--verify-only" in sys.argv:
         print("ACTIVE_RELEASE_VERIFIED=OK", flush=True)
@@ -41,9 +43,12 @@ def main() -> int:
     if "--debug" in sys.argv:
         os.environ["CATALOG_DEBUG"] = "1"
 
-    from app.main import main as app_main
+    from app import main as app_module
 
-    app_main()
+    # Keep the large stable application shell untouched and replace only the
+    # Product Studio implementation before any studio window can be opened.
+    app_module.ProductStudio = Epic49ProductStudio
+    app_module.main()
     return 0
 
 
