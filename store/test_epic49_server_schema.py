@@ -92,9 +92,11 @@ class Epic49ServerSchemaTests(TestCase):
         self.media.cleanup()
 
     def test_profile_sync_makes_existing_store_slug_ascii_and_persists_operator_fields(self):
+        old_slug = self.product.slug
         profile = sync_catalog_profile(self.product, self.asset, self.data, price_min=350000, price_max=650000)
         self.product.refresh_from_db()
         self.assertEqual(profile.product_id, self.product.pk)
+        self.assertEqual(profile.legacy_slug, old_slug)
         self.assertEqual(profile.desktop_product_id, 44)
         self.assertEqual(profile.price_min, 350000)
         self.assertEqual(profile.price_max, 650000)
@@ -106,9 +108,13 @@ class Epic49ServerSchemaTests(TestCase):
         self.product.slug.encode("ascii")
         self.assertNotIn("%", self.product.slug)
         path = self.product.get_absolute_url()
-        self.assertEqual(resolve(path).view_name, "store:product_detail")
+        self.assertEqual(resolve(path).view_name, "epic49_product_compat")
         self.assertIn(profile.public_slug, path)
         self.assertEqual(ProductSitemap().location(self.product), path)
+
+        response = self.client.get(f"/store/product/{old_slug}/")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response["Location"], path)
 
     def test_seo_sync_and_schema_use_structured_catalog_data(self):
         sync_catalog_profile(self.product, self.asset, self.data, price_min=350000, price_max=650000)
@@ -142,7 +148,7 @@ class Epic49ServerSchemaTests(TestCase):
         )
         self.product.refresh_from_db()
         self.assertEqual(slide.target_url, self.product.get_absolute_url())
-        self.assertEqual(resolve(slide.target_url).view_name, "store:product_detail")
+        self.assertEqual(resolve(slide.target_url).view_name, "epic49_product_compat")
 
     def test_backfill_command_is_dry_run_by_default_and_apply_is_idempotent(self):
         self.assertFalse(ProductCatalogProfile.objects.filter(product=self.product).exists())
@@ -167,7 +173,7 @@ class Epic49ServerSchemaTests(TestCase):
     def test_model_is_registered_as_real_store_database_model(self):
         field_names = {field.name for field in ProductCatalogProfile._meta.fields}
         for name in {
-            "product", "public_slug", "desktop_product_id", "price_min", "price_max",
+            "product", "public_slug", "legacy_slug", "desktop_product_id", "price_min", "price_max",
             "technical_features", "keywords", "homepage_slider_enabled", "last_synced_at",
         }:
             self.assertIn(name, field_names)
@@ -181,5 +187,6 @@ class Epic49MigrationContractTests(TestCase):
         self.assertIn("migrations.CreateModel", migration)
         self.assertIn('name="ProductCatalogProfile"', migration)
         self.assertIn("migrations.RunPython(backfill_catalog_profiles, noop_reverse)", migration)
+        self.assertIn('"legacy_slug"', migration)
         self.assertNotIn("DeleteModel", migration)
         self.assertNotIn("RemoveField", migration)
