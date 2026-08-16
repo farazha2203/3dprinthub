@@ -11,7 +11,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import resolve
 
 from store.epic49_catalog_profile import ProductCatalogProfile, sync_catalog_profile, sync_product_seo
-from store.models import Category, ImportedPrintAsset, PrintCatalogSource, Product
+from store.epic49_publish_options import sync_epic49_publish_options
+from store.models import Category, ImportedPrintAsset, PrintCatalogSource, PrintQuality, Product
 from store.sitemaps import ProductSitemap
 from store.templatetags.store_seo import product_schema_json
 from website.models import HomepageHeroSlide
@@ -149,6 +150,35 @@ class Epic49ServerSchemaTests(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(slide.target_url, self.product.get_absolute_url())
         self.assertEqual(resolve(slide.target_url).view_name, "epic49_product_compat")
+
+    def test_material_color_options_create_real_variants_with_desktop_lead_time(self):
+        PrintQuality.objects.create(code="standard", name="استاندارد", sort_order=1, is_active=True)
+        data = dict(self.data)
+        data["homepage_slider_enabled"] = False
+        data["material_color_options_json"] = [
+            {"material": "PLA", "color": "صورتی", "hex": "#ff69b4"},
+            {"material": "PETG", "color": "مشکی", "hex": "#111111"},
+        ]
+        payload = dict(self.asset.source_payload or {})
+        payload["desktop_catalog_v85"] = data
+        ImportedPrintAsset.objects.filter(pk=self.asset.pk).update(source_payload=payload)
+        self.asset.refresh_from_db()
+
+        result = sync_epic49_publish_options(self.asset)
+        self.product.refresh_from_db()
+        profile = ProductCatalogProfile.objects.get(product=self.product)
+        variants = list(
+            self.product.variants.filter(is_active=True, code__startswith=f"EP49-{self.product.pk}-")
+            .select_related("material", "color")
+            .order_by("material__name", "color__name")
+        )
+        self.assertEqual(profile.price_mode, "variant")
+        self.assertEqual(len(result["material_color_variants"]), 2)
+        self.assertEqual(len(variants), 2)
+        self.assertEqual({(item.material.name, item.color.name) for item in variants}, {("PLA", "صورتی"), ("PETG", "مشکی")})
+        self.assertTrue(all(item.lead_time_min_days == 2 for item in variants))
+        self.assertTrue(all(item.lead_time_max_days == 5 for item in variants))
+        self.assertEqual(self.product.order_mode, "variant")
 
     def test_backfill_command_is_dry_run_by_default_and_apply_is_idempotent(self):
         self.assertFalse(ProductCatalogProfile.objects.filter(product=self.product).exists())
