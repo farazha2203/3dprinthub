@@ -76,7 +76,7 @@
       "daily_limit": 20
     }
   ],
-  "package_version": "8.6.0",
+  "package_version": "8.7.0",
   "portfolio_harvest_sources": ["makerworld", "printables", "thingiverse", "grabcad"],
   "local_categories": [
     {"slug": "external-other", "name": "سایر محصولات"},
@@ -132,5 +132,10 @@
     "bulk_content_enabled": true,
     "bulk_pricing_enabled": true
   },
-  "ui": {"theme": "light"}
+  "ui": {
+    "theme": "light",
+    "shell": "sidebar",
+    "product_workspace": "v87-six-step",
+    "icon_system": "native-pillow"
+  }
 }
