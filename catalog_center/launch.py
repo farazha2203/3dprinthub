@@ -20,7 +20,7 @@ def main() -> int:
     load_project_env(ENV_FILE)
 
     from app.version import APP_VERSION, BUILD_ID, SOURCE_ROOT
-    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
+    from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
