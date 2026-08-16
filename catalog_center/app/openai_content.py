@@ -5,6 +5,25 @@ from typing import Any
 
 from .ai_providers import AIProviderClient, response_output_text
 
+SLIDER_SEO_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "title_fa": {"type": "string"},
+        "description_fa": {"type": "string"},
+        "image_alt_fa": {"type": "string"},
+        "button_text_fa": {"type": "string"},
+        "focus_keyword_fa": {"type": "string"},
+    },
+    "required": [
+        "title_fa",
+        "description_fa",
+        "image_alt_fa",
+        "button_text_fa",
+        "focus_keyword_fa",
+    ],
+}
+
 CONTENT_SCHEMA = {
     "type":"object","additionalProperties":False,
     "properties":{
@@ -21,9 +40,10 @@ CONTENT_SCHEMA = {
         "use_case_class":{"type":"string"},
         "material_recommendations":{"type":"array","items":{"type":"object","additionalProperties":False,"properties":{
             "material":{"type":"string"},"score":{"type":"integer","minimum":0,"maximum":100},"recommended":{"type":"boolean"},"reason_fa":{"type":"string"}
-        },"required":["material","score","recommended","reason_fa"]}}
+        },"required":["material","score","recommended","reason_fa"]}},
+        "homepage_slider_seo": SLIDER_SEO_SCHEMA,
     },
-    "required":["title_fa","short_description_fa","description_fa","categories_fa","specs_fa","tags_fa","hashtags_fa","suggested_category_slug","category_confidence","seo_title_fa","seo_description_fa","sales_bullets","social_caption_fa","image_alt_texts","content_notes","use_case_class","material_recommendations"]
+    "required":["title_fa","short_description_fa","description_fa","categories_fa","specs_fa","tags_fa","hashtags_fa","suggested_category_slug","category_confidence","seo_title_fa","seo_description_fa","sales_bullets","social_caption_fa","image_alt_texts","content_notes","use_case_class","material_recommendations","homepage_slider_seo"]
 }
 
 class AIContentService:
@@ -58,12 +78,14 @@ class AIContentService:
             "Never invent dimensions, weight, compatibility, license, source rating, file availability or price. Preserve engineering names and units. "
             "Translate all source specifications and category paths to natural Persian. Choose suggested_category_slug only from allowed_site_categories. "
             "Create useful non-spam SEO title/description, internal tags and Persian social hashtags. "
+            "Always create homepage_slider_seo as a separate homepage hero content pack: title_fa must be concise and factual, description_fa must be a short useful Persian summary, image_alt_fa must accurately describe the product/image without keyword stuffing, button_text_fa must be a short action label, and focus_keyword_fa must be one natural target phrase. "
+            "For homepage_slider_seo avoid price, availability, performance or technical claims unless they are explicitly supported by source facts. Do not duplicate the full product SEO text; write compact hero copy suitable for an H2, a short paragraph, image alt text and an internal product link on the homepage. "
             "Classify the use case and recommend printable materials conservatively. Do not recommend expensive engineering materials such as PPS-CF for ordinary home decor unless source facts require high heat/chemical/mechanical performance. "
             "For automotive outdoor/high-heat parts prefer suitable heat/UV-capable choices; for flexible parts consider TPU; for gears/load/wear consider engineering nylons/composites when justified. "
             "Explain each recommendation briefly in Persian. Missing facts go in content_notes. "
             + ("Use faithful translation; do not add marketing claims. " if strict_translate else "Write persuasive but factual Persian ecommerce copy. ")
         )
-        result,model=self.client.structured_response(instructions=instructions,input_content=content,schema=CONTENT_SCHEMA,schema_name="catalog_content_pack_v84",preferred_model=self.model)
+        result,model=self.client.structured_response(instructions=instructions,input_content=content,schema=CONTENT_SCHEMA,schema_name="catalog_content_pack_v871",preferred_model=self.model)
         result["_ai_provider"]=self.provider; result["_ai_model"]=model
         return result
 
