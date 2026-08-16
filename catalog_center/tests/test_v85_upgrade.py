@@ -133,10 +133,18 @@ class V85UpgradeTests(unittest.TestCase):
         self.assertTrue(logo.is_file())
         self.assertEqual(hashlib.sha256(icon.read_bytes()).hexdigest(), "f3ff35ae0e78161d0930d82dfd15f5a9c573a99e1e6a2b2e9030275749998c86")
         self.assertEqual(hashlib.sha256(logo.read_bytes()).hexdigest(), "3b53b171f05e329f284835489d3a4729dec7bab4e7de568e23b4b3dcaeec9971")
-        build = (root / "BUILD_EXE.ps1").read_text(encoding="utf-8")
-        self.assertIn("--add-data", build)
-        self.assertIn("brand_icon.png", build)
-        self.assertIn('"$Root\\launch.py"', build)
+
+        wrapper = (root / "BUILD_EXE.ps1").read_text(encoding="utf-8")
+        builder = (root / "build_portable_exe.py").read_text(encoding="utf-8")
+
+        # BUILD_EXE.ps1 is intentionally only a thin launcher. The actual
+        # PyInstaller contract lives in build_portable_exe.py.
+        self.assertIn("build_portable_exe.py", wrapper)
+        self.assertIn("--add-data", builder)
+        self.assertIn("brand_icon.png", builder)
+        self.assertIn("config.example.json", builder)
+        self.assertIn("portable_entry.py", builder)
+        self.assertIn("--onefile", builder)
 
 
 if __name__ == "__main__":
