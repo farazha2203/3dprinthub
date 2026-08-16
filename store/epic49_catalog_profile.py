@@ -69,6 +69,14 @@ def _json_value(value, default):
         return default
 
 
+def _slug_base(product) -> str:
+    for value in [getattr(product, "title_en", ""), getattr(product, "source_external_id", ""), getattr(product, "sku", "")]:
+        base = slugify(str(value or ""), allow_unicode=False).strip("-")
+        if base:
+            return base[:200]
+    return f"product-{product.pk}"
+
+
 def safe_public_slug(product) -> str:
     try:
         current = str(product.catalog_profile.public_slug or "").strip()
@@ -76,25 +84,24 @@ def safe_public_slug(product) -> str:
             return current
     except Exception:
         pass
-    candidates = [getattr(product, "title_en", ""), getattr(product, "source_external_id", ""), getattr(product, "sku", "")]
-    base = ""
-    for value in candidates:
-        base = slugify(str(value or ""), allow_unicode=False).strip("-")
-        if base:
-            break
-    return (base or f"product-{product.pk}")[:200]
+    return _slug_base(product)
 
 
 def public_product_url(product) -> str:
-    return reverse("epic49_product_canonical", kwargs={"pk": product.pk, "public_slug": safe_public_slug(product)})
+    return reverse("store:product_detail", kwargs={"slug": safe_public_slug(product)})
 
 
 def _unique_public_slug(product, preferred="") -> str:
-    base = slugify(str(preferred or ""), allow_unicode=False).strip("-") or safe_public_slug(product)
+    from store.models import Product
+
+    base = slugify(str(preferred or ""), allow_unicode=False).strip("-") or _slug_base(product)
     base = (base or f"product-{product.pk}")[:200]
     candidate = base
     counter = 1
-    while ProductCatalogProfile.objects.exclude(product=product).filter(public_slug=candidate).exists():
+    while (
+        ProductCatalogProfile.objects.exclude(product=product).filter(public_slug=candidate).exists()
+        or Product.objects.exclude(pk=product.pk).filter(slug=candidate).exists()
+    ):
         counter += 1
         suffix = f"-{counter}"
         candidate = f"{base[:220-len(suffix)]}{suffix}"
@@ -102,11 +109,12 @@ def _unique_public_slug(product, preferred="") -> str:
 
 
 def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0) -> ProductCatalogProfile:
-    profile, _ = ProductCatalogProfile.objects.get_or_create(
-        product=product,
-        defaults={"public_slug": _unique_public_slug(product, getattr(product, "title_en", ""))},
-    )
-    if not profile.public_slug:
+    from store.models import Product
+
+    profile = ProductCatalogProfile.objects.filter(product=product).first()
+    if profile is None:
+        profile = ProductCatalogProfile(product=product, public_slug=_unique_public_slug(product, getattr(product, "title_en", "")))
+    elif not profile.public_slug:
         profile.public_slug = _unique_public_slug(product, getattr(product, "title_en", ""))
 
     minimum = max(0, int(price_min or data.get("price_min") or getattr(product, "fixed_price", 0) or 0))
@@ -147,6 +155,10 @@ def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0
     profile.homepage_slider_sort_order = max(0, int(data.get("homepage_slider_sort_order") or 100))
     profile.last_synced_at = timezone.now()
     profile.save()
+
+    if product.slug != profile.public_slug:
+        Product.objects.filter(pk=product.pk).update(slug=profile.public_slug)
+        product.slug = profile.public_slug
     return profile
 
 
