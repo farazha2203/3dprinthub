@@ -17,6 +17,7 @@ from app.runtime_paths import (
 def _configure_main_runtime():
     from app.env_settings import env_value
     from app import main as app_main
+    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
 
     data = data_root()
     data.mkdir(parents=True, exist_ok=True)
@@ -30,12 +31,14 @@ def _configure_main_runtime():
     app_main.HOST_MIRROR = host_mirror
     app_main.BATCH_ROOT = host_mirror / "imports" / "desktop_catalog" / "pending"
     app_main.ASSET_ROOT = asset_root()
+    app_main.ProductStudio = Epic49ProductStudio
     return app_main
 
 
 def _portable_verify() -> int:
     from app.env_settings import ENV_FILE
     from app.version import APP_NAME, APP_VERSION, BUILD_ID
+    from app.epic49_product_studio import ProductStudio as Epic49ProductStudio
 
     payload = {
         "app_name": APP_NAME,
@@ -48,11 +51,13 @@ def _portable_verify() -> int:
         "brand_icon_exists": (asset_root() / "brand_icon.png").is_file(),
         "env_file": str(ENV_FILE),
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
+        "product_studio_epic49": Epic49ProductStudio.__module__ == "app.epic49_product_studio",
     }
     ok = bool(
         payload["config_template_exists"]
         and payload["brand_icon_exists"]
         and payload["data_is_outside_bundle"]
+        and payload["product_studio_epic49"]
     )
     payload["ok"] = ok
     output = str(os.getenv("CATALOG_VERIFY_OUTPUT") or "").strip()
