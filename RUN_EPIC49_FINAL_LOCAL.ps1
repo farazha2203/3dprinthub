@@ -27,7 +27,6 @@ if ($LASTEXITCODE -ne 0) { throw "Git diff check failed" }
   -q
 if ($LASTEXITCODE -ne 0) { throw "Python compileall failed" }
 
-# First QA the exact Git source. Canonical Windows files are touched only after this suite is green.
 Set-Location $Catalog
 & $Python launch.py --verify-only
 if ($LASTEXITCODE -ne 0) { throw "Git Catalog launcher verification failed" }
@@ -46,18 +45,18 @@ if ($LASTEXITCODE -ne 0) { throw "Migration drift detected" }
   store.test_phase49_catalog_visibility `
   store.test_phase49_1_media `
   store.test_phase49_unicode_routes `
+  store.test_epic49_operator_publish `
   catalog_bridge.tests.test_bridge `
   catalog_bridge.tests.test_phase49_diagnostics `
   catalog_bridge.tests.test_epic49_contract `
+  website.test_phase45_homepage_hero `
   website.test_phase48_operational_release `
   --verbosity 2
 if ($LASTEXITCODE -ne 0) { throw "Django Epic49 regression tests failed" }
 
-# Read-only locally. Failed production batches are archived only on the host after acceptance.
 & $Python manage.py epic49_archive_failed_batches --all-failed
 if ($LASTEXITCODE -ne 0) { throw "Epic49 failed-batch dry-run failed" }
 
-# Only after Git-side QA passes, sync tracked Catalog source into the actual Windows application source.
 & (Join-Path $Root "SYNC_EPIC49_CATALOG_WINDOWS.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Canonical Windows Catalog sync failed" }
 
@@ -74,18 +73,18 @@ if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog launcher verification failed
 & $Python -m unittest discover -s tests -p "test_*.py" -v
 if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite failed" }
 
-# Every approved QA run produces a fresh, verified, single-file portable EXE.
 & (Join-Path $CanonicalCatalog "BUILD_EXE.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Portable EXE build or self-verification failed" }
 
 $Version = (& $Python -c "import sys; sys.path.insert(0, r'$CanonicalCatalog'); from app.version import APP_VERSION; print(APP_VERSION)").Trim()
 $ReleaseDir = Join-Path $CanonicalCatalog ("release\" + $Version)
-$VersionedExe = Join-Path $ReleaseDir ("3DPrintHub-CatalogCenter-v" + $Version + ".exe")
-$StableExe = Join-Path $ReleaseDir "3DPrintHub-CatalogCenter.exe"
 $ReleaseManifest = Join-Path $ReleaseDir "release-manifest.json"
-if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Versioned portable EXE missing: $VersionedExe" }
-if (-not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing: $StableExe" }
 if (-not (Test-Path -LiteralPath $ReleaseManifest)) { throw "Release manifest missing: $ReleaseManifest" }
+$Manifest = Get-Content -LiteralPath $ReleaseManifest -Raw | ConvertFrom-Json
+$VersionedExe = Join-Path $ReleaseDir ([string]$Manifest.versioned_exe)
+$StableExe = Join-Path $ReleaseDir ([string]$Manifest.stable_exe)
+if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Verified portable EXE missing: $VersionedExe" }
+if ($Manifest.stable_exe_updated -eq $true -and -not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing after successful alias update: $StableExe" }
 
 Set-Location $Root
 Write-Host "DATABASE_MIGRATE=NO"
@@ -98,9 +97,16 @@ Write-Host "BRIDGE_VERSION=1.2.0"
 Write-Host "PUBLISH_CONTRACT=epic49-final"
 Write-Host "PUBLIC_HTTP_ACCEPTANCE_CONTRACT=ENABLED"
 Write-Host "EXISTING_PRODUCT_RESYNC=ENABLED"
+Write-Host "PER_PRODUCT_IMAGE_LIMIT=ENABLED"
+Write-Host "LOCAL_IMAGE_UPLOAD=ENABLED"
+Write-Host "PRICE_RANGE=ENABLED"
+Write-Host "MATERIAL_COLOR_VARIANTS=ENABLED"
+Write-Host "HOMEPAGE_SLIDER_CONTROL=ENABLED"
+Write-Host "UNICODE_PUBLIC_ROUTE_HARDENED=ENABLED"
 Write-Host "FAILED_BATCH_ARCHIVE=DRY_RUN_OK"
 Write-Host "PORTABLE_EXE=$VersionedExe"
 Write-Host "PORTABLE_EXE_LATEST=$StableExe"
+Write-Host "PORTABLE_STABLE_ALIAS_UPDATED=$($Manifest.stable_exe_updated)"
 Write-Host "PORTABLE_EXE_RELEASE_MANIFEST=$ReleaseManifest"
 Write-Host "PORTABLE_EXE_BUILD=OK"
 Write-Host "EPIC49_LOCAL_QA=OK"
