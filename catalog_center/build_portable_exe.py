@@ -23,7 +23,7 @@ PRODUCT_BASENAME = "3DPrintHub-CatalogCenter"
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        for chunk in iter(lambda: handle.read(1024 * 1024, ), b""):
             digest.update(chunk)
     return digest.hexdigest()
 
@@ -99,13 +99,24 @@ def git_sha() -> str:
         return ""
 
 
+def _copy_with_locked_fallback(source: Path, preferred: Path, *, suffix: str) -> tuple[Path, bool]:
+    try:
+        shutil.copy2(source, preferred)
+        return preferred, True
+    except PermissionError:
+        fallback = preferred.with_name(f"{preferred.stem}-{suffix}{preferred.suffix}")
+        shutil.copy2(source, fallback)
+        return fallback, False
+
+
 def build(python: Path) -> Path:
     release_dir = ROOT / "release" / APP_VERSION
     build_dir = ROOT / "build" / "portable-exe"
+    staging_dir = build_dir / "dist"
     release_dir.mkdir(parents=True, exist_ok=True)
     if build_dir.exists():
         shutil.rmtree(build_dir)
-    build_dir.mkdir(parents=True, exist_ok=True)
+    staging_dir.mkdir(parents=True, exist_ok=True)
 
     icon = build_dir / "brand_icon.ico"
     version_file = build_dir / "version_info.txt"
@@ -121,7 +132,7 @@ def build(python: Path) -> Path:
         "--windowed",
         "--noupx",
         "--name", versioned_name,
-        "--distpath", str(release_dir),
+        "--distpath", str(staging_dir),
         "--workpath", str(build_dir / "work"),
         "--specpath", str(build_dir),
         "--paths", str(ROOT),
@@ -137,20 +148,18 @@ def build(python: Path) -> Path:
     ]
     subprocess.run(cmd, cwd=ROOT, check=True)
 
-    versioned_exe = release_dir / f"{versioned_name}.exe"
-    if not versioned_exe.is_file() or versioned_exe.stat().st_size < 1_000_000:
-        raise RuntimeError(f"Portable EXE was not created correctly: {versioned_exe}")
+    staged_exe = staging_dir / f"{versioned_name}.exe"
+    if not staged_exe.is_file() or staged_exe.stat().st_size < 1_000_000:
+        raise RuntimeError(f"Portable EXE was not created correctly: {staged_exe}")
 
-    stable_exe = release_dir / f"{PRODUCT_BASENAME}.exe"
-    shutil.copy2(versioned_exe, stable_exe)
-
+    # Verify the exact staged binary before touching the release folder.
     with tempfile.TemporaryDirectory() as temporary:
         verify_file = Path(temporary) / "verify.json"
         env = os.environ.copy()
         env["CATALOG_VERIFY_OUTPUT"] = str(verify_file)
         result = subprocess.run(
-            [str(versioned_exe), "--portable-verify"],
-            cwd=release_dir,
+            [str(staged_exe), "--portable-verify"],
+            cwd=staging_dir,
             env=env,
             timeout=90,
             check=False,
@@ -161,9 +170,24 @@ def build(python: Path) -> Path:
         if verify.get("ok") is not True:
             raise RuntimeError(f"Portable EXE verification payload failed: {verify}")
 
+    build_suffix = "build-" + "".join(ch for ch in BUILD_ID if ch.isalnum())
+    preferred_versioned = release_dir / f"{versioned_name}.exe"
+    versioned_exe, versioned_preferred = _copy_with_locked_fallback(
+        staged_exe, preferred_versioned, suffix=build_suffix
+    )
+
+    stable_exe = release_dir / f"{PRODUCT_BASENAME}.exe"
+    stable_updated = True
+    try:
+        shutil.copy2(staged_exe, stable_exe)
+    except PermissionError:
+        stable_updated = False
+
     versioned_sha = sha256(versioned_exe)
-    stable_sha = sha256(stable_exe)
-    if versioned_sha != stable_sha:
+    staged_sha = sha256(staged_exe)
+    if versioned_sha != staged_sha:
+        raise RuntimeError("Released and verified EXE hashes differ")
+    if stable_updated and sha256(stable_exe) != versioned_sha:
         raise RuntimeError("Versioned and stable EXE hashes differ")
 
     manifest = {
@@ -179,7 +203,9 @@ def build(python: Path) -> Path:
         "profile_persists_across_releases": True,
         "connection_secrets": "Windows Credential Store",
         "versioned_exe": versioned_exe.name,
+        "preferred_versioned_name_available": versioned_preferred,
         "stable_exe": stable_exe.name,
+        "stable_exe_updated": stable_updated,
         "sha256": versioned_sha,
         "size_bytes": versioned_exe.stat().st_size,
     }
@@ -194,6 +220,8 @@ def build(python: Path) -> Path:
     print(f"PORTABLE_EXE_LATEST={stable_exe}")
     print(f"PORTABLE_EXE_SHA256={versioned_sha}")
     print(f"PORTABLE_EXE_SIZE={versioned_exe.stat().st_size}")
+    print(f"PORTABLE_VERSIONED_PREFERRED={int(versioned_preferred)}")
+    print(f"PORTABLE_STABLE_ALIAS_UPDATED={int(stable_updated)}")
     print(r"PORTABLE_DATA_PROFILE=%LOCALAPPDATA%\3DPrintHub\CatalogCenter")
     print("PORTABLE_SECRET_STORE=WINDOWS_CREDENTIAL_MANAGER")
     print("PORTABLE_EXE_VERIFY=OK")
