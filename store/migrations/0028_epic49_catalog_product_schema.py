@@ -42,7 +42,7 @@ def backfill_catalog_profiles(apps, schema_editor):
     ImportedPrintAsset = apps.get_model("store", "ImportedPrintAsset")
     Product = apps.get_model("store", "Product")
 
-    assets = ImportedPrintAsset.objects.exclude(product_id=None).select_related("product").order_by("pk")
+    assets = ImportedPrintAsset.objects.exclude(product_id=None).select_related("product", "source").order_by("pk")
     for asset in assets.iterator():
         product = asset.product
         payload = asset.source_payload or {}
@@ -67,6 +67,10 @@ def backfill_catalog_profiles(apps, schema_editor):
         lead_min = max(0, int(data.get("lead_time_min_days") or 0))
         lead_max = max(lead_min, int(data.get("lead_time_max_days") or lead_min or 0))
         public_slug = _unique_slug(ProductCatalogProfile, Product, product)
+        keywords = _json_value(data.get("keywords_json"), [])
+        tags_fa = _json_value(data.get("tags_fa_json"), [])
+        hashtags = _json_value(data.get("hashtags_fa_json"), [])
+
         ProductCatalogProfile.objects.update_or_create(
             product_id=product.pk,
             defaults={
@@ -85,7 +89,7 @@ def backfill_catalog_profiles(apps, schema_editor):
                 "license_name": str(data.get("license_name") or getattr(asset, "license_name", ""))[:200],
                 "license_url": str(data.get("license_url") or getattr(asset, "license_url", ""))[:1000],
                 "technical_features": _json_value(data.get("technical_features_json"), {}),
-                "keywords": _json_value(data.get("keywords_json"), []),
+                "keywords": keywords,
                 "price_min": max(0, minimum),
                 "price_max": max(0, maximum),
                 "price_mode": price_mode,
@@ -96,8 +100,24 @@ def backfill_catalog_profiles(apps, schema_editor):
                 "last_synced_at": getattr(asset, "updated_at", None),
             },
         )
-        if product.slug != public_slug:
-            Product.objects.filter(pk=product.pk).update(slug=public_slug, canonical_url="")
+
+        meta_title = str(data.get("seo_title_fa") or getattr(product, "meta_title", "") or getattr(product, "title", ""))[:180]
+        meta_description = str(data.get("seo_description_fa") or getattr(product, "meta_description", "") or getattr(product, "short_description", "")).replace("\n", " ")[:320]
+        focus = next((str(x).strip() for x in [*keywords, *tags_fa] if str(x).strip()), getattr(product, "title", ""))[:180]
+        attribution = str(data.get("author_name") or getattr(asset, "author_name", "") or getattr(asset.source, "name", ""))[:220]
+        editorial_url = str(data.get("source_url") or getattr(asset, "source_url", ""))[:1000]
+        Product.objects.filter(pk=product.pk).update(
+            slug=public_slug,
+            canonical_url="",
+            meta_title=meta_title,
+            meta_description=meta_description,
+            seo_focus_keyword=focus,
+            og_title=meta_title,
+            og_description=meta_description,
+            editorial_source_url=editorial_url,
+            source_attribution=attribution,
+            hashtags=" ".join(str(x).strip() for x in hashtags if str(x).strip()),
+        )
 
 
 def noop_reverse(apps, schema_editor):
