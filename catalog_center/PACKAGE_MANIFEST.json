@@ -1,9 +1,17 @@
 {
-  "name": "3DPrintHub Catalog Intelligence v8.6.0",
-  "version": "8.6.0",
+  "name": "3DPrintHub Catalog Center v8.7.0 — Windows UX Rebuild",
+  "version": "8.7.0",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
+    "ux87_sidebar_shell",
+    "ux87_native_icon_system",
+    "ux87_single_product_workspace",
+    "ux87_ai_center",
+    "ux87_connection_center",
+    "ux87_six_step_product_workflow",
+    "persistent_ai_profile",
+    "persistent_host_profile",
     "direct_single_product_publish",
     "strict_commercial_license_gate",
     "editable_publish_controls",
@@ -47,6 +55,9 @@
     "app/product_studio.py",
     "app/epic49_product_studio.py",
     "app/epic49_product_studio_final.py",
+    "app/product_workspace_v87.py",
+    "app/ux87_shell.py",
+    "app/ux87_icons.py",
     "app/epic49_desktop_schema.py",
     "app/persistent_connection_profile.py",
     "app/runtime_paths.py",
@@ -63,10 +74,13 @@
     "tests/test_persistent_connection_profile.py",
     "tests/test_portable_exe_contract.py",
     "tests/test_v854_launcher.py",
+    "tests/test_v87_ux_rebuild.py",
     "tests/test_v85_upgrade.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
   "secret_store": "Windows Credential Manager",
+  "ai_profile_migration": "preserved",
+  "host_profile_migration": "preserved",
   "installer_required": false
 }
