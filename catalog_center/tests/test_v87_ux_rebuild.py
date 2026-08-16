@@ -41,6 +41,10 @@ class V87UXRebuildTests(unittest.TestCase):
         for marker in [
             'self.db.setting("ai_provider"',
             'self.db.setting("ai_model"',
+            'self.db.setting("translation_provider"',
+            'self.db.setting("google_api_key"',
+            'get_secret("google_api_key")',
+            'set_secret("google_api_key"',
             'env_value("CATALOG_FTP_HOST"',
             'self.db.setting("ftp_host"',
             'env_value("CATALOG_SITE_URL"',
@@ -51,6 +55,12 @@ class V87UXRebuildTests(unittest.TestCase):
             'get_secret("bridge_token")',
         ]:
             self.assertIn(marker, source)
+
+    def test_google_legacy_secret_is_only_erased_after_secure_write(self):
+        source = inspect.getsource(build_app_class(app_main.App)._migrate_legacy_google_key)
+        self.assertLess(source.index('set_secret("google_api_key"'), source.rindex('self.db.set_setting("google_api_key", "")'))
+        self.assertIn("except Exception", source)
+        self.assertIn("return legacy_key", source)
 
     def test_product_workspace_has_one_six_step_flow(self):
         labels = [label for _key, label in ProductWorkspace.SECTION_LABELS]
@@ -90,6 +100,16 @@ class V87UXRebuildTests(unittest.TestCase):
             "قیمت انتخاب‌شده‌ها",
         ]:
             self.assertIn(marker, source)
+
+    def test_ai_center_preserves_translation_and_google_controls(self):
+        source = (ROOT / "app" / "ux87_shell.py").read_text(encoding="utf-8")
+        for marker in ["موتور ترجمه", "Google API Key", "ذخیره امن AI", "تست زنده AI", "translation_provider"]:
+            self.assertIn(marker, source)
+
+    def test_connection_center_preserves_manual_batch_ack_action(self):
+        source = (ROOT / "app" / "ux87_shell.py").read_text(encoding="utf-8")
+        self.assertIn("ارسال آخرین Batch و دریافت ACK", source)
+        self.assertIn("command=self.upload_last_batch", source)
 
     def test_native_icons_do_not_depend_on_font_emoji(self):
         source = (ROOT / "app" / "ux87_icons.py").read_text(encoding="utf-8")
