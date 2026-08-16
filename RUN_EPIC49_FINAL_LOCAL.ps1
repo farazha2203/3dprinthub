@@ -74,6 +74,19 @@ if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog launcher verification failed
 & $Python -m unittest discover -s tests -p "test_*.py" -v
 if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite failed" }
 
+# Every approved QA run produces a fresh, verified, single-file portable EXE.
+& (Join-Path $CanonicalCatalog "BUILD_EXE.ps1")
+if ($LASTEXITCODE -ne 0) { throw "Portable EXE build or self-verification failed" }
+
+$Version = (& $Python -c "import sys; sys.path.insert(0, r'$CanonicalCatalog'); from app.version import APP_VERSION; print(APP_VERSION)").Trim()
+$ReleaseDir = Join-Path $CanonicalCatalog ("release\" + $Version)
+$VersionedExe = Join-Path $ReleaseDir ("3DPrintHub-CatalogCenter-v" + $Version + ".exe")
+$StableExe = Join-Path $ReleaseDir "3DPrintHub-CatalogCenter.exe"
+$ReleaseManifest = Join-Path $ReleaseDir "release-manifest.json"
+if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Versioned portable EXE missing: $VersionedExe" }
+if (-not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing: $StableExe" }
+if (-not (Test-Path -LiteralPath $ReleaseManifest)) { throw "Release manifest missing: $ReleaseManifest" }
+
 Set-Location $Root
 Write-Host "DATABASE_MIGRATE=NO"
 Write-Host "DATABASE_DATA_WRITE=NO"
@@ -86,4 +99,8 @@ Write-Host "PUBLISH_CONTRACT=epic49-final"
 Write-Host "PUBLIC_HTTP_ACCEPTANCE_CONTRACT=ENABLED"
 Write-Host "EXISTING_PRODUCT_RESYNC=ENABLED"
 Write-Host "FAILED_BATCH_ARCHIVE=DRY_RUN_OK"
+Write-Host "PORTABLE_EXE=$VersionedExe"
+Write-Host "PORTABLE_EXE_LATEST=$StableExe"
+Write-Host "PORTABLE_EXE_RELEASE_MANIFEST=$ReleaseManifest"
+Write-Host "PORTABLE_EXE_BUILD=OK"
 Write-Host "EPIC49_LOCAL_QA=OK"
