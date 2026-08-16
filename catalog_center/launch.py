@@ -5,14 +5,12 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.5.4"
+EXPECTED_VERSION = "8.6.0"
 ROOT = Path(__file__).resolve().parent
 
 
 def main() -> int:
     # The absolute launcher location must win over the caller's current folder.
-    # This prevents an older sibling project containing an ``app`` package from
-    # shadowing the installed release.
     root_text = str(ROOT)
     sys.path[:] = [root_text, *[item for item in sys.path if item != root_text]]
 
@@ -36,6 +34,7 @@ def main() -> int:
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
     print("PRODUCT_STUDIO_EPIC49=ENABLED", flush=True)
+    print("EPIC49_OPERATOR_CONTROLS=ENABLED", flush=True)
 
     if "--verify-only" in sys.argv:
         print("ACTIVE_RELEASE_VERIFIED=OK", flush=True)
@@ -44,11 +43,11 @@ def main() -> int:
         os.environ["CATALOG_DEBUG"] = "1"
 
     from app import main as app_module
+    from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
 
-    # Keep the large stable application shell untouched and replace only the
-    # Product Studio implementation before any studio window can be opened.
     app_module.ProductStudio = Epic49ProductStudio
+    install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
     app_module.main()
     return 0
