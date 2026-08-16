@@ -17,7 +17,7 @@ def _json_value(value, default):
         return default
 
 
-def _unique_slug(Profile, product):
+def _unique_slug(Profile, Product, product):
     candidates = [getattr(product, "title_en", ""), getattr(product, "source_external_id", ""), getattr(product, "sku", "")]
     base = ""
     for value in candidates:
@@ -27,7 +27,10 @@ def _unique_slug(Profile, product):
     base = (base or f"product-{product.pk}")[:200]
     candidate = base
     counter = 1
-    while Profile.objects.filter(public_slug=candidate).exists():
+    while (
+        Profile.objects.filter(public_slug=candidate).exists()
+        or Product.objects.exclude(pk=product.pk).filter(slug=candidate).exists()
+    ):
         counter += 1
         suffix = f"-{counter}"
         candidate = f"{base[:220-len(suffix)]}{suffix}"
@@ -37,6 +40,7 @@ def _unique_slug(Profile, product):
 def backfill_catalog_profiles(apps, schema_editor):
     ProductCatalogProfile = apps.get_model("store", "ProductCatalogProfile")
     ImportedPrintAsset = apps.get_model("store", "ImportedPrintAsset")
+    Product = apps.get_model("store", "Product")
 
     assets = ImportedPrintAsset.objects.exclude(product_id=None).select_related("product").order_by("pk")
     for asset in assets.iterator():
@@ -62,10 +66,11 @@ def backfill_catalog_profiles(apps, schema_editor):
 
         lead_min = max(0, int(data.get("lead_time_min_days") or 0))
         lead_max = max(lead_min, int(data.get("lead_time_max_days") or lead_min or 0))
+        public_slug = _unique_slug(ProductCatalogProfile, Product, product)
         ProductCatalogProfile.objects.update_or_create(
             product_id=product.pk,
             defaults={
-                "public_slug": _unique_slug(ProductCatalogProfile, product),
+                "public_slug": public_slug,
                 "desktop_product_id": int(data.get("desktop_product_id") or 0) or None,
                 "batch_uuid": str(data.get("batch_uuid") or "")[:80],
                 "source_hash": str(data.get("source_hash") or "")[:64],
@@ -91,6 +96,8 @@ def backfill_catalog_profiles(apps, schema_editor):
                 "last_synced_at": getattr(asset, "updated_at", None),
             },
         )
+        if product.slug != public_slug:
+            Product.objects.filter(pk=product.pk).update(slug=public_slug, canonical_url="")
 
 
 def noop_reverse(apps, schema_editor):
