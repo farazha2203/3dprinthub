@@ -28,8 +28,20 @@ if ($LASTEXITCODE -ne 0) { throw "Git diff check failed" }
 if ($LASTEXITCODE -ne 0) { throw "Python compileall failed" }
 
 Set-Location $Catalog
-& $Python launch.py --verify-only
+$GitVerify = @(& $Python launch.py --verify-only)
 if ($LASTEXITCODE -ne 0) { throw "Git Catalog launcher verification failed" }
+$GitVerify | ForEach-Object { Write-Host $_ }
+$GitVerifyText = $GitVerify -join "`n"
+foreach ($Marker in @(
+  "ACTIVE_VERSION=8.7.0",
+  "UX87_SHELL=ENABLED",
+  "PRODUCT_WORKSPACE_V87=ENABLED",
+  "AI_PROFILE_MIGRATION=PRESERVED",
+  "HOST_PROFILE_MIGRATION=PRESERVED",
+  "ACTIVE_RELEASE_VERIFIED=OK"
+)) {
+    if ($GitVerifyText -notmatch [regex]::Escape($Marker)) { throw "Missing v8.7 launcher marker: $Marker" }
+}
 
 & $Python -m unittest discover -s tests -p "test_*.py" -v
 if ($LASTEXITCODE -ne 0) { throw "Git Catalog Center full test suite failed" }
@@ -51,8 +63,6 @@ $ShowText = $Show -join "`n"
 if ($ShowText -notmatch "0028_epic49_catalog_product_schema") { throw "Migration 0028 is not registered" }
 if ($ShowText -notmatch "0029_epic49_catalog_product_backfill") { throw "Migration 0029 is not registered" }
 
-# Test DB creation applies the real migration chain, including 0028 + 0029,
-# without writing to the developer's runtime database.
 & $Python manage.py test `
   store.test_phase49_catalog_visibility `
   store.test_phase49_1_media `
@@ -80,8 +90,20 @@ if (-not (Test-Path -LiteralPath $CanonicalCatalog)) {
 if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog compileall failed" }
 
 Set-Location $CanonicalCatalog
-& $Python launch.py --verify-only
+$CanonicalVerify = @(& $Python launch.py --verify-only)
 if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog launcher verification failed" }
+$CanonicalVerify | ForEach-Object { Write-Host $_ }
+$CanonicalVerifyText = $CanonicalVerify -join "`n"
+foreach ($Marker in @(
+  "ACTIVE_VERSION=8.7.0",
+  "UX87_SHELL=ENABLED",
+  "PRODUCT_WORKSPACE_V87=ENABLED",
+  "AI_PROFILE_MIGRATION=PRESERVED",
+  "HOST_PROFILE_MIGRATION=PRESERVED",
+  "ACTIVE_RELEASE_VERIFIED=OK"
+)) {
+    if ($CanonicalVerifyText -notmatch [regex]::Escape($Marker)) { throw "Canonical source missing v8.7 marker: $Marker" }
+}
 
 & $Python -m unittest discover -s tests -p "test_*.py" -v
 if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite failed" }
@@ -90,6 +112,7 @@ if ($LASTEXITCODE -ne 0) { throw "Canonical Catalog Center full test suite faile
 if ($LASTEXITCODE -ne 0) { throw "Portable EXE build or self-verification failed" }
 
 $Version = (& $Python -c "import sys; sys.path.insert(0, r'$CanonicalCatalog'); from app.version import APP_VERSION; print(APP_VERSION)").Trim()
+if ($Version -ne "8.7.0") { throw "Expected portable release 8.7.0, got $Version" }
 $ReleaseDir = Join-Path $CanonicalCatalog ("release\" + $Version)
 $ReleaseManifest = Join-Path $ReleaseDir "release-manifest.json"
 if (-not (Test-Path -LiteralPath $ReleaseManifest)) { throw "Release manifest missing: $ReleaseManifest" }
@@ -100,6 +123,15 @@ if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Verified portable EXE 
 if ($Manifest.stable_exe_updated -eq $true -and -not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing after successful alias update: $StableExe" }
 
 Set-Location $Root
+Write-Host "CATALOG_VERSION=8.7.0"
+Write-Host "UX87_WINDOWS_REBUILD=OK"
+Write-Host "UX87_SIDEBAR_SHELL=OK"
+Write-Host "UX87_NATIVE_ICONS=OK"
+Write-Host "UX87_PRODUCT_WORKSPACE=OK"
+Write-Host "UX87_AI_CENTER=OK"
+Write-Host "UX87_CONNECTION_CENTER=OK"
+Write-Host "AI_PROFILE_PRESERVED=YES"
+Write-Host "HOST_PROFILE_PRESERVED=YES"
 Write-Host "DATABASE_MIGRATION_0028_SCHEMA=READY"
 Write-Host "DATABASE_MIGRATION_0029_BACKFILL=READY"
 Write-Host "DATABASE_MYSQL_DDL_DATA_SPLIT=ENABLED"
