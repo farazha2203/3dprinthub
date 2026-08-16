@@ -5,8 +5,10 @@ import os
 import re
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ENV_FILE = PROJECT_ROOT / ".env"
+from .runtime_paths import env_file
+
+
+ENV_FILE = env_file()
 _VALID_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _loaded_from_file: set[str] = set()
 
