@@ -1,0 +1,204 @@
+from __future__ import annotations
+
+import tkinter as tk
+from tkinter import ttk
+
+from .epic49_product_studio_final import ProductStudio as Epic49ProductStudio
+from .version import APP_VERSION
+
+
+class ProductWorkspace(Epic49ProductStudio):
+    """Single official product workspace for Catalog Center 8.7.
+
+    All legacy editing/publishing capability is preserved, but duplicate fast paths
+    are hidden and the operator follows one six-step workflow.
+    """
+
+    SECTION_LABELS = [
+        ("quick", "۱. اطلاعات پایه"),
+        ("commerce", "۲. سفارش و قیمت"),
+        ("images", "۳. تصاویر"),
+        ("content", "۴. محتوا و SEO"),
+        ("specs", "۵. منبع و فایل"),
+        ("publish", "۶. بررسی و انتشار"),
+    ]
+
+    def __init__(self, app, product_id: int):
+        super().__init__(app, product_id)
+        self.title(f"Product Workspace | 3DPrintHub Catalog Center {APP_VERSION}")
+        self.geometry("1540x940")
+        self.minsize(1240, 780)
+
+    def _build_ui(self):
+        style = ttk.Style(self)
+        # Keep a Notebook internally because many stable workflows select a page by
+        # widget reference; hide the tab strip and use the right-hand workflow rail.
+        try:
+            style.layout("Workspace87.TNotebook.Tab", [])
+        except Exception:
+            pass
+        style.configure("Workspace87.TNotebook", borderwidth=0, background="#f4f7fa")
+
+        header = tk.Frame(self, bg="#071827", padx=18, pady=12)
+        header.pack(fill="x")
+        title_box = tk.Frame(header, bg="#071827")
+        title_box.pack(side="left", fill="x", expand=True)
+        self.header_title = tk.StringVar(value="محصول")
+        self.header_meta = tk.StringVar(value="")
+        tk.Label(title_box, textvariable=self.header_title, bg="#071827", fg="white", font=("Tahoma", 17, "bold")).pack(anchor="w")
+        tk.Label(title_box, textvariable=self.header_meta, bg="#071827", fg="#b9c8d6", font=("Tahoma", 9)).pack(anchor="w", pady=(3, 0))
+
+        actions = tk.Frame(header, bg="#071827")
+        actions.pack(side="right")
+        ttk.Button(actions, text="ذخیره", command=self.save, style="Primary.TButton").pack(side="left", padx=3)
+        ttk.Button(actions, text="گزارش انتشار", command=self.open_sync_log).pack(side="left", padx=3)
+        ttk.Button(actions, text="انتشار روی سایت", command=self.publish_now, style="Publish.TButton").pack(side="left", padx=3)
+
+        source_bar = ttk.Frame(self, padding=(16, 8, 16, 8))
+        source_bar.pack(fill="x")
+        ttk.Label(source_bar, text="منبع محصول").pack(side="left")
+        self.source_url = tk.StringVar()
+        ttk.Entry(source_bar, textvariable=self.source_url).pack(side="left", fill="x", expand=True, padx=7)
+        ttk.Button(source_bar, text="باز کردن منبع", command=self.open_source).pack(side="left", padx=3)
+        ttk.Button(source_bar, text="کپی لینک", command=self.copy_source).pack(side="left", padx=3)
+
+        body = ttk.Frame(self, padding=(12, 0, 12, 8))
+        body.pack(fill="both", expand=True)
+        rail = tk.Frame(body, bg="#0b2238", width=210, padx=8, pady=10)
+        rail.pack(side="right", fill="y", padx=(8, 0))
+        rail.pack_propagate(False)
+        content = ttk.Frame(body)
+        content.pack(side="left", fill="both", expand=True)
+
+        self.nb = ttk.Notebook(content, style="Workspace87.TNotebook")
+        self.nb.pack(fill="both", expand=True)
+        self.quick_tab = ttk.Frame(self.nb, padding=14)
+        self.commerce_tab = ttk.Frame(self.nb, padding=14)
+        self.images_tab = ttk.Frame(self.nb, padding=12)
+        self.content_tab = ttk.Frame(self.nb, padding=14)
+        self.specs_tab = ttk.Frame(self.nb, padding=14)
+        self.publish_tab = ttk.Frame(self.nb, padding=14)
+        pages = {
+            "quick": self.quick_tab,
+            "commerce": self.commerce_tab,
+            "images": self.images_tab,
+            "content": self.content_tab,
+            "specs": self.specs_tab,
+            "publish": self.publish_tab,
+        }
+        for key, label in self.SECTION_LABELS:
+            self.nb.add(pages[key], text=label)
+
+        tk.Label(rail, text="مراحل محصول", bg="#0b2238", fg="#f6d77a", font=("Tahoma", 11, "bold")).pack(anchor="e", pady=(0, 8))
+        self._section_buttons = {}
+        for key, label in self.SECTION_LABELS:
+            button = tk.Button(
+                rail,
+                text=label,
+                command=lambda k=key: self.select_section(k),
+                anchor="e",
+                relief="flat",
+                bd=0,
+                bg="#0b2238",
+                fg="#d9e4ee",
+                activebackground="#123452",
+                activeforeground="white",
+                font=("Tahoma", 10, "bold"),
+                padx=10,
+                pady=9,
+                cursor="hand2",
+            )
+            button.pack(fill="x", pady=2)
+            self._section_buttons[key] = button
+
+        ttk.Separator(rail, orient="horizontal").pack(fill="x", pady=10)
+        tk.Label(
+            rail,
+            text="تمام اطلاعات این Workspace\nدر دیتای پایدار برنامه ذخیره می‌شود.",
+            bg="#0b2238",
+            fg="#91a4b5",
+            justify="right",
+            font=("Tahoma", 9),
+        ).pack(anchor="e")
+
+        # Build all inherited controls so no existing field or workflow disappears.
+        self._quick_ui()
+        self._commerce_ui()
+        self._images_ui()
+        self._content_ui()
+        self._specs_ui()
+        self._publish_ui()
+        self._remove_duplicate_legacy_actions()
+        self._normalize_button_labels()
+
+        footer = ttk.Frame(self, padding=(12, 4, 12, 10))
+        footer.pack(fill="x")
+        self.footer_status = tk.StringVar(value="آماده")
+        ttk.Label(footer, textvariable=self.footer_status, style="SubHeader.TLabel").pack(side="left", fill="x", expand=True)
+        ttk.Button(footer, text="ذخیره", command=self.save).pack(side="right", padx=3)
+        ttk.Button(footer, text="آماده‌سازی انتشار", command=self.queue_for_publish, style="Success.TButton").pack(side="right", padx=3)
+        ttk.Button(footer, text="انتشار روی سایت", command=self.publish_now, style="Publish.TButton").pack(side="right", padx=3)
+        self.select_section("quick")
+
+    def select_section(self, key: str):
+        page_map = {
+            "quick": self.quick_tab,
+            "commerce": self.commerce_tab,
+            "images": self.images_tab,
+            "content": self.content_tab,
+            "specs": self.specs_tab,
+            "publish": self.publish_tab,
+        }
+        page = page_map.get(key, self.quick_tab)
+        self.nb.select(page)
+        for section, button in getattr(self, "_section_buttons", {}).items():
+            active = section == key
+            button.configure(
+                bg="#c99a2e" if active else "#0b2238",
+                fg="#071827" if active else "#d9e4ee",
+                activebackground="#d8ad49" if active else "#123452",
+            )
+
+    def _remove_duplicate_legacy_actions(self):
+        # The quick page used to carry another 4-button workflow box. The 8.7 rail
+        # replaces it, while all underlying operations stay available elsewhere.
+        for child in self.quick_tab.winfo_children():
+            try:
+                if isinstance(child, ttk.LabelFrame) and str(child.cget("text")) == "مسیر یک‌دقیقه‌ای":
+                    child.grid_remove()
+            except Exception:
+                pass
+        # The former separate SEO studio duplicates the integrated content page.
+        for child in self._walk(self.content_tab):
+            if isinstance(child, ttk.Button):
+                try:
+                    if "استودیوی کامل SEO" in str(child.cget("text")):
+                        child.pack_forget()
+                except Exception:
+                    pass
+
+    def _walk(self, root):
+        for child in root.winfo_children():
+            yield child
+            yield from self._walk(child)
+
+    def _normalize_button_labels(self):
+        replacements = {
+            "♻ بازیابی با همین سقف": "بازیابی با سقف انتخابی",
+            "＋ افزودن عکس از کامپیوتر": "افزودن عکس از کامپیوتر",
+            "✨ ترجمه دقیق EN → FA": "ترجمه با هوش مصنوعی",
+            "✨ تولید محتوای فروشگاهی": "تولید محتوای فروشگاهی",
+            "💾 ذخیره همه تغییرات": "ذخیره همه تغییرات",
+            "💾 ذخیره تنظیمات انتشار": "ذخیره تنظیمات انتشار",
+            "🚀 ارسال همین محصول به سایت": "انتشار همین محصول روی سایت",
+            "🧾 گزارش ارسال": "گزارش انتشار",
+        }
+        for child in self._walk(self):
+            if not isinstance(child, ttk.Button):
+                continue
+            try:
+                text = str(child.cget("text"))
+                if text in replacements:
+                    child.configure(text=replacements[text])
+            except Exception:
+                pass
