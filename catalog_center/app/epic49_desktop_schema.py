@@ -42,6 +42,21 @@ def ensure_epic49_desktop_schema(db) -> None:
         db.conn.commit()
 
 
+def install(app_module) -> None:
+    """Ensure the additive desktop schema immediately after the main App creates its DB."""
+    app_cls = app_module.App
+    if getattr(app_cls, "_epic49_schema_installed", False):
+        return
+    original_init = app_cls.__init__
+
+    def wrapped_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        ensure_epic49_desktop_schema(self.db)
+
+    app_cls.__init__ = wrapped_init
+    app_cls._epic49_schema_installed = True
+
+
 def list_available_material_colors(db) -> list[dict]:
     ensure_epic49_desktop_schema(db)
     rows = db.conn.execute(
