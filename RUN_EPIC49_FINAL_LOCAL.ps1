@@ -41,11 +41,25 @@ if ($LASTEXITCODE -ne 0) { throw "Django check failed" }
 & $Python manage.py makemigrations --check --dry-run
 if ($LASTEXITCODE -ne 0) { throw "Migration drift detected" }
 
+$MigrationPlan = @(& $Python manage.py migrate store 0028 --plan)
+if ($LASTEXITCODE -ne 0) { throw "Migration 0028 plan failed" }
+$MigrationPlan | ForEach-Object { Write-Host $_ }
+if (($MigrationPlan -join "`n") -notmatch "0028_epic49_catalog_product_schema") {
+    $Show = @(& $Python manage.py showmigrations store)
+    $Show | ForEach-Object { Write-Host $_ }
+    if (($Show -join "`n") -notmatch "0028_epic49_catalog_product_schema") {
+        throw "Migration 0028 is not registered"
+    }
+}
+
+# Test DB creation applies the real migration chain, including 0028, without
+# writing to the developer's runtime database.
 & $Python manage.py test `
   store.test_phase49_catalog_visibility `
   store.test_phase49_1_media `
   store.test_phase49_unicode_routes `
   store.test_epic49_operator_publish `
+  store.test_epic49_server_schema `
   catalog_bridge.tests.test_bridge `
   catalog_bridge.tests.test_phase49_diagnostics `
   catalog_bridge.tests.test_epic49_contract `
@@ -87,12 +101,18 @@ if (-not (Test-Path -LiteralPath $VersionedExe)) { throw "Verified portable EXE 
 if ($Manifest.stable_exe_updated -eq $true -and -not (Test-Path -LiteralPath $StableExe)) { throw "Stable portable EXE missing after successful alias update: $StableExe" }
 
 Set-Location $Root
-Write-Host "DATABASE_MIGRATE=NO"
-Write-Host "DATABASE_DATA_WRITE=NO"
+Write-Host "DATABASE_MIGRATION_0028=READY"
+Write-Host "DATABASE_LOCAL_RUNTIME_WRITE=NO"
 Write-Host "GIT_CATALOG_FULL_SUITE=OK"
 Write-Host "WINDOWS_CATALOG_SYNC=OK"
 Write-Host "WINDOWS_CATALOG_FULL_SUITE=OK"
 Write-Host "DJANGO_EPIC49_REGRESSION=OK"
+Write-Host "SERVER_CATALOG_PROFILE=ENABLED"
+Write-Host "SERVER_BACKFILL_COMMAND=TESTED"
+Write-Host "ASCII_PRODUCT_URL=ENABLED"
+Write-Host "LEGACY_PRODUCT_REDIRECT=ENABLED"
+Write-Host "SEO_STRUCTURED_DATA=ENABLED"
+Write-Host "SITEMAP_CANONICAL_URL=ENABLED"
 Write-Host "BRIDGE_VERSION=1.2.0"
 Write-Host "PUBLISH_CONTRACT=epic49-final"
 Write-Host "PUBLIC_HTTP_ACCEPTANCE_CONTRACT=ENABLED"
@@ -102,7 +122,6 @@ Write-Host "LOCAL_IMAGE_UPLOAD=ENABLED"
 Write-Host "PRICE_RANGE=ENABLED"
 Write-Host "MATERIAL_COLOR_VARIANTS=ENABLED"
 Write-Host "HOMEPAGE_SLIDER_CONTROL=ENABLED"
-Write-Host "UNICODE_PUBLIC_ROUTE_HARDENED=ENABLED"
 Write-Host "FAILED_BATCH_ARCHIVE=DRY_RUN_OK"
 Write-Host "PORTABLE_EXE=$VersionedExe"
 Write-Host "PORTABLE_EXE_LATEST=$StableExe"
