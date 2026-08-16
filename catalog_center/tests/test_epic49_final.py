@@ -12,6 +12,17 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
 
 
+def _repo_server_file(relative: str) -> Path | None:
+    """Return a Django-server file only when tests run inside the full repo.
+
+    The canonical Windows Catalog Center is intentionally standalone and does
+    not contain the Django project. Server contract tests are enforced in the
+    Git checkout and skipped (not failed) in the portable Windows copy.
+    """
+    candidate = REPO / Path(relative)
+    return candidate if candidate.is_file() else None
+
+
 class Epic49StrictAckTests(unittest.TestCase):
     def setUp(self):
         self.row = {"publish_as_product": 1, "publish_as_portfolio": 0}
@@ -112,15 +123,23 @@ class Epic49PublicVerificationTests(unittest.TestCase):
 
 
 class Epic49ServerSyncContractTests(unittest.TestCase):
+    def _require_server_file(self, relative: str) -> Path:
+        path = _repo_server_file(relative)
+        if path is None:
+            self.skipTest("Standalone Catalog Center: Django server source is intentionally not packaged")
+        return path
+
     def test_existing_product_is_resynced_instead_of_early_return(self):
-        source = (REPO / "store" / "phase34b_publishing.py").read_text(encoding="utf-8")
+        source = self._require_server_file("store/phase34b_publishing.py").read_text(encoding="utf-8")
         self.assertNotIn("if asset.product_id:\n        return asset.product", source)
         self.assertIn("_sync_product_fields(product, asset)", source)
         self.assertIn("_selected_asset_images(asset)", source)
         self.assertIn("product.images.all().delete()", source)
 
     def test_failed_batch_archive_is_non_destructive(self):
-        source = (REPO / "store" / "management" / "commands" / "epic49_archive_failed_batches.py").read_text(encoding="utf-8")
+        source = self._require_server_file(
+            "store/management/commands/epic49_archive_failed_batches.py"
+        ).read_text(encoding="utf-8")
         self.assertIn("shutil.move", source)
         self.assertNotIn("shutil.rmtree", source)
         self.assertNotIn("unlink(", source)
