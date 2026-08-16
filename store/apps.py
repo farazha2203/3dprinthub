@@ -8,4 +8,5 @@ class StoreConfig(AppConfig):
 
     def ready(self):
         from . import signals  # noqa: F401
+        from . import epic49_publish_signals  # noqa: F401
         from . import checks  # noqa: F401
