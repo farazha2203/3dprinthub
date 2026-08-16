@@ -211,12 +211,16 @@ class Epic49ServerSchemaTests(TestCase):
 
 
 class Epic49MigrationContractTests(TestCase):
-    def test_migration_0028_is_present_and_additive(self):
-        root = Path(__file__).resolve().parent
-        migration = (root / "migrations" / "0028_epic49_catalog_product_schema.py").read_text(encoding="utf-8")
-        self.assertIn("migrations.CreateModel", migration)
-        self.assertIn('name="ProductCatalogProfile"', migration)
-        self.assertIn("migrations.RunPython(backfill_catalog_profiles, noop_reverse)", migration)
-        self.assertIn('"legacy_slug"', migration)
-        self.assertNotIn("DeleteModel", migration)
-        self.assertNotIn("RemoveField", migration)
+    def test_schema_and_backfill_are_split_for_mysql_safety(self):
+        root = Path(__file__).resolve().parent / "migrations"
+        schema = (root / "0028_epic49_catalog_product_schema.py").read_text(encoding="utf-8")
+        backfill = (root / "0029_epic49_catalog_product_backfill.py").read_text(encoding="utf-8")
+        self.assertIn("migrations.CreateModel", schema)
+        self.assertIn('name="ProductCatalogProfile"', schema)
+        self.assertIn("atomic = False", schema)
+        self.assertNotIn("RunPython", schema)
+        self.assertNotIn("DeleteModel", schema)
+        self.assertNotIn("RemoveField", schema)
+        self.assertIn('("store", "0028_epic49_catalog_product_schema")', backfill)
+        self.assertIn("migrations.RunPython(backfill_catalog_profiles, reverse_catalog_slugs)", backfill)
+        self.assertNotIn("CreateModel", backfill)
