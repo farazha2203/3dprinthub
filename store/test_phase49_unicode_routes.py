@@ -17,7 +17,7 @@ class Phase4902UnicodeRouteTests(SimpleTestCase):
 
     def test_product_routes_resolve_unicode_slug(self):
         paths = {
-            "store:product_detail": f"/store/product/{self.unicode_slug}/",
+            "epic49_product_compat": f"/store/product/{self.unicode_slug}/",
             "store:toggle_like": f"/store/product/{self.unicode_slug}/like/",
             "store:add_comment": f"/store/product/{self.unicode_slug}/comment/",
             "store:cart_add": f"/store/cart/add/{self.unicode_slug}/",
