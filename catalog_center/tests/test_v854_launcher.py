@@ -30,8 +30,11 @@ class V854LauncherTests(unittest.TestCase):
                 check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("ACTIVE_VERSION=8.6.0", result.stdout)
-        self.assertIn("EPIC49_OPERATOR_CONTROLS=ENABLED", result.stdout)
+        self.assertIn("ACTIVE_VERSION=8.7.0", result.stdout)
+        self.assertIn("UX87_SHELL=ENABLED", result.stdout)
+        self.assertIn("PRODUCT_WORKSPACE_V87=ENABLED", result.stdout)
+        self.assertIn("AI_PROFILE_MIGRATION=PRESERVED", result.stdout)
+        self.assertIn("HOST_PROFILE_MIGRATION=PRESERVED", result.stdout)
         self.assertIn(f"ACTIVE_SOURCE={ROOT}", result.stdout)
         self.assertNotIn("ACTIVE_VERSION=8.5.1", result.stdout)
 
@@ -41,7 +44,7 @@ class V854LauncherTests(unittest.TestCase):
         from app.version import APP_VERSION
         from launch import EXPECTED_VERSION
 
-        self.assertEqual({manifest["version"], config["package_version"], APP_VERSION, EXPECTED_VERSION}, {"8.6.0"})
+        self.assertEqual({manifest["version"], config["package_version"], APP_VERSION, EXPECTED_VERSION}, {"8.7.0"})
 
     def test_every_manifest_file_exists(self):
         manifest = json.loads((ROOT / "PACKAGE_MANIFEST.json").read_text(encoding="utf-8"))
