@@ -17,6 +17,17 @@ def _json_value(value, default):
         return default
 
 
+def _positive_int(value, default=0):
+    try:
+        normalized = str(value if value not in (None, "") else default).replace(",", "").strip()
+        return max(0, int(float(normalized or 0)))
+    except Exception:
+        try:
+            return max(0, int(default or 0))
+        except Exception:
+            return 0
+
+
 def _unique_slug(Profile, Product, product):
     candidates = [getattr(product, "title_en", ""), getattr(product, "source_external_id", ""), getattr(product, "sku", "")]
     base = ""
@@ -50,8 +61,9 @@ def backfill_catalog_profiles(apps, schema_editor):
         data = payload.get("desktop_catalog_v85") if isinstance(payload, dict) else {}
         data = data if isinstance(data, dict) else {}
 
-        minimum = int(data.get("price_min") or getattr(product, "fixed_price", 0) or getattr(asset, "fixed_print_price", 0) or 0)
-        maximum = int(data.get("price_max") or minimum or 0)
+        fallback_price = _positive_int(getattr(product, "fixed_price", 0), getattr(asset, "fixed_print_price", 0))
+        minimum = _positive_int(data.get("price_min"), fallback_price)
+        maximum = _positive_int(data.get("price_max"), minimum)
         if minimum and maximum and maximum < minimum:
             minimum, maximum = maximum, minimum
         options = _json_value(data.get("material_color_options_json"), [])
@@ -65,25 +77,26 @@ def backfill_catalog_profiles(apps, schema_editor):
         else:
             price_mode = "fixed"
 
-        lead_min = max(0, int(data.get("lead_time_min_days") or 0))
-        lead_max = max(lead_min, int(data.get("lead_time_max_days") or lead_min or 0))
+        lead_min = _positive_int(data.get("lead_time_min_days"), 0)
+        lead_max = max(lead_min, _positive_int(data.get("lead_time_max_days"), lead_min))
         public_slug = _unique_slug(ProductCatalogProfile, Product, product)
         keywords = _json_value(data.get("keywords_json"), [])
         tags_fa = _json_value(data.get("tags_fa_json"), [])
         hashtags = _json_value(data.get("hashtags_fa_json"), [])
+        desktop_id = _positive_int(data.get("desktop_product_id"), 0)
 
         ProductCatalogProfile.objects.update_or_create(
             product_id=product.pk,
             defaults={
                 "public_slug": public_slug,
                 "legacy_slug": legacy_slug if legacy_slug != public_slug else "",
-                "desktop_product_id": int(data.get("desktop_product_id") or 0) or None,
+                "desktop_product_id": desktop_id or None,
                 "batch_uuid": str(data.get("batch_uuid") or "")[:80],
                 "source_hash": str(data.get("source_hash") or "")[:64],
                 "product_type": str(data.get("product_type") or "ready_product")[:40],
                 "use_description": str(data.get("use_description") or ""),
                 "availability_status": availability[:40],
-                "stock_quantity": max(0, int(data.get("stock_quantity") or 0)),
+                "stock_quantity": _positive_int(data.get("stock_quantity"), 0),
                 "lead_time_min_days": lead_min,
                 "lead_time_max_days": lead_max,
                 "has_3d_file": bool(data.get("has_3d_file")),
@@ -92,13 +105,13 @@ def backfill_catalog_profiles(apps, schema_editor):
                 "license_url": str(data.get("license_url") or getattr(asset, "license_url", ""))[:1000],
                 "technical_features": _json_value(data.get("technical_features_json"), {}),
                 "keywords": keywords,
-                "price_min": max(0, minimum),
-                "price_max": max(0, maximum),
+                "price_min": minimum,
+                "price_max": maximum,
                 "price_mode": price_mode,
-                "download_image_limit": min(200, max(1, int(data.get("download_image_limit") or 10))),
+                "download_image_limit": min(200, max(1, _positive_int(data.get("download_image_limit"), 10))),
                 "homepage_slider_enabled": bool(data.get("homepage_slider_enabled")),
                 "homepage_slider_image_url": str(data.get("homepage_slider_image_url") or "")[:2000],
-                "homepage_slider_sort_order": max(0, int(data.get("homepage_slider_sort_order") or 100)),
+                "homepage_slider_sort_order": _positive_int(data.get("homepage_slider_sort_order"), 100),
                 "last_synced_at": getattr(asset, "updated_at", None),
             },
         )
@@ -119,6 +132,8 @@ def backfill_catalog_profiles(apps, schema_editor):
             editorial_source_url=editorial_url,
             source_attribution=attribution,
             hashtags=" ".join(str(x).strip() for x in hashtags if str(x).strip()),
+            robots_index=bool(getattr(product, "is_active", False)),
+            robots_follow=bool(getattr(product, "is_active", False)),
         )
 
 
