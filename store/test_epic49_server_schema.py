@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import json
 import tempfile
+from io import StringIO
 from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import resolve
 
 from store.epic49_catalog_profile import ProductCatalogProfile, sync_catalog_profile, sync_product_seo
 from store.models import Category, ImportedPrintAsset, PrintCatalogSource, Product
+from store.sitemaps import ProductSitemap
 from store.templatetags.store_seo import product_schema_json
 from website.models import HomepageHeroSlide
 
@@ -81,8 +84,6 @@ class Epic49ServerSchemaTests(TestCase):
             commercial_license_status="allowed",
             source_payload={"desktop_catalog_v85": self.data},
         )
-        # Avoid the post_save sync while constructing the fixture; production
-        # assigns this relation through the importer after the Product exists.
         ImportedPrintAsset.objects.filter(pk=self.asset.pk).update(product_id=self.product.pk)
         self.asset.refresh_from_db()
 
@@ -107,6 +108,7 @@ class Epic49ServerSchemaTests(TestCase):
         path = self.product.get_absolute_url()
         self.assertEqual(resolve(path).view_name, "store:product_detail")
         self.assertIn(profile.public_slug, path)
+        self.assertEqual(ProductSitemap().location(self.product), path)
 
     def test_seo_sync_and_schema_use_structured_catalog_data(self):
         sync_catalog_profile(self.product, self.asset, self.data, price_min=350000, price_max=650000)
@@ -141,6 +143,26 @@ class Epic49ServerSchemaTests(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(slide.target_url, self.product.get_absolute_url())
         self.assertEqual(resolve(slide.target_url).view_name, "store:product_detail")
+
+    def test_backfill_command_is_dry_run_by_default_and_apply_is_idempotent(self):
+        self.assertFalse(ProductCatalogProfile.objects.filter(product=self.product).exists())
+        dry = StringIO()
+        call_command("epic49_backfill_server_catalog", stdout=dry)
+        self.assertIn("MODE=DRY_RUN", dry.getvalue())
+        self.assertFalse(ProductCatalogProfile.objects.filter(product=self.product).exists())
+
+        applied = StringIO()
+        call_command("epic49_backfill_server_catalog", "--apply", stdout=applied)
+        self.assertIn("MODE=APPLY", applied.getvalue())
+        profile = ProductCatalogProfile.objects.get(product=self.product)
+        first_pk = profile.pk
+        self.product.refresh_from_db()
+        self.product.slug.encode("ascii")
+
+        again = StringIO()
+        call_command("epic49_backfill_server_catalog", "--apply", stdout=again)
+        self.assertEqual(ProductCatalogProfile.objects.get(product=self.product).pk, first_pk)
+        self.assertEqual(ProductCatalogProfile.objects.filter(product=self.product).count(), 1)
 
     def test_model_is_registered_as_real_store_database_model(self):
         field_names = {field.name for field in ProductCatalogProfile._meta.fields}
