@@ -23,6 +23,7 @@ class ProductCatalogProfile(models.Model):
         verbose_name="محصول فروشگاه",
     )
     public_slug = models.SlugField(max_length=220, unique=True, allow_unicode=False, verbose_name="اسلاگ عمومی امن")
+    legacy_slug = models.CharField(max_length=240, blank=True, db_index=True, verbose_name="اسلاگ قبلی برای Redirect")
     desktop_product_id = models.PositiveBigIntegerField(null=True, blank=True, db_index=True, verbose_name="شناسه محصول دسکتاپ")
     batch_uuid = models.CharField(max_length=80, blank=True, db_index=True, verbose_name="شناسه Batch")
     source_hash = models.CharField(max_length=64, blank=True, db_index=True, verbose_name="هش منبع")
@@ -111,11 +112,18 @@ def _unique_public_slug(product, preferred="") -> str:
 def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0) -> ProductCatalogProfile:
     from store.models import Product
 
+    original_slug = str(getattr(product, "slug", "") or "")
     profile = ProductCatalogProfile.objects.filter(product=product).first()
     if profile is None:
-        profile = ProductCatalogProfile(product=product, public_slug=_unique_public_slug(product, getattr(product, "title_en", "")))
+        profile = ProductCatalogProfile(
+            product=product,
+            public_slug=_unique_public_slug(product, getattr(product, "title_en", "")),
+            legacy_slug=original_slug,
+        )
     elif not profile.public_slug:
         profile.public_slug = _unique_public_slug(product, getattr(product, "title_en", ""))
+    if not profile.legacy_slug and original_slug and original_slug != profile.public_slug:
+        profile.legacy_slug = original_slug
 
     minimum = max(0, int(price_min or data.get("price_min") or getattr(product, "fixed_price", 0) or 0))
     maximum = max(0, int(price_max or data.get("price_max") or minimum or 0))
