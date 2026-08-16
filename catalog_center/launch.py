@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.6.0"
+EXPECTED_VERSION = "8.7.0"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -18,7 +18,8 @@ def main() -> int:
     load_project_env(ENV_FILE)
 
     from app.version import APP_VERSION, BUILD_ID, SOURCE_ROOT
-    from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
+    from app.product_workspace_v87 import ProductWorkspace
+    from app.ux87_shell import build_app_class
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
@@ -33,8 +34,10 @@ def main() -> int:
     print(f"ACTIVE_VERSION={APP_VERSION}", flush=True)
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
-    print("PRODUCT_STUDIO_EPIC49=ENABLED", flush=True)
-    print("EPIC49_OPERATOR_CONTROLS=ENABLED", flush=True)
+    print("UX87_SHELL=ENABLED", flush=True)
+    print("PRODUCT_WORKSPACE_V87=ENABLED", flush=True)
+    print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
+    print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
     if "--verify-only" in sys.argv:
         print("ACTIVE_RELEASE_VERIFIED=OK", flush=True)
@@ -46,10 +49,11 @@ def main() -> int:
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
 
-    app_module.ProductStudio = Epic49ProductStudio
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
-    app_module.main()
+    app_module.ProductStudio = ProductWorkspace  # compatibility for any deep legacy callback
+    App87 = build_app_class(app_module.App)
+    App87().mainloop()
     return 0
 
 
