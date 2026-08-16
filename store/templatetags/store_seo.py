@@ -57,6 +57,13 @@ def _breadcrumb(request, parts):
     return {"@type":"BreadcrumbList", "itemListElement":items}
 
 
+def _catalog_profile(product):
+    try:
+        return product.catalog_profile
+    except Exception:
+        return None
+
+
 @register.simple_tag
 def product_schema_json(product, variants, request, seo):
     if not getattr(product, "schema_enabled", True):
@@ -66,6 +73,37 @@ def product_schema_json(product, variants, request, seo):
     url=_absolute(request, product.get_absolute_url())
     group_id=f"{url}#product"
     group={"@type":"ProductGroup", "@id":group_id, "name":product.title, "description":product.short_description, "url":url, "image":images, "productGroupID":product.sku, "brand":{"@type":"Brand", "name":product.brand_name or "3DprintHub"}, "category":product.category.name, "variesBy":["https://schema.org/material", "https://schema.org/color"]}
+
+    profile = _catalog_profile(product)
+    if profile is not None:
+        keywords = [str(item).strip() for item in (profile.keywords or []) if str(item).strip()]
+        if keywords:
+            group["keywords"] = ", ".join(keywords[:30])
+        if profile.price_min or profile.price_max:
+            low = int(profile.price_min or profile.price_max or 0) * 10
+            high = int(profile.price_max or profile.price_min or 0) * 10
+            if low and high:
+                if high < low:
+                    low, high = high, low
+                group["offers"] = {
+                    "@type": "AggregateOffer",
+                    "url": url,
+                    "priceCurrency": "IRR",
+                    "lowPrice": low,
+                    "highPrice": high,
+                    "offerCount": max(1, len(variants)),
+                }
+        additional = [
+            {"@type":"PropertyValue", "name":"نوع محصول", "value":profile.product_type},
+            {"@type":"PropertyValue", "name":"وضعیت عرضه", "value":profile.availability_status},
+            {"@type":"PropertyValue", "name":"حداقل زمان آماده‌سازی", "value":profile.lead_time_min_days, "unitText":"روز"},
+            {"@type":"PropertyValue", "name":"حداکثر زمان آماده‌سازی", "value":profile.lead_time_max_days, "unitText":"روز"},
+        ]
+        for key, value in list((profile.technical_features or {}).items())[:20]:
+            if value not in (None, "", [], {}):
+                additional.append({"@type":"PropertyValue", "name":str(key), "value":str(value)[:300]})
+        group["additionalProperty"] = additional
+
     has_variant=[]
     availability={"in_stock":"https://schema.org/InStock", "made_to_order":"https://schema.org/PreOrder", "preorder":"https://schema.org/PreOrder", "out_of_stock":"https://schema.org/OutOfStock"}
     for variant in variants:
@@ -109,6 +147,7 @@ def service_schema_json(page, request, seo):
     url=_absolute(request, page.get_absolute_url())
     graph=[{"@type":"Service", "name":page.title, "description":page.short_description, "url":url, "provider":{"@id":(seo.site_url.rstrip("/") + "/#organization") if seo else url + "#provider"}, "areaServed":{"@type":"Country", "name":"Iran"}}, _breadcrumb(request, [("خانه", "/"), ("خدمات", "/#services"), (page.title, "")])]
     return _json({"@context":"https://schema.org", "@graph":graph})
+
 
 @register.simple_tag
 def product_faq_schema_json(product, request):
