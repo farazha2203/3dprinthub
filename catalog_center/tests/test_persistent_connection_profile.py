@@ -26,6 +26,20 @@ class _DB:
         self.values[key] = value
 
 
+class _FakeKeyring:
+    def __init__(self):
+        self.values = {}
+
+    def set_password(self, service, username, password):
+        self.values[(service, username)] = password
+
+    def get_password(self, service, username):
+        return self.values.get((service, username))
+
+    def delete_password(self, service, username):
+        self.values.pop((service, username), None)
+
+
 class PersistentConnectionProfileTests(unittest.TestCase):
     def test_validated_profile_persists_nonsecrets_and_keyring_secrets(self):
         app = SimpleNamespace(
@@ -52,14 +66,7 @@ class PersistentConnectionProfileTests(unittest.TestCase):
         set_secret.assert_any_call("bridge_token", "bridge-secret")
 
     def test_env_connection_secrets_move_to_keyring_and_are_scrubbed(self):
-        class FakeKeyring:
-            def __init__(self):
-                self.values = {}
-
-            def set_password(self, service, username, password):
-                self.values[(service, username)] = password
-
-        fake = FakeKeyring()
+        fake = _FakeKeyring()
         with tempfile.TemporaryDirectory() as temporary:
             env_file = Path(temporary) / ".env"
             env_file.write_text(
@@ -77,13 +84,27 @@ class PersistentConnectionProfileTests(unittest.TestCase):
             self.assertNotIn("bridge-secret", text)
             self.assertIn("CATALOG_SITE_URL=https://3dprinthub.ir", text)
             self.assertEqual(
-                fake.values[(secure_secrets.SERVICE_NAME, "FTP_PASSWORD")],
+                fake.values[(secure_secrets.SERVICE_NAME, "CATALOG_FTP_PASSWORD")],
                 "ftp-secret",
             )
             self.assertEqual(
                 fake.values[(secure_secrets.SERVICE_NAME, "CATALOG_BRIDGE_TOKEN")],
                 "bridge-secret",
             )
+
+    def test_legacy_ftp_password_is_read_and_upgraded_in_keyring(self):
+        fake = _FakeKeyring()
+        fake.set_password(secure_secrets.SERVICE_NAME, "FTP_PASSWORD", "legacy-secret")
+        with patch("app.secure_secrets._keyring", return_value=fake), patch.dict(
+            "os.environ", {"CATALOG_FTP_PASSWORD": "", "FTP_PASSWORD": ""}, clear=False
+        ):
+            value = secure_secrets.get_secret("ftp_password")
+
+        self.assertEqual(value, "legacy-secret")
+        self.assertEqual(
+            fake.values[(secure_secrets.SERVICE_NAME, "CATALOG_FTP_PASSWORD")],
+            "legacy-secret",
+        )
 
 
 if __name__ == "__main__":
