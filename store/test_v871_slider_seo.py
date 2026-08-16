@@ -70,6 +70,8 @@ class V871HomepageSliderSeoTests(TestCase):
         asset = self._asset(data)
         result = sync_epic49_publish_options(asset)
         slide = HomepageHeroSlide.objects.get(asset=asset)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.slug, "leaf-lamp")
         self.assertTrue(slide.is_active)
         self.assertEqual(slide.title_override, data["homepage_slider_title_fa"])
         self.assertEqual(slide.description, data["homepage_slider_description_fa"])
