@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, reverse
 
@@ -42,6 +45,37 @@ class Phase492APublicIntakeTests(TestCase):
         self.assertEqual(reverse("store:product_list"), "/store/")
         self.assertEqual(reverse("store:cart_detail"), "/store/cart/")
         self.assertEqual(reverse("store:checkout"), "/store/checkout/")
+
+    def test_core_store_pages_render_without_removed_route_reverse(self):
+        for url in (reverse("store:product_list"), reverse("store:cart_detail")):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+
+    def test_active_templates_have_no_removed_external_intake_links(self):
+        active_templates = (
+            "templates/store/base.html",
+            "templates/store/product_list.html",
+            "templates/store/product_detail.html",
+            "templates/website/index.html",
+            "templates/website/partials/header.html",
+            "templates/website/partials/order-form.html",
+            "templates/website/customer/account_base.html",
+            "templates/website/customer/dashboard.html",
+        )
+        forbidden_tokens = (
+            "store:external_catalog",
+            "store:external_link_analyzer",
+            "store:customer_link_analyses",
+            "/store/ready-models/",
+            "ready-models-sitemap",
+        )
+        base_dir = Path(settings.BASE_DIR)
+        for relative_path in active_templates:
+            source = (base_dir / relative_path).read_text(encoding="utf-8")
+            for token in forbidden_tokens:
+                with self.subTest(template=relative_path, token=token):
+                    self.assertNotIn(token, source)
 
     def test_customer_order_form_excludes_ready_catalog_mode(self):
         form = Phase10OrderForm()
