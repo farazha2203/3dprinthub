@@ -1,8 +1,9 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, reverse
 
 from website.order_intake import Phase10OrderForm
 
+from .catalog_automation import external_model_sync_enabled, process_catalog_queue, queue_due_catalog_sources
 from .epic49_catalog_profile import ProductCatalogProfile
 from .models import Category, Product
 
@@ -47,6 +48,12 @@ class Phase492APublicIntakeTests(TestCase):
         modes = {value for value, _label in form.fields["request_mode"].choices}
         self.assertIn("new_part", modes)
         self.assertNotIn("ready_catalog", modes)
+
+    @override_settings(EXTERNAL_MODEL_SYNC_ENABLED=False)
+    def test_external_model_automation_is_disabled(self):
+        self.assertFalse(external_model_sync_enabled())
+        self.assertEqual(queue_due_catalog_sources(), [])
+        self.assertEqual(process_catalog_queue(), [])
 
 
 class Phase492AWindowsCatalogProductNavigationTests(TestCase):
