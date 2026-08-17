@@ -1,0 +1,36 @@
+param(
+    [Parameter(Mandatory=$true)][string]$LogoPath,
+    [Parameter(Mandatory=$true)][string]$FontsArchivePath
+)
+$ErrorActionPreference = 'Stop'
+$Root = Split-Path -Parent $PSScriptRoot
+$ExpectedLogoSha256 = 'fcdfb65509a8e8b1da15eadf8b28fa68ff9433f69d7b333290180843c5ea3335'
+if (!(Test-Path $LogoPath)) { throw "Logo not found: $LogoPath" }
+if (!(Test-Path $FontsArchivePath)) { throw "Fonts archive not found: $FontsArchivePath" }
+$actual = (Get-FileHash -Algorithm SHA256 $LogoPath).Hash.ToLowerInvariant()
+if ($actual -ne $ExpectedLogoSha256) { throw "Wrong logo selected. Expected SHA256=$ExpectedLogoSha256, actual=$actual" }
+$brandDir = Join-Path $Root 'static\img\brand'
+New-Item -ItemType Directory -Force -Path $brandDir | Out-Null
+Copy-Item -LiteralPath $LogoPath -Destination (Join-Path $brandDir '3dprinthublogo.png') -Force
+$fontDir = Join-Path $Root 'static\fonts\iransans'
+New-Item -ItemType Directory -Force -Path $fontDir | Out-Null
+$sevenZip = @("$env:ProgramFiles\7-Zip\7z.exe", "$env:ProgramFiles(x86)\7-Zip\7z.exe", '7z.exe') | Where-Object { ($_ -eq '7z.exe') -or (Test-Path $_) } | Select-Object -First 1
+if (!$sevenZip) { throw '7-Zip was not found. Install 7-Zip or add 7z.exe to PATH.' }
+$tmp = Join-Path $env:TEMP ("p49_fonts_" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+try {
+    & $sevenZip x "-o$tmp" -y $FontsArchivePath | Out-Host
+    $wanted = @(
+      'IRANSansWeb_FaNum_UltraLight.woff','IRANSansWeb_FaNum_Light.woff','IRANSansWeb_FaNum.woff',
+      'IRANSansWeb_FaNum_Medium.woff','IRANSansWeb_FaNum_Bold.woff','IRANSansWeb_FaNum_Black.woff'
+    )
+    foreach ($name in $wanted) {
+        $src = Get-ChildItem -Path $tmp -Recurse -File -Filter $name | Select-Object -First 1
+        if (!$src) { throw "Required font missing from archive: $name" }
+        Copy-Item $src.FullName (Join-Path $fontDir $name) -Force
+    }
+} finally { if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force } }
+Write-Host "BRAND_LOGO_SHA256=$actual" -ForegroundColor Green
+Write-Host "BRAND_LOGO=$(Join-Path $brandDir '3dprinthublogo.png')" -ForegroundColor Green
+Write-Host "IRANSANS_FANUM_WEIGHTS=6" -ForegroundColor Green
+Write-Host 'PHASE49_2B_BRAND_ASSETS_READY=OK' -ForegroundColor Green
