@@ -26,5 +26,5 @@ class Phase44HeroGalleryCompatibilityTests(SimpleTestCase):
         phase45 = (self.root / "static/css/phase45-home-hero.css").read_text(encoding="utf-8", errors="replace")
         mobile = (self.root / "static/css/phase49_2a-mobile-first.css").read_text(encoding="utf-8", errors="replace")
         self.assertIn("@media(max-width:820px)", phase45)
-        self.assertIn("@media (max-width: 767px)", mobile)
+        self.assertIn("@media (max-width:767px)", mobile)
         self.assertIn(".p45-hero__viewport", mobile)
