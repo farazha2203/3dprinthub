@@ -4,7 +4,6 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.urls import reverse
 
 from website.models import Material, Quote
 
@@ -27,6 +26,12 @@ from .models import (
 
 
 class Phase23CatalogReferenceTests(TestCase):
+    """Historical catalog parsing/data-policy coverage only.
+
+    Public catalog routes were retired in Phase 49.2A; these tests retain data
+    integrity/parser behavior without re-exposing the old customer UI.
+    """
+
     def setUp(self):
         self.source = PrintCatalogSource.objects.create(
             name="Reference Source",
@@ -61,20 +66,11 @@ class Phase23CatalogReferenceTests(TestCase):
         )
         return asset
 
-    def test_reference_item_is_public_without_license_or_model_file(self):
+    def test_reference_item_policy_state_is_preserved_for_history(self):
         asset = self.create_asset()
         self.assertTrue(public_catalog_queryset().filter(pk=asset.pk).exists())
         self.assertEqual(asset.public_display_mode, "reference")
         self.assertEqual(asset.catalog_image_url, asset.remote_image_url)
-
-    def test_catalog_page_renders_remote_image_and_source(self):
-        asset = self.create_asset()
-        response = self.client.get(reverse("store:external_catalog"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, asset.title)
-        self.assertContains(response, asset.remote_image_url)
-        self.assertContains(response, self.source.name)
-
 
     def test_policy_can_hide_reference_without_deleting_it(self):
         asset = self.create_asset(source_url="https://models.example.com/model/hidden")
@@ -82,9 +78,9 @@ class Phase23CatalogReferenceTests(TestCase):
         self.policy.save(update_fields=["public_reference_enabled"])
         self.assertFalse(public_catalog_queryset().filter(pk=asset.pk).exists())
 
-    def test_homepage_uses_remote_reference_image_without_manual_publication(self):
-        asset = self.create_asset(source_url="https://models.example.com/model/home-reference")
-        self.assertIn(asset, list(homepage_catalog_assets(slider=True, limit=5)))
+    def test_homepage_external_asset_feed_is_disabled(self):
+        self.create_asset(source_url="https://models.example.com/model/home-reference")
+        self.assertEqual(list(homepage_catalog_assets(slider=True, limit=5)), [])
 
     def test_sync_persists_candidate_when_detail_fetch_fails(self):
         class FakeAdapter:
@@ -133,7 +129,9 @@ class Phase23CatalogReferenceTests(TestCase):
         self.assertEqual(asset.metrics.downloads_count, 420)
 
 
-class Phase23LinkIntelligenceTests(TestCase):
+class Phase23LinkIntelligenceCoreTests(TestCase):
+    """Keep SSRF/parser/quote logic covered as historical core utilities."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="phase23-user",
@@ -163,7 +161,6 @@ class Phase23LinkIntelligenceTests(TestCase):
     def test_private_address_is_blocked(self):
         with self.assertRaises(ValidationError):
             normalize_public_url("http://127.0.0.1/internal")
-
 
     def test_direct_file_link_is_preserved_without_downloading_model(self):
         analysis = CustomerLinkAnalysis.objects.create(
@@ -207,9 +204,6 @@ class Phase23LinkIntelligenceTests(TestCase):
             normalized_url="https://public.example.com/models/bracket",
             source_domain="public.example.com",
         )
-        # DNS validation is intentionally kept in production for SSRF protection.
-        # The fetch layer is mocked in this unit test, so DNS must be mocked too;
-        # otherwise reserved example domains correctly fail before the fake fetch runs.
         with (
             patch("store.link_intelligence._assert_public_host"),
             patch("store.link_intelligence._safe_fetch", side_effect=fake_fetch),
@@ -237,32 +231,3 @@ class Phase23LinkIntelligenceTests(TestCase):
         self.assertEqual(order.status, "quoted")
         self.assertEqual(quote.status, "sent")
         self.assertGreater(quote.total_price, 0)
-
-
-class Phase23CustomerLinkHistoryTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username="phase23-history", email="history@example.com", password="pass12345"
-        )
-
-    def test_customer_can_view_own_link_analysis_history(self):
-        own = CustomerLinkAnalysis.objects.create(
-            user=self.user,
-            source_url="https://example.com/own-model",
-            normalized_url="https://example.com/own-model",
-            source_domain="example.com",
-            title="Own model",
-            status="partial",
-        )
-        CustomerLinkAnalysis.objects.create(
-            source_url="https://example.org/other-model",
-            normalized_url="https://example.org/other-model",
-            source_domain="example.org",
-            title="Other model",
-            status="partial",
-        )
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("store:customer_link_analyses"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, own.title)
-        self.assertNotContains(response, "Other model")
