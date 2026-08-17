@@ -29,11 +29,27 @@ class MobileContractTests(SimpleTestCase):
         self.assertIn(".p13-wizard__steps", css)
         self.assertIn(".store-quick-nav", css)
 
+    def test_mobile_stylesheet_has_no_unscoped_desktop_image_reset(self):
+        css = self.read("static/css/phase49_2a-mobile-first.css")
+        first_breakpoint = css.index("@media (max-width:1023px)")
+        prelude = css[:first_breakpoint]
+        self.assertNotIn("img{height:auto}", css.replace(" ", ""))
+        self.assertNotIn("html,body", prelude)
+        self.assertNotIn("img,svg", prelude)
+
     def test_header_uses_mobile_nav_until_desktop(self):
         header = self.read("templates/website/partials/header.html")
         self.assertIn('aria-controls="mobile-menu"', header)
         self.assertIn('aria-expanded="false"', header)
         self.assertIn('class="mobile-menu lg:hidden', header)
+        self.assertIn("max-w-[180px]", header)
+
+    def test_fallback_hero_logo_is_explicitly_capped(self):
+        hero = self.read("templates/website/partials/hero.html")
+        self.assertIn('class="p45-hero__fallback-logo"', hero)
+        self.assertIn("max-width:320px", hero)
+        self.assertIn("max-height:320px", hero)
+        self.assertIn('width="320" height="320"', hero)
 
     def test_current_hero_has_no_retired_public_catalog_link(self):
         hero = self.read("templates/website/partials/hero.html")
