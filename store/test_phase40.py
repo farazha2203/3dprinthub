@@ -17,13 +17,13 @@ class Phase40ConnectionSettingsTests(SimpleTestCase):
 
 
 class Phase40ImporterContractTests(SimpleTestCase):
-    def test_importer_has_v841_safety_contract(self):
+    def test_importer_has_current_v85_safety_contract(self):
         path = Path(__file__).resolve().parent / "management" / "commands" / "phase37_import_catalog_center.py"
         text = path.read_text(encoding="utf-8")
         for marker in (
             "CATALOG_ACK_JSON=",
-            "CATALOG_INTELLIGENCE_V8_4_IMPORT=OK",
-            "Unsupported batch schema; expected 8.4",
+            "CATALOG_INTELLIGENCE_V8_5_IMPORT=OK",
+            "Unsupported batch schema; expected 8.5",
             "Editorial path escapes the batch root",
             "local_image_files_json",
             "publish_incomplete",
