@@ -7,7 +7,7 @@ from django.urls import include, path, re_path
 
 from store.public_media import serve_public_store_media
 from store.epic49_routes import product_detail_by_id_view, product_detail_compat_view
-from store.sitemaps import CategorySitemap, ExternalCatalogSitemap, ProductSitemap, ServicePageSitemap, StaticViewSitemap
+from store.sitemaps import CategorySitemap, ProductSitemap, ServicePageSitemap, StaticViewSitemap
 from django_smartbase_admin.admin.site import sb_admin_site
 admin.site.site_header = "مدیریت 3DPrintHub"
 admin.site.site_title = "3DPrintHub"
@@ -19,7 +19,6 @@ sitemaps = {
     "store-products": ProductSitemap,
     "store-categories": CategorySitemap,
     "store-services": ServicePageSitemap,
-    "external-catalog": ExternalCatalogSitemap,
 }
 
 
