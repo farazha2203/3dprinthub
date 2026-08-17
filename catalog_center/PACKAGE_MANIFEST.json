@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.7.0 — Windows UX Rebuild",
-  "version": "8.7.0",
+  "name": "3DPrintHub Catalog Center v8.7.1 — Homepage Slider SEO",
+  "version": "8.7.1",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -23,6 +23,9 @@
     "store_material_color_variants",
     "homepage_slider_control",
     "homepage_slider_image_selection",
+    "homepage_slider_direct_gallery_selection",
+    "homepage_slider_dedicated_ai_seo",
+    "homepage_slider_editable_title_description_alt_button_keyword",
     "unicode_public_route_hardening",
     "stable_product_id_fallback",
     "existing_product_resync",
@@ -56,6 +59,7 @@
     "app/epic49_product_studio.py",
     "app/epic49_product_studio_final.py",
     "app/product_workspace_v87.py",
+    "app/product_workspace_v871.py",
     "app/ux87_shell.py",
     "app/ux87_icons.py",
     "app/epic49_desktop_schema.py",
@@ -67,6 +71,7 @@
     "app/batch_packaging.py",
     "app/v8_features.py",
     "app/workflow.py",
+    "app/openai_content.py",
     "tests/test_epic49_editable_studio.py",
     "tests/test_epic49_final.py",
     "tests/test_epic49_studio_final.py",
@@ -75,6 +80,7 @@
     "tests/test_portable_exe_contract.py",
     "tests/test_v854_launcher.py",
     "tests/test_v87_ux_rebuild.py",
+    "tests/test_v871_slider_seo.py",
     "tests/test_v85_upgrade.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",

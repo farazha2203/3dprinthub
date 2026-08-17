@@ -76,7 +76,7 @@
       "daily_limit": 20
     }
   ],
-  "package_version": "8.7.0",
+  "package_version": "8.7.1",
   "portfolio_harvest_sources": ["makerworld", "printables", "thingiverse", "grabcad"],
   "local_categories": [
     {"slug": "external-other", "name": "سایر محصولات"},
@@ -128,6 +128,7 @@
     "generate_seo": true,
     "generate_social": true,
     "generate_hashtags": true,
+    "generate_homepage_slider_seo": true,
     "material_recommendation": true,
     "bulk_content_enabled": true,
     "bulk_pricing_enabled": true
@@ -135,7 +136,7 @@
   "ui": {
     "theme": "light",
     "shell": "sidebar",
-    "product_workspace": "v87-six-step",
+    "product_workspace": "v871-six-step-slider-seo",
     "icon_system": "native-pillow"
   }
 }

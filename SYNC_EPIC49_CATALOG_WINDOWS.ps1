@@ -7,7 +7,7 @@ $DestinationRoot = "D:\projects\3dprinthub_catalog_center"
 $RuntimeRoot = "D:\projects\3dprinthub-catalog-manager"
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $BackupRoot = Join-Path $RuntimeRoot "backups\epic49_sync_$Stamp"
-$ExpectedBranch = "epic/phase49-finalization"
+$ExpectedBranch = "release/catalog-center-8.7.1-slider-seo"
 
 Set-Location $Repo
 

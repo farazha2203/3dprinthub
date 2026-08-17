@@ -11,6 +11,11 @@ PRODUCT_COLUMNS = {
     "homepage_slider_enabled": "INTEGER NOT NULL DEFAULT 0",
     "homepage_slider_image_url": "TEXT NOT NULL DEFAULT ''",
     "homepage_slider_sort_order": "INTEGER NOT NULL DEFAULT 100",
+    "homepage_slider_title_fa": "TEXT NOT NULL DEFAULT ''",
+    "homepage_slider_description_fa": "TEXT NOT NULL DEFAULT ''",
+    "homepage_slider_alt_text": "TEXT NOT NULL DEFAULT ''",
+    "homepage_slider_button_text": "TEXT NOT NULL DEFAULT 'مشاهده محصول'",
+    "homepage_slider_focus_keyword": "TEXT NOT NULL DEFAULT ''",
 }
 
 

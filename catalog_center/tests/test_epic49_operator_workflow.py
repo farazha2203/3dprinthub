@@ -32,6 +32,11 @@ class Epic49OperatorDatabaseTests(unittest.TestCase):
                     "homepage_slider_enabled",
                     "homepage_slider_image_url",
                     "homepage_slider_sort_order",
+                    "homepage_slider_title_fa",
+                    "homepage_slider_description_fa",
+                    "homepage_slider_alt_text",
+                    "homepage_slider_button_text",
+                    "homepage_slider_focus_keyword",
                 }:
                     self.assertIn(name, columns)
                 pink = add_available_material_color(db, "PLA", "صورتی", "#ff69b4")
@@ -60,7 +65,8 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
     def test_v87_workspace_exposes_requested_operator_controls(self):
         source = (ROOT / "app" / "product_workspace_v87.py").read_text(encoding="utf-8")
         final_source = (ROOT / "app" / "epic49_product_studio_final.py").read_text(encoding="utf-8")
-        combined = source + "\n" + final_source
+        v871_source = (ROOT / "app" / "product_workspace_v871.py").read_text(encoding="utf-8")
+        combined = source + "\n" + final_source + "\n" + v871_source
         for marker in [
             "حداکثر تعداد عکس در هر بازیابی",
             "افزودن عکس از کامپیوتر",
@@ -71,6 +77,8 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
             "عکس اسلایدر",
             "download_image_limit",
             "material_color_options_json",
+            "محتوای اختصاصی اسلایدر صفحه اول",
+            "انتخاب برای اسلایدر",
         ]:
             self.assertIn(marker, combined)
 
@@ -80,9 +88,9 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
         self.assertIn("local://", source)
         self.assertIn("shutil.copy2", source)
 
-    def test_87_release_and_resilient_staged_exe_build_are_enabled(self):
+    def test_current_release_and_resilient_staged_exe_build_are_enabled(self):
         from app.version import APP_VERSION
-        self.assertEqual(APP_VERSION, "8.7.0")
+        self.assertEqual(APP_VERSION, "8.7.1")
         builder = (ROOT / "build_portable_exe.py").read_text(encoding="utf-8")
         self.assertIn("staging_dir", builder)
         self.assertIn("except PermissionError", builder)
