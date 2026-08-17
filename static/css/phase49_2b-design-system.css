@@ -1,0 +1,12 @@
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum_UltraLight.woff") format("woff");font-weight:200;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum_Light.woff") format("woff");font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum_Medium.woff") format("woff");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum_Bold.woff") format("woff");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"IRANSans49";src:url("../fonts/iransans/IRANSansWeb_FaNum_Black.woff") format("woff");font-weight:900;font-style:normal;font-display:swap}
+:root{--p49-navy-950:#050b12;--p49-navy-900:#081522;--p49-navy-850:#0b1a2a;--p49-navy-800:#102235;--p49-gold:#d99a18;--p49-gold-bright:#f3b52d;--p49-gold-soft:#fff4d5;--p49-surface:#fff;--p49-page:#f4f7fb;--p49-border:#dfe5ed;--p49-text:#111827;--p49-muted:#64748b;--p49-success:#16a34a;--p49-danger:#dc2626;--p49-radius-sm:12px;--p49-radius:18px;--p49-radius-lg:26px;--p49-shadow:0 18px 50px rgba(5,11,18,.08)}
+html,body,button,input,textarea,select,option{font-family:"IRANSans49","IRANSans",Tahoma,Arial,sans-serif!important;font-variant-numeric:tabular-nums}
+.brand-mark,.p49-brand-mark{display:block;background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important;object-fit:contain}
+.p49-brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}.p49-brand-lockup img{width:44px;height:44px;flex:none}.p49-brand-lockup strong{font-size:15px;font-weight:900;color:inherit}.p49-brand-lockup small{display:block;margin-top:2px;font-size:11px;color:var(--p49-muted)}
+.p49-card{background:var(--p49-surface);border:1px solid var(--p49-border);border-radius:var(--p49-radius);box-shadow:var(--p49-shadow)}
+.p49-gold-accent{color:var(--p49-gold)!important}.p49-btn-primary{background:linear-gradient(135deg,var(--p49-gold-bright),var(--p49-gold));color:var(--p49-navy-950)!important;border:0;font-weight:900;box-shadow:0 10px 26px rgba(217,154,24,.24)}
