@@ -100,14 +100,17 @@ def finish_review(review: LinkAnalysisManualReview, *, user, action: str, note: 
         from django.urls import reverse
         from .services import notify
 
-        title = "بررسی لینک شما تکمیل شد" if status == "resolved" else "نتیجه بررسی لینک شما ثبت شد"
-        message = (note or "کارشناس نتیجه بررسی لینک ارسالی شما را ثبت کرد.")[:1000]
+        title = "بررسی درخواست شما تکمیل شد" if status == "resolved" else "نتیجه بررسی درخواست شما ثبت شد"
+        message = (note or "کارشناس نتیجه بررسی درخواست ثبت‌شده شما را ثبت کرد.")[:1000]
+        # Phase 49.2A retired the public link-analysis detail route. Historical
+        # reviews remain readable to staff, while customers are sent to their
+        # active dashboard instead of a removed URL.
         notify(
             row.analysis.user,
             title,
             message,
             notification_type="order",
-            url=reverse("store:external_link_analysis", kwargs={"token": row.analysis.public_token}),
+            url=reverse("website:customer_dashboard"),
         )
 
     from .realtime import publish_operations
