@@ -1,33 +1,29 @@
-/* Phase 49.2A — mobile-first stabilization
-   Final cascade layer for public website + store.
-   Goal: no accidental horizontal overflow, readable typography, touch-safe controls,
-   predictable header/menu behavior, and a compact hero on 320–430px phones. */
+/* Phase 49.2A — mobile/tablet stabilization hotfix
+   IMPORTANT: this stylesheet must not change desktop layout above 1023px.
+   All layout rules are intentionally scoped to responsive breakpoints. */
 
-*,*::before,*::after{box-sizing:border-box}
-html,body{max-width:100%;overflow-x:hidden}
-@supports(overflow:clip){html,body{overflow-x:clip}}
-body{min-width:0}
-img,svg,video,canvas{max-width:100%}
-img{height:auto}
-input,select,textarea,button{max-width:100%;min-width:0}
-.p45-home,.p45-home>section,.container,.p13-container,.p46-shell{min-width:0}
-
-/* Header/tablet contract: mobile navigation is used until the real desktop nav appears. */
 @media (max-width:1023px){
   :root{--p45-header-height:64px}
+  html,body{max-width:100%;overflow-x:hidden}
+  @supports(overflow:clip){html,body{overflow-x:clip}}
+  body{min-width:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  .p45-home,.p45-home>section,.container,.p13-container,.p46-shell{min-width:0}
+
   .site-header{min-height:64px}
   .site-header>.container{width:100%;max-width:none;padding-inline:.75rem!important}
+  .site-header>.container>div>a>img{display:block;width:auto!important;height:40px!important;max-width:190px!important;max-height:40px!important;object-fit:contain!important;flex:0 0 auto}
   #mobile-menu-button{display:flex!important;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px}
   #mobile-menu{display:none!important;position:fixed;z-index:70;top:64px;right:.65rem;left:.65rem;max-height:calc(100dvh - 76px);padding:0 0 .65rem!important;overflow-y:auto;overscroll-behavior:contain}
   #mobile-menu.is-open{display:block!important}
   #mobile-menu nav{border-radius:20px!important;padding:.75rem!important;box-shadow:0 20px 55px rgba(15,23,42,.18)!important}
   #mobile-menu .mobile-menu-link{min-height:44px;display:flex;align-items:center;padding:.7rem .85rem!important;border-radius:14px!important}
   html.mobile-nav-open,html.mobile-nav-open body{overflow:hidden!important}
+
+  .p45-hero__fallback-logo{width:min(42vw,240px)!important;max-width:240px!important;max-height:240px!important;height:auto!important;object-fit:contain!important}
 }
 
 @media (max-width:767px){
   html{scroll-padding-top:76px}
-  body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   input,select,textarea{font-size:16px!important}
   button,a,input,select,textarea{touch-action:manipulation}
 
@@ -44,18 +40,18 @@ input,select,textarea,button{max-width:100%;min-width:0}
   /* Managed hero: compact, legible and intentionally non-desktop. */
   .p45-hero__viewport{height:clamp(430px,72svh,590px)!important;min-height:0!important}
   .p45-hero__media{background:#eef2f5}
-  .p45-hero__media img{width:100%;height:100%!important;max-width:none;transform:none!important}
+  .p45-hero__media img{display:block;width:100%!important;height:100%!important;max-width:none!important;object-fit:var(--p45-fit,cover)!important;object-position:var(--p45-position,center)!important;transform:none!important}
   .p45-hero__slide.is-active .p45-hero__media img{transform:none!important}
   .p45-hero__caption{right:.75rem!important;left:.75rem!important;bottom:4.7rem!important;width:auto!important;max-width:none;padding:.85rem!important;border-radius:18px!important;max-height:48%;overflow:hidden}
   .p45-hero__group{min-height:24px;padding:.25rem .55rem;font-size:.64rem}
   .p45-hero__caption h2{margin-top:.55rem;font-size:clamp(1.25rem,6.2vw,1.85rem)!important;line-height:1.35!important;letter-spacing:-.02em!important}
-  .p45-hero__caption p{margin-top:.4rem;font-size:.78rem!important;line-height:1.65!important;-webkit-line-clamp:2}
+  .p45-hero__caption p{margin-top:.4rem;font-size:.78rem!important;line-height:1.65!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .p45-hero__product-link{width:100%;min-height:44px;justify-content:center;margin-top:.65rem;padding:.58rem .75rem!important;border-radius:12px!important}
   .p45-hero__controls{right:.75rem!important;left:auto!important;bottom:.75rem!important;gap:.45rem!important;max-width:calc(100% - 1.5rem)}
   .p45-hero__arrow{width:40px!important;height:40px!important;flex:0 0 40px}
   .p45-hero__dots{max-width:calc(100vw - 120px);overflow:hidden;padding:.45rem .55rem!important}
   .p45-hero__counter,.p45-hero__scroll{display:none!important}
-  .p45-hero__fallback img{width:min(76vw,420px)!important;max-height:42vh!important}
+  .p45-hero__fallback-logo{width:min(54vw,210px)!important;max-width:210px!important;max-height:210px!important;height:auto!important}
 
   /* Intro becomes a clean one-column block. */
   .p45-intro{padding:3rem 1rem!important}
@@ -67,15 +63,15 @@ input,select,textarea,button{max-width:100%;min-width:0}
   .p45-intro__proof{grid-template-columns:minmax(0,1fr)!important;margin-top:2rem!important;gap:.45rem!important}
   .p45-intro__proof article{padding:.75rem!important;background:#fff;border:1px solid rgba(15,23,42,.07)}
 
-  /* Phase 13 order flow and old homepage pieces. */
+  /* Order flow. */
   .p13-heading-row{gap:.9rem!important;margin-bottom:1.4rem!important}
   .p13-title{font-size:clamp(1.7rem,7.5vw,2.35rem)!important}
   .p13-lead{font-size:.92rem!important;line-height:1.9!important}
   .p13-order-layout,.p13-form-grid,.p13-photo-grid,.p13-mode-grid,.p13-check-grid,.p13-material-grid,.p13-catalog-grid{grid-template-columns:minmax(0,1fr)!important}
   .p13-order-layout{gap:1.25rem!important}
   .p13-order-info{position:static!important}
-  .p13-wizard{border-radius:20px!important}
-  .p13-wizard__top{padding:.7rem!important;overflow-x:auto}
+  .p13-wizard{border-radius:20px!important;max-width:100%;overflow:hidden}
+  .p13-wizard__top{padding:.7rem!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .p13-wizard__steps{grid-template-columns:repeat(4,minmax(98px,1fr))!important;min-width:430px}
   .p13-wizard__step{min-height:42px;padding:.45rem;font-size:.68rem;white-space:nowrap}
   .p13-wizard__body{padding:1rem!important}
@@ -86,7 +82,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
   .p13-list-row{grid-template-columns:64px minmax(0,1fr)!important;gap:.7rem!important;padding:.75rem!important}
   .p13-list-row__image{width:64px!important}
 
-  /* Phase 46 guide. */
+  /* Material guide. */
   .p46-guide__head{text-align:right!important;padding-inline:0!important}
   .p46-guide__head h2{font-size:clamp(1.75rem,7.5vw,2.35rem)!important}
   .p46-guide__head p{font-size:.92rem;line-height:1.9}
@@ -97,11 +93,10 @@ input,select,textarea,button{max-width:100%;min-width:0}
   .p46-guide-card__index{width:38px;height:38px}
   .p46-guide__foot{flex-direction:column!important;align-items:flex-start!important}
 
-  /* Phase 47 wizard status. */
   .p47-wizard-status{grid-template-columns:minmax(0,1fr) auto!important;gap:.6rem!important;padding:.7rem .8rem!important}
   .p47-wizard-status__track{grid-column:1/-1!important;grid-row:2!important}
 
-  /* Tables remain usable without expanding the whole page. */
+  /* Tables scroll inside their own wrapper instead of widening the page. */
   .overflow-x-auto,[class*="overflow-x-auto"]{max-width:100%;overflow-x:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
   table{max-width:none;font-size:.78rem}
   th,td{white-space:normal;overflow-wrap:anywhere}
@@ -120,27 +115,39 @@ input,select,textarea,button{max-width:100%;min-width:0}
   .store-price-breakdown>div,.store-spec-list>div{gap:.65rem!important;align-items:flex-start}
   .store-spec-list dd{max-width:62%;overflow-wrap:anywhere}
 
-  /* Prevent decorative/motion layers from creating sideways scroll. */
+  /* Customer portal. */
+  .customer-shell{grid-template-columns:minmax(0,1fr)!important;gap:1rem!important}
+  .customer-sidebar{position:static!important;top:auto!important;padding:1rem!important;border-radius:20px!important}
+  .customer-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.4rem!important}
+  .customer-nav a{min-width:0;text-align:center;padding:.7rem .55rem!important;font-size:.78rem;overflow-wrap:anywhere}
+  .customer-card,.customer-welcome{border-radius:20px!important}
+  .customer-card{padding:1rem!important}
+  .customer-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* Prevent decorative motion from creating sideways scroll. */
   .p45-home>section.p47-section-polish::before{max-width:180px!important}
   html.p46-motion-enabled .p46-reveal.p47-motion-side{transform:translateY(16px)!important}
 }
 
 @media (max-width:479px){
   .site-header>.container{padding-inline:.6rem!important}
-  .p45-hero__viewport{height:clamp(420px,70svh,535px)!important}
+  .site-header>.container>div>a>img{height:36px!important;max-width:165px!important;max-height:36px!important}
+  .p45-hero__viewport{height:clamp(410px,68svh,520px)!important}
   .p45-hero__caption{right:.6rem!important;left:.6rem!important;bottom:4.35rem!important;padding:.72rem!important}
   .p45-hero__caption p{display:none!important}
   .p45-hero__caption h2{font-size:clamp(1.18rem,6vw,1.55rem)!important}
   .p45-hero__controls{right:.6rem!important;bottom:.6rem!important}
   .p45-hero__arrow{width:38px!important;height:38px!important;flex-basis:38px}
+  .p45-hero__fallback-logo{width:min(52vw,180px)!important;max-width:180px!important;max-height:180px!important}
   .p45-intro{padding:2.6rem .8rem!important}
   .p45-intro h1{font-size:clamp(1.7rem,8.4vw,2.2rem)!important}
   .p13-container,.p46-shell{width:calc(100% - 1rem)!important}
   .p13-wizard__footer{grid-template-columns:minmax(0,1fr)!important}
   .store-quick-nav{grid-template-columns:minmax(0,1fr)!important}
   .store-quick-nav>a:nth-child(3){grid-column:auto}
+  .customer-nav{grid-template-columns:minmax(0,1fr)!important}
 }
 
-@media (prefers-reduced-motion:reduce){
+@media (prefers-reduced-motion:reduce) and (max-width:1023px){
   .p45-hero__media img{transform:none!important}
 }
