@@ -69,7 +69,6 @@
     <link rel="stylesheet" href="{% static 'css/phase13-frontend.css' %}">
     <!-- PHASE14_PRESENTATION_CSS -->
     <link rel="stylesheet" href="{% static 'css/phase14-presentation.css' %}">
-    {% if presentation_schema %}<script type="application/ld+json">{{ presentation_schema|safe }}</script>{% endif %}
     <link rel="stylesheet" href="{% static 'css/phase18-catalog-display.css' %}">
     {% if homepage_hero_slides.0.effective_image_url %}<link rel="preload" as="image" href="{{ homepage_hero_slides.0.effective_image_url }}" fetchpriority="high">{% endif %}
     <link rel="stylesheet" href="{% static 'css/phase45-home-hero.css' %}?v=45.0.0">
