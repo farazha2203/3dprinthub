@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
 
+from .epic49_catalog_profile import ProductCatalogProfile
 from .models import Category, Product
 
 
@@ -56,11 +57,21 @@ class Phase492AWindowsCatalogProductNavigationTests(TestCase):
             short_description="محصول تست برای قفل مسیر کلیک کاتالوگ ویندوز",
             description="این رکورد رفتار محصول منتشرشده از Catalog Center ویندوز را شبیه‌سازی می‌کند.",
             main_image="store/products/windows-phase49-2a.webp",
-            source="windows_catalog",
             is_active=True,
+        )
+        self.profile = ProductCatalogProfile.objects.create(
+            product=self.product,
+            public_slug=self.product.slug,
+            desktop_product_id=4902001,
+            batch_uuid="phase49-2a-windows-batch",
+            source_hash="49" * 32,
+            product_type="ready_product",
+            availability_status="made_to_order",
+            has_3d_file=True,
         )
 
     def test_windows_catalog_product_card_url_opens_detail(self):
+        self.assertIsNotNone(self.product.catalog_profile.desktop_product_id)
         detail_url = self.product.get_absolute_url()
         self.assertEqual(detail_url, f"/store/product/{self.product.slug}/")
 
