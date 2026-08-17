@@ -42,7 +42,14 @@ class MobileContractTests(SimpleTestCase):
         self.assertIn('aria-controls="mobile-menu"', header)
         self.assertIn('aria-expanded="false"', header)
         self.assertIn('class="mobile-menu lg:hidden', header)
-        self.assertIn("max-w-[180px]", header)
+
+    def test_header_brand_logo_has_hard_desktop_size_lock(self):
+        header = self.read("templates/website/partials/header.html")
+        self.assertIn("site-header__brand-logo", header)
+        self.assertIn("height:56px", header)
+        self.assertIn("max-width:220px", header)
+        self.assertIn("max-height:56px", header)
+        self.assertIn("object-fit:contain", header)
 
     def test_fallback_hero_logo_is_explicitly_capped(self):
         hero = self.read("templates/website/partials/hero.html")
