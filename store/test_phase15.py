@@ -42,7 +42,7 @@ class Phase15PopulationTests(TestCase):
             maximum_limit=100,
         )
 
-    def test_schedule_is_configured_for_real_population(self):
+    def test_schedule_configuration_remains_readable_for_historical_records(self):
         schedule = configure_population_schedule(self.policy, requested_limit=50)
         self.assertTrue(schedule.enabled)
         self.assertTrue(schedule.hydrate_files)
@@ -52,7 +52,7 @@ class Phase15PopulationTests(TestCase):
         self.assertEqual(schedule.requested_limit, 50)
 
     @patch("store.catalog_population._discover_from_url", return_value=[])
-    def test_discovery_combines_multiple_sort_modes(self, _mock):
+    def test_discovery_parser_combines_multiple_sort_modes(self, _mock):
         candidates, errors = discover_population_candidates(
             _FakeAdapter(),
             source_key="makerworld",
@@ -90,8 +90,7 @@ class Phase15PopulationTests(TestCase):
         asset.refresh_from_db()
         self.assertTrue(asset.technical_specs["source_file_available"])
 
-
-    def test_admin_dashboard_shows_real_population_controls(self):
+    def test_admin_dashboard_still_exposes_pricing_and_historical_catalog_status(self):
         admin_user = User.objects.create_superuser(
             username="phase15-admin",
             email="phase15@example.com",
@@ -102,10 +101,9 @@ class Phase15PopulationTests(TestCase):
             reverse("admin:store_catalogautomationdashboard_changelist")
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "پر کردن واقعی کاتالوگ سایت")
-        self.assertContains(response, "صف دریافت واقعی MakerWorld و Printables")
+        self.assertContains(response, "داشبورد همگام‌سازی")
 
-    def test_admin_prepare_population_queues_public_sources(self):
+    def test_admin_prepare_population_does_not_queue_external_sources_in_phase49_2a(self):
         printables_source = PrintCatalogSource.objects.create(
             name="Printables Test",
             code="printables-phase15",
@@ -129,12 +127,9 @@ class Phase15PopulationTests(TestCase):
             {"limit": 30},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            CatalogSyncRun.objects.filter(status="queued").count(),
-            2,
-        )
+        self.assertEqual(CatalogSyncRun.objects.filter(status="queued").count(), 0)
 
-    def test_counts_report_public_assets(self):
+    def test_counts_report_historical_public_assets(self):
         asset = ImportedPrintAsset.objects.create(
             source=self.source,
             source_url="https://makerworld.com/en/models/2-test",
