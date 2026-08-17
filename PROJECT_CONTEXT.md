@@ -109,7 +109,7 @@ Latest user-provided local results before this mobile subphase:
 - Full Store suite: **220 tests OK, 1 environment-specific MySQL test skipped**
 - Website suite: most tests OK, but six Phase27/44/46 assertions were stale and still required retired Phase27/external-catalog UI contracts.
 
-The stale Website tests are being aligned to the active Phase45/49.2A contract; retired public routes must not be resurrected.
+The stale Website tests are aligned to the active Phase45/49.2A contract; retired public routes must not be resurrected.
 
 Known warnings that are not the cause of these test failures:
 
@@ -129,17 +129,30 @@ Target validation widths include at minimum:
 - 430 px
 - tablet widths through 1023 px
 
-The final public cascade layer is:
+The final responsive layer is:
 
 `static/css/phase49_2a-mobile-first.css`
 
-It is intentionally loaded after older homepage/store styles so it owns the final phone/tablet contract.
-It covers:
+### Desktop-isolation hotfix
 
-- accidental horizontal overflow protection
+During the first mobile stabilization attempt, generic image/reset rules were placed outside responsive media queries and the Phase45 no-slide fallback logo was still allowed to grow to a very large size. This produced an unacceptable desktop visual regression where the fallback brand artwork dominated the viewport.
+
+The hotfix contract is now explicit:
+
+- `phase49_2a-mobile-first.css` must not apply layout/image reset rules above 1023px.
+- All responsive layout rules in that file are scoped inside phone/tablet media queries.
+- The generic unscoped `img { height:auto }` reset is prohibited by regression test.
+- The Phase45 fallback logo has an explicit desktop cap of 320x320 and smaller tablet/phone caps.
+- The normal Header logo keeps its explicit desktop dimensions and receives smaller dimensions only inside responsive breakpoints.
+- Active Hero slide images retain their own Phase45 object-fit/object-position contract.
+
+This hotfix adds no model, database migration, data conversion or production data change.
+
+The responsive layer covers:
+
+- accidental horizontal overflow protection only on responsive widths
 - compact fixed header and consistent mobile/tablet navigation
 - accessible menu state and scroll locking
-- dynamic fixed-header scroll offset
 - touch-safe controls
 - 16px mobile form controls to avoid unwanted mobile browser zoom
 - compact Phase45 managed hero and readable mobile CTA/caption
@@ -149,8 +162,6 @@ It covers:
 - Store filter/category/card/navigation layout
 - customer portal/login/register mobile shell
 - reduced decorative horizontal motion on small screens
-
-This mobile stabilization adds no database model and requires no migration.
 
 ## Current production gate
 
@@ -165,8 +176,13 @@ Before deployment, the exact current branch commit must pass on Windows:
 5. `python manage.py test store -v 2`
 6. `python manage.py test catalog_bridge -v 2`
 7. `python manage.py test -v 2`
-8. local visual verification at phone/tablet widths
+8. local visual verification at desktop and phone/tablet widths
 9. explicit user approval
+
+Visual acceptance must include both:
+
+- desktop regression check at >= 1280px, including no-slide Hero fallback
+- mobile checks at 320/360/390/430px and tablet <= 1023px
 
 After approval only:
 
