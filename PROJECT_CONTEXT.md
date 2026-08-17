@@ -163,6 +163,24 @@ The responsive layer covers:
 - customer portal/login/register mobile shell
 - reduced decorative horizontal motion on small screens
 
+## Canonical brand mark contract
+
+The approved UI brand mark is the existing transparent PNG:
+
+`static/img/brand/logo-icon-512.png`
+
+Rules:
+
+- Header, no-slide Hero fallback, Store/page icons and quote/payment branding use this canonical static asset.
+- UI templates must not reference the superseded `img/brand/logo-header.png` or `img/brand/logo-full.png` artwork.
+- A transparent brand mark must never receive an artificial `bg-white`, padding tile, border or card shadow directly behind the image.
+- `static/css/brand-mark-contract.css` is the final logo-only cascade layer. It must stay isolated from general layout styling.
+- If a future intentionally non-transparent logo asset is introduced, its containing surface must match the asset background color so there is no visible rectangular patch.
+- Brand icon/favicons in public/store/quote HTML should use the same canonical PNG unless an explicitly approved derivative is created.
+- Regression tests scan public templates for superseded brand artwork and verify transparent logo behavior.
+
+This brand cleanup changes no database model or business data and requires no migration.
+
 ## Current production gate
 
 **Production deployment is NOT approved yet.**
@@ -171,7 +189,7 @@ Before deployment, the exact current branch commit must pass on Windows:
 
 1. `python manage.py check`
 2. `python manage.py makemigrations --check --dry-run`
-3. targeted Phase49.2A + mobile regression tests
+3. targeted Phase49.2A + mobile/brand regression tests
 4. `python manage.py test website -v 2`
 5. `python manage.py test store -v 2`
 6. `python manage.py test catalog_bridge -v 2`
@@ -181,8 +199,9 @@ Before deployment, the exact current branch commit must pass on Windows:
 
 Visual acceptance must include both:
 
-- desktop regression check at >= 1280px, including no-slide Hero fallback
+- desktop regression check at >= 1280px, including no-slide Hero fallback and transparent Header logo
 - mobile checks at 320/360/390/430px and tablet <= 1023px
+- quote/payment page brand mark without a white rectangular backing
 
 After approval only:
 
