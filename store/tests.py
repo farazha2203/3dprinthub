@@ -134,15 +134,17 @@ class StoreCheckoutTests(TestCase):
         self.assertEqual(response.status_code, 302)
         return StoreOrder.objects.get(user=self.user)
 
-    def test_cart_add_and_checkout_create_price_snapshot(self):
+    def test_cart_add_and_checkout_create_vat_inclusive_price_snapshot(self):
         order = self._checkout(quantity=2)
         item = order.items.get()
         self.assertEqual(item.unit_price, 182_000)
         self.assertEqual(item.quantity, 2)
         self.assertEqual(item.line_total, 364_000)
+        self.assertEqual(order.subtotal, 364_000)
         self.assertEqual(order.shipping_fee, 30_000)
-        self.assertEqual(order.total_amount, 394_000)
-        self.assertTrue(StorePayment.objects.filter(order=order, amount=394_000).exists())
+        self.assertEqual(order.tax_amount, 39_400)
+        self.assertEqual(order.total_amount, 433_400)
+        self.assertTrue(StorePayment.objects.filter(order=order, amount=433_400).exists())
         self.variant.fixed_fee = 500_000
         self.variant.save()
         item.refresh_from_db()
