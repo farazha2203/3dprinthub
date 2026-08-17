@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+    function currentHeaderOffset() {
+        const header = document.querySelector(".site-header");
+        if (!header) return 76;
+        return Math.max(64, Math.ceil(header.getBoundingClientRect().height));
+    }
+
     function scrollToSection(sectionId) {
         const target = document.getElementById(sectionId);
 
@@ -7,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return false;
         }
 
-        const headerOffset = 105;
+        const headerOffset = currentHeaderOffset() + 12;
         const elementPosition = target.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -67,16 +73,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const mobileMenu = document.getElementById("mobile-menu");
     const mobileMenuLinks = document.querySelectorAll(".mobile-menu-link");
 
+    function setMobileMenu(open) {
+        if (!mobileMenuButton || !mobileMenu) return;
+        mobileMenu.classList.toggle("is-open", open);
+        mobileMenuButton.setAttribute("aria-expanded", open ? "true" : "false");
+        mobileMenu.setAttribute("aria-hidden", open ? "false" : "true");
+        document.documentElement.classList.toggle("mobile-nav-open", open);
+    }
+
     if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener("click", function () {
-            mobileMenu.classList.toggle("is-open");
+            setMobileMenu(!mobileMenu.classList.contains("is-open"));
         });
 
         mobileMenuLinks.forEach(function (link) {
             link.addEventListener("click", function () {
-                mobileMenu.classList.remove("is-open");
+                setMobileMenu(false);
             });
         });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && mobileMenu.classList.contains("is-open")) {
+                setMobileMenu(false);
+                mobileMenuButton.focus();
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            if (window.innerWidth >= 1024 && mobileMenu.classList.contains("is-open")) {
+                setMobileMenu(false);
+            }
+        }, { passive: true });
     }
 
     /*
