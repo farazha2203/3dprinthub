@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -19,6 +20,16 @@ from .models import (
 )
 
 
+def external_model_sync_enabled() -> bool:
+    """Phase 49.2A kill-switch for legacy external model ingestion.
+
+    Windows Catalog Center remains the canonical product publishing path. This
+    switch only controls the legacy external-model scheduler/worker; material
+    reference pricing and FX services are separate and remain available.
+    """
+    return bool(getattr(settings, "EXTERNAL_MODEL_SYNC_ENABLED", False))
+
+
 def _local_now(setting: CatalogAutomationSetting, now=None):
     now = now or timezone.now()
     try:
@@ -29,6 +40,10 @@ def _local_now(setting: CatalogAutomationSetting, now=None):
 
 
 def queue_catalog_source(*, schedule: CatalogSourceSchedule, actor=None, trigger="manual", scheduled_for=None):
+    if not external_model_sync_enabled():
+        raise ValidationError(
+            "دریافت مدل از منابع خارجی در Phase 49.2A غیرفعال است؛ انتشار محصول فقط از Catalog Center ویندوز انجام می‌شود."
+        )
     if not schedule.policy.is_active or not schedule.policy.source.is_active:
         raise ValidationError("منبع یا سیاست دریافت غیرفعال است.")
     duplicate = CatalogSyncRun.objects.filter(
@@ -56,6 +71,8 @@ def queue_catalog_source(*, schedule: CatalogSourceSchedule, actor=None, trigger
 
 
 def queue_due_catalog_sources(*, now=None):
+    if not external_model_sync_enabled():
+        return []
     setting = CatalogAutomationSetting.load()
     if not setting.queue_enabled:
         return []
@@ -140,6 +157,8 @@ def reset_stale_catalog_runs(*, now=None):
 
 
 def process_catalog_queue(*, limit=None):
+    if not external_model_sync_enabled():
+        return []
     setting = CatalogAutomationSetting.load()
     limit = int(limit or setting.process_batch_size or 1)
     processed = []
@@ -187,12 +206,11 @@ def process_catalog_queue(*, limit=None):
 
 
 def homepage_catalog_assets(*, slider=False, limit=None):
-    """Return fresh public references without requiring manual publication.
-
-    Slider items need an image (local or remote); grid items may use the branded
-    placeholder so every fetched reference can still reach the public catalog.
-    """
+    """Return legacy public references only when external model sync is enabled."""
     from django.db.models import Q
+
+    if not external_model_sync_enabled():
+        return public_catalog_queryset().none()
 
     setting = CatalogAutomationSetting.load()
     limit = max(1, min(int(limit or (setting.homepage_slider_count if slider else setting.homepage_grid_count)), 60))
