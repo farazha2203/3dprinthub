@@ -83,6 +83,7 @@ class MobileContractTests(SimpleTestCase):
         forbidden = (
             "img/brand/logo-header.png",
             "img/brand/logo-full.png",
+            "settings.logo.url",
         )
         offenders = []
         templates_root = self.root / "templates"
