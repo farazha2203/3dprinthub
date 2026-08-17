@@ -1,10 +1,12 @@
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 from store.models import CatalogAssetMetrics, CatalogSourcePolicy, ImportedPrintAsset, PrintCatalogSource
 
 
-class Phase27FullscreenHeroTests(TestCase):
+class Phase27HistoricalHeroCompatibilityTests(TestCase):
+    """Keep the useful Phase 27 data contracts without resurrecting retired public UI."""
+
     def setUp(self):
         self.source = PrintCatalogSource.objects.create(
             name="Phase 27 Source",
@@ -36,7 +38,7 @@ class Phase27FullscreenHeroTests(TestCase):
         )
         return asset
 
-    def test_home_hero_uses_newest_catalog_items_first(self):
+    def test_historical_home_context_keeps_newest_catalog_items_first(self):
         older = self.create_asset("older-model", "https://models.example.com/older.jpg")
         newer = self.create_asset("newer-model", "https://models.example.com/newer.jpg")
         response = self.client.get(reverse("website:home"))
@@ -44,21 +46,17 @@ class Phase27FullscreenHeroTests(TestCase):
         assets = list(response.context["hero_model_slider"])
         self.assertEqual(assets[:2], [newer, older])
 
-    def test_home_renders_fullscreen_background_slider_and_product_links(self):
-        asset = self.create_asset("hero-model", "https://models.example.com/hero.jpg")
+    def test_home_uses_current_managed_hero_not_retired_phase27_markup(self):
+        self.create_asset("hero-model", "https://models.example.com/hero.jpg")
         response = self.client.get(reverse("website:home"))
-        self.assertContains(response, "data-p27-home-hero")
-        self.assertContains(response, "data-p27-hero-slide")
-        self.assertContains(response, "data-p14-hero-slider")
-        self.assertContains(response, "p27-home-hero__backdrop")
-        self.assertContains(response, "p27-home-hero__subject-frame")
-        self.assertContains(response, "p27-home-hero__subject")
-        self.assertContains(response, reverse("store:external_catalog_detail", args=[asset.pk]))
-        self.assertContains(response, asset.remote_image_url)
-        self.assertContains(response, "phase27-home-hero.css")
-        self.assertContains(response, "phase27-home-hero.js")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-p45-hero")
+        self.assertContains(response, "phase45-home-hero.css")
+        self.assertNotContains(response, "data-p27-home-hero")
+        self.assertNotContains(response, "phase27-home-hero.js")
+        self.assertNotContains(response, "/store/ready-models/")
 
-    def test_legacy_active_source_without_policy_remains_visible_as_reference(self):
+    def test_legacy_reference_record_is_preserved_without_public_catalog_route(self):
         source = PrintCatalogSource.objects.create(
             name="Legacy Source",
             code="phase27-legacy-source",
@@ -77,7 +75,7 @@ class Phase27FullscreenHeroTests(TestCase):
             source_kind="custom",
             image_urls=[asset.remote_image_url],
         )
-        response = self.client.get(reverse("store:external_catalog"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, asset.title)
+        asset.refresh_from_db()
         self.assertEqual(asset.public_display_mode, "reference")
+        with self.assertRaises(NoReverseMatch):
+            reverse("store:external_catalog")
