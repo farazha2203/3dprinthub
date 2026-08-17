@@ -30,7 +30,6 @@
     <meta name="theme-color" content="#FF9800">
 
     <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
-
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/phase49_1-accessibility.css' %}">
 
@@ -44,7 +43,7 @@
         --brand-light: #F8FAFC;
         --brand-accent: #FF9800;
     }
-</style>
+    </style>
 
     <script type="application/ld+json">
     {
@@ -65,23 +64,17 @@
     </script>
     <link rel="stylesheet" href="{% static 'css/brand-theme-preview.css' %}">
 
-    <!-- PHASE10_READY_MODELS_SCHEMA -->
-    {% if ready_models_schema %}<script type="application/ld+json">{{ ready_models_schema|safe }}</script>{% endif %}
+    <!-- Phase 49.2A: public external ready-model catalog/schema intentionally removed. -->
     <!-- PHASE13_FRONTEND_CSS -->
     <link rel="stylesheet" href="{% static 'css/phase13-frontend.css' %}">
     <!-- PHASE14_PRESENTATION_CSS -->
     <link rel="stylesheet" href="{% static 'css/phase14-presentation.css' %}">
-    <!-- PHASE14_PRESENTATION_SCHEMA -->
     {% if presentation_schema %}<script type="application/ld+json">{{ presentation_schema|safe }}</script>{% endif %}
-    <!-- PHASE18_SLIDER_GRID_CSS -->
     <link rel="stylesheet" href="{% static 'css/phase18-catalog-display.css' %}">
-    <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
     {% if homepage_hero_slides.0.effective_image_url %}<link rel="preload" as="image" href="{{ homepage_hero_slides.0.effective_image_url }}" fetchpriority="high">{% endif %}
     <link rel="stylesheet" href="{% static 'css/phase45-home-hero.css' %}?v=45.0.0">
     <link rel="stylesheet" href="{% static 'css/phase46-home-experience.css' %}?v=46.0.0">
-    <!-- PHASE47_HOME_POLISH -->
     <link rel="stylesheet" href="{% static 'css/phase47-home-polish.css' %}?v=47.0.0">
-    <!-- PHASE44_HERO_GALLERY_CLEAR -->
 </head>
 
 <body class="bg-[#f6f9fc] text-slate-950 selection:bg-cyan-400 selection:text-white">
@@ -89,9 +82,7 @@
     {% if messages %}
         <div class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-xl">
             {% for message in messages %}
-                <div class="rounded-2xl px-5 py-4 shadow-2xl text-center
-                    {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %}
-                    text-white">
+                <div class="rounded-2xl px-5 py-4 shadow-2xl text-center {% if message.tags == 'success' %}bg-emerald-500{% else %}bg-rose-500{% endif %} text-white">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -107,7 +98,6 @@
         {% include "website/partials/recommendations.html" %}
         {% include "website/partials/portfolio.html" %}
         {% include "website/partials/products.html" %}
-        {% include "website/partials/external-models-home.html" %}
         {% include "website/partials/team-showcase.html" %}
         {% include "website/partials/client-showcase.html" %}
         {% include "website/partials/phase13-material-pricing.html" %}
@@ -131,46 +121,30 @@
             {
                 "@type": "Question",
                 "name": "قیمت پرینت سه‌بعدی چگونه محاسبه می‌شود؟",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "قیمت پرینت سه‌بعدی بر اساس نوع متریال، وزن مصرفی، زمان چاپ، پیچیدگی قطعه، کیفیت چاپ، تعداد قطعات، نیاز به ساپورت، پرداخت نهایی و دستمزد آماده‌سازی محاسبه می‌شود."
-                }
+                "acceptedAnswer": {"@type": "Answer", "text": "قیمت پرینت سه‌بعدی بر اساس نوع متریال، وزن مصرفی، زمان چاپ، پیچیدگی قطعه، کیفیت چاپ، تعداد قطعات، نیاز به ساپورت، پرداخت نهایی و دستمزد آماده‌سازی محاسبه می‌شود."}
             },
             {
                 "@type": "Question",
                 "name": "اگر فایل سه‌بعدی نداشته باشم، می‌توانید طراحی انجام دهید؟",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "بله. اگر فایل سه‌بعدی آماده ندارید، تیم 3DprintHub می‌تواند بر اساس عکس، نقشه، نمونه فیزیکی، ابعاد یا توضیحات شما مدل سه‌بعدی قطعه را طراحی کند."
-                }
+                "acceptedAnswer": {"@type": "Answer", "text": "بله. اگر فایل سه‌بعدی آماده ندارید، تیم 3DprintHub می‌تواند بر اساس عکس، نقشه، نمونه فیزیکی، ابعاد یا توضیحات شما مدل سه‌بعدی قطعه را طراحی کند."}
             },
             {
                 "@type": "Question",
                 "name": "چه متریالی برای قطعه من مناسب‌تر است؟",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "انتخاب متریال به کاربرد قطعه بستگی دارد. برای نمونه‌سازی PLA، برای قطعات مقاوم‌تر PETG یا ABS، برای قطعات انعطاف‌پذیر TPU و برای قطعات صنعتی متریال‌هایی مانند PA-CF، PET-CF، PC-FR یا PPS-CF پیشنهاد می‌شود."
-                }
+                "acceptedAnswer": {"@type": "Answer", "text": "انتخاب متریال به کاربرد قطعه بستگی دارد. برای نمونه‌سازی PLA، برای قطعات مقاوم‌تر PETG یا ABS، برای قطعات انعطاف‌پذیر TPU و برای قطعات صنعتی متریال‌هایی مانند PA-CF، PET-CF، PC-FR یا PPS-CF پیشنهاد می‌شود."}
             },
             {
                 "@type": "Question",
                 "name": "آیا قطعات پرینت سه‌بعدی برای استفاده صنعتی قابل اعتماد هستند؟",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "بله، اگر طراحی قطعه، جهت چاپ، درصد پرشدگی، نوع متریال و تنظیمات چاپ درست انتخاب شوند، قطعات پرینت سه‌بعدی می‌توانند در بسیاری از کاربردهای صنعتی استفاده شوند."
-                }
+                "acceptedAnswer": {"@type": "Answer", "text": "بله، اگر طراحی قطعه، جهت چاپ، درصد پرشدگی، نوع متریال و تنظیمات چاپ درست انتخاب شوند، قطعات پرینت سه‌بعدی می‌توانند در بسیاری از کاربردهای صنعتی استفاده شوند."}
             },
             {
                 "@type": "Question",
                 "name": "آیا امکان ساخت قطعه از روی نمونه فیزیکی وجود دارد؟",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "بله. امکان بررسی، اندازه‌برداری، مدل‌سازی سه‌بعدی و ساخت مجدد قطعه از روی نمونه فیزیکی وجود دارد."
-                }
+                "acceptedAnswer": {"@type": "Answer", "text": "بله. امکان بررسی، اندازه‌برداری، مدل‌سازی سه‌بعدی و ساخت مجدد قطعه از روی نمونه فیزیکی وجود دارد."}
             }
         ]
     };
-
     var script = document.createElement("script");
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(faqSchema);
@@ -180,14 +154,10 @@
 <!-- /FAQ_SCHEMA_3DPRINTHUB_AUTO -->
 
     <script src="{% static 'js/theme-preview.js' %}"></script>
-    <!-- PHASE13_FRONTEND_JS -->
     <script src="{% static 'js/phase13-frontend.js' %}" defer></script>
-    <!-- PHASE14_PRESENTATION_JS -->
     <script src="{% static 'js/phase14-presentation.js' %}" defer></script>
-    <!-- PHASE27_FULLSCREEN_LATEST_CATALOG_HERO -->
     <script src="{% static 'js/phase45-home-hero.js' %}?v=45.0.0" defer></script>
     <script src="{% static 'js/phase46-home-experience.js' %}?v=46.0.0" defer></script>
-    <!-- PHASE47_HOME_POLISH -->
     <script src="{% static 'js/phase47-home-polish.js' %}?v=47.0.0" defer></script>
 </body>
 </html>
