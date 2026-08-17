@@ -5,8 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>پیش‌فاکتور سفارش | 3DprintHub.ir</title>
+  <link rel="icon" type="image/png" href="{% static 'img/brand/logo-icon-512.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/brand/logo-icon-512.png' %}">
   <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'css/brand-mark-contract.css' %}?v=49.2.2">
   <style>
     :root{--brand-primary:{% if settings and settings.primary_color %}{{ settings.primary_color }}{% else %}#ff9800{% endif %};--brand-secondary:{% if settings and settings.secondary_color %}{{ settings.secondary_color }}{% else %}#0f172a{% endif %}}
     .qcard{background:rgba(15,23,42,.82);border:1px solid rgba(148,163,184,.16);box-shadow:0 20px 70px rgba(0,0,0,.22)}
@@ -18,7 +21,7 @@
 {% if messages %}<div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-xl space-y-2">{% for message in messages %}<div class="rounded-2xl px-5 py-4 text-center text-white shadow-2xl {% if message.tags == 'success' %}bg-emerald-600{% elif message.tags == 'error' %}bg-rose-600{% else %}bg-sky-700{% endif %}">{{ message }}</div>{% endfor %}</div>{% endif %}
 <main class="container mx-auto px-4 md:px-6 py-8 md:py-12"><div class="max-w-5xl mx-auto">
   <header class="flex items-center justify-between gap-4 mb-8">
-    <a href="/" class="flex items-center gap-3">{% if settings and settings.logo %}<img src="{{ settings.logo.url }}" alt="3DprintHub" class="w-12 h-12 rounded-2xl object-contain bg-white p-1">{% else %}<div class="w-12 h-12 rounded-2xl bg-orange-500 text-slate-950 grid place-items-center font-black">3D</div>{% endif %}<div><b class="text-xl">3DprintHub.ir</b><small class="block text-slate-400">پیش‌فاکتور و پرداخت امن</small></div></a>
+    <a href="/" class="flex items-center gap-3"><img src="{% static 'img/brand/logo-icon-512.png' %}" alt="3DprintHub" class="brand-mark w-12 h-12 object-contain" width="48" height="48"><div><b class="text-xl">3DprintHub.ir</b><small class="block text-slate-400">پیش‌فاکتور و پرداخت امن</small></div></a>
     <a href="{% url 'website:customer_dashboard' %}" class="text-sm text-slate-300 hover:text-orange-300">بازگشت به پنل مشتری</a>
   </header>
 
