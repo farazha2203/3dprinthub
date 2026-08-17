@@ -17,6 +17,9 @@ def install() -> None:
                 return product.get_absolute_url()
             except Exception:
                 pass
-        return reverse("store:external_catalog_detail", args=[self.asset_id])
+        # Phase 49.2A retired the public external ready-model detail route.
+        # A legacy hero asset without a live Product now lands on the active
+        # store instead of generating a broken reverse()/404 target.
+        return reverse("store:product_list")
 
     HomepageHeroSlide.target_url = property(target_url)
