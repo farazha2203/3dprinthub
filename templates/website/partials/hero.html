@@ -67,7 +67,7 @@
         <a class="p45-btn p45-btn--secondary" href="{% url 'website:customer_dashboard' %}">پیگیری سفارش‌ها</a>
       {% else %}
         <a class="p45-btn p45-btn--primary" href="{% url 'website:customer_login' %}?next=/%23order">ورود و ثبت سفارش</a>
-        <a class="p45-btn p45-btn--secondary" href="{% url 'store:external_catalog' %}">دیدن مدل‌های آماده</a>
+        <a class="p45-btn p45-btn--secondary" href="{% url 'store:product_list' %}">مشاهده فروشگاه قطعات</a>
       {% endif %}
     </div>
 
