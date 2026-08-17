@@ -5,9 +5,9 @@
     <aside class="p13-order-info">
       <span class="p13-kicker">سفارش تخصصی چاپ سه‌بعدی</span>
       <h2 class="p13-title">هر اطلاعاتی که برای ساخت دقیق لازم است، مرحله‌به‌مرحله</h2>
-      <p class="p13-lead">برای قطعه جدید، چهار نمای اصلی و اطلاعات شرایط کاری را دریافت می‌کنیم. برای مدل آماده یا فایل قبلی، مراحل اضافی حذف می‌شوند و سفارش با نرخ روز ثبت می‌شود.</p>
+      <p class="p13-lead">برای قطعه جدید، چهار نمای اصلی و اطلاعات شرایط کاری را دریافت می‌کنیم. اگر قبلاً فایلی برای شما ساخته و محفوظ شده باشد، می‌توانید همان مدل را دوباره سفارش دهید.</p>
       <div class="p13-order-benefits">
-        <div class="p13-order-benefit"><span class="p13-order-benefit__num">۱</span><div><strong>انتخاب مسیر سفارش</strong><br>قطعه جدید، مدل آماده یا سفارش مجدد فایل محفوظ.</div></div>
+        <div class="p13-order-benefit"><span class="p13-order-benefit__num">۱</span><div><strong>انتخاب مسیر سفارش</strong><br>قطعه جدید یا سفارش مجدد فایل محفوظ خودتان.</div></div>
         <div class="p13-order-benefit"><span class="p13-order-benefit__num">۲</span><div><strong>بررسی مهندسی</strong><br>ابعاد، دما، فشار، تماس با روغن، بنزین، گریس و مواد شیمیایی.</div></div>
         <div class="p13-order-benefit"><span class="p13-order-benefit__num">۳</span><div><strong>قیمت‌گذاری شفاف</strong><br>متریال، زمان دستگاه، طراحی، پرداخت‌کاری و ارسال جدا بررسی می‌شوند.</div></div>
       </div>
@@ -30,9 +30,7 @@
           <small>مرحله فعلی</small>
           <strong data-p47-step-label>نوع سفارش</strong>
         </div>
-        <div class="p47-wizard-status__track" aria-hidden="true">
-          <span data-p47-progress-fill></span>
-        </div>
+        <div class="p47-wizard-status__track" aria-hidden="true"><span data-p47-progress-fill></span></div>
         <div class="p47-wizard-status__counter" data-p47-progress-text>۱ از ۴</div>
       </div>
 
@@ -49,85 +47,17 @@
 
         <section class="p13-wizard-panel" data-p13-panel="1">
           <h3 class="p13-panel-title">چه نوع سفارشی ثبت می‌کنید؟</h3>
-          <p class="p13-panel-note">مسیر مناسب را انتخاب کنید تا فقط اطلاعات لازم نمایش داده شود.</p>
+          <p class="p13-panel-note">سفارش جدید را ثبت کنید یا اگر مدل محفوظ قبلی دارید همان فایل را دوباره برای چاپ انتخاب کنید.</p>
           <div class="p13-mode-grid">
             {% for radio in form.request_mode %}
-              {% if radio.data.value != 'reorder_model' or has_reusable_models %}
-                <label class="p13-mode-card">{{ radio.tag }}<strong>{{ radio.choice_label }}</strong>
-                  {% if radio.data.value == 'new_part' %}<small>ساخت از روی عکس، نمونه فیزیکی یا اندازه‌برداری.</small>{% elif radio.data.value == 'reorder_model' %}<small>فایل محفوظ است و به مشتری نمایش داده یا تحویل نمی‌شود.</small>{% else %}<small>مدل آماده انتخاب‌شده با متریال و رنگ دلخواه چاپ می‌شود.</small>{% endif %}
-                </label>
+              {% if radio.data.value == 'new_part' %}
+                <label class="p13-mode-card">{{ radio.tag }}<strong>{{ radio.choice_label }}</strong><small>ساخت از روی عکس، نمونه فیزیکی یا اندازه‌برداری.</small></label>
+              {% elif radio.data.value == 'reorder_model' and has_reusable_models %}
+                <label class="p13-mode-card">{{ radio.tag }}<strong>{{ radio.choice_label }}</strong><small>فایل محفوظ است و به مشتری نمایش داده یا تحویل نمی‌شود.</small></label>
               {% endif %}
             {% endfor %}
           </div>
-          {{ form.ready_catalog_asset_id }}
           <div class="p13-field" style="margin-top:1rem" data-p13-reorder-only hidden><label>{{ form.reusable_model.label }}</label>{{ form.reusable_model }}<small style="display:block;margin-top:.4rem;color:#929aa6">{{ form.reusable_model.help_text }}</small></div>
-          <div class="p46-ready-picker" data-p13-ready-only data-p46-ready-picker hidden>
-            <div class="p46-ready-picker__head">
-              <div>
-                <span class="p46-ready-picker__eyebrow">مدل آماده دانلودشده</span>
-                <h4>محصول را از فهرست انتخاب کنید یا کد آن را وارد کنید</h4>
-                <p>فقط مدل‌هایی که فایل آن‌ها در آرشیو داخلی موجود است برای سفارش مستقیم نمایش داده می‌شوند.</p>
-              </div>
-              <div class="p46-ready-picker__count">{{ ready_order_asset_count|default:0 }} مدل آماده</div>
-            </div>
-
-            <div class="p46-ready-picker__tools">
-              <div class="p13-field">
-                <label for="{{ form.ready_catalog_code.id_for_label }}">{{ form.ready_catalog_code.label }}</label>
-                {{ form.ready_catalog_code }}
-                <small>نمونه: <b>PH-000123</b>؛ اگر محصول SKU داشته باشد همان SKU هم پذیرفته می‌شود.</small>
-              </div>
-              <div class="p13-field">
-                <label for="p46-ready-filter">جستجو در مدل‌های آماده</label>
-                <input id="p46-ready-filter" type="search" class="form-input" data-p46-ready-filter placeholder="نام مدل، کد محصول، SKU یا منبع">
-              </div>
-            </div>
-
-            {% if ready_order_options %}
-              <div class="p46-ready-list" data-p46-ready-list>
-                {% for item in ready_order_options %}
-                  <button type="button"
-                    class="p46-ready-item{% if selected_ready_asset_id == item.id %} is-selected{% endif %}"
-                    data-p46-ready-item
-                    data-id="{{ item.id }}"
-                    data-code="{{ item.code|escape }}"
-                    data-sku="{{ item.sku|escape }}"
-                    data-title="{{ item.title|escape }}"
-                    data-source="{{ item.source|escape }}"
-                    data-image="{{ item.image_url|escape }}">
-                    <span class="p46-ready-item__media">
-                      {% if item.image_url %}
-                        <img src="{{ item.image_url }}" alt="{{ item.title }}" width="160" height="120" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-                      {% else %}<span class="p46-ready-item__placeholder">3D</span>{% endif %}
-                    </span>
-                    <span class="p46-ready-item__copy">
-                      <small>{{ item.code }}{% if item.sku %} · {{ item.sku }}{% endif %}</small>
-                      <strong>{{ item.title }}</strong>
-                      <em>{{ item.source }}</em>
-                    </span>
-                    <span class="p46-ready-item__check">✓</span>
-                  </button>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="p46-ready-empty">هنوز مدل آرشیوشده قابل سفارش مستقیم پیدا نشده است.</div>
-            {% endif %}
-
-            <div class="p46-ready-selected" data-p46-ready-selected hidden>
-              <span class="p46-ready-selected__media" data-p46-selected-media></span>
-              <div>
-                <small data-p46-selected-code>کد محصول</small>
-                <strong data-p46-selected-title>مدل انتخاب‌شده</strong>
-                <span data-p46-selected-source></span>
-              </div>
-              <button type="button" data-p46-clear-ready>تغییر انتخاب</button>
-            </div>
-
-            <div class="p46-ready-picker__foot">
-              <span>مدل موردنظر را پیدا نکردید؟</span>
-              <a href="{% url 'store:external_catalog' %}" target="_blank" rel="noopener">مشاهده کل کاتالوگ مدل‌ها</a>
-            </div>
-          </div>
         </section>
 
         <section class="p13-wizard-panel" data-p13-panel="2" hidden>
