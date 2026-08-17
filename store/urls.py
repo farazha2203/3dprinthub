@@ -29,8 +29,15 @@ urlpatterns = [
 
 # BEGIN STORE COMMERCE PHASE 2
 from .views import (
-    cart_add_view, cart_detail_view, cart_remove_view, cart_update_view, checkout_view,
-    manual_payment_view, my_orders_view, order_detail_view, order_success_view,
+    cart_add_view,
+    cart_detail_view,
+    cart_remove_view,
+    cart_update_view,
+    checkout_view,
+    manual_payment_view,
+    my_orders_view,
+    order_detail_view,
+    order_success_view,
     product_review_view,
 )
 
@@ -89,42 +96,9 @@ urlpatterns += [
 ]
 # END AFFILIATE PARTNER PROGRAM PHASE 7 URLS
 
-from .views import external_print_catalog, external_print_catalog_detail
-
-# BEGIN MULTI SOURCE CATALOG PHASE 9 URLS
-urlpatterns += [
-    path("ready-models/", external_print_catalog, name="external_catalog"),
-    path("ready-models/<int:pk>/", external_print_catalog_detail, name="external_catalog_detail"),
-]
-# END MULTI SOURCE CATALOG PHASE 9 URLS
-
-# BEGIN PHASE 10 PUBLIC CATALOG SITEMAP URL
-from .views import external_catalog_sitemap
-
-urlpatterns += [
-    path("ready-models-sitemap.xml", external_catalog_sitemap, name="external_catalog_sitemap"),
-]
-# END PHASE 10 PUBLIC CATALOG SITEMAP URL
-
-# BEGIN PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE URLS
-from .views import (
-    external_catalog_refresh_request,
-    external_link_analysis_detail,
-    external_link_analysis_status,
-    external_link_analyzer,
-    external_link_reanalyze,
-    customer_link_analyses_view,
-)
-
-urlpatterns += [
-    path("ready-models/<int:pk>/refresh/", external_catalog_refresh_request, name="external_catalog_refresh"),
-    path("link-analyzer/", external_link_analyzer, name="external_link_analyzer"),
-    path("link-analyzer/<uuid:token>/", external_link_analysis_detail, name="external_link_analysis"),
-    path("link-analyzer/<uuid:token>/status/", external_link_analysis_status, name="external_link_analysis_status"),
-    path("link-analyzer/<uuid:token>/reanalyze/", external_link_reanalyze, name="external_link_reanalyze"),
-    path("account/link-analyses/", customer_link_analyses_view, name="customer_link_analyses"),
-]
-# END PHASE 23 RESILIENT CATALOG AND LINK INTELLIGENCE URLS
+# Phase 49.2A: public external-model intake is intentionally disabled.
+# Historical catalog/link-analysis data and worker diagnostics are preserved for audit/rollback,
+# but customers cannot browse ready-models or submit external links anymore.
 
 # BEGIN PHASE 25 WORKER HEALTH URL
 from .views import link_analysis_worker_health_view
@@ -134,12 +108,10 @@ urlpatterns += [
 ]
 # END PHASE 25 WORKER HEALTH URL
 
-
-# BEGIN PHASE 26 REALTIME AND MANUAL REVIEW URLS
-from .views import external_link_manual_review_request, link_analysis_operations_snapshot_view
+# BEGIN PHASE 26 OPERATIONS SNAPSHOT URL
+from .views import link_analysis_operations_snapshot_view
 
 urlpatterns += [
-    path("link-analyzer/<uuid:token>/manual-review/", external_link_manual_review_request, name="external_link_manual_review"),
     path("internal/link-operations-snapshot/", link_analysis_operations_snapshot_view, name="link_operations_snapshot"),
 ]
-# END PHASE 26 REALTIME AND MANUAL REVIEW URLS
+# END PHASE 26 OPERATIONS SNAPSHOT URL
