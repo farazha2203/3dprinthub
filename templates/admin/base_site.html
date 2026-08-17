@@ -1,5 +1,16 @@
 {% extends "admin/base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title|default:"داشبورد" }} | مدیریت 3DPrintHub{% endblock %}
 
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/phase49_2b-design-system.css' %}?v=49.2.0">
+<link rel="stylesheet" href="{% static 'css/phase49_2b-admin.css' %}?v=49.2.0">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="icon" type="image/png" href="{% static 'img/brand/3dprinthublogo.png' %}">
+<link rel="apple-touch-icon" href="{% static 'img/brand/3dprinthublogo.png' %}">
+{% endblock %}
