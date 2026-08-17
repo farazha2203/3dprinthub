@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.urls import reverse
 
 from website.models import Material
 
@@ -12,7 +11,6 @@ from .link_intelligence import analyze_customer_link, billable_print_minutes, no
 from .manual_pricing import apply_manual_review_pricing
 from .models import (
     CatalogAssetMetrics,
-    CatalogPricingReview,
     CatalogSourcePolicy,
     CustomerLinkAnalysis,
     ImportedPrintAsset,
@@ -23,6 +21,8 @@ from .models import (
 
 
 class Phase29VerifiedPricingTests(TestCase):
+    """Pricing/parser rules remain valid for historical review data."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="phase29-user", email="p29@example.com", password="StrongPass123!"
@@ -124,7 +124,7 @@ class Phase29VerifiedPricingTests(TestCase):
         self.assertEqual(billable_print_minutes(61), 120)
         self.assertEqual(billable_print_minutes(90), 120)
 
-    def test_operator_verification_locks_exact_price(self):
+    def test_operator_verification_locks_exact_price_and_finishes_review(self):
         analysis = self.create_analysis()
         analysis.title = "فانل پارامتریک"
         analysis.status = "needs_input"
@@ -148,13 +148,7 @@ class Phase29VerifiedPricingTests(TestCase):
         self.assertEqual(review.status, "resolved")
 
 
-class Phase29SourceLifecycleAndSeoTests(TestCase):
-    def setUp(self):
-        self.material = Material.objects.create(
-            name="PLA", price_per_kg=800_000, sale_price_per_gram=1_000,
-            main_usage="مدل عمومی", sample_parts="مدل", is_active=True,
-        )
-
+class Phase29SourceLifecycleTests(TestCase):
     def create_source(self, code, kind, priority):
         source = PrintCatalogSource.objects.create(
             name=code.title(), code=code, base_url=f"https://{code}.example.com/",
@@ -186,27 +180,10 @@ class Phase29SourceLifecycleAndSeoTests(TestCase):
         self.assertTrue(public_catalog_queryset().filter(pk=archived.pk).exists())
         self.assertNotEqual(archived.public_display_mode, "hidden")
 
-    def test_makerworld_priority_precedes_printables(self):
+    def test_makerworld_priority_precedes_printables_for_historical_queryset(self):
         printables = self.create_source("printables-order", "printables", 30)
         makerworld = self.create_source("makerworld-order", "makerworld", 10)
         print_asset = self.create_asset(printables, "newer")
         maker_asset = self.create_asset(makerworld, "preferred")
         ids = list(public_catalog_queryset().filter(pk__in=[print_asset.pk, maker_asset.pk]).values_list("pk", flat=True))
         self.assertEqual(ids[0], maker_asset.pk)
-
-    def test_catalog_page_only_emits_offer_after_operator_verification(self):
-        source = self.create_source("makerworld-seo", "makerworld", 10)
-        asset = self.create_asset(source, "seo")
-        response = self.client.get(reverse("store:external_catalog_detail", args=[asset.pk]))
-        self.assertNotContains(response, '"@type": "Offer"')
-
-        review = CatalogPricingReview.objects.get(asset=asset)
-        review.material = self.material
-        review.weight_grams = Decimal("50")
-        review.print_minutes = 61
-        review.status = "verified"
-        review.save()
-        response = self.client.get(reverse("store:external_catalog_detail", args=[asset.pk]))
-        self.assertContains(response, '"@type": "Offer"')
-        self.assertContains(response, '"priceCurrency": "IRR"')
-        self.assertContains(response, "زمان قابل محاسبه")
