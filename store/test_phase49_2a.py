@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
 
+from website.order_intake import Phase10OrderForm
+
 from .epic49_catalog_profile import ProductCatalogProfile
 from .models import Category, Product
 
@@ -39,6 +41,12 @@ class Phase492APublicIntakeTests(TestCase):
         self.assertEqual(reverse("store:product_list"), "/store/")
         self.assertEqual(reverse("store:cart_detail"), "/store/cart/")
         self.assertEqual(reverse("store:checkout"), "/store/checkout/")
+
+    def test_customer_order_form_excludes_ready_catalog_mode(self):
+        form = Phase10OrderForm()
+        modes = {value for value, _label in form.fields["request_mode"].choices}
+        self.assertIn("new_part", modes)
+        self.assertNotIn("ready_catalog", modes)
 
 
 class Phase492AWindowsCatalogProductNavigationTests(TestCase):
