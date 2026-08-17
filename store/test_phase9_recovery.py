@@ -28,6 +28,6 @@ class Phase89RecoveryRegressionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "PLA Recovery Test")
 
-    def test_external_catalog_route_resolves_and_renders(self):
-        response = self.client.get(reverse("store:external_catalog"))
+    def test_active_store_route_resolves_and_renders(self):
+        response = self.client.get(reverse("store:product_list"))
         self.assertEqual(response.status_code, 200)
