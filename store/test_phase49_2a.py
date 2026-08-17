@@ -52,6 +52,13 @@ class Phase492APublicIntakeTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
 
+    def test_home_does_not_emit_retired_external_catalog_schema(self):
+        response = self.client.get(reverse("website:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "مدل‌های آماده چاپ سه‌بعدی")
+        self.assertNotContains(response, "مدل‌های آماده برای سفارش چاپ سه‌بعدی")
+        self.assertContains(response, '"@type": "ProfessionalService"')
+
     def test_all_templates_have_no_removed_external_intake_links(self):
         forbidden_tokens = (
             "store:external_catalog",
