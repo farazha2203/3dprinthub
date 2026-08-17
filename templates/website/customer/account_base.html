@@ -45,8 +45,7 @@
                         <a class="{% if request.resolver_match.url_name == 'partner_apply' %}active{% endif %}" href="{% url 'store:partner_apply' %}">درخواست همکاری</a>
                     {% endif %}
                     <a class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'store:notifications' %}">اعلان‌ها{% if unread_store_notifications %} ({{ unread_store_notifications }}){% endif %}</a>
-                    <a class="{% if request.resolver_match.url_name == 'customer_link_analyses' %}active{% endif %}" href="{% url 'store:customer_link_analyses' %}">تحلیل لینک‌ها و برآوردها</a>
-                    <a href="{% url 'store:my_orders' %}">سفارش‌های فروشگاه</a>
+                    <a href="{% url 'store:my_orders' %}">سفارش‌های خرید</a>
                     <a href="/#order">سفارش ساخت قطعه</a>
                     <a class="logout" href="{% url 'website:customer_logout' %}">خروج از حساب</a>
                 </nav>
