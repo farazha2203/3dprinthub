@@ -4,7 +4,6 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.urls import reverse
 from django.utils import timezone
 
 from website.models import Material
@@ -39,7 +38,9 @@ SAMPLE_HTML = b'''<!doctype html><html><head>
 }</script></head><body><a href="/downloads/bracket.stl">download</a></body></html>'''
 
 
-class Phase24QueueTests(TestCase):
+class Phase24HistoricalQueueCoreTests(TestCase):
+    """Historical worker/queue integrity without a public submission API."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="phase24-user",
@@ -196,52 +197,3 @@ class Phase24QueueTests(TestCase):
         analysis.status = "ready"
         analysis.save(update_fields=["status", "updated_at"])
         return analysis
-
-    def test_status_api_is_private_and_reports_progress(self):
-        analysis = self.make_analysis("status")
-        job = enqueue_link_analysis(analysis)
-        CustomerLinkAnalysisJob.objects.filter(pk=job.pk).update(
-            progress_percent=42,
-            progress_stage="parsing",
-            progress_message="extracting",
-        )
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("store:external_link_analysis_status", args=[analysis.public_token]))
-        self.assertEqual(response.status_code, 200)
-        payload = response.json()
-        self.assertEqual(payload["progress_percent"], 42)
-        self.assertEqual(payload["job_status"], "queued")
-
-
-class Phase24SubmissionTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username="phase24-submit-user",
-            email="phase24-submit@example.com",
-            password="StrongPass123!",
-        )
-
-    def test_anonymous_submit_redirects_to_login_without_creating_analysis(self):
-        response = self.client.post(
-            reverse("store:external_link_analyzer"),
-            {"source_url": "https://public.example.com/product"},
-        )
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("website:customer_login"), response.url)
-        self.assertFalse(CustomerLinkAnalysis.objects.exists())
-
-    def test_authenticated_submit_queues_without_running_remote_fetch_in_request(self):
-        self.client.force_login(self.user)
-        with patch(
-            "store.link_intelligence._assert_public_host",
-            side_effect=AssertionError("DNS must run in the worker, not in the web request"),
-        ):
-            response = self.client.post(
-                reverse("store:external_link_analyzer"),
-                {"source_url": "https://public.example.com/product"},
-            )
-        self.assertEqual(response.status_code, 302)
-        analysis = CustomerLinkAnalysis.objects.get(user=self.user)
-        self.assertEqual(analysis.status, "pending")
-        self.assertEqual(analysis.job.status, "queued")
-        self.assertEqual(CustomerLinkAnalysisAttempt.objects.count(), 0)
