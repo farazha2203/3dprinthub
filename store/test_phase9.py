@@ -1,20 +1,16 @@
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.urls import reverse
 
 from .catalog_classification import classify_external_asset
 from .catalog_site_adapters.common import CatalogCandidate, extract_file_formats, license_decision
 from .catalog_site_adapters.printables import PrintablesAdapter
 from .catalog_sync import public_catalog_queryset, save_external_record
 from .models import (
-    CatalogAssetMetrics,
     CatalogCategoryRule,
     CatalogSourcePolicy,
     Category,
-    ImportedPrintAsset,
     PrintCatalogSource,
 )
 
@@ -118,6 +114,8 @@ class ClassificationTests(Phase9Base):
 
 
 class PersistenceAndVisibilityTests(Phase9Base):
+    """Historical data/privacy contracts; no public external catalog route."""
+
     def _record(self):
         return {
             "source_url": "https://www.printables.com/model/123-industrial-gear-holder",
@@ -158,7 +156,7 @@ class PersistenceAndVisibilityTests(Phase9Base):
         with self.assertRaises(ValidationError):
             metrics.full_clean()
 
-    def test_public_queryset_returns_reference_before_commercial_approval(self):
+    def test_historical_queryset_state_changes_after_commercial_approval(self):
         asset, metrics = save_external_record(source=self.source, policy=self.policy, parsed=self._record(), rank=1)
         self.assertTrue(public_catalog_queryset().filter(pk=asset.pk).exists())
         self.assertEqual(asset.public_display_mode, "reference")
@@ -167,16 +165,10 @@ class PersistenceAndVisibilityTests(Phase9Base):
         asset.refresh_from_db()
         self.assertEqual(asset.public_display_mode, "printable")
 
-    def test_public_page_never_exposes_download_url(self):
+    def test_private_download_url_stays_server_side(self):
         asset, metrics = save_external_record(source=self.source, policy=self.policy, parsed=self._record(), rank=1)
-        asset.preview_image = SimpleUploadedFile("preview.jpg", b"fake-image", content_type="image/jpeg")
-        asset.save(update_fields=["preview_image"])
-        metrics.public_approved = True
-        metrics.save(update_fields=["public_approved"])
-        response = self.client.get(reverse("store:external_catalog_detail", args=[asset.pk]))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "https://files.printables.com/gear-holder.stl")
-        self.assertContains(response, "Printables Test")
+        self.assertTrue(asset.private_download_url)
+        self.assertFalse(hasattr(asset, "public_download_url"))
 
 
 class PolicyTests(Phase9Base):
