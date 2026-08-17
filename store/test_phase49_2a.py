@@ -52,17 +52,7 @@ class Phase492APublicIntakeTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
 
-    def test_active_templates_have_no_removed_external_intake_links(self):
-        active_templates = (
-            "templates/store/base.html",
-            "templates/store/product_list.html",
-            "templates/store/product_detail.html",
-            "templates/website/index.html",
-            "templates/website/partials/header.html",
-            "templates/website/partials/order-form.html",
-            "templates/website/customer/account_base.html",
-            "templates/website/customer/dashboard.html",
-        )
+    def test_all_templates_have_no_removed_external_intake_links(self):
         forbidden_tokens = (
             "store:external_catalog",
             "store:external_link_analyzer",
@@ -70,11 +60,14 @@ class Phase492APublicIntakeTests(TestCase):
             "/store/ready-models/",
             "ready-models-sitemap",
         )
-        base_dir = Path(settings.BASE_DIR)
-        for relative_path in active_templates:
-            source = (base_dir / relative_path).read_text(encoding="utf-8")
+        templates_root = Path(settings.BASE_DIR) / "templates"
+        template_paths = sorted(templates_root.rglob("*.html"))
+        self.assertTrue(template_paths, "No templates found for Phase 49.2A contract scan.")
+        for template_path in template_paths:
+            source = template_path.read_text(encoding="utf-8")
+            relative_path = template_path.relative_to(Path(settings.BASE_DIR))
             for token in forbidden_tokens:
-                with self.subTest(template=relative_path, token=token):
+                with self.subTest(template=str(relative_path), token=token):
                     self.assertNotIn(token, source)
 
     def test_customer_order_form_excludes_ready_catalog_mode(self):
