@@ -23,26 +23,24 @@ class Phase46HomeExperienceContractTests(SimpleTestCase):
         self.assertIn('data-p46-tab="parts"', source)
         self.assertNotIn("<table", source)
 
-    def test_ready_product_order_supports_code_and_list(self):
-        form = self.source("website/order_intake.py")
+    def test_retired_ready_catalog_picker_is_not_public(self):
         template = self.source("templates/website/partials/order-form.html")
-        self.assertIn("ready_catalog_code = forms.CharField", form)
-        self.assertIn("resolve_ready_order_asset", form)
-        self.assertIn("data-p46-ready-picker", template)
-        self.assertIn("form.ready_catalog_code", template)
+        self.assertNotIn("data-p46-ready-picker", template)
+        self.assertNotIn("form.ready_catalog_code", template)
+        self.assertNotIn('value="ready_catalog"', template)
 
     def test_phase46_does_not_add_model_fields_or_migration(self):
         migration_dir = ROOT / "website" / "migrations"
         self.assertFalse(any(path.name.startswith("0020_phase46") for path in migration_dir.glob("*.py")))
         self.assertIn('return f"PH-{pk:06d}"', self.source("store/catalog_sync.py"))
 
-    def test_catalog_surfaces_order_code(self):
+    def test_retired_public_catalog_templates_are_absent(self):
         for relative in (
             "templates/website/partials/external-models-home.html",
             "templates/store/external_catalog.html",
             "templates/store/external_catalog_detail.html",
         ):
-            self.assertIn("PH-", self.source(relative))
+            self.assertFalse((ROOT / relative).exists(), relative)
 
     def test_new_static_assets_are_loaded(self):
         source = self.source("templates/website/index.html")
