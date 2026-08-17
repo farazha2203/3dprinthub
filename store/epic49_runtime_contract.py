@@ -5,21 +5,32 @@ from django.urls import reverse
 
 def install() -> None:
     """Install small runtime properties without rewriting mature model modules."""
+    from store.models import Product
     from website.models import HomepageHeroSlide
 
     def target_url(self):
+        """Resolve the canonical active Store URL without trusting stale relation cache.
+
+        Catalog Center may replace a legacy/unicode slug with the ASCII public slug in
+        the same request that creates/updates a homepage slide.  Read Product by id so
+        a cached relation cannot emit the previous slug.  Phase 49.2A retired the
+        external ready-model detail route, therefore a legacy slide without an active
+        Product falls back to the live Store list instead of a removed route.
+        """
         try:
-            product = self.asset.product
+            product_id = getattr(self.asset, "product_id", None)
         except Exception:
-            product = None
-        if product is not None and getattr(product, "is_active", False):
+            product_id = None
+        if product_id:
             try:
-                return product.get_absolute_url()
+                product = Product.objects.filter(pk=product_id, is_active=True).first()
             except Exception:
-                pass
-        # Phase 49.2A retired the public external ready-model detail route.
-        # A legacy hero asset without a live Product now lands on the active
-        # store instead of generating a broken reverse()/404 target.
+                product = None
+            if product is not None:
+                try:
+                    return product.get_absolute_url()
+                except Exception:
+                    pass
         return reverse("store:product_list")
 
     HomepageHeroSlide.target_url = property(target_url)
