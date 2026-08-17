@@ -3,6 +3,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -24,7 +25,7 @@ from store.models import (
     MarketPricingSetting,
     PrintCatalogSource,
 )
-from website.models import CustomerReusableModel, Material, OrderIntakeDetail
+from website.models import CustomerReusableModel, Material
 from website.order_intake import Phase10OrderForm
 
 
@@ -110,11 +111,11 @@ class Phase10CatalogAutomationTests(TestCase):
             requested_limit=200,
         )
 
-    def test_manual_queue_creates_nonblocking_job(self):
-        run = queue_catalog_source(schedule=self.schedule, trigger="manual")
-        self.assertEqual(run.status, "queued")
-        self.assertTrue(CatalogQueuedJob.objects.filter(run=run, trigger="manual").exists())
-
+    def test_manual_external_queue_is_disabled_in_phase49_2a(self):
+        with self.assertRaises(ValidationError):
+            queue_catalog_source(schedule=self.schedule, trigger="manual")
+        self.assertFalse(CatalogQueuedJob.objects.exists())
+        self.assertFalse(CatalogSyncRun.objects.exists())
 
     def test_admin_automation_dashboard_renders(self):
         admin_user = User.objects.create_superuser(
@@ -124,12 +125,10 @@ class Phase10CatalogAutomationTests(TestCase):
         response = self.client.get(reverse("admin:store_catalogautomationdashboard_changelist"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "داشبورد همگام‌سازی")
-        self.assertContains(response, "صف همه منابع")
-        self.assertContains(response, "پردازش صف الآن")
         self.assertContains(response, "بروزرسانی نرخ دلار")
         self.assertContains(response, "بروزرسانی Bambu و متریال")
 
-    def test_admin_can_queue_single_source_from_dashboard_button(self):
+    def test_admin_external_queue_button_does_not_create_run(self):
         admin_user = User.objects.create_superuser(
             username="queue-admin", email="queue@example.com", password="StrongPass123!"
         )
@@ -141,11 +140,8 @@ class Phase10CatalogAutomationTests(TestCase):
             )
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(
-            CatalogSyncRun.objects.filter(
-                source=self.source, status="queued"
-            ).exists()
-        )
+        self.assertFalse(CatalogSyncRun.objects.filter(source=self.source, status="queued").exists())
+        self.assertFalse(CatalogQueuedJob.objects.exists())
 
     def test_admin_can_refresh_manual_fx_from_dashboard_button(self):
         ExchangeRateProvider.objects.filter(code="manual-usd").delete()
@@ -171,7 +167,7 @@ class Phase10CatalogAutomationTests(TestCase):
             ).exists()
         )
 
-    def test_homepage_queryset_contains_only_safe_public_asset(self):
+    def test_homepage_external_catalog_queryset_is_disabled(self):
         asset = ImportedPrintAsset.objects.create(
             source=self.source,
             source_url="https://www.printables.com/model/1",
@@ -189,7 +185,7 @@ class Phase10CatalogAutomationTests(TestCase):
             downloads_count=1000,
         )
         CatalogAssetPublication.objects.create(metrics=metrics, show_on_homepage=True)
-        self.assertEqual(list(homepage_catalog_assets(slider=True)), [asset])
+        self.assertEqual(list(homepage_catalog_assets(slider=True)), [])
 
 
 @override_settings(PRIVATE_MEDIA_ROOT="/tmp/phase10-private-tests")
@@ -229,13 +225,13 @@ class Phase10OrderIntakeTests(TestCase):
         self.assertEqual(order.reference_photos.count(), 4)
         self.assertEqual(order.intake_detail.usage_environment, "outdoor")
 
-
-    def test_invalid_ready_catalog_asset_is_rejected(self):
+    def test_ready_catalog_mode_is_not_a_valid_customer_choice(self):
         data = dict(self.base_data)
         data.update({"request_mode": "ready_catalog", "ready_catalog_asset_id": 999999})
         form = Phase10OrderForm(data=data, files={}, user=self.user)
         self.assertFalse(form.is_valid())
-        self.assertIn("قابل سفارش عمومی نیست", str(form.errors))
+        self.assertIn("request_mode", form.errors)
+        self.assertIn("ready_catalog", str(form.errors))
 
     def test_private_model_download_is_staff_only(self):
         saved = CustomerReusableModel.objects.create(
