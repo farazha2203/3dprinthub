@@ -25,7 +25,7 @@
 .p45-hero__scroll{position:absolute;z-index:6;left:50%;bottom:1.05rem;translate:-50% 0;display:flex;align-items:center;gap:.55rem;color:rgba(255,255,255,.76);font-size:.65rem;font-weight:850}
 .p45-hero__scroll i{display:block;width:32px;height:1px;background:linear-gradient(90deg,#fff,transparent)}
 .p45-hero__fallback{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#19232d 0,#070b10 58%,#030507 100%)}
-.p45-hero__fallback img{width:min(58vw,680px);height:auto;max-height:55vh;object-fit:contain;filter:drop-shadow(0 25px 65px rgba(0,0,0,.35))}
+.p45-hero__fallback img,.p45-hero__fallback-logo{display:block;width:min(28vw,320px);height:auto;max-width:320px;max-height:320px;object-fit:contain;filter:drop-shadow(0 25px 65px rgba(0,0,0,.35))}
 
 .p45-intro{position:relative;background:#f5f7f9;color:#101820;padding:clamp(4.5rem,8vw,8rem) 1.1rem;overflow:hidden}
 .p45-intro::before{content:"";position:absolute;inset:auto -8vw -20vw auto;width:42vw;height:42vw;border-radius:50%;background:radial-gradient(circle,rgba(22,163,74,.09),transparent 68%);pointer-events:none}
