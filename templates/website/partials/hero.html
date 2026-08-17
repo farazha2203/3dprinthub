@@ -45,7 +45,7 @@
       <div class="p45-hero__counter" aria-hidden="true"><span data-p45-current>01</span><i></i><span>{{ homepage_hero_slides|length|stringformat:"02d" }}</span></div>
     {% else %}
       <div class="p45-hero__fallback">
-        <img src="{% static 'img/brand/logo-full.png' %}" alt="3DPrintHub" width="720" height="360">
+        <img class="p45-hero__fallback-logo" src="{% static 'img/brand/logo-full.png' %}" alt="3DPrintHub" width="320" height="320" style="width:min(28vw,320px);max-width:320px;max-height:320px;height:auto;object-fit:contain">
       </div>
     {% endif %}
 
