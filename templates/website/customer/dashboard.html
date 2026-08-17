@@ -6,18 +6,17 @@
   <div>
     <span>حساب کاربری 3DprintHub</span>
     <h1>سلام {{ profile.first_name|default:'دوست عزیز' }}، خوش آمدید</h1>
-    <p>سفارش‌های چاپ سفارشی، خریدهای فروشگاه، پرداخت‌ها و آدرس‌های ارسال را از اینجا مدیریت کنید.</p>
+    <p>همه سفارش‌های خرید و ساخت، پرداخت‌ها و آدرس‌های ارسال را از اینجا مدیریت کنید.</p>
   </div>
   <div class="flex flex-wrap gap-3">
-    <a class="customer-button secondary" href="{% url 'store:external_link_analyzer' %}">تحلیل لینک و برآورد قیمت</a>
-    <a class="customer-button secondary" href="{% url 'store:product_list' %}">مشاهده فروشگاه</a>
+    <a class="customer-button secondary" href="{% url 'store:product_list' %}">مشاهده محصولات</a>
     <a class="customer-button primary" href="/#order">ثبت سفارش ساخت</a>
   </div>
 </div>
 
 <div class="customer-stats">
   <article><span>سفارش ساخت</span><strong>{{ custom_stats.all }}</strong><small>{{ custom_stats.active }} سفارش فعال</small></article>
-  <article><span>سفارش فروشگاه</span><strong>{{ store_stats.all }}</strong><small>{{ store_stats.active }} در حال انجام</small></article>
+  <article><span>سفارش خرید</span><strong>{{ store_stats.all }}</strong><small>{{ store_stats.active }} در حال انجام</small></article>
   <article><span>در انتظار پرداخت</span><strong>{{ store_stats.awaiting_payment }}</strong><small>نیازمند اقدام شما</small></article>
   <article><span>خرید پرداخت‌شده</span><strong>{{ paid_total|intcomma }}</strong><small>تومان</small></article>
 </div>
@@ -25,7 +24,7 @@
 <div class="grid xl:grid-cols-3 gap-6 mt-6">
   <section class="customer-card xl:col-span-2">
     <div class="customer-card-head">
-      <div><h2>آخرین سفارش‌های فروشگاه</h2><p>وضعیت تولید، پرداخت و ارسال</p></div>
+      <div><h2>آخرین سفارش‌های خرید</h2><p>وضعیت تولید، پرداخت و ارسال</p></div>
       <a href="{% url 'store:my_orders' %}">مشاهده همه</a>
     </div>
     <div class="space-y-3">
@@ -35,7 +34,7 @@
           <div><strong>{{ order.total_amount|intcomma }} تومان</strong><span>{{ order.get_status_display }} / {{ order.get_payment_status_display }}</span></div>
         </a>
       {% empty %}
-        <div class="customer-empty">هنوز خریدی از فروشگاه ثبت نشده است.</div>
+        <div class="customer-empty">هنوز سفارش خریدی ثبت نشده است.</div>
       {% endfor %}
     </div>
   </section>
@@ -58,7 +57,7 @@
 
 <section class="customer-card mt-6">
   <div class="customer-card-head">
-    <div><h2>سفارش‌های ساخت و مهندسی معکوس</h2><p>درخواست‌های ثبت‌شده از فرم اصلی سایت</p></div>
+    <div><h2>سفارش‌های ساخت و مهندسی معکوس</h2><p>درخواست‌های ثبت‌شده مستقیم در 3DprintHub</p></div>
     <a href="/#order">سفارش جدید</a>
   </div>
   <div class="customer-table-wrap">
