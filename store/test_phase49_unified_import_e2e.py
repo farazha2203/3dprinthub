@@ -93,11 +93,11 @@ class Epic49UnifiedImportE2ETests(TestCase):
             "homepage_slider_enabled": True,
             "homepage_slider_image_url": remote,
             "homepage_slider_sort_order": 11,
-            "homepage_slider_title_fa": "Hero اختصاصی چرخ‌دنده Epic49",
-            "homepage_slider_description_fa": "توضیح کاملاً مستقل مخصوص Hero",
-            "homepage_slider_alt_text": "Alt اختصاصی Hero Epic49",
+            "homepage_slider_title_fa": "عنوان اختصاصی چرخ‌دنده آزمایشی",
+            "homepage_slider_description_fa": "توضیح کاملاً مستقل مخصوص اسلایدر برای معرفی و خرید محصول",
+            "homepage_slider_alt_text": "تصویر اختصاصی چرخ‌دنده برای خرید و سفارش محصول",
             "homepage_slider_button_text": "مشاهده چرخ‌دنده",
-            "homepage_slider_focus_keyword": "چرخ دنده Hero",
+            "homepage_slider_focus_keyword": "خرید چرخ دنده سه بعدی",
             "homepage_slider_transition_effect": "wedding_dissolve",
             "homepage_slider_transition_duration_ms": 1900,
             "homepage_slider_display_duration_ms": 8700,
@@ -145,18 +145,18 @@ class Epic49UnifiedImportE2ETests(TestCase):
 
         self.assertEqual(product.title, "چرخ‌دنده تست Epic49")
         self.assertEqual(product.meta_title, "خرید چرخ‌دنده تست Epic49")
-        self.assertEqual(profile.homepage_slider_title_fa, "Hero اختصاصی چرخ‌دنده Epic49")
-        self.assertEqual(profile.homepage_slider_description_fa, "توضیح کاملاً مستقل مخصوص Hero")
-        self.assertEqual(profile.homepage_slider_alt_text, "Alt اختصاصی Hero Epic49")
-        self.assertEqual(profile.homepage_slider_focus_keyword, "چرخ دنده Hero")
+        self.assertEqual(profile.homepage_slider_title_fa, "عنوان اختصاصی چرخ‌دنده آزمایشی")
+        self.assertEqual(profile.homepage_slider_description_fa, "توضیح کاملاً مستقل مخصوص اسلایدر برای معرفی و خرید محصول")
+        self.assertEqual(profile.homepage_slider_alt_text, "تصویر اختصاصی چرخ‌دنده برای خرید و سفارش محصول")
+        self.assertEqual(profile.homepage_slider_focus_keyword, "خرید چرخ دنده سه بعدی")
         self.assertEqual(profile.homepage_slider_transition_effect, "wedding_dissolve")
         self.assertEqual(profile.homepage_slider_transition_duration_ms, 1900)
         self.assertEqual(profile.homepage_slider_display_duration_ms, 8700)
         self.assertEqual(profile.last_modified_by, "employee-e2e")
 
-        self.assertEqual(slide.title_override, "Hero اختصاصی چرخ‌دنده Epic49")
-        self.assertEqual(slide.description, "توضیح کاملاً مستقل مخصوص Hero")
-        self.assertEqual(slide.image_alt_text, "Alt اختصاصی Hero Epic49")
+        self.assertEqual(slide.title_override, "عنوان اختصاصی چرخ‌دنده آزمایشی")
+        self.assertEqual(slide.description, "توضیح کاملاً مستقل مخصوص اسلایدر برای معرفی و خرید محصول")
+        self.assertEqual(slide.image_alt_text, "تصویر اختصاصی چرخ‌دنده برای خرید و سفارش محصول")
         self.assertEqual(slide.transition_effect, "wedding_dissolve")
         self.assertEqual(slide.transition_duration_ms, 1900)
         self.assertEqual(slide.display_duration_ms, 8700)
