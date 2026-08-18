@@ -33,8 +33,34 @@ Desktop uses a branded sticky sidebar; tablet/mobile use an accessible off-canva
 ## Asset installer
 `scripts/install_phase49_2b_brand_assets.ps1` validates the exact final logo SHA-256 and copies it unchanged. It first verifies whether all six required IRANSans FaNum WOFF files already exist and are non-empty. When they are already present, they are reused and **7-Zip is not required**. Archive extraction and 7-Zip are only required if one or more required font files are actually missing.
 
+## Managed homepage Hero hotfix
+The Phase45 Hero was still coupled to the retired public External Catalog and its Admin form only copied an image URL after manually clicking the saved gallery. Selecting an asset did not prefill title, description, group or SEO alt text, and a newly-created slide was not initially approved. This made the homepage fall back to the brand logo when no active slide existed.
+
+Phase 49.2B fixes this without a schema migration:
+- `website/phase49_2b_hero_hotfix.py` installs runtime fallback properties and a `pre_save` safety net for `HomepageHeroSlide`.
+- Title fallback order uses Persian imported title, Store Product title and source title.
+- Description fallback uses Persian short description, Store Product short description and imported descriptions.
+- Group fallback prefers the Store Product category and then catalog/source metadata.
+- SEO image alt is generated from the resolved product title/group when left blank.
+- Image resolution prefers the imported local preview, then remote/catalog images and Store Product media.
+- Hero targets now resolve only to an active Store Product or the Store product list. `external_catalog_detail` is not a valid Hero target anymore.
+- Staff-only endpoint `website:hero_slide_prefill` supplies immediate Admin suggestions after selecting an asset.
+- `static/js/admin-phase45-hero.js` listens to the Django Select2 asset selector, fills the Hero fields, enables the new-slide approval checkbox and renders candidate image choices before a first save.
+- `templates/admin/website/homepageheroslide/change_form.html` loads the hotfix JS with an explicit cache version.
+- The public Hero renders `effective_description` and `target_url`; an active slide with no image does not masquerade as the site logo.
+
+Existing inactive slides remain intentionally inactive until an administrator approves them; no data row is silently published by this hotfix.
+
+## Admin login desktop hotfix
+The first 49.2B CSS constrained the entire authentication content wrapper to `460px`, which made `/admin/login/` look like a mobile layout on desktop. The fix restores a full-width desktop authentication shell and constrains only the login card to approximately `520px`. The Admin CSS cache version is bumped to `49.2.1`. Internal Admin pages are not affected by this login-only layout fix.
+
 ## Database
-No model or data migration is part of Phase 49.2B.
+No model or data migration is part of Phase 49.2B. The Hero hotfix uses runtime properties/signals and existing fields only.
 
 ## Validation gate
 Before production: `manage.py check`, no pending migrations, Phase49.2B tests, website/store/catalog_bridge suites, full suite, desktop/mobile visual review of Admin and Customer Portal, explicit user approval. Production deployment remains blocked until those checks pass.
+
+Focused regression tests now include:
+- `website.test_phase49_2b_master_ui`
+- `website.test_phase49_2b_hero_login_hotfix`
+- `website.test_phase45_homepage_hero`
