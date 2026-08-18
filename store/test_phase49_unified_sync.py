@@ -19,7 +19,7 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
             email="epic49@example.com",
             password="StrongTestPass123!",
         )
-        cls.category = Category.objects.create(name="Epic49 Unified", slug="epic49-unified")
+        cls.category = Category.objects.create(name="قطعات تست Epic49", slug="epic49-unified")
         cls.product = Product.objects.create(
             category=cls.category,
             title="محصول Epic49",
@@ -51,7 +51,7 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
             asset=cls.asset,
             remote_url="https://example.com/images/epic49-hero.jpg",
             image="store/imported-models/gallery/epic49-hero.jpg",
-            alt_text="تصویر Hero Epic49",
+            alt_text="تصویر اسلایدر Epic49",
             is_primary=True,
             is_selected=True,
             sort_order=0,
@@ -60,7 +60,7 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def _payload(self, *, batch="batch-a", source_hash="hash-a", product_revision=0, slider_revision=0, title="Hero A"):
+    def _payload(self, *, batch="batch-a", source_hash="hash-a", product_revision=0, slider_revision=0, title="عنوان اسلایدر الف"):
         return {
             "desktop_product_id": 77,
             "batch_uuid": batch,
@@ -81,15 +81,15 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
             "homepage_slider_image_url": self.image.remote_url,
             "homepage_slider_sort_order": 25,
             "homepage_slider_title_fa": title,
-            "homepage_slider_description_fa": "توضیح اختصاصی Hero",
-            "homepage_slider_alt_text": "Alt اختصاصی Hero",
+            "homepage_slider_description_fa": "توضیح اختصاصی اسلایدر برای خرید محصول",
+            "homepage_slider_alt_text": "تصویر اختصاصی اسلایدر محصول",
             "homepage_slider_button_text": "مشاهده قطعه",
-            "homepage_slider_focus_keyword": "Hero Epic49",
+            "homepage_slider_focus_keyword": "خرید چاپ سه بعدی",
             "homepage_slider_transition_effect": "wedding_dissolve",
             "homepage_slider_transition_duration_ms": 1800,
             "homepage_slider_display_duration_ms": 8500,
-            "seo_title_fa": "SEO محصول Epic49",
-            "seo_description_fa": "توضیح SEO محصول Epic49",
+            "seo_title_fa": "خرید محصول Epic49",
+            "seo_description_fa": "توضیح سئو فارسی برای خرید محصول Epic49",
             "operator_name": "employee-01",
         }
 
@@ -110,7 +110,7 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
         self.assertEqual(slide.transition_effect, "wedding_dissolve")
         self.assertEqual(slide.transition_duration_ms, 1800)
         self.assertEqual(slide.display_duration_ms, 8500)
-        self.assertEqual(profile.homepage_slider_focus_keyword, "Hero Epic49")
+        self.assertEqual(profile.homepage_slider_focus_keyword, "خرید چاپ سه بعدی")
         self.assertEqual(first["product_revision"], 1)
         self.assertEqual(first["slider_revision"], 1)
 
@@ -127,14 +127,14 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
             source_hash="hash-b",
             product_revision=1,
             slider_revision=1,
-            title="Hero B",
+            title="عنوان اسلایدر ب",
         ))
         third = sync_epic49_publish_options(self.asset)
         profile.refresh_from_db()
         slide.refresh_from_db()
         self.assertEqual(profile.sync_revision, 2)
         self.assertEqual(slide.sync_revision, 2)
-        self.assertEqual(slide.title_override, "Hero B")
+        self.assertEqual(slide.title_override, "عنوان اسلایدر ب")
         self.assertEqual(third["product_revision"], 2)
         self.assertEqual(third["slider_revision"], 2)
 
