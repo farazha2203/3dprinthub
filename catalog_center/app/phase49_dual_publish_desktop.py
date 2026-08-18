@@ -4,7 +4,7 @@ import json
 from urllib.parse import urlsplit
 from tkinter import messagebox, ttk
 
-from .epic49_local_publish import import_batch_to_local_django
+from .epic49_local_publish import import_batch_to_local_django, running_as_portable
 from .v8_features import ack_item_confirms_publish
 
 
@@ -82,21 +82,30 @@ def install(workspace_class) -> None:
         local = ttk.Frame(targets, padding=8)
         local.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
         ttk.Label(local, text="🧪 تست روی همین کامپیوتر", style="Header.TLabel").pack(anchor="w")
-        ttk.Label(
-            local,
-            text=(
+        portable = running_as_portable()
+        local_help = (
+            "نسخه Portable کارمندان: Local Test غیرفعال است؛ این قابلیت فقط روی سیستم توسعه فعال می‌شود."
+            if portable
+            else (
                 "Batch استاندارد 8.5 مستقیماً وارد Django لوکال می‌شود. "
                 "هیچ FTP، Bridge یا تغییری روی سایت اصلی انجام نمی‌شود."
-            ),
+            )
+        )
+        ttk.Label(
+            local,
+            text=local_help,
             style="SubHeader.TLabel",
             wraplength=580,
         ).pack(anchor="w", pady=(3, 8))
-        ttk.Button(
+        local_button = ttk.Button(
             local,
-            text=LOCAL_BUTTON_TEXT,
+            text=LOCAL_BUTTON_TEXT if not portable else "🧪 Local Test — فقط نسخه توسعه",
             command=self.publish_to_local_computer,
             style="Primary.TButton",
-        ).pack(anchor="w")
+        )
+        local_button.pack(anchor="w")
+        if portable:
+            local_button.state(["disabled"])
 
         production = ttk.Frame(targets, padding=8)
         production.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
@@ -124,6 +133,13 @@ def install(workspace_class) -> None:
         ).pack(anchor="w")
 
     def publish_to_local_computer(self):
+        if running_as_portable():
+            messagebox.showwarning(
+                "3DPrintHub — Local Test",
+                "Local Test در نسخه Portable کارمندان غیرفعال است. این دکمه فقط در نسخه Source/Developer اجرا می‌شود.",
+                parent=self,
+            )
+            return
         if not self.queue_for_publish(notify=False):
             return
         if not messagebox.askyesno(
