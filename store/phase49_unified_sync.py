@@ -33,6 +33,20 @@ def _actor(data: dict) -> str:
     return str(data.get("operator_name") or data.get("operator_id") or "desktop")[:120]
 
 
+def _same_batch(profile, data: dict) -> bool:
+    if profile is None:
+        return False
+    incoming_batch = str(data.get("batch_uuid") or "").strip()
+    incoming_hash = str(data.get("source_hash") or "").strip()
+    if not incoming_batch:
+        return False
+    if str(profile.batch_uuid or "") != incoming_batch:
+        return False
+    if incoming_hash and str(profile.source_hash or "") != incoming_hash:
+        return False
+    return str(profile.last_modified_source or "") == "desktop"
+
+
 def _assert_revision(*, entity: str, current_revision: int, expected_revision: int, last_source: str) -> None:
     current_revision = max(0, int(current_revision or 0))
     expected_revision = max(0, int(expected_revision or 0))
@@ -42,9 +56,6 @@ def _assert_revision(*, entity: str, current_revision: int, expected_revision: i
                 f"EPIC49_SYNC_CONFLICT entity={entity} expected={expected_revision} current={current_revision}"
             )
         return
-    # Legacy/no-revision desktop batches are still accepted unless a human Admin
-    # has edited this record. In that case forcing a refresh is safer than a silent
-    # overwrite of the manager's newer site-side changes.
     if current_revision > 1 and str(last_source or "") == "admin":
         raise ValidationError(
             f"EPIC49_SYNC_CONFLICT entity={entity} expected=refresh current={current_revision} source=admin"
@@ -53,7 +64,7 @@ def _assert_revision(*, entity: str, current_revision: int, expected_revision: i
 
 def _check_product_revision(product, data: dict) -> None:
     profile = ProductCatalogProfile.objects.filter(product=product).first()
-    if profile is None:
+    if profile is None or _same_batch(profile, data):
         return
     _assert_revision(
         entity=f"product:{product.pk}",
@@ -73,6 +84,9 @@ def _check_slider_revision(asset, data: dict) -> None:
     slide = _existing_slide(asset)
     if slide is None:
         return
+    profile = ProductCatalogProfile.objects.filter(product_id=getattr(asset, "product_id", None)).first()
+    if _same_batch(profile, data):
+        return
     _assert_revision(
         entity=f"hero:{slide.pk}",
         current_revision=getattr(slide, "sync_revision", 1),
@@ -88,8 +102,6 @@ def _selected_image(asset, requested: str):
     row = asset.images.filter(remote_url=requested).order_by("sort_order", "id").first()
     if row is not None:
         return row
-    # A newer desktop may send the already-synced server media URL. Match it to
-    # the imported image filename when possible instead of storing a loose URL.
     for candidate in asset.images.exclude(image="").order_by("sort_order", "id")[:80]:
         try:
             local_url = str(candidate.image.url or "").strip()
@@ -98,6 +110,25 @@ def _selected_image(asset, requested: str):
         if local_url and (requested == local_url or requested.endswith(local_url)):
             return candidate
     return None
+
+
+def _slide_state(slide) -> tuple:
+    if slide is None:
+        return ()
+    return (
+        getattr(slide, "selected_asset_image_id", None),
+        str(slide.image_url or ""),
+        str(slide.image_alt_text or ""),
+        str(slide.title_override or ""),
+        str(slide.group_title or ""),
+        str(slide.description or ""),
+        str(slide.button_text or ""),
+        int(slide.sort_order or 0),
+        str(slide.transition_effect or ""),
+        int(slide.transition_duration_ms or 0),
+        int(slide.display_duration_ms or 0),
+        bool(slide.is_active),
+    )
 
 
 def apply_homepage_slider(product, asset, data: dict) -> dict:
@@ -110,11 +141,12 @@ def apply_homepage_slider(product, asset, data: dict) -> dict:
 
     if not enabled:
         if slide is not None:
-            changed = bool(slide.is_active)
+            before = _slide_state(slide)
             slide.is_active = False
             slide.last_modified_source = "desktop"
             slide.last_modified_by = actor
-            if changed:
+            after = _slide_state(slide)
+            if before != after:
                 slide.sync_revision = max(1, int(getattr(slide, "sync_revision", 1) or 1)) + 1
             slide.save()
         existing.exclude(pk=getattr(slide, "pk", None)).update(is_active=False)
@@ -160,9 +192,12 @@ def apply_homepage_slider(product, asset, data: dict) -> dict:
         defaults["sync_revision"] = 1
         slide = HomepageHeroSlide.objects.create(asset=asset, **defaults)
     else:
+        before = _slide_state(slide)
         for key, value in defaults.items():
             setattr(slide, key, value)
-        slide.sync_revision = max(1, int(getattr(slide, "sync_revision", 1) or 1)) + 1
+        after = _slide_state(slide)
+        if before != after:
+            slide.sync_revision = max(1, int(getattr(slide, "sync_revision", 1) or 1)) + 1
         slide.save()
     existing.exclude(pk=slide.pk).update(is_active=False)
     return {
@@ -190,6 +225,10 @@ def sync_epic49_publish_options(asset) -> dict:
         return {}
 
     product = asset.product
+    profile_before = ProductCatalogProfile.objects.filter(product=product).first()
+    same_operation = _same_batch(profile_before, data)
+    revision_before = int(getattr(profile_before, "sync_revision", 0) or 0)
+
     _check_product_revision(product, data)
     _check_slider_revision(asset, data)
 
@@ -197,12 +236,13 @@ def sync_epic49_publish_options(asset) -> dict:
     profile = ProductCatalogProfile.objects.filter(product=product).first()
     actor = _actor(data)
     if profile is not None:
-        # sync_catalog_profile already increments exactly once; this update only
-        # records who initiated the desktop operation.
-        ProductCatalogProfile.objects.filter(pk=profile.pk).update(
-            last_modified_source="desktop",
-            last_modified_by=actor,
-        )
+        updates = {
+            "last_modified_source": "desktop",
+            "last_modified_by": actor,
+        }
+        if same_operation and revision_before:
+            updates["sync_revision"] = revision_before
+        ProductCatalogProfile.objects.filter(pk=profile.pk).update(**updates)
         profile.refresh_from_db()
         result["product_revision"] = int(profile.sync_revision or 1)
     else:
@@ -274,8 +314,6 @@ def install() -> None:
     publish.apply_homepage_slider = apply_homepage_slider
     publish.sync_epic49_publish_options = sync_epic49_publish_options
 
-    # epic49_publish_signals imported the callable into its module namespace.
-    # Rebind it too so post_save uses the same optimistic-concurrency contract.
     try:
         from . import epic49_publish_signals
 
