@@ -33,23 +33,29 @@ class Epic49CatalogMigrationAuditTests(TestCase):
             code="epic49-audit-source",
             base_url="https://example.com/",
         )
+
+        # Create without desktop payload so the normal Epic49 post_save synchronizer
+        # cannot mutate Product/Profile before this test audits the read-only command.
         cls.asset = ImportedPrintAsset.objects.create(
             source=cls.source,
             source_url="https://example.com/audit-product",
             external_id="AUDIT-ASSET-001",
             title="Audit Imported Asset",
             product=cls.product,
-            source_payload={
-                "desktop_catalog_v85": {
-                    "seo_title_fa": "عنوان جدید پیشنهادی Audit",
-                    "seo_description_fa": "توضیح جدید پیشنهادی Audit",
-                    "keywords_json": ["کلید جدید"],
-                    "hashtags_fa_json": ["#audit", "#3dprint"],
-                    "homepage_slider_enabled": True,
-                    "homepage_slider_sort_order": 12,
-                }
-            },
+            source_payload={},
         )
+        payload = {
+            "desktop_catalog_v85": {
+                "seo_title_fa": "عنوان جدید پیشنهادی Audit",
+                "seo_description_fa": "توضیح جدید پیشنهادی Audit",
+                "keywords_json": ["کلید جدید"],
+                "hashtags_fa_json": ["#audit", "#3dprint"],
+                "homepage_slider_enabled": True,
+                "homepage_slider_sort_order": 12,
+            }
+        }
+        ImportedPrintAsset.objects.filter(pk=cls.asset.pk).update(source_payload=payload)
+        cls.asset.source_payload = payload
 
     def test_command_reports_changes_without_mutating_product_or_profile(self):
         before = Product.objects.values(
