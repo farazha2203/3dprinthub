@@ -17,7 +17,7 @@ from .models import HomepageHeroSlide
 
 # Phase 49.2B hotfix: keep the existing database schema intact while making the
 # managed homepage hero use the Store/Product data that Catalog Center already
-# imported.  The public External Catalog was retired in Phase 49.2A and must not
+# imported. The public External Catalog was retired in Phase 49.2A and must not
 # be used as a hero target anymore.
 
 
@@ -39,12 +39,40 @@ def _product_for(asset: ImportedPrintAsset | None):
         return None
 
 
+def _desktop_data(asset: ImportedPrintAsset | None) -> dict:
+    if asset is None:
+        return {}
+    try:
+        payload = asset.source_payload or {}
+        data = payload.get("desktop_catalog_v85") if isinstance(payload, dict) else {}
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _slider_seo(asset: ImportedPrintAsset | None) -> dict:
+    """Reuse the Catalog Center 8.7.1 operator/AI slider SEO resolver."""
+    if asset is None:
+        return {}
+    try:
+        from store.epic49_publish_options import _homepage_slider_seo
+
+        data = _desktop_data(asset)
+        if not data:
+            return {}
+        return _homepage_slider_seo(data, _product_for(asset))
+    except Exception:
+        return {}
+
+
 def _asset_title(asset: ImportedPrintAsset | None) -> str:
     if asset is None:
         return ""
     product = _product_for(asset)
+    slider = _slider_seo(asset)
     return (
-        str(getattr(asset, "persian_title", "") or "").strip()
+        str(slider.get("title_fa") or "").strip()
+        or str(getattr(asset, "persian_title", "") or "").strip()
         or str(getattr(product, "title", "") or "").strip()
         or str(getattr(asset, "display_title", "") or "").strip()
         or str(getattr(asset, "title", "") or "").strip()
@@ -55,8 +83,10 @@ def _asset_description(asset: ImportedPrintAsset | None) -> str:
     if asset is None:
         return ""
     product = _product_for(asset)
+    slider = _slider_seo(asset)
     value = (
-        str(getattr(asset, "persian_short_description", "") or "").strip()
+        str(slider.get("description_fa") or "").strip()
+        or str(getattr(asset, "persian_short_description", "") or "").strip()
         or str(getattr(product, "short_description", "") or "").strip()
         or str(getattr(asset, "short_description", "") or "").strip()
         or str(getattr(asset, "persian_description", "") or "").strip()
@@ -92,9 +122,40 @@ def _asset_group(asset: ImportedPrintAsset | None) -> str:
         return "مدل منتخب"
 
 
+def _requested_slider_image(asset: ImportedPrintAsset | None) -> str:
+    """Resolve the exact image selected by the Windows Catalog Center when possible."""
+    if asset is None:
+        return ""
+    data = _desktop_data(asset)
+    requested = str(data.get("homepage_slider_image_url") or "").strip()
+
+    if not requested:
+        product = _product_for(asset)
+        try:
+            requested = str(product.catalog_profile.homepage_slider_image_url or "").strip() if product else ""
+        except Exception:
+            requested = ""
+
+    if requested:
+        try:
+            row = asset.images.filter(remote_url=requested).exclude(image="").order_by("sort_order", "id").first()
+            if row is not None:
+                local = _safe_file_url(getattr(row, "image", None))
+                if local:
+                    return local
+        except Exception:
+            pass
+        return requested
+    return ""
+
+
 def _asset_image(asset: ImportedPrintAsset | None) -> str:
     if asset is None:
         return ""
+
+    selected = _requested_slider_image(asset)
+    if selected:
+        return selected
 
     # catalog_image_url already prefers the locally imported preview and then
     # falls back to the original remote image / extracted gallery.
@@ -118,7 +179,7 @@ def _absolute_remote_url(value: str) -> str:
 
     Local /media/... previews remain perfectly valid for rendering, but putting a
     relative path inside HomepageHeroSlide.image_url would fail URLField form
-    validation.  Therefore local previews are shown by effective_image_url while
+    validation. Therefore local previews are shown by effective_image_url while
     image_url remains empty unless the candidate is genuinely remote.
     """
 
@@ -148,14 +209,15 @@ def _candidate_urls(asset: ImportedPrintAsset | None) -> list[str]:
     if asset is None:
         return urls
 
+    add(_requested_slider_image(asset))
     add(_asset_image(asset))
     add(_safe_file_url(getattr(asset, "preview_image", None)))
     add(getattr(asset, "remote_image_url", ""))
 
     try:
         for row in asset.images.all().order_by("sort_order", "id")[:40]:
-            add(_safe_file_url(getattr(row, "image", None)))
             add(getattr(row, "remote_url", ""))
+            add(_safe_file_url(getattr(row, "image", None)))
     except Exception:
         pass
 
@@ -180,11 +242,16 @@ def hero_suggestions(asset: ImportedPrintAsset | None) -> dict:
     title = _asset_title(asset) or "مدل منتخب"
     group = _asset_group(asset) or "مدل منتخب"
     preview_url = _asset_image(asset)
+    slider = _slider_seo(asset)
+    alt_text = str(slider.get("image_alt_fa") or "").strip() or f"{title} - {group} | 3DPrintHub"
+    button_text = str(slider.get("button_text_fa") or "").strip() or "مشاهده محصول"
     return {
         "title": title[:220],
         "description": _asset_description(asset),
         "group_title": group[:160],
-        "image_alt_text": f"{title} - {group} | 3DPrintHub"[:240],
+        "image_alt_text": alt_text[:240],
+        "button_text": button_text[:80],
+        "focus_keyword": str(slider.get("focus_keyword_fa") or "").strip()[:180],
         "preview_url": preview_url,
         "image_url": _absolute_remote_url(preview_url),
         "target_url": _asset_target(asset),
@@ -217,6 +284,10 @@ def _effective_alt_text(self: HomepageHeroSlide) -> str:
     explicit = str(self.image_alt_text or "").strip()
     if explicit:
         return explicit
+    slider = _slider_seo(getattr(self, "asset", None))
+    slider_alt = str(slider.get("image_alt_fa") or "").strip()
+    if slider_alt:
+        return slider_alt[:240]
     return f"{self.effective_title} - {self.effective_group_title} | 3DPrintHub"[:240]
 
 
@@ -254,6 +325,8 @@ def _prefill_slide_before_save(sender, instance: HomepageHeroSlide, **_kwargs):
         instance.description = data["description"]
     if not str(instance.image_alt_text or "").strip():
         instance.image_alt_text = data["image_alt_text"]
+    if not str(instance.button_text or "").strip() or instance.button_text == "مشاهده محصول":
+        instance.button_text = data["button_text"] or "مشاهده محصول"
     if not str(instance.image_url or "").strip() and data["image_url"]:
         instance.image_url = data["image_url"]
 
