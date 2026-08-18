@@ -12,6 +12,7 @@ _SCRIPT_STYLE_RE = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.IGNORECASE 
 _BREAK_RE = re.compile(r"<(?:br\s*/?|/p|/div|/li|p\b[^>]*|div\b[^>]*|li\b[^>]*)>", re.IGNORECASE)
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
+_SALES_INTENT_RE = re.compile(r"(?:خرید|سفارش|قیمت|فروش|تهیه|ثبت\s*سفارش)")
 
 # Text copied from source websites must never become public sales copy.
 _BOILERPLATE_MARKERS = (
@@ -91,6 +92,17 @@ def first_safe_persian(values: Iterable[Any], *, limit: int = 0) -> str:
     return ""
 
 
+def sales_intent_keyword(value: Any, *, fallback_title: str = "") -> str:
+    """Guarantee commercial search intent for public focus keywords."""
+    text = safe_persian_text(value, limit=180)
+    if text:
+        if _SALES_INTENT_RE.search(text):
+            return text
+        return clean_public_text(f"خرید {text}", limit=180)
+    title = safe_persian_text(fallback_title, limit=150) or _GENERIC_HERO_TITLE
+    return clean_public_text(f"خرید {title}", limit=180)
+
+
 def _category_name(product) -> str:
     try:
         if product is not None and product.category_id:
@@ -130,17 +142,15 @@ def _sales_focus(base_title: str, data: dict, ai: dict) -> str:
         *_list_values(data, "tags_fa_json"),
     ]
     focus = first_safe_persian(candidates, limit=180)
-    if focus:
-        return focus
-    return clean_public_text(f"خرید {base_title}", limit=180)
+    return sales_intent_keyword(focus, fallback_title=base_title)
 
 
 def build_slider_sales_copy(data: dict, product=None, asset=None) -> dict:
     """Resolve Persian-only, sales-oriented public Hero copy.
 
-    Dedicated Windows slider fields are authoritative. General Persian product
-    SEO is only a fallback. Raw source title/description are deliberately not
-    accepted here.
+    Dedicated Windows slider fields are authoritative. The imported Persian
+    editorial fields from Windows are preferred over the generic Product copy.
+    Raw source title/description are deliberately not accepted here.
     """
     data = data if isinstance(data, dict) else {}
     ai = _slider_ai(data)
@@ -151,8 +161,8 @@ def build_slider_sales_copy(data: dict, product=None, asset=None) -> dict:
             ai.get("title_fa"),
             data.get("seo_title_fa"),
             data.get("title_fa"),
-            getattr(product, "title", "") if product is not None else "",
             _asset_persian(asset, "persian_title"),
+            getattr(product, "title", "") if product is not None else "",
         ],
         limit=220,
     )
@@ -168,9 +178,9 @@ def build_slider_sales_copy(data: dict, product=None, asset=None) -> dict:
             data.get("short_description_fa"),
             data.get("seo_description_fa"),
             data.get("description_fa"),
-            getattr(product, "short_description", "") if product is not None else "",
             _asset_persian(asset, "persian_short_description"),
             _asset_persian(asset, "persian_description"),
+            getattr(product, "short_description", "") if product is not None else "",
         ],
         limit=1200,
     ) or _GENERIC_HERO_DESCRIPTION
@@ -212,8 +222,8 @@ def build_product_sales_seo(data: dict, product=None, asset=None) -> dict:
     base_title = first_safe_persian(
         [
             data.get("title_fa"),
-            getattr(product, "title", "") if product is not None else "",
             _asset_persian(asset, "persian_title"),
+            getattr(product, "title", "") if product is not None else "",
         ],
         limit=150,
     ) or _GENERIC_HERO_TITLE
@@ -228,8 +238,8 @@ def build_product_sales_seo(data: dict, product=None, asset=None) -> dict:
         [
             data.get("short_description_fa"),
             data.get("description_fa"),
-            getattr(product, "short_description", "") if product is not None else "",
             _asset_persian(asset, "persian_short_description"),
+            getattr(product, "short_description", "") if product is not None else "",
         ],
         limit=250,
     )
@@ -240,7 +250,7 @@ def build_product_sales_seo(data: dict, product=None, asset=None) -> dict:
     )
 
     keywords = [*_list_values(data, "keywords_json"), *_list_values(data, "tags_fa_json")]
-    focus = first_safe_persian(keywords, limit=180) or clean_public_text(f"خرید {base_title}", limit=180)
+    focus = sales_intent_keyword(first_safe_persian(keywords, limit=180), fallback_title=base_title)
     hashtags = [safe_persian_text(value, limit=80) for value in _list_values(data, "hashtags_fa_json")]
     hashtags = [value for value in hashtags if value]
 
