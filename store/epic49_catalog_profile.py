@@ -14,6 +14,16 @@ PRICE_MODE_CHOICES = [
     ("quote", "نیازمند استعلام"),
 ]
 
+SLIDER_EFFECT_CHOICES = [
+    ("cinematic_fade", "Cinematic Fade"),
+    ("wedding_dissolve", "Wedding Dissolve"),
+    ("cinematic_zoom", "Cinematic Zoom"),
+    ("ken_burns", "Ken Burns Fade"),
+    ("soft_blur", "Soft Blur Dissolve"),
+    ("cinematic_reveal", "Cinematic Reveal"),
+]
+SLIDER_EFFECT_CODES = {code for code, _label in SLIDER_EFFECT_CHOICES}
+
 
 class ProductCatalogProfile(models.Model):
     product = models.OneToOneField(
@@ -43,9 +53,23 @@ class ProductCatalogProfile(models.Model):
     price_max = models.PositiveBigIntegerField(default=0, db_index=True, verbose_name="حداکثر قیمت")
     price_mode = models.CharField(max_length=20, choices=PRICE_MODE_CHOICES, default="fixed", db_index=True, verbose_name="مدل قیمت")
     download_image_limit = models.PositiveSmallIntegerField(default=10, verbose_name="سقف دریافت تصویر")
+
+    # Epic49 unified desktop/server homepage slider contract.
     homepage_slider_enabled = models.BooleanField(default=False, db_index=True, verbose_name="نمایش در اسلایدر")
     homepage_slider_image_url = models.CharField(max_length=2000, blank=True, verbose_name="تصویر انتخابی اسلایدر")
     homepage_slider_sort_order = models.PositiveIntegerField(default=100, db_index=True, verbose_name="ترتیب اسلایدر")
+    homepage_slider_title_fa = models.CharField(max_length=220, blank=True, verbose_name="عنوان اختصاصی اسلایدر")
+    homepage_slider_description_fa = models.TextField(blank=True, verbose_name="توضیح اختصاصی اسلایدر")
+    homepage_slider_alt_text = models.CharField(max_length=240, blank=True, verbose_name="Alt اختصاصی تصویر اسلایدر")
+    homepage_slider_button_text = models.CharField(max_length=80, blank=True, default="مشاهده محصول", verbose_name="متن دکمه اسلایدر")
+    homepage_slider_focus_keyword = models.CharField(max_length=180, blank=True, verbose_name="عبارت کلیدی اسلایدر")
+    homepage_slider_transition_effect = models.CharField(max_length=32, choices=SLIDER_EFFECT_CHOICES, default="cinematic_fade", verbose_name="افکت اسلایدر")
+    homepage_slider_transition_duration_ms = models.PositiveIntegerField(default=1400, verbose_name="مدت Transition اسلایدر")
+    homepage_slider_display_duration_ms = models.PositiveIntegerField(default=7000, verbose_name="مدت نمایش اسلایدر")
+
+    sync_revision = models.PositiveBigIntegerField(default=1, db_index=True, verbose_name="نسخه همگام‌سازی")
+    last_modified_source = models.CharField(max_length=20, default="desktop", db_index=True, verbose_name="منبع آخرین تغییر")
+    last_modified_by = models.CharField(max_length=120, blank=True, verbose_name="عامل آخرین تغییر")
     last_synced_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name="آخرین همگام‌سازی")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -79,6 +103,51 @@ def _positive_int(value, default=0) -> int:
             return max(0, int(default or 0))
         except Exception:
             return 0
+
+
+def _bounded_int(value, default: int, minimum: int, maximum: int) -> int:
+    return min(maximum, max(minimum, _positive_int(value, default)))
+
+
+def _slider_seo_from_data(data: dict, product) -> dict:
+    content_pack = _json_value(data.get("content_pack_json"), {})
+    ai = content_pack.get("homepage_slider_seo") if isinstance(content_pack, dict) else {}
+    if not isinstance(ai, dict):
+        ai = {}
+    image_alts = _json_value(data.get("image_alt_texts_json"), [])
+    title = str(
+        data.get("homepage_slider_title_fa")
+        or ai.get("title_fa")
+        or data.get("title_fa")
+        or getattr(product, "title", "")
+        or ""
+    ).strip()
+    description = str(
+        data.get("homepage_slider_description_fa")
+        or ai.get("description_fa")
+        or data.get("short_description_fa")
+        or data.get("seo_description_fa")
+        or getattr(product, "short_description", "")
+        or ""
+    ).strip()
+    alt_text = str(
+        data.get("homepage_slider_alt_text")
+        or ai.get("image_alt_fa")
+        or (image_alts[0] if image_alts else "")
+        or title
+    ).strip()
+    return {
+        "title": title[:220],
+        "description": description[:480],
+        "alt": alt_text[:240],
+        "button": str(data.get("homepage_slider_button_text") or ai.get("button_text_fa") or "مشاهده محصول").strip()[:80] or "مشاهده محصول",
+        "focus": str(data.get("homepage_slider_focus_keyword") or ai.get("focus_keyword_fa") or "").strip()[:180],
+    }
+
+
+def _slider_effect(value) -> str:
+    value = str(value or "").strip()
+    return value if value in SLIDER_EFFECT_CODES else "cinematic_fade"
 
 
 def _slug_base(product) -> str:
@@ -120,11 +189,22 @@ def _unique_public_slug(product, preferred="") -> str:
     return candidate
 
 
-def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0) -> ProductCatalogProfile:
+def sync_catalog_profile(
+    product,
+    asset,
+    data: dict,
+    *,
+    price_min=0,
+    price_max=0,
+    sync_source="desktop",
+    sync_actor="",
+    bump_revision=True,
+) -> ProductCatalogProfile:
     from store.models import Product
 
     original_slug = str(getattr(product, "slug", "") or "")
     profile = ProductCatalogProfile.objects.filter(product=product).first()
+    created = profile is None
     if profile is None:
         profile = ProductCatalogProfile(
             product=product,
@@ -173,9 +253,26 @@ def sync_catalog_profile(product, asset, data: dict, *, price_min=0, price_max=0
     profile.price_max = maximum
     profile.price_mode = price_mode
     profile.download_image_limit = min(200, max(1, _positive_int(data.get("download_image_limit"), 10)))
+
+    slider = _slider_seo_from_data(data, product)
     profile.homepage_slider_enabled = bool(data.get("homepage_slider_enabled"))
     profile.homepage_slider_image_url = str(data.get("homepage_slider_image_url") or "")[:2000]
     profile.homepage_slider_sort_order = _positive_int(data.get("homepage_slider_sort_order"), 100)
+    profile.homepage_slider_title_fa = slider["title"]
+    profile.homepage_slider_description_fa = slider["description"]
+    profile.homepage_slider_alt_text = slider["alt"]
+    profile.homepage_slider_button_text = slider["button"]
+    profile.homepage_slider_focus_keyword = slider["focus"]
+    profile.homepage_slider_transition_effect = _slider_effect(data.get("homepage_slider_transition_effect"))
+    profile.homepage_slider_transition_duration_ms = _bounded_int(data.get("homepage_slider_transition_duration_ms"), 1400, 300, 4000)
+    profile.homepage_slider_display_duration_ms = _bounded_int(data.get("homepage_slider_display_duration_ms"), 7000, 2000, 30000)
+
+    if created:
+        profile.sync_revision = 1
+    elif bump_revision:
+        profile.sync_revision = max(1, int(profile.sync_revision or 1)) + 1
+    profile.last_modified_source = str(sync_source or "desktop")[:20]
+    profile.last_modified_by = str(sync_actor or "")[:120]
     profile.last_synced_at = timezone.now()
     profile.save()
 
