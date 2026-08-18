@@ -7,7 +7,9 @@
 
 ## Brand
 - Exact canonical user logo: `static/img/brand/3dprinthublogo.png`.
-- Expected SHA-256: `fcdfb65509a8e8b1da15eadf8b28fa68ff9433f69d7b333290180843c5ea3335`.
+- Final approved SHA-256: `97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`.
+- This hash supersedes the earlier provisional logo hash.
+- Approved source file on Windows: `D:\projects\3dprinthublogo.png`.
 - Logo is never regenerated/recolored and must render on a transparent surface without forced white tiles.
 - Colors: deep navy/graphite surfaces with metallic gold accents derived from the supplied logo.
 
@@ -29,7 +31,7 @@ The layer standardizes font, sidebar/topbar colors, cards, tables, forms, filter
 Desktop uses a branded sticky sidebar; tablet/mobile use an accessible off-canvas drawer. Dashboard, support, profile, addresses, appearance, affiliate, notifications and store-order links remain available.
 
 ## Asset installer
-`scripts/install_phase49_2b_brand_assets.ps1` validates the exact logo SHA-256, copies it unchanged, extracts six IRANSans FaNum WOFF weights from the user's archive, and refuses a different logo.
+`scripts/install_phase49_2b_brand_assets.ps1` validates the exact final logo SHA-256, copies it unchanged, extracts six IRANSans FaNum WOFF weights from the user's archive, and refuses a different logo.
 
 ## Database
 No model or data migration is part of Phase 49.2B.
