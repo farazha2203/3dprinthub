@@ -5,7 +5,8 @@
       <div class="p45-hero__track" data-p45-track>
         {% for slide in homepage_hero_slides %}
           <article class="p45-hero__slide{% if forloop.first %} is-active{% endif %}" data-p45-slide aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
-            <a class="p45-hero__media" href="{% if slide.asset.product_id and slide.asset.product.is_active %}{{ slide.asset.product.get_absolute_url }}{% else %}{{ slide.target_url }}{% endif %}" aria-label="مشاهده {{ slide.effective_title }}">
+            <a class="p45-hero__media" href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
+              {% if slide.effective_image_url %}
               <img
                 src="{{ slide.effective_image_url }}"
                 alt="{{ slide.effective_alt_text }}"
@@ -16,12 +17,13 @@
                 {% if forloop.first %}fetchpriority="high"{% endif %}
                 style="--p45-fit:{{ slide.object_fit }};--p45-position:{{ slide.focal_position }}"
               >
+              {% endif %}
             </a>
             <div class="p45-hero__caption">
               <span class="p45-hero__group">{{ slide.effective_group_title }}</span>
               <h2>{{ slide.effective_title }}</h2>
-              {% if slide.description %}<p>{{ slide.description }}</p>{% endif %}
-              <a class="p45-hero__product-link" href="{% if slide.asset.product_id and slide.asset.product.is_active %}{{ slide.asset.product.get_absolute_url }}{% else %}{{ slide.target_url }}{% endif %}">
+              {% if slide.effective_description %}<p>{{ slide.effective_description }}</p>{% endif %}
+              <a class="p45-hero__product-link" href="{{ slide.target_url }}">
                 <span>{{ slide.button_text|default:"مشاهده محصول" }}</span>
                 <span aria-hidden="true">←</span>
               </a>
