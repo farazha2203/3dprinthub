@@ -16,4 +16,11 @@ class StoreConfig(AppConfig):
         from . import epic49_catalog_admin  # noqa: F401
         from . import signals  # noqa: F401
         from . import epic49_publish_signals  # noqa: F401
+
+        # Epic49 unified must load after the publish signal so both the direct
+        # service call and the signal-held callable are rebound to one revision-
+        # protected Desktop <-> Server contract.
+        from .phase49_unified_sync import install as install_phase49_unified_sync
+        install_phase49_unified_sync()
+
         from . import checks  # noqa: F401
