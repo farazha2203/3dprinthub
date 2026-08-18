@@ -23,10 +23,33 @@ def _asset_description(asset) -> str:
     return _resolved_copy(asset)["description_fa"]
 
 
+def _asset_group(asset) -> str:
+    if asset is None:
+        return "محصول منتخب"
+    product = legacy._product_for(asset)
+    try:
+        if product is not None and product.category_id:
+            category = safe_persian_text(product.category.name, limit=160)
+            if category:
+                return category
+    except Exception:
+        pass
+    try:
+        metrics = asset.metrics
+        display = getattr(metrics, "get_segment_display", None)
+        if callable(display):
+            value = safe_persian_text(display(), limit=160)
+            if value:
+                return value
+    except Exception:
+        pass
+    return "محصول منتخب"
+
+
 def hero_suggestions(asset) -> dict:
     copy = _resolved_copy(asset)
     title = copy["title_fa"]
-    group = legacy._asset_group(asset) or "محصول منتخب"
+    group = _asset_group(asset)
     preview_url = legacy._asset_image(asset)
     return {
         "title": title[:220],
@@ -52,6 +75,11 @@ def _effective_description(self: HomepageHeroSlide) -> str:
     return explicit or _resolved_copy(getattr(self, "asset", None))["description_fa"]
 
 
+def _effective_group_title(self: HomepageHeroSlide) -> str:
+    explicit = safe_persian_text(self.group_title, limit=160)
+    return explicit or _asset_group(getattr(self, "asset", None))
+
+
 def _effective_alt_text(self: HomepageHeroSlide) -> str:
     explicit = safe_persian_text(self.image_alt_text, limit=240)
     return explicit or _resolved_copy(getattr(self, "asset", None))["image_alt_fa"]
@@ -71,22 +99,24 @@ def _repair_slide_before_save(sender, instance: HomepageHeroSlide, **_kwargs):
         instance.title_override = data["title"]
     if not safe_persian_text(instance.description, limit=1200):
         instance.description = data["description"]
+    if not safe_persian_text(instance.group_title, limit=160):
+        instance.group_title = data["group_title"]
     if not safe_persian_text(instance.image_alt_text, limit=240):
         instance.image_alt_text = data["image_alt_text"]
     if not safe_persian_text(instance.button_text, limit=80):
         instance.button_text = data["button_text"] or "مشاهده محصول"
-    if not str(instance.group_title or "").strip():
-        instance.group_title = data["group_title"]
 
 
 # Rebind the Phase49.2B resolver so its existing Admin AJAX endpoint and its
 # pre_save safety net immediately inherit the Persian-sales contract.
 legacy._asset_title = _asset_title
 legacy._asset_description = _asset_description
+legacy._asset_group = _asset_group
 legacy.hero_suggestions = hero_suggestions
 
 HomepageHeroSlide.effective_title = property(_effective_title)
 HomepageHeroSlide.effective_description = property(_effective_description)
+HomepageHeroSlide.effective_group_title = property(_effective_group_title)
 HomepageHeroSlide.effective_alt_text = property(_effective_alt_text)
 HomepageHeroSlide.effective_button_text = property(_effective_button_text)
 
