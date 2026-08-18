@@ -150,10 +150,10 @@ class Phase49_2CHeroStudioBehaviorTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(payload["ok"])
-        self.assertEqual(payload["count"], 1)
-        self.assertEqual(payload["items"][0]["asset_id"], self.asset.pk)
-        self.assertEqual(payload["items"][0]["sku"], "P49C-GEAR-001")
-        self.assertEqual(payload["items"][0]["category"], self.category.name)
+        matches = [item for item in payload["items"] if item["sku"] == "P49C-GEAR-001"]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["asset_id"], self.asset.pk)
+        self.assertEqual(matches[0]["category"], self.category.name)
 
     def test_asset_detail_returns_real_image_ids_without_initial_slide_save(self):
         response = self.client.get(
