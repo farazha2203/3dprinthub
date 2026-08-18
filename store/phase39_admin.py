@@ -86,15 +86,46 @@ if pricing_admin:
 
 @admin.register(MaterialColorOption)
 class MaterialColorOptionAdmin(admin.ModelAdmin):
-    list_display = ["material", "color_chip", "name", "effective_price", "current_stock", "current_roll_count", "is_active"]
-    list_filter = ["material", "is_active"]
+    list_display = [
+        "material", "color_chip", "name", "color_type", "effective_price",
+        "current_stock", "current_roll_count", "is_active",
+    ]
+    list_filter = ["material", "color_type", "is_active"]
     search_fields = ["name", "code", "material__name"]
     list_editable = ["is_active"]
+    fieldsets = (
+        ("متریال و رنگ", {
+            "fields": ("material", "name", "code", "color_type", "is_active", "sort_order")
+        }),
+        ("نمایش رنگ", {
+            "fields": ("hex_code", "secondary_hex", "tertiary_hex"),
+            "description": "برای رنگ ساده فقط HEX اصلی کافی است. برای دو‌رنگ/چندرنگ/گرادیانی HEX دوم و سوم را هم وارد کنید.",
+        }),
+        ("قیمت و موجودی", {
+            "fields": ("sale_price_per_gram_override", "low_stock_threshold_grams")
+        }),
+    )
 
     @admin.display(description="رنگ")
     def color_chip(self, obj):
-        color = obj.hex_code or "#e5e7eb"
-        return format_html('<span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:{};border:1px solid #999"></span>', color)
+        colors = [x for x in [obj.hex_code, obj.secondary_hex, obj.tertiary_hex] if x]
+        if not colors:
+            colors = ["#e5e7eb"]
+        if len(colors) == 1:
+            background = colors[0]
+        else:
+            step = 100 / len(colors)
+            pieces = []
+            for index, color in enumerate(colors):
+                start = int(index * step)
+                end = 100 if index == len(colors) - 1 else int((index + 1) * step)
+                pieces.append(f"{color} {start}% {end}%")
+            background = "linear-gradient(135deg," + ",".join(pieces) + ")"
+        return format_html(
+            '<span title="{}" style="display:inline-block;width:38px;height:24px;border-radius:8px;background:{};border:1px solid #999"></span>',
+            obj.get_color_type_display(),
+            background,
+        )
 
     @admin.display(description="قیمت هر گرم")
     def effective_price(self, obj):
