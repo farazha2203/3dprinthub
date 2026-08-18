@@ -21,13 +21,24 @@ class Phase491FrontendContractTests(SimpleTestCase):
             self.assertIn(f'for="{field_id}"', text)
             self.assertIn(f'id="{field_id}"', text)
 
-    def test_public_layouts_wire_favicon_and_accessibility_assets(self):
+    def test_public_layouts_use_approved_brand_asset_and_accessibility_assets(self):
         store_base = (ROOT / "templates" / "store" / "base.html").read_text(encoding="utf-8")
         homepage = (ROOT / "templates" / "website" / "index.html").read_text(encoding="utf-8")
+        canonical_brand = "img/brand/3dprinthublogo.png"
         for text in (store_base, homepage):
-            self.assertIn("favicon/favicon.ico", text)
+            self.assertIn(canonical_brand, text)
+            self.assertIn('rel="icon"', text)
+            self.assertIn('rel="apple-touch-icon"', text)
             self.assertIn("phase49_1-accessibility.css", text)
             self.assertIn("phase49_1-accessibility.js", text)
+            self.assertNotIn("favicon/favicon.ico", text)
+
+    def test_legacy_favicon_pack_remains_available_but_is_not_the_brand_source_of_truth(self):
+        favicon_root = ROOT / "static" / "favicon"
+        self.assertTrue((favicon_root / "favicon.ico").is_file())
+        self.assertTrue((favicon_root / "favicon-32x32.png").is_file())
+        self.assertTrue((favicon_root / "apple-touch-icon.png").is_file())
+        self.assertTrue((ROOT / "static" / "img" / "brand" / "3dprinthublogo.png").is_file())
 
     def test_tailwind_production_build_scaffold_exists(self):
         self.assertTrue((ROOT / "package.json").is_file())
