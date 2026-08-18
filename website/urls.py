@@ -161,3 +161,15 @@ urlpatterns += [
     ),
 ]
 # END PHASE 22 CUSTOMER PASSWORD RECOVERY
+
+# BEGIN PHASE 49.2B MANAGED HERO HOTFIX
+from .phase49_2b_hero_hotfix import hero_asset_prefill_view
+
+urlpatterns += [
+    path(
+        "internal/admin/hero-slide-prefill/",
+        hero_asset_prefill_view,
+        name="hero_slide_prefill",
+    ),
+]
+# END PHASE 49.2B MANAGED HERO HOTFIX
