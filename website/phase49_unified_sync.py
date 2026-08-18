@@ -38,6 +38,63 @@ def install_model_contract() -> None:
         ).contribute_to_class(HomepageHeroSlide, "last_modified_by")
 
 
+def _actor(request) -> str:
+    user = getattr(request, "user", None)
+    if user is None or not getattr(user, "is_authenticated", False):
+        return ""
+    return str(
+        getattr(user, "username", "")
+        or getattr(user, "email", "")
+        or getattr(user, "pk", "")
+        or ""
+    )[:120]
+
+
+def _mirror_hero_to_profile(slide: HomepageHeroSlide, actor: str) -> None:
+    asset = getattr(slide, "asset", None)
+    product = getattr(asset, "product", None) if asset is not None else None
+    if product is None:
+        return
+    from store.epic49_catalog_profile import ProductCatalogProfile, _unique_public_slug
+
+    profile = ProductCatalogProfile.objects.filter(product=product).first()
+    if profile is None:
+        profile = ProductCatalogProfile.objects.create(
+            product=product,
+            public_slug=_unique_public_slug(product, getattr(product, "title_en", "")),
+            legacy_slug=str(getattr(product, "slug", "") or ""),
+            sync_revision=1,
+            last_modified_source="admin",
+            last_modified_by=actor,
+        )
+    else:
+        profile.sync_revision = max(1, int(profile.sync_revision or 1)) + 1
+
+    selected = getattr(slide, "selected_asset_image", None)
+    selected_url = ""
+    if selected is not None:
+        selected_url = str(getattr(selected, "remote_url", "") or "").strip()
+        if not selected_url:
+            try:
+                selected_url = str(selected.image.url or "").strip()
+            except Exception:
+                selected_url = ""
+
+    profile.homepage_slider_enabled = bool(slide.is_active)
+    profile.homepage_slider_image_url = selected_url or str(slide.image_url or "")[:2000]
+    profile.homepage_slider_sort_order = max(0, int(slide.sort_order or 0))
+    profile.homepage_slider_title_fa = str(slide.title_override or "")[:220]
+    profile.homepage_slider_description_fa = str(slide.description or "")
+    profile.homepage_slider_alt_text = str(slide.image_alt_text or "")[:240]
+    profile.homepage_slider_button_text = str(slide.button_text or "مشاهده محصول")[:80]
+    profile.homepage_slider_transition_effect = str(slide.transition_effect or "cinematic_fade")[:32]
+    profile.homepage_slider_transition_duration_ms = int(slide.transition_duration_ms or 1400)
+    profile.homepage_slider_display_duration_ms = int(slide.display_duration_ms or 7000)
+    profile.last_modified_source = "admin"
+    profile.last_modified_by = actor
+    profile.save()
+
+
 def install_admin_contract() -> None:
     model_admin = admin.site._registry.get(HomepageHeroSlide)
     if model_admin is None or getattr(model_admin, "_phase49_unified_sync_installed", False):
@@ -65,17 +122,13 @@ def install_admin_contract() -> None:
         model_admin.fieldsets = tuple(patched)
 
     def save_model(this, request, obj, form, change):
-        # Admin is an authoritative editor. Every human save creates a new
-        # optimistic-concurrency revision so a stale Windows client receives 409
-        # instead of silently overwriting a newer site edit.
         obj.sync_revision = max(1, int(getattr(obj, "sync_revision", 1) or 1)) + (1 if change else 0)
         obj.last_modified_source = "admin"
-        user = getattr(request, "user", None)
-        actor = ""
-        if user is not None and getattr(user, "is_authenticated", False):
-            actor = str(getattr(user, "username", "") or getattr(user, "email", "") or getattr(user, "pk", ""))
-        obj.last_modified_by = actor[:120]
-        return original_save_model(request, obj, form, change)
+        actor = _actor(request)
+        obj.last_modified_by = actor
+        result = original_save_model(request, obj, form, change)
+        _mirror_hero_to_profile(obj, actor)
+        return result
 
     model_admin.save_model = MethodType(save_model, model_admin)
     model_admin._phase49_unified_sync_installed = True
