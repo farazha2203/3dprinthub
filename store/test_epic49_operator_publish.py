@@ -46,8 +46,22 @@ class Epic49OperatorPublishContractTests(SimpleTestCase):
         self.assertEqual(
             result,
             [
-                {"material": "PLA", "color": "صورتی", "hex": "#ff69b4"},
-                {"material": "PETG", "color": "مشکی", "hex": ""},
+                {
+                    "material": "PLA",
+                    "color": "صورتی",
+                    "hex": "#ff69b4",
+                    "color_type": "solid",
+                    "secondary_hex": "",
+                    "tertiary_hex": "",
+                },
+                {
+                    "material": "PETG",
+                    "color": "مشکی",
+                    "hex": "",
+                    "color_type": "solid",
+                    "secondary_hex": "",
+                    "tertiary_hex": "",
+                },
             ],
         )
 
@@ -63,7 +77,12 @@ class Epic49OperatorPublishContractTests(SimpleTestCase):
             "def apply_homepage_slider",
             "HomepageHeroSlide",
             "homepage_slider_image_url",
+            "material_options_json",
+            "color_options_json",
             "material_color_options_json",
+            "color_type",
+            "secondary_hex",
+            "tertiary_hex",
         ]:
             self.assertIn(marker, source)
 
