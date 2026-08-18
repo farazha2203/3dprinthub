@@ -12,6 +12,9 @@ from app.epic49_product_studio import (
     parse_json_list,
     unique_lines,
 )
+from app.product_workspace_epic49 import ProductWorkspace as ProductWorkspaceEpic49
+from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
+from app.product_workspace_v87 import ProductWorkspace as ProductWorkspace87
 from app.v8_features import commercial_license_allows_publish
 
 
@@ -105,17 +108,28 @@ class Epic49EditablePublishTests(unittest.TestCase):
 
 
 class Epic49StudioActivationTests(unittest.TestCase):
-    def test_normal_launcher_activates_v87_workspace(self):
+    def test_unified_workspace_preserves_v87_and_v871_inheritance_chain(self):
+        self.assertTrue(issubclass(ProductWorkspace871, ProductWorkspace87))
+        self.assertTrue(issubclass(ProductWorkspaceEpic49, ProductWorkspace871))
+
+    def test_normal_launcher_activates_unified_workspace_without_losing_v87_contract(self):
         source = (ROOT / "launch.py").read_text(encoding="utf-8")
-        self.assertIn("app.product_workspace_v87", source)
+        self.assertIn("app.product_workspace_epic49", source)
         self.assertIn("app_module.ProductStudio = ProductWorkspace", source)
         self.assertIn("PRODUCT_WORKSPACE_V87=ENABLED", source)
+        self.assertIn("PRODUCT_WORKSPACE_V871=ENABLED", source)
+        self.assertIn("EPIC49_UNIFIED_SYNC=ENABLED", source)
+        self.assertIn("EPIC49_SERVER_SLIDER_MANAGER=ENABLED", source)
         self.assertIn("UX87_SHELL=ENABLED", source)
 
-    def test_portable_exe_activates_and_verifies_v87_workspace(self):
+    def test_portable_exe_activates_and_verifies_unified_workspace(self):
         source = (ROOT / "portable_entry.py").read_text(encoding="utf-8")
+        self.assertIn("app.product_workspace_epic49", source)
         self.assertIn("app_main.ProductStudio = ProductWorkspace", source)
         self.assertIn('"product_workspace_v87"', source)
+        self.assertIn('"product_workspace_v871"', source)
+        self.assertIn('"epic49_unified_sync"', source)
+        self.assertIn('"epic49_server_slider_manager"', source)
         self.assertIn('"ux87_shell"', source)
 
 
