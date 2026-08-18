@@ -11,6 +11,7 @@
     var header = document.querySelector("header");
     var slides = Array.prototype.slice.call(root.querySelectorAll("[data-p45-slide]"));
     var dots = Array.prototype.slice.call(root.querySelectorAll("[data-p45-dot]"));
+    var descriptions = Array.prototype.slice.call(root.querySelectorAll("[data-p49c-description]"));
     var next = root.querySelector("[data-p45-next]");
     var prev = root.querySelector("[data-p45-prev]");
     var current = root.querySelector("[data-p45-current]");
@@ -85,6 +86,8 @@
     function schedule() {
       stop();
       if (slides.length < 2 || document.hidden) return;
+      var expanded = root.querySelector("[data-p49c-description][aria-expanded='true']");
+      if (expanded) return;
       var wait = displayOf(slides[index]);
       timer = window.setTimeout(function () { go(index + 1, false); }, wait);
     }
@@ -121,6 +124,13 @@
       var outgoingLink = outgoing.querySelector(".p45-hero__media");
       if (outgoingLink) outgoingLink.tabIndex = -1;
 
+      descriptions.forEach(function (control) {
+        control.classList.remove("is-expanded");
+        control.setAttribute("aria-expanded", "false");
+        var label = control.querySelector("[data-p49c-description-more]");
+        if (label) label.textContent = "نمایش بیشتر";
+      });
+
       index = nextIndex;
       updateNavigation();
 
@@ -149,6 +159,18 @@
     dots.forEach(function (dot) {
       dot.addEventListener("click", function () {
         go(Number(dot.getAttribute("data-p45-dot")) || 0, true);
+      });
+    });
+
+    descriptions.forEach(function (control) {
+      control.addEventListener("click", function () {
+        var expanded = control.getAttribute("aria-expanded") === "true";
+        control.classList.toggle("is-expanded", !expanded);
+        control.setAttribute("aria-expanded", expanded ? "false" : "true");
+        var label = control.querySelector("[data-p49c-description-more]");
+        if (label) label.textContent = expanded ? "نمایش بیشتر" : "بستن توضیحات";
+        if (expanded) schedule();
+        else stop();
       });
     });
 
