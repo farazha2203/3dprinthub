@@ -1,0 +1,77 @@
+name: Phase49 Epic Unified CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-unified:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-epic49-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "epic49-ci-token-12345678901234567890"
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile changed Python surfaces
+        run: |
+          python -m compileall -q \
+            store/epic49_catalog_profile.py \
+            store/phase49_unified_sync.py \
+            store/epic49_catalog_admin.py \
+            catalog_bridge \
+            website/phase49_unified_sync.py \
+            catalog_center/app/epic49_desktop_schema.py \
+            catalog_center/app/epic49_site_sync.py \
+            catalog_center/app/epic49_server_slider_manager.py \
+            catalog_center/app/product_workspace_epic49.py \
+            catalog_center/launch.py \
+            catalog_center/portable_entry.py
+
+      - name: Django checks and migration contract
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+
+      - name: Phase49 unified behavioral and regression tests
+        run: |
+          python manage.py test \
+            store.test_phase49_unified_sync \
+            store.test_phase49_unified_import_e2e \
+            catalog_bridge.test_phase49_unified_bridge \
+            website.test_phase49_2c_hero_studio \
+            website.test_phase49_2b_hero_login_hotfix \
+            website.test_phase45_homepage_hero \
+            -v 2
+
+      - name: Windows Catalog Center Epic49 tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_unified_desktop
+          python -m unittest discover -s tests -p 'test_*epic49*.py' -v
+
+      - name: Full Django suite
+        run: python manage.py test -v 1
