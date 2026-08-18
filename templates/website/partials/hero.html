@@ -1,6 +1,6 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/phase49_2c-hero-effects.css' %}?v=49.2.3">
-<script src="{% static 'js/phase49_2c-home-hero.js' %}?v=49.2.3" defer></script>
+<link rel="stylesheet" href="{% static 'css/phase49_2c-hero-effects.css' %}?v=49.3.1">
+<script src="{% static 'js/phase49_2c-home-hero.js' %}?v=49.3.1" defer></script>
 <section id="home" class="p45-hero" data-p45-hero data-p49c-engine aria-label="مدل‌های منتخب 3DPrintHub">
   <div class="p45-hero__viewport">
     {% if homepage_hero_slides %}
@@ -32,9 +32,20 @@
             <div class="p45-hero__caption">
               <span class="p45-hero__group">{{ slide.effective_group_title }}</span>
               <h2>{{ slide.effective_title }}</h2>
-              {% if slide.effective_description %}<p>{{ slide.effective_description }}</p>{% endif %}
+              {% if slide.effective_description %}
+                <button
+                  type="button"
+                  class="p49c-hero__description"
+                  data-p49c-description
+                  aria-expanded="false"
+                  aria-label="نمایش توضیح کامل {{ slide.effective_title }}"
+                >
+                  <span class="p49c-hero__description-text">{{ slide.effective_description }}</span>
+                  <span class="p49c-hero__description-more" data-p49c-description-more>نمایش بیشتر</span>
+                </button>
+              {% endif %}
               <a class="p45-hero__product-link" href="{{ slide.target_url }}">
-                <span>{{ slide.button_text|default:"مشاهده محصول" }}</span>
+                <span>{{ slide.effective_button_text|default:"مشاهده محصول" }}</span>
                 <span aria-hidden="true">←</span>
               </a>
             </div>
