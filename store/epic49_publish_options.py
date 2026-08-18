@@ -8,6 +8,11 @@ from urllib.parse import urljoin
 from django.utils.text import slugify
 
 
+COLOR_TYPE_CODES = {
+    "solid", "transparent", "translucent", "metallic", "silk", "dual", "multicolor", "gradient"
+}
+
+
 def _safe_list(value):
     if isinstance(value, list):
         return value
@@ -48,7 +53,66 @@ def _color_code(material_id: int, color_name: str) -> str:
     return f"m{material_id}-{base}"[:120]
 
 
+def _normalized_materials(data: dict) -> list[str]:
+    output = []
+    seen = set()
+    for item in _safe_list(data.get("material_options_json")):
+        name = str(item.get("name") if isinstance(item, dict) else item or "").strip()
+        if not name or name.casefold() in seen:
+            continue
+        seen.add(name.casefold())
+        output.append(name)
+    return output
+
+
+def _normalized_colors(data: dict) -> list[dict]:
+    output = []
+    seen = set()
+    for item in _safe_list(data.get("color_options_json")):
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or item.get("color") or item.get("color_name") or "").strip()
+        if not name:
+            continue
+        kind = str(item.get("color_type") or item.get("type") or "solid").strip().lower()
+        if kind not in COLOR_TYPE_CODES:
+            kind = "solid"
+        key = (name.casefold(), kind)
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append({
+            "color": name,
+            "hex": str(item.get("hex") or item.get("hex_code") or "").strip(),
+            "color_type": kind,
+            "secondary_hex": str(item.get("secondary_hex") or item.get("hex2") or "").strip(),
+            "tertiary_hex": str(item.get("tertiary_hex") or item.get("hex3") or "").strip(),
+        })
+    return output
+
+
 def normalized_material_color_options(data: dict) -> list[dict]:
+    # Epic49 rich contract: materials and colors are selected independently in
+    # Windows. Build the compatibility pair list server-side. This preserves all
+    # existing variant logic while allowing one color to be offered on multiple
+    # selected materials.
+    materials = _normalized_materials(data)
+    colors = _normalized_colors(data)
+    if materials and colors:
+        return [
+            {
+                "material": material,
+                "color": color["color"],
+                "hex": color.get("hex", ""),
+                "color_type": color.get("color_type", "solid"),
+                "secondary_hex": color.get("secondary_hex", ""),
+                "tertiary_hex": color.get("tertiary_hex", ""),
+            }
+            for material in materials
+            for color in colors
+        ]
+
+    # Legacy pair contract remains fully supported for older desktop rows.
     raw = _safe_list(data.get("material_color_options_json"))
     output = []
     seen = set()
@@ -59,21 +123,26 @@ def normalized_material_color_options(data: dict) -> list[dict]:
         color = str(item.get("color") or item.get("color_name") or "").strip()
         if not material or not color:
             continue
-        key = (material.casefold(), color.casefold())
+        kind = str(item.get("color_type") or item.get("type") or "solid").strip().lower()
+        if kind not in COLOR_TYPE_CODES:
+            kind = "solid"
+        key = (material.casefold(), color.casefold(), kind)
         if key in seen:
             continue
         seen.add(key)
-        output.append({"material": material, "color": color, "hex": str(item.get("hex") or item.get("hex_code") or "").strip()})
+        output.append({
+            "material": material,
+            "color": color,
+            "hex": str(item.get("hex") or item.get("hex_code") or "").strip(),
+            "color_type": kind,
+            "secondary_hex": str(item.get("secondary_hex") or item.get("hex2") or "").strip(),
+            "tertiary_hex": str(item.get("tertiary_hex") or item.get("hex3") or "").strip(),
+        })
     return output
 
 
 def _homepage_slider_seo(data: dict, product) -> dict:
-    """Return operator-approved 8.7.1 slider copy with AI-pack fallback.
-
-    The desktop app writes dedicated columns when the operator saves. Older/bulk
-    AI flows may only have content_pack_json, so the server also accepts the
-    nested homepage_slider_seo object without requiring a new MySQL migration.
-    """
+    """Return operator-approved 8.7.1 slider copy with AI-pack fallback."""
     content_pack = _safe_dict(data.get("content_pack_json"))
     ai = content_pack.get("homepage_slider_seo") or {}
     if not isinstance(ai, dict):
@@ -189,6 +258,13 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
             material.is_active = True
 
         color = MaterialColorOption.objects.filter(material=material, name__iexact=item["color"]).order_by("id").first()
+        color_defaults = {
+            "hex_code": item.get("hex", "")[:20],
+            "color_type": item.get("color_type", "solid"),
+            "secondary_hex": item.get("secondary_hex", "")[:20],
+            "tertiary_hex": item.get("tertiary_hex", "")[:20],
+            "is_active": True,
+        }
         if color is None:
             code = _color_code(material.pk, item["color"])
             suffix = 1
@@ -200,16 +276,14 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
                 material=material,
                 name=item["color"][:100],
                 code=candidate,
-                hex_code=item["hex"][:20],
-                is_active=True,
                 sort_order=index,
+                **color_defaults,
             )
         else:
             changes = {}
-            if item["hex"] and color.hex_code != item["hex"][:20]:
-                changes["hex_code"] = item["hex"][:20]
-            if not color.is_active:
-                changes["is_active"] = True
+            for key, value in color_defaults.items():
+                if getattr(color, key) != value:
+                    changes[key] = value
             if changes:
                 MaterialColorOption.objects.filter(pk=color.pk).update(**changes)
                 for key, value in changes.items():
@@ -255,7 +329,15 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
             for key, value in defaults.items():
                 setattr(variant, key, value)
             variant.save()
-        output.append({"material": material.name, "color": color.name, "variant_id": variant.pk})
+        output.append({
+            "material": material.name,
+            "color": color.name,
+            "color_type": color.color_type,
+            "hex": color.hex_code,
+            "secondary_hex": color.secondary_hex,
+            "tertiary_hex": color.tertiary_hex,
+            "variant_id": variant.pk,
+        })
 
     ProductVariant.objects.filter(product=product, code__startswith=f"EP49-{product.pk}-").exclude(code__in=selected_codes).update(is_active=False)
     ProductVariant.objects.filter(product=product, code=f"MW-FIX-{asset.pk:07d}-DEFAULT").update(is_active=False)
