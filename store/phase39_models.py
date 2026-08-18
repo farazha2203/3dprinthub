@@ -7,12 +7,32 @@ from django.utils import timezone
 
 
 class MaterialColorOption(models.Model):
+    COLOR_TYPE_CHOICES = [
+        ("solid", "ساده"),
+        ("transparent", "شفاف / شیشه‌ای"),
+        ("translucent", "نیمه‌شفاف"),
+        ("metallic", "متالیک"),
+        ("silk", "Silk / ابریشمی"),
+        ("dual", "دو رنگ"),
+        ("multicolor", "چند رنگ"),
+        ("gradient", "گرادیانی"),
+    ]
+
     material = models.ForeignKey(
         "website.Material", on_delete=models.CASCADE, related_name="store_color_options", verbose_name="متریال"
     )
     name = models.CharField(max_length=100, verbose_name="نام رنگ")
     code = models.SlugField(max_length=120, verbose_name="کد رنگ")
-    hex_code = models.CharField(max_length=20, blank=True, verbose_name="کد HEX")
+    hex_code = models.CharField(max_length=20, blank=True, verbose_name="کد HEX اصلی")
+    color_type = models.CharField(
+        max_length=20,
+        choices=COLOR_TYPE_CHOICES,
+        default="solid",
+        db_index=True,
+        verbose_name="نوع رنگ",
+    )
+    secondary_hex = models.CharField(max_length=20, blank=True, verbose_name="HEX دوم")
+    tertiary_hex = models.CharField(max_length=20, blank=True, verbose_name="HEX سوم")
     sale_price_per_gram_override = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True, verbose_name="قیمت فروش اختصاصی هر گرم"
     )
