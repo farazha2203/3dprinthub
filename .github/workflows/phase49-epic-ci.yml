@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - epic/phase49-unified-product-slider-sync
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
   workflow_dispatch:
 
 permissions:
