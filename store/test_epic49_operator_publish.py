@@ -76,11 +76,25 @@ class Epic49OperatorPublishContractTests(SimpleTestCase):
         self.assertIn("product.catalog_profile.price_min", template)
         self.assertIn("product.catalog_profile.technical_features", template)
 
-    def test_hero_links_to_store_product_when_published(self):
+    def test_hero_links_use_safe_store_target_contract(self):
         from pathlib import Path
-        template = (Path(__file__).resolve().parents[1] / "templates" / "website" / "partials" / "hero.html").read_text(encoding="utf-8")
-        self.assertIn("slide.asset.product.get_absolute_url", template)
-        self.assertIn("slide.asset.product.is_active", template)
+        root = Path(__file__).resolve().parents[1]
+        template = (root / "templates" / "website" / "partials" / "hero.html").read_text(encoding="utf-8")
+        runtime = (root / "website" / "phase49_2b_hero_hotfix.py").read_text(encoding="utf-8")
+
+        # The template consumes one safe runtime property instead of duplicating
+        # Product publication/fallback logic in HTML.
+        self.assertIn("{{ slide.target_url }}", template)
+        self.assertNotIn("external_catalog_detail", template)
+
+        # Active Store Products link to their canonical detail URL. If a Product
+        # is not public yet, the Hero falls back to the Store list and never to the
+        # retired external catalog route.
+        self.assertIn("def _asset_target", runtime)
+        self.assertIn('getattr(product, "is_active", False)', runtime)
+        self.assertIn("product.get_absolute_url()", runtime)
+        self.assertIn('reverse("store:product_list")', runtime)
+        self.assertNotIn("external_catalog_detail", runtime)
 
 
 if __name__ == "__main__":
