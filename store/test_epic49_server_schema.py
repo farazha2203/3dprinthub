@@ -123,7 +123,7 @@ class Epic49ServerSchemaTests(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.meta_title, self.data["seo_title_fa"])
         self.assertEqual(self.product.meta_description, self.data["seo_description_fa"])
-        self.assertEqual(self.product.seo_focus_keyword, "آباژور سه بعدی")
+        self.assertEqual(self.product.seo_focus_keyword, "خرید آباژور سه بعدی")
         self.assertIn("#آباژور", self.product.hashtags)
         self.assertEqual(self.product.canonical_url, "")
 
