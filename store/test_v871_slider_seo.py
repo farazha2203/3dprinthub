@@ -78,7 +78,7 @@ class V871HomepageSliderSeoTests(TestCase):
         self.assertEqual(slide.image_alt_text, data["homepage_slider_alt_text"])
         self.assertEqual(slide.button_text, data["homepage_slider_button_text"])
         self.assertEqual(slide.sort_order, 12)
-        self.assertEqual(result["homepage_slider"]["focus_keyword"], "آباژور سه بعدی")
+        self.assertEqual(result["homepage_slider"]["focus_keyword"], "خرید آباژور سه بعدی")
         self.assertEqual(slide.target_url, self.product.get_absolute_url())
 
     def test_ai_content_pack_is_backward_compatible_slider_copy_fallback(self):
@@ -99,12 +99,13 @@ class V871HomepageSliderSeoTests(TestCase):
             "content_pack_json": json.dumps({"homepage_slider_seo": ai_slider}, ensure_ascii=False),
         }
         asset = self._asset(data, external_id="8712")
-        sync_epic49_publish_options(asset)
+        result = sync_epic49_publish_options(asset)
         slide = HomepageHeroSlide.objects.get(asset=asset)
         self.assertEqual(slide.title_override, ai_slider["title_fa"])
         self.assertEqual(slide.description, ai_slider["description_fa"])
         self.assertEqual(slide.image_alt_text, ai_slider["image_alt_fa"])
         self.assertEqual(slide.button_text, ai_slider["button_text_fa"])
+        self.assertEqual(result["homepage_slider"]["focus_keyword"], "خرید چراغ دکوراتیو سه بعدی")
 
 
 if __name__ == "__main__":
