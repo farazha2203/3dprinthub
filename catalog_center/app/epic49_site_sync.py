@@ -98,7 +98,7 @@ def update_hero_slide(settings: SiteConnection, slide_id: int, expected_revision
 
 
 def apply_server_product_to_local(db, local_product_id: int, server: dict) -> None:
-    """Persist only fields owned by the unified contract; source/raw data stays local."""
+    """Persist editable server fields; immutable/raw internet source data stays local."""
     profile = server.get("profile") if isinstance(server.get("profile"), dict) else {}
     values = {
         "server_product_id": int(server.get("id") or 0),
@@ -107,6 +107,9 @@ def apply_server_product_to_local(db, local_product_id: int, server: dict) -> No
         "server_slider_revision": int(server.get("hero_revision") or 0),
         "server_updated_at": str(server.get("updated_at") or ""),
         "last_sync_conflict": "",
+        "title_fa": str(server.get("title") or ""),
+        "short_description_fa": str(server.get("short_description") or ""),
+        "description_fa": str(server.get("description") or ""),
         "seo_title_fa": str(server.get("meta_title") or ""),
         "seo_description_fa": str(server.get("meta_description") or ""),
         "homepage_slider_enabled": int(bool(profile.get("homepage_slider_enabled"))),
