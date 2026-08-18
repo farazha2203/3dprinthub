@@ -21,10 +21,18 @@ def main() -> int:
     from app.product_workspace_epic49 import ProductWorkspace
     from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.phase49_dual_publish_desktop import install as install_dual_publish_workspace
-    from app.ux87_shell import build_app_class
+    from app.phase49_material_color_picker import install as install_material_color_picker
+    from app import ux87_shell
 
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
+    install_material_color_picker(ProductWorkspace)
+
+    # Critical routing contract: UX87 historically imported the old 8.7 workspace
+    # at module load time. Point the shell at the final Epic49 workspace so product
+    # double-clicks and the "ویرایش محصول" action open the same class that the
+    # launcher has patched with Slider SEO, Dual Publish and option pickers.
+    ux87_shell.ProductWorkspace = ProductWorkspace
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
@@ -40,6 +48,7 @@ def main() -> int:
     print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
     print(f"ACTIVE_SOURCE={SOURCE_ROOT}", flush=True)
     print("UX87_SHELL=ENABLED", flush=True)
+    print("UX87_EPIC49_WORKSPACE_ROUTING=ENABLED", flush=True)
     print("PRODUCT_WORKSPACE_V87=ENABLED", flush=True)
     print("PRODUCT_WORKSPACE_V871=ENABLED", flush=True)
     print("HOMEPAGE_SLIDER_SEO_V871=ENABLED", flush=True)
@@ -48,6 +57,7 @@ def main() -> int:
     print("EPIC49_PERSIAN_SALES_HERO=ENABLED", flush=True)
     print("EPIC49_DUAL_PUBLISH_TARGETS=ENABLED", flush=True)
     print("EPIC49_LOCAL_PUBLISH_SQLITE_GUARD=ENABLED", flush=True)
+    print("EPIC49_MATERIAL_COLOR_PICKER=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -63,8 +73,8 @@ def main() -> int:
 
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
-    app_module.ProductStudio = ProductWorkspace  # compatibility for any deep legacy callback
-    App87 = build_app_class(app_module.App)
+    app_module.ProductStudio = ProductWorkspace  # compatibility for deep legacy callbacks
+    App87 = ux87_shell.build_app_class(app_module.App)
     App87().mainloop()
     return 0
 
