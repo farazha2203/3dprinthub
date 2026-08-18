@@ -53,5 +53,10 @@ class WebsiteConfig(AppConfig):
 
         views._phase14_presentation_schema = _phase49_2a_presentation_schema
 
+        # Phase 49.2B: install the managed Hero Store/Product fallbacks, server-side
+        # pre-save completion and Admin defaults for every runtime path (web, tests,
+        # shell and management commands) without changing the database schema.
+        from . import phase49_2b_hero_hotfix  # noqa: F401
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
