@@ -21,10 +21,10 @@ jobs:
       DJANGO_SECRET_KEY: "ci-only-epic49-secret-key"
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
       CATALOG_BRIDGE_TOKEN: "epic49-ci-token-12345678901234567890"
-      MEDIA_ROOT: "${{ runner.temp }}/3dprinthub-media"
-      PRIVATE_MEDIA_ROOT: "${{ runner.temp }}/3dprinthub-private-media"
-      STATIC_ROOT: "${{ runner.temp }}/3dprinthub-static"
-      CATALOG_BRIDGE_PENDING_ROOT: "${{ runner.temp }}/3dprinthub-imports/pending"
+      MEDIA_ROOT: "/tmp/3dprinthub-ci/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-ci/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-ci/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-ci/imports/pending"
       PYTHONUNBUFFERED: "1"
 
     steps:
@@ -44,6 +44,7 @@ jobs:
 
       - name: Prepare isolated CI runtime directories
         run: |
+          rm -rf /tmp/3dprinthub-ci
           mkdir -p "$MEDIA_ROOT" "$PRIVATE_MEDIA_ROOT" "$STATIC_ROOT" "$CATALOG_BRIDGE_PENDING_ROOT"
 
       - name: Compile changed Python surfaces
