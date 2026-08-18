@@ -11,151 +11,89 @@
 - Repository: `farazha2203/3dprinthub`
 
 ## Delivery rule
-GitHub is the code source of truth. Required flow:
-`GitHub phase branch -> Windows sync -> local migration plan/test -> local visual acceptance -> explicit approval -> production backup -> production deploy -> smoke tests`.
-Never reset production DB for a code/deploy problem. Preserve `.env`, MySQL, `media`, `private_media`, Catalog Center state/API keys and other runtime data.
+GitHub is the code source of truth.
 
-## Stable recovery baseline
+Required flow:
+
+`GitHub Epic branch -> Windows sync -> local backup/migration plan -> local tests -> local visual/E2E acceptance -> explicit approval -> production backup -> production deploy -> production smoke tests`.
+
+Never reset/drop/truncate production DB for a code/deploy problem. Preserve `.env`, MySQL, `media`, `private_media`, Catalog Center data, API keys and other runtime state.
+
+## Stable historical recovery baseline
 Phase 31 remains the historical recovery baseline: 2408 fixture objects, 51 fixture models, 31 provinces, 427 counties, 1242 cities; production DB/media backups existed and site/admin smoke checks were HTTP 200. Production data may have grown since then.
 
-## Phase 49.2A foundation retained
-Phase 49.2A consolidated the active product path:
-`Windows Catalog Center 8.7.1 -> Catalog Bridge -> Product/ProductCatalogProfile -> Store`.
-Public external ready-model catalog/Link Analyzer intake routes are retired and must not be restored to satisfy legacy tests. Historical records remain. External model sync is disabled by default. Material and USD/FX pricing logic remain independent.
-Catalog Center: version `8.7.1`, build `2026.08.16.3`.
-Latest known local results before 49.2B: Catalog Bridge 9/9 OK; Store 220 tests OK with one local MySQL-specific skip. Mobile/Desktop public-site stabilization is part of the retained foundation.
-Known warnings remain visible: `ckeditor.W001` (CKEditor 4 technical debt) and `store.W026` (in-memory realtime layer; shared Redis needed for cross-process production realtime if required).
+---
 
-## Phase 49.2B foundation retained — Master Admin + Customer Portal
-- Approved design source: uploaded `master.zip` only (Velzon Django Corporate 4.3.0).
+# Phase49 foundations retained
+
+## Phase49.2A — Core consolidation
+
+Active product route:
+
+`Windows Catalog Center 8.7.1 -> Catalog Bridge -> ImportedPrintAsset -> Product/ProductCatalogProfile -> Store`.
+
+Retained decisions:
+- public external ready-model catalog/Link Analyzer intake is retired;
+- historical records are preserved;
+- external background model sync is disabled by default;
+- material pricing and USD/FX logic remain independent;
+- External Catalog route must not be restored merely to satisfy stale tests.
+
+Catalog Center baseline:
+- version: `8.7.1`
+- build: `2026.08.16.3`
+
+Known warnings:
+- `ckeditor.W001`: CKEditor 4 technical debt/security warning;
+- `store.W026`: in-memory realtime channel layer; Redis required for cross-process realtime if enabled in production.
+
+## Phase49.2B — Master Admin + Customer Portal
+
+Approved UI source:
+- uploaded `master.zip` / Velzon Django Corporate 4.3.0;
 - `interactive` is rejected and must not be used.
-- Existing Master RTL assets under `static/velzon_master/` are reused.
-- Exact user logo: `static/img/brand/3dprinthublogo.png`.
-- Approved SHA-256: `97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`.
-- User-supplied IRANSans FaNum weights are mapped as 200/300/400/500/700/900 in `static/css/phase49_2b-design-system.css`.
-- Admin uses Master RTL + `phase49_2b-design-system.css` + `phase49_2b-admin.css`.
-- Customer Portal uses `phase49_2b-customer.css/js`, desktop sidebar and <=1100px accessible drawer.
-- Admin desktop Login regression was fixed: full auth shell is no longer constrained to 460px; only the login card is capped around 520px.
-- Managed Hero Phase49.2B hotfix aligned Hero SEO/image/title/description/target with Store Product and retired External Catalog URLs.
-- Phase49.2B Hero backend compatibility remains active in 49.2C: Store target resolver, SEO/image suggestions, `pre_save` completion and new-slide `is_active=True` default.
-- The old Phase49.2B Select2 Admin Hero UI is retired in 49.2C and must not be restored just to satisfy an obsolete test.
 
-## Current active phase
-**Phase 49.2C — Hero Studio & Cinematic Slider**
+Brand:
+- canonical UI logo: `static/img/brand/3dprinthublogo.png`;
+- approved SHA-256: `97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`;
+- exact user-supplied logo only; do not regenerate/recolor/substitute;
+- six IRANSans FaNum weights mapped 200/300/400/500/700/900.
 
-Branch:
-`epic/phase49-2c-hero-studio`
+Retained improvements:
+- Master RTL Admin;
+- Customer Portal desktop sidebar + responsive drawer;
+- Admin login desktop width regression fixed;
+- Hero Store target/SEO/image fallback aligned with Store Product;
+- External Catalog Hero URLs retired.
 
-Detailed document:
-`docs/PHASE49_2C_HERO_STUDIO.md`
+## Phase49.2C — Hero Studio & Cinematic Slider
 
-### Goal
-Make homepage Hero management visual and fast: select a product from an image album instead of a slow autocomplete-only workflow, select the exact product image with a persistent database relation, edit existing slides without delete/recreate, and choose a cinematic transition/timing per slide.
+Migration already applied on **local SQLite only**:
+`website.0020_phase49_2c_hero_studio`.
 
-### UI / icon contract
-No new frontend/icon library is installed. Existing Master/Velzon Remix Icons are used:
-- search: `ri-search-2-line`
-- filter: `ri-filter-3-line`
-- gallery/image: `ri-image-2-line`
-- selected state: `ri-checkbox-circle-fill`
-- refresh: `ri-refresh-line`
-- edit: `ri-edit-2-line`
-- cinematic settings: `ri-movie-2-line`
-- preview: `ri-play-circle-line`
-- pagination: Remix arrow icons
+Fields:
+- `selected_asset_image` -> nullable FK to `store.ImportedPrintAssetImage`;
+- `transition_effect`;
+- `transition_duration_ms`;
+- `display_duration_ms`.
 
-Admin Studio files:
-- `templates/admin/website/homepageheroslide/change_form.html`
-- `static/css/admin-phase49_2c-hero-studio.css`
-- `static/js/admin-phase49_2c-hero-studio.js`
+Local validation from 2026-08-18:
+- Hero rows before 0020: 2;
+- Hero rows after 0020: 2;
+- all four columns verified;
+- `PHASE49_2C_DB_VERIFY=OK`;
+- dedicated 49.2C test: 9/9 OK;
+- later combined Phase49 regression: 21/21 OK.
 
-The old Django autocomplete remains collapsed as an emergency/advanced fallback only.
+Hero Studio retained:
+- visual Product Album Picker;
+- visual image selection without first Save;
+- persistent image relation;
+- edit existing sliders without delete/recreate;
+- cinematic effect/timing per slide;
+- reduced-motion/mobile-safe behavior.
 
-### Album Picker backend
-Staff-only ModelAdmin endpoints:
-- `/admin/website/homepageheroslide/product-browser/`
-- `/admin/website/homepageheroslide/asset-detail/`
-
-The Product browser uses actual active Store Products backed by `ImportedPrintAsset`, 24 per page. Search covers Persian/English title, SKU, source external id, imported title/id and source name. Category filter uses real Store `Category` rows.
-
-Selecting a product immediately:
-1. writes the actual `ImportedPrintAsset` FK to the existing form;
-2. fetches Phase49.2B / Catalog Center 8.7.1 SEO suggestions;
-3. fills title/group/description/alt/button for a deliberate new selection;
-4. renders the product image album without a first Save;
-5. leaves every field manually editable before final Save.
-
-### Database / migration
-**Phase49.2C intentionally has a real additive migration.**
-
-Migration:
-`website/migrations/0020_phase49_2c_hero_studio.py`
-
-Previous chain:
-`website.0019_phase45_managed_homepage_hero -> store.0027_phase39_variant_color_fk`.
-`ImportedPrintAssetImage` exists since `store.0009_inventory_finance_catalog`, so the FK target is available before 0020.
-
-Added `HomepageHeroSlide` fields:
-- `selected_asset_image`: nullable FK to `store.ImportedPrintAssetImage`, `SET_NULL`, no reverse relation.
-- `transition_effect`: choice field, default `cinematic_fade`.
-- `transition_duration_ms`: default 1400, valid 300..4000 ms.
-- `display_duration_ms`: default 7000, valid 2000..30000 ms.
-
-No table/row/media deletion exists in migration 0020. Existing slides keep all old data, receive transition defaults, and start with `selected_asset_image=NULL` until an operator selects an album image.
-
-Runtime alignment module:
-`website/phase49_2c_hero_studio.py`.
-It contributes the same four persistent fields declared by migration 0020 to the mature runtime model rather than rewriting the very large legacy `website/models.py`. ORM/Admin/makemigrations remain aligned with the migration state.
-
-### Local 0020 validation — 2026-08-18
-Local DB vendor: SQLite.
-Backup created under:
-`D:\projects\3dprinthub-backups\phase49_2c_20260818-123411`.
-
-Before 0020:
-- full `db.sqlite3` copied;
-- `website_homepageheroslide` exported to JSON;
-- Hero rows: **2**.
-
-After 0020:
-- migration applied successfully;
-- Hero rows: **2**;
-- verified columns: `selected_asset_image_id`, `transition_effect`, `transition_duration_ms`, `display_duration_ms`;
-- missing columns: none;
-- `PHASE49_2C_DB_VERIFY=OK`.
-
-Checks/tests:
-- `makemigrations --check --dry-run`: **No changes detected**.
-- `website.test_phase49_2c_hero_studio`: **9/9 OK**.
-- first combined Phase49.2B/45 regression: 15 tests OK + 1 stale test failure because it still required `P49_HERO_PREFILL_URL` in the form.
-- stale test has now been upgraded: 49.2B server fallback is required, but 49.2C Album Picker must be the only Admin Hero UI and legacy `admin-phase45-hero.js`/`P49_HERO_PREFILL_URL` must not return.
-
-### Image selection precedence
-1. manually selected `selected_asset_image.image`;
-2. that image row's `remote_url`;
-3. explicit legacy `image_url`;
-4. Catalog/Store preview fallback.
-
-Manual Hero Studio image selection is intentionally authoritative so a later Catalog Center publish cannot silently overwrite a manually approved Hero image. Choosing the default/fallback card clears the relation and returns the slide to Catalog/Store fallback behavior.
-
-### Existing slide editing
-Homepage Hero changelist is patched to expose:
-- preview and title as edit links;
-- explicit edit action with `ri-edit-2-line`;
-- inline transition-effect edit;
-- inline sort-order edit;
-- inline active-status edit;
-- display/transition timing summary.
-
-Deleting/recreating an existing slide is no longer required.
-
-### Cinematic transition engine
-Frontend assets:
-- `static/css/phase49_2c-hero-effects.css`
-- `static/js/phase49_2c-home-hero.js`
-- `templates/website/partials/hero.html` exposes per-slide effect/timing data.
-
-Effects:
+Six effects:
 1. `cinematic_fade`
 2. `wedding_dissolve`
 3. `cinematic_zoom`
@@ -163,77 +101,419 @@ Effects:
 5. `soft_blur`
 6. `cinematic_reveal`
 
-The engine uses per-slide `setTimeout` timing, not a fixed `setInterval`. Each slide independently owns transition and display durations. Existing keyboard, swipe, dots, arrows, focus/hover pause and visibility pause behavior are retained.
+---
 
-### Legacy engine / cache isolation
-The new root has `data-p49c-engine`. New JS removes `data-p45-hero` before DOMContentLoaded; therefore even an old browser-cached Phase45 JS cannot initialize a second slider engine against the same Hero.
+# Local Store migration status before Unified Epic
 
-### Mobile / accessibility
-- `prefers-reduced-motion` removes cinematic animation and transforms.
-- <=600px soft-blur becomes simple fade; reveal avoids expensive mobile clip animation.
-- one active slide keeps navigation controls hidden as before.
+On Windows local SQLite, these are already applied:
+- `[X] store.0027_phase39_variant_color_fk`
+- `[X] store.0028_epic49_catalog_product_schema`
+- `[X] store.0029_epic49_catalog_product_backfill`
+- `[X] website.0019_phase45_managed_homepage_hero`
+- `[X] website.0020_phase49_2c_hero_studio`
 
-### Admin effect preview
-Hero Studio has a local preview stage reading the current transition type/duration from the form, so the operator can preview the selected effect before Save.
+Before 0028/0029 the read-only audit reported:
+- `IMPORTED_ASSETS_WITH_PRODUCT=0`
+- `PROFILES_TO_CREATE_OR_REFRESH=0`
+- `PRODUCTS_WITH_ANY_CHANGE=0`
+- `PRODUCTS_WITH_SLUG_CHANGE=0`
+- `AUDIT_DB_MUTATIONS=0`
 
-## Pending Store migration gate discovered during Phase49.2C
-The local migration plan also exposed two **older Epic49 Store migrations** still pending locally:
-- `store.0028_epic49_catalog_product_schema` — creates `ProductCatalogProfile`.
-- `store.0029_epic49_catalog_product_backfill` — profile backfill plus Product slug/SEO normalization.
+Therefore local application of 0028/0029 changed no existing Product slug/SEO because local Product count was zero.
 
-0029 can change Product fields including:
-- `slug`, `canonical_url`;
-- `meta_title`, `meta_description`, `seo_focus_keyword`;
-- `og_title`, `og_description`;
-- `editorial_source_url`, `source_attribution`, `hashtags`;
-- `robots_index`, `robots_follow`.
+After applying them:
+- `STORE_0028_APPLIED=True`
+- `STORE_0029_APPLIED=True`
+- `PROFILE_TABLE_EXISTS=True`
+- Product/slug/SEO change counts remained zero.
 
-Therefore **do not run a general `python manage.py migrate` yet**. 0028/0029 require an explicit read-only audit first.
+Do **not** re-run old warnings that 0028/0029 are pending; that state is obsolete.
 
-### Read-only audit command
-Path:
-`store/management/commands/epic49_catalog_migration_audit.py`
+---
+
+# Local catalog dataset observation
+
+Read-only local audit:
+- `PRODUCTS = 0`
+- `ACTIVE_PRODUCTS = 0`
+- `IMPORTED_ASSETS = 45`
+- `ASSETS_WITH_PRODUCT = 0`
+- `ASSETS_WITHOUT_PRODUCT = 45`
+- `HERO_SLIDES = 2`
+
+Historical local Hero links:
+- slide 10 -> asset 1, `Vesper – Sculptural Bedside Lamp`;
+- slide 11 -> asset 8, `Articulated flexi lizard`.
+
+Those 45 local Assets are **not to be bulk-converted automatically**. Windows employee publishing is the operational Source of Truth and must run the normal approval/license/image/category gates. Historical/reference assets stay preserved.
+
+---
+
+# CURRENT ACTIVE EPIC
+
+## Epic 49 — Unified Product / SEO / Slider / Desktop / Bridge
+
+Branch:
+
+`epic/phase49-unified-product-slider-sync`
+
+Detailed document:
+
+`docs/EPIC49_UNIFIED_PRODUCT_SLIDER_SYNC.md`
+
+### Current state
+- Epic implementation: **complete on GitHub**;
+- self-test CI: **green**;
+- Windows local pull/migrations/visual QA: **not yet performed for the Unified Epic**;
+- production: **untouched / not deployed**.
+
+Code validation baseline before documentation-only commits:
+
+`8ad84577498072cf8c3d007d8bd259d6e3428cba`
+
+Final CI probe commit:
+
+`03b9df7c8f5a7ce8e8ad44b916cd626cc419818d`
+
+Final GitHub Actions:
+- run: `32129944811`
+- job: `95688635543`
+- result: **SUCCESS**
+
+All gates passed:
+- dependency install;
+- isolated runtime directories;
+- Python compile;
+- `manage.py check`;
+- `makemigrations --check --dry-run`;
+- `migrate --plan`;
+- targeted Phase49 behavioral/regression tests;
+- Windows Catalog Center Epic49 tests;
+- **full Django test suite**.
+
+---
+
+## Unified operational model
+
+**Windows Catalog Center is the primary employee editor.**
+
+Employees should be able to perform from Windows:
+- internet product intake;
+- source/reference review;
+- Persian content edit;
+- Product SEO edit/AI generation;
+- image selection;
+- price/material/color configuration;
+- publish approval/license controls;
+- independent Hero Slider SEO;
+- Hero image selection;
+- Hero effect/timing;
+- publish to site;
+- read current site Product revision;
+- read/edit all current site Hero sliders;
+- refresh newer server edits.
+
+**Django Admin remains an equal secondary/manager editor**, not a separate data model.
+
+Server changes and Windows changes use the same persistent Product/Profile/Hero records.
+
+---
+
+## Product SEO vs Hero SEO
+
+Product SEO remains independent from Hero SEO.
+
+Hero-specific persistent contract:
+- `homepage_slider_enabled`
+- `homepage_slider_image_url`
+- `homepage_slider_sort_order`
+- `homepage_slider_title_fa`
+- `homepage_slider_description_fa`
+- `homepage_slider_alt_text`
+- `homepage_slider_button_text`
+- `homepage_slider_focus_keyword`
+- `homepage_slider_transition_effect`
+- `homepage_slider_transition_duration_ms`
+- `homepage_slider_display_duration_ms`
+
+Catalog Center AI Pack `homepage_slider_seo` is preserved. Dedicated Slider SEO takes priority; Product SEO is fallback only when Slider fields are empty.
+
+---
+
+## Unified Django database migrations — NOT YET APPLIED LOCALLY
+
+### Store 0030
+
+`store/migrations/0030_phase49_unified_sync_contract.py`
+
+Adds to ProductCatalogProfile:
+- dedicated Hero SEO fields;
+- Hero effect/timing fields;
+- `sync_revision`;
+- `last_modified_source`;
+- `last_modified_by`.
+
+### Website 0021
+
+`website/migrations/0021_phase49_unified_hero_sync.py`
+
+Adds to HomepageHeroSlide:
+- `sync_revision`;
+- `last_modified_source`;
+- `last_modified_by`.
+
+Both migrations are additive. No DROP/DELETE/TRUNCATE operations.
+
+The next Windows gate must review `migrate --plan` before applying 0030/0021.
+
+---
+
+## Windows SQLite unified schema
+
+`catalog_center/app/epic49_desktop_schema.py`
+
+New additive columns:
+- `homepage_slider_transition_effect`
+- `homepage_slider_transition_duration_ms`
+- `homepage_slider_display_duration_ms`
+- `server_product_id`
+- `server_product_revision`
+- `server_slider_id`
+- `server_slider_revision`
+- `server_updated_at`
+- `last_sync_conflict`
+
+Existing Hero SEO columns remain.
+
+Installer only adds missing columns; old Windows data is not deleted/rebuilt.
+
+---
+
+## Windows UI / icons
+
+No new UI/icon package installed.
+
+Employee mental model/icons:
+- 📦 product
+- 🖼 gallery/images
+- 🔎 Product SEO
+- 🎬 Hero Slider
+- ✨ AI content/Slider SEO
+- 🌐 server sync / server sliders
+- ✅ publish
+- ⚠ revision conflict
+- ↻ refresh from server
+
+Final workspace:
+
+`catalog_center/app/product_workspace_epic49.py`
+
+Inheritance:
+
+`ProductWorkspaceEpic49 -> ProductWorkspace871 -> ProductWorkspace87`
+
+Existing V87/V871 workflow is preserved; Epic extends it rather than replacing it.
+
+Adds:
+- effect selector;
+- transition/display timing;
+- server revisions;
+- local cinematic Preview from real cached Product images;
+- refresh current Product from Server;
+- manage all server sliders.
+
+Server Slider Manager:
+
+`catalog_center/app/epic49_server_slider_manager.py`
+
+Edits:
+- title;
+- description;
+- alt;
+- focus keyword;
+- button;
+- exact image from same Asset;
+- effect;
+- transition/display timing;
+- order;
+- active state;
+- revision/source/operator.
+
+---
+
+## Catalog Bridge unified contract
+
+Bridge runtime:
+- version `1.3.0`;
+- contract `epic49-unified-v1`;
+- same existing Bearer token / HMAC authorization.
+
+Old endpoints retained:
+- `/api/catalog-bridge/v1/health/`
+- `/api/catalog-bridge/v1/import/`
+- `/api/catalog-bridge/v1/diagnostics/<batch_name>/`
+
+New endpoints:
+- `GET /api/catalog-bridge/v1/products/`
+- `GET /api/catalog-bridge/v1/products/<id>/`
+- `POST /api/catalog-bridge/v1/products/<id>/sync/`
+- `GET /api/catalog-bridge/v1/hero-slides/`
+- `GET /api/catalog-bridge/v1/hero-slides/<id>/`
+- `POST /api/catalog-bridge/v1/hero-slides/<id>/sync/`
+
+Writes use explicit Allow-lists.
+
+Hero image ownership is enforced: an image belonging to another Asset cannot be assigned to a Hero slide.
+
+---
+
+## Revision / conflict protection
+
+Product Profile and Hero each have independent `sync_revision`.
+
+If Windows revision equals Server revision:
+- update accepted;
+- revision incremented.
+
+If Server revision is newer:
+- HTTP `409 Conflict`;
+- current server payload returned;
+- Windows shows conflict and requires review/refresh.
+
+Admin Product edits bump Profile revision.
+Admin Hero edits bump Hero revision.
+Profile Admin and Hero Admin mirror common Slider fields so they do not become competing sources.
+
+Audit fields:
+- `last_modified_source`: `desktop` / `admin`;
+- `last_modified_by`: employee/operator/admin username.
+
+---
+
+## Same-batch idempotency
+
+Key:
+
+`batch_uuid + source_hash`
 
 Purpose:
-- mirror the relevant 0029 slug/SEO calculations;
-- report whether 0028/0029 are applied;
-- report profile-table existence;
-- count imported Products/profiles affected;
-- count Product slug changes and per-field SEO changes;
-- show detailed changed Product/SKU rows;
-- perform **zero database mutation**.
+- multiple Asset saves/signals inside one official import must not conflict with themselves;
+- repeated import of identical batch must not inflate revisions;
+- duplicate Product/Hero must not be created.
 
-Run:
-`python manage.py epic49_catalog_migration_audit --limit 100`
+Hero revision increments only when actual Hero state changes.
 
-JSON option:
-`python manage.py epic49_catalog_migration_audit --limit 0 --json`
+---
 
-Behavior test:
-`python manage.py test store.test_epic49_catalog_migration_audit -v 2`
+## ACK enrichment
 
-The test snapshots Product slug/SEO fields, runs the command, verifies the Product is byte-for-byte unchanged at field level, and verifies no `ProductCatalogProfile` was created.
+Import ACK additionally returns:
+- `server_product_id`
+- `product_revision`
+- `slider_id`
+- `slider_revision`
+- `sync_contract=epic49-unified-v1`
 
-## Phase49.2C validation gate
-**Production deployment is NOT approved. Migration 0020 must not be applied on host yet. Store 0028/0029 must not be applied locally/host until audit approval.**
+Windows stores revisions for subsequent optimistic updates.
 
-Required Windows sequence now:
-1. sync latest `epic/phase49-2c-hero-studio`;
-2. rerun `website.test_phase49_2b_hero_login_hotfix`, `website.test_phase49_2c_hero_studio`, `website.test_phase45_homepage_hero`;
-3. run `store.test_epic49_catalog_migration_audit`;
-4. run `epic49_catalog_migration_audit --limit 100` and review all summary counts and changed slugs;
-5. only after explicit audit approval: new local DB backup and controlled application of Store 0028/0029;
-6. then `website`, `store`, `catalog_bridge`, full suite;
-7. visual QA: Hero Studio add/edit/list, Home Hero desktop + 320/360/390/430/tablet, all six effects and reduced-motion behavior;
-8. explicit user approval;
-9. only then production DB backup/deploy/migrations/collectstatic/restart/smoke tests.
+---
 
-Known warnings remain:
-- `ckeditor.W001`: CKEditor4 maintenance/security debt; separate upgrade phase required.
-- `store.W026`: in-memory realtime layer; Redis needed for cross-process production realtime if required.
+## Brand contract after Full Suite cleanup
 
-## Rollback rule
-Before production migration, rollback is branch/code-only. After 0020 is applied locally, do not drop columns/reset DB as a shortcut. The migration is additive and old data remains. Store 0028/0029 must be audited before application because 0029 changes Product slug/SEO data.
+Canonical public brand asset:
 
-## Next planned work after Phase49.2C
-After compatibility retest and Store migration audit are accepted, continue visual Hero Studio QA, apply only approved pending migrations, run full suite, then return to Master-based Admin/Customer workflow improvements. No host changes before local approval.
+`static/img/brand/3dprinthublogo.png`
+
+Home and Store both use the canonical approved logo for browser icon/apple-touch references.
+
+Legacy files under `static/favicon/` remain preserved for compatibility/history but are not the brand Source of Truth because they were generated before the final approved canonical-logo contract and their provenance could not be proven from Repository history.
+
+---
+
+# Epic49 tests
+
+Key behavioral tests:
+- `store.test_phase49_unified_sync`
+- `store.test_phase49_unified_import_e2e`
+- `store.test_epic49_operator_publish`
+- `store.test_phase49_1_frontend_contract`
+- `catalog_bridge.test_phase49_unified_bridge`
+- `catalog_bridge.tests.test_epic49_contract`
+- `website.test_phase49_2c_hero_studio`
+- `website.test_phase49_2b_hero_login_hotfix`
+- `website.test_phase45_homepage_hero`
+- `catalog_center/tests/test_phase49_unified_desktop.py`
+- all `catalog_center/tests/test_*epic49*.py`.
+
+E2E test builds a real v8.5 batch, imports through the official `phase37_import_catalog_center` command, then verifies Product/Profile/Hero/image/SEO/effect/timing/revision/idempotency.
+
+---
+
+# CI issues found and fixed before handoff
+
+1. **Legacy Windows tests tied to old workspace filename**
+   - fixed by validating real inheritance `Epic49 -> V871 -> V87`.
+
+2. **CI tried to write media under `/home/sfkilvrs`**
+   - production settings were not changed;
+   - CI uses isolated `/tmp/3dprinthub-ci/...` env paths.
+
+3. **Legacy Bridge contract expected 1.2.0 / epic49-final**
+   - upgraded to real 1.3.0 / epic49-unified-v1;
+   - legacy import/health/diagnostic routes are explicitly tested as retained.
+
+4. **Legacy Hero template test required direct Product URL expression**
+   - upgraded to `slide.target_url` safe runtime contract;
+   - active Product -> canonical product URL;
+   - unpublished Product -> Store list;
+   - retired External Catalog URL prohibited.
+
+5. **Legacy favicon test required old favicon pack**
+   - public layouts canonicalized to final approved `3dprinthublogo.png`;
+   - legacy favicon files preserved, not used as brand source of truth.
+
+After these corrections, final CI Run `32129944811` / Job `95688635543` completed successfully through the full Django suite.
+
+---
+
+# Temporary CI probe rule
+
+Draft PRs/branches with `ci/phase49-unified-*` and `PHASE49_EPIC_SELFTEST_PROBE*` were created only to force GitHub Actions runs against the Epic branch.
+
+They must **never be merged** into the Epic or Main branch.
+
+The implementation branch itself contains no probe marker files.
+
+---
+
+# Current validation gate
+
+## Completed
+- Epic code implemented on GitHub.
+- Django migrations tracked.
+- Windows schema tracked.
+- Bridge read/write revision contract tracked.
+- targeted tests green in GitHub Actions.
+- Windows tests green in GitHub Actions.
+- full Django suite green in GitHub Actions.
+- detailed Epic document written.
+
+## Pending before production
+1. Windows `git pull/switch` to Unified Epic;
+2. local DB + Catalog Center data backup;
+3. `check` + `makemigrations --check`;
+4. inspect `migrate --plan`;
+5. apply `store.0030` and `website.0021` locally;
+6. verify DB columns/revisions;
+7. run targeted tests locally;
+8. run Website/Store/Catalog Bridge/full suite locally;
+9. run Catalog Center Windows test/verify;
+10. visual QA Product Workspace / Hero Studio / Server Slider Manager;
+11. one real local employee flow:
+    `internet -> Windows -> Product SEO -> Hero SEO/image/effect -> publish -> Django -> edit Admin -> refresh Windows`;
+12. explicit user approval;
+13. production backup/deploy/migrations/collectstatic/restart/smoke.
+
+**Production deployment is NOT approved yet.**
+
+No host changes should be made until Windows local acceptance is complete.
