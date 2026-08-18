@@ -52,12 +52,17 @@ jobs:
           python -m compileall -q \
             store/epic49_catalog_profile.py \
             store/phase49_unified_sync.py \
+            store/phase49_persian_sales_copy.py \
+            store/phase49_persian_sales_runtime.py \
             store/epic49_catalog_admin.py \
             catalog_bridge \
             website/phase49_unified_sync.py \
+            website/phase49_persian_sales_hero.py \
+            website/management/commands/phase49_repair_persian_sales_hero.py \
             catalog_center/app/epic49_desktop_schema.py \
             catalog_center/app/epic49_site_sync.py \
             catalog_center/app/epic49_server_slider_manager.py \
+            catalog_center/app/phase49_persian_sales_desktop.py \
             catalog_center/app/product_workspace_epic49.py \
             catalog_center/launch.py \
             catalog_center/portable_entry.py
@@ -77,6 +82,7 @@ jobs:
             store.test_phase49_1_frontend_contract \
             catalog_bridge.test_phase49_unified_bridge \
             catalog_bridge.tests.test_epic49_contract \
+            website.test_phase49_persian_sales_hero \
             website.test_phase49_2c_hero_studio \
             website.test_phase49_2b_hero_login_hotfix \
             website.test_phase45_homepage_hero \
@@ -86,6 +92,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v tests.test_phase49_unified_desktop
+          python -m unittest -v tests.test_phase49_persian_sales_slider
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
       - name: Full Django suite
