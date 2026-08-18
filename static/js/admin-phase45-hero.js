@@ -50,16 +50,18 @@ function applyPayload(data,force){
   setValue("id_group_title",data.group_title,force);
   setValue("id_description",data.description,force);
   setValue("id_image_alt_text",data.image_alt_text,force);
-  if(data.image_url)setValue("id_image_url",data.image_url,force);
+  setValue("id_button_text",data.button_text||"مشاهده محصول",force);
+  if(force)setValue("id_image_url",data.image_url||"",true);else if(data.image_url)setValue("id_image_url",data.image_url,false);
   setPreview(data.preview_url||data.image_url||"");
   renderGallery(data.images||[]);
   if(force){var active=byId("id_is_active");if(active&&!active.checked)active.checked=true}
-  status("اطلاعات محصول برای اسلایدر آماده شد. پس از بررسی، ذخیره را بزنید.",false);
+  var seo=data.focus_keyword?" | کلمه کلیدی اسلایدر: "+data.focus_keyword:"";
+  status("اطلاعات محصول و SEO اسلایدر آماده شد"+seo+". پس از بررسی، ذخیره را بزنید.",false);
 }
 function prefill(force){
   var id=assetId();if(!id)return;
   var endpoint=window.P49_HERO_PREFILL_URL||"/internal/admin/hero-slide-prefill/";
-  status("در حال دریافت اطلاعات محصول…",false);
+  status("در حال دریافت اطلاعات محصول و SEO اسلایدر…",false);
   fetch(endpoint+"?asset_id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Requested-With":"XMLHttpRequest"}})
     .then(function(response){if(!response.ok)throw new Error("HTTP "+response.status);return response.json()})
     .then(function(data){if(!data||!data.ok)throw new Error((data&&data.error)||"پاسخ نامعتبر");applyPayload(data,force)})
@@ -73,7 +75,7 @@ function selectGalleryImage(button){
   }
   document.querySelectorAll(".p45-admin-image-choice").forEach(function(item){item.classList.toggle("is-selected",item===button)});
   setPreview(url);
-  status(/^https?:\/\//i.test(url)?"تصویر انتخاب شد و در فیلد URL ثبت شد.":"تصویر محلی انتخاب شد؛ برای نمایش از تصویر ذخیره‌شده محصول استفاده می‌شود.",false);
+  status(/^https?:\/\//i.test(url)?"تصویر انتخاب شد و در فیلد URL ثبت شد.":"تصویر Local برای Preview انتخاب شد؛ در صورت خالی‌بودن URL، سایت از Media همان محصول استفاده می‌کند.",false);
 }
 function boot(){
   document.addEventListener("click",function(event){var button=event.target.closest(".p45-admin-image-choice");if(!button)return;event.preventDefault();selectGalleryImage(button)});
