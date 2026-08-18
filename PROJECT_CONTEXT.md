@@ -39,7 +39,8 @@ Known warnings remain visible: `ckeditor.W001` (CKEditor 4 technical debt) and `
 The one approved logo is the exact user-supplied file installed as:
 `static/img/brand/3dprinthublogo.png`
 Expected SHA-256:
-`fcdfb65509a8e8b1da15eadf8b28fa68ff9433f69d7b333290180843c5ea3335`
+`97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`
+This SHA-256 supersedes the earlier provisional logo hash. The approved source file is the user's local `D:\projects\3dprinthublogo.png` with this exact hash.
 It must never be redrawn, recolored, substituted or regenerated. Transparent logo surfaces must have no forced white tile, padding, border or shadow. `static/css/brand-mark-contract.css` points UI brand marks to this asset.
 
 ### Typography
