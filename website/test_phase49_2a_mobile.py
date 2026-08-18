@@ -51,13 +51,13 @@ class MobileContractTests(SimpleTestCase):
         self.assertIn("max-width:220px", header)
         self.assertIn("max-height:56px", header)
         self.assertIn("object-fit:contain", header)
-        self.assertIn("img/brand/logo-icon-512.png", header)
+        self.assertIn("img/brand/3dprinthublogo.png", header)
 
     def test_fallback_hero_logo_is_explicitly_capped(self):
         hero = self.read("templates/website/partials/hero.html")
         self.assertIn("p45-hero__fallback-logo", hero)
         self.assertIn("brand-mark--hero", hero)
-        self.assertIn("img/brand/logo-icon-512.png", hero)
+        self.assertIn("img/brand/3dprinthublogo.png", hero)
         self.assertIn("max-width:320px", hero)
         self.assertIn("max-height:320px", hero)
         self.assertIn('width="320" height="320"', hero)
