@@ -65,5 +65,9 @@ class WebsiteConfig(AppConfig):
         # load after the Hero Studio so it can extend that already-registered admin.
         from . import phase49_unified_sync  # noqa: F401
 
+        # Epic49 Persian Sales Hero: public Hero copy must come from approved Persian
+        # Windows/Product SEO and never from English/raw source-cookie boilerplate.
+        from . import phase49_persian_sales_hero  # noqa: F401
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
