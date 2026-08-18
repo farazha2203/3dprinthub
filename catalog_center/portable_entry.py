@@ -29,7 +29,10 @@ def _configure_runtime():
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
     from app.product_workspace_epic49 import ProductWorkspace
+    from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.ux87_shell import build_app_class
+
+    install_persian_sales_workspace(ProductWorkspace)
 
     data = data_root()
     data.mkdir(parents=True, exist_ok=True)
@@ -55,14 +58,17 @@ def _portable_verify() -> int:
     from app.env_settings import ENV_FILE
     from app.version import APP_NAME, APP_VERSION, BUILD_ID
     from app.product_workspace_epic49 import ProductWorkspace
+    from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
     from app.ux87_shell import build_app_class
     from app import main as app_main
 
+    install_persian_sales_workspace(ProductWorkspace)
     workspace_epic49 = bool(
         ProductWorkspace.__module__ == "app.product_workspace_epic49"
         and issubclass(ProductWorkspace, ProductWorkspace871)
     )
+    persian_sales = bool(getattr(ProductWorkspace, "_phase49_persian_sales_installed", False))
     payload = {
         "app_name": APP_NAME,
         "app_version": APP_VERSION,
@@ -80,6 +86,7 @@ def _portable_verify() -> int:
         "homepage_slider_seo_v871": workspace_epic49,
         "epic49_unified_sync": workspace_epic49,
         "epic49_server_slider_manager": workspace_epic49,
+        "epic49_persian_sales_hero": persian_sales,
         "ux87_shell": build_app_class(app_main.App).__name__ == "CatalogCenterApp87",
         "ai_profile_preserved": True,
         "host_profile_preserved": True,
@@ -93,6 +100,7 @@ def _portable_verify() -> int:
         and payload["homepage_slider_seo_v871"]
         and payload["epic49_unified_sync"]
         and payload["epic49_server_slider_manager"]
+        and payload["epic49_persian_sales_hero"]
         and payload["ux87_shell"]
     )
     payload["ok"] = ok
