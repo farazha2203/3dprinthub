@@ -37,6 +37,8 @@ Known warnings remain visible: `ckeditor.W001` (CKEditor 4 technical debt) and `
 - Customer Portal uses `phase49_2b-customer.css/js`, desktop sidebar and <=1100px accessible drawer.
 - Admin desktop Login regression was fixed: full auth shell is no longer constrained to 460px; only the login card is capped around 520px.
 - Managed Hero Phase49.2B hotfix aligned Hero SEO/image/title/description/target with Store Product and retired External Catalog URLs.
+- Phase49.2B Hero backend compatibility remains active in 49.2C: Store target resolver, SEO/image suggestions, `pre_save` completion and new-slide `is_active=True` default.
+- The old Phase49.2B Select2 Admin Hero UI is retired in 49.2C and must not be restored just to satisfy an obsolete test.
 
 ## Current active phase
 **Phase 49.2C — Hero Studio & Cinematic Slider**
@@ -91,6 +93,7 @@ Migration:
 
 Previous chain:
 `website.0019_phase45_managed_homepage_hero -> store.0027_phase39_variant_color_fk`.
+`ImportedPrintAssetImage` exists since `store.0009_inventory_finance_catalog`, so the FK target is available before 0020.
 
 Added `HomepageHeroSlide` fields:
 - `selected_asset_image`: nullable FK to `store.ImportedPrintAssetImage`, `SET_NULL`, no reverse relation.
@@ -102,7 +105,30 @@ No table/row/media deletion exists in migration 0020. Existing slides keep all o
 
 Runtime alignment module:
 `website/phase49_2c_hero_studio.py`.
-It contributes the same four persistent fields declared by migration 0020 to the mature runtime model rather than rewriting the very large legacy `website/models.py`. ORM/Admin/makemigrations must remain aligned with the migration state.
+It contributes the same four persistent fields declared by migration 0020 to the mature runtime model rather than rewriting the very large legacy `website/models.py`. ORM/Admin/makemigrations remain aligned with the migration state.
+
+### Local 0020 validation — 2026-08-18
+Local DB vendor: SQLite.
+Backup created under:
+`D:\projects\3dprinthub-backups\phase49_2c_20260818-123411`.
+
+Before 0020:
+- full `db.sqlite3` copied;
+- `website_homepageheroslide` exported to JSON;
+- Hero rows: **2**.
+
+After 0020:
+- migration applied successfully;
+- Hero rows: **2**;
+- verified columns: `selected_asset_image_id`, `transition_effect`, `transition_duration_ms`, `display_duration_ms`;
+- missing columns: none;
+- `PHASE49_2C_DB_VERIFY=OK`.
+
+Checks/tests:
+- `makemigrations --check --dry-run`: **No changes detected**.
+- `website.test_phase49_2c_hero_studio`: **9/9 OK**.
+- first combined Phase49.2B/45 regression: 15 tests OK + 1 stale test failure because it still required `P49_HERO_PREFILL_URL` in the form.
+- stale test has now been upgraded: 49.2B server fallback is required, but 49.2C Album Picker must be the only Admin Hero UI and legacy `admin-phase45-hero.js`/`P49_HERO_PREFILL_URL` must not return.
 
 ### Image selection precedence
 1. manually selected `selected_asset_image.image`;
@@ -150,28 +176,64 @@ The new root has `data-p49c-engine`. New JS removes `data-p45-hero` before DOMCo
 ### Admin effect preview
 Hero Studio has a local preview stage reading the current transition type/duration from the form, so the operator can preview the selected effect before Save.
 
+## Pending Store migration gate discovered during Phase49.2C
+The local migration plan also exposed two **older Epic49 Store migrations** still pending locally:
+- `store.0028_epic49_catalog_product_schema` — creates `ProductCatalogProfile`.
+- `store.0029_epic49_catalog_product_backfill` — profile backfill plus Product slug/SEO normalization.
+
+0029 can change Product fields including:
+- `slug`, `canonical_url`;
+- `meta_title`, `meta_description`, `seo_focus_keyword`;
+- `og_title`, `og_description`;
+- `editorial_source_url`, `source_attribution`, `hashtags`;
+- `robots_index`, `robots_follow`.
+
+Therefore **do not run a general `python manage.py migrate` yet**. 0028/0029 require an explicit read-only audit first.
+
+### Read-only audit command
+Path:
+`store/management/commands/epic49_catalog_migration_audit.py`
+
+Purpose:
+- mirror the relevant 0029 slug/SEO calculations;
+- report whether 0028/0029 are applied;
+- report profile-table existence;
+- count imported Products/profiles affected;
+- count Product slug changes and per-field SEO changes;
+- show detailed changed Product/SKU rows;
+- perform **zero database mutation**.
+
+Run:
+`python manage.py epic49_catalog_migration_audit --limit 100`
+
+JSON option:
+`python manage.py epic49_catalog_migration_audit --limit 0 --json`
+
+Behavior test:
+`python manage.py test store.test_epic49_catalog_migration_audit -v 2`
+
+The test snapshots Product slug/SEO fields, runs the command, verifies the Product is byte-for-byte unchanged at field level, and verifies no `ProductCatalogProfile` was created.
+
 ## Phase49.2C validation gate
-**Production deployment is NOT approved. Migration 0020 must not be applied on host yet.**
+**Production deployment is NOT approved. Migration 0020 must not be applied on host yet. Store 0028/0029 must not be applied locally/host until audit approval.**
 
-Required Windows sequence after GitHub sync:
-1. `python manage.py check`
-2. `python manage.py makemigrations --check --dry-run` — must report no new migration beyond tracked 0020
-3. `python manage.py migrate --plan` — inspect 0020 only/additive operations
-4. make a local DB backup before applying 0020 if local data matters
-5. `python manage.py migrate`
-6. `python manage.py test website.test_phase49_2c_hero_studio -v 2`
-7. Phase49.2B/45 regression tests
-8. `python manage.py test website -v 2`
-9. `python manage.py test store -v 2`
-10. `python manage.py test catalog_bridge -v 2`
-11. `python manage.py test -v 2`
-12. visual QA: Hero Studio add/edit/list, Home Hero desktop + 320/360/390/430/tablet, all six effects and reduced-motion behavior
-13. explicit user approval
+Required Windows sequence now:
+1. sync latest `epic/phase49-2c-hero-studio`;
+2. rerun `website.test_phase49_2b_hero_login_hotfix`, `website.test_phase49_2c_hero_studio`, `website.test_phase45_homepage_hero`;
+3. run `store.test_epic49_catalog_migration_audit`;
+4. run `epic49_catalog_migration_audit --limit 100` and review all summary counts and changed slugs;
+5. only after explicit audit approval: new local DB backup and controlled application of Store 0028/0029;
+6. then `website`, `store`, `catalog_bridge`, full suite;
+7. visual QA: Hero Studio add/edit/list, Home Hero desktop + 320/360/390/430/tablet, all six effects and reduced-motion behavior;
+8. explicit user approval;
+9. only then production DB backup/deploy/migrations/collectstatic/restart/smoke tests.
 
-Only after approval: production DB backup, exact approved branch/commit deploy, `migrate --plan`, `migrate`, `collectstatic --noinput`, Passenger restart, Home/Admin/Customer/Store/Bridge smoke tests, then record deployed commit here.
+Known warnings remain:
+- `ckeditor.W001`: CKEditor4 maintenance/security debt; separate upgrade phase required.
+- `store.W026`: in-memory realtime layer; Redis needed for cross-process production realtime if required.
 
 ## Rollback rule
-Before production migration, rollback is branch/code-only. After 0020 is applied, do not drop columns/reset DB as a shortcut. The migration is additive and old data remains; any production rollback must preserve DB/media and be evaluated against the deployed code version.
+Before production migration, rollback is branch/code-only. After 0020 is applied locally, do not drop columns/reset DB as a shortcut. The migration is additive and old data remains. Store 0028/0029 must be audited before application because 0029 changes Product slug/SEO data.
 
 ## Next planned work after Phase49.2C
-After Hero Studio is locally verified, continue Master-based Admin/Customer workflow improvements and then complete full production validation/deploy. No host changes before local approval.
+After compatibility retest and Store migration audit are accepted, continue visual Hero Studio QA, apply only approved pending migrations, run full suite, then return to Master-based Admin/Customer workflow improvements. No host changes before local approval.
