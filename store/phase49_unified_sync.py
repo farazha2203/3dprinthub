@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+from types import MethodType
+
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 
 from . import epic49_publish_options as publish
-from .epic49_catalog_profile import ProductCatalogProfile, SLIDER_EFFECT_CODES
+from .epic49_catalog_profile import (
+    ProductCatalogProfile,
+    SLIDER_EFFECT_CODES,
+    _unique_public_slug,
+)
+from .models import Product
 
 
 _ORIGINAL_SYNC = publish.sync_epic49_publish_options
@@ -207,6 +215,58 @@ def sync_epic49_publish_options(asset) -> dict:
     return result
 
 
+def _admin_actor(request) -> str:
+    user = getattr(request, "user", None)
+    if user is None or not getattr(user, "is_authenticated", False):
+        return ""
+    return str(
+        getattr(user, "username", "")
+        or getattr(user, "email", "")
+        or getattr(user, "pk", "")
+        or ""
+    )[:120]
+
+
+def _ensure_profile_for_admin(product: Product) -> ProductCatalogProfile:
+    profile = ProductCatalogProfile.objects.filter(product=product).first()
+    if profile is not None:
+        return profile
+    return ProductCatalogProfile.objects.create(
+        product=product,
+        public_slug=_unique_public_slug(product, getattr(product, "title_en", "")),
+        legacy_slug=str(getattr(product, "slug", "") or ""),
+        sync_revision=1,
+        last_modified_source="admin",
+    )
+
+
+def _install_product_admin_revision() -> None:
+    model_admin = admin.site._registry.get(Product)
+    if model_admin is None or getattr(model_admin, "_phase49_unified_revision_installed", False):
+        return
+    original_save_model = model_admin.save_model
+
+    def save_model(this, request, obj, form, change):
+        result = original_save_model(request, obj, form, change)
+        profile = _ensure_profile_for_admin(obj)
+        if change:
+            profile.sync_revision = max(1, int(profile.sync_revision or 1)) + 1
+        else:
+            profile.sync_revision = max(1, int(profile.sync_revision or 1))
+        profile.last_modified_source = "admin"
+        profile.last_modified_by = _admin_actor(request)
+        profile.save(update_fields=[
+            "sync_revision",
+            "last_modified_source",
+            "last_modified_by",
+            "updated_at",
+        ])
+        return result
+
+    model_admin.save_model = MethodType(save_model, model_admin)
+    model_admin._phase49_unified_revision_installed = True
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -222,4 +282,6 @@ def install() -> None:
         epic49_publish_signals.sync_epic49_publish_options = sync_epic49_publish_options
     except Exception:
         pass
+
+    _install_product_admin_revision()
     _INSTALLED = True
