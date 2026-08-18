@@ -19,7 +19,10 @@ def main() -> int:
 
     from app.version import APP_VERSION, BUILD_ID, SOURCE_ROOT
     from app.product_workspace_epic49 import ProductWorkspace
+    from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.ux87_shell import build_app_class
+
+    install_persian_sales_workspace(ProductWorkspace)
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
@@ -40,6 +43,7 @@ def main() -> int:
     print("HOMEPAGE_SLIDER_SEO_V871=ENABLED", flush=True)
     print("EPIC49_UNIFIED_SYNC=ENABLED", flush=True)
     print("EPIC49_SERVER_SLIDER_MANAGER=ENABLED", flush=True)
+    print("EPIC49_PERSIAN_SALES_HERO=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
