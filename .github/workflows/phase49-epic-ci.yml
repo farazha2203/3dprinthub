@@ -74,6 +74,7 @@ jobs:
             store.test_phase49_unified_sync \
             store.test_phase49_unified_import_e2e \
             catalog_bridge.test_phase49_unified_bridge \
+            catalog_bridge.tests.test_epic49_contract \
             website.test_phase49_2c_hero_studio \
             website.test_phase49_2b_hero_login_hotfix \
             website.test_phase45_homepage_hero \
@@ -85,23 +86,5 @@ jobs:
           python -m unittest -v tests.test_phase49_unified_desktop
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
-      - name: Full Django suite diagnostic
-        id: full_suite
-        shell: bash
-        run: |
-          set +e
-          python manage.py test --failfast -v 2 > /tmp/phase49-full-suite.log 2>&1
-          status=$?
-          echo "FULL_SUITE_EXIT_CODE=$status"
-          echo "----- LAST 250 LINES -----"
-          tail -n 250 /tmp/phase49-full-suite.log || true
-          exit $status
-
-      - name: Upload Full Django diagnostic log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: phase49-full-suite-diagnostic
-          path: /tmp/phase49-full-suite.log
-          if-no-files-found: error
-          retention-days: 3
+      - name: Full Django suite
+        run: python manage.py test -v 1
