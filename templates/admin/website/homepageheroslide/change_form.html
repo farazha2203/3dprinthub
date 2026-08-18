@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+window.P49_HERO_PREFILL_URL = "{% url 'website:hero_slide_prefill' %}";
+</script>
+<script src="{% static 'js/admin-phase45-hero.js' %}?v=49.2.3" defer></script>
+{% endblock %}
