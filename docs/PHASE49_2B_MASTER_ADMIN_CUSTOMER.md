@@ -14,7 +14,7 @@
 - Colors: deep navy/graphite surfaces with metallic gold accents derived from the supplied logo.
 
 ## Typography
-IRANSans FaNum weights are mapped in `static/css/phase49_2b-design-system.css` as 200/300/400/500/700/900. The user-supplied `fonts.rar` is the asset source. The installer script copies only the required FaNum WOFF files.
+IRANSans FaNum weights are mapped in `static/css/phase49_2b-design-system.css` as 200/300/400/500/700/900. The user-supplied `fonts.rar` is the original asset source. The six approved WOFF files are tracked in the project once installed.
 
 ## Admin architecture
 Django Admin behavior remains intact. `templates/admin/base.html` continues to load Master RTL/Bootstrap assets. Phase 49.2B is an override layer loaded through `templates/admin/base_site.html`:
@@ -31,7 +31,7 @@ The layer standardizes font, sidebar/topbar colors, cards, tables, forms, filter
 Desktop uses a branded sticky sidebar; tablet/mobile use an accessible off-canvas drawer. Dashboard, support, profile, addresses, appearance, affiliate, notifications and store-order links remain available.
 
 ## Asset installer
-`scripts/install_phase49_2b_brand_assets.ps1` validates the exact final logo SHA-256, copies it unchanged, extracts six IRANSans FaNum WOFF weights from the user's archive, and refuses a different logo.
+`scripts/install_phase49_2b_brand_assets.ps1` validates the exact final logo SHA-256 and copies it unchanged. It first verifies whether all six required IRANSans FaNum WOFF files already exist and are non-empty. When they are already present, they are reused and **7-Zip is not required**. Archive extraction and 7-Zip are only required if one or more required font files are actually missing.
 
 ## Database
 No model or data migration is part of Phase 49.2B.
