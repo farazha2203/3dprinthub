@@ -1,0 +1,55 @@
+[data-p49c-engine] .p45-hero__slide{transition:none!important}
+[data-p49c-engine] .p45-hero__slide.is-entering,[data-p49c-engine] .p45-hero__slide.is-leaving{visibility:visible!important;pointer-events:none}
+[data-p49c-engine] .p45-hero__slide.is-entering{z-index:3!important}
+[data-p49c-engine] .p45-hero__slide.is-leaving{z-index:2!important}
+[data-p49c-engine] .p45-hero__slide.is-active:not(.is-entering):not(.is-leaving){z-index:1!important}
+[data-p49c-engine] .p45-hero__slide .p45-hero__media img{transition:none!important;will-change:transform,opacity,filter,clip-path}
+[data-p49c-engine] .p45-hero__slide .p45-hero__caption{will-change:transform,opacity,filter}
+
+[data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,1400ms) cubic-bezier(.22,.61,.36,1) both}
+[data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,1400ms) cubic-bezier(.22,.61,.36,1) both}
+[data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-entering .p45-hero__media img{animation:p49c-soft-zoom-in var(--p49c-transition,1400ms) ease-out both}
+
+[data-p49c-active-effect="wedding_dissolve"] .p45-hero__slide.is-leaving{animation:p49c-wedding-out var(--p49c-transition,1600ms) cubic-bezier(.4,0,.2,1) both}
+[data-p49c-active-effect="wedding_dissolve"] .p45-hero__slide.is-entering{animation:p49c-wedding-in var(--p49c-transition,1600ms) cubic-bezier(.4,0,.2,1) both}
+[data-p49c-active-effect="wedding_dissolve"] .p45-hero__slide.is-entering .p45-hero__caption{animation:p49c-caption-float var(--p49c-transition,1600ms) ease-out both}
+
+[data-p49c-active-effect="cinematic_zoom"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,1400ms) ease-in-out both}
+[data-p49c-active-effect="cinematic_zoom"] .p45-hero__slide.is-leaving .p45-hero__media img{animation:p49c-zoom-away var(--p49c-transition,1400ms) cubic-bezier(.2,.7,.2,1) both}
+[data-p49c-active-effect="cinematic_zoom"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,1400ms) ease-out both}
+[data-p49c-active-effect="cinematic_zoom"] .p45-hero__slide.is-entering .p45-hero__media img{animation:p49c-zoom-arrive var(--p49c-transition,1400ms) cubic-bezier(.2,.7,.2,1) both}
+
+[data-p49c-active-effect="ken_burns"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,1500ms) ease-in-out both}
+[data-p49c-active-effect="ken_burns"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,1500ms) ease-in-out both}
+[data-p49c-engine] .p45-hero__slide[data-p49c-effect="ken_burns"].is-active:not(.is-entering):not(.is-leaving) .p45-hero__media img{animation:p49c-ken-hold var(--p49c-display,7000ms) linear both}
+
+[data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-leaving{animation:p49c-blur-out var(--p49c-transition,1400ms) ease-in-out both}
+[data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-entering{animation:p49c-blur-in var(--p49c-transition,1400ms) ease-in-out both}
+
+[data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-leaving{animation:p49c-reveal-out var(--p49c-transition,1300ms) cubic-bezier(.76,0,.24,1) both}
+[data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-entering{animation:p49c-reveal-in var(--p49c-transition,1300ms) cubic-bezier(.76,0,.24,1) both}
+[data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-entering .p45-hero__caption{animation:p49c-caption-float var(--p49c-transition,1300ms) ease-out both}
+
+@keyframes p49c-fade-out{from{opacity:1}to{opacity:0}}
+@keyframes p49c-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes p49c-soft-zoom-in{from{transform:scale(1.055)}to{transform:scale(1.018)}}
+@keyframes p49c-wedding-out{0%{opacity:1;filter:brightness(1) saturate(1)}35%{opacity:.88}100%{opacity:0;filter:brightness(.86) saturate(.84)}}
+@keyframes p49c-wedding-in{0%{opacity:0;filter:brightness(1.12) saturate(.9);transform:scale(1.025)}38%{opacity:.22}100%{opacity:1;filter:brightness(1) saturate(1);transform:scale(1)}}
+@keyframes p49c-caption-float{0%{opacity:0;transform:translate3d(0,18px,0);filter:blur(5px)}45%{opacity:0}100%{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}}
+@keyframes p49c-zoom-away{from{transform:scale(1.02)}to{transform:scale(1.105)}}
+@keyframes p49c-zoom-arrive{from{transform:scale(.955)}to{transform:scale(1.018)}}
+@keyframes p49c-ken-hold{from{transform:scale(1.015) translate3d(0,0,0)}to{transform:scale(1.075) translate3d(-1.25%,.8%,0)}}
+@keyframes p49c-blur-out{from{opacity:1;filter:blur(0)}to{opacity:0;filter:blur(14px)}}
+@keyframes p49c-blur-in{from{opacity:0;filter:blur(14px);transform:scale(1.035)}to{opacity:1;filter:blur(0);transform:scale(1)}}
+@keyframes p49c-reveal-out{from{opacity:1;clip-path:inset(0 0 0 0);transform:scale(1)}to{opacity:.15;clip-path:inset(0 0 0 10%);transform:scale(1.025)}}
+@keyframes p49c-reveal-in{from{opacity:0;clip-path:inset(0 100% 0 0);transform:scale(1.03)}to{opacity:1;clip-path:inset(0 0 0 0);transform:scale(1)}}
+
+@media(max-width:600px){
+  [data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,900ms) ease-in-out both}
+  [data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,900ms) ease-in-out both}
+  [data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-entering,[data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-leaving{clip-path:none!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  [data-p49c-engine] .p45-hero__slide,[data-p49c-engine] .p45-hero__media img,[data-p49c-engine] .p45-hero__caption{animation:none!important;transition:none!important;filter:none!important;transform:none!important;clip-path:none!important}
+}
