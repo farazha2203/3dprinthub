@@ -61,5 +61,9 @@ class WebsiteConfig(AppConfig):
         # the real database columns; this module installs the matching runtime fields.
         from . import phase49_2c_hero_studio  # noqa: F401
 
+        # Epic49 unified: optimistic revision + edit source/operator contract must
+        # load after the Hero Studio so it can extend that already-registered admin.
+        from . import phase49_unified_sync  # noqa: F401
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
