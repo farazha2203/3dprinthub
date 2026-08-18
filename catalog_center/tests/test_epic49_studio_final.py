@@ -36,11 +36,25 @@ class Epic49FinalStudioTests(unittest.TestCase):
     def test_launchers_use_unified_workspace_and_keep_v87_shell_contract(self):
         launch = (ROOT / "launch.py").read_text(encoding="utf-8")
         portable = (ROOT / "portable_entry.py").read_text(encoding="utf-8")
+
+        # Both release paths still use the final Epic workspace and UX87 shell.
         for source in (launch, portable):
             self.assertIn("app.product_workspace_epic49", source)
-            self.assertIn("app.ux87_shell", source)
             self.assertIn("ProductWorkspace", source)
             self.assertIn("build_app_class", source)
+        self.assertTrue(
+            "from app import ux87_shell" in launch or "app.ux87_shell" in launch,
+            "normal launcher must import the UX87 shell",
+        )
+        self.assertIn("app.ux87_shell", portable)
+
+        # The normal/source launcher must explicitly repair the historical shell
+        # alias that caused real product opens to use the old 8.7 workspace.
+        self.assertIn("ux87_shell.ProductWorkspace = ProductWorkspace", launch)
+        self.assertIn("UX87_EPIC49_WORKSPACE_ROUTING=ENABLED", launch)
+        self.assertIn("EPIC49_MATERIAL_COLOR_PICKER=ENABLED", launch)
+        self.assertIn("install_material_color_picker(ProductWorkspace)", launch)
+
         self.assertIn("PRODUCT_WORKSPACE_V87=ENABLED", launch)
         self.assertIn("PRODUCT_WORKSPACE_V871=ENABLED", launch)
         self.assertIn("EPIC49_UNIFIED_SYNC=ENABLED", launch)
