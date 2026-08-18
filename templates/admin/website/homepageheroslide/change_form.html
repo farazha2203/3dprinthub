@@ -3,8 +3,92 @@
 
 {% block extrahead %}
 {{ block.super }}
-<script>
-window.P49_HERO_PREFILL_URL = "{% url 'website:hero_slide_prefill' %}";
-</script>
-<script src="{% static 'js/admin-phase45-hero.js' %}?v=49.2.3" defer></script>
+<link rel="stylesheet" href="{% static 'css/admin-phase49_2c-hero-studio.css' %}?v=49.2.3">
+<script src="{% static 'js/admin-phase49_2c-hero-studio.js' %}?v=49.2.3" defer></script>
+{% endblock %}
+
+{% block form_top %}
+{{ block.super }}
+<section
+  class="p49c-studio"
+  data-p49c-studio
+  data-browser-url="{% url 'admin:website_homepageheroslide_product_browser' %}"
+  data-detail-url="{% url 'admin:website_homepageheroslide_asset_detail' %}"
+  data-current-asset-id="{% if original %}{{ original.asset_id|default:'' }}{% endif %}"
+  data-current-image-id="{% if original %}{{ original.selected_asset_image_id|default:'' }}{% endif %}"
+>
+  <header class="p49c-studio__header">
+    <div>
+      <span class="p49c-kicker"><i class="ri-movie-2-line"></i> Hero Studio</span>
+      <h2>انتخاب تصویری محصول و ساخت اسلاید</h2>
+      <p>محصول را از آلبوم انتخاب کنید؛ اطلاعات SEO و تصاویر همان لحظه بارگذاری می‌شوند و نیازی به ذخیره اولیه نیست.</p>
+    </div>
+    <div class="p49c-studio__status" data-p49c-status>آماده انتخاب محصول</div>
+  </header>
+
+  <div class="p49c-toolbar">
+    <label class="p49c-search">
+      <i class="ri-search-2-line" aria-hidden="true"></i>
+      <input type="search" data-p49c-search placeholder="جستجو در عنوان، SKU، شناسه کاتالوگ یا منبع..." autocomplete="off">
+    </label>
+    <label class="p49c-filter">
+      <i class="ri-filter-3-line" aria-hidden="true"></i>
+      <select data-p49c-category>
+        <option value="">همه دسته‌ها</option>
+      </select>
+    </label>
+    <button type="button" class="p49c-btn p49c-btn--ghost" data-p49c-refresh>
+      <i class="ri-refresh-line" aria-hidden="true"></i>
+      بروزرسانی
+    </button>
+  </div>
+
+  <div class="p49c-browser-shell">
+    <div class="p49c-browser" data-p49c-products aria-live="polite">
+      <div class="p49c-loading"><i class="ri-loader-4-line"></i> در حال دریافت محصولات…</div>
+    </div>
+    <nav class="p49c-pagination" aria-label="صفحه‌بندی محصولات">
+      <button type="button" data-p49c-prev><i class="ri-arrow-right-s-line"></i> قبلی</button>
+      <span data-p49c-page>صفحه ۱</span>
+      <button type="button" data-p49c-next>بعدی <i class="ri-arrow-left-s-line"></i></button>
+    </nav>
+  </div>
+
+  <div class="p49c-selected" data-p49c-selected hidden>
+    <div class="p49c-selected__image"><img data-p49c-selected-image alt=""></div>
+    <div class="p49c-selected__copy">
+      <span><i class="ri-checkbox-circle-fill"></i> محصول انتخاب‌شده</span>
+      <strong data-p49c-selected-title>—</strong>
+      <small data-p49c-selected-meta>—</small>
+    </div>
+  </div>
+
+  <section class="p49c-gallery-section" data-p49c-gallery-section hidden>
+    <div class="p49c-section-title">
+      <div>
+        <span><i class="ri-image-2-line"></i> گالری تصاویر همین محصول</span>
+        <small>روی تصویر دلخواه کلیک کنید؛ شناسه واقعی تصویر در دیتابیس ذخیره می‌شود.</small>
+      </div>
+      <span class="p49c-gallery-count" data-p49c-gallery-count></span>
+    </div>
+    <div class="p49c-gallery" data-p49c-gallery></div>
+  </section>
+
+  <section class="p49c-effect-preview">
+    <div class="p49c-section-title">
+      <div>
+        <span><i class="ri-movie-2-line"></i> پیش‌نمایش افکت</span>
+        <small>افکت انتخاب‌شده در بخش «افکت سینمایی و زمان‌بندی» را قبل از ذخیره بررسی کنید.</small>
+      </div>
+      <button type="button" class="p49c-btn p49c-btn--gold" data-p49c-preview-effect>
+        <i class="ri-play-circle-line"></i> اجرای پیش‌نمایش
+      </button>
+    </div>
+    <div class="p49c-preview-stage" data-p49c-preview-stage>
+      <div class="p49c-preview-layer p49c-preview-layer--a"><img data-p49c-preview-a alt="پیش‌نمایش تصویر"></div>
+      <div class="p49c-preview-layer p49c-preview-layer--b"><img data-p49c-preview-b alt="پیش‌نمایش تصویر"></div>
+      <div class="p49c-preview-empty" data-p49c-preview-empty>بعد از انتخاب محصول و عکس، پیش‌نمایش افکت اینجا فعال می‌شود.</div>
+    </div>
+  </section>
+</section>
 {% endblock %}
