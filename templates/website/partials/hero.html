@@ -1,10 +1,18 @@
 {% load static %}
-<section id="home" class="p45-hero" data-p45-hero aria-label="مدل‌های منتخب 3DPrintHub">
+<section id="home" class="p45-hero" data-p45-hero data-p49c-engine aria-label="مدل‌های منتخب 3DPrintHub">
   <div class="p45-hero__viewport">
     {% if homepage_hero_slides %}
       <div class="p45-hero__track" data-p45-track>
         {% for slide in homepage_hero_slides %}
-          <article class="p45-hero__slide{% if forloop.first %} is-active{% endif %}" data-p45-slide aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+          <article
+            class="p45-hero__slide{% if forloop.first %} is-active{% endif %}"
+            data-p45-slide
+            data-p49c-effect="{{ slide.transition_effect|default:'cinematic_fade' }}"
+            data-p49c-transition="{{ slide.transition_duration_ms|default:1400 }}"
+            data-p49c-display="{{ slide.display_duration_ms|default:7000 }}"
+            style="--p49c-transition:{{ slide.transition_duration_ms|default:1400 }}ms;--p49c-display:{{ slide.display_duration_ms|default:7000 }}ms"
+            aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
+          >
             <a class="p45-hero__media" href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
               {% if slide.effective_image_url %}
               <img
