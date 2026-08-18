@@ -4,7 +4,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
-$ExpectedLogoSha256 = 'fcdfb65509a8e8b1da15eadf8b28fa68ff9433f69d7b333290180843c5ea3335'
+$ExpectedLogoSha256 = '97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec'
 if (!(Test-Path $LogoPath)) { throw "Logo not found: $LogoPath" }
 if (!(Test-Path $FontsArchivePath)) { throw "Fonts archive not found: $FontsArchivePath" }
 $actual = (Get-FileHash -Algorithm SHA256 $LogoPath).Hash.ToLowerInvariant()
