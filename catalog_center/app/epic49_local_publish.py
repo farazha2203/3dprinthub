@@ -11,6 +11,10 @@ from .v8_features import parse_ack_lines
 LOCAL_SITE_URL = "http://127.0.0.1:8000"
 
 
+def running_as_portable() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
+
 def default_repo_root() -> Path:
     configured = str(os.getenv("CATALOG_LOCAL_DJANGO_ROOT") or "").strip()
     if configured:
@@ -59,7 +63,14 @@ def local_django_preflight(
 
     This is deliberately strict. The Local button must never be able to inherit
     a production MySQL DATABASE_URL from the current Windows environment.
+    Portable/employee EXE builds are not developer runtimes and are blocked.
     """
+    if running_as_portable():
+        raise RuntimeError(
+            "LOCAL PUBLISH BLOCKED: انتشار آزمایشی روی کامپیوتر فقط در نسخه Source/Developer فعال است. "
+            "نسخه Portable کارمندان فقط مجاز به استفاده از دکمه انتشار سایت اصلی است."
+        )
+
     root = Path(repo_root or default_repo_root()).resolve()
     manage_py = root / "manage.py"
     if not manage_py.is_file():
