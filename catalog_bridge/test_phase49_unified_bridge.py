@@ -17,16 +17,16 @@ HEADERS = {"HTTP_AUTHORIZATION": f"Bearer {TOKEN}"}
 class Epic49UnifiedBridgeTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.category = Category.objects.create(name="Bridge Category", slug="bridge-category")
+        cls.category = Category.objects.create(name="قطعات تست Bridge", slug="bridge-category")
         cls.product = Product.objects.create(
             category=cls.category,
-            title="Bridge Product",
+            title="محصول تست Bridge",
             title_en="Bridge Product EN",
             slug="bridge-product",
             sku="BRIDGE-001",
-            short_description="Bridge short",
-            description="Bridge description",
-            meta_title="Old meta",
+            short_description="توضیح کوتاه محصول Bridge",
+            description="توضیحات کامل محصول Bridge",
+            meta_title="خرید محصول تست Bridge",
             main_image="store/products/bridge.jpg",
             is_active=True,
         )
@@ -40,13 +40,15 @@ class Epic49UnifiedBridgeTests(TestCase):
             source_url="https://example.com/models/bridge",
             external_id="BRIDGE-ASSET-001",
             title="Bridge Asset",
+            persian_title="محصول فارسی Bridge",
+            persian_short_description="توضیح فارسی اختصاصی محصول Bridge",
             product=cls.product,
         )
         cls.image = ImportedPrintAssetImage.objects.create(
             asset=cls.asset,
             remote_url="https://example.com/images/bridge.jpg",
             image="store/imported-models/gallery/bridge.jpg",
-            alt_text="Bridge Hero",
+            alt_text="تصویر اسلایدر محصول Bridge",
             is_selected=True,
             is_primary=True,
         )
@@ -55,19 +57,21 @@ class Epic49UnifiedBridgeTests(TestCase):
             public_slug="bridge-product-public",
             legacy_slug=cls.product.slug,
             homepage_slider_enabled=True,
-            homepage_slider_title_fa="Hero Bridge",
-            homepage_slider_description_fa="Hero Description",
-            homepage_slider_alt_text="Hero Alt",
-            homepage_slider_focus_keyword="Hero Focus",
+            homepage_slider_title_fa="عنوان اسلایدر Bridge",
+            homepage_slider_description_fa="توضیح فارسی اسلایدر Bridge برای خرید محصول",
+            homepage_slider_alt_text="تصویر محصول Bridge برای خرید و سفارش",
+            homepage_slider_focus_keyword="خرید محصول Bridge",
+            homepage_slider_button_text="مشاهده محصول",
             sync_revision=3,
             last_modified_source="desktop",
         )
         cls.slide = HomepageHeroSlide.objects.create(
             asset=cls.asset,
             selected_asset_image=cls.image,
-            title_override="Hero Bridge",
-            description="Hero Description",
-            image_alt_text="Hero Alt",
+            title_override="عنوان اسلایدر Bridge",
+            description="توضیح فارسی اسلایدر Bridge برای خرید محصول",
+            image_alt_text="تصویر محصول Bridge برای خرید و سفارش",
+            button_text="مشاهده محصول",
             transition_effect="cinematic_fade",
             transition_duration_ms=1400,
             display_duration_ms=7000,
@@ -77,11 +81,11 @@ class Epic49UnifiedBridgeTests(TestCase):
 
         cls.other_product = Product.objects.create(
             category=cls.category,
-            title="Other Product",
+            title="محصول دیگر",
             slug="other-product",
             sku="BRIDGE-OTHER",
-            short_description="Other",
-            description="Other",
+            short_description="توضیح محصول دیگر",
+            description="توضیحات محصول دیگر",
             main_image="store/products/other.jpg",
             is_active=True,
         )
@@ -90,13 +94,14 @@ class Epic49UnifiedBridgeTests(TestCase):
             source_url="https://example.com/models/other",
             external_id="BRIDGE-ASSET-OTHER",
             title="Other Asset",
+            persian_title="محصول فارسی دیگر",
             product=cls.other_product,
         )
         cls.other_image = ImportedPrintAssetImage.objects.create(
             asset=cls.other_asset,
             remote_url="https://example.com/images/other.jpg",
             image="store/imported-models/gallery/other.jpg",
-            alt_text="Other",
+            alt_text="تصویر محصول دیگر",
         )
 
     def _post(self, path, payload):
@@ -126,7 +131,7 @@ class Epic49UnifiedBridgeTests(TestCase):
         slides = self.client.get("/api/catalog-bridge/v1/hero-slides/", **HEADERS)
         self.assertEqual(slides.status_code, 200)
         row = next(item for item in slides.json()["items"] if item["id"] == self.slide.pk)
-        self.assertEqual(row["focus_keyword"], "Hero Focus")
+        self.assertEqual(row["focus_keyword"], "خرید محصول Bridge")
         self.assertEqual(row["sync_revision"], 2)
 
     def test_product_update_increments_revision_and_stale_update_returns_409(self):
@@ -136,13 +141,13 @@ class Epic49UnifiedBridgeTests(TestCase):
             "operator": "employee-02",
             "product": {
                 "title": "عنوان جدید از Windows",
-                "meta_title": "Meta جدید",
-                "meta_description": "Description جدید",
+                "meta_title": "خرید عنوان جدید از Windows",
+                "meta_description": "توضیح فارسی فروش برای عنوان جدید از Windows",
             },
             "profile": {
-                "homepage_slider_title_fa": "Hero جدید",
-                "homepage_slider_alt_text": "Alt جدید",
-                "homepage_slider_focus_keyword": "Keyword جدید",
+                "homepage_slider_title_fa": "عنوان جدید اسلایدر",
+                "homepage_slider_alt_text": "تصویر جدید اسلایدر برای خرید محصول",
+                "homepage_slider_focus_keyword": "خرید عنوان جدید",
                 "homepage_slider_transition_effect": "cinematic_zoom",
                 "homepage_slider_transition_duration_ms": 1900,
                 "homepage_slider_display_duration_ms": 8800,
@@ -156,6 +161,7 @@ class Epic49UnifiedBridgeTests(TestCase):
         self.assertEqual(self.profile.last_modified_source, "desktop")
         self.assertEqual(self.profile.last_modified_by, "employee-02")
         self.assertEqual(self.profile.homepage_slider_transition_effect, "cinematic_zoom")
+        self.assertEqual(self.profile.homepage_slider_focus_keyword, "خرید عنوان جدید")
 
         stale = self._post(path, {
             "expected_revision": 3,
@@ -175,10 +181,10 @@ class Epic49UnifiedBridgeTests(TestCase):
             "expected_revision": 2,
             "operator": "employee-slider",
             "slide": {
-                "title_override": "Hero Windows",
-                "description": "Hero Windows Description",
-                "image_alt_text": "Hero Windows Alt",
-                "focus_keyword": "Hero Windows Keyword",
+                "title_override": "عنوان اسلایدر از Windows",
+                "description": "توضیح فارسی اسلایدر از Windows برای خرید و سفارش محصول",
+                "image_alt_text": "تصویر اسلایدر از Windows برای خرید محصول",
+                "focus_keyword": "خرید محصول از Windows",
                 "selected_asset_image_id": self.image.pk,
                 "transition_effect": "wedding_dissolve",
                 "transition_duration_ms": 2100,
@@ -194,12 +200,12 @@ class Epic49UnifiedBridgeTests(TestCase):
         self.assertEqual(self.slide.last_modified_source, "desktop")
         self.assertEqual(self.slide.last_modified_by, "employee-slider")
         self.assertEqual(self.slide.transition_effect, "wedding_dissolve")
-        self.assertEqual(self.profile.homepage_slider_focus_keyword, "Hero Windows Keyword")
-        self.assertEqual(self.profile.homepage_slider_title_fa, "Hero Windows")
+        self.assertEqual(self.profile.homepage_slider_focus_keyword, "خرید محصول از Windows")
+        self.assertEqual(self.profile.homepage_slider_title_fa, "عنوان اسلایدر از Windows")
 
         stale = self._post(path, {
             "expected_revision": 2,
-            "slide": {"title_override": "Stale"},
+            "slide": {"title_override": "نسخه قدیمی"},
         })
         self.assertEqual(stale.status_code, 409)
 
