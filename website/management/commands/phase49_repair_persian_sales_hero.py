@@ -36,6 +36,8 @@ class Command(BaseCommand):
                 updates["title_override"] = suggested["title"]
             if not safe_persian_text(slide.description, limit=1200):
                 updates["description"] = suggested["description"]
+            if not safe_persian_text(slide.group_title, limit=160):
+                updates["group_title"] = suggested["group_title"]
             if not safe_persian_text(slide.image_alt_text, limit=240):
                 updates["image_alt_text"] = suggested["image_alt_text"]
             if not safe_persian_text(slide.button_text, limit=80):
