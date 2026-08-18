@@ -74,11 +74,13 @@ class Phase49PersianSalesHeroTests(SimpleTestCase):
         slide = HomepageHeroSlide(
             asset=asset,
             title_override="Vesper – Sculptural Bedside Lamp",
+            group_title="MakerWorld",
             description=COOKIE_TEXT,
             image_alt_text="Vesper sculptural lamp",
             button_text="Buy now",
         )
         self.assertEqual(slide.effective_title, "چراغ رومیزی دکوراتیو وسپر")
+        self.assertEqual(slide.effective_group_title, "محصول منتخب")
         self.assertIn("متریال", slide.effective_description)
         self.assertNotIn("cookie", slide.effective_description.casefold())
         self.assertIn("خرید", slide.effective_alt_text)
