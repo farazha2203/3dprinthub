@@ -1,99 +1,139 @@
-# PROJECT_CONTEXT - 3DPrintHub
+# PROJECT_CONTEXT — 3DPrintHub
 
-## Permanent paths
+> این فایل Source of Truth مسیر جاری پروژه است. جزئیات تاریخی هر فاز در `docs/` نگه‌داری می‌شود. هنگام تعارض، وضعیت جاری این فایل + Migration state واقعی + خروجی تست جدیدتر ملاک است.
+
+## 1) مسیرهای دائمی
+
 - Windows project root: `D:\projects\3DPrintHub`
-- Windows Catalog Center runtime: `D:\projects\3dprinthub_catalog_center`
-- Windows Catalog Center data: `D:\projects\3dprinthub-catalog-manager`
+- Windows virtualenv: `D:\projects\3DPrintHub\.venv`
+- Windows Catalog Center source: `D:\projects\3DPrintHub\catalog_center`
+- Windows Catalog Center runtime/data legacy paths:
+  - `D:\projects\3dprinthub_catalog_center`
+  - `D:\projects\3dprinthub-catalog-manager`
 - Windows rollback backups: `D:\projects\3dprinthub-backups`
 - Production root: `/home/sfkilvrs/3dprinthub`
 - Production virtualenv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 - Production MySQL DB: `sfkilvrs_EmiAdmin_3dprinthub`
-- Repository: `farazha2203/3dprinthub`
+- GitHub: `farazha2203/3dprinthub`
 
-## Delivery rule
-GitHub is the code source of truth.
+## 2) قانون تحویل
 
-Required flow:
+مسیر اجباری:
 
-`GitHub Epic branch -> Windows sync -> local backup/migration plan -> local tests -> local visual/E2E acceptance -> explicit approval -> production backup -> production deploy -> production smoke tests`.
+`GitHub Epic branch → Self-Test/CI → Windows pull → Local DB backup/migration/test → Visual QA → explicit user approval → Production DB/media backup → Deploy → migrate/collectstatic/restart → smoke tests`
 
-Never reset/drop/truncate production DB for a code/deploy problem. Preserve `.env`, MySQL, `media`, `private_media`, Catalog Center data, API keys and other runtime state.
+قواعد:
 
-## Stable historical recovery baseline
-Phase 31 remains the historical recovery baseline: 2408 fixture objects, 51 fixture models, 31 provinces, 427 counties, 1242 cities; production DB/media backups existed and site/admin smoke checks were HTTP 200. Production data may have grown since then.
+- Production قبل از تأیید Local دست نمی‌خورد.
+- DB برای حل مشکل کد Reset نمی‌شود.
+- `.env`, API keys, MySQL, media, private_media, Catalog Center data حفظ می‌شوند.
+- هر Migration قبل از Production باید روی Local/CI تست شده باشد.
+- هر عملیات Repair/Backfill ابتدا Dry Run/Backup دارد.
 
----
+## 3) Branch فعال
 
-# Phase49 foundations retained
+`epic/phase49-unified-product-slider-sync`
 
-## Phase49.2A — Core consolidation
+این Branch زنجیره خطی Phase49 را یکپارچه کرده است:
 
-Active product route:
+`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero Hotfix`
 
-`Windows Catalog Center 8.7.1 -> Catalog Bridge -> ImportedPrintAsset -> Product/ProductCatalogProfile -> Store`.
+Branchهای Foundation به‌صورت Merge موازی روی هم ریخته نشده‌اند؛ Epic از آخرین زنجیره خطی ساخته شد تا Conflict مصنوعی ایجاد نشود.
 
-Retained decisions:
-- public external ready-model catalog/Link Analyzer intake is retired;
-- historical records are preserved;
-- external background model sync is disabled by default;
-- material pricing and USD/FX logic remain independent;
-- External Catalog route must not be restored merely to satisfy stale tests.
+## 4) وضعیت فعلی Validation
 
-Catalog Center baseline:
-- version: `8.7.1`
+### Epic49 Unified baseline
+
+Baseline Runtime قبلی که Full CI سبز داشت:
+
+`8ad84577498072cf8c3d007d8bd259d6e3428cba`
+
+Run:
+
+`32129944811`
+
+### Persian Sales Hero Hotfix — validation جدید
+
+آخرین Runtime commit پیش از documentation:
+
+`dc1699d5e78563205dbac66f219f765601055456`
+
+Final GitHub Actions:
+
+- Run: `32143733191`
+- Job: `95732323558`
+- Result: **SUCCESS**
+
+Gateها:
+
+- Compile changed Python surfaces: ✅
+- Django check: ✅
+- `makemigrations --check --dry-run`: ✅ No changes detected
+- Migration contract/plan: ✅
+- Phase49 targeted Django/Bridge/Hero tests: ✅
+- Windows Catalog Center Epic49 tests: ✅
+- Full Django suite: ✅
+
+Warnings فعلی Failure نیستند:
+
+- `3dprinthub.W001`: Google membership در CI به‌دلیل credentials خالی disabled است.
+- `ckeditor.W001`: CKEditor4 technical/security debt.
+- `store.W026`: in-memory realtime؛ برای cross-process production در صورت نیاز Redis تنظیم شود.
+
+**Production در Epic49 Unified و Persian Sales Hero Hotfix هنوز Deploy نشده است.**
+
+## 5) Foundation 49.2A — Catalog/Store consolidation
+
+مسیر فعال محصول:
+
+`Windows Catalog Center 8.7.1 → Catalog Bridge → ImportedPrintAsset → Product/ProductCatalogProfile → Store`
+
+- Public external ready-model catalog/Link Analyzer intake بازنشسته شده و نباید برای پاس‌شدن تست قدیمی برگردد.
+- historical data حذف نشده است.
+- external autosync به‌صورت پیش‌فرض خاموش است.
+- Material و USD/FX pricing حفظ شده‌اند.
+- Catalog Center version: `8.7.1`
 - build: `2026.08.16.3`
 
-Known warnings:
-- `ckeditor.W001`: CKEditor 4 technical debt/security warning;
-- `store.W026`: in-memory realtime channel layer; Redis required for cross-process realtime if enabled in production.
+## 6) Foundation 49.2B — Master Admin + Customer Portal
 
-## Phase49.2B — Master Admin + Customer Portal
+- Design source: `master.zip` (Velzon Django Corporate 4.3.0) فقط.
+- `interactive` رد شده و نباید استفاده شود.
+- Master RTL assets: `static/velzon_master/`
+- IRANSans FaNum six weights: 200/300/400/500/700/900.
+- Admin/customer navy/graphite + metallic gold design system.
+- Desktop Admin login 460px regression رفع شده است.
+- Customer Portal mobile drawer حفظ شده است.
 
-Approved UI source:
-- uploaded `master.zip` / Velzon Django Corporate 4.3.0;
-- `interactive` is rejected and must not be used.
+### برند canonical
 
-Brand:
-- canonical UI logo: `static/img/brand/3dprinthublogo.png`;
-- approved SHA-256: `97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`;
-- exact user-supplied logo only; do not regenerate/recolor/substitute;
-- six IRANSans FaNum weights mapped 200/300/400/500/700/900.
+فایل:
 
-Retained improvements:
-- Master RTL Admin;
-- Customer Portal desktop sidebar + responsive drawer;
-- Admin login desktop width regression fixed;
-- Hero Store target/SEO/image fallback aligned with Store Product;
-- External Catalog Hero URLs retired.
+`static/img/brand/3dprinthublogo.png`
 
-## Phase49.2C — Hero Studio & Cinematic Slider
+Approved SHA256:
 
-Migration already applied on **local SQLite only**:
-`website.0020_phase49_2c_hero_studio`.
+`97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`
 
-Fields:
-- `selected_asset_image` -> nullable FK to `store.ImportedPrintAssetImage`;
-- `transition_effect`;
-- `transition_duration_ms`;
-- `display_duration_ms`.
+هیچ لوگوی جایگزین/بازطراحی‌شده نباید جای این فایل استفاده شود.
 
-Local validation from 2026-08-18:
-- Hero rows before 0020: 2;
-- Hero rows after 0020: 2;
-- all four columns verified;
-- `PHASE49_2C_DB_VERIFY=OK`;
-- dedicated 49.2C test: 9/9 OK;
-- later combined Phase49 regression: 21/21 OK.
+## 7) Foundation 49.2C — Hero Studio & Cinematic Slider
 
-Hero Studio retained:
-- visual Product Album Picker;
-- visual image selection without first Save;
-- persistent image relation;
-- edit existing sliders without delete/recreate;
-- cinematic effect/timing per slide;
-- reduced-motion/mobile-safe behavior.
+سند:
 
-Six effects:
+`docs/PHASE49_2C_HERO_STUDIO.md`
+
+قابلیت‌ها:
+
+- Admin visual Product Album Picker
+- Image Album Picker بدون Save اولیه
+- `selected_asset_image` relation واقعی
+- ویرایش Slide موجود بدون Delete/Recreate
+- Effect/Timing per slide
+- mobile/reduced-motion behavior
+
+Effects:
+
 1. `cinematic_fade`
 2. `wedding_dissolve`
 3. `cinematic_zoom`
@@ -101,419 +141,351 @@ Six effects:
 5. `soft_blur`
 6. `cinematic_reveal`
 
----
+Migration:
 
-# Local Store migration status before Unified Epic
+`website.0020_phase49_2c_hero_studio`
 
-On Windows local SQLite, these are already applied:
-- `[X] store.0027_phase39_variant_color_fk`
-- `[X] store.0028_epic49_catalog_product_schema`
-- `[X] store.0029_epic49_catalog_product_backfill`
-- `[X] website.0019_phase45_managed_homepage_hero`
-- `[X] website.0020_phase49_2c_hero_studio`
+Persistent fields:
 
-Before 0028/0029 the read-only audit reported:
-- `IMPORTED_ASSETS_WITH_PRODUCT=0`
-- `PROFILES_TO_CREATE_OR_REFRESH=0`
-- `PRODUCTS_WITH_ANY_CHANGE=0`
-- `PRODUCTS_WITH_SLUG_CHANGE=0`
-- `AUDIT_DB_MUTATIONS=0`
+- selected_asset_image
+- transition_effect
+- transition_duration_ms
+- display_duration_ms
 
-Therefore local application of 0028/0029 changed no existing Product slug/SEO because local Product count was zero.
+Migration فقط Additive است.
 
-After applying them:
-- `STORE_0028_APPLIED=True`
-- `STORE_0029_APPLIED=True`
-- `PROFILE_TABLE_EXISTS=True`
-- Product/slug/SEO change counts remained zero.
+## 8) Epic49 Unified Product / SEO / Slider / Desktop / Bridge
 
-Do **not** re-run old warnings that 0028/0029 are pending; that state is obsolete.
-
----
-
-# Local catalog dataset observation
-
-Read-only local audit:
-- `PRODUCTS = 0`
-- `ACTIVE_PRODUCTS = 0`
-- `IMPORTED_ASSETS = 45`
-- `ASSETS_WITH_PRODUCT = 0`
-- `ASSETS_WITHOUT_PRODUCT = 45`
-- `HERO_SLIDES = 2`
-
-Historical local Hero links:
-- slide 10 -> asset 1, `Vesper – Sculptural Bedside Lamp`;
-- slide 11 -> asset 8, `Articulated flexi lizard`.
-
-Those 45 local Assets are **not to be bulk-converted automatically**. Windows employee publishing is the operational Source of Truth and must run the normal approval/license/image/category gates. Historical/reference assets stay preserved.
-
----
-
-# CURRENT ACTIVE EPIC
-
-## Epic 49 — Unified Product / SEO / Slider / Desktop / Bridge
-
-Branch:
-
-`epic/phase49-unified-product-slider-sync`
-
-Detailed document:
+سند کامل:
 
 `docs/EPIC49_UNIFIED_PRODUCT_SLIDER_SYNC.md`
 
-### Current state
-- Epic implementation: **complete on GitHub**;
-- self-test CI: **green**;
-- Windows local pull/migrations/visual QA: **not yet performed for the Unified Epic**;
-- production: **untouched / not deployed**.
+مدل عملیاتی:
 
-Code validation baseline before documentation-only commits:
+```text
+Employee
+  ↓
+Catalog Center Windows
+  ↓
+Product + Images + Product SEO + Hero SEO + Hero Image + Effect/Timing
+  ↓
+Catalog Bridge
+  ↓
+Django Product / ProductCatalogProfile / HomepageHeroSlide
+  ↓
+Public Store/Home
+```
 
-`8ad84577498072cf8c3d007d8bd259d6e3428cba`
+و برگشت:
 
-Final CI probe commit:
+```text
+Django Admin / Server edit
+  ↓
+Revision increment
+  ↓
+Catalog Bridge
+  ↓
+Windows refresh / compare
+```
 
-`03b9df7c8f5a7ce8e8ad44b916cd626cc419818d`
+Windows ابزار اصلی کارمند است؛ Admin سایت ابزار مدیریتی دوم و کامل است.
 
-Final GitHub Actions:
-- run: `32129944811`
-- job: `95688635543`
-- result: **SUCCESS**
+### Conflict Protection
 
-All gates passed:
-- dependency install;
-- isolated runtime directories;
-- Python compile;
-- `manage.py check`;
-- `makemigrations --check --dry-run`;
-- `migrate --plan`;
-- targeted Phase49 behavioral/regression tests;
-- Windows Catalog Center Epic49 tests;
-- **full Django test suite**.
+- Product profile و Hero revision مستقل دارند.
+- Stale Windows update روی Server جدید → HTTP 409.
+- مدیر سایت اگر Product/Hero را Edit کند Revision بالا می‌رود.
+- Employee باید Refresh/Review کند و تغییر مدیر silently overwrite نمی‌شود.
 
----
-
-## Unified operational model
-
-**Windows Catalog Center is the primary employee editor.**
-
-Employees should be able to perform from Windows:
-- internet product intake;
-- source/reference review;
-- Persian content edit;
-- Product SEO edit/AI generation;
-- image selection;
-- price/material/color configuration;
-- publish approval/license controls;
-- independent Hero Slider SEO;
-- Hero image selection;
-- Hero effect/timing;
-- publish to site;
-- read current site Product revision;
-- read/edit all current site Hero sliders;
-- refresh newer server edits.
-
-**Django Admin remains an equal secondary/manager editor**, not a separate data model.
-
-Server changes and Windows changes use the same persistent Product/Profile/Hero records.
-
----
-
-## Product SEO vs Hero SEO
-
-Product SEO remains independent from Hero SEO.
-
-Hero-specific persistent contract:
-- `homepage_slider_enabled`
-- `homepage_slider_image_url`
-- `homepage_slider_sort_order`
-- `homepage_slider_title_fa`
-- `homepage_slider_description_fa`
-- `homepage_slider_alt_text`
-- `homepage_slider_button_text`
-- `homepage_slider_focus_keyword`
-- `homepage_slider_transition_effect`
-- `homepage_slider_transition_duration_ms`
-- `homepage_slider_display_duration_ms`
-
-Catalog Center AI Pack `homepage_slider_seo` is preserved. Dedicated Slider SEO takes priority; Product SEO is fallback only when Slider fields are empty.
-
----
-
-## Unified Django database migrations — NOT YET APPLIED LOCALLY
-
-### Store 0030
-
-`store/migrations/0030_phase49_unified_sync_contract.py`
-
-Adds to ProductCatalogProfile:
-- dedicated Hero SEO fields;
-- Hero effect/timing fields;
-- `sync_revision`;
-- `last_modified_source`;
-- `last_modified_by`.
-
-### Website 0021
-
-`website/migrations/0021_phase49_unified_hero_sync.py`
-
-Adds to HomepageHeroSlide:
-- `sync_revision`;
-- `last_modified_source`;
-- `last_modified_by`.
-
-Both migrations are additive. No DROP/DELETE/TRUNCATE operations.
-
-The next Windows gate must review `migrate --plan` before applying 0030/0021.
-
----
-
-## Windows SQLite unified schema
-
-`catalog_center/app/epic49_desktop_schema.py`
-
-New additive columns:
-- `homepage_slider_transition_effect`
-- `homepage_slider_transition_duration_ms`
-- `homepage_slider_display_duration_ms`
-- `server_product_id`
-- `server_product_revision`
-- `server_slider_id`
-- `server_slider_revision`
-- `server_updated_at`
-- `last_sync_conflict`
-
-Existing Hero SEO columns remain.
-
-Installer only adds missing columns; old Windows data is not deleted/rebuilt.
-
----
-
-## Windows UI / icons
-
-No new UI/icon package installed.
-
-Employee mental model/icons:
-- 📦 product
-- 🖼 gallery/images
-- 🔎 Product SEO
-- 🎬 Hero Slider
-- ✨ AI content/Slider SEO
-- 🌐 server sync / server sliders
-- ✅ publish
-- ⚠ revision conflict
-- ↻ refresh from server
-
-Final workspace:
-
-`catalog_center/app/product_workspace_epic49.py`
-
-Inheritance:
-
-`ProductWorkspaceEpic49 -> ProductWorkspace871 -> ProductWorkspace87`
-
-Existing V87/V871 workflow is preserved; Epic extends it rather than replacing it.
-
-Adds:
-- effect selector;
-- transition/display timing;
-- server revisions;
-- local cinematic Preview from real cached Product images;
-- refresh current Product from Server;
-- manage all server sliders.
-
-Server Slider Manager:
-
-`catalog_center/app/epic49_server_slider_manager.py`
-
-Edits:
-- title;
-- description;
-- alt;
-- focus keyword;
-- button;
-- exact image from same Asset;
-- effect;
-- transition/display timing;
-- order;
-- active state;
-- revision/source/operator.
-
----
-
-## Catalog Bridge unified contract
-
-Bridge runtime:
-- version `1.3.0`;
-- contract `epic49-unified-v1`;
-- same existing Bearer token / HMAC authorization.
-
-Old endpoints retained:
-- `/api/catalog-bridge/v1/health/`
-- `/api/catalog-bridge/v1/import/`
-- `/api/catalog-bridge/v1/diagnostics/<batch_name>/`
-
-New endpoints:
-- `GET /api/catalog-bridge/v1/products/`
-- `GET /api/catalog-bridge/v1/products/<id>/`
-- `POST /api/catalog-bridge/v1/products/<id>/sync/`
-- `GET /api/catalog-bridge/v1/hero-slides/`
-- `GET /api/catalog-bridge/v1/hero-slides/<id>/`
-- `POST /api/catalog-bridge/v1/hero-slides/<id>/sync/`
-
-Writes use explicit Allow-lists.
-
-Hero image ownership is enforced: an image belonging to another Asset cannot be assigned to a Hero slide.
-
----
-
-## Revision / conflict protection
-
-Product Profile and Hero each have independent `sync_revision`.
-
-If Windows revision equals Server revision:
-- update accepted;
-- revision incremented.
-
-If Server revision is newer:
-- HTTP `409 Conflict`;
-- current server payload returned;
-- Windows shows conflict and requires review/refresh.
-
-Admin Product edits bump Profile revision.
-Admin Hero edits bump Hero revision.
-Profile Admin and Hero Admin mirror common Slider fields so they do not become competing sources.
-
-Audit fields:
-- `last_modified_source`: `desktop` / `admin`;
-- `last_modified_by`: employee/operator/admin username.
-
----
-
-## Same-batch idempotency
-
-Key:
+Idempotency:
 
 `batch_uuid + source_hash`
 
-Purpose:
-- multiple Asset saves/signals inside one official import must not conflict with themselves;
-- repeated import of identical batch must not inflate revisions;
-- duplicate Product/Hero must not be created.
+اجرای دوباره همان Batch revision بی‌دلیل بالا نمی‌برد و duplicate Product/Hero نمی‌سازد.
 
-Hero revision increments only when actual Hero state changes.
+## 9) Epic49 Django DB contract
 
----
+### Store
 
-## ACK enrichment
+Migration:
 
-Import ACK additionally returns:
-- `server_product_id`
-- `product_revision`
-- `slider_id`
-- `slider_revision`
-- `sync_contract=epic49-unified-v1`
+`store.0030_phase49_unified_sync_contract`
 
-Windows stores revisions for subsequent optimistic updates.
+روی `ProductCatalogProfile`:
 
----
+- homepage_slider_title_fa
+- homepage_slider_description_fa
+- homepage_slider_alt_text
+- homepage_slider_button_text
+- homepage_slider_focus_keyword
+- homepage_slider_transition_effect
+- homepage_slider_transition_duration_ms
+- homepage_slider_display_duration_ms
+- sync_revision
+- last_modified_source
+- last_modified_by
 
-## Brand contract after Full Suite cleanup
+### Website
 
-Canonical public brand asset:
+Migration:
+
+`website.0021_phase49_unified_hero_sync`
+
+روی `HomepageHeroSlide`:
+
+- sync_revision
+- last_modified_source
+- last_modified_by
+
+هر دو Migration Additive هستند؛ DROP/DELETE/TRUNCATE ندارند.
+
+### Store 0028/0029 history
+
+Local audit قبلی نشان داد قبل از اجرای Backfill:
+
+- Imported assets linked to Product: 0
+- Products with changes: 0
+- Products with slug changes: 0
+
+پس `store.0028` و `store.0029` روی Local قبلاً بدون Product mutation اعمال شدند. Production state باید قبل از deploy جداگانه Verify شود و از Local فرض نشود.
+
+## 10) Windows DB contract
+
+Module:
+
+`catalog_center/app/epic49_desktop_schema.py`
+
+Additive SQLite columns:
+
+- homepage_slider_transition_effect
+- homepage_slider_transition_duration_ms
+- homepage_slider_display_duration_ms
+- server_product_id
+- server_product_revision
+- server_slider_id
+- server_slider_revision
+- server_updated_at
+- last_sync_conflict
+
+Slider SEO fields از قبل در 8.7.1 وجود داشتند و حفظ شدند.
+
+## 11) Catalog Bridge 1.3
+
+Contract:
+
+- version: `1.3.0`
+- publish contract: `epic49-unified-v1`
+- Auth: existing Bearer token + constant-time compare.
+
+Legacy endpoints حفظ شده‌اند:
+
+- health
+- import
+- diagnostics
+
+Unified endpoints:
+
+- products list/detail/sync
+- hero-slides list/detail/sync
+
+Write API allow-list دارد. Hero image فقط اگر متعلق به همان Asset باشد پذیرفته می‌شود.
+
+ACK Import شامل server product/slider ID + revisions است تا Windows state sync شود.
+
+## 12) Persian Sales Hero Hotfix — مرحله جاری
+
+سند کامل:
+
+`docs/EPIC49_PERSIAN_SALES_HERO_HOTFIX.md`
+
+### مسئله
+
+Hero قدیمی می‌توانست این نوع داده را عمومی کند:
+
+- English source title مثل `Vesper – Sculptural Bedside Lamp`
+- Cookie/Consent/Tracking text
+- HTML boilerplate
+- English source name در badge
+
+### Source of Truth جدید
+
+Public Hero اول داده فارسی تاییدشده Windows را می‌گیرد:
+
+1. dedicated Slider Persian SEO
+2. AI Slider Persian SEO
+3. Product SEO فارسی Windows
+4. Product editorial فارسی Windows/Imported Asset
+5. Persian Product fallback
+6. Persian generic sales fallback
+
+Raw source English title/description fallback عمومی نیست.
+
+### Sanitizer
+
+`store/phase49_persian_sales_copy.py`
+
+- HTML/BR/script/style cleanup
+- Persian validation
+- Cookie/Privacy/Tracking blacklist
+- shared Slider/Product sales resolver
+- sales-intent keyword normalization
+
+### SEO فروش
+
+Focus Keyword اگر intent تراکنشی نداشته باشد تبدیل می‌شود:
+
+`آباژور سه بعدی` → `خرید آباژور سه بعدی`
+
+Intentهای پذیرفته‌شده:
+
+- خرید
+- سفارش
+- قیمت
+- فروش
+- تهیه
+- ثبت سفارش
+
+Product meta/OG و Slider alt/focus نیز از قرارداد فارسی فروش استفاده می‌کنند.
+
+### Profile global save gate
+
+`store/phase49_persian_sales_runtime.py`
+
+`ProductCatalogProfile` قبل از Save normalize می‌شود، مستقل از اینکه ورودی از:
+
+- Windows import
+- Bridge
+- Admin
+- Hero mirror
+
+آمده باشد.
+
+### Public Hero runtime
+
+`website/phase49_persian_sales_hero.py`
+
+فارسی‌بودن را روی:
+
+- title
+- description
+- group/badge
+- alt
+- button
+
+enforce می‌کند.
+
+### Windows runtime
+
+`catalog_center/app/phase49_persian_sales_desktop.py`
+
+- source_title/source_description raw fallback نیستند.
+- reload/save Slider fields را فارسی normalize می‌کند.
+- launcher و portable هر دو Patch را نصب می‌کنند.
+- Marker: `EPIC49_PERSIAN_SALES_HERO=ENABLED`.
+
+### Hero description UX
+
+Default:
+
+- حداکثر 2 خط
+- ellipsis
+- `نمایش بیشتر`
+
+On click:
+
+- full description
+- `بستن توضیحات`
+- aria-expanded
+- autoplay pause while reading
+
+Slide change state را reset می‌کند.
+
+Files:
+
+- `templates/website/partials/hero.html`
+- `static/css/phase49_2c-hero-effects.css`
+- `static/js/phase49_2c-home-hero.js`
+
+## 13) Legacy data repair
+
+Command:
+
+`python manage.py phase49_repair_persian_sales_hero`
+
+Default: **DRY_RUN**
+
+Apply فقط بعد از Review/Backup:
+
+`python manage.py phase49_repair_persian_sales_hero --apply`
+
+قابل ترمیم:
+
+- Hero title/description/group/alt/button
+- Profile slider title/description/alt/button/focus
+
+Command Product/Image/Price را حذف/تغییر ساختاری نمی‌دهد.
+
+این Hotfix Migration جدید ندارد.
+
+## 14) تست‌های Persian Sales Hero
+
+Server:
+
+`website.test_phase49_persian_sales_hero`
+
+Exact regression input دارد:
+
+- Vesper English title
+- Cookie Settings/Consent/Tracking HTML
+
+Windows:
+
+`catalog_center/tests/test_phase49_persian_sales_slider.py`
+
+E2E:
+
+`store.test_phase49_unified_import_e2e`
+
+Batch E2E دارای Slider SEO فارسی مستقل + sales focus + image/effect/timing/revision است.
+
+## 15) خطاهای مهمی که CI گرفت و علت رفع
+
+1. Product title قبل از `asset.persian_title` fallback می‌شد → Windows/Imported Persian precedence اصلاح شد.
+2. focus عمومی مثل `چراغ دکوراتیو` intent فروش نداشت → `خرید چراغ دکوراتیو` شد.
+3. Bridge test fixtures انگلیسی بودند → fixture فارسی شد؛ Revision/409 contract ثابت ماند.
+4. E2E test focus عمومی بود → Batch E2E به SEO فروش واقعی ارتقا یافت.
+5. دو Full Suite contract قدیمی انتظار `آباژور سه بعدی` داشتند → expectation به `خرید آباژور سه بعدی` ارتقا یافت؛ Runtime عقب‌گرد نکرد.
+
+## 16) وضعیت برند و Frontend
+
+Canonical public brand:
 
 `static/img/brand/3dprinthublogo.png`
 
-Home and Store both use the canonical approved logo for browser icon/apple-touch references.
+Approved SHA256:
 
-Legacy files under `static/favicon/` remain preserved for compatibility/history but are not the brand Source of Truth because they were generated before the final approved canonical-logo contract and their provenance could not be proven from Repository history.
+`97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`
 
----
+Legacy favicon pack حذف نشده ولی Source of Truth برند نیست مگر دوباره از canonical logo تأییدشده تولید/verify شود.
 
-# Epic49 tests
+## 17) Gate بعدی Local
 
-Key behavioral tests:
-- `store.test_phase49_unified_sync`
-- `store.test_phase49_unified_import_e2e`
-- `store.test_epic49_operator_publish`
-- `store.test_phase49_1_frontend_contract`
-- `catalog_bridge.test_phase49_unified_bridge`
-- `catalog_bridge.tests.test_epic49_contract`
-- `website.test_phase49_2c_hero_studio`
-- `website.test_phase49_2b_hero_login_hotfix`
-- `website.test_phase45_homepage_hero`
-- `catalog_center/tests/test_phase49_unified_desktop.py`
-- all `catalog_center/tests/test_*epic49*.py`.
+1. Pull آخرین `epic/phase49-unified-product-slider-sync`.
+2. Verify clean worktree.
+3. `python manage.py check`.
+4. `python manage.py makemigrations --check --dry-run` → No changes detected.
+5. targeted Persian Hero + Windows tests.
+6. `python manage.py phase49_repair_persian_sales_hero` → Dry Run.
+7. Review affected Hero/Profile rows.
+8. Local DB backup.
+9. Apply repair only after output accepted.
+10. Restart runserver + Ctrl+Shift+R.
+11. Visual QA: Persian title/badge/description/alt behavior, no Cookie/HTML, 2-line ellipsis, click expand/collapse.
+12. User explicit approval.
+13. Only then prepare Production backup/migration/deploy plan.
 
-E2E test builds a real v8.5 batch, imports through the official `phase37_import_catalog_center` command, then verifies Product/Profile/Hero/image/SEO/effect/timing/revision/idempotency.
+## 18) Production status
 
----
+**NOT DEPLOYED / NOT APPROVED YET.**
 
-# CI issues found and fixed before handoff
-
-1. **Legacy Windows tests tied to old workspace filename**
-   - fixed by validating real inheritance `Epic49 -> V871 -> V87`.
-
-2. **CI tried to write media under `/home/sfkilvrs`**
-   - production settings were not changed;
-   - CI uses isolated `/tmp/3dprinthub-ci/...` env paths.
-
-3. **Legacy Bridge contract expected 1.2.0 / epic49-final**
-   - upgraded to real 1.3.0 / epic49-unified-v1;
-   - legacy import/health/diagnostic routes are explicitly tested as retained.
-
-4. **Legacy Hero template test required direct Product URL expression**
-   - upgraded to `slide.target_url` safe runtime contract;
-   - active Product -> canonical product URL;
-   - unpublished Product -> Store list;
-   - retired External Catalog URL prohibited.
-
-5. **Legacy favicon test required old favicon pack**
-   - public layouts canonicalized to final approved `3dprinthublogo.png`;
-   - legacy favicon files preserved, not used as brand source of truth.
-
-After these corrections, final CI Run `32129944811` / Job `95688635543` completed successfully through the full Django suite.
-
----
-
-# Temporary CI probe rule
-
-Draft PRs/branches with `ci/phase49-unified-*` and `PHASE49_EPIC_SELFTEST_PROBE*` were created only to force GitHub Actions runs against the Epic branch.
-
-They must **never be merged** into the Epic or Main branch.
-
-The implementation branch itself contains no probe marker files.
-
----
-
-# Current validation gate
-
-## Completed
-- Epic code implemented on GitHub.
-- Django migrations tracked.
-- Windows schema tracked.
-- Bridge read/write revision contract tracked.
-- targeted tests green in GitHub Actions.
-- Windows tests green in GitHub Actions.
-- full Django suite green in GitHub Actions.
-- detailed Epic document written.
-
-## Pending before production
-1. Windows `git pull/switch` to Unified Epic;
-2. local DB + Catalog Center data backup;
-3. `check` + `makemigrations --check`;
-4. inspect `migrate --plan`;
-5. apply `store.0030` and `website.0021` locally;
-6. verify DB columns/revisions;
-7. run targeted tests locally;
-8. run Website/Store/Catalog Bridge/full suite locally;
-9. run Catalog Center Windows test/verify;
-10. visual QA Product Workspace / Hero Studio / Server Slider Manager;
-11. one real local employee flow:
-    `internet -> Windows -> Product SEO -> Hero SEO/image/effect -> publish -> Django -> edit Admin -> refresh Windows`;
-12. explicit user approval;
-13. production backup/deploy/migrations/collectstatic/restart/smoke.
-
-**Production deployment is NOT approved yet.**
-
-No host changes should be made until Windows local acceptance is complete.
+هیچ Migration/Repair/collectstatic/restart مربوط به Epic49 Unified یا Persian Sales Hero Hotfix روی Production از این مسیر انجام نشده است.
