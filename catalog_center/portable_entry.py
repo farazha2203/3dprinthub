@@ -28,7 +28,7 @@ def _configure_runtime():
     from app import main as app_main
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
-    from app.product_workspace_v871 import ProductWorkspace
+    from app.product_workspace_epic49 import ProductWorkspace
     from app.ux87_shell import build_app_class
 
     data = data_root()
@@ -54,14 +54,14 @@ def _configure_runtime():
 def _portable_verify() -> int:
     from app.env_settings import ENV_FILE
     from app.version import APP_NAME, APP_VERSION, BUILD_ID
-    from app.product_workspace_v871 import ProductWorkspace
-    from app.product_workspace_v87 import ProductWorkspace as ProductWorkspace87
+    from app.product_workspace_epic49 import ProductWorkspace
+    from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
     from app.ux87_shell import build_app_class
     from app import main as app_main
 
-    workspace_v871 = bool(
-        ProductWorkspace.__module__ == "app.product_workspace_v871"
-        and issubclass(ProductWorkspace, ProductWorkspace87)
+    workspace_epic49 = bool(
+        ProductWorkspace.__module__ == "app.product_workspace_epic49"
+        and issubclass(ProductWorkspace, ProductWorkspace871)
     )
     payload = {
         "app_name": APP_NAME,
@@ -75,9 +75,11 @@ def _portable_verify() -> int:
         "env_file": str(ENV_FILE),
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
         "data_is_release_independent": data_root().resolve() == persistent_data_root().resolve(),
-        "product_workspace_v87": workspace_v871,
-        "product_workspace_v871": workspace_v871,
-        "homepage_slider_seo_v871": workspace_v871,
+        "product_workspace_v87": workspace_epic49,
+        "product_workspace_v871": workspace_epic49,
+        "homepage_slider_seo_v871": workspace_epic49,
+        "epic49_unified_sync": workspace_epic49,
+        "epic49_server_slider_manager": workspace_epic49,
         "ux87_shell": build_app_class(app_main.App).__name__ == "CatalogCenterApp87",
         "ai_profile_preserved": True,
         "host_profile_preserved": True,
@@ -89,6 +91,8 @@ def _portable_verify() -> int:
         and payload["data_is_release_independent"]
         and payload["product_workspace_v871"]
         and payload["homepage_slider_seo_v871"]
+        and payload["epic49_unified_sync"]
+        and payload["epic49_server_slider_manager"]
         and payload["ux87_shell"]
     )
     payload["ok"] = ok
