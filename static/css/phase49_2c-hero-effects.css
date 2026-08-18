@@ -6,6 +6,51 @@
 [data-p49c-engine] .p45-hero__slide .p45-hero__media img{transition:none!important;will-change:transform,opacity,filter,clip-path}
 [data-p49c-engine] .p45-hero__slide .p45-hero__caption{will-change:transform,opacity,filter}
 
+/* Epic49 Persian Sales Hero: two lines by default, full copy on deliberate click. */
+[data-p49c-engine] .p49c-hero__description{
+  display:block;
+  width:100%;
+  margin:12px 0 0;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  line-height:1.9;
+  text-align:inherit;
+  cursor:pointer;
+}
+[data-p49c-engine] .p49c-hero__description-text{
+  display:-webkit-box;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  text-overflow:ellipsis;
+  max-height:3.8em;
+}
+[data-p49c-engine] .p49c-hero__description.is-expanded .p49c-hero__description-text{
+  display:block;
+  overflow:visible;
+  max-height:none;
+  -webkit-line-clamp:unset;
+  line-clamp:unset;
+}
+[data-p49c-engine] .p49c-hero__description-more{
+  display:inline-flex;
+  margin-top:7px;
+  font-size:.76rem;
+  font-weight:700;
+  opacity:.8;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+[data-p49c-engine] .p49c-hero__description:focus-visible{
+  outline:2px solid currentColor;
+  outline-offset:5px;
+  border-radius:6px;
+}
+
 [data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,1400ms) cubic-bezier(.22,.61,.36,1) both}
 [data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,1400ms) cubic-bezier(.22,.61,.36,1) both}
 [data-p49c-active-effect="cinematic_fade"] .p45-hero__slide.is-entering .p45-hero__media img{animation:p49c-soft-zoom-in var(--p49c-transition,1400ms) ease-out both}
@@ -48,6 +93,8 @@
   [data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-leaving{animation:p49c-fade-out var(--p49c-transition,900ms) ease-in-out both}
   [data-p49c-active-effect="soft_blur"] .p45-hero__slide.is-entering{animation:p49c-fade-in var(--p49c-transition,900ms) ease-in-out both}
   [data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-entering,[data-p49c-active-effect="cinematic_reveal"] .p45-hero__slide.is-leaving{clip-path:none!important}
+  [data-p49c-engine] .p49c-hero__description{line-height:1.75}
+  [data-p49c-engine] .p49c-hero__description-text{max-height:3.5em}
 }
 
 @media(prefers-reduced-motion:reduce){
