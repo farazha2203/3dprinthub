@@ -16,17 +16,24 @@ PRODUCT_COLUMNS = {
     "homepage_slider_alt_text": "TEXT NOT NULL DEFAULT ''",
     "homepage_slider_button_text": "TEXT NOT NULL DEFAULT 'مشاهده محصول'",
     "homepage_slider_focus_keyword": "TEXT NOT NULL DEFAULT ''",
+    "homepage_slider_transition_effect": "TEXT NOT NULL DEFAULT 'cinematic_fade'",
+    "homepage_slider_transition_duration_ms": "INTEGER NOT NULL DEFAULT 1400",
+    "homepage_slider_display_duration_ms": "INTEGER NOT NULL DEFAULT 7000",
+    "server_product_id": "INTEGER NOT NULL DEFAULT 0",
+    "server_product_revision": "INTEGER NOT NULL DEFAULT 0",
+    "server_slider_id": "INTEGER NOT NULL DEFAULT 0",
+    "server_slider_revision": "INTEGER NOT NULL DEFAULT 0",
+    "server_updated_at": "TEXT NOT NULL DEFAULT ''",
+    "last_sync_conflict": "TEXT NOT NULL DEFAULT ''",
 }
 
 
 def ensure_epic49_desktop_schema(db) -> None:
     """Add Epic49 final desktop fields without deleting or rewriting runtime data."""
     existing = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
-    changed = False
     for name, ddl in PRODUCT_COLUMNS.items():
         if name not in existing:
             db.conn.execute(f"ALTER TABLE products ADD COLUMN {name} {ddl}")
-            changed = True
 
     db.conn.execute(
         """
@@ -41,10 +48,7 @@ def ensure_epic49_desktop_schema(db) -> None:
         )
         """
     )
-    if changed:
-        db.conn.commit()
-    else:
-        db.conn.commit()
+    db.conn.commit()
 
 
 def install(app_module) -> None:
