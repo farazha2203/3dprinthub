@@ -1,8 +1,11 @@
 from pathlib import Path
 
 from django.contrib import admin
-from django.test import SimpleTestCase
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 
+from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource, Product
 from website.models import HomepageHeroSlide
 
 
@@ -90,3 +93,93 @@ class Phase49_2CHeroStudioContractTests(SimpleTestCase):
             self.assertIn(effect, styles)
         self.assertIn("prefers-reduced-motion:reduce", styles)
         self.assertIn("@media(max-width:600px)", styles)
+
+
+class Phase49_2CHeroStudioBehaviorTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_superuser(
+            username="phase49c-admin",
+            email="phase49c@example.com",
+            password="StrongTestPass123!",
+        )
+        cls.category = Category.objects.create(name="قطعات تست Hero", slug="phase49c-hero")
+        cls.product = Product.objects.create(
+            category=cls.category,
+            title="چرخ دنده تست Hero Studio",
+            title_en="Hero Studio Test Gear",
+            slug="phase49c-test-gear",
+            sku="P49C-GEAR-001",
+            short_description="توضیح کوتاه محصول تست",
+            description="توضیحات کامل محصول تست برای Hero Studio",
+            main_image="store/products/phase49c-main.jpg",
+            is_active=True,
+        )
+        cls.source = PrintCatalogSource.objects.create(
+            name="Phase49C Test Source",
+            code="phase49c-test-source",
+            base_url="https://example.com/",
+        )
+        cls.asset = ImportedPrintAsset.objects.create(
+            source=cls.source,
+            source_url="https://example.com/models/gear",
+            external_id="P49C-ASSET-001",
+            title="Hero Test Gear",
+            persian_title="چرخ دنده فارسی Hero",
+            persian_short_description="توضیح فارسی اختصاصی اسلایدر",
+            product=cls.product,
+        )
+        cls.asset_image = ImportedPrintAssetImage.objects.create(
+            asset=cls.asset,
+            remote_url="https://example.com/images/gear-hero.jpg",
+            image="store/imported-models/gallery/phase49c-hero.jpg",
+            alt_text="چرخ دنده تست در Hero",
+            is_primary=True,
+            is_selected=True,
+            sort_order=0,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_product_browser_returns_visual_product_card_payload(self):
+        response = self.client.get(
+            reverse("admin:website_homepageheroslide_product_browser"),
+            {"q": "P49C-GEAR-001"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["items"][0]["asset_id"], self.asset.pk)
+        self.assertEqual(payload["items"][0]["sku"], "P49C-GEAR-001")
+        self.assertEqual(payload["items"][0]["category"], self.category.name)
+
+    def test_asset_detail_returns_real_image_ids_without_initial_slide_save(self):
+        response = self.client.get(
+            reverse("admin:website_homepageheroslide_asset_detail"),
+            {"asset_id": self.asset.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        image_ids = [row["id"] for row in payload["images"] if row["id"] is not None]
+        self.assertIn(self.asset_image.pk, image_ids)
+        self.assertEqual(payload["suggestions"]["title"], "چرخ دنده فارسی Hero")
+
+    def test_selected_asset_image_is_persistent_and_has_render_priority(self):
+        slide = HomepageHeroSlide.objects.create(
+            asset=self.asset,
+            selected_asset_image=self.asset_image,
+            image_url="https://example.com/images/legacy-fallback.jpg",
+            transition_effect="wedding_dissolve",
+            transition_duration_ms=1800,
+            display_duration_ms=8500,
+            is_active=True,
+        )
+        slide.refresh_from_db()
+        self.assertEqual(slide.selected_asset_image_id, self.asset_image.pk)
+        self.assertEqual(slide.transition_effect, "wedding_dissolve")
+        self.assertEqual(slide.transition_duration_ms, 1800)
+        self.assertEqual(slide.display_duration_ms, 8500)
+        self.assertTrue(slide.effective_image_url.endswith("/store/imported-models/gallery/phase49c-hero.jpg"))
