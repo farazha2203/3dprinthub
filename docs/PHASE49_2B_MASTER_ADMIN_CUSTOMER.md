@@ -38,18 +38,22 @@ The Phase45 Hero was still coupled to the retired public External Catalog and it
 
 Phase 49.2B fixes this without a schema migration:
 - `website/phase49_2b_hero_hotfix.py` installs runtime fallback properties and a `pre_save` safety net for `HomepageHeroSlide`.
-- Title fallback order uses Persian imported title, Store Product title and source title.
-- Description fallback uses Persian short description, Store Product short description and imported descriptions.
+- **Catalog Center 8.7.1 slider SEO is the first content source.** The hotfix reuses the existing server resolver in `store/epic49_publish_options.py` for `homepage_slider_title_fa`, `homepage_slider_description_fa`, `homepage_slider_alt_text`, `homepage_slider_button_text` and `homepage_slider_focus_keyword`, including its AI content-pack fallback.
+- If dedicated slider copy is missing, title falls back through Persian imported title, Store Product title and source title.
+- Description then falls back through Persian short description, Store Product short description and imported descriptions.
 - Group fallback prefers the Store Product category and then catalog/source metadata.
-- SEO image alt is generated from the resolved product title/group when left blank.
-- Image resolution prefers the imported local preview, then remote/catalog images and Store Product media.
+- SEO image alt is generated from the resolved product title/group only when the dedicated 8.7.1 alt is absent.
+- The image selected by Catalog Center (`homepage_slider_image_url`) is preferred; imported local media for that remote URL is used when available, then normal imported preview/catalog image and Store Product media are considered.
 - Hero targets now resolve only to an active Store Product or the Store product list. `external_catalog_detail` is not a valid Hero target anymore.
 - Staff-only endpoint `website:hero_slide_prefill` supplies immediate Admin suggestions after selecting an asset.
-- `static/js/admin-phase45-hero.js` listens to the Django Select2 asset selector, fills the Hero fields, enables the new-slide approval checkbox and renders candidate image choices before a first save.
+- `static/js/admin-phase45-hero.js` listens to the Django Select2 asset selector, fills title/description/group/Alt/button, shows the 8.7.1 focus keyword status, enables the new-slide approval checkbox and renders candidate image choices before a first save.
 - `templates/admin/website/homepageheroslide/change_form.html` loads the hotfix JS with an explicit cache version.
 - The public Hero renders `effective_description` and `target_url`; an active slide with no image does not masquerade as the site logo.
+- `WebsiteConfig.ready()` loads the runtime contract for web requests, tests, shell and management commands.
 
-Existing inactive slides remain intentionally inactive until an administrator approves them; no data row is silently published by this hotfix.
+The existing Catalog Center 8.7.1 publish path remains authoritative for automated publishing: when `homepage_slider_enabled` is enabled in the desktop payload, `store.epic49_publish_options.apply_homepage_slider()` creates or updates the asset slide, stores the selected image and SEO copy, and marks that generated slide active. Manual Admin editing remains available as an operator override/review layer.
+
+Existing inactive slides remain intentionally inactive until an administrator approves them; no old data row is silently published by this hotfix.
 
 ## Admin login desktop hotfix
 The first 49.2B CSS constrained the entire authentication content wrapper to `460px`, which made `/admin/login/` look like a mobile layout on desktop. The fix restores a full-width desktop authentication shell and constrains only the login card to approximately `520px`. The Admin CSS cache version is bumped to `49.2.1`. Internal Admin pages are not affected by this login-only layout fix.
