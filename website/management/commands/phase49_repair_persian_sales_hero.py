@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand
 
 from store.models import ImportedPrintAsset
-from store.phase49_catalog_profile import ProductCatalogProfile
+from store.epic49_catalog_profile import ProductCatalogProfile
 from store.phase49_persian_sales_copy import build_slider_sales_copy, safe_persian_text
 from website.models import HomepageHeroSlide
 from website.phase49_2b_hero_hotfix import _desktop_data
