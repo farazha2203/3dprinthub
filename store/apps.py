@@ -23,4 +23,10 @@ class StoreConfig(AppConfig):
         from .phase49_unified_sync import install as install_phase49_unified_sync
         install_phase49_unified_sync()
 
+        # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
+        # public source of truth. Imported English/raw source boilerplate is not
+        # allowed to become Store metadata or homepage Hero copy.
+        from .phase49_persian_sales_runtime import install as install_phase49_persian_sales_runtime
+        install_phase49_persian_sales_runtime()
+
         from . import checks  # noqa: F401
