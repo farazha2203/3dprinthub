@@ -1,0 +1,2 @@
+Phase49 Epic artifact diagnostic self-test probe #7.
+Temporary branch; do not merge.
