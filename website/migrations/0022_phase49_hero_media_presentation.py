@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import migrations, models
 
 
@@ -25,17 +26,29 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="homepageheroslide",
             name="image_scale_percent",
-            field=models.PositiveSmallIntegerField(default=100, verbose_name="مقیاس تصویر درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=100,
+                validators=[MinValueValidator(60), MaxValueValidator(140)],
+                verbose_name="مقیاس تصویر درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="image_position_x_percent",
-            field=models.PositiveSmallIntegerField(default=50, verbose_name="موقعیت افقی تصویر درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=50,
+                validators=[MinValueValidator(0), MaxValueValidator(100)],
+                verbose_name="موقعیت افقی تصویر درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="image_position_y_percent",
-            field=models.PositiveSmallIntegerField(default=50, verbose_name="موقعیت عمودی تصویر درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=50,
+                validators=[MinValueValidator(0), MaxValueValidator(100)],
+                verbose_name="موقعیت عمودی تصویر درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
@@ -60,26 +73,46 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="homepageheroslide",
             name="background_blur_px",
-            field=models.PositiveSmallIntegerField(default=18, verbose_name="Blur پس‌زمینه پیکسل"),
+            field=models.PositiveSmallIntegerField(
+                default=18,
+                validators=[MinValueValidator(0), MaxValueValidator(60)],
+                verbose_name="Blur پس‌زمینه پیکسل",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="desktop_max_width_percent",
-            field=models.PositiveSmallIntegerField(default=78, verbose_name="حداکثر عرض تصویر دسکتاپ درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=78,
+                validators=[MinValueValidator(30), MaxValueValidator(100)],
+                verbose_name="حداکثر عرض تصویر دسکتاپ درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="desktop_max_height_percent",
-            field=models.PositiveSmallIntegerField(default=88, verbose_name="حداکثر ارتفاع تصویر دسکتاپ درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=88,
+                validators=[MinValueValidator(30), MaxValueValidator(100)],
+                verbose_name="حداکثر ارتفاع تصویر دسکتاپ درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="mobile_max_width_percent",
-            field=models.PositiveSmallIntegerField(default=92, verbose_name="حداکثر عرض تصویر موبایل درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=92,
+                validators=[MinValueValidator(30), MaxValueValidator(100)],
+                verbose_name="حداکثر عرض تصویر موبایل درصد",
+            ),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
             name="mobile_max_height_percent",
-            field=models.PositiveSmallIntegerField(default=72, verbose_name="حداکثر ارتفاع تصویر موبایل درصد"),
+            field=models.PositiveSmallIntegerField(
+                default=72,
+                validators=[MinValueValidator(30), MaxValueValidator(100)],
+                verbose_name="حداکثر ارتفاع تصویر موبایل درصد",
+            ),
         ),
     ]
