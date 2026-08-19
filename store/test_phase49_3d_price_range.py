@@ -56,16 +56,15 @@ class Phase493DPriceRangePublicTests(TestCase):
     def test_store_list_shows_full_price_range(self):
         response = self.client.get(reverse("store:product_list"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "بازه قیمت")
-        self.assertContains(response, "450,000")
-        self.assertContains(response, "750,000")
+        html = response.content.decode("utf-8")
+        self.assertIn("بازه قیمت", html)
+        self.assertRegex(html, r"450(?:,|٬)?000\s+تا\s+750(?:,|٬)?000\s+تومان")
 
     def test_product_detail_shows_full_price_range(self):
         response = self.client.get(self.product.get_absolute_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "بازه قیمت")
-        self.assertContains(response, "450,000")
-        self.assertContains(response, "750,000")
+        html = response.content.decode("utf-8")
+        self.assertRegex(html, r"بازه قیمت:\s*450(?:,|٬)?000\s+تا\s+750(?:,|٬)?000\s+تومان")
 
 
 if __name__ == "__main__":
