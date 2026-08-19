@@ -40,7 +40,7 @@ Branch فعال:
 
 زنجیره خطی:
 
-`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Workflow Recovery`
+`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Workflow Recovery → 49.3C-1 Persian Content Integrity`
 
 Foundationها Merge موازی نشده‌اند؛ Epic ancestry خطی است تا Conflict مصنوعی ایجاد نشود.
 
@@ -508,23 +508,81 @@ Dedicated tests:
 CI:
 `.github/workflows/phase49-epic-ci.yml` new modules را compile می‌کند و test 49.3C را explicit + Epic49 discovery اجرا می‌کند.
 
+## 19.1) Phase49.3C-1 — Persian AI Content Integrity & Workspace Persistence
+
+Doc:
+`docs/PHASE49_3C_PERSIAN_CONTENT_HOTFIX.md`
+
+Visual QA جدید نشان داد Regression فقط در AI generation نیست؛ دو لایه مستقل وجود داشت:
+1. fallback می‌توانست متن انگلیسی source را وارد فیلد `_fa` کند.
+2. Product Workspace واقعی همه فیلدهای SEO را در Reload/Save round-trip نمی‌کرد.
+
+Repair:
+- `catalog_center/app/phase49_3c_persian_content.py`
+- Structured Schema اکنون `use_description_fa` را نیز الزام می‌کند.
+- تمام editorial/SEO fields فارسی Gate دارند.
+- English source هیچ‌وقت fallback فارسی نمی‌شود.
+- Provider در صورت خروجی غیر فارسی یک Structured Persian Repair می‌گیرد.
+- Provider failure فقط fallback فارسی محافظه‌کارانه می‌سازد و `translation_status/content_status = needs_review` می‌شود؛ انتشار Silent مجاز نیست.
+- `description_fa` به HTML fragment محدود و sanitize می‌شود.
+- Workspace Reload فیلدهای SEO/Tag/Hashtag/Keyword/Alt/Material Recommendation را از DB برمی‌گرداند.
+- Workspace Save همان فیلدها را دوباره در DB persist می‌کند.
+- `use_description_fa` به `use_description` موجود در Product وصل می‌شود؛ Migration جدید لازم نیست.
+- Readiness علاوه بر non-empty بودن، فارسی بودن Content/SEO را نیز بررسی می‌کند.
+- Snapshot زنده `use_description` را از Widget فعلی می‌خواند.
+
+فیلدهای SEO باید کاملاً فارسی باشند:
+- SEO Title
+- SEO Description
+- Keywords
+- Tags
+- Hashtags
+- Image Alt
+- Slider SEO
+
+کدهای فنی مانند `PLA/PETG` فقط در فیلدهای فنی/متریال مجازند و نباید به‌عنوان عبارت SEO انگلیسی تولید شوند.
+
+HTML مجاز:
+`p`, `br`, `strong`, `em`, `ul`, `ol`, `li`, `h3`, `h4`
+
+HTML خطرناک/غیرمجاز:
+`script`, `style`, `iframe`, event handlers و URL جدید تولیدشده توسط AI.
+
+Dedicated test:
+`catalog_center/tests/test_epic49_phase49_3c_persian_content.py`
+
+Markers جدید:
+- `EPIC49_3C_PERSIAN_CONTENT_GUARD=ENABLED`
+- `EPIC49_3C_PERSIAN_SEO=ENABLED`
+- `EPIC49_3C_HTML_SANITIZATION=ENABLED`
+- `EPIC49_3C_WORKSPACE_CONTENT_PERSISTENCE=ENABLED`
+
+Current implementation commits:
+- Persian guard: `f95a86ff96ca7f3e540e93d4b37a9971b84948ab`
+- Launcher activation: `cbc6e5e4121cd26078abdd0a3cdb5346c8d98c1c`
+- Persian tests: `ec2a644f8b80b1b369623a65f04f1483a3be677c`
+- Hotfix documentation: `a9afb8197855a7b73a0aa6fc606a090083a2c6fd`
+
 Current checklist:
-- [x] Implementation committed to GitHub Epic.
-- [x] Dedicated regression tests committed.
-- [x] CI workflow gate updated.
-- [x] Documentation committed.
-- [ ] Final GitHub CI result verified for final 49.3C HEAD.
+- [x] Persian AI/SEO guard implemented on GitHub.
+- [x] `use_description_fa` added to structured contract at runtime.
+- [x] Workspace SEO Reload/Save persistence repaired.
+- [x] Persian language readiness gate added.
+- [x] HTML fragment sanitization added.
+- [x] Dedicated Persian regression tests committed.
+- [x] Hotfix documentation committed.
+- [ ] Final GitHub CI result verified for hotfix HEAD.
 - [ ] Windows pull / compile / dedicated tests.
-- [ ] `launch.py --verify-only`.
-- [ ] Real Product Visual QA.
-- [ ] AI Provider live QA.
+- [ ] `launch.py --verify-only` with new markers.
+- [ ] Real Product AI Visual QA.
+- [ ] Save/Reopen persistence QA.
 - [ ] Image delete exact-identity QA.
 - [ ] Image SEO/Metadata QA.
 - [ ] Local Publish E2E.
 - [ ] Explicit user approval.
 - [ ] Production deploy.
 
-## 20) Gate بعدی Windows Local — Phase49.3C
+## 20) Gate بعدی Windows Local — Phase49.3C / 49.3C-1
 
 1. Catalog Center و Django runserver را برای Pull/initial tests ببند.
 2. Pull آخرین `epic/phase49-unified-product-slider-sync`.
@@ -538,19 +596,24 @@ Current checklist:
    - `[X] website.0022`
 6. `python manage.py check`.
 7. `python manage.py makemigrations --check --dry-run` → `No changes detected`.
-8. Phase49.3C Django migration ندارد؛ `migrate --plan` نباید 49.3C migration نشان دهد.
+8. Phase49.3C/49.3C-1 Django migration ندارد؛ `migrate --plan` نباید migration جدید نشان دهد.
 9. Windows dedicated:
    - `python -m unittest -v tests.test_epic49_phase49_3c_operator_recovery`
    - `python -m unittest -v tests.test_epic49_phase49_3c_image_signature`
+   - `python -m unittest -v tests.test_epic49_phase49_3c_persian_content`
    - Phase49.3B regression modules.
    - Epic49 discovery.
-10. `python launch.py --verify-only` و Markerهای 49.3B + 49.3C.
+10. `python launch.py --verify-only` و Markerهای 49.3B + 49.3C + Persian hotfix.
 11. برنامه را باز کن و همان Fanart/Flexi product را تست کن:
    - Missing list از بدو Load.
    - قیمت/متن/checkbox → تغییر زنده قرمز/سبز.
    - AI همین مرحله.
    - Global AI.
-   - short description/tags/hashtags/SEO/material recommendations.
+   - عنوان فارسی، توضیح کوتاه، توضیح کامل و توضیحات کاربرد محصول.
+   - SEO Title/Description/Keywords/Tags/Hashtags کاملاً فارسی.
+   - HTML توضیح کامل با tagهای مجاز.
+   - Save → Close/Reopen → همان محتوا باقی بماند.
+   - تغییر دستی SEO → Save → Reopen → تغییر باقی بماند.
    - image filename current/SEO.
    - انتخاب یک عکس و حذف دقیق همان عکس.
    - max 10 image intake.
@@ -566,5 +629,5 @@ Current checklist:
 
 **NOT DEPLOYED / NOT APPROVED.**
 
-هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C در Production اجرا نشده است.
+هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C یا 49.3C-1 در Production اجرا نشده است.
 `website.0022` و `store.0032` نیز طبق وضعیت ثبت‌شده هنوز فقط Local هستند و Production برای این Epic قبل از approval دست‌نخورده می‌ماند.
