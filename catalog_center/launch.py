@@ -36,6 +36,7 @@ def main() -> int:
         install_workspace as install_persian_workspace,
     )
     from app.phase49_3c_persian_translate_guard import install as install_persian_translate_guard
+    from app.phase49_3d_image_signature import install as install_phase49_3d_image_signature
     from app.phase49_3d_workflow_hardening import (
         install_ai_shell as install_phase49_3d_ai_shell,
         install_workspace as install_phase49_3d_workspace,
@@ -48,6 +49,7 @@ def main() -> int:
     install_ai_recovery()
     install_persian_content()
     install_persian_translate_guard()
+    install_phase49_3d_image_signature()
     install_server_slider_media(ServerSliderManager)
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
@@ -122,6 +124,7 @@ def main() -> int:
     print("EPIC49_3D_LOCAL_PUBLISH_PREFLIGHT=ENABLED", flush=True)
     print("EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED", flush=True)
     print("EPIC49_3D_IMAGE_LIMIT_PRESERVED=ENABLED", flush=True)
+    print("EPIC49_3D_SEMANTIC_IMAGE_SIGNATURE=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 

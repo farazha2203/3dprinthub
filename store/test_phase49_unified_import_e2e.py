@@ -73,7 +73,9 @@ class Epic49UnifiedImportE2ETests(TestCase):
             "license_url": "https://example.com/license",
             "suggested_price": 750000,
             "final_price": 750000,
-            "price_is_final": True,
+            "price_is_final": False,
+            "price_min": 650000,
+            "price_max": 850000,
             "product_type": "ready_product",
             "use_description": "تست فرایند Windows تا Store",
             "availability_status": "made_to_order",
@@ -145,6 +147,12 @@ class Epic49UnifiedImportE2ETests(TestCase):
 
         self.assertEqual(product.title, "چرخ‌دنده تست Epic49")
         self.assertEqual(product.meta_title, "خرید چرخ‌دنده تست Epic49")
+        self.assertEqual(product.fixed_price, 650000)
+        self.assertFalse(product.price_is_final)
+        self.assertTrue(product.consultation_required)
+        self.assertEqual(profile.price_min, 650000)
+        self.assertEqual(profile.price_max, 850000)
+        self.assertEqual(profile.price_mode, "range")
         self.assertEqual(profile.homepage_slider_title_fa, "عنوان اختصاصی چرخ‌دنده آزمایشی")
         self.assertEqual(profile.homepage_slider_description_fa, "توضیح کاملاً مستقل مخصوص اسلایدر برای معرفی و خرید محصول")
         self.assertEqual(profile.homepage_slider_alt_text, "تصویر اختصاصی چرخ‌دنده برای خرید و سفارش محصول")
@@ -171,7 +179,11 @@ class Epic49UnifiedImportE2ETests(TestCase):
         call_command("phase37_import_catalog_center", str(batch), stdout=out2)
         profile.refresh_from_db()
         slide.refresh_from_db()
+        product.refresh_from_db()
         self.assertEqual(profile.sync_revision, product_revision)
         self.assertEqual(slide.sync_revision, slider_revision)
+        self.assertEqual(profile.price_min, 650000)
+        self.assertEqual(profile.price_max, 850000)
+        self.assertEqual(product.fixed_price, 650000)
         self.assertEqual(Product.objects.filter(pk=product.pk).count(), 1)
         self.assertEqual(HomepageHeroSlide.objects.filter(asset=asset).count(), 1)

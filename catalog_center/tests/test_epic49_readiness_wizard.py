@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import inspect
 import unittest
 from pathlib import Path
 
-from app.openai_content import AIContentService, CONTENT_SCHEMA
+from app.openai_content import CONTENT_SCHEMA
 from app.phase49_readiness_wizard import (
     STAGE_LABELS,
     build_sales_keywords,
@@ -110,7 +109,10 @@ class Phase493AReadinessWizardTests(unittest.TestCase):
     def test_ai_schema_supports_sales_targets_but_not_fake_material_color_fields(self):
         props = CONTENT_SCHEMA["properties"]
         self.assertIn("target_keywords_fa", props)
-        source = inspect.getsource(AIContentService.enrich_product)
+        # Read the source contract from disk rather than inspecting a runtime-patched
+        # method. Persian/translation guards intentionally wrap enrich_product during
+        # full discovery, so inspect.getsource() made this test order-dependent.
+        source = (ROOT / "app" / "openai_content.py").read_text(encoding="utf-8")
         self.assertIn('"selected_materials"', source)
         self.assertIn('"selected_colors"', source)
         self.assertIn("Never invent", source)
