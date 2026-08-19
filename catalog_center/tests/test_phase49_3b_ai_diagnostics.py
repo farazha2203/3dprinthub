@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import tempfile
@@ -21,6 +22,11 @@ from app.phase49_diagnostics import (
 
 
 class Phase493BAIProviderTests(unittest.TestCase):
+    def test_product_ai_runtime_imports_cleanly(self):
+        module = importlib.import_module("app.phase49_3b_ai_product_runtime")
+        self.assertTrue(callable(module.install))
+        self.assertTrue(callable(module._sync_reference_lists))
+
     def test_openrouter_is_first_class_provider(self):
         self.assertIn("openrouter", PROVIDERS)
         self.assertEqual(PROVIDERS["openrouter"].base_url, "https://openrouter.ai/api/v1")
