@@ -84,6 +84,7 @@ jobs:
             catalog_center/app/phase49_3c_persian_translate_guard.py \
             catalog_center/app/phase49_3d_image_signature.py \
             catalog_center/app/phase49_3d_workflow_hardening.py \
+            catalog_center/app/phase49_3d_ai_ui_cleanup.py \
             catalog_center/app/openai_content.py \
             catalog_center/app/ai_providers.py \
             catalog_center/app/product_workspace_epic49.py \
@@ -128,6 +129,7 @@ jobs:
           python -m unittest -v tests.test_epic49_phase49_3c_persian_translate_guard
           python -m unittest -v tests.test_epic49_phase49_3c_image_signature
           python -m unittest -v tests.test_epic49_phase49_3d_workflow_hardening
+          python -m unittest -v tests.test_epic49_phase49_3d_ai_ui_cleanup
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
       - name: Full Django suite
