@@ -51,16 +51,19 @@ Main doc:
 Hardening appendix:
 `docs/PHASE49_3B_PROVIDER_HARDENING_APPENDIX.md`
 
-Runtime hardening baseline:
-`a8e74311f69db49f2131ea9df39560585568e262`
+Final gapfix appendix:
+`docs/PHASE49_3B_FINAL_GAPFIX_APPENDIX.md`
+
+Clean runtime/test baseline قبل از Documentation نهایی:
+`c0ac5a9f98e157a5a50b6e1cf8021265a6246e28`
 
 Final CI:
-- Run: `32243798557`
-- Job: `96039870389`
+- Run: `32248104376`
+- Job: `96052943408`
 - Compile: ✅
 - Django check + migration contract: ✅
-- Phase49 targeted behavioral/regression: ✅
-- Windows Catalog Center tests: ✅
+- Phase49 targeted Django/Bridge/Hero/Profile: ✅
+- Windows Catalog Center AI/Wizard/Diagnostics: ✅
 - Full Django suite: ✅
 
 Live provider/visual QA هنوز روی Windows انجام نشده و Production untouched است.
@@ -261,7 +264,7 @@ AI stage-specific:
 - Stage 4: full ecommerce content + sales SEO.
 - Stage 6: Slider SEO + media.
 
-## 14) Phase49.3B — Hero Media Studio
+## 14) Phase49.3B — Hero Media Studio + Product Profile persistence
 
 Windows Stage 6 persistent controls:
 - presentation: `product_fit`, `full_bleed`, `framed`, `cinematic`
@@ -279,12 +282,25 @@ Default product-safe:
 
 Windows Desktop/Mobile preview موجود است.
 
-Django migration:
-`website.0022_phase49_hero_media_presentation`
+Django migrations:
+- `website.0022_phase49_hero_media_presentation` → presentation fields روی HomepageHeroSlide
+- `store.0032_phase49_slider_media_profile` → همان contract روی ProductCatalogProfile
 
-Migration فقط Additive است؛ DROP/DELETE/TRUNCATE/RESET ندارد.
+هر دو Migration فقط Additive هستند؛ DROP/DELETE/TRUNCATE/RESET ندارند.
 
-Admin و Bridge همان Media fields را روی همان HomepageHeroSlide موجود مدیریت می‌کنند؛ Hero model موازی ساخته نشده است.
+دلیل `store.0032`:
+تنظیمات قاب‌بندی Windows حتی وقتی `homepage_slider_enabled=False` است باید روی Product Profile ماندگار بماند و بعداً با فعال‌شدن Slider از بین نرود.
+
+Sync contract:
+`Windows → ProductCatalogProfile → HomepageHeroSlide → Home`
+
+Reverse:
+`ProductProfile Admin ↔ Hero Admin ↔ Bridge ↔ Windows`
+
+Admin و Bridge همان Media fields را مدیریت می‌کنند؛ Hero model موازی ساخته نشده است.
+
+Runtime ordering مهم:
+Unified Sync ابتدا publish function را rebind می‌کند؛ Profile Media wrapper بعد از آن نصب می‌شود تا overwrite نشود.
 
 ## 15) Phase49.3B — AI Provider Hub
 
@@ -316,6 +332,8 @@ Structured output:
 - AvalAI/OpenRouter: Chat Completions.
 - اگر gateway/model `response_format` را با HTTP400/invalid_request/unsupported رد کند، یک retry بدون `response_format` انجام و JSON سمت Client parse/validate می‌شود.
 
+این مسیر Regression گزارش‌شده AvalAI `HTTP 400 invalid_request` را پوشش می‌دهد و تست اختصاصی دارد.
+
 OpenRouter model list dynamic است و Free Router/Free models را تشخیص می‌دهد.
 
 ## 16) Phase49.3B — AI cost / balance
@@ -337,30 +355,57 @@ Semantics:
 - OpenRouter: optional Management Key for credits; model pricing metadata.
 - OpenAI: ordinary key به‌عنوان remaining balance نمایش داده نمی‌شود؛ optional Admin Key فقط cost/spend report است.
 
-USD Provider costs با `ai_usd_to_toman` به تومان estimate می‌شوند؛ exact provider-local cost بر estimate اولویت دارد.
+USD Provider costs با setting `ai_usd_to_toman` به تومان تبدیل و در SQLite **پایدار** می‌شوند؛ exact provider-local cost بر estimate اولویت دارد.
 
-## 17) Phase49.3B — Program Log / Diagnostics
+هیچ Balance یا Exact Cost بدون داده Provider ساخته نمی‌شود.
+
+## 17) Phase49.3B — Program Log / Diagnostics / Audit identity
 
 SQLite additive tables:
 - `app_audit_log`
 - `ai_request_log`
 
+هر دو Log اکنون dedicated identity columns دارند:
+- `operator`
+- `workstation`
+- `session_id`
+
+Operator resolution:
+1. Catalog setting `operator_name`
+2. `CATALOG_OPERATOR_NAME`
+3. Windows user
+
+Workstation:
+`COMPUTERNAME` یا hostname.
+
+Session:
+یک UUID برای هر اجرای Catalog Center.
+
 Audit tracks:
-- operator
+- operator/workstation/session
 - timestamp
 - product ID
 - area/action/status
 - changed field names
-- module/source
+- module/source file
 - runtime errors
 
-AI log tracks request lifecycle/cost/request ID.
+AI log tracks:
+- operator/provider/model/operation
+- request lifecycle
+- HTTP/Request ID
+- token usage
+- USD/Toman cost
+- sanitized error/response summary
 
 Diagnostic UI:
+- نام اپراتور + ذخیره
+- workstation/session display
 - `لاگ دیتابیسی برنامه`
 - `درخواست‌های AI`
 - `تکمیل هزینه AvalAI`
 - `خروجی گزارش عیب‌یابی`
+- Copy Details / Copy Request ID
 
 Secret redaction covers Bearer/Authorization/API key/password/token/secret patterns.
 
@@ -368,6 +413,9 @@ Diagnostic bundle:
 `<Catalog persistent data>/diagnostics/catalog-diagnostic-YYYYMMDD-HHMMSS.json`
 
 این فایل برای ارسال جهت عیب‌یابی طراحی شده و Secret ذخیره نمی‌کند.
+
+زنجیره قابل بررسی:
+`operator → workstation → session → product → provider/model → operation → Request ID → HTTP → duration → tokens → cost → sanitized error`
 
 ## 18) Local historical data state
 
@@ -390,9 +438,13 @@ Legacy Vesper/flexi-lizard Assetهای قدیمی بودند. 45 Asset نبای�
 4. `python manage.py check`.
 5. `python manage.py makemigrations --check --dry-run`.
 6. `python manage.py migrate --plan`.
-7. اگر `store.0031` یا `website.0022` Local pending هستند، فقط بعد از Backup و Plan صحیح اعمال شوند.
-8. Windows targeted tests + `python launch.py --verify-only`.
-9. Verify markers:
+7. Pendingهای مورد انتظار را از وضعیت واقعی Local بررسی کن:
+   - `store.0031_phase49_rich_material_colors` اگر هنوز اعمال نشده
+   - `website.0022_phase49_hero_media_presentation`
+   - `store.0032_phase49_slider_media_profile`
+8. فقط بعد از Backup و Plan صحیح Migrationهای مورد انتظار را اعمال کن.
+9. Windows targeted tests + `python launch.py --verify-only`.
+10. Verify markerها:
    - `EPIC49_GUIDED_WIZARD_7_STAGE=ENABLED`
    - `EPIC49_HERO_MEDIA_STUDIO=ENABLED`
    - `EPIC49_AI_PROVIDER_HUB=ENABLED`
@@ -400,19 +452,23 @@ Legacy Vesper/flexi-lizard Assetهای قدیمی بودند. 45 Asset نبای�
    - `EPIC49_AI_COST_TOMAN=ENABLED`
    - `EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED`
    - `EPIC49_DIAGNOSTIC_LOG_UI=ENABLED`
-10. باز کردن AI Center و تست AvalAI/OpenRouter/OpenAI هرکدام جدا با کلید واقعی Operator.
-11. تست مجدد همان AvalAI content generation که قبلاً HTTP400 می‌داد.
-12. بررسی Provider/Model/HTTP/Request ID/Tokens/Cost در AI log.
-13. Diagnostic bundle export و بررسی shareability.
-14. Wizard 7 Stage + Previous/Next/Stars/Locks.
-15. Hero Desktop/Mobile preview و `product_fit + contain`.
-16. تکمیل یک Product واقعی و فقط `🧪 Local Publish`.
-17. Verify Local Store/Home/Admin/Product/Profile/Hero.
-18. Visual/user approval.
-19. فقط بعد از approval: Production backup/deploy plan.
+   - `EPIC49_AUDIT_IDENTITY=ENABLED`
+   - `EPIC49_AI_COST_PERSISTENCE=ENABLED`
+11. AI Center: AvalAI/OpenRouter/OpenAI را هرکدام جدا با کلید واقعی Operator تست کن.
+12. همان AvalAI content generation که قبلاً HTTP400 می‌داد دوباره تست شود.
+13. Provider/Model/HTTP/Request ID/Tokens/Cost در AI log بررسی شود.
+14. Operator/Workstation/Session در Program Log بررسی شود.
+15. Diagnostic bundle export و shareability بررسی شود.
+16. Wizard 7 Stage + Previous/Next/Stars/Locks.
+17. Hero Desktop/Mobile preview و `product_fit + contain`.
+18. قاب‌بندی Hero را با Slider خاموش ذخیره/reopen کن تا ProductProfile persistence ثابت شود.
+19. تکمیل یک Product واقعی و فقط `🧪 Local Publish`.
+20. Verify Local Store/Home/Admin/Product/Profile/Hero.
+21. Visual/user approval.
+22. فقط بعد از approval: Production backup/deploy plan.
 
 ## 20) Production status
 
 **NOT DEPLOYED / NOT APPROVED.**
 
-هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3B یا `website.0022` در Production اجرا نشده است.
+هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3B، `website.0022` یا `store.0032` در Production اجرا نشده است.
