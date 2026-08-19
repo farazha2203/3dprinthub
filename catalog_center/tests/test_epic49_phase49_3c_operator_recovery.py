@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
 import tempfile
 import types
 import unittest
@@ -13,6 +14,7 @@ from app.phase49_3c_ai_recovery import _deterministic_fill, missing_commerce_fie
 from app.phase49_3c_image_pipeline import (
     MAX_SOURCE_IMAGES,
     cap_unique_urls,
+    finalize_selected_images,
     install_extractor_patch,
     planned_seo_filename,
     strict_existing_image_mapping,
@@ -80,6 +82,85 @@ class Phase493CImageIdentityTests(unittest.TestCase):
         self.assertTrue(name.startswith("fanart-solidarity-bear-3d-print-"))
         self.assertTrue(name.endswith(".webp"))
         self.assertNotEqual(name, "001.webp")
+
+    def test_finalize_deduplicates_content_keeps_sources_and_preserves_third_party_credit(self):
+        class FakeDB:
+            def __init__(self, row):
+                self.row = row
+                self.conn = sqlite3.connect(":memory:")
+                self.conn.row_factory = sqlite3.Row
+                self.conn.execute(
+                    "CREATE TABLE products(id INTEGER PRIMARY KEY, image_metadata_json TEXT NOT NULL DEFAULT '[]')"
+                )
+                self.conn.commit()
+
+            def product(self, product_id):
+                return self.row if int(product_id) == int(self.row["id"]) else None
+
+            def update_product(self, product_id, values):
+                self.row.update(values)
+
+            def setting(self, key, default=""):
+                return "QA Operator" if key == "operator_name" else default
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            images = root / "images"
+            images.mkdir()
+            one = images / "one.jpg"
+            two = images / "two.jpg"
+            self._image(one, 100)
+            two.write_bytes(one.read_bytes())
+            url1 = "https://cdn.example.test/a.jpg"
+            url2 = "https://cdn.example.test/b.jpg"
+            (root / "page_extract.json").write_text(
+                json.dumps({
+                    "images": [
+                        {"url": url1, "local_file": str(one)},
+                        {"url": url2, "local_file": str(two)},
+                    ]
+                }),
+                encoding="utf-8",
+            )
+            row = {
+                "id": 7,
+                "local_dir": str(root),
+                "source_title": "Fanart Solidarity Bear",
+                "title_fa": "خرس همبستگی",
+                "short_description_fa": "مدل تزئینی برای چاپ سه‌بعدی",
+                "seo_title_fa": "خرید فایل سه‌بعدی خرس همبستگی",
+                "source_url": "https://makerworld.com/model/7",
+                "source_code": "makerworld",
+                "source_name": "MakerWorld",
+                "author_name": "Original Designer",
+                "license_name": "Creator License",
+                "license_url": "https://example.test/license",
+                "commercial_status": "allowed",
+                "images_json": json.dumps([url1, url2]),
+                "selected_images_json": json.dumps([url1, url2]),
+                "primary_image_url": url1,
+                "image_alt_texts_json": json.dumps(["خرس همبستگی - نمای اصلی", "خرس همبستگی - نمای دوم"]),
+                "keywords_json": json.dumps(["خرید خرس سه بعدی"]),
+                "tags_fa_json": json.dumps(["خرس", "دکور"]),
+                "hashtags_fa_json": json.dumps(["#چاپ_سه_بعدی"]),
+                "image_metadata_json": "[]",
+            }
+            db = FakeDB(row)
+            try:
+                result = finalize_selected_images(db, 7)
+            finally:
+                db.conn.close()
+            self.assertEqual(result["kept"], 1)
+            self.assertEqual(result["duplicates"], 1)
+            self.assertTrue(one.is_file())
+            self.assertTrue(two.is_file())
+            metadata = json.loads(row["image_metadata_json"])
+            self.assertEqual(len(metadata), 1)
+            self.assertEqual(metadata[0]["creator"], "Original Designer")
+            self.assertEqual(metadata[0]["copyright_holder"], "Original Designer")
+            self.assertEqual(metadata[0]["publisher"], "3DPrintHub")
+            self.assertTrue(metadata[0]["seo_filename"].startswith("fanart-solidarity-bear-3d-print-"))
+            self.assertTrue(Path(metadata[0]["final_local_file"]).is_file())
 
 
 class Phase493CExtractorContractTests(unittest.TestCase):
@@ -157,6 +238,7 @@ class Phase493CSourceContractTests(unittest.TestCase):
             "✨ تکمیل هوشمند همه فیلدهای AI",
             "🖼 نهایی‌سازی SEO تصاویر",
             "نیازمند اپراتور",
+            "انتشار/صف متوقف شد",
         ):
             self.assertIn(token, text)
 
