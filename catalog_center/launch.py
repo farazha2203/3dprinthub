@@ -80,6 +80,8 @@ def main() -> int:
     print("EPIC49_OPENROUTER=ENABLED", flush=True)
     print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
     print("EPIC49_DIAGNOSTIC_LOG_UI=ENABLED", flush=True)
+    print("EPIC49_AUDIT_IDENTITY=ENABLED", flush=True)
+    print("EPIC49_AI_COST_PERSISTENCE=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -97,6 +99,8 @@ def main() -> int:
     from app.phase49_ai_provider_hub import install_base_app as install_ai_base, install_shell as install_ai_shell
     from app.phase49_diagnostics import configure as configure_diagnostics, audit_event
     from app.phase49_diagnostics_ui import install_database as install_diagnostic_database, install_base_app as install_diagnostic_ui
+    from app.phase49_diagnostics_identity import install as install_diagnostic_identity
+    from app.phase49_diagnostics_identity_ui import install as install_diagnostic_identity_ui
 
     install_diagnostic_database(Database)
     install_ai_base(app_module.App)
@@ -104,11 +108,13 @@ def main() -> int:
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
     install_diagnostic_ui(app_module.App, app_module.DATA)
+    install_diagnostic_identity_ui(app_module.App)
     app_module.ProductStudio = ProductWorkspace
     App87 = ux87_shell.build_app_class(app_module.App)
     install_ai_shell(App87)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
+    install_diagnostic_identity(app.db)
     audit_event(
         "runtime",
         "app_start",
