@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ from unittest.mock import Mock, patch
 
 from app.ai_providers import AIProviderClient, PROVIDERS
 from app.db import Database
+from app import secure_secrets
 from app.phase49_diagnostics import (
     ai_request_event,
     audit_event,
@@ -28,6 +30,29 @@ class Phase493BAIProviderTests(unittest.TestCase):
             {"id": "vendor/paid", "free": False},
         ]):
             self.assertEqual(client.choose_model(""), "openrouter/free")
+
+    def test_openrouter_secret_registry_is_static_and_isolated(self):
+        self.assertEqual(secure_secrets.USERS["openai"], "OPENAI_API_KEY")
+        self.assertEqual(secure_secrets.USERS["avalai"], "AVALAI_API_KEY")
+        self.assertEqual(secure_secrets.USERS["openrouter"], "OPENROUTER_API_KEY")
+        self.assertEqual(
+            secure_secrets.CONNECTION_USERS["openrouter_management_key"],
+            "OPENROUTER_MANAGEMENT_KEY",
+        )
+        self.assertEqual(
+            secure_secrets.CONNECTION_USERS["openai_admin_key"],
+            "OPENAI_ADMIN_KEY",
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "OPENAI_API_KEY": "openai-key",
+                "OPENROUTER_API_KEY": "openrouter-key",
+            },
+            clear=False,
+        ):
+            self.assertEqual(secure_secrets.get_provider_key("openai"), "openai-key")
+            self.assertEqual(secure_secrets.get_provider_key("openrouter"), "openrouter-key")
 
     def test_avalai_structured_400_retries_without_response_format(self):
         client = AIProviderClient("avalai", "test-key", "model-x")
@@ -53,11 +78,19 @@ class Phase493BAIProviderTests(unittest.TestCase):
     def test_provider_hub_has_independent_cards_and_balance_contracts(self):
         root = Path(__file__).resolve().parents[1]
         text = (root / "app" / "phase49_ai_provider_hub.py").read_text(encoding="utf-8")
-        for token in ("AvalAI — پرداخت", "OpenRouter — مدل‌های متعدد", "OpenAI Direct", "Management Key", "Admin Key", "اعتبار / هزینه"):
+        for token in (
+            "AvalAI — پرداخت",
+            "OpenRouter — مدل‌های متعدد",
+            "OpenAI Direct",
+            "Management Key",
+            "Admin Key",
+            "اعتبار / هزینه",
+        ):
             self.assertIn(token, text)
-        self.assertIn("openrouter/free", (root / "app" / "ai_providers.py").read_text(encoding="utf-8"))
-        self.assertIn("/user/v1/credit", (root / "app" / "ai_providers.py").read_text(encoding="utf-8"))
-        self.assertIn("/v1/credits", (root / "app" / "ai_providers.py").read_text(encoding="utf-8"))
+        providers = (root / "app" / "ai_providers.py").read_text(encoding="utf-8")
+        self.assertIn("openrouter/free", providers)
+        self.assertIn("/user/v1/credit", providers)
+        self.assertIn("/v1/credits", providers)
 
 
 class Phase493BDiagnosticsTests(unittest.TestCase):
@@ -73,12 +106,23 @@ class Phase493BDiagnosticsTests(unittest.TestCase):
 
     def test_audit_and_ai_logs_are_persistent_and_secrets_redacted(self):
         audit_event(
-            "settings", "save", message="Authorization: Bearer super-secret-token", detail={"api_key": "sk-test-secret"}
+            "settings",
+            "save",
+            message="Authorization: Bearer super-secret-token",
+            detail={"api_key": "sk-test-secret"},
         )
         ai_request_event(
-            provider="openrouter", model="openrouter/free", operation="test", endpoint="https://openrouter.ai/api/v1/chat/completions",
-            request_id="req-123", http_status=200, usage={"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18, "cost": 0},
-            cost_usd=0.0, product_id=42, request_summary={"token": "do-not-store"}, response_summary={"ok": True},
+            provider="openrouter",
+            model="openrouter/free",
+            operation="test",
+            endpoint="https://openrouter.ai/api/v1/chat/completions",
+            request_id="req-123",
+            http_status=200,
+            usage={"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18, "cost": 0},
+            cost_usd=0.0,
+            product_id=42,
+            request_summary={"token": "do-not-store"},
+            response_summary={"ok": True},
         )
         app_rows = recent_app_events(50)
         ai_rows = recent_ai_requests(50)
