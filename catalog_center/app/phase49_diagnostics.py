@@ -13,16 +13,26 @@ _DB = None
 _LOGGER = None
 _LOCK = threading.RLock()
 
-_SECRET_RE = re.compile(
-    r"(?i)(authorization|api[_ -]?key|password|token|secret)(\s*[:=]\s*)([^\s,;\"']+)"
+_BEARER_RE = re.compile(r"(?i)\bbearer\s+[a-z0-9._~+/=-]+")
+_JSON_SECRET_RE = re.compile(
+    r'''(?ix)(["']?(?:authorization|api[_ -]?key|password|token|secret)["']?\s*:\s*)(["'])(.*?)(\2)'''
 )
-_BEARER_RE = re.compile(r"(?i)(bearer\s+)([a-z0-9._~+/=-]+)")
+_ASSIGN_SECRET_RE = re.compile(
+    r'''(?ix)\b((?:authorization|api[_ -]?key|password|token|secret)\s*=\s*)([^\s,;]+)'''
+)
+_HEADER_SECRET_RE = re.compile(
+    r'''(?im)^((?:authorization|api[_ -]?key|password|token|secret)\s*:\s*)([^\r\n]+)$'''
+)
 
 
 def redact(value: Any) -> str:
     text = str(value if value is not None else "")
-    text = _SECRET_RE.sub(r"\1\2***", text)
-    text = _BEARER_RE.sub(r"\1***", text)
+    # Order matters: mask Bearer payload first so a later Authorization match
+    # cannot leave the token tail behind.
+    text = _BEARER_RE.sub("Bearer ***", text)
+    text = _JSON_SECRET_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}***{m.group(4)}", text)
+    text = _ASSIGN_SECRET_RE.sub(lambda m: f"{m.group(1)}***", text)
+    text = _HEADER_SECRET_RE.sub(lambda m: f"{m.group(1)}***", text)
     return text
 
 
