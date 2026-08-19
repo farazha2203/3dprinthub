@@ -244,6 +244,37 @@ Dedicated test verifies:
 - Operator override فقط فیلدهای مجاز را نگه می‌دارد.
 - SEO filename نمی‌تواند Path دلخواه ایجاد کند.
 
+## Final GitHub CI
+
+CI Probe موقت:
+
+- PR `#33`
+- Base: Epic HEAD `749606576561a500985632827b54c3b1b8a589a5`
+- Probe فقط `docs/CI_PROBE_PHASE49_3E.md` را اضافه کرد.
+- PR بسته شد و **Merge نشد**.
+
+Final CI:
+
+- Run `32280313257`
+- Job `96157285817`
+- PowerShell runner 49.3D + 49.3E contract: ✅
+- Compile changed Python surfaces: ✅
+- Django check + `makemigrations --check --dry-run` + migrate plan: ✅
+- Phase49 targeted Django/Bridge/Hero/Profile: ✅ — 62 tests
+- Windows Catalog Center explicit tests: ✅
+- Phase49.3E dedicated task/image/slider tests: ✅ — 8/8
+- `launch.py --verify-only` + تمام Markerهای 49.3E: ✅
+- Epic49 discovery: ✅ — 84 tests
+- Full Django suite: ✅ — 408 tests, 2 skipped
+- Overall: **SUCCESS**
+
+Warnings ثبت‌شده و غیر-Failure:
+
+- `3dprinthub.W001`: Google membership credentials در CI خالی است.
+- `ckeditor.W001`: CKEditor4 technical/security debt.
+- `store.W026`: realtime in-memory channel layer؛ Production Redis در صورت نیاز cross-process.
+- Pillow `Image.getdata()` deprecation warning؛ Failure نیست و برای refactor آینده ثبت شود.
+
 ## Gate
 
 - [x] Root Cause از Visual QA واقعی مشخص شد.
@@ -256,7 +287,7 @@ Dedicated test verifies:
 - [x] Local Publish برای Preflight قابل دسترس شد.
 - [x] Dedicated tests نوشته شد.
 - [x] Git-only Windows runner ساخته شد.
-- [ ] Final GitHub CI verified.
+- [x] Final GitHub CI verified — Run `32280313257`, Job `96157285817`.
 - [ ] Windows pull + local automated gate.
 - [ ] Visual QA همان محصول واقعی.
 - [ ] Image AI SEO real-provider QA.
