@@ -35,6 +35,7 @@ def main() -> int:
         install_readiness as install_persian_readiness,
         install_workspace as install_persian_workspace,
     )
+    from app.phase49_3c_persian_translate_guard import install as install_persian_translate_guard
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -42,6 +43,7 @@ def main() -> int:
     install_ai_runtime_patch()
     install_ai_recovery()
     install_persian_content()
+    install_persian_translate_guard()
     install_server_slider_media(ServerSliderManager)
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
@@ -104,6 +106,7 @@ def main() -> int:
     print("EPIC49_3C_IMAGE_SEO_METADATA=ENABLED", flush=True)
     print("EPIC49_3C_AI_COMPLETENESS_RECOVERY=ENABLED", flush=True)
     print("EPIC49_3C_PERSIAN_CONTENT_GUARD=ENABLED", flush=True)
+    print("EPIC49_3C_PERSIAN_TRANSLATE_GUARD=ENABLED", flush=True)
     print("EPIC49_3C_PERSIAN_SEO=ENABLED", flush=True)
     print("EPIC49_3C_HTML_SANITIZATION=ENABLED", flush=True)
     print("EPIC49_3C_WORKSPACE_CONTENT_PERSISTENCE=ENABLED", flush=True)
