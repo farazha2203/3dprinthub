@@ -7,20 +7,26 @@ SERVICE_NAME = "3DPrintHub Catalog Intelligence"
 USERS = {
     "openai": "OPENAI_API_KEY",
     "avalai": "AVALAI_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
 }
 
 CONNECTION_USERS = {
     "ftp_password": "CATALOG_FTP_PASSWORD",
     "bridge_token": "CATALOG_BRIDGE_TOKEN",
+    "openrouter_management_key": "OPENROUTER_MANAGEMENT_KEY",
+    "openai_admin_key": "OPENAI_ADMIN_KEY",
 }
 LEGACY_CONNECTION_USERS = {
     "ftp_password": ["FTP_PASSWORD"],
     "bridge_token": [],
+    "openrouter_management_key": [],
+    "openai_admin_key": [],
 }
 
 LEGACY_FILES = {
     "openai": ["APIKEY.txt"],
     "avalai": ["APIKEY-AVAL.txt", "APIKEY_AVAL.txt"],
+    "openrouter": [],
 }
 
 
@@ -104,7 +110,7 @@ def secret_source(name: str) -> str:
 
 
 def migrate_connection_env_to_keyring(env_path: str | Path) -> list[str]:
-    """Move FTP/Bridge secrets from a portable .env into Windows Credential Store.
+    """Move FTP/Bridge/admin secrets from a portable .env into Windows Credential Store.
 
     Both current and legacy environment names are accepted. The source file is
     scrubbed only after every discovered secret is saved successfully. No secret
@@ -154,7 +160,7 @@ def migrate_connection_env_to_keyring(env_path: str | Path) -> list[str]:
         kr.set_password(SERVICE_NAME, env_name, value)
 
     cleaned = [line for index, line in enumerate(original_lines) if index not in secret_line_indexes]
-    cleaned.append("# Connection secrets migrated to Windows Credential Store.")
+    cleaned.append("# Connection/admin secrets migrated to Windows Credential Store.")
     path.write_text("\n".join(cleaned).rstrip() + "\n", encoding="utf-8")
     return sorted(discovered)
 
@@ -258,16 +264,3 @@ def migrate_legacy_key_to_keyring(provider: str, project_root: str | Path | None
         return False
     set_provider_key(provider, value)
     return True
-
-# Backward-compatible helpers used by v8.3 code.
-def get_openai_key() -> str:
-    return get_provider_key("openai")
-
-def set_openai_key(value: str) -> None:
-    set_provider_key("openai", value)
-
-def delete_openai_key() -> None:
-    delete_provider_key("openai")
-
-def key_source() -> str:
-    return provider_key_source("openai")
