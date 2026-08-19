@@ -9,10 +9,13 @@ from pathlib import Path
 from PIL import Image
 
 from app.phase49_3c_image_pipeline import finalize_selected_images, image_metadata_missing
+from app.phase49_3d_image_signature import install as install_semantic_image_signature
 
 
 class Phase493CImageSignatureTests(unittest.TestCase):
     def test_seo_edit_after_finalize_requires_metadata_refresh(self):
+        install_semantic_image_signature()
+
         class FakeDB:
             def __init__(self, row):
                 self.row = row
@@ -71,6 +74,7 @@ class Phase493CImageSignatureTests(unittest.TestCase):
             try:
                 finalize_selected_images(db, 1)
                 self.assertEqual(image_metadata_missing(row), [])
+                # A real SEO edit must still invalidate the fresh metadata.
                 row["seo_title_fa"] = "عنوان SEO جدید"
                 missing = image_metadata_missing(row)
             finally:
@@ -80,6 +84,25 @@ class Phase493CImageSignatureTests(unittest.TestCase):
                 any("بروزرسانی Metadata تصویر" in item for item in missing),
                 missing,
             )
+
+    def test_semantically_equal_persian_json_serialization_does_not_go_stale(self):
+        install_semantic_image_signature()
+        from app import phase49_3c_image_pipeline as pipeline
+
+        row_ascii = {
+            "title_fa": "کاور چرخ دنده",
+            "keywords_json": json.dumps(["خرید کاور چرخ دنده"]),
+            "tags_fa_json": json.dumps(["چرخ دنده"]),
+            "hashtags_fa_json": json.dumps(["#چاپ_سه_بعدی"]),
+            "image_alt_texts_json": json.dumps(["کاور چرخ دنده"]),
+        }
+        row_utf8 = dict(row_ascii)
+        for key in ("keywords_json", "tags_fa_json", "hashtags_fa_json", "image_alt_texts_json"):
+            row_utf8[key] = json.dumps(json.loads(row_ascii[key]), ensure_ascii=False)
+        self.assertEqual(
+            pipeline.image_seo_signature(row_ascii),
+            pipeline.image_seo_signature(row_utf8),
+        )
 
 
 if __name__ == "__main__":
