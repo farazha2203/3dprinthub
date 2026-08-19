@@ -6,8 +6,7 @@
 {% block title %}{% if current_category %}{{ current_category.meta_title|default:current_category.name }}{% else %}فروشگاه قطعات آماده چاپ سه‌بعدی{% endif %} | 3DprintHub{% endblock %}
 {% block meta_description %}{% if current_category %}{{ current_category.meta_description|default:current_category.description }}{% else %}قطعات آماده چاپ خودرو، موتورسیکلت، لوازم خانگی، صنعتی، ماکت و محصولات خلاقانه را با متریال و کیفیت دلخواه سفارش دهید.{% endif %}{% endblock %}
 
-{% block robots %}{% if current_category and not current_category.robots_index %}noindex{% else %}index{% endif %},{% if current_category and not current_category.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}
-{% block og_type %}website{% endblock %}
+{% block robots %}{% if current_category and not current_category.robots_index %}noindex{% else %}index{% endif %},{% if current_category and not current_category.robots_follow %}nofollow{% else %}follow{% endif %}{% endblock %}
 {% block og_title %}{% if current_category %}{{ current_category.og_title|default:current_category.meta_title|default:current_category.name }}{% else %}فروشگاه قطعات سه‌بعدی 3DprintHub{% endif %}{% endblock %}
 {% block og_description %}{% if current_category %}{{ current_category.og_description|default:current_category.meta_description|default:current_category.description }}{% else %}قطعات آماده چاپ و محصولات سفارشی سه‌بعدی{% endif %}{% endblock %}
 {% block og_image %}{% if current_category.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.og_image.url }}{% elif current_category.image %}{{ request.scheme }}://{{ request.get_host }}{{ current_category.image.url }}{% endif %}{% endblock %}
