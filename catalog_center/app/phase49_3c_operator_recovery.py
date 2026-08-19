@@ -2,13 +2,39 @@ from __future__ import annotations
 
 import json
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from .epic49_product_studio import LICENSE_LABEL_TO_CODE
 from .phase49_3b_guided_wizard import STAGE_HELP, STAGE_LABELS, STAGE_ORDER
 from .phase49_3c_image_pipeline import image_metadata_missing
 from .product_studio import PRODUCT_TYPE_CODES
 
+
+FIELD_STAGE = {
+    "عنوان فارسی": "quick",
+    "گروه سایت": "quick",
+    "نوع محصول": "quick",
+    "قیمت یا حالت سفارش": "commerce",
+    "حداقل یک متریال": "commerce",
+    "حداقل یک رنگ": "commerce",
+    "تصویر اصلی": "images",
+    "حداقل یک تصویر انتخاب‌شده": "images",
+    "عنوان فارسی": "content",
+    "توضیح فارسی": "content",
+    "SEO Title فارسی": "content",
+    "SEO Description فارسی": "content",
+    "عبارت‌های هدف SEO": "content",
+    "Alt تصویر": "content",
+    "لینک منبع": "specs",
+    "مجوز تجاری مجاز": "specs",
+    "عنوان اسلایدر": "slider",
+    "توضیح اسلایدر": "slider",
+    "Alt اسلایدر": "slider",
+    "عبارت هدف اسلایدر": "slider",
+    "عکس اسلایدر": "slider",
+    "تأیید برای فروش": "publish",
+    "نوع انتشار محصول": "publish",
+}
 
 OPERATOR_ONLY_HINTS = {
     "قیمت یا حالت سفارش": "نیازمند اپراتور یا محاسبه قیمت از داده واقعی است.",
@@ -46,7 +72,7 @@ def _var(value, default=""):
 
 
 def build_live_snapshot(workspace, base_row) -> dict:
-    """Merge unsaved visible widgets over the DB row for live readiness."""
+    """Merge visible, unsaved widgets over the database row for live readiness."""
     data = dict(base_row or {})
     if not data:
         return data
@@ -105,7 +131,7 @@ def build_live_snapshot(workspace, base_row) -> dict:
     data["seo_title_fa"] = str(_var(getattr(workspace, "content_seo_title", None), "") or "").strip()
     data["seo_description_fa"] = _text(getattr(workspace, "content_seo_desc", None))
 
-    for key, attr in (
+    list_widgets = (
         ("keywords_json", "content_keywords"),
         ("image_alt_texts_json", "content_image_alts"),
         ("tags_fa_json", "content_tags_fa"),
@@ -113,7 +139,8 @@ def build_live_snapshot(workspace, base_row) -> dict:
         ("categories_fa_json", "content_categories_fa"),
         ("materials_json", "content_materials"),
         ("colors_json", "content_colors"),
-    ):
+    )
+    for key, attr in list_widgets:
         widget = getattr(workspace, attr, None)
         if widget is None:
             continue
@@ -138,13 +165,14 @@ def build_live_snapshot(workspace, base_row) -> dict:
     if hasattr(workspace, "publish_portfolio_var"):
         data["publish_as_portfolio"] = int(bool(_var(workspace.publish_portfolio_var, data.get("publish_as_portfolio", 0))))
 
-    for key, attr in (
+    slider_map = (
         ("homepage_slider_title_fa", "slider_title_fa_var"),
         ("homepage_slider_alt_text", "slider_alt_text_var"),
         ("homepage_slider_button_text", "slider_button_text_var"),
         ("homepage_slider_focus_keyword", "slider_focus_keyword_var"),
         ("homepage_slider_image_url", "slider_image_url_var"),
-    ):
+    )
+    for key, attr in slider_map:
         if hasattr(workspace, attr):
             data[key] = str(_var(getattr(workspace, attr), data.get(key, "")) or "").strip()
     if hasattr(workspace, "slider_description_text"):
@@ -199,6 +227,7 @@ def install(workspace_class, readiness_module) -> None:
     original_save = workspace_class.save
     original_readiness = getattr(workspace_class, "_phase49_refresh_readiness", None)
     original_guided_refresh = getattr(workspace_class, "_phase49_3b_refresh_wizard", None)
+    original_queue = workspace_class.queue_for_publish
 
     def __init__(self, app, product_id: int):
         self._phase49_3c_after_id = None
@@ -223,7 +252,11 @@ def install(workspace_class, readiness_module) -> None:
             kwargs["before"] = old_footer
         bar.pack(**kwargs)
         self._phase49_3c_ai_context = tk.StringVar(value="AI همین مرحله")
-        ttk.Label(bar, textvariable=self._phase49_3c_ai_context, style="SubHeader.TLabel").pack(side="right", padx=8)
+        ttk.Label(
+            bar,
+            textvariable=self._phase49_3c_ai_context,
+            style="SubHeader.TLabel",
+        ).pack(side="right", padx=8)
         ttk.Button(
             bar,
             text="✨ دستیار AI همین مرحله",
@@ -247,7 +280,12 @@ def install(workspace_class, readiness_module) -> None:
         if not buttons:
             return
         rail = next(iter(buttons.values())).master
-        frame = tk.Frame(rail, bg="#0b2238", highlightbackground="#29445e", highlightthickness=1)
+        frame = tk.Frame(
+            rail,
+            bg="#0b2238",
+            highlightbackground="#29445e",
+            highlightthickness=1,
+        )
         frame.pack(fill="x", pady=(10, 4))
         tk.Label(
             frame,
@@ -268,7 +306,10 @@ def install(workspace_class, readiness_module) -> None:
             font=("Tahoma", 8),
         )
         self._phase49_3c_missing.pack(fill="x", padx=5, pady=(0, 5))
-        self._phase49_3c_missing.bind("<Double-Button-1>", lambda _event: self._phase49_3c_focus_missing())
+        self._phase49_3c_missing.bind(
+            "<Double-Button-1>",
+            lambda _event: self._phase49_3c_focus_missing(),
+        )
         self._phase49_3c_missing_records = []
 
     def _phase49_3c_collect_variables(self):
@@ -281,18 +322,21 @@ def install(workspace_class, readiness_module) -> None:
                 candidates = [item for item in value.values() if isinstance(item, tk.Variable)]
             elif isinstance(value, (list, tuple)):
                 candidates = [item for item in value if isinstance(item, tk.Variable)]
-            for variable in candidates:
-                marker = str(variable)
+            for var in candidates:
+                marker = str(var)
                 if marker in seen:
                     continue
                 seen.add(marker)
-                yield variable
+                yield var
 
     def _phase49_3c_bind_live_fields(self):
-        for variable in self._phase49_3c_collect_variables():
+        for var in self._phase49_3c_collect_variables():
             try:
-                token = variable.trace_add("write", lambda *_args, self=self: self._phase49_3c_schedule_live())
-                self._phase49_3c_trace_tokens.append((variable, token))
+                token = var.trace_add(
+                    "write",
+                    lambda *_args, self=self: self._phase49_3c_schedule_live(),
+                )
+                self._phase49_3c_trace_tokens.append((var, token))
             except Exception:
                 pass
 
@@ -304,17 +348,29 @@ def install(workspace_class, readiness_module) -> None:
         for widget in walk(self):
             if isinstance(widget, (tk.Text, tk.Entry, ttk.Entry)):
                 try:
-                    widget.bind("<KeyRelease>", lambda _event, self=self: self._phase49_3c_schedule_live(), add="+")
+                    widget.bind(
+                        "<KeyRelease>",
+                        lambda _event, self=self: self._phase49_3c_schedule_live(),
+                        add="+",
+                    )
                 except Exception:
                     pass
             if isinstance(widget, ttk.Combobox):
                 try:
-                    widget.bind("<<ComboboxSelected>>", lambda _event, self=self: self._phase49_3c_schedule_live(), add="+")
+                    widget.bind(
+                        "<<ComboboxSelected>>",
+                        lambda _event, self=self: self._phase49_3c_schedule_live(),
+                        add="+",
+                    )
                 except Exception:
                     pass
             if isinstance(widget, (ttk.Checkbutton, tk.Checkbutton)):
                 try:
-                    widget.bind("<ButtonRelease-1>", lambda _event, self=self: self.after(10, self._phase49_3c_schedule_live), add="+")
+                    widget.bind(
+                        "<ButtonRelease-1>",
+                        lambda _event, self=self: self.after(10, self._phase49_3c_schedule_live),
+                        add="+",
+                    )
                 except Exception:
                     pass
 
@@ -333,7 +389,8 @@ def install(workspace_class, readiness_module) -> None:
         row = self.db.product(self.product_id)
         snapshot = build_live_snapshot(self, row)
         state = readiness_module.evaluate_readiness(snapshot)
-        return _augment_image_stage(state, snapshot), snapshot
+        state = _augment_image_stage(state, snapshot)
+        return state, snapshot
 
     def _phase49_refresh_readiness(self):
         if hasattr(self, "_phase49_3c_missing"):
@@ -360,11 +417,17 @@ def install(workspace_class, readiness_module) -> None:
             self._phase49_3b_help_var.set(STAGE_HELP.get(current, ""))
         if hasattr(self, "_phase49_3b_required_var"):
             missing = current_stage.get("missing") or []
-            self._phase49_3b_required_var.set("" if not missing else "★ الزامی برای ادامه: " + " • ".join(missing[:8]))
+            self._phase49_3b_required_var.set(
+                "" if not missing else "★ الزامی برای ادامه: " + " • ".join(missing[:8])
+            )
 
         index = STAGE_ORDER.index(current) if current in STAGE_ORDER else 0
         first_incomplete = next(
-            (idx for idx, key in enumerate(STAGE_ORDER) if not (state.get("stages", {}).get(key) or {}).get("ready", False)),
+            (
+                idx
+                for idx, key in enumerate(STAGE_ORDER)
+                if not (state.get("stages", {}).get(key) or {}).get("ready", False)
+            ),
             len(STAGE_ORDER),
         )
         for idx, key in enumerate(STAGE_ORDER):
@@ -385,7 +448,11 @@ def install(workspace_class, readiness_module) -> None:
             self._phase49_3b_prev.configure(state="disabled" if index == 0 else "normal")
         if hasattr(self, "_phase49_3b_next"):
             if index == len(STAGE_ORDER) - 1:
-                self._phase49_3b_next.configure(text="💾 ذخیره نهایی", state="normal", command=lambda: self.save())
+                self._phase49_3b_next.configure(
+                    text="💾 ذخیره نهایی",
+                    state="normal",
+                    command=lambda: self.save(),
+                )
             else:
                 self._phase49_3b_next.configure(
                     text="مرحله بعد برای انتشار →",
@@ -397,11 +464,27 @@ def install(workspace_class, readiness_module) -> None:
             if state.get("production_ready"):
                 self._phase49_readiness_summary.set("✅ محصول آماده انتشار است")
             else:
-                total = sum(len((stage or {}).get("missing") or []) for stage in state.get("stages", {}).values())
+                total = sum(
+                    len((stage or {}).get("missing") or [])
+                    for stage in state.get("stages", {}).values()
+                )
                 self._phase49_readiness_summary.set(f"❌ آماده Production نیست • {total} مورد ناقص")
         if hasattr(self, "_phase49_readiness_missing"):
             missing = current_stage.get("missing") or []
-            self._phase49_readiness_missing.set("همین مرحله کامل است." if not missing else " • ".join(missing[:3]))
+            self._phase49_readiness_missing.set(
+                "همین مرحله کامل است."
+                if not missing
+                else " • ".join(missing[:3])
+            )
+
+        publish_ready = bool(state.get("production_ready"))
+        for attr in ("_phase49_site_button", "_phase49_local_button"):
+            button = getattr(self, attr, None)
+            if button is not None:
+                try:
+                    button.state(["!disabled"] if publish_ready else ["disabled"])
+                except Exception:
+                    pass
 
         self._phase49_3c_missing_records = []
         if hasattr(self, "_phase49_3c_missing"):
@@ -419,8 +502,16 @@ def install(workspace_class, readiness_module) -> None:
 
         if hasattr(self, "_phase49_3c_ai_context"):
             stage_label = STAGE_LABELS.get(current, current)
-            operator_missing = [label for label in current_stage.get("missing") or [] if label in OPERATOR_ONLY_HINTS]
-            suffix = " • موارد اپراتوری: " + "، ".join(operator_missing[:2]) if operator_missing else ""
+            operator_missing = [
+                label
+                for label in current_stage.get("missing") or []
+                if label in OPERATOR_ONLY_HINTS
+            ]
+            suffix = (
+                " • موارد اپراتوری: " + "، ".join(operator_missing[:2])
+                if operator_missing
+                else ""
+            )
             self._phase49_3c_ai_context.set(f"دستیار فعال برای {stage_label}{suffix}")
 
     def _phase49_3b_refresh_wizard(self):
@@ -446,8 +537,11 @@ def install(workspace_class, readiness_module) -> None:
             "توضیح فارسی": "content_short_fa",
             "SEO Description فارسی": "content_seo_desc",
             "Alt تصویر": "content_image_alts",
+            "لینک منبع": "source_url",
         }
         target = getattr(self, focus_targets.get(label, ""), None)
+        if isinstance(target, tk.Variable):
+            target = None
         if target is not None:
             try:
                 target.focus_set()
@@ -469,13 +563,49 @@ def install(workspace_class, readiness_module) -> None:
             self.footer_status.set("AI ابتدا Alt/SEO/تگ‌های تصاویر را می‌سازد؛ بعد نهایی‌سازی SEO تصاویر را بزن.")
             return self.generate_ai("commerce")
         if current in {"commerce", "content", "specs", "slider"}:
-            self.footer_status.set("AI فقط داده‌های قابل استنتاج را پیشنهاد می‌دهد؛ قیمت، مجوز، رنگ و انتخاب متریال واقعی جعل نمی‌شوند.")
+            self.footer_status.set(
+                "AI فقط داده‌های قابل استنتاج را پیشنهاد می‌دهد؛ قیمت، مجوز، رنگ و انتخاب متریال واقعی جعل نمی‌شوند."
+            )
             return self.generate_ai("commerce")
         return self.generate_ai("commerce")
 
     def _phase49_3c_all_ai(self):
-        self.footer_status.set("پکیج کامل AI در حال تولید است: عنوان، توضیح کوتاه/کامل، تگ، هشتگ، SEO، فروش، Alt و پیشنهاد متریال.")
+        self.footer_status.set(
+            "پکیج کامل AI در حال تولید است: عنوان، توضیح کوتاه/کامل، تگ، هشتگ، SEO، فروش، Alt و پیشنهاد متریال."
+        )
         return self.generate_ai("commerce")
+
+    def queue_for_publish(self, notify=True):
+        try:
+            self.save(silent=True)
+        except Exception:
+            pass
+        state, _snapshot = self._phase49_3c_state()
+        self._phase49_readiness_state = state
+        if not state.get("production_ready"):
+            first = next(
+                (
+                    key
+                    for key in STAGE_ORDER
+                    if not (state.get("stages", {}).get(key) or {}).get("ready", False)
+                ),
+                "publish",
+            )
+            try:
+                self.select_section(first)
+            except Exception:
+                pass
+            if notify:
+                missing = state.get("missing") or []
+                messagebox.showwarning(
+                    "3DPrintHub — محصول هنوز کامل نیست",
+                    "انتشار/صف متوقف شد. موارد ناقص:\n\n- "
+                    + "\n- ".join(missing[:16]),
+                    parent=self,
+                )
+            self._phase49_3c_refresh_live()
+            return False
+        return original_queue(self, notify=notify)
 
     def reload(self):
         result = original_reload(self)
@@ -502,6 +632,7 @@ def install(workspace_class, readiness_module) -> None:
     workspace_class._phase49_3c_focus_missing = _phase49_3c_focus_missing
     workspace_class._phase49_3c_stage_ai = _phase49_3c_stage_ai
     workspace_class._phase49_3c_all_ai = _phase49_3c_all_ai
+    workspace_class.queue_for_publish = queue_for_publish
     workspace_class.reload = reload
     workspace_class.save = save
     workspace_class._phase49_3c_operator_recovery_installed = True
