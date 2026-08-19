@@ -22,3 +22,8 @@ class CatalogBridgeConfig(AppConfig):
 
             _ack_from_output_with_revisions._epic49_unified_wrapped = True
             views._ack_from_output = _ack_from_output_with_revisions
+
+        # Phase49.3B extends the existing Hero read/write endpoints instead of
+        # creating a parallel API. Revision/409/auth semantics remain unchanged.
+        from .phase49_3b_media_contract import install as install_phase49_3b_media_contract
+        install_phase49_3b_media_contract()
