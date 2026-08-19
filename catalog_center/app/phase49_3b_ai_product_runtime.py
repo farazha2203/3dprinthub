@@ -5,7 +5,20 @@ from tkinter import messagebox
 
 from .openai_content import AIContentService
 from .phase49_diagnostics import audit_event
-from .phase49_readiness_wizard import selected_color_names, selected_material_names, sync_seo_reference_lists
+from .phase49_readiness_wizard import selected_color_names, selected_material_names
+
+
+def _sync_reference_lists(workspace) -> None:
+    """Reuse the readiness wizard's installed sync hook without importing an inner symbol.
+
+    The Phase49.3A readiness module installs ``_phase49_sync_reference_lists`` on the
+    workspace class at runtime. Phase49.3B must depend on that public runtime hook,
+    not on a module-level function that does not exist.
+    """
+
+    sync = getattr(workspace, "_phase49_sync_reference_lists", None)
+    if callable(sync):
+        sync(update_widgets=True)
 
 
 def install(workspace_class) -> None:
@@ -16,8 +29,10 @@ def install(workspace_class) -> None:
         if getattr(self, "_ai_busy", False):
             return
         try:
-            sync_seo_reference_lists(self)
+            _sync_reference_lists(self)
         except Exception:
+            # Reference-list synchronization is a convenience step. It must never
+            # prevent an operator from opening/running the AI workflow.
             pass
         self.save(silent=True)
         provider = self.app._selected_ai_provider()
