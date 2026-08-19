@@ -29,4 +29,10 @@ class StoreConfig(AppConfig):
         from .phase49_persian_sales_runtime import install as install_phase49_persian_sales_runtime
         install_phase49_persian_sales_runtime()
 
+        # Phase49.3B: after the mature publish path creates/updates the slide,
+        # persist product-friendly fit/scale/position/background settings coming
+        # from Windows Catalog Center into the same HomepageHeroSlide record.
+        from .phase49_3b_hero_media_sync import install as install_phase49_3b_hero_media_sync
+        install_phase49_3b_hero_media_sync()
+
         from . import checks  # noqa: F401
