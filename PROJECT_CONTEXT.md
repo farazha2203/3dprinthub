@@ -12,155 +12,115 @@
   - `D:\projects\3dprinthub-catalog-manager`
 - Windows backups: `D:\projects\3dprinthub-backups`
 - GitHub: `farazha2203/3dprinthub`
+- Active branch: `epic/phase49-unified-product-slider-sync`
 - Production root: `/home/sfkilvrs/3dprinthub`
 - Production venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 - Production MySQL DB: `sfkilvrs_EmiAdmin_3dprinthub`
 
-## 2) قانون تحویل
+## 2) قانون تحویل و حفاظت دیتا
 
 مسیر اجباری:
 
-`GitHub Epic → CI/Self-Test → Windows pull → Local backup/migration/test → Visual/Data QA → explicit user approval → Production backup → deploy/migrate/collectstatic/restart → smoke tests`
+`GitHub Epic → CI/Self-Test → Windows pull → Local backup/test → Visual/Data QA → explicit user approval → Production backup → deploy/migrate/collectstatic/restart → smoke tests`
 
 قواعد ثابت:
-- Production قبل از تأیید Local دست نمی‌خورد.
+- Production قبل از تأیید صریح Local دست نمی‌خورد.
 - DB برای حل مشکل کد Reset نمی‌شود.
-- `.env`, API keys, DB, media/private_media و Catalog Center data حفظ می‌شوند.
-- Repair/Backfill ابتدا Dry Run + Backup.
-- Windows Catalog Center ابزار اصلی کارمند است؛ Django Admin ابزار مدیریتی دوم و کامل است.
-- Python/Django زبان پروژه؛ PowerShell برای عملیات Windows.
-- Secret/API Key/Password/Token داخل Git/SQLite audit/export ذخیره نشود.
-- تغییرات Source ابتدا مستقیم روی GitHub Epic ثبت می‌شوند؛ Windows فقط از GitHub Pull می‌کند و Patch دستی Source مبنا نیست.
-- هر فاز باید Doc مستقل، تست و وضعیت Gate داشته باشد.
+- `.env`, API keys, DB, media/private_media و Catalog Center persistent data حذف/Reset نمی‌شوند.
+- Repair/Backfill حساس ابتدا Backup + Dry Run دارد.
+- Windows Catalog Center ابزار عملیاتی اصلی کارمند است؛ Django Admin ابزار مدیریتی دوم و کامل است.
+- Python/Django زبان اصلی پروژه؛ PowerShell برای عملیات Windows.
+- Secret/API Key/Password/Token داخل Git، SQLite audit یا diagnostic export ذخیره نمی‌شود.
+- Source ابتدا روی GitHub Epic ثبت می‌شود؛ Windows فقط Pull می‌کند و Patch دستی Source مبنا نیست.
+- هر فاز باید Doc مستقل، Test، CI/Local Gate و checklist داشته باشد.
 
-## 3) Branch و Epic جاری
-
-Branch فعال:
-
-`epic/phase49-unified-product-slider-sync`
-
-زنجیره خطی:
+## 3) زنجیره Epic جاری
 
 `49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Workflow Recovery → 49.3C-1 Persian Content Integrity → 49.3D Workflow Hardening`
 
-Foundationها Merge موازی نشده‌اند؛ Epic ancestry خطی است تا Conflict مصنوعی ایجاد نشود.
+Foundationها موازی Merge نشده‌اند؛ ancestry خطی نگه‌داری می‌شود تا Conflict مصنوعی ایجاد نشود.
 
-## 4) Validation تاریخی — Phase49.3B
+## 4) Baseline و Migration state
 
-Docs:
-- `docs/PHASE49_3B_GUIDED_AI_HERO_DIAGNOSTICS.md`
-- `docs/PHASE49_3B_PROVIDER_HARDENING_APPENDIX.md`
-- `docs/PHASE49_3B_FINAL_GAPFIX_APPENDIX.md`
-- `docs/PHASE49_3B_WINDOWS_LAUNCH_IMPORT_HOTFIX.md`
+Catalog Center:
+- Version: `8.7.1`
+- Build family: `2026.08.16.3`
 
-Clean runtime/test baseline تاریخی:
-`c0ac5a9f98e157a5a50b6e1cf8021265a6246e28`
+Django migrations مرتبط با Epic:
+- `store.0030_phase49_unified_sync_contract`
+- `website.0020_phase49_2c_hero_studio`
+- `website.0021_phase49_unified_hero_sync`
+- `store.0031_phase49_rich_material_colors`
+- `website.0022_phase49_hero_media_presentation`
+- `store.0032_phase49_slider_media_profile`
 
-Final CI تاریخی:
-- Run: `32248104376`
-- Job: `96052943408`
-- Compile: ✅
-- Django check + migration contract: ✅
-- Phase49 targeted Django/Bridge/Hero/Profile: ✅
-- Windows Catalog Center AI/Wizard/Diagnostics: ✅
-- Full Django suite: ✅
+آخرین Windows state ثبت‌شده قبل از 49.3D:
+- `store.0031`: applied ✅
+- `store.0032`: applied ✅
+- `website.0022`: applied ✅
 
-Windows local output قبل از 49.3C:
-- `store.0031`: applied.
-- `store.0032`: applied.
-- `website.0022`: applied.
-- Targeted Django: 45 tests ✅.
-- Full Django: 406 tests ✅, 2 skipped.
-- Epic49 discovery: 48 tests ✅.
-- Windows temp SQLite `WinError 32` در test cleanup شناسایی و fix شد.
-- `phase49_3b_ai_product_runtime` ImportError برای symbol ناموجود `sync_seo_reference_lists` شناسایی و fix شد.
+Phase49.3C / 49.3C-1 / 49.3D Django migration جدید ندارند. Desktop SQLite فقط additive schema دارد.
 
-Warnings شناخته‌شده Failure نیستند:
+Warnings شناخته‌شده و غیر-Failure:
 - `ckeditor.W001`: CKEditor4 technical/security debt.
 - `store.W026`: realtime in-memory؛ برای cross-process production در صورت نیاز Redis.
 
-## 5) Foundation 49.2A — Catalog / Store consolidation
+## 5) Foundations — Catalog / Admin / Hero / Unified Sync
 
-مسیر اصلی:
-
+Canonical catalog flow:
 `Windows Catalog Center 8.7.1 → Catalog Bridge → ImportedPrintAsset → Product/ProductCatalogProfile → Store`
 
+49.2A:
 - Public external catalog/Link Analyzer intake بازنشسته شده.
 - historical rows حذف نشده‌اند.
 - external autosync پیش‌فرض خاموش.
 - Material و USD/FX pricing حفظ شده.
-- Catalog Center: `8.7.1`, build `2026.08.16.3`.
 
-## 6) Foundation 49.2B — Master Admin + Customer Portal
-
+49.2B:
 - Design source فقط `master.zip` / Velzon Django Corporate 4.3.0.
 - `interactive` ممنوع.
 - Master RTL assets: `static/velzon_master/`.
 - IRANSans FaNum: 200/300/400/500/700/900.
 - navy/graphite + metallic gold.
-- Desktop Admin login regression رفع شده.
 - Customer Portal drawer حفظ شده.
+- Canonical brand: `static/img/brand/3dprinthublogo.png`
+- Approved logo SHA256: `97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`
 
-Canonical brand:
-`static/img/brand/3dprinthublogo.png`
-
-Approved SHA256:
-`97ec202678e386387fa9ebe2c6055fa45967d1f341d40dbc5f2d9e980b873cec`
-
-هیچ لوگوی جایگزین/بازطراحی‌شده استفاده نشود.
-
-## 7) Foundation 49.2C — Hero Studio
-
-Doc: `docs/PHASE49_2C_HERO_STUDIO.md`
-
+49.2C Hero Studio:
 - visual Product Album Picker در Admin.
-- Image Album بدون Save اولیه.
-- `selected_asset_image` relation واقعی.
 - Edit Slide بدون Delete/Recreate.
 - per-slide Effect/Timing.
 - mobile/reduced-motion fallback.
+- Effects: `cinematic_fade`, `wedding_dissolve`, `cinematic_zoom`, `ken_burns`, `soft_blur`, `cinematic_reveal`.
 
-Effects:
-`cinematic_fade`, `wedding_dissolve`, `cinematic_zoom`, `ken_burns`, `soft_blur`, `cinematic_reveal`
-
-Migration:
-`website.0020_phase49_2c_hero_studio`
-
-## 8) Epic49 Unified Product / SEO / Slider / Sync
-
-Doc: `docs/EPIC49_UNIFIED_PRODUCT_SLIDER_SYNC.md`
-
-Model:
-
+Unified model:
 `Employee → Windows → Product + Images + Product SEO + Slider SEO + Hero → Bridge → Django Product/Profile/Hero → Store/Home`
 
 Reverse sync:
 `Django Admin edit → revision increment → Bridge → Windows refresh/compare`
 
-Conflict Protection:
+Conflict protection:
 - Product Profile و Hero revision مستقل.
 - stale Windows write → HTTP 409.
 - Admin edit revision را بالا می‌برد.
 - `batch_uuid + source_hash` برای idempotency.
 
-Migrations:
-- `store.0030_phase49_unified_sync_contract`
-- `website.0021_phase49_unified_hero_sync`
-
 Catalog Bridge:
 - version `1.3.0`
 - contract `epic49-unified-v1`
-- legacy `health/import/diagnostics` حفظ شده.
+- legacy health/import/diagnostics حفظ شده.
 - products + hero list/detail/sync اضافه شده.
 - Bearer token فعلی حفظ شده.
 
-## 9) Persian Sales Hero
+## 6) Persian Sales Hero + Dual Publish
 
-Doc: `docs/EPIC49_PERSIAN_SALES_HERO_HOTFIX.md`
+Docs:
+- `docs/EPIC49_PERSIAN_SALES_HERO_HOTFIX.md`
+- `docs/EPIC49_DUAL_PUBLISH_TARGETS.md`
 
-Public Hero raw English/Cookie/Consent/Tracking/HTML را نشان نمی‌دهد.
+Public Hero raw English/Cookie/Consent/Tracking/HTML را نمایش نمی‌دهد.
 
-Priority:
+Persian priority:
 1. Slider Persian SEO
 2. AI Slider Persian SEO
 3. Product SEO فارسی Windows
@@ -168,19 +128,7 @@ Priority:
 5. Persian Product fallback
 6. Persian generic sales fallback
 
-Focus keyword فروش‌محور است؛ مثال:
-`آباژور سه بعدی → خرید آباژور سه بعدی`
-
-Hero UX:
-- 2-line clamp + ellipsis.
-- `نمایش بیشتر / بستن توضیحات`.
-- autoplay هنگام متن کامل pause می‌شود.
-
-## 10) Dual Publish Targets
-
-Doc: `docs/EPIC49_DUAL_PUBLISH_TARGETS.md`
-
-Windows Source/Developer:
+Windows Publish targets:
 - `🧪 انتشار آزمایشی روی کامپیوتر`
 - `🌐 انتشار واقعی روی سایت اصلی`
 
@@ -199,57 +147,33 @@ Production:
 
 Production دو confirmation و مقصد واضح دارد.
 
-## 11) Desktop Options / Workspace Routing / Rich Colors
+## 7) Desktop Materials / Colors / Workspace Routing
 
 Doc: `docs/EPIC49_DESKTOP_OPTIONS_WORKSPACE_REPAIR.md`
 
-Root cause UI قدیمی:
-`ux87_shell.py` alias قدیمی Workspace را نگه داشته بود.
-
-Fix:
+Workspace routing:
 `ux87_shell.ProductWorkspace = ProductWorkspace`
 
-Material Picker:
+Material:
 - Checkbox مستقل.
 - Windows: `material_options_json`.
 
-Rich Color Picker:
-- Checkbox مستقل.
+Color:
 - Windows: `color_options_json`.
 - types: `solid`, `transparent`, `translucent`, `metallic`, `silk`, `dual`, `multicolor`, `gradient`.
 - main/secondary/tertiary HEX.
 - legacy compatibility JSON حفظ شده.
 
-Django migration:
-`store.0031_phase49_rich_material_colors`
+## 8) Phase49.3A / 49.3B — Readiness + Guided Wizard + Hero Media + AI Hub
 
-## 12) Phase49.3A — Product Publish Readiness
+Docs:
+- `docs/PHASE49_3A_PRODUCT_PUBLISH_READINESS.md`
+- `docs/PHASE49_3B_GUIDED_AI_HERO_DIAGNOSTICS.md`
+- `docs/PHASE49_3B_PROVIDER_HARDENING_APPENDIX.md`
+- `docs/PHASE49_3B_FINAL_GAPFIX_APPENDIX.md`
+- `docs/PHASE49_3B_WINDOWS_LAUNCH_IMPORT_HOTFIX.md`
 
-Doc: `docs/PHASE49_3A_PRODUCT_PUBLISH_READINESS.md`
-
-49.3A Readiness Runtime-calculated است و Migration جدا ندارد.
-
-Readiness بررسی می‌کند:
-- اطلاعات پایه
-- قیمت/سفارش/متریال/رنگ
-- تصاویر
-- محتوا و SEO
-- منبع/مجوز
-- publish requirements
-
-SEO Editable Lists:
-- Material/Color از انتخاب واقعی Operator sync می‌شود.
-- Keyword bank برای Search/Content/SEO intent است، نه HTML meta-keywords stuffing.
-- AI حق اختراع Material/Color ندارد.
-
-49.3A CI historical:
-- Run `32234579086`
-- Job `96011595438`
-- SUCCESS
-
-## 13) Phase49.3B — Guided Publish Wizard
-
-Canonical stages:
+Canonical 7 stages:
 1. اطلاعات پایه
 2. سفارش، قیمت و گزینه‌ها
 3. تصاویر
@@ -262,180 +186,95 @@ UX:
 - `✅` complete
 - `❌ ★` incomplete required
 - `🔒` future locked
-- Previous/`مرحله بعد برای انتشار` پایین هر Stage.
-- Final stage: Save + Local Publish + Production Publish.
-- Next تا تکمیل Requiredهای همان Stage disabled است.
+- Previous/Next
+- Next تا تکمیل Requiredهای Stage disabled
+- Final stage: Save + Local + Production Publish
 
 AI stage-specific:
-- Stage 1: فقط ترجمه عنوان فارسی.
-- Stage 4: full ecommerce content + sales SEO.
+- Stage 1: فقط عنوان فارسی.
+- Stage 4: ecommerce content + Persian sales SEO.
 - Stage 6: Slider SEO + media.
 
-## 14) Phase49.3B — Hero Media Studio + Product Profile persistence
-
-Windows Stage 6 persistent controls:
+Hero Media:
 - presentation: `product_fit`, `full_bleed`, `framed`, `cinematic`
 - contain/cover
 - focal position
-- image scale
-- X/Y position
+- scale / X / Y
 - background: solid/blur/gradient/image
-- background color / blur px
-- desktop max width/height
-- mobile max width/height
+- desktop/mobile max dimensions
+- default: `product_fit + contain`
 
-Default product-safe:
-`product_fit + contain`
-
-Windows Desktop/Mobile preview موجود است.
-
-Django migrations:
-- `website.0022_phase49_hero_media_presentation`
-- `store.0032_phase49_slider_media_profile`
-
-هر دو Migration فقط Additive هستند؛ DROP/DELETE/TRUNCATE/RESET ندارند.
-
-Sync contract:
-`Windows → ProductCatalogProfile → HomepageHeroSlide → Home`
-
-Reverse:
-`ProductProfile Admin ↔ Hero Admin ↔ Bridge ↔ Windows`
-
-## 15) Phase49.3B — AI Provider Hub
-
-Providerها:
+AI Providers:
 - AvalAI
 - OpenRouter
 - OpenAI Direct
 
-Secret registry ثابت:
+Secret registry:
 - `OPENAI_API_KEY`
 - `AVALAI_API_KEY`
 - `OPENROUTER_API_KEY`
 - optional `OPENROUTER_MANAGEMENT_KEY`
 - optional `OPENAI_ADMIN_KEY`
 
-Secretها فقط Environment/Windows Credential Store؛ داخل SQLite/Git/diagnostic export ذخیره نمی‌شوند.
-
 Structured output:
-- OpenAI: Responses API + strict JSON schema.
+- OpenAI: Responses API + strict schema.
 - AvalAI/OpenRouter: Chat Completions.
-- اگر gateway/model `response_format` را رد کند، یک retry بدون `response_format` و client-side JSON validation انجام می‌شود.
+- unsupported `response_format` → one retry without it + client-side JSON validation.
 
-OpenRouter model list dynamic است و Free Router/Free models را تشخیص می‌دهد.
-
-## 16) Phase49.3B — AI cost / balance
-
-`ai_request_log` نگه می‌دارد:
-- provider/model
-- operation/endpoint
-- request ID
-- HTTP status
-- duration
-- tokens
-- USD cost
-- Toman/IRT cost estimate/exact provider local cost
-- product ID
-- sanitized summaries/error
-
-Semantics:
-- AvalAI: provider credit + local currency/exchange-rate when available.
-- OpenRouter: optional Management Key for credits; model pricing metadata.
-- OpenAI: ordinary key به‌عنوان remaining balance نمایش داده نمی‌شود؛ optional Admin Key فقط cost/spend report است.
-
-USD Provider costs با setting `ai_usd_to_toman` به تومان تبدیل و در SQLite پایدار می‌شوند؛ exact provider-local cost بر estimate اولویت دارد.
-
-## 17) Program Log / Diagnostics / Audit identity
-
-SQLite additive tables:
+Diagnostics:
 - `app_audit_log`
 - `ai_request_log`
+- operator/workstation/session identity
+- provider/model/operation/request ID/HTTP/duration/tokens/USD/Toman cost
+- sanitized error/response
+- diagnostic bundle: `<Catalog persistent data>/diagnostics/catalog-diagnostic-YYYYMMDD-HHMMSS.json`
 
-Dedicated identity columns:
-- `operator`
-- `workstation`
-- `session_id`
+Historical Phase49.3B final CI:
+- Run `32248104376`
+- Job `96052943408`
+- SUCCESS
 
-Audit tracks:
-- operator/workstation/session
-- timestamp
-- product ID
-- area/action/status
-- changed field names
-- module/source file
-- runtime errors
+## 9) Phase49.3C — Operator Workflow Recovery + Image SEO
 
-AI log tracks:
-- operator/provider/model/operation
-- request lifecycle
-- HTTP/Request ID
-- token usage
-- USD/Toman cost
-- sanitized error/response summary
+Doc: `docs/PHASE49_3C_OPERATOR_WORKFLOW_RECOVERY.md`
 
-Diagnostic bundle:
-`<Catalog persistent data>/diagnostics/catalog-diagnostic-YYYYMMDD-HHMMSS.json`
+Runtime:
+- live readiness with 180ms debounce.
+- Widget snapshot برای unsaved fields.
+- exact missing-field list.
+- stage AI + global AI.
+- fail-closed queue/local/production.
+- AI completeness validation/repair/fallback.
+- exact image URL/file identity; no index guessing.
+- source image max hard cap = 10.
+- canonical URL dedupe.
+- SHA + conservative visual duplicate filtering.
+- SEO WebP output.
+- creator/copyright/license/source/operator/publisher metadata.
+- stale metadata signature.
 
-Secret redaction covers Bearer/Authorization/API key/password/token/secret patterns.
+Desktop additive field:
+- `products.image_metadata_json`
 
-## 18) Local historical data state
+Files:
+- final SEO images: `<product local_dir>/seo_images/`
+- manifest: `image_seo_manifest.json`
 
-آخرین Audit قبل از Product واقعی مسیر جدید:
-- Product = 0
-- ImportedPrintAsset = 45
-- linked Asset→Product = 0
-- Hero slides = 2
-
-Legacy Vesper/flexi-lizard Assetهای قدیمی بودند. 45 Asset نباید کورکورانه Product شوند.
-
-تست صحیح End-to-End:
-**یک Product واقعی Windows → Local Publish → Django Product/Profile/Hero → Home/Admin**.
-
-## 19) Phase49.3C — Operator Workflow Recovery + AI Autofill + Image SEO
-
-Doc:
-`docs/PHASE49_3C_OPERATOR_WORKFLOW_RECOVERY.md`
-
-Root causeها:
-1. Readiness عمدتاً از DB saved state خوانده می‌شد، نه Widgetهای unsaved.
-2. Image local resolver در نبود exact mapping از sorted file index حدس می‌زد.
-3. AI Schema fieldها را داشت، اما empty string/array می‌توانست valid عبور کند.
-
-Implementation:
-- `phase49_3c_operator_recovery.py`: live debounce + Widget snapshot + exact missing list + fail-closed publish.
-- `phase49_3c_ai_recovery.py`: completeness validation + structured repair + conservative fallback.
-- `phase49_3c_image_pipeline.py`: max 10 source images، canonical URL dedupe، SHA/dHash duplicate filtering، exact identity، SEO WebP/metadata، stale signature detection.
-
-Desktop additive data:
-- `products.image_metadata_json` با `ALTER TABLE ADD COLUMN`.
-- No Django migration for 49.3C.
-- Source/cache images حذف یا reset نمی‌شوند.
-- Final files در `<product local_dir>/seo_images/`.
-- Metadata canonical record: `image_seo_manifest.json`.
-
-Markers:
-- `EPIC49_3C_LIVE_READINESS=ENABLED`
-- `EPIC49_3C_STAGE_AI=ENABLED`
-- `EPIC49_3C_IMAGE_ID_SAFE_DELETE=ENABLED`
-- `EPIC49_3C_IMAGE_LIMIT_10=ENABLED`
-- `EPIC49_3C_IMAGE_SEO_METADATA=ENABLED`
-- `EPIC49_3C_AI_COMPLETENESS_RECOVERY=ENABLED`
-
-## 19.1) Phase49.3C-1 — Persian AI Content Integrity & Workspace Persistence
+## 10) Phase49.3C-1 — Persian Content Integrity
 
 Docs:
 - `docs/PHASE49_3C_PERSIAN_CONTENT_HOTFIX.md`
 - `docs/PHASE49_3C_PERSIAN_TRANSLATION_GUARD.md`
 
-Repair:
+Rules:
 - English source دیگر fallback فارسی نمی‌شود.
-- `use_description_fa` در Structured Contract اجباری و به `use_description` موجود وصل شده.
-- همه Editorial/SEO fields فارسی Gate دارند.
-- Provider در خروجی غیر فارسی Structured Persian Repair می‌گیرد.
-- fallback فارسی محافظه‌کارانه `needs_review` می‌شود.
-- `description_fa` HTML fragment محدود/sanitize می‌شود.
-- Workspace Reload/Save برای SEO/Tag/Hashtag/Keyword/Alt/Material Recommendation کامل شد.
-- Translation workflow نیز Guard فارسی جدا دارد.
+- `use_description_fa` در Structured AI contract اجباری و به `use_description` وصل است.
+- Editorial/SEO fields باید فارسی باشند.
+- خروجی غیر فارسی → Structured Persian Repair.
+- Repair failure → English به فیلد فارسی کپی نمی‌شود؛ fallback فارسی محافظه‌کارانه + `needs_review`.
+- `description_fa` HTML محدود و sanitize می‌شود.
+- Workspace Reload/Save برای SEO/Tag/Hashtag/Keyword/Alt/Material Recommendation کامل است.
+- Translation workflow Guard مستقل دارد.
 
 HTML مجاز:
 `p`, `br`, `strong`, `em`, `ul`, `ol`, `li`, `h3`, `h4`
@@ -447,57 +286,53 @@ Markers:
 - `EPIC49_3C_HTML_SANITIZATION=ENABLED`
 - `EPIC49_3C_WORKSPACE_CONTENT_PERSISTENCE=ENABLED`
 
-## 20) Phase49.3D — Workflow Hardening
+## 11) Phase49.3D — Workflow Hardening
 
-Doc:
+Canonical doc:
 `docs/PHASE49_3D_WORKFLOW_HARDENING.md`
 
-Visual QA جدید مشکلات زیر را تأیید کرد:
-1. Product Workspace در بدو بازشدن `TclError pack/grid` می‌داد.
-2. Provider Hub برای صدها مدل Search/Filter حرفه‌ای نداشت.
-3. Provider/Model فعال با Radio و ذخیره یکپارچه واضح نبود.
-4. Local Publish در Readiness failure می‌توانست فقط به Images برگردد و دلیل را نشان ندهد.
-5. قیمت محصول با زمان چاپ نامشخص باید Range حرفه‌ای داشته باشد.
-6. Product Open به Auto Prepare کنترل‌شده AI نیاز داشت.
+### 11.1 Product Workspace TclError
 
-### 20.1 Workspace geometry fix
+Visual error:
+`TclError: cannot use geometry manager pack inside ... which already has slaves managed by grid`
 
 Root cause:
-`quick_tab` از `grid()` استفاده می‌کند ولی Phase49.3B title-AI panel روی همان parent از `pack()` استفاده کرده بود.
+`quick_tab` grid-managed بود ولی Phase49.3B title-AI holder روی همان parent از `pack()` استفاده می‌کرد.
 
 Fix:
-- Title-AI holder روی `quick_tab` فقط با `grid()` ساخته می‌شود.
-- Widgetهای داخلی holder می‌توانند `pack()` داشته باشند چون parent متفاوت است.
+- holder روی `quick_tab` فقط با `grid()`.
+- داخل holder استفاده از `pack()` مجاز است چون parent متفاوت است.
 
-### 20.2 Searchable AI Model Picker
+### 11.2 Searchable AI Model Picker
 
-Providerها:
-- AvalAI
-- OpenRouter
-- OpenAI
+برای AvalAI / OpenRouter / OpenAI:
+- دریافت full `list_model_info()` بدون UI cap مصنوعی.
+- Search زنده name/model_id.
+- alias search: `CHATGPT/GPT`, Claude, Gemini, Grok, DeepSeek, Qwen, Llama, Mistral.
+- Free-only filter.
+- vertical/horizontal scroll.
+- visible/total model count.
+- double-click/select button.
+- فقط raw model id persist می‌شود؛ label قیمت/رایگان ذخیره نمی‌شود.
 
-قابلیت‌ها:
-- فهرست کامل مدل‌های Provider بدون cap مصنوعی UI.
-- Search زنده روی name و model id.
-- Alias `CHATGPT/GPT`, `Claude`, `Gemini`, `Grok`, `DeepSeek`, `Qwen`, `Llama`, `Mistral`.
-- فیلتر فقط مدل‌های رایگان.
-- Scroll عمودی/افقی.
-- شمارنده visible/total.
-- انتخاب با Double Click یا Button.
-- فقط raw model id persist می‌شود؛ label تزئینی `• رایگان/قیمت` ذخیره نمی‌شود.
+### 11.3 Active Provider / Model
 
-### 20.3 Active Provider / Model
-
-- Radio Button روی هر Provider.
-- `ذخیره Provider و مدل فعال`.
-- Persist:
+- Radio Button مستقل روی هر Provider.
+- canonical action: `ذخیره Provider و مدل فعال`.
+- persist:
   - `ai_provider`
   - `ai_model`
   - `ai_model_<provider>`
-- live Test Connection دقیقاً با Provider/Model فعال.
-- typed API Key در Secure Secret Store ذخیره می‌شود، نه SQLite/Git log.
+- live Test Connection روی دقیقاً Provider/Model فعال.
+- typed API Key فقط Secure Secret Store.
+- Legacy per-card button `فعال کن` از UI حذف شده تا دو Source of Truth وجود نداشته باشد.
+- save-key/test/balance/cost controls قدیمی حفظ شده‌اند.
 
-### 20.4 Auto AI Prepare on Product Open
+Files:
+- `catalog_center/app/phase49_3d_workflow_hardening.py`
+- `catalog_center/app/phase49_3d_ai_ui_cleanup.py`
+
+### 11.4 Auto AI Prepare on Product Open
 
 Desktop additive columns:
 - `ai_auto_prepare_hash`
@@ -505,151 +340,207 @@ Desktop additive columns:
 - `ai_auto_prepare_at`
 
 Behavior:
-- default setting `ai_auto_prepare_on_open=1` قابل خاموش‌کردن است.
-- فقط اگر فارسی/SEO ناقص باشد اجرا می‌شود.
-- Source fingerprint از source facts + selected material/color/images ساخته می‌شود.
+- setting: `ai_auto_prepare_on_open`.
+- فقط اگر Persian editorial/SEO ناقص باشد اجرا می‌شود.
+- fingerprint از Source facts + selected materials/colors/images ساخته می‌شود.
 - همان fingerprint دوباره API مصرف نمی‌کند.
-- Failure خودکار loop/retry نمی‌شود؛ Retry دستی باقی است.
-- موفقیت مستقیم به Product اعمال و Workspace reload می‌شود.
-- Similar Persian keywords از محصولات همان category فقط به‌عنوان editorial hint به AI داده می‌شود و حق Override facts ندارد.
+- auto failure loop/retry نمی‌شود؛ Retry دستی باقی است.
+- موفقیت مستقیم Product fields را populate و Workspace را reload می‌کند.
+- Similar Persian keywords از محصولات همان category فقط editorial hint هستند و حق Override facts ندارند.
 
-### 20.5 Local/Production Publish Preflight
+AI حق جعل ندارد:
+- price
+- license
+- dimensions
+- stock
+- selected color/material
 
-قبل از ارسال:
+### 11.5 Local/Production Publish Preflight
+
+قبل از Publish:
 1. Save.
-2. Recalculate readiness.
-3. اگر فقط SEO/Metadata تصاویر stale باشد، auto finalize تصاویر.
-4. Recalculate readiness.
+2. Recalculate Readiness.
+3. اگر فقط Image SEO/Metadata stale است و core image موجود است → auto finalize.
+4. Recalculate.
 5. اگر ناقص است:
-   - Stage اول ناقص باز می‌شود.
-   - Missing reasons در Dialog نمایش داده می‌شود.
-   - `preflight_blocked` در Audit ثبت می‌شود.
+   - first incomplete stage باز می‌شود.
+   - missing reasons در Dialog نمایش داده می‌شوند.
+   - `preflight_blocked` audit می‌شود.
    - هیچ Batch/FTP/Import اجرا نمی‌شود.
 
-این Fix مسیر «کلیک Local Publish → برگشت بی‌صدا به Images» را هدف می‌گیرد.
+این مسیر مشکل «Local Publish → برگشت بی‌صدا به Images» را هدف گرفته است.
 
-### 20.6 Professional Price Range
+### 11.6 Semantic Image SEO Signature
 
-زیرساخت موجود حفظ شد:
-- Windows: `price_min`, `price_max`.
-- Batch: تمام editorial fields منتقل می‌شوند.
-- Django: `ProductCatalogProfile.price_min/price_max/price_mode`.
-- Product Detail: Range موجود بود.
-- Product List: اکنون Range کامل را نمایش می‌دهد.
-- Structured Product schema تاریخی از قبل AggregateOffer low/high را پشتیبانی می‌کرد.
+CI Regression:
+- 49.3C raw JSON string را hash می‌کرد.
+- Persian JSON قبل/بعد `ensure_ascii=False` از نظر byte فرق داشت ولی معنای یکسان داشت.
+- Metadata تازه بلافاصله stale می‌شد.
 
-Desktop Save normalization:
+Fix:
+`catalog_center/app/phase49_3d_image_signature.py`
+
+- JSON fields قبل از hash parse/normalize می‌شوند.
+- serialization-only change stale نمی‌کند.
+- SEO/Alt واقعی تغییر کند → signature تغییر و Stage image دوباره قرمز می‌شود.
+
+Marker:
+`EPIC49_3D_SEMANTIC_IMAGE_SIGNATURE=ENABLED`
+
+### 11.7 Professional Price Range
+
+Desktop:
+- `price_min`
+- `price_max`
 - max < min → swap.
 - فقط یک طرف → دو طرف برابر.
-- Range خالی + final/suggested price → fixed range.
+- Range خالی + final/suggested → fixed range.
 
-No Django migration required.
+Windows→Batch→Django E2E validated:
+- test input `650000..850000`.
+- `Product.fixed_price = 650000`.
+- `Product.price_is_final = False`.
+- `Product.consultation_required = True`.
+- `ProductCatalogProfile.price_min = 650000`.
+- `ProductCatalogProfile.price_max = 850000`.
+- `ProductCatalogProfile.price_mode = range`.
+- re-import همان Batch idempotent و Range پایدار است.
 
-### 20.7 Image Download Limit
+Server bug found by CI:
+- `apply_price_range()` consultation را True می‌کرد.
+- `apply_phase43_product_details()` بعداً آن را False می‌کرد.
+- Fix: True قبلی حفظ می‌شود؛ Phase43 دیگر Range requirement را downgrade نمی‌کند.
+
+Public:
+- Product Detail range موجود.
+- Product List اکنون range کامل نشان می‌دهد.
+- Public test روی عبارت `حداقل تا حداکثر تومان` Locale-safe است.
+
+### 11.8 Image Download Limit
 
 طبق درخواست کاربر رفتار موجود تغییر نکرد:
 - per-product `download_image_limit` موجود است.
 - انتخاب کمتر از 10 محترم است.
 - hard cap 49.3C = 10.
-- Regression test: limit=5 → 5؛ limit>10 → حداکثر 10.
+- test: limit=5 → 5؛ limit>10 → max 10.
 
-### 20.8 Environment note — django-admin-expert
+### 11.9 Test isolation fix
 
-قبل از اجرای فاز Plugin directory برای `django-admin-expert` بررسی شد. Plugin/Skill مستقلی با همین نام در Session فعلی موجود نبود و نتایج Search نامرتبط بودند. بنابراین Plugin اشتباه نصب نشد و ادعای نصب نیز نمی‌شود. Django/Admin این فاز با Source واقعی Repo و تست‌های Django validate می‌شود.
+CI نشان داد `test_epic49_readiness_wizard` از runtime-patched method با `inspect.getsource()` استفاده می‌کرد و Full Discovery order-dependent بود.
 
-### 20.9 Files / tests
+Fix:
+- contract از canonical `app/openai_content.py` خوانده می‌شود.
+- اجرای منفرد و Discovery رفتار یکسان دارند.
 
-Runtime:
-- `catalog_center/app/phase49_3d_workflow_hardening.py`
-- `catalog_center/app/openai_content.py`
-- `catalog_center/launch.py`
-- `templates/store/product_list.html`
+## 12) Phase49.3D Final CI
 
-Tests:
-- `catalog_center/tests/test_epic49_phase49_3d_workflow_hardening.py`
-- `store/test_phase49_3d_price_range.py`
+Validated runtime HEAD:
+`e3eb0969b79fef67dc235cdbd213655140a128e1`
 
-CI:
-- `.github/workflows/phase49-epic-ci.yml`
+CI Probe:
+- PR `#31`.
+- Base = validated runtime HEAD.
+- Head `93180ae00fdf243074bcbbb3a3dcf00477887bef`.
+- Probe فقط یک docs marker اضافه داشت.
+- PR بسته شد و **Merge نشد**.
 
-Markers:
-- `EPIC49_3D_WORKSPACE_LAYOUT_FIX=ENABLED`
-- `EPIC49_3D_AI_MODEL_PICKER=ENABLED`
-- `EPIC49_3D_ACTIVE_PROVIDER_PERSISTENCE=ENABLED`
-- `EPIC49_3D_AUTO_AI_PREPARE=ENABLED`
-- `EPIC49_3D_LOCAL_PUBLISH_PREFLIGHT=ENABLED`
-- `EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED`
-- `EPIC49_3D_IMAGE_LIMIT_PRESERVED=ENABLED`
+Final CI:
+- Run `32271502234`
+- Job `96128806609`
+- Checkout/Dependencies: ✅
+- Compile changed Python surfaces: ✅
+- Django check + `makemigrations --check --dry-run` + migrate plan: ✅
+- Phase49 targeted Django/Bridge/Hero/Profile: ✅
+- Windows→Batch→Django price-range E2E: ✅
+- Public Store list/detail range: ✅
+- Windows Catalog Center explicit tests: ✅
+- Phase49.3C Persian/Translation/Image regression tests: ✅
+- Phase49.3D workflow/AI UI tests: ✅
+- Epic49 unittest discovery: ✅
+- Full Django suite: ✅
+- Overall: **SUCCESS**
 
-Current checklist:
-- [x] Root cause pack/grid مشخص شد.
-- [x] Workspace grid-safe repair committed.
-- [x] Searchable AI Model Picker committed.
-- [x] Radio Provider + persistent Provider/Model committed.
-- [x] Active Provider live Test Connection committed.
-- [x] Auto AI Prepare + fingerprint committed.
-- [x] Similar Persian keyword hint contract committed.
-- [x] Explicit Local/Production publish preflight committed.
-- [x] Price range list/detail contract committed.
-- [x] Image-limit behavior preserved/tested.
+CI Failهایی که قبل از Final success ریشه‌ای حل شدند:
+1. Locale-specific price separator assertion.
+2. Raw JSON image signature false-stale.
+3. Runtime monkey-patch order-dependent readiness test.
+4. Phase43 consultation overwrite after range sync.
+
+## 13) Phase49.3D checklist
+
+- [x] Workspace geometry root cause/fix.
+- [x] Searchable full AI Model Picker.
+- [x] Radio Provider + persistent Provider/Model.
+- [x] Legacy AI `فعال کن` removed from canonical UI.
+- [x] Exact Provider/Model Test Connection.
+- [x] Auto AI Prepare + fingerprint.
+- [x] Similar Persian keyword hints.
+- [x] Persian content/application/SEO guards inherited from 49.3C-1.
+- [x] Explicit Publish Preflight/Error dialog/Audit.
+- [x] Auto image metadata finalization.
+- [x] Semantic image signature.
+- [x] Desktop min/max price normalization.
+- [x] Windows→Batch→Django Product/Profile Range E2E.
+- [x] Store List/Detail range.
+- [x] Range consultation requirement preserved.
+- [x] Image download limit preserved/tested.
 - [x] CI workflow updated.
-- [x] Dedicated phase documentation committed.
-- [ ] Final GitHub CI verified for final 49.3D HEAD.
-- [ ] Windows pull / backup / compile / tests.
-- [ ] `launch.py --verify-only`.
-- [ ] Product Workspace opens without TclError.
-- [ ] Live AI model search/provider/model persistence/test QA.
+- [x] Final GitHub CI SUCCESS.
+- [ ] Windows pull/backup/compile/tests.
+- [ ] Product Workspace visual open without TclError.
+- [ ] Live Provider model list/search/select/save/restart/test QA.
 - [ ] Real Product Auto AI Prepare QA.
 - [ ] Local Publish E2E.
+- [ ] Local Django Product/Profile/Hero/Store/Home/Admin verification.
 - [ ] Explicit user approval.
 - [ ] Production deploy.
 
-## 21) Gate بعدی Windows Local — Phase49.3D
+## 14) Environment note — django-admin-expert
+
+طبق سیاست پروژه، قبل از Phase49.3D Plugin directory برای `django-admin-expert` بررسی شد. Plugin/Skill مستقلی با همین نام در Session فعلی موجود نبود و نتایج Search نامرتبط بودند. بنابراین Plugin اشتباه نصب نشد و ادعای نصب نیز نمی‌شود. Django/Admin این فاز بر اساس Source واقعی Repository و Django tests validate شده است.
+
+## 15) Gate بعدی — Windows Local
 
 1. Catalog Center و Django runserver را ببند.
-2. Pull آخرین `epic/phase49-unified-product-slider-sync`.
-3. Verify exact HEAD اعلام‌شده بعد از Final CI/docs.
+2. `git status` باید clean باشد؛ هیچ reset/delete خودکار انجام نشود.
+3. Fetch/Switch/Pull `epic/phase49-unified-product-slider-sync` با `--ff-only`.
 4. Backup:
    - `D:\projects\3DPrintHub\db.sqlite3`
    - `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
-   - persistent Catalog data folders بدون حذف.
+   - persistent catalog data
 5. `python manage.py check`.
-6. `python manage.py makemigrations --check --dry-run` → `No changes detected`.
-7. `python manage.py migrate --plan` → Phase49.3D migration جدید ندارد.
-8. Dedicated tests:
-   - `python manage.py test store.test_phase49_3d_price_range -v 2`
-   - `cd catalog_center`
-   - `python -m unittest -v tests.test_epic49_phase49_3d_workflow_hardening`
-   - 49.3C/Persian regressions.
-   - Epic49 discovery.
-9. `python launch.py --verify-only` و Markerهای 49.3D.
-10. Product Workspace را باز کن:
-   - هیچ TclError pack/grid نباشد.
-   - Auto Prepare فقط در صورت نقص/Source change اجرا شود.
-11. AI Center:
-   - Radio Provider.
-   - Model Search؛ `CHATGPT`/GPT/Claude/etc.
-   - تعداد مدل واقعی Provider دیده شود.
-   - raw model id انتخاب و persist شود.
-   - Save → Restart → همان Provider/Model باقی بماند.
-   - Test Connection موفق/خطادار با پیام واضح و Audit.
-12. Price Range:
-   - min/max وارد و Save/Reopen.
-   - Batch editorial هر دو مقدار.
-   - Local Store list/detail هر دو مقدار.
-13. Image download limit:
-   - انتخاب 5 → بیش از 5 دانلود نشود.
-14. Local Publish:
-   - stale image metadata → auto finalize.
-   - blocker واقعی → Dialog صریح.
-   - Ready کامل → فقط Local Publish.
-15. Verify Local Django Product/Profile/Hero/Store/Home/Admin.
-16. Visual/user approval.
-17. فقط بعد از approval Production plan.
+6. `python manage.py makemigrations --check --dry-run` → No changes detected.
+7. `python manage.py migrate --plan` → Phase49.3D migration جدید نداشته باشد.
+8. Django targeted:
+   - `store.test_phase49_3d_price_range`
+   - `store.test_phase49_unified_import_e2e`
+9. Catalog targeted:
+   - `tests.test_epic49_phase49_3d_workflow_hardening`
+   - `tests.test_epic49_phase49_3d_ai_ui_cleanup`
+   - `tests.test_epic49_phase49_3c_image_signature`
+   - Persian/Translate/Operator/Guided/Diagnostics regressions
+   - Epic49 discovery
+10. `python launch.py --verify-only` و Markerهای 49.3D.
+11. Visual QA Product Workspace بدون TclError.
+12. AI Center live QA:
+   - Radio Provider
+   - Search `CHATGPT`/GPT/Claude/etc.
+   - visible/total model count
+   - free filter
+   - raw model select
+   - save Provider+Model
+   - restart persistence
+   - Test Connection
+13. Real Product Auto Prepare QA.
+14. Price min/max Save/Reopen.
+15. image limit=5 QA.
+16. Local Publish؛ blocker باید Dialog واضح بدهد و metadata stale باید auto-finalize شود.
+17. Verify Local Product/Profile/Hero/Store/Home/Admin.
+18. explicit user approval.
+19. فقط بعد از approval Production plan.
 
-## 22) Production status
+## 16) Production status
 
 **NOT DEPLOYED / NOT APPROVED.**
 
-هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C، 49.3C-1 یا 49.3D در Production اجرا نشده است.
-`website.0022` و `store.0032` نیز طبق وضعیت ثبت‌شده هنوز فقط Local هستند و Production برای این Epic قبل از approval دست‌نخورده می‌ماند.
+هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C، 49.3C-1 یا 49.3D در Production اجرا نشده است. Production تا پایان Windows Local QA و تأیید صریح کاربر دست‌نخورده می‌ماند.
