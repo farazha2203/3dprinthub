@@ -29,12 +29,6 @@ def main() -> int:
     install_dual_publish_workspace(ProductWorkspace)
     install_material_color_picker(ProductWorkspace)
     install_readiness_workspace(ProductWorkspace)
-
-    # Critical routing contract: UX87 historically imported the old 8.7 workspace
-    # at module load time. Point the shell at the final Epic49 workspace so product
-    # double-clicks and the "ویرایش محصول" action open the same class that the
-    # launcher has patched with Slider SEO, Dual Publish, rich options and the
-    # Phase49.3A readiness wizard.
     ux87_shell.ProductWorkspace = ProductWorkspace
 
     if APP_VERSION != EXPECTED_VERSION:
@@ -66,6 +60,7 @@ def main() -> int:
     print("EPIC49_AI_PROVIDER_HUB=ENABLED", flush=True)
     print("EPIC49_OPENROUTER=ENABLED", flush=True)
     print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
+    print("EPIC49_DIAGNOSTIC_LOG_UI=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -76,16 +71,20 @@ def main() -> int:
         os.environ["CATALOG_DEBUG"] = "1"
 
     from app import main as app_module
+    from app.db import Database
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
     from app.phase49_readiness_wizard import install_app as install_readiness_app
     from app.phase49_ai_provider_hub import install_base_app as install_ai_base, install_shell as install_ai_shell
     from app.phase49_diagnostics import configure as configure_diagnostics, audit_event
+    from app.phase49_diagnostics_ui import install_database as install_diagnostic_database, install_base_app as install_diagnostic_ui
 
+    install_diagnostic_database(Database)
     install_ai_base(app_module.App)
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
+    install_diagnostic_ui(app_module.App, app_module.DATA)
     app_module.ProductStudio = ProductWorkspace  # compatibility for deep legacy callbacks
     App87 = ux87_shell.build_app_class(app_module.App)
     install_ai_shell(App87)
