@@ -119,6 +119,41 @@ def _hamming(left: int | None, right: int | None) -> int:
     return (left ^ right).bit_count()
 
 
+def _visual_fingerprint(path: Path) -> tuple[int | None, int, int, float] | None:
+    """Conservative visual fingerprint used only after URL/SHA exact checks."""
+    try:
+        with Image.open(path) as image:
+            width, height = image.size
+            gray = image.convert("L")
+            mean_luma = float(gray.resize((1, 1), Image.Resampling.BOX).getpixel((0, 0)))
+            compact = gray.resize((9, 8), Image.Resampling.LANCZOS)
+            pixels = list(compact.getdata())
+    except Exception:
+        return None
+    value = 0
+    for y in range(8):
+        for x in range(8):
+            value <<= 1
+            value |= 1 if pixels[y * 9 + x] > pixels[y * 9 + x + 1] else 0
+    return value, int(width), int(height), mean_luma
+
+
+def _looks_like_same_image(
+    current: tuple[int | None, int, int, float] | None,
+    previous: tuple[int | None, int, int, float] | None,
+) -> bool:
+    if current is None or previous is None:
+        return False
+    current_hash, current_w, current_h, current_mean = current
+    previous_hash, previous_w, previous_h, previous_mean = previous
+    return (
+        current_w == previous_w
+        and current_h == previous_h
+        and abs(current_mean - previous_mean) <= 4.0
+        and _hamming(current_hash, previous_hash) <= 2
+    )
+
+
 def ensure_schema(db) -> None:
     columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
     if IMAGE_METADATA_COLUMN not in columns:
@@ -141,20 +176,14 @@ def _manifest_items(local_dir: Path, filename: str) -> list[dict]:
     return [item for item in items or [] if isinstance(item, dict)]
 
 
-def strict_local_image(row, url: str) -> str:
-    """Resolve only an exact URL/local identifier; never guess by list index."""
+def strict_source_local_image(row, url: str) -> str:
+    """Resolve the original/cache image exactly, never a prior SEO derivative."""
     local_dir = Path(str(_row_value(row, "local_dir", "") or ""))
     if not local_dir:
         return ""
     url = str(url or "").strip()
     if not url:
         return ""
-
-    for item in _manifest_items(local_dir, "image_seo_manifest.json"):
-        if str(item.get("source_url") or "") == url:
-            path = Path(str(item.get("final_local_file") or ""))
-            if path.is_file():
-                return str(path)
 
     if url.startswith("local://"):
         candidate = local_dir / "images" / url.split("local://", 1)[1]
@@ -181,8 +210,27 @@ def strict_local_image(row, url: str) -> str:
     if suffix not in IMAGE_SUFFIXES:
         suffix = ".jpg"
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:20]
-    candidate = local_dir / "images" / f"batch_{digest}{suffix}"
-    return str(candidate) if candidate.is_file() else ""
+    for prefix in ("batch_", "phase49_3c_"):
+        candidate = local_dir / "images" / f"{prefix}{digest}{suffix}"
+        if candidate.is_file():
+            return str(candidate)
+    return ""
+
+
+def strict_local_image(row, url: str) -> str:
+    """Resolve an exact final/source image; never guess by list index."""
+    local_dir = Path(str(_row_value(row, "local_dir", "") or ""))
+    url = str(url or "").strip()
+    if not local_dir or not url:
+        return ""
+
+    for item in _manifest_items(local_dir, "image_seo_manifest.json"):
+        if str(item.get("source_url") or "") == url:
+            path = Path(str(item.get("final_local_file") or ""))
+            if path.is_file():
+                return str(path)
+
+    return strict_source_local_image(row, url)
 
 
 def strict_existing_image_mapping(local_dir: Path, all_urls: list[str]) -> dict[str, Path]:
@@ -351,7 +399,7 @@ def _write_webp_with_metadata(source: Path, target: Path, metadata: dict) -> Non
 
 
 def _download_if_needed(row, url: str, local_dir: Path) -> Path | None:
-    resolved = strict_local_image(row, url)
+    resolved = strict_source_local_image(row, url)
     if resolved:
         return Path(resolved)
     if not url.startswith(("http://", "https://")):
@@ -403,7 +451,7 @@ def finalize_selected_images(db, product_id: int) -> dict:
     kept_urls: list[str] = []
     items: list[dict] = []
     seen_sha: set[str] = set()
-    seen_dhash: list[int] = []
+    seen_visual: list[tuple[int | None, int, int, float]] = []
     duplicate_count = 0
     unresolved: list[str] = []
 
@@ -413,13 +461,13 @@ def finalize_selected_images(db, product_id: int) -> dict:
             unresolved.append(source_url)
             continue
         sha = _sha256(source)
-        phash = _dhash(source)
-        if sha in seen_sha or any(_hamming(phash, old) <= 2 for old in seen_dhash):
+        visual = _visual_fingerprint(source)
+        if sha in seen_sha or any(_looks_like_same_image(visual, old) for old in seen_visual):
             duplicate_count += 1
             continue
         seen_sha.add(sha)
-        if phash is not None:
-            seen_dhash.append(phash)
+        if visual is not None:
+            seen_visual.append(visual)
         index = len(items) + 1
         metadata = build_image_metadata(row, source_url, source, index, db)
         target = seo_dir / metadata["seo_filename"]
@@ -449,7 +497,7 @@ def finalize_selected_images(db, product_id: int) -> dict:
         regenerated: list[dict] = []
         for index, item in enumerate(items, start=1):
             old = Path(item["final_local_file"])
-            source = Path(strict_local_image(row, item["source_url"]) or old)
+            source = Path(strict_source_local_image(row, item["source_url"]) or old)
             if not source.is_file():
                 source = old
             item = dict(item)
@@ -551,7 +599,7 @@ def _filter_manifest_after_extract(data: dict) -> dict:
     ]
 
     exact_seen: set[str] = set()
-    perceptual_seen: list[int] = []
+    visual_seen: list[tuple[int | None, int, int, float]] = []
     duplicate_urls: set[str] = set()
     downloaded_files: list[str] = []
     for item in image_rows:
@@ -559,13 +607,13 @@ def _filter_manifest_after_extract(data: dict) -> dict:
         if not local.is_file():
             continue
         sha = _sha256(local)
-        phash = _dhash(local)
-        if sha in exact_seen or any(_hamming(phash, old) <= 2 for old in perceptual_seen):
+        visual = _visual_fingerprint(local)
+        if sha in exact_seen or any(_looks_like_same_image(visual, old) for old in visual_seen):
             duplicate_urls.add(str(item.get("url") or ""))
             continue
         exact_seen.add(sha)
-        if phash is not None:
-            perceptual_seen.append(phash)
+        if visual is not None:
+            visual_seen.append(visual)
         downloaded_files.append(str(local))
 
     if duplicate_urls:
@@ -684,6 +732,10 @@ def install_workspace(workspace_class) -> None:
         ):
             return
         try:
+            self.save(silent=True)
+        except Exception:
+            pass
+        try:
             result = finalize_selected_images(self.db, self.product_id)
         except Exception as exc:
             messagebox.showerror("3DPrintHub", f"نهایی‌سازی تصاویر ناموفق بود:\n{exc}", parent=self)
@@ -714,6 +766,8 @@ def install_base_app(app_module) -> None:
     app_module.extract_direct_link = wrapped_extract
 
     batch_packaging.existing_image_mapping = strict_existing_image_mapping
+
+    original_copy = batch_packaging.copy_images_into_model
 
     def copy_images_into_model(selected_pairs, model_dir):
         image_target = Path(model_dir) / "images"
