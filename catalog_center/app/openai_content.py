@@ -48,10 +48,11 @@ CONTENT_SCHEMA = {
 }
 
 class AIContentService:
-    def __init__(self, api_key:str, model:str="", provider:str="openai"):
-        self.client=AIProviderClient(provider,api_key,model)
+    def __init__(self, api_key:str, model:str="", provider:str="openai", product_id:int|None=None):
+        self.client=AIProviderClient(provider,api_key,model,product_id=product_id)
         self.model=model
         self.provider=provider
+        self.product_id=product_id
 
     def test_connection(self)->str:
         r=self.client.test_connection(self.model)
