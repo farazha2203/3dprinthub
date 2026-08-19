@@ -1,1 +1,1 @@
-Temporary CI marker commits were not part of runtime. Final Phase49.3B validation must use the clean runtime/test baseline documented in PROJECT_CONTEXT.md.
+Phase49.3B temporary CI marker files are housekeeping only and are excluded from runtime validation decisions.
