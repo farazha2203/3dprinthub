@@ -1,1 +1,1 @@
-Housekeeping note: temporary CI-only marker files are not runtime code. Final validation uses the latest clean runtime/test commit plus documentation.
+Phase49.3B housekeeping complete.
