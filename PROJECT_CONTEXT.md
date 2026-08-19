@@ -30,6 +30,7 @@
 - Windows Catalog Center ابزار اصلی کارمند است؛ Django Admin ابزار مدیریتی دوم و کامل است.
 - Python/Django زبان پروژه؛ PowerShell برای عملیات Windows.
 - Secret/API Key/Password/Token داخل Git/SQLite audit/export ذخیره نشود.
+- تغییرات Source ابتدا مستقیم روی GitHub Epic ثبت می‌شوند؛ Windows فقط از GitHub Pull می‌کند و Patch دستی Source مبنا نیست.
 
 ## 3) Branch و Epic جاری
 
@@ -39,11 +40,11 @@ Branch فعال:
 
 زنجیره خطی:
 
-`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics`
+`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Workflow Recovery`
 
 Foundationها Merge موازی نشده‌اند؛ Epic ancestry خطی است تا Conflict مصنوعی ایجاد نشود.
 
-## 4) جدیدترین Validation — Phase49.3B
+## 4) Validation تاریخی — Phase49.3B
 
 Main doc:
 `docs/PHASE49_3B_GUIDED_AI_HERO_DIAGNOSTICS.md`
@@ -54,10 +55,13 @@ Hardening appendix:
 Final gapfix appendix:
 `docs/PHASE49_3B_FINAL_GAPFIX_APPENDIX.md`
 
+Windows launch import hotfix:
+`docs/PHASE49_3B_WINDOWS_LAUNCH_IMPORT_HOTFIX.md`
+
 Clean runtime/test baseline قبل از Documentation نهایی:
 `c0ac5a9f98e157a5a50b6e1cf8021265a6246e28`
 
-Final CI:
+Final CI تاریخی:
 - Run: `32248104376`
 - Job: `96052943408`
 - Compile: ✅
@@ -66,7 +70,15 @@ Final CI:
 - Windows Catalog Center AI/Wizard/Diagnostics: ✅
 - Full Django suite: ✅
 
-Live provider/visual QA هنوز روی Windows انجام نشده و Production untouched است.
+Windows local output قبل از 49.3C:
+- `store.0031`: applied.
+- `store.0032`: applied.
+- `website.0022`: applied.
+- Targeted Django: 45 tests ✅.
+- Full Django: 406 tests ✅, 2 skipped.
+- Epic49 discovery: 48 tests ✅.
+- Windows temp SQLite `WinError 32` در test cleanup شناسایی و روی GitHub fix شد.
+- `phase49_3b_ai_product_runtime` ImportError برای symbol ناموجود `sync_seo_reference_lists` شناسایی و روی GitHub fix شد.
 
 Warnings شناخته‌شده Failure نیستند:
 - `ckeditor.W001`: CKEditor4 technical/security debt.
@@ -430,45 +442,129 @@ Legacy Vesper/flexi-lizard Assetهای قدیمی بودند. 45 Asset نبای�
 تست صحیح End-to-End:
 **یک Product واقعی Windows → Local Publish → Django Product/Profile/Hero → Home/Admin**.
 
-## 19) Gate بعدی Windows Local
+## 19) Phase49.3C — Operator Workflow Recovery + AI Autofill + Image SEO
 
-1. بستن Catalog Center و runserver.
-2. Pull آخرین Epic.
-3. Backup Django DB و Catalog Center persistent SQLite/data.
-4. `python manage.py check`.
-5. `python manage.py makemigrations --check --dry-run`.
-6. `python manage.py migrate --plan`.
-7. Pendingهای مورد انتظار را از وضعیت واقعی Local بررسی کن:
-   - `store.0031_phase49_rich_material_colors` اگر هنوز اعمال نشده
-   - `website.0022_phase49_hero_media_presentation`
-   - `store.0032_phase49_slider_media_profile`
-8. فقط بعد از Backup و Plan صحیح Migrationهای مورد انتظار را اعمال کن.
-9. Windows targeted tests + `python launch.py --verify-only`.
-10. Verify markerها:
-   - `EPIC49_GUIDED_WIZARD_7_STAGE=ENABLED`
-   - `EPIC49_HERO_MEDIA_STUDIO=ENABLED`
-   - `EPIC49_AI_PROVIDER_HUB=ENABLED`
-   - `EPIC49_OPENROUTER=ENABLED`
-   - `EPIC49_AI_COST_TOMAN=ENABLED`
-   - `EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED`
-   - `EPIC49_DIAGNOSTIC_LOG_UI=ENABLED`
-   - `EPIC49_AUDIT_IDENTITY=ENABLED`
-   - `EPIC49_AI_COST_PERSISTENCE=ENABLED`
-11. AI Center: AvalAI/OpenRouter/OpenAI را هرکدام جدا با کلید واقعی Operator تست کن.
-12. همان AvalAI content generation که قبلاً HTTP400 می‌داد دوباره تست شود.
-13. Provider/Model/HTTP/Request ID/Tokens/Cost در AI log بررسی شود.
-14. Operator/Workstation/Session در Program Log بررسی شود.
-15. Diagnostic bundle export و shareability بررسی شود.
-16. Wizard 7 Stage + Previous/Next/Stars/Locks.
-17. Hero Desktop/Mobile preview و `product_fit + contain`.
-18. قاب‌بندی Hero را با Slider خاموش ذخیره/reopen کن تا ProductProfile persistence ثابت شود.
-19. تکمیل یک Product واقعی و فقط `🧪 Local Publish`.
-20. Verify Local Store/Home/Admin/Product/Profile/Hero.
-21. Visual/user approval.
-22. فقط بعد از approval: Production backup/deploy plan.
+Doc:
+`docs/PHASE49_3C_OPERATOR_WORKFLOW_RECOVERY.md`
 
-## 20) Production status
+علت شروع:
+Visual QA واقعی نشان داد Stage-level readiness برای Operator کافی نیست و تعدادی از Editorial AI fieldها خالی می‌مانند؛ همچنین Thumbnail mapping قدیمی می‌توانست URL و local file را با index اشتباه نمایش دهد.
+
+Root causeها:
+1. Readiness عمدتاً از DB saved state خوانده می‌شد، نه Widgetهای unsaved.
+2. Image local resolver در نبود exact mapping از sorted file index حدس می‌زد؛ بعد از primary reorder کارت می‌توانست عکس اشتباه نمایش دهد.
+3. AI Schema fieldها را داشت، اما empty string/array می‌توانست به‌عنوان response معتبر عبور کند.
+
+Implementation:
+- `phase49_3c_operator_recovery.py`
+  - live 180ms debounce.
+  - Widget snapshot.
+  - exact missing-field list.
+  - Stage AI + Global AI.
+  - Queue/Local/Production fail-closed.
+- `phase49_3c_ai_recovery.py`
+  - commerce completeness validation.
+  - one structured repair request.
+  - conservative deterministic editorial fallback.
+  - factual price/license/material/color selection جعل نمی‌شود.
+- `phase49_3c_image_pipeline.py`
+  - max 10 source images.
+  - canonical URL dedupe.
+  - SHA-256 + conservative visual duplicate filtering (dHash + dimensions + mean luminance).
+  - exact URL/file identity; no index fallback.
+  - filename before/SEO filename display.
+  - final WebP SEO images always regenerated from original/source cache, not prior lossy SEO derivatives.
+  - unsaved operator edits are saved before image finalization.
+  - creator/copyright/license/source/operator/publisher metadata.
+  - third-party copyright preservation.
+  - `seo_signature` stale metadata detection.
+
+Desktop additive data:
+- `products.image_metadata_json` با `ALTER TABLE ADD COLUMN`.
+- No Django migration for 49.3C.
+- Source/cache images حذف یا reset نمی‌شوند.
+- Final files در `<product local_dir>/seo_images/`.
+- Metadata canonical record: `image_seo_manifest.json`.
+
+Batch:
+- Final SEO filename حفظ می‌شود.
+- نهایی‌سازی فایل دیگر نام انسانی را به `001.webp` برنمی‌گرداند.
+- `image_metadata_json` داخل `desktop_editorial.json` و Imported Asset source payload می‌ماند.
+
+Markers:
+- `EPIC49_3C_LIVE_READINESS=ENABLED`
+- `EPIC49_3C_STAGE_AI=ENABLED`
+- `EPIC49_3C_IMAGE_ID_SAFE_DELETE=ENABLED`
+- `EPIC49_3C_IMAGE_LIMIT_10=ENABLED`
+- `EPIC49_3C_IMAGE_SEO_METADATA=ENABLED`
+- `EPIC49_3C_AI_COMPLETENESS_RECOVERY=ENABLED`
+
+Dedicated tests:
+- `catalog_center/tests/test_epic49_phase49_3c_operator_recovery.py`
+- `catalog_center/tests/test_epic49_phase49_3c_image_signature.py`
+
+`image_signature` regression ثابت می‌کند بعد از Finalize، تغییر SEO/Alt/Attribution دوباره Image Stage را stale/قرمز می‌کند.
+
+CI:
+`.github/workflows/phase49-epic-ci.yml` new modules را compile می‌کند و test 49.3C را explicit + Epic49 discovery اجرا می‌کند.
+
+Current checklist:
+- [x] Implementation committed to GitHub Epic.
+- [x] Dedicated regression tests committed.
+- [x] CI workflow gate updated.
+- [x] Documentation committed.
+- [ ] Final GitHub CI result verified for final 49.3C HEAD.
+- [ ] Windows pull / compile / dedicated tests.
+- [ ] `launch.py --verify-only`.
+- [ ] Real Product Visual QA.
+- [ ] AI Provider live QA.
+- [ ] Image delete exact-identity QA.
+- [ ] Image SEO/Metadata QA.
+- [ ] Local Publish E2E.
+- [ ] Explicit user approval.
+- [ ] Production deploy.
+
+## 20) Gate بعدی Windows Local — Phase49.3C
+
+1. Catalog Center و Django runserver را برای Pull/initial tests ببند.
+2. Pull آخرین `epic/phase49-unified-product-slider-sync`.
+3. Verify exact HEAD اعلام‌شده پس از Final CI/docs.
+4. Backup:
+   - `D:\projects\3DPrintHub\db.sqlite3`
+   - Catalog persistent SQLite/data.
+5. Django migrations دوباره اعمال نشوند؛ Local فعلی:
+   - `[X] store.0031`
+   - `[X] store.0032`
+   - `[X] website.0022`
+6. `python manage.py check`.
+7. `python manage.py makemigrations --check --dry-run` → `No changes detected`.
+8. Phase49.3C Django migration ندارد؛ `migrate --plan` نباید 49.3C migration نشان دهد.
+9. Windows dedicated:
+   - `python -m unittest -v tests.test_epic49_phase49_3c_operator_recovery`
+   - `python -m unittest -v tests.test_epic49_phase49_3c_image_signature`
+   - Phase49.3B regression modules.
+   - Epic49 discovery.
+10. `python launch.py --verify-only` و Markerهای 49.3B + 49.3C.
+11. برنامه را باز کن و همان Fanart/Flexi product را تست کن:
+   - Missing list از بدو Load.
+   - قیمت/متن/checkbox → تغییر زنده قرمز/سبز.
+   - AI همین مرحله.
+   - Global AI.
+   - short description/tags/hashtags/SEO/material recommendations.
+   - image filename current/SEO.
+   - انتخاب یک عکس و حذف دقیق همان عکس.
+   - max 10 image intake.
+   - duplicate filtering.
+   - SEO Finalize و Metadata.
+   - تغییر SEO بعد از Finalize → stale Metadata دوباره قرمز.
+12. فقط پس از همه Gateها یک `🧪 Local Publish`.
+13. Verify Django Local Product/Profile/Hero/Store/Home/Admin.
+14. Visual/user approval.
+15. بعد از approval فقط Production plan اجرا شود.
+
+## 21) Production status
 
 **NOT DEPLOYED / NOT APPROVED.**
 
-هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3B، `website.0022` یا `store.0032` در Production اجرا نشده است.
+هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C در Production اجرا نشده است.
+`website.0022` و `store.0032` نیز طبق وضعیت ثبت‌شده هنوز فقط Local هستند و Production برای این Epic قبل از approval دست‌نخورده می‌ماند.
