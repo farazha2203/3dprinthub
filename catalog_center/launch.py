@@ -22,13 +22,17 @@ def main() -> int:
     from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.phase49_dual_publish_desktop import install as install_dual_publish_workspace
     from app.phase49_material_color_picker import install as install_material_color_picker
+    from app import phase49_readiness_wizard as readiness_module
     from app.phase49_readiness_wizard import install as install_readiness_workspace
+    from app.phase49_3b_guided_wizard import configure_readiness, install as install_guided_workspace
     from app import ux87_shell
 
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
     install_material_color_picker(ProductWorkspace)
+    configure_readiness(readiness_module)
     install_readiness_workspace(ProductWorkspace)
+    install_guided_workspace(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
 
     if APP_VERSION != EXPECTED_VERSION:
@@ -57,6 +61,8 @@ def main() -> int:
     print("EPIC49_MATERIAL_COLOR_PICKER=ENABLED", flush=True)
     print("EPIC49_READINESS_WIZARD=ENABLED", flush=True)
     print("EPIC49_SEO_REFERENCE_SYNC=ENABLED", flush=True)
+    print("EPIC49_GUIDED_WIZARD_7_STAGE=ENABLED", flush=True)
+    print("EPIC49_HERO_MEDIA_STUDIO=ENABLED", flush=True)
     print("EPIC49_AI_PROVIDER_HUB=ENABLED", flush=True)
     print("EPIC49_OPENROUTER=ENABLED", flush=True)
     print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
