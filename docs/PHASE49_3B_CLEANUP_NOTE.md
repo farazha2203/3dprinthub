@@ -1,1 +1,1 @@
-Phase49.3B temporary CI marker files are housekeeping only and are excluded from runtime validation decisions.
+Housekeeping note: temporary CI-only marker files are not runtime code. Final validation uses the latest clean runtime/test commit plus documentation.
