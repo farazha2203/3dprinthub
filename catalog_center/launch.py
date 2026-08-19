@@ -63,6 +63,9 @@ def main() -> int:
     print("EPIC49_MATERIAL_COLOR_PICKER=ENABLED", flush=True)
     print("EPIC49_READINESS_WIZARD=ENABLED", flush=True)
     print("EPIC49_SEO_REFERENCE_SYNC=ENABLED", flush=True)
+    print("EPIC49_AI_PROVIDER_HUB=ENABLED", flush=True)
+    print("EPIC49_OPENROUTER=ENABLED", flush=True)
+    print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -76,13 +79,26 @@ def main() -> int:
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
     from app.phase49_readiness_wizard import install_app as install_readiness_app
+    from app.phase49_ai_provider_hub import install_base_app as install_ai_base, install_shell as install_ai_shell
+    from app.phase49_diagnostics import configure as configure_diagnostics, audit_event
 
+    install_ai_base(app_module.App)
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
     app_module.ProductStudio = ProductWorkspace  # compatibility for deep legacy callbacks
     App87 = ux87_shell.build_app_class(app_module.App)
-    App87().mainloop()
+    install_ai_shell(App87)
+    app = App87()
+    configure_diagnostics(app.db, getattr(app, "logger", None))
+    audit_event(
+        "runtime",
+        "app_start",
+        source_file=str(Path(__file__).resolve()),
+        message=f"Catalog Center {APP_VERSION} build={BUILD_ID}",
+        detail={"source": str(SOURCE_ROOT)},
+    )
+    app.mainloop()
     return 0
 
 
