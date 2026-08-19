@@ -18,35 +18,41 @@ class _DB:
         self.conn.execute("CREATE TABLE products(id INTEGER PRIMARY KEY)")
         self.conn.commit()
 
+    def close(self):
+        self.conn.close()
+
 
 class Epic49UnifiedDesktopTests(unittest.TestCase):
     def test_desktop_schema_is_additive_and_contains_unified_slider_revision_fields(self):
         with tempfile.TemporaryDirectory() as tmp:
             db = _DB(Path(tmp) / "catalog.sqlite3")
-            ensure_epic49_desktop_schema(db)
-            columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
-            expected = {
-                "homepage_slider_title_fa",
-                "homepage_slider_description_fa",
-                "homepage_slider_alt_text",
-                "homepage_slider_button_text",
-                "homepage_slider_focus_keyword",
-                "homepage_slider_transition_effect",
-                "homepage_slider_transition_duration_ms",
-                "homepage_slider_display_duration_ms",
-                "server_product_id",
-                "server_product_revision",
-                "server_slider_id",
-                "server_slider_revision",
-                "server_updated_at",
-                "last_sync_conflict",
-            }
-            self.assertTrue(expected.issubset(columns))
-            self.assertTrue(expected.issubset(PRODUCT_COLUMNS))
-            # Running the additive installer twice must be safe for employee PCs.
-            ensure_epic49_desktop_schema(db)
-            columns2 = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
-            self.assertEqual(columns, columns2)
+            try:
+                ensure_epic49_desktop_schema(db)
+                columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
+                expected = {
+                    "homepage_slider_title_fa",
+                    "homepage_slider_description_fa",
+                    "homepage_slider_alt_text",
+                    "homepage_slider_button_text",
+                    "homepage_slider_focus_keyword",
+                    "homepage_slider_transition_effect",
+                    "homepage_slider_transition_duration_ms",
+                    "homepage_slider_display_duration_ms",
+                    "server_product_id",
+                    "server_product_revision",
+                    "server_slider_id",
+                    "server_slider_revision",
+                    "server_updated_at",
+                    "last_sync_conflict",
+                }
+                self.assertTrue(expected.issubset(columns))
+                self.assertTrue(expected.issubset(PRODUCT_COLUMNS))
+                # Running the additive installer twice must be safe for employee PCs.
+                ensure_epic49_desktop_schema(db)
+                columns2 = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
+                self.assertEqual(columns, columns2)
+            finally:
+                db.close()
 
     def test_unified_workspace_extends_v871_instead_of_replacing_existing_product_studio(self):
         self.assertTrue(issubclass(ProductWorkspace, ProductWorkspace871))
