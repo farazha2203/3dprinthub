@@ -176,7 +176,6 @@ def upsert_asset(source: PrintCatalogSource, data: dict):
 
 
 
-
 def apply_phase39_product_intelligence(product, data: dict) -> None:
     """Populate optional Phase39 storefront intelligence when that phase is installed."""
     if not product:
@@ -260,7 +259,13 @@ def apply_phase43_product_details(product, data: dict) -> None:
         product.fixed_delivery_days = max(1, details["lead_time_max_days"] or details["lead_time_min_days"] or 1)
         update_fields.append("fixed_delivery_days")
     if hasattr(product, "consultation_required"):
-        product.consultation_required = details["product_type"] == "custom_order" or details["availability_status"] == "quote_required"
+        # Preserve a prior True from Epic49 price-range synchronization. A price
+        # range means the exact total still depends on order choices; Phase43
+        # product-type defaults must never downgrade that consultation requirement.
+        product.consultation_required = bool(getattr(product, "consultation_required", False)) or (
+            details["product_type"] == "custom_order"
+            or details["availability_status"] == "quote_required"
+        )
         update_fields.append("consultation_required")
     if details["use_description"] and hasattr(product, "short_description"):
         product.short_description = details["use_description"][:350]
