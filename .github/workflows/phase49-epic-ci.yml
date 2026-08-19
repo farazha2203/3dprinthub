@@ -55,6 +55,19 @@ jobs:
           if ($many.Count -ne 2) { throw "Multi-result array contract failed." }
           Write-Host "PHASE49_3D_POWERSHELL_RUNNER_CONTRACT=OK"
 
+          $runner3e = Get-Content -Raw -Path "RUN_PHASE49_3E_LOCAL_GATE.ps1"
+          [void][scriptblock]::Create($runner3e)
+          if ($runner3e -notmatch '\$RunnerVersion\s*=\s*"49\.3E\.0"') {
+            throw "Expected Phase49.3E.0 runner version marker is missing."
+          }
+          if ($runner3e -notmatch 'RUN_PHASE49_3D_LOCAL_GATE\.ps1') {
+            throw "Phase49.3E runner must chain the canonical Phase49.3D base gate."
+          }
+          if ($runner3e -notmatch 'EPIC49_3E_AI_TASK_CENTER=ENABLED') {
+            throw "Phase49.3E launcher marker contract is missing from the runner."
+          }
+          Write-Host "PHASE49_3E_POWERSHELL_RUNNER_CONTRACT=OK"
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -109,6 +122,8 @@ jobs:
             catalog_center/app/phase49_3d_image_signature.py \
             catalog_center/app/phase49_3d_workflow_hardening.py \
             catalog_center/app/phase49_3d_ai_ui_cleanup.py \
+            catalog_center/app/phase49_3e_ai_task_center.py \
+            catalog_center/app/phase49_3e_ai_contract.py \
             catalog_center/app/openai_content.py \
             catalog_center/app/ai_providers.py \
             catalog_center/app/product_workspace_epic49.py \
@@ -154,6 +169,14 @@ jobs:
           python -m unittest -v tests.test_epic49_phase49_3c_image_signature
           python -m unittest -v tests.test_epic49_phase49_3d_workflow_hardening
           python -m unittest -v tests.test_epic49_phase49_3d_ai_ui_cleanup
+          python -m unittest -v tests.test_epic49_phase49_3e_ai_task_center
+          python launch.py --verify-only | tee /tmp/phase49-verify.txt
+          grep -F "EPIC49_3E_AI_TASK_CENTER=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3E_IMAGE_AI_SEO=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3E_OPERATOR_IMAGE_EDITOR=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3E_NON_BLOCKING_STAGE_NAV=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3E_LOCAL_PREFLIGHT_ALWAYS_ACCESSIBLE=ENABLED" /tmp/phase49-verify.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-verify.txt
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
       - name: Full Django suite
