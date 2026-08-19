@@ -29,12 +29,19 @@ def main() -> int:
     from app.phase49_3c_ai_recovery import install as install_ai_recovery
     from app.phase49_3c_image_pipeline import install_workspace as install_image_workspace
     from app.phase49_3c_operator_recovery import install as install_operator_recovery
+    from app.phase49_3c_persian_content import (
+        install as install_persian_content,
+        install_app as install_persian_app,
+        install_readiness as install_persian_readiness,
+        install_workspace as install_persian_workspace,
+    )
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
 
     install_ai_runtime_patch()
     install_ai_recovery()
+    install_persian_content()
     install_server_slider_media(ServerSliderManager)
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
@@ -44,7 +51,9 @@ def main() -> int:
     install_guided_workspace(ProductWorkspace)
     install_ai_product_runtime(ProductWorkspace)
     install_image_workspace(ProductWorkspace)
+    install_persian_readiness(readiness_module)
     install_operator_recovery(ProductWorkspace, readiness_module)
+    install_persian_workspace(ProductWorkspace, readiness_module)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -94,6 +103,10 @@ def main() -> int:
     print("EPIC49_3C_IMAGE_LIMIT_10=ENABLED", flush=True)
     print("EPIC49_3C_IMAGE_SEO_METADATA=ENABLED", flush=True)
     print("EPIC49_3C_AI_COMPLETENESS_RECOVERY=ENABLED", flush=True)
+    print("EPIC49_3C_PERSIAN_CONTENT_GUARD=ENABLED", flush=True)
+    print("EPIC49_3C_PERSIAN_SEO=ENABLED", flush=True)
+    print("EPIC49_3C_HTML_SANITIZATION=ENABLED", flush=True)
+    print("EPIC49_3C_WORKSPACE_CONTENT_PERSISTENCE=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -121,6 +134,7 @@ def main() -> int:
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
+    install_persian_app(app_module.App)
     install_diagnostic_ui(app_module.App, app_module.DATA)
     install_diagnostic_identity_ui(app_module.App)
     app_module.ProductStudio = ProductWorkspace
