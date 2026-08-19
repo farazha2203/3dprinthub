@@ -29,7 +29,7 @@ Local Publish از `queue_for_publish(notify=False)` استفاده می‌کر�
 
 ### Price range
 
-زیرساخت `price_min/price_max` از قبل در Desktop SQLite، Batch و `ProductCatalogProfile` وجود داشت و صفحه جزئیات سایت نیز Range را نمایش می‌داد؛ نقص اصلی نرمال‌سازی Save و نمایش Range روی کارت‌های Store بود. بنابراین Django migration جدید ایجاد نشد.
+زیرساخت `price_min/price_max` از قبل در Desktop SQLite، Batch و `ProductCatalogProfile` وجود داشت و صفحه جزئیات سایت نیز Range را نمایش می‌داد؛ نقص اصلی نرمال‌سازی Save، نمایش Range روی کارت‌های Store و حفظ `consultation_required=True` بعد از import بود. بنابراین Django migration جدید ایجاد نشد.
 
 ## Implementation
 
@@ -71,6 +71,7 @@ Local Publish از `queue_for_publish(notify=False)` استفاده می‌کر�
   - `ai_model_<provider>`
 - API Key تایپ‌شده فقط در Secure Secret Store ذخیره می‌شود؛ داخل Git/SQLite audit قرار نمی‌گیرد.
 - Test Connection فعال دقیقاً با همان Provider/Model انتخابی اجرا می‌شود و تعداد مدل‌های Provider را گزارش می‌کند.
+- `phase49_3d_ai_ui_cleanup.py` مسیر Legacy «فعال کن» را فقط از UI حذف می‌کند تا Active Provider یک Source of Truth داشته باشد؛ دکمه‌های ذخیره Key، تست اتصال، اعتبار و هزینه حذف نمی‌شوند.
 
 ### 4. Auto AI Prepare on Product Open
 
@@ -107,6 +108,16 @@ AI همچنان حق جعل این موارد را ندارد:
 
 بنابراین Local Publish دیگر نباید بی‌صدا فقط به تصاویر برگردد.
 
+### 5.1 Semantic Image SEO Signature
+
+CI یک Regression واقعی پیدا کرد: `image_seo_signature()` در 49.3C رشته خام JSON را Hash می‌کرد. قبل از Finalize، `json.dumps` ممکن بود حروف فارسی را `\uXXXX` ذخیره کند و Finalize همان لیست را با `ensure_ascii=False` بنویسد. داده از نظر معنا یکسان بود اما Hash عوض می‌شد و Metadata تازه بلافاصله stale می‌شد.
+
+Fix:
+- `phase49_3d_image_signature.py`
+- فیلدهای JSON قبل از Hash parse/normalize می‌شوند.
+- تفاوت serialization دیگر stale ایجاد نمی‌کند.
+- تغییر واقعی SEO/Alt هنوز Signature را عوض و Stage تصاویر را قرمز می‌کند.
+
 ### 6. Price Range
 
 Desktop Save:
@@ -114,11 +125,26 @@ Desktop Save:
 - اگر فقط یکی وارد شده باشد، مقدار دوم برابر همان می‌شود.
 - اگر Range خالی ولی `final_price/suggested_price` وجود داشته باشد، Range ثابت از آن ساخته می‌شود.
 
-Server:
-- `ProductCatalogProfile.price_min/price_max/price_mode` موجود و حفظ شده است.
-- `product_detail.html` قبلاً Range را نمایش می‌داد.
-- `product_list.html` اکنون اگر `price_max > price_min` باشد، متن `بازه قیمت` و هر دو مقدار را نمایش می‌دهد.
-- `store/test_phase49_3d_price_range.py` List و Detail را تست می‌کند.
+Windows → Django E2E:
+- تست واقعی با `price_min=650000` و `price_max=850000` وارد Batch می‌شود.
+- بعد از `phase37_import_catalog_center`:
+  - `Product.fixed_price = 650000`
+  - `Product.price_is_final = False`
+  - `Product.consultation_required = True`
+  - `ProductCatalogProfile.price_min = 650000`
+  - `ProductCatalogProfile.price_max = 850000`
+  - `ProductCatalogProfile.price_mode = range`
+- Re-import همان Batch idempotent است و Range باقی می‌ماند.
+
+Server regression پیدا و رفع شد:
+- `apply_price_range()` برای Range درست `consultation_required=True` می‌کرد.
+- `apply_phase43_product_details()` بعداً آن را بر اساس `product_type/availability_status` دوباره False می‌کرد.
+- اکنون `True` قبلی حفظ می‌شود و Phase43 فقط در صورت custom/quote آن را اضافه می‌کند، نه اینکه Range requirement را downgrade کند.
+
+Public Store:
+- `product_detail.html` Range را نمایش می‌دهد.
+- `product_list.html` اگر `price_max > price_min` باشد، متن `بازه قیمت` و هر دو مقدار را نمایش می‌دهد.
+- تست Public در برابر separatorهای عددی Locale-safe است؛ اصل contract روی `حداقل تا حداکثر تومان` بسته می‌شود.
 
 ### 7. Image Download Limit
 
@@ -130,13 +156,28 @@ Server:
 - hard cap فاز 49.3C برابر 10 تصویر است.
 - Regression test ثابت می‌کند انتخاب 5 → فقط 5 URL و انتخاب بالاتر از 10 → حداکثر 10.
 
+### 8. Test isolation hardening
+
+CI دوم نشان داد `test_epic49_readiness_wizard` از `inspect.getsource(AIContentService.enrich_product)` استفاده می‌کرد. Persian Guardها عمداً این Method را Runtime-wrap می‌کنند؛ بنابراین Full Discovery با اجرای منفرد نتیجه متفاوت داشت.
+
+Fix:
+- Source contract از فایل canonical `app/openai_content.py` خوانده می‌شود.
+- Test دیگر به ترتیب Monkey-Patchهای runtime وابسته نیست.
+
 ## Files
 
 - `catalog_center/app/phase49_3d_workflow_hardening.py`
+- `catalog_center/app/phase49_3d_image_signature.py`
+- `catalog_center/app/phase49_3d_ai_ui_cleanup.py`
 - `catalog_center/app/openai_content.py`
 - `catalog_center/launch.py`
 - `catalog_center/tests/test_epic49_phase49_3d_workflow_hardening.py`
+- `catalog_center/tests/test_epic49_phase49_3d_ai_ui_cleanup.py`
+- `catalog_center/tests/test_epic49_phase49_3c_image_signature.py`
+- `catalog_center/tests/test_epic49_readiness_wizard.py`
 - `store/test_phase49_3d_price_range.py`
+- `store/test_phase49_unified_import_e2e.py`
+- `store/management/commands/phase37_import_catalog_center.py`
 - `templates/store/product_list.html`
 - `.github/workflows/phase49-epic-ci.yml`
 - `PROJECT_CONTEXT.md`
@@ -146,14 +187,40 @@ Server:
 - `EPIC49_3D_WORKSPACE_LAYOUT_FIX=ENABLED`
 - `EPIC49_3D_AI_MODEL_PICKER=ENABLED`
 - `EPIC49_3D_ACTIVE_PROVIDER_PERSISTENCE=ENABLED`
+- `EPIC49_3D_AI_LEGACY_ACTIVATE_REMOVED=ENABLED`
 - `EPIC49_3D_AUTO_AI_PREPARE=ENABLED`
 - `EPIC49_3D_LOCAL_PUBLISH_PREFLIGHT=ENABLED`
 - `EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED`
 - `EPIC49_3D_IMAGE_LIMIT_PRESERVED=ENABLED`
+- `EPIC49_3D_SEMANTIC_IMAGE_SIGNATURE=ENABLED`
 
 ## Environment note — django-admin-expert
 
 طبق سیاست پروژه، قبل از این فاز Plugin directory برای `django-admin-expert` بررسی شد. Plugin/Skill مستقلی با همین نام در Session فعلی موجود نبود و نتیجه‌های Search نامرتبط بودند؛ بنابراین هیچ Plugin اشتباهی نصب نشد و ادعای نصب نیز ثبت نمی‌شود. Django/Admin validation بر اساس Source واقعی همین Repository و تست‌های Django انجام می‌شود.
+
+## CI history / Root-cause closure
+
+در مسیر فاز، CI فقط برای «سبزکردن ظاهری» Retry نشد؛ هر Fail بررسی شد:
+
+1. Public Price Range test ابتدا separator عددی ثابت انتظار داشت؛ Runtime Range درست بود. Test Locale-safe شد.
+2. Image Metadata بلافاصله stale می‌شد؛ Root cause raw JSON serialization hash بود. Runtime semantic signature اضافه شد.
+3. Readiness test در Full Discovery order-dependent بود؛ Test از runtime-wrapped method به canonical source contract منتقل شد.
+4. Price Range E2E نشان داد `consultation_required=True` بعداً توسط Phase43 downgrade می‌شود؛ Runtime import fix شد.
+
+Final validated runtime HEAD:
+`e3eb0969b79fef67dc235cdbd213655140a128e1`
+
+Final CI Probe:
+- PR `#31` — closed, **not merged**.
+- Probe Head `93180ae00fdf243074bcbbb3a3dcf00477887bef` = exact runtime tree + one temporary docs marker.
+- Run `32271502234`
+- Job `96128806609`
+- Compile changed Python surfaces: ✅
+- Django checks + migration contract: ✅
+- Phase49 targeted Django / import E2E / public range tests: ✅
+- Windows Catalog Center explicit tests + Epic49 discovery: ✅
+- Full Django suite: ✅
+- Overall: **SUCCESS**
 
 ## Gate
 
@@ -161,16 +228,21 @@ Server:
 - [x] Grid-safe Workspace repair پیاده‌سازی شد.
 - [x] Searchable full model picker پیاده‌سازی شد.
 - [x] Provider radio + persistent Provider/Model پیاده‌سازی شد.
+- [x] Legacy `فعال کن` از مسیر UI canonical حذف شد.
 - [x] Active Provider/Model live connection test پیاده‌سازی شد.
 - [x] Auto AI prepare با source fingerprint پیاده‌سازی شد.
 - [x] Similar Persian keyword hints اضافه شد.
 - [x] Local Publish explicit preflight/error reporting پیاده‌سازی شد.
 - [x] Auto image metadata finalization در publish preflight اضافه شد.
+- [x] Semantic Image Signature regression رفع شد.
 - [x] Desktop price range normalization پیاده‌سازی شد.
+- [x] Windows→Batch→Django Product/Profile Range E2E تست شد.
 - [x] Store list/detail price range contract تست شد.
+- [x] Range consultation requirement حفظ می‌شود.
 - [x] Image download limit behavior بدون تغییر عملکرد اصلی پوشش تست دارد.
+- [x] Test order-dependence رفع شد.
 - [x] Dedicated Windows + Django tests به CI اضافه شد.
-- [ ] Final GitHub CI برای HEAD نهایی verified.
+- [x] Final GitHub CI برای Runtime HEAD verified.
 - [ ] Windows pull/backup/compile/tests.
 - [ ] Product Workspace visual open بدون TclError.
 - [ ] Live Provider model list/search/test QA.
