@@ -103,6 +103,7 @@ jobs:
             store.test_epic49_operator_publish \
             store.test_phase49_1_frontend_contract \
             store.test_phase49_3b_profile_media \
+            store.test_phase49_3d_price_range \
             catalog_bridge.test_phase49_unified_bridge \
             catalog_bridge.tests.test_epic49_contract \
             website.test_phase49_persian_sales_hero \
