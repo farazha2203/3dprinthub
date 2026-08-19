@@ -66,6 +66,25 @@ PowerShell runner syntax and array-safety contract
 - Array normalization را contract-check می‌کند.
 - حالت صفر/یک/چند آیتم را تست می‌کند.
 
+## CI Validation
+
+CI Probe موقت:
+- PR `#32`
+- Base: Epic HEAD مربوط به Hotfix
+- Head فقط یک docs marker اضافه داشت
+- PR بسته شد و Merge نشد
+
+Final CI:
+- Run `32276195521`
+- Job `96144096195`
+- PowerShell runner syntax and array-safety contract: ✅
+- Compile changed Python surfaces: ✅
+- Django check + migration contract: ✅
+- Phase49 behavioral/regression tests: ✅
+- Windows Catalog Center Epic49 tests: ✅
+- Full Django suite: ✅
+- Overall: **SUCCESS**
+
 ## Git-only delivery
 
 هیچ Patch دستی روی Windows مجاز نیست.
@@ -92,7 +111,7 @@ Canonical file:
 - [x] Runner array-safe شد.
 - [x] Runner version marker اضافه شد.
 - [x] PowerShell CI contract اضافه شد.
-- [ ] GitHub CI جدید تأیید شود.
+- [x] GitHub CI جدید تأیید شد.
 - [ ] Windows pull و اجرای مجدد Runner.
 - [ ] ادامه Phase49.3D Local QA.
 - [ ] Production فقط بعد از تأیید صریح Local.
