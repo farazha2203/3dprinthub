@@ -31,6 +31,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: PowerShell runner syntax and array-safety contract
+        shell: pwsh
+        run: |
+          $runner = Get-Content -Raw -Path "RUN_PHASE49_3D_LOCAL_GATE.ps1"
+          [void][scriptblock]::Create($runner)
+
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3D\.1"') {
+            throw "Expected Phase49.3D.1 runner version marker is missing."
+          }
+          if ($runner -notmatch '\$projectProcesses\s*=\s*@\(') {
+            throw "Process pipeline must be normalized to an array with @(...)."
+          }
+          if ($runner -notmatch 'if\s*\(@\(\$projectProcesses\)\.Count\s*-gt\s*0\)') {
+            throw "Process count check must remain array-safe under StrictMode."
+          }
+
+          $zero = @($null | Where-Object { $null -ne $_ })
+          $one = @("one")
+          $many = @("one", "two")
+          if ($zero.Count -ne 0) { throw "Zero-result array contract failed." }
+          if ($one.Count -ne 1) { throw "Single-result array contract failed." }
+          if ($many.Count -ne 2) { throw "Multi-result array contract failed." }
+          Write-Host "PHASE49_3D_POWERSHELL_RUNNER_CONTRACT=OK"
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
