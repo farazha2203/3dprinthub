@@ -65,6 +65,7 @@ class AIContentService:
             "source_title":source.get("source_title") or "","source_description":source.get("source_description") or "",
             "source_categories":source.get("source_categories") or [],"source_category":source.get("source_category") or "",
             "source_specs":source.get("source_specs") or {},"source_tags":source.get("source_tags") or [],
+            "similar_persian_keywords":source.get("similar_persian_keywords") or [],
             "author_name":source.get("author_name") or "","license_name":source.get("license_name") or "",
             "source_price":source.get("source_price"),"source_currency":source.get("source_currency") or "",
             "estimated_weight_grams":source.get("estimated_weight_grams"),"estimated_print_minutes":source.get("estimated_print_minutes"),
@@ -83,6 +84,7 @@ class AIContentService:
             "Translate all source specifications and category paths to natural Persian. Choose suggested_category_slug only from allowed_site_categories. "
             "Create useful non-spam SEO title/description, internal tags and Persian social hashtags. "
             "When target_keywords_fa is supported, suggest 5 to 12 natural Persian commercial/search-intent phrases suitable for product SEO and internal content planning; prefer phrases containing buying, ordering, price, product type, use case, and only the selected_materials/selected_colors that are explicitly present in the input. Never use target_keywords_fa as obsolete HTML meta-keywords stuffing. "
+            "similar_persian_keywords are editorial hints collected from previously reviewed products in the same local category. Reuse or adapt only phrases that are semantically relevant to this product; never treat them as product facts, never copy irrelevant phrases, and never let them override the current source facts. "
             "selected_materials and selected_colors are factual operator selections. You may use them in SEO phrases when relevant, but never add a material or color that is not present in those lists. "
             "Always create homepage_slider_seo as a separate homepage hero content pack: title_fa must be concise and factual, description_fa must be a short useful Persian summary, image_alt_fa must accurately describe the product/image without keyword stuffing, button_text_fa must be a short action label, and focus_keyword_fa must be one natural target phrase. "
             "For homepage_slider_seo avoid price, availability, performance or technical claims unless they are explicitly supported by source facts. Do not duplicate the full product SEO text; write compact hero copy suitable for an H2, a short paragraph, image alt text and an internal product link on the homepage. "
