@@ -12,15 +12,14 @@ class StoreConfig(AppConfig):
         # the model under the `store` app before commands/views use it.
         from . import epic49_catalog_profile  # noqa: F401
 
-        # Phase49.3B: persist Hero fit/scale/background on ProductCatalogProfile
-        # even while the homepage slider is disabled. The migration owns the
-        # database columns; this module contributes the matching runtime fields.
+        # Phase49.3B: migration 0032 owns these columns. Importing the module now
+        # contributes the runtime fields before Admin registration; the publish
+        # wrapper itself is installed later, after Unified Sync rebinds services.
         from . import phase49_3b_profile_media
 
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
-        phase49_3b_profile_media.install()
         from . import signals  # noqa: F401
         from . import epic49_publish_signals  # noqa: F401
 
@@ -29,6 +28,10 @@ class StoreConfig(AppConfig):
         # protected Desktop <-> Server contract.
         from .phase49_unified_sync import install as install_phase49_unified_sync
         install_phase49_unified_sync()
+
+        # Install profile persistence after Unified Sync so its apply_homepage_slider
+        # wrapper cannot be overwritten by the revision-aware rebind above.
+        phase49_3b_profile_media.install()
 
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
