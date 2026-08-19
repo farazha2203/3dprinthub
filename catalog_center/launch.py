@@ -26,11 +26,15 @@ def main() -> int:
     from app.phase49_3b_guided_wizard import configure_readiness, install as install_guided_workspace
     from app.phase49_3b_ai_product_runtime import install as install_ai_product_runtime
     from app.phase49_3b_ai_runtime_patch import install as install_ai_runtime_patch
+    from app.phase49_3c_ai_recovery import install as install_ai_recovery
+    from app.phase49_3c_image_pipeline import install_workspace as install_image_workspace
+    from app.phase49_3c_operator_recovery import install as install_operator_recovery
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
 
     install_ai_runtime_patch()
+    install_ai_recovery()
     install_server_slider_media(ServerSliderManager)
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
@@ -39,6 +43,8 @@ def main() -> int:
     install_readiness_workspace(ProductWorkspace)
     install_guided_workspace(ProductWorkspace)
     install_ai_product_runtime(ProductWorkspace)
+    install_image_workspace(ProductWorkspace)
+    install_operator_recovery(ProductWorkspace, readiness_module)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -82,6 +88,12 @@ def main() -> int:
     print("EPIC49_DIAGNOSTIC_LOG_UI=ENABLED", flush=True)
     print("EPIC49_AUDIT_IDENTITY=ENABLED", flush=True)
     print("EPIC49_AI_COST_PERSISTENCE=ENABLED", flush=True)
+    print("EPIC49_3C_LIVE_READINESS=ENABLED", flush=True)
+    print("EPIC49_3C_STAGE_AI=ENABLED", flush=True)
+    print("EPIC49_3C_IMAGE_ID_SAFE_DELETE=ENABLED", flush=True)
+    print("EPIC49_3C_IMAGE_LIMIT_10=ENABLED", flush=True)
+    print("EPIC49_3C_IMAGE_SEO_METADATA=ENABLED", flush=True)
+    print("EPIC49_3C_AI_COMPLETENESS_RECOVERY=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -101,9 +113,11 @@ def main() -> int:
     from app.phase49_diagnostics_ui import install_database as install_diagnostic_database, install_base_app as install_diagnostic_ui
     from app.phase49_diagnostics_identity import install as install_diagnostic_identity
     from app.phase49_diagnostics_identity_ui import install as install_diagnostic_identity_ui
+    from app.phase49_3c_image_pipeline import install_base_app as install_image_base
 
     install_diagnostic_database(Database)
     install_ai_base(app_module.App)
+    install_image_base(app_module)
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
