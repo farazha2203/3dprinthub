@@ -32,6 +32,7 @@ CONTENT_SCHEMA = {
         "specs_fa":{"type":"array","items":{"type":"object","additionalProperties":False,"properties":{"key":{"type":"string"},"value":{"type":"string"}},"required":["key","value"]}},
         "tags_fa":{"type":"array","items":{"type":"string"}},
         "hashtags_fa":{"type":"array","items":{"type":"string"}},
+        "target_keywords_fa":{"type":"array","items":{"type":"string"},"maxItems":12},
         "suggested_category_slug":{"type":"string"},"category_confidence":{"type":"number","minimum":0,"maximum":1},
         "seo_title_fa":{"type":"string"},"seo_description_fa":{"type":"string"},
         "sales_bullets":{"type":"array","items":{"type":"string"},"maxItems":8},
@@ -66,6 +67,8 @@ class AIContentService:
             "author_name":source.get("author_name") or "","license_name":source.get("license_name") or "",
             "source_price":source.get("source_price"),"source_currency":source.get("source_currency") or "",
             "estimated_weight_grams":source.get("estimated_weight_grams"),"estimated_print_minutes":source.get("estimated_print_minutes"),
+            "selected_materials":source.get("selected_materials") or [],
+            "selected_colors":source.get("selected_colors") or [],
             "image_count":image_count,"allowed_site_categories":[{"slug":x.get("slug",""),"name":x.get("name","")} for x in local_categories],
         }
         content=[{"type":"input_text","text":json.dumps(payload,ensure_ascii=False)}]
@@ -75,9 +78,11 @@ class AIContentService:
         instructions=(
             ("You are a precise Persian technical translator. " if strict_translate else "") +
             "You are a Persian ecommerce content editor and catalog intelligence editor for 3DPrintHub, an Iranian professional 3D-printing ecommerce site. "
-            "Never invent dimensions, weight, compatibility, license, source rating, file availability or price. Preserve engineering names and units. "
+            "Never invent dimensions, weight, compatibility, license, source rating, file availability, price, material or color. Preserve engineering names and units. "
             "Translate all source specifications and category paths to natural Persian. Choose suggested_category_slug only from allowed_site_categories. "
             "Create useful non-spam SEO title/description, internal tags and Persian social hashtags. "
+            "When target_keywords_fa is supported, suggest 5 to 12 natural Persian commercial/search-intent phrases suitable for product SEO and internal content planning; prefer phrases containing buying, ordering, price, product type, use case, and only the selected_materials/selected_colors that are explicitly present in the input. Never use target_keywords_fa as obsolete HTML meta-keywords stuffing. "
+            "selected_materials and selected_colors are factual operator selections. You may use them in SEO phrases when relevant, but never add a material or color that is not present in those lists. "
             "Always create homepage_slider_seo as a separate homepage hero content pack: title_fa must be concise and factual, description_fa must be a short useful Persian summary, image_alt_fa must accurately describe the product/image without keyword stuffing, button_text_fa must be a short action label, and focus_keyword_fa must be one natural target phrase. "
             "For homepage_slider_seo avoid price, availability, performance or technical claims unless they are explicitly supported by source facts. Do not duplicate the full product SEO text; write compact hero copy suitable for an H2, a short paragraph, image alt text and an internal product link on the homepage. "
             "Classify the use case and recommend printable materials conservatively. Do not recommend expensive engineering materials such as PPS-CF for ordinary home decor unless source facts require high heat/chemical/mechanical performance. "
