@@ -42,6 +42,9 @@ def main() -> int:
         install_workspace as install_phase49_3d_workspace,
     )
     from app.phase49_3d_ai_ui_cleanup import install as install_phase49_3d_ai_ui_cleanup
+    from app import phase49_3e_ai_task_center as phase49_3e_task_center_module
+    from app.phase49_3e_ai_contract import install as install_phase49_3e_contract
+    from app.phase49_3e_ai_task_center import install as install_phase49_3e_task_center
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -64,6 +67,8 @@ def main() -> int:
     install_operator_recovery(ProductWorkspace, readiness_module)
     install_persian_workspace(ProductWorkspace, readiness_module)
     install_phase49_3d_workspace(ProductWorkspace, readiness_module)
+    install_phase49_3e_contract(phase49_3e_task_center_module)
+    install_phase49_3e_task_center(ProductWorkspace, readiness_module)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -127,6 +132,11 @@ def main() -> int:
     print("EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED", flush=True)
     print("EPIC49_3D_IMAGE_LIMIT_PRESERVED=ENABLED", flush=True)
     print("EPIC49_3D_SEMANTIC_IMAGE_SIGNATURE=ENABLED", flush=True)
+    print("EPIC49_3E_AI_TASK_CENTER=ENABLED", flush=True)
+    print("EPIC49_3E_IMAGE_AI_SEO=ENABLED", flush=True)
+    print("EPIC49_3E_OPERATOR_IMAGE_EDITOR=ENABLED", flush=True)
+    print("EPIC49_3E_NON_BLOCKING_STAGE_NAV=ENABLED", flush=True)
+    print("EPIC49_3E_LOCAL_PREFLIGHT_ALWAYS_ACCESSIBLE=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
