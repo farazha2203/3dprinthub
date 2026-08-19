@@ -27,3 +27,8 @@ class CatalogBridgeConfig(AppConfig):
         # creating a parallel API. Revision/409/auth semantics remain unchanged.
         from .phase49_3b_media_contract import install as install_phase49_3b_media_contract
         install_phase49_3b_media_contract()
+
+        # Persist the same presentation contract on ProductCatalogProfile so a
+        # Windows operator can prepare Hero fit/background before enabling the slide.
+        from .phase49_3b_profile_media_contract import install as install_phase49_3b_profile_media_contract
+        install_phase49_3b_profile_media_contract()
