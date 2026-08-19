@@ -1,1 +1,1 @@
-This file exists only to record that temporary CI marker commits were pruned from the final Phase49.3B branch history.
+Temporary CI marker commits were not part of runtime. Final Phase49.3B validation must use the clean runtime/test baseline documented in PROJECT_CONTEXT.md.
