@@ -36,6 +36,10 @@ def main() -> int:
         install_workspace as install_persian_workspace,
     )
     from app.phase49_3c_persian_translate_guard import install as install_persian_translate_guard
+    from app.phase49_3d_workflow_hardening import (
+        install_ai_shell as install_phase49_3d_ai_shell,
+        install_workspace as install_phase49_3d_workspace,
+    )
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -56,6 +60,7 @@ def main() -> int:
     install_persian_readiness(readiness_module)
     install_operator_recovery(ProductWorkspace, readiness_module)
     install_persian_workspace(ProductWorkspace, readiness_module)
+    install_phase49_3d_workspace(ProductWorkspace, readiness_module)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -110,6 +115,13 @@ def main() -> int:
     print("EPIC49_3C_PERSIAN_SEO=ENABLED", flush=True)
     print("EPIC49_3C_HTML_SANITIZATION=ENABLED", flush=True)
     print("EPIC49_3C_WORKSPACE_CONTENT_PERSISTENCE=ENABLED", flush=True)
+    print("EPIC49_3D_WORKSPACE_LAYOUT_FIX=ENABLED", flush=True)
+    print("EPIC49_3D_AI_MODEL_PICKER=ENABLED", flush=True)
+    print("EPIC49_3D_ACTIVE_PROVIDER_PERSISTENCE=ENABLED", flush=True)
+    print("EPIC49_3D_AUTO_AI_PREPARE=ENABLED", flush=True)
+    print("EPIC49_3D_LOCAL_PUBLISH_PREFLIGHT=ENABLED", flush=True)
+    print("EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED", flush=True)
+    print("EPIC49_3D_IMAGE_LIMIT_PRESERVED=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -143,6 +155,7 @@ def main() -> int:
     app_module.ProductStudio = ProductWorkspace
     App87 = ux87_shell.build_app_class(app_module.App)
     install_ai_shell(App87)
+    install_phase49_3d_ai_shell(App87)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
