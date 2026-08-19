@@ -22,16 +22,19 @@ def main() -> int:
     from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
     from app.phase49_dual_publish_desktop import install as install_dual_publish_workspace
     from app.phase49_material_color_picker import install as install_material_color_picker
+    from app.phase49_readiness_wizard import install as install_readiness_workspace
     from app import ux87_shell
 
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
     install_material_color_picker(ProductWorkspace)
+    install_readiness_workspace(ProductWorkspace)
 
     # Critical routing contract: UX87 historically imported the old 8.7 workspace
     # at module load time. Point the shell at the final Epic49 workspace so product
     # double-clicks and the "ویرایش محصول" action open the same class that the
-    # launcher has patched with Slider SEO, Dual Publish and option pickers.
+    # launcher has patched with Slider SEO, Dual Publish, rich options and the
+    # Phase49.3A readiness wizard.
     ux87_shell.ProductWorkspace = ProductWorkspace
 
     if APP_VERSION != EXPECTED_VERSION:
@@ -58,6 +61,8 @@ def main() -> int:
     print("EPIC49_DUAL_PUBLISH_TARGETS=ENABLED", flush=True)
     print("EPIC49_LOCAL_PUBLISH_SQLITE_GUARD=ENABLED", flush=True)
     print("EPIC49_MATERIAL_COLOR_PICKER=ENABLED", flush=True)
+    print("EPIC49_READINESS_WIZARD=ENABLED", flush=True)
+    print("EPIC49_SEO_REFERENCE_SYNC=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -70,9 +75,11 @@ def main() -> int:
     from app import main as app_module
     from app.epic49_desktop_schema import install as install_epic49_desktop_schema
     from app.persistent_connection_profile import install as install_persistent_connection_profile
+    from app.phase49_readiness_wizard import install_app as install_readiness_app
 
     install_epic49_desktop_schema(app_module)
     install_persistent_connection_profile(app_module)
+    install_readiness_app(app_module.App)
     app_module.ProductStudio = ProductWorkspace  # compatibility for deep legacy callbacks
     App87 = ux87_shell.build_app_class(app_module.App)
     App87().mainloop()
