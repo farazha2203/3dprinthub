@@ -10,7 +10,6 @@ ROOT = Path(__file__).resolve().parent
 
 
 def main() -> int:
-    # The absolute launcher location must win over the caller's current folder.
     root_text = str(ROOT)
     sys.path[:] = [root_text, *[item for item in sys.path if item != root_text]]
 
@@ -25,6 +24,7 @@ def main() -> int:
     from app import phase49_readiness_wizard as readiness_module
     from app.phase49_readiness_wizard import install as install_readiness_workspace
     from app.phase49_3b_guided_wizard import configure_readiness, install as install_guided_workspace
+    from app.phase49_3b_ai_product_runtime import install as install_ai_product_runtime
     from app import ux87_shell
 
     install_persian_sales_workspace(ProductWorkspace)
@@ -33,7 +33,13 @@ def main() -> int:
     configure_readiness(readiness_module)
     install_readiness_workspace(ProductWorkspace)
     install_guided_workspace(ProductWorkspace)
+    install_ai_product_runtime(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
+    # Rename the legacy navigation label without forking the mature shell.
+    ux87_shell.NAV_ITEMS[:] = [
+        (key, "لاگ برنامه" if key == "logs" else label, icon)
+        for key, label, icon in ux87_shell.NAV_ITEMS
+    ]
 
     if APP_VERSION != EXPECTED_VERSION:
         raise RuntimeError(
@@ -64,6 +70,7 @@ def main() -> int:
     print("EPIC49_GUIDED_WIZARD_7_STAGE=ENABLED", flush=True)
     print("EPIC49_HERO_MEDIA_STUDIO=ENABLED", flush=True)
     print("EPIC49_AI_PROVIDER_HUB=ENABLED", flush=True)
+    print("EPIC49_AI_PRODUCT_CONTEXT=ENABLED", flush=True)
     print("EPIC49_OPENROUTER=ENABLED", flush=True)
     print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
     print("EPIC49_DIAGNOSTIC_LOG_UI=ENABLED", flush=True)
@@ -91,7 +98,7 @@ def main() -> int:
     install_persistent_connection_profile(app_module)
     install_readiness_app(app_module.App)
     install_diagnostic_ui(app_module.App, app_module.DATA)
-    app_module.ProductStudio = ProductWorkspace  # compatibility for deep legacy callbacks
+    app_module.ProductStudio = ProductWorkspace
     App87 = ux87_shell.build_app_class(app_module.App)
     install_ai_shell(App87)
     app = App87()
