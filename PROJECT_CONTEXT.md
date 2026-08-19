@@ -40,7 +40,7 @@ Branch فعال:
 
 زنجیره خطی:
 
-`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options/Workspace Repair`
+`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options/Workspace Repair → Phase49.3A Publish Readiness`
 
 Foundationها Merge موازی نشده‌اند؛ Epic روی یک ancestry خطی ساخته شده تا Conflict مصنوعی ایجاد نشود.
 
@@ -54,27 +54,30 @@ Foundationها Merge موازی نشده‌اند؛ Epic روی یک ancestry خ
 - Job: `95732323558` — SUCCESS
 
 ### Dual Publish Targets
-- tested runtime baseline: `b14cdc6a3bcae016e373e5c7fcbf036bd0fcb029`
 - CI Run: `32152308954`
 - Job: `95760929653` — SUCCESS
 
-### Desktop Options + Workspace Routing Repair — جدیدترین Gate
-- runtime baseline قبل از documentation: `ec8c749cfdf8e019d0f93a4cd5fd74a86200bbb6`
-- Final CI Run: `32158432992`
-- Final Job: `95781188545`
+### Desktop Options + Workspace Routing Repair
+- tested runtime baseline: `ec8c749cfdf8e019d0f93a4cd5fd74a86200bbb6`
+- CI Run: `32158432992`
+- Job: `95781188545` — SUCCESS
+
+### Phase49.3A Product Publish Readiness — جدیدترین Gate
+- CI Run: `32234579086`
+- Job: `96011595438`
 - Result: **SUCCESS**
 
 Gateهای نهایی:
 - Compile: ✅
 - Django check + migration contract: ✅
 - Phase49 targeted behavioral/regression tests: ✅
-- Windows Catalog Center tests: ✅
+- Windows Catalog Center + Readiness Wizard tests: ✅
 - Full Django suite: ✅
 
 Warnings شناخته‌شده Failure نیستند:
 - `ckeditor.W001`: CKEditor4 technical/security debt.
 - `store.W026`: realtime in-memory؛ برای cross-process production در صورت نیاز Redis.
-- OAuth/credential dependent checks در CI ممکن است optional feature را disabled گزارش کنند.
+- OAuth/credential-dependent checks در CI ممکن است optional feature را disabled گزارش کنند.
 
 **Production برای تغییرات جاری Epic49 هنوز Deploy نشده است.**
 
@@ -114,7 +117,6 @@ Approved SHA256:
 
 Doc: `docs/PHASE49_2C_HERO_STUDIO.md`
 
-قابلیت‌ها:
 - visual Product Album Picker در Admin.
 - Image Album بدون Save اولیه.
 - `selected_asset_image` relation واقعی.
@@ -155,8 +157,6 @@ Conflict Protection:
 Migrations:
 - `store.0030_phase49_unified_sync_contract`
 - `website.0021_phase49_unified_hero_sync`
-
-هر دو Additive هستند.
 
 Catalog Bridge:
 - version `1.3.0`
@@ -214,14 +214,12 @@ Production path:
 
 Production دکمه دو confirmation و مقصد واضح دارد.
 
-## 11) Desktop Options + Workspace Routing Repair — مرحله جاری
+## 11) Desktop Options + Workspace Routing Repair
 
-Doc کامل:
-`docs/EPIC49_DESKTOP_OPTIONS_WORKSPACE_REPAIR.md`
+Doc: `docs/EPIC49_DESKTOP_OPTIONS_WORKSPACE_REPAIR.md`
 
-### Root cause UI قدیمی
-
-`launch.py` Workspace نهایی Epic را import می‌کرد، ولی `ux87_shell.py` یک alias قدیمی از `product_workspace_v87.ProductWorkspace` داشت و Product open همان کلاس قدیمی را instantiate می‌کرد.
+Root cause UI قدیمی:
+`ux87_shell.py` alias قدیمی `product_workspace_v87.ProductWorkspace` را نگه داشته بود.
 
 Fix:
 
@@ -229,62 +227,28 @@ Fix:
 ux87_shell.ProductWorkspace = ProductWorkspace
 ```
 
-بنابراین Product double-click / Edit اکنون Workspace نهایی Epic را باز می‌کند و Patchهای Slider SEO، Dual Publish و Option Picker واقعاً در UI فعال هستند.
-
 Marker:
 `UX87_EPIC49_WORKSPACE_ROUTING=ENABLED`
 
-### Material Picker
+Material Picker:
+- متریال مستقل Checkbox.
+- Windows: `material_options_json`.
 
-متریال مستقل Checkbox است.
+Rich Color Picker:
+- رنگ مستقل Checkbox.
+- Windows: `color_options_json`.
+- Types: `solid`, `transparent`, `translucent`, `metallic`, `silk`, `dual`, `multicolor`, `gradient`.
+- Metadata: main/secondary/tertiary HEX.
+- legacy `material_color_options_json` به‌صورت derived compatibility حفظ شده.
 
-Windows column:
-`material_options_json`
-
-Default choices:
-PLA, PLA-CF, HT-PLA-GF, PETG, PET-CF, PETG-rCF08, ABS, ASA, PC-FR, TPU95, PA6-CF20, PA12-CF10, PPS-CF10.
-
-### Rich Color Picker
-
-رنگ مستقل Checkbox است.
-
-Windows column:
-`color_options_json`
-
-Types:
-- `solid` ساده
-- `transparent` شفاف/شیشه‌ای
-- `translucent` نیمه‌شفاف
-- `metallic` متالیک
-- `silk` ابریشمی
-- `dual` دو رنگ
-- `multicolor` چند رنگ
-- `gradient` گرادیانی
-
-Metadata:
-- name
-- main HEX
-- secondary HEX
-- tertiary HEX
-- color type
-
-Legacy `material_color_options_json` حذف نشده و به‌صورت derived compatibility payload نگه‌داری می‌شود.
-
-### Windows SQLite
-
-`catalog_center/app/epic49_desktop_schema.py`
-
-Additive changes:
+Windows SQLite additive:
 - `products.material_options_json`
 - `products.color_options_json`
 - `available_material_colors.color_type`
 - `available_material_colors.secondary_hex`
 - `available_material_colors.tertiary_hex`
 
-### Django DB
-
-Migration جدید:
-
+Django migration:
 `store.0031_phase49_rich_material_colors`
 
 روی `MaterialColorOption`:
@@ -292,17 +256,106 @@ Migration جدید:
 - secondary_hex
 - tertiary_hex
 
-Migration فقط Additive؛ DROP/DELETE/TRUNCATE ندارد.
+Migration فقط Additive است.
 
-### Admin
+## 12) Phase49.3A — Product Publish Readiness Wizard
 
-`MaterialColorOptionAdmin`:
-- color type filter/editor
-- HEX 1/2/3
-- gradient/multi swatch preview
-- pricing + inventory حفظ شده.
+Doc: `docs/PHASE49_3A_PRODUCT_PUBLISH_READINESS.md`
 
-## 12) Local historical data state
+### هدف
+
+هر Product در Windows یک Wizard وضعیت انتشار دارد. وضعیت از دیتای واقعی محاسبه می‌شود و صرفاً UI decoration نیست.
+
+منوی سمت راست:
+- `✅` مرحله کامل.
+- `❌` مرحله ناقص.
+- `مرحله بعد: ...` به اولین Stage ناقص می‌رود.
+- `✨ پیشنهاد AI برای موارد ناقص`.
+- `🧪 انتشار آزمایشی روی کامپیوتر`.
+- `🌐 انتشار واقعی روی سایت اصلی`.
+
+Stages:
+1. اطلاعات پایه
+2. سفارش، قیمت و گزینه‌ها
+3. تصاویر
+4. محتوا و SEO
+5. منبع و مجوز
+6. بررسی و انتشار
+
+Production Publish فقط وقتی همه Gateهای لازم سبز باشند فعال می‌شود. Direct callback هم دوباره Readiness را بررسی می‌کند و قابل bypass نیست.
+
+### Gateهای اصلی
+
+اطلاعات پایه:
+- عنوان فارسی
+- گروه سایت معتبر
+- نوع محصول
+
+سفارش/گزینه‌ها:
+- قیمت معتبر یا order/portfolio mode
+- حداقل یک متریال واقعی
+- حداقل یک رنگ واقعی
+
+تصاویر:
+- primary image
+- حداقل یک selected image
+
+Content/SEO:
+- عنوان فارسی
+- توضیح فارسی
+- SEO Title فارسی
+- SEO Description فارسی
+- حداقل 3 عبارت هدف SEO
+- Alt تصویر
+
+منبع/مجوز:
+- source URL
+- مجوز تجاری قابل انتشار
+
+Publish:
+- approval
+- publish type
+- اگر Slider روشن است: Slider title/description/alt/focus/image نیز اجباری‌اند.
+
+### SEO Editable Lists
+
+- `materials_json` از Material checkbox واقعی Product sync می‌شود.
+- `colors_json` از Color checkbox واقعی Product sync می‌شود.
+- `keywords_json` بانک عبارت‌های هدف Search/Content است؛ برای meta-keywords منسوخ یا keyword stuffing نیست.
+- اگر Keywords خالی باشد fallback فروش‌محور deterministic ساخته می‌شود.
+
+نمونه:
+- خرید گکو مفصلی سه بعدی
+- سفارش گکو مفصلی سه بعدی
+- قیمت گکو مفصلی سه بعدی
+- گکو مفصلی سه بعدی PLA
+- گکو مفصلی سه بعدی شفاف
+
+AI schema:
+- `target_keywords_fa` اضافه شده.
+- `selected_materials` و `selected_colors` به Prompt می‌روند.
+- AI حق اختراع Material/Color ندارد؛ فقط از انتخاب واقعی اپراتور استفاده می‌کند.
+
+Markerها:
+- `EPIC49_READINESS_WIZARD=ENABLED`
+- `EPIC49_SEO_REFERENCE_SYNC=ENABLED`
+
+### DB
+
+Phase49.3A Migration جدید ندارد؛ Readiness Runtime-calculated است.
+Migration قبلی Rich Color همچنان `store.0031_phase49_rich_material_colors` است.
+
+### Validation
+
+- CI Run: `32234579086`
+- Job: `96011595438`
+- Compile: PASS
+- Migration Contract: PASS
+- Targeted regression: PASS
+- Windows Readiness tests: PASS
+- Full Django suite: PASS
+
+## 13) Local historical data state
 
 آخرین Audit قبل از اولین Product واقعی از مسیر جدید:
 - Product = 0
@@ -314,52 +367,36 @@ Vesper/flexi-lizard legacy slides Assetهای قدیمی بدون Product کام
 
 این 45 Asset نباید کورکورانه Product شوند. تست صحیح: **یک Product واقعی از Windows → Local Publish**.
 
-## 13) Gate بعدی Local
+## 14) Gate بعدی Local
 
 1. بستن Catalog Center و runserver.
 2. Pull آخرین Epic.
-3. Backup:
-   - Django `db.sqlite3`
-   - Catalog Center persistent data/catalog SQLite.
-4. `python manage.py check`
+3. Backup Django DB و Catalog Center persistent SQLite/data.
+4. `python manage.py check`.
 5. `python manage.py makemigrations --check --dry-run` → No changes detected.
-6. `python manage.py migrate --plan`
-7. انتظار migration جدید: `store.0031_phase49_rich_material_colors` (اگر هنوز Local اعمال نشده).
-8. بعد از Verify/Backup: `python manage.py migrate store 0031`.
-9. Django tests:
-   - `store.test_phase49_rich_material_colors`
-   - `store.test_epic49_operator_publish`
-10. Windows tests:
+6. `python manage.py showmigrations store` و `python manage.py migrate --plan`.
+7. اگر `store.0031_phase49_rich_material_colors` هنوز Local اعمال نشده، فقط بعد از Backup/Verify اعمال شود.
+8. Windows tests:
+   - `tests.test_epic49_readiness_wizard`
    - `tests.test_epic49_material_color_picker`
    - `tests.test_epic49_studio_final`
-11. `python launch.py --verify-only` و Verify markerها.
-12. `python launch.py`.
-13. Product واقعی را باز کن و Visual QA:
-   - Slider SEO کامل.
-   - Effect/Timing.
-   - Local/Production buttons.
-   - Material checkboxes.
-   - Color checkboxes.
-   - Transparent color.
-   - Dual/multicolor HEX metadata.
-   - Save/reopen persistence.
-14. یک Product واقعی:
-   - تولید Product SEO فارسی.
-   - تولید Slider SEO مستقل.
-   - انتخاب Hero image.
-   - انتخاب material/colors.
-   - `🧪 Local Publish`.
-15. Verify Local Django:
-   - Product created.
-   - ProductCatalogProfile created.
-   - rich variants/colors created.
-   - HomepageHeroSlide created/updated.
-   - Store/Home/Admin درست.
-16. Visual/user approval.
-17. فقط بعد از تأیید: Production plan.
+9. `python launch.py --verify-only` و Verify markerهای Readiness/SEO reference/Dual Publish/Material Picker.
+10. `python launch.py`.
+11. Visual QA روی یک Product واقعی:
+   - ✅/❌ کنار شش Stage.
+   - دکمه Next Stage.
+   - AI helper.
+   - SEO Editable Lists: keywords/materials/colors populated.
+   - Slider SEO + Effect/Timing.
+   - Local/Production buttons در rail.
+   - Production تا تکمیل Gateها disabled.
+12. Product واقعی را کامل کن و فقط `🧪 Local Publish` را اجرا کن.
+13. Verify Local Django: Product/Profile/rich colors/Hero/Store/Home/Admin.
+14. Visual/user approval.
+15. فقط بعد از تأیید: Production plan.
 
-## 14) Production status
+## 15) Production status
 
 **NOT DEPLOYED / NOT APPROVED YET.**
 
-هیچ Migration/collectstatic/restart مربوط به `store.0031` یا Workspace Options در Production اجرا نشده است.
+هیچ deploy/migrate/collectstatic/restart مربوط به `store.0031`, Workspace Options یا Phase49.3A در Production اجرا نشده است.
