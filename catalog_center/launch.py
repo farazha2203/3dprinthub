@@ -41,6 +41,7 @@ def main() -> int:
         install_ai_shell as install_phase49_3d_ai_shell,
         install_workspace as install_phase49_3d_workspace,
     )
+    from app.phase49_3d_ai_ui_cleanup import install as install_phase49_3d_ai_ui_cleanup
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -120,6 +121,7 @@ def main() -> int:
     print("EPIC49_3D_WORKSPACE_LAYOUT_FIX=ENABLED", flush=True)
     print("EPIC49_3D_AI_MODEL_PICKER=ENABLED", flush=True)
     print("EPIC49_3D_ACTIVE_PROVIDER_PERSISTENCE=ENABLED", flush=True)
+    print("EPIC49_3D_AI_LEGACY_ACTIVATE_REMOVED=ENABLED", flush=True)
     print("EPIC49_3D_AUTO_AI_PREPARE=ENABLED", flush=True)
     print("EPIC49_3D_LOCAL_PUBLISH_PREFLIGHT=ENABLED", flush=True)
     print("EPIC49_3D_PRICE_RANGE_CONTRACT=ENABLED", flush=True)
@@ -159,6 +161,7 @@ def main() -> int:
     App87 = ux87_shell.build_app_class(app_module.App)
     install_ai_shell(App87)
     install_phase49_3d_ai_shell(App87)
+    install_phase49_3d_ai_ui_cleanup(App87)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
