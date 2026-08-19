@@ -9,8 +9,33 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="homepageheroslide",
+            name="presentation_mode",
+            field=models.CharField(
+                choices=[
+                    ("product_fit", "نمایش کامل محصول"),
+                    ("full_bleed", "پر کردن کامل اسلایدر"),
+                    ("framed", "کادر محصول"),
+                    ("cinematic", "سینمایی با پس‌زمینه"),
+                ],
+                default="product_fit",
+                max_length=20,
+                verbose_name="حالت ارائه تصویر",
+            ),
+        ),
+        migrations.AddField(
+            model_name="homepageheroslide",
             name="image_scale_percent",
             field=models.PositiveSmallIntegerField(default=100, verbose_name="مقیاس تصویر درصد"),
+        ),
+        migrations.AddField(
+            model_name="homepageheroslide",
+            name="image_position_x_percent",
+            field=models.PositiveSmallIntegerField(default=50, verbose_name="موقعیت افقی تصویر درصد"),
+        ),
+        migrations.AddField(
+            model_name="homepageheroslide",
+            name="image_position_y_percent",
+            field=models.PositiveSmallIntegerField(default=50, verbose_name="موقعیت عمودی تصویر درصد"),
         ),
         migrations.AddField(
             model_name="homepageheroslide",
