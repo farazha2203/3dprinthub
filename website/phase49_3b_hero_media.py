@@ -7,6 +7,12 @@ from django.db import models
 from .models import HomepageHeroSlide
 
 
+PRESENTATION_CHOICES = [
+    ("product_fit", "نمایش کامل محصول"),
+    ("full_bleed", "پر کردن کامل اسلایدر"),
+    ("framed", "کادر محصول"),
+    ("cinematic", "سینمایی با پس‌زمینه"),
+]
 BACKGROUND_CHOICES = [
     ("solid", "رنگ ثابت"),
     ("blur", "پس‌زمینه Blur از تصویر"),
@@ -24,12 +30,29 @@ def _has(name: str) -> bool:
 
 
 def _install_fields() -> None:
+    if not _has("presentation_mode"):
+        models.CharField(
+            max_length=20,
+            choices=PRESENTATION_CHOICES,
+            default="product_fit",
+            verbose_name="حالت ارائه تصویر",
+        ).contribute_to_class(HomepageHeroSlide, "presentation_mode")
     if not _has("image_scale_percent"):
         models.PositiveSmallIntegerField(
             default=100,
             validators=[MinValueValidator(60), MaxValueValidator(140)],
             verbose_name="مقیاس تصویر درصد",
         ).contribute_to_class(HomepageHeroSlide, "image_scale_percent")
+    for name, default, label in (
+        ("image_position_x_percent", 50, "موقعیت افقی تصویر درصد"),
+        ("image_position_y_percent", 50, "موقعیت عمودی تصویر درصد"),
+    ):
+        if not _has(name):
+            models.PositiveSmallIntegerField(
+                default=default,
+                validators=[MinValueValidator(0), MaxValueValidator(100)],
+                verbose_name=label,
+            ).contribute_to_class(HomepageHeroSlide, name)
     if not _has("background_mode"):
         models.CharField(
             max_length=20,
@@ -75,7 +98,12 @@ def _install_admin() -> None:
         fields = list(options.get("fields") or [])
         if title == "۲. تصویر Hero":
             for name in (
+                "presentation_mode",
+                "object_fit",
+                "focal_position",
                 "image_scale_percent",
+                "image_position_x_percent",
+                "image_position_y_percent",
                 "background_mode",
                 "background_color",
                 "background_blur_px",
@@ -86,15 +114,16 @@ def _install_admin() -> None:
             ):
                 if name not in fields:
                     fields.append(name)
-            options["fields"] = tuple(fields)
+            # De-duplicate because object_fit/focal_position were already in 49.2C.
+            options["fields"] = tuple(dict.fromkeys(fields))
             options["description"] = (
-                "عکس محصول بهتر است با Contain نمایش داده شود تا Crop نشود. Scale، پس‌زمینه، Blur و سقف اندازه Desktop/Mobile "
-                "هم از Windows Catalog Center و هم از این فرم قابل مدیریت‌اند."
+                "برای کالاها حالت «نمایش کامل محصول» پیشنهاد می‌شود تا Crop نشود. Scale، Position دقیق، پس‌زمینه، Blur و سقف اندازه "
+                "Desktop/Mobile هم از Windows Catalog Center و هم از این فرم قابل مدیریت‌اند."
             )
         output.append((title, options))
     model_admin.fieldsets = tuple(output)
     filters = list(model_admin.list_filter or [])
-    for name in ("object_fit", "focal_position", "background_mode"):
+    for name in ("object_fit", "focal_position", "presentation_mode", "background_mode"):
         if name not in filters:
             filters.append(name)
     model_admin.list_filter = tuple(filters)
