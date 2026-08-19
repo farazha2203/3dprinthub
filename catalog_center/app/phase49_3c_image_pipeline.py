@@ -254,6 +254,31 @@ def _safe_alt(row, index: int, alts: list[str]) -> str:
     return f"{title} - نمای {index}"[:220]
 
 
+def image_seo_signature(row) -> str:
+    payload = {
+        key: _row_value(row, key, "")
+        for key in (
+            "title_fa",
+            "source_title",
+            "short_description_fa",
+            "seo_title_fa",
+            "seo_description_fa",
+            "keywords_json",
+            "tags_fa_json",
+            "hashtags_fa_json",
+            "image_alt_texts_json",
+            "author_name",
+            "source_name",
+            "source_url",
+            "license_name",
+            "license_url",
+            "commercial_status",
+        )
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 def build_image_metadata(row, url: str, local_file: Path, index: int, db) -> dict:
     alts = [str(x or "").strip() for x in _json_list(_row_value(row, "image_alt_texts_json", "[]"))]
     keywords = []
@@ -296,6 +321,7 @@ def build_image_metadata(row, url: str, local_file: Path, index: int, db) -> dic
         "credit_line": f"Creator: {creator} | Source: {source_url} | Publisher/Editor: 3DPrintHub",
         "original_sha256": _sha256(local_file),
         "metadata_version": "49.3C",
+        "seo_signature": image_seo_signature(row),
     }
 
 
@@ -483,6 +509,7 @@ def image_metadata_missing(row) -> list[str]:
         for item in items
         if isinstance(item, dict)
     }
+    current_signature = image_seo_signature(row)
     missing: list[str] = []
     for index, url in enumerate(selected, start=1):
         meta = by_url.get(url) or {}
@@ -496,6 +523,8 @@ def image_metadata_missing(row) -> list[str]:
             missing.append(f"منبع تصویر {index}")
         if not bool(meta.get("metadata_ready")):
             missing.append(f"Metadata تصویر {index}")
+        elif str(meta.get("seo_signature") or "") != current_signature:
+            missing.append(f"بروزرسانی Metadata تصویر {index}")
     return missing
 
 
