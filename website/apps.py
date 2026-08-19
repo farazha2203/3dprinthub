@@ -61,6 +61,11 @@ class WebsiteConfig(AppConfig):
         # the real database columns; this module installs the matching runtime fields.
         from . import phase49_2c_hero_studio  # noqa: F401
 
+        # Phase 49.3B: product-friendly Hero media presentation. Migration 0022 owns
+        # scale/background/max-size columns while this runtime extends the mature
+        # HomepageHeroSlide model and Admin without rewriting the large models file.
+        from . import phase49_3b_hero_media  # noqa: F401
+
         # Epic49 unified: optimistic revision + edit source/operator contract must
         # load after the Hero Studio so it can extend that already-registered admin.
         from . import phase49_unified_sync  # noqa: F401
