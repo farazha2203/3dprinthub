@@ -63,6 +63,8 @@ jobs:
             catalog_center/app/epic49_site_sync.py \
             catalog_center/app/epic49_server_slider_manager.py \
             catalog_center/app/phase49_persian_sales_desktop.py \
+            catalog_center/app/phase49_readiness_wizard.py \
+            catalog_center/app/openai_content.py \
             catalog_center/app/product_workspace_epic49.py \
             catalog_center/launch.py \
             catalog_center/portable_entry.py
@@ -93,6 +95,7 @@ jobs:
         run: |
           python -m unittest -v tests.test_phase49_unified_desktop
           python -m unittest -v tests.test_phase49_persian_sales_slider
+          python -m unittest -v tests.test_epic49_readiness_wizard
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
       - name: Full Django suite
