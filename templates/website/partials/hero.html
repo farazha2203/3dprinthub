@@ -1,6 +1,6 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/phase49_2c-hero-effects.css' %}?v=49.3.1">
-<script src="{% static 'js/phase49_2c-home-hero.js' %}?v=49.3.1" defer></script>
+<link rel="stylesheet" href="{% static 'css/phase49_2c-hero-effects.css' %}?v=49.3.2">
+<script src="{% static 'js/phase49_2c-home-hero.js' %}?v=49.3.2" defer></script>
 <section id="home" class="p45-hero" data-p45-hero data-p49c-engine aria-label="مدل‌های منتخب 3DPrintHub">
   <div class="p45-hero__viewport">
     {% if homepage_hero_slides %}
@@ -12,10 +12,17 @@
             data-p49c-effect="{{ slide.transition_effect|default:'cinematic_fade' }}"
             data-p49c-transition="{{ slide.transition_duration_ms|default:1400 }}"
             data-p49c-display="{{ slide.display_duration_ms|default:7000 }}"
+            data-p49b-presentation="{{ slide.presentation_mode|default:'product_fit' }}"
+            data-p49b-background="{{ slide.background_mode|default:'blur' }}"
             style="--p49c-transition:{{ slide.transition_duration_ms|default:1400 }}ms;--p49c-display:{{ slide.display_duration_ms|default:7000 }}ms"
             aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
           >
-            <a class="p45-hero__media" href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
+            <a
+              class="p45-hero__media"
+              href="{{ slide.target_url }}"
+              aria-label="مشاهده {{ slide.effective_title }}"
+              style="--p49b-bg-color:{{ slide.background_color|default:'#071827' }};--p49b-bg-blur:{{ slide.background_blur_px|default:18 }}px;--p49b-bg-image:url('{{ slide.effective_image_url }}')"
+            >
               {% if slide.effective_image_url %}
               <img
                 src="{{ slide.effective_image_url }}"
@@ -25,7 +32,7 @@
                 loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
                 decoding="async"
                 {% if forloop.first %}fetchpriority="high"{% endif %}
-                style="--p45-fit:{{ slide.object_fit }};--p45-position:{{ slide.focal_position }}"
+                style="--p45-fit:{{ slide.object_fit }};--p45-position:{{ slide.focal_position }};--p49b-x:{{ slide.image_position_x_percent|default:50 }};--p49b-y:{{ slide.image_position_y_percent|default:50 }};--p49b-scale:{{ slide.image_scale_percent|default:100 }};--p49b-desktop-w:{{ slide.desktop_max_width_percent|default:78 }};--p49b-desktop-h:{{ slide.desktop_max_height_percent|default:88 }};--p49b-mobile-w:{{ slide.mobile_max_width_percent|default:92 }};--p49b-mobile-h:{{ slide.mobile_max_height_percent|default:72 }}"
               >
               {% endif %}
             </a>
