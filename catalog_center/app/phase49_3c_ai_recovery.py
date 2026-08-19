@@ -60,16 +60,26 @@ def _safe_text_list(values) -> list[str]:
 
 
 def _deterministic_fill(pack: dict, source: dict, image_count: int) -> dict:
-    """Fill editorial derivatives only; factual operator fields are never invented."""
+    """Conservative final fallback after a provider repair call.
+
+    It fills only editorial derivatives. Factual operator fields such as price,
+    license, selected materials/colors, dimensions and stock are never invented.
+    """
     result = dict(pack)
-    title = str(result.get("title_fa") or source.get("source_title") or "محصول چاپ سه‌بعدی").strip()
+    title = str(
+        result.get("title_fa")
+        or source.get("source_title")
+        or "محصول چاپ سه‌بعدی"
+    ).strip()
     description = str(
         result.get("description_fa")
         or result.get("short_description_fa")
         or source.get("source_description")
         or title
     ).strip()
-    short = str(result.get("short_description_fa") or "").strip() or description[:500]
+    short = str(result.get("short_description_fa") or "").strip()
+    if not short:
+        short = description[:500]
     result["title_fa"] = title
     result["description_fa"] = description
     result["short_description_fa"] = short
@@ -81,8 +91,12 @@ def _deterministic_fill(pack: dict, source: dict, image_count: int) -> dict:
 
     keywords = _safe_text_list(result.get("target_keywords_fa") or [])
     if len(keywords) < 3:
-        candidates = [f"خرید {title}", f"سفارش {title}", f"قیمت {title}"]
-        candidates.extend(f"{title} {item}" for item in source.get("selected_materials") or [])
+        candidates = [
+            f"خرید {title}",
+            f"سفارش {title}",
+            f"قیمت {title}",
+        ]
+        candidates.extend(f"{title} {x}" for x in source.get("selected_materials") or [])
         keywords = _safe_text_list([*keywords, *candidates])[:12]
     result["target_keywords_fa"] = keywords
 
@@ -120,15 +134,25 @@ def _deterministic_fill(pack: dict, source: dict, image_count: int) -> dict:
     recs = result.get("material_recommendations")
     if not isinstance(recs, list) or not recs:
         selected = _safe_text_list(source.get("selected_materials") or [])
-        result["material_recommendations"] = [
-            {
-                "material": material,
-                "score": 70,
-                "recommended": True,
-                "reason_fa": "این متریال توسط اپراتور برای این محصول انتخاب شده و به‌عنوان گزینه واقعی ثبت شده است.",
-            }
-            for material in selected[:8]
-        ]
+        if selected:
+            result["material_recommendations"] = [
+                {
+                    "material": material,
+                    "score": 70,
+                    "recommended": True,
+                    "reason_fa": "این متریال توسط اپراتور برای این محصول انتخاب شده و به‌عنوان گزینه واقعی ثبت شده است.",
+                }
+                for material in selected[:8]
+            ]
+        else:
+            result["material_recommendations"] = [
+                {
+                    "material": "PLA",
+                    "score": 40,
+                    "recommended": False,
+                    "reason_fa": "پیشنهاد عمومی اولیه برای بررسی اپراتور است و به‌عنوان متریال واقعی محصول ثبت نمی‌شود.",
+                }
+            ]
 
     slider = result.get("homepage_slider_seo")
     if not isinstance(slider, dict):
@@ -148,7 +172,14 @@ def install() -> None:
         return
     original = AIContentService.enrich_product
 
-    def enrich_product(self, source, local_categories, image_count=0, image_urls=None, mode="commerce"):
+    def enrich_product(
+        self,
+        source,
+        local_categories,
+        image_count=0,
+        image_urls=None,
+        mode="commerce",
+    ):
         result = original(
             self,
             source,
@@ -176,17 +207,21 @@ def install() -> None:
                 "missing_or_empty_fields": missing,
             }
             instructions = (
-                "Repair this Persian 3DPrintHub ecommerce content pack. Return the FULL object matching the schema. "
-                "Keep correct existing fields and fill every listed missing editorial field with factual Persian content. "
+                "Repair this Persian 3DPrintHub ecommerce content pack. "
+                "Return the FULL object matching the supplied schema. "
+                "Keep every correct existing field. Fill every listed missing/empty editorial field with useful, factual Persian content. "
                 "Do not invent price, dimensions, stock, license, selected materials, selected colors, compatibility or performance claims. "
                 "material_recommendations are suggestions only and may be inferred conservatively from the described use case. "
-                "image_alt_texts must contain one concise non-spam Persian alt per requested image. "
+                "image_alt_texts must contain one concise, non-spam Persian alt per requested image. "
                 "tags_fa, hashtags_fa, target_keywords_fa, sales_bullets and material_recommendations must not be empty."
             )
             try:
                 repaired, model = self.client.structured_response(
                     instructions=instructions,
-                    input_content=[{"type": "input_text", "text": json.dumps(repair_input, ensure_ascii=False)}],
+                    input_content=[{
+                        "type": "input_text",
+                        "text": json.dumps(repair_input, ensure_ascii=False),
+                    }],
                     schema=CONTENT_SCHEMA,
                     schema_name="catalog_content_pack_v871_repair",
                     preferred_model=self.model,
