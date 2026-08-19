@@ -5,6 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+$RunnerVersion = "49.3D.1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -39,6 +40,7 @@ function Run-Native {
 }
 
 Step "00. PHASE49.3D WINDOWS LOCAL GATE"
+Write-Host "Runner    = $RunnerVersion"
 Write-Host "Project   = $Root"
 Write-Host "Catalog   = $Catalog"
 Write-Host "Branch    = $ExpectedBranch"
@@ -51,17 +53,20 @@ if (-not (Test-Path $Py)) { Fail "Virtualenv Python not found: $Py" }
 Step "01. CHECK RUNNING PROJECT PROCESSES"
 $projectProcesses = @()
 try {
-    $projectProcesses = Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object {
-        $cmd = [string]$_.CommandLine
-        $cmd -and (
-            ($cmd -match [regex]::Escape($Root)) -and
-            (($cmd -match "launch\.py") -or ($cmd -match "manage\.py\s+runserver"))
-        )
-    }
+    $projectProcesses = @(
+        Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object {
+            $cmd = [string]$_.CommandLine
+            $cmd -and (
+                ($cmd -match [regex]::Escape($Root)) -and
+                (($cmd -match "launch\.py") -or ($cmd -match "manage\.py\s+runserver"))
+            )
+        }
+    )
 } catch {
+    $projectProcesses = @()
     Write-Host "Process inspection warning: $($_.Exception.Message)" -ForegroundColor Yellow
 }
-if ($projectProcesses.Count -gt 0) {
+if (@($projectProcesses).Count -gt 0) {
     $projectProcesses | Select-Object ProcessId, Name, CommandLine | Format-Table -AutoSize
     Fail "Catalog Center or Django runserver is still running. Close it normally, then run this gate again."
 }
