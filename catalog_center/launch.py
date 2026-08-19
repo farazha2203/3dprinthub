@@ -25,8 +25,13 @@ def main() -> int:
     from app.phase49_readiness_wizard import install as install_readiness_workspace
     from app.phase49_3b_guided_wizard import configure_readiness, install as install_guided_workspace
     from app.phase49_3b_ai_product_runtime import install as install_ai_product_runtime
+    from app.phase49_3b_ai_runtime_patch import install as install_ai_runtime_patch
+    from app.epic49_server_slider_manager import ServerSliderManager
+    from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
 
+    install_ai_runtime_patch()
+    install_server_slider_media(ServerSliderManager)
     install_persian_sales_workspace(ProductWorkspace)
     install_dual_publish_workspace(ProductWorkspace)
     install_material_color_picker(ProductWorkspace)
@@ -35,7 +40,6 @@ def main() -> int:
     install_guided_workspace(ProductWorkspace)
     install_ai_product_runtime(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
-    # Rename the legacy navigation label without forking the mature shell.
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
         for key, label, icon in ux87_shell.NAV_ITEMS
@@ -61,6 +65,7 @@ def main() -> int:
     print("HOMEPAGE_SLIDER_SEO_V871=ENABLED", flush=True)
     print("EPIC49_UNIFIED_SYNC=ENABLED", flush=True)
     print("EPIC49_SERVER_SLIDER_MANAGER=ENABLED", flush=True)
+    print("EPIC49_SERVER_SLIDER_MEDIA=ENABLED", flush=True)
     print("EPIC49_PERSIAN_SALES_HERO=ENABLED", flush=True)
     print("EPIC49_DUAL_PUBLISH_TARGETS=ENABLED", flush=True)
     print("EPIC49_LOCAL_PUBLISH_SQLITE_GUARD=ENABLED", flush=True)
@@ -71,6 +76,7 @@ def main() -> int:
     print("EPIC49_HERO_MEDIA_STUDIO=ENABLED", flush=True)
     print("EPIC49_AI_PROVIDER_HUB=ENABLED", flush=True)
     print("EPIC49_AI_PRODUCT_CONTEXT=ENABLED", flush=True)
+    print("EPIC49_AI_COST_TOMAN=ENABLED", flush=True)
     print("EPIC49_OPENROUTER=ENABLED", flush=True)
     print("EPIC49_PERSISTENT_DIAGNOSTICS=ENABLED", flush=True)
     print("EPIC49_DIAGNOSTIC_LOG_UI=ENABLED", flush=True)
