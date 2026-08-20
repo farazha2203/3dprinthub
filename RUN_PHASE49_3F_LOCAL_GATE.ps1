@@ -8,10 +8,10 @@ $ErrorActionPreference = "Stop"
 
 $RunnerVersion = "49.3F.1"
 $Root = "D:\projects\3DPrintHub"
-$Catalog = Join-Path $Root "catalog_center"
-$Py = Join-Path $Root ".venv\Scripts\python.exe"
+$Catalog = "$Root\catalog_center"
+$Py = "$Root\.venv\Scripts\python.exe"
 $ExpectedBranch = "epic/phase49-unified-product-slider-sync"
-$BaseGate = Join-Path $Root "RUN_PHASE49_3E_LOCAL_GATE.ps1"
+$BaseGate = "$Root\RUN_PHASE49_3E_LOCAL_GATE.ps1"
 $BackupBase = "D:\projects\3dprinthub-backups\phase49-3f"
 $CatalogData = "D:\projects\3dprinthub-catalog-manager"
 
