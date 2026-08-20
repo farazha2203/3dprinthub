@@ -39,15 +39,12 @@
 - Script/ZIP/Hotfix خارج از GitHub Source of Truth مبنا نیست.
 - Bugfix باید Regression Test داشته باشد؛ تستی که Bug واقعی را پیدا کرده حذف/ضعیف نمی‌شود.
 
-Policy:
-`docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`
-
-Master roadmap:
-`docs/00_PROJECT_MASTER_ROADMAP_FA.md`
+Policy: `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`  
+Master roadmap: `docs/00_PROJECT_MASTER_ROADMAP_FA.md`
 
 ## 3) زنجیره Epic جاری
 
-`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Recovery → 49.3C-1 Persian Integrity → 49.3D Workflow Hardening → 49.3D.1 Runner Hotfix → 49.3E AI Task Recovery → 49.3F Product Intelligence/Dynamic Pricing/AI UX → 49.3F Runtime Trace Redaction Hotfix`
+`49.2A → 49.2B → 49.2C → Epic49 Unified → Persian Sales Hero → Dual Publish → Desktop Options → 49.3A Readiness → 49.3B Guided AI/Hero/Diagnostics → 49.3C Operator Recovery → 49.3C-1 Persian Integrity → 49.3D Workflow Hardening → 49.3D.1 Runner Hotfix → 49.3E AI Task Recovery → 49.3F Product Intelligence/Dynamic Pricing/AI UX → 49.3F Runtime Trace Redaction Hotfix → 49.3F.1 Windows Native stderr Capture Hotfix`
 
 Ancestry خطی نگه‌داری می‌شود تا Conflict مصنوعی ایجاد نشود.
 
@@ -70,23 +67,21 @@ Django migrations اصلی Epic:
 - `store.0033_phase49_3f_pricing_intelligence`
 - `website.0023_phase49_3f_material_runtime_rates`
 
-آخرین Windows state ثبت‌شده قبل از اجرای Runner 49.3F:
+آخرین Windows state ثبت‌شده در اجرای واقعی 2026-08-20:
 - `store.0031`: applied ✅
 - `store.0032`: applied ✅
 - `website.0022`: applied ✅
-- `store.0033`: **pending Local Gate**
-- `website.0023`: **pending Local Gate**
+- `store.0033`: applied ✅
+- `website.0023`: applied ✅
 
-CI ثابت کرده 0033 و 0023 **AddField-only** هستند. Production این فاز را هنوز دریافت نکرده است.
+اجرای واقعی Windows نشان داد هر دو Migration فاز 49.3F با `OK` اعمال شدند. Failure بعدی Runner فقط در مرحله `showmigrations` و به‌علت Windows PowerShell native stderr handling بود؛ DB/Migration failure نبود. CI نیز ثابت کرده 0033 و 0023 **AddField-only** هستند. Production این فاز را هنوز دریافت نکرده است.
 
 ## 6) Unified Product / Hero architecture
 
 Canonical flow:
-
 `Employee → Windows Catalog Center → Batch/Bridge → Django Product + ProductCatalogProfile + HomepageHeroSlide → Store/Home/Cart/Checkout`
 
 Reverse:
-
 `Django Admin edit → revision increment → Bridge → Windows refresh/compare`
 
 Protection:
@@ -155,8 +150,7 @@ Diagnostics:
 - provider/model/request ID/HTTP/duration/tokens/cost
 - sanitized diagnostic bundle
 
-Historical final CI 49.3B:
-Run `32248104376`, Job `96052943408`, SUCCESS.
+Historical final CI 49.3B: Run `32248104376`, Job `96052943408`, SUCCESS.
 
 ## 9) Phase49.3C / 3C-1
 
@@ -185,16 +179,12 @@ Resolved:
 - professional price range compatibility.
 - PowerShell StrictMode array bug در Runner.
 
-49.3D final CI:
-Run `32271502234`, Job `96128806609`, SUCCESS.
-
-49.3D.1 final CI:
-Run `32276195521`, Job `96144096195`, SUCCESS.
+49.3D final CI: Run `32271502234`, Job `96128806609`, SUCCESS.  
+49.3D.1 final CI: Run `32276195521`, Job `96144096195`, SUCCESS.
 
 ## 11) Phase49.3E — AI Task Completion & Recovery
 
-Rule جاری:
-**Readiness راهنما است، نه زندان.**
+Rule جاری: **Readiness راهنما است، نه زندان.**
 
 - همه 7 Stage قابل بازکردن هستند.
 - Stage قرمز یعنی ناقص، نه disabled.
@@ -210,64 +200,34 @@ Task Center:
 
 Manual Image Metadata Editor و structured AI guards حفظ شده‌اند.
 
-Final CI:
-Run `32280313257`, Job `96157285817`, SUCCESS.
+Final CI: Run `32280313257`, Job `96157285817`, SUCCESS.
 
 ## 12) Phase49.3F — Product Intelligence / Dynamic Pricing / AI UX
 
-Canonical doc:
-`docs/PHASE49_3F_PRODUCT_INTELLIGENCE_PRICING_AI_UX.md`
+Canonical doc: `docs/PHASE49_3F_PRODUCT_INTELLIGENCE_PRICING_AI_UX.md`
 
 ### Image SEO privacy contract
-
-**هیچ Image bytes، فایل یا URL تصویر در Task Image SEO به AI ارسال نمی‌شود.**
-AI فقط Product/SEO facts + selected slots + prior alt را می‌گیرد. Mapping URL فقط Local است.
-
-Metadata تصاویر انتخاب‌نشده preserve می‌شود.
+- هیچ Image bytes، فایل یا URL تصویر در Task Image SEO به AI ارسال نمی‌شود.
+- AI فقط Product/SEO facts + selected slots + prior alt را می‌گیرد. Mapping URL فقط Local است.
+- Metadata تصاویر انتخاب‌نشده preserve می‌شود.
 
 ### AI Center
-
-Canonical Provider order:
-1. AvalAI
-2. OpenRouter
-3. Google Gemini Direct
-4. OpenAI Direct
-
-Google Gemini Direct:
-- provider code `google`.
-- key در `x-goog-api-key` Header، نه URL/log.
-- `/models` و filter `generateContent`.
-- real model ID persistence.
-- Balance جعلی نمایش داده نمی‌شود.
-
-AI Center scrollable است و active Provider/Model + Save/Test/Log controls sticky هستند.
+Canonical Provider order: AvalAI → OpenRouter → Google Gemini Direct → OpenAI Direct.
+Google Gemini Direct با provider code `google`، `x-goog-api-key` Header، `/models` + `generateContent` filter و real model ID persistence پیاده شده است. Balance جعلی نمایش داده نمی‌شود. AI Center scrollable است و active Provider/Model + Save/Test/Log controls sticky هستند.
 
 ### Runtime Trace
-
-Path:
-`<persistent catalog data>/logs/phase49_3f/YYYY-MM-DD/workflow-<session>.jsonl`
-
-Record:
-operator/workstation/session/product/provider/model/action/status/elapsed/sanitized detail.
+Path: `<persistent catalog data>/logs/phase49_3f/YYYY-MM-DD/workflow-<session>.jsonl`
+Record: operator/workstation/session/product/provider/model/action/status/elapsed/sanitized detail.
 
 ### Source-grounded Technical AI
-
 AI فقط بعد از تغییر واقعی `last_refetched_at` اجرا می‌شود؛ `updated_at` عمومی success نیست.
 
 ### Dynamic Pricing
-
-Strategies:
-- `legacy`
-- `fixed`
-- `dynamic`
-
+Strategies: `legacy`, `fixed`, `dynamic`.
 Product Detail/Cart/Checkout از همان Variant price source استفاده می‌کنند.
-
-Acceptance:
-`2,600,000/kg + 100g part + 50g support×2 + 3h×150k + 3h×50k = 1,120,000 تومان before extras/shipping`.
+Acceptance: `2,600,000/kg + 100g part + 50g support×2 + 3h×150k + 3h×50k = 1,120,000 تومان before extras/shipping`.
 
 ### Public UX
-
 - raw `ready_product`/`made_to_order` نمایش داده نمی‌شود.
 - `Username` attribution عمومی نمایش داده نمی‌شود.
 - Technical Summary فارسی.
@@ -276,14 +236,10 @@ Acceptance:
 
 ## 13) Phase49.3F Runtime Trace Redaction Hotfix
 
-Previous CI failure:
-`test_runtime_trace_redacts_structured_and_inline_secrets`.
+Previous CI failure: `test_runtime_trace_redacts_structured_and_inline_secrets`.
+Observed fake leak: `Authorization: *** very-secret-token ...`
 
-Observed fake leak:
-`Authorization: *** very-secret-token ...`
-
-Root Cause:
-`runtime_logging.redact()` ابتدا generic `authorization:<value>` را اجرا می‌کرد و فقط `Bearer` را mask می‌کرد؛ credential tail باقی می‌ماند.
+Root Cause: `runtime_logging.redact()` ابتدا generic `authorization:<value>` را اجرا می‌کرد و فقط `Bearer` را mask می‌کرد؛ credential tail باقی می‌ماند.
 
 Minimal Fix:
 - Bearer credential pattern قبل از generic secret-key pattern.
@@ -291,16 +247,11 @@ Minimal Fix:
 - original failing test unchanged.
 - new direct baseline regression در `catalog_center/tests/test_v85_core.py`.
 
-Commits:
-- runtime fix: `60393e9cd294a8414c2b7945a3a11c54b391d8a1`
-- regression: `03259f5072f8b902b190aa5bb86bc5b694632ab3`
-- validated runtime/test baseline before final docs: `a207ad2c35dd8dbbd10457e0d2295ea8efbb9776`
-
 Status: **FIXED + FINAL CI VERIFIED**.
 
 ## 14) Phase49.3F Final CI
 
-Validation-only PR: `#35` — **Do Not Merge**.
+Validation-only PR: `#35` — Do Not Merge.
 
 - Run `32351795808`
 - Job `96372355769`
@@ -318,20 +269,37 @@ Validation-only PR: `#35` — **Do Not Merge**.
 - Full Django **415 PASS / 2 skipped** ✅
 - Overall **SUCCESS**
 
-Main 49.3F markers:
-- `EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED`
-- `EPIC49_3F_UNSELECTED_IMAGE_METADATA_PRESERVED=ENABLED`
-- `EPIC49_3F_AI_PROGRESS_TIMEOUT=ENABLED`
-- `EPIC49_3F_SCROLLABLE_AI_CENTER=ENABLED`
-- `EPIC49_3F_GOOGLE_GEMINI_DIRECT=ENABLED`
-- `EPIC49_3F_RUNTIME_TRACE=ENABLED`
-- `EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED`
-- `EPIC49_3F_DYNAMIC_PRICING=ENABLED`
-- `AI_PROFILE_MIGRATION=PRESERVED`
-- `HOST_PROFILE_MIGRATION=PRESERVED`
-- `ACTIVE_RELEASE_VERIFIED=OK`
+## 15) Phase49.3F.1 — Windows Native stderr Capture Hotfix
 
-## 15) Warnings شناخته‌شده
+Canonical doc: `docs/PHASE49_3F1_WINDOWS_NATIVE_CAPTURE_HOTFIX.md`
+
+Windows incident:
+- `store.0033` migration: **OK**
+- `website.0023` migration: **OK**
+- crash occurred afterward while capturing `manage.py showmigrations ... 2>&1` under Windows PowerShell with `$ErrorActionPreference = "Stop"`.
+- `ckeditor.W001` was harmless stderr output with native exit code zero, but PowerShell converted it to terminating `NativeCommandError` before `$LASTEXITCODE` could be inspected.
+
+Minimal Fix:
+- Runner version `49.3F.1`.
+- helper `Invoke-NativeCapture` temporarily uses `ErrorActionPreference=Continue`, captures stdout/stderr, restores previous preference, and treats native exit code as the success/failure source of truth.
+- `showmigrations store/website` use the helper.
+- `-NativeCaptureSelfTest` reproduces stderr-warning + stdout + exit-code-0 behavior.
+- no new migration; no DB rollback/reset; no Pricing/AI/Workspace/Publish changes.
+
+Final CI:
+- Run `32356959599`
+- Job `96388108683`
+- PowerShell syntax/array/native-capture self-test ✅
+- Compile ✅
+- Django check/migration contract ✅
+- AddField-only migration safety ✅
+- Targeted Phase49 regressions ✅
+- Windows Catalog Center Epic49 ✅
+- Full Django ✅
+- Overall **SUCCESS**
+- Validation PR `#36`: closed / not merged.
+
+## 16) Warnings شناخته‌شده
 
 غیر-Failure:
 - `3dprinthub.W001`: Google membership credentials خالی.
@@ -339,30 +307,33 @@ Main 49.3F markers:
 - `store.W026`: in-memory realtime؛ multi-process production به Redis/polling strategy نیاز دارد.
 - Pillow `Image.getdata()` deprecation.
 
-هیچ‌کدام blocker Hotfix 49.3F نیستند و برای رفعشان معماری unrelated تغییر نمی‌کند.
+هیچ‌کدام blocker Phase49.3F.1 نیستند و برای رفعشان معماری unrelated تغییر نمی‌کند.
 
-## 16) Separate open item
+## 17) Separate open item
 
-Local logs قبلاً `GET /api/v1/catalog/sitemap/ → 404` نشان دادند. این defect با Redaction/49.3F CI یکی نیست و نباید فراموش شود. قبل از closure کامل Epic باید Route/client contract آن بررسی شود؛ endpoint موازی بی‌دلیل ساخته نشود.
+Local logs قبلاً `GET /api/v1/catalog/sitemap/ → 404` نشان دادند. این defect با 49.3F.1 یکی نیست و نباید فراموش شود. قبل از closure کامل Epic باید Route/client contract آن بررسی شود؛ endpoint موازی بی‌دلیل ساخته نشود.
 
-## 17) Gate فعلی — Windows Local Phase49.3F
+## 18) Gate فعلی — Windows Local Phase49.3F.1
 
-Canonical runner:
-`D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1`
+Canonical runner: `D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1`  
+Runner version: `49.3F.1`.
 
-Runner version: `49.3F.0`.
+Windows migration state already applied:
+- `store.0033` ✅
+- `website.0023` ✅
 
-ترتیب:
+ترتیب بعدی:
 1. Catalog Center/Django project processها بسته.
 2. `git status --short` خالی؛ dirty → Stop/Inspect.
 3. `git fetch --prune origin`.
 4. switch Epic.
 5. `git pull --ff-only origin epic/phase49-unified-product-slider-sync`.
-6. Runner 49.3F اجرا شود.
-7. Runner backup Local Django DB و Catalog DB می‌سازد.
-8. 0033/0023 additive migration apply/verify.
-9. compile/Django/Windows/launcher/full suite.
-10. Manual QA.
+6. Verify RunnerVersion = `49.3F.1`.
+7. Runner 49.3F اجرا شود.
+8. Runner backup جدید Local Django DB و Catalog DB می‌سازد.
+9. Migration commands idempotent هستند؛ 0033/0023 باید applied باقی بمانند و `showmigrations` verification از Hotfix عبور کند.
+10. focused/regression/launcher/full suite تا پایان PASS شود.
+11. Manual QA.
 
 Manual acceptance:
 - AI Center scroll/sticky controls.
@@ -381,18 +352,19 @@ Manual acceptance:
 
 سپس explicit user approval؛ قبل از آن Production ممنوع.
 
-## 18) Current checklist
+## 19) Current checklist
 
 - [x] Phase49.3D runtime/CI complete.
 - [x] Phase49.3D.1 runner hotfix CI complete.
 - [x] Phase49.3E AI Task Center/recovery CI complete.
 - [x] Phase49.3F Product Intelligence/Dynamic Pricing implementation complete.
 - [x] Phase49.3F AddField-only migration contract CI verified.
-- [x] Runtime Trace inline Bearer leak fixed.
-- [x] Redaction baseline regression added.
-- [x] Phase49.3F Final GitHub CI SUCCESS — Run `32351795808`, Job `96372355769`.
-- [ ] Windows Pull + `RUN_PHASE49_3F_LOCAL_GATE.ps1`.
-- [ ] Phase49.3F Local migrations 0033/0023 applied/verified.
+- [x] Runtime Trace inline Bearer leak fixed + CI verified.
+- [x] Windows Local migrations `store.0033` / `website.0023` applied successfully.
+- [x] Phase49.3F.1 native stderr capture hotfix implemented.
+- [x] Phase49.3F.1 Final GitHub CI SUCCESS — Run `32356959599`, Job `96388108683`.
+- [ ] Windows pull latest Epic + rerun `RUN_PHASE49_3F_LOCAL_GATE.ps1`.
+- [ ] Phase49.3F.1 Automated Local Gate PASS through all remaining steps.
 - [ ] Real-provider AI QA.
 - [ ] Image SEO privacy/metadata QA.
 - [ ] Runtime log real-secret QA.
@@ -402,19 +374,21 @@ Manual acceptance:
 - [ ] Explicit user approval.
 - [ ] Production deploy.
 
-## 19) Production status
+## 20) Production status
 
 **NOT DEPLOYED / NOT APPROVED / UNTOUCHED.**
 
-هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C تا 49.3F در Production اجرا نشده است. Production تا پایان Windows Local QA و تأیید صریح کاربر دست‌نخورده می‌ماند.
+هیچ deploy/migrate/collectstatic/restart مربوط به Phase49.3C تا 49.3F.1 در Production اجرا نشده است. Production تا پایان Windows Local QA و تأیید صریح کاربر دست‌نخورده می‌ماند.
 
-## 20) قدم بعدی دقیق
+## 21) قدم بعدی دقیق
 
 ```text
-GitHub exact Epic HEAD
+GitHub latest Epic HEAD
 → Windows pull --ff-only
-→ RUN_PHASE49_3F_LOCAL_GATE.ps1
-→ automated Local PASS
+→ verify RUN_PHASE49_3F_LOCAL_GATE.ps1 = 49.3F.1
+→ rerun automated Local Gate
+→ confirm showmigrations verification passes
+→ complete local regression suite
 → manual AI/Image/Pricing/Product QA
 → one real LOCAL PUBLISH ONLY
 → Local Django E2E
