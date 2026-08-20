@@ -8,7 +8,10 @@
 - Migrations: **NO NEW MIGRATION**
 - Pricing/AI/Workspace/Publish: **UNCHANGED**
 - Production: **UNTOUCHED**
-- CI final: **PENDING**
+- CI final: **SUCCESS**
+- Final CI Run: `32356959599`
+- Final CI Job: `96388108683`
+- CI probe PR: `#36` — **closed / not merged**
 
 ## Incident واقعی Windows — 2026-08-20
 
@@ -88,6 +91,37 @@ PHASE49_3F_NATIVE_CAPTURE_SELFTEST=OK
 
 Workflow رسمی Phase49 نیز این Self-Test و Source Contract را اجرا می‌کند.
 
+## CI hardening در زمان پیاده‌سازی
+
+دو Failure اولیه Probe فقط ضعف خود تست CI را نشان دادند و قبل از تحویل Windows رفع شدند:
+
+1. Self-Test روی Linux قبل از اجرا به `Join-Path D:\...` می‌رسید. Path initialization به assignment ساده و path-neutral تبدیل شد تا Self-Test قبل از Windows path validation قابل اجرا باشد.
+2. Self-Test موفق بود و marker را با `Write-Host` چاپ می‌کرد، اما Workflow سعی می‌کرد marker را از pipeline capture بخواند. چون خود Self-Test stdout/stderr را داخلی validate می‌کند، CI اکنون نتیجه را با exit code Self-Test می‌سنجد.
+
+این دو مورد هیچ تغییری در Runtime business logic یا DB ایجاد نکردند.
+
+## Final CI Verification
+
+Run نهایی:
+
+```text
+Run  = 32356959599
+Job  = 96388108683
+Result = SUCCESS
+```
+
+Gateهای نهایی:
+
+- PowerShell runner syntax / array safety / native stderr self-test: **PASS**
+- Python compile: **PASS**
+- Django check / migration contract: **PASS**
+- Phase49.3F additive migration safety: **PASS**
+- Phase49 targeted behavioral regressions: **PASS**
+- Windows Catalog Center Epic49 tests: **PASS**
+- Full Django suite: **PASS**
+
+PR موقت `#36` فقط برای مشاهده CI ساخته شد و بدون Merge بسته شد.
+
 ## Data Safety
 
 - Migrationهای Local از قبل با موفقیت اعمال شده‌اند؛ rollback نمی‌شوند.
@@ -111,13 +145,14 @@ Technical debt مستقل است. Trigger مشاهده‌شده برای stderr 
 - Warning را با success/failure اشتباه نکن؛ **native exit code** مرجع نتیجه فرمان است.
 - برای رفع این کلاس خطا Warningهای Django را خاموش نکن.
 - Migration موفق را به علت Failure مرحله Verify rollback/reset نکن.
+- Self-Test CI نباید قبل از platform-specific path validation به Windows-only drive access وابسته باشد.
 
 ## Next Gate
 
 - [x] Root Cause identified
 - [x] Runner 49.3F.1 implemented
 - [x] CI contract/self-test added
-- [ ] Full GitHub CI verified
+- [x] Full GitHub CI verified
 - [ ] Windows pull latest Epic
 - [ ] Re-run `RUN_PHASE49_3F_LOCAL_GATE.ps1`
 - [ ] Automated Local Gate PASS
