@@ -1,11 +1,12 @@
 param(
-    [switch]$LaunchApp
+    [switch]$LaunchApp,
+    [switch]$NativeCaptureSelfTest
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3F.0"
+$RunnerVersion = "49.3F.1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -37,6 +38,51 @@ function Run-Native {
     if ($LASTEXITCODE -ne 0) {
         Fail "Command failed ($LASTEXITCODE): $File $($Arguments -join ' ')"
     }
+}
+
+function Invoke-NativeCapture {
+    param(
+        [Parameter(Mandatory=$true)][string]$File,
+        [Parameter(Mandatory=$true)][string[]]$Arguments
+    )
+
+    # Windows PowerShell 5.1 converts native-process stderr into ErrorRecord objects.
+    # Under $ErrorActionPreference='Stop', a harmless warning on stderr can become a
+    # terminating NativeCommandError before $LASTEXITCODE is inspected. Capture with
+    # Continue locally, then fail only on the native process exit code.
+    $previousErrorActionPreference = $ErrorActionPreference
+    $captured = @()
+    $exitCode = $null
+    try {
+        $ErrorActionPreference = "Continue"
+        $captured = @(& $File @Arguments 2>&1)
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    $text = (@($captured) | ForEach-Object { $_.ToString() }) -join "`n"
+    if ($exitCode -ne 0) {
+        Fail "Command failed ($exitCode): $File $($Arguments -join ' ')`n$text"
+    }
+    return $text
+}
+
+if ($NativeCaptureSelfTest) {
+    $currentShell = (Get-Process -Id $PID).Path
+    $probe = Invoke-NativeCapture -File $currentShell -Arguments @(
+        "-NoProfile",
+        "-Command",
+        '[Console]::Error.WriteLine("PHASE49_3F_NATIVE_STDERR_WARNING"); [Console]::Out.WriteLine("PHASE49_3F_NATIVE_STDOUT_OK"); exit 0'
+    )
+    if ($probe -notmatch "PHASE49_3F_NATIVE_STDERR_WARNING") {
+        throw "Native capture self-test did not retain stderr text."
+    }
+    if ($probe -notmatch "PHASE49_3F_NATIVE_STDOUT_OK") {
+        throw "Native capture self-test did not retain stdout text."
+    }
+    Write-Host "PHASE49_3F_NATIVE_CAPTURE_SELFTEST=OK" -ForegroundColor Green
+    exit 0
 }
 
 Step "00. PHASE49.3F WINDOWS LOCAL GATE"
@@ -182,9 +228,8 @@ try {
     try {
         Run-Native -File $Py -Arguments @("manage.py", "migrate", "store", "0033_phase49_3f_pricing_intelligence")
         Run-Native -File $Py -Arguments @("manage.py", "migrate", "website", "0023_phase49_3f_material_runtime_rates")
-        $storeMigrations = (& $Py manage.py showmigrations store 2>&1) -join "`n"
-        $websiteMigrations = (& $Py manage.py showmigrations website 2>&1) -join "`n"
-        if ($LASTEXITCODE -ne 0) { Fail "showmigrations failed." }
+        $storeMigrations = Invoke-NativeCapture -File $Py -Arguments @("manage.py", "showmigrations", "store")
+        $websiteMigrations = Invoke-NativeCapture -File $Py -Arguments @("manage.py", "showmigrations", "website")
         if ($storeMigrations -notmatch "\[X\]\s+0033_phase49_3f_pricing_intelligence") {
             Fail "Store 0033 is not applied."
         }
