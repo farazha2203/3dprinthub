@@ -17,13 +17,13 @@
 {% block og_image %}{% if product.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ product.og_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}{% endif %}{% endblock %}
 
 {% block content %}
-<section class="container mx-auto px-4 md:px-6 py-8 md:py-12">
-    <nav class="text-sm text-slate-500 mb-6">
+<section class="container mx-auto px-4 md:px-6 py-7 md:py-10 phase493f-product-detail">
+    <nav class="text-sm text-slate-500 mb-5">
         <a href="{% url 'store:product_list' %}">فروشگاه</a><span class="px-2">/</span>
         <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a><span class="px-2">/</span><span>{{ product.title }}</span>
     </nav>
 
-    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+    <div class="grid lg:grid-cols-2 gap-7 lg:gap-10 items-start">
         <div>
             <div class="store-main-image"><img src="{{ product.main_image.url }}" alt="{{ product.title }}" width="1000" height="750" class="w-full h-full object-cover"></div>
             {% consultation_links product.title product.get_absolute_url as consult %}
@@ -31,55 +31,115 @@
             {% if product.images.all %}<div class="grid grid-cols-4 gap-3 mt-3">{% for image in product.images.all %}<img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" loading="lazy" class="rounded-xl aspect-square object-cover border border-slate-200">{% endfor %}</div>{% endif %}
         </div>
 
-        <div class="store-product-panel">
-            <div class="text-orange-500 font-bold">{{ product.category.name }}</div>
-            <h1 class="text-3xl md:text-4xl font-black mt-3 leading-tight">{{ product.title }}</h1>
-            <p class="text-slate-600 leading-8 mt-5">{{ product.short_description }}</p>
-
-            {% if product.catalog_profile.price_min %}
-            <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-5 text-slate-700">
-                {% if product.catalog_profile.price_max > product.catalog_profile.price_min %}
-                    <strong class="text-orange-700">بازه قیمت: {{ product.catalog_profile.price_min|intcomma }} تا {{ product.catalog_profile.price_max|intcomma }} تومان</strong>
-                {% else %}
-                    <strong class="text-orange-700">قیمت پایه: {{ product.catalog_profile.price_min|intcomma }} تومان</strong>
-                {% endif %}
-                {% if product.price_note %}<div class="text-sm leading-7 mt-1">{{ product.price_note }}</div>{% endif %}
-            </div>
-            {% elif product.fixed_price %}
-            <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-5 text-slate-700"><strong class="text-orange-700">قیمت پایه: {{ product.fixed_price|intcomma }} تومان</strong>{% if product.price_note %}<div class="text-sm leading-7 mt-1">{{ product.price_note }}</div>{% endif %}</div>
-            {% endif %}
-
-            {% if user.is_authenticated and product.source_url %}<div class="phase39-source mt-4"><strong>منبع مدل:</strong> <a href="{{ product.source_url }}" target="_blank" rel="noopener noreferrer">{{ product.source_name|default:"مشاهده سایت مرجع" }}</a></div>{% endif %}
-            {% if active_promotions %}<div class="phase39-promo-row">{% for promo in active_promotions %}<span class="phase39-promo-badge">{{ promo.title|default:promo.get_kind_display }}{% if promo.discount_percent %} • {{ promo.discount_percent }}٪ تخفیف{% endif %}{% if promo.stock_limit %} • {{ promo.remaining_quantity }} عدد باقی‌مانده{% endif %}</span>{% endfor %}</div>{% endif %}
-            {% if product.show_public_order_count %}<div class="phase39-order-proof">بیش از {{ public_order_count }} سفارش ثبت‌شده برای این محصول</div>{% endif %}
-            {% if product.editorial_source_url %}<div class="phase39-source"><span>منبع اطلاعات:</span> <a href="{{ product.editorial_source_url }}" target="_blank" rel="nofollow noopener">مشاهده منبع اصلی</a>{% if product.source_attribution %} • {{ product.source_attribution }}{% endif %}</div>{% endif %}
+        <div class="store-product-panel phase493f-product-panel">
+            <div class="text-orange-500 font-bold text-sm">{{ product.category.name }}</div>
+            <h1 class="text-2xl md:text-3xl font-black mt-2 leading-snug phase493f-product-title">{{ product.title }}</h1>
+            <p class="text-slate-600 leading-7 mt-3 text-sm md:text-base phase493f-product-summary">{{ product.short_description }}</p>
 
             {% if product.catalog_profile %}
-            <div class="grid sm:grid-cols-2 gap-3 mt-6 text-sm">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><strong>نوع محصول</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.product_type }}</div></div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><strong>وضعیت عرضه</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.availability_status }}</div></div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><strong>زمان آماده‌سازی</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.lead_time_min_days }} تا {{ product.catalog_profile.lead_time_max_days }} روز</div></div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><strong>فایل سه‌بعدی</strong><div class="mt-1 text-slate-600">{% if product.catalog_profile.has_3d_file %}موجود{% else %}طبق اطلاعات سفارش{% endif %}</div></div>
+                {% if product.catalog_profile.pricing_strategy == 'fixed' and product.catalog_profile.price_min %}
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700">
+                    <div class="text-xs text-orange-600 font-bold mb-1">قیمت قطعی</div>
+                    <strong class="text-orange-700 text-lg">{{ product.catalog_profile.price_min|intcomma }} تومان</strong>
+                    {% if product.price_note %}<div class="text-sm leading-6 mt-1">{{ product.price_note }}</div>{% endif %}
+                </div>
+                {% elif product.catalog_profile.pricing_strategy == 'dynamic' and product.catalog_profile.price_min %}
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700">
+                    <div class="text-xs text-orange-600 font-bold mb-1">بازه محاسباتی فعلی</div>
+                    {% if product.catalog_profile.price_max > product.catalog_profile.price_min %}
+                    <strong class="text-orange-700 text-lg">{{ product.catalog_profile.price_min|intcomma }} تا {{ product.catalog_profile.price_max|intcomma }} تومان</strong>
+                    {% else %}
+                    <strong class="text-orange-700 text-lg">{{ product.catalog_profile.price_min|intcomma }} تومان</strong>
+                    {% endif %}
+                    <div class="text-sm leading-6 mt-1">مبلغ دقیق با انتخاب متریال، رنگ و کیفیت چاپ محاسبه می‌شود.</div>
+                </div>
+                {% elif product.catalog_profile.price_min %}
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700">
+                    {% if product.catalog_profile.price_max > product.catalog_profile.price_min %}<strong class="text-orange-700">بازه قیمت: {{ product.catalog_profile.price_min|intcomma }} تا {{ product.catalog_profile.price_max|intcomma }} تومان</strong>{% else %}<strong class="text-orange-700">قیمت پایه: {{ product.catalog_profile.price_min|intcomma }} تومان</strong>{% endif %}
+                    {% if product.price_note %}<div class="text-sm leading-6 mt-1">{{ product.price_note }}</div>{% endif %}
+                </div>
+                {% endif %}
+            {% elif product.fixed_price %}
+            <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700"><strong class="text-orange-700">قیمت پایه: {{ product.fixed_price|intcomma }} تومان</strong></div>
+            {% endif %}
+
+            {% if active_promotions %}<div class="phase39-promo-row">{% for promo in active_promotions %}<span class="phase39-promo-badge">{{ promo.title|default:promo.get_kind_display }}{% if promo.discount_percent %} • {{ promo.discount_percent }}٪ تخفیف{% endif %}{% if promo.stock_limit %} • {{ promo.remaining_quantity }} عدد باقی‌مانده{% endif %}</span>{% endfor %}</div>{% endif %}
+            {% if product.show_public_order_count %}<div class="phase39-order-proof">بیش از {{ public_order_count }} سفارش ثبت‌شده برای این محصول</div>{% endif %}
+
+            {% if user.is_authenticated and product.source_url %}
+            <div class="phase39-source mt-4"><strong>منبع مدل:</strong> <a href="{{ product.source_url }}" target="_blank" rel="noopener noreferrer">مشاهده منبع اصلی</a></div>
+            {% elif product.editorial_source_url %}
+            <div class="phase39-source mt-4"><span>منبع اطلاعات:</span> <a href="{{ product.editorial_source_url }}" target="_blank" rel="nofollow noopener">مشاهده منبع اصلی</a></div>
+            {% endif %}
+
+            {% if product.catalog_profile %}
+            <div class="grid sm:grid-cols-2 gap-2 mt-5 text-sm phase493f-quick-specs">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><strong>نوع محصول</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.product_type_label }}</div></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><strong>وضعیت عرضه</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.availability_status_label }}</div></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><strong>زمان آماده‌سازی</strong><div class="mt-1 text-slate-600">{{ product.catalog_profile.lead_time_min_days }} تا {{ product.catalog_profile.lead_time_max_days }} روز</div></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><strong>فایل سه‌بعدی</strong><div class="mt-1 text-slate-600">{% if product.catalog_profile.has_3d_file %}موجود{% else %}طبق اطلاعات سفارش{% endif %}</div></div>
             </div>
             {% endif %}
 
-            {% if product.compatibilities.all %}<div class="store-compatibility mt-6"><div class="font-black mb-3">سازگاری محصول</div><div class="flex flex-wrap gap-2">{% for item in product.compatibilities.all %}<span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+            {% if product.compatibilities.all %}<div class="store-compatibility mt-5"><div class="font-black mb-3">سازگاری محصول</div><div class="flex flex-wrap gap-2">{% for item in product.compatibilities.all %}<span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
             {% if material_options %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
 
-            <div class="mt-7"><label for="variant-select" class="block font-black mb-2">انتخاب متریال، رنگ و کیفیت چاپ</label><select id="variant-select" class="form-input"><option value="">انتخاب کنید</option>{% for variant in variants %}{% with price=variant.price_breakdown %}<option value="{{ variant.id }}" data-material="{{ variant.material.name }}" data-quality="{{ variant.quality.name }}" data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}" {% if variant.color and variant.material.track_filament_inventory and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %} data-material-cost="{{ price.material_cost }}" data-machine-cost="{{ price.machine_cost }}" data-labor-cost="{{ price.labor_cost }}" data-post-fee="{{ price.post_processing_fee }}" data-fixed-fee="{{ price.fixed_fee }}" data-total="{{ price.unit_price }}" data-print-time="{{ variant.print_time_minutes }}" data-weight="{{ variant.material_weight_grams }}">{{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان</option>{% endwith %}{% endfor %}</select></div>
-            <div id="price-breakdown" class="store-price-breakdown phase39-customer-price hidden mt-5"><div class="total"><span>قیمت نهایی قبل از مالیات و ارسال</span><strong id="price-total">—</strong></div><p id="variant-meta" class="text-sm text-slate-600 mt-3"></p><p class="text-xs text-slate-500 mt-2">مالیات ارزش افزوده و هزینه ارسال در مرحله تسویه‌حساب جداگانه محاسبه می‌شود.</p><span id="price-material" hidden></span><span id="price-machine" hidden></span><span id="price-labor" hidden></span><span id="price-extra" hidden></span></div>
+            {% if variants %}
+            <div class="mt-6">
+                <label for="variant-select" class="block font-black mb-2">انتخاب متریال، رنگ و کیفیت چاپ</label>
+                <select id="variant-select" class="form-input">
+                    <option value="">انتخاب کنید</option>
+                    {% for variant in variants %}{% with price=variant.price_breakdown %}
+                    <option value="{{ variant.id }}"
+                        data-pricing-strategy="{{ price.pricing_strategy|default:'legacy' }}"
+                        data-material="{{ variant.material.name }}"
+                        data-quality="{{ variant.quality.name }}"
+                        data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
+                        {% if variant.color and variant.material.track_filament_inventory and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
+                        data-material-cost="{{ price.material_cost|default:0 }}"
+                        data-machine-cost="{{ price.machine_cost|default:0 }}"
+                        data-supervision-cost="{{ price.supervision_cost|default:price.labor_cost|default:0 }}"
+                        data-assembly-cost="{{ price.assembly_cost|default:0 }}"
+                        data-accessory-cost="{{ price.accessory_sale|default:0 }}"
+                        data-post-fee="{{ price.post_processing_fee|default:0 }}"
+                        data-fixed-fee="{{ price.fixed_fee|default:0 }}"
+                        data-color-adjustment="{{ price.color_price_adjustment|default:0 }}"
+                        data-total="{{ price.unit_price }}"
+                        data-print-time="{{ price.actual_print_minutes|default:variant.print_time_minutes }}"
+                        data-billable-time="{{ price.billable_print_minutes|default:variant.print_time_minutes }}"
+                        data-part-weight="{{ price.part_weight_grams|default:variant.final_weight_grams }}"
+                        data-support-weight="{{ price.support_weight_grams|default:0 }}"
+                        data-chargeable-weight="{{ price.chargeable_material_grams|default:variant.material_weight_grams }}">{{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان</option>
+                    {% endwith %}{% endfor %}
+                </select>
+            </div>
 
-            <div class="mt-6"><form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">{% csrf_token %}<input type="hidden" name="variant_id" id="cart-variant-id" value=""><input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد"><button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button></form><div class="grid grid-cols-2 gap-3 mt-3"><a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a><form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form></div>{% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}</div>
+            <div id="price-breakdown" class="store-price-breakdown phase39-customer-price hidden mt-4 phase493f-price-breakdown">
+                <div class="total"><span>قیمت نهایی قبل از مالیات و ارسال</span><strong id="price-total">—</strong></div>
+                <p id="variant-meta" class="text-sm text-slate-600 mt-3"></p>
+                <div id="price-components" class="grid grid-cols-2 gap-2 mt-3 text-sm">
+                    <div class="rounded-xl bg-white border border-slate-200 p-2"><span class="text-slate-500">متریال</span><strong id="price-material" class="block mt-1">—</strong></div>
+                    <div class="rounded-xl bg-white border border-slate-200 p-2"><span class="text-slate-500">چاپ دستگاه</span><strong id="price-machine" class="block mt-1">—</strong></div>
+                    <div class="rounded-xl bg-white border border-slate-200 p-2"><span class="text-slate-500">نظارت اپراتور</span><strong id="price-supervision" class="block mt-1">—</strong></div>
+                    <div class="rounded-xl bg-white border border-slate-200 p-2"><span class="text-slate-500">مونتاژ و سایر هزینه‌های تعریف‌شده</span><strong id="price-extra" class="block mt-1">—</strong></div>
+                </div>
+                <p id="pricing-formula-note" class="text-xs text-slate-500 mt-3">قیمت بر اساس وزن قابل محاسبه متریال، زمان چاپ، نرخ متریال، نظارت و هزینه‌های تکمیلی ثبت‌شده محاسبه می‌شود. هزینه ارسال در مرحله تسویه جدا است.</p>
+            </div>
+
+            <div class="mt-5"><form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">{% csrf_token %}<input type="hidden" name="variant_id" id="cart-variant-id" value=""><input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد"><button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button></form><div class="grid grid-cols-2 gap-3 mt-3"><a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a><form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form></div>{% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}</div>
+            {% endif %}
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6 mt-10">
+    <div class="grid lg:grid-cols-3 gap-6 mt-9">
         <section class="lg:col-span-2 store-content-card">
-            <h2 class="text-2xl font-black">توضیحات و مشخصات محصول</h2><div class="prose-content mt-5">{{ product.description|linebreaks }}</div>
-            {% if product.catalog_profile.use_description %}<div class="mt-6"><h3 class="font-black text-lg">کاربرد محصول</h3><div class="prose-content mt-2">{{ product.catalog_profile.use_description|linebreaks }}</div></div>{% endif %}
-            {% if product.catalog_profile.technical_features %}<div class="mt-6"><h3 class="font-black text-lg">ویژگی‌های فنی</h3><dl class="grid sm:grid-cols-2 gap-3 mt-3">{% for key,value in product.catalog_profile.technical_features.items %}<div class="rounded-xl border border-slate-200 p-3"><dt class="font-bold">{{ key }}</dt><dd class="text-slate-600 mt-1">{{ value }}</dd></div>{% endfor %}</dl></div>{% endif %}
-            {% if product.technical_notes %}<div class="mt-6"><h3 class="font-black text-lg">نکات فنی</h3><div class="prose-content mt-2">{{ product.technical_notes|linebreaks }}</div></div>{% endif %}
-            {% if product.installation_guide %}<div class="mt-6"><h3 class="font-black text-lg">راهنمای نصب</h3><div class="prose-content mt-2">{{ product.installation_guide|linebreaks }}</div></div>{% endif %}
+            <h2 class="text-xl md:text-2xl font-black">توضیحات و مشخصات محصول</h2>
+            {% if product.catalog_profile.technical_summary_fa %}<div class="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4"><h3 class="font-black text-base">خلاصه فنی و کاربردی</h3><div class="prose-content mt-2 text-sm md:text-base">{{ product.catalog_profile.technical_summary_fa|linebreaks }}</div></div>{% endif %}
+            <div class="prose-content mt-4">{{ product.description|linebreaks }}</div>
+            {% if product.catalog_profile.use_description %}<div class="mt-5"><h3 class="font-black text-lg">کاربرد محصول</h3><div class="prose-content mt-2">{{ product.catalog_profile.use_description|linebreaks }}</div></div>{% endif %}
+            {% if product.catalog_profile.technical_features %}<div class="mt-5"><h3 class="font-black text-lg">ویژگی‌های فنی</h3><dl class="grid sm:grid-cols-2 gap-2 mt-3">{% for key,value in product.catalog_profile.technical_features.items %}<div class="rounded-xl border border-slate-200 p-3"><dt class="font-bold text-sm">{{ key }}</dt><dd class="text-slate-600 mt-1 text-sm leading-6">{{ value }}</dd></div>{% endfor %}</dl></div>{% endif %}
+            {% if product.technical_notes %}<div class="mt-5"><h3 class="font-black text-lg">نکات فنی</h3><div class="prose-content mt-2">{{ product.technical_notes|linebreaks }}</div></div>{% endif %}
+            {% if product.installation_guide %}<div class="mt-5"><h3 class="font-black text-lg">راهنمای نصب</h3><div class="prose-content mt-2">{{ product.installation_guide|linebreaks }}</div></div>{% endif %}
         </section>
         <aside class="store-content-card"><h2 class="text-xl font-black">اطلاعات سریع</h2><dl class="store-spec-list mt-4"><div><dt>کد محصول</dt><dd>{{ product.sku }}</dd></div><div><dt>ابعاد</dt><dd>{{ product.dimensions|default:'طبق مشخصات سفارش' }}</dd></div>{% if product.catalog_profile.stock_quantity %}<div><dt>موجودی</dt><dd>{{ product.catalog_profile.stock_quantity|intcomma }}</dd></div>{% endif %}<div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div><div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div></dl>{% if product.catalog_profile.keywords %}<div class="mt-5 text-sm text-slate-500">{% for keyword in product.catalog_profile.keywords %}<span class="inline-block border border-slate-200 rounded-full px-2 py-1 m-1">{{ keyword }}</span>{% endfor %}</div>{% endif %}{% if product.hashtags %}<div class="phase39-hashtags">{{ product.hashtags }}</div>{% endif %}</aside>
     </div>
