@@ -6,12 +6,16 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
+# Order is part of the security contract: redact the credential carried by a
+# Bearer scheme before the generic key=value/key:value pass. Otherwise a text
+# such as ``Authorization: Bearer <token>`` can have only the word ``Bearer``
+# replaced by the generic rule while leaving the real credential behind.
 SECRET_PATTERNS = (
+    re.compile(r"(?i)(bearer\s+)([a-z0-9._~+/=-]+)"),
     re.compile(
         r"(?i)(password|token|access[_ -]?token|refresh[_ -]?token|authorization|api[_ -]?key|secret|management[_ -]?key|admin[_ -]?key)"
         r"(\s*[:=]\s*)([^\s,;]+)"
     ),
-    re.compile(r"(?i)(bearer\s+)([a-z0-9._~+/=-]+)"),
 )
 
 
