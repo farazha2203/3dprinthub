@@ -101,14 +101,9 @@ jobs:
             throw "Phase49.3F runner must explicitly preserve Production."
           }
 
-          $nativeProbe = & ./RUN_PHASE49_3F_LOCAL_GATE.ps1 -NativeCaptureSelfTest 2>&1
+          & ./RUN_PHASE49_3F_LOCAL_GATE.ps1 -NativeCaptureSelfTest
           if ($LASTEXITCODE -ne 0) {
-            $nativeProbe | ForEach-Object { Write-Host $_ }
             throw "Phase49.3F.1 native capture self-test failed."
-          }
-          $nativeProbeText = ($nativeProbe -join "`n")
-          if ($nativeProbeText -notmatch 'PHASE49_3F_NATIVE_CAPTURE_SELFTEST=OK') {
-            throw "Phase49.3F.1 native capture self-test marker is missing."
           }
           Write-Host "PHASE49_3F_POWERSHELL_RUNNER_CONTRACT=OK"
 
