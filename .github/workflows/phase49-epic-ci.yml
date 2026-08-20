@@ -68,6 +68,28 @@ jobs:
           }
           Write-Host "PHASE49_3E_POWERSHELL_RUNNER_CONTRACT=OK"
 
+          $runner3f = Get-Content -Raw -Path "RUN_PHASE49_3F_LOCAL_GATE.ps1"
+          [void][scriptblock]::Create($runner3f)
+          if ($runner3f -notmatch '\$RunnerVersion\s*=\s*"49\.3F\.0"') {
+            throw "Expected Phase49.3F.0 runner version marker is missing."
+          }
+          if ($runner3f -notmatch 'RUN_PHASE49_3E_LOCAL_GATE\.ps1') {
+            throw "Phase49.3F runner must chain the canonical Phase49.3E base gate."
+          }
+          if ($runner3f -notmatch '0033_phase49_3f_pricing_intelligence') {
+            throw "Phase49.3F store migration gate is missing."
+          }
+          if ($runner3f -notmatch '0023_phase49_3f_material_runtime_rates') {
+            throw "Phase49.3F material-rate migration gate is missing."
+          }
+          if ($runner3f -notmatch 'EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED') {
+            throw "Phase49.3F image privacy launcher marker is missing from runner."
+          }
+          if ($runner3f -notmatch 'Production\s*=\s*UNTOUCHED') {
+            throw "Phase49.3F runner must explicitly preserve Production."
+          }
+          Write-Host "PHASE49_3F_POWERSHELL_RUNNER_CONTRACT=OK"
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -93,6 +115,9 @@ jobs:
             store/phase49_persian_sales_runtime.py \
             store/phase49_3b_profile_media.py \
             store/phase49_3b_hero_media_sync.py \
+            store/phase49_3f_pricing.py \
+            store/phase49_3f_pricing_finalize.py \
+            store/phase49_3f_admin.py \
             store/epic49_catalog_admin.py \
             catalog_bridge \
             website/phase49_unified_sync.py \
@@ -124,6 +149,14 @@ jobs:
             catalog_center/app/phase49_3d_ai_ui_cleanup.py \
             catalog_center/app/phase49_3e_ai_task_center.py \
             catalog_center/app/phase49_3e_ai_contract.py \
+            catalog_center/app/phase49_3f_gemini_provider.py \
+            catalog_center/app/phase49_3f_ai_experience.py \
+            catalog_center/app/phase49_3f_selected_image_ai.py \
+            catalog_center/app/phase49_3f_product_intelligence.py \
+            catalog_center/app/phase49_3f_runtime_trace.py \
+            catalog_center/app/phase49_3f_workspace.py \
+            catalog_center/app/phase49_3f_source_refresh_guard.py \
+            catalog_center/app/runtime_logging.py \
             catalog_center/app/openai_content.py \
             catalog_center/app/ai_providers.py \
             catalog_center/app/product_workspace_epic49.py \
@@ -136,6 +169,21 @@ jobs:
           python manage.py makemigrations --check --dry-run
           python manage.py migrate --plan
 
+      - name: Phase49.3F migration files are additive only
+        run: |
+          python - <<'PY'
+          from importlib import import_module
+          forbidden = {"DeleteModel", "RemoveField", "RunSQL", "RunPython", "SeparateDatabaseAndState"}
+          modules = [
+              import_module("store.migrations.0033_phase49_3f_pricing_intelligence"),
+              import_module("website.migrations.0023_phase49_3f_material_runtime_rates"),
+          ]
+          names = {type(op).__name__ for module in modules for op in module.Migration.operations}
+          assert names == {"AddField"}, names
+          assert names.isdisjoint(forbidden), names & forbidden
+          print("PHASE49_3F_MIGRATION_SAFETY=ADD_FIELD_ONLY")
+          PY
+
       - name: Phase49 unified behavioral and regression tests
         run: |
           python manage.py test \
@@ -145,6 +193,7 @@ jobs:
             store.test_phase49_1_frontend_contract \
             store.test_phase49_3b_profile_media \
             store.test_phase49_3d_price_range \
+            store.test_phase49_3f_pricing \
             catalog_bridge.test_phase49_unified_bridge \
             catalog_bridge.tests.test_epic49_contract \
             website.test_phase49_persian_sales_hero \
@@ -170,12 +219,21 @@ jobs:
           python -m unittest -v tests.test_epic49_phase49_3d_workflow_hardening
           python -m unittest -v tests.test_epic49_phase49_3d_ai_ui_cleanup
           python -m unittest -v tests.test_epic49_phase49_3e_ai_task_center
+          python -m unittest -v tests.test_phase49_3f_product_intelligence
           python launch.py --verify-only | tee /tmp/phase49-verify.txt
           grep -F "EPIC49_3E_AI_TASK_CENTER=ENABLED" /tmp/phase49-verify.txt
           grep -F "EPIC49_3E_IMAGE_AI_SEO=ENABLED" /tmp/phase49-verify.txt
           grep -F "EPIC49_3E_OPERATOR_IMAGE_EDITOR=ENABLED" /tmp/phase49-verify.txt
           grep -F "EPIC49_3E_NON_BLOCKING_STAGE_NAV=ENABLED" /tmp/phase49-verify.txt
           grep -F "EPIC49_3E_LOCAL_PREFLIGHT_ALWAYS_ACCESSIBLE=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_UNSELECTED_IMAGE_METADATA_PRESERVED=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_AI_PROGRESS_TIMEOUT=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_SCROLLABLE_AI_CENTER=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_GOOGLE_GEMINI_DIRECT=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_RUNTIME_TRACE=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED" /tmp/phase49-verify.txt
+          grep -F "EPIC49_3F_DYNAMIC_PRICING=ENABLED" /tmp/phase49-verify.txt
           grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-verify.txt
           python -m unittest discover -s tests -p 'test_*epic49*.py' -v
 
