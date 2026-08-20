@@ -21,6 +21,7 @@ class StoreConfig(AppConfig):
         # migrations own the DB columns; this module contributes their runtime
         # model fields before Admin/runtime contracts are registered.
         from . import phase49_3f_pricing
+        from . import phase49_3f_pricing_finalize
 
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
@@ -42,6 +43,7 @@ class StoreConfig(AppConfig):
         # fixed/dynamic pricing strategy becomes the final pricing contract used
         # by Catalog import, ProductVariant, Cart and Checkout.
         phase49_3f_pricing.install()
+        phase49_3f_pricing_finalize.install()
 
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
