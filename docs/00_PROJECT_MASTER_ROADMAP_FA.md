@@ -58,6 +58,7 @@ Regression Tests = تست‌هایی که حفظ رفتار قبلی را اثب
 - `docs/PHASE49_3B_GUIDED_AI_HERO_DIAGNOSTICS.md`
 - `docs/PHASE49_3D_WORKFLOW_HARDENING.md`
 - `docs/PHASE49_3F_PRODUCT_INTELLIGENCE_PRICING_AI_UX.md`
+- `docs/PHASE49_3F1_WINDOWS_NATIVE_CAPTURE_HOTFIX.md`
 - `deploy/phase48-deploy.sh`
 - `deploy/phase49-deploy.sh`
 
@@ -186,6 +187,7 @@ Expected before extras/shipping = 1,120,000 تومان
 → 49.3E AI Task Completion & Recovery
 → 49.3F Product Intelligence / Dynamic Pricing / AI UX
 → 49.3F Runtime Trace Redaction Hotfix
+→ 49.3F.1 Windows Native stderr Capture Hotfix
 ```
 
 ### قابلیت‌های حفاظت‌شده که نباید Regression شوند
@@ -279,7 +281,7 @@ D:\projects\3dprinthub-backups
 Secrets: Windows Credential Store / Environment variables. Secret در Git/SQLite audit/diagnostic export ذخیره نمی‌شود.
 
 Canonical runner فعلی:
-`D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1`
+`D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1` — version `49.3F.1`
 
 Chain:
 `49.3F → 49.3E → 49.3D`
@@ -366,7 +368,6 @@ Restart بدون runtime verification و HTTP smoke test کافی نیست.
 ## 9) Error / Incident Ledger — خطاهای حل‌شده
 
 ### 9.1) Tkinter pack/grid collision
-
 Symptom: `TclError: cannot use geometry manager pack ... already has slaves managed by grid`  
 Root Cause: یک parent مشترک همزمان `grid` و `pack`.  
 Fix: geometry manager همان parent حفظ شد؛ holder داخلی parent جدا دارد.  
@@ -374,70 +375,58 @@ Do Not Repeat: قبل از افزودن Widget، manager همان parent برر�
 Status: **FIXED + Regression test**.
 
 ### 9.2) AI model display label به‌جای raw ID
-
 Root Cause: Label نمایشی می‌توانست persist شود.  
 Fix: فقط raw model ID persist.  
 Status: **FIXED + test**.
 
 ### 9.3) Silent Local Publish blocker
-
 Root Cause: `notify=False` دلیل Readiness failure را پنهان می‌کرد.  
 Fix: Save → Readiness → optional image finalize → Readiness → exact dialog/audit.  
 Status: **FIXED**.
 
 ### 9.4) Image SEO false-stale
-
 Root Cause: hash روی raw JSON serialization (`\uXXXX` در برابر UTF-8).  
 Fix: semantic JSON normalize قبل از signature.  
 Status: **FIXED + test**.
 
 ### 9.5) Image index guessing
-
 Risk: ویرایش/حذف metadata تصویر اشتباه.  
 Fix: exact URL/file/manifest identity.  
 Status: **FIXED + tests**.
 
 ### 9.6) Test وابسته به runtime monkey patch
-
 Root Cause: `inspect.getsource()` روی method wrapped و test-order dependency.  
 Fix: Source contract از فایل canonical.  
 Status: **FIXED**.
 
 ### 9.7) AvalAI HTTP400 روی `response_format`
-
 Fix: یک retry بدون `response_format` + client-side JSON validation.  
 Do Not Repeat: Provider capability-aware behavior.  
 Status: **FIXED + test**.
 
 ### 9.8) `updated_at` به‌جای real source refresh
-
 Fix: فقط تغییر `last_refetched_at` success محسوب می‌شود.  
 Status: **FIXED + test**.
 
 ### 9.9) Price Range `consultation_required=True` overwrite
-
 Root Cause: Phase43 state درست قبلی را دوباره False می‌کرد.  
 Fix: True قبلی preserve؛ مرحله بعد فقط requirement اضافه می‌کند.  
 Status: **FIXED + E2E test**.
 
 ### 9.10) raw codes / Username در Public output
-
 Fix: Persian labels + filtering attribution داخلی در HTML/SEO contract.  
 Status: **FIXED + public tests**.
 
 ### 9.11) Product/Cart price divergence risk
-
 Fix: Variant cache finalization؛ Range از همان cached unit prices.  
 Status: **GUARDED + tests**.
 
 ### 9.12) Windows temp SQLite file lock
-
 Root Cause: test connection قبل از `TemporaryDirectory` cleanup بسته نمی‌شد.  
 Fix: explicit `db.conn.close()` در `finally`.  
 Status: **FIXED + CI**.
 
 ### 9.13) `sync_seo_reference_lists` ImportError در Launcher
-
 Root Cause: runtime فایل، inner hook نصب‌شده روی Workspace را به‌اشتباه module-level symbol فرض کرده بود.  
 Fix: callable workspace hook از `_phase49_sync_reference_lists` resolve می‌شود.  
 Status: **FIXED + import regression test**.
@@ -445,7 +434,6 @@ Status: **FIXED + import regression test**.
 ### 9.14) Phase49.3F Runtime Trace inline Bearer secret leak
 
 Failure قبلی:
-
 ```text
 Authorization: Bearer very-secret-token
 → Authorization: *** very-secret-token ...
@@ -459,11 +447,42 @@ Fix:
 - تست اصلی Phase49.3F حفظ شد و همان تست اکنون PASS است.
 - `catalog_center/tests/test_v85_core.py` نیز direct Bearer regression دارد.
 
-Commits:
-- Fix: `60393e9cd294a8414c2b7945a3a11c54b391d8a1`
-- Regression: `03259f5072f8b902b190aa5bb86bc5b694632ab3`
-
 Status: **FIXED + FINAL CI VERIFIED**.
+
+### 9.15) Phase49.3F Windows `showmigrations` NativeCommandError
+
+Symptom واقعی Local:
+- `store.0033` با `OK` اعمال شد.
+- `website.0023` با `OK` اعمال شد.
+- سپس Runner در `showmigrations` با `NativeCommandError` متوقف شد.
+
+Root Cause:
+- Runner سراسری `$ErrorActionPreference="Stop"` داشت.
+- `showmigrations ... 2>&1` خروجی native stderr را مستقیم Capture می‌کرد.
+- `ckeditor.W001` Warning غیرکشنده روی stderr نوشته شد، در حالی که native exit code صفر بود.
+- Windows PowerShell 5.1 Warning را قبل از بررسی `$LASTEXITCODE` به terminating error تبدیل کرد.
+
+Fix — Phase49.3F.1:
+- Runner version `49.3F.1`.
+- Helper `Invoke-NativeCapture` فقط در scope اجرای native command EAP را موقتاً `Continue` می‌کند و سپس restore می‌کند.
+- success/failure فقط از native exit code تعیین می‌شود.
+- stdout/stderr هر دو برای Verify حفظ می‌شوند.
+- `showmigrations store/website` فقط از Helper استفاده می‌کنند.
+- `-NativeCaptureSelfTest` یک native process با stderr warning + stdout + exit 0 اجرا می‌کند.
+
+CI final:
+- Run `32356959599`
+- Job `96388108683`
+- PowerShell native capture self-test PASS.
+- کل Workflow تا Full Django PASS.
+- PR موقت `#36` بدون Merge بسته شد.
+
+Do Not Repeat:
+- زیر Windows PowerShell و `ErrorActionPreference=Stop`، native stderr را بدون lifecycle کنترل‌شده با `2>&1` Capture نکن.
+- Warning را با Failure اشتباه نکن؛ native exit code نتیجه واقعی فرمان است.
+- Migration موفق را به‌خاطر Failure مرحله Verify rollback/reset نکن.
+
+Status: **FIXED + FINAL CI VERIFIED; Windows rerun pending**.
 
 ---
 
@@ -488,82 +507,69 @@ Warnings شناخته‌شده:
 
 ---
 
-## 11) Phase49.3F — Final GitHub CI State
+## 11) Phase49.3F / 49.3F.1 — Final GitHub CI State
 
-Validated runtime/test baseline قبل از Documentation نهایی:
-`a207ad2c35dd8dbbd10457e0d2295ea8efbb9776`
-
-Validation-only PR:
-`#35` — **Do Not Merge**.
-
-Final CI:
-
+Phase49.3F baseline CI:
 ```text
 Run: 32351795808
 Job: 96372355769
-
-PowerShell runner contract: PASS
-Compile: PASS
-Django check/migration contract: PASS
-Phase49.3F AddField-only migration safety: PASS
 Targeted Django: 69/69 PASS
 Phase49.3F Windows dedicated: 7/7 PASS
-Phase49.3B diagnostics regression: 7/7 PASS
-Diagnostic identity: 3/3 PASS
 Epic49 Windows discovery: 84/84 PASS
 Launcher markers: PASS
 ACTIVE_RELEASE_VERIFIED=OK
 Full Django: 415 PASS / 2 skipped
 Overall: SUCCESS
+```
+
+Phase49.3F.1 runner hotfix CI:
+```text
+Run: 32356959599
+Job: 96388108683
+PowerShell runner syntax/native-capture self-test: PASS
+Compile: PASS
+Django check/migration contract: PASS
+AddField-only migration safety: PASS
+Targeted Phase49 regressions: PASS
+Windows Catalog Center Epic49: PASS
+Full Django suite: PASS
+Overall: SUCCESS
 Production: UNTOUCHED
 ```
 
-Markerهای اصلی:
-- `EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED`
-- `EPIC49_3F_UNSELECTED_IMAGE_METADATA_PRESERVED=ENABLED`
-- `EPIC49_3F_AI_PROGRESS_TIMEOUT=ENABLED`
-- `EPIC49_3F_SCROLLABLE_AI_CENTER=ENABLED`
-- `EPIC49_3F_GOOGLE_GEMINI_DIRECT=ENABLED`
-- `EPIC49_3F_RUNTIME_TRACE=ENABLED`
-- `EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED`
-- `EPIC49_3F_DYNAMIC_PRICING=ENABLED`
-- `AI_PROFILE_MIGRATION=PRESERVED`
-- `HOST_PROFILE_MIGRATION=PRESERVED`
-- `ACTIVE_RELEASE_VERIFIED=OK`
-
-**نتیجه:** blocker کدنویسی/CI فاز 49.3F بسته شده؛ فاز هنوز DONE نیست چون Windows Local/Manual QA و user approval باقی است.
+**نتیجه:** blocker کد/CI فاز 49.3F.1 بسته شده؛ Local Gate باید با Runner جدید دوباره از نقطه Verify عبور کند.
 
 ---
 
 ## 12) Migration State
 
-### قبلاً روی Windows اعمال‌شده
-- `store.0031_phase49_rich_material_colors` ✅
-- `store.0032_phase49_slider_media_profile` ✅
-- `website.0022_phase49_hero_media_presentation` ✅
-
-### Phase49.3F — Additive-only و در Local Gate فعلی باید بررسی/اعمال شوند
+### Windows — applied ✅
+- `store.0031_phase49_rich_material_colors`
+- `store.0032_phase49_slider_media_profile`
+- `website.0022_phase49_hero_media_presentation`
 - `store.0033_phase49_3f_pricing_intelligence`
 - `website.0023_phase49_3f_material_runtime_rates`
 
-CI ثابت کرده هر دو فقط `AddField` هستند. Production هنوز این فاز را دریافت نکرده است.
+دو Migration 49.3F در اجرای واقعی Windows 2026-08-20 با `OK` اعمال شدند. Crash بعدی Runner بعد از Migration و در Verify `showmigrations` بود. **Rollback یا Reset لازم نیست.**
+
+Production هنوز Phase49.3F/49.3F.1 را دریافت نکرده است.
 
 ---
 
 ## 13) مسیر باقی‌مانده — از همین نقطه
 
 ### Gate A — Windows Pull + Automated Local Gate
-
+- [x] 0033/0023 روی Windows اعمال شده‌اند.
 - [ ] Catalog Center/Django processهای مربوط بسته شوند.
 - [ ] `git status --short` خالی باشد؛ dirty tree → Stop/Inspect، نه Reset.
 - [ ] Fetch/Switch/Pull exact Epic با `--ff-only`.
+- [ ] Verify Runner `49.3F.1`.
 - [ ] اجرای `RUN_PHASE49_3F_LOCAL_GATE.ps1` از Repository.
-- [ ] Backup Local Django DB و Catalog DB ساخته شود.
-- [ ] `store.0033` و `website.0023` Additive apply/verify شوند.
+- [ ] Backup جدید Local Django DB و Catalog DB ساخته شود.
+- [ ] `showmigrations` Verify با `Invoke-NativeCapture` PASS شود.
 - [ ] Focused + regression + launcher + full local suite PASS شود.
 
 ### Gate B — Manual Windows QA
-
 - [ ] AI Center vertical/horizontal scroll + sticky Provider/Model/Save/Test/Log.
 - [ ] Gemini Direct با real key: list/search/select/save/test.
 - [ ] AvalAI/OpenRouter/OpenAI sanity test در صورت real key.
@@ -579,17 +585,14 @@ CI ثابت کرده هر دو فقط `AddField` هستند. Production هنوز
 - [ ] Hero/Admin/reverse-sync regression بررسی شود.
 
 ### Gate C — One Real Local Publish
-
 - [ ] فقط یک Product واقعی.
 - [ ] **LOCAL PUBLISH ONLY**؛ Production Publish استفاده نشود.
 - [ ] Django Local Product/Profile/Hero/Home/Store/Admin verify شود.
 
 ### Gate D — User Approval
-
 - [ ] تأیید صریح Visual/Data/Local E2E.
 
 ### Gate E — Production
-
 فقط بعد از Gate D:
 - exact HEAD check
 - `.env`/pending/DB backup
@@ -605,20 +608,15 @@ CI ثابت کرده هر دو فقط `AddField` هستند. Production هنوز
 
 ---
 
-## 14) Separate Open Technical Items — غیر از blocker 49.3F
-
-این موارد نباید گم شوند ولی نباید با Hotfix فعلی قاطی شوند:
+## 14) Separate Open Technical Items
 
 ### `/api/v1/catalog/sitemap/` → 404 در Local runserver
-
-قبلاً در Local logs مشاهده شده است. احتمالاً stale client endpoint یا mismatch route است. این مورد **blocker Redaction/49.3F CI نیست** اما قبل از بسته‌شدن کامل Epic باید Root Cause آن بررسی شود و اگر Route واقعاً لازم است همان contract اصلاح شود؛ Endpoint موازی بی‌دلیل ساخته نشود.
+قبلاً در Local logs مشاهده شده است. احتمالاً stale client endpoint یا mismatch route است. این مورد blocker 49.3F.1 نیست اما قبل از بسته‌شدن کامل Epic باید Root Cause آن بررسی شود؛ Endpoint موازی بی‌دلیل ساخته نشود.
 
 ### CKEditor4
-
 `ckeditor.W001` بدهی امنیتی/maintenance مستقل است. ارتقا/جایگزینی باید فاز جدا با بررسی licensing/UI compatibility باشد.
 
 ### Realtime
-
 `store.W026`: برای multi-process Production، Redis/polling architecture باید مطابق Host واقعی تصمیم‌گیری شود؛ تغییر عجولانه unrelated ممنوع.
 
 ---
@@ -626,7 +624,6 @@ CI ثابت کرده هر دو فقط `AddField` هستند. Production هنوز
 ## 15) نقشه کدهای اصلی
 
 ### Windows Catalog Center
-
 ```text
 catalog_center/launch.py
 catalog_center/app/product_workspace_epic49.py
@@ -650,7 +647,6 @@ catalog_center/app/openai_content.py
 ```
 
 ### Django / Store / Pricing
-
 ```text
 store/epic49_catalog_profile.py
 store/phase49_unified_sync.py
@@ -665,7 +661,6 @@ templates/store/product_list.html
 ```
 
 ### Bridge / Hero
-
 ```text
 catalog_bridge/
 website/phase49_unified_sync.py
@@ -675,12 +670,12 @@ templates/website/partials/hero.html
 ```
 
 ### CI / Runner / Deploy
-
 ```text
 .github/workflows/phase49-epic-ci.yml
 RUN_PHASE49_3D_LOCAL_GATE.ps1
 RUN_PHASE49_3E_LOCAL_GATE.ps1
 RUN_PHASE49_3F_LOCAL_GATE.ps1
+docs/PHASE49_3F1_WINDOWS_NATIVE_CAPTURE_HOTFIX.md
 deploy/phase48-deploy.sh
 deploy/phase49-deploy.sh
 deploy/epic49_backup_database.py
@@ -733,7 +728,6 @@ deploy/epic49_verify_runtime.py
 ## 18) Definition of Done
 
 یک فاز فقط وقتی DONE است که:
-
 ```text
 Code complete
 + Focused tests green
@@ -754,25 +748,24 @@ Code complete
 
 ## 19) Current Status — 2026-08-20
 
-**Phase:** `49.3F Product Intelligence / Dynamic Pricing / AI UX`  
+**Phase:** `49.3F.1 Windows Native stderr Capture Hotfix`  
 **GitHub code/CI blocker:** بسته شده ✅  
-**Final CI:** Run `32351795808`, Job `96372355769` — SUCCESS ✅  
-**Runtime Trace Bearer leak:** FIXED + regression-covered ✅  
-**Targeted Django:** 69/69 ✅  
-**Phase49.3F Windows:** 7/7 ✅  
-**Epic49 discovery:** 84/84 ✅  
-**Full Django:** 415 PASS / 2 skipped ✅  
-**Launcher:** `ACTIVE_RELEASE_VERIFIED=OK` ✅  
-**Windows Local 49.3F Gate:** PENDING  
+**Final CI:** Run `32356959599`, Job `96388108683` — SUCCESS ✅  
+**Runner:** `49.3F.1` ✅  
+**Windows Local store.0033:** APPLIED ✅  
+**Windows Local website.0023:** APPLIED ✅  
+**Previous Local Runner Failure:** after migrations / `showmigrations` capture — FIXED IN GITHUB ✅  
+**Automated Local Gate after hotfix:** PENDING  
 **Manual QA / one real Local Publish:** PENDING  
 **Production:** **UNTOUCHED / NOT APPROVED**
 
 ### قدم بعدی دقیق
-
 ```text
-GitHub exact Epic HEAD
+GitHub latest Epic HEAD
 → Windows pull --ff-only
+→ verify Runner 49.3F.1
 → RUN_PHASE49_3F_LOCAL_GATE.ps1
+→ confirm showmigrations verification passes
 → Local automated PASS
 → Manual AI/Image/Pricing/Product QA
 → one real LOCAL PUBLISH ONLY
@@ -781,14 +774,11 @@ GitHub exact Epic HEAD
 → Production plan/deploy
 ```
 
-در این نقطه **کد جدید برای Hotfix Redaction لازم نیست** مگر Windows Local Gate Regression تازه‌ای نشان دهد. اگر Regression جدیدی ظاهر شد، فقط Root Cause همان مورد با Minimal Change + Regression Test اصلاح می‌شود.
-
 ---
 
 ## 20) قانون نگهداری این سند
 
 در پایان هر Phase/Hotfix مهم باید حداقل این موارد به‌روز شوند:
-
 1. مسیر طی‌شده.
 2. Incident/Error Ledger.
 3. Current Status.
