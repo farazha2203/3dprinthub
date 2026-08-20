@@ -127,7 +127,8 @@ class Phase493FPricingTests(TestCase):
         self.assertIn("تولید پس از سفارش", body)
         self.assertIn("خلاصه فنی و کاربردی", body)
         self.assertIn("data-supervision-cost", body)
-        self.assertIn("وزن قابل‌محاسبه", body)
+        self.assertIn("data-chargeable-weight", body)
+        self.assertIn("وزن قابل محاسبه", body)
 
     def test_phase493f_admin_extensions_are_registered(self):
         profile_admin = admin.site._registry[ProductCatalogProfile]
