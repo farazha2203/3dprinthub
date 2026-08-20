@@ -45,6 +45,11 @@ class StoreConfig(AppConfig):
         phase49_3f_pricing.install()
         phase49_3f_pricing_finalize.install()
 
+        # Extend the already-registered mature Django Admin instead of replacing
+        # website/store admin implementations.
+        from .phase49_3f_admin import install as install_phase49_3f_admin
+        install_phase49_3f_admin()
+
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
         # allowed to become Store metadata or homepage Hero copy.
