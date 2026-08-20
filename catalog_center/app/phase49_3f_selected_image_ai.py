@@ -124,7 +124,7 @@ def generate_selected_image_text(service, row, selected_urls: list[str]) -> dict
 
 
 def merge_selected_metadata(existing_items: list, selected_urls: list[str], ai_pack: dict) -> list[dict]:
-    """Update only selected URL records; preserve every unselected metadata row byte-for-byte semantically."""
+    """Update only selected URL records; preserve every unselected metadata row."""
     output = [dict(item) for item in existing_items if isinstance(item, dict)]
     by_url = {str(item.get("source_url") or ""): item for item in output if item.get("source_url")}
     result_by_slot = {
@@ -158,10 +158,11 @@ def merge_selected_metadata(existing_items: list, selected_urls: list[str], ai_p
 def install_image_pipeline_override(image_pipeline) -> None:
     if getattr(image_pipeline, "_phase49_3f_selected_ai_override_installed", False):
         return
-    original = image_pipeline.build_image_metadata
+    original_build = image_pipeline.build_image_metadata
+    original_finalize = image_pipeline.finalize_selected_images
 
     def build_image_metadata(row, url, local_file, index, db):
-        base = original(row, url, local_file, index, db)
+        base = original_build(row, url, local_file, index, db)
         existing = next(
             (
                 item for item in _json_list(_row_value(row, image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
@@ -177,5 +178,41 @@ def install_image_pipeline_override(image_pipeline) -> None:
             base["_ai_override_fields"] = sorted(allowed)
         return base
 
+    def finalize_selected_images(db, product_id: int):
+        before = db.product(int(product_id))
+        selected = set(
+            image_pipeline.cap_unique_urls(
+                _json_list(_row_value(before, "selected_images_json", "[]"))
+            )
+        )
+        before_items = [
+            dict(item)
+            for item in _json_list(_row_value(before, image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
+            if isinstance(item, dict)
+        ]
+        preserved = [
+            item for item in before_items
+            if str(item.get("source_url") or "") not in selected
+        ]
+        result = original_finalize(db, product_id)
+        after = db.product(int(product_id))
+        selected_items = [
+            dict(item)
+            for item in _json_list(_row_value(after, image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
+            if isinstance(item, dict)
+        ]
+        # The original finalizer intentionally rebuilds the selected set. 49.3F
+        # restores unrelated metadata records afterward so unselected images are
+        # not edited, dropped or rewritten as a side effect of Image SEO.
+        merged = [*preserved, *selected_items]
+        db.update_product(
+            int(product_id),
+            {image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(merged, ensure_ascii=False)},
+        )
+        result = dict(result or {})
+        result["preserved_unselected_metadata"] = len(preserved)
+        return result
+
     image_pipeline.build_image_metadata = build_image_metadata
+    image_pipeline.finalize_selected_images = finalize_selected_images
     image_pipeline._phase49_3f_selected_ai_override_installed = True
