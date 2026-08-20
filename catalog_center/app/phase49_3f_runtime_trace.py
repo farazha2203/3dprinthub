@@ -11,13 +11,28 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .runtime_logging import redact
+
 _LOCK = threading.Lock()
 _ROOT: Path | None = None
 _SESSION = uuid.uuid4().hex
 _OPERATOR = ""
 _WORKSTATION = ""
 
-SENSITIVE_KEYS = {"authorization", "api_key", "apikey", "password", "secret", "token", "bridge_token"}
+SENSITIVE_KEYS = {
+    "authorization",
+    "api_key",
+    "apikey",
+    "api-key",
+    "password",
+    "secret",
+    "token",
+    "bridge_token",
+    "access_token",
+    "refresh_token",
+    "management_key",
+    "admin_key",
+}
 
 
 def configure(data_root: str | Path, *, operator: str = "", workstation: str = "") -> Path:
@@ -43,17 +58,23 @@ def _sanitize(value: Any):
     if isinstance(value, dict):
         output = {}
         for key, item in value.items():
-            if str(key).strip().lower() in SENSITIVE_KEYS:
+            normalized = str(key).strip().lower().replace("-", "_").replace(" ", "_")
+            if normalized in {item.replace("-", "_") for item in SENSITIVE_KEYS} or any(
+                token in normalized for token in ("password", "token", "secret", "api_key", "authorization")
+            ):
                 output[str(key)] = "***REDACTED***"
             else:
                 output[str(key)] = _sanitize(item)
         return output
     if isinstance(value, (list, tuple)):
         return [_sanitize(item) for item in value]
-    text = str(value) if not isinstance(value, (str, int, float, bool, type(None))) else value
-    if isinstance(text, str) and len(text) > 4000:
-        return text[:4000] + "…"
-    return text
+    if isinstance(value, str):
+        text = redact(value)
+        return text[:4000] + "…" if len(text) > 4000 else text
+    if isinstance(value, (int, float, bool, type(None))):
+        return value
+    text = redact(value)
+    return text[:4000] + "…" if len(text) > 4000 else text
 
 
 def event(
@@ -81,7 +102,7 @@ def event(
         "provider": str(provider or "")[:60],
         "model": str(model or "")[:180],
         "elapsed_ms": int(elapsed_ms) if elapsed_ms is not None else None,
-        "message": str(message or "")[:2000],
+        "message": _sanitize(str(message or ""))[:2000],
         "detail": _sanitize(detail or {}),
     }
     path = current_log_path()
@@ -109,5 +130,12 @@ class Span:
         if exc is None:
             event(self.area, self.action + ":done", elapsed_ms=elapsed, **self.meta)
         else:
-            event(self.area, self.action + ":error", status="error", elapsed_ms=elapsed, message=f"{exc_type.__name__}: {exc}", **self.meta)
+            event(
+                self.area,
+                self.action + ":error",
+                status="error",
+                elapsed_ms=elapsed,
+                message=f"{exc_type.__name__}: {exc}",
+                **self.meta,
+            )
         return False
