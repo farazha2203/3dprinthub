@@ -2,7 +2,7 @@
 
 > **این فایل باید قبل از شروع هر فاز، Hotfix، تغییر UI، Migration، تغییر Sync یا Deploy خوانده شود.**
 >
-> هدف این سند این است که مسیر پروژه روشن بماند، کد تکراری و معماری موازی ساخته نشود، مشکلات حل‌شده دوباره برنگردند و هر تغییر فقط همان چیزی را که لازم است اصلاح کند بدون اینکه قابلیت‌های قبلی را از بین ببرد.
+> هدف این سند روشن نگه‌داشتن مسیر پروژه، جلوگیری از کد تکراری/موازی، ثبت خطاها و روش رفعشان، و حفاظت از قابلیت‌های قبلی در هر ارتقا است.
 
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه جاری:** `epic/phase49-unified-product-slider-sync`  
@@ -15,52 +15,42 @@
 
 ## 1) قانون مادر تغییرات — Preserve Existing Behavior / Minimal Change
 
-این قانون از این تاریخ برای تمام توسعه‌های بعدی الزام‌آور است:
+این قانون برای تمام توسعه‌های بعدی الزام‌آور است:
 
 1. **تغییر جدید نباید قابلیت قبلی سالم را حذف، Replace یا بی‌اثر کند مگر درخواست صریح کاربر وجود داشته باشد.**
-2. اگر یک مسیر Mature از قبل وجود دارد، تغییر جدید باید آن را **Extend / Patch / Wrap** کند، نه اینکه یک مسیر موازی جدید بسازد.
-3. برای رفع یک خطا، کل UI / Model / Sync / Admin بازنویسی نمی‌شود؛ Root Cause همان بخش اصلاح می‌شود.
-4. اگر ارتباط بین دو بخش مشکل دارد، **Boundary/Contract/Sync** اصلاح می‌شود؛ کلیات معماری به هم ریخته نمی‌شود.
-5. رفتار قبلی Default باقی می‌ماند مگر نیاز جدید دقیقاً Default جدید را طلب کند. نمونه: `pricing_strategy=legacy` برای کالاهای قدیمی به‌صورت پیش‌فرض حفظ شده است.
-6. قبل از تغییر، باید مشخص شود:
-   - دقیقاً چه چیزی باید تغییر کند؛
-   - چه چیزهایی نباید تغییر کنند؛
-   - کدام Contractها باید حفظ شوند؛
-   - کدام تست‌ها از رفتار قبلی محافظت می‌کنند.
-7. هر Bugfix باید Regression Test داشته باشد تا همان خطا دوباره برنگردد.
-8. Migration ترجیحاً Additive است. حذف جدول/فیلد/داده فقط در فاز مستقل، Backup شده، مستند و با تأیید صریح مجاز است.
-9. برای حل مشکل Deploy یا Migration، `reset --hard`، حذف DB، `DROP`, `TRUNCATE`, `DELETE FROM`, حذف media یا حذف `.env` راه‌حل محسوب نمی‌شود.
-10. Source of Truth کد فقط GitHub است؛ Patch دستی روی Windows/Host مبنای پروژه نیست.
-
-### قانون «همان تغییر، نه بیشتر»
-
-هر Task باید یک Change Scope داشته باشد:
+2. مسیر Mature موجود باید **Extend / Patch / Wrap** شود؛ مسیر موازی جدید فقط وقتی مجاز است که معماری موجود واقعاً پاسخگو نباشد و دلیل آن مستند شود.
+3. برای رفع Bug، Root Cause همان Boundary/Contract/Module اصلاح می‌شود؛ کل UI/Model/Sync/Admin بازنویسی نمی‌شود.
+4. رفتار Default قبلی حفظ می‌شود مگر درخواست جدید دقیقاً Default دیگری بخواهد. نمونه: محصولات قدیمی روی `pricing_strategy=legacy` باقی می‌مانند.
+5. هر Task قبل از اجرا باید چهار چیز داشته باشد:
 
 ```text
-Requested Delta: چه چیزی باید عوض شود
-Touched Surfaces: فایل/مدل/رابط‌های لازم
-Must-Not-Touch: قابلیت‌های سالم مرتبط که باید بدون تغییر بمانند
-Regression Tests: تست‌هایی که اثبات می‌کنند قابلیت‌های قبلی حفظ شده‌اند
+Requested Delta  = دقیقاً چه چیزی باید تغییر کند
+Touched Surfaces = فایل/مدل/رابط‌های لازم
+Must-Not-Touch   = قابلیت‌های سالمی که نباید تغییر کنند
+Regression Tests = تست‌هایی که حفظ رفتار قبلی را اثبات می‌کنند
 ```
 
-اگر برای یک تغییر کوچک نیاز به دست‌کاری گسترده دیده شد، ابتدا باید علت معماری آن ثابت شود؛ بازنویسی گسترده انتخاب پیش‌فرض نیست.
+6. هر Bugfix باید Regression Test داشته باشد؛ تستی که Bug واقعی را پیدا کرده برای سبزکردن CI حذف یا ضعیف نمی‌شود.
+7. Migration در حالت عادی Additive-first است. حذف/rename destructive فقط در فاز مستقل، با Backup/Dry Run و تأیید صریح مجاز است.
+8. `reset --hard`، حذف DB، `DROP`, `TRUNCATE`, حذف `.env`, media/private_media یا Catalog persistent data راه‌حل عادی خطای کد/Deploy نیست.
+9. Source of Truth کد GitHub است؛ Patch دستی Windows/Host مبنای پروژه نیست.
+10. Production فقط بعد از تأیید صریح Local/Visual/Data QA اجرا می‌شود.
 
 ---
 
-## 2) ترتیب Source of Truth هنگام اختلاف اطلاعات
+## 2) ترتیب Source of Truth
 
-در صورت اختلاف بین اسناد یا حافظه گفتگو، ترتیب اعتبار این است:
+هنگام اختلاف اطلاعات:
 
-1. Migration state واقعی روی محیط موردنظر.
-2. آخرین خروجی واقعی CI / Local Gate / Host Verification.
+1. Migration state واقعی محیط موردنظر.
+2. جدیدترین خروجی واقعی CI / Local Gate / Host Verification.
 3. این فایل: `docs/00_PROJECT_MASTER_ROADMAP_FA.md`.
 4. `PROJECT_CONTEXT.md`.
-5. سند مخصوص آخرین Phase در `docs/`.
-6. کد Runtime + تست‌های همان Feature.
+5. سند مخصوص جدیدترین Phase در `docs/`.
+6. Runtime code + tests همان Feature.
 7. اسناد تاریخی قدیمی‌تر.
 
-اسناد مرجع مهم:
-
+اسناد مهم:
 - `PROJECT_CONTEXT.md`
 - `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`
 - `docs/EPIC49_UNIFIED_PRODUCT_SLIDER_SYNC.md`
@@ -73,33 +63,28 @@ Regression Tests: تست‌هایی که اثبات می‌کنند قابلیت
 
 ---
 
-## 3) خواسته‌ها و الزامات کاربر — دسته‌بندی‌شده
+## 3) خواسته‌های اصلی کاربر — طبقه‌بندی‌شده
 
 ### 3.1) سیاست توسعه و تحویل
 
 - توسعه فازبه‌فاز، قابل ردگیری و تست‌شده باشد.
-- هر فاز ابتدا روی GitHub ثبت شود.
-- سپس Windows از GitHub Pull کند.
-- Local کامل تست شود.
-- فقط بعد از تأیید صریح Local، Production به‌روزرسانی شود.
-- تمام تغییرات، علت، مسیر نصب، خطا، روش رفع خطا، DB و وضعیت پروژه در GitHub مستند شوند.
-- هر قسمت تکمیل‌شده در سند فاز تیک بخورد.
-- اگر یک مرحله خطا داد، Root Cause کامل رفع شود و مسیر نصفه رها نشود.
-- فایل/اسکریپت جدا از GitHub Source of Truth نباشد.
+- هر تغییر ابتدا روی GitHub ثبت شود؛ Windows فقط Pull کند.
+- Local کامل تست شود؛ سپس با تأیید صریح کاربر Production.
+- مسیر نصب، DB، Host، خطاها، Root Cause، Fix، تست و وضعیت هر فاز در GitHub مستند شود.
+- وقتی یک فاز خطا دارد، مشکل کامل حل شود و نیمه‌کاره رها نشود.
+- هیچ ZIP/Script/Hotfix خارج از GitHub Source of Truth مبنای اجرا نباشد.
 
-### 3.2) اصل حفظ قابلیت‌های قبلی
+### 3.2) حفاظت قابلیت‌های قبلی
 
-- پنل‌ها و قابلیت‌های سالم قبلی حفظ شوند.
+- پنل‌ها و Workflowهای سالم قبلی حفظ شوند.
 - تغییر جدید فقط همان قسمت درخواستی را تغییر دهد.
-- ارتباط بین ماژول‌ها اصلاح شود بدون ایجاد معماری موازی.
-- UI Mature موجود در صورت امکان Extend شود.
-- مدل/DB قدیمی بدون دلیل Reset نشود.
-- داده‌های واقعی کاربر، تصاویر، media و تنظیمات از بین نروند.
+- ارتباط بین ماژول‌ها اصلاح شود بدون به‌هم‌زدن کلیات معماری.
+- DB، تصاویر، media، تنظیمات و داده‌های واقعی بدون دلیل Reset/Delete نشوند.
+- Product، Hero، Pricing، Cart/Checkout و AI workflowهای موجود fork موازی نشوند.
 
 ### 3.3) Product Workspace / Wizard
 
-مدل کاری هدف:
-
+Canonical workflow:
 1. اطلاعات پایه
 2. سفارش، قیمت و گزینه‌ها
 3. تصاویر
@@ -108,182 +93,81 @@ Regression Tests: تست‌هایی که اثبات می‌کنند قابلیت
 6. اسلایدر صفحه اصلی
 7. بررسی و انتشار
 
-خواسته‌ها:
-- مراحل واضح و قابل حرکت باشند.
-- Requiredها ستاره‌دار و وضعیت کامل/ناقص مشخص باشد.
-- Previous / Next وجود داشته باشد.
-- اپراتور دلیل Publish Block را دقیق ببیند.
-- Local Publish همیشه قابل تشخیص از Production Publish باشد.
-- Production Publish بدون Readiness واقعی اجرا نشود.
+الزامات:
+- وضعیت کامل/ناقص واضح باشد.
+- همه Stageها قابل مراجعه و اصلاح باشند؛ از 49.3E به بعد Readiness راهنما است، نه زندان.
+- Local Publish از Production Publish کاملاً جدا باشد.
+- Publish failure دلیل دقیق بدهد؛ Silent failure ممنوع.
+- Production بدون Readiness کامل و تأیید صریح اجرا نشود.
 
 ### 3.4) AI Provider Hub
 
-Providerهای موردنیاز:
-
+Providerهای Canonical:
 - AvalAI
 - OpenRouter
 - Google Gemini Direct
 - OpenAI Direct
 
 الزامات:
-- هر Provider کارت/تنظیم مستقل داشته باشد.
-- Provider و Model فعال واضح باشد.
-- Search مدل، Free filter در صورت پشتیبانی و Model count وجود داشته باشد.
-- فقط raw model ID ذخیره شود؛ Label نمایشی نباید به‌جای ID ذخیره شود.
-- اعتبار/Balance فقط وقتی نمایش داده شود که API واقعی Provider آن را پشتیبانی می‌کند.
-- هزینه هر Request در صورت امکان ذخیره شود؛ Toman/IRT از داده واقعی Provider یا نرخ تبدیل تنظیم‌شده محاسبه شود، نه عدد ساختگی.
-- API Key/Management Key/Admin Key داخل Git/SQLite/Diagnostic export ثبت نشود.
-- Test Connection دقیقاً Provider/Model فعال را تست کند.
-- خطای AvalAI برای `response_format` با fallback کنترل‌شده مدیریت شود.
+- تنظیم، Key، Model و Test هر Provider مستقل.
+- Provider/Model فعال یک Source of Truth داشته باشد.
+- Search/Filter مدل و raw model ID persistence.
+- Balance فقط اگر Provider API واقعی دارد؛ عدد جعلی ممنوع.
+- Request ID/token/cost در صورت پشتیبانی ثبت شود.
+- API Key/Management Key/Admin Key در Git/SQLite diagnostic/export ثبت نشود.
+- AvalAI/OpenRouter در rejection `response_format` یک fallback کنترل‌شده داشته باشند.
 
-### 3.5) AI Diagnostics / Logging
+### 3.5) Image SEO / Metadata
 
-لاگ باید قابل عیب‌یابی باشد و شامل اطلاعات زیر شود:
+- AI فقط درباره تصاویر انتخاب‌شده کار کند.
+- **Image bytes، فایل تصویر و URL تصویر برای Image SEO به AI ارسال نشود.**
+- Mapping Slot→URL فقط Local باشد.
+- Metadata تصاویر انتخاب‌نشده حفظ شود.
+- Exact identity استفاده شود؛ index guessing ممنوع.
+- `download_image_limit` per-product حفظ شود؛ hard cap فعلی 10.
+- Source/cache image به‌خاطر finalize حذف نشود.
 
-- Operator
-- Workstation
-- Session
-- Product
-- Provider
-- Model
-- Operation
-- Endpoint/Request ID در صورت وجود
-- HTTP status
-- Duration
-- Token/cost در صورت وجود
-- فایل/ماژول/Action
-- Success/Failure
-- Error sanitized
+### 3.6) Persian Content / SEO
 
-اما Secret هرگز نباید وارد Log شود.
-
-### 3.6) تصاویر و Image SEO
-
-- AI فقط برای عکس‌های انتخاب‌شده همان محصول کار کند.
-- عکس Binary، URL عکس یا فایل تصویر به AI فرستاده نشود؛ AI فقط ورودی Text/Facts بگیرد.
-- Mapping بین Image slot و URL/File فقط Local باشد.
-- Metadata عکس‌های انتخاب‌نشده دست‌نخورده بماند.
-- Exact image identity استفاده شود و index guessing ممنوع باشد.
-- انتخاب تعداد دانلود تصویر per-product حفظ شود.
-- Hard cap فعلی 10 تصویر حفظ شود مگر تغییر صریح درخواست شود.
-- Filename/Alt/Metadata SEO انسانی و قابل ردگیری باشند.
-
-### 3.7) محتوای فارسی و SEO
-
-- English source نباید به‌عنوان Persian fallback وارد فیلد فارسی شود.
-- عنوان، توضیح، SEO title/description و Alt فارسی معتبر باشند.
+- English source fallback برای Persian editorial ممنوع.
+- Product SEO و Slider SEO مستقل بمانند.
 - AI حق جعل قیمت، مجوز، ابعاد، موجودی، متریال یا رنگ را ندارد.
-- Product SEO و Hero/Slider SEO مستقل بمانند.
-- خروجی عمومی سایت نباید کدهای داخلی مانند `ready_product` یا `made_to_order` را نمایش دهد.
-- Source attribution داخلی مانند `Username` نباید به مشتری نمایش داده شود.
-- Structured Data / JSON-LD نیز باید خروجی تمیز و حرفه‌ای داشته باشد؛ فقط ظاهر HTML کافی نیست.
+- raw codeهایی مانند `ready_product`, `made_to_order` و attribution داخلی مانند `Username` در Public UI/SEO/JSON-LD نمایش داده نشوند.
 
-### 3.8) Hero / Homepage Slider
+### 3.7) Hero / Slider
 
-- Hero Studio مستقل ولی متصل به همان Product باقی بماند.
-- تصویر Hero فقط از تصاویر همان Product/Asset انتخاب شود.
-- Desktop/Mobile preview وجود داشته باشد.
-- `contain/cover`, focal, scale, X/Y, background, blur و ابعاد Desktop/Mobile قابل کنترل باشند.
-- Default امن Product: `product_fit + contain`.
+- Hero متصل به همان Product/Asset باشد.
+- تصویر فقط از همان Asset/Product انتخاب شود.
 - Effect/Timing قبلی حفظ شود.
-- تغییر Admin و Windows با Revision مستقل Sync شود.
+- `product_fit + contain` Default امن Product.
+- focal/scale/X/Y/background/blur/desktop/mobile controls حفظ شوند.
+- Product Profile و Hero revision مستقل و conflict-safe باقی بمانند.
 
-### 3.9) قیمت‌گذاری
+### 3.8) Pricing
 
-سه Strategy فعلی باید حفظ شوند:
+Strategyها:
+- `legacy`: رفتار قبلی بدون تغییر.
+- `fixed`: قیمت قطعی اپراتور.
+- `dynamic`: محاسباتی بر اساس Variant.
 
-- `legacy`: موتور قدیمی و رفتار کالاهای قبلی
-- `fixed`: قیمت نهایی اپراتور
-- `dynamic`: محاسبه واقعی
+Source of Truth قیمت Dynamic همان `ProductVariant.price_breakdown()` و cache نهایی Variant است؛ Product Detail، Cart و Checkout نباید ماشین‌حساب موازی داشته باشند.
 
-Dynamic باید از یک Source of Truth استفاده کند:
-
-```text
-chargeable_material_grams = part_weight + support_weight * support_multiplier
-material_cost = chargeable_material_grams * material_sale_price_per_gram
-machine_cost = print_hourly_rate * billable_minutes / 60
-supervision_cost = supervision_hourly_rate * billable_minutes / 60
-unit_price = material + machine + supervision + assembly + accessory + post + fixed + color adjustment
-```
-
-ارسال/بسته‌بندی/مالیات در Checkout جدا باقی می‌مانند.
-
-مثال Acceptance ثابت:
+Acceptance ثابت:
 
 ```text
-PLA = 2,600,000 تومان / kg = 2,600 تومان / g
+PLA = 2,600,000 تومان/kg = 2,600 تومان/g
 Part = 100g
-Support = 50g × 2
+Support = 50g × multiplier 2
 Chargeable = 200g
 Material = 520,000
 Print = 3h × 150,000 = 450,000
 Supervision = 3h × 50,000 = 150,000
-Total before extras/shipping = 1,120,000 تومان
+Expected before extras/shipping = 1,120,000 تومان
 ```
-
-قیمت Product Detail، Cart و Checkout نباید از سه فرمول مختلف بیاید.
 
 ---
 
-## 4) پیشنهادهای معماری/کاری برای جلوگیری از کد بیهوده
-
-این موارد پیشنهاد توسعه‌ای هستند و باید در فازهای بعد رعایت شوند:
-
-### 4.1) یک Source of Truth برای هر Business Rule
-
-مثال:
-- Price → `ProductVariant.price_breakdown()` / cached finalized value
-- Product/Hero Sync → همان Bridge contract موجود
-- Readiness → همان readiness engine
-- Secret → Secure credential/env registry
-
-نباید یک فرمول مشابه در Template، یک فرمول دیگر در Cart و یک فرمول سوم در Importer ساخته شود.
-
-### 4.2) Contract Test در Boundaryها
-
-Boundaryهای حساس:
-
-```text
-Windows SQLite → Batch
-Batch → Django Importer
-Django Product/Profile → Hero
-Django Admin → Bridge
-Bridge → Windows
-Product Detail → Cart → Checkout
-AI Provider → Structured Result → Operator Apply
-```
-
-هر تغییر در یکی از این Boundaryها باید حداقل یک Contract/Regression Test داشته باشد.
-
-### 4.3) Additive-first Schema
-
-در فاز عادی:
-- AddField / AddColumn / AddIndex ترجیح دارد.
-- حذف یا Rename destructive در همان فاز Feature انجام نشود.
-- Backfill حساس باید Dry Run + Backup داشته باشد.
-
-### 4.4) Incident Ledger
-
-هر خطای مهم باید در همین سند با این قالب اضافه شود:
-
-```text
-Symptom
-Root Cause
-Fix
-Regression Test
-Do Not Repeat
-Status
-```
-
-### 4.5) Release Gate واقعی
-
-هیچ Feature با «کد نوشته شد» تمام‌شده محسوب نمی‌شود. Definition of Done در بخش انتهای همین سند آمده است.
-
----
-
-## 5) مسیر طی‌شده پروژه
-
-زنجیره جاری:
+## 4) مسیر طی‌شده
 
 ```text
 49.2A
@@ -300,31 +184,33 @@ Status
 → 49.3D Workflow Hardening
 → 49.3D.1 Windows Runner Hotfix
 → 49.3E AI Task Completion & Recovery
-→ 49.3F Product Intelligence / Pricing / AI UX
+→ 49.3F Product Intelligence / Dynamic Pricing / AI UX
+→ 49.3F Runtime Trace Redaction Hotfix
 ```
 
-### خلاصه قابلیت‌های مهمی که نباید Regression شوند
+### قابلیت‌های حفاظت‌شده که نباید Regression شوند
 
-- Windows Catalog Center ابزار اصلی اپراتور باقی مانده است.
-- Django Admin ابزار مدیریتی دوم و کامل باقی مانده است.
-- Product و Hero روی یک Unified Contract هستند.
-- Product Revision و Hero Revision مستقل هستند.
-- stale write با HTTP 409 Conflict محافظت می‌شود.
-- `batch_uuid + source_hash` از duplicate/re-import بی‌دلیل جلوگیری می‌کند.
-- Hero effect/timing و Persian sales content حفظ شده است.
-- Material/Color options واقعی اپراتور حفظ شده‌اند.
-- Readiness قبل از Publish وجود دارد.
-- Local و Production Publish از هم جدا هستند.
-- AI Provider Hub مستقل و قابل عیب‌یابی است.
-- Image identity exact و metadata preservation وجود دارد.
-- Persian Content Guard وجود دارد.
-- Price range قدیمی و Dynamic pricing جدید باید همزمان سازگار بمانند.
+- Windows Catalog Center ابزار اصلی اپراتور.
+- Django Admin ابزار مدیریتی دوم.
+- Unified Product/Hero/Bridge contract.
+- Product Revision و Hero Revision مستقل.
+- stale Windows write → HTTP 409.
+- `batch_uuid + source_hash` idempotency.
+- Persian Hero + Effect/Timing.
+- Material/Color operator options.
+- Local/Production Publish separation.
+- Readiness + exact blocker reasons.
+- AI Provider Hub + persistent diagnostics.
+- Exact image identity + unselected metadata preservation.
+- Persian Content Guard.
+- Price Range legacy compatibility + Dynamic pricing.
+- Product Detail / Cart / Checkout price consistency.
 
 ---
 
-## 6) معماری جاری — End-to-End
+## 5) معماری End-to-End
 
-### مسیر اصلی اپراتور
+### مسیر اپراتور
 
 ```text
 Employee
@@ -358,13 +244,11 @@ Catalog Bridge
 Windows Refresh / Compare
 ```
 
-اصل مهم: **مدل/Endpoint/DB موازی برای یک مفهوم موجود نسازیم.** اگر Sync ناقص است، همان Contract موجود Extend می‌شود.
+اصل: اگر Sync ناقص است همان Contract Extend می‌شود؛ DB/Endpoint/Model موازی برای مفهوم موجود ساخته نمی‌شود.
 
 ---
 
-## 7) ساختار Windows / Local
-
-### مسیرها
+## 6) Windows / Local Structure
 
 ```text
 Project root:
@@ -379,44 +263,32 @@ D:\projects\3DPrintHub\catalog_center
 Django local DB:
 D:\projects\3DPrintHub\db.sqlite3
 
-Persistent Catalog data:
+Persistent Catalog:
 D:\projects\3dprinthub-catalog-manager
 
-Legacy/persistent catalog area retained:
+Retained legacy persistent area:
 D:\projects\3dprinthub_catalog_center
 
-Current Catalog DB used by Phase49.3F backup gate:
+Catalog DB:
 D:\projects\3dprinthub-catalog-manager\catalog.sqlite3
 
 Backups:
 D:\projects\3dprinthub-backups
 ```
 
-### Secretها
+Secrets: Windows Credential Store / Environment variables. Secret در Git/SQLite audit/diagnostic export ذخیره نمی‌شود.
 
-- Windows Credential Store / Environment variables.
-- Secretها در Git commit نمی‌شوند.
-- Secretها در SQLite diagnostic/audit و export نباید ذخیره شوند.
+Canonical runner فعلی:
+`D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1`
 
-### Runner جاری
+Chain:
+`49.3F → 49.3E → 49.3D`
 
-```text
-D:\projects\3DPrintHub\RUN_PHASE49_3F_LOCAL_GATE.ps1
-```
-
-Runner جدید، Gateهای قبلی را زنجیره می‌کند:
-
-```text
-49.3F → 49.3E → 49.3D
-```
-
-بنابراین Runner قدیمی مستقیم برای فاز جاری نباید جای Runner جدید استفاده شود.
+Runner باید exact remote Epic HEAD، clean worktree، backup، migration safety، tests و launcher markers را Fail-closed بررسی کند.
 
 ---
 
-## 8) ساختار Production / Host
-
-### مسیرهای ثابت
+## 7) Production / Host Structure
 
 ```text
 Project:
@@ -425,8 +297,8 @@ Project:
 Python venv:
 /home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python
 
-Production database:
-MySQL: sfkilvrs_EmiAdmin_3dprinthub
+Production DB:
+MySQL sfkilvrs_EmiAdmin_3dprinthub
 
 Static default:
 /home/sfkilvrs/public_html/static
@@ -434,365 +306,324 @@ Static default:
 Media default:
 /home/sfkilvrs/public_html/media
 
-Project private media default/fallback:
+Private media fallback:
 /home/sfkilvrs/3dprinthub/private_media
 ```
 
-مقادیر نهایی `STATIC_ROOT`, `MEDIA_ROOT`, `PRIVATE_MEDIA_ROOT` ممکن است با `.env` Override شوند؛ قبل از Deploy باید Runtime settings واقعی خوانده شوند.
+`.env` ممکن است Static/Media/Private paths را Override کند؛ قبل از Deploy Runtime settings واقعی خوانده شود.
 
-### انتخاب DB در Django
+### DB Guard
 
-در `config/settings.py`:
+در `config/settings.py` اگر `DB_NAME` خالی باشد Django به SQLite fallback می‌کند. بنابراین Production migration فقط وقتی مجاز است که:
 
-- اگر `DB_NAME` تنظیم شده باشد → MySQL.
-- اگر `DB_NAME` خالی باشد → fallback به `BASE_DIR/db.sqlite3`.
+```text
+connection.vendor == mysql
+DB name == expected production DB
+```
 
-**قاعده Production:** قبل از Migration باید `connection.vendor == "mysql"` اثبات شود. اگر Production ناخواسته SQLite را می‌بیند، Migration متوقف می‌شود؛ نباید روی SQLite fallback ادامه داد.
+اگر Production ناخواسته SQLite دید، Deploy متوقف می‌شود.
 
-### Passenger
-
-Restart مورد استفاده:
+### Passenger Restart
 
 ```bash
 mkdir -p tmp
 touch tmp/restart.txt
 ```
 
-بعد از تغییر Python/Template/Static/Config، Deploy کامل باید Verification بعد از Restart داشته باشد.
+Restart بدون runtime verification و HTTP smoke test کافی نیست.
 
 ---
 
-## 9) Runbook امن Production
+## 8) Runbook امن Production
 
-Production فقط بعد از Windows Local QA و تأیید صریح کاربر.
-
-ترتیب استاندارد:
+فقط بعد از Local approval:
 
 ```text
-1. git status / branch / expected HEAD
+1. git status / branch / exact expected HEAD
 2. Backup .env
 3. Backup pending imports
 4. Django check
 5. makemigrations --check --dry-run
-6. Assert DB vendor = mysql
-7. mysqldump before migrations
+6. Assert vendor=mysql + expected DB
+7. mysqldump قبل از migration
 8. migrate --plan
 9. migrate --noinput
 10. collectstatic --noinput
 11. Passenger restart
 12. runtime verifier
 13. HTTP smoke tests
-14. Product/Home/Admin/Cart checks relevant to the phase
-15. ثبت نتیجه در docs/PROJECT_CONTEXT
+14. Product/Home/Admin/Cart checks مرتبط
+15. DB/Data/Media safety check
+16. ثبت نتیجه در docs + PROJECT_CONTEXT
 ```
 
-DB backup Production باید fail-closed باشد:
-- `mysqldump` موجود نباشد → Deploy متوقف.
-- dump fail شود → Migration اجرا نشود.
-- Password در command line چاپ نشود.
-- charset `utf8mb4` حفظ شود.
+`mysqldump` وجود نداشته باشد یا fail شود → Migration اجرا نمی‌شود. Password در command line/log چاپ نمی‌شود. `utf8mb4` حفظ می‌شود.
 
-`deploy/phase48-deploy.sh` مسیر اثبات‌شده Backup/Migrate/Collectstatic/Restart است و `deploy/phase49-deploy.sh` همان مسیر را reuse می‌کند.
+`deploy/phase48-deploy.sh` مسیر پایه اثبات‌شده است؛ `deploy/phase49-deploy.sh` آن را reuse می‌کند.
 
 ---
 
-## 10) خطاهای تاریخی و روش جلوگیری از تکرار
+## 9) Error / Incident Ledger — خطاهای حل‌شده
 
-### 10.1) Tkinter: مخلوط شدن `pack()` و `grid()`
+### 9.1) Tkinter pack/grid collision
 
-**Symptom**
+Symptom: `TclError: cannot use geometry manager pack ... already has slaves managed by grid`  
+Root Cause: یک parent مشترک همزمان `grid` و `pack`.  
+Fix: geometry manager همان parent حفظ شد؛ holder داخلی parent جدا دارد.  
+Do Not Repeat: قبل از افزودن Widget، manager همان parent بررسی شود.  
+Status: **FIXED + Regression test**.
+
+### 9.2) AI model display label به‌جای raw ID
+
+Root Cause: Label نمایشی می‌توانست persist شود.  
+Fix: فقط raw model ID persist.  
+Status: **FIXED + test**.
+
+### 9.3) Silent Local Publish blocker
+
+Root Cause: `notify=False` دلیل Readiness failure را پنهان می‌کرد.  
+Fix: Save → Readiness → optional image finalize → Readiness → exact dialog/audit.  
+Status: **FIXED**.
+
+### 9.4) Image SEO false-stale
+
+Root Cause: hash روی raw JSON serialization (`\uXXXX` در برابر UTF-8).  
+Fix: semantic JSON normalize قبل از signature.  
+Status: **FIXED + test**.
+
+### 9.5) Image index guessing
+
+Risk: ویرایش/حذف metadata تصویر اشتباه.  
+Fix: exact URL/file/manifest identity.  
+Status: **FIXED + tests**.
+
+### 9.6) Test وابسته به runtime monkey patch
+
+Root Cause: `inspect.getsource()` روی method wrapped و test-order dependency.  
+Fix: Source contract از فایل canonical.  
+Status: **FIXED**.
+
+### 9.7) AvalAI HTTP400 روی `response_format`
+
+Fix: یک retry بدون `response_format` + client-side JSON validation.  
+Do Not Repeat: Provider capability-aware behavior.  
+Status: **FIXED + test**.
+
+### 9.8) `updated_at` به‌جای real source refresh
+
+Fix: فقط تغییر `last_refetched_at` success محسوب می‌شود.  
+Status: **FIXED + test**.
+
+### 9.9) Price Range `consultation_required=True` overwrite
+
+Root Cause: Phase43 state درست قبلی را دوباره False می‌کرد.  
+Fix: True قبلی preserve؛ مرحله بعد فقط requirement اضافه می‌کند.  
+Status: **FIXED + E2E test**.
+
+### 9.10) raw codes / Username در Public output
+
+Fix: Persian labels + filtering attribution داخلی در HTML/SEO contract.  
+Status: **FIXED + public tests**.
+
+### 9.11) Product/Cart price divergence risk
+
+Fix: Variant cache finalization؛ Range از همان cached unit prices.  
+Status: **GUARDED + tests**.
+
+### 9.12) Windows temp SQLite file lock
+
+Root Cause: test connection قبل از `TemporaryDirectory` cleanup بسته نمی‌شد.  
+Fix: explicit `db.conn.close()` در `finally`.  
+Status: **FIXED + CI**.
+
+### 9.13) `sync_seo_reference_lists` ImportError در Launcher
+
+Root Cause: runtime فایل، inner hook نصب‌شده روی Workspace را به‌اشتباه module-level symbol فرض کرده بود.  
+Fix: callable workspace hook از `_phase49_sync_reference_lists` resolve می‌شود.  
+Status: **FIXED + import regression test**.
+
+### 9.14) Phase49.3F Runtime Trace inline Bearer secret leak
+
+Failure قبلی:
 
 ```text
-TclError: cannot use geometry manager pack inside ... which already has slaves managed by grid
+Authorization: Bearer very-secret-token
+→ Authorization: *** very-secret-token ...
 ```
 
-**Root Cause:** یک parent مشترک (`quick_tab`) همزمان childهای `grid` و `pack` داشت.
+Root Cause: Pattern عمومی `authorization:<value>` قبل از Bearer pattern اجرا می‌شد و فقط کلمه `Bearer` را mask می‌کرد؛ credential واقعی tail باقی می‌ماند.
 
-**Fix:** روی یک parent فقط یک geometry manager؛ holder جدا می‌تواند داخل parent خودش manager دیگری داشته باشد.
+Fix:
+- در `catalog_center/app/runtime_logging.py` اول `Bearer <credential>` Redact می‌شود، سپس generic secret-key pattern.
+- Runtime Trace schema/JSONL/identity/AI Center/Pricing/DB/Publish تغییر نکرد.
+- تست اصلی Phase49.3F حفظ شد و همان تست اکنون PASS است.
+- `catalog_center/tests/test_v85_core.py` نیز direct Bearer regression دارد.
 
-**Do Not Repeat:** هنگام افزودن Widget جدید، geometry manager همان parent را ابتدا بررسی کن.
+Commits:
+- Fix: `60393e9cd294a8414c2b7945a3a11c54b391d8a1`
+- Regression: `03259f5072f8b902b190aa5bb86bc5b694632ab3`
 
-**Status:** FIXED + Regression test.
-
-### 10.2) ذخیره Label مدل AI به‌جای raw model ID
-
-**Root Cause:** Label مثل `model-id • رایگان` می‌توانست به‌جای ID واقعی persist شود.
-
-**Fix:** فقط raw model ID ذخیره می‌شود؛ label فقط UI است.
-
-**Do Not Repeat:** Display value و persisted value را یکی فرض نکن.
-
-**Status:** FIXED + Regression test.
-
-### 10.3) Local Publish بی‌صدا به Stage ناقص برمی‌گشت
-
-**Root Cause:** مسیر `queue_for_publish(notify=False)` دلیل Readiness failure را به اپراتور نشان نمی‌داد.
-
-**Fix:** Save → recompute readiness → optional image finalize → recompute → block publish + exact reasons + audit log.
-
-**Do Not Repeat:** هیچ Publish path نباید Readiness را bypass یا failure را silent کند.
-
-**Status:** FIXED.
-
-### 10.4) Image SEO بلافاصله stale می‌شد
-
-**Root Cause:** Hash روی JSON raw زده می‌شد؛ `\uXXXX` و UTF-8 فارسی از نظر معنا یکسان ولی از نظر رشته متفاوت بودند.
-
-**Fix:** JSON قبل از signature parse/normalize می‌شود.
-
-**Do Not Repeat:** Semantic state را از serialization خام Hash نکن.
-
-**Status:** FIXED + Regression test.
-
-### 10.5) Image mapping با index guessing
-
-**Risk:** حذف/ویرایش metadata عکس اشتباه در صورت تغییر ترتیب تصاویر.
-
-**Fix:** Exact URL/file/manifest identity؛ index guessing ممنوع.
-
-**Status:** FIXED + Regression tests.
-
-### 10.6) Test وابسته به Monkey Patch runtime
-
-**Root Cause:** `inspect.getsource()` روی Method runtime-wrapped نتیجه را وابسته به ترتیب اجرای test می‌کرد.
-
-**Fix:** Source contract از فایل canonical خوانده می‌شود.
-
-**Do Not Repeat:** Source contract test نباید به ترتیب import/patch وابسته باشد.
-
-**Status:** FIXED.
-
-### 10.7) AvalAI HTTP 400 روی Structured Output
-
-**Root Cause:** بعضی Gateway/Modelها `response_format` را قبول نمی‌کنند.
-
-**Fix:** یک Retry کنترل‌شده بدون `response_format` + parse/validation سمت Client.
-
-**Do Not Repeat:** OpenAI/AvalAI/OpenRouter را با یک Structured API فرض نکن؛ Provider capability-aware باش.
-
-**Status:** FIXED + test.
-
-### 10.8) `updated_at` به اشتباه Source Refresh موفق محسوب می‌شد
-
-**Root Cause:** تغییر عادی Product state می‌توانست AI technical flow را تحریک کند.
-
-**Fix:** فقط تغییر واقعی `last_refetched_at` success محسوب می‌شود.
-
-**Do Not Repeat:** Generic record timestamp را جای source freshness استفاده نکن.
-
-**Status:** FIXED + test.
-
-### 10.9) `consultation_required=True` بعد از Import دوباره False می‌شد
-
-**Root Cause:** `apply_price_range()` مقدار درست را set می‌کرد و Phase43 بعداً آن را downgrade می‌کرد.
-
-**Fix:** state قبلی True حفظ می‌شود؛ مرحله بعد فقط requirement اضافه می‌کند، نه حذف.
-
-**Do Not Repeat:** Post-processing نباید تصمیم قبلی business rule را بدون Contract مشخص overwrite کند.
-
-**Status:** FIXED + E2E regression.
-
-### 10.10) کدهای داخلی در JSON-LD عمومی
-
-**Symptom:** ظاهر صفحه فارسی بود ولی Structured Data هنوز `ready_product` و `made_to_order` منتشر می‌کرد.
-
-**Root Cause:** Template visible از Label فارسی استفاده می‌کرد ولی SEO serializer از raw field.
-
-**Fix:** JSON-LD هم از Persian runtime labels استفاده می‌کند.
-
-**Do Not Repeat:** فقط HTML را تست نکن؛ Source/JSON-LD/SEO نیز جزو Public Contract است.
-
-**Status:** FIXED در Phase49.3F CI iteration.
-
-### 10.11) نمایش `Username` در صفحه عمومی Product
-
-**Root Cause:** attribution داخلی source وارد Public Template شده بود.
-
-**Fix:** source internal attribution از نمایش مشتری حذف شد.
-
-**Do Not Repeat:** Internal operator/source identity را Public presentation فرض نکن.
-
-**Status:** FIXED + public test.
-
-### 10.12) اختلاف Cache قیمت و Range نمایش سایت
-
-**Risk:** Product Detail یک عدد و Cart/Checkout عدد دیگر نشان دهد.
-
-**Fix:** بعد از profile sync، active variantها دوباره محاسبه و `price_min/max` از همان `cached_unit_price` نهایی می‌شوند.
-
-**Do Not Repeat:** Range را از منبعی جدا از Cart price تولید نکن.
-
-**Status:** Guarded in 49.3F.
+Status: **FIXED + FINAL CI VERIFIED**.
 
 ---
 
-## 11) خطاهای Host که نباید دوباره تکرار شوند
+## 10) Host Errors / Do-Not-Repeat
 
-### 11.1) اجرای Migration روی DB اشتباه
+- Production migration روی SQLite fallback ممنوع؛ vendor/name قبل از migration assert شود.
+- Migration بدون DB backup ممنوع.
+- `mysqldump` fail/missing → Deploy Stop.
+- Python عمومی Host استفاده نشود؛ venv پروژه استفاده شود.
+- تغییر Static → `collectstatic` فراموش نشود.
+- Restart بدون runtime verify/HTTP smoke کافی نیست.
+- Dirty host tree با `reset --hard` خودکار پاک نشود؛ منشأ تغییر بررسی شود.
+- Warning با Failure اشتباه نشود.
 
-Production باید MySQL باشد. اگر `DB_NAME`/env اشتباه باشد Django ممکن است به SQLite fallback کند.
+Warnings شناخته‌شده:
+- `3dprinthub.W001`: Google membership credentials خالی.
+- `ckeditor.W001`: CKEditor4 security/maintenance debt.
+- `store.W026`: in-memory realtime برای cross-process کافی نیست؛ Redis/polling strategy لازم است.
+- Pillow `Image.getdata()` deprecation.
 
-**Guard:** قبل از backup/migration `connection.vendor` و database name بررسی شود.
-
-### 11.2) Migration بدون Backup
-
-ممنوع. Backup DB قبل از `migrate` شرط است.
-
-### 11.3) ادامه Deploy وقتی `mysqldump` وجود ندارد یا fail شده
-
-ممنوع. Deploy باید قبل از Migration stop شود.
-
-### 11.4) استفاده از Python اشتباه Host
-
-همیشه Python پروژه:
-
-```text
-/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python
-```
-
-استفاده از `python` عمومی shell می‌تواند dependency/settings متفاوت بدهد.
-
-### 11.5) فراموش کردن `collectstatic`
-
-اگر CSS/JS/static تغییر کرده، فقط Pull + Restart کافی نیست. `collectstatic --noinput` باید در Deploy path باشد.
-
-### 11.6) Restart بدون Verify
-
-بعد از `touch tmp/restart.txt` باید runtime verifier و HTTP smoke test اجرا شود.
-
-### 11.7) Dirty Working Tree روی Host
-
-قبل از Deploy باید Source tracked clean باشد. برای حل dirty state، `reset --hard` خودکار نزن؛ ابتدا منشأ فایل تغییرکرده مشخص شود.
-
-### 11.8) Warning را با Failure اشتباه نکن
-
-Warningهای شناخته‌شده فعلی:
-
-- `3dprinthub.W001`: Google membership بدون credentials غیرفعال است.
-- `ckeditor.W001`: CKEditor4 technical/security debt.
-- `store.W026`: in-memory realtime برای cross-process کافی نیست؛ Redis یا polling strategy لازم است.
-- Pillow `Image.getdata()` deprecation: بدهی refactor آینده، نه Failure فعلی.
-
-این Warningها باید مستند باشند، ولی نباید برای «رفع Warning» قابلیت‌های unrelated ناگهانی بازنویسی شوند.
+این Warningها بدهی‌های جدا هستند و بهانه بازنویسی unrelated نیستند.
 
 ---
 
-## 12) خطای باز فعلی — Phase49.3F
+## 11) Phase49.3F — Final GitHub CI State
 
-### وضعیت آخرین CI شناخته‌شده
+Validated runtime/test baseline قبل از Documentation نهایی:
+`a207ad2c35dd8dbbd10457e0d2295ea8efbb9776`
+
+Validation-only PR:
+`#35` — **Do Not Merge**.
+
+Final CI:
 
 ```text
-Run: 32346200148
-Job: 96355362243
+Run: 32351795808
+Job: 96372355769
 
 PowerShell runner contract: PASS
 Compile: PASS
-Django check: PASS
-makemigrations --check: PASS
-Migration plan: PASS
-49.3F AddField-only safety: PASS
-Targeted Django tests: 69/69 PASS
-Windows Catalog Center tests: FAIL
-Full Django suite: SKIPPED because Windows step failed
+Django check/migration contract: PASS
+Phase49.3F AddField-only migration safety: PASS
+Targeted Django: 69/69 PASS
+Phase49.3F Windows dedicated: 7/7 PASS
+Phase49.3B diagnostics regression: 7/7 PASS
+Diagnostic identity: 3/3 PASS
+Epic49 Windows discovery: 84/84 PASS
+Launcher markers: PASS
+ACTIVE_RELEASE_VERIFIED=OK
+Full Django: 415 PASS / 2 skipped
+Overall: SUCCESS
 Production: UNTOUCHED
 ```
 
-### Failure باز
+Markerهای اصلی:
+- `EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED`
+- `EPIC49_3F_UNSELECTED_IMAGE_METADATA_PRESERVED=ENABLED`
+- `EPIC49_3F_AI_PROGRESS_TIMEOUT=ENABLED`
+- `EPIC49_3F_SCROLLABLE_AI_CENTER=ENABLED`
+- `EPIC49_3F_GOOGLE_GEMINI_DIRECT=ENABLED`
+- `EPIC49_3F_RUNTIME_TRACE=ENABLED`
+- `EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED`
+- `EPIC49_3F_DYNAMIC_PRICING=ENABLED`
+- `AI_PROFILE_MIGRATION=PRESERVED`
+- `HOST_PROFILE_MIGRATION=PRESERVED`
+- `ACTIVE_RELEASE_VERIFIED=OK`
 
-Test:
+**نتیجه:** blocker کدنویسی/CI فاز 49.3F بسته شده؛ فاز هنوز DONE نیست چون Windows Local/Manual QA و user approval باقی است.
 
-```text
-tests.test_phase49_3f_product_intelligence
-Phase493FRuntimeTraceTests.test_runtime_trace_redacts_structured_and_inline_secrets
-```
+---
 
-Observed leak در fake test data:
+## 12) Migration State
 
-```text
-Authorization: *** very-secret-token *** secret=***
-```
+### قبلاً روی Windows اعمال‌شده
+- `store.0031_phase49_rich_material_colors` ✅
+- `store.0032_phase49_slider_media_profile` ✅
+- `website.0022_phase49_hero_media_presentation` ✅
 
-Structured fields مانند `api_key` و `refresh_token` درست Redact شده‌اند، اما token داخل متن آزاد `message` هنوز کامل حذف نشده است.
+### Phase49.3F — Additive-only و در Local Gate فعلی باید بررسی/اعمال شوند
+- `store.0033_phase49_3f_pricing_intelligence`
+- `website.0023_phase49_3f_material_runtime_rates`
 
-### Root Cause فعلی
-
-`phase49_3f_runtime_trace._sanitize(str)` به `runtime_logging.redact()` متکی است. Redactor مرکزی بعضی الگوها را mask می‌کند ولی شکل آزاد Authorization در این تست، tail secret را باقی می‌گذارد.
-
-### Fix موردنیاز
-
-- **فقط Redaction رشته‌ای** را اصلاح کنیم.
-- ساختار Runtime Trace، مسیر فایل، identity fields و JSONL format را تغییر ندهیم.
-- تست فعلی ضعیف یا حذف نشود.
-- تست‌های قبلی Diagnostics نیز دوباره اجرا شوند تا Redaction جدید Regression ایجاد نکند.
-
-**Status:** OPEN — blocker CI نهایی 49.3F.
+CI ثابت کرده هر دو فقط `AddField` هستند. Production هنوز این فاز را دریافت نکرده است.
 
 ---
 
 ## 13) مسیر باقی‌مانده — از همین نقطه
 
-### Gate A — بستن Failure فعلی
+### Gate A — Windows Pull + Automated Local Gate
 
-- [ ] اصلاح حداقلی inline Authorization/Bearer secret redaction.
-- [ ] اجرای focused Runtime Trace test.
-- [ ] اجرای Diagnostics secret tests قدیمی.
-- [ ] اجرای Windows Phase49 tests.
-
-### Gate B — CI نهایی
-
-- [ ] CI Targeted Django سبز.
-- [ ] Windows Catalog Center سبز.
-- [ ] Launcher markers سبز.
-- [ ] Full Django suite سبز.
-- [ ] شماره Run/Job/Commit نهایی در همین سند و `PROJECT_CONTEXT.md` ثبت شود.
-
-### Gate C — Windows Local Gate
-
-- [ ] `git fetch/pull` از Epic.
-- [ ] اجرای canonical `RUN_PHASE49_3F_LOCAL_GATE.ps1`.
+- [ ] Catalog Center/Django processهای مربوط بسته شوند.
+- [ ] `git status --short` خالی باشد؛ dirty tree → Stop/Inspect، نه Reset.
+- [ ] Fetch/Switch/Pull exact Epic با `--ff-only`.
+- [ ] اجرای `RUN_PHASE49_3F_LOCAL_GATE.ps1` از Repository.
 - [ ] Backup Local Django DB و Catalog DB ساخته شود.
-- [ ] migration 0033/0023 فقط Additive اعمال شود.
-- [ ] Local automated gate کامل PASS شود.
+- [ ] `store.0033` و `website.0023` Additive apply/verify شوند.
+- [ ] Focused + regression + launcher + full local suite PASS شود.
 
-### Gate D — Manual Windows QA
+### Gate B — Manual Windows QA
 
-- [ ] AI Center scroll/sticky controls.
-- [ ] Gemini Direct با Key واقعی + model list.
-- [ ] AvalAI/OpenRouter/OpenAI sanity test در صورت key واقعی.
+- [ ] AI Center vertical/horizontal scroll + sticky Provider/Model/Save/Test/Log.
+- [ ] Gemini Direct با real key: list/search/select/save/test.
+- [ ] AvalAI/OpenRouter/OpenAI sanity test در صورت real key.
 - [ ] AI progress states و 30s connection timeout.
-- [ ] Image SEO فقط 1–2 عکس انتخاب‌شده؛ هیچ image/file/url به AI نرود.
-- [ ] Metadata عکس انتخاب‌نشده حفظ شود.
-- [ ] Runtime log بدون هیچ secret.
-- [ ] Source refetch + technical AI فقط بعد از `last_refetched_at` واقعی.
-- [ ] Dynamic pricing example = 1,120,000 تومان قبل از extras/shipping.
-- [ ] Product public Persian labels / no Username / no raw codes.
-- [ ] یک Product واقعی **LOCAL PUBLISH ONLY**.
-- [ ] Product Detail price == Cart unit price == Checkout unit source.
-- [ ] Hero / Admin / reverse sync regression بررسی شود.
+- [ ] Image SEO روی 1–2 تصویر منتخب؛ هیچ image/file/url به AI نرود.
+- [ ] metadata تصاویر انتخاب‌نشده حفظ شود.
+- [ ] Runtime JSONL واقعی بررسی شود؛ هیچ API secret باقی نماند.
+- [ ] source technical AI فقط بعد از تغییر واقعی `last_refetched_at`.
+- [ ] Dynamic price example = **1,120,000 تومان** قبل از extras/shipping.
+- [ ] quality duration و assembly تغییر قیمت را درست منعکس کنند.
+- [ ] Product public: Persian labels / no Username / no raw codes.
+- [ ] Product Detail price == Cart/Checkout unit price.
+- [ ] Hero/Admin/reverse-sync regression بررسی شود.
 
-### Gate E — تأیید کاربر
+### Gate C — One Real Local Publish
 
-- [ ] تأیید صریح Local/Visual/Data QA.
+- [ ] فقط یک Product واقعی.
+- [ ] **LOCAL PUBLISH ONLY**؛ Production Publish استفاده نشود.
+- [ ] Django Local Product/Profile/Hero/Home/Store/Admin verify شود.
 
-### Gate F — Production
+### Gate D — User Approval
 
-فقط بعد از Gate E:
+- [ ] تأیید صریح Visual/Data/Local E2E.
 
-- [ ] Host exact HEAD check.
-- [ ] Production `.env` / pending / DB backup.
-- [ ] assert MySQL.
-- [ ] migration plan.
-- [ ] migrate.
-- [ ] collectstatic.
-- [ ] Passenger restart.
-- [ ] runtime verify.
-- [ ] smoke tests.
-- [ ] DB/Data/Media safety verification.
-- [ ] سند فاز و این فایل با نتیجه نهایی Update شوند.
+### Gate E — Production
+
+فقط بعد از Gate D:
+- exact HEAD check
+- `.env`/pending/DB backup
+- assert MySQL
+- migration plan
+- migrate
+- collectstatic
+- Passenger restart
+- runtime verify
+- smoke tests
+- DB/Data/Media safety verification
+- docs/context final update
 
 ---
 
-## 14) نقشه کدهای اصلی مرتبط با مسیر جاری
+## 14) Separate Open Technical Items — غیر از blocker 49.3F
+
+این موارد نباید گم شوند ولی نباید با Hotfix فعلی قاطی شوند:
+
+### `/api/v1/catalog/sitemap/` → 404 در Local runserver
+
+قبلاً در Local logs مشاهده شده است. احتمالاً stale client endpoint یا mismatch route است. این مورد **blocker Redaction/49.3F CI نیست** اما قبل از بسته‌شدن کامل Epic باید Root Cause آن بررسی شود و اگر Route واقعاً لازم است همان contract اصلاح شود؛ Endpoint موازی بی‌دلیل ساخته نشود.
+
+### CKEditor4
+
+`ckeditor.W001` بدهی امنیتی/maintenance مستقل است. ارتقا/جایگزینی باید فاز جدا با بررسی licensing/UI compatibility باشد.
+
+### Realtime
+
+`store.W026`: برای multi-process Production، Redis/polling architecture باید مطابق Host واقعی تصمیم‌گیری شود؛ تغییر عجولانه unrelated ممنوع.
+
+---
+
+## 15) نقشه کدهای اصلی
 
 ### Windows Catalog Center
 
@@ -813,6 +644,7 @@ catalog_center/app/phase49_3f_selected_image_ai.py
 catalog_center/app/phase49_3f_product_intelligence.py
 catalog_center/app/phase49_3f_runtime_trace.py
 catalog_center/app/phase49_3f_source_refresh_guard.py
+catalog_center/app/runtime_logging.py
 catalog_center/app/ai_providers.py
 catalog_center/app/openai_content.py
 ```
@@ -842,25 +674,13 @@ website/phase49_3b_profile_media_mirror.py
 templates/website/partials/hero.html
 ```
 
-### Migrationهای جاری Phase49.3F
-
-```text
-store/migrations/0033_phase49_3f_pricing_intelligence.py
-website/migrations/0023_phase49_3f_material_runtime_rates.py
-```
-
-### CI / Runner
+### CI / Runner / Deploy
 
 ```text
 .github/workflows/phase49-epic-ci.yml
 RUN_PHASE49_3D_LOCAL_GATE.ps1
 RUN_PHASE49_3E_LOCAL_GATE.ps1
 RUN_PHASE49_3F_LOCAL_GATE.ps1
-```
-
-### Production
-
-```text
 deploy/phase48-deploy.sh
 deploy/phase49-deploy.sh
 deploy/epic49_backup_database.py
@@ -869,63 +689,50 @@ deploy/epic49_verify_runtime.py
 
 ---
 
-## 15) Checklist اجباری قبل از هر تغییر جدید
+## 16) Checklist اجباری قبل/بعد از هر تغییر
 
-- [ ] درخواست کاربر را به یک Delta دقیق تبدیل کرده‌ام.
-- [ ] فایل‌ها/ماژول‌های موجود مربوط را قبل از کدنویسی خوانده‌ام.
-- [ ] بررسی کرده‌ام قابلیت مشابه قبلاً وجود دارد یا نه.
-- [ ] مسیر Mature را Extend می‌کنم، نه اینکه Duplicate بسازم.
-- [ ] `Must-Not-Touch`ها مشخص شده‌اند.
-- [ ] DB/Media/Secret/Production safety مشخص است.
-- [ ] اگر Migration نیاز است، Additive-first طراحی شده.
-- [ ] Regression test قابلیت قبلی در نظر گرفته شده.
-- [ ] Sync boundaryهای متاثر مشخص شده‌اند.
-- [ ] هیچ Secret در test fixture/log/export واقعی وارد نمی‌شود.
-- [ ] Production در این مرحله لازم نیست مگر Local قبلاً صریح تأیید شده باشد.
+### قبل
+- [ ] Requested Delta مشخص.
+- [ ] Existing code/feature خوانده شده.
+- [ ] Duplicate solution جست‌وجو شده.
+- [ ] Must-Not-Touch مشخص.
+- [ ] DB/Media/Secret/Production safety مشخص.
+- [ ] Migration در صورت نیاز Additive-first.
+- [ ] Boundaryهای متاثر مشخص.
+- [ ] Regression test تعریف شده.
 
----
-
-## 16) Checklist بعد از هر تغییر
-
+### بعد
 - [ ] Compile/Syntax PASS.
 - [ ] Focused tests PASS.
-- [ ] Regression tests قبلی PASS.
-- [ ] `manage.py check` PASS یا فقط warningهای شناخته‌شده.
-- [ ] `makemigrations --check --dry-run` نتیجه مورد انتظار.
-- [ ] Migration safety بررسی شده.
-- [ ] CI کامل PASS.
-- [ ] Git working tree موردنظر clean.
-- [ ] `PROJECT_CONTEXT.md` و Phase doc Update شده.
-- [ ] این Master Roadmap در بخش Current Status / Error Ledger / Remaining Path Update شده.
-- [ ] Local Gate اجرا شده.
-- [ ] Visual/Data QA اجرا شده.
-- [ ] فقط بعد از تأیید صریح → Production.
+- [ ] Regression tests PASS.
+- [ ] `manage.py check` فقط warningهای شناخته‌شده یا clean.
+- [ ] `makemigrations --check --dry-run` مطابق انتظار.
+- [ ] Migration safety PASS.
+- [ ] CI full PASS.
+- [ ] Docs/PROJECT_CONTEXT/Master Roadmap update.
+- [ ] Windows Local Gate PASS.
+- [ ] Visual/Data QA PASS.
+- [ ] explicit approval قبل از Production.
 
 ---
 
-## 17) عملیات ممنوع به‌عنوان «راه‌حل سریع»
+## 17) عملیات ممنوع به‌عنوان Quick Fix
 
 بدون فاز مستقل و تأیید صریح:
-
-- `git reset --hard` روی فایل‌های ناشناخته/کاربر.
-- `git clean -fd` برای رفع Deploy.
-- حذف `db.sqlite3`.
-- حذف Catalog SQLite.
-- حذف `.env`.
-- حذف `media/` یا `private_media/`.
-- `DROP TABLE`.
-- `TRUNCATE`.
-- حذف Product/Asset تاریخی برای حل migration.
-- ساخت DB جدید فقط برای اینکه migration سبز شود.
-- ساخت Endpoint/Model/Price Engine/AI workflow موازی وقتی مسیر موجود قابل Extend است.
-- حذف تستی که Bug واقعی را پیدا کرده فقط برای سبز کردن CI.
-- تبدیل Warning شناخته‌شده به بازنویسی unrelated.
+- `git reset --hard` / `git clean -fd` برای پنهان‌کردن مشکل.
+- حذف Django/Catalog DB.
+- حذف `.env` یا media/private_media.
+- `DROP TABLE` / `TRUNCATE`.
+- حذف Product/Asset تاریخی برای سبزشدن migration.
+- ساخت DB جدید فقط برای سبزشدن test.
+- ساخت Endpoint/Model/Pricing/AI workflow موازی وقتی مسیر Mature قابل Extend است.
+- حذف/تضعیف تستی که Regression واقعی را پیدا کرده.
 
 ---
 
-## 18) Definition of Done هر فاز
+## 18) Definition of Done
 
-یک فاز فقط وقتی **DONE** است که همه موارد زیر برقرار باشند:
+یک فاز فقط وقتی DONE است که:
 
 ```text
 Code complete
@@ -934,67 +741,61 @@ Code complete
 + CI full green
 + Migration safety verified
 + Windows Local Gate green
-+ Manual visual/data QA green
++ Manual Visual/Data QA green
 + User explicit approval
-+ Production backup/deploy (اگر فاز production-bound است)
++ Production backup/deploy if production-bound
 + Production smoke/data checks green
 + Docs/roadmap/context updated
 ```
 
-اگر هر کدام ناقص باشد، وضعیت باید `IN PROGRESS` یا `BLOCKED` ثبت شود، نه DONE.
+در غیر این صورت وضعیت `IN PROGRESS` یا `BLOCKED/PENDING LOCAL QA` است.
 
 ---
 
-## 19) وضعیت جاری پروژه در زمان ایجاد این فایل
+## 19) Current Status — 2026-08-20
 
-**Phase فعال:** `49.3F Product Intelligence / Dynamic Pricing / AI UX`  
-**Development branch:** `epic/phase49-unified-product-slider-sync`  
-**Django targeted suite:** 69/69 PASS در Run `32346200148`  
-**Current blocker:** Runtime Trace inline secret redaction  
-**Windows CI:** FAILED روی همان Redaction test  
-**Full Django suite در Run جاری:** به‌علت Windows failure اجرا نشده  
-**Local 49.3F final gate:** هنوز پس از CI نهایی لازم است  
+**Phase:** `49.3F Product Intelligence / Dynamic Pricing / AI UX`  
+**GitHub code/CI blocker:** بسته شده ✅  
+**Final CI:** Run `32351795808`, Job `96372355769` — SUCCESS ✅  
+**Runtime Trace Bearer leak:** FIXED + regression-covered ✅  
+**Targeted Django:** 69/69 ✅  
+**Phase49.3F Windows:** 7/7 ✅  
+**Epic49 discovery:** 84/84 ✅  
+**Full Django:** 415 PASS / 2 skipped ✅  
+**Launcher:** `ACTIVE_RELEASE_VERIFIED=OK` ✅  
+**Windows Local 49.3F Gate:** PENDING  
+**Manual QA / one real Local Publish:** PENDING  
 **Production:** **UNTOUCHED / NOT APPROVED**
 
 ### قدم بعدی دقیق
 
-**نه بازنویسی AI Center، نه تغییر قیمت، نه تغییر DB.**  
-قدم بعدی فقط:
-
 ```text
-Fix inline secret redaction
-→ keep current log schema intact
-→ keep current tests intact
-→ rerun Windows diagnostics + Phase49 CI
-→ full suite
-→ update docs
-→ Windows Local Gate
+GitHub exact Epic HEAD
+→ Windows pull --ff-only
+→ RUN_PHASE49_3F_LOCAL_GATE.ps1
+→ Local automated PASS
+→ Manual AI/Image/Pricing/Product QA
+→ one real LOCAL PUBLISH ONLY
+→ Local Django E2E
+→ explicit user approval
+→ Production plan/deploy
 ```
 
-این همان اصل «اصلاح ارتباط/Root Cause بدون به‌هم‌زدن کلیات» است.
+در این نقطه **کد جدید برای Hotfix Redaction لازم نیست** مگر Windows Local Gate Regression تازه‌ای نشان دهد. اگر Regression جدیدی ظاهر شد، فقط Root Cause همان مورد با Minimal Change + Regression Test اصلاح می‌شود.
 
 ---
 
 ## 20) قانون نگهداری این سند
 
-از این فاز به بعد، در پایان هر Phase یا Hotfix مهم باید حداقل این چهار قسمت Update شوند:
+در پایان هر Phase/Hotfix مهم باید حداقل این موارد به‌روز شوند:
 
-1. `مسیر طی‌شده پروژه`
-2. `خطاهای تاریخی / Error Ledger`
-3. `خطای باز فعلی / Current Status`
-4. `مسیر باقی‌مانده`
+1. مسیر طی‌شده.
+2. Incident/Error Ledger.
+3. Current Status.
+4. Remaining Path.
+5. Final code/test baseline.
+6. CI Run/Job/result.
+7. Local Gate result.
+8. Production result.
 
-برای CI نهایی نیز باید ثبت شود:
-
-```text
-Final commit SHA
-CI Run ID
-CI Job ID
-Targeted result
-Windows result
-Full suite result
-Local Gate result
-Production result
-```
-
-هدف این سند صرفاً گزارش نیست؛ **Guard مهندسی پروژه است تا توسعه بعدی بر پایه وضعیت واقعی انجام شود و کدهای حل‌شده دوباره از نو یا به شکل موازی ساخته نشوند.**
+این فایل نقشه مادر است؛ Phase docs جزئیات implementation را نگه می‌دارند و `PROJECT_CONTEXT.md` Snapshot عملیاتی کوتاه‌تر را نگه می‌دارد.
