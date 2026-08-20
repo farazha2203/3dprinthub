@@ -17,6 +17,11 @@ class StoreConfig(AppConfig):
         # wrapper itself is installed later, after Unified Sync rebinds services.
         from . import phase49_3b_profile_media
 
+        # Phase49.3F keeps the mature store/models.py stable too. The additive
+        # migrations own the DB columns; this module contributes their runtime
+        # model fields before Admin/runtime contracts are registered.
+        from . import phase49_3f_pricing
+
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
@@ -32,6 +37,11 @@ class StoreConfig(AppConfig):
         # Install profile persistence after Unified Sync so its apply_homepage_slider
         # wrapper cannot be overwritten by the revision-aware rebind above.
         phase49_3b_profile_media.install()
+
+        # Phase49.3F is installed after Unified Sync/Profile Media so the explicit
+        # fixed/dynamic pricing strategy becomes the final pricing contract used
+        # by Catalog import, ProductVariant, Cart and Checkout.
+        phase49_3f_pricing.install()
 
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
