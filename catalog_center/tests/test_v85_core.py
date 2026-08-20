@@ -70,6 +70,16 @@ class V85ConnectionContractTests(unittest.TestCase):
         self.assertNotIn("abc", text)
         self.assertNotIn("another-secret", text)
 
+    def test_authorization_bearer_value_is_fully_redacted(self):
+        text = redact(
+            "request Authorization: Bearer very-secret-token password=hunter2 secret=topsecret status=400"
+        )
+        self.assertNotIn("very-secret-token", text)
+        self.assertNotIn("hunter2", text)
+        self.assertNotIn("topsecret", text)
+        self.assertIn("status=400", text)
+        self.assertIn("***", text)
+
     def test_main_has_ftp_https_bridge_and_no_paramiko(self):
         root = Path(__file__).resolve().parents[1]
         text = (root / "app" / "main.py").read_text(encoding="utf-8")
@@ -81,7 +91,7 @@ class V85ConnectionContractTests(unittest.TestCase):
 
     def test_product_fields_and_blocking_schema_exist(self):
         with tempfile.TemporaryDirectory() as temp:
-            db = Database(Path(temp) / "db.sqlite3")
+            db = Database(Path(self.temp.name) / "db.sqlite3")
             try:
                 columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
                 required = {
