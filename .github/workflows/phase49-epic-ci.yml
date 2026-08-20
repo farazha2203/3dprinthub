@@ -70,8 +70,20 @@ jobs:
 
           $runner3f = Get-Content -Raw -Path "RUN_PHASE49_3F_LOCAL_GATE.ps1"
           [void][scriptblock]::Create($runner3f)
-          if ($runner3f -notmatch '\$RunnerVersion\s*=\s*"49\.3F\.0"') {
-            throw "Expected Phase49.3F.0 runner version marker is missing."
+          if ($runner3f -notmatch '\$RunnerVersion\s*=\s*"49\.3F\.1"') {
+            throw "Expected Phase49.3F.1 runner version marker is missing."
+          }
+          if ($runner3f -notmatch 'function\s+Invoke-NativeCapture') {
+            throw "Phase49.3F.1 native capture helper is missing."
+          }
+          if ($runner3f -match '\(&\s+\$Py\s+manage\.py\s+showmigrations\s+store\s+2>&1\)') {
+            throw "Unsafe direct showmigrations stderr capture returned."
+          }
+          if ($runner3f -notmatch 'Invoke-NativeCapture\s+-File\s+\$Py\s+-Arguments\s+@\("manage\.py",\s*"showmigrations",\s*"store"\)') {
+            throw "Store showmigrations must use Invoke-NativeCapture."
+          }
+          if ($runner3f -notmatch 'Invoke-NativeCapture\s+-File\s+\$Py\s+-Arguments\s+@\("manage\.py",\s*"showmigrations",\s*"website"\)') {
+            throw "Website showmigrations must use Invoke-NativeCapture."
           }
           if ($runner3f -notmatch 'RUN_PHASE49_3E_LOCAL_GATE\.ps1') {
             throw "Phase49.3F runner must chain the canonical Phase49.3E base gate."
@@ -87,6 +99,16 @@ jobs:
           }
           if ($runner3f -notmatch 'Production\s*=\s*UNTOUCHED') {
             throw "Phase49.3F runner must explicitly preserve Production."
+          }
+
+          $nativeProbe = & ./RUN_PHASE49_3F_LOCAL_GATE.ps1 -NativeCaptureSelfTest 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            $nativeProbe | ForEach-Object { Write-Host $_ }
+            throw "Phase49.3F.1 native capture self-test failed."
+          }
+          $nativeProbeText = ($nativeProbe -join "`n")
+          if ($nativeProbeText -notmatch 'PHASE49_3F_NATIVE_CAPTURE_SELFTEST=OK') {
+            throw "Phase49.3F.1 native capture self-test marker is missing."
           }
           Write-Host "PHASE49_3F_POWERSHELL_RUNNER_CONTRACT=OK"
 
