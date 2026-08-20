@@ -7,7 +7,10 @@ from pathlib import Path
 
 
 SECRET_PATTERNS = (
-    re.compile(r"(?i)(password|token|authorization|api[_ -]?key)(\s*[:=]\s*)([^\s,;]+)"),
+    re.compile(
+        r"(?i)(password|token|access[_ -]?token|refresh[_ -]?token|authorization|api[_ -]?key|secret|management[_ -]?key|admin[_ -]?key)"
+        r"(\s*[:=]\s*)([^\s,;]+)"
+    ),
     re.compile(r"(?i)(bearer\s+)([a-z0-9._~+/=-]+)"),
 )
 
