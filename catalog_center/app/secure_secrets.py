@@ -8,6 +8,7 @@ USERS = {
     "openai": "OPENAI_API_KEY",
     "avalai": "AVALAI_API_KEY",
     "openrouter": "OPENROUTER_API_KEY",
+    "google": "GOOGLE_GEMINI_API_KEY",
 }
 
 CONNECTION_USERS = {
@@ -27,6 +28,7 @@ LEGACY_FILES = {
     "openai": ["APIKEY.txt"],
     "avalai": ["APIKEY-AVAL.txt", "APIKEY_AVAL.txt"],
     "openrouter": [],
+    "google": [],
 }
 
 
@@ -63,7 +65,6 @@ def get_secret(name: str) -> str:
             value = (kr.get_password(SERVICE_NAME, legacy) or "").strip()
             if not value:
                 continue
-            # Upgrade the legacy Credential Manager username in place.
             kr.set_password(SERVICE_NAME, primary, value)
             return value
     except Exception:
@@ -110,12 +111,7 @@ def secret_source(name: str) -> str:
 
 
 def migrate_connection_env_to_keyring(env_path: str | Path) -> list[str]:
-    """Move FTP/Bridge/admin secrets from a portable .env into Windows Credential Store.
-
-    Both current and legacy environment names are accepted. The source file is
-    scrubbed only after every discovered secret is saved successfully. No secret
-    value is returned or logged.
-    """
+    """Move FTP/Bridge/admin secrets from a portable .env into Windows Credential Store."""
     path = Path(env_path)
     if not path.is_file():
         return []
