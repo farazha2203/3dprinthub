@@ -45,9 +45,21 @@ def main() -> int:
     from app import phase49_3e_ai_task_center as phase49_3e_task_center_module
     from app.phase49_3e_ai_contract import install as install_phase49_3e_contract
     from app.phase49_3e_ai_task_center import install as install_phase49_3e_task_center
+    from app.phase49_3f_gemini_provider import install as install_phase49_3f_gemini_provider
+    from app.phase49_3f_ai_experience import (
+        prepare_provider_modules as prepare_phase49_3f_provider_modules,
+        configure_runtime as configure_phase49_3f_runtime,
+        install_shell as install_phase49_3f_ai_shell,
+    )
+    from app.phase49_3f_workspace import install as install_phase49_3f_workspace
+    from app.phase49_3f_source_refresh_guard import install as install_phase49_3f_source_refresh_guard
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
+
+    # Provider extension must happen before any settings/app state is constructed.
+    install_phase49_3f_gemini_provider()
+    prepare_phase49_3f_provider_modules()
 
     install_ai_runtime_patch()
     install_ai_recovery()
@@ -69,6 +81,8 @@ def main() -> int:
     install_phase49_3d_workspace(ProductWorkspace, readiness_module)
     install_phase49_3e_contract(phase49_3e_task_center_module)
     install_phase49_3e_task_center(ProductWorkspace, readiness_module)
+    install_phase49_3f_workspace(ProductWorkspace, readiness_module)
+    install_phase49_3f_source_refresh_guard(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -137,6 +151,14 @@ def main() -> int:
     print("EPIC49_3E_OPERATOR_IMAGE_EDITOR=ENABLED", flush=True)
     print("EPIC49_3E_NON_BLOCKING_STAGE_NAV=ENABLED", flush=True)
     print("EPIC49_3E_LOCAL_PREFLIGHT_ALWAYS_ACCESSIBLE=ENABLED", flush=True)
+    print("EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED", flush=True)
+    print("EPIC49_3F_UNSELECTED_IMAGE_METADATA_PRESERVED=ENABLED", flush=True)
+    print("EPIC49_3F_AI_PROGRESS_TIMEOUT=ENABLED", flush=True)
+    print("EPIC49_3F_SCROLLABLE_AI_CENTER=ENABLED", flush=True)
+    print("EPIC49_3F_GOOGLE_GEMINI_DIRECT=ENABLED", flush=True)
+    print("EPIC49_3F_RUNTIME_TRACE=ENABLED", flush=True)
+    print("EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED", flush=True)
+    print("EPIC49_3F_DYNAMIC_PRICING=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -158,6 +180,7 @@ def main() -> int:
     from app.phase49_diagnostics_identity_ui import install as install_diagnostic_identity_ui
     from app.phase49_3c_image_pipeline import install_base_app as install_image_base
 
+    configure_phase49_3f_runtime(app_module.DATA)
     install_diagnostic_database(Database)
     install_ai_base(app_module.App)
     install_image_base(app_module)
@@ -172,6 +195,7 @@ def main() -> int:
     install_ai_shell(App87)
     install_phase49_3d_ai_shell(App87)
     install_phase49_3d_ai_ui_cleanup(App87)
+    install_phase49_3f_ai_shell(App87, app_module.DATA)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
