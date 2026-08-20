@@ -93,9 +93,11 @@ def product_schema_json(product, variants, request, seo):
                     "highPrice": high,
                     "offerCount": max(1, len(variants)),
                 }
+        product_type_label = str(getattr(profile, "product_type_label", "") or profile.product_type or "").strip()
+        availability_label = str(getattr(profile, "availability_status_label", "") or profile.availability_status or "").strip()
         additional = [
-            {"@type":"PropertyValue", "name":"نوع محصول", "value":profile.product_type},
-            {"@type":"PropertyValue", "name":"وضعیت عرضه", "value":profile.availability_status},
+            {"@type":"PropertyValue", "name":"نوع محصول", "value":product_type_label},
+            {"@type":"PropertyValue", "name":"وضعیت عرضه", "value":availability_label},
             {"@type":"PropertyValue", "name":"حداقل زمان آماده‌سازی", "value":profile.lead_time_min_days, "unitText":"روز"},
             {"@type":"PropertyValue", "name":"حداکثر زمان آماده‌سازی", "value":profile.lead_time_max_days, "unitText":"روز"},
         ]
