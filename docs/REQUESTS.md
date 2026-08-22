@@ -110,7 +110,7 @@ Fix:
 - no duplicate Provider/Model/network/request implementation
 
 ### REQ-49I-009 — Windows handoff must use live GitHub snapshot, not stale Chat SHA
-Status: GITHUB_UPDATED / 49.3I.3 CI PENDING / WINDOWS RERUN BLOCKED
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - GitHub remains the source of truth during handoff.
 - do not treat a SHA copied into Chat as permanent while the development branch can advance.
@@ -121,23 +121,23 @@ Request:
 
 Incident:
 - Windows correctly pulled to `53e9216ae84a3e167481253da44760179c751051` but the Chat preflight still required stale `789edf8652ad8a09641afedd5e959c63822800c7`.
+- the repository's existing Git-only Windows policy already required Remote Epic HEAD resolution after fetch; the failed Chat preflight violated that policy.
 - canonical root cause: `ERR-49-019`.
 
 Fix:
 - canonical runner upgraded to v49.3I.3 with live fetch + exact branch + fetched Remote HEAD equality guard.
-- Phase49.3I CI now asserts the handoff guard markers and Windows PowerShell 5.1 ASCII contract.
+- Phase49.3I CI asserts the handoff guard markers and Windows PowerShell 5.1 ASCII contract.
 
-## Phase49.3I Previous Final GitHub Validation
-Exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
-CI-only PR #47: CLOSED / NOT MERGED.
-- Phase49.3I Run `32573779531` — SUCCESS
-- Phase49.3H Run `32573779534` — SUCCESS
-- Phase49.3G Run `32573779548` — SUCCESS
-- Full Phase49 + Full Django Run `32573779528` — SUCCESS
+Validation:
+- CI-only PR #48 CLOSED / NOT MERGED.
+- validated Epic base `7117510f173f45a3d8c806e46fb0476cbaeba115`.
+- Phase49.3I `32575765467` SUCCESS.
+- Phase49.3H `32575765515` SUCCESS.
+- Phase49.3G `32575765544` SUCCESS.
+- Full Phase49 + Full Django `32575765457` SUCCESS.
 
-Runner at that gate was v49.3I.2. The later 49.3I.3 handoff safety change requires a fresh CI validation before Windows rerun.
-
-Canonical runner now: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
+## Canonical Runner
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
 
 Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
