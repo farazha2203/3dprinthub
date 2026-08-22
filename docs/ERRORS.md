@@ -198,6 +198,18 @@ Correct Solution: Phase49.3I.5 makes card -> hidden Treeview synchronization one
 Verification: dedicated fake-Treeview feedback-loop regression test plus Phase49.3I/full CI required before Windows rerun.
 Prevention Rule: bidirectional UI synchronization must designate one direction as event-producing and the reverse direction as state-only; never write the same Tk selection again from its own `<<TreeviewSelect>>` callback.
 
+### ERR-49-023 — Secure credentials appeared lost because masked fields were not hydrated
+Date: 2026-08-22
+Environment: Windows Catalog Center UX87
+Related Phase: 49.3I.6
+Symptoms: after upgrading/restarting Catalog Center, the owner saw FTP password, Bridge token and AI API key fields empty again and had to treat them as if they had been lost, despite the project contract that credentials persist between releases.
+Verified Root Cause: the secure backend already wrote/read credentials through Windows Credential Store, and runtime `_ai_key()` / `_site_connection()` already fell back to secure storage. The operator fields had a different lifecycle: `ai_key` initialized empty, FTP password and Bridge token initialized from environment/new input only, and mature Save handlers cleared those widgets after secure persistence. Startup never hydrated Credential Store values back into the masked fields.
+Failed Condition: previous persistence tests proved keyring writes/runtime fallback but did not test operator-visible field hydration after Save/restart/provider switch.
+Correct Solution: Phase49.3I.6 adds an additive App87 secret-persistence layer that hydrates secure values into masked fields at startup, rehydrates after mature Save handlers clear them, and loads the stored key when AI Provider changes. Same-provider ordinary refresh does not overwrite an unsaved newly typed key. Explicit delete/clear remains authoritative.
+Secret Safety: Windows Credential Store/environment remains the source of truth. No secret is persisted to SQLite, Git, source files, diagnostics or logs.
+Verification: dedicated `test_epic49_phase49_3i_secret_persistence.py`, secure composition/source contract, Phase49.3I/3H/3G/full CI, then Windows Save→restart→provider-switch QA.
+Prevention Rule: secure persistence is not complete if only runtime fallback works; operator-facing masked fields must represent the persisted secure state without moving secrets into unsafe storage. Regression-test both backend persistence and UI hydration lifecycle.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
