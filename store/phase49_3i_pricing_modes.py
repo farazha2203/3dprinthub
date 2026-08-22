@@ -21,22 +21,17 @@ def _range_values(data: dict, kwargs: dict, product) -> tuple[int, int]:
 
 
 def install() -> None:
-    from . import epic49_catalog_profile, phase49_3f_pricing
-    from .epic49_catalog_profile import ProductCatalogProfile
+    from . import epic49_catalog_profile
 
     if getattr(epic49_catalog_profile, "_phase49_3i_pricing_modes_installed", False):
         return
 
-    # Runtime choice extension only; the existing DB column is CharField(20), so
-    # no Django schema migration is required for the new semantic value `range`.
-    field = ProductCatalogProfile._meta.get_field("pricing_strategy")
-    choices = list(field.choices or [])
-    if not any(code == RANGE_CODE for code, _label in choices):
-        choices.insert(2, (RANGE_CODE, RANGE_LABEL))
-        field.choices = choices
-    if not any(code == RANGE_CODE for code, _label in phase49_3f_pricing.PRICING_STRATEGY_CHOICES):
-        phase49_3f_pricing.PRICING_STRATEGY_CHOICES.insert(2, (RANGE_CODE, RANGE_LABEL))
-
+    # IMPORTANT: do not mutate ProductCatalogProfile.pricing_strategy.choices here.
+    # The migration-owned field already has enough max_length to persist `range`,
+    # and changing choices at runtime makes `makemigrations --check` generate a
+    # metadata-only AlterField migration. Phase49.3I intentionally remains
+    # schema-free. Windows is the operator UI that exposes the three business
+    # modes; server import stores the semantic `range` value directly.
     original_sync = epic49_catalog_profile.sync_catalog_profile
 
     def sync_catalog_profile(product, asset, data: dict, **kwargs):
