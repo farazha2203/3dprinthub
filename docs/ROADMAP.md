@@ -23,6 +23,9 @@ Unified 3DPrintHub catalog workflow from Windows discovery/review/edit/AI/SEO/pr
 - [x] 49.3I.1 Windows PowerShell 5.1 Runner Encoding Hotfix — GitHub CI SUCCESS
 - [x] 49.3I.2 Local QA Regression Hotfix: real UX87 product gallery + AI first-paint — GitHub CI SUCCESS
 - [x] 49.3I.2 docs-closed final GitHub validation — PR #47 CLOSED / NOT MERGED; all required workflows SUCCESS
+- [x] ERR-49-019 root cause verified: stale Chat-pinned Expected HEAD after valid GitHub branch advancement
+- [x] 49.3I.3 Git snapshot handoff guard implemented on GitHub
+- [ ] 49.3I.3 CI validation
 - [ ] Windows Local Gate + visual/data QA
 - [ ] LOCAL PUBLISH ONLY + Local Django E2E
 - [ ] Owner acceptance
@@ -55,10 +58,25 @@ Unified 3DPrintHub catalog workflow from Windows discovery/review/edit/AI/SEO/pr
 - existing Provider/Model/network worker/result/error drawer/cost ledger/audit remain unchanged
 - no parallel AI request implementation is introduced
 
-## Final GitHub Validation
+## Git Handoff Contract — 49.3I.3
+Root cause: a fixed Expected HEAD copied into Chat became stale after the mutable Epic branch advanced with later documentation commits. Windows correctly fast-forwarded to current GitHub HEAD, then the stale Chat constant falsely blocked the handoff (`ERR-49-019`).
+
+Canonical rule now:
+1. Windows worktree must be clean.
+2. exact Epic branch is required.
+3. repository runner performs live `git fetch --prune origin`.
+4. runner reads the fetched `origin/epic/phase49-unified-product-slider-sync` snapshot.
+5. Local HEAD must equal that fetched Remote HEAD.
+6. mismatch fails closed and instructs `git pull --ff-only` then rerun.
+7. no Chat-pinned SHA is the sole handoff source of truth.
+8. no reset/stash/delete shortcut.
+
+Runner version: `49.3I.3`.
+CI contract checks live fetch, branch guard, remote-ref guard, ASCII-only Windows PowerShell 5.1 compatibility and `PHASE49_3I_GIT_SNAPSHOT=OK`.
+
+## Previous Final GitHub Validation
 CI-only PR #47: CLOSED / NOT MERGED.
-Exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
-Marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged.
+Exact validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`.
 
 SUCCESS:
 - Phase49.3I Run `32573779531`
@@ -66,17 +84,7 @@ SUCCESS:
 - Phase49.3G Run `32573779548`
 - Full Phase49 + Full Django Run `32573779528`
 
-Canonical regressions:
-- `ERR-49-017`: product-list patch targeted a bypassed `_products_ui` boundary.
-- `ERR-49-018`: AI progress was instantiated after synchronous preflight.
-
-## Runner Contract
-Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
-- ASCII-only for Windows PowerShell 5.1
-- raw-byte CI guard remains mandatory
-- chains Phase49.3H and prior gates
-- includes Product gallery and AI first-paint regressions
-- Production action forbidden
+GitHub compare from that validated base to Windows-pulled HEAD `53e9216ae84a3e167481253da44760179c751051` contains only `PROJECT_CONTEXT.md` and `docs/*`; runtime/migrations/database/media were unchanged.
 
 ## Pricing Contract
 1. `fixed`: exact operator price, e.g. 1,200,000 toman.
@@ -97,20 +105,21 @@ Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
 - Hero/Product sync contracts
 - secure secret handling
 - Windows PowerShell 5.1-safe Local Gate runner
+- live fetched GitHub snapshot handoff guard
 
 ## Remaining Gates Before Production
-1. Windows clean-worktree safety check
-2. `git fetch --prune` + `git pull --ff-only`
-3. verify exact pulled Epic HEAD and runner version `49.3I.2`
-4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
-5. verify Products gallery images/name/edit-only + large image preview
-6. verify full AI autofill immediate startup progress → mature 49.3H progress/result drawer
-7. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA using IDs `2834255` and `2845731`
-8. validate image cap and Fixed / Range / Formula modes
-9. real LOCAL PUBLISH ONLY
-10. Local Django E2E
-11. explicit user approval
-12. only then verified Production backup/deploy/restart/smoke
+1. validate 49.3I.3 runner/workflow in GitHub CI.
+2. Windows clean-worktree safety check.
+3. fetch + fast-forward pull current Epic branch.
+4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` v49.3I.3; runner re-fetches and verifies Local == fetched Remote snapshot.
+5. verify Products gallery images/name/edit-only + large image preview.
+6. verify full AI autofill immediate startup progress → mature 49.3H progress/result drawer.
+7. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA using IDs `2834255` and `2845731`.
+8. validate image cap and Fixed / Range / Formula modes.
+9. real LOCAL PUBLISH ONLY.
+10. Local Django E2E.
+11. explicit user approval.
+12. only then verified Production backup/deploy/restart/smoke.
 
 ## Deferred / Separate
 - `/api/v1/catalog/sitemap/` local 404 root cause
@@ -119,4 +128,4 @@ Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
 - Pillow `Image.getdata()` deprecation
 
 ## Next Recommended Task
-Windows pulls the current Epic branch from GitHub and runs `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Production remains out of scope until Local approval.
+Complete Phase49.3I.3 CI validation. After success, Windows pulls the current Epic branch and runs the repository runner v49.3I.3. Production remains out of scope until Local approval.
