@@ -11,21 +11,52 @@ Production Domain: 3dprinthub.ir
 ## Git
 Current Development Branch: epic/phase49-unified-product-slider-sync
 Phase49.3H validated Epic HEAD: e145d1e11619e36bd766788083bee59899a80cbb
-Pre-49.3H baseline HEAD: e052829c7ed34e931f52affecd7a3b74e33dc5a1
+Phase49.3I validated runtime HEAD: 9d462f1ec12b00727c96acf9d4f59b4723d676b4
 Production Branch/Commit: verify on host before deploy; no Phase49.3C..49.3I production deploy approved.
 
 ## Current Development
 Current Epic: Epic49 Unified Product / Slider / Catalog Center
 Current Phase: Phase49.3I — Discovery Review Queue + Product List Simplification + Explicit Pricing Modes
-Status: IN_PROGRESS
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS LOCAL QA PENDING
 
-## Phase49.3H GitHub Validation
+## Phase49.3I GitHub Validation
 Status: GITHUB_UPDATED
-- Dedicated 49.3H CI Run 32565773426 — SUCCESS
-- Phase49.3G regression Run 32565773459 — SUCCESS
-- Full Phase49 CI Run 32565773433 — SUCCESS
-- Validation PR #40 is CI-only; close without merge after confirming all three runs.
-- 49.3H Windows Local Gate/manual QA/Local Publish are still pending; therefore 49.3H is not LOCAL_TESTED or ACCEPTED yet.
+- Dedicated Phase49.3I CI Run 32569551060 — SUCCESS
+- Phase49.3H regression Run 32569551053 — SUCCESS
+- Phase49.3G regression Run 32569551048 — SUCCESS
+- Full Phase49 + Full Django CI Run 32569551034 — SUCCESS
+- Final validation PR #42 was CI-only and closed without merge.
+- Validated runtime/base SHA: `9d462f1ec12b00727c96acf9d4f59b4723d676b4`.
+- PR #41 exposed a real migration-contract failure and was closed without merge; the fix was committed before PR #42.
+
+## Phase49.3I Implemented
+1. Exact search/listing URL contract: an explicit operator HTTP(S) seed is authoritative and is no longer silently replaced by the configured default listing.
+2. Two-stage acquisition: Preview Candidate first, then operator approval, then full fetch.
+3. Preview candidate stores one representative thumbnail + basic title/source identity only; no full extraction before approval.
+4. Approved candidate full fetch uses the existing Phase49.3H image limit contract (default 10, hard max 20).
+5. Archive / Not Needed creates or preserves a minimal blocked identity and does not full-fetch the product.
+6. Duplicate/blocked guard uses source code + external id + normalized URL before full fetch.
+7. Source text safety removes CJK/Cyrillic/emoji/unexpected script garbage from scraped source text while preserving URLs/identities and Persian editorial `_fa` fields.
+8. Products/work queue is lightweight: thumbnail + product name + one Product Workspace action; detailed editing remains in Product Workspace.
+9. Pricing is explicit: `fixed`, `range`, `dynamic/formula`.
+10. Range uses existing min/max consultation contract and does not enter the dynamic formula engine.
+11. Canonical repository runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1`.
+12. Dedicated CI workflow: `.github/workflows/phase49-3i-ci.yml`.
+
+## Phase49.3I Root-Cause Fix During CI
+Initial PR #41 failed `makemigrations --check --dry-run` because Phase49.3I mutated `ProductCatalogProfile.pricing_strategy` runtime choices and Django proposed metadata migration `store.0034_alter_productcatalogprofile_pricing_strategy`.
+
+Correct fix:
+- do not mutate migration-owned Django field choices;
+- keep the existing CharField schema unchanged;
+- persist semantic value `range` directly;
+- Windows remains the operator UI exposing the three business modes;
+- server profile sync stores `pricing_strategy=range` and `price_mode=range` without a new migration.
+
+Verification:
+- dedicated Phase49.3I tests PASS;
+- `makemigrations --check --dry-run` PASS with no changes;
+- full Phase49 + full Django suite PASS.
 
 ## Paths
 Local Project Root: D:\projects\3DPrintHub
@@ -46,41 +77,30 @@ Database Local: Django SQLite + persistent Catalog SQLite
 Database Production: MySQL
 Production App Server: Passenger/LiteSpeed pattern; restart via tmp/restart.txt after verification
 
-## Phase49.3I Requested Delta
-1. Search URL is authoritative. Example MakerWorld `https://makerworld.com/en/search/models?keyword=cake+stand` must discover candidates from that exact page, not a default listing URL.
-2. Two-stage acquisition: Preview candidate first (one thumbnail + basic identity/title), operator approves/archives, only then full product extraction occurs.
-3. Approved candidate full fetch uses operator-selected image limit 1..20; archive/not-needed candidate becomes blocked without full fetch.
-4. Duplicate and blocked identities must never be fetched again.
-5. Scraped source text stored in source fields must be Latin/English-safe; URLs/identities are untouched and Persian editorial `_fa` fields remain Persian.
-6. Main products/work queue becomes lightweight: thumbnail + product name + one Product Page/Workspace action; detailed editing moves to Product Workspace.
-7. Pricing UI exposes exactly three business modes: fixed exact price, operator-entered price range, formula/dynamic calculation.
-8. Preserve Phase49.3H execution/cost/image-limit contracts and all mature Epic49 behavior.
-
-## Verified Root Causes For 49.3I
-- `main.py::_scan_worker` currently uses configured `listing[:1]` for mode `search`, ignoring the operator-supplied seed/search URL. This explains unrelated MakerWorld results.
-- Current scan immediately enters full `collect_classic_exact` after discovery; there is no human preview/approval gate.
-- Current products page still contains a large embedded editor although Product Workspace already exists.
-- Current Phase49.3F pricing UI conflates `dynamic` and range into one radio option even though server profile has an explicit `range` price mode.
-
 ## Database / Migration Safety
-- Expected Django migration for Phase49.3I: NONE unless later tests prove a real schema requirement.
-- Candidate review state will be local-only/additive in Catalog SQLite.
+- Phase49.3I Django migration: NONE.
+- Candidate review table is local Catalog SQLite only and additive (`CREATE TABLE IF NOT EXISTS`).
 - No reset/drop/truncate/delete.
-- Existing historical rows are not mass-rewritten solely for source-script sanitation.
+- Historical product/media rows are not mass-rewritten.
+- Production database is untouched.
 
 ## Production
 UNTOUCHED / NOT APPROVED.
 
 ## Remaining Work
-- implement Phase49.3I GitHub code + tests + runner + CI
-- run dedicated 49.3I and full regression CI
-- update docs with exact validated HEAD
-- Windows `git pull --ff-only`
-- run repository Phase49.3I Local Gate
-- manual QA: MakerWorld cake-stand preview, approve/archive, image limit, lightweight product list, 3 pricing modes
+- Windows `git status --short` safety check
+- Windows `git fetch --prune origin`
+- Windows `git switch epic/phase49-unified-product-slider-sync`
+- Windows `git pull --ff-only origin epic/phase49-unified-product-slider-sync`
+- run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
+- manual QA with the real MakerWorld `cake+stand` search URL
+- approve one candidate and archive one candidate
+- verify duplicate guard + selected image limit
+- verify lightweight Products page + Product Workspace routing
+- verify Fixed / Range / Formula pricing modes
 - one LOCAL PUBLISH ONLY / local Django E2E
 - explicit owner approval
 - only then production plan/deploy
 
 ## Exact Next Task
-Implement Phase49.3I minimally on GitHub; no production action.
+Windows Local Gate + manual Phase49.3I QA from the GitHub branch. Production remains forbidden until explicit Local approval.
