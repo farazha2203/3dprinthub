@@ -31,84 +31,94 @@ Request:
 ### REQ-49I-001 — Exact search URL discovery
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-- when owner supplies a MakerWorld search/listing URL, discovery must use that exact URL as the authoritative source
+- supplied MakerWorld search/listing URL is the authoritative discovery source
 - example: `https://makerworld.com/en/search/models?keyword=cake+stand`
-- expected candidates include source URLs such as MakerWorld model `2834255` and `2845731` when present on that result page
-- do not silently replace supplied search URL with configured default popular/download listing
+- do not replace it with configured popular/download listings
 
 ### REQ-49I-002 — Two-stage candidate review before full fetch
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-- Stage 1: discover lightweight candidates and obtain only one thumbnail + product name/basic source identity
-- show candidate review list before expensive full extraction
-- Stage 2: only operator-approved candidates receive full content/spec/text extraction and selected number of images
+- Stage 1: only one thumbnail + product name/basic source identity
+- Stage 2: only approved candidates receive full content/spec/text + chosen number of images
 - image limit remains selectable 1..20
 
 ### REQ-49I-003 — Archive / not-needed candidate
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-- operator can select candidate and mark `آرشیو / لازم نیست`
-- candidate becomes blocked/not-wanted without full extraction
-- blocked identities must not be rediscovered/refetched unless explicitly restored
-- no source record is destructively deleted
+- selected candidate can be archived/not-needed without full extraction
+- blocked identity must prevent rediscovery until explicit restore
+- no destructive source deletion
 
 ### REQ-49I-004 — Duplicate guard
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - same source product must not be received twice
-- guard by source code + external source id and normalized URL
-- existing blocked/product identities are treated as known before full fetch
+- guard by source code + external source id + normalized URL
 
 ### REQ-49I-005 — Safe source text persistence
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-- scraped source textual fields should not persist Chinese/CJK or other unexpected script/font garbage
-- URLs/source identity must remain exact and unchanged
-- Persian editorial/AI `_fa` fields must remain Persian and are not filtered by this source-text rule
-- no destructive mass rewrite of historical DB rows during this phase
+- do not persist Chinese/CJK or other unexpected scraped script/font garbage
+- URLs/source identities remain exact
+- Persian editorial/AI `_fa` fields remain Persian
+- no historical mass rewrite
 
-### REQ-49I-006 — Lightweight products page
+### REQ-49I-006 — Product page must be a real image gallery
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-- main product/work list should primarily show thumbnail and product name
-- remove/hide embedded giant parameter/editor surface from the list page
-- provide one clear `صفحه محصول / ویرایش کامل` action
-- all detailed edits continue in the existing Product Workspace
+- main Products page must show products as large image gallery/cards, not a parameter-heavy table/editor
+- every product card shows only product image, product name and one Edit Product action
+- price/title/status/editor fields must not be displayed on the Products list surface
+- clicking product image should open a larger preview
+- all detailed edits continue in Product Workspace
+
+Local QA result before fix:
+- intended 49.3I lightweight patch did not execute on the real UX87 page construction boundary, so images did not appear and legacy controls remained.
+- canonical root cause: `ERR-49-017`.
+
+Fix:
+- patch real `_modernize_products_page` boundary
+- hide complete legacy pane while preserving it for compatibility
+- local-only 260x190 gallery thumbnails + click-to-large-preview
+- batched thumbnail loading through Tk `after()`
 
 ### REQ-49I-007 — Three explicit pricing modes
 Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
-1. exact/fixed: one exact amount, e.g. 1,200,000 toman
-2. range: explicit min/max, e.g. 200,000–500,000 toman
-3. formula/dynamic: grams/material rate + print time + supervision and configured pricing inputs
-- range must not be conflated with formula pricing
-- preserve existing Dynamic Variant price source of truth
+1. exact/fixed
+2. range/min-max
+3. formula/dynamic
+- Range must not be conflated with Formula
+- preserve Dynamic Variant source of truth
 
-## Phase49.3I Validation
-Original functional validation:
-- Dedicated 49.3I CI Run `32569551060` — SUCCESS
-- Phase49.3H regression Run `32569551053` — SUCCESS
-- Phase49.3G regression Run `32569551048` — SUCCESS
-- Full Phase49 + Full Django Run `32569551034` — SUCCESS
+### REQ-49I-008 — Full AI autofill must show progress immediately
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Request:
+- clicking full AI autofill must not appear frozen before a progress screen opens
+- progress should be visible before preflight, then show connection/send/receive/save stages
+- success leaves the result/log drawer visible
+- error remains visible with sanitized log/error details
 
-Windows first delivery result:
-- GitHub sync to validated HEAD `91f39681e2008c29d0ec7bc06794b935d794b33e` succeeded.
-- runner then failed at parse time under Windows PowerShell 5.1 before tests/app launch.
-- no DB/publish/Production operation occurred.
+Local QA root cause:
+- 49.3F created `AIProgress` only after synchronous `save/preflight/source preparation`, so no UI existed to paint during that interval.
+- canonical root cause: `ERR-49-018`.
 
-Runner encoding Root Cause and fix:
-- BOM-less UTF-8 + Persian/em-dash content was misdecoded by Windows PowerShell 5.1 legacy ANSI behavior.
-- runner v`49.3I.1` is ASCII-only.
-- CI now rejects any non-ASCII byte in the canonical 49.3I runner.
-- canonical error: `ERR-49-016`.
+Fix:
+- immediate startup progress first-paint
+- existing AI flow scheduled after Tk event-loop yield
+- automatic handoff to existing 49.3H progress/result/error/cost stack
+- no duplicate Provider/Model/network/request implementation
 
-Hotfix validation:
-- CI-only PR #44 CLOSED / NOT MERGED.
-- Phase49.3I Run `32570978818` — SUCCESS
-- Phase49.3H Run `32570978800` — SUCCESS
-- Phase49.3G Run `32570978829` — SUCCESS
-- Full Phase49 + Full Django Run `32570978799` — SUCCESS
-- hotfix runtime/base SHA: `451bcb9e264b847259a6ea0414550e4f80afa250`
+## Phase49.3I Latest Validation
+Local QA regression runtime base before docs closure: `bf51fff1000bfcc6561712a243cb13e48001123c`.
+CI-only PR #46: CLOSED / NOT MERGED.
+- Phase49.3I Run `32573421461` — SUCCESS
+- Phase49.3H Run `32573421431` — SUCCESS
+- Phase49.3G Run `32573421523` — SUCCESS
+- Full Phase49 + Full Django Run `32573421439` — SUCCESS
+- Full Django suite step PASS
+
+Canonical runner now: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`, ASCII-only for Windows PowerShell 5.1.
 
 Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
