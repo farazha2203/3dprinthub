@@ -109,7 +109,25 @@ Fix:
 - automatic handoff to existing 49.3H progress/result/error/cost stack
 - no duplicate Provider/Model/network/request implementation
 
-## Phase49.3I Final GitHub Validation
+### REQ-49I-009 — Windows handoff must use live GitHub snapshot, not stale Chat SHA
+Status: GITHUB_UPDATED / 49.3I.3 CI PENDING / WINDOWS RERUN BLOCKED
+Request:
+- GitHub remains the source of truth during handoff.
+- do not treat a SHA copied into Chat as permanent while the development branch can advance.
+- after a live fetch, capture the actual `origin/epic/phase49-unified-product-slider-sync` snapshot and require Local HEAD to match it.
+- dirty Local must stop for inspection; no reset/stash/delete shortcut.
+- if Local is behind, use fast-forward-only pull and rerun the repository gate.
+- runner/CI must protect this contract so the stale-Expected-HEAD failure cannot recur.
+
+Incident:
+- Windows correctly pulled to `53e9216ae84a3e167481253da44760179c751051` but the Chat preflight still required stale `789edf8652ad8a09641afedd5e959c63822800c7`.
+- canonical root cause: `ERR-49-019`.
+
+Fix:
+- canonical runner upgraded to v49.3I.3 with live fetch + exact branch + fetched Remote HEAD equality guard.
+- Phase49.3I CI now asserts the handoff guard markers and Windows PowerShell 5.1 ASCII contract.
+
+## Phase49.3I Previous Final GitHub Validation
 Exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
 CI-only PR #47: CLOSED / NOT MERGED.
 - Phase49.3I Run `32573779531` — SUCCESS
@@ -117,7 +135,9 @@ CI-only PR #47: CLOSED / NOT MERGED.
 - Phase49.3G Run `32573779548` — SUCCESS
 - Full Phase49 + Full Django Run `32573779528` — SUCCESS
 
-Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`, ASCII-only for Windows PowerShell 5.1.
+Runner at that gate was v49.3I.2. The later 49.3I.3 handoff safety change requires a fresh CI validation before Windows rerun.
+
+Canonical runner now: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
 
 Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
