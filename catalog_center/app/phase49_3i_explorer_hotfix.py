@@ -9,42 +9,75 @@ from PIL import Image, ImageOps, ImageTk
 
 from .phase49_3i_discovery_review import is_http_url
 from .phase49_3i_product_list import _local_thumbnail
+from .workflow import STATUS_LABELS, image_count, product_state
 
 
 VIEW_MODES = {
     "extra_large": {
         "label": "آیکن خیلی بزرگ",
         "thumb": (320, 235),
-        "card": (348, 332),
+        "card": (348, 382),
     },
     "large": {
         "label": "آیکن بزرگ",
         "thumb": (260, 190),
-        "card": (288, 286),
+        "card": (288, 338),
     },
     "medium": {
         "label": "آیکن متوسط",
         "thumb": (180, 132),
-        "card": (208, 226),
+        "card": (208, 292),
     },
     "small": {
         "label": "آیکن کوچک",
         "thumb": (120, 88),
-        "card": (150, 184),
+        "card": (164, 254),
     },
     "list": {
         "label": "لیست",
-        "thumb": (72, 54),
-        "card": (700, 78),
+        "thumb": (82, 62),
+        "card": (760, 104),
     },
 }
 DEFAULT_VIEW_MODE = "large"
 VIEW_SETTING_KEY = "phase49_3i_product_view_mode"
 
+FILTER_OPTIONS = (
+    ("work_queue", "کارهای من"),
+    ("new", "جدید"),
+    ("needs_update", "نیازمند بروزرسانی"),
+    ("without_images", "بدون تصویر"),
+    ("without_content", "بدون محتوا"),
+    ("ready", "آماده انتشار"),
+    ("upload_queue", "صف انتشار"),
+    ("published", "منتشرشده"),
+    ("error", "خطادار"),
+    ("all", "همه محصولات"),
+)
+
+SORT_OPTIONS = (
+    ("priority", "اولویت کاری"),
+    ("newest", "جدیدترین"),
+    ("oldest", "قدیمی‌ترین"),
+    ("updated", "آخرین بروزرسانی"),
+    ("rating", "بیشترین امتیاز"),
+    ("downloads", "بیشترین دانلود"),
+)
+
 
 def normalize_view_mode(value: str) -> str:
     key = str(value or "").strip().lower()
     return key if key in VIEW_MODES else DEFAULT_VIEW_MODE
+
+
+def _option_label(options, key: str, fallback: str) -> str:
+    key = str(key or "").strip()
+    return next((label for value, label in options if value == key), fallback)
+
+
+def _option_key(options, label: str, fallback: str) -> str:
+    label = str(label or "").strip()
+    return next((value for value, item_label in options if item_label == label), fallback)
 
 
 def matches_source_product_url(url: str, model_pattern: str) -> bool:
@@ -60,6 +93,49 @@ def matches_source_product_url(url: str, model_pattern: str) -> bool:
         return False
 
 
+def _row_value(row, key: str, default=""):
+    try:
+        return row[key]
+    except Exception:
+        return default
+
+
+def product_card_metadata(row, date_formatter=None) -> tuple[str, str]:
+    """Compact operator metadata; Product Workspace remains the detailed editor."""
+    product_id = int(_row_value(row, "id", 0) or 0)
+    state = product_state(row)
+    status = STATUS_LABELS.get(state, state or "نامشخص")
+    source = str(_row_value(row, "source_name", "") or _row_value(row, "source_code", "") or "منبع نامشخص")
+    images = image_count(row)
+
+    created_raw = str(_row_value(row, "created_at", "") or "")
+    if callable(date_formatter):
+        try:
+            created = str(date_formatter(created_raw) or created_raw)
+        except Exception:
+            created = created_raw
+    else:
+        created = created_raw[:10]
+    created = created or "—"
+
+    if state == "published":
+        publish_label = "منتشرشده"
+    elif state == "queued":
+        publish_label = "در صف انتشار"
+    elif state == "ready":
+        publish_label = "آماده انتشار"
+    elif state == "needs_update":
+        publish_label = "نیازمند بروزرسانی"
+    elif state == "error":
+        publish_label = "خطای انتشار/همگام‌سازی"
+    else:
+        publish_label = "در حال تکمیل"
+
+    line_one = f"#{product_id} • {status} • {source} • {images} عکس"
+    line_two = f"افزوده: {created} • {publish_label}"
+    return line_one, line_two
+
+
 def _photo_for_size(path: Path, size: tuple[int, int]):
     width, height = size
     with Image.open(path) as opened:
@@ -73,12 +149,36 @@ def _photo_for_size(path: Path, size: tuple[int, int]):
 
 
 def install(app_class) -> None:
-    """Add Windows-Explorer-like product browsing without replacing mature flows."""
+    """Add Explorer browsing while preserving mature Catalog and Workspace flows."""
     if getattr(app_class, "_phase49_3i_explorer_hotfix_installed", False):
         return
 
     original_modernize = app_class._modernize_products_page
     original_direct_link = app_class.start_direct_link_import
+    original_refresh_products = app_class.refresh_products
+
+    def _hide_legacy_raw_filter_bar(self):
+        filter_var = str(getattr(self, "product_filter", ""))
+        sort_var = str(getattr(self, "product_sort", ""))
+        for child in self.products_tab.winfo_children():
+            if not isinstance(child, ttk.Frame):
+                continue
+            combo_vars = set()
+            for widget in child.winfo_children():
+                if not isinstance(widget, ttk.Combobox):
+                    continue
+                try:
+                    combo_vars.add(str(widget.cget("textvariable") or ""))
+                except Exception:
+                    pass
+            if filter_var in combo_vars or sort_var in combo_vars:
+                try:
+                    child.pack_forget()
+                except Exception:
+                    try:
+                        child.grid_remove()
+                    except Exception:
+                        pass
 
     def _modernize_products_page(self):
         original_modernize(self)
@@ -87,9 +187,13 @@ def install(app_class) -> None:
         self._phase49_3i_last_selected_id = None
         self._phase49_3i_product_order = []
         self._phase49_3i_gallery_card_by_id = {}
+        self._phase49_3i_syncing_tree_selection = False
+        self._phase49_3i_opening_product = False
         self._phase49_3i_gallery_mode = normalize_view_mode(
             self.db.setting(VIEW_SETTING_KEY, DEFAULT_VIEW_MODE)
         )
+
+        self._hide_legacy_raw_filter_bar()
 
         shell = getattr(getattr(self, "_phase49_3i_gallery_canvas", None), "master", None)
         toolbar = ttk.Frame(self.products_tab)
@@ -98,7 +202,42 @@ def install(app_class) -> None:
         else:
             toolbar.pack(fill="x", pady=(0, 7))
 
-        ttk.Label(toolbar, text="نمایش:").pack(side="right", padx=(6, 2))
+        ttk.Label(toolbar, text="فیلتر:").pack(side="right", padx=(6, 2))
+        current_filter = str(getattr(self, "product_filter", tk.StringVar(value="work_queue")).get() or "work_queue")
+        self._phase49_3i_filter_label = tk.StringVar(
+            value=_option_label(FILTER_OPTIONS, current_filter, "کارهای من")
+        )
+        filter_combo = ttk.Combobox(
+            toolbar,
+            textvariable=self._phase49_3i_filter_label,
+            values=[label for _key, label in FILTER_OPTIONS],
+            state="readonly",
+            width=19,
+        )
+        filter_combo.pack(side="right", padx=3)
+        filter_combo.bind("<<ComboboxSelected>>", self._phase49_3i_change_filter)
+
+        ttk.Label(toolbar, text="جستجو:").pack(side="right", padx=(8, 2))
+        search = ttk.Entry(toolbar, textvariable=self.product_search, width=22)
+        search.pack(side="right", padx=3)
+        search.bind("<Return>", lambda _event: self.refresh_products())
+
+        ttk.Label(toolbar, text="مرتب‌سازی:").pack(side="right", padx=(8, 2))
+        current_sort = str(getattr(self, "product_sort", tk.StringVar(value="priority")).get() or "priority")
+        self._phase49_3i_sort_label = tk.StringVar(
+            value=_option_label(SORT_OPTIONS, current_sort, "اولویت کاری")
+        )
+        sort_combo = ttk.Combobox(
+            toolbar,
+            textvariable=self._phase49_3i_sort_label,
+            values=[label for _key, label in SORT_OPTIONS],
+            state="readonly",
+            width=18,
+        )
+        sort_combo.pack(side="right", padx=3)
+        sort_combo.bind("<<ComboboxSelected>>", self._phase49_3i_change_sort)
+
+        ttk.Label(toolbar, text="نمایش:").pack(side="right", padx=(8, 2))
         labels = [VIEW_MODES[key]["label"] for key in VIEW_MODES]
         current_label = VIEW_MODES[self._phase49_3i_gallery_mode]["label"]
         self._phase49_3i_view_label = tk.StringVar(value=current_label)
@@ -107,29 +246,32 @@ def install(app_class) -> None:
             textvariable=self._phase49_3i_view_label,
             values=labels,
             state="readonly",
-            width=18,
+            width=16,
         )
         view_combo.pack(side="right", padx=3)
         view_combo.bind("<<ComboboxSelected>>", self._phase49_3i_change_view)
 
-        ttk.Button(
-            toolbar,
-            text="انتخاب همه",
-            command=self._phase49_3i_select_all_products,
-        ).pack(side="right", padx=3)
-        ttk.Button(
-            toolbar,
-            text="لغو انتخاب",
-            command=self._phase49_3i_clear_selection,
-        ).pack(side="right", padx=3)
+        ttk.Button(toolbar, text="بروزرسانی", command=self.refresh_products).pack(side="right", padx=4)
+        ttk.Button(toolbar, text="انتخاب همه", command=self._phase49_3i_select_all_products).pack(side="left", padx=3)
+        ttk.Button(toolbar, text="لغو انتخاب", command=self._phase49_3i_clear_selection).pack(side="left", padx=3)
         self._phase49_3i_selected_count = tk.StringVar(value="0 انتخاب")
-        ttk.Label(toolbar, textvariable=self._phase49_3i_selected_count).pack(side="right", padx=10)
+        ttk.Label(toolbar, textvariable=self._phase49_3i_selected_count).pack(side="left", padx=10)
 
         self._phase49_3i_context_menu = tk.Menu(self, tearoff=False)
         self.after_idle(self._phase49_3i_render_gallery)
 
     def _phase49_3i_current_view(self):
         return VIEW_MODES[normalize_view_mode(getattr(self, "_phase49_3i_gallery_mode", DEFAULT_VIEW_MODE))]
+
+    def _phase49_3i_change_filter(self, _event=None):
+        key = _option_key(FILTER_OPTIONS, self._phase49_3i_filter_label.get(), "work_queue")
+        self.product_filter.set(key)
+        self.refresh_products()
+
+    def _phase49_3i_change_sort(self, _event=None):
+        key = _option_key(SORT_OPTIONS, self._phase49_3i_sort_label.get(), "priority")
+        self.product_sort.set(key)
+        self.refresh_products()
 
     def _phase49_3i_change_view(self, _event=None):
         label = str(getattr(self, "_phase49_3i_view_label", tk.StringVar()).get() or "")
@@ -194,6 +336,71 @@ def install(app_class) -> None:
         count_var = getattr(self, "_phase49_3i_selected_count", None)
         if count_var is not None:
             count_var.set(f"{len(selected)} انتخاب")
+
+    def _phase49_3i_select_product(self, product_id: int):
+        """One-way card -> hidden Treeview sync with a re-entrancy guard."""
+        product_id = int(product_id)
+        self.current_product = product_id
+        tree = getattr(self, "product_tree", None)
+        iid = str(product_id)
+        if tree is not None and tree.exists(iid):
+            try:
+                current = tuple(str(item) for item in tree.selection())
+            except Exception:
+                current = ()
+            if current != (iid,):
+                self._phase49_3i_syncing_tree_selection = True
+                try:
+                    tree.selection_set(iid)
+                    tree.focus(iid)
+                finally:
+                    self._phase49_3i_syncing_tree_selection = False
+        if hasattr(self, "status"):
+            self.status.set(f"محصول #{product_id} انتخاب شد")
+
+    def load_product(self, _event=None):
+        """Hidden Treeview -> card state is one-way; never selection_set again."""
+        if getattr(self, "_phase49_3i_syncing_tree_selection", False):
+            return
+        tree = getattr(self, "product_tree", None)
+        selection = tree.selection() if tree is not None else ()
+        if not selection:
+            return
+        try:
+            product_id = int(selection[0])
+        except Exception:
+            return
+        self.current_product = product_id
+        if hasattr(self, "_phase49_3i_selected_products"):
+            self._phase49_3i_selected_products = {product_id}
+            self._phase49_3i_last_selected_id = product_id
+            self._phase49_3i_update_selection_visuals()
+        if hasattr(self, "status"):
+            self.status.set(f"محصول #{product_id} انتخاب شد")
+
+    def _phase49_3i_open_product(self, product_id: int):
+        """Prevent repeated open clicks and yield one Tk frame before Workspace construction."""
+        product_id = int(product_id)
+        if getattr(self, "_phase49_3i_opening_product", False):
+            return
+        self._phase49_3i_select_product(product_id)
+        self._phase49_3i_opening_product = True
+        if hasattr(self, "status"):
+            self.status.set(f"در حال باز کردن محصول #{product_id}...")
+        try:
+            self.update_idletasks()
+        except Exception:
+            pass
+
+        def open_now():
+            try:
+                self.open_product_studio(product_id)
+            finally:
+                self._phase49_3i_opening_product = False
+                if hasattr(self, "status"):
+                    self.status.set(f"محصول #{product_id} باز شد")
+
+        self.after(20, open_now)
 
     def _phase49_3i_select_click(self, event, product_id: int, *, preview: bool = False):
         product_id = int(product_id)
@@ -297,6 +504,37 @@ def install(app_class) -> None:
             lambda event, pid=product_id: self._phase49_3i_show_context_menu(event, pid),
         )
 
+    def _phase49_3i_apply_post_sort(self):
+        if str(getattr(self, "product_sort", tk.StringVar(value="priority")).get() or "") != "oldest":
+            return
+        tree = getattr(self, "product_tree", None)
+        if tree is None:
+            return
+        items = list(tree.get_children())
+
+        def created_key(iid):
+            try:
+                row = self.db.product(int(iid))
+                return str(row["created_at"] or "") if row is not None else ""
+            except Exception:
+                return ""
+
+        items.sort(key=created_key)
+        for index, iid in enumerate(items):
+            try:
+                tree.move(iid, "", index)
+            except Exception:
+                pass
+
+    def refresh_products(self):
+        result = original_refresh_products(self)
+        self._phase49_3i_apply_post_sort()
+        if hasattr(self, "_update_dashboard"):
+            self._update_dashboard()
+        if hasattr(self, "_refresh_ux87_dashboard"):
+            self._refresh_ux87_dashboard()
+        return result
+
     def _phase49_3i_render_gallery(self):
         inner = getattr(self, "_phase49_3i_gallery_inner", None)
         tree = getattr(self, "product_tree", None)
@@ -344,6 +582,8 @@ def install(app_class) -> None:
             if row is None:
                 continue
             title = str(row["title_fa"] or row["source_title"] or f"Product #{product_id}").strip()
+            date_formatter = getattr(self, "_date_short", None)
+            meta_one, meta_two = product_card_metadata(row, date_formatter)
 
             card = tk.Frame(
                 inner,
@@ -372,12 +612,23 @@ def install(app_class) -> None:
             image_label.pack(fill="both", expand=True)
             image_label._phase49_thumb_size = (thumb_w, thumb_h)
 
+            text_box = tk.Frame(card, bg="white")
             title_label = tk.Label(
-                card,
+                text_box,
                 text=title,
                 bg="white",
                 fg="#071827",
                 font=("Tahoma", 10, "bold"),
+                justify="right",
+                anchor="e",
+                cursor="arrow",
+            )
+            meta_label = tk.Label(
+                text_box,
+                text=f"{meta_one}\n{meta_two}",
+                bg="white",
+                fg="#64748b",
+                font=("Tahoma", 8),
                 justify="right",
                 anchor="e",
                 cursor="arrow",
@@ -392,19 +643,27 @@ def install(app_class) -> None:
 
             if mode == "list":
                 image_holder.pack(side="right", padx=(8, 0))
-                edit_button.pack(side="left", padx=(0, 8))
-                title_label.configure(wraplength=720)
-                title_label.pack(side="right", fill="both", expand=True, padx=10)
+                edit_button.pack(side="left", padx=(0, 8), pady=8)
+                text_box.pack(side="right", fill="both", expand=True, padx=10)
+                title_label.configure(wraplength=620)
+                title_label.pack(fill="x", pady=(7, 2))
+                meta_label.configure(wraplength=620)
+                meta_label.pack(fill="x", pady=(0, 4))
             else:
                 image_holder.pack(anchor="center")
+                text_box.pack(fill="x", pady=(5, 2))
                 title_label.configure(wraplength=max(110, card_w - 20))
-                title_label.pack(fill="x", pady=(7, 5))
+                title_label.pack(fill="x", pady=(2, 2))
+                meta_label.configure(wraplength=max(110, card_w - 20))
+                meta_label.pack(fill="x", pady=(0, 2))
                 edit_button.pack(fill="x", side="bottom")
 
             self._phase49_3i_bind_selectable(card, product_id)
             self._phase49_3i_bind_selectable(image_holder, product_id, preview=True)
             self._phase49_3i_bind_selectable(image_label, product_id, preview=True)
+            self._phase49_3i_bind_selectable(text_box, product_id)
             self._phase49_3i_bind_selectable(title_label, product_id)
+            self._phase49_3i_bind_selectable(meta_label, product_id)
 
             self._phase49_3i_gallery_cards.append(card)
             self._phase49_3i_gallery_card_by_id[product_id] = card
@@ -459,17 +718,25 @@ def install(app_class) -> None:
         return original_direct_link(self)
 
     app_class._modernize_products_page = _modernize_products_page
+    app_class._hide_legacy_raw_filter_bar = _hide_legacy_raw_filter_bar
     app_class._phase49_3i_current_view = _phase49_3i_current_view
+    app_class._phase49_3i_change_filter = _phase49_3i_change_filter
+    app_class._phase49_3i_change_sort = _phase49_3i_change_sort
     app_class._phase49_3i_change_view = _phase49_3i_change_view
     app_class._phase49_3i_gallery_resize = _phase49_3i_gallery_resize
     app_class._phase49_3i_layout_cards = _phase49_3i_layout_cards
     app_class._phase49_3i_update_selection_visuals = _phase49_3i_update_selection_visuals
+    app_class._phase49_3i_select_product = _phase49_3i_select_product
+    app_class.load_product = load_product
+    app_class._phase49_3i_open_product = _phase49_3i_open_product
     app_class._phase49_3i_select_click = _phase49_3i_select_click
     app_class._phase49_3i_select_all_products = _phase49_3i_select_all_products
     app_class._phase49_3i_clear_selection = _phase49_3i_clear_selection
     app_class._phase49_3i_remove_selected_from_publish_queue = _phase49_3i_remove_selected_from_publish_queue
     app_class._phase49_3i_show_context_menu = _phase49_3i_show_context_menu
     app_class._phase49_3i_bind_selectable = _phase49_3i_bind_selectable
+    app_class._phase49_3i_apply_post_sort = _phase49_3i_apply_post_sort
+    app_class.refresh_products = refresh_products
     app_class._phase49_3i_render_gallery = _phase49_3i_render_gallery
     app_class._phase49_3i_load_next_thumbnail = _phase49_3i_load_next_thumbnail
     app_class.start_direct_link_import = start_direct_link_import
