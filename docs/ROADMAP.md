@@ -21,7 +21,12 @@ Unified 3DPrintHub catalog workflow from Windows discovery/review/edit/AI/SEO/pr
 - [x] 49.3H SEO Execution Console + AI Cost Ledger + Controlled Image Acquisition — GitHub CI SUCCESS
 - [x] 49.3I Discovery Review Queue + Product Gallery + Explicit Pricing Modes — GitHub CI SUCCESS
 - [x] 49.3I.1 Windows PowerShell 5.1 Runner Encoding Hotfix — GitHub CI SUCCESS
-- [x] 49.3I.2 Local QA Regression Hotfix: real UX87 product gallery + AI first-paint — GitHub CI SUCCESS; Windows rerun pending
+- [x] 49.3I.2 Local QA Regression Hotfix: real UX87 product gallery + AI first-paint — GitHub CI SUCCESS
+- [x] 49.3I.2 docs-closed final GitHub validation — PR #47 CLOSED / NOT MERGED; all required workflows SUCCESS
+- [ ] Windows Local Gate + visual/data QA
+- [ ] LOCAL PUBLISH ONLY + Local Django E2E
+- [ ] Owner acceptance
+- [ ] Production deploy + verification
 
 ## Phase49.3I Delivered Contract
 - operator-supplied search/listing URL is authoritative
@@ -50,16 +55,16 @@ Unified 3DPrintHub catalog workflow from Windows discovery/review/edit/AI/SEO/pr
 - existing Provider/Model/network worker/result/error drawer/cost ledger/audit remain unchanged
 - no parallel AI request implementation is introduced
 
-## Latest Regression Validation
-CI-only PR #46: CLOSED / NOT MERGED.
-Runtime base before docs closure: `bf51fff1000bfcc6561712a243cb13e48001123c`.
+## Final GitHub Validation
+CI-only PR #47: CLOSED / NOT MERGED.
+Exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
+Marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged.
 
 SUCCESS:
-- Phase49.3I Run `32573421461`
-- Phase49.3H Run `32573421431`
-- Phase49.3G Run `32573421523`
-- Full Phase49 + Full Django Run `32573421439`
-- Full Django suite step PASS
+- Phase49.3I Run `32573779531`
+- Phase49.3H Run `32573779534`
+- Phase49.3G Run `32573779548`
+- Full Phase49 + Full Django Run `32573779528`
 
 Canonical regressions:
 - `ERR-49-017`: product-list patch targeted a bypassed `_products_ui` boundary.
@@ -94,19 +99,18 @@ Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
 - Windows PowerShell 5.1-safe Local Gate runner
 
 ## Remaining Gates Before Production
-1. docs-closed final GitHub validation
-2. Windows clean-worktree safety check
-3. `git fetch --prune` + `git pull --ff-only`
-4. verify runner version `49.3I.2`
-5. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
-6. verify Products gallery images/name/edit-only + large image preview
-7. verify full AI autofill immediate startup progress → mature 49.3H progress/result drawer
-8. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA
-9. validate image cap and Fixed / Range / Formula modes
-10. real LOCAL PUBLISH ONLY
-11. Local Django E2E
-12. explicit user approval
-13. only then verified Production backup/deploy/restart/smoke
+1. Windows clean-worktree safety check
+2. `git fetch --prune` + `git pull --ff-only`
+3. verify exact pulled Epic HEAD and runner version `49.3I.2`
+4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
+5. verify Products gallery images/name/edit-only + large image preview
+6. verify full AI autofill immediate startup progress → mature 49.3H progress/result drawer
+7. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA using IDs `2834255` and `2845731`
+8. validate image cap and Fixed / Range / Formula modes
+9. real LOCAL PUBLISH ONLY
+10. Local Django E2E
+11. explicit user approval
+12. only then verified Production backup/deploy/restart/smoke
 
 ## Deferred / Separate
 - `/api/v1/catalog/sitemap/` local 404 root cause
@@ -115,4 +119,4 @@ Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
 - Pillow `Image.getdata()` deprecation
 
 ## Next Recommended Task
-After docs-closed GitHub validation, Windows pulls the exact validated Epic HEAD and reruns `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Production remains out of scope until Local approval.
+Windows pulls the current Epic branch from GitHub and runs `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Production remains out of scope until Local approval.
