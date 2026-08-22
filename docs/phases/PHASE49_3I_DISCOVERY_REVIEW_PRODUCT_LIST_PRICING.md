@@ -2,231 +2,268 @@
 
 Updated: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.4`
-Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.5`
+Status: `FINAL CI SUCCESS / WINDOWS RERUN PENDING`
 Production: `UNTOUCHED`
 
 ## Goal
-Phase49.3I makes Catalog Center safe and efficient for high-volume product discovery/review while keeping Product Workspace as the canonical detailed editor.
+Phase49.3I makes Catalog Center safe and efficient for high-volume discovery/review while Product Workspace remains the canonical detailed editor.
 
 The phase owns:
-1. exact operator-supplied Search/Listing URL handling,
+1. exact operator Search/Listing URL handling,
 2. Preview Candidate → Approve → Full Fetch,
 3. archive/not-needed + blocked identity dedupe,
 4. source-script sanitation,
-5. lightweight Products gallery and Product Workspace routing,
-6. explicit Fixed / Range / Formula pricing modes,
-7. immediate AI progress first paint,
+5. visual Products Explorer + Product Workspace routing,
+6. explicit Fixed / Range / Formula pricing,
+7. immediate AI first paint,
 8. deterministic GitHub→Windows snapshot handoff,
-9. Windows-Explorer-style product browsing,
-10. source-aware Product URL vs Group/Category/Search URL routing.
+9. Explorer-style product browsing,
+10. Product URL vs Group/Category/Search URL routing,
+11. stable selection/open interaction and compact operational card metadata.
 
-## Requested Delta
-### A. Discovery Preview First
-- Operator supplies an exact HTTP(S) Search/Listing/Category URL.
-- Explicit valid seed is authoritative.
-- Discovery opens only the listing/group surface and collects lightweight candidates.
-- Preview candidate stores only source identity, title and one thumbnail.
-- Product page full extraction is forbidden before operator approval.
+## A. Discovery Preview First
+- explicit valid HTTP(S) Search/Listing/Category seed is authoritative,
+- Preview only stores lightweight identity/title/thumbnail,
+- full product extraction is forbidden before approval.
 
-### B. Approval Before Full Fetch
-- Operator can select one or many preview candidates.
-- Only approved candidates are fully extracted.
-- Canonical image limit remains default 10 / hard max 20.
-- Full fetch preserves source identity and sanitized source data.
+## B. Approval Before Full Fetch
+- one or many candidates may be approved,
+- Full Fetch only approved candidates,
+- image default 10 / hard max 20,
+- source identity and sanitized source payload preserved.
 
-### C. Archive / Not Needed / Dedupe
-- Archive before full fetch creates only minimal blocked identity.
-- Blocked source identity must not reappear as a new candidate.
-- Existing curated product must never be silently blocked merely because discovery saw it again.
-- Duplicate protection remains source code + external id + normalized URL.
+## C. Archive / Not Needed / Dedupe
+- archive before Full Fetch creates minimal blocked identity,
+- blocked identity does not reappear,
+- existing curated product is not silently blocked,
+- duplicate boundary is source code + external id + normalized URL.
 
-### D. Source Text Safety
-- URLs and source identity are preserved.
-- English/Latin technical source text is preserved.
-- Persian editorial `_fa` fields are preserved.
-- Unexpected CJK/Cyrillic/emoji source garbage is removed from scraped text fields.
+## D. Source Text Safety
+- preserve URLs/source identity,
+- preserve English/Latin technical source text,
+- preserve Persian editorial `_fa` fields,
+- remove unexpected scraped CJK/Cyrillic/emoji garbage.
 
-### E. Product Gallery
-Base 49.3I gallery contract remains:
-- legacy detailed Products editor/Treeview remains alive only as compatibility backend,
-- operator surface shows product image + product name + Edit Product only,
-- click image opens large local preview,
-- Edit Product opens canonical Product Workspace,
-- thumbnail source is local only: strict mapping → `page_extract.json` → local `images/`,
-- no network fetch occurs during Products gallery thumbnail rendering.
+## E. Products Explorer Contract
+The Products surface is visual/lightweight, not a parameter-heavy editor.
 
-### F. Phase49.3I.4 Explorer Gallery Hotfix
-Owner local QA exposed `ERR-49-020` where real images were clipped to a thin strip.
+Per card:
+- product image,
+- product name,
+- compact operator metadata:
+  - Product ID,
+  - product/workflow state,
+  - source,
+  - image count,
+  - added date,
+  - publish state,
+- one Edit Product action.
 
-Corrected contract:
-- thumbnail PhotoImage is rendered inside a pixel-sized holder frame,
-- holder uses `pack_propagate(False)`,
-- child image Label fills the holder and has no text-unit width/height,
-- view size changes also regenerate the PhotoImage for the requested pixel dimensions.
+Detailed editorial, SEO, material, pricing, commercial and publish editing stays in Product Workspace.
 
-Explorer-style view modes:
-- Extra Large Icons,
-- Large Icons — default,
-- Medium Icons,
-- Small Icons,
+Image click opens large local preview.
+Thumbnail source remains local-only:
+`strict local mapping → page_extract.json → local images/`.
+
+## F. Explorer Visual / Selection Features — 49.3I.4 Preserved
+View modes:
+- Extra Large,
+- Large — default,
+- Medium,
+- Small,
 - List.
 
-The chosen view is stored in existing local Catalog `settings`; no schema migration is introduced.
+View preference is stored in existing local Catalog settings; no schema migration.
 
-Selection behavior:
-- normal click → single selection,
-- Ctrl-click → toggle item,
-- Shift-click → contiguous range,
+Selection:
+- normal click single,
+- Ctrl-click toggle,
+- Shift-click contiguous range,
 - Select All,
 - Clear Selection,
-- selected-count display,
-- selected cards receive a visual border.
+- selected count,
+- selected-card border.
 
-Right-click context menu:
+Right-click:
 - Open Product,
 - Image Preview,
 - Remove From Publish Queue,
 - Select All,
 - Clear Selection.
 
-`Remove From Publish Queue` safety contract:
-- applies to the selected local products,
-- sets `upload_ready=0`,
-- sets `workflow_status=review`,
-- does not delete product data,
-- does not block the product,
-- does not call Production,
-- does not unpublish/delete an already-live site record.
+Safe queue removal only sets:
+- `upload_ready=0`,
+- `workflow_status=review`.
 
-### G. Product URL vs Group/Category/Search URL Routing
-Owner local QA requested verification of direct-link versus group intake and exposed `ERR-49-021`.
+It does not delete/block/unpublish a product and never touches Production.
 
-49.3I.4 routing contract:
-- every configured source with non-empty `model_url_pattern` uses that product regex as its authoritative single-product boundary,
-- matching URL → mature direct single-product intake,
-- other valid HTTP(S) URL → Preview Candidate discovery first,
-- no Full Fetch for a non-product URL before review,
-- source without a product regex preserves mature fallback routing.
+## G. Product URL vs Group/Category/Search Routing — 49.3I.4 Preserved
+For a configured source with non-empty `model_url_pattern`:
+- matching Product URL → mature direct single-product intake,
+- valid HTTP(S) non-product URL → Preview Candidate first,
+- Full Fetch only after approval,
+- no product regex → preserve mature fallback behavior.
 
-MakerWorld Direct Product example:
+MakerWorld Product example:
 `https://makerworld.com/en/models/2834255-cake-stand-small-table-great-for-cakes-cupcakes?from=search#profileId-3158565`
 
 MakerWorld Search example:
 `https://makerworld.com/en/search/models?keyword=cake+stand`
 
-### H. Explicit Pricing Modes
-Three independent operator modes remain:
-- Fixed — exact final price,
-- Range — explicit minimum/maximum,
-- Formula — dynamic cost formula based on material/time/supervision/extras.
+## H. Explicit Pricing Modes
+Independent operator modes:
+- Fixed,
+- Range,
+- Formula/Dynamic.
 
-Range must never invoke Formula calculations.
-No migration-owned Django field choices are mutated at runtime.
+Range never invokes Formula.
+No runtime mutation of migration-owned Django field choices.
 
-### I. AI First Paint
-Full AI autofill must paint immediate startup progress before synchronous preflight, then hand off to the mature 49.3H connection/send/receive/result/error/cost UI.
+## I. AI First Paint
+Full AI autofill paints immediate progress before synchronous preflight, then hands off to the mature 49.3H connection/send/receive/result/error/cost UI.
 
-### J. GitHub → Windows Handoff
-Runner v49.3I.4 preserves 49.3I.3 live snapshot semantics:
-- clean worktree required,
-- exact Epic branch required,
+## J. GitHub → Windows Handoff
+Runner v49.3I.5 preserves the live snapshot contract:
+- clean worktree,
+- exact Epic branch,
 - `git fetch --prune origin`,
-- Local HEAD must equal fetched Remote Epic HEAD,
-- stale Chat-pinned SHA is not authoritative,
-- no reset/stash/delete shortcut.
+- Local HEAD equals fetched Remote Epic HEAD,
+- stale Chat SHA is not authoritative,
+- no reset/stash/delete shortcut,
+- ASCII-only PowerShell 5.1 runner.
+
+## K. Phase49.3I.5 — Selection Loop Guard
+### Windows incident
+49.3I.4 automated local gate passed and Explorer visual rendering was corrected, but manual QA found selecting/opening a product could freeze.
+
+### Root cause — ERR-49-022
+The hidden mature Treeview is bound:
+`<<TreeviewSelect>> -> load_product`.
+
+The Explorer card used `_phase49_3i_select_product() -> tree.selection_set(iid)`. The 49.3I compatibility `load_product()` called `_phase49_3i_select_product()` again, which wrote selection again, forming:
+
+`card -> selection_set -> TreeviewSelect -> load_product -> selection_set -> ...`
+
+### Corrected interaction contract
+- card → hidden Treeview is the event-producing direction,
+- re-entrancy guard blocks recursive callback handling,
+- `selection_set()` only when selection actually differs,
+- Treeview `load_product()` is state-only and never writes selection,
+- repeated Product Open clicks are guarded,
+- Tk receives an idle/layout paint opportunity before Product Workspace construction.
+
+### Regression test
+A fake Treeview immediately invokes `load_product()` from `selection_set()` and raises if multiple writes occur. Expected/validated selection write count is exactly one.
+
+## L. Phase49.3I.5 — Friendly Filter / Sort + Compact Metadata
+Persian filters:
+- کارهای من,
+- جدید,
+- نیازمند بروزرسانی,
+- بدون تصویر,
+- بدون محتوا,
+- آماده انتشار,
+- صف انتشار,
+- منتشرشده,
+- خطادار,
+- همه محصولات.
+
+Persian sorting:
+- اولویت کاری,
+- جدیدترین,
+- قدیمی‌ترین,
+- آخرین بروزرسانی,
+- بیشترین امتیاز,
+- بیشترین دانلود.
+
+The raw legacy filter/sort UI is hidden, while mature DB/filter semantics remain the backend.
 
 ## Runtime Surface
-Added:
-- `catalog_center/app/phase49_3i_explorer_hotfix.py`
-- `catalog_center/tests/test_epic49_phase49_3i_explorer_hotfix.py`
+Changed for 49.3I.5:
+- `catalog_center/app/phase49_3i_explorer_hotfix.py`,
+- `catalog_center/tests/test_epic49_phase49_3i_explorer_hotfix.py`,
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1`,
+- `.github/workflows/phase49-3i-ci.yml`.
 
-Changed:
-- `catalog_center/app/phase49_3i_product_list.py`
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1`
-- `.github/workflows/phase49-3i-ci.yml`
-
-Preserved mature Phase49.3I runtime:
-- `catalog_center/app/phase49_3i_discovery_review.py`
-- `catalog_center/app/phase49_3i_source_safety.py`
-- `catalog_center/app/phase49_3i_local_qa_hotfix.py`
-- `catalog_center/app/phase49_3i_pricing_modes.py`
-- `store/phase49_3i_pricing_modes.py`
+Preserved mature runtime:
+- `catalog_center/app/phase49_3i_discovery_review.py`,
+- `catalog_center/app/phase49_3i_source_safety.py`,
+- `catalog_center/app/phase49_3i_product_list.py`,
+- `catalog_center/app/phase49_3i_local_qa_hotfix.py`,
+- `catalog_center/app/phase49_3i_pricing_modes.py`,
+- `store/phase49_3i_pricing_modes.py`.
 
 ## Must-Not-Touch
-- Product Workspace detailed editing contract.
-- Phase49.3H SEO Execution Console.
-- Phase49.3H result/error drawer and AI cost ledger.
-- default 10 / hard max 20 image policy.
-- manual override/provenance behavior.
-- dual product/portfolio publish targets.
-- product revision + idempotency.
-- homepage slider/revision contracts.
-- production paths, DB and media.
-- historical local media.
+- Product Workspace detailed editing,
+- 49.3H SEO execution/result/error/cost,
+- image default 10 / hard max 20,
+- manual override/provenance,
+- dual product/portfolio targets,
+- product/hero revision/idempotency,
+- Production path/DB/media/source,
+- historical media,
 - secrets.
 
-## Regression Tests
-49.3I.4 CI proved:
-1. five Explorer view modes exist and default to Large.
-2. unknown view mode normalizes safely.
-3. MakerWorld product URL matches source product regex.
-4. MakerWorld Group/Search URL does not match source product regex.
-5. malformed/empty product regex fails closed as non-product.
-6. thumbnail image Label has no text-unit width/height.
-7. explicit pixel holder and `pack_propagate(False)` exist.
-8. Ctrl/Shift multi-selection contract exists.
-9. right-click context menu contract exists.
-10. queue removal mutates only `upload_ready=0` and `workflow_status=review` and contains no delete/block call.
-11. Explorer view persists through existing Catalog settings.
-12. direct-link wrapper reads source `model_url_pattern` before selecting Direct vs Preview.
-13. Explorer hotfix composes after the mature 49.3I gallery installer.
-14. previous 49.3I/3H/3G tests pass.
-15. Django `makemigrations --check --dry-run` reports no changes.
-16. Full Django suite passes.
-
 ## Database / Migration Safety
-- Django schema change: NONE.
-- Django migration: NONE — CI verified.
-- Catalog local schema change: NONE.
-- existing `settings` key-value table stores only view preference.
-- no destructive schema operation.
+- Django schema change: NONE,
+- Django migration: NONE — CI verified,
+- Catalog local schema change: NONE,
+- no destructive schema operation,
 - no media rewrite/delete.
 
 ## Error Records
-- `ERR-49-020` — Product thumbnails clipped by Tk text-unit Label geometry.
-- `ERR-49-021` — Group/category URL could bypass Preview because URL-shape classifier was incomplete.
+- `ERR-49-017` — wrong UX87 composition boundary,
+- `ERR-49-018` — AI progress after synchronous preflight,
+- `ERR-49-019` — stale Chat SHA handoff,
+- `ERR-49-020` — clipped thumbnail receiver,
+- `ERR-49-021` — Product-vs-Group URL routing,
+- `ERR-49-022` — hidden Treeview selection feedback loop.
 
-See `docs/ERRORS.md` for Root Cause / Solution / Prevention.
-
-## Final GitHub Validation
-CI-only PR `#49`: CLOSED / NOT MERGED.
-Validated Epic base: `f792fd01d643a7b3d071234a4237f2d6932679b3`.
-Marker head: `3bb010414c55e62a5b09c3b2f0e123870980c0e5` — not merged.
+## Final GitHub Validation — 49.3I.5
+CI-only PR `#50`: `CLOSED / NOT MERGED`.
+Validated Epic runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
+Marker head: `57813f47f649bb2c415aa0fae1481f4a2561ce1d` — not merged.
 
 Successful runs:
-- Phase49.3I `32577907763`.
-- Phase49.3H `32577907755`.
-- Phase49.3G `32577907768`.
-- Full Phase49 + Full Django `32577907801`.
+- Phase49.3I `32580222694` — SUCCESS,
+- Phase49.3H `32580222686` — SUCCESS,
+- Phase49.3G `32580222682` — SUCCESS,
+- Full Phase49 + Full Django `32580222683` — SUCCESS.
 
-## Acceptance Gate Still Pending
-49.3I.4 is not owner-accepted until Windows proves:
-1. clean pull + runner v49.3I.4.
-2. full image thumbnails with no thin strip.
-3. all five Explorer view modes.
-4. Ctrl/Shift multi-selection.
-5. right-click menu and safe queue removal.
-6. real Direct Product URL routes direct.
-7. real Group/Category/Search URL routes Preview first.
-8. AI first-paint/progress regression QA.
-9. Fixed/Range/Formula regression QA.
-10. only after those pass: one LOCAL PUBLISH ONLY + Local Django E2E.
-11. explicit owner acceptance.
-12. only then Production backup/deploy/verification.
+CI verified:
+1. runner 49.3I.5 + ASCII-only + live Git snapshot contract,
+2. fake-Treeview feedback-loop regression,
+3. product open guard/Tk yield contract,
+4. compact metadata contract,
+5. friendly filter/sort contract,
+6. Explorer view/image/multi-select/context-menu regressions,
+7. Product-vs-Group source routing,
+8. 49.3H/3G regressions,
+9. Django no-new-migration contract,
+10. no destructive schema operation,
+11. Full Django suite.
+
+## Windows Acceptance Gate Still Pending
+49.3I.5 is not owner-accepted until Windows proves:
+1. clean pull + runner 49.3I.5,
+2. selecting one product never freezes,
+3. Edit Product opens exactly one Workspace,
+4. right-click Open Product opens exactly one Workspace,
+5. compact card metadata is useful/readable,
+6. Ready / Publish Queue / Published filters work,
+7. Newest / Oldest / Last Updated sorts work,
+8. Explorer view modes and Ctrl/Shift selection still work,
+9. safe queue removal still works,
+10. Product URL direct vs Group/Search Preview routing still works,
+11. AI first-paint/progress regression passes,
+12. Fixed/Range/Formula regression passes,
+13. only after all above: one LOCAL PUBLISH ONLY + Local Django E2E,
+14. explicit owner acceptance,
+15. only then Production backup/deploy/verify.
 
 ## Current State
-GitHub final CI is successful. Windows has not yet pulled/tested 49.3I.4. Production is untouched.
+GitHub final CI for 49.3I.5 is successful. Windows has not yet pulled/tested 49.3I.5. Production is untouched.
 
 ## Exact Next Step
-Owner Windows machine: clean worktree → live fetch/prune → `pull --ff-only` current Epic → repository-owned v49.3I.4 gate with `-LaunchApp` → Explorer/routing manual QA. No local source patch and no Production action.
+Windows clean worktree → live fetch/prune → fast-forward-only pull current Epic → repository-owned v49.3I.5 gate with `-LaunchApp` → selection/open + compact metadata/filter/sort manual QA. No local source patch and no Production action.
