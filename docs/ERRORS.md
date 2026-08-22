@@ -128,87 +128,88 @@ Related Phase: 49.3I runner hotfix
 Environment: Windows PowerShell 5.1
 Symptoms: `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` failed before execution with multiple `Unexpected token ')'` parser errors around the manual QA lines; Persian labels appeared as mojibake such as `Ø...`.
 Verified Root Cause: the GitHub runner was stored as UTF-8 without BOM but contained Persian text and an em dash. Windows PowerShell 5.1 uses legacy ANSI decoding for BOM-less script files. The UTF-8 bytes were decoded as mojibake; the em-dash byte sequence produced a smart-quote character that PowerShell treats as a string delimiter, terminating a string early and causing the later `)`/`<` parse errors.
-Failed Condition: CI parsed the Unicode text correctly under modern `pwsh` on Linux, so syntax-only CI did not reproduce this Windows PowerShell 5.1 encoding boundary.
-Correct Solution: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.1` is ASCII-only. Manual QA guidance in the runner uses ASCII text; Persian UI/docs remain unchanged. `.github/workflows/phase49-3i-ci.yml` now rejects any non-ASCII byte in the Windows runner before parsing it.
-Verification: CI-only PR #44 closed without merge; Phase49.3I Run `32570978818` SUCCESS; Phase49.3H Run `32570978800` SUCCESS; Phase49.3G Run `32570978829` SUCCESS; Full Phase49/Django Run `32570978799` SUCCESS.
-Prevention Rule: repository `.ps1` files intended for Windows PowerShell 5.1 must either have a validated BOM/encoding contract or remain ASCII-only. For canonical Local Gate runners, enforce ASCII-only bytes in CI so GitHub UTF-8 storage cannot become a legacy-decoding parse failure.
+Correct Solution: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.1` is ASCII-only and CI rejects non-ASCII bytes.
+Verification: CI-only PR #44; Phase49.3I `32570978818`, 49.3H `32570978800`, 49.3G `32570978829`, Full Phase49 `32570978799` SUCCESS.
+Prevention Rule: canonical Windows PowerShell 5.1 runners must remain ASCII-only or carry a separately verified encoding contract.
 
 ### ERR-49-017 — Phase49.3I Products UI patch missed the real UX87 composition boundary
 Date: 2026-08-22
-Related Phase: 49.3I Local QA regression hotfix
-Environment: Windows Catalog Center 8.7.1
-Symptoms: Products page still showed the legacy parameter/editor surface and no intended image-card gallery. The owner expected large product images, product name and one edit action only.
-Verified Root Cause: `phase49_3i_product_list.py` wrapped `App87._products_ui`, but `ux87_shell.CatalogCenterApp87._ui()` explicitly calls `super()._products_ui()` and then `self._modernize_products_page()`. Therefore the 49.3I `_products_ui` wrapper was bypassed by the real shell construction path.
-Failed Condition: the original regression test only asserted source-string presence and did not verify the actual UX87 composition call path.
-Correct Solution: wrap the real `App87._modernize_products_page` boundary; keep the mature Treeview/editor alive but hide the complete legacy Panedwindow; render a responsive local-only card gallery with 260x190 thumbnails, product name, one Edit Product action, vertical scrolling and click-to-large-preview. Thumbnail loading is batched through Tk `after()` to avoid a large synchronous render stall.
-Verification: CI-only PR #46; Phase49.3I Run `32573421461` SUCCESS; Phase49.3H Run `32573421431` SUCCESS; Phase49.3G Run `32573421523` SUCCESS; Full Phase49/Django Run `32573421439` SUCCESS.
-Prevention Rule: UI patch tests must verify the real shell composition boundary, not only the target method's source patterns. If a shell explicitly calls `super().method()`, patching the subclass override of that method is ineffective.
+Related Phase: 49.3I
+Symptoms: Products page still showed the legacy parameter/editor surface and no intended image-card gallery.
+Verified Root Cause: UX87 `_ui()` explicitly calls `super()._products_ui()` then `_modernize_products_page()`, bypassing the original patch target.
+Correct Solution: patch the real `_modernize_products_page` boundary, keep mature backend hidden, render local image gallery.
+Verification: CI-only PR #46; all Phase49 CI SUCCESS.
+Prevention Rule: UI patch tests must verify the real shell composition boundary.
 
 ### ERR-49-018 — AI progress window was created after synchronous preflight work
 Date: 2026-08-22
-Related Phase: 49.3I Local QA regression hotfix / protected 49.3H execution console
-Environment: Windows Catalog Center Product Workspace
-Symptoms: clicking full AI autofill appeared to hang briefly before any progress UI became visible, even though the network call itself ran in a worker thread.
-Verified Root Cause: the mature 49.3F `_phase49_3e_run_ai` performs `save(silent=True)`, row/source/material/color/category preparation and other synchronous preflight work before constructing `AIProgress`. The Tk event loop therefore had no progress window to paint during that preflight interval.
-Correct Solution: add an additive first-paint handoff at the composition root. A lightweight startup progress window is created immediately, the existing flow is scheduled via Tk `after(80)`, and when the real 49.3H `AIProgress` is constructed it replaces the startup window. Existing provider/model/network worker, result/error drawer, cost ledger and audit behavior are not duplicated or replaced.
-Verification: CI-only PR #46; Phase49.3I Run `32573421461` SUCCESS; Full Phase49/Django Run `32573421439` SUCCESS.
-Prevention Rule: any user-triggered operation with synchronous UI-thread preflight must paint immediate feedback before starting that preflight; network threading alone is not sufficient UX responsiveness.
+Related Phase: 49.3I
+Symptoms: full AI autofill looked frozen before progress appeared.
+Root Cause: synchronous save/preflight/source preparation ran before progress construction.
+Correct Solution: immediate lightweight first-paint, then Tk `after()` handoff to mature 49.3H progress/result/error/cost stack.
+Prevention Rule: synchronous UI-thread preflight must not begin before visible feedback is painted.
 
 ### ERR-49-019 — Windows handoff failed because Chat-pinned Expected HEAD became stale
 Date: 2026-08-22
 Environment: Windows PowerShell / GitHub handoff
-Related Phase: 49.3I.3 handoff guard
-Symptoms: Windows clean-worktree fetch and `git pull --ff-only` succeeded, updating Local from `fee6a5f...` to real remote HEAD `53e9216ae84a3e167481253da44760179c751051`, but the Chat-provided preflight then failed because it still required `789edf8652ad8a09641afedd5e959c63822800c7`.
-Verified Root Cause: the handoff command pinned a mutable branch to a SHA copied into Chat. After that SHA was issued, additional repository documentation commits advanced the Epic branch. The local pull correctly followed GitHub, but the stale Chat constant incorrectly treated the newer valid branch HEAD as an error. This also violated the existing `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`, which already required resolving Remote Epic HEAD after fetch rather than hardcoding an old SHA.
-Evidence: GitHub comparison `97674a82acc97e1a623b76084b60344cfa93142b..53e9216ae84a3e167481253da44760179c751051` contains only `PROJECT_CONTEXT.md` and `docs/*`; no runtime, runner, migration, database or media file changed in those seven post-validation commits.
-Failed Attempt: reusing a fixed `$ExpectedHead` from Chat as the source of truth for a branch that could advance before the operator executed the command.
-Correct Solution: repository runner v`49.3I.3` performs a live `git fetch --prune origin`, requires the exact Epic branch, verifies clean worktree, reads `origin/epic/phase49-unified-product-slider-sync` after that fetch, and requires Local HEAD to equal that fetched remote snapshot. If they differ, it fails with a `git pull --ff-only` instruction and must be rerun. No reset/stash/delete shortcut is used.
-Verification: CI-only PR #48 closed without merge. Validated Epic base `7117510f173f45a3d8c806e46fb0476cbaeba115`. Phase49.3I Run `32575765467` SUCCESS; Phase49.3H Run `32575765515` SUCCESS; Phase49.3G Run `32575765544` SUCCESS; Full Phase49 + Full Django Run `32575765457` SUCCESS. CI verifies runner version `49.3I.3`, ASCII-only compatibility, live fetch guard, expected branch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`.
-Prevention Rule: never use a Chat-pinned SHA as the sole Windows handoff truth for a mutable development branch. Pin the fetched remote snapshot inside the same local execution, then verify Local HEAD equals that snapshot; repository CI must protect the handoff contract.
+Root Cause: mutable branch advanced after a fixed SHA was copied into Chat.
+Correct Solution: live `git fetch --prune origin`, exact branch, clean worktree, Local HEAD equals fetched Remote Epic HEAD; ff-only pull if behind.
+Prevention Rule: never use a Chat-pinned SHA as sole source of truth for a mutable branch.
 
 ### ERR-49-020 — Product images were clipped into thin horizontal strips
 Date: 2026-08-22
 Environment: Windows Catalog Center Products gallery
-Related Phase: 49.3I.4 Explorer local-QA hotfix
-Symptoms: real product thumbnails appeared as very thin horizontal strips at the top of otherwise normal cards, while a no-image placeholder occupied a much larger area.
-Verified Root Cause: the gallery generated a real 260x190 `PhotoImage`, but the target `tk.Label` retained `width=32` and `height=12`. Those values are text-unit dimensions on a Tk Label and remained active after assigning the image, clipping the rendered image to a tiny widget surface.
-Failed Condition: previous tests verified thumbnail generation, local-only resolution and gallery composition, but did not verify the pixel geometry of the widget receiving the PhotoImage.
-Correct Solution: Phase49.3I.4 renders every thumbnail inside an explicit pixel-sized holder frame with `pack_propagate(False)` and lets an unconstrained child Label fill that holder. The child image Label no longer carries text-unit width/height. View-specific PhotoImages are generated for the selected Explorer mode.
-Verification: dedicated regression test `test_thumbnail_uses_pixel_holder_not_text_unit_image_label_dimensions`; GitHub CI and Windows visual QA required before acceptance.
-Prevention Rule: never size Tk image Labels with text-unit `width`/`height` when the rendered image size is a pixel contract. Use a pixel-sized container and an unconstrained image widget, and regression-test the receiver geometry as well as the image object.
+Root Cause: a 260x190 PhotoImage was assigned to a `tk.Label(width=32,height=12)` where width/height were text-unit dimensions.
+Correct Solution: pixel-sized holder frame + unconstrained image Label.
+Prevention Rule: pixel image contracts must not be sized through Tk text-unit Label dimensions.
 
 ### ERR-49-021 — Group/category URLs could be misclassified as direct product links
 Date: 2026-08-22
 Environment: Windows Catalog Center discovery/direct-link intake
-Related Phase: 49.3I.4 Explorer local-QA hotfix
-Symptoms: operator-facing direct-link routing could treat some source category/group/collection URLs as single product pages, bypassing the intended Preview-first discovery workflow.
-Verified Root Cause: `is_listing_or_search_url()` recognized only a limited URL-shape list such as `/search`, `keyword=`, `orderby=`, `/models` and `/3d-models`. Real source group/category URLs can use other paths. Each configured source already owns an authoritative `model_url_pattern`, but the direct-link router did not use that pattern to distinguish a product URL from a listing/group URL.
-Correct Solution: Phase49.3I.4 adds fail-safe source-aware routing. For a configured source with a non-empty product regex, only a URL matching that source's `model_url_pattern` may take direct product intake; another valid HTTP(S) URL routes to Preview Candidate discovery first. Sources without a product regex retain the mature prior behavior.
-Verification: pure regression tests cover a real MakerWorld product URL versus MakerWorld group/search URLs and malformed/empty patterns; Windows QA must verify one real direct product URL and one real group/search URL.
-Prevention Rule: source type must be classified by the source's verified product identity pattern, not by an incomplete enumeration of possible listing URL shapes. Non-product URLs must fail safe to Preview rather than full extraction.
+Root Cause: finite URL-shape heuristics were used instead of configured source `model_url_pattern`.
+Correct Solution: only URLs matching the source product regex may take direct intake; other valid source URLs go Preview-first.
+Prevention Rule: classify product identity from verified source product pattern, not guessed listing paths.
 
 ### ERR-49-022 — Hidden Treeview selection feedback loop froze Product open/preview
 Date: 2026-08-22
 Environment: Windows Catalog Center Products Explorer
-Related Phase: 49.3I.5
-Symptoms: after the 49.3I.4 visual fix, selecting/opening a product could freeze the UI and behave like an infinite loop before Product Workspace or image preview became usable.
-Verified Root Cause: the Explorer card called `_phase49_3i_select_product()`, which executed hidden `product_tree.selection_set(iid)`. The mature Treeview is bound to `<<TreeviewSelect>> -> load_product`; the 49.3I compatibility `load_product()` called `_phase49_3i_select_product()` again, which executed `selection_set()` again. This formed a card -> Treeview event -> load_product -> selection_set feedback cycle.
-Failed Condition: 49.3I.4 tests verified Ctrl/Shift selection and context actions but did not simulate the hidden Treeview virtual-event feedback path.
-Correct Solution: Phase49.3I.5 makes card -> hidden Treeview synchronization one-way with a re-entrancy guard and only calls `selection_set()` when the selection actually differs. The Treeview `load_product()` callback now updates current/card state only and never writes selection back. Product opening also has a repeat-click guard and yields one Tk frame before constructing Product Workspace.
-Verification: dedicated fake-Treeview feedback-loop regression test plus Phase49.3I/full CI required before Windows rerun.
-Prevention Rule: bidirectional UI synchronization must designate one direction as event-producing and the reverse direction as state-only; never write the same Tk selection again from its own `<<TreeviewSelect>>` callback.
+Root Cause: card selection wrote Treeview selection; `<<TreeviewSelect>>` called `load_product`; compatibility callback wrote selection again.
+Correct Solution: one-way event-producing sync, re-entrancy guard, state-only reverse callback, repeat-open guard.
+Prevention Rule: never write the same Tk selection from its own selection callback.
 
 ### ERR-49-023 — Secure credentials appeared lost because masked fields were not hydrated
 Date: 2026-08-22
 Environment: Windows Catalog Center UX87
 Related Phase: 49.3I.6
-Symptoms: after upgrading/restarting Catalog Center, the owner saw FTP password, Bridge token and AI API key fields empty again and had to treat them as if they had been lost, despite the project contract that credentials persist between releases.
-Verified Root Cause: the secure backend already wrote/read credentials through Windows Credential Store, and runtime `_ai_key()` / `_site_connection()` already fell back to secure storage. The operator fields had a different lifecycle: `ai_key` initialized empty, FTP password and Bridge token initialized from environment/new input only, and mature Save handlers cleared those widgets after secure persistence. Startup never hydrated Credential Store values back into the masked fields.
-Failed Condition: previous persistence tests proved keyring writes/runtime fallback but did not test operator-visible field hydration after Save/restart/provider switch.
-Correct Solution: Phase49.3I.6 adds an additive App87 secret-persistence layer that hydrates secure values into masked fields at startup, rehydrates after mature Save handlers clear them, and loads the stored key when AI Provider changes. Same-provider ordinary refresh does not overwrite an unsaved newly typed key. Explicit delete/clear remains authoritative.
-Secret Safety: Windows Credential Store/environment remains the source of truth. No secret is persisted to SQLite, Git, source files, diagnostics or logs.
-Verification: dedicated `test_epic49_phase49_3i_secret_persistence.py`, secure composition/source contract, Phase49.3I/3H/3G/full CI, then Windows Save→restart→provider-switch QA.
-Prevention Rule: secure persistence is not complete if only runtime fallback works; operator-facing masked fields must represent the persisted secure state without moving secrets into unsafe storage. Regression-test both backend persistence and UI hydration lifecycle.
+Symptoms: FTP password, Bridge token and legacy AI key looked empty after save/restart.
+Root Cause: secure backend worked, but masked fields did not mirror persisted Windows Credential Store values and mature Save handlers cleared widgets.
+Correct Solution: hydrate legacy connection/AI fields from secure storage at startup and after Save.
+Failed Condition Discovered Later: Phase49.3I.6 covered the legacy single AI key field but not the real Phase49.3F per-provider `_ai_hub_key_vars`; see `ERR-49-025`.
+Prevention Rule: persistence tests must target the real current operator widgets, not only legacy compatibility fields.
+
+### ERR-49-024 — Preview Candidate evaluate_all JavaScript became syntactically invalid
+Date: 2026-08-22
+Environment: Windows Catalog Center / MakerWorld Preview
+Related Phase: 49.3I.7
+Symptoms: exact MakerWorld search URL routed correctly to Preview, but every attempt failed with `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`; `candidates=0 failed=1 full_fetch=0`.
+Verified Root Cause: `phase49_3i_discovery_review.py` passed a normal Python triple-quoted JavaScript expression containing `+'\n'+` source text. Python converted that escape into a literal line break before Playwright evaluated it, leaving a raw newline inside a JavaScript single-quoted string. Playwright correctly rejected the invalid browser-context expression.
+Evidence: owner screenshot showed the error at `UtilityScript.evaluate`; repository inspection found the exact expression. Official Playwright contract states `locator.evaluate_all(expression)` executes the supplied JavaScript expression in page context.
+Correct Solution: Phase49.3I.7 installs a narrow Stage-1 Preview recovery using a raw Python JavaScript string so the browser receives the two characters backslash+n. It reuses the existing `candidates_from_dom_rows()` lightweight parser and does not call mature full-product extraction.
+Preserved Mature Path: `classic_methods.discover_classic` and `collect_classic_exact` are not rewritten; Direct Product and approved Full Fetch remain their existing mature paths.
+Verification: `test_epic49_phase49_3i_preview_recovery.py`, Phase49.3I CI and Full Phase49 regression CI, then Windows real MakerWorld Preview QA.
+Prevention Rule: any Python-embedded JavaScript passed to Playwright must have an explicit escaping contract and a regression test for the exact browser expression; never assume Python string escaping preserves JavaScript source bytes.
+
+### ERR-49-025 — 49.3I.6 hydrated the legacy AI field but real Provider Hub keys still disappeared visually
+Date: 2026-08-22
+Environment: Windows Catalog Center AI Center
+Related Phase: 49.3I.7
+Symptoms: AvalAI/OpenRouter/OpenAI/Google provider-card API Key fields appeared empty again after restart/update; model picker then behaved as if the Provider had no key, so live model lists were not visible.
+Verified Root Cause: the modern Phase49.3F AI Center uses per-provider `_ai_hub_key_vars`. `phase49_3i_secret_persistence.py` 49.3I.6 only hydrated legacy `ai_key`, FTP password and Bridge token. Meanwhile the mature provider save handlers stored the key in Windows Credential Store and intentionally cleared `_ai_hub_key_vars[provider]`. Therefore secure runtime fallback could still work while the real visible Provider cards were empty.
+Correct Solution: Phase49.3I.7 hydrates every real provider-card key variable from Windows Credential Store, also rehydrates OpenRouter management/OpenAI admin masked fields, and restores the card immediately after mature secure Save clears it. It also background-loads model catalogs for configured providers into the existing Model ID combobox/cache using the mature `AIProviderClient.list_model_info()` path.
+Provider API Contract: AvalAI uses its authenticated `/v1/models`; OpenRouter uses `/api/v1/models`; existing OpenAI/Google adapters remain preserved.
+Secret Safety: credentials remain only in Windows Credential Store/environment; no secret is written to SQLite, Git, source, diagnostics or logs.
+Verification: expanded `test_epic49_phase49_3i_secret_persistence.py`, secure composition contract, provider model-cache/combobox tests, Phase49.3I/3H/3G/full CI, then Windows restart/model-list QA.
+Prevention Rule: credential persistence and model-list readiness must be regression-tested against the real active Provider Hub state variables and save handlers after all composition layers are installed.
 
 ## OPEN / SEPARATE ITEMS
 
@@ -218,7 +219,6 @@ Rule: investigate route/client contract before Epic closure; do not add duplicat
 
 ### ERR-OPEN-002 — AI request cost may be unknown
 Status: mitigated by Phase49.3H
-Evidence: historical AI request logs include tokens/request IDs but provider cost may not be available.
 Rule: never invent a cost. Use provider response or verified provider cost lookup; otherwise mark unknown.
 
 ### ERR-OPEN-003 — Historical image acquisition limit inconsistency
