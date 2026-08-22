@@ -127,11 +127,32 @@ Date: 2026-08-22
 Related Phase: 49.3I runner hotfix
 Environment: Windows PowerShell 5.1
 Symptoms: `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` failed before execution with multiple `Unexpected token ')'` parser errors around the manual QA lines; Persian labels appeared as mojibake such as `Ø...`.
-Verified Root Cause: the GitHub runner was stored as UTF-8 without BOM but contained Persian text and an em dash. Windows PowerShell 5.1 uses legacy ANSI decoding for BOM-less script files. The UTF-8 bytes were decoded as mojibake; the em-dash byte sequence produced a smart-quote character that PowerShell treats as a quote delimiter, terminating a string early and causing the later `)`/`<` parse errors.
-Failed Condition: CI parsed the Unicode text correctly under modern `pwsh` on Linux, so syntax-only CI did not reproduce the Windows PowerShell 5.1 encoding boundary.
+Verified Root Cause: the GitHub runner was stored as UTF-8 without BOM but contained Persian text and an em dash. Windows PowerShell 5.1 uses legacy ANSI decoding for BOM-less script files. The UTF-8 bytes were decoded as mojibake; the em-dash byte sequence produced a smart-quote character that PowerShell treats as a string delimiter, terminating a string early and causing the later `)`/`<` parse errors.
+Failed Condition: CI parsed the Unicode text correctly under modern `pwsh` on Linux, so syntax-only CI did not reproduce this Windows PowerShell 5.1 encoding boundary.
 Correct Solution: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.1` is ASCII-only. Manual QA guidance in the runner uses ASCII text; Persian UI labels remain in project docs/UI. `.github/workflows/phase49-3i-ci.yml` now rejects any non-ASCII byte in the Windows runner before parsing it.
 Verification: CI-only PR #44 closed without merge; Phase49.3I Run `32570978818` SUCCESS; Phase49.3H Run `32570978800` SUCCESS; Phase49.3G Run `32570978829` SUCCESS; Full Phase49/Django Run `32570978799` SUCCESS.
 Prevention Rule: repository `.ps1` files intended for Windows PowerShell 5.1 must either have a validated BOM/encoding contract or remain ASCII-only. For canonical Local Gate runners, enforce ASCII-only bytes in CI so GitHub UTF-8 storage cannot become a legacy-decoding parse failure.
+
+### ERR-49-017 — Phase49.3I Products UI patch missed the real UX87 composition boundary
+Date: 2026-08-22
+Related Phase: 49.3I Local QA regression hotfix
+Environment: Windows Catalog Center 8.7.1
+Symptoms: Products page still showed the legacy parameter/editor surface and no intended image-card gallery. The owner expected large product images, product name and one edit action only.
+Verified Root Cause: `phase49_3i_product_list.py` wrapped `App87._products_ui`, but `ux87_shell.CatalogCenterApp87._ui()` explicitly calls `super()._products_ui()` and then `self._modernize_products_page()`. Therefore the 49.3I `_products_ui` wrapper was bypassed by the real shell construction path.
+Failed Condition: the original regression test only asserted source-string presence and did not verify the actual UX87 composition call path.
+Correct Solution: wrap the real `App87._modernize_products_page` boundary; keep the mature Treeview/editor alive but hide the complete legacy Panedwindow; render a responsive local-only card gallery with 260x190 thumbnails, product name, one Edit Product action, vertical scrolling and click-to-large-preview. Thumbnail loading is batched through Tk `after()` to avoid a large synchronous render stall.
+Verification: CI-only PR #46; Phase49.3I Run `32573421461` SUCCESS; Phase49.3H Run `32573421431` SUCCESS; Phase49.3G Run `32573421523` SUCCESS; Full Phase49/Django Run `32573421439` SUCCESS.
+Prevention Rule: UI patch tests must verify the real shell composition boundary, not only the target method's source patterns. If a shell explicitly calls `super().method()`, patching the subclass override of that method is ineffective.
+
+### ERR-49-018 — AI progress window was created after synchronous preflight work
+Date: 2026-08-22
+Related Phase: 49.3I Local QA regression hotfix / protected 49.3H execution console
+Environment: Windows Catalog Center Product Workspace
+Symptoms: clicking full AI autofill appeared to hang briefly before any progress UI became visible, even though the network call itself ran in a worker thread.
+Verified Root Cause: the mature 49.3F `_phase49_3e_run_ai` performs `save(silent=True)`, row/source/material/color/category preparation and other synchronous preflight work before constructing `AIProgress`. The Tk event loop therefore had no progress window to paint during that preflight interval.
+Correct Solution: add an additive first-paint handoff at the composition root. A lightweight startup progress window is created immediately, the existing flow is scheduled via Tk `after(80)`, and when the real 49.3H `AIProgress` is constructed it replaces the startup window. Existing provider/model/network worker, result/error drawer, cost ledger and audit behavior are not duplicated or replaced.
+Verification: CI-only PR #46; Phase49.3I Run `32573421461` SUCCESS; Full Phase49/Django Run `32573421439` SUCCESS.
+Prevention Rule: any user-triggered operation with synchronous UI-thread preflight must paint immediate feedback before starting that preflight; network threading alone is not sufficient UX responsiveness.
 
 ## OPEN / SEPARATE ITEMS
 
