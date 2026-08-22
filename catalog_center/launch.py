@@ -53,6 +53,7 @@ def main() -> int:
     )
     from app.phase49_3f_workspace import install as install_phase49_3f_workspace
     from app.phase49_3f_source_refresh_guard import install as install_phase49_3f_source_refresh_guard
+    from app.phase49_3g_workspace_usability import install as install_phase49_3g_workspace
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -83,6 +84,9 @@ def main() -> int:
     install_phase49_3e_task_center(ProductWorkspace, readiness_module)
     install_phase49_3f_workspace(ProductWorkspace, readiness_module)
     install_phase49_3f_source_refresh_guard(ProductWorkspace)
+    # 49.3G belongs at the real ProductWorkspace composition boundary. Keeping it
+    # here preserves the independent 49.3F Source Refresh unit-test contract.
+    install_phase49_3g_workspace(ProductWorkspace, readiness_module)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -159,6 +163,12 @@ def main() -> int:
     print("EPIC49_3F_RUNTIME_TRACE=ENABLED", flush=True)
     print("EPIC49_3F_SOURCE_GROUNDED_TECHNICAL_AI=ENABLED", flush=True)
     print("EPIC49_3F_DYNAMIC_PRICING=ENABLED", flush=True)
+    print("EPIC49_3G_WORKSPACE_VERTICAL_SCROLL=ENABLED", flush=True)
+    print("EPIC49_3G_GALLERY_HORIZONTAL_SCROLL=ENABLED", flush=True)
+    print("EPIC49_3G_COMPACT_COMMERCE=ENABLED", flush=True)
+    print("EPIC49_3G_AI_AUTOFILL_PROVENANCE=ENABLED", flush=True)
+    print("EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED", flush=True)
+    print("EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
