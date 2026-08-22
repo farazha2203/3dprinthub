@@ -76,21 +76,54 @@ Symptoms: `ValidationError: ['قبل از تبدیل، تصویر اصلی با�
 Root Cause: product main image was not materialized into site Media before conversion/import.
 Prevention Rule: Publish packaging/preflight must guarantee selected/primary image is materialized and owned by the target Media contract before import.
 
+### ERR-49-011 — Phase49.3H CI fixture assumed `upsert_product()` returns product ID
+Date: 2026-08-22
+Related Phase: 49.3H
+Symptoms: dedicated tests failed with `TypeError: int() argument ... not 'NoneType'`.
+Root Cause: new test fixture guessed a return-value contract not guaranteed by the actual Database API.
+Correct Solution: perform upsert, then resolve the row by verified source identity and read its DB id.
+Prevention Rule: tests must use actual repository method contracts; do not infer return values.
+
+### ERR-49-012 — Phase49.3H redaction assertion coupled to display format
+Date: 2026-08-22
+Related Phase: 49.3H
+Symptoms: safe output `Authorization: *** ***` failed a test expecting literal `Bearer ***`.
+Root Cause: test asserted one formatting representation instead of the security invariant.
+Correct Solution: assert original secret is absent and Authorization is masked; do not weaken runtime redaction.
+Prevention Rule: security tests assert semantic invariants plus leak absence, not incidental mask formatting.
+
+## ACTIVE ROOT CAUSE — Phase49.3I
+
+### ERR-49-013 — Explicit MakerWorld search URL ignored in search mode
+Date: 2026-08-22
+Environment: Windows Catalog Center discovery
+Symptoms: owner supplied `https://makerworld.com/en/search/models?keyword=cake+stand` but unrelated products were collected.
+Verified Root Cause: `main.py::_scan_worker` selects `target_templates=listing[:1]` for `mode == "search"`, so the explicit `seed` search URL is ignored and the configured default MakerWorld listing is scanned instead.
+Correct Solution: explicit HTTP(S) seed/listing URL is authoritative. Discovery must first create review candidates; full product extraction occurs only after operator approval.
+Prevention Rule: never silently substitute a configured discovery URL when an operator supplied an explicit valid URL. Regression-test exact target selection.
+
+### ERR-49-014 — Discovery performs full extraction before human review
+Date: 2026-08-22
+Related Phase: 49.3I
+Symptoms: discovery immediately downloads/parses full products and many images, wasting time and producing unwanted catalog rows.
+Verified Root Cause: after URL discovery current `_scan_worker` immediately iterates `pending_urls` and calls `collect_classic_exact`/full parse.
+Correct Solution: split discovery into Preview Candidate and Approved Full Fetch stages.
+Prevention Rule: discovery and acquisition are separate state transitions; preview must not call the full extractor.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Status: OPEN / outside Phase49.3H
+Status: OPEN / outside Phase49.3I
 Rule: investigate route/client contract before Epic closure; do not add duplicate endpoint without root-cause verification.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
-Status: OPEN, addressed by Phase49.3H
-Evidence: historical AI request logs include tokens/request IDs but `cost_usd=—` for some AvalAI calls.
+Status: mitigated by Phase49.3H
+Evidence: historical AI request logs include tokens/request IDs but provider cost may not be available.
 Rule: never invent a cost. Use provider response or verified provider cost lookup; otherwise mark unknown.
 
-### ERR-OPEN-003 — Image acquisition limit inconsistent
-Status: OPEN, addressed by Phase49.3H
-Current observed behavior: main UI default can be 60 and per-product controls allow up to 100, while prior project policy expected a much tighter cap.
-Rule: one canonical image-limit normalizer must cap all intake/refetch/persisted-selected flows.
+### ERR-OPEN-003 — Historical image acquisition limit inconsistency
+Status: runtime contract addressed by Phase49.3H; Windows pull/QA pending
+Rule: canonical normalizer is default 10 / hard max 20 across new intake/refetch/persisted-selected flows.
 
 ## Warning Debt (not current blockers)
 - `ckeditor.W001`: CKEditor4 security/maintenance debt.
