@@ -2,6 +2,44 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I Local QA Regression Hotfix
+
+### Fixed
+- Products page now patches the real UX87 `_modernize_products_page` composition boundary instead of an `_products_ui` override that the shell bypassed.
+- legacy table/editor Panedwindow is preserved for compatibility but hidden from the operator Products surface.
+- Products page now renders a responsive scrollable gallery with large local thumbnail, product name and one `ویرایش محصول` action per card.
+- product image click opens a large local preview.
+- thumbnails resolve from local persisted mappings/files only and load in small Tk `after()` batches.
+- full AI autofill now paints immediate startup progress before synchronous save/preflight/source preparation and hands off to the mature 49.3H progress/result UI.
+
+### Preserved
+- AI Provider/Model selection, network worker, result/error drawer, request logging and cost ledger remain the mature 49.3F/49.3H implementation.
+- Product Workspace remains the detailed editor.
+- MakerWorld Preview/Approve/Archive/Dedupe and image limit 10/20 remain unchanged.
+- Fixed / Range / Formula pricing remains unchanged.
+
+### Runner
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped to `49.3I.2`.
+- ASCII-only Windows PowerShell 5.1 contract remains enforced.
+- gallery composition and AI first-paint tests are now part of the canonical runner/CI.
+
+### Database
+- Django migration: NONE.
+- no reset/drop/truncate/delete/data rewrite.
+- Production untouched.
+
+### Tests
+- CI-only PR #46 closed without merge.
+- Phase49.3I Run `32573421461` — SUCCESS.
+- Phase49.3H Run `32573421431` — SUCCESS.
+- Phase49.3G Run `32573421523` — SUCCESS.
+- Full Phase49 + Full Django Run `32573421439` — SUCCESS.
+- runtime base before docs closure: `bf51fff1000bfcc6561712a243cb13e48001123c`.
+
+### Documentation
+- `ERR-49-017` and `ERR-49-018` added.
+- CURRENT_STATE / ROADMAP / REQUESTS / active Phase49.3I docs updated.
+
 ## 2026-08-22 — Phase49.3I Windows PowerShell 5.1 Runner Encoding Hotfix
 
 ### Changed
