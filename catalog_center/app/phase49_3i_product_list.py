@@ -411,9 +411,10 @@ def install(app_class) -> None:
     app_class._phase49_3i_load_next_thumbnail = _phase49_3i_load_next_thumbnail
     app_class._phase49_3i_product_list_installed = True
 
-    # Compose the Windows Explorer-style local QA hotfix only after the mature
-    # Phase49.3I gallery contract exists. This keeps the original gallery as the
-    # compatibility boundary while replacing only its operator-facing behavior.
+    # Compose same-phase operator-shell hotfixes only after the mature 49.3I
+    # gallery contract exists. Older phase installers remain independent.
     from .phase49_3i_explorer_hotfix import install as install_explorer_hotfix
+    from .phase49_3i_secret_persistence import install as install_secret_persistence
 
     install_explorer_hotfix(app_class)
+    install_secret_persistence(app_class)
