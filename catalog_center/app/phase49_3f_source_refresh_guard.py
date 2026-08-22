@@ -96,14 +96,3 @@ def install(workspace_class) -> None:
 
     workspace_class._phase49_3f_refresh_source_and_generate = _phase49_3f_refresh_source_and_generate
     workspace_class._phase49_3f_source_refresh_guard_installed = True
-
-    # 49.3G is intentionally chained last so it wraps the mature 49.3F Workspace
-    # rather than creating a second/parallel editor path.
-    from .phase49_3g_workspace_usability import install as install_phase49_3g_workspace
-    install_phase49_3g_workspace(workspace_class)
-    print("EPIC49_3G_WORKSPACE_VERTICAL_SCROLL=ENABLED", flush=True)
-    print("EPIC49_3G_GALLERY_HORIZONTAL_SCROLL=ENABLED", flush=True)
-    print("EPIC49_3G_COMPACT_COMMERCE=ENABLED", flush=True)
-    print("EPIC49_3G_AI_AUTOFILL_PROVENANCE=ENABLED", flush=True)
-    print("EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED", flush=True)
-    print("EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED", flush=True)
