@@ -19,6 +19,8 @@ from app.phase49_3g_workspace_usability import (
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "app" / "phase49_3g_workspace_usability.py"
 SELECTED_IMAGE_AI = ROOT / "app" / "phase49_3f_selected_image_ai.py"
+SOURCE_GUARD = ROOT / "app" / "phase49_3f_source_refresh_guard.py"
+LAUNCHER = ROOT / "launch.py"
 
 
 class _Db:
@@ -132,6 +134,17 @@ class Phase493GSourceContractTests(unittest.TestCase):
         self.assertIn("input_text", source)
         self.assertNotIn('"input_image"', source)
         self.assertNotIn("image_url", source)
+
+    def test_3g_installs_only_at_real_launcher_boundary_after_3f_guard(self):
+        launcher = LAUNCHER.read_text(encoding="utf-8")
+        guard = SOURCE_GUARD.read_text(encoding="utf-8")
+        self.assertIn("install_phase49_3g_workspace(ProductWorkspace, readiness_module)", launcher)
+        self.assertLess(
+            launcher.index("install_phase49_3f_source_refresh_guard(ProductWorkspace)"),
+            launcher.index("install_phase49_3g_workspace(ProductWorkspace, readiness_module)"),
+        )
+        self.assertNotIn("phase49_3g_workspace_usability", guard)
+        self.assertNotIn("install_phase49_3g_workspace", guard)
 
 
 if __name__ == "__main__":
