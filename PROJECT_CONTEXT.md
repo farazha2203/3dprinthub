@@ -4,169 +4,190 @@ Updated: 2026-08-22
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.4 — Explorer Product Gallery + Source URL Routing`
-Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.5 — Selection Loop Guard + Compact Product Metadata`
+Status: `FINAL CI SUCCESS / WINDOWS RERUN PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
-Repository/GitHub is the permanent source of truth. Do not infer branch, commit, paths, versions, database, migrations or deploy state from Chat memory.
+GitHub/Repository is the permanent source of truth. Do not infer branch, commit, paths, runtime versions, database, migrations or deployment state from Chat memory.
 
 Required flow:
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
-No direct Production source edits. No ZIP/patch/source delivery through Chat. No destructive reset/stash/delete shortcut for a dirty Windows worktree.
+No direct Production source edits. No ZIP/Patch/source delivery through Chat. Dirty Local/Host stops for inspection; no reset/stash/delete shortcut.
 
 ## Canonical Paths
 Windows project: `D:\projects\3DPrintHub`
 Windows Catalog Center: `D:\projects\3DPrintHub\catalog_center`
 Windows venv: `D:\projects\3DPrintHub\.venv`
+Windows Django DB: `D:\projects\3DPrintHub\db.sqlite3`
 Windows Catalog persistent root: `D:\projects\3dprinthub-catalog-manager`
 Windows Catalog DB: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
+Windows backups: `D:\projects\3dprinthub-backups`
 Production project: `/home/sfkilvrs/3dprinthub`
 Production venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 
-See `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before any environment or deployment work.
+Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment/deployment work.
 
 ## Current Phase49.3I Contracts
 ### Discovery
-- explicit valid operator HTTP(S) Search/Listing/Category URL is authoritative.
-- discovery is Preview Candidate first.
-- Preview takes basic identity/title/one thumbnail only.
-- Full Fetch is allowed only after operator approval.
-- image acquisition default 10 / hard max 20.
-- Archive/Not Needed stores minimal blocked identity without full fetch.
-- duplicate guard uses source + external id + normalized URL.
-- source scraped text is sanitized; URLs and Persian editorial fields are preserved.
+- explicit valid operator Search/Listing/Category URL is authoritative,
+- Preview Candidate first,
+- Preview stores identity/title/one thumbnail only,
+- Full Fetch only after approval,
+- image default 10 / hard max 20,
+- Archive/Not Needed preserves blocked identity,
+- duplicate boundary source + external id + normalized URL,
+- source text sanitized while URLs and Persian editorial fields are preserved.
 
 ### Product Workspace
-- canonical location for detailed product editing.
-- Product list/gallery must not duplicate detailed editor fields.
+- canonical detailed editor,
+- all commercial/editorial/SEO/material/pricing changes happen there,
+- Products Explorer remains a lightweight browsing/selection surface.
 
-### Products Gallery
-Base contract:
-- hidden mature Treeview/filter/sort remains compatibility backend.
-- operator cards expose only image, product name and Edit Product.
-- local thumbnail resolution: strict local image mapping → `page_extract.json` → local `images/`.
-- no network request during Products gallery rendering.
-- image click opens large local preview.
+### Products Explorer — 49.3I.5
+Per product card:
+- local image,
+- product name,
+- Product ID,
+- Persian state,
+- source,
+- image count,
+- added date,
+- publish state,
+- Edit Product action.
 
-### Phase49.3I.4 Explorer Hotfix
-Owner Windows QA showed real product images as thin strips.
-Verified cause (`ERR-49-020`): a 260x190 PhotoImage was assigned to a `tk.Label(width=32,height=12)`, clipping the receiver.
+View modes:
+- Extra Large,
+- Large,
+- Medium,
+- Small,
+- List.
 
-49.3I.4 behavior:
-- explicit pixel-sized image holder + `pack_propagate(False)`,
-- child image Label fills holder and has no text-unit width/height,
-- view-specific PhotoImage sizing,
-- view modes: Extra Large, Large, Medium, Small, List,
-- default view: Large,
-- view preference stored in existing local Catalog settings table,
-- normal click single-select,
-- Ctrl-click toggle,
-- Shift-click range,
+Selection/context:
+- normal/Ctrl/Shift selection,
 - Select All / Clear Selection,
-- selected-count UI,
-- right-click: Open, Preview, Remove From Publish Queue, Select All, Clear Selection.
+- right-click Open / Preview / Remove From Publish Queue,
+- safe queue removal only: `upload_ready=0`, `workflow_status=review`,
+- no delete/block/Production operation.
 
-Safe right-click queue removal:
-- `upload_ready=0`,
-- `workflow_status=review`,
-- no product delete,
-- no product block,
-- no Production unpublish/delete.
+Friendly filters:
+- کارهای من,
+- جدید,
+- نیازمند بروزرسانی,
+- بدون تصویر,
+- بدون محتوا,
+- آماده انتشار,
+- صف انتشار,
+- منتشرشده,
+- خطادار,
+- همه محصولات.
 
-Runtime:
-- `catalog_center/app/phase49_3i_explorer_hotfix.py`
-- composed after the mature `phase49_3i_product_list.install()` boundary.
+Friendly sorting:
+- اولویت کاری,
+- جدیدترین,
+- قدیمی‌ترین,
+- آخرین بروزرسانی,
+- بیشترین امتیاز,
+- بیشترین دانلود.
+
+### Selection Loop Prevention — ERR-49-022
+49.3I.4 Windows manual QA found a freeze when selecting/opening products.
+
+Root cause:
+`card -> hidden Treeview selection_set -> <<TreeviewSelect>> -> load_product -> selection_set -> ...`
+
+49.3I.5 contract:
+- card → Treeview is one-way event-producing sync,
+- re-entrancy guard,
+- only write selection if it differs,
+- Treeview callback is state-only,
+- Product Open repeat-click guard,
+- Tk paint/yield before Product Workspace construction.
 
 ### Source URL Routing
-Verified weakness (`ERR-49-021`): the old listing classifier enumerated only selected URL shapes and could misclassify a source Group/Category URL as a direct product.
-
-49.3I.4 fail-safe contract:
-- configured source with non-empty `model_url_pattern` uses that regex as the authoritative product URL boundary,
-- matching URL → mature direct single-product intake,
-- other valid HTTP(S) URL → Preview Candidate discovery first,
-- source without product regex → mature prior fallback behavior.
-
-MakerWorld Direct Product example:
-`https://makerworld.com/en/models/2834255-cake-stand-small-table-great-for-cakes-cupcakes?from=search#profileId-3158565`
-
-MakerWorld Search example:
-`https://makerworld.com/en/search/models?keyword=cake+stand`
+For configured source with `model_url_pattern`:
+- matching product URL → direct single-product intake,
+- other valid HTTP(S) URL → Preview Candidate first,
+- Full Fetch only after approval.
 
 ### AI
-- first-paint progress appears before synchronous preflight.
-- mature 49.3H progress/result/error/cost UI remains source of truth.
-- provider/model/network/request implementation is not duplicated.
+- immediate first-paint progress before synchronous preflight,
+- mature 49.3H progress/result/error/cost remains authoritative,
+- no fabricated provider cost.
 
 ### Pricing
 Three independent modes:
 - Fixed,
 - Range,
 - Formula/Dynamic.
-Range must never invoke Formula.
-No runtime mutation of migration-owned Django choices.
+Range must not invoke Formula.
 
-### Git Handoff
-Runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.4.
-- ASCII-only for Windows PowerShell 5.1.
-- clean worktree required.
-- exact Epic branch required.
-- live `git fetch --prune origin`.
-- Local HEAD must equal fetched Remote Epic HEAD.
-- no Chat-pinned SHA as sole handoff truth.
+## Windows Delivery Contract
+Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.5.
 
-## Final GitHub Validation
-CI-only PR `#49`: CLOSED / NOT MERGED.
-Validated Epic base: `f792fd01d643a7b3d071234a4237f2d6932679b3`.
-Marker head `3bb010414c55e62a5b09c3b2f0e123870980c0e5` was not merged.
+Runner rules:
+- ASCII-only for Windows PowerShell 5.1,
+- exact Epic branch,
+- clean worktree,
+- live `git fetch --prune origin`,
+- Local HEAD must equal fetched Remote Epic HEAD,
+- no Chat-pinned SHA as sole truth,
+- no reset/stash/delete shortcut.
 
-Successful workflows:
-- Phase49.3I `32577907763`.
-- Phase49.3H `32577907755`.
-- Phase49.3G `32577907768`.
-- Full Phase49 + Full Django `32577907801`.
+## Latest Verified State
+### Windows 49.3I.4 local gate
+- Local HEAD: `7330ad6d79d8061998b1fa143051173b558cefbd`,
+- 137 Catalog tests PASS,
+- 419 Django tests PASS, 2 skipped,
+- no new migration,
+- Production untouched,
+- Explorer visual rendering fixed,
+- selection/open feedback loop discovered in manual QA.
 
-Validated:
-- runner v49.3I.4 / ASCII / live-snapshot contract,
-- Explorer regression tests,
-- source URL routing tests,
-- previous 49.3I/3H/3G regressions,
-- Django checks,
-- no migration changes,
-- no destructive schema operations,
-- Windows Catalog Epic49 tests,
-- Full Django suite.
+### GitHub 49.3I.5 final CI
+CI-only PR #50: CLOSED / NOT MERGED.
+Validated runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
+Marker head: `57813f47f649bb2c415aa0fae1481f4a2561ce1d` — not merged.
 
-Post-validation Epic commits are documentation-only closure. Windows must still compare Local HEAD to the live fetched Remote Epic HEAD, not to a Chat-pinned SHA.
+Successful runs:
+- 49.3I `32580222694`,
+- 49.3H `32580222686`,
+- 49.3G `32580222682`,
+- Full Phase49 + Full Django `32580222683`.
 
-## Required Windows QA — NEXT
-1. close Catalog Center.
-2. clean worktree.
-3. fetch/prune + `pull --ff-only` current Epic.
-4. run v49.3I.4 repository gate with `-LaunchApp`.
-5. verify full thumbnails, no thin strips.
-6. verify all five Explorer view modes.
-7. verify Ctrl/Shift multi-select.
-8. verify right-click menu and safe local queue removal.
-9. verify large image preview.
-10. verify Edit Product → Product Workspace.
-11. real Product URL → direct intake.
-12. real Group/Category/Search URL → Preview first.
-13. approved-only Full Fetch and image cap <=20.
-14. AI first-paint regression QA.
-15. Fixed/Range/Formula QA.
-16. only then one LOCAL PUBLISH ONLY + Local Django E2E.
+Django migration for 49.3I.5: NONE.
 
-## Production Gate
-No Production commands until:
-- Windows automated gate success,
-- visual/data QA success,
-- LOCAL PUBLISH E2E success,
+## Error Knowledge
+Relevant latest records:
+- `ERR-49-017` UX87 composition boundary,
+- `ERR-49-018` AI first-paint,
+- `ERR-49-019` stale Chat SHA handoff,
+- `ERR-49-020` clipped thumbnail receiver,
+- `ERR-49-021` Product-vs-Group URL routing,
+- `ERR-49-022` hidden Treeview selection feedback loop.
+
+Always inspect `docs/ERRORS.md` before troubleshooting.
+
+## Current Acceptance Gate
+Windows must pull and test 49.3I.5 before Local Publish:
+1. select card without freeze,
+2. Edit Product opens one Workspace,
+3. right-click Open opens one Workspace,
+4. card compact metadata readable,
+5. Ready / Queue / Published filters work,
+6. Newest / Oldest / Last Updated sorts work,
+7. view modes + Ctrl/Shift + context queue removal still work,
+8. direct Product vs Group/Search routing still works,
+9. AI progress regression QA,
+10. Fixed/Range/Formula regression QA.
+
+Only then:
+- one LOCAL PUBLISH ONLY,
+- Local Django E2E,
 - explicit owner approval,
-- verified production path/branch/commit/DB vendor/name,
-- backup and rollback readiness.
+- Production backup/deploy/verify.
 
-## Exact Next Step
-Owner Windows machine: live GitHub pull with clean worktree → `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` → Explorer/routing manual QA. Do not patch local source manually and do not touch Production.
+## Production
+Production is untouched and not approved. Before any Production step, re-verify host branch/commit, MySQL vendor/name, backup, rollback, host constraints and deploy method from repository docs and read-only server state.
