@@ -1,6 +1,6 @@
 # Phase49.3G — Final Validation Record
 
-این فایل نتیجه نهایی CI را برای `docs/PHASE49_3G_WORKSPACE_USABILITY_AI_PROVENANCE.md` تکمیل می‌کند.
+این فایل نتیجه نهایی GitHub/CI برای `docs/PHASE49_3G_WORKSPACE_USABILITY_AI_PROVENANCE.md` را ثبت می‌کند.
 
 ## Runtime baseline validated
 
@@ -8,7 +8,7 @@
 88c19d0ab9a5ed416479f65c30b8a6ed8cf0153d
 ```
 
-این baseline شامل این موارد است:
+این Runtime baseline شامل این موارد است:
 
 - Workspace vertical scroll controller
 - compact Commerce layout
@@ -21,6 +21,8 @@
 - 49.3F Source Refresh Guard مستقل از 49.3G
 - `RUN_PHASE49_3G_LOCAL_GATE.ps1` version `49.3G.0`
 
+Docs-only commits بعد از این Runtime baseline رفتار برنامه را تغییر نداده‌اند؛ Windows باید همیشه آخرین HEAD همان Epic را با `git pull --ff-only` دریافت کند.
+
 ## Final dedicated Phase49.3G CI
 
 ```text
@@ -30,7 +32,6 @@ Conclusion: SUCCESS
 ```
 
 Passed:
-
 - PowerShell Phase49.3G runner contract
 - Python 3.12 setup/dependencies
 - Compile 49.3G runtime surfaces
@@ -48,7 +49,6 @@ Conclusion: SUCCESS
 ```
 
 Passed:
-
 - PowerShell legacy/current runner contracts
 - compile changed Python surfaces
 - Django check + migration contract
@@ -56,6 +56,17 @@ Passed:
 - targeted Phase49 behavioral/regression tests
 - Windows Catalog Center Epic49 discovery/regressions
 - Full Django suite
+
+## Validation-only PR
+
+```text
+PR: #37
+Purpose: CI probe only
+State: CLOSED
+Merged: NO
+```
+
+PR موقت وارد Epic نشد؛ Runtime قبلاً مستقیم روی Epic ثبت شده بود و PR فقط برای مشاهده هر دو Workflow استفاده شد.
 
 ## Boundary regression caught before Windows
 
@@ -86,7 +97,7 @@ launch.py composition root
 
 ## `$django-admin-expert`
 
-در شروع فاز 49.3G دوباره Plugin Management جستجو شد؛ Plugin/Skill متناظر Django Admin پیدا نشد. بنابراین وضعیت صحیح:
+در شروع فاز 49.3G دوباره Plugin Management جستجو شد؛ Plugin/Skill متناظر Django Admin پیدا نشد. وضعیت صحیح:
 
 ```text
 unavailable in current session
@@ -94,17 +105,34 @@ unavailable in current session
 
 هیچ ادعای نصب/به‌روزرسانی ثبت نمی‌شود.
 
+## Source of Truth synced
+
+پس از Final CI، این فایل‌ها به وضعیت 49.3G منتقل شدند:
+
+- `PROJECT_CONTEXT.md`
+- `docs/00_PROJECT_MASTER_ROADMAP_FA.md`
+- `docs/PHASE49_3G_WORKSPACE_USABILITY_AI_PROVENANCE.md`
+- `docs/PHASE49_3G_FINAL_VALIDATION.md`
+
+Current gate در اسناد مادر دیگر 49.3F.1 نیست؛ 49.3G Windows Local Gate است.
+
 ## Remaining gate
 
 ```text
-GitHub final docs head
-→ Windows git fetch/pull --ff-only
+GitHub latest Epic HEAD
+→ Windows git status --short
+→ dirty? STOP / INSPECT / NO RESET
+→ git fetch --prune origin
+→ git switch epic/phase49-unified-product-slider-sync
+→ git pull --ff-only
+→ verify RUN_PHASE49_3G_LOCAL_GATE.ps1 = 49.3G.0
 → RUN_PHASE49_3G_LOCAL_GATE.ps1 -LaunchApp
 → automated Local PASS
 → real visual scroll/gallery QA
 → AI ownership/autofill/manual override QA
 → selected-image privacy QA
 → one LOCAL PUBLISH ONLY
+→ Local Django E2E
 → explicit user approval
 → Production plan/deploy
 ```
