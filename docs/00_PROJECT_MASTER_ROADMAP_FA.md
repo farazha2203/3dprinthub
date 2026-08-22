@@ -1,19 +1,18 @@
 # 3DPrintHub — نقشه مادر پروژه، معماری، فازها و مسیر بعدی
 
-> این فایل قبل از هر Phase/Hotfix/UI change/Migration/Sync/Deploy خوانده می‌شود. Source of Truth اصلی Repository/GitHub است. وضعیت واقعی Migration/Data/Server و جدیدترین CI/Local/Host output بر متن قدیمی مقدم است.
+> این فایل قبل از هر Phase/Hotfix/UI change/Migration/Sync/Deploy خوانده می‌شود. Source of Truth اصلی Repository/GitHub است. وضعیت واقعی Git/Database/Server/CI/Local output بر حافظه Chat و متن قدیمی مقدم است.
 
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
-**زبان اصلی:** Python / Django  
-**اپراتور اصلی:** Windows Catalog Center  
-**مدیریت دوم:** Django Admin  
-**Production:** قبل از Local QA + Local Publish E2E + تأیید صریح کاربر ممنوع.
+**Current Phase:** `49.3I`  
+**Current Hotfix:** `49.3I.5 — Selection Loop Guard + Compact Product Metadata`  
+**Windows Operator:** Catalog Center 8.7.1  
+**Backend:** Django / Python  
+**Production:** تا Local QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
 
 ---
 
 ## 1) قانون مادر
-
-مسیر اجباری:
 
 ```text
 READ DOCS
@@ -23,7 +22,7 @@ READ DOCS
 → CI
 → WINDOWS PULL --FF-ONLY
 → LOCAL AUTOMATED GATE
-→ MANUAL VISUAL/DATA QA
+→ MANUAL VISUAL/DATA/INTERACTION QA
 → LOCAL PUBLISH E2E
 → EXPLICIT OWNER APPROVAL
 → PRODUCTION BACKUP/DEPLOY
@@ -32,20 +31,20 @@ READ DOCS
 ```
 
 قواعد ثابت:
-- قابلیت سالم Mature باید Extend/Patch/Wrap شود؛ بازنویسی موازی بدون دلیل ممنوع.
+- Mature behavior باید Extend/Patch/Wrap شود؛ بازنویسی موازی بدون دلیل ممنوع.
 - Bugfix بدون Regression Test کامل نیست.
 - Source Code دائمی روی Production ویرایش نمی‌شود.
-- هیچ ZIP/Patch/PS1/Python/Source مستقل از Repository برای اجرا مبنا نیست.
-- Dirty Local/Host = STOP/INSPECT؛ `reset --hard`, `git clean`, حذف DB/.env/media/persistent data Quick Fix نیست.
-- Migration معمول Additive-first؛ destructive change فقط با Target/Backup/Rollback verified و Phase مستقل.
-- Secret/API key/token/password در Git/log/audit/chat ذخیره نمی‌شود.
-- SHA ثابت داخل Chat نباید برای Branch قابل‌حرکت تنها Source of Truth تحویل Windows باشد؛ Snapshot باید بعد از fetch واقعی از `origin/<branch>` قفل شود.
+- ZIP/Patch/Source مستقل از Repository مسیر تحویل نیست.
+- Dirty Local/Host = STOP/INSPECT؛ reset/stash/delete Quick Fix ممنوع.
+- Migrationها Additive-first؛ destructive فقط با Target/Backup/Rollback verified.
+- Secret/API key/token/password در Git/log/chat ذخیره نمی‌شود.
+- SHA ثابت در Chat Source of Truth یک Branch متحرک نیست؛ Snapshot باید بعد از `git fetch` واقعی از `origin/<branch>` Verify شود.
 
 Policy: `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`.
 
 ---
 
-## 2) مسیرهای واقعی ثبت‌شده
+## 2) مسیرهای ثبت‌شده
 
 ### Windows
 ```text
@@ -69,11 +68,14 @@ Media:         /home/sfkilvrs/public_html/media
 Private media: /home/sfkilvrs/3dprinthub/private_media
 ```
 
-Production DB Guard:
-- vendor باید `mysql` باشد.
-- DB name باید دقیقاً production DB باشد.
-- SQLite fallback در Production migration = STOP.
-- قبل از Migration Production، backup واقعی الزامی است.
+قبل از هر Production operation:
+- `docs/PATHS.md`
+- `docs/HOST_CONSTRAINTS.md`
+- DB vendor/name واقعی
+- Backup
+- Rollback
+- Branch/Commit واقعی
+باید دوباره Verify شوند.
 
 ---
 
@@ -99,450 +101,233 @@ Production DB Guard:
 → 49.3F.1 Native stderr Capture Hotfix
 → 49.3G Workspace Usability + AI Provenance
 → 49.3H SEO Execution + AI Cost + Controlled Image Intake
-→ 49.3I Discovery Review + Product Gallery + Explicit Pricing Modes
+→ 49.3I Discovery Review + Product Gallery + Explicit Pricing
 → 49.3I.1 Windows PowerShell 5.1 Encoding Guard
 → 49.3I.2 Real UX87 Product Gallery + AI First-Paint
 → 49.3I.3 Live GitHub Snapshot Handoff Guard
+→ 49.3I.4 Explorer Product Gallery + Source URL Routing
+→ 49.3I.5 Selection Loop Guard + Compact Product Metadata
 ```
 
-Current Phase:
-**49.3I.3 handoff hotfix** — GitHub implementation + dedicated/regression/full CI SUCCESS; Windows Local Gate/QA pending.
+Current status:
+**49.3I.5 GitHub implementation + final CI SUCCESS; Windows rerun pending; Production untouched.**
 
 ---
 
-## 4) End-to-End Architecture
+## 4) معماری عملیاتی
 
 ```text
-Employee
+Operator
   ↓
 Windows Catalog Center 8.7.1
   ↓
 Persistent Catalog SQLite
   ↓
-Discovery Review / Product Workspace / Images / AI / SEO / Price / Hero
+Discovery Preview / Product Workspace / AI / Pricing / Image Pipeline
   ↓
-Batch / Bridge
-  ├─ Local Publish → Local Django SQLite
-  └─ Production Publish → verified FTP/Bridge/Importer
-                           ↓
-                     Django Product
-                     ProductCatalogProfile
-                     HomepageHeroSlide
-                           ↓
-                     Store / Home / Cart / Checkout
+LOCAL PUBLISH ONLY
+  ↓
+Local Django SQLite
+  ↓
+Local Store/Admin/E2E Verification
+  ↓
+Explicit Owner Approval
+  ↓
+GitHub-approved Commit
+  ↓
+Production Host pulls from GitHub
+  ↓
+MySQL + Passenger/LiteSpeed
+  ↓
+Production Verification
 ```
 
-Reverse sync:
-`Django Admin edit → revision increment → Bridge → Windows refresh/compare`.
-
-Protection:
-- stale Windows write → revision conflict / fail-closed
-- Product and Hero revisions independent
-- `batch_uuid + source_hash` idempotency
-- Local and Production targets separate
+Production هیچ‌وقت مستقیماً Source of Development نیست.
 
 ---
 
-## 5) Protected Product Workspace Contracts
+## 5) قراردادهای اصلی Phase49.3I
 
-Canonical stages remain available and non-blocking for editing; Readiness guides the operator, Production Publish remains fail-closed.
+### Discovery
+- Explicit Search/Listing/Category URL authoritative.
+- Preview Candidate first.
+- یک thumbnail + identity/title در Preview.
+- Full Fetch فقط Approved.
+- image limit پیش‌فرض 10 / حداکثر 20.
+- Archive/Not Needed بدون Full Fetch و با blocked identity.
+- Dedupe: source + external id + normalized URL.
+- Source text sanitation بدون آسیب به URL و Persian editorial fields.
 
-Protected capabilities:
-- Persian source/editor integrity
-- Product SEO + Slider SEO separation
-- exact selected-image identity
-- Image SEO selected-only + text-only
-- Material/Color options
-- Hero media/effect/timing/revision
-- AI provider/model persistence + diagnostics
-- AI provenance/manual override
-- Local Publish exact preflight
-- server revision/idempotency
+### Product Workspace
+- محل canonical همه ویرایش‌های جزئی/تجاری/SEO/قیمت/متریال.
+- Products page نباید دوباره به فرم پارامترسنگین تبدیل شود.
 
----
+### Products Explorer
+کارت هر محصول:
+- تصویر،
+- نام،
+- شماره Product ID،
+- وضعیت،
+- منبع،
+- تعداد عکس،
+- تاریخ اضافه‌شدن،
+- وضعیت انتشار،
+- دکمه Edit Product.
 
-## 6) AI / Diagnostics Baseline
+View:
+- Extra Large,
+- Large,
+- Medium,
+- Small,
+- List.
 
-Providers:
-- AvalAI
-- OpenRouter
-- Google Gemini Direct
-- OpenAI Direct
+Selection:
+- Normal / Ctrl / Shift,
+- Select All / Clear,
+- Right-click context actions.
 
-Rules:
-- raw model ID persisted; decorated label not persisted
-- active provider/model single source of truth
-- API key only from secure store/environment
-- request ID/tokens/cost logged where supported
-- unknown provider cost is never invented
-- Bearer/secret redaction regression-protected
-- AI cannot invent legal/license/price/inventory/material/color facts
-- operator-owned fields stay protected
+Safe queue removal:
+- فقط `upload_ready=0`
+- فقط `workflow_status=review`
+- no delete/block/unpublish/Production.
 
-`$django-admin-expert`: no matching Plugin/Skill available in this session; do not claim installed.
+### Source URL Routing
+اگر Source دارای `model_url_pattern` باشد:
+- Product URL match → Direct Product Intake.
+- Valid non-product URL → Preview Candidate first.
+- Full Fetch only after approval.
 
----
+### Pricing
+سه Mode مستقل:
+- Fixed
+- Range
+- Formula/Dynamic
 
-## 7) Image Contract — Phase49.3H+
+Range نباید Formula را اجرا کند.
 
-Current canonical acquisition limit:
-- default: **10**
-- hard max: **20**
-- operator chooses per product/intake
-- cap applies to persisted/selected/downloaded images
-- reaching cap moves workflow to next product; does not stop batch discovery
-
-Image SEO privacy:
-- selected images only
-- no image bytes/files/URLs sent to AI
-- slot→URL mapping local only
-- unselected metadata preserved
-
----
-
-## 8) Pricing Contract — Phase49.3I
-
-Operator modes are explicitly separated:
-
-### Fixed
-Exact amount such as `1,200,000 تومان`.
-- `price_min == price_max`
-- final price true
-
-### Range
-Explicit range such as `200,000..500,000 تومان`.
-- existing price-range/consultation behavior
-- not formula pricing
-- `pricing_strategy=range`
-- `price_mode=range`
-
-### Dynamic / Formula
-Existing mature Variant engine:
-- material grams/rates
-- part/support weight + support multiplier
-- print minutes/hourly rate
-- supervision rate
-- assembly/extras where configured
-
-Dynamic Source of Truth remains:
-`ProductVariant.price_breakdown()` + cached Variant unit price.
-
-Acceptance baseline:
-```text
-PLA = 2,600,000/kg = 2,600/g
-Part = 100g
-Support = 50g × 2
-Chargeable = 200g
-Material = 520,000
-Print = 3h × 150,000 = 450,000
-Supervision = 3h × 50,000 = 150,000
-Expected = 1,120,000 تومان before extras/shipping
-```
-
-Product Detail/Cart/Checkout نباید calculator موازی بسازند.
+### AI
+- First paint قبل از synchronous preflight.
+- mature 49.3H progress/result/error/cost ledger حفظ شود.
+- Cost فقط اگر Provider/response معتبر ارائه کند؛ fabrication ممنوع.
 
 ---
 
-## 9) Phase49.3I Discovery Contract
+## 6) 49.3I.5 — Root Cause و Fix
 
-Root Cause قدیمی:
-`mode=search` لینک صریح اپراتور را نادیده می‌گرفت و `listing[:1]` پیش‌فرض را اسکن می‌کرد.
-
-Contract جدید:
-1. explicit HTTP(S) search/listing URL = authoritative.
-2. Stage 1 فقط Preview Candidate:
-   - one thumbnail
-   - source title
-   - external/source identity
-   - product URL
-3. هیچ full extraction قبل از approval.
-4. Stage 2 فقط approved candidate را کامل دریافت می‌کند.
-5. image limit 1..20 اعمال می‌شود.
-6. Archive/Not Needed = blocked identity without full fetch.
-7. existing/blocked identity = duplicate guard before full fetch.
-
-MakerWorld regression examples:
-- `2834255`
-- `2845731`
-- search URL: `https://makerworld.com/en/search/models?keyword=cake+stand`
-
----
-
-## 10) Source Text Safety — Phase49.3I
-
-روی scraped/source text قبل از persistence:
-- Unicode normalization
-- Latin/English/digits/common punctuation/technical symbols retained
-- CJK/Cyrillic/unexpected scripts/emoji removed
-- URL/source identity unchanged
-- Persian `_fa` editorial fields untouched
-- no historical mass rewrite
-
----
-
-## 11) Product List / Gallery — Phase49.3I.2
-
-Main work list:
-- visual responsive gallery
-- large local thumbnail + display name + one Edit Product action only
-- embedded detailed editor hidden from work-list surface
-- click thumbnail → large local preview
-- all detailed editing remains in Product Workspace
-- compatibility code/DB/workflow preserved
-- local-only thumbnail resolution, batched through Tk `after()`
-
-AI full autofill:
-- startup progress first-paint before synchronous preflight
-- handoff to mature 49.3H progress/result/error/cost stack
-
-Recorded as `ERR-49-017` and `ERR-49-018`.
-
----
-
-## 12) Database / Migration State
-
-Important applied Windows migrations:
-- `store.0031` ✅
-- `store.0032` ✅
-- `website.0022` ✅
-- `store.0033` ✅
-- `website.0023` ✅
-
-49.3G:
-- no Django migration
-- local additive AI provenance columns
-
-49.3H:
-- no Django migration
-
-49.3I / 49.3I.1 / 49.3I.2 / 49.3I.3:
-- no new Django migration
-- local additive Candidate Review table only for discovery state
-- 49.3I.3 changes only Git safety runner/CI/docs
-- no reset/drop/truncate/delete
-
-Production Phase49.3C..49.3I.3 remains not deployed/not approved.
-
----
-
-## 13) Phase49.3I CI Incident
-
-Initial CI-only PR #41:
-- new Catalog tests PASS
-- Django migration gate FAIL
-- proposed `store.0034_alter_productcatalogprofile_pricing_strategy`
+### ERR-49-022
+Windows 49.3I.4 Automated Gate PASS شد، ولی Manual QA نشان داد انتخاب/بازکردن Product می‌تواند Freeze شود.
 
 Root Cause:
-- first range implementation mutated Django runtime field `choices`
-- Django choices are migration-state metadata
+```text
+Explorer Card
+→ hidden Treeview.selection_set()
+→ <<TreeviewSelect>>
+→ load_product()
+→ _phase49_3i_select_product()
+→ selection_set()
+→ ...
+```
 
-Correct Fix:
-- do not mutate migration-owned choices
-- existing `CharField(max_length=20)` stores raw semantic `range`
-- Windows exposes operator modes
-- server sync persists range semantics without model metadata mutation
+Fix:
+- card → Treeview فقط یک جهت event-producing است.
+- re-entrancy guard.
+- selection_set فقط در صورت تفاوت selection.
+- load_product فقط state را Sync می‌کند و selection را دوباره نمی‌نویسد.
+- Product Open repeat-click guard.
+- Tk yield/paint قبل از ساخت Product Workspace.
+- Regression Test با Fake Treeview که callback را از selection_set فوراً fire می‌کند و فقط یک write را قبول می‌کند.
 
-Prevention:
-Django field metadata changes are migration state even if SQL column type stays unchanged.
-
-Recorded as `ERR-49-015`.
+هم‌زمان درخواست جدید اپراتور اجرا شد:
+- compact metadata روی کارت،
+- Persian filters شامل آماده انتشار/صف انتشار/منتشرشده،
+- Persian sorts شامل جدیدترین/قدیمی‌ترین/آخرین بروزرسانی.
 
 ---
 
-## 14) Latest Validated Phase49.3I Baselines
+## 7) آخرین Validation واقعی
 
-### 49.3I.2 docs-closed final
-- validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`
-- CI-only PR #47: closed / not merged
-- marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` not merged
+### Windows 49.3I.4
+- HEAD: `7330ad6d79d8061998b1fa143051173b558cefbd`
+- 137 Catalog tests PASS
+- 419 Django tests PASS, 2 skipped
+- Migration changes: NONE
+- Production untouched
+- Explorer visual rendering corrected
+- Selection loop found in manual QA
+
+### GitHub 49.3I.5
+CI-only PR `#50`: CLOSED / NOT MERGED.
+Runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
+Marker head: `57813f47f649bb2c415aa0fae1481f4a2561ce1d` — not merged.
 
 Runs:
-- Phase49.3I dedicated `32573779531` — SUCCESS
-- Phase49.3H regression `32573779534` — SUCCESS
-- Phase49.3G regression `32573779548` — SUCCESS
-- Full Phase49 + Full Django `32573779528` — SUCCESS
+- Phase49.3I `32580222694` — SUCCESS
+- Phase49.3H `32580222686` — SUCCESS
+- Phase49.3G `32580222682` — SUCCESS
+- Full Phase49 + Full Django `32580222683` — SUCCESS
 
-### 49.3I.3 Git handoff guard
-- validated Epic base: `7117510f173f45a3d8c806e46fb0476cbaeba115`
-- CI-only PR #48: closed / not merged
-- marker head `fc400359442efef336b445a72d60002f78eab916` not merged
-
-Runs:
-- Phase49.3I dedicated `32575765467` — SUCCESS
-- Phase49.3H regression `32575765515` — SUCCESS
-- Phase49.3G regression `32575765544` — SUCCESS
-- Full Phase49 + Full Django `32575765457` — SUCCESS
-
-Validated:
-- Windows PowerShell ASCII contract
-- live GitHub snapshot handoff guard
-- compile
-- exact search URL
-- preview/no-full-fetch
-- approve/archive/dedupe
-- source text safety
-- product gallery + AI first-paint regressions
-- Fixed/Range/Dynamic pricing
-- Django check + no migration drift
-- launcher markers
-- existing 49.3H / 49.3G protections
-- full Epic49 regressions
-- full Django suite
+Migration 49.3I.5: NONE.
 
 ---
 
-## 15) Canonical Runners / CI / Handoff
+## 8) Error Knowledge Base
 
-```text
-RUN_PHASE49_3D_LOCAL_GATE.ps1
-RUN_PHASE49_3E_LOCAL_GATE.ps1
-RUN_PHASE49_3F_LOCAL_GATE.ps1
-RUN_PHASE49_3G_LOCAL_GATE.ps1
-RUN_PHASE49_3H_LOCAL_GATE.ps1
-RUN_PHASE49_3I_LOCAL_GATE.ps1
-```
+قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
 
-Current runner:
-`D:\projects\3DPrintHub\RUN_PHASE49_3I_LOCAL_GATE.ps1`
-Version: `49.3I.3`
-Encoding: `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1`
-
-Runner chain:
-`49.3I → 49.3H → 49.3G → 49.3F.1 → 49.3E → 49.3D/base gates`.
-
-49.3I.3 Git handoff guard (`ERR-49-019`):
-- clean worktree required
-- exact Epic branch required
-- live `git fetch --prune origin`
-- fetched `origin/epic/phase49-unified-product-slider-sync` is resolved inside the same execution
-- Local HEAD must equal fetched Remote HEAD
-- mismatch = fail closed + `git pull --ff-only` instruction + rerun
-- stale SHA copied into Chat is never sole handoff truth
-
-CI:
-- `.github/workflows/phase49-epic-ci.yml`
-- `.github/workflows/phase49-3g-workspace-usability-ci.yml`
-- `.github/workflows/phase49-3h-ci.yml`
-- `.github/workflows/phase49-3i-ci.yml`
+Latest relevant:
+- ERR-49-017: UX87 composition boundary
+- ERR-49-018: AI first-paint
+- ERR-49-019: stale Chat SHA handoff
+- ERR-49-020: clipped thumbnail Label
+- ERR-49-021: Product-vs-Group URL routing
+- ERR-49-022: hidden Treeview selection feedback loop
 
 ---
 
-## 16) Known Separate/Open Items
+## 9) Gate بعدی Windows
 
-- `/api/v1/catalog/sitemap/` local 404: investigate route/client Root Cause before final Epic closure.
-- CKEditor4 warning/debt: separate scope.
-- `store.W026` realtime/in-memory warning: production architecture scope.
-- Pillow `Image.getdata()` deprecation: non-blocking debt.
-- Google membership credentials warning: expected when credentials intentionally absent in CI.
+قبل از Local Publish:
+1. Catalog Center بسته باشد.
+2. worktree clean.
+3. fetch/prune.
+4. pull --ff-only current Epic.
+5. Runner v49.3I.5 with `-LaunchApp`.
+6. select card → no freeze.
+7. Edit Product → exactly one Workspace.
+8. right-click Open → exactly one Workspace.
+9. compact metadata readable.
+10. Ready / Queue / Published filters.
+11. Newest / Oldest / Last Updated sorts.
+12. Explorer views + Ctrl/Shift + context action regression.
+13. Product URL direct vs Group/Search Preview regression.
+14. AI first-paint regression.
+15. Fixed/Range/Formula regression.
 
----
-
-## 17) Current Gate — Windows Phase49.3I.3
-
-### Gate A0 — GitHub CI
-- [x] 49.3I.3 dedicated CI PASS
-- [x] prior 49.3H/49.3G regression CI PASS
-- [x] full Phase49/Django CI PASS
-
-### Gate A — Git / Automated
-- [ ] close running project processes if runner reports conflict
-- [ ] `git status --short` empty; dirty → STOP/INSPECT
-- [ ] `git fetch --prune origin`
-- [ ] switch Epic branch
-- [ ] `git pull --ff-only origin epic/phase49-unified-product-slider-sync`
-- [ ] run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
-- [ ] runner performs live fetch and verifies Local HEAD == fetched Remote HEAD
-- [ ] `PHASE49_3I_GIT_SNAPSHOT=OK`
-- [ ] chained previous gates PASS
-- [ ] dedicated 49.3I tests PASS
-- [ ] Django no-migration gate PASS
-- [ ] final worktree clean
-
-### Gate B — Manual Discovery QA
-- [ ] MakerWorld Search mode + exact `cake+stand` URL
-- [ ] Candidate list relevant to cake stand
-- [ ] before approval only one thumbnail/basic identity; no full row fetch
-- [ ] approve one candidate with image limit 10; persisted/selected/downloaded <=10
-- [ ] archive another candidate; blocked without full fetch
-- [ ] repeat same search; imported/blocked identities do not full-fetch again
-- [ ] source text no CJK/unexpected script; URLs exact; Persian editorial untouched
-
-### Gate C — UI/Pricing/AI QA
-- [ ] Products page image + name + one Edit Product action only
-- [ ] product image opens large local preview
-- [ ] Product Workspace opens with detailed fields
-- [ ] Full AI Autofill shows startup progress before preflight and hands off to 49.3H progress/result drawer
-- [ ] Fixed example `1,200,000`
-- [ ] Range example `200,000..500,000`
-- [ ] Formula pricing uses mature dynamic engine
-- [ ] 49.3H cost/result/image-limit protections still work
-- [ ] 49.3G manual override/provenance still works
-
-### Gate D — Local E2E
-- [ ] one real **LOCAL PUBLISH ONLY**
-- [ ] Local Django Product/Profile/Hero/Home/Store/Admin verify
-
-### Gate E — Owner Approval
-- [ ] explicit user approval
-
-### Gate F — Production
-Only after Gate E with verified host state + backup + rollback + MySQL checks.
+اگر همه PASS شدند:
+- یک LOCAL PUBLISH ONLY
+- Local Django E2E
+- verify product/image/pricing/provenance
+- explicit owner approval
 
 ---
 
-## 18) Current Status — 2026-08-22
+## 10) Production Gate
 
-**Phase:** 49.3I.3 handoff hotfix  
-**49.3I.2 runtime:** FINAL CI SUCCESS ✅  
-**Stale Chat Expected HEAD incident:** ROOT CAUSE VERIFIED ✅  
-**ERR-49-019:** DOCUMENTED + CI VERIFIED ✅  
-**Runner v49.3I.3:** IMPLEMENTED ON GITHUB ✅  
-**49.3I.3 CI:** SUCCESS ✅  
-**Django migration 49.3I.3:** NONE ✅  
-**Windows last pull:** succeeded to `53e9216ae84a3e167481253da44760179c751051`; no rollback required  
-**Windows Automated Gate v49.3I.3:** PENDING  
-**Manual Discovery/Product/Pricing/AI QA:** PENDING  
-**Local Publish E2E:** PENDING  
-**Owner Production approval:** PENDING  
-**Production:** UNTOUCHED / NOT APPROVED
+Production فعلاً `UNTOUCHED / NOT APPROVED` است.
 
-### قدم بعدی دقیق
-
-```text
-Windows D:\projects\3DPrintHub
-→ git status --short
-→ dirty? STOP/INSPECT
-→ git fetch --prune origin
-→ git switch epic/phase49-unified-product-slider-sync
-→ git pull --ff-only origin epic/phase49-unified-product-slider-sync
-→ .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp
-→ Runner live fetch / Local == Remote snapshot PASS
-→ PHASE49_3I_GIT_SNAPSHOT=OK
-→ Automated Local PASS
-→ Manual MakerWorld/Archive/Dedupe/Product Gallery/AI/Pricing QA
-→ one LOCAL PUBLISH ONLY
-→ Local Django E2E
-→ explicit owner approval
-→ Production plan
-```
+قبل از Deploy:
+- owner approval صریح،
+- Host read-only state verify،
+- branch/commit verify،
+- MySQL vendor/name verify،
+- backup + rollback verify،
+- GitHub pull only،
+- deploy،
+- production verification،
+- docs final update.
 
 ---
 
-## 19) Definition of Done
+## 11) Exact Next Step
 
-A Phase is not complete merely because code exists.
-
-```text
-Code + regression tests
-+ focused CI
-+ full regression CI
-+ migration safety
-+ Windows Local automated gate
-+ Manual Visual/Data QA
-+ Local E2E
-+ explicit owner approval
-+ Production backup/deploy/verification when production-bound
-+ documentation closure
-```
-
-Until Windows/Local acceptance, Phase49.3I remains `WINDOWS QA PENDING`.
+Windows باید آخرین Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.5 را اجرا کند. اول interaction loop + metadata/filter/sort QA؛ هنوز Local Publish و Production ممنوع است.
