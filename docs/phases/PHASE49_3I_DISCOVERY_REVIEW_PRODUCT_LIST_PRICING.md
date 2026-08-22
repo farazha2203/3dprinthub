@@ -1,9 +1,9 @@
 # Phase49.3I — Discovery Review + Product Gallery + Explicit Pricing Modes
 
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
+Status: `GITHUB_UPDATED / 49.3I.3 HANDOFF HOTFIX CI PENDING / WINDOWS LOCAL RERUN BLOCKED`
 Approved: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
-Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`
+Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Scope
@@ -14,7 +14,8 @@ Phase49.3I owns:
 4. safe scraped source text,
 5. Products page gallery/routing to Product Workspace,
 6. Fixed / Range / Formula pricing modes,
-7. Local QA regression fixes required to make the approved 49.3H/49.3I UI contracts actually usable on Windows.
+7. Local QA regression fixes required to make the approved 49.3H/49.3I UI contracts actually usable on Windows,
+8. deterministic GitHub→Windows handoff that does not depend on a stale Chat-pinned SHA.
 
 ## A. Exact Search / Listing Contract
 - explicit HTTP(S) listing/search seed is authoritative.
@@ -113,7 +114,7 @@ Server contract:
 - no new Django migration.
 
 ## G. Runner / Windows Compatibility
-- canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`.
+- canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`.
 - ASCII-only marker: `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1`.
 - CI rejects any non-ASCII runner byte before PowerShell parse.
 - chains full Phase49.3H/49.3G/49.3F... gates.
@@ -121,6 +122,29 @@ Server contract:
 - Production action prohibited.
 
 Historical runner incident: `ERR-49-016`.
+
+## H. GitHub Snapshot Handoff — ERR-49-019 / 49.3I.3
+### Symptom
+Windows was clean and on the correct Epic branch. `git fetch --prune origin` and `git pull --ff-only` succeeded, advancing Local from `fee6a5f...` to current GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`. The Chat preflight then failed because it still pinned obsolete `$ExpectedHead=789edf8652ad8a09641afedd5e959c63822800c7`.
+
+### Verified Root Cause
+A SHA copied into Chat was treated as a permanent handoff target while the development branch was still allowed to advance. Later documentation commits moved the branch after that Chat response. GitHub and Local behaved correctly; the stale Chat constant was the failed contract.
+
+GitHub compare from validated base `97674a82acc97e1a623b76084b60344cfa93142b` to Windows-pulled `53e9216...` shows seven post-validation commits and only `PROJECT_CONTEXT.md` + `docs/*`. No runtime, runner, migration, DB, media or production surface changed in those seven commits.
+
+### Permanent Fix
+Runner v49.3I.3 now performs its own handoff safety check before tests:
+1. clean worktree required,
+2. exact Epic branch required,
+3. live `git fetch --prune origin`,
+4. resolve fetched `origin/epic/phase49-unified-product-slider-sync`,
+5. require Local HEAD == fetched Remote HEAD,
+6. mismatch fails closed with `git pull --ff-only` instruction,
+7. rerun the same repository gate after pull.
+
+The handoff no longer uses a Chat-pinned SHA as sole source of truth.
+
+CI adds source-contract assertions for runner version 49.3I.3, expected branch, live fetch, fetched remote ref and `PHASE49_3I_GIT_SNAPSHOT=OK`.
 
 ## Runtime Files
 - `catalog_center/app/phase49_3i_discovery_review.py`
@@ -135,9 +159,10 @@ Historical runner incident: `ERR-49-016`.
 - `.github/workflows/phase49-3i-ci.yml`
 
 ## Database Safety
-- Django migration for Phase49.3I: NONE.
+- Django migration for Phase49.3I / 49.3I.3: NONE.
 - Candidate review table: local Catalog SQLite additive only.
 - Product gallery and AI first-paint fixes: UI/runtime sequencing only.
+- 49.3I.3 handoff fix changes Git safety runner/CI/docs only.
 - no reset/drop/truncate/delete.
 - no historical row/media rewrite.
 - Production DB/source untouched.
@@ -174,6 +199,11 @@ Historical runner incident: `ERR-49-016`.
 - 49.3G `32573779548` SUCCESS.
 - Full Phase49 + Full Django `32573779528` SUCCESS.
 
+### 49.3I.3 Git Handoff Guard
+- implementation committed on Epic branch.
+- CI validation: PENDING.
+- Windows rerun must wait for this CI gate.
+
 ## Must Not Regress
 - Phase49.3H SEO execution progress/result/error console and AI cost ledger,
 - immediate AI startup feedback,
@@ -186,13 +216,15 @@ Historical runner incident: `ERR-49-016`.
 - Local/Production publish separation,
 - Product/Hero revision/idempotency,
 - Persian content integrity,
-- secret redaction.
+- secret redaction,
+- Windows PowerShell 5.1 ASCII runner contract,
+- live fetched GitHub snapshot handoff guard.
 
 ## Remaining Acceptance Gates
-1. Windows clean worktree,
-2. fetch/pull `--ff-only` current Epic branch,
-3. verify runner v49.3I.2,
-4. run repository runner with `-LaunchApp`,
+1. final CI for 49.3I.3 handoff guard,
+2. Windows clean worktree,
+3. fetch/pull `--ff-only` current Epic branch,
+4. run repository runner v49.3I.3 with `-LaunchApp`,
 5. Products gallery visual QA + large image preview,
 6. full AI autofill immediate progress → mature progress/result drawer QA,
 7. MakerWorld cake+stand Preview/Approve/Archive/Dedupe QA,
@@ -203,4 +235,4 @@ Historical runner incident: `ERR-49-016`.
 12. only then Production plan/deploy.
 
 ## Delivery Gate
-Runtime regression fixes and docs-closed final CI have passed. Production remains forbidden. Next gate is Windows Local rerun from the current Epic branch using the canonical runner.
+49.3I.3 handoff guard is implemented but not yet accepted until CI passes. Production remains forbidden. After CI, Windows must pull the current Epic branch and run the repository-owned v49.3I.3 gate; no manual Windows source patch and no stale Chat-pinned Expected HEAD.
