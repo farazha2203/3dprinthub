@@ -4,8 +4,8 @@ Updated: 2026-08-22
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.5 — Selection Loop Guard + Compact Product Metadata`
-Status: `FINAL CI SUCCESS / WINDOWS RERUN PENDING`
+Current Hotfix: `49.3I.6 — Secure Credential Field Persistence`
+Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
@@ -31,7 +31,7 @@ Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment/deployment work.
 
 ## Current Phase49.3I Contracts
-### Discovery
+### Discovery / Routing
 - explicit valid operator Search/Listing/Category URL is authoritative,
 - Preview Candidate first,
 - Preview stores identity/title/one thumbnail only,
@@ -39,93 +39,47 @@ Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment
 - image default 10 / hard max 20,
 - Archive/Not Needed preserves blocked identity,
 - duplicate boundary source + external id + normalized URL,
-- source text sanitized while URLs and Persian editorial fields are preserved.
+- source text sanitized while URLs and Persian editorial fields are preserved,
+- configured `model_url_pattern` distinguishes Product URL from Group/Category/Search URL.
 
-### Product Workspace
-- canonical detailed editor,
-- all commercial/editorial/SEO/material/pricing changes happen there,
-- Products Explorer remains a lightweight browsing/selection surface.
+Owner Windows QA after 49.3I.5 confirms the Product-vs-Group/sub-branch routing problem is fixed.
 
-### Products Explorer — 49.3I.5
-Per product card:
-- local image,
-- product name,
-- Product ID,
-- Persian state,
-- source,
-- image count,
-- added date,
-- publish state,
-- Edit Product action.
-
-View modes:
-- Extra Large,
-- Large,
-- Medium,
-- Small,
-- List.
-
-Selection/context:
+### Product Workspace / Products Explorer
+- Product Workspace is canonical detailed editor,
+- Products Explorer stays visual/lightweight,
+- cards include local image, name, ID, state, source, image count, added date, publish state and Edit Product,
+- Extra Large / Large / Medium / Small / List views,
 - normal/Ctrl/Shift selection,
 - Select All / Clear Selection,
-- right-click Open / Preview / Remove From Publish Queue,
+- right-click Open / Preview / safe Remove From Publish Queue,
 - safe queue removal only: `upload_ready=0`, `workflow_status=review`,
-- no delete/block/Production operation.
-
-Friendly filters:
-- کارهای من,
-- جدید,
-- نیازمند بروزرسانی,
-- بدون تصویر,
-- بدون محتوا,
-- آماده انتشار,
-- صف انتشار,
-- منتشرشده,
-- خطادار,
-- همه محصولات.
-
-Friendly sorting:
-- اولویت کاری,
-- جدیدترین,
-- قدیمی‌ترین,
-- آخرین بروزرسانی,
-- بیشترین امتیاز,
-- بیشترین دانلود.
+- no delete/block/Production operation,
+- Persian filters/sorts remain available.
 
 ### Selection Loop Prevention — ERR-49-022
-49.3I.4 Windows manual QA found a freeze when selecting/opening products.
+49.3I.5 makes card → hidden Treeview synchronization one-way, re-entrancy guarded and state-only on the reverse callback. Product Open also has repeat-click guard and Tk paint/yield before Workspace construction.
 
-Root cause:
-`card -> hidden Treeview selection_set -> <<TreeviewSelect>> -> load_product -> selection_set -> ...`
+### Secure Credential Persistence — ERR-49-023
+Windows Credential Store service `3DPrintHub Catalog Intelligence` remains the secure source of truth.
 
-49.3I.5 contract:
-- card → Treeview is one-way event-producing sync,
-- re-entrancy guard,
-- only write selection if it differs,
-- Treeview callback is state-only,
-- Product Open repeat-click guard,
-- Tk paint/yield before Product Workspace construction.
+49.3I.6:
+- hydrates stored FTP password + Bridge token into masked fields at startup,
+- hydrates selected AI Provider key,
+- rehydrates fields after mature Save handlers clear them,
+- Provider switch loads that Provider's stored key,
+- same-provider routine refresh does not overwrite unsaved input,
+- explicit delete/clear remains authoritative,
+- no credential is persisted in SQLite, Git, source, diagnostics or logs.
 
-### Source URL Routing
-For configured source with `model_url_pattern`:
-- matching product URL → direct single-product intake,
-- other valid HTTP(S) URL → Preview Candidate first,
-- Full Fetch only after approval.
-
-### AI
-- immediate first-paint progress before synchronous preflight,
+### AI / Pricing
+- immediate AI first-paint before synchronous preflight,
 - mature 49.3H progress/result/error/cost remains authoritative,
-- no fabricated provider cost.
-
-### Pricing
-Three independent modes:
-- Fixed,
-- Range,
-- Formula/Dynamic.
-Range must not invoke Formula.
+- no fabricated provider cost,
+- Fixed / Range / Formula remain independent,
+- Range never invokes Formula.
 
 ## Windows Delivery Contract
-Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.5.
+Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.6.
 
 Runner rules:
 - ASCII-only for Windows PowerShell 5.1,
@@ -137,51 +91,46 @@ Runner rules:
 - no reset/stash/delete shortcut.
 
 ## Latest Verified State
-### Windows 49.3I.4 local gate
-- Local HEAD: `7330ad6d79d8061998b1fa143051173b558cefbd`,
-- 137 Catalog tests PASS,
-- 419 Django tests PASS, 2 skipped,
-- no new migration,
-- Production untouched,
-- Explorer visual rendering fixed,
-- selection/open feedback loop discovered in manual QA.
+### Windows
+- 49.3I.5 launched successfully,
+- Product URL vs Group/Category/Search/sub-branch routing confirmed corrected by owner,
+- 49.3I.6 credential persistence not yet pulled/tested.
 
-### GitHub 49.3I.5 final CI
-CI-only PR #50: CLOSED / NOT MERGED.
-Validated runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
-Marker head: `57813f47f649bb2c415aa0fae1481f4a2561ce1d` — not merged.
+### GitHub 49.3I.6 final CI
+CI-only PR #51: CLOSED / NOT MERGED.
+Validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
+Marker head: `fa8e4bcf5f7795983434f7cfd34c88918273bae6` — not merged.
 
 Successful runs:
-- 49.3I `32580222694`,
-- 49.3H `32580222686`,
-- 49.3G `32580222682`,
-- Full Phase49 + Full Django `32580222683`.
+- 49.3I `32583277412`,
+- 49.3H `32583277584`,
+- 49.3G `32583277406`,
+- Full Phase49 + Full Django `32583277418`.
 
-Django migration for 49.3I.5: NONE.
+Django migration for 49.3I.6: NONE.
 
-## Error Knowledge
-Relevant latest records:
+## Relevant Error Knowledge
 - `ERR-49-017` UX87 composition boundary,
 - `ERR-49-018` AI first-paint,
 - `ERR-49-019` stale Chat SHA handoff,
 - `ERR-49-020` clipped thumbnail receiver,
 - `ERR-49-021` Product-vs-Group URL routing,
-- `ERR-49-022` hidden Treeview selection feedback loop.
+- `ERR-49-022` hidden Treeview selection feedback loop,
+- `ERR-49-023` secure credentials not hydrated into masked fields.
 
 Always inspect `docs/ERRORS.md` before troubleshooting.
 
 ## Current Acceptance Gate
-Windows must pull and test 49.3I.5 before Local Publish:
-1. select card without freeze,
-2. Edit Product opens one Workspace,
-3. right-click Open opens one Workspace,
-4. card compact metadata readable,
-5. Ready / Queue / Published filters work,
-6. Newest / Oldest / Last Updated sorts work,
-7. view modes + Ctrl/Shift + context queue removal still work,
-8. direct Product vs Group/Search routing still works,
-9. AI progress regression QA,
-10. Fixed/Range/Formula regression QA.
+Windows must pull/test 49.3I.6 before Local Publish:
+1. AI key stays masked/populated after Save,
+2. restart restores stored AI key,
+3. Provider switch restores that Provider's key,
+4. FTP password + Bridge token stay masked/populated after Save/restart,
+5. live AI/FTP/Bridge tests use secure credentials,
+6. selection/open remains responsive,
+7. Product-vs-Group/Search routing remains correct,
+8. AI progress regression QA,
+9. Fixed/Range/Formula regression QA.
 
 Only then:
 - one LOCAL PUBLISH ONLY,
