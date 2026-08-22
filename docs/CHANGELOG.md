@@ -2,6 +2,50 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I.4 Explorer Product Gallery + Source URL Routing
+
+### Fixed
+- real product thumbnails no longer depend on a text-unit-sized Tk Label. 49.3I.4 uses a pixel-sized image holder with propagation disabled and an unconstrained child image Label, preventing the thin horizontal strip regression recorded as `ERR-49-020`.
+- direct-link intake no longer relies only on a finite set of Search/Listing URL shapes. For configured sources, the source `model_url_pattern` is the authoritative Product URL boundary; valid non-product URLs route Preview-first. This is recorded as `ERR-49-021`.
+
+### Added
+- Windows-Explorer-style Products view modes: Extra Large, Large, Medium, Small and List.
+- persistent local view preference through the existing Catalog settings table.
+- normal/Ctrl/Shift multi-selection, Select All, Clear Selection and selected-count UI.
+- right-click context menu with Open Product, Image Preview, Remove From Publish Queue, Select All and Clear Selection.
+- safe multi-item local publish-queue removal using only `upload_ready=0` and `workflow_status=review`; no delete/block/Production operation.
+- `catalog_center/app/phase49_3i_explorer_hotfix.py`.
+- `catalog_center/tests/test_epic49_phase49_3i_explorer_hotfix.py`.
+
+### Preserved
+- Product cards still expose only image, product name and Edit Product.
+- Product Workspace remains the detailed editor.
+- normal image click still opens large local preview.
+- local-only product thumbnail resolution remains strict mapping → `page_extract.json` → local `images/`.
+- Preview → Approve → Full Fetch remains the acquisition state machine.
+- image limit default 10 / hard max 20 remains unchanged.
+- Fixed / Range / Formula pricing remains unchanged.
+- 49.3I.3 live fetched Git snapshot handoff guard remains unchanged.
+
+### Runner / CI
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped to `49.3I.4` and remains ASCII-only for Windows PowerShell 5.1.
+- runner now compiles/tests the Explorer hotfix and adds manual QA for full thumbnail rendering, view switching, Ctrl/Shift selection, right-click queue removal and Product-vs-Group URL routing.
+- Phase49.3I CI now validates the v49.3I.4 runner contract and dedicated Explorer/routing tests.
+
+### Database / Production
+- intended Django migration: NONE.
+- no Django model/schema change.
+- existing local Catalog settings table only stores the view preference.
+- no product delete/block operation from Explorer queue removal.
+- no media rewrite.
+- Production untouched / not approved.
+
+### Validation State
+- GitHub implementation complete.
+- final CI probe pending.
+- Windows pull/visual/data QA pending.
+- LOCAL PUBLISH ONLY remains blocked until Explorer/routing QA passes.
+
 ## 2026-08-22 — Phase49.3I.3 Windows Git Snapshot Handoff Guard
 
 ### Fixed
