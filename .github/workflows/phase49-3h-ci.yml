@@ -1,0 +1,95 @@
+name: Phase49.3H SEO Cost Image Limit CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3h:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3h-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3h-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3h/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3h/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3h/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3h/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Phase49.3H PowerShell runner contract
+        shell: pwsh
+        run: |
+          $runner = Get-Content -Raw -Path "RUN_PHASE49_3H_LOCAL_GATE.ps1"
+          [void][scriptblock]::Create($runner)
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3H\.0"') { throw "49.3H runner version missing" }
+          if ($runner -notmatch 'RUN_PHASE49_3G_LOCAL_GATE\.ps1') { throw "49.3H must chain 49.3G gate" }
+          if ($runner -notmatch 'EPIC49_3H_SEO_EXECUTION_CONSOLE=ENABLED') { throw "49.3H execution marker missing" }
+          if ($runner -notmatch 'EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED') { throw "49.3H image cap marker missing" }
+          if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production guard missing" }
+          Write-Host "PHASE49_3H_RUNNER_CONTRACT=OK"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile Phase49.3H
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3h_image_limits.py \
+            catalog_center/app/phase49_3h_cost_ledger.py \
+            catalog_center/app/phase49_3h_seo_execution.py \
+            catalog_center/launch.py
+
+      - name: Phase49.3H dedicated tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_epic49_phase49_3h_image_limits \
+            tests.test_epic49_phase49_3h_cost_ledger \
+            tests.test_epic49_phase49_3h_seo_execution \
+            tests.test_epic49_phase49_3g_workspace_usability \
+            tests.test_epic49_phase49_3g_commerce_provenance \
+            tests.test_epic49_phase49_3c_image_signature
+
+      - name: Phase49.3H launcher markers
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_SEO_EXECUTION_CONSOLE=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_RESULT_ERROR_DRAWER=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_AI_COST_LEDGER=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_PUBLISH_COST_RECEIPT=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_IMAGE_LIMIT_DEFAULT_10=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3H_PERSISTED_IMAGE_CAP=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED" /tmp/phase49-3h-verify.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3h-verify.txt
+
+      - name: Django migration contract
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+          echo "PHASE49_3H_DJANGO_MIGRATION=NONE"
