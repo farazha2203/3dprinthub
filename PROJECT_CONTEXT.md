@@ -27,11 +27,11 @@ Epic chain ends at `Phase49.3I`.
 Current phase:
 `Phase49.3I — Discovery Review + Product Gallery + Explicit Pricing Modes`
 
-Current Local QA hotfix:
-`49.3I.2 — real UX87 Products gallery + AI progress first-paint`
+Current handoff hotfix:
+`49.3I.3 — live GitHub snapshot guard after stale Chat-pinned Expected HEAD failure`
 
 Status:
-`GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
+`GITHUB_UPDATED / HANDOFF HOTFIX CI PENDING / WINDOWS RERUN BLOCKED UNTIL CI`
 
 Active phase doc:
 `docs/phases/PHASE49_3I_DISCOVERY_REVIEW_PRODUCT_LIST_PRICING.md`
@@ -40,7 +40,7 @@ Active phase doc:
 - Catalog Center version: `8.7.1`
 - Canonical detailed editor: Epic49 Product Workspace
 - Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1`
-- Runner version: `49.3I.2`
+- Runner version: `49.3I.3`
 - Encoding contract: `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1`
 - Runner chain: `49.3I → 49.3H → 49.3G → 49.3F.1 → 49.3E → 49.3D/base`
 - Local and Production publish targets remain separate/fail-closed.
@@ -105,12 +105,33 @@ Phase49.3I does not mutate Django field choices; semantic `range` is stored in e
 ## 9) Windows Runner Compatibility
 Historical `ERR-49-016`: BOM-less UTF-8 runner with Persian/em-dash failed under Windows PowerShell 5.1 legacy decoding.
 
-Current contract:
-- runner v49.3I.2 is ASCII-only
+Current encoding contract:
+- runner v49.3I.3 remains ASCII-only
 - CI rejects non-ASCII runner bytes
-- PowerShell parse/chain/Production guard tested
+- PowerShell parse/chain/Production guard remains protected
 
-## 10) Final GitHub Validation
+## 10) Windows GitHub Handoff Contract — 49.3I.3
+Incident `ERR-49-019`:
+- Windows clean-worktree fetch/pull correctly advanced Local from `fee6a5f...` to GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`.
+- the Chat preflight still pinned obsolete SHA `789edf8652ad8a09641afedd5e959c63822800c7` and falsely failed after the correct pull.
+
+Verified evidence:
+- final validated runtime/docs base before this incident: `97674a82acc97e1a623b76084b60344cfa93142b`.
+- GitHub compare to Windows-pulled `53e9216...` shows seven later commits touching only `PROJECT_CONTEXT.md` and `docs/*`.
+- no runtime, migration, DB, media or Production surface changed in those seven commits.
+
+Permanent handoff rule in runner v49.3I.3:
+1. clean worktree required,
+2. exact Epic branch required,
+3. live `git fetch --prune origin`,
+4. resolve fetched `origin/epic/phase49-unified-product-slider-sync`,
+5. require Local HEAD == fetched Remote HEAD,
+6. mismatch → fail closed + `git pull --ff-only` instruction + rerun,
+7. never use a Chat-pinned SHA as sole mutable-branch handoff truth.
+
+CI now checks this handoff contract through `PHASE49_3I_GIT_SNAPSHOT=OK` and runner source guards.
+
+## 11) Previous Final GitHub Validation
 CI-only PR #47: `CLOSED / NOT MERGED`.
 Exact validated Epic runtime/docs base:
 `97674a82acc97e1a623b76084b60344cfa93142b`
@@ -123,9 +144,9 @@ SUCCESS:
 - Full Django suite step PASS
 - no migration drift
 
-The PR marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged. Post-validation commits are documentation-only; runtime validated by PR #47 is unchanged.
+Runner at that gate was v49.3I.2. The later 49.3I.3 runner/workflow handoff safety change requires fresh CI before Windows rerun.
 
-## 11) Database / Safety
+## 12) Database / Safety
 Previously applied Windows migrations remain:
 - `store.0031`
 - `store.0032`
@@ -133,27 +154,28 @@ Previously applied Windows migrations remain:
 - `store.0033`
 - `website.0023`
 
-Phase49.3G/3H/3I Local QA fixes add no Django migration.
+Phase49.3G/3H/3I/3I.3 add no Django migration.
 No reset/drop/truncate/delete, no historical media/data rewrite, Production DB/source untouched.
 
-## 12) Known Separate Items
+## 13) Known Separate Items
 - Local `/api/v1/catalog/sitemap/` 404 remains separate before Epic closure.
 - CKEditor4 warning/debt separate.
 - Production realtime/Redis architecture warning separate.
 - Pillow `Image.getdata()` deprecation non-blocking.
 
-## 13) Production
-**UNTOUCHED / NOT APPROVED / NOT DEPLOYED for Phase49.3C..49.3I.**
+## 14) Production
+**UNTOUCHED / NOT APPROVED / NOT DEPLOYED for Phase49.3C..49.3I.3.**
 
 Before any Production action re-verify host path, branch/commit, worktree, venv, MySQL vendor/name, `.env`, backup and rollback.
 
-## 14) Exact Next Gate
+## 15) Exact Next Gate
 ```text
-Windows clean-worktree check
+49.3I.3 GitHub CI
+→ Windows clean-worktree check
 → git fetch --prune origin
-→ git pull --ff-only current Epic HEAD
-→ verify RUN_PHASE49_3I_LOCAL_GATE.ps1 v49.3I.2
-→ run .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp
+→ git pull --ff-only current Epic branch
+→ run .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp v49.3I.3
+→ runner performs its own live fetch and verifies Local HEAD == fetched Remote HEAD
 → Products gallery image/name/edit-only QA + large preview
 → full AI autofill immediate startup progress → 49.3H progress/result drawer
 → MakerWorld cake+stand Preview/Approve/Archive/Dedupe
