@@ -35,7 +35,7 @@ def install(page_extractor_module, crawler_module) -> None:
 
     original_extract = page_extractor_module.RichPageExtractor.extract
     original_direct = page_extractor_module.extract_direct_link
-    original_parse = crawler_module.BrowserSession.parse_product
+    original_parse = crawler_module.parse_product
 
     async def extract(self, *args, **kwargs):
         page = await original_extract(self, *args, **kwargs)
@@ -46,11 +46,11 @@ def install(page_extractor_module, crawler_module) -> None:
         result = await original_direct(*args, **kwargs)
         return sanitize_source_payload(result)
 
-    def parse_product(self, *args, **kwargs):
-        result = original_parse(self, *args, **kwargs)
+    def parse_product(*args, **kwargs):
+        result = original_parse(*args, **kwargs)
         return sanitize_source_payload(result)
 
     page_extractor_module.RichPageExtractor.extract = extract
     page_extractor_module.extract_direct_link = extract_direct_link
-    crawler_module.BrowserSession.parse_product = parse_product
+    crawler_module.parse_product = parse_product
     page_extractor_module._phase49_3i_source_safety_installed = True
