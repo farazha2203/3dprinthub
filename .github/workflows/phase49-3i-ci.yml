@@ -42,8 +42,12 @@ jobs:
 
           $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.2"') { throw "49.3I.2 runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.3"') { throw "49.3I.3 runner version missing" }
           if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
+          if ($runner -notmatch '\$ExpectedBranch\s*=\s*"epic/phase49-unified-product-slider-sync"') { throw "49.3I expected branch guard missing" }
+          if ($runner -notmatch 'git"\s+-Arguments\s+@\("fetch",\s*"--prune",\s*"origin"\)') { throw "49.3I live GitHub fetch guard missing" }
+          if ($runner -notmatch 'origin/\$ExpectedBranch') { throw "49.3I fetched remote ref guard missing" }
+          if ($runner -notmatch 'PHASE49_3I_GIT_SNAPSHOT=OK') { throw "49.3I fetched snapshot marker missing" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
           if ($runner -notmatch 'EPIC49_3I_EXACT_SEARCH_URL=ENABLED') { throw "49.3I exact-search marker missing" }
           if ($runner -notmatch 'EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED') { throw "49.3I product gallery marker missing" }
@@ -51,6 +55,7 @@ jobs:
           if ($runner -notmatch 'EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED') { throw "49.3I pricing marker missing" }
           if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production guard missing" }
           Write-Host "PHASE49_3I_RUNNER_ASCII=OK"
+          Write-Host "PHASE49_3I_GIT_HANDOFF_CONTRACT=OK"
           Write-Host "PHASE49_3I_RUNNER_CONTRACT=OK"
 
       - name: Set up Python 3.12
