@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.5"
+$RunnerVersion = "49.3I.6"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -138,6 +138,7 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_explorer_hotfix.py",
     "catalog_center\app\phase49_3i_local_qa_hotfix.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
+    "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_discovery_review.py",
     "catalog_center\tests\test_epic49_phase49_3i_source_safety.py",
@@ -145,6 +146,7 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_explorer_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
+    "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
     "store\test_phase49_3i_pricing_modes.py"
 )
 foreach ($relative in $requiredFiles) {
@@ -157,6 +159,7 @@ Write-Host "PHASE49_3I_EXPLORER_HOTFIX=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_SELECTION_LOOP_GUARD=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_CARD_METADATA=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_FRIENDLY_FILTER_SORT=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_SECRET_PERSISTENCE=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -169,6 +172,7 @@ try {
         "catalog_center\app\phase49_3i_explorer_hotfix.py",
         "catalog_center\app\phase49_3i_local_qa_hotfix.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
+        "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
         "store\apps.py",
         "catalog_center\launch.py"
@@ -188,6 +192,7 @@ try {
         "tests.test_epic49_phase49_3i_explorer_hotfix",
         "tests.test_epic49_phase49_3i_local_qa_hotfix",
         "tests.test_epic49_phase49_3i_pricing_modes",
+        "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
         "tests.test_epic49_phase49_3h_seo_execution",
         "tests.test_epic49_phase49_3g_workspace_usability",
@@ -267,23 +272,19 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - use the real MakerWorld search URL:" -ForegroundColor Cyan
-Write-Host "https://makerworld.com/en/search/models?keyword=cake+stand"
-Write-Host ""
-Write-Host "1) Click/select a product and verify the UI stays responsive with no Treeview selection feedback loop."
-Write-Host "2) Open the same product from Edit and right-click Open; only one Product Workspace should open per action."
-Write-Host "3) Product cards must show compact ID, state, source, image count, added date, and publish state."
-Write-Host "4) Filter labels must include Ready, Publish Queue, Published; sort must include Newest and Oldest."
-Write-Host "5) Product thumbnails must fill their image area; no thin clipped strip is allowed."
-Write-Host "6) Change view between Extra Large, Large, Medium, Small, and List."
-Write-Host "7) Ctrl-click and Shift-click products; verify multi-selection and selection count."
-Write-Host "8) Right-click a selected product; verify Open, Preview, and Remove From Publish Queue."
-Write-Host "9) Remove From Publish Queue must not delete the product and must not touch Production."
-Write-Host "10) Direct product URL must use direct product intake. Group/category/search URL must use Preview first."
-Write-Host "11) Full AI autofill must paint startup progress before preflight and hand off to mature progress."
-Write-Host "12) Discovery Preview must full-fetch only approved candidates and enforce image limit <= 20."
-Write-Host "13) Pricing Fixed, Range, and Formula must remain independent."
-Write-Host "14) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
+Write-Host "Manual QA - secure credential persistence:" -ForegroundColor Cyan
+Write-Host "1) Save AI key and confirm the masked key field stays populated after save."
+Write-Host "2) Restart Catalog Center and confirm the stored AI key is still shown masked."
+Write-Host "3) Switch AI provider and confirm that provider's stored key is restored masked."
+Write-Host "4) Save FTP password and Bridge token; both masked fields must remain populated after save."
+Write-Host "5) Restart Catalog Center; FTP password and Bridge token must still be restored masked."
+Write-Host "6) FTP/Bridge/AI tests must use the secure stored credentials successfully."
+Write-Host "7) Secrets must not be written to SQLite, logs, source files, or Git."
+Write-Host "8) Product selection/open must remain responsive with no feedback loop."
+Write-Host "9) Direct product URL and group/category/search routing must remain correct."
+Write-Host "10) Full AI autofill must paint startup progress before preflight."
+Write-Host "11) Pricing Fixed, Range, and Formula must remain independent."
+Write-Host "12) Do LOCAL PUBLISH ONLY after all visual/data/credential QA passes."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
