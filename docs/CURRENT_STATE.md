@@ -12,19 +12,51 @@ Production Domain: `3dprinthub.ir`
 ## Current Epic / Phase
 Current Epic: Epic49 Unified Product / Slider / Catalog Center
 Current Phase: Phase49.3I — Discovery Review Queue + Product Gallery + Explicit Pricing Modes
-Current Hotfix: 49.3I.2 — Windows Local QA regressions: real Products gallery composition + AI progress first-paint
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
+Current Hotfix: 49.3I.3 — Windows GitHub snapshot handoff guard after stale Chat-pinned SHA failure
+Status: `GITHUB_UPDATED / HANDOFF HOTFIX CI PENDING / WINDOWS RERUN BLOCKED UNTIL CI`
 Production: `UNTOUCHED / NOT APPROVED`
 
-## Latest Windows QA Findings
-1. Products page did not show the intended product image gallery and legacy parameter/editor UI remained visible.
-2. Clicking full AI autofill appeared to hang briefly before the progress UI became visible.
+## Latest Windows Handoff Result
+Windows started from clean worktree on the correct Epic branch and successfully executed:
+- `git fetch --prune origin`
+- `git switch epic/phase49-unified-product-slider-sync`
+- `git pull --ff-only origin epic/phase49-unified-product-slider-sync`
 
-Canonical root causes:
-- `ERR-49-017`: old 49.3I product-list patch wrapped `App87._products_ui`, but UX87 constructs the page through `super()._products_ui()` and then `self._modernize_products_page()`. The patch missed the real composition boundary.
-- `ERR-49-018`: mature 49.3F AI flow performed synchronous save/preflight/source preparation before constructing `AIProgress`, so no progress window existed during that interval.
+Local advanced from `fee6a5f...` to GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`.
+The preflight then stopped because the Chat command still required stale SHA `789edf8652ad8a09641afedd5e959c63822800c7`.
 
-## Implemented Local QA Fixes
+Canonical root cause: `ERR-49-019`.
+- GitHub was correct and Local pull was correct.
+- the fixed `$ExpectedHead` in Chat had become stale after later repository documentation commits.
+- no reset/stash/delete/rollback is required or allowed as a shortcut.
+
+## Handoff Safety Verification
+GitHub compare from final validated runtime/docs base `97674a82acc97e1a623b76084b60344cfa93142b` to the Windows-pulled HEAD `53e9216ae84a3e167481253da44760179c751051` shows seven commits and only these surfaces:
+- `PROJECT_CONTEXT.md`
+- `docs/CHANGELOG.md`
+- `docs/CURRENT_STATE.md`
+- `docs/REQUESTS.md`
+- `docs/ROADMAP.md`
+- `docs/phases/PHASE49_3I_DISCOVERY_REVIEW_PRODUCT_LIST_PRICING.md`
+
+No Catalog runtime, Django runtime, Runner, migration, database, media or production file changed in those seven commits.
+
+## Phase49.3I.3 Implemented Fix
+Canonical runner is being upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.3`.
+The repository runner now:
+- requires clean Windows worktree,
+- requires exact branch `epic/phase49-unified-product-slider-sync`,
+- performs live `git fetch --prune origin`,
+- reads the fetched `origin/epic/phase49-unified-product-slider-sync` snapshot,
+- requires Local HEAD to equal that fetched Remote HEAD,
+- fails closed with an explicit `git pull --ff-only` instruction when Local is behind,
+- never uses a Chat-pinned SHA as the sole handoff truth,
+- preserves the Windows PowerShell 5.1 ASCII-only contract.
+
+`.github/workflows/phase49-3i-ci.yml` now asserts the 49.3I.3 Git snapshot handoff contract.
+CI validation for this new runner/workflow change is pending before Windows rerun.
+
+## Product / AI Local QA Fixes Still Preserved
 ### Products page
 - patch wraps the real `App87._modernize_products_page` boundary.
 - complete legacy product Panedwindow remains alive for compatibility but is hidden from the operator surface.
@@ -33,25 +65,16 @@ Canonical root causes:
 - no price/title/status/editor parameter fields are exposed on the Products list surface.
 - clicking the image opens a large local preview.
 - detailed editing routes to the canonical Product Workspace.
-- thumbnails are local-only and resolve through strict local mapping, `page_extract.json`, then `local_dir/images` fallback.
-- thumbnails load in small Tk `after()` batches to avoid a large synchronous UI stall.
+- thumbnails are local-only and load in small Tk `after()` batches.
 
 ### AI first-paint
-- additive module: `catalog_center/app/phase49_3i_local_qa_hotfix.py`.
-- startup progress paints immediately before legacy synchronous preflight.
-- existing AI flow starts via Tk `after(80)` after the first paint.
-- when mature 49.3H progress is created, startup progress hands off to it.
-- Provider/Model selection, network worker, AI request, SEO result/error drawer, cost ledger and audit remain the existing 49.3F/49.3H implementation; no duplicate AI workflow was added.
+- `catalog_center/app/phase49_3i_local_qa_hotfix.py` paints startup progress immediately.
+- existing AI flow starts after a Tk event-loop yield.
+- mature 49.3H Provider/Model/network/result/error/cost/audit stack remains unchanged.
 
-### Runner
-- canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
-- Windows PowerShell 5.1 ASCII-only runner contract remains enforced.
-- runner tests Product gallery composition + AI first-paint regression.
-
-## Final GitHub Validation
+## Previous Final GitHub Validation
 CI-only PR #47: `CLOSED / NOT MERGED`.
 Exact validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`.
-Marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged.
 
 SUCCESS:
 - Phase49.3I dedicated Run `32573779531`
@@ -63,7 +86,7 @@ SUCCESS:
 - Django check / migration contract PASS
 - no new Django migration
 
-Post-validation commits after `97674a82...` are documentation-only; runtime validated by PR #47 is unchanged. Changelog, Requests, Roadmap and the active Phase49.3I document are synchronized with the final CI result.
+The new 49.3I.3 handoff runner/workflow change occurred after that validation and therefore requires its own final CI before Windows rerun.
 
 ## Existing Phase49.3I Contracts Preserved
 - explicit operator search/listing URL is authoritative.
@@ -90,11 +113,10 @@ Production Venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 
 ## Database / Migration Safety
-- Phase49.3I Local QA hotfix Django migration: NONE.
+- Phase49.3I.3 handoff guard Django migration: NONE.
 - no reset/drop/truncate/delete.
 - no historical DB/media rewrite.
-- Product gallery is a UI layer over existing rows/files.
-- AI first-paint hotfix changes UI sequencing only.
+- handoff hotfix changes only Windows Git safety runner + CI contract + docs.
 - Production database/source remains untouched.
 
 ## Known Separate Items
@@ -104,16 +126,17 @@ Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 - Pillow `Image.getdata()` deprecation remains non-blocking debt.
 
 ## Remaining Work
-1. Windows clean-worktree + `git fetch --prune` + `git pull --ff-only`.
-2. verify runner version `49.3I.2`.
-3. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`.
-4. visual QA: Products page must be gallery-only cards with image/name/edit + large image preview.
-5. AI QA: full autofill must show immediate startup progress, then existing connection/send/receive progress and result/error drawer.
-6. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA.
-7. Fixed / Range / Formula pricing QA.
-8. one LOCAL PUBLISH ONLY + Local Django E2E.
-9. explicit owner approval.
-10. only then Production plan/deploy.
+1. complete Phase49.3I.3 GitHub CI validation for runner/workflow handoff guard.
+2. Windows verifies clean worktree; no reset/stash/delete shortcut.
+3. Windows `git fetch --prune origin` + `git pull --ff-only` current Epic branch.
+4. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` v49.3I.3.
+5. visual QA: Products page gallery-only image/name/edit + large preview.
+6. AI QA: full autofill immediate startup progress → existing 49.3H progress/result drawer.
+7. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA.
+8. Fixed / Range / Formula pricing QA.
+9. one LOCAL PUBLISH ONLY + Local Django E2E.
+10. explicit owner approval.
+11. only then Production plan/deploy.
 
 ## Exact Next Task
-Pull the current Epic branch on Windows and rerun `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Do not manually edit Windows source and do not touch Production.
+Finish CI for Phase49.3I.3. After CI success, Windows pulls the current Epic branch and runs the repository runner v49.3I.3. Do not manually edit Windows source and do not touch Production.
