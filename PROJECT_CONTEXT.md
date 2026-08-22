@@ -31,7 +31,7 @@ Current handoff hotfix:
 `49.3I.3 — live GitHub snapshot guard after stale Chat-pinned Expected HEAD failure`
 
 Status:
-`GITHUB_UPDATED / HANDOFF HOTFIX CI PENDING / WINDOWS RERUN BLOCKED UNTIL CI`
+`GITHUB_UPDATED / 49.3I.3 CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
 
 Active phase doc:
 `docs/phases/PHASE49_3I_DISCOVERY_REVIEW_PRODUCT_LIST_PRICING.md`
@@ -114,6 +114,7 @@ Current encoding contract:
 Incident `ERR-49-019`:
 - Windows clean-worktree fetch/pull correctly advanced Local from `fee6a5f...` to GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`.
 - the Chat preflight still pinned obsolete SHA `789edf8652ad8a09641afedd5e959c63822800c7` and falsely failed after the correct pull.
+- the existing Git-only Windows policy already required Remote Epic HEAD resolution after fetch; the failed Chat preflight violated that repository rule.
 
 Verified evidence:
 - final validated runtime/docs base before this incident: `97674a82acc97e1a623b76084b60344cfa93142b`.
@@ -129,22 +130,23 @@ Permanent handoff rule in runner v49.3I.3:
 6. mismatch → fail closed + `git pull --ff-only` instruction + rerun,
 7. never use a Chat-pinned SHA as sole mutable-branch handoff truth.
 
-CI now checks this handoff contract through `PHASE49_3I_GIT_SNAPSHOT=OK` and runner source guards.
+CI checks this handoff contract through `PHASE49_3I_GIT_SNAPSHOT=OK` and runner source guards.
 
-## 11) Previous Final GitHub Validation
-CI-only PR #47: `CLOSED / NOT MERGED`.
-Exact validated Epic runtime/docs base:
-`97674a82acc97e1a623b76084b60344cfa93142b`
+## 11) Phase49.3I.3 Final GitHub Validation
+CI-only PR #48: `CLOSED / NOT MERGED`.
+Validated Epic base:
+`7117510f173f45a3d8c806e46fb0476cbaeba115`
+
+Probe marker head:
+`fc400359442efef336b445a72d60002f78eab916` — not merged.
 
 SUCCESS:
-- Phase49.3I `32573779531`
-- Phase49.3H `32573779534`
-- Phase49.3G `32573779548`
-- Full Phase49 + Full Django `32573779528`
-- Full Django suite step PASS
+- Phase49.3I `32575765467`
+- Phase49.3H `32575765515`
+- Phase49.3G `32575765544`
+- Full Phase49 + Full Django `32575765457`
+- Full Django suite PASS
 - no migration drift
-
-Runner at that gate was v49.3I.2. The later 49.3I.3 runner/workflow handoff safety change requires fresh CI before Windows rerun.
 
 ## 12) Database / Safety
 Previously applied Windows migrations remain:
@@ -170,12 +172,13 @@ Before any Production action re-verify host path, branch/commit, worktree, venv,
 
 ## 15) Exact Next Gate
 ```text
-49.3I.3 GitHub CI
-→ Windows clean-worktree check
+Windows clean-worktree check
 → git fetch --prune origin
-→ git pull --ff-only current Epic branch
+→ git switch epic/phase49-unified-product-slider-sync
+→ git pull --ff-only origin epic/phase49-unified-product-slider-sync
 → run .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp v49.3I.3
 → runner performs its own live fetch and verifies Local HEAD == fetched Remote HEAD
+→ PHASE49_3I_GIT_SNAPSHOT=OK
 → Products gallery image/name/edit-only QA + large preview
 → full AI autofill immediate startup progress → 49.3H progress/result drawer
 → MakerWorld cake+stand Preview/Approve/Archive/Dedupe
