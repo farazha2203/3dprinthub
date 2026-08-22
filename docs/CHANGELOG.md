@@ -2,6 +2,42 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I Windows PowerShell 5.1 Runner Encoding Hotfix
+
+### Changed
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped from `49.3I.0` to `49.3I.1`.
+- the canonical 49.3I Windows runner is now ASCII-only to remain deterministic under Windows PowerShell 5.1 BOM-less script decoding.
+- manual QA output inside the runner was converted to ASCII text; Persian UI/docs remain unchanged.
+- Phase49.3I CI now rejects any non-ASCII runner byte and verifies `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1` before parsing.
+
+### Fixed
+- Windows Local Gate parser failure showing mojibake and `Unexpected token ')'` / reserved `<` errors before the runner could execute.
+- Root Cause: UTF-8 without BOM + Persian/em-dash text was decoded through legacy ANSI by Windows PowerShell 5.1; the em-dash byte sequence became mojibake containing a smart quote interpreted as a string delimiter.
+
+### Database
+- NONE.
+- no migration, reset, delete, drop, truncate, data rewrite or media change.
+
+### Deployment
+- Production untouched / not approved.
+- Windows must pull the GitHub hotfix; no manual local patch is allowed.
+
+### Tests
+- CI-only PR #44 closed without merge.
+- Phase49.3I Run `32570978818` — SUCCESS.
+- Phase49.3H Run `32570978800` — SUCCESS.
+- Phase49.3G Run `32570978829` — SUCCESS.
+- Full Phase49 + Full Django Run `32570978799` — SUCCESS.
+- validated runtime/base SHA: `451bcb9e264b847259a6ea0414550e4f80afa250`.
+
+### Documentation
+- `ERR-49-016` added to `docs/ERRORS.md`.
+- CURRENT_STATE and active Phase49.3I documentation updated.
+
+### Git
+Branch: `epic/phase49-unified-product-slider-sync`
+Runner-hotfix runtime validated commit: `451bcb9e264b847259a6ea0414550e4f80afa250`
+
 ## 2026-08-22 — Phase49.3I Discovery Review / Product List / Pricing Modes
 
 ### Added
