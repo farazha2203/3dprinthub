@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.4"
+$RunnerVersion = "49.3I.5"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -154,6 +154,9 @@ foreach ($relative in $requiredFiles) {
 }
 Write-Host "PHASE49_3I_SOURCE_FILES=OK" -ForegroundColor Green
 Write-Host "PHASE49_3I_EXPLORER_HOTFIX=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_SELECTION_LOOP_GUARD=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_CARD_METADATA=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_FRIENDLY_FILTER_SORT=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -267,19 +270,20 @@ Write-Host ""
 Write-Host "Manual QA - use the real MakerWorld search URL:" -ForegroundColor Cyan
 Write-Host "https://makerworld.com/en/search/models?keyword=cake+stand"
 Write-Host ""
-Write-Host "1) Product thumbnails must fill their image area; no thin clipped strip is allowed."
-Write-Host "2) Change view between Extra Large, Large, Medium, Small, and List."
-Write-Host "3) Ctrl-click and Shift-click products; verify multi-selection and selection count."
-Write-Host "4) Right-click a selected product; verify Open, Preview, and Remove From Publish Queue."
-Write-Host "5) Remove From Publish Queue must not delete the product and must not touch Production."
-Write-Host "6) Click a normal product image and verify the large local preview opens."
-Write-Host "7) Click Edit Product and confirm Product Workspace opens with all detailed fields."
-Write-Host "8) Direct product URL must use direct product intake. Group/category/search URL must use Preview first."
-Write-Host "9) Full AI autofill must paint startup progress before preflight and hand off to mature progress."
-Write-Host "10) Discovery Preview must full-fetch only approved candidates and enforce image limit <= 20."
-Write-Host "11) Archive another candidate and repeat search to verify blocked/duplicate guards."
-Write-Host "12) Pricing Fixed, Range, and Formula must remain independent."
-Write-Host "13) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
+Write-Host "1) Click/select a product and verify the UI stays responsive with no Treeview selection feedback loop."
+Write-Host "2) Open the same product from Edit and right-click Open; only one Product Workspace should open per action."
+Write-Host "3) Product cards must show compact ID, state, source, image count, added date, and publish state."
+Write-Host "4) Filter labels must include Ready, Publish Queue, Published; sort must include Newest and Oldest."
+Write-Host "5) Product thumbnails must fill their image area; no thin clipped strip is allowed."
+Write-Host "6) Change view between Extra Large, Large, Medium, Small, and List."
+Write-Host "7) Ctrl-click and Shift-click products; verify multi-selection and selection count."
+Write-Host "8) Right-click a selected product; verify Open, Preview, and Remove From Publish Queue."
+Write-Host "9) Remove From Publish Queue must not delete the product and must not touch Production."
+Write-Host "10) Direct product URL must use direct product intake. Group/category/search URL must use Preview first."
+Write-Host "11) Full AI autofill must paint startup progress before preflight and hand off to mature progress."
+Write-Host "12) Discovery Preview must full-fetch only approved candidates and enforce image limit <= 20."
+Write-Host "13) Pricing Fixed, Range, and Formula must remain independent."
+Write-Host "14) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
