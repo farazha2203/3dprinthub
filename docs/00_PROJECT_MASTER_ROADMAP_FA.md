@@ -39,6 +39,7 @@ READ DOCS
 - Dirty Local/Host = STOP/INSPECT؛ `reset --hard`, `git clean`, حذف DB/.env/media/persistent data Quick Fix نیست.
 - Migration معمول Additive-first؛ destructive change فقط با Target/Backup/Rollback verified و Phase مستقل.
 - Secret/API key/token/password در Git/log/audit/chat ذخیره نمی‌شود.
+- SHA ثابت داخل Chat نباید برای Branch قابل‌حرکت تنها Source of Truth تحویل Windows باشد؛ Snapshot باید بعد از fetch واقعی از `origin/<branch>` قفل شود.
 
 Policy: `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`.
 
@@ -98,11 +99,14 @@ Production DB Guard:
 → 49.3F.1 Native stderr Capture Hotfix
 → 49.3G Workspace Usability + AI Provenance
 → 49.3H SEO Execution + AI Cost + Controlled Image Intake
-→ 49.3I Discovery Review + Lightweight Product List + Explicit Pricing Modes
+→ 49.3I Discovery Review + Product Gallery + Explicit Pricing Modes
+→ 49.3I.1 Windows PowerShell 5.1 Encoding Guard
+→ 49.3I.2 Real UX87 Product Gallery + AI First-Paint
+→ 49.3I.3 Live GitHub Snapshot Handoff Guard
 ```
 
 Current Phase:
-**49.3I** — GitHub implementation + CI SUCCESS; Windows Local Gate/QA pending.
+**49.3I.3 handoff hotfix** — implementation/docs on GitHub; CI pending; Windows rerun blocked until CI success.
 
 ---
 
@@ -276,14 +280,22 @@ MakerWorld regression examples:
 
 ---
 
-## 11) Product List — Phase49.3I
+## 11) Product List / Gallery — Phase49.3I.2
 
 Main work list:
-- lightweight thumbnail + display name
-- embedded giant detailed editor hidden from work-list surface
-- canonical action: `صفحه محصول / ویرایش کامل`
+- visual responsive gallery
+- large local thumbnail + display name + one Edit Product action only
+- embedded detailed editor hidden from work-list surface
+- click thumbnail → large local preview
 - all detailed editing remains in Product Workspace
 - compatibility code/DB/workflow preserved
+- local-only thumbnail resolution, batched through Tk `after()`
+
+AI full autofill:
+- startup progress first-paint before synchronous preflight
+- handoff to mature 49.3H progress/result/error/cost stack
+
+Recorded as `ERR-49-017` and `ERR-49-018`.
 
 ---
 
@@ -303,12 +315,13 @@ Important applied Windows migrations:
 49.3H:
 - no Django migration
 
-49.3I:
-- no Django migration
-- local additive Candidate Review table only
+49.3I / 49.3I.1 / 49.3I.2 / 49.3I.3:
+- no new Django migration
+- local additive Candidate Review table only for discovery state
+- 49.3I.3 changes only Git safety runner/CI/docs
 - no reset/drop/truncate/delete
 
-Production Phase49.3C..49.3I remains not deployed/not approved.
+Production Phase49.3C..49.3I.3 remains not deployed/not approved.
 
 ---
 
@@ -336,27 +349,27 @@ Recorded as `ERR-49-015`.
 
 ---
 
-## 14) Final Phase49.3I GitHub Validation
+## 14) Latest Validated Phase49.3I Baseline
 
-Runtime/base SHA:
-`9d462f1ec12b00727c96acf9d4f59b4723d676b4`
-
-CI-only final PR #42: closed / not merged.
+Docs-closed final CI before the 49.3I.3 handoff hotfix:
+- validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`
+- CI-only PR #47: closed / not merged
+- marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` not merged
 
 Runs:
-- Phase49.3I dedicated `32569551060` — SUCCESS
-- Phase49.3H regression `32569551053` — SUCCESS
-- Phase49.3G regression `32569551048` — SUCCESS
-- Full Phase49 + Full Django `32569551034` — SUCCESS
+- Phase49.3I dedicated `32573779531` — SUCCESS
+- Phase49.3H regression `32573779534` — SUCCESS
+- Phase49.3G regression `32573779548` — SUCCESS
+- Full Phase49 + Full Django `32573779528` — SUCCESS
 
 Validated:
-- runner syntax/chain/Production guard
+- runner ASCII contract
 - compile
 - exact search URL
 - preview/no-full-fetch
 - approve/archive/dedupe
 - source text safety
-- lightweight product list
+- product gallery + AI first-paint regressions
 - Fixed/Range/Dynamic pricing
 - Django check + no migration drift
 - launcher markers
@@ -364,9 +377,11 @@ Validated:
 - full Epic49 regressions
 - full Django suite
 
+49.3I.3 runner/workflow safety change occurred after this baseline and therefore requires fresh CI before Windows rerun.
+
 ---
 
-## 15) Canonical Runners / CI
+## 15) Canonical Runners / CI / Handoff
 
 ```text
 RUN_PHASE49_3D_LOCAL_GATE.ps1
@@ -379,10 +394,20 @@ RUN_PHASE49_3I_LOCAL_GATE.ps1
 
 Current runner:
 `D:\projects\3DPrintHub\RUN_PHASE49_3I_LOCAL_GATE.ps1`
-Version: `49.3I.0`
+Version: `49.3I.3`
+Encoding: `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1`
 
 Runner chain:
 `49.3I → 49.3H → 49.3G → 49.3F.1 → 49.3E → 49.3D/base gates`.
+
+49.3I.3 Git handoff guard (`ERR-49-019`):
+- clean worktree required
+- exact Epic branch required
+- live `git fetch --prune origin`
+- fetched `origin/epic/phase49-unified-product-slider-sync` is resolved inside the same execution
+- Local HEAD must equal fetched Remote HEAD
+- mismatch = fail closed + `git pull --ff-only` instruction + rerun
+- stale SHA copied into Chat is never sole handoff truth
 
 CI:
 - `.github/workflows/phase49-epic-ci.yml`
@@ -402,16 +427,22 @@ CI:
 
 ---
 
-## 17) Current Gate — Windows Phase49.3I
+## 17) Current Gate — Windows Phase49.3I.3
+
+### Gate A0 — GitHub CI
+- [ ] 49.3I.3 dedicated CI PASS
+- [ ] prior 49.3H/49.3G regression CI PASS
+- [ ] full Phase49/Django CI PASS
 
 ### Gate A — Git / Automated
 - [ ] close running project processes if runner reports conflict
 - [ ] `git status --short` empty; dirty → STOP/INSPECT
 - [ ] `git fetch --prune origin`
 - [ ] switch Epic branch
-- [ ] `git pull --ff-only`
-- [ ] verify exact expected HEAD
+- [ ] `git pull --ff-only origin epic/phase49-unified-product-slider-sync`
 - [ ] run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
+- [ ] runner performs live fetch and verifies Local HEAD == fetched Remote HEAD
+- [ ] `PHASE49_3I_GIT_SNAPSHOT=OK`
 - [ ] chained previous gates PASS
 - [ ] dedicated 49.3I tests PASS
 - [ ] Django no-migration gate PASS
@@ -426,9 +457,11 @@ CI:
 - [ ] repeat same search; imported/blocked identities do not full-fetch again
 - [ ] source text no CJK/unexpected script; URLs exact; Persian editorial untouched
 
-### Gate C — UI/Pricing QA
-- [ ] Products page lightweight image + name
-- [ ] Product Workspace opens via one clear action
+### Gate C — UI/Pricing/AI QA
+- [ ] Products page image + name + one Edit Product action only
+- [ ] product image opens large local preview
+- [ ] Product Workspace opens with detailed fields
+- [ ] Full AI Autofill shows startup progress before preflight and hands off to 49.3H progress/result drawer
 - [ ] Fixed example `1,200,000`
 - [ ] Range example `200,000..500,000`
 - [ ] Formula pricing uses mature dynamic engine
@@ -449,15 +482,16 @@ Only after Gate E with verified host state + backup + rollback + MySQL checks.
 
 ## 18) Current Status — 2026-08-22
 
-**Phase:** 49.3I  
-**GitHub implementation:** COMPLETE ✅  
-**Dedicated CI:** SUCCESS ✅  
-**Full Phase49/Django CI:** SUCCESS ✅  
-**Django migration 49.3I:** NONE ✅  
-**CI migration bug:** ROOT CAUSE FIXED + REGRESSION ✅  
-**Canonical runner:** `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.0 ✅  
-**Windows Automated Gate:** PENDING  
-**Manual Discovery/Product/Pricing QA:** PENDING  
+**Phase:** 49.3I.3 handoff hotfix  
+**49.3I.2 runtime:** FINAL CI SUCCESS ✅  
+**Stale Chat Expected HEAD incident:** ROOT CAUSE VERIFIED ✅  
+**ERR-49-019:** DOCUMENTED ✅  
+**Runner v49.3I.3:** IMPLEMENTED ON GITHUB ✅  
+**49.3I.3 CI:** PENDING  
+**Django migration 49.3I.3:** NONE ✅  
+**Windows last pull:** succeeded to `53e9216ae84a3e167481253da44760179c751051`; no rollback required  
+**Windows Automated Gate v49.3I.3:** BLOCKED UNTIL CI  
+**Manual Discovery/Product/Pricing/AI QA:** PENDING  
 **Local Publish E2E:** PENDING  
 **Owner Production approval:** PENDING  
 **Production:** UNTOUCHED / NOT APPROVED
@@ -465,16 +499,17 @@ Only after Gate E with verified host state + backup + rollback + MySQL checks.
 ### قدم بعدی دقیق
 
 ```text
-Windows D:\projects\3DPrintHub
+GitHub 49.3I.3 CI PASS
+→ Windows D:\projects\3DPrintHub
 → git status --short
 → dirty? STOP/INSPECT
 → git fetch --prune origin
 → git switch epic/phase49-unified-product-slider-sync
 → git pull --ff-only origin epic/phase49-unified-product-slider-sync
-→ verify pulled HEAD
 → .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp
+→ Runner live fetch / Local == Remote snapshot PASS
 → Automated Local PASS
-→ Manual MakerWorld/Archive/Dedupe/Product/Pricing QA
+→ Manual MakerWorld/Archive/Dedupe/Product Gallery/AI/Pricing QA
 → one LOCAL PUBLISH ONLY
 → Local Django E2E
 → explicit owner approval
@@ -500,4 +535,4 @@ Code + regression tests
 + documentation closure
 ```
 
-Until Windows/Local acceptance, Phase49.3I status remains `WINDOWS QA PENDING`.
+Until 49.3I.3 CI + Windows/Local acceptance, Phase49.3I remains `WINDOWS QA PENDING`.
