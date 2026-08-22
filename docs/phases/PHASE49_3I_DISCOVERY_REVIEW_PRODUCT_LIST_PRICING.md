@@ -3,7 +3,7 @@
 Updated: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
 Current Hotfix: `49.3I.6`
-Status: `GITHUB IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING`
+Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED`
 
 ## Goal
@@ -58,10 +58,10 @@ Immediate first-paint progress remains before synchronous preflight and hands of
 
 ## Phase49.3I.6 — Secure Credential Field Persistence
 ### Owner report
-Catalog Center 49.3I.5 launches, but Token/API Key/FTP credential fields appear empty again. The expected contract is that credentials saved once remain stable across restarts/releases.
+Catalog Center 49.3I.5 launches, but Token/API Key/FTP credential fields appeared empty again. The expected contract is that credentials saved once remain stable across restarts/releases.
 
 ### Root Cause — ERR-49-023
-The secure storage backend itself already exists and uses Windows Credential Store under stable service name:
+The secure storage backend already exists and uses Windows Credential Store under stable service name:
 `3DPrintHub Catalog Intelligence`.
 
 Runtime accessors already use secure fallback:
@@ -116,10 +116,24 @@ CI additionally verifies:
 - previous Explorer/selection/routing tests,
 - 49.3H/3G regressions,
 - Django check / no migration drift,
-- no destructive schema operations.
+- no destructive schema operations,
+- Windows Catalog Epic49 tests,
+- Full Django suite.
+
+## Final GitHub Validation
+CI-only PR `#51`: `CLOSED / NOT MERGED`.
+Validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
+Marker head: `fa8e4bcf5f7795983434f7cfd34c88918273bae6` — not merged.
+
+Successful workflows:
+- Phase49.3I `32583277412` — SUCCESS.
+- Phase49.3H `32583277584` — SUCCESS.
+- Phase49.3G `32583277406` — SUCCESS.
+- Full Phase49 + Full Django `32583277418` — SUCCESS.
 
 ## Database / Migration / Secret Safety
-- Django schema change: NONE intended; final CI pending,
+- Django schema change: NONE — CI verified,
+- Django migration: NONE — CI verified,
 - Catalog schema change: NONE,
 - no reset/drop/truncate,
 - no media rewrite/delete,
@@ -139,7 +153,7 @@ CI additionally verifies:
 - Production paths/DB/media,
 - historical media.
 
-## Windows Acceptance Gate After Final CI
+## Windows Acceptance Gate — NEXT
 Windows must verify:
 - AI key remains populated as a masked value after secure Save,
 - app restart restores the masked stored AI key,
@@ -158,4 +172,4 @@ Only after that:
 - then Production verification/backup/deploy path may begin.
 
 ## Exact Next Step
-Finish final GitHub CI validation for 49.3I.6 and close the CI-only marker PR without merge. Do not ask Windows to pull until all required workflows succeed. Production remains blocked.
+Owner Windows machine: clean worktree → live fetch/prune → fast-forward-only pull current Epic → repository-owned v49.3I.6 gate with `-LaunchApp` → secure credential Save/restart/provider-switch QA. Production remains blocked.
