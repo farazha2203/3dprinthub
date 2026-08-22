@@ -1,175 +1,175 @@
-# Phase49.3I — Discovery Review + Product Explorer + Pricing + Credential Persistence
+# Phase49.3I — Discovery Review + Product Explorer + Pricing + Provider Recovery
 
 Updated: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.6`
+Current Hotfix: `49.3I.7`
 Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
-Production: `UNTOUCHED`
+Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
-Phase49.3I provides safe high-volume product discovery/review while Product Workspace remains the canonical detailed editor. It also owns the current Explorer interaction/routing fixes and the operator-visible persistence of securely stored Catalog Center credentials.
+Provide a business-usable Catalog Center flow that can discover many source products cheaply, let the operator review lightweight candidates, full-fetch only approved products with an operator-selected image limit, prepare/edit/publish locally, and only reach Production after explicit acceptance.
 
-## Preserved Phase49.3I Contracts
-### Discovery
-- exact operator HTTP(S) Search/Listing/Category URL is authoritative,
-- Preview Candidate first,
-- Preview stores identity/title/one thumbnail only,
-- Full Fetch only after approval,
-- default image intake 10 / hard max 20,
-- Archive/Not Needed stores blocked identity without Full Fetch,
-- dedupe boundary: source code + external id + normalized URL,
-- source text sanitation preserves URLs and Persian editorial fields.
+## Canonical Discovery State Machine
+`Exact Search/Listing/Category URL → Preview Candidate → Approve/Archive → Approved Full Fetch → Product Workspace → LOCAL PUBLISH ONLY → Local Django E2E → Owner Approval → Production`
 
-### Products Explorer
-- visual lightweight product browsing,
-- Product Workspace owns detailed commercial/editorial/SEO/material/pricing editing,
-- local-only thumbnails,
-- Extra Large / Large / Medium / Small / List views,
+### Preview Candidate
+Must contain only:
+- source identity / external id,
+- source URL,
+- basic title,
+- one thumbnail.
+
+Must NOT:
+- enter full product pages,
+- download all images,
+- create parallel full extraction,
+- invoke Production.
+
+### Approved Full Fetch
+Only approved candidate(s) may enter the mature full extraction path.
+Image limit is selectable `1..20`, default `10`; `20` is valid when the operator asks for 20 images.
+
+### Archive / Not Needed
+Archive keeps minimal blocked identity and prevents rediscovery until restore; it does not Full Fetch.
+
+## Source URL Routing
+For a source with `model_url_pattern`:
+- Product URL match → mature Direct Product intake,
+- valid non-product Group/Category/Search/Listing/sub-branch URL → Preview first.
+
+Owner Windows QA already confirmed this routing problem is fixed.
+
+## 49.3I.7 Preview Recovery — ERR-49-024
+### Incident
+MakerWorld exact Search URL routed to Preview correctly but failed with:
+`Locator.evaluate_all: SyntaxError: Invalid or unexpected token`.
+
+### Root Cause
+The Stage-1 DOM expression was embedded in a normal Python triple-quoted string. An intended JavaScript `\n` escape became a literal newline inside a JavaScript single-quoted string before Playwright evaluated it.
+
+### Fix
+`catalog_center/app/phase49_3i_preview_recovery.py`:
+- uses a raw Python JavaScript source string,
+- keeps valid browser-side escaping,
+- uses existing `candidates_from_dom_rows()`,
+- patches only the Preview candidate function,
+- never calls Direct/Full extraction.
+
+Mature `classic_methods.discover_classic` and `collect_classic_exact` remain untouched.
+
+## AI Provider Hub Contract
+Registered current provider cards remain:
+- AvalAI,
+- OpenRouter,
+- Google Gemini Direct,
+- OpenAI Direct.
+
+Provider model listing uses the existing mature `AIProviderClient` / Google adapter; no parallel client is introduced.
+
+## 49.3I.7 Provider Recovery — ERR-49-025
+### Incident
+Stored AI keys still appeared empty in real Provider cards after 49.3I.6 and model lists were therefore not reliably visible.
+
+### Root Cause
+49.3I.6 hydrated legacy `ai_key`, FTP password and Bridge token. The real Phase49.3F AI Center uses `_ai_hub_key_vars` per Provider, and its secure Save handler clears those variables after persisting to Windows Credential Store.
+
+### Fix
+`phase49_3i_secret_persistence.py` now:
+- hydrates the real per-provider `_ai_hub_key_vars`,
+- rehydrates Provider cards after mature secure Save,
+- preserves FTP password + Bridge token hydration,
+- hydrates stored OpenRouter management/OpenAI admin masked fields,
+- does not overwrite newly typed non-empty input,
+- background-loads model catalogs for configured providers,
+- fills existing Model ID combobox/cache/status,
+- preserves manual model picker/API refresh,
+- keeps secrets out of SQLite/Git/source/logs.
+
+## Products Explorer
+Preserved:
+- local image + product name + compact ID/state/source/image-count/date/publish-state,
+- Edit Product → canonical Product Workspace,
+- large image preview,
+- Extra Large / Large / Medium / Small / List,
 - normal/Ctrl/Shift selection,
-- Select All / Clear Selection,
+- Select All / Clear,
 - right-click Open / Preview / safe Remove From Publish Queue,
-- queue removal only sets `upload_ready=0` and `workflow_status=review`,
-- no product delete/block/Production operation,
-- compact Product ID/state/source/image count/added date/publish state,
-- Persian filters and sorting.
+- selection feedback-loop guard,
+- Persian filters/sorts.
 
-### Selection Stability
-`ERR-49-022` feedback cycle is guarded:
-`card -> hidden Treeview selection -> TreeviewSelect -> state-only callback`.
-The callback never writes selection back, and repeated Product Workspace open actions are guarded.
+Safe queue removal only changes local queue state; no delete/block/Production operation.
 
-### Product URL Routing
-For a configured source with non-empty `model_url_pattern`:
-- matching Product URL → direct single-product intake,
-- other valid HTTP(S) Group/Category/Search URL → Preview Candidate first,
-- Full Fetch only after approval.
-
-Windows owner QA after 49.3I.5 confirms this routing/sub-branch issue is fixed.
-
-### Pricing
-Three independent modes remain:
+## Pricing
+Independent modes:
 - Fixed,
 - Range,
 - Formula/Dynamic.
 Range never invokes Formula.
 
-### AI
-Immediate first-paint progress remains before synchronous preflight and hands off to the mature 49.3H progress/result/error/cost stack.
+## AI Execution
+Full AI autofill preserves immediate first-paint before synchronous preflight and the mature 49.3H progress/result/error/cost stack.
 
-## Phase49.3I.6 — Secure Credential Field Persistence
-### Owner report
-Catalog Center 49.3I.5 launches, but Token/API Key/FTP credential fields appeared empty again. The expected contract is that credentials saved once remain stable across restarts/releases.
-
-### Root Cause — ERR-49-023
-The secure storage backend already exists and uses Windows Credential Store under stable service name:
-`3DPrintHub Catalog Intelligence`.
-
-Runtime accessors already use secure fallback:
-- provider key: field/environment → `get_provider_key()`,
-- site connection: field/environment → `get_secret()`.
-
-The UI lifecycle was inconsistent with that backend:
-- `ai_key` started empty,
-- FTP password and Bridge token fields hydrated only from environment/new input,
-- mature secure Save handlers wrote to Credential Store and then cleared the widgets,
-- restart did not put secure-store values back into the masked widgets.
-
-Thus credentials could still exist securely while the UI looked as if they had vanished.
-
-### Corrected Contract
-New additive module:
-`catalog_center/app/phase49_3i_secret_persistence.py`
-
-It:
-- keeps Credential Store/environment as the secure source of truth,
-- hydrates FTP password and Bridge token into masked fields at startup when empty,
-- hydrates selected AI Provider key into the masked field,
-- rehydrates fields after successful mature Save clears them,
-- reloads the stored key when Provider changes,
-- preserves unsaved same-provider input during ordinary UI refresh,
-- preserves explicit delete/clear actions,
-- never stores secrets in SQLite, logs, source files, diagnostics or Git.
-
-Composition occurs after the mature 49.3I Product Explorer installer. No older phase installer is modified.
-
-## Runtime Surface — 49.3I.6
+## Runtime Surface — 49.3I.7
 Added:
-- `catalog_center/app/phase49_3i_secret_persistence.py`,
-- `catalog_center/tests/test_epic49_phase49_3i_secret_persistence.py`.
+- `catalog_center/app/phase49_3i_preview_recovery.py`
+- `catalog_center/tests/test_epic49_phase49_3i_preview_recovery.py`
 
 Changed:
-- `catalog_center/app/phase49_3i_product_list.py` for same-phase App87 composition,
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v49.3I.6,
-- `.github/workflows/phase49-3i-ci.yml`.
-
-## Regression Coverage
-Dedicated 49.3I.6 tests verify:
-1. startup secure hydration without SQLite,
-2. post-save secure rehydration after mature handlers clear widgets,
-3. provider-specific stored key hydration on Provider switch,
-4. unsaved newly typed key is not overwritten by normal same-provider refresh,
-5. the hotfix source contains no SQLite `set_setting`, logger, file write or file-open secret persistence path.
-
-CI additionally verifies:
-- secret persistence installer composes after the mature Product Explorer,
-- canonical runner is ASCII-only and v49.3I.6,
-- previous Explorer/selection/routing tests,
-- 49.3H/3G regressions,
-- Django check / no migration drift,
-- no destructive schema operations,
-- Windows Catalog Epic49 tests,
-- Full Django suite.
+- `catalog_center/app/phase49_3i_secret_persistence.py`
+- `catalog_center/tests/test_epic49_phase49_3i_secret_persistence.py`
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v49.3I.7
+- `.github/workflows/phase49-3i-ci.yml`
 
 ## Final GitHub Validation
-CI-only PR `#51`: `CLOSED / NOT MERGED`.
-Validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
-Marker head: `fa8e4bcf5f7795983434f7cfd34c88918273bae6` — not merged.
+CI-only PR #52: `CLOSED / NOT MERGED`.
+Validated runtime base: `4e0b1b7f0f8934a03ab74037bdce5f9abe55b425`.
+Marker head: `5097f45f069e40af64d452ffaa8cd07399a977f2` — not merged.
 
-Successful workflows:
-- Phase49.3I `32583277412` — SUCCESS.
-- Phase49.3H `32583277584` — SUCCESS.
-- Phase49.3G `32583277406` — SUCCESS.
-- Full Phase49 + Full Django `32583277418` — SUCCESS.
+Successful runs:
+- Phase49.3I `32585956198` — SUCCESS
+- Phase49.3H `32585956149` — SUCCESS
+- Phase49.3G `32585956156` — SUCCESS
+- Full Phase49 + Full Django `32585956155` — SUCCESS
+
+Validation includes:
+- runner v49.3I.7 / ASCII-only Windows PS5.1,
+- live Git snapshot guard,
+- Preview JavaScript escape test,
+- Preview-only/no-full-fetch source contract,
+- real Provider Hub key hydration,
+- post-save rehydration,
+- Provider model catalog scheduling/cache/combobox tests,
+- prior 49.3I/3H/3G regressions,
+- Django no-migration contract,
+- no destructive schema operation,
+- Full Django suite.
 
 ## Database / Migration / Secret Safety
-- Django schema change: NONE — CI verified,
-- Django migration: NONE — CI verified,
-- Catalog schema change: NONE,
-- no reset/drop/truncate,
-- no media rewrite/delete,
-- no secret migration into SQLite/source/Git/logs,
+- Django migration: `NONE` — CI verified.
+- Catalog schema migration: `NONE`.
+- no reset/drop/truncate.
+- no historical data rewrite.
+- no media rewrite/delete.
+- secrets remain Windows Credential Store/environment only.
 - Production untouched.
 
-## Must-Not-Touch
-- Product Workspace detailed editor,
-- mature secure keyring backend and explicit delete actions,
-- Product-vs-Group routing,
-- selection-loop guard,
-- 49.3H AI result/error/cost behavior,
-- image default 10 / hard max 20,
-- Preview → Approve → Full Fetch,
-- Fixed / Range / Formula independence,
-- Product/Hero revision/idempotency,
-- Production paths/DB/media,
-- historical media.
-
 ## Windows Acceptance Gate — NEXT
-Windows must verify:
-- AI key remains populated as a masked value after secure Save,
-- app restart restores the masked stored AI key,
-- Provider switch restores that Provider's stored key,
-- FTP password and Bridge token remain masked/populated after Save and restart,
-- AI/FTP/Bridge connection tests use the secure credentials successfully,
-- no secrets are written into SQLite/log/source,
-- Product selection/open remains responsive,
-- Product-vs-Group/Search routing remains correct,
-- AI first-paint and Fixed/Range/Formula regressions still pass.
+1. close Catalog Center and require clean worktree,
+2. live fetch/prune + ff-only pull current Epic,
+3. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
+4. Runner must be `49.3I.7` and Git snapshot marker OK,
+5. FTP password + Bridge token remain masked after Save/restart,
+6. AvalAI/OpenRouter saved keys remain masked in real Provider cards after restart,
+7. configured Provider model lists load into Model ID controls and model picker,
+8. exact MakerWorld search URL returns Preview candidates without JavaScript syntax error,
+9. Preview candidate shows one thumbnail/basic identity only,
+10. approve one candidate with image limit 20; only then Full Fetch runs,
+11. archive another candidate; no Full Fetch,
+12. direct Product URL path still works,
+13. Product selection/open, AI first-paint, Fixed/Range/Formula regressions pass.
 
-Only after that:
+Only after all above PASS:
 - one `LOCAL PUBLISH ONLY`,
 - Local Django E2E,
 - explicit owner acceptance,
-- then Production verification/backup/deploy path may begin.
-
-## Exact Next Step
-Owner Windows machine: clean worktree → live fetch/prune → fast-forward-only pull current Epic → repository-owned v49.3I.6 gate with `-LaunchApp` → secure credential Save/restart/provider-switch QA. Production remains blocked.
+- then Production backup/deploy/verification may begin.
