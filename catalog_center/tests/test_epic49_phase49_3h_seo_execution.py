@@ -96,7 +96,8 @@ class Phase493HSEOExecutionTests(unittest.TestCase):
         rendered = format_result(result)
         self.assertNotIn(secret, result["error_text"])
         self.assertNotIn(secret, rendered)
-        self.assertIn("Bearer ***", rendered)
+        self.assertRegex(result["error_text"], r"Authorization:\s+\*{3}")
+        self.assertRegex(rendered, r"Authorization:\s+\*{3}")
 
     def test_source_contract_has_result_drawer_and_error_keeps_progress_open(self):
         source = (Path(__file__).resolve().parents[1] / "app" / "phase49_3h_seo_execution.py").read_text(encoding="utf-8")
