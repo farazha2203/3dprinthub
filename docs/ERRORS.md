@@ -187,6 +187,17 @@ Correct Solution: Phase49.3I.4 adds fail-safe source-aware routing. For a config
 Verification: pure regression tests cover a real MakerWorld product URL versus MakerWorld group/search URLs and malformed/empty patterns; Windows QA must verify one real direct product URL and one real group/search URL.
 Prevention Rule: source type must be classified by the source's verified product identity pattern, not by an incomplete enumeration of possible listing URL shapes. Non-product URLs must fail safe to Preview rather than full extraction.
 
+### ERR-49-022 — Hidden Treeview selection feedback loop froze Product open/preview
+Date: 2026-08-22
+Environment: Windows Catalog Center Products Explorer
+Related Phase: 49.3I.5
+Symptoms: after the 49.3I.4 visual fix, selecting/opening a product could freeze the UI and behave like an infinite loop before Product Workspace or image preview became usable.
+Verified Root Cause: the Explorer card called `_phase49_3i_select_product()`, which executed hidden `product_tree.selection_set(iid)`. The mature Treeview is bound to `<<TreeviewSelect>> -> load_product`; the 49.3I compatibility `load_product()` called `_phase49_3i_select_product()` again, which executed `selection_set()` again. This formed a card -> Treeview event -> load_product -> selection_set feedback cycle.
+Failed Condition: 49.3I.4 tests verified Ctrl/Shift selection and context actions but did not simulate the hidden Treeview virtual-event feedback path.
+Correct Solution: Phase49.3I.5 makes card -> hidden Treeview synchronization one-way with a re-entrancy guard and only calls `selection_set()` when the selection actually differs. The Treeview `load_product()` callback now updates current/card state only and never writes selection back. Product opening also has a repeat-click guard and yields one Tk frame before constructing Product Workspace.
+Verification: dedicated fake-Treeview feedback-loop regression test plus Phase49.3I/full CI required before Windows rerun.
+Prevention Rule: bidirectional UI synchronization must designate one direction as event-producing and the reverse direction as state-only; never write the same Tk selection again from its own `<<TreeviewSelect>>` callback.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
