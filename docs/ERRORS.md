@@ -154,6 +154,18 @@ Correct Solution: add an additive first-paint handoff at the composition root. A
 Verification: CI-only PR #46; Phase49.3I Run `32573421461` SUCCESS; Full Phase49/Django Run `32573421439` SUCCESS.
 Prevention Rule: any user-triggered operation with synchronous UI-thread preflight must paint immediate feedback before starting that preflight; network threading alone is not sufficient UX responsiveness.
 
+### ERR-49-019 — Windows handoff failed because Chat-pinned Expected HEAD became stale
+Date: 2026-08-22
+Environment: Windows PowerShell / GitHub handoff
+Related Phase: 49.3I.3 handoff guard
+Symptoms: Windows clean-worktree fetch and `git pull --ff-only` succeeded, updating Local from `fee6a5f...` to real remote HEAD `53e9216ae84a3e167481253da44760179c751051`, but the Chat-provided preflight then failed because it still required `789edf8652ad8a09641afedd5e959c63822800c7`.
+Verified Root Cause: the handoff command pinned a mutable branch to a SHA copied into Chat. After that SHA was issued, additional repository documentation commits advanced the Epic branch. The local pull correctly followed GitHub, but the stale Chat constant incorrectly treated the newer valid branch HEAD as an error.
+Evidence: GitHub comparison `97674a82acc97e1a623b76084b60344cfa93142b..53e9216ae84a3e167481253da44760179c751051` contains only `PROJECT_CONTEXT.md` and `docs/*`; no runtime, runner, migration, database or media file changed in those seven post-validation commits.
+Failed Attempt: reusing a fixed `$ExpectedHead` from Chat as the source of truth for a branch that could advance before the operator executed the command.
+Correct Solution: repository runner v`49.3I.3` performs a live `git fetch --prune origin`, requires the exact Epic branch, verifies clean worktree, reads `origin/epic/phase49-unified-product-slider-sync` after that fetch, and requires Local HEAD to equal that fetched remote snapshot. If they differ, it fails with a `git pull --ff-only` instruction and must be rerun. No reset/stash/delete shortcut is used.
+Verification: `.github/workflows/phase49-3i-ci.yml` now requires runner version `49.3I.3`, ASCII-only compatibility, live fetch guard, expected branch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`. Final CI validation is required before Windows rerun.
+Prevention Rule: never use a Chat-pinned SHA as the sole Windows handoff truth for a mutable development branch. Pin the fetched remote snapshot inside the same local execution, then verify Local HEAD equals that snapshot; repository CI must protect the handoff contract.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
