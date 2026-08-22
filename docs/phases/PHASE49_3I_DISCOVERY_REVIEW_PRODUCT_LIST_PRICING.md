@@ -1,6 +1,6 @@
 # Phase49.3I — Discovery Review + Product Gallery + Explicit Pricing Modes
 
-Status: `GITHUB_UPDATED / CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
 Approved: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
 Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`
@@ -164,7 +164,15 @@ Historical runner incident: `ERR-49-016`.
 - 49.3H `32573421431` SUCCESS.
 - 49.3G `32573421523` SUCCESS.
 - Full Phase49 + Full Django `32573421439` SUCCESS.
-- Full Django suite step PASS.
+
+### Docs-Closed Final Validation
+- PR #47 closed / not merged.
+- exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
+- marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` not merged.
+- 49.3I `32573779531` SUCCESS.
+- 49.3H `32573779534` SUCCESS.
+- 49.3G `32573779548` SUCCESS.
+- Full Phase49 + Full Django `32573779528` SUCCESS.
 
 ## Must Not Regress
 - Phase49.3H SEO execution progress/result/error console and AI cost ledger,
@@ -181,10 +189,10 @@ Historical runner incident: `ERR-49-016`.
 - secret redaction.
 
 ## Remaining Acceptance Gates
-1. final docs-closed CI validation,
-2. Windows clean worktree,
-3. fetch/pull `--ff-only` exact validated Epic HEAD,
-4. run repository runner v49.3I.2 with `-LaunchApp`,
+1. Windows clean worktree,
+2. fetch/pull `--ff-only` current Epic branch,
+3. verify runner v49.3I.2,
+4. run repository runner with `-LaunchApp`,
 5. Products gallery visual QA + large image preview,
 6. full AI autofill immediate progress → mature progress/result drawer QA,
 7. MakerWorld cake+stand Preview/Approve/Archive/Dedupe QA,
@@ -195,4 +203,4 @@ Historical runner incident: `ERR-49-016`.
 12. only then Production plan/deploy.
 
 ## Delivery Gate
-Runtime regression fixes have passed CI. Production remains forbidden. Next gate is the docs-closed GitHub validation followed by Windows Local rerun from the exact GitHub HEAD.
+Runtime regression fixes and docs-closed final CI have passed. Production remains forbidden. Next gate is Windows Local rerun from the current Epic branch using the canonical runner.
