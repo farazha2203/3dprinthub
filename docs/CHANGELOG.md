@@ -13,13 +13,23 @@ Record meaningful changes only.
 - Windows correctly fast-forwarded from `fee6a5f...` to GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`.
 - the handoff then falsely failed because the Chat command still required stale SHA `789edf8652ad8a09641afedd5e959c63822800c7`.
 - GitHub compare from validated base `97674a82acc97e1a623b76084b60344cfa93142b` to `53e9216...` confirmed the seven later commits were documentation-only.
+- repository policy already required Remote Epic HEAD resolution after fetch; the failed Chat preflight violated that rule.
 - recorded as `ERR-49-019`.
 
 ### Runner / CI
 - `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped to `49.3I.3`.
 - Windows PowerShell 5.1 ASCII-only contract is preserved.
-- Phase49.3I CI now requires exact branch guard, live fetch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`.
-- final CI validation for 49.3I.3 is pending before Windows rerun.
+- Phase49.3I CI requires exact branch guard, live fetch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`.
+
+### Validation
+- CI-only PR #48 closed without merge.
+- validated Epic base `7117510f173f45a3d8c806e46fb0476cbaeba115`.
+- marker head `fc400359442efef336b445a72d60002f78eab916` not merged.
+- Phase49.3I Run `32575765467` — SUCCESS.
+- Phase49.3H Run `32575765515` — SUCCESS.
+- Phase49.3G Run `32575765544` — SUCCESS.
+- Full Phase49 + Full Django Run `32575765457` — SUCCESS.
+- Full Django suite PASS.
 
 ### Database / Production
 - Django migration: NONE.
@@ -40,7 +50,7 @@ Record meaningful changes only.
 
 ### Gate
 - GitHub final validation is complete for the 49.3I.2 runtime/docs baseline.
-- 49.3I.3 handoff guard is a later runner/workflow safety change and must pass its own CI before Windows rerun.
+- later 49.3I.3 handoff guard also passed its own CI in PR #48.
 - Production remains untouched and forbidden until Windows visual/data QA, LOCAL PUBLISH ONLY, Local Django E2E and explicit owner approval.
 
 ## 2026-08-22 — Phase49.3I Local QA Regression Hotfix
