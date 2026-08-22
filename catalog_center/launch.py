@@ -27,6 +27,7 @@ def main() -> int:
     from app.phase49_3b_ai_product_runtime import install as install_ai_product_runtime
     from app.phase49_3b_ai_runtime_patch import install as install_ai_runtime_patch
     from app.phase49_3c_ai_recovery import install as install_ai_recovery
+    from app import phase49_3c_image_pipeline as image_pipeline_module
     from app.phase49_3c_image_pipeline import install_workspace as install_image_workspace
     from app.phase49_3c_operator_recovery import install as install_operator_recovery
     from app.phase49_3c_persian_content import (
@@ -51,10 +52,21 @@ def main() -> int:
         configure_runtime as configure_phase49_3f_runtime,
         install_shell as install_phase49_3f_ai_shell,
     )
+    from app import phase49_3f_workspace as phase49_3f_workspace_module
     from app.phase49_3f_workspace import install as install_phase49_3f_workspace
     from app.phase49_3f_source_refresh_guard import install as install_phase49_3f_source_refresh_guard
     from app.phase49_3g_workspace_usability import install as install_phase49_3g_workspace
     from app.phase49_3g_commerce_provenance import install as install_phase49_3g_commerce_provenance
+    from app import page_extractor as page_extractor_module
+    from app.phase49_3h_image_limits import (
+        install_extractor as install_phase49_3h_image_extractor,
+        install_app as install_phase49_3h_image_app,
+        install_workspace as install_phase49_3h_image_workspace,
+    )
+    from app.phase49_3h_seo_execution import (
+        install_progress as install_phase49_3h_progress,
+        install_workspace as install_phase49_3h_execution_workspace,
+    )
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -62,6 +74,11 @@ def main() -> int:
     # Provider extension must happen before any settings/app state is constructed.
     install_phase49_3f_gemini_provider()
     prepare_phase49_3f_provider_modules()
+
+    # 49.3H intake policy is a runtime boundary contract. Install before `main`
+    # imports extract_direct_link so every old intake/refetch caller receives the
+    # same 1..20 normalizer without scattered rewrites.
+    install_phase49_3h_image_extractor(page_extractor_module, image_pipeline_module)
 
     install_ai_runtime_patch()
     install_ai_recovery()
@@ -89,6 +106,12 @@ def main() -> int:
     # here preserves the independent 49.3F Source Refresh unit-test contract.
     install_phase49_3g_workspace(ProductWorkspace, readiness_module)
     install_phase49_3g_commerce_provenance(ProductWorkspace)
+    # 49.3H is another additive composition layer. Do not inject it into old
+    # independent installers: progress/result/cost/image-limit wrappers are
+    # composed here only after 49.3G has established its mature behavior.
+    install_phase49_3h_progress(phase49_3f_workspace_module)
+    install_phase49_3h_image_workspace(ProductWorkspace)
+    install_phase49_3h_execution_workspace(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -172,6 +195,13 @@ def main() -> int:
     print("EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED", flush=True)
     print("EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED", flush=True)
     print("EPIC49_3G_COMMERCE_PROVENANCE=ENABLED", flush=True)
+    print("EPIC49_3H_SEO_EXECUTION_CONSOLE=ENABLED", flush=True)
+    print("EPIC49_3H_RESULT_ERROR_DRAWER=ENABLED", flush=True)
+    print("EPIC49_3H_AI_COST_LEDGER=ENABLED", flush=True)
+    print("EPIC49_3H_PUBLISH_COST_RECEIPT=ENABLED", flush=True)
+    print("EPIC49_3H_IMAGE_LIMIT_DEFAULT_10=ENABLED", flush=True)
+    print("EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED", flush=True)
+    print("EPIC49_3H_PERSISTED_IMAGE_CAP=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -209,6 +239,7 @@ def main() -> int:
     install_phase49_3d_ai_shell(App87)
     install_phase49_3d_ai_ui_cleanup(App87)
     install_phase49_3f_ai_shell(App87, app_module.DATA)
+    install_phase49_3h_image_app(App87)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
