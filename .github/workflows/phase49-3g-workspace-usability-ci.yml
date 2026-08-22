@@ -58,13 +58,16 @@ jobs:
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3g_workspace_usability.py \
+            catalog_center/app/phase49_3g_commerce_provenance.py \
             catalog_center/app/phase49_3f_source_refresh_guard.py \
             catalog_center/launch.py
 
       - name: Phase49.3G dedicated tests
         working-directory: catalog_center
         run: |
-          python -m unittest -v tests.test_epic49_phase49_3g_workspace_usability
+          python -m unittest -v \
+            tests.test_epic49_phase49_3g_workspace_usability \
+            tests.test_epic49_phase49_3g_commerce_provenance
 
       - name: Phase49.3G launch markers
         working-directory: catalog_center
@@ -76,6 +79,7 @@ jobs:
           grep -F "EPIC49_3G_AI_AUTOFILL_PROVENANCE=ENABLED" /tmp/phase49-3g-verify.txt
           grep -F "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED" /tmp/phase49-3g-verify.txt
           grep -F "EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_COMMERCE_PROVENANCE=ENABLED" /tmp/phase49-3g-verify.txt
           grep -F "EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED" /tmp/phase49-3g-verify.txt
           grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3g-verify.txt
 
