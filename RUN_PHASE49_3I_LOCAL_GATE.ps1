@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.3"
+$RunnerVersion = "49.3I.4"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -135,12 +135,14 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_discovery_review.py",
     "catalog_center\app\phase49_3i_source_safety.py",
     "catalog_center\app\phase49_3i_product_list.py",
+    "catalog_center\app\phase49_3i_explorer_hotfix.py",
     "catalog_center\app\phase49_3i_local_qa_hotfix.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "store\phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_discovery_review.py",
     "catalog_center\tests\test_epic49_phase49_3i_source_safety.py",
     "catalog_center\tests\test_epic49_phase49_3i_product_list.py",
+    "catalog_center\tests\test_epic49_phase49_3i_explorer_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "store\test_phase49_3i_pricing_modes.py"
@@ -151,6 +153,7 @@ foreach ($relative in $requiredFiles) {
     }
 }
 Write-Host "PHASE49_3I_SOURCE_FILES=OK" -ForegroundColor Green
+Write-Host "PHASE49_3I_EXPLORER_HOTFIX=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -160,6 +163,7 @@ try {
         "catalog_center\app\phase49_3i_discovery_review.py",
         "catalog_center\app\phase49_3i_source_safety.py",
         "catalog_center\app\phase49_3i_product_list.py",
+        "catalog_center\app\phase49_3i_explorer_hotfix.py",
         "catalog_center\app\phase49_3i_local_qa_hotfix.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "store\phase49_3i_pricing_modes.py",
@@ -178,6 +182,7 @@ try {
         "tests.test_epic49_phase49_3i_discovery_review",
         "tests.test_epic49_phase49_3i_source_safety",
         "tests.test_epic49_phase49_3i_product_list",
+        "tests.test_epic49_phase49_3i_explorer_hotfix",
         "tests.test_epic49_phase49_3i_local_qa_hotfix",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -262,18 +267,19 @@ Write-Host ""
 Write-Host "Manual QA - use the real MakerWorld search URL:" -ForegroundColor Cyan
 Write-Host "https://makerworld.com/en/search/models?keyword=cake+stand"
 Write-Host ""
-Write-Host "1) Products page must be a scrollable card gallery, not the legacy table/editor."
-Write-Host "2) Every product card must show a large local image, product name, and Edit Product action only."
-Write-Host "3) Click a product image and verify the large local preview opens."
-Write-Host "4) Click Edit Product and confirm Product Workspace opens with all detailed fields."
-Write-Host "5) Click full AI autofill and verify startup progress paints immediately before preflight."
-Write-Host "6) Verify startup progress hands off to the existing AI connection/send/receive progress."
-Write-Host "7) Success must leave the Phase49.3H result/log drawer; safe errors must remain visible."
-Write-Host "8) Discovery preview must use the exact MakerWorld URL and full-fetch only approved candidates."
-Write-Host "9) Approve one candidate with image limit 10; persisted/selected/downloaded images must be 10 or fewer."
-Write-Host "10) Archive another candidate and repeat search to verify blocked/duplicate guards."
-Write-Host "11) Pricing Fixed, Range, and Formula must remain independent."
-Write-Host "12) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
+Write-Host "1) Product thumbnails must fill their image area; no thin clipped strip is allowed."
+Write-Host "2) Change view between Extra Large, Large, Medium, Small, and List."
+Write-Host "3) Ctrl-click and Shift-click products; verify multi-selection and selection count."
+Write-Host "4) Right-click a selected product; verify Open, Preview, and Remove From Publish Queue."
+Write-Host "5) Remove From Publish Queue must not delete the product and must not touch Production."
+Write-Host "6) Click a normal product image and verify the large local preview opens."
+Write-Host "7) Click Edit Product and confirm Product Workspace opens with all detailed fields."
+Write-Host "8) Direct product URL must use direct product intake. Group/category/search URL must use Preview first."
+Write-Host "9) Full AI autofill must paint startup progress before preflight and hand off to mature progress."
+Write-Host "10) Discovery Preview must full-fetch only approved candidates and enforce image limit <= 20."
+Write-Host "11) Archive another candidate and repeat search to verify blocked/duplicate guards."
+Write-Host "12) Pricing Fixed, Range, and Formula must remain independent."
+Write-Host "13) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
