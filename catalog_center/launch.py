@@ -58,6 +58,7 @@ def main() -> int:
     from app.phase49_3g_workspace_usability import install as install_phase49_3g_workspace
     from app.phase49_3g_commerce_provenance import install as install_phase49_3g_commerce_provenance
     from app import page_extractor as page_extractor_module
+    from app import crawler as crawler_module
     from app.phase49_3h_image_limits import (
         install_extractor as install_phase49_3h_image_extractor,
         install_app as install_phase49_3h_image_app,
@@ -70,6 +71,7 @@ def main() -> int:
     from app.phase49_3i_pricing_modes import install as install_phase49_3i_pricing_workspace
     from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
     from app.phase49_3i_product_list import install as install_phase49_3i_product_list
+    from app.phase49_3i_source_safety import install as install_phase49_3i_source_safety
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -82,6 +84,10 @@ def main() -> int:
     # imports extract_direct_link so every old intake/refetch caller receives the
     # same 1..20 normalizer without scattered rewrites.
     install_phase49_3h_image_extractor(page_extractor_module, image_pipeline_module)
+    # 49.3I source sanitation is installed after the 49.3H image wrapper and
+    # before `main` imports either extraction function. URLs/IDs are preserved;
+    # only scraped source text is normalized.
+    install_phase49_3i_source_safety(page_extractor_module, crawler_module)
 
     install_ai_runtime_patch()
     install_ai_recovery()
