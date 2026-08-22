@@ -5,7 +5,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.0"
+$RunnerVersion = "49.3I.1"
+$RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -60,6 +61,7 @@ function Invoke-NativeCapture {
 
 Step "00. PHASE49.3I WINDOWS LOCAL GATE"
 Write-Host "Runner     = $RunnerVersion"
+Write-Host "Encoding   = $RunnerEncodingContract"
 Write-Host "Project    = $Root"
 Write-Host "Catalog    = $Catalog"
 Write-Host "Production = NOT TOUCHED" -ForegroundColor Yellow
@@ -215,22 +217,22 @@ Step "09. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA — use the real MakerWorld search URL:" -ForegroundColor Cyan
+Write-Host "Manual QA - use the real MakerWorld search URL:" -ForegroundColor Cyan
 Write-Host "https://makerworld.com/en/search/models?keyword=cake+stand"
 Write-Host ""
-Write-Host "1) Select MakerWorld + Search mode, paste the exact URL, click 'کشف و پیش‌نمایش'."
-Write-Host "2) Confirm candidate results belong to cake stand search; inspect examples 2834255 / 2845731 if MakerWorld still returns them."
-Write-Host "3) Preview must show one thumbnail + product name/link and MUST NOT create full product rows before approval."
-Write-Host "4) Select one candidate, set image limit 10, approve full fetch; persisted/selected/downloaded images must be <=10."
-Write-Host "5) Select another candidate and choose 'آرشیو / لازم نیست'; it must enter Blocked without full data fetch."
-Write-Host "6) Repeat the same search: imported/blocked identities must not full-fetch again."
-Write-Host "7) New/refetched source text must not persist CJK/other unexpected scripts; URL stays exact; Persian AI/editor fields remain Persian."
-Write-Host "8) Products page shows a lightweight thumbnail + product name list; detailed right-side form is gone from this page."
-Write-Host "9) 'صفحه محصول / ویرایش کامل' opens Product Workspace and all detailed fields are still available there."
-Write-Host "10) Pricing Fixed: enter an exact value (example 1,200,000); min=max and price is final."
-Write-Host "11) Pricing Range: enter 200,000..500,000; it stays a range/consultation price and does NOT use formula calculation."
-Write-Host "12) Pricing Formula: material grams/rates + print time + supervision preview still calculates through mature 49.3F engine."
-Write-Host "13) 49.3H SEO Result/Error drawer, cost ledger and image hard max 20 still work."
+Write-Host "1) Select MakerWorld and Search mode, paste the exact URL, then run discovery preview."
+Write-Host "2) Confirm candidate results belong to the cake stand search; inspect examples 2834255 and 2845731 if still present."
+Write-Host "3) Preview must show one thumbnail plus product name/link and must not create full product rows before approval."
+Write-Host "4) Select one candidate, set image limit 10, approve full fetch; persisted, selected, and downloaded images must be 10 or fewer."
+Write-Host "5) Select another candidate and use Archive/Not Needed; it must enter Blocked without full data fetch."
+Write-Host "6) Repeat the same search: imported or blocked identities must not full-fetch again."
+Write-Host "7) New or refetched source text must not persist CJK or other unexpected scripts; URL stays exact; Persian editor fields remain Persian."
+Write-Host "8) Products page shows a lightweight thumbnail plus product name list; the detailed right-side form is hidden on this page."
+Write-Host "9) Open Product Workspace from the full-edit action and confirm all detailed fields remain available."
+Write-Host "10) Pricing Fixed: enter an exact value such as 1200000; min equals max and price is final."
+Write-Host "11) Pricing Range: enter 200000 through 500000; it remains range/consultation pricing and does not use formula calculation."
+Write-Host "12) Pricing Formula: material grams/rates plus print time plus supervision still calculate through the mature 49.3F engine."
+Write-Host "13) Phase49.3H SEO result/error drawer, cost ledger, and image hard max 20 still work."
 Write-Host "14) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
 
 if ($LaunchApp) {
