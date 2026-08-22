@@ -35,45 +35,57 @@ Implemented and preserved:
 - Persian filters/sorts,
 - source `model_url_pattern` Product-vs-Group routing,
 - AI first paint,
-- Windows PowerShell 5.1 ASCII runner.
+- Windows PowerShell 5.1 ASCII runner,
+- secure credential field hydration from Windows Credential Store.
 
 ## Windows QA Confirmed After 49.3I.5
 Owner confirmed:
 - Catalog Center launches after the 49.3I.5 handoff,
 - Product link vs Group/Category/Search/sub-branch routing is fixed.
 
-The remaining newly reported regression is operator-visible credential persistence.
-
 ## Phase49.3I.6 — Secure Credential Field Persistence
-Status: `GITHUB IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING`
+Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 
 ### Requested Delta
-Credentials that were saved securely must not appear to vanish on the next save/restart/release. The stable secure location remains Windows Credential Store; the solution must not put passwords/tokens/API keys into SQLite, Git, source files or logs.
+Credentials saved securely must not appear to vanish on the next save/restart/release. The stable secure location remains Windows Credential Store; passwords/tokens/API keys must not be moved into SQLite, Git, source files or logs.
 
 ### Verified Boundary
-Existing secure backend already persists and reads credentials. The UX defect is that masked fields are initialized without secure-store hydration and mature Save handlers clear the input widgets after writing to the secure store.
+The secure backend already persisted and read credentials. The defect was operator-visible hydration: masked fields initialized without secure-store values and mature Save handlers cleared their widgets after secure persistence.
 
 ### Implemented Scope
 1. Add `phase49_3i_secret_persistence.py` as an additive App87 shell layer.
-2. Hydrate FTP password and Bridge token from the secure store at startup when their fields are empty.
+2. Hydrate FTP password and Bridge token from secure storage at startup when empty.
 3. Hydrate selected AI provider key from its secure provider entry.
 4. Rehydrate masked fields after a successful mature Save clears them.
-5. When Provider changes, load that Provider's stored key.
-6. Do not overwrite a newly typed unsaved key during normal same-provider refresh.
+5. On Provider change, load that Provider's stored key.
+6. Do not overwrite newly typed unsaved input during normal same-provider refresh.
 7. Preserve explicit credential delete/clear behavior.
 8. Keep all credentials out of SQLite/log/source/Git.
 9. No schema migration and no Production action.
 
-### Regression Tests
-Dedicated tests cover startup hydration, post-save hydration, provider switching, unsaved input preservation and source-level secret-safety. CI also checks same-phase composition and previous Phase49.3I/3H/3G behavior.
+### Final Validation
+CI-only PR `#51`: `CLOSED / NOT MERGED`.
+Validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
+Marker head: `fa8e4bcf5f7795983434f7cfd34c88918273bae6` — not merged.
 
-### Runner / CI
-- canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.6,
-- ASCII-only for Windows PowerShell 5.1,
-- live fetched Remote Epic HEAD equality guard preserved,
-- new marker: `PHASE49_3I_SECRET_PERSISTENCE=ENABLED`,
-- new module/test included in compile and dedicated unit gate,
-- final CI probe still required before Windows handoff.
+Successful runs:
+- Phase49.3I: `32583277412` — SUCCESS.
+- Phase49.3H: `32583277584` — SUCCESS.
+- Phase49.3G: `32583277406` — SUCCESS.
+- Full Phase49 + Full Django: `32583277418` — SUCCESS.
+
+CI verified:
+- runner v49.3I.6 / ASCII-only contract,
+- live Git snapshot guard,
+- secure credential startup/save/provider-switch tests,
+- secure-store-only composition/source contract,
+- previous Explorer/selection/routing regressions,
+- Phase49.3H/3G regressions,
+- Django checks,
+- no migration drift,
+- no destructive schema operations,
+- Windows Catalog Epic49 tests,
+- Full Django suite.
 
 ## Must-Not-Touch
 - Product Workspace detailed editor,
@@ -88,8 +100,8 @@ Dedicated tests cover startup hydration, post-save hydration, provider switching
 - historical media,
 - secrets in Git/log/SQLite.
 
-## Windows Manual QA After Final CI
-Windows must prove saved AI key, FTP password and Bridge token remain visibly present as masked values immediately after Save and after restart; switching AI provider restores that provider's saved key; live AI/FTP/Bridge tests still consume the secure credentials; no secret appears in SQLite/logs/source. Existing link-routing, selection/open, AI progress and pricing regressions are rechecked.
+## Windows Manual QA — NEXT
+Windows must prove saved AI key, FTP password and Bridge token remain visibly present as masked values immediately after Save and after restart; switching AI provider restores that provider's saved key; live AI/FTP/Bridge tests consume the secure credentials; no secret appears in SQLite/logs/source. Existing link-routing, selection/open, AI progress and pricing regressions are rechecked.
 
 ## Local Publish Gate
 Only after credential + remaining 49.3I manual QA passes:
@@ -102,4 +114,4 @@ Only after credential + remaining 49.3I manual QA passes:
 Production remains blocked until Windows QA and Local Publish E2E pass and the owner explicitly approves Production. Before deploy, re-verify host branch/commit/path, MySQL vendor/name, backup and rollback.
 
 ## Immediate Next Step
-Finish GitHub CI for 49.3I.6 and close the CI-only validation probe without merge. Then provide Windows fast-forward-only pull + repository runner instructions. No Production command yet.
+Windows clean fast-forward-only pull of the live fetched Epic snapshot, then repository-owned v49.3I.6 local gate with `-LaunchApp` and secure credential persistence QA. No Production command yet.
