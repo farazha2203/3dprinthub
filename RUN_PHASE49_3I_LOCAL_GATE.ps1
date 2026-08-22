@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.1"
+$RunnerVersion = "49.3I.2"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -102,11 +102,13 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_discovery_review.py",
     "catalog_center\app\phase49_3i_source_safety.py",
     "catalog_center\app\phase49_3i_product_list.py",
+    "catalog_center\app\phase49_3i_local_qa_hotfix.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "store\phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_discovery_review.py",
     "catalog_center\tests\test_epic49_phase49_3i_source_safety.py",
     "catalog_center\tests\test_epic49_phase49_3i_product_list.py",
+    "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "store\test_phase49_3i_pricing_modes.py"
 )
@@ -125,6 +127,7 @@ try {
         "catalog_center\app\phase49_3i_discovery_review.py",
         "catalog_center\app\phase49_3i_source_safety.py",
         "catalog_center\app\phase49_3i_product_list.py",
+        "catalog_center\app\phase49_3i_local_qa_hotfix.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "store\phase49_3i_pricing_modes.py",
         "store\apps.py",
@@ -142,8 +145,10 @@ try {
         "tests.test_epic49_phase49_3i_discovery_review",
         "tests.test_epic49_phase49_3i_source_safety",
         "tests.test_epic49_phase49_3i_product_list",
+        "tests.test_epic49_phase49_3i_local_qa_hotfix",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3h_image_limits",
+        "tests.test_epic49_phase49_3h_seo_execution",
         "tests.test_epic49_phase49_3g_workspace_usability",
         "tests.test_epic49_phase49_3g_commerce_provenance"
     )
@@ -183,9 +188,13 @@ try {
         "EPIC49_3I_ARCHIVE_BLOCK_DEDUPE=ENABLED",
         "EPIC49_3I_SOURCE_TEXT_LATIN_SAFE=ENABLED",
         "EPIC49_3I_LIGHTWEIGHT_PRODUCT_LIST=ENABLED",
+        "EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED",
+        "EPIC49_3I_PRODUCT_LIST_ONLY_IMAGE_NAME_EDIT=ENABLED",
+        "EPIC49_3I_AI_PROGRESS_FIRST_PAINT=ENABLED",
         "EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED",
         "EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED",
         "EPIC49_3H_SEO_EXECUTION_CONSOLE=ENABLED",
+        "EPIC49_3H_RESULT_ERROR_DRAWER=ENABLED",
         "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED",
         "ACTIVE_RELEASE_VERIFIED=OK"
     )
@@ -220,20 +229,18 @@ Write-Host ""
 Write-Host "Manual QA - use the real MakerWorld search URL:" -ForegroundColor Cyan
 Write-Host "https://makerworld.com/en/search/models?keyword=cake+stand"
 Write-Host ""
-Write-Host "1) Select MakerWorld and Search mode, paste the exact URL, then run discovery preview."
-Write-Host "2) Confirm candidate results belong to the cake stand search; inspect examples 2834255 and 2845731 if still present."
-Write-Host "3) Preview must show one thumbnail plus product name/link and must not create full product rows before approval."
-Write-Host "4) Select one candidate, set image limit 10, approve full fetch; persisted, selected, and downloaded images must be 10 or fewer."
-Write-Host "5) Select another candidate and use Archive/Not Needed; it must enter Blocked without full data fetch."
-Write-Host "6) Repeat the same search: imported or blocked identities must not full-fetch again."
-Write-Host "7) New or refetched source text must not persist CJK or other unexpected scripts; URL stays exact; Persian editor fields remain Persian."
-Write-Host "8) Products page shows a lightweight thumbnail plus product name list; the detailed right-side form is hidden on this page."
-Write-Host "9) Open Product Workspace from the full-edit action and confirm all detailed fields remain available."
-Write-Host "10) Pricing Fixed: enter an exact value such as 1200000; min equals max and price is final."
-Write-Host "11) Pricing Range: enter 200000 through 500000; it remains range/consultation pricing and does not use formula calculation."
-Write-Host "12) Pricing Formula: material grams/rates plus print time plus supervision still calculate through the mature 49.3F engine."
-Write-Host "13) Phase49.3H SEO result/error drawer, cost ledger, and image hard max 20 still work."
-Write-Host "14) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
+Write-Host "1) Products page must be a scrollable card gallery, not the legacy table/editor."
+Write-Host "2) Every product card must show a large local image, product name, and Edit Product action only."
+Write-Host "3) Click a product image and verify the large local preview opens."
+Write-Host "4) Click Edit Product and confirm Product Workspace opens with all detailed fields."
+Write-Host "5) Click full AI autofill and verify startup progress paints immediately before preflight."
+Write-Host "6) Verify startup progress hands off to the existing AI connection/send/receive progress."
+Write-Host "7) Success must leave the Phase49.3H result/log drawer; safe errors must remain visible."
+Write-Host "8) Discovery preview must use the exact MakerWorld URL and full-fetch only approved candidates."
+Write-Host "9) Approve one candidate with image limit 10; persisted/selected/downloaded images must be 10 or fewer."
+Write-Host "10) Archive another candidate and repeat search to verify blocked/duplicate guards."
+Write-Host "11) Pricing Fixed, Range, and Formula must remain independent."
+Write-Host "12) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
 
 if ($LaunchApp) {
     Step "10. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
