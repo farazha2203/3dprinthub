@@ -54,25 +54,14 @@ Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 - preserve Persian editorial `_fa` fields,
 - no historical mass rewrite.
 
-### REQ-49I-006 — Products surface must be a real visual gallery, not a parameter-heavy editor
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
-Original request:
-- large usable product image,
+### REQ-49I-006 — Products surface remains visual/lightweight
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- usable product image,
 - product name,
+- compact Product ID/state/source/image-count/date/publish-state,
 - Edit Product action,
 - click image for large preview,
 - detailed editing stays in Product Workspace.
-
-Refined by owner during 49.3I.5 QA:
-- the list must remain lightweight and visual,
-- but it should also show compact operational details useful for browsing:
-  - Product ID,
-  - state,
-  - source,
-  - image count,
-  - added date,
-  - publish state.
-- price/editorial/SEO/material/pricing forms must not return to the Products list.
 
 ### REQ-49I-007 — Three explicit pricing modes
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
@@ -81,136 +70,105 @@ Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 3. Formula/Dynamic.
 - Range must not invoke Formula.
 
-### REQ-49I-008 — Full AI autofill must show progress immediately
+### REQ-49I-008 — Full AI autofill progress immediately
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 - first progress paint before synchronous preflight,
 - then connection/send/receive/save/result stages,
-- success/result/error remains visible and sanitized.
+- success/result/error stays visible and sanitized.
 
-### REQ-49I-009 — Windows handoff uses live GitHub snapshot, not stale Chat SHA
+### REQ-49I-009 — Windows handoff uses live GitHub snapshot
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / ACTIVE`
-- fetch current remote inside the same execution,
-- Local HEAD must equal fetched Remote Epic HEAD,
+- fetch current remote inside same execution,
+- Local HEAD equals fetched Remote Epic HEAD,
 - dirty Local stops for inspection,
-- only fast-forward pull,
+- ff-only pull,
 - no reset/stash/delete shortcut,
 - runner remains ASCII-only for Windows PowerShell 5.1.
-
 Canonical root cause: `ERR-49-019`.
 
 ### REQ-49I-010 — Windows Explorer-style Products browsing
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
-- full-sized thumbnails, no clipped strip,
-- Extra Large / Large / Medium / Small / List views,
-- persist view preference,
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- full thumbnails,
+- Extra Large / Large / Medium / Small / List,
+- persistent view preference,
 - normal/Ctrl/Shift selection,
-- Select All / Clear Selection,
-- selected count,
-- right-click menu,
-- safe Remove From Publish Queue,
-- image click large preview.
+- Select All / Clear,
+- right-click actions,
+- safe Remove From Publish Queue.
+Canonical root cause: `ERR-49-020`.
 
-Canonical root cause for thumbnail issue: `ERR-49-020`.
-
-### REQ-49I-011 — Direct Product URL vs Group/Category/Search URL routes safely
+### REQ-49I-011 — Product URL vs Group/Category/Search routing
 Status: `WINDOWS OWNER QA CONFIRMED`
-- true product URL → mature direct single-product intake,
-- Group/Category/Search/Listing/sub-branch URL → Preview Candidate first,
+- true product URL → mature direct intake,
+- Group/Category/Search/Listing/sub-branch → Preview first,
 - Full Fetch only after approval,
-- configured source `model_url_pattern` is authoritative single-product boundary.
-
+- source `model_url_pattern` is authoritative.
 Canonical root cause: `ERR-49-021`.
-Owner confirmed after 49.3I.5 that the link/sub-branch problem is corrected locally.
 
-### REQ-49I-012 — Product selection/open must never loop + restore compact metadata and useful sorting
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
-Owner QA request:
-- selecting/opening a product must never freeze or enter a selection callback loop,
-- one Open action opens one Product Workspace,
-- cards should show useful compact operational details,
-- restore friendly product filters and sorting such as آماده انتشار / صف انتشار / منتشرشده / جدیدترین / قدیمی‌ترین / آخرین بروزرسانی.
-
-Verified root cause:
-- Explorer card wrote hidden Treeview selection,
-- `<<TreeviewSelect>>` called `load_product`,
-- compatibility `load_product` wrote Treeview selection again,
-- cycle repeated.
-- canonical record: `ERR-49-022`.
-
-Implemented 49.3I.5:
-- one-way card → Treeview event-producing sync,
+### REQ-49I-012 — Product selection/open never loops
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- one Open action → one Product Workspace,
+- one-way Treeview sync,
 - re-entrancy guard,
-- only write Treeview selection when it differs,
-- Treeview callback is state-only,
-- repeat-open guard + Tk paint yield before Product Workspace,
-- compact card ID/state/source/images/date/publish-state,
-- Persian filter/sort toolbar,
-- dedicated fake-Treeview feedback-loop regression test.
+- state-only reverse callback,
+- useful Persian filters/sorts.
+Canonical root cause: `ERR-49-022`.
 
-Validation:
-- CI-only PR #50: CLOSED / NOT MERGED,
-- validated Epic runtime base `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`,
-- Phase49.3I Run `32580222694` SUCCESS,
-- Phase49.3H Run `32580222686` SUCCESS,
-- Phase49.3G Run `32580222682` SUCCESS,
-- Full Phase49 + Full Django Run `32580222683` SUCCESS,
-- Django migration: NONE.
+### REQ-49I-013 — Token/API Key/FTP credentials persist visibly and securely
+Status: `SUPERSEDED BY 49.3I.7 REAL PROVIDER-HUB FIX / WINDOWS QA PENDING`
+- Windows Credential Store/environment stays source of truth,
+- FTP password + Bridge token remain masked/populated after Save/restart,
+- AI credentials remain masked/populated,
+- no secret in SQLite/Git/source/logs.
+Canonical root cause: `ERR-49-023`.
 
-### REQ-49I-013 — Token/API Key/FTP credentials must persist visibly and securely
-Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner report:
-- Catalog Center 49.3I.5 launches,
-- but Token and Key fields appeared empty again,
-- credentials should be entered once and remain available across save/restart/release.
+### REQ-49I-014 — Real AI Provider Hub keys and model lists must survive updates and be visible
+Status: `GITHUB IMPLEMENTED IN 49.3I.7 / CI VALIDATION RUNNING / WINDOWS QA PENDING`
+Owner requirement:
+- AvalAI and OpenRouter API keys entered once must not visually disappear after update/restart,
+- the real Phase49.3F provider cards, not only a legacy AI field, must restore their stored keys masked,
+- OpenAI/Google provider cards preserve the same secure behavior when configured,
+- provider model catalogs must load into the program so the operator can see/select model IDs,
+- configured providers should background-load their model catalog without requiring a new key entry,
+- manual model picker/API refresh remains available,
+- no secret moves into SQLite/Git/source/logs.
+Verified root cause: 49.3I.6 hydrated legacy `ai_key` but modern cards use `_ai_hub_key_vars`; mature provider Save then cleared those real card vars. Canonical record: `ERR-49-025`.
 
-Required contract:
-- one stable secure source of truth,
-- Windows Credential Store/environment remains the credential backend,
-- securely stored AI key, FTP password and Bridge token are restored into masked fields on startup,
-- successful Save must not leave the masked fields looking empty,
-- Provider switch restores that Provider's stored key,
-- explicit delete/clear remains supported,
-- no password/token/API key in SQLite, Git, source files, diagnostics or logs.
-
-Verified root cause:
-- runtime secure fallback already existed,
-- UX fields were initialized without secure-store hydration,
-- mature Save handlers wrote credentials securely and then cleared the widgets,
-- restart therefore looked like credential loss even when secure storage still held the value.
-
-Canonical record: `ERR-49-023`.
-
-Validation:
-- CI-only PR #51: CLOSED / NOT MERGED,
-- validated Epic base `f1e92f8f42a6ed90bf1001dc14a15638828ee341`,
-- marker head `fa8e4bcf5f7795983434f7cfd34c88918273bae6` not merged,
-- Phase49.3I Run `32583277412` SUCCESS,
-- Phase49.3H Run `32583277584` SUCCESS,
-- Phase49.3G Run `32583277406` SUCCESS,
-- Full Phase49 + Full Django Run `32583277418` SUCCESS,
-- Django migration: NONE.
+### REQ-49I-015 — Search Preview must work without breaking mature full source extraction
+Status: `GITHUB IMPLEMENTED IN 49.3I.7 / CI VALIDATION RUNNING / WINDOWS QA PENDING`
+Owner workflow:
+1. search/listing URL is scanned,
+2. show lightweight candidate(s), each with one thumbnail/basic identity,
+3. operator approves wanted product,
+4. only then follow the product link and run mature full extraction,
+5. download/persist the operator-selected image count, e.g. 20,
+6. rejected/archived candidates are not full-fetched.
+Owner explicitly requested that the previously working mature source extraction remain untouched.
+Verified regression: routing reached Preview correctly, but `Locator.evaluate_all` failed with `SyntaxError: Invalid or unexpected token` before any candidates were produced.
+Corrected boundary: raw/escaped Preview JavaScript only; mature `discover_classic` / `collect_classic_exact` paths remain untouched. Canonical record: `ERR-49-024`.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.6`.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.7`.
 
 Protected contracts:
 - ASCII-only Windows PowerShell 5.1 compatibility,
 - live fetched GitHub snapshot guard,
-- selection-loop regression test,
-- compact metadata/filter/sort tests,
-- secure credential hydration/persistence tests,
-- Explorer thumbnail/view/multi-select/context-menu tests,
-- Product-vs-Group routing tests,
+- Preview JavaScript escape regression,
+- Preview-only lightweight candidate boundary,
+- real provider-card secure hydration,
+- provider model-catalog auto-load/cache/combobox visibility,
+- selection-loop and Explorer regressions,
+- Product-vs-Group routing,
 - Phase49.3H/3G + Django migration/full-suite regressions.
 
 ## Preserved Requests From Prior Phases
-- Workspace stages remain accessible; incomplete state is guided, not trapped.
-- AI provider/model remains selectable/persistent with connection test.
-- Image SEO remains selected-only and text-only; no image bytes/files/URLs sent to AI.
+- Product Workspace remains canonical detailed editor.
+- AI provider/model remains selectable and persistent.
+- Image SEO is selected-only and text-only; image bytes/files/URLs are not sent to AI.
 - AI provenance/manual override/disable remains protected.
 - source refresh preserves human edits.
 - Local vs Production publish remains fail-closed.
 - Production cannot be touched before explicit owner approval.
 
 ## Change Rule
-A new request does not authorize unrelated redesign. Implement the requested delta minimally and preserve mature behavior unless the owner explicitly requests replacement/removal.
+A new request does not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact broken boundary.
