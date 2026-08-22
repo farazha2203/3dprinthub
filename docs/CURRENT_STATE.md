@@ -13,7 +13,7 @@ Production Domain: `3dprinthub.ir`
 Current Epic: Epic49 Unified Product / Slider / Catalog Center
 Current Phase: Phase49.3I — Discovery Review Queue + Product Gallery + Explicit Pricing Modes
 Current Hotfix: 49.3I.3 — Windows GitHub snapshot handoff guard after stale Chat-pinned SHA failure
-Status: `GITHUB_UPDATED / HANDOFF HOTFIX CI PENDING / WINDOWS RERUN BLOCKED UNTIL CI`
+Status: `GITHUB_UPDATED / 49.3I.3 CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Latest Windows Handoff Result
@@ -28,6 +28,7 @@ The preflight then stopped because the Chat command still required stale SHA `78
 Canonical root cause: `ERR-49-019`.
 - GitHub was correct and Local pull was correct.
 - the fixed `$ExpectedHead` in Chat had become stale after later repository documentation commits.
+- the existing `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md` already required Remote Epic HEAD resolution after fetch; the Chat preflight violated that policy.
 - no reset/stash/delete/rollback is required or allowed as a shortcut.
 
 ## Handoff Safety Verification
@@ -42,7 +43,7 @@ GitHub compare from final validated runtime/docs base `97674a82acc97e1a623b76084
 No Catalog runtime, Django runtime, Runner, migration, database, media or production file changed in those seven commits.
 
 ## Phase49.3I.3 Implemented Fix
-Canonical runner is being upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.3`.
+Canonical runner is now `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.3`.
 The repository runner now:
 - requires clean Windows worktree,
 - requires exact branch `epic/phase49-unified-product-slider-sync`,
@@ -53,8 +54,24 @@ The repository runner now:
 - never uses a Chat-pinned SHA as the sole handoff truth,
 - preserves the Windows PowerShell 5.1 ASCII-only contract.
 
-`.github/workflows/phase49-3i-ci.yml` now asserts the 49.3I.3 Git snapshot handoff contract.
-CI validation for this new runner/workflow change is pending before Windows rerun.
+`.github/workflows/phase49-3i-ci.yml` asserts the 49.3I.3 Git snapshot handoff contract.
+
+## Phase49.3I.3 Final GitHub Validation
+CI-only PR #48: `CLOSED / NOT MERGED`.
+Exact validated Epic base for the handoff hotfix: `7117510f173f45a3d8c806e46fb0476cbaeba115`.
+Probe marker head `fc400359442efef336b445a72d60002f78eab916` was not merged.
+
+SUCCESS:
+- Phase49.3I dedicated Run `32575765467`
+- Phase49.3H regression Run `32575765515`
+- Phase49.3G regression Run `32575765544`
+- Full Phase49 + Full Django Run `32575765457`
+- PowerShell runner handoff contract PASS
+- Catalog dedicated tests PASS
+- Django check / pricing / migration contract PASS
+- launcher markers PASS
+- no destructive schema operation guard PASS
+- Full Django suite PASS
 
 ## Product / AI Local QA Fixes Still Preserved
 ### Products page
@@ -71,22 +88,6 @@ CI validation for this new runner/workflow change is pending before Windows reru
 - `catalog_center/app/phase49_3i_local_qa_hotfix.py` paints startup progress immediately.
 - existing AI flow starts after a Tk event-loop yield.
 - mature 49.3H Provider/Model/network/result/error/cost/audit stack remains unchanged.
-
-## Previous Final GitHub Validation
-CI-only PR #47: `CLOSED / NOT MERGED`.
-Exact validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`.
-
-SUCCESS:
-- Phase49.3I dedicated Run `32573779531`
-- Phase49.3H regression Run `32573779534`
-- Phase49.3G regression Run `32573779548`
-- Full Phase49 + Full Django Run `32573779528`
-- Full Django suite step PASS
-- PowerShell 5.1 ASCII runner contract PASS
-- Django check / migration contract PASS
-- no new Django migration
-
-The new 49.3I.3 handoff runner/workflow change occurred after that validation and therefore requires its own final CI before Windows rerun.
 
 ## Existing Phase49.3I Contracts Preserved
 - explicit operator search/listing URL is authoritative.
@@ -126,10 +127,10 @@ Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 - Pillow `Image.getdata()` deprecation remains non-blocking debt.
 
 ## Remaining Work
-1. complete Phase49.3I.3 GitHub CI validation for runner/workflow handoff guard.
-2. Windows verifies clean worktree; no reset/stash/delete shortcut.
-3. Windows `git fetch --prune origin` + `git pull --ff-only` current Epic branch.
-4. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` v49.3I.3.
+1. Windows verifies clean worktree; no reset/stash/delete shortcut.
+2. Windows `git fetch --prune origin` + `git pull --ff-only` current Epic branch.
+3. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` v49.3I.3.
+4. runner must print `PHASE49_3I_GIT_SNAPSHOT=OK` after live Local==Remote verification.
 5. visual QA: Products page gallery-only image/name/edit + large preview.
 6. AI QA: full autofill immediate startup progress → existing 49.3H progress/result drawer.
 7. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA.
@@ -139,4 +140,4 @@ Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 11. only then Production plan/deploy.
 
 ## Exact Next Task
-Finish CI for Phase49.3I.3. After CI success, Windows pulls the current Epic branch and runs the repository runner v49.3I.3. Do not manually edit Windows source and do not touch Production.
+Windows pulls the current Epic branch and runs the repository runner v49.3I.3. Do not use a Chat-pinned Expected HEAD, do not manually edit Windows source, and do not touch Production.
