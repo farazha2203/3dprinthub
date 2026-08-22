@@ -157,10 +157,10 @@ Validation:
 - Django migration: NONE.
 
 ### REQ-49I-013 — Token/API Key/FTP credentials must persist visibly and securely
-Status: `GITHUB IMPLEMENTED IN 49.3I.6 / FINAL CI PENDING / WINDOWS QA PENDING`
+Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Owner report:
 - Catalog Center 49.3I.5 launches,
-- but Token and Key fields appear empty again,
+- but Token and Key fields appeared empty again,
 - credentials should be entered once and remain available across save/restart/release.
 
 Required contract:
@@ -179,6 +179,16 @@ Verified root cause:
 - restart therefore looked like credential loss even when secure storage still held the value.
 
 Canonical record: `ERR-49-023`.
+
+Validation:
+- CI-only PR #51: CLOSED / NOT MERGED,
+- validated Epic base `f1e92f8f42a6ed90bf1001dc14a15638828ee341`,
+- marker head `fa8e4bcf5f7795983434f7cfd34c88918273bae6` not merged,
+- Phase49.3I Run `32583277412` SUCCESS,
+- Phase49.3H Run `32583277584` SUCCESS,
+- Phase49.3G Run `32583277406` SUCCESS,
+- Full Phase49 + Full Django Run `32583277418` SUCCESS,
+- Django migration: NONE.
 
 ## Canonical Runner
 `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.6`.
