@@ -1,0 +1,3 @@
+CI-only marker for Phase49.3I.4 Explorer Product Gallery + Source URL Routing final validation.
+Base Epic snapshot: f792fd01d643a7b3d071234a4237f2d6932679b3
+Do not merge this marker.
