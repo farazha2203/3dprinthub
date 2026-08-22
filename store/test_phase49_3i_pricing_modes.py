@@ -33,12 +33,25 @@ class Phase493IServerPricingTests(TestCase):
             source_payload={},
         )
 
-    def test_runtime_pricing_strategy_choices_include_range(self):
+    def test_range_semantic_value_round_trips_without_runtime_choice_mutation(self):
         field = ProductCatalogProfile._meta.get_field("pricing_strategy")
         choices = {code: label for code, label in field.choices}
         self.assertIn("fixed", choices)
-        self.assertIn("range", choices)
         self.assertIn("dynamic", choices)
+        # Choices stay migration-owned from 49.3F. Adding `range` here would make
+        # makemigrations create a metadata-only AlterField migration.
+        self.assertNotIn("range", choices)
+        profile = ProductCatalogProfile.objects.create(
+            product=self.product,
+            public_slug="cake-stand-49i-choice-free",
+            pricing_strategy="range",
+            price_mode="range",
+            price_min=200000,
+            price_max=500000,
+        )
+        profile.refresh_from_db()
+        self.assertEqual(profile.pricing_strategy, "range")
+        self.assertEqual(profile.price_mode, "range")
 
     def test_range_publish_uses_existing_consultation_contract(self):
         minimum, maximum = epic49_publish_options.apply_price_range(
