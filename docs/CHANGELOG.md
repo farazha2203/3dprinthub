@@ -2,6 +2,53 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I.6 Secure Credential Field Persistence
+
+### Windows QA Input
+- Catalog Center 49.3I.5 launched successfully.
+- owner confirmed Product URL vs Group/Category/Search/sub-branch routing is fixed locally.
+- owner reported FTP password, Bridge token and AI API key fields appeared empty again after update/restart.
+
+### Root Cause
+- secure credentials were already stored in Windows Credential Store and runtime accessors already fell back to that store.
+- UX87 masked fields did not hydrate from secure storage at startup.
+- mature secure Save handlers cleared the widgets after persisting credentials, so the UI looked as if credentials had disappeared.
+- recorded as `ERR-49-023`.
+
+### Fixed
+- added `catalog_center/app/phase49_3i_secret_persistence.py`.
+- startup restores FTP password and Bridge token from the secure store into masked fields when empty.
+- startup restores the selected AI provider key into the masked AI field.
+- successful Save rehydrates fields after mature handlers clear them.
+- changing AI Provider restores that Provider's stored key.
+- routine same-provider refresh does not overwrite an unsaved newly typed key.
+- explicit credential clear/delete remains authoritative.
+
+### Secret Safety
+- Windows Credential Store/environment remains the only credential source of truth.
+- no secret is written to SQLite, Git, source files, diagnostics or logs.
+- no DB schema or media change.
+- Production untouched.
+
+### Tests / Runner / CI
+- added `catalog_center/tests/test_epic49_phase49_3i_secret_persistence.py`.
+- runner upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.6 and remains ASCII-only for Windows PowerShell 5.1.
+- new runner marker: `PHASE49_3I_SECRET_PERSISTENCE=ENABLED`.
+- CI-only PR #51 closed without merge.
+- validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
+- marker head `fa8e4bcf5f7795983434f7cfd34c88918273bae6` not merged.
+- Phase49.3I Run `32583277412` — SUCCESS.
+- Phase49.3H Run `32583277584` — SUCCESS.
+- Phase49.3G Run `32583277406` — SUCCESS.
+- Full Phase49 + Full Django Run `32583277418` — SUCCESS.
+- Django migration: NONE.
+
+### Next Gate
+- Windows pull of current Epic + v49.3I.6 local gate.
+- verify masked credential persistence after Save/restart/provider switch.
+- recheck AI/FTP/Bridge live use, selection/open, routing, AI first-paint and pricing modes.
+- Local Publish remains blocked until those checks pass.
+
 ## 2026-08-22 — Phase49.3I.5 Selection Loop Guard + Compact Product Metadata
 
 ### Windows QA Evidence
@@ -227,7 +274,7 @@ Record meaningful changes only.
 - Phase49.3I Run `32570978818` — SUCCESS.
 - Phase49.3H Run `32570978800` — SUCCESS.
 - Phase49.3G Run `32570978829` — SUCCESS.
-- Full Phase49 + Full Django Run `32570978799` — SUCCESS.
+- Full Phase49/Django Run `32570978799` — SUCCESS.
 - validated runtime/base SHA: `451bcb9e264b847259a6ea0414550e4f80afa250`.
 
 ### Documentation
