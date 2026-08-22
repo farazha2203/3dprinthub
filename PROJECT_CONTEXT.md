@@ -31,7 +31,7 @@ Current Local QA hotfix:
 `49.3I.2 — real UX87 Products gallery + AI progress first-paint`
 
 Status:
-`GITHUB_UPDATED / CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
+`GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL RERUN PENDING`
 
 Active phase doc:
 `docs/phases/PHASE49_3I_DISCOVERY_REVIEW_PRODUCT_LIST_PRICING.md`
@@ -110,20 +110,20 @@ Current contract:
 - CI rejects non-ASCII runner bytes
 - PowerShell parse/chain/Production guard tested
 
-## 10) Latest GitHub Validation
-CI-only PR #46: CLOSED / NOT MERGED.
-Validated runtime base before documentation closure:
-`bf51fff1000bfcc6561712a243cb13e48001123c`
+## 10) Final GitHub Validation
+CI-only PR #47: `CLOSED / NOT MERGED`.
+Exact validated Epic runtime/docs base:
+`97674a82acc97e1a623b76084b60344cfa93142b`
 
 SUCCESS:
-- Phase49.3I `32573421461`
-- Phase49.3H `32573421431`
-- Phase49.3G `32573421523`
-- Full Phase49 + Full Django `32573421439`
+- Phase49.3I `32573779531`
+- Phase49.3H `32573779534`
+- Phase49.3G `32573779548`
+- Full Phase49 + Full Django `32573779528`
 - Full Django suite step PASS
 - no migration drift
 
-A final docs-closed validation is required after the current documentation commits; that final Epic HEAD is the only SHA to deliver to Windows.
+The PR marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged. Post-validation commits are documentation-only; runtime validated by PR #47 is unchanged.
 
 ## 11) Database / Safety
 Previously applied Windows migrations remain:
@@ -149,10 +149,9 @@ Before any Production action re-verify host path, branch/commit, worktree, venv,
 
 ## 14) Exact Next Gate
 ```text
-final docs-closed GitHub CI
-→ Windows clean-worktree check
+Windows clean-worktree check
 → git fetch --prune origin
-→ git pull --ff-only exact validated Epic HEAD
+→ git pull --ff-only current Epic HEAD
 → verify RUN_PHASE49_3I_LOCAL_GATE.ps1 v49.3I.2
 → run .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp
 → Products gallery image/name/edit-only QA + large preview
