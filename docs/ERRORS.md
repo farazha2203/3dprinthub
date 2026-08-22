@@ -122,6 +122,17 @@ Correct Solution: keep migration-owned 49.3F field choices unchanged; persist se
 Verification: replacement PR #42; dedicated 49.3I Run `32569551060` SUCCESS; Full Phase49/Django Run `32569551034` SUCCESS; `makemigrations --check --dry-run` reports no changes.
 Prevention Rule: changing Django field metadata such as `choices` is migration state even if the SQL column type does not change. If a semantic value is intentionally schema-free, do not mutate migration-owned model field metadata.
 
+### ERR-49-016 — Phase49.3I runner parse failure on Windows PowerShell 5.1
+Date: 2026-08-22
+Related Phase: 49.3I runner hotfix
+Environment: Windows PowerShell 5.1
+Symptoms: `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` failed before execution with multiple `Unexpected token ')'` parser errors around the manual QA lines; Persian labels appeared as mojibake such as `Ø...`.
+Verified Root Cause: the GitHub runner was stored as UTF-8 without BOM but contained Persian text and an em dash. Windows PowerShell 5.1 uses legacy ANSI decoding for BOM-less script files. The UTF-8 bytes were decoded as mojibake; the em-dash byte sequence produced a smart-quote character that PowerShell treats as a quote delimiter, terminating a string early and causing the later `)`/`<` parse errors.
+Failed Condition: CI parsed the Unicode text correctly under modern `pwsh` on Linux, so syntax-only CI did not reproduce the Windows PowerShell 5.1 encoding boundary.
+Correct Solution: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.1` is ASCII-only. Manual QA guidance in the runner uses ASCII text; Persian UI labels remain in project docs/UI. `.github/workflows/phase49-3i-ci.yml` now rejects any non-ASCII byte in the Windows runner before parsing it.
+Verification: CI-only PR #44 closed without merge; Phase49.3I Run `32570978818` SUCCESS; Phase49.3H Run `32570978800` SUCCESS; Phase49.3G Run `32570978829` SUCCESS; Full Phase49/Django Run `32570978799` SUCCESS.
+Prevention Rule: repository `.ps1` files intended for Windows PowerShell 5.1 must either have a validated BOM/encoding contract or remain ASCII-only. For canonical Local Gate runners, enforce ASCII-only bytes in CI so GitHub UTF-8 storage cannot become a legacy-decoding parse failure.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
