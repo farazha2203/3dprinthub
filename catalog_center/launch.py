@@ -67,6 +67,9 @@ def main() -> int:
         install_progress as install_phase49_3h_progress,
         install_workspace as install_phase49_3h_execution_workspace,
     )
+    from app.phase49_3i_pricing_modes import install as install_phase49_3i_pricing_workspace
+    from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
+    from app.phase49_3i_product_list import install as install_phase49_3i_product_list
     from app.epic49_server_slider_manager import ServerSliderManager
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
@@ -112,6 +115,9 @@ def main() -> int:
     install_phase49_3h_progress(phase49_3f_workspace_module)
     install_phase49_3h_image_workspace(ProductWorkspace)
     install_phase49_3h_execution_workspace(ProductWorkspace)
+    # 49.3I keeps the same composition-root rule. Pricing UI is extended only
+    # after the mature 49.3F/3G/3H workspace layers are complete.
+    install_phase49_3i_pricing_workspace(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -202,6 +208,14 @@ def main() -> int:
     print("EPIC49_3H_IMAGE_LIMIT_DEFAULT_10=ENABLED", flush=True)
     print("EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED", flush=True)
     print("EPIC49_3H_PERSISTED_IMAGE_CAP=ENABLED", flush=True)
+    print("EPIC49_3I_EXACT_SEARCH_URL=ENABLED", flush=True)
+    print("EPIC49_3I_DISCOVERY_REVIEW_QUEUE=ENABLED", flush=True)
+    print("EPIC49_3I_PREVIEW_ONE_IMAGE=ENABLED", flush=True)
+    print("EPIC49_3I_APPROVAL_BEFORE_FULL_FETCH=ENABLED", flush=True)
+    print("EPIC49_3I_ARCHIVE_BLOCK_DEDUPE=ENABLED", flush=True)
+    print("EPIC49_3I_SOURCE_TEXT_LATIN_SAFE=ENABLED", flush=True)
+    print("EPIC49_3I_LIGHTWEIGHT_PRODUCT_LIST=ENABLED", flush=True)
+    print("EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -240,6 +254,9 @@ def main() -> int:
     install_phase49_3d_ai_ui_cleanup(App87)
     install_phase49_3f_ai_shell(App87, app_module.DATA)
     install_phase49_3h_image_app(App87)
+    # 49.3I app-shell features compose only after the mature App87 class exists.
+    install_phase49_3i_discovery_review(App87)
+    install_phase49_3i_product_list(App87)
     app = App87()
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
