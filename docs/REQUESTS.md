@@ -5,21 +5,21 @@ Last Updated: 2026-08-22
 ## Phase49.3H
 
 ### REQ-49H-001 — Unified SEO execution visibility
-Status: GITHUB_UPDATED / CI SUCCESS / LOCAL QA PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
 Request:
 - every SEO-related button/action visibly shows execution/result/error state
 - provider/model/request/tokens/cost/log information where available
 - error/result remains recoverable and sanitized
 
 ### REQ-49H-002 — Per-product AI/SEO cost
-Status: GITHUB_UPDATED / CI SUCCESS / LOCAL QA PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
 Request:
 - record cost spent editing/SEOing each product
 - internal publish cost receipt
 - real provider cost only; never invent unsupported cost
 
 ### REQ-49H-003 — Controlled image intake
-Status: GITHUB_UPDATED / CI SUCCESS / LOCAL QA PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
 Request:
 - operator determines max images per product
 - default 10; hard max 20
@@ -29,34 +29,34 @@ Request:
 ## Phase49.3I
 
 ### REQ-49I-001 — Exact search URL discovery
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - supplied MakerWorld search/listing URL is the authoritative discovery source
 - example: `https://makerworld.com/en/search/models?keyword=cake+stand`
 - do not replace it with configured popular/download listings
 
 ### REQ-49I-002 — Two-stage candidate review before full fetch
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - Stage 1: only one thumbnail + product name/basic source identity
 - Stage 2: only approved candidates receive full content/spec/text + chosen number of images
 - image limit remains selectable 1..20
 
 ### REQ-49I-003 — Archive / not-needed candidate
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - selected candidate can be archived/not-needed without full extraction
 - blocked identity must prevent rediscovery until explicit restore
 - no destructive source deletion
 
 ### REQ-49I-004 — Duplicate guard
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - same source product must not be received twice
 - guard by source code + external source id + normalized URL
 
 ### REQ-49I-005 — Safe source text persistence
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - do not persist Chinese/CJK or other unexpected scraped script/font garbage
 - URLs/source identities remain exact
@@ -64,7 +64,7 @@ Request:
 - no historical mass rewrite
 
 ### REQ-49I-006 — Product page must be a real image gallery
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - main Products page must show products as large image gallery/cards, not a parameter-heavy table/editor
 - every product card shows only product image, product name and one Edit Product action
@@ -83,7 +83,7 @@ Fix:
 - batched thumbnail loading through Tk `after()`
 
 ### REQ-49I-007 — Three explicit pricing modes
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 1. exact/fixed
 2. range/min-max
@@ -92,7 +92,7 @@ Request:
 - preserve Dynamic Variant source of truth
 
 ### REQ-49I-008 — Full AI autofill must show progress immediately
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
+Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - clicking full AI autofill must not appear frozen before a progress screen opens
 - progress should be visible before preflight, then show connection/send/receive/save stages
@@ -109,16 +109,15 @@ Fix:
 - automatic handoff to existing 49.3H progress/result/error/cost stack
 - no duplicate Provider/Model/network/request implementation
 
-## Phase49.3I Latest Validation
-Local QA regression runtime base before docs closure: `bf51fff1000bfcc6561712a243cb13e48001123c`.
-CI-only PR #46: CLOSED / NOT MERGED.
-- Phase49.3I Run `32573421461` — SUCCESS
-- Phase49.3H Run `32573421431` — SUCCESS
-- Phase49.3G Run `32573421523` — SUCCESS
-- Full Phase49 + Full Django Run `32573421439` — SUCCESS
-- Full Django suite step PASS
+## Phase49.3I Final GitHub Validation
+Exact validated Epic base: `97674a82acc97e1a623b76084b60344cfa93142b`.
+CI-only PR #47: CLOSED / NOT MERGED.
+- Phase49.3I Run `32573779531` — SUCCESS
+- Phase49.3H Run `32573779534` — SUCCESS
+- Phase49.3G Run `32573779548` — SUCCESS
+- Full Phase49 + Full Django Run `32573779528` — SUCCESS
 
-Canonical runner now: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`, ASCII-only for Windows PowerShell 5.1.
+Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.2`, ASCII-only for Windows PowerShell 5.1.
 
 Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
