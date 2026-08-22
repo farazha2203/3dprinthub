@@ -18,82 +18,101 @@ Unified 3DPrintHub catalog workflow from Windows discovery/review/edit/AI/SEO/pr
 - [x] 49.3F product intelligence / dynamic pricing / AI UX
 - [x] 49.3F runtime redaction + 49.3F.1 native capture hotfix
 - [x] 49.3G workspace usability + AI provenance — GitHub CI complete
-- [x] 49.3H SEO Execution Console + AI Cost Ledger + Controlled Image Acquisition — GitHub CI SUCCESS; Windows Local QA pending
-- [x] 49.3I Discovery Review Queue + Product List Simplification + Explicit Pricing Modes — GitHub CI SUCCESS
-- [x] 49.3I.1 Windows PowerShell 5.1 Runner Encoding Hotfix — GitHub CI SUCCESS; Windows rerun pending
+- [x] 49.3H SEO Execution Console + AI Cost Ledger + Controlled Image Acquisition — GitHub CI SUCCESS
+- [x] 49.3I Discovery Review Queue + Product Gallery + Explicit Pricing Modes — GitHub CI SUCCESS
+- [x] 49.3I.1 Windows PowerShell 5.1 Runner Encoding Hotfix — GitHub CI SUCCESS
+- [x] 49.3I.2 Local QA Regression Hotfix: real UX87 product gallery + AI first-paint — GitHub CI SUCCESS; Windows rerun pending
 
 ## Phase49.3I Delivered Contract
-- operator-supplied search/listing URL is authoritative; configured default listing cannot silently replace it
+- operator-supplied search/listing URL is authoritative
 - discovery creates a lightweight review queue first: one thumbnail + title + source identity/URL
 - no full product extraction before operator approval
-- approved candidates full-fetch with operator image cap `1..20` (default 10)
+- approved candidates full-fetch with image cap `1..20` (default 10)
 - archive/not-needed candidates become blocked without full extraction
 - duplicate/blocked source identity is fail-closed before full fetch
-- scraped source text is normalized to Latin/English-safe text before persistence; URLs remain exact; Persian editorial fields remain Persian
-- Products/work queue is lightweight and detailed editing routes to Product Workspace
-- pricing modes are explicit and independent: Fixed / Range / Formula(Dynamic)
+- source text is normalized before persistence while URLs and Persian editorial `_fa` fields remain protected
+- pricing modes are independent: Fixed / Range / Formula(Dynamic)
 
-## Runner Hotfix Contract
-Observed Windows failure:
-- GitHub sync to validated `91f39681...` succeeded.
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` then failed at parse time under Windows PowerShell 5.1.
-- Persian text appeared as mojibake and later manual-QA lines produced `Unexpected token ')'`.
+## Products Gallery Contract — 49.3I.2
+- real UX87 composition boundary is `_modernize_products_page`
+- complete legacy table/editor pane remains alive only for compatibility and is hidden from the operator surface
+- Products page is a responsive scrollable card gallery
+- each card exposes only: large local image, product name, Edit Product action
+- price, title fields, status fields and other editor parameters are not displayed on the Products list surface
+- click product image opens a large local preview
+- detailed editing routes to Product Workspace
+- thumbnails are local-only and loaded in small Tk `after()` batches
 
-Root Cause:
-- BOM-less UTF-8 PowerShell script contained Persian text and an em dash.
-- Windows PowerShell 5.1 decoded the file using legacy ANSI semantics.
-- the em-dash byte sequence became mojibake containing a smart quote treated as a PowerShell quote delimiter.
+## AI First-Paint Contract — 49.3I.2
+- full AI autofill paints a startup progress window before synchronous save/preflight preparation
+- existing 49.3F AI flow begins after a short Tk event-loop yield
+- startup window hands off to the existing 49.3H AI progress window
+- existing Provider/Model/network worker/result/error drawer/cost ledger/audit remain unchanged
+- no parallel AI request implementation is introduced
 
-Permanent fix:
-- canonical runner version `49.3I.1` is ASCII-only.
-- CI reads raw bytes and rejects any non-ASCII byte in this Windows runner.
-- CI marker: `ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1`.
-- no database/runtime/Production behavior changed.
+## Latest Regression Validation
+CI-only PR #46: CLOSED / NOT MERGED.
+Runtime base before docs closure: `bf51fff1000bfcc6561712a243cb13e48001123c`.
 
-Hotfix validation:
-- CI-only PR #44 closed / not merged
-- Phase49.3I Run `32570978818` — SUCCESS
-- Phase49.3H Run `32570978800` — SUCCESS
-- Phase49.3G Run `32570978829` — SUCCESS
-- Full Phase49 + Full Django Run `32570978799` — SUCCESS
-- runtime/base SHA `451bcb9e264b847259a6ea0414550e4f80afa250`
+SUCCESS:
+- Phase49.3I Run `32573421461`
+- Phase49.3H Run `32573421431`
+- Phase49.3G Run `32573421523`
+- Full Phase49 + Full Django Run `32573421439`
+- Full Django suite step PASS
+
+Canonical regressions:
+- `ERR-49-017`: product-list patch targeted a bypassed `_products_ui` boundary.
+- `ERR-49-018`: AI progress was instantiated after synchronous preflight.
+
+## Runner Contract
+Canonical Windows runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.2`.
+- ASCII-only for Windows PowerShell 5.1
+- raw-byte CI guard remains mandatory
+- chains Phase49.3H and prior gates
+- includes Product gallery and AI first-paint regressions
+- Production action forbidden
 
 ## Pricing Contract
 1. `fixed`: exact operator price, e.g. 1,200,000 toman.
-2. `range`: operator min/max, e.g. 200,000–500,000 toman; non-final/consultation behavior remains the existing range contract.
-3. `dynamic`: formula from material grams/rates + print time + supervision/other configured charges using the existing Variant pricing source of truth.
+2. `range`: operator min/max, e.g. 200,000–500,000 toman; non-final/consultation behavior.
+3. `dynamic`: formula from material grams/rates + print time + supervision/other configured charges using existing Variant pricing source of truth.
 
 ## Must Not Regress
-- Phase49.3H SEO execution result/error console and AI cost ledger
+- 49.3H SEO result/error console and AI cost ledger
+- immediate AI progress feedback
 - image intake default 10 / hard max 20
 - selected-image-only + text-only image SEO
-- manual override/provenance rules
+- AI provenance/manual override rules
+- Product page gallery list contract: image/name/edit only
 - dynamic pricing source of truth in ProductVariant
 - Local vs Production publish separation
 - revision/idempotency guards
 - Persian content integrity
 - Hero/Product sync contracts
 - secure secret handling
-- Windows PowerShell 5.1-safe canonical Local Gate runner
+- Windows PowerShell 5.1-safe Local Gate runner
 
 ## Remaining Gates Before Production
-1. final docs-closed GitHub hotfix validation
-2. Windows `git status --short` safety check
-3. Windows `git fetch --prune` + `git pull --ff-only`
-4. verify `RUN_PHASE49_3I_LOCAL_GATE.ps1` version `49.3I.1`
-5. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
-6. Manual Visual/Data QA using the MakerWorld `cake+stand` search URL
-7. approve one candidate and archive one candidate; verify no duplicate/full-fetch for blocked item
-8. validate image cap and all 3 pricing modes
-9. real LOCAL PUBLISH ONLY
-10. Local Django E2E
-11. explicit user approval
-12. verified production backup/deploy/migrate/collectstatic/restart/smoke
+1. docs-closed final GitHub validation
+2. Windows clean-worktree safety check
+3. `git fetch --prune` + `git pull --ff-only`
+4. verify runner version `49.3I.2`
+5. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
+6. verify Products gallery images/name/edit-only + large image preview
+7. verify full AI autofill immediate startup progress → mature 49.3H progress/result drawer
+8. MakerWorld `cake+stand` Preview/Approve/Archive/Dedupe QA
+9. validate image cap and Fixed / Range / Formula modes
+10. real LOCAL PUBLISH ONLY
+11. Local Django E2E
+12. explicit user approval
+13. only then verified Production backup/deploy/restart/smoke
 
 ## Deferred / Separate
 - `/api/v1/catalog/sitemap/` local 404 root cause
 - CKEditor4 debt
 - Production Redis/realtime architecture warning
+- Pillow `Image.getdata()` deprecation
 
 ## Next Recommended Task
-After final GitHub validation of the documentation-closed runner hotfix, Windows pulls the exact validated Epic HEAD and reruns `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Production remains out of scope until Local approval.
+After docs-closed GitHub validation, Windows pulls the exact validated Epic HEAD and reruns `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Production remains out of scope until Local approval.
