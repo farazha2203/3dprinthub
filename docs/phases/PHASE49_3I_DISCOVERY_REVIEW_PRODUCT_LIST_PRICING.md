@@ -1,87 +1,152 @@
 # Phase49.3I — Discovery Review Queue + Product List Simplification + Explicit Pricing Modes
 
-Status: IN_PROGRESS
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
 Approved: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
 Phase49.3H validated baseline: `e145d1e11619e36bd766788083bee59899a80cbb`
+Phase49.3I runtime validated SHA: `9d462f1ec12b00727c96acf9d4f59b4723d676b4`
 Production: UNTOUCHED / NOT APPROVED
 
 ## Why
-The current classic discovery path immediately performs full extraction after URL discovery. For MakerWorld `mode=search`, it also ignores an operator-supplied search URL and scans the configured first listing instead. This can produce unrelated products and spends time/bandwidth before human review.
+The previous classic discovery path immediately performed full extraction after URL discovery. For MakerWorld `mode=search`, it also ignored an operator-supplied search URL and scanned the configured first listing instead. This could produce unrelated products and spend time/bandwidth before human review.
 
-The main products page still duplicates a large editor although Epic49 Product Workspace is already the canonical editing surface. Pricing also visually conflates operator-entered price range with formula/dynamic calculation.
+The main products page also duplicated a large editor although Epic49 Product Workspace was already the canonical editing surface. Pricing visually conflated operator-entered price range with formula/dynamic calculation.
 
-## Requested Delta
+## Implemented Delta
 
 ### A. Exact Search / Listing Contract
-- If `seed` is an explicit HTTP(S) listing/search URL, use it as the authoritative discovery page.
-- For MakerWorld search `https://makerworld.com/en/search/models?keyword=cake+stand`, do not replace it with configured popular/download listings.
-- Extract only product/model links matching the source model pattern.
-- Deduplicate by `(source_code, external_id)` and normalized source URL.
+- explicit HTTP(S) listing/search `seed` is authoritative
+- MakerWorld example `https://makerworld.com/en/search/models?keyword=cake+stand` is not replaced by configured popular/download listings
+- discovery extracts model/product candidates matching the source model pattern
+- candidates deduplicate by source identity and normalized URL
+- regression fixtures include MakerWorld IDs `2834255` and `2845731`
 
 ### B. Two-Stage Acquisition
 Stage 1 — Preview:
 - discover candidate model links
-- capture one representative thumbnail from the listing card when available
+- capture one representative thumbnail when available
 - capture source title/basic identity only
 - persist local review candidate state, not a full product
-- do not fetch all product text/specs/images/files yet
+- do not fetch full product text/specs/images/files
 
 Stage 2 — Approved Full Fetch:
 - operator selects candidate(s)
 - operator chooses image limit `1..20` (default 10)
 - full extraction runs only for approved candidates
-- 49.3H image cap applies to persisted/selected/downloaded images
+- Phase49.3H image cap applies to persisted/selected/downloaded images
 - source row is upserted once and candidate becomes imported/completed
 
 Archive / Not Needed:
 - no full extraction
-- create/preserve a minimal blocked identity record sufficient for existing blocked/dedup guards
-- candidate state becomes blocked/not_needed
+- create/preserve a minimal blocked identity sufficient for existing blocked/dedup guards
+- candidate becomes blocked/not-needed
 - existing restore workflow remains available
 
 ### C. Source Text Safety
-Apply only to scraped/source textual payloads before DB persistence:
+Applied to scraped/source textual payloads before persistence:
 - Unicode NFKC normalization
-- keep Latin-script text, ASCII/common punctuation, digits and whitespace
-- remove CJK/Cyrillic/other unexpected script text and emoji/control garbage
-- preserve URLs/identifiers exactly
-- preserve Persian editorial/AI `_fa` fields; this filter does not apply to those fields
-- recursively sanitize textual values in source snapshots/specs/tags where safe, while leaving URL-like strings untouched
-- do not mass-rewrite historical rows in this phase
+- Latin-script text, ASCII/common punctuation, digits and useful technical symbols remain
+- CJK/Cyrillic/unexpected scripts, emoji and control garbage are removed from source text
+- URLs/identifiers remain exact
+- Persian editorial/AI `_fa` fields are not filtered
+- no destructive historical mass rewrite
 
 ### D. Lightweight Main Products Page
-- keep existing database/workflow/product tree and actions internally for compatibility
-- hide the embedded giant right-side editor on the main list page
-- list focuses on product thumbnail + display name
-- one clear `صفحه محصول / ویرایش کامل` action opens the canonical Product Workspace
-- double-click still opens Product Workspace
-- do not remove Product Workspace fields/features
+- mature product tree/database/workflow remains intact for compatibility
+- embedded large right-side editor is hidden from the work-list surface
+- list focuses on thumbnail + display name
+- one clear `صفحه محصول / ویرایش کامل` action opens canonical Product Workspace
+- double-click continues to open Product Workspace
+- detailed Product Workspace fields/features are preserved
 
 ### E. Explicit Pricing Modes
-Expose three separate modes in Product Workspace:
-1. `fixed` — exact operator amount. `price_min == price_max`, final price true.
-2. `range` — operator min/max. Existing range/consultation contract is used; not a formula calculation.
-3. `dynamic` — existing formula/variant engine based on selected materials, grams, print time, supervision and configured rates.
+Product Workspace exposes three independent business modes:
+1. `fixed` — exact operator amount; min=max; final price.
+2. `range` — operator min/max; existing range/consultation contract; not formula calculation.
+3. `dynamic` — existing formula/variant engine based on materials, grams, print time, supervision and configured rates.
 
-Server/Desktop behavior:
-- add `range` to pricing strategy normalization/choices without a new Django migration
-- preserve `ProductCatalogProfile.price_mode=range` for range products
-- `range` delegates to the mature base price-range importer so consultation/range notes remain correct
+Server behavior:
+- `range` is persisted as a semantic value in the existing `pricing_strategy` CharField
+- ProductCatalogProfile uses `price_mode=range`
+- range delegates to mature base price-range importer so consultation/range notes remain correct
 - only `dynamic` invokes the formula engine
-- fixed and dynamic regressions remain covered
+- no new Django migration
 
-## Touched Surfaces
-Expected additive/minimal surfaces:
-- new `catalog_center/app/phase49_3i_discovery_review.py`
-- new `catalog_center/app/phase49_3i_product_list.py`
-- new `catalog_center/app/phase49_3i_pricing_modes.py`
-- `catalog_center/launch.py` composition only
-- `store/phase49_3f_pricing.py` small range normalization/publish compatibility patch if required by tests
-- tests / runner / CI / docs
+## Runtime Files
+- `catalog_center/app/phase49_3i_discovery_review.py`
+- `catalog_center/app/phase49_3i_source_safety.py`
+- `catalog_center/app/phase49_3i_product_list.py`
+- `catalog_center/app/phase49_3i_pricing_modes.py`
+- `store/phase49_3i_pricing_modes.py`
+- `catalog_center/launch.py`
+- `store/apps.py`
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1`
+- `.github/workflows/phase49-3i-ci.yml`
+
+## Root Cause / CI Incident
+Initial CI-only PR #41 found a real migration-contract bug after the new Catalog tests had passed.
+
+Symptom:
+`makemigrations --check --dry-run` proposed:
+`store/migrations/0034_alter_productcatalogprofile_pricing_strategy.py`
+
+Root Cause:
+- first implementation mutated `ProductCatalogProfile.pricing_strategy` runtime `choices` to add `range`
+- Django `choices` are model migration-state metadata
+- therefore a supposedly runtime-only choice change produced an `AlterField` migration proposal
+
+Failed assumption:
+- treating runtime `field.choices` mutation as schema/migration neutral
+
+Correct Fix:
+- do not mutate migration-owned choices
+- existing `CharField(max_length=20)` already stores the semantic value `range`
+- Windows is the operator UI exposing Fixed/Range/Formula
+- server profile sync writes `pricing_strategy=range` and `price_mode=range` without changing Django field metadata
+
+Prevention:
+- semantic schema-free values must not be implemented by mutating migration-owned Django field metadata
+
+## Database Safety
+- Django migration for Phase49.3I: NONE
+- `makemigrations --check --dry-run`: PASS / no changes after fix
+- Candidate review table: local Catalog SQLite only, additive `CREATE TABLE IF NOT EXISTS`
+- no reset/drop/truncate/delete
+- historical rows/media are not mass rewritten
+- Production database untouched
+
+## GitHub Verification
+Final CI-only PR #42 was closed without merge.
+
+Validated runtime/base SHA:
+`9d462f1ec12b00727c96acf9d4f59b4723d676b4`
+
+Runs:
+- Dedicated Phase49.3I: `32569551060` — SUCCESS
+- Phase49.3H regression: `32569551053` — SUCCESS
+- Phase49.3G regression: `32569551048` — SUCCESS
+- Full Phase49 + Full Django: `32569551034` — SUCCESS
+
+Dedicated Phase49.3I coverage includes:
+- PowerShell runner syntax/chain/Production guard
+- compile of all new surfaces
+- exact MakerWorld search target regression
+- preview/no-full-fetch contract
+- archive/block/dedupe contract
+- source-script sanitation + URL/Persian preservation
+- lightweight product list contract
+- Fixed/Range/Dynamic Windows pricing contract
+- Django range/consultation profile contract
+- `makemigrations --check --dry-run`
+- launcher markers
+- no-destructive-schema assertion
+- 49.3H image-limit regression
+- 49.3G provenance regression
+
+Full Phase49 CI additionally passed mature unified behavioral tests, Windows Catalog Epic49 tests and the full Django suite.
 
 ## Must Not Touch / Regress
-- Production source or data
+- Production source/data
 - Phase49.3H result/error console and cost ledger
 - image default 10 / hard max 20
 - selected-image text-only AI privacy
@@ -92,26 +157,19 @@ Expected additive/minimal surfaces:
 - Persian content guard
 - historical media/catalog data
 
-## Database Safety
-- Django migration expected: NONE.
-- Candidate review table is local Catalog SQLite only, `CREATE TABLE IF NOT EXISTS` additive.
-- No destructive migration/reset/delete/truncate.
-- Blocked/archive keeps identity record instead of deleting data.
-
-## Regression / Acceptance Tests
-1. Search mode with explicit MakerWorld seed uses seed URL, not `listing[:1]`.
-2. MakerWorld candidate fixture includes model IDs `2834255` and `2845731` and deduplicates profile/hash variants.
-3. Preview captures at most one thumbnail and performs no full extraction.
-4. Approve invokes full extractor exactly once with selected limit 1..20.
-5. Archive invokes no full extractor and adds blocked identity.
-6. Existing product/blocked identity prevents full fetch on rediscovery.
-7. Source sanitizer removes CJK/emoji/unexpected script from source fields, preserves English/digits/punctuation and URLs; Persian `_fa` payload is unchanged.
-8. Main products UI has lightweight list + Product Page action; legacy editor remains hidden but available to compatibility code.
-9. pricing strategy fixed/range/dynamic round-trip.
-10. range min/max remains range/consultation; dynamic uses formula engine; fixed remains exact.
-11. 49.3H image cap + selected-image privacy regressions.
-12. Phase49.3G provenance regressions.
-13. Full Phase49 + Full Django suite.
+## Remaining Acceptance Gates
+1. Windows clean-worktree verification
+2. `git fetch --prune` + `git pull --ff-only` from the Epic branch
+3. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`
+4. manual MakerWorld `cake+stand` preview QA
+5. approve one candidate with chosen image limit
+6. archive one candidate and verify blocked/no-full-fetch
+7. repeat search and verify imported/blocked duplicate guard
+8. validate lightweight Products list and Product Workspace routing
+9. validate Fixed / Range / Formula pricing modes
+10. one LOCAL PUBLISH ONLY + Local Django E2E
+11. explicit owner approval
+12. only then Production plan/deploy
 
 ## Delivery Gate
-GitHub implementation -> dedicated CI + Full Phase49 regression -> Windows `git pull --ff-only` -> Phase49.3I runner -> manual MakerWorld cake-stand candidate QA -> approve/archive/duplicate/image-limit/pricing QA -> one LOCAL PUBLISH ONLY -> Local Django E2E -> explicit owner approval -> Production plan.
+GitHub implementation + CI are complete. Next gate is Windows Local testing from GitHub. Production remains forbidden until Local approval.
