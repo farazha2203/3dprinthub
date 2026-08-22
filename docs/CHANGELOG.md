@@ -2,6 +2,73 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I.5 Selection Loop Guard + Compact Product Metadata
+
+### Windows QA Evidence
+- Windows pulled Phase49.3I.4 to `7330ad6d79d8061998b1fa143051173b558cefbd`.
+- repository-owned local gate completed successfully.
+- 137 Catalog Center tests PASS.
+- 419 Django tests PASS with 2 skipped.
+- no new migration was proposed/planned.
+- Production remained untouched.
+- Explorer thumbnail/view rendering was visually corrected.
+
+### Fixed
+- product selection/open no longer creates a hidden Treeview selection feedback loop.
+- Root Cause `ERR-49-022`: Explorer card called `selection_set()`, mature `<<TreeviewSelect>>` invoked `load_product`, and compatibility `load_product` wrote the selection again.
+- card → hidden Treeview sync is now one-way and re-entrancy guarded.
+- `selection_set()` runs only when the hidden Treeview selection differs.
+- Treeview `load_product()` updates current/card state only and never writes selection back.
+- Product Open has a repeat-click guard and yields one Tk frame before Product Workspace construction.
+
+### Added / Refined
+- compact operator metadata on each product card:
+  - Product ID,
+  - product/workflow state,
+  - source,
+  - image count,
+  - added date,
+  - publish state.
+- Persian operator filters including Ready, Publish Queue and Published.
+- Persian sorts including Newest, Oldest and Last Updated.
+- old raw filter/sort bar hidden while mature DB/filter backend remains in use.
+- dedicated fake-Treeview regression test that fires the selection callback directly from `selection_set()` and proves one selection write only.
+
+### Preserved
+- Explorer Extra Large/Large/Medium/Small/List views.
+- persistent view preference.
+- Ctrl/Shift multi-select and context menu.
+- safe Remove From Publish Queue semantics only: `upload_ready=0`, `workflow_status=review`.
+- Product Workspace remains the detailed editor.
+- Product-vs-Group URL routing by source `model_url_pattern`.
+- Preview → Approve → Full Fetch.
+- AI progress/result/error/cost behavior.
+- image default 10 / hard max 20.
+- Fixed / Range / Formula pricing independence.
+
+### Runner / CI
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped to `49.3I.5` and remains ASCII-only for Windows PowerShell 5.1.
+- new runner markers protect selection-loop guard, compact metadata and friendly filter/sort behavior.
+- CI-only PR #50 closed without merge.
+- validated Epic runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
+- marker head `57813f47f649bb2c415aa0fae1481f4a2561ce1d` not merged.
+- Phase49.3I Run `32580222694` — SUCCESS.
+- Phase49.3H Run `32580222686` — SUCCESS.
+- Phase49.3G Run `32580222682` — SUCCESS.
+- Full Phase49 + Full Django Run `32580222683` — SUCCESS.
+
+### Database / Production
+- Django migration: NONE.
+- Catalog schema migration: NONE.
+- no reset/drop/truncate/data rewrite.
+- no media rewrite/delete.
+- Production untouched / not approved.
+
+### Acceptance State
+- GitHub implementation and final CI complete.
+- Windows 49.3I.5 pull/interaction/metadata QA pending.
+- Local Publish remains blocked until that QA passes.
+
 ## 2026-08-22 — Phase49.3I.4 Explorer Product Gallery + Source URL Routing
 
 ### Fixed
