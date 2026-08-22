@@ -5,12 +5,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.2"
+$RunnerVersion = "49.3I.3"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
 $BaseGate = Join-Path $Root "RUN_PHASE49_3H_LOCAL_GATE.ps1"
+$ExpectedBranch = "epic/phase49-unified-product-slider-sync"
+$RemoteRef = "origin/$ExpectedBranch"
 
 function Step([string]$Title) {
     Write-Host ""
@@ -63,7 +65,7 @@ Step "00. PHASE49.3I WINDOWS LOCAL GATE"
 Write-Host "Runner     = $RunnerVersion"
 Write-Host "Encoding   = $RunnerEncodingContract"
 Write-Host "Project    = $Root"
-Write-Host "Catalog    = $Catalog"
+Write-Host "Branch     = $ExpectedBranch"
 Write-Host "Production = NOT TOUCHED" -ForegroundColor Yellow
 
 if (-not (Test-Path $Root)) { Fail "Project root not found: $Root" }
@@ -71,7 +73,38 @@ if (-not (Test-Path $Catalog)) { Fail "Catalog Center not found: $Catalog" }
 if (-not (Test-Path $Py)) { Fail "Virtualenv Python not found: $Py" }
 if (-not (Test-Path $BaseGate)) { Fail "Phase49.3H base gate not found: $BaseGate" }
 
-Step "01. VERIFY OPERATIONAL DOCUMENTATION"
+Step "01. VERIFY FETCHED GITHUB SNAPSHOT"
+Push-Location $Root
+try {
+    $dirtyBefore = @(git status --porcelain --untracked-files=all)
+    if ($dirtyBefore.Count -gt 0) {
+        $dirtyBefore | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
+        Fail "Local worktree is not clean. Inspect it; do not reset, stash, delete or overwrite as a shortcut."
+    }
+
+    $branch = (Invoke-NativeCapture -File "git" -Arguments @("branch", "--show-current")).Trim()
+    if ($branch -ne $ExpectedBranch) {
+        Fail "Wrong branch. Expected $ExpectedBranch but found $branch."
+    }
+
+    Run-Native -File "git" -Arguments @("fetch", "--prune", "origin")
+
+    $localHead = (Invoke-NativeCapture -File "git" -Arguments @("rev-parse", "HEAD")).Trim()
+    $remoteHead = (Invoke-NativeCapture -File "git" -Arguments @("rev-parse", $RemoteRef)).Trim()
+
+    Write-Host "LOCAL_HEAD  = $localHead"
+    Write-Host "REMOTE_HEAD = $remoteHead"
+
+    if ($localHead -ne $remoteHead) {
+        Fail "Local HEAD does not match the fetched GitHub snapshot. Run: git pull --ff-only origin $ExpectedBranch ; then rerun this repository gate."
+    }
+
+    Write-Host "PHASE49_3I_GIT_SNAPSHOT=OK" -ForegroundColor Green
+} finally {
+    Pop-Location
+}
+
+Step "02. VERIFY OPERATIONAL DOCUMENTATION"
 $requiredDocs = @(
     "AGENTS.md",
     "PROJECT_CONTEXT.md",
@@ -91,13 +124,13 @@ foreach ($relative in $requiredDocs) {
 }
 Write-Host "PHASE49_3I_DOCS=OK" -ForegroundColor Green
 
-Step "02. RUN FULL PHASE49.3H BASE GATE"
+Step "03. RUN FULL PHASE49.3H BASE GATE"
 & $BaseGate
 if ($LASTEXITCODE -ne 0) {
     Fail "Phase49.3H base gate failed. Phase49.3I stopped."
 }
 
-Step "03. VERIFY PHASE49.3I SOURCE EXISTS"
+Step "04. VERIFY PHASE49.3I SOURCE EXISTS"
 $requiredFiles = @(
     "catalog_center\app\phase49_3i_discovery_review.py",
     "catalog_center\app\phase49_3i_source_safety.py",
@@ -119,7 +152,7 @@ foreach ($relative in $requiredFiles) {
 }
 Write-Host "PHASE49_3I_SOURCE_FILES=OK" -ForegroundColor Green
 
-Step "04. COMPILE PHASE49.3I"
+Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
 try {
     Run-Native -File $Py -Arguments @(
@@ -137,7 +170,7 @@ try {
     Pop-Location
 }
 
-Step "05. PHASE49.3I CATALOG CENTER TESTS"
+Step "06. PHASE49.3I CATALOG CENTER TESTS"
 Push-Location $Catalog
 try {
     Run-Native -File $Py -Arguments @(
@@ -156,7 +189,7 @@ try {
     Pop-Location
 }
 
-Step "06. PHASE49.3I DJANGO PRICING + MIGRATION CONTRACT"
+Step "07. PHASE49.3I DJANGO PRICING + MIGRATION CONTRACT"
 Push-Location $Root
 try {
     Run-Native -File $Py -Arguments @("manage.py", "check")
@@ -175,7 +208,7 @@ try {
     Pop-Location
 }
 
-Step "07. VERIFY PHASE49.3I LAUNCH MARKERS"
+Step "08. VERIFY PHASE49.3I LAUNCH MARKERS"
 Push-Location $Catalog
 try {
     $verifyText = Invoke-NativeCapture -File $Py -Arguments @("launch.py", "--verify-only")
@@ -208,7 +241,7 @@ try {
     Pop-Location
 }
 
-Step "08. FINAL GIT SAFETY CHECK"
+Step "09. FINAL GIT SAFETY CHECK"
 Push-Location $Root
 try {
     $dirty = @(git status --porcelain --untracked-files=all)
@@ -222,7 +255,7 @@ try {
     Pop-Location
 }
 
-Step "09. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
+Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
@@ -243,7 +276,7 @@ Write-Host "11) Pricing Fixed, Range, and Formula must remain independent."
 Write-Host "12) Do LOCAL PUBLISH ONLY after visual/data QA. Do not use Production Publish."
 
 if ($LaunchApp) {
-    Step "10. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
+    Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
     Start-Process -FilePath $Py -ArgumentList @("launch.py") -WorkingDirectory $Catalog
     Write-Host "Catalog Center started." -ForegroundColor Green
 }
