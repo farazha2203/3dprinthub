@@ -18,13 +18,19 @@ class Phase493HSEOExecutionTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.db = Database(Path(self.temp.name) / "catalog.sqlite3")
         diagnostics.configure(self.db)
-        self.product_id = self.db.upsert_product({
+        self.db.upsert_product({
             "source_code": "test",
             "external_id": "seo-1",
             "source_url": "https://example.test/product/seo-1",
             "source_title": "SEO Test",
             "title_fa": "محصول تست",
         })
+        row = self.db.conn.execute(
+            "SELECT id FROM products WHERE source_code=? AND external_id=?",
+            ("test", "seo-1"),
+        ).fetchone()
+        self.assertIsNotNone(row)
+        self.product_id = int(row["id"])
 
     def tearDown(self):
         self.db.close()
