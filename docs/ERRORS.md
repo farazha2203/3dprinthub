@@ -92,23 +92,35 @@ Root Cause: test asserted one formatting representation instead of the security 
 Correct Solution: assert original secret is absent and Authorization is masked; do not weaken runtime redaction.
 Prevention Rule: security tests assert semantic invariants plus leak absence, not incidental mask formatting.
 
-## ACTIVE ROOT CAUSE — Phase49.3I
-
 ### ERR-49-013 — Explicit MakerWorld search URL ignored in search mode
 Date: 2026-08-22
 Environment: Windows Catalog Center discovery
+Related Phase: 49.3I
 Symptoms: owner supplied `https://makerworld.com/en/search/models?keyword=cake+stand` but unrelated products were collected.
-Verified Root Cause: `main.py::_scan_worker` selects `target_templates=listing[:1]` for `mode == "search"`, so the explicit `seed` search URL is ignored and the configured default MakerWorld listing is scanned instead.
-Correct Solution: explicit HTTP(S) seed/listing URL is authoritative. Discovery must first create review candidates; full product extraction occurs only after operator approval.
+Verified Root Cause: `main.py::_scan_worker` selected `target_templates=listing[:1]` for `mode == "search"`, so the explicit `seed` search URL was ignored and the configured default MakerWorld listing was scanned instead.
+Correct Solution: explicit HTTP(S) seed/listing URL is authoritative. Discovery first creates review candidates; full product extraction occurs only after operator approval.
+Verification: Phase49.3I dedicated CI Run `32569551060` + full Phase49 Run `32569551034`.
 Prevention Rule: never silently substitute a configured discovery URL when an operator supplied an explicit valid URL. Regression-test exact target selection.
 
-### ERR-49-014 — Discovery performs full extraction before human review
+### ERR-49-014 — Discovery performed full extraction before human review
 Date: 2026-08-22
 Related Phase: 49.3I
-Symptoms: discovery immediately downloads/parses full products and many images, wasting time and producing unwanted catalog rows.
-Verified Root Cause: after URL discovery current `_scan_worker` immediately iterates `pending_urls` and calls `collect_classic_exact`/full parse.
-Correct Solution: split discovery into Preview Candidate and Approved Full Fetch stages.
+Symptoms: discovery immediately downloaded/parsed full products and many images, wasting time and producing unwanted catalog rows.
+Verified Root Cause: after URL discovery `_scan_worker` immediately iterated `pending_urls` and called full collection/parse.
+Correct Solution: split discovery into Preview Candidate and Approved Full Fetch states; archive/not-needed creates only blocked identity.
+Verification: Phase49.3I dedicated CI Run `32569551060`.
 Prevention Rule: discovery and acquisition are separate state transitions; preview must not call the full extractor.
+
+### ERR-49-015 — Runtime pricing choices created a phantom Django migration
+Date: 2026-08-22
+Related Phase: 49.3I
+Environment: GitHub CI / Django migration contract
+Symptoms: initial Phase49.3I PR #41 passed Catalog tests but `makemigrations --check --dry-run` proposed `store/migrations/0034_alter_productcatalogprofile_pricing_strategy.py`.
+Root Cause: the first range implementation mutated `ProductCatalogProfile.pricing_strategy` runtime `choices`. Django field choices are migration state metadata, so the apparently runtime-only change was detected as `AlterField`.
+Failed Attempt: treating a runtime `field.choices` mutation as schema/migration-neutral.
+Correct Solution: keep migration-owned 49.3F field choices unchanged; persist semantic raw value `range` in the existing `CharField(max_length=20)`; Windows exposes the three operator modes and server sync stores `pricing_strategy=range` + `price_mode=range` without changing field metadata.
+Verification: replacement PR #42; dedicated 49.3I Run `32569551060` SUCCESS; Full Phase49/Django Run `32569551034` SUCCESS; `makemigrations --check --dry-run` reports no changes.
+Prevention Rule: changing Django field metadata such as `choices` is migration state even if the SQL column type does not change. If a semantic value is intentionally schema-free, do not mutate migration-owned model field metadata.
 
 ## OPEN / SEPARATE ITEMS
 
