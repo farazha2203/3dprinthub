@@ -106,7 +106,7 @@ Production DB Guard:
 ```
 
 Current Phase:
-**49.3I.3 handoff hotfix** — implementation/docs on GitHub; CI pending; Windows rerun blocked until CI success.
+**49.3I.3 handoff hotfix** — GitHub implementation + dedicated/regression/full CI SUCCESS; Windows Local Gate/QA pending.
 
 ---
 
@@ -349,9 +349,9 @@ Recorded as `ERR-49-015`.
 
 ---
 
-## 14) Latest Validated Phase49.3I Baseline
+## 14) Latest Validated Phase49.3I Baselines
 
-Docs-closed final CI before the 49.3I.3 handoff hotfix:
+### 49.3I.2 docs-closed final
 - validated Epic runtime/docs base: `97674a82acc97e1a623b76084b60344cfa93142b`
 - CI-only PR #47: closed / not merged
 - marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` not merged
@@ -362,8 +362,20 @@ Runs:
 - Phase49.3G regression `32573779548` — SUCCESS
 - Full Phase49 + Full Django `32573779528` — SUCCESS
 
+### 49.3I.3 Git handoff guard
+- validated Epic base: `7117510f173f45a3d8c806e46fb0476cbaeba115`
+- CI-only PR #48: closed / not merged
+- marker head `fc400359442efef336b445a72d60002f78eab916` not merged
+
+Runs:
+- Phase49.3I dedicated `32575765467` — SUCCESS
+- Phase49.3H regression `32575765515` — SUCCESS
+- Phase49.3G regression `32575765544` — SUCCESS
+- Full Phase49 + Full Django `32575765457` — SUCCESS
+
 Validated:
-- runner ASCII contract
+- Windows PowerShell ASCII contract
+- live GitHub snapshot handoff guard
 - compile
 - exact search URL
 - preview/no-full-fetch
@@ -376,8 +388,6 @@ Validated:
 - existing 49.3H / 49.3G protections
 - full Epic49 regressions
 - full Django suite
-
-49.3I.3 runner/workflow safety change occurred after this baseline and therefore requires fresh CI before Windows rerun.
 
 ---
 
@@ -430,9 +440,9 @@ CI:
 ## 17) Current Gate — Windows Phase49.3I.3
 
 ### Gate A0 — GitHub CI
-- [ ] 49.3I.3 dedicated CI PASS
-- [ ] prior 49.3H/49.3G regression CI PASS
-- [ ] full Phase49/Django CI PASS
+- [x] 49.3I.3 dedicated CI PASS
+- [x] prior 49.3H/49.3G regression CI PASS
+- [x] full Phase49/Django CI PASS
 
 ### Gate A — Git / Automated
 - [ ] close running project processes if runner reports conflict
@@ -485,12 +495,12 @@ Only after Gate E with verified host state + backup + rollback + MySQL checks.
 **Phase:** 49.3I.3 handoff hotfix  
 **49.3I.2 runtime:** FINAL CI SUCCESS ✅  
 **Stale Chat Expected HEAD incident:** ROOT CAUSE VERIFIED ✅  
-**ERR-49-019:** DOCUMENTED ✅  
+**ERR-49-019:** DOCUMENTED + CI VERIFIED ✅  
 **Runner v49.3I.3:** IMPLEMENTED ON GITHUB ✅  
-**49.3I.3 CI:** PENDING  
+**49.3I.3 CI:** SUCCESS ✅  
 **Django migration 49.3I.3:** NONE ✅  
 **Windows last pull:** succeeded to `53e9216ae84a3e167481253da44760179c751051`; no rollback required  
-**Windows Automated Gate v49.3I.3:** BLOCKED UNTIL CI  
+**Windows Automated Gate v49.3I.3:** PENDING  
 **Manual Discovery/Product/Pricing/AI QA:** PENDING  
 **Local Publish E2E:** PENDING  
 **Owner Production approval:** PENDING  
@@ -499,8 +509,7 @@ Only after Gate E with verified host state + backup + rollback + MySQL checks.
 ### قدم بعدی دقیق
 
 ```text
-GitHub 49.3I.3 CI PASS
-→ Windows D:\projects\3DPrintHub
+Windows D:\projects\3DPrintHub
 → git status --short
 → dirty? STOP/INSPECT
 → git fetch --prune origin
@@ -508,6 +517,7 @@ GitHub 49.3I.3 CI PASS
 → git pull --ff-only origin epic/phase49-unified-product-slider-sync
 → .\RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp
 → Runner live fetch / Local == Remote snapshot PASS
+→ PHASE49_3I_GIT_SNAPSHOT=OK
 → Automated Local PASS
 → Manual MakerWorld/Archive/Dedupe/Product Gallery/AI/Pricing QA
 → one LOCAL PUBLISH ONLY
@@ -535,4 +545,4 @@ Code + regression tests
 + documentation closure
 ```
 
-Until 49.3I.3 CI + Windows/Local acceptance, Phase49.3I remains `WINDOWS QA PENDING`.
+Until Windows/Local acceptance, Phase49.3I remains `WINDOWS QA PENDING`.
