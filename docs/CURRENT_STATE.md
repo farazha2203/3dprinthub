@@ -5,13 +5,13 @@ Repository: `farazha2203/3dprinthub`
 Branch: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
 Active Hotfix: `49.3I.4 — Explorer Product Gallery + Source URL Routing`
-Status: `GITHUB IMPLEMENTED / CI PENDING / WINDOWS RERUN PENDING`
+Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS LOCAL QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-The owner completed Windows local QA far enough to expose two additional operator-facing regressions in the Products/Discovery surfaces. The previous 49.3I.3 Git snapshot handoff guard remains valid and must not regress.
+The owner's Windows QA exposed two additional operator-facing regressions and both are now fixed on GitHub and validated by the final CI probe.
 
-The new 49.3I.4 implementation is now present on the Epic branch. It has not yet passed the final CI probe and has not yet been pulled/tested on the owner's Windows machine. Production remains prohibited.
+Phase49.3I.4 is ready for a clean Windows pull and local visual/data QA. It is NOT yet approved for Local Publish acceptance or Production.
 
 ## Owner-Reported Local QA Findings
 1. Product images in the gallery rendered as thin horizontal strips instead of full thumbnails.
@@ -29,46 +29,70 @@ The new 49.3I.4 implementation is now present on the Epic branch. It has not yet
 ### ERR-49-021 — Group/category URL routing weakness
 The prior route classifier recognized a finite list of listing/search URL shapes. A source category/group/collection URL outside those shapes could reach direct full extraction. Configured sources already expose an authoritative `model_url_pattern`, which is now used as the product-vs-listing boundary.
 
-## Phase49.3I.4 Requested Delta
+## Phase49.3I.4 Implemented Delta
 ### Explorer-style Products surface
-- Preserve the mature hidden Treeview/filter/sort backend.
-- Preserve the lightweight gallery content contract: image + product name + Edit Product only.
-- Render thumbnails in pixel-sized holder frames; image Labels carry no text-unit width/height.
-- Add persistent view modes stored in the existing local Catalog settings table:
+- Mature hidden Treeview/filter/sort backend preserved.
+- Lightweight gallery content preserved: image + product name + Edit Product only.
+- Thumbnails render inside explicit pixel-sized holder frames; image Labels have no text-unit width/height.
+- persistent view modes through the existing local Catalog settings table:
   - Extra Large Icons,
   - Large Icons,
   - Medium Icons,
   - Small Icons,
   - List.
-- Add Windows-like multi-selection:
-  - normal click = single selection,
-  - Ctrl-click = toggle selection,
-  - Shift-click = range selection,
-  - Select All / Clear Selection controls.
-- Right-click context menu:
+- normal/Ctrl/Shift product selection.
+- Select All / Clear Selection and selected count.
+- right-click context menu:
   - Open Product,
   - Image Preview,
   - Remove From Publish Queue,
   - Select All,
   - Clear Selection.
-- Right-click `Remove From Publish Queue` reuses the mature local semantics only:
+- Remove From Publish Queue uses only:
   - `upload_ready=0`,
   - `workflow_status=review`.
-- It does NOT delete a product, does NOT block a product and does NOT unpublish/delete anything on Production.
+- It does NOT delete/block a product and does NOT unpublish/delete anything on Production.
 - Normal image click still opens the large local preview.
 
 ### Source-aware URL routing
 For a configured source with a non-empty `model_url_pattern`:
-- URL matches the source product regex → direct single-product intake.
+- URL matches the source product regex → mature direct single-product intake.
 - valid HTTP(S) URL does not match the product regex → Preview Candidate discovery first.
-- sources without a product regex preserve the mature prior fallback behavior.
+- source without product regex preserves the mature previous fallback behavior.
 
 ## Runtime Files Added/Changed
-- `catalog_center/app/phase49_3i_explorer_hotfix.py` — new additive Explorer/routing hotfix.
-- `catalog_center/app/phase49_3i_product_list.py` — composes the Explorer hotfix after the mature 49.3I gallery installer.
-- `catalog_center/tests/test_epic49_phase49_3i_explorer_hotfix.py` — new regression coverage.
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` — bumped to v49.3I.4 and includes Explorer regression coverage.
-- `.github/workflows/phase49-3i-ci.yml` — compiles/tests 49.3I.4 and enforces runner contract.
+- `catalog_center/app/phase49_3i_explorer_hotfix.py`
+- `catalog_center/app/phase49_3i_product_list.py`
+- `catalog_center/tests/test_epic49_phase49_3i_explorer_hotfix.py`
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` — v49.3I.4
+- `.github/workflows/phase49-3i-ci.yml`
+
+## Final GitHub Validation
+CI-only PR: `#49`
+State: `CLOSED / NOT MERGED`
+Validated Epic base: `f792fd01d643a7b3d071234a4237f2d6932679b3`
+CI marker head: `3bb010414c55e62a5b09c3b2f0e123870980c0e5` — not merged.
+
+Successful workflows:
+- Phase49.3I Discovery Review Pricing CI — Run `32577907763` — SUCCESS.
+- Phase49.3H SEO Cost Image Limit CI — Run `32577907755` — SUCCESS.
+- Phase49.3G Workspace Usability CI — Run `32577907768` — SUCCESS.
+- Phase49 Epic Unified CI / Full Django — Run `32577907801` — SUCCESS.
+
+Validated inside CI:
+- Runner v49.3I.4 contract.
+- Windows PowerShell 5.1 ASCII-only runner.
+- live fetched Git snapshot guard.
+- Python compile.
+- dedicated Explorer thumbnail/view/multi-select/context-menu tests.
+- source Product-vs-Group URL routing tests.
+- previous 49.3I/3H/3G regressions.
+- Django checks.
+- `makemigrations --check --dry-run` = no changes.
+- migration plan contract.
+- no destructive schema operations.
+- Windows Catalog Epic49 tests.
+- Full Django suite.
 
 ## Must-Not-Touch / Preserved Contracts
 - Product Workspace detailed editor.
@@ -84,66 +108,60 @@ For a configured source with a non-empty `model_url_pattern`:
 - no direct Production source edit.
 
 ## Database / Migration / Media Safety
-- Django migration for 49.3I.4: `NONE` intended and must be verified by CI and Windows local gate.
-- No Django model/schema change.
-- No production DB operation.
-- No local Catalog destructive schema operation.
-- Existing Catalog `settings` table stores the chosen Explorer view mode; no schema migration required.
-- No historical media rewrite/delete.
-- No product delete/block operation in Explorer queue removal.
-
-## Error Knowledge Base
-New resolved-code / acceptance-pending records:
-- `ERR-49-020` — image receiver clipping from Tk text-unit dimensions.
-- `ERR-49-021` — group/category URL misclassified by incomplete URL-shape enumeration.
-
-Previous critical records remain active prevention rules:
-- `ERR-49-013` exact search URL ignored,
-- `ERR-49-014` full extraction before review,
-- `ERR-49-015` phantom pricing migration,
-- `ERR-49-016` PowerShell 5.1 runner encoding,
-- `ERR-49-017` wrong UX composition boundary,
-- `ERR-49-018` AI progress first-paint gap,
-- `ERR-49-019` stale Chat-pinned SHA.
+- Django migration for 49.3I.4: `NONE` — CI verified.
+- no Django model/schema change.
+- no Production DB operation.
+- no destructive local Catalog schema operation.
+- existing Catalog `settings` table stores Explorer view preference; no schema migration required.
+- no historical media rewrite/delete.
+- no product delete/block operation in Explorer queue removal.
 
 ## Git / Commit State
-Branch: `epic/phase49-unified-product-slider-sync`
-Latest runtime/CI implementation commit before this state-doc update: `95e321ba213287362674adf743702015187ceadb`.
-Documentation synchronization is in progress; use a live fetched `origin/epic/phase49-unified-product-slider-sync` snapshot for Windows handoff, never a Chat-pinned SHA.
+Branch: `epic/phase49-unified-product-slider-sync`.
+CI-validated runtime/docs base: `f792fd01d643a7b3d071234a4237f2d6932679b3`.
+Post-validation commits are documentation-only status closure. Windows handoff must still resolve the live fetched Remote Epic HEAD inside the same execution; never use a Chat-pinned SHA as sole truth.
 
-## Tests Required Before Acceptance
-1. Phase49.3I dedicated GitHub CI.
-2. Phase49.3H regression CI.
-3. Phase49.3G regression CI.
-4. Full Phase49 + Full Django CI.
-5. `makemigrations --check --dry-run` = no changes.
-6. Windows runner v49.3I.4 with `PHASE49_3I_GIT_SNAPSHOT=OK`.
-7. Windows visual QA:
-   - thumbnails show full image area, no thin strip,
-   - switch all five view modes,
-   - Ctrl/Shift multi-select,
-   - right-click actions,
-   - remove selected items from local publish queue without deleting products.
-8. URL routing QA:
-   - one real source Product URL → direct intake,
-   - one real source Group/Category/Search URL → Preview first,
-   - approved candidate only → Full Fetch.
+## Windows QA Required Before Local Publish
+1. Close Catalog Center.
+2. verify clean Windows worktree.
+3. `git fetch --prune origin`.
+4. `git pull --ff-only origin epic/phase49-unified-product-slider-sync`.
+5. run repository-owned `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`.
+6. verify Runner `49.3I.4` and `PHASE49_3I_GIT_SNAPSHOT=OK`.
+7. Products:
+   - full thumbnails, no thin strip,
+   - all five Explorer view modes,
+   - Ctrl-click / Shift-click,
+   - Select All / Clear Selection,
+   - right-click context menu,
+   - Remove From Publish Queue does not delete product,
+   - image click large preview,
+   - Edit Product opens Product Workspace.
+8. URL routing:
+   - one real Product URL → direct intake,
+   - one real Group/Category/Search URL → Preview first,
+   - Full Fetch only after approval.
 9. AI first-paint/progress regression QA.
-10. Fixed / Range / Formula pricing QA.
-11. one `LOCAL PUBLISH ONLY` + Local Django E2E only after the visual/data QA above.
+10. Fixed / Range / Formula pricing regression QA.
+
+## Local Publish Gate
+Do NOT perform Local Publish until the Explorer/routing visual/data QA above passes. After owner confirms visual/data QA:
+- one `LOCAL PUBLISH ONLY`,
+- Local Django E2E,
+- verify image/product/pricing/provenance payload.
 
 ## Production State
-Production is untouched. No production deployment, migration, publish or media operation is approved in 49.3I.4 at this time.
+Production is untouched. No production deployment, migration, publish or media operation is approved.
 
 ## Remaining Work
-1. Finish repository documentation sync for 49.3I.4.
-2. Run final GitHub CI probe and inspect every required workflow.
-3. If CI passes, close the probe without merge.
-4. On Windows: clean worktree → fetch/prune → `pull --ff-only` current Epic → run repository-owned v49.3I.4 gate with `-LaunchApp`.
-5. Perform Explorer gallery + URL routing manual QA.
-6. Only after manual QA: one LOCAL PUBLISH ONLY + Local Django E2E.
-7. Obtain explicit owner approval.
-8. Only then prepare Production backup/deploy/verification plan.
+1. Windows clean pull of current Epic.
+2. run v49.3I.4 local gate with `-LaunchApp`.
+3. Explorer gallery visual QA.
+4. Product-vs-Group URL routing QA.
+5. AI/pricing regression QA.
+6. only after those pass: one LOCAL PUBLISH ONLY + Local Django E2E.
+7. explicit owner approval.
+8. only then Production backup/deploy/verification.
 
 ## Exact Next Task
-Complete 49.3I.4 GitHub CI/docs closure. Do not issue Production commands and do not ask the owner to patch local source manually.
+Pull the current Epic on Windows using live GitHub snapshot verification and run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`. Do not patch source locally and do not touch Production.
