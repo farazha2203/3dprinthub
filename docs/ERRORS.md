@@ -166,6 +166,27 @@ Correct Solution: repository runner v`49.3I.3` performs a live `git fetch --prun
 Verification: CI-only PR #48 closed without merge. Validated Epic base `7117510f173f45a3d8c806e46fb0476cbaeba115`. Phase49.3I Run `32575765467` SUCCESS; Phase49.3H Run `32575765515` SUCCESS; Phase49.3G Run `32575765544` SUCCESS; Full Phase49 + Full Django Run `32575765457` SUCCESS. CI verifies runner version `49.3I.3`, ASCII-only compatibility, live fetch guard, expected branch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`.
 Prevention Rule: never use a Chat-pinned SHA as the sole Windows handoff truth for a mutable development branch. Pin the fetched remote snapshot inside the same local execution, then verify Local HEAD equals that snapshot; repository CI must protect the handoff contract.
 
+### ERR-49-020 — Product images were clipped into thin horizontal strips
+Date: 2026-08-22
+Environment: Windows Catalog Center Products gallery
+Related Phase: 49.3I.4 Explorer local-QA hotfix
+Symptoms: real product thumbnails appeared as very thin horizontal strips at the top of otherwise normal cards, while a no-image placeholder occupied a much larger area.
+Verified Root Cause: the gallery generated a real 260x190 `PhotoImage`, but the target `tk.Label` retained `width=32` and `height=12`. Those values are text-unit dimensions on a Tk Label and remained active after assigning the image, clipping the rendered image to a tiny widget surface.
+Failed Condition: previous tests verified thumbnail generation, local-only resolution and gallery composition, but did not verify the pixel geometry of the widget receiving the PhotoImage.
+Correct Solution: Phase49.3I.4 renders every thumbnail inside an explicit pixel-sized holder frame with `pack_propagate(False)` and lets an unconstrained child Label fill that holder. The child image Label no longer carries text-unit width/height. View-specific PhotoImages are generated for the selected Explorer mode.
+Verification: dedicated regression test `test_thumbnail_uses_pixel_holder_not_text_unit_image_label_dimensions`; GitHub CI and Windows visual QA required before acceptance.
+Prevention Rule: never size Tk image Labels with text-unit `width`/`height` when the rendered image size is a pixel contract. Use a pixel-sized container and an unconstrained image widget, and regression-test the receiver geometry as well as the image object.
+
+### ERR-49-021 — Group/category URLs could be misclassified as direct product links
+Date: 2026-08-22
+Environment: Windows Catalog Center discovery/direct-link intake
+Related Phase: 49.3I.4 Explorer local-QA hotfix
+Symptoms: operator-facing direct-link routing could treat some source category/group/collection URLs as single product pages, bypassing the intended Preview-first discovery workflow.
+Verified Root Cause: `is_listing_or_search_url()` recognized only a limited URL-shape list such as `/search`, `keyword=`, `orderby=`, `/models` and `/3d-models`. Real source group/category URLs can use other paths. Each configured source already owns an authoritative `model_url_pattern`, but the direct-link router did not use that pattern to distinguish a product URL from a listing/group URL.
+Correct Solution: Phase49.3I.4 adds fail-safe source-aware routing. For a configured source with a non-empty product regex, only a URL matching that source's `model_url_pattern` may take direct product intake; another valid HTTP(S) URL routes to Preview Candidate discovery first. Sources without a product regex retain the mature prior behavior.
+Verification: pure regression tests cover a real MakerWorld product URL versus MakerWorld group/search URLs and malformed/empty patterns; Windows QA must verify one real direct product URL and one real group/search URL.
+Prevention Rule: source type must be classified by the source's verified product identity pattern, not by an incomplete enumeration of possible listing URL shapes. Non-product URLs must fail safe to Preview rather than full extraction.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
