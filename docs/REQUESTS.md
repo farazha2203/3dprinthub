@@ -29,7 +29,7 @@ Request:
 ## Phase49.3I
 
 ### REQ-49I-001 — Exact search URL discovery
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - when owner supplies a MakerWorld search/listing URL, discovery must use that exact URL as the authoritative source
 - example: `https://makerworld.com/en/search/models?keyword=cake+stand`
@@ -37,7 +37,7 @@ Request:
 - do not silently replace supplied search URL with configured default popular/download listing
 
 ### REQ-49I-002 — Two-stage candidate review before full fetch
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - Stage 1: discover lightweight candidates and obtain only one thumbnail + product name/basic source identity
 - show candidate review list before expensive full extraction
@@ -45,7 +45,7 @@ Request:
 - image limit remains selectable 1..20
 
 ### REQ-49I-003 — Archive / not-needed candidate
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - operator can select candidate and mark `آرشیو / لازم نیست`
 - candidate becomes blocked/not-wanted without full extraction
@@ -53,14 +53,14 @@ Request:
 - no source record is destructively deleted
 
 ### REQ-49I-004 — Duplicate guard
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - same source product must not be received twice
 - guard by source code + external source id and normalized URL
 - existing blocked/product identities are treated as known before full fetch
 
 ### REQ-49I-005 — Safe source text persistence
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - scraped source textual fields should not persist Chinese/CJK or other unexpected script/font garbage
 - URLs/source identity must remain exact and unchanged
@@ -68,7 +68,7 @@ Request:
 - no destructive mass rewrite of historical DB rows during this phase
 
 ### REQ-49I-006 — Lightweight products page
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 - main product/work list should primarily show thumbnail and product name
 - remove/hide embedded giant parameter/editor surface from the list page
@@ -76,7 +76,7 @@ Request:
 - all detailed edits continue in the existing Product Workspace
 
 ### REQ-49I-007 — Three explicit pricing modes
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS QA PENDING
+Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
 Request:
 1. exact/fixed: one exact amount, e.g. 1,200,000 toman
 2. range: explicit min/max, e.g. 200,000–500,000 toman
@@ -85,12 +85,32 @@ Request:
 - preserve existing Dynamic Variant price source of truth
 
 ## Phase49.3I Validation
+Original functional validation:
 - Dedicated 49.3I CI Run `32569551060` — SUCCESS
 - Phase49.3H regression Run `32569551053` — SUCCESS
 - Phase49.3G regression Run `32569551048` — SUCCESS
 - Full Phase49 + Full Django Run `32569551034` — SUCCESS
-- Runtime/base SHA validated: `9d462f1ec12b00727c96acf9d4f59b4723d676b4`
-- Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
+
+Windows first delivery result:
+- GitHub sync to validated HEAD `91f39681e2008c29d0ec7bc06794b935d794b33e` succeeded.
+- runner then failed at parse time under Windows PowerShell 5.1 before tests/app launch.
+- no DB/publish/Production operation occurred.
+
+Runner encoding Root Cause and fix:
+- BOM-less UTF-8 + Persian/em-dash content was misdecoded by Windows PowerShell 5.1 legacy ANSI behavior.
+- runner v`49.3I.1` is ASCII-only.
+- CI now rejects any non-ASCII byte in the canonical 49.3I runner.
+- canonical error: `ERR-49-016`.
+
+Hotfix validation:
+- CI-only PR #44 CLOSED / NOT MERGED.
+- Phase49.3I Run `32570978818` — SUCCESS
+- Phase49.3H Run `32570978800` — SUCCESS
+- Phase49.3G Run `32570978829` — SUCCESS
+- Full Phase49 + Full Django Run `32570978799` — SUCCESS
+- hotfix runtime/base SHA: `451bcb9e264b847259a6ea0414550e4f80afa250`
+
+Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
 ## Preserved Requests From Prior Phases
 - Workspace stages remain accessible; incomplete task is guided, not trapped.
