@@ -42,10 +42,12 @@ jobs:
 
           $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.1"') { throw "49.3I.1 runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.2"') { throw "49.3I.2 runner version missing" }
           if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
           if ($runner -notmatch 'EPIC49_3I_EXACT_SEARCH_URL=ENABLED') { throw "49.3I exact-search marker missing" }
+          if ($runner -notmatch 'EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED') { throw "49.3I product gallery marker missing" }
+          if ($runner -notmatch 'EPIC49_3I_AI_PROGRESS_FIRST_PAINT=ENABLED') { throw "49.3I AI first-paint marker missing" }
           if ($runner -notmatch 'EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED') { throw "49.3I pricing marker missing" }
           if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production guard missing" }
           Write-Host "PHASE49_3I_RUNNER_ASCII=OK"
@@ -73,6 +75,7 @@ jobs:
             catalog_center/app/phase49_3i_discovery_review.py \
             catalog_center/app/phase49_3i_source_safety.py \
             catalog_center/app/phase49_3i_product_list.py \
+            catalog_center/app/phase49_3i_local_qa_hotfix.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
             store/phase49_3i_pricing_modes.py \
             store/apps.py \
@@ -85,8 +88,10 @@ jobs:
             tests.test_epic49_phase49_3i_discovery_review \
             tests.test_epic49_phase49_3i_source_safety \
             tests.test_epic49_phase49_3i_product_list \
+            tests.test_epic49_phase49_3i_local_qa_hotfix \
             tests.test_epic49_phase49_3i_pricing_modes \
             tests.test_epic49_phase49_3h_image_limits \
+            tests.test_epic49_phase49_3h_seo_execution \
             tests.test_epic49_phase49_3g_workspace_usability \
             tests.test_epic49_phase49_3g_commerce_provenance \
             tests.test_epic49_phase49_3c_image_signature
@@ -115,9 +120,13 @@ jobs:
           grep -F "EPIC49_3I_ARCHIVE_BLOCK_DEDUPE=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3I_SOURCE_TEXT_LATIN_SAFE=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3I_LIGHTWEIGHT_PRODUCT_LIST=ENABLED" /tmp/phase49-3i-verify.txt
+          grep -F "EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED" /tmp/phase49-3i-verify.txt
+          grep -F "EPIC49_3I_PRODUCT_LIST_ONLY_IMAGE_NAME_EDIT=ENABLED" /tmp/phase49-3i-verify.txt
+          grep -F "EPIC49_3I_AI_PROGRESS_FIRST_PAINT=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3H_IMAGE_LIMIT_HARD_MAX_20=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3H_SEO_EXECUTION_CONSOLE=ENABLED" /tmp/phase49-3i-verify.txt
+          grep -F "EPIC49_3H_RESULT_ERROR_DRAWER=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED" /tmp/phase49-3i-verify.txt
           grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i-verify.txt
 
@@ -125,9 +134,16 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          phase = Path("catalog_center/app/phase49_3i_discovery_review.py").read_text(encoding="utf-8").lower()
+          sources = [
+              Path("catalog_center/app/phase49_3i_discovery_review.py"),
+              Path("catalog_center/app/phase49_3i_product_list.py"),
+              Path("catalog_center/app/phase49_3i_local_qa_hotfix.py"),
+          ]
           forbidden = ["drop table", "truncate table", "delete from products"]
-          found = [token for token in forbidden if token in phase]
+          found = []
+          for path in sources:
+              text = path.read_text(encoding="utf-8").lower()
+              found.extend((str(path), token) for token in forbidden if token in text)
           assert not found, found
           print("PHASE49_3I_SCHEMA_SAFETY=ADDITIVE_LOCAL_ONLY")
           PY
