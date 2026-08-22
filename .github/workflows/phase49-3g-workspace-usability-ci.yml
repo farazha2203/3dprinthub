@@ -1,0 +1,84 @@
+name: Phase49.3G Workspace Usability CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3g:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3g-secret"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3g-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3g-ci/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3g-ci/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3g-ci/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3g-ci/imports/pending"
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PowerShell Phase49.3G runner contract
+        shell: pwsh
+        run: |
+          $runner = Get-Content -Raw -Path "RUN_PHASE49_3G_LOCAL_GATE.ps1"
+          [void][scriptblock]::Create($runner)
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3G\.0"') { throw "Phase49.3G runner version missing" }
+          if ($runner -notmatch 'RUN_PHASE49_3F_LOCAL_GATE\.ps1') { throw "Phase49.3G must chain 49.3F.1" }
+          if ($runner -notmatch 'function\s+Invoke-NativeCapture') { throw "Safe native capture helper missing" }
+          if ($runner -notmatch 'EPIC49_3G_WORKSPACE_VERTICAL_SCROLL=ENABLED') { throw "3G marker gate missing" }
+          if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production safety marker missing" }
+          Write-Host "PHASE49_3G_POWERSHELL_RUNNER_CONTRACT=OK"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile Phase49.3G
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3g_workspace_usability.py \
+            catalog_center/app/phase49_3f_source_refresh_guard.py \
+            catalog_center/launch.py
+
+      - name: Phase49.3G dedicated tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_epic49_phase49_3g_workspace_usability
+
+      - name: Phase49.3G launch markers
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_WORKSPACE_VERTICAL_SCROLL=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_GALLERY_HORIZONTAL_SCROLL=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_COMPACT_COMMERCE=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_AI_AUTOFILL_PROVENANCE=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED" /tmp/phase49-3g-verify.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3g-verify.txt
+
+      - name: No Django migration drift
+        run: |
+          python manage.py makemigrations --check --dry-run
