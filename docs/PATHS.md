@@ -13,12 +13,13 @@ Catalog SQLite: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
 Legacy Retained Data: `D:\projects\3dprinthub_catalog_center`
 Backups: `D:\projects\3dprinthub-backups`
 Runtime Logs: under persistent Catalog data root, including `logs\phase49_3f\YYYY-MM-DD\workflow-*.jsonl`
-Canonical pre-49.3H Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3G_LOCAL_GATE.ps1`
+Canonical validated pre-49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3H_LOCAL_GATE.ps1`
+Canonical Phase49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3I_LOCAL_GATE.ps1` after it is committed/CI-validated in this phase.
 
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Development Branch: `epic/phase49-unified-product-slider-sync`
-Pre-49.3H baseline: `e052829c7ed34e931f52affecd7a3b74e33dc5a1`
+Phase49.3H validated Epic HEAD: `e145d1e11619e36bd766788083bee59899a80cbb`
 Delivery: GitHub-first only; no standalone chat patches/scripts.
 
 ## PRODUCTION
