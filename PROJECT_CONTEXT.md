@@ -5,6 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
 Current Hotfix: `49.3I.4 — Explorer Product Gallery + Source URL Routing`
+Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
@@ -116,41 +117,50 @@ Runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.4.
 - Local HEAD must equal fetched Remote Epic HEAD.
 - no Chat-pinned SHA as sole handoff truth.
 
-## Current Validation State
-49.3I.4 implementation and documentation are on GitHub.
-Final CI-only validation probe is pending.
-Windows has not yet pulled/tested 49.3I.4.
-No Local Publish acceptance has occurred for 49.3I.4.
-Production is untouched.
+## Final GitHub Validation
+CI-only PR `#49`: CLOSED / NOT MERGED.
+Validated Epic base: `f792fd01d643a7b3d071234a4237f2d6932679b3`.
+Marker head `3bb010414c55e62a5b09c3b2f0e123870980c0e5` was not merged.
 
-## Required CI
-- Phase49.3I dedicated CI.
-- Phase49.3H regression CI.
-- Phase49.3G regression CI.
-- Full Phase49 + Full Django CI.
-- runner ASCII/live-snapshot contract.
-- `makemigrations --check --dry-run` = no changes.
-- no destructive schema operations.
+Successful workflows:
+- Phase49.3I `32577907763`.
+- Phase49.3H `32577907755`.
+- Phase49.3G `32577907768`.
+- Full Phase49 + Full Django `32577907801`.
 
-## Required Windows QA After CI
-1. pull current Epic with clean worktree and `--ff-only`.
-2. run v49.3I.4 repository gate with `-LaunchApp`.
-3. full thumbnails, no thin strips.
-4. all five Explorer view modes.
-5. Ctrl/Shift multi-select.
-6. right-click menu and safe local queue removal.
-7. large image preview.
-8. Edit Product → Product Workspace.
-9. Direct Product URL → direct intake.
-10. Group/Category/Search URL → Preview first.
-11. approved-only Full Fetch and image cap <=20.
-12. AI first-paint regression QA.
-13. Fixed/Range/Formula QA.
-14. only then one LOCAL PUBLISH ONLY + Local Django E2E.
+Validated:
+- runner v49.3I.4 / ASCII / live-snapshot contract,
+- Explorer regression tests,
+- source URL routing tests,
+- previous 49.3I/3H/3G regressions,
+- Django checks,
+- no migration changes,
+- no destructive schema operations,
+- Windows Catalog Epic49 tests,
+- Full Django suite.
+
+Post-validation Epic commits are documentation-only closure. Windows must still compare Local HEAD to the live fetched Remote Epic HEAD, not to a Chat-pinned SHA.
+
+## Required Windows QA — NEXT
+1. close Catalog Center.
+2. clean worktree.
+3. fetch/prune + `pull --ff-only` current Epic.
+4. run v49.3I.4 repository gate with `-LaunchApp`.
+5. verify full thumbnails, no thin strips.
+6. verify all five Explorer view modes.
+7. verify Ctrl/Shift multi-select.
+8. verify right-click menu and safe local queue removal.
+9. verify large image preview.
+10. verify Edit Product → Product Workspace.
+11. real Product URL → direct intake.
+12. real Group/Category/Search URL → Preview first.
+13. approved-only Full Fetch and image cap <=20.
+14. AI first-paint regression QA.
+15. Fixed/Range/Formula QA.
+16. only then one LOCAL PUBLISH ONLY + Local Django E2E.
 
 ## Production Gate
 No Production commands until:
-- CI success,
 - Windows automated gate success,
 - visual/data QA success,
 - LOCAL PUBLISH E2E success,
@@ -159,4 +169,4 @@ No Production commands until:
 - backup and rollback readiness.
 
 ## Exact Next Step
-Run final GitHub CI validation for 49.3I.4, close the CI-only probe without merge on success, then issue a live-snapshot Windows pull/local-gate handoff. Do not patch local source manually and do not touch Production.
+Owner Windows machine: live GitHub pull with clean worktree → `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` → Explorer/routing manual QA. Do not patch local source manually and do not touch Production.
