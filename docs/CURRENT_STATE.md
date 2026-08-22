@@ -63,7 +63,7 @@ SUCCESS:
 - Django check / migration contract PASS
 - no new Django migration
 
-Post-validation commits after `97674a82...` are documentation-only; runtime validated by PR #47 is unchanged.
+Post-validation commits after `97674a82...` are documentation-only; runtime validated by PR #47 is unchanged. Changelog, Requests, Roadmap and the active Phase49.3I document are synchronized with the final CI result.
 
 ## Existing Phase49.3I Contracts Preserved
 - explicit operator search/listing URL is authoritative.
