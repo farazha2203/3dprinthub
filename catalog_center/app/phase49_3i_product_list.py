@@ -76,7 +76,10 @@ def _local_thumbnail(row) -> Path | None:
             path = ""
         if path and Path(path).is_file():
             return Path(path)
-    local_dir = Path(str(row["local_dir"] or "")) if "local_dir" in row.keys() else Path()
+    local_text = str(row["local_dir"] or "").strip() if "local_dir" in row.keys() else ""
+    if not local_text:
+        return None
+    local_dir = Path(local_text)
     image_dir = local_dir / "images"
     if image_dir.is_dir():
         for path in sorted(image_dir.iterdir()):
