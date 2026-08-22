@@ -19,6 +19,8 @@ Private Media: `/home/sfkilvrs/3dprinthub/private_media`
 - `mysqldump`/backup must succeed before production schema migration. Missing/failed backup means STOP.
 - Pending import files, media/private_media and `.env` are persistent data; do not delete/reset as a code-sync shortcut.
 - Production deployment is forbidden until Local automated gate + visual/data QA + LOCAL PUBLISH E2E + explicit user approval.
+- Phase49.3I is currently GitHub-only development. It must not trigger FTP/Bridge/Production actions during discovery review or CI.
+- Candidate review state is Windows Catalog local operational data and must not require Production DB changes.
 
 ## Restart
 Correct Pattern:
