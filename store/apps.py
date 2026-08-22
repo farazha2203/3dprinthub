@@ -45,6 +45,12 @@ class StoreConfig(AppConfig):
         phase49_3f_pricing.install()
         phase49_3f_pricing_finalize.install()
 
+        # Phase49.3I extends the mature pricing contract with an explicit range
+        # strategy. It is semantic/runtime-only: the existing CharField/price_min/
+        # price_max columns already support it, so no new migration is required.
+        from .phase49_3i_pricing_modes import install as install_phase49_3i_pricing_modes
+        install_phase49_3i_pricing_modes()
+
         # Extend the already-registered mature Django Admin instead of replacing
         # website/store admin implementations.
         from .phase49_3f_admin import install as install_phase49_3f_admin
