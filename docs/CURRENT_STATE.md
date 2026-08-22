@@ -24,7 +24,7 @@ Status: GITHUB_UPDATED
 - Dedicated 49.3H CI Run 32565773426 — SUCCESS
 - Phase49.3G regression Run 32565773459 — SUCCESS
 - Full Phase49 CI Run 32565773433 — SUCCESS
-- Validation PR #40 is CI-only and must be closed without merge.
+- Validation PR #40 is CI-only; close without merge after confirming all three runs.
 - 49.3H Windows Local Gate/manual QA/Local Publish are still pending; therefore 49.3H is not LOCAL_TESTED or ACCEPTED yet.
 
 ## Paths
@@ -72,7 +72,6 @@ Production App Server: Passenger/LiteSpeed pattern; restart via tmp/restart.txt 
 UNTOUCHED / NOT APPROVED.
 
 ## Remaining Work
-- close CI-only PR #40 without merge
 - implement Phase49.3I GitHub code + tests + runner + CI
 - run dedicated 49.3I and full regression CI
 - update docs with exact validated HEAD
