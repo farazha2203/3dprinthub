@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.5 — Selection Loop Guard + Compact Product Metadata`  
+**Current Hotfix:** `49.3I.6 — Secure Credential Field Persistence`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Local QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
@@ -68,14 +68,7 @@ Media:         /home/sfkilvrs/public_html/media
 Private media: /home/sfkilvrs/3dprinthub/private_media
 ```
 
-قبل از هر Production operation:
-- `docs/PATHS.md`
-- `docs/HOST_CONSTRAINTS.md`
-- DB vendor/name واقعی
-- Backup
-- Rollback
-- Branch/Commit واقعی
-باید دوباره Verify شوند.
+قبل از هر Production operation باید `docs/PATHS.md`، `docs/HOST_CONSTRAINTS.md`، DB vendor/name واقعی، Backup، Rollback و Branch/Commit واقعی دوباره Verify شوند.
 
 ---
 
@@ -107,10 +100,11 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3I.3 Live GitHub Snapshot Handoff Guard
 → 49.3I.4 Explorer Product Gallery + Source URL Routing
 → 49.3I.5 Selection Loop Guard + Compact Product Metadata
+→ 49.3I.6 Secure Credential Field Persistence
 ```
 
 Current status:
-**49.3I.5 GitHub implementation + final CI SUCCESS; Windows rerun pending; Production untouched.**
+**49.3I.6 final GitHub CI SUCCESS; Windows secure-credential QA pending; Production untouched.**
 
 ---
 
@@ -121,7 +115,7 @@ Operator
   ↓
 Windows Catalog Center 8.7.1
   ↓
-Persistent Catalog SQLite
+Persistent Catalog SQLite + Windows Credential Store
   ↓
 Discovery Preview / Product Workspace / AI / Pricing / Image Pipeline
   ↓
@@ -148,7 +142,7 @@ Production هیچ‌وقت مستقیماً Source of Development نیست.
 
 ## 5) قراردادهای اصلی Phase49.3I
 
-### Discovery
+### Discovery / Routing
 - Explicit Search/Listing/Category URL authoritative.
 - Preview Candidate first.
 - یک thumbnail + identity/title در Preview.
@@ -157,120 +151,71 @@ Production هیچ‌وقت مستقیماً Source of Development نیست.
 - Archive/Not Needed بدون Full Fetch و با blocked identity.
 - Dedupe: source + external id + normalized URL.
 - Source text sanitation بدون آسیب به URL و Persian editorial fields.
+- Source `model_url_pattern` مرز Product URL و Group/Category/Search URL است.
 
-### Product Workspace
-- محل canonical همه ویرایش‌های جزئی/تجاری/SEO/قیمت/متریال.
-- Products page نباید دوباره به فرم پارامترسنگین تبدیل شود.
+Owner بعد از 49.3I.5 تأیید کرده مشکل لینک و زیرشاخه‌ها روی Windows درست شده است.
 
-### Products Explorer
-کارت هر محصول:
-- تصویر،
-- نام،
-- شماره Product ID،
-- وضعیت،
-- منبع،
-- تعداد عکس،
-- تاریخ اضافه‌شدن،
-- وضعیت انتشار،
-- دکمه Edit Product.
+### Product Workspace / Explorer
+- Product Workspace محل canonical همه ویرایش‌های جزئی/تجاری/SEO/قیمت/متریال است.
+- Products Explorer visual/lightweight باقی می‌ماند.
+- کارت شامل تصویر، نام، Product ID، وضعیت، منبع، تعداد عکس، تاریخ اضافه‌شدن، وضعیت انتشار و Edit Product است.
+- View: Extra Large / Large / Medium / Small / List.
+- Selection: Normal / Ctrl / Shift + Select All / Clear + right-click actions.
+- Safe queue removal فقط `upload_ready=0` و `workflow_status=review`؛ no delete/block/unpublish/Production.
 
-View:
-- Extra Large,
-- Large,
-- Medium,
-- Small,
-- List.
-
-Selection:
-- Normal / Ctrl / Shift,
-- Select All / Clear,
-- Right-click context actions.
-
-Safe queue removal:
-- فقط `upload_ready=0`
-- فقط `workflow_status=review`
-- no delete/block/unpublish/Production.
-
-### Source URL Routing
-اگر Source دارای `model_url_pattern` باشد:
-- Product URL match → Direct Product Intake.
-- Valid non-product URL → Preview Candidate first.
-- Full Fetch only after approval.
-
-### Pricing
-سه Mode مستقل:
-- Fixed
-- Range
-- Formula/Dynamic
-
-Range نباید Formula را اجرا کند.
-
-### AI
-- First paint قبل از synchronous preflight.
-- mature 49.3H progress/result/error/cost ledger حفظ شود.
-- Cost فقط اگر Provider/response معتبر ارائه کند؛ fabrication ممنوع.
-
----
-
-## 6) 49.3I.5 — Root Cause و Fix
-
-### ERR-49-022
-Windows 49.3I.4 Automated Gate PASS شد، ولی Manual QA نشان داد انتخاب/بازکردن Product می‌تواند Freeze شود.
-
-Root Cause:
-```text
-Explorer Card
-→ hidden Treeview.selection_set()
-→ <<TreeviewSelect>>
-→ load_product()
-→ _phase49_3i_select_product()
-→ selection_set()
-→ ...
-```
-
-Fix:
-- card → Treeview فقط یک جهت event-producing است.
+### Selection Stability — ERR-49-022
+- card → hidden Treeview فقط یک جهت event-producing است.
 - re-entrancy guard.
 - selection_set فقط در صورت تفاوت selection.
-- load_product فقط state را Sync می‌کند و selection را دوباره نمی‌نویسد.
-- Product Open repeat-click guard.
-- Tk yield/paint قبل از ساخت Product Workspace.
-- Regression Test با Fake Treeview که callback را از selection_set فوراً fire می‌کند و فقط یک write را قبول می‌کند.
+- reverse Treeview callback فقط state را Sync می‌کند.
+- Product Open repeat-click guard + Tk yield/paint.
 
-هم‌زمان درخواست جدید اپراتور اجرا شد:
-- compact metadata روی کارت،
-- Persian filters شامل آماده انتشار/صف انتشار/منتشرشده،
-- Persian sorts شامل جدیدترین/قدیمی‌ترین/آخرین بروزرسانی.
+### Secure Credentials — ERR-49-023
+Source of truth امن:
+**Windows Credential Store / environment**.
+
+49.3I.6:
+- FTP password و Bridge token را در Startup به فیلد Masked برمی‌گرداند.
+- AI key مربوط به Provider انتخاب‌شده را Hydrate می‌کند.
+- بعد از Save که Mature handler فیلد را پاک می‌کند، مقدار ذخیره‌شده امن دوباره Masked نمایش داده می‌شود.
+- Provider switch کلید همان Provider را برمی‌گرداند.
+- refresh معمول همان Provider، مقدار Unsaved جدید را overwrite نمی‌کند.
+- Explicit delete/clear حفظ شده است.
+- Secret در SQLite/Git/source/log/diagnostics ذخیره نمی‌شود.
+
+### Pricing / AI
+- Fixed / Range / Formula مستقل.
+- Range نباید Formula را اجرا کند.
+- AI First Paint قبل از synchronous preflight.
+- mature 49.3H progress/result/error/cost stack حفظ می‌شود.
+- Cost ساختگی ممنوع.
 
 ---
 
-## 7) آخرین Validation واقعی
+## 6) آخرین Validation واقعی
 
-### Windows 49.3I.4
-- HEAD: `7330ad6d79d8061998b1fa143051173b558cefbd`
-- 137 Catalog tests PASS
-- 419 Django tests PASS, 2 skipped
-- Migration changes: NONE
-- Production untouched
-- Explorer visual rendering corrected
-- Selection loop found in manual QA
+### Windows
+- 49.3I.5 Launch موفق.
+- owner تأیید کرده Product URL vs Group/Category/Search/sub-branch routing درست شده.
+- 49.3I.6 هنوز روی Windows pull/test نشده است.
 
-### GitHub 49.3I.5
-CI-only PR `#50`: CLOSED / NOT MERGED.
-Runtime base: `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`.
-Marker head: `57813f47f649bb2c415aa0fae1481f4a2561ce1d` — not merged.
+### GitHub 49.3I.6
+CI-only PR `#51`: CLOSED / NOT MERGED.
+Validated Epic base: `f1e92f8f42a6ed90bf1001dc14a15638828ee341`.
+Marker head: `fa8e4bcf5f7795983434f7cfd34c88918273bae6` — not merged.
 
 Runs:
-- Phase49.3I `32580222694` — SUCCESS
-- Phase49.3H `32580222686` — SUCCESS
-- Phase49.3G `32580222682` — SUCCESS
-- Full Phase49 + Full Django `32580222683` — SUCCESS
+- Phase49.3I `32583277412` — SUCCESS
+- Phase49.3H `32583277584` — SUCCESS
+- Phase49.3G `32583277406` — SUCCESS
+- Full Phase49 + Full Django `32583277418` — SUCCESS
 
-Migration 49.3I.5: NONE.
+Migration 49.3I.6: NONE.
+Production: UNTOUCHED.
 
 ---
 
-## 8) Error Knowledge Base
+## 7) Error Knowledge Base
 
 قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
 
@@ -281,27 +226,27 @@ Latest relevant:
 - ERR-49-020: clipped thumbnail Label
 - ERR-49-021: Product-vs-Group URL routing
 - ERR-49-022: hidden Treeview selection feedback loop
+- ERR-49-023: secure credentials not hydrated into masked fields
 
 ---
 
-## 9) Gate بعدی Windows
+## 8) Gate بعدی Windows
 
 قبل از Local Publish:
 1. Catalog Center بسته باشد.
 2. worktree clean.
 3. fetch/prune.
 4. pull --ff-only current Epic.
-5. Runner v49.3I.5 with `-LaunchApp`.
-6. select card → no freeze.
-7. Edit Product → exactly one Workspace.
-8. right-click Open → exactly one Workspace.
-9. compact metadata readable.
-10. Ready / Queue / Published filters.
-11. Newest / Oldest / Last Updated sorts.
-12. Explorer views + Ctrl/Shift + context action regression.
-13. Product URL direct vs Group/Search Preview regression.
-14. AI first-paint regression.
-15. Fixed/Range/Formula regression.
+5. Runner v49.3I.6 with `-LaunchApp`.
+6. AI key بعد از Save باید Masked باقی بماند.
+7. Restart باید AI key ذخیره‌شده را برگرداند.
+8. Provider switch باید Key همان Provider را برگرداند.
+9. FTP password + Bridge token بعد از Save/Restart باید Masked باقی بمانند.
+10. AI/FTP/Bridge live tests باید با secure credentials کار کنند.
+11. Selection/Open بدون Freeze.
+12. Product URL direct vs Group/Search Preview regression.
+13. AI first-paint regression.
+14. Fixed/Range/Formula regression.
 
 اگر همه PASS شدند:
 - یک LOCAL PUBLISH ONLY
@@ -311,7 +256,7 @@ Latest relevant:
 
 ---
 
-## 10) Production Gate
+## 9) Production Gate
 
 Production فعلاً `UNTOUCHED / NOT APPROVED` است.
 
@@ -328,6 +273,6 @@ Production فعلاً `UNTOUCHED / NOT APPROVED` است.
 
 ---
 
-## 11) Exact Next Step
+## 10) Exact Next Step
 
-Windows باید آخرین Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.5 را اجرا کند. اول interaction loop + metadata/filter/sort QA؛ هنوز Local Publish و Production ممنوع است.
+Windows باید آخرین Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.6 را اجرا کند. تمرکز QA فعلی روی Secure Credential Save/Restart/Provider-Switch است؛ هنوز Local Publish و Production ممنوع است.
