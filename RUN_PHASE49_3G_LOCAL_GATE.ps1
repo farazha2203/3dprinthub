@@ -78,7 +78,9 @@ if ($LASTEXITCODE -ne 0) {
 Step "02. VERIFY PHASE49.3G SOURCE EXISTS"
 $requiredFiles = @(
     "catalog_center\app\phase49_3g_workspace_usability.py",
-    "catalog_center\tests\test_epic49_phase49_3g_workspace_usability.py"
+    "catalog_center\app\phase49_3g_commerce_provenance.py",
+    "catalog_center\tests\test_epic49_phase49_3g_workspace_usability.py",
+    "catalog_center\tests\test_epic49_phase49_3g_commerce_provenance.py"
 )
 foreach ($relative in $requiredFiles) {
     if (-not (Test-Path (Join-Path $Root $relative))) {
@@ -93,6 +95,7 @@ try {
     Run-Native -File $Py -Arguments @(
         "-m", "compileall", "-q",
         "catalog_center\app\phase49_3g_workspace_usability.py",
+        "catalog_center\app\phase49_3g_commerce_provenance.py",
         "catalog_center\app\phase49_3f_source_refresh_guard.py",
         "catalog_center\launch.py"
     )
@@ -105,7 +108,8 @@ Push-Location $Catalog
 try {
     Run-Native -File $Py -Arguments @(
         "-m", "unittest", "-v",
-        "tests.test_epic49_phase49_3g_workspace_usability"
+        "tests.test_epic49_phase49_3g_workspace_usability",
+        "tests.test_epic49_phase49_3g_commerce_provenance"
     )
 } finally {
     Pop-Location
@@ -123,6 +127,7 @@ try {
         "EPIC49_3G_AI_AUTOFILL_PROVENANCE=ENABLED",
         "EPIC49_3G_MANUAL_OVERRIDE_GUARD=ENABLED",
         "EPIC49_3G_AI_DISABLE_PER_GROUP=ENABLED",
+        "EPIC49_3G_COMMERCE_PROVENANCE=ENABLED",
         "EPIC49_3F_SELECTED_IMAGE_TEXT_ONLY_AI=ENABLED",
         "ACTIVE_RELEASE_VERIFIED=OK"
     )
@@ -160,12 +165,13 @@ Write-Host "2) Commerce fields are compact; pricing/rate table no longer expands
 Write-Host "3) Images gallery is one horizontal thumbnail strip with a visible horizontal scrollbar."
 Write-Host "4) Gallery status/buttons still work: selected/site/primary/slider/remove/open."
 Write-Host "5) Task Center shows AI/manual/disabled ownership suffixes."
-Write-Host "6) Run 'تکمیل هوشمند محصول با AI'; only missing allowed fields may be filled."
-Write-Host "7) AI must never auto-approve sale/license/fixed price or Production Publish."
-Write-Host "8) Disable AI for one group; rerun autofill and confirm that group is not modified."
-Write-Host "9) Manually edit an AI-owned field + Save; group becomes manual override and stays protected until operator releases it."
-Write-Host "10) Image SEO remains selected-only and text-only; unselected metadata remains unchanged."
-Write-Host "11) Production remains untouched until explicit approval."
+Write-Host "6) Commerce page shows material AI ownership controls; fixed price/sale approval/license remain operator-owned."
+Write-Host "7) Run 'تکمیل هوشمند محصول با AI'; only missing allowed fields may be filled."
+Write-Host "8) AI must never auto-approve sale/license/fixed price or Production Publish."
+Write-Host "9) Disable AI for one group; rerun autofill and confirm that group is not modified."
+Write-Host "10) Manually edit an AI-owned field + Save; group becomes manual override and stays protected until operator releases it."
+Write-Host "11) Image SEO remains selected-only and text-only; unselected metadata remains unchanged."
+Write-Host "12) Production remains untouched until explicit approval."
 
 if ($LaunchApp) {
     Step "08. START CATALOG CENTER FOR PHASE49.3G MANUAL QA"
