@@ -136,8 +136,60 @@ Validation:
 - Phase49.3G `32575765544` SUCCESS.
 - Full Phase49 + Full Django `32575765457` SUCCESS.
 
+### REQ-49I-010 — Windows Explorer-style Products browsing
+Status: GITHUB_IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING
+Request:
+- product thumbnails must render at full usable size, not as clipped strips
+- Products browsing should behave like a Windows folder
+- operator can switch between very large, large, medium, small icon views and list view
+- view preference should persist locally
+- normal/Ctrl/Shift selection must allow one or many products
+- Select All and Clear Selection controls
+- right-click context menu on products
+- right-click can safely remove selected products from the local publish queue
+- product cards still show only image, product name and Edit Product
+- normal image click still opens a large preview
+
+Local QA incident:
+- real 260x190 PhotoImage was assigned to a `tk.Label(width=32,height=12)` and therefore clipped into a thin horizontal strip.
+- canonical root cause: `ERR-49-020`.
+
+Fix:
+- additive `phase49_3i_explorer_hotfix.py`
+- pixel-sized image holder + unconstrained child Label
+- view-specific PhotoImage sizing
+- persistent Explorer view mode via existing Catalog settings table
+- multi-select and context-menu behavior layered on top of the mature hidden Treeview/filter backend
+- Remove From Publish Queue uses only `upload_ready=0` + `workflow_status=review`; no delete/block/Production action
+
+### REQ-49I-011 — Direct Product URL vs Group/Category/Search URL must route safely
+Status: GITHUB_IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING
+Request:
+- a true product URL should continue to use direct single-product intake
+- a source group/category/search/listing URL should not be treated as a product page
+- group/category/search intake must create Preview Candidates first
+- Full Fetch only after operator approval
+
+Verified weakness:
+- previous URL-shape classifier recognized only selected `/search`, `keyword=`, `orderby=`, `/models` and `/3d-models` patterns.
+- valid category/group URLs outside those shapes could be misclassified.
+- canonical root cause: `ERR-49-021`.
+
+Fix:
+- use the configured source `model_url_pattern` as authoritative product identity boundary
+- matching source product URL → mature direct intake
+- valid HTTP(S) non-product URL → Preview Candidate discovery
+- sources without a product regex preserve prior fallback behavior
+
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.3`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.4`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
+
+49.3I.4 adds automated coverage for:
+- pixel-holder thumbnail geometry,
+- Explorer view modes,
+- Ctrl/Shift multi-selection contract,
+- right-click/safe queue removal,
+- source `model_url_pattern` Product-vs-Group routing.
 
 Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
 
