@@ -2,6 +2,31 @@
 
 Record meaningful changes only.
 
+## 2026-08-22 — Phase49.3I.3 Windows Git Snapshot Handoff Guard
+
+### Fixed
+- Windows handoff no longer depends on a Chat-pinned `$ExpectedHead` that can become stale while the development branch advances.
+- canonical runner now performs live `git fetch --prune origin`, requires the exact Epic branch and clean worktree, resolves the fetched remote branch HEAD, and requires Local HEAD to match that fetched snapshot.
+- Local/Remote mismatch fails closed with an explicit `git pull --ff-only` instruction and requires rerunning the repository gate.
+
+### Root Cause
+- Windows correctly fast-forwarded from `fee6a5f...` to GitHub HEAD `53e9216ae84a3e167481253da44760179c751051`.
+- the handoff then falsely failed because the Chat command still required stale SHA `789edf8652ad8a09641afedd5e959c63822800c7`.
+- GitHub compare from validated base `97674a82acc97e1a623b76084b60344cfa93142b` to `53e9216...` confirmed the seven later commits were documentation-only.
+- recorded as `ERR-49-019`.
+
+### Runner / CI
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` bumped to `49.3I.3`.
+- Windows PowerShell 5.1 ASCII-only contract is preserved.
+- Phase49.3I CI now requires exact branch guard, live fetch guard, fetched remote-ref guard and `PHASE49_3I_GIT_SNAPSHOT=OK`.
+- final CI validation for 49.3I.3 is pending before Windows rerun.
+
+### Database / Production
+- Django migration: NONE.
+- no DB/media rewrite.
+- no reset/stash/delete cleanup shortcut.
+- Production untouched / not approved.
+
 ## 2026-08-22 — Phase49.3I Docs-Closed Final Validation
 
 ### Validation
@@ -14,8 +39,8 @@ Record meaningful changes only.
 - marker head `0530181f1b4f2fcedadbdc0cc34251c43f2b1f3b` was not merged.
 
 ### Gate
-- GitHub final validation is complete.
-- next required gate is Windows Local rerun from the Epic branch using `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` v`49.3I.2`.
+- GitHub final validation is complete for the 49.3I.2 runtime/docs baseline.
+- 49.3I.3 handoff guard is a later runner/workflow safety change and must pass its own CI before Windows rerun.
 - Production remains untouched and forbidden until Windows visual/data QA, LOCAL PUBLISH ONLY, Local Django E2E and explicit owner approval.
 
 ## 2026-08-22 — Phase49.3I Local QA Regression Hotfix
