@@ -33,13 +33,22 @@ jobs:
       - name: Phase49.3I PowerShell runner contract
         shell: pwsh
         run: |
-          $runner = Get-Content -Raw -Path "RUN_PHASE49_3I_LOCAL_GATE.ps1"
+          $runnerPath = "RUN_PHASE49_3I_LOCAL_GATE.ps1"
+          $runnerBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $runnerPath))
+          $nonAscii = @($runnerBytes | Where-Object { $_ -gt 127 })
+          if ($nonAscii.Count -gt 0) {
+            throw "49.3I runner must remain ASCII-only for Windows PowerShell 5.1 compatibility. Non-ASCII bytes: $($nonAscii.Count)"
+          }
+
+          $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.0"') { throw "49.3I runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.1"') { throw "49.3I.1 runner version missing" }
+          if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
           if ($runner -notmatch 'EPIC49_3I_EXACT_SEARCH_URL=ENABLED') { throw "49.3I exact-search marker missing" }
           if ($runner -notmatch 'EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED') { throw "49.3I pricing marker missing" }
           if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production guard missing" }
+          Write-Host "PHASE49_3I_RUNNER_ASCII=OK"
           Write-Host "PHASE49_3I_RUNNER_CONTRACT=OK"
 
       - name: Set up Python 3.12
