@@ -19,12 +19,18 @@ class Phase493HCostLedgerTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.db = Database(Path(self.temp.name) / "catalog.sqlite3")
         diagnostics.configure(self.db)
-        self.product_id = self.db.upsert_product({
+        self.db.upsert_product({
             "source_code": "test",
             "external_id": "p-1",
             "source_url": "https://example.test/product/1",
             "source_title": "Test product",
         })
+        row = self.db.conn.execute(
+            "SELECT id FROM products WHERE source_code=? AND external_id=?",
+            ("test", "p-1"),
+        ).fetchone()
+        self.assertIsNotNone(row)
+        self.product_id = int(row["id"])
 
     def tearDown(self):
         self.db.close()
