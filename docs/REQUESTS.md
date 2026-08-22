@@ -5,202 +5,182 @@ Last Updated: 2026-08-22
 ## Phase49.3H
 
 ### REQ-49H-001 — Unified SEO execution visibility
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
-Request:
-- every SEO-related button/action visibly shows execution/result/error state
-- provider/model/request/tokens/cost/log information where available
-- error/result remains recoverable and sanitized
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
+- every SEO-related action shows execution/result/error state,
+- provider/model/request/tokens/cost/log where available,
+- sanitized recoverable errors/results.
 
 ### REQ-49H-002 — Per-product AI/SEO cost
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
-Request:
-- record cost spent editing/SEOing each product
-- internal publish cost receipt
-- real provider cost only; never invent unsupported cost
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
+- record real AI/SEO cost per product where provider data supports it,
+- internal publish cost receipt,
+- never invent unsupported cost.
 
 ### REQ-49H-003 — Controlled image intake
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING
-Request:
-- operator determines max images per product
-- default 10; hard max 20
-- limit applies to persisted/selected/downloaded images
-- reaching the limit does not stop the multi-product workflow
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
+- operator image limit,
+- default 10,
+- hard max 20,
+- applies to persisted/selected/downloaded images,
+- per-product cap must not stop later products.
 
 ## Phase49.3I
 
 ### REQ-49I-001 — Exact search URL discovery
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- supplied MakerWorld search/listing URL is the authoritative discovery source
-- example: `https://makerworld.com/en/search/models?keyword=cake+stand`
-- do not replace it with configured popular/download listings
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- explicit MakerWorld/Search/Listing URL is authoritative,
+- do not silently replace with default popular/download listing.
 
 ### REQ-49I-002 — Two-stage candidate review before full fetch
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- Stage 1: only one thumbnail + product name/basic source identity
-- Stage 2: only approved candidates receive full content/spec/text + chosen number of images
-- image limit remains selectable 1..20
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- Preview: one thumbnail + title/basic source identity only,
+- Full Fetch only after approval,
+- image limit remains selectable 1..20.
 
 ### REQ-49I-003 — Archive / not-needed candidate
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- selected candidate can be archived/not-needed without full extraction
-- blocked identity must prevent rediscovery until explicit restore
-- no destructive source deletion
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- archive without Full Fetch,
+- preserve blocked identity so it does not reappear,
+- no destructive source deletion.
 
 ### REQ-49I-004 — Duplicate guard
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- same source product must not be received twice
-- guard by source code + external source id + normalized URL
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- prevent duplicate source products by source code + external id + normalized URL.
 
 ### REQ-49I-005 — Safe source text persistence
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- do not persist Chinese/CJK or other unexpected scraped script/font garbage
-- URLs/source identities remain exact
-- Persian editorial/AI `_fa` fields remain Persian
-- no historical mass rewrite
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- discard unexpected scraped CJK/Cyrillic/emoji garbage from source text,
+- preserve URLs/source identity,
+- preserve Persian editorial `_fa` fields,
+- no historical mass rewrite.
 
-### REQ-49I-006 — Product page must be a real image gallery
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- main Products page must show products as large image gallery/cards, not a parameter-heavy table/editor
-- every product card shows only product image, product name and one Edit Product action
-- price/title/status/editor fields must not be displayed on the Products list surface
-- clicking product image should open a larger preview
-- all detailed edits continue in Product Workspace
+### REQ-49I-006 — Products surface must be a real visual gallery, not a parameter-heavy editor
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
+Original request:
+- large usable product image,
+- product name,
+- Edit Product action,
+- click image for large preview,
+- detailed editing stays in Product Workspace.
 
-Local QA result before fix:
-- intended 49.3I lightweight patch did not execute on the real UX87 page construction boundary, so images did not appear and legacy controls remained.
-- canonical root cause: `ERR-49-017`.
-
-Fix:
-- patch real `_modernize_products_page` boundary
-- hide complete legacy pane while preserving it for compatibility
-- local-only 260x190 gallery thumbnails + click-to-large-preview
-- batched thumbnail loading through Tk `after()`
+Refined by owner during 49.3I.5 QA:
+- the list must remain lightweight and visual,
+- but it should also show compact operational details useful for browsing:
+  - Product ID,
+  - state,
+  - source,
+  - image count,
+  - added date,
+  - publish state.
+- price/editorial/SEO/material/pricing forms must not return to the Products list.
 
 ### REQ-49I-007 — Three explicit pricing modes
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-1. exact/fixed
-2. range/min-max
-3. formula/dynamic
-- Range must not be conflated with Formula
-- preserve Dynamic Variant source of truth
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+1. Fixed exact price,
+2. Range min/max,
+3. Formula/Dynamic.
+- Range must not invoke Formula.
 
 ### REQ-49I-008 — Full AI autofill must show progress immediately
-Status: GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- clicking full AI autofill must not appear frozen before a progress screen opens
-- progress should be visible before preflight, then show connection/send/receive/save stages
-- success leaves the result/log drawer visible
-- error remains visible with sanitized log/error details
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- first progress paint before synchronous preflight,
+- then connection/send/receive/save/result stages,
+- success/result/error remains visible and sanitized.
 
-Local QA root cause:
-- 49.3F created `AIProgress` only after synchronous `save/preflight/source preparation`, so no UI existed to paint during that interval.
-- canonical root cause: `ERR-49-018`.
+### REQ-49I-009 — Windows handoff uses live GitHub snapshot, not stale Chat SHA
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / ACTIVE`
+- fetch current remote inside the same execution,
+- Local HEAD must equal fetched Remote Epic HEAD,
+- dirty Local stops for inspection,
+- only fast-forward pull,
+- no reset/stash/delete shortcut,
+- runner remains ASCII-only for Windows PowerShell 5.1.
 
-Fix:
-- immediate startup progress first-paint
-- existing AI flow scheduled after Tk event-loop yield
-- automatic handoff to existing 49.3H progress/result/error/cost stack
-- no duplicate Provider/Model/network/request implementation
-
-### REQ-49I-009 — Windows handoff must use live GitHub snapshot, not stale Chat SHA
-Status: GITHUB_UPDATED / CI SUCCESS / WINDOWS RERUN PENDING
-Request:
-- GitHub remains the source of truth during handoff.
-- do not treat a SHA copied into Chat as permanent while the development branch can advance.
-- after a live fetch, capture the actual `origin/epic/phase49-unified-product-slider-sync` snapshot and require Local HEAD to match it.
-- dirty Local must stop for inspection; no reset/stash/delete shortcut.
-- if Local is behind, use fast-forward-only pull and rerun the repository gate.
-- runner/CI must protect this contract so the stale-Expected-HEAD failure cannot recur.
-
-Incident:
-- Windows correctly pulled to `53e9216ae84a3e167481253da44760179c751051` but the Chat preflight still required stale `789edf8652ad8a09641afedd5e959c63822800c7`.
-- the repository's existing Git-only Windows policy already required Remote Epic HEAD resolution after fetch; the failed Chat preflight violated that policy.
-- canonical root cause: `ERR-49-019`.
-
-Fix:
-- canonical runner upgraded to v49.3I.3 with live fetch + exact branch + fetched Remote HEAD equality guard.
-- Phase49.3I CI asserts the handoff guard markers and Windows PowerShell 5.1 ASCII contract.
-
-Validation:
-- CI-only PR #48 CLOSED / NOT MERGED.
-- validated Epic base `7117510f173f45a3d8c806e46fb0476cbaeba115`.
-- Phase49.3I `32575765467` SUCCESS.
-- Phase49.3H `32575765515` SUCCESS.
-- Phase49.3G `32575765544` SUCCESS.
-- Full Phase49 + Full Django `32575765457` SUCCESS.
+Canonical root cause: `ERR-49-019`.
 
 ### REQ-49I-010 — Windows Explorer-style Products browsing
-Status: GITHUB_IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING
-Request:
-- product thumbnails must render at full usable size, not as clipped strips
-- Products browsing should behave like a Windows folder
-- operator can switch between very large, large, medium, small icon views and list view
-- view preference should persist locally
-- normal/Ctrl/Shift selection must allow one or many products
-- Select All and Clear Selection controls
-- right-click context menu on products
-- right-click can safely remove selected products from the local publish queue
-- product cards still show only image, product name and Edit Product
-- normal image click still opens a large preview
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
+- full-sized thumbnails, no clipped strip,
+- Extra Large / Large / Medium / Small / List views,
+- persist view preference,
+- normal/Ctrl/Shift selection,
+- Select All / Clear Selection,
+- selected count,
+- right-click menu,
+- safe Remove From Publish Queue,
+- image click large preview.
 
-Local QA incident:
-- real 260x190 PhotoImage was assigned to a `tk.Label(width=32,height=12)` and therefore clipped into a thin horizontal strip.
-- canonical root cause: `ERR-49-020`.
+Canonical root cause for thumbnail issue: `ERR-49-020`.
 
-Fix:
-- additive `phase49_3i_explorer_hotfix.py`
-- pixel-sized image holder + unconstrained child Label
-- view-specific PhotoImage sizing
-- persistent Explorer view mode via existing Catalog settings table
-- multi-select and context-menu behavior layered on top of the mature hidden Treeview/filter backend
-- Remove From Publish Queue uses only `upload_ready=0` + `workflow_status=review`; no delete/block/Production action
+### REQ-49I-011 — Direct Product URL vs Group/Category/Search URL routes safely
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
+- true product URL → mature direct single-product intake,
+- Group/Category/Search/Listing URL → Preview Candidate first,
+- Full Fetch only after approval,
+- configured source `model_url_pattern` is authoritative single-product boundary.
 
-### REQ-49I-011 — Direct Product URL vs Group/Category/Search URL must route safely
-Status: GITHUB_IMPLEMENTED / FINAL CI PENDING / WINDOWS QA PENDING
-Request:
-- a true product URL should continue to use direct single-product intake
-- a source group/category/search/listing URL should not be treated as a product page
-- group/category/search intake must create Preview Candidates first
-- Full Fetch only after operator approval
+Canonical root cause: `ERR-49-021`.
 
-Verified weakness:
-- previous URL-shape classifier recognized only selected `/search`, `keyword=`, `orderby=`, `/models` and `/3d-models` patterns.
-- valid category/group URLs outside those shapes could be misclassified.
-- canonical root cause: `ERR-49-021`.
+### REQ-49I-012 — Product selection/open must never loop + restore compact metadata and useful sorting
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
+Owner QA request:
+- selecting/opening a product must never freeze or enter a selection callback loop,
+- one Open action opens one Product Workspace,
+- cards should show useful compact operational details,
+- restore friendly product filters and sorting such as:
+  - آماده انتشار,
+  - صف انتشار,
+  - منتشرشده,
+  - جدیدترین,
+  - قدیمی‌ترین,
+  - آخرین بروزرسانی.
 
-Fix:
-- use the configured source `model_url_pattern` as authoritative product identity boundary
-- matching source product URL → mature direct intake
-- valid HTTP(S) non-product URL → Preview Candidate discovery
-- sources without a product regex preserve prior fallback behavior
+Verified root cause:
+- Explorer card wrote hidden Treeview selection,
+- `<<TreeviewSelect>>` called `load_product`,
+- compatibility `load_product` wrote Treeview selection again,
+- cycle repeated.
+- canonical record: `ERR-49-022`.
+
+Implemented 49.3I.5:
+- one-way card → Treeview event-producing sync,
+- re-entrancy guard,
+- only write Treeview selection when it differs,
+- Treeview callback is state-only,
+- repeat-open guard + Tk paint yield before Product Workspace,
+- compact card ID/state/source/images/date/publish-state,
+- Persian filter/sort toolbar,
+- dedicated fake-Treeview feedback-loop regression test.
+
+Validation:
+- CI-only PR #50: CLOSED / NOT MERGED,
+- validated Epic runtime base `cdaac6680ea8545f52ece15ecaa3ce0a575eabe9`,
+- Phase49.3I Run `32580222694` SUCCESS,
+- Phase49.3H Run `32580222686` SUCCESS,
+- Phase49.3G Run `32580222682` SUCCESS,
+- Full Phase49 + Full Django Run `32580222683` SUCCESS,
+- Django migration: NONE.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.4`, ASCII-only for Windows PowerShell 5.1 and protected by live Git snapshot verification.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.5`.
 
-49.3I.4 adds automated coverage for:
-- pixel-holder thumbnail geometry,
-- Explorer view modes,
-- Ctrl/Shift multi-selection contract,
-- right-click/safe queue removal,
-- source `model_url_pattern` Product-vs-Group routing.
-
-Windows automated gate + visual/data QA remain required before Local Publish/acceptance.
+Protected contracts:
+- ASCII-only Windows PowerShell 5.1 compatibility,
+- live fetched GitHub snapshot guard,
+- selection-loop regression test,
+- compact metadata/filter/sort tests,
+- Explorer thumbnail/view/multi-select/context-menu tests,
+- Product-vs-Group routing tests,
+- Phase49.3H/3G + Django migration/full-suite regressions.
 
 ## Preserved Requests From Prior Phases
-- Workspace stages remain accessible; incomplete task is guided, not trapped.
-- AI provider/model selectable and persistent with connection test.
-- Image SEO operates only on selected product images and sends no image bytes/files/URLs to AI.
-- AI tasks/provenance indicate what AI filled and allow operator manual override/disable.
-- Local vs Production publish separation remains fail-closed.
-- Source refresh preserves human edits.
-- Production cannot be touched before Local approval.
+- Workspace stages remain accessible; incomplete state is guided, not trapped.
+- AI provider/model remains selectable/persistent with connection test.
+- Image SEO remains selected-only and text-only; no image bytes/files/URLs sent to AI.
+- AI provenance/manual override/disable remains protected.
+- source refresh preserves human edits.
+- Local vs Production publish remains fail-closed.
+- Production cannot be touched before explicit owner approval.
 
 ## Change Rule
-A new request does not authorize unrelated redesign. Implement approved delta with minimal changes and preserve mature behavior unless owner explicitly requests removal/replacement.
+A new request does not authorize unrelated redesign. Implement the requested delta minimally and preserve mature behavior unless the owner explicitly requests replacement/removal.
