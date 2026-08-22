@@ -68,6 +68,7 @@ def main() -> int:
         install_progress as install_phase49_3h_progress,
         install_workspace as install_phase49_3h_execution_workspace,
     )
+    from app.phase49_3i_local_qa_hotfix import install as install_phase49_3i_local_qa_hotfix
     from app.phase49_3i_pricing_modes import install as install_phase49_3i_pricing_workspace
     from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
     from app.phase49_3i_product_list import install as install_phase49_3i_product_list
@@ -121,6 +122,10 @@ def main() -> int:
     install_phase49_3h_progress(phase49_3f_workspace_module)
     install_phase49_3h_image_workspace(ProductWorkspace)
     install_phase49_3h_execution_workspace(ProductWorkspace)
+    # Local QA exposed a first-paint gap before 49.3F synchronous preflight.
+    # Compose the visual handoff here so AI provider/network/result logic stays
+    # owned by the mature 49.3F/49.3H stack.
+    install_phase49_3i_local_qa_hotfix(ProductWorkspace, phase49_3f_workspace_module)
     # 49.3I keeps the same composition-root rule. Pricing UI is extended only
     # after the mature 49.3F/3G/3H workspace layers are complete.
     install_phase49_3i_pricing_workspace(ProductWorkspace)
@@ -221,6 +226,9 @@ def main() -> int:
     print("EPIC49_3I_ARCHIVE_BLOCK_DEDUPE=ENABLED", flush=True)
     print("EPIC49_3I_SOURCE_TEXT_LATIN_SAFE=ENABLED", flush=True)
     print("EPIC49_3I_LIGHTWEIGHT_PRODUCT_LIST=ENABLED", flush=True)
+    print("EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED", flush=True)
+    print("EPIC49_3I_PRODUCT_LIST_ONLY_IMAGE_NAME_EDIT=ENABLED", flush=True)
+    print("EPIC49_3I_AI_PROGRESS_FIRST_PAINT=ENABLED", flush=True)
     print("EPIC49_3I_PRICING_FIXED_RANGE_FORMULA=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
