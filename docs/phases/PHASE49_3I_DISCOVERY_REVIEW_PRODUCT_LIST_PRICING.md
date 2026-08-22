@@ -3,13 +3,13 @@
 Updated: 2026-08-22
 Branch: `epic/phase49-unified-product-slider-sync`
 Current Hotfix: `49.3I.4`
-Status: `IMPLEMENTED ON GITHUB / FINAL CI PENDING / WINDOWS QA PENDING`
+Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED`
 
 ## Goal
 Phase49.3I makes Catalog Center safe and efficient for high-volume product discovery/review while keeping Product Workspace as the canonical detailed editor.
 
-The phase now owns:
+The phase owns:
 1. exact operator-supplied Search/Listing URL handling,
 2. Preview Candidate → Approve → Full Fetch,
 3. archive/not-needed + blocked identity dedupe,
@@ -109,13 +109,11 @@ Owner local QA requested verification of direct-link versus group intake and exp
 - no Full Fetch for a non-product URL before review,
 - source without a product regex preserves mature fallback routing.
 
-For MakerWorld, a model URL such as:
+MakerWorld Direct Product example:
 `https://makerworld.com/en/models/2834255-cake-stand-small-table-great-for-cakes-cupcakes?from=search#profileId-3158565`
-must route as Direct Product.
 
-A Search/Group URL such as:
+MakerWorld Search example:
 `https://makerworld.com/en/search/models?keyword=cake+stand`
-must route as Preview Candidate discovery.
 
 ### H. Explicit Pricing Modes
 Three independent operator modes remain:
@@ -169,7 +167,7 @@ Preserved mature Phase49.3I runtime:
 - secrets.
 
 ## Regression Tests
-49.3I.4 dedicated tests must prove:
+49.3I.4 CI proved:
 1. five Explorer view modes exist and default to Large.
 2. unknown view mode normalizes safely.
 3. MakerWorld product URL matches source product regex.
@@ -183,12 +181,13 @@ Preserved mature Phase49.3I runtime:
 11. Explorer view persists through existing Catalog settings.
 12. direct-link wrapper reads source `model_url_pattern` before selecting Direct vs Preview.
 13. Explorer hotfix composes after the mature 49.3I gallery installer.
-14. previous 49.3I/3H/3G tests continue to pass.
+14. previous 49.3I/3H/3G tests pass.
 15. Django `makemigrations --check --dry-run` reports no changes.
+16. Full Django suite passes.
 
 ## Database / Migration Safety
 - Django schema change: NONE.
-- Intended Django migration: NONE.
+- Django migration: NONE — CI verified.
 - Catalog local schema change: NONE.
 - existing `settings` key-value table stores only view preference.
 - no destructive schema operation.
@@ -200,27 +199,34 @@ Preserved mature Phase49.3I runtime:
 
 See `docs/ERRORS.md` for Root Cause / Solution / Prevention.
 
-## Acceptance Gate
-Phase49.3I.4 is not complete until all of the following pass:
-1. Phase49.3I GitHub CI.
-2. Phase49.3H regression CI.
-3. Phase49.3G regression CI.
-4. Full Phase49 + Full Django CI.
-5. Windows clean pull + runner v49.3I.4.
-6. visual proof that real images occupy their full thumbnail area.
-7. all five Explorer view modes.
-8. Ctrl and Shift multi-selection.
-9. right-click menu and safe local queue removal.
-10. real Direct Product URL routes direct.
-11. real Group/Category/Search URL routes Preview first.
-12. AI first-paint/progress regression QA.
-13. pricing Fixed/Range/Formula regression QA.
-14. one LOCAL PUBLISH ONLY + Local Django E2E after visual/data QA.
-15. explicit owner acceptance.
-16. only then Production backup/deploy/verification.
+## Final GitHub Validation
+CI-only PR `#49`: CLOSED / NOT MERGED.
+Validated Epic base: `f792fd01d643a7b3d071234a4237f2d6932679b3`.
+Marker head: `3bb010414c55e62a5b09c3b2f0e123870980c0e5` — not merged.
+
+Successful runs:
+- Phase49.3I `32577907763`.
+- Phase49.3H `32577907755`.
+- Phase49.3G `32577907768`.
+- Full Phase49 + Full Django `32577907801`.
+
+## Acceptance Gate Still Pending
+49.3I.4 is not owner-accepted until Windows proves:
+1. clean pull + runner v49.3I.4.
+2. full image thumbnails with no thin strip.
+3. all five Explorer view modes.
+4. Ctrl/Shift multi-selection.
+5. right-click menu and safe queue removal.
+6. real Direct Product URL routes direct.
+7. real Group/Category/Search URL routes Preview first.
+8. AI first-paint/progress regression QA.
+9. Fixed/Range/Formula regression QA.
+10. only after those pass: one LOCAL PUBLISH ONLY + Local Django E2E.
+11. explicit owner acceptance.
+12. only then Production backup/deploy/verification.
 
 ## Current State
-GitHub implementation exists. Final CI probe is pending. Windows has not yet pulled 49.3I.4. Production is untouched.
+GitHub final CI is successful. Windows has not yet pulled/tested 49.3I.4. Production is untouched.
 
 ## Exact Next Step
-Finish repository documentation sync, run the CI-only final validation probe, close it without merge on success, then hand the owner a live-snapshot Windows pull + v49.3I.4 local gate. No Production action yet.
+Owner Windows machine: clean worktree → live fetch/prune → `pull --ff-only` current Epic → repository-owned v49.3I.4 gate with `-LaunchApp` → Explorer/routing manual QA. No local source patch and no Production action.
