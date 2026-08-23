@@ -188,6 +188,42 @@ Prevention Rule:
 - never dump a full provider model catalog into the synchronous Tk display path,
 - cancel/timeout/stale paths must release operator busy state immediately while separately preventing late-result mutation.
 
+### ERR-49-030 — Exact-page discovery succeeded in backend but UX87 did not expose the real operator review state
+Date: 2026-08-23
+Environment: Windows Catalog Center 8.7.1 / UX87 Discovery
+Related Phase: 49.3I.12
+Symptoms:
+- exact MakerWorld Search URL was logged as the actual `PREVIEW_TARGET`,
+- run completed with candidates and zero failed rows while `full_fetch=0`,
+- operator could not clearly see candidate review results, whether discovery was actively working/stopped/done, elapsed time, or the current URL,
+- manual direct Product URL intake was not separated clearly from Search/Listing discovery,
+- Product Workspace image presentation still showed unstable fitting on some aspect ratios.
+Verified Root Cause:
+- UX87 builds Discovery inside final `_ui()` using `super()._scan_ui()`, so a later monkey-patch of App87 `_scan_ui` did not mount the intended Phase49.3I review surface even though backend methods were active,
+- candidate rendering needed to reuse the mature `#0 thumbnail + status/title/source/external/url` Treeview contract rather than invent a parallel incompatible row layout,
+- image rendering needed the existing ERR-49-020 prevention rule applied consistently at the final Product Workspace thumbnail boundary.
+Correct Solution — Phase49.3I.12:
+- mount the operator controls at final UX87 `_ui` composition boundary,
+- preserve mature discovery and Full Fetch methods; do not add a second crawler/extractor,
+- add explicit exact-page and single-product actions with source-regex URL classification,
+- show live badge/progress/elapsed/current URL/detail and Stop-request feedback,
+- bridge the new visible Treeview back to the mature candidate thumbnail renderer,
+- render Product Workspace thumbnails in fixed `228x171` pixel `ImageOps.contain` letterboxed cards without crop/stretch or text-unit Label sizing.
+Verification:
+- PR #58 merged,
+- validated feature head `2a9442055d33777f675ccd3ebe11de8419bfb2b3`,
+- merge commit `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`,
+- Phase49.3I Run `32631604990` SUCCESS,
+- Phase49.3H Run `32631604930` SUCCESS,
+- Phase49.3G Run `32631604945` SUCCESS,
+- Full Phase49 + Full Django Run `32631604928` SUCCESS,
+- no Django migration, no Catalog schema migration, Production untouched.
+Prevention Rule:
+- patch the final visible UX composition boundary, not only a method that the final shell may bypass,
+- observable background work must expose running/stopping/done state and the actual active target,
+- reuse mature candidate/extractor contracts instead of parallel UI/data paths,
+- image viewports use pixel containers with contain-fit semantics.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
