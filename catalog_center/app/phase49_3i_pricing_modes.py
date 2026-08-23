@@ -8,7 +8,6 @@ from .phase49_3i12_runtime_bridge import (
     install_app as _install_phase49_3i12_app,
     install_workspace as _install_phase49_3i12_workspace,
 )
-from .phase49_3i18_operator_editing import install as _install_phase49_3i18_operator_editing
 
 
 PRICING_MODES = {"fixed", "range", "dynamic"}
@@ -180,6 +179,7 @@ def install(workspace_class) -> None:
     # Same-phase final workspace boundary: keep the mature gallery/network logic,
     # replace only its pixel rendering contract with fixed contain/letterbox cards.
     _install_phase49_3i12_workspace(workspace_class)
-    # 49.3I.18 is additive: global editor shortcuts + bulk image metadata +
-    # operator-authoritative title correction/rebuild, after the mature workspace.
+    # 49.3I.18 is imported only here, after launch.py has completed its module
+    # import phase, so this additive bridge cannot perturb startup import order.
+    from .phase49_3i18_operator_editing import install as _install_phase49_3i18_operator_editing
     _install_phase49_3i18_operator_editing(workspace_class)
