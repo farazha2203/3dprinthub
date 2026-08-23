@@ -152,3 +152,12 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     from .phase49_3i_ai_refresh_completion import install as install_ai_refresh_completion
 
     install_ai_refresh_completion(workspace_class, task_center_module)
+
+    # 49.3I.10 keeps the mature provider/request workers but makes their exact
+    # sanitized HTTP payload/result observable, gives high-volume AI diagnostics
+    # scrollbars, and replaces the old title-only quick action with a bounded
+    # cancel/stale-safe flow. It also freezes exception closures scheduled by Tk
+    # so error-reporting callbacks cannot crash after `except ... as exc` exits.
+    from .phase49_3i_ai_trace_recovery import install as install_ai_trace_recovery
+
+    install_ai_trace_recovery(workspace_class, phase49_3f_workspace_module)
