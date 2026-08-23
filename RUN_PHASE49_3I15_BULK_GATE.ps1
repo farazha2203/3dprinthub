@@ -79,8 +79,10 @@ try {
     Run-Native -File $Py -Arguments @(
         "-m", "compileall", "-q",
         "catalog_center\app\phase49_3i15_bulk_discovery_images.py",
+        "catalog_center\app\phase49_3i15_staging_guard.py",
         "catalog_center\app\phase49_3i12_runtime_bridge.py",
-        "catalog_center\tests\test_epic49_phase49_3i15_bulk_discovery_images.py"
+        "catalog_center\tests\test_epic49_phase49_3i15_bulk_discovery_images.py",
+        "catalog_center\tests\test_epic49_phase49_3i15_staging_guard.py"
     )
 } finally {
     Pop-Location
@@ -93,6 +95,7 @@ try {
     Run-Native -File $Py -Arguments @(
         "-m", "unittest", "-v",
         "tests.test_epic49_phase49_3i15_bulk_discovery_images",
+        "tests.test_epic49_phase49_3i15_staging_guard",
         "tests.test_epic49_phase49_3i14_legacy_scan_restore",
         "tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery",
         "tests.test_epic49_phase49_3i12_discovery_image_recovery"
@@ -104,6 +107,7 @@ try {
 Write-Host "PHASE49_3I15_PRODUCT_LIMIT_MAX=100" -ForegroundColor Green
 Write-Host "PHASE49_3I15_IMAGE_LIMIT_MAX=20" -ForegroundColor Green
 Write-Host "PHASE49_3I15_BULK_IMAGES=CLASSIC_BROWSER_HELPERS" -ForegroundColor Green
+Write-Host "PHASE49_3I15_LOCAL_STAGING_REQUIRED=YES" -ForegroundColor Green
 Write-Host "PHASE49_3I15_ADD_TO_PRODUCTS=NO_DIRECT_FULL_FETCH" -ForegroundColor Green
 Write-Host "PHASE49_3I15_ARCHIVE_BLOCK=PRESERVED" -ForegroundColor Green
 Write-Host "PHASE49_3I15_PREVIOUS_REGRESSIONS=PRESERVED" -ForegroundColor Green
