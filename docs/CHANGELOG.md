@@ -2,40 +2,46 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-23 — Phase49.3I.16 Resilient Acquisition Fallback + Cached Candidate Reuse
+## 2026-08-23 — Phase49.3I.17 Single Active AI Runtime
 
 ### Windows Evidence
-A merged 49.3I.15 build still showed previously correct MakerWorld candidates, but a new exact-page run aborted on `Locator.evaluate_all: SyntaxError: Invalid or unexpected token` before image staging.
+Product Workspace AI could remain at `در حال اتصال به هوش مصنوعی`, appeared to enumerate many models/providers despite one saved active AI, sometimes required Task Manager, and a stale callback raised `TclError: invalid command name ...listbox`.
 
 ### Implemented
-- replaced the single mandatory live discovery boundary at final runtime with an ordered ladder: locator-safe Playwright → public HTTP/HTML → attached Chrome 9222 → cached candidate DB,
-- locator-safe discovery avoids embedded `evaluate_all`,
-- reuses previously persisted candidates for the same source/listing URL when live discovery cannot re-read the page,
-- image acquisition now falls through: locator-safe fresh → HTTP parse/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail,
-- each failed/successful method is traced in candidate manifests,
-- local staged image remains mandatory before readiness/Add-to-Products,
-- one candidate failure remains isolated,
-- no Rich Direct Full Fetch dependency was reintroduced,
-- 49.3I.15 limits/Add-to-Products/Archive/Block and all AI/pricing/publish contracts remain unchanged.
-
-### Review Hardening
-Code review identified two risks in the first fallback design: the mature Classic discovery helper could leak a browser on its own exception path, and an all-live-method discovery failure could still terminate the listing. The final runtime discovery layer therefore skips that leak-prone discovery fallback and uses attached Chrome plus persisted-candidate reuse as the later boundaries.
+- Product AI now reads exactly one saved `ai_provider` and that provider's saved model,
+- API key comes only from the secure slot for that exact provider,
+- legacy cross-provider fallback based on whichever secret exists is rejected,
+- hidden AI-on-open is disabled; Product AI requires explicit operator action,
+- Product-bound connection preflight is local and no longer downloads `/models` before every content request,
+- Google Product AI uses the exact saved model without a model-list preflight,
+- explicit AI Settings model search/test remain live,
+- stale destroyed-widget callbacks are logged/suppressed and Product busy flags are released,
+- existing trace/schema repair/watchdog/Stop Waiting/stale-result/manual-override contracts remain.
 
 ### Validation / Merge
-PR #62 merged into `epic/phase49-unified-product-slider-sync`.
-- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
-- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`.
+PR #63 merged into `epic/phase49-unified-product-slider-sync`.
+- final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
+- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`.
 
-Final-head SUCCESS:
-- 49.3I.16 `32645660164`,
-- 49.3I `32645660154`,
-- 49.3I.15 `32645660045`,
-- 49.3I.14 `32645660071`,
-- 49.3H `32645660135`,
-- 49.3G `32645660118`,
-- Full Phase49 + Windows Catalog regressions + Full Django `32645660123`.
+Final runtime-head SUCCESS:
+- 49.3I.17 `32649623837`,
+- 49.3I `32649623808`,
+- 49.3I.16 `32649623695`,
+- 49.3I.15 `32649623705`,
+- 49.3I.14 `32649623679`,
+- 49.3H `32649623825`,
+- 49.3G `32649623755`,
+- Full Phase49 + Windows Catalog regressions + Full Django `32649623804`.
 
 Django migration: NONE. Catalog schema migration: NONE. Production untouched.
+
+## 2026-08-23 — Phase49.3I.16 Resilient Acquisition Fallback + Cached Candidate Reuse
+- final discovery ladder: locator-safe Playwright → HTTP/HTML → attached Chrome 9222 → cached candidate DB,
+- image fallback: locator-safe → HTTP → mature Classic DOM → Chrome 9222 → listing thumbnail,
+- method trace persisted,
+- cached correct candidates may be reused,
+- no Rich Direct dependency returned,
+- PR #62 merged; all required CI success; no migration; Production untouched.
 
 ## 2026-08-23 — Phase49.3I.15 Bulk Exact-Page Images + Add-to-Products
 - product max 100 / image max 20,
