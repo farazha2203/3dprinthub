@@ -222,6 +222,17 @@ Safety: the blocking urllib worker is not force-killed from Tk/Python; it may fi
 Verification: dedicated `test_epic49_phase49_3i_ai_execution_recovery.py`; CI-only PR #53 closed without merge; Phase49.3I Run `32620646603`, Phase49.3H Run `32620646600`, Phase49.3G Run `32620646605`, Full Phase49 + Full Django Run `32620646657` all SUCCESS; Django migration NONE.
 Prevention Rule: UI regression tests must exercise the exact visible operator button command path after all composition layers, not only the canonical backend action. Every long AI action must enter one observable execution path with timeout/cancel/stale-result safety.
 
+### ERR-49-027 — All-Fields AI rerun could not refresh existing AI output and generic Persian titles persisted
+Date: 2026-08-23
+Environment: Windows Product Workspace / storefront SEO
+Related Phase: 49.3I.9
+Symptoms: a specific source title such as `Halloween Samhain Pumpkin LED goth Tealight Holder` could remain translated as the generic `محصول چاپ 3 بعدی`; pressing All-Fields AI again after changing Provider/Model did not replace non-empty generated content; publisher/source-site identity and desktop SEO were not guaranteed to survive all later storefront intelligence/visibility layers.
+Verified Root Cause: the mature Task Center deliberately filled only missing editorial fields. That was correct for manual-override safety, but there was no distinction between operator-authored values and stale/AI-owned values during an explicit All-Fields refresh. Generic legacy placeholders were therefore treated as completed. Separately, older import intelligence could overwrite source attribution after conversion.
+Correct Solution: Phase49.3I.9 adds refresh semantics for AI-owned/previous-pack fields while preserving proven manual overrides, explicitly treats generic Persian titles as refreshable, rejects newly generated generic Persian titles, strengthens the source-grounded Persian/SEO prompt, optionally reuses the mature source `refetch()` when images are below the chosen cap, fills only factual/local readiness defaults, stores the source website name as publisher/source, and re-applies desktop SEO/source attribution after mature visibility sync onto real Product meta/OG/source fields.
+Safety: manual overrides remain protected; source facts/license rights are not fabricated; legal commercial license and sale approval require explicit operator confirmation; price default `500000` Toman is a local fallback only when price is absent; material/color defaults come only from active local inventory; no second crawler/AI client/importer was introduced.
+Verification: CI-only PR #55 closed without merge; Phase49.3I Run `32623618842`, Phase49.3H Run `32623618854`, Phase49.3G Run `32623618950`, Full Phase49 + Full Django Run `32623618792` all SUCCESS; Django migration NONE; Catalog schema migration NONE.
+Prevention Rule: an explicit AI refresh must distinguish AI-owned/generated state from real manual overrides, must validate product-specific title quality, and storefront synchronization tests must assert final public meta/source fields after all mature post-conversion layers.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
