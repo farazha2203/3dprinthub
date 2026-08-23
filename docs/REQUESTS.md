@@ -8,19 +8,15 @@ Older detailed request history remains available in Git history. This file keeps
 
 ### REQ-49H-001 — Unified SEO execution visibility
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- SEO/AI actions show execution/result/error state.
-- provider/model/request/tokens/cost/log where available.
-- sanitized recoverable errors/results.
+AI/SEO actions expose execution/result/error state with sanitized provider/model/request/tokens/cost/log where available.
 
 ### REQ-49H-002 — Per-product AI/SEO cost
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- record real provider-supported cost only.
-- never invent unsupported cost.
+Record real provider-supported cost only; never invent unsupported cost.
 
 ### REQ-49H-003 — Controlled image intake
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- default 10, hard max 20.
-- persisted/selected/downloaded image cap remains consistent.
+Default 10, hard max 20 across persisted/selected/downloaded image flow.
 
 ## Phase49.3I — Preserved Core Requests
 
@@ -42,7 +38,7 @@ Dedupe by source + external id + normalized URL.
 
 ### REQ-49I-005 — Safe source text persistence
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Unexpected scraped script garbage must not pollute editorial data; source URL/identity and Persian fields remain preserved.
+Unexpected scraped script garbage must not pollute editorial data.
 
 ### REQ-49I-006 — Visual/lightweight Products Explorer
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
@@ -54,111 +50,82 @@ Range must never invoke Formula.
 
 ### REQ-49I-009 — Windows handoff uses live GitHub snapshot
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / ACTIVE`
-- fetch current remote inside the gate,
-- clean exact Epic branch,
-- Local HEAD equals fetched Remote Epic HEAD,
-- ff-only pull,
-- no reset/stash/delete shortcut,
-- ASCII-only Windows PowerShell runner.
-Canonical record: `ERR-49-019`.
+Live fetch, clean exact Epic branch, Local HEAD == fetched Remote HEAD, ff-only pull, no reset/stash/delete shortcut, ASCII-only Windows runner. Canonical record: `ERR-49-019`.
 
 ### REQ-49I-014 — Real Provider Hub credentials/model lists persist
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- AvalAI/OpenRouter/OpenAI/Google real Provider-card fields hydrate from secure storage,
-- model catalogs remain visible/selectable,
-- FTP/Bridge credentials remain secure/persistent,
-- no secret in SQLite/Git/source/logs.
-Canonical record: `ERR-49-025`.
+Provider-card keys hydrate from secure storage, model catalogs remain selectable, FTP/Bridge credentials remain secure/persistent, secrets never enter SQLite/Git/log payloads.
 
 ### REQ-49I-015 — MakerWorld Preview does not break mature source acquisition
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Search/Listing → lightweight Preview → Approve → mature Full Fetch → selected image limit.
-Canonical record: `ERR-49-024`.
 
 ### REQ-49I-016 — All real AI actions are bounded and observable
-Status: `GITHUB_UPDATED IN 49.3I.8 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- real bottom All-Fields action uses mature Task Center,
-- immediate first-paint,
-- connection/send/wait/receive/save/result-error progress,
-- elapsed timer + Stop Waiting,
-- 210-second operator watchdog,
-- late cancelled/timed-out result cannot mutate product,
-- no duplicate AI client/network worker.
-Canonical record: `ERR-49-026`.
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Real All-Fields uses mature Task Center, immediate first-paint, connection/send/wait/receive/save/result/error progress, elapsed timer, Stop Waiting, 210-second watchdog and stale-result discard.
 
 ### REQ-49I-017 — Explicit All-Fields rerun refreshes AI-owned values
-Status: `GITHUB_UPDATED IN 49.3I.9 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- changing Provider/Model and pressing All-Fields regenerates AI-owned/generated content,
-- proven manual edits remain protected,
-- generic Persian title is never accepted as product-specific completion,
-- Persian title/description/SEO remains grounded in real source identity/use/theme/facts,
-- low image count may offer mature source refetch before AI,
-- missing local preparation defaults may be filled without fabricating source facts,
-- source website is publisher/source identity while designer remains separate,
-- Django Product meta/OG/source fields receive verified desktop SEO/source payload.
-Canonical record: `ERR-49-027`.
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Changing Provider/Model and pressing All-Fields regenerates AI-owned output while proven manual edits remain protected; generic titles are rejected; source/SEO facts remain grounded.
 
-### REQ-49I-018 — Exact AI request/result diagnostics + safe title retry
+### REQ-49I-018 — AI request/result/error must be inspectable
 Status: `GITHUB_UPDATED IN 49.3I.10 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner expectation:
-- when AI is slow, fails, returns poor output or times out, the operator must know the exact stage/result instead of guessing,
-- progress dialog must show sanitized data sent and data received,
-- high-volume request/result/error panes must have vertical and horizontal scrollbars,
-- no API key/token/Authorization header may be visible or logged,
-- title translation must rerun even when an old/wrong Persian title already exists,
-- title retry must use the Provider/Model active at the time of the click,
-- title-only wait is bounded to 90 seconds,
-- Stop Waiting/timeout/workspace closure must make late title results stale/non-applicable,
-- provider/network/validation errors remain visible and the app stays open,
-- generic/non-Persian/too-short title output is rejected before write,
-- delayed Tk callbacks must not crash because an `except ... as exc` closure was cleared by Python,
-- the existing All-Fields 210-second stale-result watchdog remains preserved.
+Operator must see scrollable sanitized outgoing request, incoming response and diagnostics; title retry uses current Provider/Model; title watchdog 90 seconds; app must remain open after provider errors.
 Canonical record: `ERR-49-028`.
+
+### REQ-49I-019 — Provider output must satisfy the exact Catalog schema and abort must be immediately retryable
+Status: `GITHUB_UPDATED IN 49.3I.11 / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Owner expectation after real AvalAI trace:
+- a successful HTTP response is not sufficient if field names/types do not match the Catalog contract,
+- AvalAI/OpenRouter must receive the actual JSON Schema,
+- output aliases such as `seo_title` must not silently stand in for required `seo_title_fa`,
+- malformed valid JSON may receive at most one automatic schema-repair request,
+- if repair still violates schema, show the exact mismatch and do not persist partial content,
+- `/models` diagnostics must be summarized so large model catalogs do not freeze Tk,
+- Stop Waiting/watchdog must release Product Workspace busy state immediately,
+- operator must be able to change Provider/Model and start a new request immediately,
+- late output from the old request remains stale and cannot mutate the product,
+- 90-second title and 210-second full-AI watchdogs remain intact,
+- secrets remain redacted and no duplicate AI client is introduced.
+Canonical record: `ERR-49-029`.
 
 ## Operational Release Requests — 2026-08-23
 
 ### REQ-REL-001 — Hand Catalog Center to employees today
-Status: `REQUESTED / WINDOWS RELEASE QA PENDING`
-Goal: employees begin entering/reviewing product/catalog data today.
-
+Status: `REQUESTED / WINDOWS 49.3I.11 RELEASE QA PENDING`
 Acceptance:
-- current GitHub Epic pulled by ff-only live snapshot,
-- runner `49.3I.10` passes,
-- title retry/request-response diagnostics pass,
+- current Epic pulled by live ff-only snapshot,
+- runner `49.3I.11` passes,
+- exact formerly failing AvalAI schema case passes or gives one precise repair/failure,
+- model trace remains responsive/compact,
+- Stop Waiting → Provider/Model change → immediate retry passes,
 - All-Fields product-specific AI/SEO test passes,
 - low-image warning/refetch passes,
 - MakerWorld Preview → Approve → Full Fetch passes,
 - Provider/model/FTP/Bridge persistence passes,
 - Product open/selection and pricing modes pass.
 
-After this QA passes employees may use Catalog Center for data entry. Production publishing still requires Local Publish E2E + explicit owner approval.
+After this QA passes employees may use Catalog Center for controlled data entry. Production still requires one Local Publish E2E + explicit owner approval.
 
 ### REQ-PAY-001 — Normal Store checkout must support online payment
 Status: `REQUESTED / IMPLEMENTATION REQUIRED`
-Verified current gap:
-- mature Phase30 ZarinPal online payment exists for accepted Quote payments,
-- normal Store checkout currently exposes only `bank_transfer`,
-- active Store checkout always redirects to `store:manual_payment`,
-- `StorePayment` has a `gateway` method but Store request/callback/verify integration is not complete.
-
-Required implementation contract:
-- reuse mature ZarinPal/security semantics rather than build a parallel payment stack,
-- server owns/recomputes the order amount,
-- random/idempotent attempt identity,
+- reuse mature Phase30 ZarinPal security semantics,
+- server owns/recomputes amount,
+- idempotent attempt identity,
 - callback cannot trust browser amount/status,
 - stored Authority must match callback Authority,
-- server-to-server Verify required before marking paid,
-- repeated callback cannot double-finalize payment/order/inventory,
-- cancelled/failed/temporary provider errors remain recoverable,
-- manual bank-transfer payment remains available,
+- server-to-server Verify before marking paid,
+- duplicate callback cannot double-finalize payment/order/inventory,
+- failed/cancelled/temporary errors recoverable,
+- bank transfer remains available,
 - Sandbox E2E before live merchant activation,
-- secrets remain in environment/secure server configuration only,
-- one owner-approved low-value Production payment before public live activation.
+- secrets only in environment/secure server configuration,
+- one owner-approved low-value Production payment before public activation.
 
 Current supported online provider in repository: `ZarinPal` only.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.10`.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.11`.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
