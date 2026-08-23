@@ -6,6 +6,7 @@
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
 **Current Hotfix:** `49.3I.15 — Bulk Exact-Page Images + Add-to-Products`  
+**Status:** `MERGED / ALL REQUIRED PR CI SUCCESS / WINDOWS QA PENDING`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک ممنوع.
@@ -101,7 +102,7 @@ Exact Search / Listing / Category URL
 → انتخاب تعداد محصول: 10/20/30/50/100
 → انتخاب تعداد عکس: 5/10/15/20
 → کشف لینک‌های همان صفحه
-→ جمع‌آوری تصاویر عمومی هر محصول با Classic browser helpers
+→ جمع‌آوری و Stage محلی تصاویر عمومی هر محصول با Classic browser helpers
 → نمایش تعداد عکس هر کاندیدا
 → انتخاب موارد موردنظر
 → اضافه کردن انتخاب‌شده‌ها به محصولات
@@ -109,9 +110,10 @@ Exact Search / Listing / Category URL
 → Product Workspace
 ```
 
-در مسیر Exact-Page جدید:
+در مسیر Exact-Page:
 - `extract_direct_link` و Rich Direct Full Fetch جزو مسیر کسب‌وکار نیستند.
 - Candidate image manifest زیر Catalog DATA ذخیره می‌شود؛ Candidate DB migration نداریم.
+- حداقل یک تصویر باید واقعاً Local Stage شده باشد تا Candidate Ready/Addable شود.
 - Add-to-Products از identity/title/source/images آماده‌شده Product review-state می‌سازد و شبکه را دوباره Full Fetch نمی‌کند.
 - یک خطای محصول کل Batch را متوقف نمی‌کند.
 - Stop بین محصولات رعایت می‌شود.
@@ -125,28 +127,29 @@ Exact Search / Listing / Category URL
 - Pricing: Fixed / Range / Formula مستقل؛ Range Formula را اجرا نمی‌کند.
 - Secretها فقط Windows Credential Store/environment.
 
-## 6) Validation — 49.3I.15
-Runtime feature head: `a7cb319c2723ae2f9cfe87a1a00c8b33e7fcf619`.
-PR: `#61`.
+## 6) Validation / Merge — 49.3I.15
+PR `#61` MERGED.
+- final PR head: `5f96d890b2e31e1f1d670c8afb716a1da4fc88d3`
+- merge commit: `953f975e883e6dfcbf61097ac8d324d68d4ca678`
 
-Successful runs:
-- 49.3I.15 `32641268643` — SUCCESS
-- 49.3I `32641268627` — SUCCESS
-- 49.3I.14 `32641268644` — SUCCESS
-- 49.3H `32641268659` — SUCCESS
-- 49.3G `32641268651` — SUCCESS
-- Full Phase49 + Full Django `32641268645` — SUCCESS
+Final-head SUCCESS:
+- 49.3I.15 `32641815323`
+- 49.3I `32641815273`
+- 49.3I.14 `32641815287`
+- 49.3H `32641815289`
+- 49.3G `32641815380`
+- Full Phase49 + Windows Catalog regressions + Full Django `32641815270`
 
 Django migration: NONE.  
 Catalog candidate schema migration: NONE.  
 Production: UNTOUCHED.
 
-## 7) Windows Release Gate — بعد از Merge
+## 7) Windows Release Gate — مرحله جاری
 1. Catalog Center بسته و worktree clean.
-2. live fetch/prune + ff-only pull.
+2. live fetch/prune + ff-only pull current Epic remote HEAD.
 3. `RUN_PHASE49_3I15_BULK_GATE.ps1 -LaunchApp`.
 4. MakerWorld exact Search URL را با 10 محصول × 10 عکس تست کن.
-5. Progress و تعداد عکس هر ردیف باید معلوم باشد.
+5. Progress و تعداد عکس Stage شده هر ردیف باید معلوم باشد.
 6. 2–3 مورد آماده را انتخاب → `اضافه کردن انتخاب‌شده‌ها به محصولات`.
 7. این عمل نباید per-product Direct Full Fetch بزند.
 8. یک مورد را Archive/Block کن.
