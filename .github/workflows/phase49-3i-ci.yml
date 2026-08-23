@@ -42,7 +42,7 @@ jobs:
 
           $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.10"') { throw "49.3I.10 runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.11"') { throw "49.3I.11 runner version missing" }
           if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
           if ($runner -notmatch '\$ExpectedBranch\s*=\s*"epic/phase49-unified-product-slider-sync"') { throw "49.3I expected branch guard missing" }
           if ($runner -notmatch 'git"\s+-Arguments\s+@\("fetch",\s*"--prune",\s*"origin"\)') { throw "49.3I live GitHub fetch guard missing" }
@@ -67,10 +67,16 @@ jobs:
           if ($runner -notmatch 'PHASE49_3I_AI_TRACE_CONSOLE=ENABLED') { throw "49.3I AI trace console marker missing" }
           if ($runner -notmatch 'PHASE49_3I_TITLE_WATCHDOG=90S') { throw "49.3I title watchdog marker missing" }
           if ($runner -notmatch 'PHASE49_3I_EXCEPTION_CALLBACK_GUARD=ENABLED') { throw "49.3I exception callback guard marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_PROVIDER_SCHEMA_STRICT=ENABLED') { throw "49.3I strict provider schema marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_SCHEMA_REPAIR_ONCE=ENABLED') { throw "49.3I one-repair marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_MODEL_TRACE_COMPACT=ENABLED') { throw "49.3I model trace compaction marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_BUSY_RELEASE_ON_ABORT=ENABLED') { throw "49.3I busy release marker missing" }
           if ($runner -notmatch 'phase49_3i_ai_refresh_completion\.py') { throw "49.3I AI refresh source missing from runner" }
           if ($runner -notmatch 'test_epic49_phase49_3i_ai_refresh_completion') { throw "49.3I AI refresh tests missing from runner" }
           if ($runner -notmatch 'phase49_3i_ai_trace_recovery\.py') { throw "49.3I AI trace source missing from runner" }
           if ($runner -notmatch 'test_epic49_phase49_3i_ai_trace_recovery') { throw "49.3I AI trace tests missing from runner" }
+          if ($runner -notmatch 'phase49_3i_schema_runtime_recovery\.py') { throw "49.3I schema runtime source missing from runner" }
+          if ($runner -notmatch 'test_epic49_phase49_3i_schema_runtime_recovery') { throw "49.3I schema runtime tests missing from runner" }
           if ($runner -notmatch 'phase49_3i9_seo_sync\.py') { throw "49.3I SEO sync source missing from runner" }
           if ($runner -notmatch 'test_phase49_3i9_seo_sync') { throw "49.3I SEO sync tests missing from runner" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
@@ -83,6 +89,7 @@ jobs:
           Write-Host "PHASE49_3I_GIT_HANDOFF_CONTRACT=OK"
           Write-Host "PHASE49_3I_AI_REFRESH_COMPLETION_CONTRACT=OK"
           Write-Host "PHASE49_3I_AI_TRACE_RECOVERY_CONTRACT=OK"
+          Write-Host "PHASE49_3I_SCHEMA_RUNTIME_RECOVERY_CONTRACT=OK"
           Write-Host "PHASE49_3I_SEO_SOURCE_SYNC_CONTRACT=OK"
           Write-Host "PHASE49_3I_RUNNER_CONTRACT=OK"
 
@@ -115,6 +122,7 @@ jobs:
             catalog_center/app/phase49_3i_ai_execution_recovery.py \
             catalog_center/app/phase49_3i_ai_refresh_completion.py \
             catalog_center/app/phase49_3i_ai_trace_recovery.py \
+            catalog_center/app/phase49_3i_schema_runtime_recovery.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
             catalog_center/app/phase49_3i_secret_persistence.py \
             store/phase49_3i_pricing_modes.py \
@@ -135,6 +143,7 @@ jobs:
             tests.test_epic49_phase49_3i_ai_execution_recovery \
             tests.test_epic49_phase49_3i_ai_refresh_completion \
             tests.test_epic49_phase49_3i_ai_trace_recovery \
+            tests.test_epic49_phase49_3i_schema_runtime_recovery \
             tests.test_epic49_phase49_3i_pricing_modes \
             tests.test_epic49_phase49_3i_secret_persistence \
             tests.test_epic49_phase49_3h_image_limits \
@@ -143,12 +152,13 @@ jobs:
             tests.test_epic49_phase49_3g_commerce_provenance \
             tests.test_epic49_phase49_3c_image_signature
 
-      - name: Phase49.3I AI refresh trace and source safety contract
+      - name: Phase49.3I AI refresh trace schema runtime and source safety contract
         run: |
           python - <<'PY'
           from pathlib import Path
           completion = Path("catalog_center/app/phase49_3i_ai_refresh_completion.py").read_text(encoding="utf-8")
           trace = Path("catalog_center/app/phase49_3i_ai_trace_recovery.py").read_text(encoding="utf-8")
+          schema_runtime = Path("catalog_center/app/phase49_3i_schema_runtime_recovery.py").read_text(encoding="utf-8")
           content = Path("catalog_center/app/openai_content.py").read_text(encoding="utf-8")
           local_qa = Path("catalog_center/app/phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
           seo_sync = Path("store/phase49_3i9_seo_sync.py").read_text(encoding="utf-8")
@@ -156,6 +166,7 @@ jobs:
 
           assert "install_ai_refresh_completion(workspace_class, task_center_module)" in local_qa
           assert "install_ai_trace_recovery(workspace_class, phase49_3f_workspace_module)" in local_qa
+          assert "install_schema_runtime_recovery(workspace_class, phase49_3f_workspace_module, trace_module)" in local_qa
           assert "self.refetch()" in completion
           assert "normalize_image_limit" in completion
           assert "extract_direct_link(" not in completion
@@ -172,6 +183,12 @@ jobs:
           assert "_freeze_exception_callback" in trace
           assert "phase49-3i10-title-stale-result-discarded" in trace
           assert "orient=\"vertical\"" in trace and "orient=\"horizontal\"" in trace
+          assert '"type": "json_schema"' in schema_runtime
+          assert "structured_content_repair" in schema_runtime
+          assert "previous_invalid_output" in schema_runtime
+          assert "MODEL_TRACE_SAMPLE_LIMIT" in schema_runtime
+          assert "cached_for_request" in schema_runtime
+          assert "_release_busy_state" in schema_runtime
           assert "validate_content_pack" in content
           assert "SOURCE TITLE IS AUTHORITATIVE PRODUCT IDENTITY" in content
           assert "Never replace a specific source title with generic phrases" in content
@@ -183,6 +200,9 @@ jobs:
 
           print("PHASE49_3I_AI_REFRESH_COMPLETION=AI_OWNED_REFRESH_MANUAL_SAFE")
           print("PHASE49_3I_AI_TRACE_CONSOLE=SANITIZED_REQUEST_RESPONSE_SCROLLABLE")
+          print("PHASE49_3I_PROVIDER_SCHEMA=STRICT_WITH_ONE_REPAIR")
+          print("PHASE49_3I_MODEL_TRACE=COMPACT_UI_SAFE")
+          print("PHASE49_3I_BUSY_RELEASE=ABORT_RETRY_SAFE")
           print("PHASE49_3I_TITLE_WATCHDOG=90S_STALE_SAFE")
           print("PHASE49_3I_EXCEPTION_CALLBACK_GUARD=ENABLED")
           print("PHASE49_3I_IMAGE_PREFLIGHT_REFETCH=MATURE_PATH_ONLY")
@@ -238,6 +258,7 @@ jobs:
               Path("catalog_center/app/phase49_3i_ai_execution_recovery.py"),
               Path("catalog_center/app/phase49_3i_ai_refresh_completion.py"),
               Path("catalog_center/app/phase49_3i_ai_trace_recovery.py"),
+              Path("catalog_center/app/phase49_3i_schema_runtime_recovery.py"),
               Path("catalog_center/app/phase49_3i_secret_persistence.py"),
               Path("store/phase49_3i9_seo_sync.py"),
           ]
