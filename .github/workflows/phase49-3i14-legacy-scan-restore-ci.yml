@@ -1,0 +1,115 @@
+name: Phase49.3I.14 Legacy Scan Restore CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+      - agent/phase49-3i14-restore-legacy-scan-403
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3i14:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3i14-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3i14-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3i14/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3i14/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3i14/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3i14/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify hotfix PowerShell encoding and contract
+        shell: pwsh
+        run: |
+          $path = "RUN_PHASE49_3I14_HOTFIX_GATE.ps1"
+          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $path))
+          $nonAscii = @($bytes | Where-Object { $_ -gt 127 })
+          if ($nonAscii.Count -gt 0) { throw "Hotfix runner must remain ASCII-only. Non-ASCII bytes: $($nonAscii.Count)" }
+          $text = [System.Text.Encoding]::ASCII.GetString($bytes)
+          [void][scriptblock]::Create($text)
+          if ($text -notmatch 'RUN_PHASE49_3I_LOCAL_GATE\.ps1') { throw "Base 49.3I gate chaining missing" }
+          if ($text -notmatch 'PHASE49_3I14_LEGACY_TOP_SCAN=RESTORED') { throw "Legacy scan restore marker missing" }
+          if ($text -notmatch 'PHASE49_3I14_SINGLE_PRODUCT_ROUTE=MATURE_BASE_SCAN') { throw "Single-product mature route marker missing" }
+          if ($text -notmatch 'NO RESET / NO STASH / NO DELETE / NO PRODUCTION') { throw "Safety marker missing" }
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare isolated runtime directories
+        run: |
+          rm -rf /tmp/3dprinthub-3i14
+          mkdir -p "$MEDIA_ROOT" "$PRIVATE_MEDIA_ROOT" "$STATIC_ROOT" "$CATALOG_BRIDGE_PENDING_ROOT"
+
+      - name: Compile Phase49.3I.14 surfaces
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3i14_legacy_scan_restore.py \
+            catalog_center/app/phase49_3i12_runtime_bridge.py \
+            catalog_center/tests/test_epic49_phase49_3i14_legacy_scan_restore.py
+
+      - name: Phase49.3I.14 targeted tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_epic49_phase49_3i14_legacy_scan_restore \
+            tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery \
+            tests.test_epic49_phase49_3i12_discovery_image_recovery \
+            tests.test_epic49_phase49_3i_discovery_review
+
+      - name: Verify preservation and routing contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          hotfix = Path("catalog_center/app/phase49_3i14_legacy_scan_restore.py").read_text(encoding="utf-8")
+          bridge = Path("catalog_center/app/phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
+
+          for label in ("شروع اسکن", "توقف محترمانه", "دریافت هوشمند از لینک", "🔎 کشف جدیدها"):
+              assert label in hotfix, label
+          assert "_resolve_legacy_start_scan" in hotfix
+          assert "legacy_start_scan(self)" in hotfix
+          assert 'self.mode_var.set("single")' in hotfix
+          assert "RichPageExtractor" in hotfix
+          assert "extract_direct_link(" not in hotfix
+          assert "async_playwright" not in hotfix
+          assert "_install_phase49_3i14_app(app_class)" in bridge
+          print("PHASE49_3I14_LEGACY_SCAN_RESTORE=OK")
+          print("PHASE49_3I14_SINGLE_PRODUCT_MATURE_ROUTE=OK")
+          print("PHASE49_3I14_PREVIEW_APPROVE_PRESERVED=OK")
+          PY
+
+      - name: Django no-migration safety
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+          echo "PHASE49_3I14_DJANGO_MIGRATION=NONE"
+
+      - name: Launcher smoke
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3i14-launch.txt
+          grep -F "EPIC49_3I_DISCOVERY_REVIEW_QUEUE=ENABLED" /tmp/phase49-3i14-launch.txt
+          grep -F "EPIC49_3I_APPROVAL_BEFORE_FULL_FETCH=ENABLED" /tmp/phase49-3i14-launch.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i14-launch.txt
