@@ -20,9 +20,22 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     The mature 49.3F/49.3H AI request, threading, provider/model, result drawer,
     cost ledger and error handling remain the source of truth. This hotfix only
     inserts a first-paint handoff before calling that existing workflow.
+
+    Same-phase Windows QA recoveries are composed here because this installer is
+    already the verified ProductWorkspace runtime boundary in launch.py. This
+    keeps Preview recovery and the operator-AI bridge active without creating a
+    second network/extraction implementation.
     """
     if getattr(workspace_class, "_phase49_3i_ai_first_paint_installed", False):
         return
+
+    # The Preview patch is independent of ProductWorkspace, but must be installed
+    # in the real runtime. The previous 49.3I.7 regression test exercised install()
+    # directly while launch never invoked it, so Windows could still execute the
+    # broken original evaluate_all expression.
+    from .phase49_3i_preview_recovery import install as install_preview_recovery
+
+    install_preview_recovery()
 
     original_run_ai = getattr(workspace_class, "_phase49_3e_run_ai", None)
     if original_run_ai is None:
@@ -125,3 +138,9 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     workspace_class._phase49_3i_show_ai_startup = _phase49_3i_show_ai_startup
     workspace_class._phase49_3e_run_ai = _phase49_3e_run_ai
     workspace_class._phase49_3i_ai_first_paint_installed = True
+
+    # Compose after first-paint so the real operator buttons enter this wrapper,
+    # then hand off to the mature 49.3H progress/result/error/cost stack.
+    from .phase49_3i_ai_execution_recovery import install as install_ai_execution_recovery
+
+    install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)
