@@ -10,6 +10,7 @@ from .phase49_3i15_bulk_discovery_images import install_app as _install_phase49_
 from .phase49_3i15_staging_guard import install_guard as _install_phase49_3i15_staging_guard
 from .phase49_3i16_resilient_acquisition import install as _install_phase49_3i16_resilient_acquisition
 from .phase49_3i16_review_hardening import install as _install_phase49_3i16_review_hardening
+from .phase49_3i19_source_identity import install_runtime as _install_phase49_3i19_source_identity
 
 
 def _install_late_layers(app_class) -> None:
@@ -19,6 +20,9 @@ def _install_late_layers(app_class) -> None:
     _install_phase49_3i15_staging_guard()
     _install_phase49_3i16_resilient_acquisition()
     _install_phase49_3i16_review_hardening(app_class)
+    # Install after 49.3I.16 because that phase swaps the acquisition entrypoints.
+    # 49.3I.19 then canonicalizes candidate/source titles at the final runtime boundary.
+    _install_phase49_3i19_source_identity()
 
 
 def install_app(app_class, discovery_module=None) -> None:
