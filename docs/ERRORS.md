@@ -45,37 +45,59 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Verified Root Cause:**
 - the 49.3I.15 bulk worker still called the older `discover_preview_candidates()` as one mandatory discovery boundary,
-- that older function contains multiline Python-embedded JavaScript passed to Playwright `evaluate_all`, matching the already known ERR-49-024 escaping failure class,
-- failure happened before candidate image staging, so the program did not exploit other available acquisition methods or the already-persisted correct candidate rows,
-- a single-method dependency contradicted the owner requirement that a failed route must fall through to other known methods.
+- that older function contains multiline Python-embedded JavaScript passed to Playwright `evaluate_all`, matching ERR-49-024,
+- failure happened before candidate image staging,
+- a single-method dependency contradicted the owner requirement that a failed route fall through to known alternatives.
 
 **Correct Solution — Phase49.3I.16:**
-- final discovery ladder is `locator-safe Playwright → public HTTP/HTML → attached Chrome 9222 → cached candidate DB`,
-- new locator-safe discovery contains no embedded `evaluate_all`,
-- if every live listing method fails, previously persisted candidates for the same `source_code + discovered_from URL` are reused,
-- per-candidate image ladder is `locator-safe fresh → HTTP HTML/parser/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail`,
-- each failed method records a trace and the next method is tried,
-- image readiness still requires a real local staged file,
-- `discovery_trace`, `acquisition_trace`, `discovery_method`, `acquisition_method` are persisted in candidate manifests,
-- no Rich Direct Full Fetch dependency is reintroduced.
+- discovery ladder `locator-safe Playwright → public HTTP/HTML → attached Chrome 9222 → cached candidate DB`,
+- per-candidate image ladder `locator-safe fresh → HTTP parser/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail`,
+- each failed method is traced and the next one is tried,
+- cached correct candidates for the same listing may be reused,
+- real local image staging remains required,
+- no Rich Direct dependency returns.
 
-**Review Hardening:**
-- review identified that the initial Classic discovery fallback could leak a browser on errors and that an all-method listing failure could still terminate the run,
-- the final runtime discovery layer therefore does not route through that leak-prone Classic discovery fallback,
-- attached Chrome + persisted-candidate reuse provide the final recovery boundaries.
+**Verification:** PR `#62` merged; all 49.3I.16/49.3I/49.3I.15/49.3I.14/49.3H/49.3G/Full Phase49 + Full Django workflows passed. No migration. Production untouched.
+
+**Prevention:** never make one browser/parser technique the only gate when equivalent verified methods or persisted results exist.
+
+### ERR-49-035 — Product AI mixed saved identity with legacy provider fallback and redundant model-catalog probes
+**Date:** 2026-08-23  
+**Environment:** Windows Catalog Center 8.7.1 after 49.3I.16.  
+**Owner evidence:** operator selected and saved one Provider/Model in AI Center, but Product AI often stayed at `در حال اتصال به هوش مصنوعی`, appeared to enumerate many models/providers, sometimes required Task Manager termination, and one async callback raised `TclError: invalid command name ...listbox`.
+
+**Verified Root Cause:**
+- legacy `App._selected_ai_provider()` only treated AvalAI/OpenAI as explicit and otherwise scanned configured keys, so saved OpenRouter/Google could drift to a different provider,
+- Product Task Center and title paths still consumed that legacy resolver,
+- every Product AI run called `probe_connection()` before useful work; the 49.3I.11 probe downloaded the provider model catalog,
+- Google Product AI could list models again before the content request,
+- `ai_auto_prepare_on_open` defaulted to enabled and could start a hidden request about 900 ms after opening an incomplete product while the operator also started a manual request,
+- a delayed Tk callback could touch a destroyed Listbox and promote a stale UI callback into a fatal dialog.
+
+**Correct Solution — Phase49.3I.17:**
+- Product AI identity comes only from saved `ai_provider` + that provider's saved model,
+- secure key is read only for that exact provider and a cross-provider request is rejected,
+- `auto`/unsaved provider fails closed instead of selecting whichever key happens to exist,
+- hidden AI-on-open is disabled; Product AI runs only after explicit operator action,
+- Product-bound `probe_connection` is a local exact-model preflight and does not request `/models`; actual content generation is the network test,
+- Google Product-bound exact model bypasses `_google_model_info` before generation,
+- Settings Model Search / explicit connection test remain live,
+- stale `invalid command name` Tk callbacks are logged/suppressed and busy flags are released,
+- existing observable request/response/error trace, schema repair, watchdog/Stop Waiting and stale-result guards are preserved.
 
 **Verification:**
-- PR `#62` merged; final head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`; merge `44216546162fead0b752d92cf6cae8d658f034f2`,
-- 49.3I.16 `32645660164` SUCCESS,
-- 49.3I `32645660154` SUCCESS,
-- 49.3I.15 `32645660045` SUCCESS,
-- 49.3I.14 `32645660071` SUCCESS,
-- 49.3H `32645660135` SUCCESS,
-- 49.3G `32645660118` SUCCESS,
-- Full Phase49 + Windows Catalog regressions + Full Django `32645660123` SUCCESS,
+- PR `#63` merged; final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`; merge `7f835f573b92e3aded6275c9421770c0c47d947a`,
+- Phase49.3I.17 `32649623837` SUCCESS,
+- Phase49.3I `32649623808` SUCCESS,
+- Phase49.3I.16 `32649623695` SUCCESS,
+- Phase49.3I.15 `32649623705` SUCCESS,
+- Phase49.3I.14 `32649623679` SUCCESS,
+- Phase49.3H `32649623825` SUCCESS,
+- Phase49.3G `32649623755` SUCCESS,
+- Full Phase49 + Windows Catalog regressions + Full Django `32649623804` SUCCESS,
 - Django migration NONE; Catalog schema migration NONE; Production untouched.
 
-**Prevention:** never make one browser/parser technique the only gate when equivalent verified methods or persisted results exist. Record the method, fail over explicitly, and preserve previously successful discovery data.
+**Prevention:** Product AI must never infer provider from available secrets or enumerate model catalogs during normal generation. Persist one active identity, use it exactly, keep discovery/test network calls explicit, and never start hidden AI work on Product open.
 
 ## OPEN / SEPARATE ITEMS
 
