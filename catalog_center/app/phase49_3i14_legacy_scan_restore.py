@@ -26,12 +26,20 @@ def _walk(root):
 
 
 def _resolve_legacy_start_scan(app_class):
-    """Return the mature BaseApp start_scan hidden by the 49.3I preview wrapper."""
+    """Return the deepest mature BaseApp start_scan, not a preview wrapper.
+
+    The final UX class can have one or more same-phase subclasses/wrappers above
+    the original BaseApp implementation.  Selecting the first parent method is
+    therefore unsafe because a preview wrapper can shadow the mature collector.
+    The app-specific BaseApp implementation is the deepest ``start_scan`` in the
+    MRO; Tk ancestors do not define this project-specific method.
+    """
+    candidates = []
     for parent in app_class.__mro__[1:]:
         candidate = parent.__dict__.get("start_scan")
         if callable(candidate):
-            return candidate
-    return None
+            candidates.append(candidate)
+    return candidates[-1] if candidates else None
 
 
 def install_app(app_class) -> None:
