@@ -4,102 +4,78 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Branch: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.13 — Windows URL Paste + Approved Batch Full-Fetch Recovery`
-Status: `GITHUB UPDATED / PR MERGED / FINAL CI SUCCESS / WINDOWS RERUN REQUIRED`
+Active Hotfix: `49.3I.14 — Restore Mature Scan Controls + Single-Product Route`
+Status: `IMPLEMENTED / PR #60 OPEN / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-Real Windows QA of 49.3I.12 proved the final UX87 discovery panel and exact MakerWorld Preview are now visible and correct: candidate image/title/source/ID/URL rows are populated and the URLs themselves are correct. The same QA exposed two new release blockers:
-- the exact URL field did not provide reliable paste behavior, forcing manual typing,
-- approved multi-candidate Full Fetch opened/closed one visible browser per selected candidate and some rows ended in `failed` without a directly visible technical reason.
+Real Windows QA after 49.3I.13 exposed a regression in the Discovery screen that blocks Catalog release:
+- Phase49.3I.12 had explicitly hidden healthy mature controls including `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
+- the earlier 49.3I Preview layer had also replaced `App87.start_scan`, so simply showing the old `شروع اسکن` button would still route it to Preview instead of the mature collector,
+- the new manual `دریافت محصول تکی` action forced Rich Direct Intake / `RichPageExtractor`; the real MakerWorld product URL `400767` returned `RuntimeError: HTTP 403`, while the owner reports the previous top mature scan path was the working path.
 
-The release was therefore NOT accepted and Local Publish / Production remain blocked.
+The release is therefore NOT accepted. Local Publish and Production remain blocked until Windows verifies the restored mature route.
 
-## Root Cause — ERR-49-031
-Repository inspection confirmed:
-- the 49.3I.12 URL field was a plain `ttk.Entry` without the explicit Windows paste bindings/context menu already used by other operator fields,
-- the mature approved batch method calls the rich direct extractor once per selected candidate and inherited `direct_link.headed=true`, causing one visible persistent browser context per selected row,
-- candidate `last_error` was already persisted but not exposed directly in the final operator surface.
+## Root Cause — ERR-49-032
+This was a regression caused by replacing/hiding healthy acquisition behavior while adding the new Preview/Approve UX. The correct invariant is now explicit: **new discovery controls are additive; mature scan controls and their original collector must remain available and unchanged unless separately approved.**
 
-## Phase49.3I.13 Implemented Delta
-PR `#59` is merged.
+## Phase49.3I.14 Delta
+PR `#60` restores only the broken acquisition boundary:
+- old top controls are restored instead of deleted/replaced,
+- visible `شروع اسکن` is rebound to the original BaseApp mature `start_scan` worker,
+- manual `دریافت محصول تکی` validates the configured Product URL pattern, sets `mode=single`, then uses the same mature BaseApp scan path,
+- `دریافت هوشمند از لینک` remains available as an optional independent tool; it is no longer forced by the new single-product button,
+- new exact-page Preview / candidate review / Approve / Archive / Paste / error-detail controls remain intact,
+- no new crawler/extractor was added.
 
-Operator URL input:
-- explicit Ctrl+V / Ctrl+V uppercase / Shift+Insert support,
-- right-click Paste menu,
-- visible `چسباندن لینک` button,
-- first non-empty clipboard line is used without damaging URL query parameters.
+## CI Incident During Implementation
+Initial 49.3I.14 CI correctly failed because the first MRO resolver selected an intermediate Preview override instead of the mature BaseApp method. The failed command was not repeated unchanged. The resolver was corrected to choose the deepest project `start_scan` implementation, then a new commit triggered fresh CI.
 
-Approved multi-candidate Full Fetch:
-- reuses the existing mature RichPageExtractor; no second crawler/extractor,
-- only the approved batch path temporarily forces background/headless browser mode,
-- original direct-link headed setting is restored when the batch ends/cancels/errors,
-- separate single-product intake keeps its configured headed behavior for login/CAPTCHA recovery,
-- visible `جزئیات خطای انتخابی` reads the already-persisted `last_error` for selected candidates.
+Successful current feature-head workflows (`bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`):
+- Phase49.3I.14 Legacy Scan Restore CI — Run `32636391530` — SUCCESS,
+- Phase49.3I Discovery Review Pricing CI — Run `32636391489` — SUCCESS,
+- Phase49.3H SEO Cost Image Limit CI — Run `32636391571` — SUCCESS,
+- Phase49.3G Workspace Usability CI — Run `32636391563` — SUCCESS,
+- Phase49 Epic Unified CI / Full Django — Run `32636391518` — SUCCESS.
 
-Preserved:
-- exact Search/Listing URL authority,
-- Preview = one thumbnail/basic identity only,
-- Full Fetch only after approval,
-- archive/dedupe,
-- image limit 1..20 default 10,
-- Product Workspace image fit 228x171 contain,
-- AI/provider/schema/trace/manual-override contracts,
-- Fixed/Range/Formula independence,
-- Local/Production publish separation.
-
-## GitHub Validation — 49.3I.13
-Implementation PR: `#59` — MERGED.
-Validated feature head: `b47793c42d807285efbd8d3e005f9979856c4878`.
-Epic merge commit: `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`.
-
-Successful workflows:
-- Phase49.3I Discovery Review Pricing CI — Run `32633932308` — SUCCESS,
-- Phase49.3H SEO Cost Image Limit CI — Run `32633932302` — SUCCESS,
-- Phase49.3G Workspace Usability CI — Run `32633932340` — SUCCESS,
-- Phase49 Epic Unified CI / Full Django — Run `32633932224` — SUCCESS.
-
-Validation includes:
-- runner `49.3I.13` and ASCII-only Windows PowerShell 5.1 contract,
-- live fetched GitHub snapshot guard,
+Validated:
+- restored mature scan method resolution,
+- single-product mature route,
+- preservation of the legacy action set,
+- preservation of 49.3I.12/13 Preview/Approve/Paste behavior,
 - compile,
-- dedicated 49.3I.13 clipboard/batch-browser restoration tests,
-- final runtime bridge installation,
-- no duplicate crawler/extractor,
-- prior Discovery/AI/Provider/SEO/Pricing regressions,
-- Django `makemigrations --check --dry-run`,
+- PowerShell ASCII/safety gate,
+- Django check + no-migration contract,
 - Windows Catalog Epic49 tests,
 - Full Django suite.
 
 ## Database / Migration / Media / Secret Safety
-- Django migration for 49.3I.13: `NONE` — CI verified,
+- Django migration: `NONE`,
 - Catalog schema migration: `NONE`,
 - no DB reset/drop/truncate,
-- no candidate/history/media deletion or rewrite,
-- no credential storage change,
-- Production DB/media/source untouched.
+- no candidate/history/media rewrite/delete,
+- no credential changes,
+- no FTP/Bridge/Production action.
 
-## Windows QA Required Now
+## Windows QA Required After PR Merge
 1. close Catalog Center completely,
 2. require clean Local worktree,
-3. live `git fetch --prune origin` + ff-only pull current Epic,
-4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-5. verify runner `49.3I.13` + `PHASE49_3I_GIT_SNAPSHOT=OK`,
-6. verify Ctrl+V, Shift+Insert, right-click Paste and `چسباندن لینک` in the exact URL field,
-7. run exact MakerWorld page Preview and confirm candidates remain visible before Full Fetch,
-8. select 2+ candidates and run approved Full Fetch; no browser window may flash/open per candidate,
-9. if any row fails, select it and use `جزئیات خطای انتخابی` to capture the exact stored reason,
-10. regression-check direct Product intake, Stop/live state, 228x171 images, AI/provider/model, image limit and Fixed/Range/Formula.
+3. live fetch/prune + ff-only pull current Epic,
+4. run repository hotfix gate `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`,
+5. verify the mature top controls are visible again,
+6. MakerWorld + `single` + `auto` + the same real product URL → use `شروع اسکن`; it must run the old mature collector,
+7. test the new `دریافت محصول تکی`; it must route to the same mature collector and must not force the Rich Direct `HTTP 403` path,
+8. confirm exact-page Preview/Approve still exists and works.
 
-## Local Publish / Production Gate
-Only after this Windows QA passes:
+Do not broaden QA again unless one of these restored contracts fails.
+
+## Next Gate
+Immediately after this focused Windows QA passes:
 - exactly one `LOCAL PUBLISH ONLY`,
-- Local Django E2E verifying title/SEO/source/images/pricing/Store/Admin,
+- Local Django Store/Admin E2E,
+- verify title/SEO/source/images/pricing/visibility,
 - explicit owner approval,
-- then read-only Host/branch/MySQL/backup/rollback verification and Production deploy from GitHub.
+- then read-only Production state/branch/MySQL/backup/rollback verification and GitHub-only deploy.
 
 ## Next Product Phase
-Normal Store checkout still uses bank transfer/manual payment. After Catalog acceptance the next implementation track is Store ZarinPal request/callback/verify + Sandbox E2E, reusing mature Phase30 security semantics.
-
-## Exact Next Task
-Windows must pull the current live Epic and rerun the repository-owned 49.3I.13 gate. Do not repeat the failing 49.3I.12 batch action before that pull. Local Publish and Production remain blocked.
+After Catalog acceptance/deploy, proceed to normal Store ZarinPal checkout request/callback/verify + Sandbox E2E.
