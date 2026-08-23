@@ -99,6 +99,37 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Prevention:** Product AI must never infer provider from available secrets or enumerate model catalogs during normal generation. Persist one active identity, use it exactly, keep discovery/test network calls explicit, and never start hidden AI work on Product open.
 
+### ERR-49-036 — Generic discovery title poisoned Product identity and all downstream AI/SEO
+**Date:** 2026-08-23  
+**Environment:** Windows Catalog Center feature QA on `agent/phase49-3i18-operator-bulk-ai-rebuild`.  
+**Owner evidence:** MakerWorld product URL `2896217-ribbed-cake-stand-cookie-platter` was stored with generic model-number identity and generated Persian image/SEO text such as `مدل میکرورلد 2896217`, although the product URL/page identifies a ribbed cake stand / cookie platter.
+
+**Verified Root Cause:**
+- 49.3I.16 classic-link and HTTP fallback discovery intentionally created placeholder text `Model <external_id>` because those methods only needed links,
+- `phase49_3i_discovery_review._candidate_title()` treated `Model 2896217` as a valid non-empty title because it rejected only the bare numeric ID,
+- 49.3I.15 `build_product_payload()` copied the candidate `source_title` directly into the Product payload,
+- therefore the generic placeholder became persistent Product identity before AI ran,
+- 49.3I.18 could manually override Persian identity, but it did not repair the acquisition boundary that supplied the wrong source title.
+
+**Correct Solution — Phase49.3I.19:**
+- classify bare/generic English and Persian model-number labels as non-authoritative,
+- prefer a valid exact-page/scraped title,
+- when live title is unavailable, derive deterministic identity from the exact MakerWorld `/models/<id>-<slug>` URL,
+- canonicalize candidate title before candidate upsert,
+- canonicalize again before Add-to-Products as a final persistence guard,
+- canonicalize Product AI source context so legacy wrong products cannot continue poisoning AI,
+- add Product Workspace actions to re-read/correct source title and optionally rebuild all AI text/SEO from the repaired identity,
+- preserve 49.3I.18 operator-authoritative Persian title and bulk image editing.
+
+**Acceptance examples:**
+- `2845731-cake-stand` → `Cake Stand`,
+- `2896217-ribbed-cake-stand-cookie-platter` → `Ribbed Cake Stand Cookie Platter`,
+- `Model 2896217`, `MakerWorld model 2896217`, `مدل میکرورلد 2896217` are rejected as authoritative titles.
+
+**Verification status:** implementation and focused unit tests are committed on the feature branch; Windows Local gate and manual MakerWorld acceptance are still required. No DB migration. Production untouched.
+
+**Prevention:** placeholders used only to keep a fallback crawler moving must never cross the candidate/Product identity boundary. Every externally sourced entity needs a canonical identity validation before persistence and again before AI generation.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
