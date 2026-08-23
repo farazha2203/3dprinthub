@@ -23,47 +23,60 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-014A: mature top acquisition controls remain additive and preserved.
 
 ### REQ-49I-022 — Bulk exact-page image acquisition + Add-to-Products
-Status: `MERGED / CI SUCCESS / WINDOWS QA PENDING`
+Status: `MERGED / CI SUCCESS`
 - exact Search/Listing/Category URL authoritative,
 - product presets include 30/50/100; hard max 100,
 - images/product supports 10/20; hard max 20,
 - selected rows add to Products without Rich Direct Full Fetch,
 - at least one local staged image required,
-- Archive/Block/dedupe/Stop preserved,
-- Product Workspace/AI/pricing/publish/FTP/Bridge untouched.
+- Archive/Block/dedupe/Stop preserved.
 
 ### REQ-49I-023 — Resilient acquisition fallback + persistent method trace
+Status: `MERGED / ALL REQUIRED CI SUCCESS`
+- failed discovery/image technique must fall through to other registered safe techniques,
+- reuse prior correct candidates for the same listing if live discovery fails,
+- record attempted/successful methods,
+- discovery ladder: locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB,
+- image ladder: locator-safe → HTTP → mature DOM → Chrome 9222 → listing thumbnail,
+- one candidate failure does not abort batch,
+- no Rich Direct dependency returns.
+
+### REQ-49I-024 — Exactly one saved Provider/Model for all Product AI
 Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
-Owner requirement after Windows evidence:
-- if one discovery/crawling/download technique fails, do not stop before trying other registered safe techniques,
-- reuse previously successful candidate discovery for the same exact listing when live rediscovery fails,
-- do not lose the visible/correct candidate list because a later crawler implementation breaks,
-- record which method was attempted, why it failed, and which method finally succeeded,
-- no embedded `evaluate_all` at the new resilient discovery boundary,
-- final discovery ladder: locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB,
-- image ladder: locator-safe fresh → HTTP parser/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail,
-- one candidate failure must not abort the rest of the batch,
-- local staging guard remains mandatory,
-- no Rich Direct Full Fetch dependency is reintroduced.
+Owner requirement after Product Workspace hang evidence:
+- AI Center remains the only place that selects the active Provider and Model,
+- after `ذخیره Provider و مدل فعال`, every Product AI action must use exactly that saved Provider and exactly that saved Model,
+- other configured API keys/providers must not be scanned or selected automatically,
+- normal Product AI must not enumerate the provider model catalog before generation,
+- Google Product AI with an exact saved model must not list models again,
+- Product Workspace open must not start hidden/automatic AI requests,
+- AI requests are explicit operator actions only,
+- existing request/response/error trace and Stop Waiting/watchdog remain,
+- stale destroyed-widget callbacks must not crash or freeze the application,
+- explicit AI Settings `Search model` and `Test connection` remain available and may call the provider API,
+- no acquisition/pricing/publish/FTP/Bridge/schema change is authorized by this request.
 
 Merge evidence:
-- PR `#62` merged,
-- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
-- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`,
-- all required final-head CI success including Full Phase49 + Windows Catalog regressions + Full Django.
+- PR `#63` merged,
+- final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
+- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`,
+- 49.3I.17 `32649623837` SUCCESS,
+- all inherited 49.3I/49.3I.16/49.3I.15/49.3I.14/49.3H/49.3G workflows SUCCESS,
+- Full Phase49 + Windows Catalog regressions + Full Django `32649623804` SUCCESS,
+- no migration; Production untouched.
 
 ## Operational Release Request
 
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED ONLY BY 49.3I.16 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
-Acceptance:
-- live ff-only Windows pull,
-- exact-page batch does not abort on first acquisition-method error,
-- correct cached candidates can be reused,
-- visible staged image counts work,
+Status: `BLOCKED ONLY BY FOCUSED WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Acceptance now includes:
+- exact saved Provider/Model only for Product AI,
+- no hidden AI-on-open request,
+- no Product `/models` preflight/hang,
+- failed/stopped AI leaves the application responsive,
+- exact-page resilient acquisition and staged images remain functional,
 - selected rows Add to Products without Direct Full Fetch,
 - Archive/Block works,
-- one added Product opens with staged images,
 - exactly one Local Publish E2E passes,
 - explicit owner approval.
 
@@ -86,7 +99,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - one owner-approved low-value Production payment before public activation.
 
 ## Canonical Windows Gate
-`RUN_PHASE49_3I16_FALLBACK_GATE.ps1`; it chains the 49.3I.15 gate and all prior 49.3I regression gates.
+`RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1`; it chains 49.3I.16 and every prior Phase49.3I regression gate.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
