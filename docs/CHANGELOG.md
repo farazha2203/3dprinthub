@@ -2,92 +2,83 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-23 — Phase49.3I.10 AI Trace + Safe Title Retry Recovery
+## 2026-08-23 — Phase49.3I.11 Provider Schema + Trace/Busy Runtime Recovery
 
-### Owner Runtime Evidence
-- title translation could appear to fail even after the AI provider returned HTTP 200,
-- operator could not see the exact request/result/error path for title retry,
-- wrong Persian title needed to be explicitly regenerated with a newly selected Provider/Model,
-- long/failed AI operations needed a safe stop without closing the app,
-- high-volume diagnostics needed scrollbars.
+### Owner Windows Evidence
+The AI trace showed AvalAI `gemini-3.5-flash-lite` returned HTTP success and useful Persian content, including a good product-specific `title_fa`, but the JSON contract did not match the repository schema:
+- `seo_title` instead of `seo_title_fa`,
+- `seo_description` instead of `seo_description_fa`,
+- `content_notes` as a string instead of an array,
+- other required fields missing/incomplete.
 
-### Root Cause — ERR-49-028
-- delayed Tk callbacks captured `except Exception as exc` directly; Python clears the exception target after leaving the except block, so the later callback could raise `NameError: cannot access free variable 'exc'`,
-- title-only translation had a separate minimal background path without mature trace/watchdog/stale-result safety,
-- existing provider diagnostics stored summaries but did not expose sanitized outgoing/incoming payloads to the operator.
+The same trace showed the full `/models` provider catalog being rendered in the Tk diagnostics pane. After changing/stopping AI, the Workspace could also remain busy until the old worker returned.
+
+### Root Cause — ERR-49-029
+- AvalAI/OpenRouter `structured_response()` requested generic `json_object` but did not send the actual Catalog JSON Schema to the compatible gateway.
+- 49.3I.10 traced full model catalogs into Tk `Text`, adding avoidable UI work.
+- Stop Waiting/watchdog made a generation stale but did not immediately release all parent busy flags; stale wrappers could return before mature cleanup.
 
 ### Fixed
-- added `catalog_center/app/phase49_3i_ai_trace_recovery.py`,
-- final AI progress dialog now contains scrollable `ارسالی`, `دریافتی`, and `خطا / Diagnostics` tabs,
-- vertical and horizontal scrollbars added for large request/result/error content,
-- OpenAI-compatible and Google Gemini HTTP payload/result tracing is shown and written to existing Phase49 JSONL diagnostics,
-- API keys/tokens/Authorization headers remain excluded/redacted,
-- explicit title retry always uses current Provider/Model even when old `title_fa` is non-empty,
-- title-only watchdog is 90 seconds,
-- Stop Waiting/timeout/workspace close makes title generation stale; late result cannot modify the product,
-- generic/non-Persian/too-short title output is rejected before persistence,
-- targeted Tk `after()` exception-closure freezing prevents delayed `exc` callbacks from dereferencing a cleared closure,
-- existing 210-second All-Fields watchdog and 49.3I.9 AI refresh/manual override/source/SEO contracts preserved,
-- no second AI client/crawler/importer introduced.
+- real JSON Schema sent to AvalAI/OpenRouter with strict schema response format where supported,
+- exact schema/property/type contract also embedded in prompt,
+- bounded fallback: strict schema → JSON object → compatibility mode,
+- exact schema validation before apply,
+- one automatic visible repair request for schema-invalid JSON, then fail precisely,
+- explicit selected model used directly,
+- model information cached within request window; duplicate model probes reduced,
+- model-list trace compacted to count + bounded sample,
+- Stop Waiting/watchdog/stale abort immediately releases busy/start/source flags,
+- late old result remains stale and cannot mutate product,
+- 90s title and 210s full-AI guards preserved,
+- no parallel AI client/crawler architecture introduced.
 
-### CI / Merge
-- implementation PR #56 merged after all required workflows passed,
-- validated feature head `8d1f6e02d6f722b8f047f5d7f7763a5a42516191`,
-- merge commit `256c130f179aaa4253898b0d5ec1ce2696ac4bb5`,
-- Phase49.3I `32626758096` SUCCESS,
-- Phase49.3H `32626758114` SUCCESS,
-- Phase49.3G `32626758134` SUCCESS,
-- Full Phase49 + Full Django `32626758119` SUCCESS,
+### Validation
+PR #57 merged.
+- feature head `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`,
+- merge commit `41d37d56437765119b9bb274037e9af7a5defbbe`,
+- Phase49.3I Run `32628666588` SUCCESS,
+- Phase49.3H Run `32628666600` SUCCESS,
+- Phase49.3G Run `32628666558` SUCCESS,
+- Full Phase49 + Full Django Run `32628666582` SUCCESS,
 - Django migration NONE,
 - Catalog schema migration NONE,
 - Production untouched.
 
-### Next Gate
-Windows ff-only pull current Epic → runner 49.3I.10 → wrong-title retry/request-response diagnostics → provider/network/Stop Waiting/timeout checks → All-Fields trace → MakerWorld/source/pricing/credential regressions. Only after this passes: one Local Publish E2E, owner approval, then Production release.
+## 2026-08-23 — Phase49.3I.10 AI Trace + Safe Title Retry Recovery
+- added scrollable sanitized outgoing/incoming/error tabs,
+- fixed delayed Tk exception callback closure bug,
+- title retry always uses current Provider/Model,
+- title-only 90-second watchdog + stale-result protection,
+- generic/non-Persian/too-short title validation,
+- PR #56 merged; all required CI success; no migration; Production untouched.
 
 ## 2026-08-23 — Phase49.3I.9 AI Refresh + SEO/Source Completion
-
-### Root Cause — ERR-49-027
-Explicit All-Fields refresh had no distinction between operator-authored values and stale/AI-owned values; generic placeholders could therefore be treated as complete.
-
-### Fixed
-- explicit All-Fields rerun refreshes AI-owned/generated fields,
-- manual overrides remain protected,
+- explicit All-Fields rerun refreshes AI-owned fields while protecting real manual overrides,
 - generic titles rejected,
-- source-grounded Persian/SEO prompt,
-- low-image mature source refetch offer,
-- local readiness defaults without fabricating source facts,
-- source website mapped as publisher/source,
-- Product meta/OG/source fields receive desktop SEO/source payload,
-- license/sale approval remains explicit operator decision.
-
-### Validation
-CI-only PR #55 closed without merge; validated runtime `390c1aba9aaf5282f44a1ec97955af4e987100ba`; Phase49.3I/3H/3G and Full Django all SUCCESS; no migration; Production untouched.
+- source-grounded Persian ecommerce/SEO prompt,
+- low-image mature refetch offer,
+- publisher/source and final Product SEO/source fields preserved,
+- no migration; Production untouched.
 
 ## 2026-08-23 — Phase49.3I.8 Observable AI Execution Recovery
-- real bottom All-Fields button routed to mature Task Center (`ERR-49-026`),
-- immediate first-paint preserved,
-- elapsed timer + Stop Waiting + 210-second stale-result watchdog,
-- no duplicate AI client/network worker,
-- all required CI SUCCESS; no migration; Production untouched.
+- real bottom All-Fields routed into mature Task Center,
+- elapsed timer + Stop Waiting + 210-second stale-result guard,
+- no duplicate AI client/network worker.
 
 ## 2026-08-22 — Phase49.3I.7 Preview + Provider Hub Recovery
-- fixed MakerWorld Preview JS escaping (`ERR-49-024`),
-- real Provider-card key hydration/model auto-load (`ERR-49-025`),
-- FTP/Bridge persistence preserved,
-- all required CI SUCCESS; no migration; Production untouched.
-
-## 2026-08-22 — Phase49.3I.6 Secure Credential Field Persistence
-Initial secure hydration for legacy AI/FTP/Bridge fields; later superseded by 49.3I.7 for real Provider Hub variables.
-
-## 2026-08-22 — Phase49.3I.5 Selection Loop Guard + Compact Product Metadata
-Fixed hidden Treeview selection feedback loop (`ERR-49-022`) and restored compact Product metadata/filters/sorts.
-
-## 2026-08-22 — Phase49.3I.4 Explorer Product Gallery + Source URL Routing
-Fixed clipped thumbnails (`ERR-49-020`); added Explorer views/multi-select/context actions; made source `model_url_pattern` authoritative (`ERR-49-021`).
+- fixed MakerWorld Preview JavaScript escape regression,
+- real Provider-card credentials/model lists rehydrated securely,
+- FTP/Bridge persistence preserved.
 
 ## 2026-08-22 — Earlier Phase49.3I Foundations
-Preserved exact Search URL authority (`ERR-49-013`), Preview before Full Fetch (`ERR-49-014`), default image limit 10/hard max 20, AI first-paint (`ERR-49-018`), Fixed/Range/Formula independence, PS5.1 ASCII runner (`ERR-49-016`), live fetched Git snapshot handoff (`ERR-49-019`), Product Workspace canonical editing, and Local/Production publish separation.
-
-## Payment Discovery — 2026-08-23
-Phase30 ZarinPal is mature for accepted Quote payments. Normal Store checkout remains bank-transfer/manual-payment only, so Storefront request/callback/verify integration is the next urgent implementation after Catalog release QA. Live Store payment must not be enabled by toggling existing Quote payment settings alone.
+Preserved:
+- exact Search/Listing authority,
+- Preview before Full Fetch,
+- image limit default 10 / max 20,
+- visual Product Explorer,
+- selection-loop guard,
+- Fixed / Range / Formula independence,
+- AI first-paint,
+- Windows PS5.1 ASCII runner,
+- live fetched GitHub snapshot handoff,
+- Local/Production publish separation.
