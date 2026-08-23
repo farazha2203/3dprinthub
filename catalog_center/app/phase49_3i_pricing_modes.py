@@ -3,8 +3,29 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from . import phase49_3i_product_list as _phase49_3i_product_list_module
+from .phase49_3i12_runtime_bridge import (
+    install_app as _install_phase49_3i12_app,
+    install_workspace as _install_phase49_3i12_workspace,
+)
+
 
 PRICING_MODES = {"fixed", "range", "dynamic"}
+
+
+# launch.py imports this same-phase pricing module before importing
+# phase49_3i_product_list.install. Wrap that later same-phase composition point so
+# 49.3I.12 mounts *after* the mature Product Explorer while leaving prior phases
+# independently testable (ERR-49-009 prevention rule).
+if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridge", False):
+    _phase49_3i_product_list_install = _phase49_3i_product_list_module.install
+
+    def _phase49_3i12_product_list_install(app_class):
+        _phase49_3i_product_list_install(app_class)
+        _install_phase49_3i12_app(app_class, None)
+
+    _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
+    _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
 
 
 def _money(value) -> int:
@@ -154,3 +175,7 @@ def install(workspace_class) -> None:
     workspace_class.reload = reload
     workspace_class.save = save
     workspace_class._phase49_3i_pricing_modes_installed = True
+
+    # Same-phase final workspace boundary: keep the mature gallery/network logic,
+    # replace only its pixel rendering contract with fixed contain/letterbox cards.
+    _install_phase49_3i12_workspace(workspace_class)
