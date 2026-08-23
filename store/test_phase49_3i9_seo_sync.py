@@ -50,12 +50,32 @@ class Phase493I9SeoSyncTests(SimpleTestCase):
         self.assertIn("meta_title", updates)
         self.assertIn("source_attribution", updates)
 
-    def test_converter_is_wrapped_in_store_composition_root(self):
+    def test_converter_and_final_visibility_are_wrapped_in_store_composition_root(self):
         from pathlib import Path
+
         apps = (Path(__file__).resolve().parent / "apps.py").read_text(encoding="utf-8")
         module = (Path(__file__).resolve().parent / "phase49_3i9_seo_sync.py").read_text(encoding="utf-8")
         self.assertIn("install_phase49_3i9_seo_sync()", apps)
         self.assertIn("publishing.convert_to_fixed_product = convert_to_fixed_product", module)
+        self.assertIn("visibility_module.publish_catalog_product_to_store = publish_catalog_product_to_store", module)
+        self.assertIn("apply_catalog_seo_to_product(product, asset, data", module)
         self.assertNotIn("Product.objects.create", module)
 
-
+    def test_source_attribution_is_source_site_not_designer(self):
+        product = _Product()
+        asset = types.SimpleNamespace(
+            source=types.SimpleNamespace(name="MakerWorld"),
+            source_url="https://makerworld.com/en/models/3132472-example",
+            author_name="Designer Name",
+        )
+        data = {
+            "source_code": "makerworld",
+            "source_url": asset.source_url,
+            "seo_title_fa": "جا شمعی هالووین",
+            "seo_description_fa": "توضیح محصول",
+            "keywords_json": "[]",
+        }
+        apply_catalog_seo_to_product(product, asset, data)
+        self.assertEqual(product.source_name, "MakerWorld")
+        self.assertEqual(product.source_attribution, "MakerWorld")
+        self.assertNotEqual(product.source_attribution, asset.author_name)
