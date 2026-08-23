@@ -161,3 +161,13 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     from .phase49_3i_ai_trace_recovery import install as install_ai_trace_recovery
 
     install_ai_trace_recovery(workspace_class, phase49_3f_workspace_module)
+
+    # 49.3I.11 runs after 49.3I.10 so it sees the final Provider/Progress classes.
+    # It sends the real JSON Schema to compatible gateways, performs one bounded
+    # repair for malformed provider JSON, summarizes huge /models traces, caches
+    # the model catalog within one client request, and releases busy state on
+    # Stop Waiting/watchdog so the operator can immediately choose another model.
+    from . import phase49_3i_ai_trace_recovery as trace_module
+    from .phase49_3i_schema_runtime_recovery import install as install_schema_runtime_recovery
+
+    install_schema_runtime_recovery(workspace_class, phase49_3f_workspace_module, trace_module)
