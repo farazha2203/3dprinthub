@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery`  
+**Current Hotfix:** `49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
@@ -100,9 +100,10 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3I.9 AI Refresh/SEO Source Completion
 → 49.3I.10 AI Trace/Safe Title Retry
 → 49.3I.11 Provider Schema/Trace/Busy Runtime Recovery
+→ 49.3I.12 Observable Exact-Page Discovery/Single Product/Image Fit
 ```
 
-Current status: **49.3I.11 GitHub CI SUCCESS; Windows release QA pending; Production untouched.**
+Current status: **49.3I.12 merged + all required GitHub CI SUCCESS; Windows release QA pending; Production untouched.**
 
 ---
 
@@ -115,7 +116,11 @@ Windows Catalog Center 8.7.1
   ↓
 Persistent Catalog SQLite + Windows Credential Store
   ↓
-Search/Listing Discovery Preview
+Exact Search/Listing/Category URL
+  ↓
+Visible Preview Discovery (live state/progress/elapsed/current URL)
+  ↓
+Candidate Review: one thumbnail + basic identity
   ↓
 Approve / Archive
   ↓
@@ -142,19 +147,32 @@ MySQL + Passenger/LiteSpeed
 Production Verification
 ```
 
+Direct Product URL مسیر جداگانه دارد و با `model_url_pattern` منبع Verify می‌شود.
+
 Production هیچ‌وقت Source of Development نیست.
 
 ---
 
-## 5) Discovery / Business Workflow
+## 5) Discovery / Business Workflow — 49.3I.12
 
 ```text
 Exact Search / Listing / Category URL
+→ "کشف لینک‌های همین صفحه"
+→ Visible Running State
 → Preview Candidate
 → one thumbnail + basic identity/title/url
 → Operator Approve or Archive
 → Approved only: mature Full Fetch
 → selected image limit 1..20 (default 10)
+→ Product Workspace
+```
+
+Direct Product:
+```text
+Exact Product URL
+→ model_url_pattern verified
+→ "دریافت محصول تکی"
+→ mature direct intake
 → Product Workspace
 ```
 
@@ -164,10 +182,22 @@ Exact Search / Listing / Category URL
 - Preview و Archive حق Full Fetch ندارند.
 - Dedupe: source + external id + normalized URL.
 - Source text sanitation بدون آسیب به URL/Persian editorial fields.
+- Worker state باید برای اپراتور observable باشد: running/stopping/done + elapsed + target.
 
 ---
 
-## 6) Provider / Secret Contract
+## 6) Product Workspace Image Contract — 49.3I.12
+
+- Product Workspace همچنان editor اصلی است.
+- کارت تصویر باید pixel contract داشته باشد، نه Tk text-unit sizing.
+- viewport ثابت: `228x171`.
+- `ImageOps.contain` + letterbox.
+- crop/stretch ممنوع.
+- landscape و portrait باید در viewport یکسان و قابل مقایسه نمایش داده شوند.
+
+---
+
+## 7) Provider / Secret Contract
 
 Source of Truth امن: **Windows Credential Store / environment**.
 
@@ -184,9 +214,8 @@ Providers:
 
 ---
 
-## 7) AI Execution Contract — 49.3I.11
+## 8) AI Execution Contract — Preserved Through 49.3I.12
 
-### Preserved from 49.3I.8–10
 - real bottom All-Fields uses mature Task Center,
 - immediate first-paint,
 - scrollable sanitized request / response / diagnostics tabs,
@@ -197,33 +226,20 @@ Providers:
 - explicit rerun refreshes AI-owned fields but protects proven manual overrides,
 - generic product titles rejected,
 - source-grounded Persian ecommerce/SEO content,
-- source website remains publisher/source identity.
-
-### 49.3I.11 / ERR-49-029
-Owner trace proved AvalAI could return HTTP 200 + useful Persian content but violate the application schema (`seo_title` vs `seo_title_fa`, `seo_description` vs `seo_description_fa`, wrong `content_notes` type, missing required keys).
-
-Fix:
-- AvalAI/OpenRouter receive the real JSON Schema,
-- strict schema format preferred and exact schema always included in prompt,
-- bounded compatibility fallback,
-- schema validation before persistence,
-- one repair request for a schema-invalid valid JSON,
-- second schema failure becomes a precise visible error,
-- explicit selected model runs directly,
-- model catalog cached within request window,
-- duplicate model probes reduced,
-- `/models` trace summarized to keep Tk responsive,
-- Stop Waiting/watchdog/stale abort immediately releases Workspace busy flags,
-- new Provider/Model request can start immediately,
+- AvalAI/OpenRouter receive actual JSON Schema,
+- exact schema validation before persistence,
+- one bounded repair request,
+- compact `/models` trace,
+- Stop Waiting/watchdog/stale abort immediately releases busy state,
 - late old output remains stale/non-applicable.
 
 ---
 
-## 8) Product Workspace / Explorer / Pricing
+## 9) Product Explorer / Pricing
 
 Preserved:
-- Product Workspace = canonical detailed editor.
 - Explorer = visual/lightweight browse/select/preview surface.
+- Product Workspace = canonical detailed editor.
 - selection feedback-loop guard.
 - safe local queue actions.
 
@@ -236,47 +252,61 @@ Range نباید Formula را اجرا کند.
 
 ---
 
-## 9) Latest Validation
+## 10) Latest Validation — 49.3I.12
 
-PR #57 merged after CI.
-Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
-Epic merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
+PR #58 merged after CI.
+Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
+Epic merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
 
 Runs:
-- Phase49.3I `32628666588` — SUCCESS
-- Phase49.3H `32628666600` — SUCCESS
-- Phase49.3G `32628666558` — SUCCESS
-- Full Phase49 + Full Django `32628666582` — SUCCESS
+- Phase49.3I `32631604990` — SUCCESS
+- Phase49.3H `32631604930` — SUCCESS
+- Phase49.3G `32631604945` — SUCCESS
+- Full Phase49 + Full Django `32631604928` — SUCCESS
 
-Verified runner 49.3I.11, ASCII/live-Git guard, compile, exact owner schema regression, strict provider schema, one repair, compact model trace, abort busy release, stale-result safety, prior AI/source/provider/Explorer/pricing/SEO regressions, no migration, Windows Catalog tests and Full Django suite.
+Verified:
+- runner 49.3I.12,
+- ASCII/live-Git guard,
+- compile,
+- exact-page/product URL classification,
+- UX87 final composition-boundary mounting,
+- candidate Treeview mature renderer compatibility,
+- live status/stop contracts,
+- 228x171 contain image fit,
+- prior AI schema/trace/refresh/manual override/source/provider/Explorer/pricing/SEO regressions,
+- no migration,
+- Windows Catalog tests,
+- Full Django suite.
 
 Production: UNTOUCHED.
 
 ---
 
-## 10) Error Knowledge Base
+## 11) Error Knowledge Base
 
 قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
-Latest relevant: ERR-49-013 through ERR-49-029, especially 026/027/028/029 for current AI behavior.
+Latest relevant: ERR-49-013 through ERR-49-030, especially:
+- 017: wrong visible UX composition boundary,
+- 020: pixel image vs text-unit sizing,
+- 026–029: AI execution/schema/trace behavior,
+- 030: exact-page discovery backend success but missing visible operator state.
 
 ---
 
-## 11) Employee Release Gate — Today
+## 12) Employee Release Gate — Today
 
 1. Catalog Center بسته باشد.
 2. worktree clean.
 3. live `git fetch --prune origin` + ff-only pull current Epic.
-4. Runner `49.3I.11` با `-LaunchApp`.
-5. همان محصول/مدل AvalAI که قبلاً schema غلط داد دوباره اجرا شود.
-6. schema exact یا حداکثر یک repair request دیده شود.
-7. `/models` trace خلاصه باشد و UI responsive بماند.
-8. Stop Waiting → تغییر Provider/Model → درخواست جدید فوراً قابل اجرا باشد.
-9. پاسخ دیرهنگام قبلی نباید روی محصول اعمال شود.
-10. title / All-Fields trace + watchdogها بررسی شوند.
-11. low-image source refetch offer.
-12. MakerWorld Preview → Approve → Full Fetch.
-13. Provider/model/FTP/Bridge persistence.
-14. Product open/selection + Fixed/Range/Formula.
+4. Runner `49.3I.12` با `-LaunchApp`.
+5. exact MakerWorld `cake+stand` Search URL با دکمه exact-page.
+6. badge/progress/elapsed/current URL دیده شود.
+7. candidate links قبل از Full Fetch دیده شوند.
+8. یک candidate → Approve → Full Fetch.
+9. یک Product URL واقعی → single-product intake.
+10. Stop feedback دیده شود.
+11. Product Workspace images → portrait/landscape equal 228x171 contain cards.
+12. AI/provider/model/image-limit/pricing regression.
 
 اگر PASS شد کارمندها می‌توانند controlled Catalog data entry را شروع کنند.
 
@@ -288,11 +318,30 @@ Latest relevant: ERR-49-013 through ERR-49-029, especially 026/027/028/029 for c
 
 ---
 
-## 12) Payment Track
+## 13) Production Gate
 
-Phase30 ZarinPal برای Quote payment بالغ است، ولی Store cart checkout هنوز bank-transfer/manual-payment است. Store gateway request/callback/verify کامل نشده است.
+بعد از Windows QA + Local Publish E2E + تأیید صریح مالک:
+1. read-only host state verify,
+2. project root/branch/commit verify,
+3. clean/safe host state,
+4. `.env`/persistent import state backup,
+5. `manage.py check`,
+6. `makemigrations --check --dry-run`,
+7. verify `connection.vendor == mysql` + exact DB name,
+8. migration plan,
+9. backup before migration if any,
+10. collectstatic,
+11. Passenger restart,
+12. HTTP/store/admin/product/media smoke/data verification,
+13. docs update.
 
-Next urgent implementation after Catalog release:
+---
+
+## 14) Next Product Phase — Store ZarinPal Checkout
+
+Phase30 ZarinPal برای Quote payment بالغ است، ولی Store cart checkout هنوز bank-transfer/manual-payment است.
+
+Next urgent implementation after Catalog acceptance:
 - reuse mature ZarinPal security semantics,
 - server-owned amount,
 - idempotent Store payment attempt,
@@ -302,12 +351,13 @@ Next urgent implementation after Catalog release:
 - finalize inventory/order exactly once,
 - keep manual bank transfer,
 - Sandbox E2E before live activation,
+- secrets outside Git,
 - owner-approved low-value live test.
 
 Current supported online provider: ZarinPal.
 
 ---
 
-## 13) Exact Next Step
+## 15) Exact Next Step
 
-Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.11 را اجرا کند. تا قبل از Windows acceptance، Local Publish/Production/live payment ممنوع است.
+Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.12 را اجرا کند. اگر PASS شد، بدون ایجاد Hotfix جدید یک Local Publish E2E انجام می‌شود؛ بعد از تأیید مالک وارد Production gate و سپس Store ZarinPal phase می‌شویم.
