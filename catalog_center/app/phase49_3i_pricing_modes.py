@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from . import phase49_3i_product_list as _phase49_3i_product_list_module
-from .phase49_3i12_discovery_image_recovery import (
+from .phase49_3i12_runtime_bridge import (
     install_app as _install_phase49_3i12_app,
     install_workspace as _install_phase49_3i12_workspace,
 )
