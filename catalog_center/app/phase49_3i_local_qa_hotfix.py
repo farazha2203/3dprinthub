@@ -29,10 +29,6 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     if getattr(workspace_class, "_phase49_3i_ai_first_paint_installed", False):
         return
 
-    # The Preview patch is independent of ProductWorkspace, but must be installed
-    # in the real runtime. The previous 49.3I.7 regression test exercised install()
-    # directly while launch never invoked it, so Windows could still execute the
-    # broken original evaluate_all expression.
     from .phase49_3i_preview_recovery import install as install_preview_recovery
 
     install_preview_recovery()
@@ -124,13 +120,9 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
                 original_run_ai(self, scope)
             finally:
                 self._phase49_3i_ai_starting = False
-                # If the existing flow exited before creating its real AIProgress
-                # (for example missing API key), remove the startup handoff.
                 if _safe_exists(getattr(self, "_phase49_3i_ai_startup_win", None)):
                     self._phase49_3i_close_ai_startup()
 
-        # Yield to Tk first. This guarantees the operator sees immediate feedback
-        # before the existing synchronous save/preflight block runs.
         self.after(STARTUP_DELAY_MS, invoke_existing_flow)
         return None
 
@@ -139,35 +131,29 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     workspace_class._phase49_3e_run_ai = _phase49_3e_run_ai
     workspace_class._phase49_3i_ai_first_paint_installed = True
 
-    # Compose after first-paint so the real operator buttons enter this wrapper,
-    # then hand off to the mature 49.3H progress/result/error/cost stack.
     from .phase49_3i_ai_execution_recovery import install as install_ai_execution_recovery
 
     install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)
 
-    # 49.3I.9 extends the *real* all-fields button after 49.3I.8 routing exists:
-    # optional source-image preflight, repeatable AI-owned refresh, readiness
-    # defaults and operator-only final confirmations. No second AI/source client.
     from . import phase49_3e_ai_task_center as task_center_module
     from .phase49_3i_ai_refresh_completion import install as install_ai_refresh_completion
 
     install_ai_refresh_completion(workspace_class, task_center_module)
 
-    # 49.3I.10 keeps the mature provider/request workers but makes their exact
-    # sanitized HTTP payload/result observable, gives high-volume AI diagnostics
-    # scrollbars, and replaces the old title-only quick action with a bounded
-    # cancel/stale-safe flow. It also freezes exception closures scheduled by Tk
-    # so error-reporting callbacks cannot crash after `except ... as exc` exits.
     from .phase49_3i_ai_trace_recovery import install as install_ai_trace_recovery
 
     install_ai_trace_recovery(workspace_class, phase49_3f_workspace_module)
 
-    # 49.3I.11 runs after 49.3I.10 so it sees the final Provider/Progress classes.
-    # It sends the real JSON Schema to compatible gateways, performs one bounded
-    # repair for malformed provider JSON, summarizes huge /models traces, caches
-    # the model catalog within one client request, and releases busy state on
-    # Stop Waiting/watchdog so the operator can immediately choose another model.
     from . import phase49_3i_ai_trace_recovery as trace_module
     from .phase49_3i_schema_runtime_recovery import install as install_schema_runtime_recovery
 
     install_schema_runtime_recovery(workspace_class, phase49_3f_workspace_module, trace_module)
+
+    # 49.3I.17 is the final ProductWorkspace AI boundary. It deliberately runs
+    # after the observable/schema recovery layers so it can keep those mature
+    # diagnostics while enforcing one exact operator-saved Provider/Model,
+    # removing hidden AI-on-open work and skipping the redundant /models probe
+    # before every product request.
+    from .phase49_3i17_single_active_ai_runtime import install as install_single_active_ai_runtime
+
+    install_single_active_ai_runtime(workspace_class, phase49_3f_workspace_module)
