@@ -5,67 +5,66 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.13 — Windows URL Paste + Approved Batch Full-Fetch Recovery`
-Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS RERUN REQUIRED`
+Current Hotfix: `49.3I.14 — Restore Mature Scan Controls + Single-Product Route`
+Status: `IMPLEMENTED / PR #60 OPEN / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Permanent Delivery Order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority
-1. pass Windows 49.3I.13 acceptance,
-2. run exactly one Local Publish E2E,
-3. obtain explicit owner approval,
-4. verify Host/branch/MySQL/backup/rollback and deploy the approved GitHub snapshot,
-5. implement normal Store-cart ZarinPal integration,
-6. pass ZarinPal Sandbox E2E,
-7. only then perform one owner-approved low-value live payment.
+1. merge 49.3I.14 after successful CI,
+2. focused Windows QA of restored mature acquisition only,
+3. exactly one Local Publish E2E,
+4. explicit owner approval,
+5. Host/branch/MySQL/backup/rollback verification + Production deploy from GitHub,
+6. then normal Store-cart ZarinPal integration and Sandbox E2E.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Encoding → Gallery/First Paint → Live Git Snapshot → Explorer/URL Routing → Selection Guard → Credential Hydration → Preview/Provider Recovery → Observable All-Fields → AI Refresh/SEO Source Completion → AI Trace/Safe Title Retry → Provider Schema/Trace/Busy Recovery → Exact-Page Operator/Image Fit → Windows Paste/Approved Batch Recovery`.
+`Discovery Review → PS5.1 Encoding → Gallery/First Paint → Live Git Snapshot → Explorer/URL Routing → Selection Guard → Credential Hydration → Preview/Provider Recovery → Observable All-Fields → AI Refresh/SEO → AI Trace → Provider Schema Recovery → Exact-Page Operator/Image Fit → Paste/Batch Recovery → Mature Scan Restoration`.
 
-## 49.3I.13 — Current Runtime
-Real Windows 49.3I.12 QA proved exact MakerWorld Preview/result URLs are correct, then exposed two operator defects: URL paste was unreliable and approved multi-selection inherited `direct_link.headed=true`, opening one visible browser per candidate. Stored candidate errors were not directly visible.
+## 49.3I.14 — Current Runtime Delta
+Windows QA showed that 49.3I.12 had hidden healthy mature acquisition buttons and the 49.3I Preview layer had shadowed the old `start_scan`. The new single-product action also forced Rich Direct Intake and hit MakerWorld HTTP 403.
 
-49.3I.13 adds:
-- Ctrl+V / Shift+Insert / right-click Paste / visible Paste Link action,
-- approved batch only: existing RichPageExtractor runs background/headless,
-- original direct-link browser setting is restored after batch completion/cancel/error,
-- single-product intake keeps configured headed behavior,
-- selected candidate `last_error` is visible from the operator surface,
-- no duplicate crawler/extractor and no schema/data reset.
+49.3I.14 is intentionally narrow:
+- restore `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها`,
+- rebind `شروع اسکن` to original BaseApp mature scan worker,
+- route new manual single-product action through the same mature `mode=single` path,
+- keep Rich Direct Intake optional rather than mandatory,
+- keep Preview/Approve/Archive/Paste/error-detail UI intact,
+- add no crawler/extractor, migration, DB/media rewrite or Production change.
 
-## Final GitHub Validation — 49.3I.13
-PR `#59`: MERGED.
-Validated feature head: `b47793c42d807285efbd8d3e005f9979856c4878`.
-Merge commit: `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`.
+## GitHub Validation — Feature Head
+Feature head: `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`.
+PR: `#60` OPEN.
 
 Successful runs:
-- Phase49.3I `32633932308` — SUCCESS,
-- Phase49.3H `32633932302` — SUCCESS,
-- Phase49.3G `32633932340` — SUCCESS,
-- Full Phase49 + Full Django `32633932224` — SUCCESS.
+- Phase49.3I.14 Legacy Scan Restore `32636391530` — SUCCESS,
+- Phase49.3I `32636391489` — SUCCESS,
+- Phase49.3H `32636391571` — SUCCESS,
+- Phase49.3G `32636391563` — SUCCESS,
+- Full Phase49 + Full Django `32636391518` — SUCCESS.
+
+The first 49.3I.14 targeted test run correctly failed on an MRO-resolution defect; code was changed before a fresh successful run. Canonical incident: `ERR-49-032`.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
 Production: untouched.
 
-## Employee Catalog Release Gate — NEXT
+## Focused Employee Catalog Release Gate — NEXT
+After PR merge:
 1. clean Windows worktree,
 2. live fetch/prune + ff-only pull current Epic,
-3. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-4. verify runner `49.3I.13` and live Git snapshot marker,
-5. verify all four URL paste methods,
-6. exact `cake+stand` MakerWorld page → Preview candidates,
-7. select 2+ candidates → approved Full Fetch with NO visible per-product browser windows,
-8. if a row fails, open Candidate Error Detail and capture the exact stored reason,
-9. verify separate direct Product URL intake,
-10. regression-check Stop/live state, Product images, AI/provider/model, image limit and Fixed/Range/Formula.
+3. run `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`,
+4. confirm mature top actions are visible,
+5. MakerWorld + `single` + `auto` + known product URL → `شروع اسکن` uses the old mature acquisition path,
+6. new `دریافت محصول تکی` uses that same mature path and no longer forces the Rich Direct HTTP-403 route,
+7. confirm the existing exact-page Preview/Approve UI remains present.
 
-After PASS, employees may begin controlled Catalog entry; then one Local Publish E2E is required before Production approval.
+No broad repeat QA unless one of these contracts fails.
 
-## Storefront Payment Track — Next Product Phase
-Normal Store checkout is still manual bank transfer. Next implementation must reuse mature Phase30 ZarinPal semantics: server-owned amount, idempotent attempt, Authority match, server-to-server Verify, duplicate-callback safety, exactly-once finalization, recoverable failures, bank transfer retained, Sandbox E2E before live.
+## After Windows PASS
+Immediately run exactly one `LOCAL PUBLISH ONLY` + Local Django Store/Admin E2E. If title/SEO/source/images/pricing/visibility are correct and owner approves, verify Production state/backup/rollback and deploy the approved GitHub snapshot.
 
-## Immediate Next Step
-Run Windows 49.3I.13. Do not repeat the known-failing 49.3I.12 approved batch path. Local Publish / Production remain blocked until this acceptance passes.
+## Next Product Phase
+Normal Store checkout is still manual bank transfer. Next implementation is ZarinPal request/callback/verify using mature Phase30 security semantics and Sandbox E2E before live activation.
