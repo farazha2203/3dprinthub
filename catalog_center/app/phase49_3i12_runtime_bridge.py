@@ -9,6 +9,7 @@ from .phase49_3i14_legacy_scan_restore import install_app as _install_phase49_3i
 from .phase49_3i15_bulk_discovery_images import install_app as _install_phase49_3i15_app
 from .phase49_3i15_staging_guard import install_guard as _install_phase49_3i15_staging_guard
 from .phase49_3i16_resilient_acquisition import install as _install_phase49_3i16_resilient_acquisition
+from .phase49_3i16_review_hardening import install as _install_phase49_3i16_review_hardening
 
 
 def _install_late_layers(app_class) -> None:
@@ -17,6 +18,7 @@ def _install_late_layers(app_class) -> None:
     _install_phase49_3i15_app(app_class)
     _install_phase49_3i15_staging_guard()
     _install_phase49_3i16_resilient_acquisition()
+    _install_phase49_3i16_review_hardening(app_class)
 
 
 def install_app(app_class, discovery_module=None) -> None:
