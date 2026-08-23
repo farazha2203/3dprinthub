@@ -110,18 +110,17 @@ class Phase493IAIExecutionRecoveryTests(unittest.TestCase):
         self.assertNotIn("AIContentService", source)
         self.assertNotIn("enrich_product(", source)
 
-    def test_launch_composes_runtime_recoveries(self):
-        launch = (Path(__file__).resolve().parents[1] / "launch.py").read_text(encoding="utf-8")
-        self.assertIn("install_phase49_3i_preview_recovery()", launch)
-        self.assertIn(
-            "install_phase49_3i_ai_execution_recovery(ProductWorkspace, phase49_3f_workspace_module)",
-            launch,
+    def test_active_local_qa_boundary_composes_both_runtime_recoveries(self):
+        root = Path(__file__).resolve().parents[1]
+        hotfix = (root / "app" / "phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
+        launch = (root / "launch.py").read_text(encoding="utf-8")
+        self.assertIn("install_preview_recovery()", hotfix)
+        self.assertIn("install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)", hotfix)
+        self.assertIn("install_phase49_3i_local_qa_hotfix(ProductWorkspace, phase49_3f_workspace_module)", launch)
+        self.assertLess(
+            hotfix.index("workspace_class._phase49_3i_ai_first_paint_installed = True"),
+            hotfix.index("install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)"),
         )
-        first_paint = launch.index("install_phase49_3i_local_qa_hotfix(ProductWorkspace, phase49_3f_workspace_module)")
-        recovery = launch.index("install_phase49_3i_ai_execution_recovery(ProductWorkspace, phase49_3f_workspace_module)")
-        pricing = launch.index("install_phase49_3i_pricing_workspace(ProductWorkspace)")
-        self.assertLess(first_paint, recovery)
-        self.assertLess(recovery, pricing)
 
 
 if __name__ == "__main__":
