@@ -79,8 +79,10 @@ try {
     Run-Native -File $Py -Arguments @(
         "-m", "compileall", "-q",
         "catalog_center\app\phase49_3i16_resilient_acquisition.py",
+        "catalog_center\app\phase49_3i16_review_hardening.py",
         "catalog_center\app\phase49_3i12_runtime_bridge.py",
-        "catalog_center\tests\test_epic49_phase49_3i16_resilient_acquisition.py"
+        "catalog_center\tests\test_epic49_phase49_3i16_resilient_acquisition.py",
+        "catalog_center\tests\test_epic49_phase49_3i16_review_hardening.py"
     )
 } finally {
     Pop-Location
@@ -93,6 +95,7 @@ try {
     Run-Native -File $Py -Arguments @(
         "-m", "unittest", "-v",
         "tests.test_epic49_phase49_3i16_resilient_acquisition",
+        "tests.test_epic49_phase49_3i16_review_hardening",
         "tests.test_epic49_phase49_3i15_staging_guard",
         "tests.test_epic49_phase49_3i15_bulk_discovery_images",
         "tests.test_epic49_phase49_3i14_legacy_scan_restore"
@@ -101,9 +104,10 @@ try {
     Pop-Location
 }
 
-Write-Host "PHASE49_3I16_DISCOVERY_FALLBACK=LOCATOR_SAFE_CLASSIC_HTTP" -ForegroundColor Green
+Write-Host "PHASE49_3I16_DISCOVERY_FALLBACK=LOCATOR_SAFE_HTTP_CDP_CACHE" -ForegroundColor Green
 Write-Host "PHASE49_3I16_IMAGE_FALLBACK=LOCATOR_HTTP_MATURE_CDP_LISTING" -ForegroundColor Green
 Write-Host "PHASE49_3I16_NO_EMBEDDED_EVALUATE_ALL=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I16_CACHED_CANDIDATE_REUSE=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I16_TRACE_PER_METHOD=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I16_ONE_FAILURE_DOES_NOT_ABORT_BATCH=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I16_PREVIOUS_REGRESSIONS=PRESERVED" -ForegroundColor Green
