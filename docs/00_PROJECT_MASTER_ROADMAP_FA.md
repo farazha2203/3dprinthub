@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.7 — Preview + Provider Hub Recovery`  
+**Current Hotfix:** `49.3I.8 — Observable AI Execution Recovery`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Local QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
@@ -102,10 +102,11 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3I.5 Selection Loop Guard + Compact Product Metadata
 → 49.3I.6 Initial Secure Credential Field Persistence
 → 49.3I.7 Preview + Provider Hub Recovery
+→ 49.3I.8 Observable AI Execution Recovery
 ```
 
 Current status:
-**49.3I.7 final GitHub CI SUCCESS; Windows QA pending; Production untouched.**
+**49.3I.8 final GitHub CI SUCCESS; Windows interaction/source QA pending; Production untouched.**
 
 ---
 
@@ -124,7 +125,9 @@ Approve / Archive
   ↓
 Approved Full Fetch (mature extractor)
   ↓
-Product Workspace / AI / Pricing / Image Pipeline
+Product Workspace
+  ↓
+Mature AI Task Center / Pricing / Image Pipeline
   ↓
 LOCAL PUBLISH ONLY
   ↓
@@ -147,9 +150,7 @@ Production هیچ‌وقت مستقیماً Source of Development نیست.
 
 ---
 
-## 5) قرارداد Discovery / Business Workflow
-
-Workflow canonical:
+## 5) Discovery / Business Workflow
 
 ```text
 Exact Search / Listing / Category URL
@@ -166,74 +167,68 @@ Exact Search / Listing / Category URL
 - Source `model_url_pattern` مرز Product URL و Group/Category/Search/sub-branch است.
 - Product URL → mature Direct Product intake.
 - Non-product URL → Preview first.
-- Preview حق Full Fetch ندارد.
-- Archive/Not Needed حق Full Fetch ندارد.
+- Preview و Archive حق Full Fetch ندارند.
 - Dedupe: source + external id + normalized URL.
 - Source text sanitation بدون آسیب به URL و Persian editorial fields.
 
-Owner قبلاً تأیید کرده Product-vs-Group/sub-branch routing روی Windows درست شده است.
+49.3I.7 `ERR-49-024` فقط Playwright Stage-1 Preview expression را اصلاح کرد؛ mature Direct/approved Full Fetch را بازنویسی نکرد. 49.3I.8 این قرارداد را حفظ و regression-test کرده است.
 
 ---
 
-## 6) 49.3I.7 Preview Recovery — ERR-49-024
+## 6) Secure Credentials + Provider Model Visibility
 
-Windows log واقعی:
-- `PHASE49_3I_URL_ROUTE=preview_listing`
-- exact MakerWorld target درست بود.
-- `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`
-- `candidates=0 failed=1 full_fetch=0`
-
-Root Cause:
-- Stage-1 Preview یک JavaScript expression را داخل Python normal triple-quoted string ساخته بود.
-- escape مورد انتظار JavaScript برای `\n` قبل از Playwright به literal newline تبدیل شد.
-- Browser یک newline نامعتبر داخل JavaScript single-quoted string دریافت کرد.
-
-Fix:
-- `catalog_center/app/phase49_3i_preview_recovery.py`
-- raw Python JavaScript string با escape صحیح.
-- reuse از `candidates_from_dom_rows()`.
-- فقط Preview boundary عوض شده است.
-- `classic_methods.discover_classic` و `collect_classic_exact` و mature Direct/Full Fetch دست نخورده‌اند.
-
-Prevention:
-- هر JavaScript embedded در Python که به Playwright داده می‌شود باید regression test روی source escaping داشته باشد.
-
----
-
-## 7) Secure Credentials + AI Provider Hub — ERR-49-023 / ERR-49-025
-
-Secure Source of Truth:
+Source of Truth امن:
 **Windows Credential Store / environment**.
 
-Providerهای فعلی:
+Providerها:
 - AvalAI
 - OpenRouter
 - Google Gemini Direct
 - OpenAI Direct
 
-49.3I.6 فقط legacy `ai_key` + FTP password + Bridge token را Hydrate کرد و Windows QA نشان داد real Provider cards هنوز کامل پوشش داده نشده‌اند.
-
-49.3I.7:
-- real `_ai_hub_key_vars` هر Provider را از secure store Hydrate می‌کند.
-- mature Provider Save اگر widget را clear کند، مقدار secure دوباره Masked نمایش داده می‌شود.
-- FTP password + Bridge token hydration حفظ شده.
-- stored OpenRouter management/OpenAI admin fields نیز Masked hydrate می‌شوند.
-- Unsaved non-empty input overwrite نمی‌شود.
+49.3I.7 / `ERR-49-025`:
+- real `_ai_hub_key_vars` را Hydrate می‌کند.
+- بعد از mature secure Save فیلد Masked دوباره مقدار امن را نشان می‌دهد.
+- FTP password + Bridge token حفظ می‌شوند.
+- stored management/admin keys در secure store می‌مانند.
+- Provider model catalogs با existing `AIProviderClient` / Google adapter background-load می‌شوند.
+- Model ID combobox/cache/model picker از همان مسیر mature استفاده می‌کنند.
 - Secret در SQLite/Git/source/log ذخیره نمی‌شود.
-
-### Provider Model Visibility
-Existing mature `AIProviderClient` / Google adapter authoritative باقی می‌ماند.
-
-49.3I.7 برای Providerهایی که key امن دارند:
-- model catalog را background-load می‌کند.
-- existing Model ID combobox/cache/status را پر می‌کند.
-- manual model picker / API refresh را حفظ می‌کند.
-
-هیچ AI client موازی جدیدی ساخته نشده است.
 
 ---
 
-## 8) Product Workspace / Explorer
+## 7) Observable AI Execution — ERR-49-026
+
+### Windows Evidence
+دکمه واقعی پایین Product Workspace یعنی `تکمیل هوشمند همه فیلدهای AI` حدود پنج دقیقه روی AvalAI content generation ماند و مسیر connection/send/receive/save/result برای اپراتور دیده نمی‌شد.
+
+### Root Cause
+Phase49.3C `_phase49_3c_all_ai()` هنوز legacy `ProductStudio.generate_ai("commerce")` را صدا می‌زد و mature `_phase49_3e_run_ai()` را bypass می‌کرد.
+
+پس این دکمه واقعی از این قابلیت‌های موجود عبور نمی‌کرد:
+- 49.3I First Paint،
+- 49.3F connection/send/receive progress،
+- 49.3H result/error/cost visibility.
+
+### 49.3I.8 Fix
+`catalog_center/app/phase49_3i_ai_execution_recovery.py`:
+- real bottom All-Fields → `_phase49_3e_run_ai("all")`.
+- non-Quick stage AI → mature Task Center؛ image scope حفظ می‌شود.
+- Quick/title-only path حفظ می‌شود.
+- AI client یا network worker دوم ساخته نمی‌شود.
+- elapsed time همیشه در progress دیده می‌شود.
+- `توقف انتظار` اضافه شده.
+- watchdog اپراتوری 210 ثانیه است و با upper-bound فعلی یک AI request هماهنگ است.
+- هر execution generation-tag دارد.
+- Cancel/Timeout generation را stale می‌کند.
+- Late stale result حق اعمال روی Product/Image ندارد.
+- Error/Result visible می‌ماند و App بسته نمی‌شود.
+
+Blocking HTTP worker force-kill نمی‌شود؛ اگر دیرتر تمام شود نتیجه آن بعد از Cancel/Timeout discard می‌شود.
+
+---
+
+## 8) Product Workspace / Explorer / Pricing
 
 Preserved:
 - Product Workspace محل canonical ویرایش‌های جزئی/تجاری/SEO/قیمت/متریال.
@@ -241,13 +236,8 @@ Preserved:
 - کارت: تصویر، نام، Product ID، وضعیت، منبع، تعداد عکس، تاریخ اضافه‌شدن، وضعیت انتشار، Edit Product.
 - View: Extra Large / Large / Medium / Small / List.
 - Selection: Normal / Ctrl / Shift + Select All / Clear + context actions.
-- Safe queue removal فقط `upload_ready=0` و `workflow_status=review`.
-- no delete/block/unpublish/Production.
-- selection feedback-loop guard حفظ شده.
-
----
-
-## 9) Pricing / AI Execution
+- selection feedback-loop guard.
+- Safe queue removal فقط local queue state را تغییر می‌دهد.
 
 Pricing modeها مستقل:
 - Fixed
@@ -256,44 +246,40 @@ Pricing modeها مستقل:
 
 Range نباید Formula را اجرا کند.
 
-AI:
-- First Paint قبل از synchronous preflight.
-- mature 49.3H progress/result/error/cost stack حفظ می‌شود.
-- Provider cost ساختگی ممنوع.
-
 ---
 
-## 10) آخرین Validation واقعی
+## 9) آخرین Validation واقعی
 
-### GitHub 49.3I.7
-CI-only PR `#52`: CLOSED / NOT MERGED.
-Validated runtime base: `4e0b1b7f0f8934a03ab74037bdce5f9abe55b425`.
-Marker head: `5097f45f069e40af64d452ffaa8cd07399a977f2` — not merged.
+### GitHub 49.3I.8
+CI-only PR `#53`: CLOSED / NOT MERGED.
+Validated runtime base: `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`.
+Marker head: `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` — not merged.
 
 Runs:
-- Phase49.3I `32585956198` — SUCCESS
-- Phase49.3H `32585956149` — SUCCESS
-- Phase49.3G `32585956156` — SUCCESS
-- Full Phase49 + Full Django `32585956155` — SUCCESS
+- Phase49.3I `32620646603` — SUCCESS
+- Phase49.3H `32620646600` — SUCCESS
+- Phase49.3G `32620646605` — SUCCESS
+- Full Phase49 + Full Django `32620646657` — SUCCESS
 
 Verified:
-- Runner v49.3I.7 ASCII-only Windows PS5.1.
+- Runner v49.3I.8 ASCII-only Windows PS5.1.
 - live Git snapshot guard.
-- Preview JS escaping.
-- Preview layer no full-fetch calls.
-- real Provider Hub secure hydration.
-- Provider model catalog loading/cache/combobox.
-- prior Explorer/selection/routing regressions.
+- exact visible All-Fields → mature Task Center routing.
+- non-Quick stage routing + Quick path preservation.
+- elapsed/watchdog/stale-result safety.
+- no duplicate AI worker/client in recovery layer.
+- Preview recovery remains active.
+- Provider key/model visibility regressions.
+- Explorer/selection/source-routing regressions.
 - Django migration: NONE.
 - Catalog schema migration: NONE.
 - Full Django suite PASS.
 
-Post-validation commits are documentation-only.
 Production: UNTOUCHED.
 
 ---
 
-## 11) Error Knowledge Base
+## 10) Error Knowledge Base
 
 قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
 
@@ -308,26 +294,28 @@ Latest relevant:
 - ERR-49-023: initial secure-field hydration gap
 - ERR-49-024: Preview Playwright JavaScript escape regression
 - ERR-49-025: real Provider Hub key/model visibility gap
+- ERR-49-026: real bottom All-Fields action bypassed mature Task Center
 
 ---
 
-## 12) Gate بعدی Windows
+## 11) Gate بعدی Windows
 
 قبل از Local Publish:
 1. Catalog Center بسته باشد.
 2. worktree clean.
 3. `git fetch --prune origin`.
 4. `git pull --ff-only` current Epic.
-5. Runner v49.3I.7 با `-LaunchApp`.
-6. FTP password + Bridge token بعد از Save/Restart Masked باقی بمانند.
-7. AvalAI/OpenRouter saved key در real Provider cards بعد از Restart Masked دیده شوند.
-8. Provider model lists داخل برنامه load و selectable باشند.
-9. exact MakerWorld Search URL بدون `Locator.evaluate_all SyntaxError` Preview candidate بدهد.
-10. Preview فقط one thumbnail/basic identity باشد.
-11. یک Candidate با image limit=20 Approve شود؛ فقط بعد از Approval Full Fetch اجرا شود.
-12. یک Candidate Archive شود؛ Full Fetch نشود.
-13. Direct Product URL mature path همچنان کار کند.
-14. Product Open / AI first-paint / Fixed-Range-Formula regression QA.
+5. Runner v49.3I.8 با `-LaunchApp`.
+6. دکمه **پایین** All-Fields AI باید First Paint فوری بدهد.
+7. Progress باید connection → send → wait/receive → save → result/error را نشان دهد.
+8. elapsed time + `توقف انتظار` visible باشد و UI responsive بماند.
+9. Stop/210s timeout باید Late Result را non-applicable کند.
+10. exact MakerWorld Search URL بدون `Locator.evaluate_all SyntaxError` Preview candidate بدهد.
+11. Preview فقط one thumbnail/basic identity باشد.
+12. یک Candidate با image limit=20 Approve شود؛ فقط بعد از Approval Full Fetch اجرا شود.
+13. یک Candidate Archive شود؛ Full Fetch نشود.
+14. Provider keys/model lists + FTP/Bridge حفظ شوند.
+15. Product Open/Selection و Fixed/Range/Formula regression QA.
 
 اگر همه PASS شدند:
 - دقیقاً یک `LOCAL PUBLISH ONLY`
@@ -337,7 +325,7 @@ Latest relevant:
 
 ---
 
-## 13) Production Gate
+## 12) Production Gate
 
 Production فعلاً `UNTOUCHED / NOT APPROVED` است.
 
@@ -354,6 +342,6 @@ Production فعلاً `UNTOUCHED / NOT APPROVED` است.
 
 ---
 
-## 14) Exact Next Step
+## 13) Exact Next Step
 
-Windows باید آخرین Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.7 را اجرا کند. تمرکز QA: secure Provider cards + model lists + exact MakerWorld Preview → Approve → Full Fetch. هنوز Local Publish و Production ممنوع است.
+Windows باید آخرین Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.8 را اجرا کند. تمرکز QA فعلی: real bottom AI execution visibility + MakerWorld Preview → Approve → mature Full Fetch. هنوز Local Publish و Production ممنوع است.
