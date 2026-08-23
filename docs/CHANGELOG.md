@@ -2,6 +2,38 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-23 — Phase49.3I.14 Mature Scan Controls + Single-Product Route Restoration
+
+### Owner Windows Evidence
+49.3I.13 still blocked release because the healthy mature top acquisition workflow had disappeared and the new manual single-product action failed on a correct MakerWorld Product URL with `RuntimeError: HTTP 403`.
+
+### Root Cause — ERR-49-032
+- 49.3I.12 explicitly hid `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
+- the 49.3I Preview installer also shadowed `App87.start_scan`, so simply making the old button visible would still route it to Preview rather than the mature BaseApp worker,
+- the new single-product action forced Rich Direct Intake / RichPageExtractor, which returned HTTP 403 for the real MakerWorld product while the mature top scan path remained present in BaseApp and was the owner-confirmed working path.
+
+### Fixed
+- restored the mature top acquisition actions alongside the new Preview/Approve UI,
+- rebound visible `شروع اسکن` to the original BaseApp mature `start_scan`,
+- routed new `دریافت محصول تکی` through the same mature `mode=single` acquisition path,
+- kept `دریافت هوشمند از لینک` as an optional separate tool rather than a forced replacement,
+- preserved exact-page Preview/Approve/Archive/Paste/error-detail behavior,
+- added no new crawler/extractor and did not change publish/FTP/Bridge/AI/pricing behavior.
+
+### Implementation Test Incident
+The first targeted CI correctly caught that the initial MRO resolver selected an intermediate Preview override. The failed command was not repeated unchanged; the resolver was corrected to use the deepest project `start_scan` implementation, then fresh CI passed.
+
+### Validation
+PR #60 open at documentation time; feature head runtime commit `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`.
+- Phase49.3I.14 Legacy Scan Restore Run `32636391530` SUCCESS,
+- Phase49.3I Run `32636391489` SUCCESS,
+- Phase49.3H Run `32636391571` SUCCESS,
+- Phase49.3G Run `32636391563` SUCCESS,
+- Full Phase49 + Full Django Run `32636391518` SUCCESS,
+- Django migration NONE,
+- Catalog schema migration NONE,
+- Production untouched.
+
 ## 2026-08-23 — Phase49.3I.13 Windows URL Paste + Approved Batch Full-Fetch Recovery
 
 ### Owner Windows Evidence

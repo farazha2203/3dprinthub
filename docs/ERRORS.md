@@ -188,6 +188,43 @@ Prevention:
 - batch acquisition must not inherit an interactive headed-browser default intended for manual single-item/login recovery,
 - persisted per-item failure reason must be reachable from the operator surface.
 
+### ERR-49-032 — New Discovery UI hid the mature scan workflow and forced a 403-prone single-product route
+Date: 2026-08-23
+Environment: Windows Catalog Center 8.7.1 / Phase49.3I.13
+Symptoms:
+- healthy top actions that previously fetched products were missing,
+- the user specifically lost `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
+- the new `دریافت محصول تکی` action on a real MakerWorld product (`400767`) failed with `RuntimeError: HTTP 403`,
+- the product URL itself was correct.
+Verified Root Cause:
+- 49.3I.12 explicitly walked the real UX87 scan tab and called `pack_forget()` / `grid_remove()` on those mature controls,
+- the earlier 49.3I discovery installer replaced `App87.start_scan` with Preview discovery, so merely showing the old button would not restore its original behavior,
+- 49.3I.12 manual single-product action called the Rich Direct `extract_direct_link` path; `RichPageExtractor` treats MakerWorld HTTP 403/429 as failure,
+- the mature BaseApp `start_scan` / `_scan_worker` path still existed and was the path the owner reported as working before this regression.
+Correct Solution — Phase49.3I.14:
+- restore the mature top control set instead of replacing it,
+- bind visible `شروع اسکن` to the original BaseApp mature `start_scan`, not the Preview override,
+- make the new `دریافت محصول تکی` action validate Product URL then use that same mature `mode=single` scan route,
+- preserve `دریافت هوشمند از لینک` as an optional separate Rich Direct tool rather than forcing it,
+- preserve the new Preview/Approve/Archive/Paste/error-detail panel alongside the mature controls,
+- add no new crawler/extractor.
+Implementation CI Incident:
+- the first 49.3I.14 resolver chose the first parent `start_scan`; a targeted test failed because an intermediate Preview override was selected (`preview-started` instead of `legacy-started`),
+- the failed CI command was not blindly repeated,
+- the resolver was changed to select the deepest project `start_scan` implementation in the MRO,
+- fresh CI on the changed commit then passed.
+Verification on feature head `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`:
+- Phase49.3I.14 Legacy Scan Restore Run `32636391530` SUCCESS,
+- Phase49.3I Run `32636391489` SUCCESS,
+- Phase49.3H Run `32636391571` SUCCESS,
+- Phase49.3G Run `32636391563` SUCCESS,
+- Full Phase49 + Full Django Run `32636391518` SUCCESS,
+- Django migration NONE; Catalog schema migration NONE; Production untouched.
+Prevention:
+- adding an operator flow does not authorize hiding or rebinding healthy mature actions,
+- UI regression tests must verify both **visibility** and **command routing** of preserved actions,
+- if a mature acquisition path is known-good, new optional intake paths must be additive rather than mandatory replacements.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
