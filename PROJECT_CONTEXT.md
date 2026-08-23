@@ -1,10 +1,10 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
-Updated: 2026-08-22
+Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.7 — Preview + Provider Hub Recovery`
+Current Hotfix: `49.3I.8 — Observable AI Execution Recovery`
 Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -40,15 +40,7 @@ Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment
 - Archive/Not Needed does not Full Fetch,
 - dedupe: source + external id + normalized URL.
 
-Owner already confirmed URL/sub-branch routing is fixed.
-
-## Current Regression Fix — ERR-49-024
-Windows log showed Preview reached the exact MakerWorld target but failed with:
-`Locator.evaluate_all: SyntaxError: Invalid or unexpected token`.
-
-Root cause: Python converted an intended JavaScript `\n` escape inside a normal triple-quoted string into a literal newline before Playwright evaluated it.
-
-49.3I.7 adds `phase49_3i_preview_recovery.py` with a raw JavaScript source string and patches only Stage-1 Preview. Mature `discover_classic` / `collect_classic_exact` full extraction is untouched.
+49.3I.7 corrected the Playwright Preview expression (`ERR-49-024`) without rewriting mature Direct Product/approved Full Fetch. 49.3I.8 preserves that recovery. Real Windows MakerWorld Preview QA is still required.
 
 ## AI Provider Hub Contract
 Current Provider cards:
@@ -59,17 +51,29 @@ Current Provider cards:
 
 The existing `AIProviderClient` / Google adapter remains authoritative for model APIs.
 
-## Current Regression Fix — ERR-49-025
-49.3I.6 hydrated legacy AI/connection fields, but the real Phase49.3F Provider Hub uses `_ai_hub_key_vars` and its mature Save clears those variables after secure persistence.
+49.3I.7 (`ERR-49-025`) hydrates the real per-provider card keys from Windows Credential Store, rehydrates after secure Save, preserves FTP/Bridge credentials, and background-loads provider model catalogs into existing Model ID controls/cache. Secrets remain outside SQLite/Git/source/logs.
 
-49.3I.7:
-- hydrates real per-provider card keys from Windows Credential Store,
-- rehydrates after mature secure Save,
-- preserves FTP password + Bridge token persistence,
-- hydrates stored management/admin masked fields,
-- background-loads configured Provider model catalogs into existing Model ID controls/cache,
-- keeps manual model picker/API refresh,
-- never writes secrets to SQLite/Git/source/logs.
+## Observable AI Execution — ERR-49-026
+Latest Windows screenshot/QA showed the bottom `تکمیل هوشمند همه فیلدهای AI` could sit on AvalAI content generation for roughly five minutes without useful execution visibility.
+
+Verified boundary:
+- that exact Phase49.3C operator action still called legacy `ProductStudio.generate_ai("commerce")`,
+- it bypassed mature `_phase49_3e_run_ai()`,
+- therefore it bypassed the already-implemented 49.3I first-paint and 49.3F/3H connection/send/receive/result/error/cost Task Center.
+
+49.3I.8:
+- routes the real bottom All-Fields action to mature `_phase49_3e_run_ai("all")`,
+- routes non-Quick stage actions through the same Task Center while images retain image scope,
+- preserves Quick/title-only behavior,
+- creates no parallel AI client/network worker,
+- keeps immediate first-paint,
+- adds elapsed time + `توقف انتظار`,
+- adds a 210-second operator watchdog aligned with the existing single-request timeout bound,
+- cancel/timeout invalidates the execution generation,
+- stale late full/image results cannot mutate product data,
+- errors/results remain visible and the app stays open.
+
+The blocking HTTP worker is not force-killed; after cancel/timeout it may finish in the background, but its result is stale and discarded.
 
 ## Products Explorer / Workspace
 Preserved:
@@ -89,7 +93,7 @@ Preserved:
 - Range never invokes Formula.
 
 ## Windows Delivery Contract
-Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.7.
+Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.8.
 - ASCII-only Windows PowerShell 5.1,
 - clean exact Epic branch,
 - live `git fetch --prune origin`,
@@ -97,20 +101,20 @@ Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.7.
 - no fixed Chat SHA as sole truth,
 - no reset/stash/delete shortcut.
 
-## Latest GitHub Validation
-CI-only PR #52: `CLOSED / NOT MERGED`.
-Validated runtime base: `4e0b1b7f0f8934a03ab74037bdce5f9abe55b425`.
-Marker head: `5097f45f069e40af64d452ffaa8cd07399a977f2` — not merged.
+## Latest GitHub Validation — 49.3I.8
+CI-only PR #53: `CLOSED / NOT MERGED`.
+Validated runtime base: `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`.
+Marker head: `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` — not merged.
 
-Runs:
-- Phase49.3I `32585956198` — SUCCESS
-- Phase49.3H `32585956149` — SUCCESS
-- Phase49.3G `32585956156` — SUCCESS
-- Full Phase49 + Full Django `32585956155` — SUCCESS
+Successful runs:
+- Phase49.3I `32620646603` — SUCCESS,
+- Phase49.3H `32620646600` — SUCCESS,
+- Phase49.3G `32620646605` — SUCCESS,
+- Full Phase49 + Full Django `32620646657` — SUCCESS.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
-Post-validation commits are documentation-only.
+Production untouched.
 
 ## Relevant Error Knowledge
 - ERR-49-013 exact Search URL ignored,
@@ -122,21 +126,24 @@ Post-validation commits are documentation-only.
 - ERR-49-022 Treeview selection loop,
 - ERR-49-023 legacy secure-field hydration,
 - ERR-49-024 Preview JavaScript escape regression,
-- ERR-49-025 real Provider Hub key/model visibility.
+- ERR-49-025 real Provider Hub key/model visibility,
+- ERR-49-026 real All-Fields AI action bypassed mature Task Center.
 
 Always inspect `docs/ERRORS.md` before troubleshooting.
 
 ## Current Windows Acceptance Gate
-1. pull current Epic with live fetch + ff-only,
-2. run v49.3I.7 gate with `-LaunchApp`,
-3. FTP password + Bridge token stay masked after Save/restart,
-4. AvalAI/OpenRouter stored keys stay masked in real Provider cards,
-5. configured Provider model lists load and can be selected,
-6. exact MakerWorld Search Preview returns candidates without JS syntax error,
-7. Preview remains one-thumbnail/basic-identity only,
-8. approve candidate with requested image limit (20 allowed) then Full Fetch,
-9. archive candidate → no Full Fetch,
-10. direct Product URL still works,
-11. Product open, AI progress, Fixed/Range/Formula regressions pass.
+1. close Catalog Center and pull current Epic using live fetch + ff-only,
+2. run v49.3I.8 gate with `-LaunchApp`,
+3. click the **bottom** All-Fields AI action,
+4. immediate startup progress must paint,
+5. mature progress must show connection/send/wait/receive/save/result-error,
+6. elapsed time + Stop Waiting remain visible; app stays responsive,
+7. Stop/210s timeout makes any later result stale/non-applicable,
+8. exact MakerWorld Search Preview returns candidates without JS syntax error,
+9. Preview remains one-thumbnail/basic identity only,
+10. approve candidate with image limit 20 then mature Full Fetch,
+11. archive candidate → no Full Fetch,
+12. Provider keys/model lists + FTP/Bridge remain available,
+13. Product open/selection and Fixed/Range/Formula regressions pass.
 
 Only then: one `LOCAL PUBLISH ONLY` → Local Django E2E → explicit owner approval → Production backup/deploy/verify.
