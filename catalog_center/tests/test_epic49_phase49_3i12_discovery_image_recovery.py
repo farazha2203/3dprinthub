@@ -56,6 +56,23 @@ class Phase493I12DiscoveryImageRecoveryTests(unittest.TestCase):
         self.assertIn("در حال کشف لینک‌های صفحه", source)
         self.assertIn("درخواست توقف ثبت شد", source)
 
+    def test_runtime_bridge_preserves_mature_candidate_tree_thumbnail_contract(self):
+        source = (Path(__file__).resolve().parents[1] / "app" / "phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
+        self.assertIn('show="tree headings"', source)
+        self.assertIn('columns=("status", "title", "source", "external", "url")', source)
+        self.assertIn('tree.heading("#0", text="عکس")', source)
+        self.assertIn("original_refresh", source)
+        self.assertIn("original_mount", source)
+        self.assertNotIn("async_playwright", source)
+        self.assertNotIn("extract_direct_link", source)
+
+    def test_same_phase_composition_bridge_installs_after_product_list(self):
+        source = (Path(__file__).resolve().parents[1] / "app" / "phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
+        self.assertIn("_phase49_3i12_composition_bridge", source)
+        self.assertIn("_phase49_3i_product_list_install(app_class)", source)
+        self.assertIn("_install_phase49_3i12_app(app_class, None)", source)
+        self.assertIn("_install_phase49_3i12_workspace(workspace_class)", source)
+
     def test_workspace_image_fit_uses_pixel_photo_contract_not_text_unit_label_size(self):
         source = (Path(__file__).resolve().parents[1] / "app" / "phase49_3i12_discovery_image_recovery.py").read_text(encoding="utf-8")
         self.assertIn("ImageOps.contain", source)
