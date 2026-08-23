@@ -5,51 +5,48 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery`
-Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit`
+Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Permanent Delivery Order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority — 2026-08-23
-1. pass Windows 49.3I.11 acceptance on the exact previously failing AI product,
-2. allow controlled employee Catalog entry,
-3. run one Local Publish E2E,
-4. obtain explicit owner approval,
-5. deploy the approved GitHub snapshot to Production after host/MySQL/backup verification,
-6. implement normal Store-cart ZarinPal integration,
-7. pass ZarinPal Sandbox E2E,
-8. only then perform one owner-approved low-value live payment.
+1. pass Windows 49.3I.12 acceptance on exact-page discovery, single-product intake and image fitting,
+2. run one Local Publish E2E,
+3. obtain explicit owner approval,
+4. deploy the approved GitHub snapshot to Production after host/MySQL/backup verification,
+5. implement normal Store-cart ZarinPal integration,
+6. pass ZarinPal Sandbox E2E,
+7. only then perform one owner-approved low-value live payment.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Encoding → Gallery/First Paint → Live Git Snapshot → Explorer/URL Routing → Selection Guard → Credential Hydration → Preview/Provider Recovery → Observable All-Fields → AI Refresh/SEO Source Completion → AI Trace/Safe Title Retry → Provider Schema/Trace/Busy Runtime Recovery`.
+`Discovery Review → PS5.1 Encoding → Gallery/First Paint → Live Git Snapshot → Explorer/URL Routing → Selection Guard → Credential Hydration → Preview/Provider Recovery → Observable All-Fields → AI Refresh/SEO Source Completion → AI Trace/Safe Title Retry → Provider Schema/Trace/Busy Runtime Recovery → Observable Exact-Page Discovery/Single-Product Intake/Image Fit`.
 
-## 49.3I.11 — Current Runtime
-Owner Windows evidence proved a successful AvalAI response could still be structurally unusable because the adapter requested only generic JSON and did not send the repository schema. The same trace also exposed UI pressure from full model-catalog rendering and a stale busy-state path after cancellation/timeout.
+## 49.3I.12 — Current Runtime
+Owner evidence showed the backend exact MakerWorld page scan itself succeeded, but the final UX87 operator surface did not expose the review panel/live operation state clearly enough, and manual single-product intake was not separated from page discovery. Product Workspace image cards also needed a stable fixed-pixel fitting contract.
 
-49.3I.11 preserves mature architecture and adds:
-- actual JSON Schema delivery to AvalAI/OpenRouter,
-- exact field/type validation before persistence,
-- one bounded schema repair when the first JSON violates the contract,
-- explicit selected-model execution,
-- per-request-window model-info cache,
-- compact `/models` trace,
-- immediate busy-state release on Stop Waiting/watchdog/stale abort,
-- late-result mutation still blocked,
-- existing 90-second title and 210-second full-AI watchdogs preserved,
-- prior request/response/error observability, AI-owned refresh/manual override, source/SEO, Preview/Full Fetch and pricing behavior preserved.
+49.3I.12 preserves the mature discovery/extractor architecture and adds:
+- final UX87 `_ui`-boundary operator panel,
+- exact-page Search/Listing/Category discovery action,
+- separate direct Product URL action validated by configured source regex,
+- visible running/stopping/done state, progress, elapsed time and active URL/detail,
+- mature candidate thumbnail/title/source/id/url renderer reused through a runtime bridge,
+- fixed 228x171 `ImageOps.contain` image cards without crop/stretch,
+- Preview remains lightweight and Full Fetch still requires approval,
+- AI/provider/pricing/source/publish behavior preserved.
 
 ### Final Validation
-PR `#57`: MERGED.
-Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
-Merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
+PR `#58`: MERGED.
+Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
+Merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
 
 Successful runs:
-- Phase49.3I `32628666588` — SUCCESS,
-- Phase49.3H `32628666600` — SUCCESS,
-- Phase49.3G `32628666558` — SUCCESS,
-- Full Phase49 + Full Django `32628666582` — SUCCESS.
+- Phase49.3I `32631604990` — SUCCESS,
+- Phase49.3H `32631604930` — SUCCESS,
+- Phase49.3G `32631604945` — SUCCESS,
+- Full Phase49 + Full Django `32631604928` — SUCCESS.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
@@ -59,27 +56,36 @@ Production: untouched.
 1. clean Windows worktree,
 2. live fetch/prune + ff-only pull current Epic,
 3. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-4. verify runner `49.3I.11` and live Git snapshot marker,
-5. retry exact AvalAI product that previously returned schema aliases,
-6. verify exact schema keys/types or one visible repair attempt,
-7. verify `/models` trace is compact and UI remains responsive,
-8. Stop Waiting → change Provider/Model → immediate new request; stale old result cannot apply,
-9. verify All-Fields + title watchdog behavior,
-10. low-image warning/refetch,
-11. MakerWorld Preview → Approve → Full Fetch,
-12. Provider/model/FTP/Bridge persistence,
-13. Product open/selection + Fixed/Range/Formula regression.
+4. verify runner `49.3I.12` and live Git snapshot marker,
+5. paste exact `cake+stand` MakerWorld Search URL and run exact-page discovery,
+6. verify visible live state/progress/elapsed/current URL,
+7. verify candidate links appear before Full Fetch,
+8. approve one candidate and run Full Fetch,
+9. test one direct Product URL with the separate single-product action,
+10. test Stop feedback,
+11. verify Product Workspace portrait/landscape images fit into equal 228x171 cards,
+12. regression-check All-Fields AI, Provider/model, image limit and Fixed/Range/Formula.
 
-After this Windows QA passes, employees may begin Catalog entry. Production publishing remains blocked by one Local Publish E2E + explicit owner approval.
+After this Windows QA passes, run exactly one Local Publish E2E. Production remains blocked until owner approval.
 
 ## Local Publish Gate
 Exactly one product must pass Local import/visibility, title/description/SEO/source attribution, selected images/main image, pricing payload and Store/Admin rendering without unexpected migration or dirty worktree.
 
-## Storefront Payment Track
-Normal Store checkout is still manual bank transfer. The next payment implementation must reuse mature Phase30 ZarinPal security semantics: server-owned amount, idempotent attempt, Authority match, server-to-server Verify, duplicate callback safety, recoverable failure/cancel, inventory/order finalization once, Sandbox before live, secrets outside Git.
+## Storefront Payment Track — Next Product Phase
+Normal Store checkout is still manual bank transfer. The next implementation must reuse mature Phase30 ZarinPal security semantics:
+- server-owned/recomputed amount,
+- idempotent Store payment attempt,
+- stored Authority must match callback Authority,
+- server-to-server Verify before marking paid,
+- duplicate callback cannot double-finalize payment/order/inventory,
+- failed/cancelled/temporary errors remain recoverable,
+- bank transfer remains available,
+- Sandbox E2E before live,
+- secrets outside Git,
+- one owner-approved low-value live test before public activation.
 
 ## Production Gate
 Blocked until Windows QA + Local Publish E2E + explicit owner approval + host branch/path/MySQL/backup/rollback verification. Live payment has the additional Store integration + Sandbox gate.
 
 ## Immediate Next Step
-Run the Windows 49.3I.11 release gate. No direct Local patch, Production deploy or live payment switch before acceptance.
+Run the Windows 49.3I.12 release gate. On PASS, immediately perform one Local Publish E2E and then move to Production approval/deploy and the Store ZarinPal phase.
