@@ -27,7 +27,7 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-014A: mature top acquisition controls restored and new UI remains additive. Canonical: ERR-49-032.
 
 ### REQ-49I-022 — Bulk exact-page image acquisition + Add-to-Products
-Status: `IMPLEMENTED ON PR #61 / CI VALIDATION / WINDOWS QA PENDING`
+Status: `MERGED TO EPIC / ALL REQUIRED PR CI SUCCESS / WINDOWS QA PENDING`
 Owner explicitly changes the exact-page business workflow:
 - do not depend on single-product/Rich Direct Full Fetch for selected Search/Listing candidates,
 - exact Search/Listing/Category URL remains authoritative,
@@ -38,20 +38,27 @@ Owner explicitly changes the exact-page business workflow:
 - each candidate row must show image count before operator selection,
 - wanted rows are selected and added with `اضافه کردن انتخاب‌شده‌ها به محصولات`,
 - adding selected rows must not call `extract_direct_link` or another per-product Rich Direct Full Fetch,
+- at least one image must be successfully staged locally before a candidate becomes ready/addable,
 - unwanted rows use existing Archive/Block semantics,
 - one candidate failure must not abort the whole batch,
 - Stop remains safe and visible,
 - no Catalog candidate-table migration is required; staged image metadata may live under persistent Catalog DATA,
 - restored mature scan controls, AI/provider/SEO/pricing/publish/FTP/Bridge/credentials are Must-Not-Touch.
 
+Merge evidence:
+- PR `#61` merged,
+- final PR head `5f96d890b2e31e1f1d670c8afb716a1da4fc88d3`,
+- merge commit `953f975e883e6dfcbf61097ac8d324d68d4ca678`,
+- final required CI set all SUCCESS, including Full Phase49 + Windows Catalog regressions + Full Django.
+
 This request supersedes the old one-thumbnail-only Preview contract **for this exact-page bulk operator path only**. Historical Preview logic remains available internally and mature top scan remains compatible.
 
 ## Operational Release Request
 
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED ONLY BY 49.3I.15 WINDOWS QA + ONE LOCAL PUBLISH E2E`
+Status: `BLOCKED ONLY BY WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 Acceptance:
-- final CI-successful 49.3I.15 merged into Epic,
+- merged CI-successful 49.3I.15 on Epic,
 - live ff-only Windows pull,
 - bulk Search/Listing acquisition with visible image counts works,
 - selected rows add to Products without Direct Full Fetch,
@@ -79,7 +86,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - one owner-approved low-value Production payment before public activation.
 
 ## Canonical Windows Gate
-`RUN_PHASE49_3I15_BULK_GATE.ps1` after Phase49.3I.15 merge; it chains all prior 49.3I gates.
+`RUN_PHASE49_3I15_BULK_GATE.ps1`; it chains all prior 49.3I gates and verifies current fetched Epic snapshot.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
