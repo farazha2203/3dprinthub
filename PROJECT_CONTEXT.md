@@ -4,7 +4,7 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.8 — Observable AI Execution Recovery`
+Current Hotfix: `49.3I.9 — AI Refresh + SEO/Source Completion`
 Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -40,83 +40,58 @@ Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment
 - Archive/Not Needed does not Full Fetch,
 - dedupe: source + external id + normalized URL.
 
-49.3I.7 corrected the Playwright Preview expression (`ERR-49-024`) without rewriting mature Direct Product/approved Full Fetch. 49.3I.8 preserves that recovery. Real Windows MakerWorld Preview QA is still required.
-
-## AI Provider Hub Contract
+## AI Provider / Execution Contract
 Current Provider cards:
 - AvalAI,
 - OpenRouter,
 - Google Gemini Direct,
 - OpenAI Direct.
 
-The existing `AIProviderClient` / Google adapter remains authoritative for model APIs.
+Secrets remain in Windows Credential Store/environment, not SQLite/Git/logs.
 
-49.3I.7 (`ERR-49-025`) hydrates the real per-provider card keys from Windows Credential Store, rehydrates after secure Save, preserves FTP/Bridge credentials, and background-loads provider model catalogs into existing Model ID controls/cache. Secrets remain outside SQLite/Git/source/logs.
+49.3I.8 fixed the real bottom All-Fields button routing to mature Task Center and preserves:
+- immediate first-paint,
+- connection/send/wait/receive/save/result-error progress,
+- elapsed timer,
+- Stop Waiting,
+- 210-second watchdog,
+- stale late-result discard.
 
-## Observable AI Execution — ERR-49-026
-Latest Windows screenshot/QA showed the bottom `تکمیل هوشمند همه فیلدهای AI` could sit on AvalAI content generation for roughly five minutes without useful execution visibility.
+49.3I.9 extends that path:
+- explicit All-Fields rerun refreshes AI-owned/generated content with the current Provider/Model,
+- proven manual overrides remain protected,
+- generic Persian product titles are refreshable and new generic AI titles are rejected,
+- product-specific Persian ecommerce/SEO prompt is source-grounded,
+- low-image products may offer mature source refetch before AI,
+- source website remains publisher/source identity,
+- Django Product meta/OG/source fields receive desktop SEO/source data after mature conversion/visibility layers.
 
-Verified boundary:
-- that exact Phase49.3C operator action still called legacy `ProductStudio.generate_ai("commerce")`,
-- it bypassed mature `_phase49_3e_run_ai()`,
-- therefore it bypassed the already-implemented 49.3I first-paint and 49.3F/3H connection/send/receive/result/error/cost Task Center.
-
-49.3I.8:
-- routes the real bottom All-Fields action to mature `_phase49_3e_run_ai("all")`,
-- routes non-Quick stage actions through the same Task Center while images retain image scope,
-- preserves Quick/title-only behavior,
-- creates no parallel AI client/network worker,
-- keeps immediate first-paint,
-- adds elapsed time + `توقف انتظار`,
-- adds a 210-second operator watchdog aligned with the existing single-request timeout bound,
-- cancel/timeout invalidates the execution generation,
-- stale late full/image results cannot mutate product data,
-- errors/results remain visible and the app stays open.
-
-The blocking HTTP worker is not force-killed; after cancel/timeout it may finish in the background, but its result is stale and discarded.
-
-## Products Explorer / Workspace
+## Products Explorer / Workspace / Pricing
 Preserved:
 - Product Workspace is canonical detailed editor,
-- Explorer cards show image/name/ID/state/source/image-count/date/publish-state,
-- Extra Large/Large/Medium/Small/List views,
-- normal/Ctrl/Shift selection,
-- context actions,
+- Explorer visual/lightweight,
 - selection-loop guard,
-- safe Remove From Publish Queue only changes local queue state.
-
-## AI / Pricing
-- immediate AI first-paint before synchronous preflight,
-- mature 49.3H result/error/cost stack,
-- no fabricated provider cost,
-- Fixed / Range / Formula independent,
+- safe local queue actions,
+- Fixed / Range / Formula-Dynamic are independent,
 - Range never invokes Formula.
 
-## Windows Delivery Contract
-Canonical runner: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.8.
-- ASCII-only Windows PowerShell 5.1,
-- clean exact Epic branch,
-- live `git fetch --prune origin`,
-- Local HEAD equals fetched Remote Epic HEAD,
-- no fixed Chat SHA as sole truth,
-- no reset/stash/delete shortcut.
-
-## Latest GitHub Validation — 49.3I.8
-CI-only PR #53: `CLOSED / NOT MERGED`.
-Validated runtime base: `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`.
-Marker head: `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` — not merged.
+## Latest GitHub Validation — 49.3I.9
+CI-only PR #55: `CLOSED / NOT MERGED`.
+Validated runtime base: `390c1aba9aaf5282f44a1ec97955af4e987100ba`.
+Marker head: `0e58324bfc87e39299b81b1fbe65f9cce21ec91e` — not merged.
 
 Successful runs:
-- Phase49.3I `32620646603` — SUCCESS,
-- Phase49.3H `32620646600` — SUCCESS,
-- Phase49.3G `32620646605` — SUCCESS,
-- Full Phase49 + Full Django `32620646657` — SUCCESS.
+- Phase49.3I `32623618842` — SUCCESS,
+- Phase49.3H `32623618854` — SUCCESS,
+- Phase49.3G `32623618950` — SUCCESS,
+- Full Phase49 + Full Django `32623618792` — SUCCESS.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
 Production untouched.
 
 ## Relevant Error Knowledge
+Latest relevant:
 - ERR-49-013 exact Search URL ignored,
 - ERR-49-014 full fetch before review,
 - ERR-49-018 AI first-paint,
@@ -127,23 +102,39 @@ Production untouched.
 - ERR-49-023 legacy secure-field hydration,
 - ERR-49-024 Preview JavaScript escape regression,
 - ERR-49-025 real Provider Hub key/model visibility,
-- ERR-49-026 real All-Fields AI action bypassed mature Task Center.
+- ERR-49-026 real All-Fields button bypassed mature Task Center,
+- ERR-49-027 explicit All-Fields rerun could not refresh AI-owned values / generic titles persisted.
 
 Always inspect `docs/ERRORS.md` before troubleshooting.
 
-## Current Windows Acceptance Gate
-1. close Catalog Center and pull current Epic using live fetch + ff-only,
-2. run v49.3I.8 gate with `-LaunchApp`,
-3. click the **bottom** All-Fields AI action,
-4. immediate startup progress must paint,
-5. mature progress must show connection/send/wait/receive/save/result-error,
-6. elapsed time + Stop Waiting remain visible; app stays responsive,
-7. Stop/210s timeout makes any later result stale/non-applicable,
-8. exact MakerWorld Search Preview returns candidates without JS syntax error,
-9. Preview remains one-thumbnail/basic identity only,
-10. approve candidate with image limit 20 then mature Full Fetch,
-11. archive candidate → no Full Fetch,
-12. Provider keys/model lists + FTP/Bridge remain available,
-13. Product open/selection and Fixed/Range/Formula regressions pass.
+## Employee Release Goal — Today
+Owner wants employees to begin Catalog entry today. The release gate is:
+1. Windows clean worktree,
+2. live fetch/prune + ff-only pull,
+3. `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
+4. verify runner `49.3I.9` and Git snapshot marker,
+5. one real All-Fields AI product-specific title/SEO test,
+6. one low-image warning/refetch test,
+7. one MakerWorld Preview → Approve → Full Fetch test,
+8. credential/model persistence,
+9. Product open/selection + pricing regressions.
 
-Only then: one `LOCAL PUBLISH ONLY` → Local Django E2E → explicit owner approval → Production backup/deploy/verify.
+After this passes, employees can use Catalog Center for data entry. Publishing to Production remains separately gated.
+
+## Local Publish / Production
+Only after Windows QA:
+- one `LOCAL PUBLISH ONLY`,
+- Local Django E2E,
+- verify title/SEO/source/images/pricing/visibility,
+- explicit owner approval,
+- then host read-only verification, MySQL/database/backup/rollback verification, GitHub-only deploy and Production smoke/data checks.
+
+## Payment State
+Repository payment support is split:
+- Phase30 ZarinPal online gateway is implemented for accepted `Quote` payments (deposit/full/balance) with server-side amount, callback token, Authority match, server-to-server Verify, idempotent ledger/audit.
+- normal Store cart checkout is still manual-payment only: active `CheckoutOperationsForm.payment_method` contains only `bank_transfer`, and active Store checkout redirects to `store:manual_payment`.
+- `StorePayment` already has a semantic `gateway` method, but normal Store request/callback/verify wiring is not complete.
+
+Current supported online provider in repository: ZarinPal only.
+
+Therefore live Store payment must not be enabled merely by setting Phase30 environment flags. A narrow Storefront ZarinPal integration + Sandbox E2E is the next urgent implementation after the Catalog release gate.
