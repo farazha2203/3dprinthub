@@ -5,13 +5,15 @@ from .phase49_3i12_discovery_image_recovery import (
     install_workspace,
 )
 from .phase49_3i13_batch_fetch_paste_recovery import install_app as _install_phase49_3i13_app
+from .phase49_3i14_legacy_scan_restore import install_app as _install_phase49_3i14_app
 
 
 def install_app(app_class, discovery_module=None) -> None:
-    """Finalize the 49.3I.12 operator panel against the mature candidate Treeview contract."""
+    """Finalize the 49.3I operator panel against the mature candidate Treeview contract."""
     _install_operator_app(app_class, discovery_module)
     if getattr(app_class, "_phase49_3i12_runtime_bridge_installed", False):
         _install_phase49_3i13_app(app_class)
+        _install_phase49_3i14_app(app_class)
         return
 
     original_mount = app_class._mount_phase49_3i12_operator_ui
@@ -67,3 +69,4 @@ def install_app(app_class, discovery_module=None) -> None:
     app_class._mount_phase49_3i12_operator_ui = _mount_phase49_3i12_operator_ui
     app_class._phase49_3i12_runtime_bridge_installed = True
     _install_phase49_3i13_app(app_class)
+    _install_phase49_3i14_app(app_class)
