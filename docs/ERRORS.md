@@ -1,254 +1,201 @@
 # ERROR KNOWLEDGE BASE
 
-Search this file before troubleshooting. Do not repeat a failed action unless its underlying condition changed.
+Search this file before troubleshooting. Do not repeat a failed action unless its underlying condition changed. Older verbose incident reports remain in Git history; this file keeps the operational root cause, correct solution and prevention rule for each current Phase49 incident.
 
 ## RESOLVED ERRORS
 
 ### ERR-49-001 — Tkinter pack/grid collision in Product Workspace
-Date: 2026-08-19
-Environment: Windows Catalog Center
-Related Phase: 49.3D
-Symptoms: `TclError: cannot use geometry manager pack ... which already has slaves managed by grid`
-Root Cause: an older guided-AI control used `pack()` directly in a tab whose children used `grid()`.
-Correct Solution: add a dedicated holder/container using the parent geometry manager; children may use a different manager only inside that new holder.
-Verification: regression tests + later Phase49 CI.
-Prevention Rule: never mix `pack` and `grid` for siblings with the same Tk parent.
+Root Cause: sibling widgets mixed `pack()` and `grid()` under the same Tk parent.
+Correct Solution: use one manager per parent; introduce a holder before switching manager inside children.
+Prevention Rule: never mix pack/grid for siblings.
 
 ### ERR-49-002 — Thumbnail callback after widget destruction
-Date: 2026-08-19
-Environment: Windows Catalog Center
-Symptoms: `TclError: invalid command name ...label` from async thumbnail callbacks.
 Root Cause: delayed image callback targeted a destroyed/rebuilt widget.
-Correct Solution: lifecycle-safe UI callbacks / avoid updating dead widget instances.
-Prevention Rule: any delayed/thread->Tk callback must verify target lifecycle and marshal to active UI only.
+Correct Solution: lifecycle-safe callbacks that verify the live target before UI mutation.
+Prevention Rule: every delayed/thread→Tk callback must validate widget lifetime.
 
 ### ERR-49-003 — Destroyed ProductWorkspace used as messagebox parent
-Date: 2026-08-19
-Environment: Windows Catalog Center
-Symptoms: `TclError: bad window path name .!productworkspace`.
-Root Cause: async callback completed after the Workspace was closed.
-Prevention Rule: async UI completion must detect widget existence before dialog/update.
+Root Cause: async completion ran after Workspace close.
+Correct Solution: verify parent existence before dialog/UI update.
+Prevention Rule: background results never assume the originating window still exists.
 
 ### ERR-49-004 — Missing `header_badge`
-Date: 2026-08-19
-Environment: Windows Catalog Center
-Symptoms: `AttributeError: '_tkinter.tkapp' object has no attribute 'header_badge'`.
-Root Cause: callback assumed a UI state variable existed in every shell configuration.
-Prevention Rule: feature patches must use verified shell contracts / guarded attributes.
+Root Cause: callback assumed a shell attribute existed in every runtime composition.
+Correct Solution: use verified/guarded shell state.
+Prevention Rule: UI patches must not depend on optional attributes without a guard.
 
 ### ERR-49-005 — Image SEO semantic signature false-stale
-Related Phase: 49.3D
-Root Cause: raw JSON byte/string representation was hashed; escaped/unescaped Persian JSON was semantically equal but produced a different signature.
-Correct Solution: normalize semantic JSON before hashing.
-Prevention Rule: signatures for structured data must hash normalized semantic representation.
+Root Cause: raw JSON representation was hashed rather than semantic normalized content.
+Correct Solution: normalize structured JSON before hashing.
+Prevention Rule: structured signatures hash semantics, not byte formatting.
 
 ### ERR-49-006 — Dynamic price consultation flag overwritten
-Related Phase: 49.3D/49.3F
-Root Cause: a later product-details importer assignment overwrote `consultation_required=True` set by price range logic.
-Correct Solution: preserve existing truth using OR semantics.
-Prevention Rule: later sync stages must not blindly overwrite decisions made by an earlier contract layer.
+Root Cause: later sync blindly overwrote an earlier pricing decision.
+Correct Solution: preserve truth with contract-aware OR/merge semantics.
+Prevention Rule: downstream layers must not erase earlier validated state.
 
-### ERR-49-007 — Phase49.3F Windows NativeCommandError after successful migrations
-Date: 2026-08-20
-Environment: Windows PowerShell 5.1
-Symptoms: migrations `store.0033` and `website.0023` applied OK, then runner aborted while capturing `showmigrations` output.
-Root Cause: `$ErrorActionPreference='Stop'` + native stderr redirected with `2>&1`; harmless Django warning became terminating PowerShell error despite native exit code 0.
-Correct Solution: `Invoke-NativeCapture` temporarily uses Continue for capture and treats native exit code as source of truth.
-Prevention Rule: do not use raw `(& native.exe ... 2>&1)` under StrictMode/EAP Stop for success/failure decisions.
+### ERR-49-007 — Windows NativeCommandError after successful migrations
+Root Cause: PowerShell 5.1 `$ErrorActionPreference='Stop'` treated harmless native stderr as terminating while exit code was 0.
+Correct Solution: capture native output under Continue and use process exit code as truth.
+Prevention Rule: do not infer native command failure from redirected stderr alone.
 
 ### ERR-49-008 — Runtime Trace inline Bearer token redaction leak
-Related Phase: 49.3F
-Root Cause: generic Authorization redaction ran before Bearer credential redaction and could leave token tail visible.
-Correct Solution: redact Bearer credential first, then generic key/value patterns.
-Prevention Rule: secret-redaction order is a security contract; keep regression tests.
+Root Cause: generic Authorization redaction ran before Bearer credential masking.
+Correct Solution: mask Bearer credentials first, then generic secret patterns.
+Prevention Rule: redaction order is a tested security contract.
 
-### ERR-49-009 — Phase49.3G installed inside independent 49.3F Source Guard
-Related Phase: 49.3G
-Symptoms: full Phase49 regression failed on minimal Workspace stub missing `reload`.
-Root Cause: cross-phase feature composition was chained inside an older independently tested installer.
-Correct Solution: keep 3F installer independent and compose 3G only in `catalog_center/launch.py`.
-Prevention Rule: cross-phase composition belongs in the composition root, not inside independent prior-phase installers.
+### ERR-49-009 — Phase49.3G installed inside independent 49.3F installer
+Root Cause: cross-phase composition leaked into an older independently tested installer.
+Correct Solution: compose phases at the launch/composition root.
+Prevention Rule: prior-phase installers remain independently valid.
 
 ### ERR-49-010 — Historical Bridge import main-image failure
-Date: 2026-08-10/11
-Environment: Desktop publish to Bridge
-Symptoms: `ValidationError: ['قبل از تبدیل، تصویر اصلی باید در Media ذخیره یا بارگذاری شود.']`
-Root Cause: product main image was not materialized into site Media before conversion/import.
-Prevention Rule: Publish packaging/preflight must guarantee selected/primary image is materialized and owned by the target Media contract before import.
+Symptoms: `قبل از تبدیل، تصویر اصلی باید در Media ذخیره یا بارگذاری شود.`
+Root Cause: primary image was not materialized into target Media before conversion.
+Correct Solution: publish preflight must materialize the selected/primary image before import.
+Prevention Rule: target Media ownership is a publish prerequisite.
 
-### ERR-49-011 — Phase49.3H CI fixture assumed `upsert_product()` returns product ID
-Date: 2026-08-22
-Related Phase: 49.3H
-Symptoms: dedicated tests failed with `TypeError: int() argument ... not 'NoneType'`.
-Root Cause: new test fixture guessed a return-value contract not guaranteed by the actual Database API.
-Correct Solution: perform upsert, then resolve the row by verified source identity and read its DB id.
-Prevention Rule: tests must use actual repository method contracts; do not infer return values.
+### ERR-49-011 — CI fixture assumed `upsert_product()` returns product ID
+Root Cause: test guessed a Database API return contract.
+Correct Solution: upsert then resolve the persisted row by verified identity.
+Prevention Rule: tests use real repository contracts, never inferred return values.
 
-### ERR-49-012 — Phase49.3H redaction assertion coupled to display format
-Date: 2026-08-22
-Related Phase: 49.3H
-Symptoms: safe output `Authorization: *** ***` failed a test expecting literal `Bearer ***`.
-Root Cause: test asserted one formatting representation instead of the security invariant.
-Correct Solution: assert original secret is absent and Authorization is masked; do not weaken runtime redaction.
-Prevention Rule: security tests assert semantic invariants plus leak absence, not incidental mask formatting.
+### ERR-49-012 — Redaction assertion coupled to display formatting
+Root Cause: test expected one literal mask format rather than the security invariant.
+Correct Solution: assert secret absence and masked Authorization semantically.
+Prevention Rule: security tests validate no-leak invariants, not cosmetic mask text.
 
-### ERR-49-013 — Explicit MakerWorld search URL ignored in search mode
-Date: 2026-08-22
-Environment: Windows Catalog Center discovery
-Related Phase: 49.3I
-Symptoms: owner supplied `https://makerworld.com/en/search/models?keyword=cake+stand` but unrelated products were collected.
-Verified Root Cause: `main.py::_scan_worker` selected `target_templates=listing[:1]` for `mode == "search"`, so the explicit `seed` search URL was ignored and the configured default MakerWorld listing was scanned instead.
-Correct Solution: explicit HTTP(S) seed/listing URL is authoritative. Discovery first creates review candidates; full product extraction occurs only after operator approval.
-Verification: Phase49.3I dedicated CI Run `32569551060` + full Phase49 Run `32569551034`.
-Prevention Rule: never silently substitute a configured discovery URL when an operator supplied an explicit valid URL. Regression-test exact target selection.
+### ERR-49-013 — Explicit MakerWorld search URL ignored
+Symptoms: operator supplied exact search URL but unrelated default listing was scanned.
+Root Cause: search mode chose configured listing instead of explicit seed.
+Correct Solution: a valid explicit HTTP(S) operator URL is authoritative.
+Prevention Rule: never silently substitute a default discovery URL.
 
-### ERR-49-014 — Discovery performed full extraction before human review
-Date: 2026-08-22
-Related Phase: 49.3I
-Symptoms: discovery immediately downloaded/parsed full products and many images, wasting time and producing unwanted catalog rows.
-Verified Root Cause: after URL discovery `_scan_worker` immediately iterated `pending_urls` and called full collection/parse.
-Correct Solution: split discovery into Preview Candidate and Approved Full Fetch states; archive/not-needed creates only blocked identity.
-Verification: Phase49.3I dedicated CI Run `32569551060`.
-Prevention Rule: discovery and acquisition are separate state transitions; preview must not call the full extractor.
+### ERR-49-014 — Discovery full-fetched before human review
+Root Cause: URL discovery immediately entered full product extraction.
+Correct Solution: `Preview Candidate → Approve/Archive → Approved Full Fetch`.
+Prevention Rule: preview and acquisition are separate state transitions.
 
-### ERR-49-015 — Runtime pricing choices created a phantom Django migration
-Date: 2026-08-22
-Related Phase: 49.3I
-Environment: GitHub CI / Django migration contract
-Symptoms: initial Phase49.3I PR #41 passed Catalog tests but `makemigrations --check --dry-run` proposed `store/migrations/0034_alter_productcatalogprofile_pricing_strategy.py`.
-Root Cause: the first range implementation mutated `ProductCatalogProfile.pricing_strategy` runtime `choices`. Django field choices are migration state metadata, so the apparently runtime-only change was detected as `AlterField`.
-Failed Attempt: treating a runtime `field.choices` mutation as schema/migration-neutral.
-Correct Solution: keep migration-owned 49.3F field choices unchanged; persist semantic raw value `range` in the existing `CharField(max_length=20)`; Windows exposes the three operator modes and server sync stores `pricing_strategy=range` + `price_mode=range` without changing field metadata.
-Verification: replacement PR #42; dedicated 49.3I Run `32569551060` SUCCESS; Full Phase49/Django Run `32569551034` SUCCESS; `makemigrations --check --dry-run` reports no changes.
-Prevention Rule: changing Django field metadata such as `choices` is migration state even if the SQL column type does not change. If a semantic value is intentionally schema-free, do not mutate migration-owned model field metadata.
+### ERR-49-015 — Runtime pricing choices created phantom Django migration
+Root Cause: runtime code mutated Django field `choices`, which is migration state metadata.
+Correct Solution: preserve migration-owned field metadata and persist the semantic raw value in the existing CharField.
+Prevention Rule: model metadata changes are migration changes even without SQL type changes.
 
 ### ERR-49-016 — Phase49.3I runner parse failure on Windows PowerShell 5.1
-Date: 2026-08-22
-Related Phase: 49.3I runner hotfix
-Environment: Windows PowerShell 5.1
-Symptoms: `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` failed before execution with multiple `Unexpected token ')'` parser errors around the manual QA lines; Persian labels appeared as mojibake such as `Ø...`.
-Verified Root Cause: the GitHub runner was stored as UTF-8 without BOM but contained Persian text and an em dash. Windows PowerShell 5.1 uses legacy ANSI decoding for BOM-less script files. The UTF-8 bytes were decoded as mojibake; the em-dash byte sequence produced a smart-quote character that PowerShell treats as a string delimiter, terminating a string early and causing the later `)`/`<` parse errors.
-Correct Solution: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.1` is ASCII-only and CI rejects non-ASCII bytes.
-Verification: CI-only PR #44; Phase49.3I `32570978818`, 49.3H `32570978800`, 49.3G `32570978829`, Full Phase49 `32570978799` SUCCESS.
-Prevention Rule: canonical Windows PowerShell 5.1 runners must remain ASCII-only or carry a separately verified encoding contract.
+Root Cause: BOM-less UTF-8 runner contained Persian/em-dash bytes and PS5.1 decoded them with legacy ANSI rules.
+Correct Solution: canonical runner is ASCII-only and CI enforces it.
+Prevention Rule: Windows PS5.1 runners keep an explicit tested encoding contract.
 
-### ERR-49-017 — Phase49.3I Products UI patch missed the real UX87 composition boundary
-Date: 2026-08-22
-Related Phase: 49.3I
-Symptoms: Products page still showed the legacy parameter/editor surface and no intended image-card gallery.
-Verified Root Cause: UX87 `_ui()` explicitly calls `super()._products_ui()` then `_modernize_products_page()`, bypassing the original patch target.
-Correct Solution: patch the real `_modernize_products_page` boundary, keep mature backend hidden, render local image gallery.
-Verification: CI-only PR #46; all Phase49 CI SUCCESS.
-Prevention Rule: UI patch tests must verify the real shell composition boundary.
+### ERR-49-017 — Products UI patch missed real UX87 composition boundary
+Root Cause: UX87 called `super()._products_ui()` then `_modernize_products_page()`, bypassing the initial patch target.
+Correct Solution: patch the real final shell composition boundary.
+Prevention Rule: UI regression tests exercise the actual visible composition path.
 
-### ERR-49-018 — AI progress window was created after synchronous preflight work
-Date: 2026-08-22
-Related Phase: 49.3I
-Symptoms: full AI autofill looked frozen before progress appeared.
-Root Cause: synchronous save/preflight/source preparation ran before progress construction.
-Correct Solution: immediate lightweight first-paint, then Tk `after()` handoff to mature 49.3H progress/result/error/cost stack.
-Prevention Rule: synchronous UI-thread preflight must not begin before visible feedback is painted.
+### ERR-49-018 — AI progress created after synchronous preflight
+Root Cause: save/preflight/source work ran before any visible progress paint.
+Correct Solution: immediate first-paint then Tk `after()` handoff to the mature Task Center.
+Prevention Rule: potentially blocking UI preflight starts only after feedback is painted.
 
-### ERR-49-019 — Windows handoff failed because Chat-pinned Expected HEAD became stale
-Date: 2026-08-22
-Environment: Windows PowerShell / GitHub handoff
-Root Cause: mutable branch advanced after a fixed SHA was copied into Chat.
-Correct Solution: live `git fetch --prune origin`, exact branch, clean worktree, Local HEAD equals fetched Remote Epic HEAD; ff-only pull if behind.
-Prevention Rule: never use a Chat-pinned SHA as sole source of truth for a mutable branch.
+### ERR-49-019 — Windows handoff used stale Chat-pinned HEAD
+Root Cause: mutable Epic advanced after a fixed SHA was copied into Chat.
+Correct Solution: live `git fetch --prune origin`, exact branch, clean worktree, Local HEAD equals fetched Remote HEAD; ff-only pull when behind.
+Prevention Rule: fixed Chat SHA is audit information, never the mutable branch source of truth.
 
-### ERR-49-020 — Product images were clipped into thin horizontal strips
-Date: 2026-08-22
-Environment: Windows Catalog Center Products gallery
-Root Cause: a 260x190 PhotoImage was assigned to a `tk.Label(width=32,height=12)` where width/height were text-unit dimensions.
-Correct Solution: pixel-sized holder frame + unconstrained image Label.
-Prevention Rule: pixel image contracts must not be sized through Tk text-unit Label dimensions.
+### ERR-49-020 — Product images clipped into thin strips
+Root Cause: pixel PhotoImage assigned to a Label sized in text units.
+Correct Solution: pixel-sized holder with unconstrained image Label.
+Prevention Rule: do not size pixel image contracts through Tk text-unit width/height.
 
-### ERR-49-021 — Group/category URLs could be misclassified as direct product links
-Date: 2026-08-22
-Environment: Windows Catalog Center discovery/direct-link intake
-Root Cause: finite URL-shape heuristics were used instead of configured source `model_url_pattern`.
-Correct Solution: only URLs matching the source product regex may take direct intake; other valid source URLs go Preview-first.
-Prevention Rule: classify product identity from verified source product pattern, not guessed listing paths.
+### ERR-49-021 — Group/category URL misclassified as direct product URL
+Root Cause: guessed URL-shape heuristics replaced configured source regex.
+Correct Solution: source `model_url_pattern` is authoritative Product-vs-Group boundary.
+Prevention Rule: classify product identity from verified source configuration.
 
-### ERR-49-022 — Hidden Treeview selection feedback loop froze Product open/preview
-Date: 2026-08-22
-Environment: Windows Catalog Center Products Explorer
-Root Cause: card selection wrote Treeview selection; `<<TreeviewSelect>>` called `load_product`; compatibility callback wrote selection again.
-Correct Solution: one-way event-producing sync, re-entrancy guard, state-only reverse callback, repeat-open guard.
-Prevention Rule: never write the same Tk selection from its own selection callback.
+### ERR-49-022 — Hidden Treeview selection feedback loop froze Product open
+Root Cause: selection callback wrote the same selection and recursively triggered itself.
+Correct Solution: one-way event-producing sync + re-entrancy/repeat-open guards.
+Prevention Rule: never mutate the same Tk selection from its own selection callback.
 
 ### ERR-49-023 — Secure credentials appeared lost because masked fields were not hydrated
-Date: 2026-08-22
-Environment: Windows Catalog Center UX87
-Related Phase: 49.3I.6
-Symptoms: FTP password, Bridge token and legacy AI key looked empty after save/restart.
-Root Cause: secure backend worked, but masked fields did not mirror persisted Windows Credential Store values and mature Save handlers cleared widgets.
-Correct Solution: hydrate legacy connection/AI fields from secure storage at startup and after Save.
-Failed Condition Discovered Later: Phase49.3I.6 covered the legacy single AI key field but not the real Phase49.3F per-provider `_ai_hub_key_vars`; see `ERR-49-025`.
-Prevention Rule: persistence tests must target the real current operator widgets, not only legacy compatibility fields.
+Root Cause: secure backend persisted credentials but visible legacy fields were cleared/not rehydrated.
+Correct Solution: hydrate from Windows Credential Store/environment after startup/save.
+Prevention Rule: persistence tests target visible operator widgets as well as storage.
 
-### ERR-49-024 — Preview Candidate evaluate_all JavaScript became syntactically invalid
-Date: 2026-08-22
-Environment: Windows Catalog Center / MakerWorld Preview
-Related Phase: 49.3I.7
-Symptoms: exact MakerWorld search URL routed correctly to Preview, but every attempt failed with `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`; `candidates=0 failed=1 full_fetch=0`.
-Verified Root Cause: `phase49_3i_discovery_review.py` passed a normal Python triple-quoted JavaScript expression containing `+'\n'+` source text. Python converted that escape into a literal line break before Playwright evaluated it, leaving a raw newline inside a JavaScript single-quoted string. Playwright correctly rejected the invalid browser-context expression.
-Evidence: owner screenshot showed the error at `UtilityScript.evaluate`; repository inspection found the exact expression. Official Playwright contract states `locator.evaluate_all(expression)` executes the supplied JavaScript expression in page context.
-Correct Solution: Phase49.3I.7 installs a narrow Stage-1 Preview recovery using a raw Python JavaScript string so the browser receives the two characters backslash+n. It reuses the existing `candidates_from_dom_rows()` lightweight parser and does not call mature full-product extraction.
-Preserved Mature Path: `classic_methods.discover_classic` and `collect_classic_exact` are not rewritten; Direct Product and approved Full Fetch remain their existing mature paths.
-Verification: `test_epic49_phase49_3i_preview_recovery.py`, Phase49.3I CI and Full Phase49 regression CI, then Windows real MakerWorld Preview QA.
-Prevention Rule: any Python-embedded JavaScript passed to Playwright must have an explicit escaping contract and a regression test for the exact browser expression; never assume Python string escaping preserves JavaScript source bytes.
+### ERR-49-024 — Preview `evaluate_all` JavaScript syntactically invalid
+Symptoms: `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`.
+Root Cause: Python string escaping turned intended JS `\n` into a literal newline inside a JS single-quoted string.
+Correct Solution: raw Python JavaScript expression preserving browser-side escape bytes.
+Prevention Rule: Python-embedded JS requires explicit escaping regression tests.
 
-### ERR-49-025 — 49.3I.6 hydrated the legacy AI field but real Provider Hub keys still disappeared visually
-Date: 2026-08-22
-Environment: Windows Catalog Center AI Center
-Related Phase: 49.3I.7
-Symptoms: AvalAI/OpenRouter/OpenAI/Google provider-card API Key fields appeared empty again after restart/update; model picker then behaved as if the Provider had no key, so live model lists were not visible.
-Verified Root Cause: the modern Phase49.3F AI Center uses per-provider `_ai_hub_key_vars`. `phase49_3i_secret_persistence.py` 49.3I.6 only hydrated legacy `ai_key`, FTP password and Bridge token. Meanwhile the mature provider save handlers stored the key in Windows Credential Store and intentionally cleared `_ai_hub_key_vars[provider]`. Therefore secure runtime fallback could still work while the real visible Provider cards were empty.
-Correct Solution: Phase49.3I.7 hydrates every real provider-card key variable from Windows Credential Store, also rehydrates OpenRouter management/OpenAI admin masked fields, and restores the card immediately after mature secure Save clears it. It also background-loads model catalogs for configured providers into the existing Model ID combobox/cache using the mature `AIProviderClient.list_model_info()` path.
-Provider API Contract: AvalAI uses its authenticated `/v1/models`; OpenRouter uses `/api/v1/models`; existing OpenAI/Google adapters remain preserved.
-Secret Safety: credentials remain only in Windows Credential Store/environment; no secret is written to SQLite, Git, source, diagnostics or logs.
-Verification: expanded `test_epic49_phase49_3i_secret_persistence.py`, secure composition contract, provider model-cache/combobox tests, Phase49.3I/3H/3G/full CI, then Windows restart/model-list QA.
-Prevention Rule: credential persistence and model-list readiness must be regression-tested against the real active Provider Hub state variables and save handlers after all composition layers are installed.
+### ERR-49-025 — Real Provider Hub keys/model lists disappeared visually
+Root Cause: 49.3I.6 hydrated legacy `ai_key`, while modern Provider cards use `_ai_hub_key_vars` and secure Save clears those widgets.
+Correct Solution: hydrate real provider-card variables, rehydrate after Save, and background-load model catalogs through the mature provider client.
+Prevention Rule: credential/model readiness tests target the real current Provider Hub controls.
 
-### ERR-49-026 — Real bottom All-Fields AI action bypassed mature progress Task Center
+### ERR-49-026 — Bottom All-Fields AI bypassed mature Task Center
+Symptoms: operator waited ~5 minutes with only a status string and no durable connection/send/receive/result view.
+Root Cause: visible Phase49.3C button still called legacy `generate_ai("commerce")` instead of `_phase49_3e_run_ai()`.
+Correct Solution: route real operator All-Fields/non-Quick actions to mature Task Center; add elapsed time, Stop Waiting, 210-second watchdog and generation-based stale-result discard.
+Prevention Rule: tests must exercise the exact visible button command after all composition layers.
+
+### ERR-49-027 — All-Fields rerun could not refresh AI output and generic titles persisted
+Symptoms: specific source title could remain `محصول چاپ 3 بعدی`; changing Provider/Model and rerunning did not replace non-empty generated fields.
+Root Cause: mature Task Center correctly filled blanks only, but explicit refresh had no distinction between manual and AI-owned values.
+Correct Solution: 49.3I.9 refreshes AI-owned/previous-pack fields, protects proven manual overrides, rejects generic titles, strengthens source-grounded Persian/SEO prompt, optionally reuses mature image refetch, and re-applies publisher/SEO source attribution to real Product fields.
+Prevention Rule: explicit AI refresh distinguishes generated state from manual ownership and validates product identity before persistence.
+
+### ERR-49-028 — AI HTTP succeeded but delayed Tk error callback crashed; title retry had no full trace
 Date: 2026-08-23
-Environment: Windows Catalog Center Product Workspace
-Related Phase: 49.3I.8
-Symptoms: clicking `تکمیل هوشمند همه فیلدهای AI` left the status on AvalAI content generation for roughly five minutes; no durable connection/send/receive/save progress was visible, the operator could not tell whether the request was active or stuck, and the Workspace was eventually closed.
-Verified Root Cause: the exact visible bottom action is Phase49.3C `_phase49_3c_all_ai()`, which still called legacy `ProductStudio.generate_ai("commerce")`. That path owns a separate old worker/status/preview flow and bypassed mature `_phase49_3e_run_ai()`. Therefore the already-correct 49.3I first-paint and Phase49.3F/3H connection/send/receive/result/error/cost stack never saw the real button.
-Correct Solution: Phase49.3I.8 bridges the real All-Fields and non-Quick stage operator actions into the mature Task Center, adds an elapsed timer + `توقف انتظار` + 210-second operator watchdog at the progress boundary, and generation-tags executions so cancel/timeout makes any late result stale and non-applicable. No second AI client/worker is created.
-Safety: the blocking urllib worker is not force-killed from Tk/Python; it may finish in the background, but a cancelled/timed-out generation cannot apply its late result. The app remains open and the error/result UI stays visible.
-Verification: dedicated `test_epic49_phase49_3i_ai_execution_recovery.py`; CI-only PR #53 closed without merge; Phase49.3I Run `32620646603`, Phase49.3H Run `32620646600`, Phase49.3G Run `32620646605`, Full Phase49 + Full Django Run `32620646657` all SUCCESS; Django migration NONE.
-Prevention Rule: UI regression tests must exercise the exact visible operator button command path after all composition layers, not only the canonical backend action. Every long AI action must enter one observable execution path with timeout/cancel/stale-result safety.
-
-### ERR-49-027 — All-Fields AI rerun could not refresh existing AI output and generic Persian titles persisted
-Date: 2026-08-23
-Environment: Windows Product Workspace / storefront SEO
-Related Phase: 49.3I.9
-Symptoms: a specific source title such as `Halloween Samhain Pumpkin LED goth Tealight Holder` could remain translated as the generic `محصول چاپ 3 بعدی`; pressing All-Fields AI again after changing Provider/Model did not replace non-empty generated content; publisher/source-site identity and desktop SEO were not guaranteed to survive all later storefront intelligence/visibility layers.
-Verified Root Cause: the mature Task Center deliberately filled only missing editorial fields. That was correct for manual-override safety, but there was no distinction between operator-authored values and stale/AI-owned values during an explicit All-Fields refresh. Generic legacy placeholders were therefore treated as completed. Separately, older import intelligence could overwrite source attribution after conversion.
-Correct Solution: Phase49.3I.9 adds refresh semantics for AI-owned/previous-pack fields while preserving proven manual overrides, explicitly treats generic Persian titles as refreshable, rejects newly generated generic Persian titles, strengthens the source-grounded Persian/SEO prompt, optionally reuses the mature source `refetch()` when images are below the chosen cap, fills only factual/local readiness defaults, stores the source website name as publisher/source, and re-applies desktop SEO/source attribution after mature visibility sync onto real Product meta/OG/source fields.
-Safety: manual overrides remain protected; source facts/license rights are not fabricated; legal commercial license and sale approval require explicit operator confirmation; price default `500000` Toman is a local fallback only when price is absent; material/color defaults come only from active local inventory; no second crawler/AI client/importer was introduced.
-Verification: CI-only PR #55 closed without merge; Phase49.3I Run `32623618842`, Phase49.3H Run `32623618854`, Phase49.3G Run `32623618950`, Full Phase49 + Full Django Run `32623618792` all SUCCESS; Django migration NONE; Catalog schema migration NONE.
-Prevention Rule: an explicit AI refresh must distinguish AI-owned/generated state from real manual overrides, must validate product-specific title quality, and storefront synchronization tests must assert final public meta/source fields after all mature post-conversion layers.
+Environment: Windows Catalog Center 8.7.1 / Product Workspace / Provider Hub
+Related Phase: 49.3I.10
+Symptoms:
+- operator could not tell what title request was sent, what was returned, or whether the provider/model failed,
+- an AI request could return HTTP 200 but the UI then raised `NameError: cannot access free variable 'exc' where it is not associated with a value in enclosing scope`,
+- title-only translation had no bounded progress/Stop Waiting/stale-result protection,
+- an already populated but wrong Persian title made retry behavior ambiguous.
+Verified Root Cause:
+- delayed Tk callbacks used lambdas that closed over `except Exception as exc`; Python deliberately clears the exception target at the end of the except block, so the later Tk callback could dereference an empty closure cell,
+- the quick title action had its own minimal background path rather than the mature observable AI progress contract,
+- provider diagnostics logged request summaries but did not expose the actual sanitized payload/result to the operator.
+Correct Solution — Phase49.3I.10:
+- add `phase49_3i_ai_trace_recovery.py` at the final Workspace composition boundary,
+- wrap the final AI progress UI with scrollable outgoing request / incoming response / error-diagnostics tabs,
+- trace sanitized OpenAI-compatible and Google Gemini payloads/responses to the UI and existing Phase49 JSONL,
+- never include API key/token/Authorization header in those trace details,
+- replace title-only action with an explicit rerunnable current-Provider/Model flow,
+- title watchdog = 90 seconds,
+- Stop Waiting/timeout/workspace close invalidates generation; late result is discarded,
+- reject generic/non-Persian/too-short title before DB write,
+- install a narrow Tk `after()` exception-closure freezer that copies a live exception object before Python clears the original `exc` cell; unrelated callbacks remain unchanged.
+Verification:
+- implementation PR #56 merged,
+- Phase49.3I Run `32626758096` SUCCESS,
+- Phase49.3H Run `32626758114` SUCCESS,
+- Phase49.3G Run `32626758134` SUCCESS,
+- Full Phase49 + Full Django Run `32626758119` SUCCESS,
+- dedicated `test_epic49_phase49_3i_ai_trace_recovery.py` PASS,
+- Django migration NONE; Catalog schema migration NONE.
+Prevention Rule:
+- never schedule a delayed callback that references a raw `except ... as exc` target without binding/freezing its value,
+- every operator AI action must expose a bounded, scrollable, sanitized request/result/error path and stale-result safety,
+- a successful provider HTTP status is not sufficient acceptance; UI application/result state must also be observable and tested.
 
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Status: OPEN / outside Phase49.3I
-Rule: investigate route/client contract before Epic closure; do not add duplicate endpoint without root-cause verification.
+Status: OPEN / outside current 49.3I employee release gate.
+Rule: verify route/client contract before adding any duplicate endpoint.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
-Status: mitigated by Phase49.3H
-Rule: never invent a cost. Use provider response or verified provider cost lookup; otherwise mark unknown.
+Status: mitigated by Phase49.3H.
+Rule: never invent cost; use provider response/verified lookup or mark unknown.
 
 ### ERR-OPEN-003 — Historical image acquisition limit inconsistency
-Status: runtime contract addressed by Phase49.3H; Windows pull/QA pending
-Rule: canonical normalizer is default 10 / hard max 20 across new intake/refetch/persisted-selected flows.
+Status: runtime contract addressed; Windows QA remains.
+Rule: default 10 / hard max 20 through the canonical normalizer.
 
-## Warning Debt (not current blockers)
-- `ckeditor.W001`: CKEditor4 security/maintenance debt.
-- `store.W026`: in-memory realtime not suitable for multi-process production without Redis/polling strategy.
+## Warning Debt
+- CKEditor4 security/maintenance warning.
+- `store.W026`: in-memory realtime is not a production multi-process architecture; Redis/polling remains separate debt.
 - Pillow `Image.getdata()` deprecation.
-- Google membership credentials warning when intentionally unset in CI.
+- Google membership credential warning when intentionally unset in CI.
