@@ -1,0 +1,121 @@
+name: Phase49.3I.17 Single Active AI CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+      - agent/phase49-3i17-single-active-ai-runtime
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3i17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3i17-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3i17-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3i17/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3i17/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3i17/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3i17/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Windows gate contract
+        shell: pwsh
+        run: |
+          $path = "RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1"
+          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $path))
+          $nonAscii = @($bytes | Where-Object { $_ -gt 127 })
+          if ($nonAscii.Count -gt 0) { throw "Runner must remain ASCII-only. Non-ASCII bytes: $($nonAscii.Count)" }
+          $text = [System.Text.Encoding]::ASCII.GetString($bytes)
+          [void][scriptblock]::Create($text)
+          if ($text -notmatch 'RUN_PHASE49_3I16_FALLBACK_GATE\.ps1') { throw "Previous gate chaining missing" }
+          foreach ($marker in @(
+            'PHASE49_3I17_ACTIVE_PROVIDER_MODEL=EXACT_SAVED_ONLY',
+            'PHASE49_3I17_AUTO_AI_ON_OPEN=DISABLED',
+            'PHASE49_3I17_TASK_MODEL_PROBE=NO_NETWORK',
+            'PHASE49_3I17_CROSS_PROVIDER_FALLBACK=FORBIDDEN',
+            'PHASE49_3I17_STALE_WIDGET_CALLBACK=SAFE',
+            'NO RESET / NO STASH / NO DELETE / NO PRODUCTION'
+          )) {
+            if ($text -notmatch [regex]::Escape($marker)) { throw "Missing marker: $marker" }
+          }
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare isolated runtime directories
+        run: |
+          rm -rf /tmp/3dprinthub-3i17
+          mkdir -p "$MEDIA_ROOT" "$PRIVATE_MEDIA_ROOT" "$STATIC_ROOT" "$CATALOG_BRIDGE_PENDING_ROOT"
+
+      - name: Compile Phase49.3I.17 surfaces
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3i17_single_active_ai_runtime.py \
+            catalog_center/app/phase49_3i_local_qa_hotfix.py \
+            catalog_center/tests/test_epic49_phase49_3i17_single_active_ai_runtime.py
+
+      - name: Phase49.3I.17 targeted regression tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_epic49_phase49_3i17_single_active_ai_runtime \
+            tests.test_epic49_phase49_3i_schema_runtime_recovery \
+            tests.test_epic49_phase49_3i_ai_trace_recovery \
+            tests.test_epic49_phase49_3i_ai_execution_recovery \
+            tests.test_epic49_phase49_3i_ai_refresh_completion
+
+      - name: Verify exact single-AI architecture contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("catalog_center/app/phase49_3i17_single_active_ai_runtime.py").read_text(encoding="utf-8")
+          bridge = Path("catalog_center/app/phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
+          assert 'ALLOWED_PROVIDERS = ("avalai", "openrouter", "google", "openai")' in text
+          assert 'db.setting("ai_provider"' in text
+          assert 'db.setting(f"ai_model_{provider}"' in text
+          assert 'secure_secrets.get_provider_key(provider)' in text
+          assert 'ai_auto_prepare_on_open", "0"' in text
+          assert '"network_probe": False' in text
+          assert 'requested != active_provider' in text
+          assert 'invalid command name' in text
+          assert 'install_single_active_ai_runtime(workspace_class, phase49_3f_workspace_module)' in bridge
+          print("PHASE49_3I17_EXACT_ACTIVE_AI=OK")
+          print("PHASE49_3I17_NO_CROSS_PROVIDER_FALLBACK=OK")
+          print("PHASE49_3I17_NO_HIDDEN_AUTO_AI=OK")
+          print("PHASE49_3I17_NO_PRODUCT_MODEL_PREFLIGHT=OK")
+          PY
+
+      - name: Django no-migration safety
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+          echo "PHASE49_3I17_DJANGO_MIGRATION=NONE"
+
+      - name: Launcher smoke
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3i17-launch.txt
+          grep -F "EPIC49_3I_DISCOVERY_REVIEW_QUEUE=ENABLED" /tmp/phase49-3i17-launch.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i17-launch.txt
