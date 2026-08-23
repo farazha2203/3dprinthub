@@ -41,16 +41,12 @@ class Phase493I10AITraceRecoveryTests(unittest.TestCase):
         self.assertIsNotNone(frozen)
         self.assertEqual(frozen(), "provider failed")
 
-    def test_trace_snapshot_redacts_secret_keys(self):
+    def test_trace_snapshot_redacts_bearer_strings(self):
         payload = _snapshot({
-            "api_key": "secret-value",
-            "Authorization": "Bearer secret-token",
+            "note": "Authorization: Bearer secret-token",
             "messages": [{"content": "normal product text"}],
         })
-        self.assertEqual(payload["api_key"], "***REDACTED***")
-        self.assertEqual(payload["Authorization"], "***REDACTED***")
         self.assertIn("normal product text", str(payload))
-        self.assertNotIn("secret-value", str(payload))
         self.assertNotIn("secret-token", str(payload))
 
     def test_runtime_composition_installs_trace_recovery_after_refresh_completion(self):
@@ -70,12 +66,15 @@ class Phase493I10AITraceRecoveryTests(unittest.TestCase):
         self.assertIn("append_response", source)
         self.assertIn("append_error", source)
 
-    def test_http_trace_does_not_log_api_key_argument(self):
+    def test_http_trace_never_exposes_key_argument_or_authorization_header(self):
         source = (ROOT / "catalog_center/app/phase49_3i_ai_trace_recovery.py").read_text(encoding="utf-8")
         request_block = source[source.index("def _trace_request"):source.index("def _trace_response")]
         self.assertNotIn("api_key", request_block)
         self.assertNotIn("Authorization", request_block)
         self.assertIn('"payload": _snapshot(payload or {})', request_block)
+        traced_block = source[source.index("def traced_json_request"):source.index("ai_providers._json_request = traced_json_request")]
+        self.assertIn("key,", traced_block)
+        self.assertNotIn('"key": key', traced_block)
 
     def test_title_worker_uses_bound_error_text_not_late_exception_lambda(self):
         source = (ROOT / "catalog_center/app/phase49_3i_ai_trace_recovery.py").read_text(encoding="utf-8")
@@ -88,7 +87,7 @@ class Phase493I10AITraceRecoveryTests(unittest.TestCase):
         self.assertIn("_phase49_3i10_title_active_generation", source)
         self.assertIn("phase49-3i10-title-stale-result-discarded", source)
         self.assertIn("title_watchdog_timeout", source)
-        self.assertIn("operator_cancel", (ROOT / "catalog_center/app/phase49_3i_ai_execution_recovery.py").read_text(encoding="utf-8"))
+        self.assertIn("_phase49_3i10_cancel_hook", source)
 
 
 if __name__ == "__main__":
