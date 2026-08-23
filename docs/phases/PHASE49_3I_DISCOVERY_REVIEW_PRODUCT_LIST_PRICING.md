@@ -2,87 +2,82 @@
 
 Updated: 2026-08-23
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.11`
-Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.12`
+Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
-Provide a business-usable Catalog Center flow that discovers source products cheaply, previews before full acquisition, prepares Persian ecommerce/SEO content, supports explicit pricing, exposes every AI execution result/error, enforces exact provider schema contracts, protects manual edits and publishes only through verified Local/Production gates.
+Provide a business-usable Catalog Center flow that discovers source products cheaply, previews before full acquisition, prepares Persian ecommerce/SEO content, supports explicit pricing, exposes AI/discovery execution state, protects manual edits and publishes only through verified Local/Production gates.
 
 ## Canonical State Machine
 `Exact Search/Listing/Category URL → Preview Candidate → Approve/Archive → Approved Full Fetch → Product Workspace → LOCAL PUBLISH ONLY → Local Django E2E → Owner Approval → Production`
 
-## Discovery / Full Fetch Contract
-Preview contains only source identity/external id, source URL, basic title and one thumbnail. Product URL uses mature direct intake; Group/Category/Search/Listing uses Preview first. Approved Full Fetch uses the mature extractor only after approval. Image limit remains `1..20`, default `10`. Archive blocks rediscovery without Full Fetch.
+Direct Product URL is a separate mature intake path and must not be confused with Search/Listing/Category Preview.
 
-## Provider / Credential Contract
-Providers: AvalAI, OpenRouter, Google Gemini Direct, OpenAI Direct. Windows Credential Store/environment remains credential source of truth. API keys, FTP password and Bridge token stay outside Git/SQLite/log trace payloads.
+## Preserved Core Contracts
+- explicit operator Search/Listing/Category URL is authoritative,
+- source `model_url_pattern` is Product-vs-Page boundary,
+- Preview contains only identity/basic title/source URL/one thumbnail,
+- Full Fetch only after approval,
+- image limit `1..20`, default `10`,
+- Archive blocks rediscovery without Full Fetch,
+- dedupe by source + external id + normalized URL,
+- Provider secrets remain in Windows Credential Store/environment,
+- All-Fields AI uses mature Task Center,
+- 90s title / 210s full-AI watchdogs,
+- exact provider schema validation + one repair,
+- stale/cancelled late AI result cannot mutate product,
+- Product Workspace remains canonical detailed editor,
+- Fixed / Range / Formula-Dynamic remain independent; Range never invokes Formula.
 
-## Observable AI Contract
-Preserved from 49.3I.8–10:
-- real All-Fields uses mature Task Center,
-- immediate first-paint,
-- scrollable `ارسالی / دریافتی / خطا-Diagnostics`,
-- elapsed timer + Stop Waiting,
-- 90-second title watchdog,
-- 210-second full-AI watchdog,
-- stale/cancelled late result cannot mutate product,
-- explicit rerun refreshes AI-owned content while protecting manual overrides,
-- title translation uses current Provider/Model and rejects generic output.
+## 49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit
 
-## 49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery
 ### Owner Evidence
-A real AvalAI response was semantically good but structurally wrong: `seo_title`/`seo_description` aliases were returned instead of `seo_title_fa`/`seo_description_fa`, `content_notes` was a string instead of an array, and required fields were missing. The provider had returned HTTP success, so the issue was not simply “AI did not answer”.
+Windows screenshot/log showed:
+- `PHASE49_3I_PREVIEW_TARGET=https://makerworld.com/en/search/models?keyword=cake+stand`,
+- `candidates=20`,
+- `failed=0`,
+- `full_fetch=0`.
 
-The same run showed the full provider model catalog in the trace and the operator reported a later Provider/Model change looked hung.
+So exact-page backend discovery was working. The remaining failure was operator visibility/composition: candidate review/live run state was not clearly mounted on final UX87, direct Product URL intake was not separated as an explicit action, and Product Workspace image fitting still looked wrong.
 
 ### Corrected Contract
-- AvalAI/OpenRouter receive the real requested JSON Schema,
-- strict schema response format is preferred when supported,
-- the exact schema is always present in the provider instruction,
-- bounded compatibility fallback: strict schema → `json_object` → no response format,
-- syntactically valid provider JSON is still rejected unless required keys/types match,
-- one automatic schema repair is allowed; a second failure becomes a precise visible error,
-- explicit selected model is used directly,
-- model list is cached within the client request window,
-- duplicate model probes are reduced,
-- `/models` trace is summarized as count + bounded sample,
-- Stop Waiting/watchdog/stale abort releases Workspace busy state immediately,
-- a new Provider/Model request may start immediately after abort,
-- the old background response remains stale/non-applicable.
+- mount operator controls at final UX87 `_ui` boundary,
+- separate `کشف لینک‌های همین صفحه` from `دریافت محصول تکی`,
+- classify direct Product URL from configured source regex rather than guessed shape,
+- visible live badge/progress/elapsed/current URL/detail,
+- explicit visible Stop request state,
+- mature candidate thumbnail/status/title/source/external/url renderer reused,
+- no duplicate crawler/extractor,
+- Preview remains no-Full-Fetch until approval,
+- Product Workspace cards use fixed `228x171` pixel `ImageOps.contain` letterbox fitting,
+- no crop/stretch and no text-unit image Label sizing.
 
-## Products Explorer / Pricing
-Preserved:
-- Product Workspace canonical detailed editor,
-- Explorer visual/lightweight,
-- selection-loop guard,
-- Fixed / Range / Formula-Dynamic independent,
-- Range never invokes Formula.
-
-## Runtime / Test Surface — 49.3I.11
+## Runtime / Test Surface — 49.3I.12
 Added:
-- `catalog_center/app/phase49_3i_schema_runtime_recovery.py`,
-- `catalog_center/tests/test_epic49_phase49_3i_schema_runtime_recovery.py`.
+- `catalog_center/app/phase49_3i12_discovery_image_recovery.py`,
+- `catalog_center/app/phase49_3i12_runtime_bridge.py`,
+- `catalog_center/tests/test_epic49_phase49_3i12_discovery_image_recovery.py`.
 
 Changed:
-- `catalog_center/app/phase49_3i_local_qa_hotfix.py`,
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v`49.3I.11`,
+- `catalog_center/app/phase49_3i_pricing_modes.py`,
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v`49.3I.12`,
 - `.github/workflows/phase49-3i-ci.yml`.
 
 No Django migration and no Catalog schema migration.
 
-## Final GitHub Validation — 49.3I.11
-Implementation PR `#57`: MERGED.
-Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
-Epic merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
+## Final GitHub Validation — 49.3I.12
+Implementation PR `#58`: MERGED.
+Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
+Epic merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
 
 Successful runs:
-- Phase49.3I `32628666588` — SUCCESS,
-- Phase49.3H `32628666600` — SUCCESS,
-- Phase49.3G `32628666558` — SUCCESS,
-- Full Phase49 + Full Django `32628666582` — SUCCESS.
+- Phase49.3I `32631604990` — SUCCESS,
+- Phase49.3H `32631604930` — SUCCESS,
+- Phase49.3G `32631604945` — SUCCESS,
+- Full Phase49 + Full Django `32631604928` — SUCCESS.
 
-Validation includes runner/ASCII/live-Git guard, exact owner malformed-response regression, strict schema delivery, one repair, model trace compaction, abort busy-release, stale-result safety, prior AI trace/refresh/source/SEO, Preview/provider/Explorer/pricing regressions, Django no-migration contract, Windows Catalog tests and Full Django suite.
+Validation includes runner/ASCII/live-Git guard, exact-page/product URL classification, UX87 final composition, candidate Treeview compatibility, live status markers, stop feedback markers, 228x171 contain image contract, prior AI/provider/Preview/pricing regressions, Django no-migration contract, Windows Catalog tests and Full Django suite.
 
 ## Database / Migration / Secret Safety
 - Django migration: `NONE`,
@@ -96,21 +91,20 @@ Validation includes runner/ASCII/live-Git guard, exact owner malformed-response 
 1. Catalog Center closed; Local worktree clean,
 2. live fetch/prune + ff-only pull current Epic,
 3. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-4. verify runner `49.3I.11` + Git snapshot marker,
-5. retry exact formerly failing AvalAI product/model,
-6. verify exact required schema keys/types or one visible repair request,
-7. verify model catalog trace is compact and UI responsive,
-8. Stop Waiting → change Provider/Model → immediate new request; old response cannot apply,
-9. verify title and All-Fields watchdogs/trace,
-10. low-image warning/refetch,
-11. MakerWorld Preview → Approve → Full Fetch,
-12. Provider/model/FTP/Bridge persistence,
-13. Product selection/open + Fixed/Range/Formula.
+4. verify runner `49.3I.12` + Git snapshot marker,
+5. exact MakerWorld `cake+stand` Search URL → exact-page discovery,
+6. verify live badge/progress/elapsed/current URL,
+7. verify candidate links appear in review panel before Full Fetch,
+8. approve one candidate → Full Fetch,
+9. direct Product URL → separate single-product action,
+10. verify Stop feedback,
+11. verify landscape/portrait Product Workspace image cards are equal 228x171 contain-fit,
+12. regression-check All-Fields AI / Provider-model / image limit / Fixed-Range-Formula.
 
 If these pass, employees may begin controlled Catalog data entry.
 
 ## Local Publish / Production Gate
 After Windows acceptance: exactly one `LOCAL PUBLISH ONLY` → Local Django E2E → verify title/SEO/source/images/pricing/visibility → explicit owner acceptance. Only then verify host branch/path/MySQL/backup/rollback and deploy the approved GitHub snapshot.
 
-## Payment Note
-Phase30 ZarinPal covers accepted Quote payments. Normal Store cart checkout remains manual bank transfer; Store request/callback/verify integration + Sandbox E2E is the next urgent track after Catalog release QA.
+## Next Phase After Acceptance
+Normal Store cart checkout remains manual bank transfer. The next implementation phase is ZarinPal Store checkout request/callback/verify + Sandbox E2E, preserving manual bank transfer and Phase30 security semantics.
