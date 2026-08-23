@@ -1,6 +1,6 @@
 # OWNER REQUESTS
 
-Last Updated: 2026-08-22
+Last Updated: 2026-08-23
 
 ## Phase49.3H
 
@@ -71,10 +71,11 @@ Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 - Range must not invoke Formula.
 
 ### REQ-49I-008 — Full AI autofill progress immediately
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Status: `SUPERSEDED/EXTENDED BY REQ-49I-016 / WINDOWS QA PENDING`
 - first progress paint before synchronous preflight,
 - then connection/send/receive/save/result stages,
 - success/result/error stays visible and sanitized.
+Canonical root cause for the original preflight gap: `ERR-49-018`.
 
 ### REQ-49I-009 — Windows handoff uses live GitHub snapshot
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / ACTIVE`
@@ -122,41 +123,65 @@ Status: `SUPERSEDED BY 49.3I.7 REAL PROVIDER-HUB FIX / WINDOWS QA PENDING`
 - no secret in SQLite/Git/source/logs.
 Canonical root cause: `ERR-49-023`.
 
-### REQ-49I-014 — Real AI Provider Hub keys and model lists must survive updates and be visible
-Status: `GITHUB IMPLEMENTED IN 49.3I.7 / CI VALIDATION RUNNING / WINDOWS QA PENDING`
-Owner requirement:
-- AvalAI and OpenRouter API keys entered once must not visually disappear after update/restart,
-- the real Phase49.3F provider cards, not only a legacy AI field, must restore their stored keys masked,
-- OpenAI/Google provider cards preserve the same secure behavior when configured,
-- provider model catalogs must load into the program so the operator can see/select model IDs,
-- configured providers should background-load their model catalog without requiring a new key entry,
-- manual model picker/API refresh remains available,
+### REQ-49I-014 — Real AI Provider Hub keys and model lists survive updates and stay visible
+Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- AvalAI/OpenRouter/OpenAI/Google real Provider-card fields hydrate from secure storage,
+- Provider keys entered once do not visually disappear after update/restart,
+- configured Provider model catalogs background-load through the mature API client,
+- Model ID/model picker remains visible/selectable,
+- manual API refresh remains available,
 - no secret moves into SQLite/Git/source/logs.
-Verified root cause: 49.3I.6 hydrated legacy `ai_key` but modern cards use `_ai_hub_key_vars`; mature provider Save then cleared those real card vars. Canonical record: `ERR-49-025`.
+Canonical root cause: `ERR-49-025`.
 
-### REQ-49I-015 — Search Preview must work without breaking mature full source extraction
-Status: `GITHUB IMPLEMENTED IN 49.3I.7 / CI VALIDATION RUNNING / WINDOWS QA PENDING`
+### REQ-49I-015 — Search Preview works without breaking mature full source extraction
+Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Owner workflow:
-1. search/listing URL is scanned,
-2. show lightweight candidate(s), each with one thumbnail/basic identity,
+1. Search/Listing URL is scanned,
+2. show lightweight candidate(s) with one thumbnail/basic identity,
 3. operator approves wanted product,
-4. only then follow the product link and run mature full extraction,
-5. download/persist the operator-selected image count, e.g. 20,
+4. only then follow product link and run mature full extraction,
+5. download/persist operator-selected image count, e.g. 20,
 6. rejected/archived candidates are not full-fetched.
-Owner explicitly requested that the previously working mature source extraction remain untouched.
-Verified regression: routing reached Preview correctly, but `Locator.evaluate_all` failed with `SyntaxError: Invalid or unexpected token` before any candidates were produced.
-Corrected boundary: raw/escaped Preview JavaScript only; mature `discover_classic` / `collect_classic_exact` paths remain untouched. Canonical record: `ERR-49-024`.
+- raw/escaped Preview JavaScript fixes `Locator.evaluate_all` syntax regression,
+- mature `extract_direct_link` / direct Product / approved Full Fetch remain preserved.
+Canonical root cause: `ERR-49-024`.
+
+### REQ-49I-016 — Every real operator AI action must show a bounded, observable execution path
+Status: `GITHUB UPDATED IN 49.3I.8 / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Owner report:
+- the bottom `تکمیل هوشمند همه فیلدهای AI` stayed on AvalAI content generation for ~5 minutes,
+- no useful progress window showed connection/send/receive/save state,
+- operator could not tell whether the request was working or stuck,
+- the Workspace eventually had to be closed.
+
+Required contract:
+- the actual visible bottom All-Fields action must use the mature Task Center,
+- immediate startup progress before preflight,
+- visible connection / data sent / waiting / response received / save / result-error path,
+- elapsed time visible continuously,
+- a `توقف انتظار` action,
+- bounded operator wait instead of indefinite-looking wait,
+- provider/network errors remain visible and do not close the app,
+- cancel/timeout must make any late network result stale so it cannot overwrite product data,
+- no duplicate AI client/worker implementation.
+
+Verified root cause:
+- Phase49.3C `_phase49_3c_all_ai()` still called legacy `generate_ai("commerce")`, bypassing `_phase49_3e_run_ai()` and therefore bypassing the already-correct 49.3I/3H progress stack.
+Canonical record: `ERR-49-026`.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.7`.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.8`.
 
 Protected contracts:
 - ASCII-only Windows PowerShell 5.1 compatibility,
 - live fetched GitHub snapshot guard,
 - Preview JavaScript escape regression,
 - Preview-only lightweight candidate boundary,
-- real provider-card secure hydration,
-- provider model-catalog auto-load/cache/combobox visibility,
+- real Provider-card secure hydration,
+- Provider model-catalog auto-load/cache/combobox visibility,
+- real bottom All-Fields AI → mature Task Center routing,
+- elapsed progress + Stop Waiting + 210s operator watchdog,
+- stale late AI result discard,
 - selection-loop and Explorer regressions,
 - Product-vs-Group routing,
 - Phase49.3H/3G + Django migration/full-suite regressions.
@@ -164,7 +189,7 @@ Protected contracts:
 ## Preserved Requests From Prior Phases
 - Product Workspace remains canonical detailed editor.
 - AI provider/model remains selectable and persistent.
-- Image SEO is selected-only and text-only; image bytes/files/URLs are not sent to AI.
+- Image SEO is selected-only and text-only; image bytes/files/URLs are not sent to the mature Task Center AI path.
 - AI provenance/manual override/disable remains protected.
 - source refresh preserves human edits.
 - Local vs Production publish remains fail-closed.
