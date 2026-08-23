@@ -10,10 +10,7 @@
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
 
----
-
 ## 1) قانون مادر
-
 ```text
 READ DOCS
 → VERIFY REAL STATE
@@ -43,11 +40,8 @@ READ DOCS
 
 Policy: `docs/GIT_ONLY_WINDOWS_DELIVERY_POLICY.md`.
 
----
-
 ## 2) مسیرهای ثبت‌شده
-
-### Windows
+Windows:
 ```text
 Project:             D:\projects\3DPrintHub
 Venv:                D:\projects\3DPrintHub\.venv
@@ -55,11 +49,10 @@ Catalog Center:      D:\projects\3DPrintHub\catalog_center
 Django SQLite:       D:\projects\3DPrintHub\db.sqlite3
 Catalog persistent:  D:\projects\3dprinthub-catalog-manager
 Catalog SQLite:      D:\projects\3dprinthub-catalog-manager\catalog.sqlite3
-Legacy retained:     D:\projects\3dprinthub_catalog_center
 Backups:             D:\projects\3dprinthub-backups
 ```
 
-### Production
+Production:
 ```text
 Project:       /home/sfkilvrs/3dprinthub
 Venv:          /home/sfkilvrs/virtualenv/3dprinthub/3.12
@@ -71,10 +64,7 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 
 قبل از هر Production operation باید `docs/PATHS.md`، `docs/HOST_CONSTRAINTS.md`، DB vendor/name واقعی، Backup، Rollback و Branch/Commit واقعی دوباره Verify شوند.
 
----
-
 ## 3) Epic49 Path
-
 ```text
 49.2A → 49.2B → 49.2C
 → Epic49 Unified Product/Slider Sync
@@ -87,213 +77,107 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3G Workspace Usability/AI Provenance
 → 49.3H SEO Execution/AI Cost/Controlled Image Intake
 → 49.3I Discovery Review/Product Explorer/Explicit Pricing
-→ 49.3I.1 Windows PS5.1 Encoding Guard
-→ 49.3I.2 Real UX87 Gallery/AI First-Paint
-→ 49.3I.3 Live GitHub Snapshot Guard
-→ 49.3I.4 Explorer/Source URL Routing
-→ 49.3I.5 Selection Loop Guard/Compact Metadata
-→ 49.3I.6 Secure Credential Persistence
-→ 49.3I.7 Preview/Provider Hub Recovery
-→ 49.3I.8 Observable All-Fields AI
-→ 49.3I.9 AI Refresh/SEO Source Completion
-→ 49.3I.10 AI Trace/Safe Title Retry
-→ 49.3I.11 Provider Schema/Trace/Busy Recovery
-→ 49.3I.12 Exact-Page Operator/Single Product/Image Fit
-→ 49.3I.13 Windows Paste/Approved Batch Recovery
+→ 49.3I.1 ... 49.3I.13
 → 49.3I.14 Mature Scan Controls/Single-Product Route Restoration
 ```
 
-Current status: **49.3I.14 implemented on PR #60; all required feature-head CI SUCCESS; focused Windows release QA pending; Production untouched.**
-
----
+Current status: **49.3I.14 merged; all required final PR-head CI SUCCESS; focused Windows release QA pending; Production untouched.**
 
 ## 4) معماری عملیاتی دریافت محصول
+دو مسیر باید همزمان وجود داشته باشند.
 
-دو مسیر باید همزمان وجود داشته باشند:
-
-### Mature acquisition path
+Mature acquisition:
 ```text
-Operator
-  ↓
-Top Source / Mode / Method / URL / Query controls
-  ↓
-شروع اسکن
-  ↓
-Original BaseApp start_scan / _scan_worker
-  ↓
-Mature discovery/queue/classic collector
-  ↓
-Product Workspace
+Source / Mode / Method / URL / Query
+→ شروع اسکن
+→ Original BaseApp start_scan / _scan_worker
+→ mature discovery/queue/classic collector
+→ Product Workspace
 ```
 
-### Review path
+Review acquisition:
 ```text
 Exact Search/Listing/Category URL
-  ↓
-Visible Preview Discovery
-  ↓
-Candidate Review: one thumbnail + basic identity
-  ↓
-Approve / Archive
-  ↓
-Approved Full Fetch
-  ↓
-Product Workspace
+→ Preview Candidate
+→ Approve / Archive
+→ Approved Full Fetch
+→ Product Workspace
 ```
 
-قانون دائمی: مسیر دوم حق حذف، مخفی‌کردن یا Rebind کردن مسیر اول را ندارد مگر با درخواست صریح مالک پروژه.
+قانون دائمی: مسیر Review حق حذف، مخفی‌کردن یا Rebind کردن مسیر Mature را ندارد مگر با درخواست صریح مالک پروژه.
 
----
-
-## 5) 49.3I.14 — علت و قرارداد اصلاح
-
+## 5) Phase49.3I.14
 Windows QA بعد از 49.3I.13 نشان داد:
-- `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها` در 49.3I.12 عمداً Hide شده بودند.
-- Preview layer متد `App87.start_scan` را هم جایگزین کرده بود؛ بنابراین صرفاً Visible کردن دکمه کافی نبود.
-- اکشن جدید `دریافت محصول تکی` به اجبار Rich Direct Intake را اجرا می‌کرد و برای MakerWorld Product واقعی `400767` خطای `RuntimeError: HTTP 403` داد.
-- مسیر Mature BaseApp هنوز در Repository موجود بود و همان مسیری است که مالک قبلاً سالم گزارش کرده بود.
-
-اصلاح 49.3I.14:
-- actionهای Mature بالا Restore می‌شوند.
-- `شروع اسکن` به BaseApp mature worker وصل می‌شود.
-- اکشن جدید `دریافت محصول تکی` بعد از Product URL validation، `mode=single` می‌گذارد و همان mature worker را اجرا می‌کند.
-- `دریافت هوشمند از لینک` همچنان به‌صورت Optional جداگانه باقی می‌ماند.
-- Preview/Approve/Archive/Paste/Error Detail حفظ می‌شوند.
-- crawler/extractor جدید ساخته نشده است.
+- `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها` Hide شده بودند,
+- Preview layer متد `App87.start_scan` را هم جایگزین کرده بود,
+- اکشن جدید `دریافت محصول تکی` Rich Direct Intake را اجباری می‌کرد و برای MakerWorld Product واقعی HTTP 403 داد.
 
 Canonical error: `ERR-49-032`.
 
----
+اصلاح:
+- mature actions Restore,
+- `شروع اسکن` → BaseApp mature worker,
+- `دریافت محصول تکی` → validate Product URL → `mode=single` → همان mature worker,
+- `دریافت هوشمند از لینک` همچنان Optional,
+- Preview/Approve/Archive/Paste/Error Detail حفظ,
+- crawler/extractor جدید اضافه نشده است.
 
 ## 6) Product Workspace / AI / Pricing Contracts
+- images: viewport ثابت `228x171`, `ImageOps.contain`, بدون crop/stretch,
+- AI: mature All-Fields Task Center, first-paint, sanitized trace, 90s/210s watchdog, stale-result safety, exact schema + one repair,
+- pricing: Fixed / Range / Formula مستقل؛ Range هرگز Formula را اجرا نمی‌کند.
 
-Images:
-- viewport ثابت `228x171`,
-- `ImageOps.contain` + letterbox,
-- crop/stretch ممنوع.
-
-AI:
-- mature All-Fields Task Center,
-- immediate first-paint,
-- sanitized request/response/error trace,
-- 90s title / 210s full-AI watchdog,
-- stale-result safety,
-- AI-owned refresh + manual override protection,
-- exact provider JSON Schema + one repair,
-- compact model trace,
-- abort releases busy state immediately.
-
-Pricing:
-- Fixed,
-- Range,
-- Formula/Dynamic,
-- Range هرگز Formula را اجرا نمی‌کند.
-
----
-
-## 7) Latest Validation — 49.3I.14 Feature Runtime
-
-PR #60: OPEN at documentation time.
-Runtime fix commit: `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`.
+## 7) Latest Validation
+PR #60: MERGED.
+Final PR head: `f12a25e1fe50fb16a03a1324c84912c830a2608e`.
+Merge commit: `124662cf2436dfcce245282b01b2da694802aa55`.
 
 Runs:
-- Phase49.3I.14 Legacy Scan Restore `32636391530` — SUCCESS
-- Phase49.3I `32636391489` — SUCCESS
-- Phase49.3H `32636391571` — SUCCESS
-- Phase49.3G `32636391563` — SUCCESS
-- Full Phase49 + Full Django `32636391518` — SUCCESS
+- Phase49.3I.14 `32636771174` — SUCCESS
+- Phase49.3I `32636771071` — SUCCESS
+- Phase49.3H `32636771154` — SUCCESS
+- Phase49.3G `32636771049` — SUCCESS
+- Full Phase49 + Full Django `32636771103` — SUCCESS
 
-Initial targeted CI correctly caught a resolver bug (`preview-started` selected instead of `legacy-started`). The failed command was not repeated unchanged; code changed to resolve the deepest project `start_scan`, then fresh CI passed.
-
-Verified:
-- mature scan route resolution,
-- manual single-product route through mature worker,
-- preserved legacy action contract,
-- Preview/Approve/Paste regressions,
-- compile,
-- Windows PowerShell safety gate,
-- Django check/no-migration,
-- Windows Catalog Epic49 tests,
-- Full Django suite.
+Initial targeted CI correctly caught the resolver bug before final validation. Final CI is green.
 
 Django migration: NONE.  
 Catalog schema migration: NONE.  
 Production: UNTOUCHED.
 
----
-
-## 8) Error Knowledge Base
-
-قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
-Current incident: **ERR-49-032**.
-
-Permanent prevention rule:
-- New controls are additive.
-- Healthy mature acquisition actions remain visible and correctly routed.
-- Regression tests must verify both button visibility/label and the actual command path.
-
----
-
-## 9) Focused Employee Release Gate — Next
-
-بعد از Merge PR #60:
-1. Catalog Center کاملاً بسته باشد.
+## 8) Employee Release Gate — Next
+1. Catalog Center بسته باشد.
 2. Local worktree clean.
 3. live `git fetch --prune origin` + ff-only pull current Epic.
 4. `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`.
-5. mature top acquisition actions دیده شوند.
-6. MakerWorld + `single` + `auto` + Product URL واقعی → `شروع اسکن` و mature worker.
-7. همان URL با `دریافت محصول تکی` → همان mature worker؛ Rich Direct HTTP-403 اجباری نباشد.
-8. exact-page Preview/Approve همچنان موجود باشد.
-
-این QA عمداً Focused است؛ ویژگی‌های بی‌ربط دوباره بازطراحی یا تست گسترده نمی‌شوند مگر regression جدید دیده شود.
+5. mature top actions visible.
+6. MakerWorld + `single` + `auto` + known Product URL → `شروع اسکن` mature route.
+7. manual `دریافت محصول تکی` همان mature route و بدون اجبار Rich Direct 403.
+8. exact-page Preview/Approve همچنان موجود.
 
 اگر PASS شد:
-- دقیقاً یک `LOCAL PUBLISH ONLY`
-- Local Django Store/Admin E2E
-- verify title/SEO/source/images/pricing/visibility
-- explicit owner approval
+- دقیقاً یک `LOCAL PUBLISH ONLY`,
+- Local Django Store/Admin E2E,
+- verify title/SEO/source/images/pricing/visibility,
+- explicit owner approval.
 
----
-
-## 10) Production Gate
-
+## 9) Production Gate
 بعد از Windows QA + Local Publish E2E + تأیید صریح مالک:
 1. read-only host state verify,
 2. project root/branch/commit verify,
 3. clean/safe host state,
-4. `.env`/persistent import state backup,
+4. `.env`/persistent data backup,
 5. `manage.py check`,
 6. `makemigrations --check --dry-run`,
-7. verify `connection.vendor == mysql` + exact DB name,
-8. migration plan,
-9. backup before migration if any,
-10. collectstatic,
-11. Passenger restart,
-12. HTTP/store/admin/product/media smoke/data verification,
-13. docs update.
+7. verify MySQL vendor/name,
+8. migration plan / backup if needed,
+9. collectstatic,
+10. Passenger restart,
+11. HTTP/store/admin/product/media verification,
+12. docs update.
 
----
+## 10) Next Product Phase
+After Catalog deploy: Store ZarinPal request/callback/verify + Sandbox E2E using mature Phase30 security semantics.
 
-## 11) Next Product Phase — Store ZarinPal Checkout
-
-Phase30 ZarinPal برای Quote payment بالغ است، ولی Store cart checkout هنوز bank-transfer/manual-payment است.
-
-Next implementation after Catalog acceptance:
-- reuse mature ZarinPal security semantics,
-- server-owned amount,
-- idempotent Store payment attempt,
-- Authority match,
-- server-to-server Verify,
-- duplicate callback safety,
-- finalize inventory/order exactly once,
-- keep manual bank transfer,
-- Sandbox E2E before live activation,
-- secrets outside Git,
-- owner-approved low-value live test.
-
----
-
-## 12) Exact Next Step
-
-بعد از Merge PR #60، Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp` را اجرا کند. Local Publish و Production تا PASS این focused regression gate ممنوع است.
+## Exact Next Step
+Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp` را اجرا کند. بعد از PASS همین Focused QA، Local Publish E2E و سپس Production gate انجام می‌شود.
