@@ -211,6 +211,17 @@ Secret Safety: credentials remain only in Windows Credential Store/environment; 
 Verification: expanded `test_epic49_phase49_3i_secret_persistence.py`, secure composition contract, provider model-cache/combobox tests, Phase49.3I/3H/3G/full CI, then Windows restart/model-list QA.
 Prevention Rule: credential persistence and model-list readiness must be regression-tested against the real active Provider Hub state variables and save handlers after all composition layers are installed.
 
+### ERR-49-026 — Real bottom All-Fields AI action bypassed mature progress Task Center
+Date: 2026-08-23
+Environment: Windows Catalog Center Product Workspace
+Related Phase: 49.3I.8
+Symptoms: clicking `تکمیل هوشمند همه فیلدهای AI` left the status on AvalAI content generation for roughly five minutes; no durable connection/send/receive/save progress was visible, the operator could not tell whether the request was active or stuck, and the Workspace was eventually closed.
+Verified Root Cause: the exact visible bottom action is Phase49.3C `_phase49_3c_all_ai()`, which still called legacy `ProductStudio.generate_ai("commerce")`. That path owns a separate old worker/status/preview flow and bypassed mature `_phase49_3e_run_ai()`. Therefore the already-correct 49.3I first-paint and Phase49.3F/3H connection/send/receive/result/error/cost stack never saw the real button.
+Correct Solution: Phase49.3I.8 bridges the real All-Fields and non-Quick stage operator actions into the mature Task Center, adds an elapsed timer + `توقف انتظار` + 210-second operator watchdog at the progress boundary, and generation-tags executions so cancel/timeout makes any late result stale and non-applicable. No second AI client/worker is created.
+Safety: the blocking urllib worker is not force-killed from Tk/Python; it may finish in the background, but a cancelled/timed-out generation cannot apply its late result. The app remains open and the error/result UI stays visible.
+Verification: dedicated `test_epic49_phase49_3i_ai_execution_recovery.py`; CI-only PR #53 closed without merge; Phase49.3I Run `32620646603`, Phase49.3H Run `32620646600`, Phase49.3G Run `32620646605`, Full Phase49 + Full Django Run `32620646657` all SUCCESS; Django migration NONE.
+Prevention Rule: UI regression tests must exercise the exact visible operator button command path after all composition layers, not only the canonical backend action. Every long AI action must enter one observable execution path with timeout/cancel/stale-result safety.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
