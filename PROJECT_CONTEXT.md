@@ -4,7 +4,7 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.16 — Resilient Acquisition Fallback + Cached Candidate Reuse`
+Current Hotfix: `49.3I.17 — Single Active AI Runtime`
 Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -25,46 +25,41 @@ Production project: `/home/sfkilvrs/3dprinthub`
 Production venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 
-## Acquisition Contract
-Primary business path:
+## Acquisition Contract — Preserved 49.3I.16
+Primary path:
 `Search/Listing URL → max 100 products → max 20 images/product → resilient discovery → resilient local image staging → visible image count → select → Add to Products / Archive → Product Workspace`.
 
-Final discovery fallback:
-`locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB`.
+Discovery fallback: `locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB`.
+Image fallback: `locator-safe → HTTP → mature Classic DOM → attached Chrome 9222 → listing thumbnail`.
+No Rich Direct Full Fetch dependency is part of bulk intake.
 
-Final image fallback:
-`locator-safe fresh → HTTP parse/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail`.
-
-Rules:
-- one method failure triggers the next method,
-- prior candidate discovery for the same listing is reusable,
-- candidate manifests record method traces,
-- at least one real local staged image is required before readiness/Add-to-Products,
-- one candidate failure does not abort the batch,
-- no Rich Direct Full Fetch dependency in the bulk path,
-- Archive/Block/dedupe and mature top controls remain,
-- AI/provider/SEO/pricing/publish/FTP/Bridge/credentials unchanged.
-
-## Product Workspace / AI / Pricing
-Images remain contain-fit `228x171`.
-AI remains observable with sanitized request/response/error, 90s title / 210s All-Fields watchdog, stale-result protection, exact provider schema and manual-override protection.
-Pricing remains Fixed / Range / Formula independent.
+## Product AI Contract — 49.3I.17
+- AI Center is the authority for selecting/saving one active Provider and Model,
+- Product AI reads only that saved Provider and its saved Model,
+- key comes only from that Provider's secure secret slot,
+- no fallback to another Provider because another key happens to exist,
+- Product open does not start AI automatically,
+- normal Product AI does not fetch `/models` before generation,
+- Google Product AI with exact saved Model skips model-list preflight,
+- explicit Settings Model Search/Test remains live,
+- stale destroyed-widget Tk callbacks are non-fatal and logged,
+- existing sanitized trace, schema repair, 90s title / 210s All-Fields watchdog, Stop Waiting, stale-result and manual-override protection remain.
 
 ## Latest Validation / Merge
-PR `#62` merged.
-- final head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
-- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`.
+PR `#63` merged.
+- final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
+- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`.
 
-All final-head workflows SUCCESS: 49.3I.16 `32645660164`, 49.3I `32645660154`, 49.3I.15 `32645660045`, 49.3I.14 `32645660071`, 49.3H `32645660135`, 49.3G `32645660118`, Full Epic + Windows Catalog + Full Django `32645660123`.
+All required runtime-head workflows SUCCESS: 49.3I.17 `32649623837`, 49.3I `32649623808`, 49.3I.16 `32649623695`, 49.3I.15 `32649623705`, 49.3I.14 `32649623679`, 49.3H `32649623825`, 49.3G `32649623755`, Full Epic + Windows Catalog + Full Django `32649623804`.
 
 Django migration: NONE. Catalog schema migration: NONE. Production untouched.
 
-Relevant latest records: `ERR-49-034`, `REQ-49I-023`.
+Relevant latest records: `ERR-49-035`, `REQ-49I-024`.
 
 ## Exact Next Gate
-Windows: live ff-only pull current Epic → `RUN_PHASE49_3I16_FALLBACK_GATE.ps1 -LaunchApp` → MakerWorld cake+stand 10×10 → verify fallback/cached candidate reuse/image staging → Add 2–3 Products → Archive one → open one Product.
+Windows: live ff-only pull current Epic → `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1 -LaunchApp` → save one active Provider/Model → open Product without hidden AI → run All-Fields once and verify only saved Provider/Model/no `/models` preflight → test Stop/failure responsiveness → optionally save one other Provider/Model and confirm exact switch.
 
-Then exactly one Local Publish E2E → owner approval → Host/MySQL/backup/rollback verification → GitHub-only Production deploy.
+Then complete any remaining short acquisition acceptance → exactly one Local Publish E2E → owner approval → Host/MySQL/backup/rollback verification → GitHub-only Production deploy.
 
 ## Next Product Phase
 After Catalog Production verification: normal Store ZarinPal request/callback/verify + Sandbox E2E, preserving bank transfer.
