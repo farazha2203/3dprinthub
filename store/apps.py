@@ -51,6 +51,12 @@ class StoreConfig(AppConfig):
         from .phase49_3i_pricing_modes import install as install_phase49_3i_pricing_modes
         install_phase49_3i_pricing_modes()
 
+        # Phase49.3I.9 maps the desktop AI/SEO/source attribution payload onto the
+        # real Product fields consumed by <title>, meta description, OG and Store
+        # product pages. It wraps the mature converter; no second importer exists.
+        from .phase49_3i9_seo_sync import install as install_phase49_3i9_seo_sync
+        install_phase49_3i9_seo_sync()
+
         # Extend the already-registered mature Django Admin instead of replacing
         # website/store admin implementations.
         from .phase49_3f_admin import install as install_phase49_3f_admin
