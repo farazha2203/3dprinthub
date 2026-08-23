@@ -8,16 +8,24 @@ from .phase49_3i13_batch_fetch_paste_recovery import install_app as _install_pha
 from .phase49_3i14_legacy_scan_restore import install_app as _install_phase49_3i14_app
 from .phase49_3i15_bulk_discovery_images import install_app as _install_phase49_3i15_app
 from .phase49_3i15_staging_guard import install_guard as _install_phase49_3i15_staging_guard
+from .phase49_3i16_resilient_acquisition import install as _install_phase49_3i16_resilient_acquisition
+from .phase49_3i16_review_hardening import install as _install_phase49_3i16_review_hardening
+
+
+def _install_late_layers(app_class) -> None:
+    _install_phase49_3i13_app(app_class)
+    _install_phase49_3i14_app(app_class)
+    _install_phase49_3i15_app(app_class)
+    _install_phase49_3i15_staging_guard()
+    _install_phase49_3i16_resilient_acquisition()
+    _install_phase49_3i16_review_hardening(app_class)
 
 
 def install_app(app_class, discovery_module=None) -> None:
     """Finalize the Phase49.3I operator surface while preserving mature controls."""
     _install_operator_app(app_class, discovery_module)
     if getattr(app_class, "_phase49_3i12_runtime_bridge_installed", False):
-        _install_phase49_3i13_app(app_class)
-        _install_phase49_3i14_app(app_class)
-        _install_phase49_3i15_app(app_class)
-        _install_phase49_3i15_staging_guard()
+        _install_late_layers(app_class)
         return
 
     original_mount = app_class._mount_phase49_3i12_operator_ui
@@ -71,7 +79,4 @@ def install_app(app_class, discovery_module=None) -> None:
     app_class.refresh_discovery_candidates = refresh_discovery_candidates
     app_class._mount_phase49_3i12_operator_ui = _mount_phase49_3i12_operator_ui
     app_class._phase49_3i12_runtime_bridge_installed = True
-    _install_phase49_3i13_app(app_class)
-    _install_phase49_3i14_app(app_class)
-    _install_phase49_3i15_app(app_class)
-    _install_phase49_3i15_staging_guard()
+    _install_late_layers(app_class)
