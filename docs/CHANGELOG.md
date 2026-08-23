@@ -2,74 +2,62 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-23 — Phase49.3I.15 Bulk Exact-Page Images + Add-to-Products
+## 2026-08-23 — Phase49.3I.16 Resilient Acquisition Fallback + Cached Candidate Reuse
 
-### Owner Business Acceptance Change
-Exact MakerWorld Search/Listing discovery is working and returns correct product links, while per-product Direct/Full Fetch repeatedly blocked operations. Owner explicitly requested that exact-page discovery become the business acquisition path: choose up to 100 products, choose up to 20 images/product, stage images, show image count, select wanted rows, Add to Products, Archive unwanted.
+### Windows Evidence
+A merged 49.3I.15 build still showed previously correct MakerWorld candidates, but a new exact-page run aborted on `Locator.evaluate_all: SyntaxError: Invalid or unexpected token` before image staging.
 
 ### Implemented
-- product presets 10/20/30/50/100 with hard max 100,
-- image presets 5/10/15/20 with hard max 20,
-- reuse verified `discover_preview_candidates` for exact-page links,
-- reuse mature Classic browser/image helpers for public image acquisition,
-- local staging guard requires at least one successfully downloaded image before readiness/Add-to-Products,
-- no Rich Direct `extract_direct_link` dependency in the new bulk flow,
-- JSON candidate image manifests under existing persistent Catalog DATA; no candidate DB migration,
-- per-row staged image count and live progress,
-- `اضافه کردن انتخاب‌شده‌ها به محصولات` materializes staged source identity/title/images into review-state Products without another network Full Fetch,
-- Archive/Block, existing-product dedupe, safe Stop and per-candidate error isolation preserved,
-- mature 49.3I.14 controls, AI/provider/SEO/pricing/publish/FTP/Bridge/credentials untouched.
+- replaced the single mandatory live discovery boundary at final runtime with an ordered ladder: locator-safe Playwright → public HTTP/HTML → attached Chrome 9222 → cached candidate DB,
+- locator-safe discovery avoids embedded `evaluate_all`,
+- reuses previously persisted candidates for the same source/listing URL when live discovery cannot re-read the page,
+- image acquisition now falls through: locator-safe fresh → HTTP parse/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail,
+- each failed/successful method is traced in candidate manifests,
+- local staged image remains mandatory before readiness/Add-to-Products,
+- one candidate failure remains isolated,
+- no Rich Direct Full Fetch dependency was reintroduced,
+- 49.3I.15 limits/Add-to-Products/Archive/Block and all AI/pricing/publish contracts remain unchanged.
 
-### Final GitHub Validation / Merge
-PR #61 merged into `epic/phase49-unified-product-slider-sync`.
-- final PR head `5f96d890b2e31e1f1d670c8afb716a1da4fc88d3`,
-- merge commit `953f975e883e6dfcbf61097ac8d324d68d4ca678`.
+### Review Hardening
+Code review identified two risks in the first fallback design: the mature Classic discovery helper could leak a browser on its own exception path, and an all-live-method discovery failure could still terminate the listing. The final runtime discovery layer therefore skips that leak-prone discovery fallback and uses attached Chrome plus persisted-candidate reuse as the later boundaries.
 
-Final-head required workflows all SUCCESS:
-- Phase49.3I.15 `32641815323`,
-- Phase49.3I `32641815273`,
-- Phase49.3I.14 `32641815287`,
-- Phase49.3H `32641815289`,
-- Phase49.3G `32641815380`,
-- Full Phase49 + Windows Catalog regressions + Full Django `32641815270`.
+### Validation / Merge
+PR #62 merged into `epic/phase49-unified-product-slider-sync`.
+- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
+- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`.
 
-Additional review verification:
-- repository-root `manage.py` is present and validates the CI working-directory choice,
-- staging guard fail-closes candidates when URLs are visible but no local image download succeeds.
+Final-head SUCCESS:
+- 49.3I.16 `32645660164`,
+- 49.3I `32645660154`,
+- 49.3I.15 `32645660045`,
+- 49.3I.14 `32645660071`,
+- 49.3H `32645660135`,
+- 49.3G `32645660118`,
+- Full Phase49 + Windows Catalog regressions + Full Django `32645660123`.
 
-Django migration: NONE.  
-Catalog candidate schema migration: NONE.  
-Production: untouched.  
-Next gate: focused Windows 10×10 QA, then exactly one Local Publish E2E.
+Django migration: NONE. Catalog schema migration: NONE. Production untouched.
 
-The older one-thumbnail Preview→approved Full Fetch contract remains historical/compatible but is explicitly superseded for the owner-approved exact-page bulk business path.
+## 2026-08-23 — Phase49.3I.15 Bulk Exact-Page Images + Add-to-Products
+- product max 100 / image max 20,
+- exact-page discovery + local image staging,
+- no Rich Direct dependency in bulk flow,
+- per-row staged image count,
+- selected rows Add to Products without another network Full Fetch,
+- local staging guard requires a real downloaded image,
+- Archive/Block/dedupe and mature controls preserved,
+- PR #61 merged; all required CI success; no migration; Production untouched.
 
 ## 2026-08-23 — Phase49.3I.14 Restore Mature Scan Controls + Single-Product Route
 - restored mature top acquisition controls,
-- routed manual Product compatibility action through original mature BaseApp scan path,
+- compatibility single Product uses mature BaseApp scan path,
 - Rich Direct remains optional,
 - PR #60 merged; all required CI success; no migration; Production untouched.
 
-## 2026-08-23 — Phase49.3I.13 Windows URL Paste + Approved Batch Full-Fetch Recovery
-- explicit Ctrl+V / Shift+Insert / right-click Paste / visible Paste action,
-- approved batch background/headless recovery,
-- selected candidate `last_error` exposed,
-- PR #59 merged; all required CI success; no migration; Production untouched.
-
-## 2026-08-23 — Phase49.3I.12 Exact-Page Operator + Single Product + Image Fit
-- final UX87 exact-page operator/live state,
-- separate Product URL action,
-- candidate Treeview and 228x171 contain-fit image contract,
-- PR #58 merged; all required CI success; no migration; Production untouched.
+## 2026-08-23 — Phase49.3I.13 Windows URL Paste + Batch Recovery
+- explicit Windows paste actions,
+- background batch behavior,
+- selected candidate technical error exposed,
+- PR #59 merged; all required CI success.
 
 ## Earlier Phase49.3I Foundations
-Preserved:
-- exact Search/Listing authority,
-- image hard max 20,
-- Product Explorer and Product Workspace routing,
-- Fixed / Range / Formula independence,
-- AI first-paint / Task Center / schema / trace / watchdog / stale-result safety,
-- secure Provider/FTP/Bridge persistence,
-- Windows PS5.1 ASCII runner,
-- live fetched GitHub snapshot handoff,
-- Local/Production publish separation.
+Preserved: Product Workspace routing, contain-fit gallery, Fixed/Range/Formula independence, observable bounded AI, provider schema/trace, secure credentials, PS5.1 runner guard, live Git snapshot handoff, and Local/Production publish separation.
