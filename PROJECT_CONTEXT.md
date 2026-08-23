@@ -4,8 +4,8 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery`
-Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit`
+Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
@@ -29,23 +29,31 @@ Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 
 Always re-read `docs/PATHS.md` and `docs/HOST_CONSTRAINTS.md` before environment/deployment work.
 
-## Discovery Contract
+## Discovery Contract — 49.3I.12
 - explicit Search/Listing/Category URL authoritative,
-- source `model_url_pattern` is Product-vs-Group boundary,
-- Product URL → mature direct intake,
-- Group/Category/Search → lightweight Preview first,
+- source `model_url_pattern` is Product-vs-Page boundary,
+- exact-page action scans the pasted page and exposes live running/stopping/done state,
+- direct Product URL has a separate manual action,
+- visible badge/progress/elapsed/current URL/detail,
 - Preview = identity/basic title/one thumbnail,
 - Full Fetch only after approval,
 - image limit default 10 / hard max 20,
 - Archive blocks rediscovery without Full Fetch,
-- dedupe = source + external id + normalized URL.
+- dedupe = source + external id + normalized URL,
+- mature candidate thumbnail/status/title/source/external/url renderer reused.
+
+## Product Workspace Image Contract — 49.3I.12
+- canonical detailed editor preserved,
+- gallery thumbnails use fixed `228x171` pixel viewports,
+- `ImageOps.contain` with letterbox background,
+- no crop/stretch,
+- no Tk text-unit sizing for pixel image labels.
 
 ## Provider / Secret Contract
 Providers: AvalAI, OpenRouter, Google Gemini Direct, OpenAI Direct.
 Secrets remain in Windows Credential Store/environment. Provider model lists, FTP password and Bridge token persistence are regression-protected.
 
-## AI Execution Contract — 49.3I.11
-Preserved:
+## AI Execution Contract — Preserved Through 49.3I.12
 - mature All-Fields Task Center,
 - immediate first-paint,
 - scrollable sanitized request/response/error tabs,
@@ -55,53 +63,42 @@ Preserved:
 - Stop Waiting/cancel/timeout stale-result discard,
 - AI-owned refresh with manual override protection,
 - generic title rejection,
-- source-grounded Persian/SEO content.
+- source-grounded Persian/SEO content,
+- exact JSON Schema delivery/validation for compatible providers,
+- one bounded schema repair,
+- compact model catalog trace,
+- abort releases busy state immediately.
 
-49.3I.11 fixes `ERR-49-029` from real owner trace:
-- HTTP-success JSON is not accepted unless it matches the exact Catalog schema,
-- AvalAI/OpenRouter receive the actual JSON Schema,
-- aliases such as `seo_title` cannot silently replace required `seo_title_fa`,
-- one bounded repair request may correct a schema-invalid response,
-- second schema failure is shown precisely and not persisted,
-- explicit selected model is used directly,
-- model catalog is cached within request window,
-- `/models` UI trace is compacted,
-- Stop Waiting/watchdog immediately releases Workspace busy state,
-- operator may change Provider/Model and retry immediately,
-- late old result stays stale and cannot mutate product.
-
-## Products / Pricing / SEO
+## Pricing / SEO
 Preserved:
-- Product Workspace canonical detailed editor,
-- visual/lightweight Explorer + selection-loop guard,
 - Fixed / Range / Formula independent; Range never invokes Formula,
 - source website as publisher/source identity,
 - desktop SEO/source sync to real Product meta/OG/source fields,
 - low-image mature refetch offer,
 - legal license/sale approvals remain explicit operator actions.
 
-## Latest Validation — 49.3I.11
-PR #57 merged after CI.
-Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
-Merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
+## Latest Validation — 49.3I.12
+PR #58 merged after CI.
+Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
+Merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
 
 Successful workflows:
-- Phase49.3I `32628666588` — SUCCESS,
-- Phase49.3H `32628666600` — SUCCESS,
-- Phase49.3G `32628666558` — SUCCESS,
-- Full Phase49 + Full Django `32628666582` — SUCCESS.
+- Phase49.3I `32631604990` — SUCCESS,
+- Phase49.3H `32631604930` — SUCCESS,
+- Phase49.3G `32631604945` — SUCCESS,
+- Full Phase49 + Full Django `32631604928` — SUCCESS.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
 Production untouched.
 
 ## Relevant Error Knowledge
-Latest relevant: ERR-49-013, 014, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029. Always inspect `docs/ERRORS.md` before troubleshooting.
+Latest relevant: ERR-49-013 through ERR-49-030, especially ERR-49-017/020/030 for current UX/discovery/image behavior and 026–029 for current AI behavior. Always inspect `docs/ERRORS.md` before troubleshooting.
 
 ## Employee Release Goal — Today
-Windows acceptance requires runner 49.3I.11 plus exact formerly failing AvalAI schema case, one-repair behavior, compact model trace, Stop Waiting → immediate Provider/Model retry, title/All-Fields watchdogs, low-image refetch, MakerWorld Preview→Approve→Full Fetch, credential persistence, Product open/selection and pricing regressions.
+Windows acceptance requires runner 49.3I.12 plus exact MakerWorld page discovery with visible live status/candidates, approved Full Fetch, direct Product URL intake, Stop feedback, Product Workspace image fit, and AI/provider/image-limit/pricing regressions.
 
 After Windows QA passes employees may use Catalog Center for controlled entry. Production remains gated by one Local Publish E2E and explicit owner approval.
 
-## Payment State
-Phase30 ZarinPal is implemented for accepted Quote payments. Normal Store cart checkout is still bank-transfer/manual-payment only; Store gateway request/callback/verify integration + Sandbox E2E remains the next urgent implementation after Catalog release.
+## Next Product Phase
+Phase30 ZarinPal exists for accepted Quote payments. Normal Store cart checkout is still bank-transfer/manual-payment only; Store gateway request/callback/verify integration + Sandbox E2E is the next implementation track immediately after Catalog acceptance.
