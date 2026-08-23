@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.16 — Resilient Acquisition Fallback + Cached Candidate Reuse`
+Current Hotfix: `49.3I.17 — Single Active AI Runtime`
 Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA NEXT`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -13,65 +13,66 @@ Production: `UNTOUCHED / NOT APPROVED`
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority
-1. focused Windows test of merged 49.3I.16 resilient acquisition,
-2. exactly one Local Publish E2E after focused QA PASS,
-3. explicit owner approval,
-4. verify Production branch/path/venv/MySQL/backup/rollback,
-5. deploy approved GitHub snapshot and verify Production,
-6. then Store ZarinPal integration + Sandbox E2E.
+1. focused Windows acceptance of 49.3I.17 exact saved Provider/Model behavior and UI non-hang,
+2. finish the short 49.3I.16 acquisition acceptance if still needed,
+3. exactly one Local Publish E2E,
+4. explicit owner approval,
+5. verify Production branch/path/venv/MySQL/backup/rollback,
+6. deploy approved GitHub snapshot and verify Production,
+7. then Store ZarinPal integration + Sandbox E2E.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse`.
+`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse → Single Active AI Runtime`.
 
-## 49.3I.16 — Canonical Resilience Rule
-A single crawler/browser/parser path is no longer allowed to be a release blocker when the same source has other verified acquisition routes or previously persisted candidates.
+## 49.3I.17 — Canonical AI Rule
+Product AI is now explicit and deterministic:
+- one saved Provider,
+- one saved Model for that Provider,
+- one secure key belonging to that Provider,
+- no automatic fallback to another configured Provider,
+- no hidden AI request when a Product Workspace opens,
+- no `/models` catalog request before each Product AI content request,
+- Google exact Product model does not re-list models before generation,
+- explicit Settings model search/test still uses live provider APIs,
+- stale Tk callbacks cannot become fatal Product Workspace dialogs.
 
-Discovery ladder:
-`locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB`.
+Existing 49.3I.8–11 request trace, schema repair, watchdog/Stop Waiting, stale-result protection and manual-override protection remain.
 
-Image ladder per candidate:
-`locator-safe fresh → HTTP parse/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail`.
-
-Contracts:
-- no embedded `evaluate_all` at the new resilient discovery boundary,
-- every failed method is traced before trying the next one,
-- prior correct candidates for the same exact listing can be reused,
-- local image staging remains required before a candidate is ready/addable,
-- one candidate failure does not abort the rest,
-- product max 100 / image max 20 unchanged,
-- no Rich Direct Full Fetch dependency in the bulk path,
-- Add-to-Products / Archive / Block / dedupe unchanged,
-- AI/SEO/pricing/publish/FTP/Bridge/credentials unchanged.
+## Acquisition Contract Preserved
+49.3I.16 remains unchanged:
+- discovery fallback `locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB`,
+- image fallback `locator-safe → HTTP → mature DOM → Chrome 9222 → listing thumbnail`,
+- product max 100 / image max 20,
+- Add-to-Products without Rich Direct Full Fetch,
+- Archive/Block/dedupe and staged-image readiness.
 
 ## GitHub Validation / Merge
-PR `#62` merged.
-- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
-- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`.
+PR `#63` merged.
+- final PR head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
+- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`.
 
-Final-head SUCCESS:
-- 49.3I.16 `32645660164`,
-- 49.3I `32645660154`,
-- 49.3I.15 `32645660045`,
-- 49.3I.14 `32645660071`,
-- 49.3H `32645660135`,
-- 49.3G `32645660118`,
-- Full Phase49 + Windows Catalog regressions + Full Django `32645660123`.
+Final runtime-head SUCCESS:
+- 49.3I.17 `32649623837`,
+- 49.3I `32649623808`,
+- 49.3I.16 `32649623695`,
+- 49.3I.15 `32649623705`,
+- 49.3I.14 `32649623679`,
+- 49.3H `32649623825`,
+- 49.3G `32649623755`,
+- Full Phase49 + Windows Catalog regressions + Full Django `32649623804`.
 
-Django migration: NONE.
-Catalog candidate schema migration: NONE.
-Production: untouched.
+Django migration: NONE. Catalog schema migration: NONE. Production untouched.
 
 ## Focused Windows Gate
 1. clean worktree + live fetch/ff-only current Epic,
-2. `RUN_PHASE49_3I16_FALLBACK_GATE.ps1 -LaunchApp`,
-3. exact MakerWorld page with `10 products × 10 images`,
-4. verify the run proceeds through fallback methods instead of aborting on the first error,
-5. verify cached candidates are reused if live discovery cannot re-read the page,
-6. select 2–3 staged rows → Add to Products without Direct Full Fetch,
-7. Archive one row,
-8. open one added Product and verify images.
+2. `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1 -LaunchApp`,
+3. select/save one active Provider/Model in AI Center,
+4. open Product Workspace: no hidden AI network activity,
+5. run All-Fields once: trace must use only the saved Provider/Model and not begin with `/models`,
+6. Stop/failure must leave the application responsive,
+7. save a different Provider/Model and verify the next request uses only that new pair.
 
-If PASS, proceed immediately to exactly one Local Publish E2E and then Production gate/deploy.
+If PASS, proceed immediately to one Local Publish E2E and then Production gate/deploy.
 
 ## Next Product Phase
 After Catalog Production verification: Store checkout ZarinPal request/callback/verify, Sandbox E2E, then one owner-approved low-value live payment while bank transfer remains available.
