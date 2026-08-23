@@ -2,6 +2,43 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-23 — Phase49.3I.13 Windows URL Paste + Approved Batch Full-Fetch Recovery
+
+### Owner Windows Evidence
+49.3I.12 correctly displayed MakerWorld candidate images/titles/IDs/URLs, but real Windows QA found:
+- exact URL field could not be pasted into reliably and required typing,
+- selecting multiple candidates then `دریافت کامل انتخاب‌شده‌ها` opened/closed approximately one visible browser per selected candidate,
+- some selected candidates ended in `خطا`, while their displayed source URLs were correct,
+- persisted technical candidate errors were not directly visible in the operator surface.
+
+### Root Cause — ERR-49-031
+- final 49.3I.12 URL field was a plain `ttk.Entry` without explicit Windows paste bindings/context menu,
+- approved batch reused the mature RichPageExtractor but inherited `direct_link.headed=true`; because Full Fetch invokes the extractor once per selected candidate, each row produced a visible persistent browser context,
+- `last_error` already existed in candidate storage but had no direct operator viewer.
+
+### Fixed
+- Ctrl+V / Ctrl+V uppercase / Shift+Insert / right-click Paste,
+- visible `چسباندن لینک` action,
+- approved batch only: temporarily force existing RichPageExtractor to background/headless mode,
+- restore original direct-link headed setting after batch completion/cancel/error,
+- direct single-product intake remains unchanged for login/CAPTCHA recovery,
+- visible `جزئیات خطای انتخابی` backed by persisted `last_error`,
+- runner upgraded to `49.3I.13`,
+- dedicated regression tests and CI contracts added,
+- no new crawler/extractor, migration, DB reset, media rewrite or Production change.
+
+### Validation
+PR #59 merged.
+- feature head `b47793c42d807285efbd8d3e005f9979856c4878`,
+- merge commit `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`,
+- Phase49.3I Run `32633932308` SUCCESS,
+- Phase49.3H Run `32633932302` SUCCESS,
+- Phase49.3G Run `32633932340` SUCCESS,
+- Full Phase49 + Full Django Run `32633932224` SUCCESS,
+- Django migration NONE,
+- Catalog schema migration NONE,
+- Production untouched.
+
 ## 2026-08-23 — Phase49.3I.12 Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit
 
 ### Owner Windows Evidence
@@ -52,25 +89,7 @@ PR #58 merged.
 - generic/non-Persian/too-short title validation,
 - PR #56 merged; all required CI success; no migration; Production untouched.
 
-## 2026-08-23 — Phase49.3I.9 AI Refresh + SEO/Source Completion
-- explicit All-Fields rerun refreshes AI-owned fields while protecting real manual overrides,
-- generic titles rejected,
-- source-grounded Persian ecommerce/SEO prompt,
-- low-image mature refetch offer,
-- publisher/source and final Product SEO/source fields preserved,
-- no migration; Production untouched.
-
-## 2026-08-23 — Phase49.3I.8 Observable AI Execution Recovery
-- real bottom All-Fields routed into mature Task Center,
-- elapsed timer + Stop Waiting + 210-second stale-result guard,
-- no duplicate AI client/network worker.
-
-## 2026-08-22 — Phase49.3I.7 Preview + Provider Hub Recovery
-- fixed MakerWorld Preview JavaScript escape regression,
-- real Provider-card credentials/model lists rehydrated securely,
-- FTP/Bridge persistence preserved.
-
-## 2026-08-22 — Earlier Phase49.3I Foundations
+## 2026-08-23 — Earlier Phase49.3I Foundations
 Preserved:
 - exact Search/Listing authority,
 - Preview before Full Fetch,
