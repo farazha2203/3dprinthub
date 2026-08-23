@@ -2,6 +2,61 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-23 — Phase49.3I.8 Observable AI Execution Recovery
+
+### Windows QA Input
+- the real bottom Product Workspace action `تکمیل هوشمند همه فیلدهای AI` remained on AvalAI content generation for roughly five minutes,
+- no durable connection/send/receive/save progress window was visible,
+- operator could not tell whether the request was running or stuck and eventually closed the Workspace.
+
+### Root Cause — ERR-49-026
+- the exact Phase49.3C bottom All-Fields action still called legacy `ProductStudio.generate_ai("commerce")`,
+- that legacy worker/status/preview path bypassed mature `_phase49_3e_run_ai()`,
+- therefore the already-existing 49.3I first-paint and 49.3F/3H Task Center progress/result/error/cost path never applied to the real visible button.
+
+### Fixed
+- added `catalog_center/app/phase49_3i_ai_execution_recovery.py`,
+- real bottom All-Fields action now routes to mature `_phase49_3e_run_ai("all")`,
+- non-Quick stage assistant actions route to mature Task Center; image stage keeps image scope,
+- Quick/title-only path remains preserved,
+- no duplicate AI client or network worker was introduced,
+- mature progress now includes elapsed time and a `توقف انتظار` control,
+- operator watchdog is 210 seconds, aligned with the existing single AI request upper-bound,
+- Stop/timeout invalidates the execution generation,
+- any later result from that stale generation is discarded and cannot mutate product/image data,
+- provider/network errors remain visible and the app stays open.
+
+### Source / MakerWorld Preservation
+- 49.3I.7 Preview recovery remains composed and regression-tested,
+- Stage-1 Preview remains one-thumbnail/basic-identity only,
+- approved Full Fetch still uses the mature source extractor only after approval,
+- Direct Product intake remains untouched,
+- image limit remains 1..20,
+- no full source extraction rewrite in 49.3I.8.
+
+### Tests / Runner / CI
+- added `catalog_center/tests/test_epic49_phase49_3i_ai_execution_recovery.py`,
+- runner upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.8 and remains ASCII-only/live-Git-snapshot guarded,
+- CI-only PR #53 closed without merge,
+- validated Epic runtime base `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`,
+- marker head `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` not merged,
+- Phase49.3I Run `32620646603` — SUCCESS,
+- Phase49.3H Run `32620646600` — SUCCESS,
+- Phase49.3G Run `32620646605` — SUCCESS,
+- Full Phase49 + Full Django Run `32620646657` — SUCCESS,
+- Django migration: NONE,
+- Catalog schema migration: NONE,
+- Production untouched / not approved.
+
+### Next Gate
+- Windows ff-only pull current Epic,
+- run v49.3I.8 Local Gate with `-LaunchApp`,
+- verify the **bottom** All-Fields AI button paints immediately, shows elapsed connection/send/receive/save/result/error progress and remains responsive,
+- verify Stop Waiting / 210s watchdog prevents late product mutation,
+- verify exact MakerWorld Preview and approved image-limit-20 Full Fetch,
+- recheck Provider keys/model lists + FTP/Bridge persistence,
+- Local Publish remains blocked until manual QA passes.
+
 ## 2026-08-22 — Phase49.3I.7 Preview + Provider Hub Recovery
 
 ### Windows QA Input
