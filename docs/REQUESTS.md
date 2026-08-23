@@ -24,68 +24,43 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-017: explicit All-Fields rerun refreshes AI-owned values and protects manual overrides.
 - REQ-49I-018: inspectable sanitized AI request/response/error, 90s title watchdog. Canonical: ERR-49-028.
 - REQ-49I-019: exact provider schema + one repair + immediate retry after abort. Canonical: ERR-49-029.
-- REQ-49I-020: exact-page discovery visibly operable; single Product URL action separate; 228x171 contain image fit. Canonical: ERR-49-030.
+- REQ-49I-020: exact-page discovery visibly operable; 228x171 contain image fit. Canonical: ERR-49-030.
+- REQ-49I-021: reliable Windows URL paste, background approved batch, selected-candidate error detail. Canonical: ERR-49-031.
 
-### REQ-49I-021 — Windows URL paste and approved batch Full Fetch must be operator-safe
-Status: `GITHUB_UPDATED IN 49.3I.13 / PR #59 MERGED / FINAL CI SUCCESS / WINDOWS REGRESSION FOUND LATER`
-Preserved acceptance:
-- Ctrl+V / Shift+Insert / right-click / visible Paste Link,
-- pasted query parameters remain intact,
-- approved batch does not flash one visible browser per candidate,
-- failed candidate exposes persisted `last_error`,
-- no second crawler/extractor and no Preview/Approve regression.
-Canonical record: `ERR-49-031`.
-
-### REQ-49I-022 — New discovery controls must not replace healthy mature acquisition
-Status: `IMPLEMENTED IN 49.3I.14 / PR #60 OPEN / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
-Owner acceptance from real Windows QA:
-- restore the previously working top acquisition controls instead of hiding them,
-- specifically preserve `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
-- `شروع اسکن` must execute the original mature BaseApp scan worker, not the 49.3I Preview wrapper,
-- new `دریافت محصول تکی` must validate Product URL then route through the same mature `mode=single` scan path,
-- Rich Direct Intake remains optional and must not be forced when the mature route is available,
-- existing Preview/Approve/Archive/Paste/error-detail UX remains available alongside the mature workflow,
-- no unrelated UI removal, crawler replacement, DB/media rewrite, migration or Production change.
+### REQ-49I-022 — New discovery UI must not remove mature acquisition
+Status: `IMPLEMENTED / PR #60 MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
+Owner acceptance:
+- `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها` remain visible,
+- visible `شروع اسکن` invokes the original mature BaseApp scan worker,
+- manual `دریافت محصول تکی` validates Product URL and then uses the same mature `mode=single` route,
+- Rich Direct intake remains optional and cannot be forced when the mature path is intended,
+- Preview/Approve/Archive/Paste/error-detail remain additive,
+- no unrelated feature may be deleted/rebound while fixing this area.
 Canonical record: `ERR-49-032`.
 
 ## Operational Release Request
 
-### REQ-REL-001 — Hand Catalog Center to employees as soon as the acquisition gate passes
-Status: `REQUESTED / WINDOWS 49.3I.14 FOCUSED RELEASE QA PENDING`
-Acceptance now requires only the release blocker regression to be rechecked:
-- current Epic pulled with live ff-only snapshot,
-- `RUN_PHASE49_3I14_HOTFIX_GATE.ps1` passes,
-- mature top acquisition controls are visible again,
-- MakerWorld `single` + `auto` + a known real product URL works through `شروع اسکن`,
-- new `دریافت محصول تکی` uses the same mature route and does not force the Rich Direct HTTP-403 path,
-- exact-page Preview/Approve remains present.
+### REQ-REL-001 — Hand Catalog Center to employees and update Production
+Status: `REQUESTED / 49.3I.14 MERGED / FOCUSED WINDOWS QA PENDING`
+Acceptance now requires only the focused release path:
+1. current Epic pulled by live ff-only snapshot,
+2. `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp` passes,
+3. mature top acquisition controls are visible,
+4. known MakerWorld Product URL works through mature `single + auto + شروع اسکن`,
+5. manual `دریافت محصول تکی` uses the same mature route rather than forcing Rich Direct 403,
+6. exact-page Preview/Approve remains present.
 
-Do not re-open unrelated accepted UX/features unless a focused regression appears.
-
-After PASS: exactly one Local Publish E2E + Store/Admin verification + explicit owner approval, then Production gate/deploy from GitHub.
+After PASS: exactly one Local Publish E2E + Store/Admin verification + explicit owner approval, then Production branch/path/MySQL/backup/rollback verification and GitHub-only deploy.
 
 ## Next Product Request
 
 ### REQ-PAY-001 — Normal Store checkout must support online payment
 Status: `REQUESTED / IMPLEMENTATION AFTER CATALOG ACCEPTANCE`
-- reuse mature Phase30 ZarinPal security semantics,
-- server owns/recomputes amount,
-- idempotent attempt identity,
-- callback cannot trust browser amount/status,
-- stored Authority must match callback Authority,
-- server-to-server Verify before marking paid,
-- duplicate callback cannot double-finalize payment/order/inventory,
-- failed/cancelled/temporary errors recoverable,
-- bank transfer remains available,
-- Sandbox E2E before live merchant activation,
-- secrets only in environment/secure server configuration,
-- one owner-approved low-value Production payment before public activation.
+Reuse mature Phase30 ZarinPal security semantics, preserve bank transfer, require Sandbox E2E before live activation and keep secrets outside Git.
 
-Current supported online provider: `ZarinPal`.
-
-## Canonical Gates
-- existing full Phase49.3I gate: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.13`,
-- additive acquisition-regression gate: `RUN_PHASE49_3I14_HOTFIX_GATE.ps1`.
+## Canonical Windows Gates
+- base regression gate: `RUN_PHASE49_3I_LOCAL_GATE.ps1`,
+- final focused release gate: `RUN_PHASE49_3I14_HOTFIX_GATE.ps1`.
 
 ## Change Rule
-New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior; healthy controls/features remain frozen unless the owner explicitly asks to replace them. Regression tests must verify both visibility and command routing of preserved operator actions.
+New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
