@@ -4,101 +4,89 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Branch: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery`
-Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Active Hotfix: `49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit`
+Status: `GITHUB UPDATED / PR MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-49.3I.11 is merged into the active Epic after the owner supplied a real Windows AI trace proving that the Provider returned HTTP success and useful Persian content, but the returned JSON did not satisfy the exact Catalog schema. Windows must now pull the live Epic snapshot and rerun the release gate before employee handoff.
+Phase49.3I.12 is merged into the active Epic. The owner screenshots proved the exact MakerWorld search URL backend path itself was already successful (`PREVIEW_TARGET` used the exact pasted URL, `candidates=20`, `failed=0`, `full_fetch=0`), but the UX87 operator surface did not make the review/result/live-running state visible enough and did not expose a clean separate single-product manual intake path. The owner also reported poor Product Workspace image fitting.
 
 Canonical release order remains:
 `GitHub → Windows ff-only pull → Local automated gate → Manual visual/data/interaction QA → one LOCAL PUBLISH ONLY → Local Django E2E → explicit owner approval → Production backup/deploy/verify`.
 
-## New Runtime Incident — ERR-49-029
-Owner evidence showed AvalAI `gemini-3.5-flash-lite` returned a successful structured-content response containing a good specific Persian title, but fields were named/typed incorrectly for the repository contract:
-- returned `seo_title`; required `seo_title_fa`,
-- returned `seo_description`; required `seo_description_fa`,
-- returned `content_notes` as a string; required an array,
-- several other required schema fields were absent.
+## Phase49.3I.12 Implemented Delta
+PR `#58` is merged.
 
-Therefore the existing validator correctly refused to persist the incomplete pack and surfaced the apparently misleading symptom `SEO Title فارسی ... خالی برگشت`.
+Discovery/operator behavior:
+- exact pasted Search/Listing/Category URL remains authoritative,
+- final UX87 `_ui` boundary mounts a visible manual operator panel,
+- separate `کشف لینک‌های همین صفحه` action for page discovery,
+- separate `دریافت محصول تکی` action validated by the configured source `model_url_pattern`,
+- visible live state badge, indeterminate progress, elapsed time, current URL/detail and explicit Stop request feedback,
+- mature candidate review contract preserved: one thumbnail + basic title/identity/source/external-id/url,
+- Preview still performs no Full Fetch,
+- approved candidates still reuse mature Full Fetch,
+- archive/dedupe/image-limit contracts remain unchanged.
 
-Two additional runtime issues were confirmed from the same trace/code path:
-- full `/models` payloads were inserted into the Tk trace UI and could make Provider/Model changes look frozen,
-- Stop Waiting/watchdog could leave Product Workspace busy state set until the old background worker returned, blocking immediate retry with another Provider/Model.
+Product Workspace image behavior:
+- fixed `228x171` pixel viewport,
+- `ImageOps.contain` + letterbox fitting,
+- no crop/stretch,
+- no Tk text-unit width/height sizing for image labels.
 
-## Phase49.3I.11 Implemented Delta
-New additive runtime:
-`catalog_center/app/phase49_3i_schema_runtime_recovery.py`
+## GitHub Validation — 49.3I.12
+Implementation PR: `#58` — MERGED.
+Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
+Epic merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
 
-Behavior:
-- AvalAI/OpenRouter receive the actual JSON Schema using strict `json_schema` where compatible,
-- exact schema/property names/types are also embedded in the provider instruction,
-- bounded compatibility sequence: strict schema → `json_object` → no response format,
-- provider output is validated against the exact schema before application,
-- one repair request is allowed when the first syntactically valid JSON violates schema; a second schema failure becomes a precise visible error,
-- explicit operator-selected model is used directly for the current request,
-- model catalog is cached inside the request window and duplicate probes are avoided,
-- `/models` trace is summarized as count + bounded sample rather than rendered in full,
-- Stop Waiting/watchdog/stale abort releases Product Workspace busy/start/source flags immediately,
-- the old network worker may finish in background but its stale result cannot mutate the product,
-- 49.3I.10 scrollable sanitized request/response/error console remains,
-- title-only watchdog remains 90 seconds; full AI watchdog remains 210 seconds,
-- manual override, AI-owned refresh, source/SEO, Preview/Full Fetch and pricing contracts remain intact.
-
-## GitHub Validation — 49.3I.11
-Implementation PR: `#57` — MERGED after all required workflows succeeded.
-Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
-Epic merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
-
-Successful workflows:
-- Phase49.3I Discovery Review Pricing CI — Run `32628666588` — SUCCESS.
-- Phase49.3H SEO Cost Image Limit CI — Run `32628666600` — SUCCESS.
-- Phase49.3G Workspace Usability CI — Run `32628666558` — SUCCESS.
-- Phase49 Epic Unified CI / Full Django — Run `32628666582` — SUCCESS.
+Successful workflows on the validated feature head:
+- Phase49.3I Discovery Review Pricing CI — Run `32631604990` — SUCCESS.
+- Phase49.3H SEO Cost Image Limit CI — Run `32631604930` — SUCCESS.
+- Phase49.3G Workspace Usability CI — Run `32631604945` — SUCCESS.
+- Phase49 Epic Unified CI / Full Django — Run `32631604928` — SUCCESS.
 
 Validated:
-- runner `49.3I.11` / ASCII-only Windows PowerShell 5.1 contract,
+- runner `49.3I.12` / ASCII-only Windows PowerShell 5.1 contract,
 - live fetched GitHub snapshot guard,
 - compile,
-- exact owner malformed-response regression,
-- strict schema delivery + one repair,
-- model trace compaction,
-- abort/watchdog busy-state release,
-- title and full-AI stale-result safety,
-- prior AI trace/refresh/manual override/source/SEO behavior,
-- Preview/provider/Explorer/pricing regressions,
+- exact-page/manual-product URL classification,
+- final UX87 composition-boundary operator UI,
+- candidate Treeview compatibility with mature thumbnail renderer,
+- live status/stop markers,
+- 228x171 contain-fit image contract,
+- prior AI schema/trace/busy-release behavior,
+- Preview/Approve/Full Fetch safety,
+- image limit 1..20 default 10,
+- Fixed/Range/Formula regressions,
 - Django check and no-migration contract,
 - Windows Catalog Epic49 tests,
 - Full Django suite.
 
 ## Database / Migration / Media / Secret Safety
-- Django migration for 49.3I.11: `NONE` — CI verified.
+- Django migration for 49.3I.12: `NONE` — CI verified.
 - Catalog schema migration: `NONE`.
 - no DB reset/drop/truncate.
 - no historical data/media rewrite/delete.
 - no credential storage change.
 - Production DB/media/source untouched.
 
-## Windows QA Required Now — Employee Release Gate
+## Current Known Release Blocker
+Windows still has to pull the current live Epic snapshot and execute the repository-owned 49.3I.12 Local gate. Phase49.3I is not accepted until the visible operator flows are manually verified on the real Windows runtime.
+
+## Windows QA Required Now
 1. close Catalog Center completely,
 2. require clean Local worktree,
 3. live fetch/prune + ff-only pull current Epic,
-4. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-5. verify Runner `49.3I.11` + `PHASE49_3I_GIT_SNAPSHOT=OK`,
-6. retry the exact product/model that previously returned `seo_title`/`seo_description`,
-7. confirm outgoing request shows the schema contract and final accepted response uses exact required keys/types,
-8. if first provider output is malformed, verify at most one visible `structured_content_repair` request,
-9. confirm `/models` trace is compact rather than a full huge catalog dump,
-10. use Stop Waiting, immediately change Provider/Model and start a new request; old late output must not apply,
-11. verify request/response/error tabs stay responsive and scrollable,
-12. run bottom All-Fields AI once,
-13. test low-image warning/refetch once,
-14. test MakerWorld Preview → Approve → Full Fetch once,
-15. verify Provider/model/FTP/Bridge credential persistence,
-16. verify Product open/selection and Fixed/Range/Formula remain healthy.
-
-If these pass, employees may use Catalog Center for controlled data entry. Production publishing remains separately gated.
+4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
+5. verify Runner `49.3I.12` + `PHASE49_3I_GIT_SNAPSHOT=OK`,
+6. paste `https://makerworld.com/en/search/models?keyword=cake+stand` and use exact-page discovery,
+7. confirm visible badge/progress/elapsed/current URL while running,
+8. confirm candidate links from that same page are visible before Full Fetch,
+9. select one candidate and run approved Full Fetch,
+10. paste one real MakerWorld Product URL and use single-product intake,
+11. confirm Stop visibly registers,
+12. open Product Workspace Images and verify portrait/landscape images use equal 228x171 contain viewports without crop/stretch,
+13. regression-check All-Fields AI / Provider-model / image limit / Fixed-Range-Formula.
 
 ## Local Publish / Production Gate
 After Windows QA passes:
@@ -106,10 +94,10 @@ After Windows QA passes:
 - Local Django E2E,
 - verify title/SEO/images/pricing/source attribution in Local Store/Admin,
 - explicit owner approval,
-- then host read-only branch/path/commit verification, MySQL/database/backup/rollback verification, GitHub-only deploy and Production smoke/data checks.
+- then re-verify host branch/path/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
 
-## Payment Track
-Phase30 ZarinPal remains mature for accepted Quote payments. Normal Store cart checkout is still manual bank-transfer only and still requires a narrow Storefront ZarinPal request/callback/verify integration + Sandbox E2E before any live payment activation.
+## Next Product Phase After Catalog Acceptance
+Normal Store-cart online payment remains incomplete. The next implementation track is Store checkout ZarinPal request/callback/verify with server-owned amount, idempotency, Authority verification, duplicate-callback safety, inventory/order finalization exactly once and Sandbox E2E before any live activation. Manual bank transfer remains available.
 
 ## Exact Next Task
-Windows must pull the current Epic using live ff-only GitHub snapshot semantics and run the repository-owned 49.3I.11 gate. Do not Local Publish, deploy Production, or enable live Store payments before this acceptance passes.
+Windows must pull the current Epic with live ff-only GitHub snapshot semantics and run the 49.3I.12 repository gate. Do not skip this acceptance. After it passes, run one Local Publish E2E and then proceed immediately to Production gate and the Store payment phase.
