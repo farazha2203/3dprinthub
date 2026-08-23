@@ -2,97 +2,107 @@
 
 Updated: 2026-08-23
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.14 — Mature Scan Restoration`
-Status: `PR #60 MERGED / ALL REQUIRED CI SUCCESS / FOCUSED WINDOWS QA PENDING`
+Current Hotfix: `49.3I.15 — Bulk Exact-Page Images + Add-to-Products`
+Status: `PR #61 VALIDATION / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
-Deliver a business-usable Catalog Center that preserves mature acquisition, adds lightweight Preview/Approve review, prepares Persian ecommerce/SEO data, supports explicit pricing/AI observability and publishes only through verified Local/Production gates.
+Deliver a business-usable Catalog Center that can acquire products from exact source listing pages in bulk, stage the requested image count, let the operator select wanted products, prepare them in Product Workspace and publish only after verified Local/Production gates.
 
 ## Canonical Acquisition Paths
-Both paths are required and must coexist.
+Two paths coexist:
 
-1. Mature acquisition:
-`Top Source/Mode/Method/URL/Query → شروع اسکن → BaseApp start_scan/_scan_worker → Product Workspace`
+1. Mature compatibility path:
+`Top Scan Controls → BaseApp start_scan/_scan_worker → Product Workspace`
 
-2. Review acquisition:
-`Exact Search/Listing/Category URL → Preview Candidate → Approve/Archive → Approved Full Fetch → Product Workspace`
+2. Primary exact-page business path after owner request:
+`Exact Search/Listing/Category URL → choose product limit + image limit → discover product links → stage images → review image counts → Add selected to Products / Archive unwanted → Product Workspace`.
 
-A new UI path must never hide, replace or silently rebind a healthy mature acquisition path.
+The previous one-thumbnail-only Preview→per-product Direct Full Fetch rule is superseded **for path 2 only**. New exact-page bulk acquisition must not depend on `extract_direct_link`.
 
-## Preserved Core Contracts
-- explicit Search/Listing/Category URL authoritative,
-- source `model_url_pattern` is Product-vs-Page boundary,
-- Preview = one thumbnail + basic identity only,
-- Full Fetch only after approval,
-- image limit `1..20`, default `10`,
-- Archive blocks rediscovery without Full Fetch,
+## Preserved Contracts
+- explicit Search/Listing/Category URL is authoritative,
+- source `model_url_pattern` remains Product-vs-Page boundary,
 - dedupe by source + external id + normalized URL,
-- Product Workspace remains canonical editor,
+- Archive/Block prevents unwanted rediscovery without destructive deletion,
+- Product Workspace remains canonical detailed editor,
 - AI/provider/schema/trace/manual-override contracts unchanged,
-- Fixed / Range / Formula-Dynamic independent,
+- image hard max 20,
+- Fixed / Range / Formula remain independent,
+- mature top scan actions restored in 49.3I.14 stay available,
 - Local Publish and Production remain separate gates.
 
-## 49.3I.14 — Mature Scan Controls + Single-Product Route Restoration
-Owner Windows QA after 49.3I.13 showed that mature top acquisition controls were hidden and the new manual single-product action forced Rich Direct Intake, causing a correct MakerWorld Product URL to fail with `RuntimeError: HTTP 403`.
+## 49.3I.15 — Bulk Exact-Page Images + Add-to-Products
 
-Canonical root cause: `ERR-49-032`.
+### Owner Acceptance Change
+The exact-page link discovery is verified working, while individual Product/Rich Direct Full Fetch repeatedly blocks operations. Owner therefore requests that the listing-page discovery itself become the acquisition workflow:
+- choose up to 100 products,
+- choose up to 20 images per product,
+- discover product links from the exact page,
+- collect public product images using mature Classic browser/image helpers,
+- show image count before selection,
+- selected rows are added directly to Products from staged data,
+- unwanted rows are archived/blocked,
+- no Product-tile Direct Full Fetch is required.
 
-Corrected contract:
-- restore mature top actions,
-- `شروع اسکن` binds to original BaseApp mature worker,
-- manual `دریافت محصول تکی` validates Product URL then sets `mode=single` and calls the same mature worker,
-- Rich Direct `دریافت هوشمند از لینک` remains optional,
-- exact-page Preview/Approve/Archive/Paste/error-detail remains,
-- no new crawler/extractor or unrelated behavior change.
+### Implementation
+Added `catalog_center/app/phase49_3i15_bulk_discovery_images.py`:
+- `normalize_product_limit()` hard caps at 100,
+- candidate image manifests persist under existing Catalog DATA (`discovery_manifests/<source>/<external>.json`),
+- image collection reuses `launch_fresh_browser`, `_dom_image_urls`, `_download_context_images`,
+- exact-page discovery still reuses `discover_preview_candidates`,
+- each candidate continues independently on failure,
+- Stop is respected between candidates,
+- UI adds product/image selectors and image-count column,
+- `اضافه کردن انتخاب‌شده‌ها به محصولات` creates Product rows from staged identity/title/images without network Full Fetch,
+- existing/blocked dedupe and history remain.
 
-## Runtime / Test Surface
+Runtime composition adds 49.3I.15 after 49.3I.13/14 in `phase49_3i12_runtime_bridge.py`.
+
 Added:
-- `catalog_center/app/phase49_3i14_legacy_scan_restore.py`,
-- `catalog_center/tests/test_epic49_phase49_3i14_legacy_scan_restore.py`,
-- `RUN_PHASE49_3I14_HOTFIX_GATE.ps1`,
-- `.github/workflows/phase49-3i14-legacy-scan-restore-ci.yml`.
+- `RUN_PHASE49_3I15_BULK_GATE.ps1`, which chains `RUN_PHASE49_3I14_HOTFIX_GATE.ps1`,
+- `.github/workflows/phase49-3i15-bulk-discovery-images-ci.yml`,
+- `catalog_center/tests/test_epic49_phase49_3i15_bulk_discovery_images.py`.
 
-Changed:
-- `catalog_center/app/phase49_3i12_runtime_bridge.py` to compose the additive recovery after 49.3I.13.
+## GitHub Validation
+Feature runtime head before documentation-only commits: `a7cb319c2723ae2f9cfe87a1a00c8b33e7fcf619`.
+PR: `#61`.
 
-No Django migration and no Catalog schema migration.
+Successful feature-head workflows:
+- Phase49.3I.15 Bulk Discovery Images `32641268643` — SUCCESS,
+- Phase49.3I `32641268627` — SUCCESS,
+- Phase49.3I.14 Legacy Scan Restore `32641268644` — SUCCESS,
+- Phase49.3H `32641268659` — SUCCESS,
+- Phase49.3G `32641268651` — SUCCESS,
+- Full Phase49 + Full Django `32641268645` — SUCCESS.
 
-## Validation
-Initial targeted CI correctly found an MRO resolver defect and failed. The resolver changed before fresh CI.
+After runtime validation, subsequent commits are documentation-only and must be compared before merge.
 
-Final PR head: `f12a25e1fe50fb16a03a1324c84912c830a2608e`.
-Merge commit: `124662cf2436dfcce245282b01b2da694802aa55`.
-PR #60: MERGED.
-
-Successful final PR-head runs:
-- Phase49.3I.14 Legacy Scan Restore `32636771174` — SUCCESS,
-- Phase49.3I `32636771071` — SUCCESS,
-- Phase49.3H `32636771154` — SUCCESS,
-- Phase49.3G `32636771049` — SUCCESS,
-- Full Phase49 + Full Django `32636771103` — SUCCESS.
-
-## Safety
-- Django migration: NONE,
-- Catalog schema migration: NONE,
+## Database / Media / Secret Safety
+- Django migration: `NONE`,
+- Catalog candidate schema migration: `NONE`,
+- staging files are additive under existing persistent Catalog DATA,
 - no reset/drop/truncate,
-- no candidate/history/media rewrite/delete,
-- no credential changes,
-- no FTP/Bridge/Production change.
+- no existing media/history deletion,
+- no secret/credential change,
+- Production untouched.
 
-## Focused Windows Acceptance Gate — NEXT
-1. Catalog Center closed; Local worktree clean,
+## Focused Windows Acceptance
+After merge:
+1. close Catalog Center and require clean Local worktree,
 2. live fetch/prune + ff-only pull current Epic,
-3. run `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`,
-4. verify mature top acquisition actions are visible,
-5. MakerWorld + `mode=single` + `method=auto` + known Product URL → `شروع اسکن` uses mature acquisition,
-6. manual `دریافت محصول تکی` uses the same mature route and does not force Rich Direct 403,
-7. exact-page Preview/Approve remains present.
+3. run `RUN_PHASE49_3I15_BULK_GATE.ps1 -LaunchApp`,
+4. use exact MakerWorld Search URL and first test `10 products × 10 images`,
+5. verify live progress and per-candidate image count,
+6. select 2–3 ready rows → `اضافه کردن انتخاب‌شده‌ها به محصولات`,
+7. verify no Rich Direct/per-product Full Fetch action is invoked,
+8. Archive one unwanted row,
+9. open one added Product and verify images in Product Workspace.
 
-Do not repeat broad unrelated QA unless this focused gate fails.
+If PASS, operational batches may use 30/50/100 products and 10/20 images.
 
-## Local Publish / Production Gate
-Immediately after focused Windows acceptance: exactly one `LOCAL PUBLISH ONLY` → Local Django Store/Admin E2E → verify title/SEO/source/images/pricing/visibility → explicit owner approval → verify Production branch/path/MySQL/backup/rollback → deploy approved GitHub snapshot.
+## Release / Production Gate
+Immediately after Windows PASS: one `LOCAL PUBLISH ONLY` → Local Django Store/Admin/product/media/SEO E2E → explicit owner approval → read-only Production path/branch/MySQL/backup/rollback verification → GitHub-only deploy → HTTP/data verification.
 
-## Next Phase After Acceptance
-Normal Store cart checkout remains manual bank transfer. Next implementation is ZarinPal request/callback/verify + Sandbox E2E using mature Phase30 security semantics.
+## Next Phase
+Normal Store checkout: ZarinPal request/callback/verify + Sandbox E2E while bank transfer remains available.
