@@ -5,12 +5,25 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.8 — Observable AI Execution Recovery`
+Current Hotfix: `49.3I.9 — AI Refresh + SEO/Source Completion`
 Status: `FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Permanent Delivery Order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
+
+## Immediate Business Priority — 2026-08-23
+The owner wants to hand Catalog Center to employees today so they can begin product/catalog entry and move the live Store toward online payments.
+
+Priority is therefore release readiness, not additional cosmetic development:
+1. finish Windows 49.3I.9 acceptance,
+2. allow controlled employee Catalog entry,
+3. run one Local Publish E2E and verify the Local storefront/admin payload,
+4. obtain explicit owner approval,
+5. deploy the approved GitHub snapshot to Production with backup/rollback verification,
+6. complete normal Store-cart online-payment integration,
+7. test ZarinPal Sandbox end-to-end,
+8. only then enable live payment and perform one owner-approved low-value Production payment.
 
 ## Preserved Phase49 Foundations
 - unified Product / Hero / Catalog synchronization,
@@ -24,101 +37,100 @@ Production: `UNTOUCHED / NOT APPROVED`
 - Local vs Production publish separation,
 - live fetched GitHub snapshot handoff.
 
-## Phase49.3I Path
-Implemented and preserved:
-- exact Search/Listing/Category URL authority,
-- Preview Candidate before Full Fetch,
-- approved-only Full Fetch,
-- archive/not-needed + blocked identity dedupe,
-- source-text sanitation,
-- Product-vs-Group routing by source `model_url_pattern`,
-- Explorer views/multi-select/context actions,
-- selection-loop guard,
-- compact metadata + Persian filter/sort,
-- AI first-paint,
-- secure provider credential hydration/model catalog loading,
-- MakerWorld Preview JavaScript recovery.
-
-Current hotfix sequence:
-`49.3I.6 Secure Credential Field Persistence → 49.3I.7 Preview + Provider Hub Recovery → 49.3I.8 Observable AI Execution Recovery`.
-
-## Phase49.3I.8 — Observable AI Execution Recovery
-### Windows Evidence
-The bottom Product Workspace action `✨ تکمیل هوشمند همه فیلدهای AI` remained on `avalai ... در حال تولید محتوا...` for about five minutes with no durable progress window.
-
-### Verified Root Cause — ERR-49-026
-That exact Phase49.3C operator button still invoked legacy `ProductStudio.generate_ai("commerce")`. It bypassed the mature `_phase49_3e_run_ai()` Task Center and therefore bypassed:
-- 49.3I immediate first-paint,
-- 49.3F connection/send/receive progress,
-- 49.3H result/error/cost visibility.
-
-The old worker was background-threaded, but the operator only saw a status string and had no bounded/observable execution contract.
-
-### Implemented Scope
-1. Route bottom All-Fields AI → mature `_phase49_3e_run_ai("all")`.
-2. Route non-Quick stage assistant actions → mature Task Center; image stage keeps image scope.
-3. Preserve Quick/title-only behavior.
-4. Do not create a second AI client/worker.
-5. Keep the 49.3I first-paint handoff.
-6. Add visible elapsed time to mature progress.
-7. Add `توقف انتظار`.
-8. Add 210-second operator watchdog, aligned to the existing single AI request timeout upper bound.
-9. Cancel/timeout invalidates the execution generation.
-10. Late results from a cancelled/timed-out run are ignored and cannot mutate product/image data.
-11. Error/result stays visible; app remains open.
-12. Preserve 49.3I.7 MakerWorld Preview recovery and mature approved Full Fetch.
+## Phase49.3I.9 — Current Runtime
+49.3I.9 extends 49.3I.8 without replacing mature architecture:
+- explicit All-Fields rerun refreshes AI-owned/generated content using the current Provider/Model,
+- real manual overrides remain protected,
+- generic Persian product titles are treated as invalid AI output,
+- source-grounded Persian product/SEO prompt is strengthened,
+- source website is preserved as publisher/source,
+- Store Product meta/OG/source fields receive desktop SEO/source data after mature conversion/visibility layers,
+- low image count may offer the mature source refetch before AI,
+- factual/local defaults may complete readiness without inventing source facts,
+- commercial-license and sale approval remain explicit operator decisions.
 
 ### Final Validation
-CI-only PR `#53`: `CLOSED / NOT MERGED`.
-Validated Epic runtime base: `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`.
-Marker head: `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` — not merged.
+CI-only PR `#55`: `CLOSED / NOT MERGED`.
+Validated runtime base: `390c1aba9aaf5282f44a1ec97955af4e987100ba`.
+Marker head: `0e58324bfc87e39299b81b1fbe65f9cce21ec91e` — not merged.
 
 Successful runs:
-- Phase49.3I: `32620646603` — SUCCESS.
-- Phase49.3H: `32620646600` — SUCCESS.
-- Phase49.3G: `32620646605` — SUCCESS.
-- Full Phase49 + Full Django: `32620646657` — SUCCESS.
+- Phase49.3I `32623618842` — SUCCESS,
+- Phase49.3H `32623618854` — SUCCESS,
+- Phase49.3G `32623618950` — SUCCESS,
+- Full Phase49 + Full Django `32623618792` — SUCCESS.
 
-CI verified runner v49.3I.8, ASCII/live-Git guards, compilation, dedicated AI execution tests, stale-result guards, Preview recovery composition, provider/Explorer/3H/3G regressions, Django checks/no-migration contract, Windows Catalog tests and Full Django suite.
+Django migration: NONE.
+Catalog schema migration: NONE.
 
-## Must-Not-Touch
-- Product Workspace detailed editor,
-- mature Task Center/provider execution semantics,
-- mature source full extraction,
-- Preview → Approve → Full Fetch state machine,
-- image limit default 10 / hard max 20,
-- selection-loop guard,
-- Product-vs-Group routing,
-- 49.3H result/error/cost stack,
-- Fixed / Range / Formula independence,
-- Product/Hero revision/idempotency,
-- Production DB/media/source,
-- secrets in Git/log/SQLite.
-
-## Windows Manual QA — NEXT
-1. close Catalog Center and verify clean worktree,
-2. fetch/prune + ff-only pull current Epic,
+## Employee Catalog Release Gate — NEXT
+Before employees rely on the tool:
+1. clean Windows worktree,
+2. live fetch/prune + ff-only pull current Epic,
 3. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-4. verify runner `49.3I.8` + Git snapshot marker,
-5. click the **bottom** All-Fields AI button,
-6. immediate startup progress must appear,
-7. mature progress must show connection → sent → waiting/received → save/result/error,
-8. elapsed time + Stop Waiting must remain visible and app must stay responsive,
-9. Stop/210s timeout must block any late result from applying,
-10. exact MakerWorld Search Preview must work without `Locator.evaluate_all` syntax error,
-11. Preview remains one-thumbnail/basic identity only,
-12. approve one candidate with image limit 20 and verify Full Fetch only after approval,
-13. recheck Provider keys/model lists, FTP/Bridge credentials, Product open/selection and pricing modes.
+4. verify Runner `49.3I.9` and live Git snapshot marker,
+5. real All-Fields AI product-specific title/SEO refresh,
+6. low-image warning/refetch,
+7. MakerWorld Preview → Approve → mature Full Fetch,
+8. Provider/model/FTP/Bridge credential persistence,
+9. Product open/selection,
+10. Fixed / Range / Formula regression.
+
+After this Windows QA passes, employees may begin Catalog entry. Production publishing is still gated by Local Publish E2E and owner approval.
 
 ## Local Publish Gate
-Only after 49.3I.8 Windows QA passes:
-- exactly one `LOCAL PUBLISH ONLY`,
-- Local Django E2E,
-- verify product/image/pricing/provenance payload,
-- no Production endpoint.
+Exactly one test product must pass:
+- `LOCAL PUBLISH ONLY`,
+- Local Django import/visibility,
+- title/description/SEO/source attribution,
+- selected images/main image,
+- Fixed/Range/Formula payload,
+- Store/Admin rendering,
+- no unexpected migration or dirty worktree.
+
+## Payment Track — Verified Current State
+The repository contains the mature Phase30 ZarinPal gateway for accepted `Quote` payments:
+- deposit/full/balance,
+- server-calculated amount,
+- callback token,
+- Authority match,
+- server-to-server Verify,
+- idempotent payment ledger/audit.
+
+But the normal Store cart checkout is **not yet online-payment ready**:
+- active `CheckoutOperationsForm` exposes only `bank_transfer`,
+- active Store `checkout_view` redirects every new order to `store:manual_payment`,
+- `StorePayment` has a `gateway` method value but no completed Store request/callback/verify flow.
+
+Therefore the next implementation after Catalog release is a narrow Storefront ZarinPal bridge that reuses the mature payment/security contracts rather than creating a second unrelated payment architecture.
+
+### Storefront Payment Acceptance Criteria
+- online gateway is shown only when environment/site settings are ready,
+- order amount is recomputed server-side,
+- gateway attempt has idempotent identity,
+- callback cannot trust browser amount/status,
+- Authority must match stored attempt,
+- Verify must be server-to-server,
+- paid callback repeated twice must not double-finalize inventory/order/ledger,
+- cancelled/failed/temporary provider errors remain recoverable,
+- StoreOrder/StorePayment status transitions are tested,
+- inventory reservation is finalized exactly once after successful payment,
+- manual bank-transfer path remains available,
+- secrets remain only in environment/secure server settings,
+- Sandbox passes before any live merchant activation.
+
+Current supported online provider in repository: `ZarinPal` only.
 
 ## Production Gate
-Blocked until Windows QA + Local Publish E2E + explicit owner approval. Before deployment re-verify host branch/commit/path, MySQL vendor/name, backup, rollback and host constraints.
+Blocked until:
+- Windows QA PASS,
+- Local Publish E2E PASS,
+- explicit owner approval,
+- host branch/commit/path verified,
+- MySQL vendor/name verified,
+- backup/rollback verified.
+
+Live Store payment has an additional gate: Store-cart integration + Sandbox E2E + owner-approved live test.
 
 ## Immediate Next Step
-Windows live GitHub snapshot pull and repository-owned Runner 49.3I.8. No manual Local source patch; no Local Publish or Production yet.
+Run the repository-owned Windows `49.3I.9` gate and manual release QA. No direct Local patch, no Production deploy, and no live payment switch before the gates above pass.
