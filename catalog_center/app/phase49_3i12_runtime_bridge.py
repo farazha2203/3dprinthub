@@ -7,6 +7,7 @@ from .phase49_3i12_discovery_image_recovery import (
 from .phase49_3i13_batch_fetch_paste_recovery import install_app as _install_phase49_3i13_app
 from .phase49_3i14_legacy_scan_restore import install_app as _install_phase49_3i14_app
 from .phase49_3i15_bulk_discovery_images import install_app as _install_phase49_3i15_app
+from .phase49_3i15_staging_guard import install_guard as _install_phase49_3i15_staging_guard
 
 
 def install_app(app_class, discovery_module=None) -> None:
@@ -16,6 +17,7 @@ def install_app(app_class, discovery_module=None) -> None:
         _install_phase49_3i13_app(app_class)
         _install_phase49_3i14_app(app_class)
         _install_phase49_3i15_app(app_class)
+        _install_phase49_3i15_staging_guard()
         return
 
     original_mount = app_class._mount_phase49_3i12_operator_ui
@@ -72,3 +74,4 @@ def install_app(app_class, discovery_module=None) -> None:
     _install_phase49_3i13_app(app_class)
     _install_phase49_3i14_app(app_class)
     _install_phase49_3i15_app(app_class)
+    _install_phase49_3i15_staging_guard()
