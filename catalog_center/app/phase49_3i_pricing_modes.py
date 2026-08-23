@@ -183,3 +183,7 @@ def install(workspace_class) -> None:
     # import phase, so this additive bridge cannot perturb startup import order.
     from .phase49_3i18_operator_editing import install as _install_phase49_3i18_operator_editing
     _install_phase49_3i18_operator_editing(workspace_class)
+    # 49.3I.19 extends the already-mounted 49.3I.18 editor with source-title
+    # identity repair. No prior workspace controls are removed or replaced.
+    from .phase49_3i19_source_identity import install_workspace as _install_phase49_3i19_source_identity
+    _install_phase49_3i19_source_identity(workspace_class)
