@@ -2,8 +2,8 @@
 
 Updated: 2026-08-23
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.12`
-Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.13`
+Status: `PR MERGED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
@@ -30,60 +30,60 @@ Direct Product URL is a separate mature intake path and must not be confused wit
 - Product Workspace remains canonical detailed editor,
 - Fixed / Range / Formula-Dynamic remain independent; Range never invokes Formula.
 
-## 49.3I.12 — Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit
+## 49.3I.13 — Windows URL Paste + Approved Batch Full-Fetch Recovery
 
 ### Owner Evidence
-Windows screenshot/log showed:
-- `PHASE49_3I_PREVIEW_TARGET=https://makerworld.com/en/search/models?keyword=cake+stand`,
-- `candidates=20`,
-- `failed=0`,
-- `full_fetch=0`.
+Real Windows 49.3I.12 QA showed:
+- exact MakerWorld candidate images/titles/IDs/URLs are visible and correct,
+- URL input could not be pasted reliably and required typing,
+- selecting multiple candidates then approved Full Fetch opened/closed roughly one browser window per selected candidate,
+- some candidate statuses became `failed`, but the exact stored reason was not directly visible.
 
-So exact-page backend discovery was working. The remaining failure was operator visibility/composition: candidate review/live run state was not clearly mounted on final UX87, direct Product URL intake was not separated as an explicit action, and Product Workspace image fitting still looked wrong.
+### Verified Root Cause — ERR-49-031
+- exact URL field was a plain `ttk.Entry` without explicit Windows paste handlers,
+- approved batch invokes the mature RichPageExtractor per candidate and inherited `direct_link.headed=true`, producing one visible persistent browser context per selected row,
+- candidate `last_error` already existed but was not exposed in the final operator UI.
 
 ### Corrected Contract
-- mount operator controls at final UX87 `_ui` boundary,
-- separate `کشف لینک‌های همین صفحه` from `دریافت محصول تکی`,
-- classify direct Product URL from configured source regex rather than guessed shape,
-- visible live badge/progress/elapsed/current URL/detail,
-- explicit visible Stop request state,
-- mature candidate thumbnail/status/title/source/external/url renderer reused,
+- Ctrl+V, Ctrl+V uppercase, Shift+Insert, right-click Paste and visible Paste Link button,
+- preserve pasted query parameters exactly,
+- approved batch only temporarily forces the existing RichPageExtractor to background/headless mode,
+- restore original direct-link headed setting after completion/cancel/error,
+- direct single-product intake retains configured headed behavior,
+- Candidate Error Detail exposes persisted `last_error`,
 - no duplicate crawler/extractor,
-- Preview remains no-Full-Fetch until approval,
-- Product Workspace cards use fixed `228x171` pixel `ImageOps.contain` letterbox fitting,
-- no crop/stretch and no text-unit image Label sizing.
+- Preview/Approve/Archive/dedupe semantics unchanged.
 
-## Runtime / Test Surface — 49.3I.12
+## Runtime / Test Surface — 49.3I.13
 Added:
-- `catalog_center/app/phase49_3i12_discovery_image_recovery.py`,
-- `catalog_center/app/phase49_3i12_runtime_bridge.py`,
-- `catalog_center/tests/test_epic49_phase49_3i12_discovery_image_recovery.py`.
+- `catalog_center/app/phase49_3i13_batch_fetch_paste_recovery.py`,
+- `catalog_center/tests/test_epic49_phase49_3i13_batch_fetch_paste_recovery.py`.
 
 Changed:
-- `catalog_center/app/phase49_3i_pricing_modes.py`,
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v`49.3I.12`,
+- `catalog_center/app/phase49_3i12_runtime_bridge.py`,
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → v`49.3I.13`,
 - `.github/workflows/phase49-3i-ci.yml`.
 
 No Django migration and no Catalog schema migration.
 
-## Final GitHub Validation — 49.3I.12
-Implementation PR `#58`: MERGED.
-Validated feature head: `2a9442055d33777f675ccd3ebe11de8419bfb2b3`.
-Epic merge commit: `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`.
+## Final GitHub Validation — 49.3I.13
+Implementation PR `#59`: MERGED.
+Validated feature head: `b47793c42d807285efbd8d3e005f9979856c4878`.
+Epic merge commit: `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`.
 
 Successful runs:
-- Phase49.3I `32631604990` — SUCCESS,
-- Phase49.3H `32631604930` — SUCCESS,
-- Phase49.3G `32631604945` — SUCCESS,
-- Full Phase49 + Full Django `32631604928` — SUCCESS.
+- Phase49.3I `32633932308` — SUCCESS,
+- Phase49.3H `32633932302` — SUCCESS,
+- Phase49.3G `32633932340` — SUCCESS,
+- Full Phase49 + Full Django `32633932224` — SUCCESS.
 
-Validation includes runner/ASCII/live-Git guard, exact-page/product URL classification, UX87 final composition, candidate Treeview compatibility, live status markers, stop feedback markers, 228x171 contain image contract, prior AI/provider/Preview/pricing regressions, Django no-migration contract, Windows Catalog tests and Full Django suite.
+Validation includes runner/ASCII/live-Git guard, clipboard query preservation, approved-batch background browser policy and restoration, runtime bridge wiring, no new crawler/extractor, prior Preview/AI/provider/image/pricing regressions, Django no-migration contract, Windows Catalog tests and Full Django suite.
 
 ## Database / Migration / Secret Safety
 - Django migration: `NONE`,
 - Catalog schema migration: `NONE`,
 - no reset/drop/truncate,
-- no historical data/media rewrite,
+- no candidate/history/media rewrite,
 - no credential storage change,
 - Production untouched.
 
@@ -91,15 +91,13 @@ Validation includes runner/ASCII/live-Git guard, exact-page/product URL classifi
 1. Catalog Center closed; Local worktree clean,
 2. live fetch/prune + ff-only pull current Epic,
 3. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-4. verify runner `49.3I.12` + Git snapshot marker,
-5. exact MakerWorld `cake+stand` Search URL → exact-page discovery,
-6. verify live badge/progress/elapsed/current URL,
-7. verify candidate links appear in review panel before Full Fetch,
-8. approve one candidate → Full Fetch,
+4. verify runner `49.3I.13` + Git snapshot marker,
+5. verify Ctrl+V / Shift+Insert / right-click / Paste Link,
+6. exact MakerWorld `cake+stand` page → Preview,
+7. select 2+ candidates → approved Full Fetch with no visible browser window per product,
+8. if any candidate fails use Candidate Error Detail and capture exact stored reason,
 9. direct Product URL → separate single-product action,
-10. verify Stop feedback,
-11. verify landscape/portrait Product Workspace image cards are equal 228x171 contain-fit,
-12. regression-check All-Fields AI / Provider-model / image limit / Fixed-Range-Formula.
+10. verify Stop/live state, image cards, AI/provider/model/image-limit/Fixed-Range-Formula regressions.
 
 If these pass, employees may begin controlled Catalog data entry.
 
@@ -107,4 +105,4 @@ If these pass, employees may begin controlled Catalog data entry.
 After Windows acceptance: exactly one `LOCAL PUBLISH ONLY` → Local Django E2E → verify title/SEO/source/images/pricing/visibility → explicit owner acceptance. Only then verify host branch/path/MySQL/backup/rollback and deploy the approved GitHub snapshot.
 
 ## Next Phase After Acceptance
-Normal Store cart checkout remains manual bank transfer. The next implementation phase is ZarinPal Store checkout request/callback/verify + Sandbox E2E, preserving manual bank transfer and Phase30 security semantics.
+Normal Store cart checkout remains manual bank transfer. Next implementation is ZarinPal Store checkout request/callback/verify + Sandbox E2E, preserving bank transfer and mature Phase30 security semantics.
