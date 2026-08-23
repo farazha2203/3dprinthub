@@ -43,6 +43,7 @@ jobs:
           if ($text -notmatch 'RUN_PHASE49_3I14_HOTFIX_GATE\.ps1') { throw "Previous regression gate chaining missing" }
           if ($text -notmatch 'PHASE49_3I15_PRODUCT_LIMIT_MAX=100') { throw "Product-limit marker missing" }
           if ($text -notmatch 'PHASE49_3I15_IMAGE_LIMIT_MAX=20') { throw "Image-limit marker missing" }
+          if ($text -notmatch 'PHASE49_3I15_LOCAL_STAGING_REQUIRED=YES') { throw "Local-staging marker missing" }
           if ($text -notmatch 'PHASE49_3I15_ADD_TO_PRODUCTS=NO_DIRECT_FULL_FETCH') { throw "Add-to-products marker missing" }
           if ($text -notmatch 'NO RESET / NO STASH / NO DELETE / NO PRODUCTION') { throw "Safety marker missing" }
 
@@ -66,14 +67,17 @@ jobs:
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3i15_bulk_discovery_images.py \
+            catalog_center/app/phase49_3i15_staging_guard.py \
             catalog_center/app/phase49_3i12_runtime_bridge.py \
-            catalog_center/tests/test_epic49_phase49_3i15_bulk_discovery_images.py
+            catalog_center/tests/test_epic49_phase49_3i15_bulk_discovery_images.py \
+            catalog_center/tests/test_epic49_phase49_3i15_staging_guard.py
 
       - name: Phase49.3I.15 targeted tests
         working-directory: catalog_center
         run: |
           python -m unittest -v \
             tests.test_epic49_phase49_3i15_bulk_discovery_images \
+            tests.test_epic49_phase49_3i15_staging_guard \
             tests.test_epic49_phase49_3i14_legacy_scan_restore \
             tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery \
             tests.test_epic49_phase49_3i12_discovery_image_recovery \
@@ -84,6 +88,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           text = Path("catalog_center/app/phase49_3i15_bulk_discovery_images.py").read_text(encoding="utf-8")
+          guard = Path("catalog_center/app/phase49_3i15_staging_guard.py").read_text(encoding="utf-8")
           bridge = Path("catalog_center/app/phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
           assert "extract_direct_link(" not in text
           assert "discover_preview_candidates(" in text
@@ -91,14 +96,19 @@ jobs:
           assert "_download_context_images" in text
           assert "PRODUCT_LIMIT_MAX = 100" in text
           assert "اضافه کردن انتخاب‌شده‌ها به محصولات" in text
+          assert "downloaded_images" in guard
+          assert 'result["image_urls"] = []' in guard
           assert "_install_phase49_3i15_app(app_class)" in bridge
+          assert "_install_phase49_3i15_staging_guard()" in bridge
           print("PHASE49_3I15_BULK_DISCOVERY_IMAGES=OK")
+          print("PHASE49_3I15_LOCAL_STAGING_GUARD=OK")
           print("PHASE49_3I15_NO_RICH_DIRECT_DEPENDENCY=OK")
           print("PHASE49_3I15_ADD_TO_PRODUCTS=OK")
           PY
 
       - name: Django no-migration safety
         run: |
+          # Repository root intentionally owns manage.py in this project.
           python manage.py check
           python manage.py makemigrations --check --dry-run
           python manage.py migrate --plan
