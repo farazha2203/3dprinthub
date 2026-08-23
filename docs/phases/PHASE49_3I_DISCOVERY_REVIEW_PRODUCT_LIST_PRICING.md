@@ -2,94 +2,87 @@
 
 Updated: 2026-08-23
 Branch: `epic/phase49-unified-product-slider-sync`
-Current Hotfix: `49.3I.16 — Resilient Acquisition Fallback + Cached Candidate Reuse`
+Current Hotfix: `49.3I.17 — Single Active AI Runtime`
 Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
-Deliver a business-usable Catalog Center that acquires products from exact source listing pages in bulk, survives individual browser/parser failures, stages local images, lets the operator select wanted products, prepares them in Product Workspace and publishes only after verified Local/Production gates.
+Deliver a business-usable Catalog Center that can bulk-acquire products from exact listing pages, survive source/browser method failures, edit products with deterministic AI, publish locally for E2E verification, then deploy only an approved GitHub snapshot.
 
-## Canonical Acquisition Paths
+## Canonical Acquisition Paths — Preserved
 1. Mature compatibility path: `Top Scan Controls → BaseApp start_scan/_scan_worker → Product Workspace`.
 2. Primary exact-page path: `Exact Search/Listing URL → product/image limits → resilient discovery → resilient local image staging → review counts → Add selected to Products / Archive unwanted → Product Workspace`.
 
-The exact-page bulk path does not depend on Rich Direct `extract_direct_link`.
+49.3I.16 remains authoritative for acquisition:
+- discovery: locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB,
+- images: locator-safe → HTTP → mature Classic DOM → Chrome 9222 → listing thumbnail,
+- product max 100 / image max 20,
+- one candidate failure does not abort the batch,
+- local image staging required,
+- no Rich Direct `extract_direct_link` dependency in exact-page bulk intake.
 
-## Preserved Contracts
-- explicit listing URL authoritative,
-- source `model_url_pattern` is Product-vs-Page boundary,
-- dedupe by source + external id + normalized URL,
-- Archive/Block prevents unwanted rediscovery without destructive deletion,
-- Product Workspace remains canonical editor,
-- AI/provider/schema/trace/manual override contracts unchanged,
-- image hard max 20; product hard max 100,
-- Fixed / Range / Formula remain independent,
-- mature top scan actions remain available,
-- Local Publish and Production remain separate gates.
-
-## 49.3I.16 — Resilient Acquisition
+## Product Workspace AI Contract — 49.3I.17
 ### Trigger
-Windows 49.3I.15 showed correct previously-discovered MakerWorld candidates but a new run aborted with `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`. This is the ERR-49-024 embedded-JavaScript failure class at an older Preview boundary.
+Windows evidence showed AI progress stuck at `در حال اتصال به هوش مصنوعی`, apparent large model/provider activity despite one saved active AI, occasional Task Manager termination, and stale `invalid command name ...listbox` Tk failures.
 
-### Final Discovery Ladder
-1. locator-safe Playwright without embedded `evaluate_all`,
-2. public HTTP/HTML link extraction,
-3. attached Chrome 9222 locator-safe discovery when available,
-4. cached candidate DB reuse for the same source/listing URL.
+### Verified causes
+- legacy provider resolver could treat saved OpenRouter/Google as non-explicit and fall back to AvalAI/OpenAI based on available credentials,
+- Product AI ran a model-catalog probe before the useful request,
+- Google could list models again,
+- Product open could trigger hidden AI automatically,
+- stale destroyed-widget callbacks could surface as fatal UI errors.
 
-### Final Image Ladder
-1. locator-safe fresh browser,
-2. public HTTP HTML + existing parser/downloader,
-3. mature Classic DOM collector,
-4. attached Chrome 9222 locator-safe path,
-5. listing-card thumbnail fallback.
-
-### Operational Rules
-- each method failure is recorded and the next method is tried,
-- previously successful candidate discovery is reusable instead of discarded,
-- per-candidate manifest records discovery/acquisition trace and successful methods,
-- at least one image must actually be staged locally before readiness/Add-to-Products,
-- one candidate failure does not abort the rest,
-- no Rich Direct dependency is reintroduced.
+### Final Runtime Rule
+- operator selects Provider/Model in AI Center and saves it,
+- Product AI uses only saved `ai_provider` + that provider's saved model,
+- API key comes only from that provider's secure secret slot,
+- cross-provider fallback is forbidden,
+- unsaved/`auto` runtime fails closed,
+- Product open starts no AI request,
+- normal Product AI skips `/models` preflight and sends the useful request directly,
+- Google exact saved model skips its model-list preflight too,
+- explicit AI Settings Model Search/Test remains live,
+- stale destroyed-widget callbacks are suppressed/logged and busy state released,
+- existing request/response/error trace, schema validation + one repair, 90s title watchdog, 210s All-Fields watchdog, Stop Waiting, stale-result protection and manual overrides remain.
 
 ### Implementation Surfaces
-- `catalog_center/app/phase49_3i16_resilient_acquisition.py`,
-- `catalog_center/app/phase49_3i16_review_hardening.py`,
-- runtime composition in `phase49_3i12_runtime_bridge.py`,
-- `RUN_PHASE49_3I16_FALLBACK_GATE.ps1`,
-- `.github/workflows/phase49-3i16-resilient-acquisition-ci.yml`,
-- focused 49.3I.16 regression tests.
+- `catalog_center/app/phase49_3i17_single_active_ai_runtime.py`,
+- final composition in `catalog_center/app/phase49_3i_local_qa_hotfix.py`,
+- `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1`,
+- `.github/workflows/phase49-3i17-single-active-ai-ci.yml`,
+- focused 49.3I.17 regression tests.
 
 ## GitHub Validation / Merge
-PR `#62` merged.
-- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
-- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`.
+PR `#63` merged.
+- final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
+- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`.
 
 SUCCESS:
-- 49.3I.16 `32645660164`,
-- 49.3I `32645660154`,
-- 49.3I.15 `32645660045`,
-- 49.3I.14 `32645660071`,
-- 49.3H `32645660135`,
-- 49.3G `32645660118`,
-- Full Phase49 + Windows Catalog regressions + Full Django `32645660123`.
+- 49.3I.17 `32649623837`,
+- 49.3I `32649623808`,
+- 49.3I.16 `32649623695`,
+- 49.3I.15 `32649623705`,
+- 49.3I.14 `32649623679`,
+- 49.3H `32649623825`,
+- 49.3G `32649623755`,
+- Full Phase49 + Windows Catalog regressions + Full Django `32649623804`.
 
 Django migration: NONE. Catalog schema migration: NONE. Production untouched.
 
 ## Focused Windows Acceptance — Current Gate
 1. close Catalog Center; clean Local worktree,
 2. live fetch/prune + ff-only pull current Epic,
-3. run `RUN_PHASE49_3I16_FALLBACK_GATE.ps1 -LaunchApp`,
-4. test MakerWorld `cake+stand` with 10 products × 10 images,
-5. first-method failure must fall through instead of aborting,
-6. if live listing methods fail, previously persisted candidates should be reused,
-7. verify staged image counts,
-8. select 2–3 ready rows → Add to Products without Direct Full Fetch,
-9. Archive one unwanted row,
-10. open one added Product and verify images.
+3. run `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1 -LaunchApp`,
+4. select/save one active Provider/Model,
+5. open Product Workspace and confirm no hidden AI request starts,
+6. run All-Fields once and verify trace contains only that Provider/Model and no leading `/models` request,
+7. Stop/failure must leave app responsive and no stale Listbox fatal popup,
+8. save a different Provider/Model and repeat once; only the newly saved pair may be used.
+
+After AI PASS, verify the already-focused exact-page acquisition if needed, then exactly one Local Publish E2E.
 
 ## Release / Production Gate
-After focused PASS: exactly one `LOCAL PUBLISH ONLY` → Local Store/Admin/Product/Media/SEO E2E → explicit owner approval → read-only Host path/branch/venv/MySQL/backup/rollback verification → GitHub-only Production deploy → HTTP/data/media verification.
+Focused Windows PASS → exactly one `LOCAL PUBLISH ONLY` → Local Store/Admin/Product/Media/SEO E2E → explicit owner approval → read-only Host path/branch/venv/MySQL/backup/rollback verification → GitHub-only Production deploy → HTTP/data/media verification.
 
 ## Next Phase
 Normal Store checkout: ZarinPal request/callback/verify + Sandbox E2E while bank transfer remains available.
