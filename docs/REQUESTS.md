@@ -13,55 +13,55 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-001: explicit Search/Listing URL is authoritative.
 - REQ-49I-003: Archive/Not Needed blocks rediscovery without destructive deletion.
 - REQ-49I-004: dedupe by source + external id + normalized URL.
-- REQ-49I-005: source text sanitation without damaging URL/Persian editorial fields.
-- REQ-49I-006: visual/lightweight Explorer; Product Workspace remains canonical editor.
-- REQ-49I-007: Fixed / Range / Formula independent; Range never invokes Formula.
-- REQ-49I-009: Windows delivery uses live fetched GitHub snapshot, clean exact Epic branch, ff-only only. Canonical: ERR-49-019.
-- REQ-49I-014: Provider-card credentials/model lists plus FTP/Bridge secure persistence.
-- REQ-49I-016: real All-Fields AI bounded/observable with 210s watchdog and stale discard.
-- REQ-49I-017: explicit All-Fields rerun refreshes AI-owned values and protects manual overrides.
-- REQ-49I-018: inspectable sanitized AI request/response/error, 90s title watchdog. Canonical: ERR-49-028.
-- REQ-49I-019: exact provider schema + one repair + immediate retry after abort. Canonical: ERR-49-029.
-- REQ-49I-020: exact-page discovery visibly operable and Product Workspace images contain-fit. Canonical: ERR-49-030.
-- REQ-49I-021: explicit Windows URL paste, operator-safe batch behavior and candidate error details. Canonical: ERR-49-031.
-- REQ-49I-014A: mature top acquisition controls restored and new UI remains additive. Canonical: ERR-49-032.
+- REQ-49I-006: Product Workspace remains canonical editor.
+- REQ-49I-007: Fixed / Range / Formula remain independent.
+- REQ-49I-009: Windows delivery uses live fetched GitHub snapshot, clean exact Epic branch, ff-only only.
+- REQ-49I-014: Provider/FTP/Bridge secure persistence.
+- REQ-49I-016..019: observable AI, rerun generated values, sanitized trace, exact provider schema, bounded watchdogs.
+- REQ-49I-020: exact-page discovery visibly operable and Product Workspace images contain-fit.
+- REQ-49I-021: Windows URL paste, operator-safe batch behavior and candidate error details.
+- REQ-49I-014A: mature top acquisition controls remain additive and preserved.
 
 ### REQ-49I-022 — Bulk exact-page image acquisition + Add-to-Products
-Status: `MERGED TO EPIC / ALL REQUIRED PR CI SUCCESS / WINDOWS QA PENDING`
-Owner explicitly changes the exact-page business workflow:
-- do not depend on single-product/Rich Direct Full Fetch for selected Search/Listing candidates,
-- exact Search/Listing/Category URL remains authoritative,
-- operator chooses product count with practical presets including 30 / 50 / 100; hard max 100,
-- operator chooses images per product, especially 10 or 20; hard max 20,
-- the same exact-page discovery first finds candidate product links,
-- then the bulk flow gathers staged public product images with the mature Classic browser/image helpers,
-- each candidate row must show image count before operator selection,
-- wanted rows are selected and added with `اضافه کردن انتخاب‌شده‌ها به محصولات`,
-- adding selected rows must not call `extract_direct_link` or another per-product Rich Direct Full Fetch,
-- at least one image must be successfully staged locally before a candidate becomes ready/addable,
-- unwanted rows use existing Archive/Block semantics,
-- one candidate failure must not abort the whole batch,
-- Stop remains safe and visible,
-- no Catalog candidate-table migration is required; staged image metadata may live under persistent Catalog DATA,
-- restored mature scan controls, AI/provider/SEO/pricing/publish/FTP/Bridge/credentials are Must-Not-Touch.
+Status: `MERGED / CI SUCCESS / WINDOWS QA PENDING`
+- exact Search/Listing/Category URL authoritative,
+- product presets include 30/50/100; hard max 100,
+- images/product supports 10/20; hard max 20,
+- selected rows add to Products without Rich Direct Full Fetch,
+- at least one local staged image required,
+- Archive/Block/dedupe/Stop preserved,
+- Product Workspace/AI/pricing/publish/FTP/Bridge untouched.
+
+### REQ-49I-023 — Resilient acquisition fallback + persistent method trace
+Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
+Owner requirement after Windows evidence:
+- if one discovery/crawling/download technique fails, do not stop before trying other registered safe techniques,
+- reuse previously successful candidate discovery for the same exact listing when live rediscovery fails,
+- do not lose the visible/correct candidate list because a later crawler implementation breaks,
+- record which method was attempted, why it failed, and which method finally succeeded,
+- no embedded `evaluate_all` at the new resilient discovery boundary,
+- final discovery ladder: locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB,
+- image ladder: locator-safe fresh → HTTP parser/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail,
+- one candidate failure must not abort the rest of the batch,
+- local staging guard remains mandatory,
+- no Rich Direct Full Fetch dependency is reintroduced.
 
 Merge evidence:
-- PR `#61` merged,
-- final PR head `5f96d890b2e31e1f1d670c8afb716a1da4fc88d3`,
-- merge commit `953f975e883e6dfcbf61097ac8d324d68d4ca678`,
-- final required CI set all SUCCESS, including Full Phase49 + Windows Catalog regressions + Full Django.
-
-This request supersedes the old one-thumbnail-only Preview contract **for this exact-page bulk operator path only**. Historical Preview logic remains available internally and mature top scan remains compatible.
+- PR `#62` merged,
+- final PR head `8f4fbe6d0264f673d0e6564a4ed1e383db023ab6`,
+- merge commit `44216546162fead0b752d92cf6cae8d658f034f2`,
+- all required final-head CI success including Full Phase49 + Windows Catalog regressions + Full Django.
 
 ## Operational Release Request
 
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED ONLY BY WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED ONLY BY 49.3I.16 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 Acceptance:
-- merged CI-successful 49.3I.15 on Epic,
 - live ff-only Windows pull,
-- bulk Search/Listing acquisition with visible image counts works,
-- selected rows add to Products without Direct Full Fetch,
+- exact-page batch does not abort on first acquisition-method error,
+- correct cached candidates can be reused,
+- visible staged image counts work,
+- selected rows Add to Products without Direct Full Fetch,
 - Archive/Block works,
 - one added Product opens with staged images,
 - exactly one Local Publish E2E passes,
@@ -86,7 +86,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - one owner-approved low-value Production payment before public activation.
 
 ## Canonical Windows Gate
-`RUN_PHASE49_3I15_BULK_GATE.ps1`; it chains all prior 49.3I gates and verifies current fetched Epic snapshot.
+`RUN_PHASE49_3I16_FALLBACK_GATE.ps1`; it chains the 49.3I.15 gate and all prior 49.3I regression gates.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
