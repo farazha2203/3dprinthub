@@ -5,61 +5,66 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.14 — Restore Mature Scan Controls + Single-Product Route`
-Status: `PR #60 MERGED / ALL REQUIRED CI SUCCESS / FOCUSED WINDOWS QA PENDING`
+Current Hotfix: `49.3I.15 — Bulk Exact-Page Images + Add-to-Products`
+Status: `PR #61 IN VALIDATION / WINDOWS QA NEXT`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Permanent Delivery Order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority
-1. focused Windows QA of 49.3I.14,
-2. exactly one Local Publish E2E,
-3. explicit owner approval,
-4. Host/branch/MySQL/backup/rollback verification + Production deploy from GitHub,
-5. then normal Store-cart ZarinPal integration and Sandbox E2E.
+1. finish and merge 49.3I.15 only after final CI success,
+2. focused Windows test of exact-page bulk acquisition,
+3. exactly one Local Publish E2E,
+4. explicit owner approval,
+5. verify Production branch/path/MySQL/backup/rollback and deploy approved GitHub snapshot,
+6. then Store-cart ZarinPal integration + Sandbox E2E.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Encoding → Gallery/First Paint → Live Git Snapshot → Explorer/URL Routing → Selection Guard → Credential Hydration → Preview/Provider Recovery → Observable All-Fields → AI Refresh/SEO → AI Trace → Provider Schema Recovery → Exact-Page Operator/Image Fit → Paste/Batch Recovery → Mature Scan Restoration`.
+`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products`.
 
-## 49.3I.14 Final Runtime
-The release regression recorded as `ERR-49-032` is fixed by restoring mature acquisition beside the new Review UX:
-- restore `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها`,
-- bind `شروع اسکن` to original BaseApp mature scan worker,
-- route manual single-product acquisition through the same mature `mode=single` worker,
-- keep Rich Direct intake optional,
-- keep Preview/Approve/Archive/Paste/error-detail intact,
-- no new crawler/extractor, migration, DB/media rewrite or Production change.
+## 49.3I.15 — New Canonical Exact-Page Business Flow
+Owner explicitly replaced the old one-thumbnail Preview→per-product Full Fetch acceptance for the exact-page operator workflow because the per-product Direct route is the recurring business blocker.
 
-## GitHub Validation
-PR #60: MERGED.
-Final PR head: `f12a25e1fe50fb16a03a1324c84912c830a2608e`.
-Merge commit: `124662cf2436dfcce245282b01b2da694802aa55`.
+New flow:
+`Exact Search/Listing URL → select 10/20/30/50/100 products → select 5/10/15/20 images per product → discover links → collect staged images with mature Classic browser helpers → display image count → select wanted rows → Add to Products → Archive unwanted`.
 
-Successful final PR-head runs:
-- Phase49.3I.14 Legacy Scan Restore `32636771174` — SUCCESS,
-- Phase49.3I `32636771071` — SUCCESS,
-- Phase49.3H `32636771154` — SUCCESS,
-- Phase49.3G `32636771049` — SUCCESS,
-- Full Phase49 + Full Django `32636771103` — SUCCESS.
+Contracts:
+- product hard max 100,
+- image hard max 20,
+- no Rich Direct `extract_direct_link` dependency in the bulk path,
+- per-candidate image manifest stored under persistent Catalog DATA without DB schema migration,
+- Add-to-Products is local DB materialization from staged identity/title/images, not another network Full Fetch,
+- existing/blocked dedupe remains,
+- Stop between candidates,
+- one candidate error does not abort the rest,
+- restored mature top controls remain visible and untouched,
+- AI/SEO/pricing/publish/FTP/Bridge/credentials unchanged.
 
-Django migration: NONE.
+## Feature Validation
+PR `#61` head before documentation sync: `a7cb319c2723ae2f9cfe87a1a00c8b33e7fcf619`.
+Observed SUCCESS:
+- 49.3I.15 `32641268643`,
+- 49.3I `32641268627`,
+- 49.3I.14 `32641268644`,
+- 49.3H `32641268659`,
+- 49.3G `32641268651`.
+Full Phase49 + Full Django `32641268645` must also be SUCCESS on the final feature head before merge.
+
+Django migration: NONE in targeted CI.
 Catalog schema migration: NONE.
 Production: untouched.
 
-## Focused Employee Catalog Release Gate — NEXT
-1. clean Windows worktree,
-2. live fetch/prune + ff-only pull current Epic,
-3. run `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`,
-4. confirm mature top actions are visible,
-5. MakerWorld + `single` + `auto` + known Product URL → `شروع اسکن` uses mature acquisition,
-6. new `دریافت محصول تکی` uses the same mature route and does not force the Rich Direct 403 path,
-7. confirm exact-page Preview/Approve remains present.
+## Focused Windows Gate After Merge
+1. clean worktree + live fetch/ff-only,
+2. `RUN_PHASE49_3I15_BULK_GATE.ps1 -LaunchApp`,
+3. exact MakerWorld page with 10 products × 10 images first,
+4. verify progress and image counts,
+5. select 2–3 rows → Add to Products without Direct Full Fetch,
+6. Archive one row,
+7. open one added product and verify images.
 
-No broad repeat QA unless one of these focused contracts fails.
-
-## After Windows PASS
-Run exactly one `LOCAL PUBLISH ONLY` + Local Django Store/Admin E2E. If title/SEO/source/images/pricing/visibility are correct and owner approves, verify Production state/backup/rollback and deploy the approved GitHub snapshot.
+If PASS, do one Local Publish E2E and move immediately to Production gate/deploy.
 
 ## Next Product Phase
-Normal Store checkout is still manual bank transfer. Next implementation is ZarinPal request/callback/verify using mature Phase30 security semantics and Sandbox E2E before live activation.
+Store checkout remains manual bank transfer. Next: ZarinPal request/callback/verify, Sandbox E2E, then one owner-approved low-value live payment.

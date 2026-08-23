@@ -1,246 +1,99 @@
 # ERROR KNOWLEDGE BASE
 
-Search this file before troubleshooting. Do not repeat a failed action unless its underlying condition changed. Detailed historical incident text remains in Git history; this file keeps the operational symptom/root-cause/fix/prevention knowledge needed for current development.
+Search this file before troubleshooting. Never repeat a failed action unchanged. Detailed incident transcripts remain in Git history; this file keeps the current operational root-cause/fix/prevention knowledge.
 
-## RESOLVED ERRORS
+## RESOLVED / CANONICAL PHASE49 ERRORS
 
-### ERR-49-001 — Tkinter pack/grid collision in Product Workspace
-Root Cause: sibling widgets mixed `pack()` and `grid()` under the same Tk parent.
-Correct Solution: one geometry manager per parent; introduce a holder when needed.
-Prevention: never mix pack/grid for siblings.
+- **ERR-49-001 — Tk pack/grid collision:** one geometry manager per parent; use holder frames.
+- **ERR-49-002 — delayed thumbnail callback after widget destruction:** verify widget lifetime before async UI mutation.
+- **ERR-49-003 — destroyed ProductWorkspace used as messagebox parent:** async result must verify parent existence.
+- **ERR-49-004 — missing optional shell attributes:** guarded access only.
+- **ERR-49-005 — image SEO semantic signature false-stale:** normalize structured JSON before hashing.
+- **ERR-49-006 — dynamic consultation flag overwritten:** downstream state uses contract-aware merge/OR.
+- **ERR-49-007 — PS5.1 NativeCommandError despite exit 0:** native exit code is truth; harmless stderr is not automatic failure.
+- **ERR-49-008 — trace Bearer redaction order leak:** mask Bearer credentials before generic authorization formatting.
+- **ERR-49-009 — later phase installed inside older independent installer:** compose phases at launch/runtime root.
+- **ERR-49-010 — Bridge main-image materialization failure:** target Media ownership is a publish prerequisite.
+- **ERR-49-011 — test guessed `upsert_product()` return:** resolve persisted product by real identity after upsert.
+- **ERR-49-012 — security test coupled to one mask format:** assert secret absence semantically.
+- **ERR-49-013 — explicit MakerWorld Search URL ignored:** explicit valid operator URL is authoritative.
+- **ERR-49-014 — discovery full-fetched before review:** Preview and acquisition were separated. Phase49.3I.15 later supersedes the one-thumbnail-only rule for the owner-approved exact-page bulk path.
+- **ERR-49-015 — runtime pricing choices caused phantom migration:** never mutate migration-owned Django field metadata at runtime.
+- **ERR-49-016 — PS5.1 runner encoding parse failure:** repository Windows runners are ASCII-only and CI-enforced.
+- **ERR-49-017 — Products UI patch missed real UX87 boundary:** patch/test final visible composition boundary.
+- **ERR-49-018 — AI progress painted after synchronous preflight:** first-paint before any blocking work.
+- **ERR-49-019 — stale Chat-pinned HEAD:** live fetch + clean exact branch + ff-only + Local HEAD == fetched Remote HEAD.
+- **ERR-49-020 — product images clipped into strips:** pixel image viewport must not use Tk text-unit width/height.
+- **ERR-49-021 — page/group URL misclassified as Product:** configured source `model_url_pattern` is authoritative boundary.
+- **ERR-49-022 — Treeview selection feedback loop froze Product open:** one-way selection sync + reentrancy/repeat-open guards.
+- **ERR-49-023 — secure credentials looked lost:** hydrate visible widgets from Windows Credential Store/environment after startup/save.
+- **ERR-49-024 — Preview embedded JS invalid escaping:** browser-side JavaScript escape bytes are regression-tested.
+- **ERR-49-025 — Provider Hub keys/models missing visually:** hydrate real `_ai_hub_key_vars`, not legacy field only.
+- **ERR-49-026 — visible All-Fields button bypassed Task Center:** exact visible button routes to mature bounded/observable AI path.
+- **ERR-49-027 — All-Fields could not refresh AI-owned values / generic titles persisted:** refresh AI-owned fields, protect manual edits, reject generic titles.
+- **ERR-49-028 — HTTP success followed by delayed Tk exception callback crash:** freeze exception values; title retry has trace + 90s watchdog.
+- **ERR-49-029 — provider returned useful but wrong JSON schema / model trace looked hung:** exact provider schema + one repair + compact model trace + immediate busy release.
+- **ERR-49-030 — exact-page discovery worked but final UX hid state/results:** mount at final UX87 boundary; visible progress/candidates; 228x171 contain-fit images.
 
-### ERR-49-002 — Thumbnail callback after widget destruction
-Root Cause: delayed image callback targeted a destroyed/rebuilt widget.
-Correct Solution: lifecycle-safe callbacks verify the live target before UI mutation.
-Prevention: every delayed/thread→Tk callback validates widget lifetime.
+### ERR-49-031 — Windows URL paste + approved batch browser flashing
+**Symptom:** URL paste unreliable; approved multi-select opened/closed one visible browser per row; technical candidate error hidden.  
+**Root Cause:** plain Entry lacked explicit Windows paste bindings; batch inherited interactive `direct_link.headed=true`; stored `last_error` was not exposed.  
+**Correct Fix — 49.3I.13:** Ctrl+V/Shift+Insert/right-click/visible Paste; approved batch background mode with setting restoration; candidate error detail.  
+**Prevention:** business-critical Windows text fields have tested paste UX; batch must not inherit manual headed-browser defaults; persisted per-item error must be operator-visible.
 
-### ERR-49-003 — Destroyed ProductWorkspace used as messagebox parent
-Root Cause: async completion ran after Workspace close.
-Correct Solution: verify parent existence before dialog/UI update.
-Prevention: background results never assume originating window still exists.
+### ERR-49-032 — New Discovery UI hid mature scan controls and forced 403-prone single route
+**Symptom:** healthy `شروع اسکن`, Stop, smart-link and discovery actions disappeared; new Product action on MakerWorld 400767 hit `HTTP 403`.  
+**Root Cause:** 49.3I.12 hid healthy controls; Preview wrapper shadowed `App87.start_scan`; new Product action forced Rich Direct while mature BaseApp scan still existed.  
+**Correct Fix — 49.3I.14:** restore mature controls; resolve deepest/original BaseApp scan worker; single compatibility action uses mature `mode=single`; Rich Direct remains optional; Preview/Paste/Archive preserved.  
+**Implementation incident:** first MRO resolver still selected Preview; targeted CI failed, code changed, fresh CI passed.  
+**Prevention:** new operator features are additive unless explicitly replacing old behavior; tests verify visibility **and routing**.
 
-### ERR-49-004 — Missing `header_badge`
-Root Cause: callback assumed an optional shell attribute existed.
-Correct Solution: guarded shell-state access.
-Prevention: patches must not depend on optional attributes without guards.
+### ERR-49-033 — Exact-page links were correct but per-product Full Fetch remained the business blocker
+**Date:** 2026-08-23  
+**Environment:** Windows Catalog Center 8.7.1 after 49.3I.14  
+**Owner evidence:** exact MakerWorld Search/Listing discovery returns the correct product links, but individual Product/Rich Direct/approved Full Fetch repeatedly fails or stalls. The owner needs bulk catalog entry now and explicitly requests not to route selected listing candidates through single-product Full Fetch.
 
-### ERR-49-005 — Image SEO semantic signature false-stale
-Root Cause: raw JSON representation was hashed instead of normalized semantics.
-Correct Solution: normalize structured JSON before hashing.
-Prevention: structured signatures hash semantics, not formatting.
+**Verified architectural cause:**
+- working exact-page discovery and failing per-product Direct extraction were coupled by the old acceptance flow,
+- `approve_discovery_candidates()` still depended on a network Full Fetch per selected row,
+- that coupling was unnecessary for the immediate business requirement: source identity/title + a controlled image set are enough to create a review-state Product and let Product Workspace/AI finish the rest.
 
-### ERR-49-006 — Dynamic price consultation flag overwritten
-Root Cause: later sync blindly overwrote an earlier pricing decision.
-Correct Solution: contract-aware OR/merge semantics.
-Prevention: downstream layers must not erase earlier validated state.
+**Correct Solution — Phase49.3I.15:**
+- exact Search/Listing URL remains authoritative,
+- operator selects product limit up to 100 and image limit up to 20,
+- first discover links with the already-verified exact-page discovery,
+- then collect staged public images per candidate using the mature Classic browser/image helpers (`launch_fresh_browser`, `_dom_image_urls`, `_download_context_images`),
+- persist staged image metadata as JSON manifests under the existing Catalog DATA root, without candidate-table migration,
+- show image count per candidate,
+- selected rows use `اضافه کردن انتخاب‌شده‌ها به محصولات`, which creates/updates the local Product from staged identity/title/images **without calling `extract_direct_link` or another Rich Direct Full Fetch**,
+- unwanted candidates continue to Archive/Block,
+- existing/blocked dedupe remains,
+- one candidate failure does not abort the rest; Stop is checked between candidates.
 
-### ERR-49-007 — Windows NativeCommandError after successful migrations
-Root Cause: PowerShell 5.1 treated harmless native stderr as terminating while exit code was zero.
-Correct Solution: capture native output under Continue and use exit code as truth.
-Prevention: do not infer native failure from stderr alone.
+**Validation on runtime feature head `a7cb319c2723ae2f9cfe87a1a00c8b33e7fcf619`:**
+- Phase49.3I.15 Run `32641268643` SUCCESS,
+- Phase49.3I Run `32641268627` SUCCESS,
+- Phase49.3I.14 Run `32641268644` SUCCESS,
+- Phase49.3H Run `32641268659` SUCCESS,
+- Phase49.3G Run `32641268651` SUCCESS,
+- Full Phase49 + Full Django Run `32641268645` SUCCESS,
+- Django migration NONE; Catalog candidate schema migration NONE; Production untouched.
 
-### ERR-49-008 — Runtime Trace inline Bearer token redaction leak
-Root Cause: generic Authorization redaction ran before Bearer masking.
-Correct Solution: mask Bearer credentials first.
-Prevention: redaction order is a tested security contract.
-
-### ERR-49-009 — Phase49.3G installed inside independent 49.3F installer
-Root Cause: cross-phase composition leaked into an older independently tested installer.
-Correct Solution: compose phases at launch/composition root.
-Prevention: prior-phase installers remain independently valid.
-
-### ERR-49-010 — Historical Bridge import main-image failure
-Symptom: primary image was not materialized in target Media before conversion.
-Correct Solution: publish preflight materializes selected/primary image first.
-Prevention: target Media ownership is a publish prerequisite.
-
-### ERR-49-011 — CI fixture assumed `upsert_product()` returns product ID
-Root Cause: test guessed a DB API return contract.
-Correct Solution: upsert then resolve persisted row by verified identity.
-Prevention: tests use real repository contracts.
-
-### ERR-49-012 — Redaction assertion coupled to display formatting
-Root Cause: test expected one cosmetic mask format.
-Correct Solution: assert secret absence and masked Authorization semantically.
-Prevention: security tests validate no-leak invariants.
-
-### ERR-49-013 — Explicit MakerWorld search URL ignored
-Root Cause: search mode chose configured listing instead of explicit seed.
-Correct Solution: valid explicit HTTP(S) operator URL is authoritative.
-Prevention: never silently substitute a default discovery URL.
-
-### ERR-49-014 — Discovery full-fetched before human review
-Root Cause: URL discovery immediately entered full extraction.
-Correct Solution: `Preview Candidate → Approve/Archive → Approved Full Fetch`.
-Prevention: preview and acquisition are separate state transitions.
-
-### ERR-49-015 — Runtime pricing choices created phantom Django migration
-Root Cause: runtime code mutated migration-owned Django field `choices`.
-Correct Solution: preserve field metadata; persist semantic value in existing field.
-Prevention: model metadata changes are migration changes.
-
-### ERR-49-016 — Phase49.3I runner parse failure on Windows PowerShell 5.1
-Root Cause: BOM-less UTF-8 runner contained Persian/em-dash bytes decoded under legacy ANSI rules.
-Correct Solution: canonical runner ASCII-only; CI enforces it.
-Prevention: Windows PS5.1 runners keep explicit tested encoding contract.
-
-### ERR-49-017 — Products UI patch missed real UX87 composition boundary
-Root Cause: UX87 called `super()._products_ui()` then `_modernize_products_page()`, bypassing the initial patch target.
-Correct Solution: patch the final visible shell boundary.
-Prevention: UI tests exercise the actual visible composition path.
-
-### ERR-49-018 — AI progress created after synchronous preflight
-Root Cause: save/preflight/source work ran before progress first-paint.
-Correct Solution: immediate first-paint then Tk `after()` handoff.
-Prevention: blocking preflight starts only after visible feedback paints.
-
-### ERR-49-019 — Windows handoff used stale Chat-pinned HEAD
-Root Cause: mutable Epic advanced after a fixed SHA was copied into Chat.
-Correct Solution: live fetch, exact branch, clean worktree, Local HEAD == fetched Remote HEAD, ff-only pull.
-Prevention: Chat SHA is audit information, never mutable-branch source of truth.
-
-### ERR-49-020 — Product images clipped into thin strips
-Root Cause: pixel PhotoImage assigned to a Label sized in Tk text units.
-Correct Solution: pixel viewport with unconstrained image Label.
-Prevention: do not size pixel images through Tk text-unit width/height.
-
-### ERR-49-021 — Group/category URL misclassified as direct product URL
-Root Cause: guessed URL-shape heuristics replaced configured source regex.
-Correct Solution: source `model_url_pattern` is authoritative Product-vs-Page boundary.
-Prevention: classify product identity from verified source configuration.
-
-### ERR-49-022 — Hidden Treeview selection feedback loop froze Product open
-Root Cause: selection callback rewrote the same selection recursively.
-Correct Solution: one-way event-producing sync plus re-entrancy/repeat-open guards.
-Prevention: never mutate the same Tk selection from its own selection callback.
-
-### ERR-49-023 — Secure credentials appeared lost because visible fields were not hydrated
-Root Cause: secure backend persisted credentials but operator widgets were cleared/not rehydrated.
-Correct Solution: hydrate Windows Credential Store/environment after startup/save.
-Prevention: persistence tests target visible operator controls as well as storage.
-
-### ERR-49-024 — Preview `evaluate_all` JavaScript syntactically invalid
-Root Cause: Python escaping turned intended JS `\n` into a literal newline in a JS single-quoted string.
-Correct Solution: preserve browser-side escape bytes.
-Prevention: Python-embedded JS requires explicit escaping regression tests.
-
-### ERR-49-025 — Real Provider Hub keys/model lists disappeared visually
-Root Cause: legacy `ai_key` was hydrated while modern Provider cards use `_ai_hub_key_vars`.
-Correct Solution: hydrate real provider-card variables and load model catalogs through mature client.
-Prevention: readiness tests target current Provider Hub controls.
-
-### ERR-49-026 — Bottom All-Fields AI bypassed mature Task Center
-Root Cause: visible button still called legacy `generate_ai("commerce")`.
-Correct Solution: route real All-Fields to mature Task Center with elapsed/Stop/210s watchdog/stale discard.
-Prevention: tests exercise exact visible button after all composition layers.
-
-### ERR-49-027 — All-Fields rerun could not refresh AI output and generic titles persisted
-Root Cause: Task Center filled blanks only and did not distinguish manual vs AI-owned values.
-Correct Solution: refresh AI-owned fields, protect proven manual edits, reject generic titles, preserve source/SEO grounding.
-Prevention: explicit AI refresh tracks generated ownership and validates product identity.
-
-### ERR-49-028 — AI HTTP succeeded but delayed Tk callback crashed; title retry lacked full trace
-Root Cause: delayed callback captured an exception target Python later clears; title-only action lacked bounded observable execution.
-Correct Solution: freeze exception values, scrollable sanitized trace, current Provider/Model retry, 90s title watchdog, stale discard.
-Prevention: HTTP success is not UI acceptance; delayed callbacks freeze values.
-
-### ERR-49-029 — Provider useful JSON had wrong schema; model trace/busy state looked hung
-Root Cause: compatible gateways received generic `json_object` rather than exact Catalog schema; huge model catalog was rendered; abort did not release all busy flags.
-Correct Solution: exact JSON Schema + one repair, compact model trace, immediate busy release, stale-result protection.
-Prevention: HTTP 200 + valid JSON is insufficient without exact application schema.
-
-### ERR-49-030 — Exact-page discovery succeeded but UX87 did not expose review/live state
-Root Cause: patch targeted a method bypassed by final UX87 `_ui`; candidate renderer/image viewport contracts also needed final-boundary composition.
-Correct Solution: mount operator at final UX87 `_ui`, reuse mature candidate Treeview, show live state, separate direct product action, 228x171 contain-fit images.
-Prevention: patch final visible composition boundary and reuse mature contracts.
-
-### ERR-49-031 — Windows URL paste failed and approved batch flashed one browser per candidate
-Date: 2026-08-23
-Environment: Windows Catalog Center 8.7.1 / Phase49.3I.12
-Symptoms:
-- exact URL field did not reliably accept Paste, forcing manual typing,
-- MakerWorld Preview rows and product URLs were correct,
-- selecting multiple candidates and running approved Full Fetch opened/closed roughly one visible browser window per selected row,
-- some rows ended as `failed`, but the operator could not directly see the persisted technical reason.
-Verified Root Cause:
-- the 49.3I.12 exact URL control was a plain `ttk.Entry` with no explicit Ctrl+V/Shift+Insert/right-click paste contract, while other operator fields already had explicit paste handlers,
-- mature approved Full Fetch invokes RichPageExtractor once per selected candidate and inherited `direct_link.headed=true`, therefore each selected row legitimately created a visible persistent browser context,
-- candidate `last_error` was already stored but not surfaced in the final operator panel.
-Correct Solution — Phase49.3I.13:
-- explicit Ctrl+V / Ctrl+V uppercase / Shift+Insert bindings,
-- right-click Paste menu and visible `چسباندن لینک` button,
-- approved batch only temporarily forces the existing RichPageExtractor to background/headless mode,
-- original direct-link headed setting is restored after batch completion/cancel/error,
-- separate single-product intake keeps its configured headed behavior,
-- `جزئیات خطای انتخابی` shows persisted `last_error`,
-- no second crawler/extractor and no Preview/Approve semantic change.
-Verification:
-- PR #59 merged,
-- feature head `b47793c42d807285efbd8d3e005f9979856c4878`,
-- merge commit `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`,
-- Phase49.3I Run `32633932308` SUCCESS,
-- Phase49.3H Run `32633932302` SUCCESS,
-- Phase49.3G Run `32633932340` SUCCESS,
-- Full Phase49 + Full Django Run `32633932224` SUCCESS,
-- Django migration NONE; Catalog schema migration NONE; Production untouched.
-Prevention:
-- Windows operator text fields that are business-critical must have explicit tested paste UX,
-- batch acquisition must not inherit an interactive headed-browser default intended for manual single-item/login recovery,
-- persisted per-item failure reason must be reachable from the operator surface.
-
-### ERR-49-032 — New Discovery UI hid the mature scan workflow and forced a 403-prone single-product route
-Date: 2026-08-23
-Environment: Windows Catalog Center 8.7.1 / Phase49.3I.13
-Symptoms:
-- healthy top actions that previously fetched products were missing,
-- the user specifically lost `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
-- the new `دریافت محصول تکی` action on a real MakerWorld product (`400767`) failed with `RuntimeError: HTTP 403`,
-- the product URL itself was correct.
-Verified Root Cause:
-- 49.3I.12 explicitly walked the real UX87 scan tab and called `pack_forget()` / `grid_remove()` on those mature controls,
-- the earlier 49.3I discovery installer replaced `App87.start_scan` with Preview discovery, so merely showing the old button would not restore its original behavior,
-- 49.3I.12 manual single-product action called the Rich Direct `extract_direct_link` path; `RichPageExtractor` treats MakerWorld HTTP 403/429 as failure,
-- the mature BaseApp `start_scan` / `_scan_worker` path still existed and was the path the owner reported as working before this regression.
-Correct Solution — Phase49.3I.14:
-- restore the mature top control set instead of replacing it,
-- bind visible `شروع اسکن` to the original BaseApp mature `start_scan`, not the Preview override,
-- make the new `دریافت محصول تکی` action validate Product URL then use that same mature `mode=single` scan route,
-- preserve `دریافت هوشمند از لینک` as an optional separate Rich Direct tool rather than forcing it,
-- preserve the new Preview/Approve/Archive/Paste/error-detail panel alongside the mature controls,
-- add no new crawler/extractor.
-Implementation CI Incident:
-- the first 49.3I.14 resolver chose the first parent `start_scan`; a targeted test failed because an intermediate Preview override was selected (`preview-started` instead of `legacy-started`),
-- the failed CI command was not blindly repeated,
-- the resolver was changed to select the deepest project `start_scan` implementation in the MRO,
-- fresh CI on the changed commit then passed.
-Verification on feature head `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`:
-- Phase49.3I.14 Legacy Scan Restore Run `32636391530` SUCCESS,
-- Phase49.3I Run `32636391489` SUCCESS,
-- Phase49.3H Run `32636391571` SUCCESS,
-- Phase49.3G Run `32636391563` SUCCESS,
-- Full Phase49 + Full Django Run `32636391518` SUCCESS,
-- Django migration NONE; Catalog schema migration NONE; Production untouched.
-Prevention:
-- adding an operator flow does not authorize hiding or rebinding healthy mature actions,
-- UI regression tests must verify both **visibility** and **command routing** of preserved actions,
-- if a mature acquisition path is known-good, new optional intake paths must be additive rather than mandatory replacements.
+**Prevention:** when a verified listing boundary already provides correct product identities, do not force a second fragile acquisition boundary merely to move an item into review. Separate **staging** from **deep enrichment** and make the network-intensive path optional when business requirements allow it.
 
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Status: OPEN / outside current 49.3I release gate.
-Rule: verify route/client contract before adding duplicate endpoint.
+Outside current release gate. Verify route/client contract before adding any duplicate endpoint.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
-Status: mitigated by Phase49.3H.
-Rule: never invent cost; use provider response/verified lookup or mark unknown.
+Never invent cost; use provider response/verified lookup or mark unknown.
 
-### ERR-OPEN-003 — Historical image acquisition limit inconsistency
-Status: runtime contract addressed; Windows QA remains.
-Rule: default 10 / hard max 20 through canonical normalizer.
+### ERR-OPEN-003 — Historical image-limit inconsistency
+Canonical controlled limit is max 20; current bulk operator exposes 5/10/15/20.
 
-## Warning Debt
+## WARNING DEBT
 - CKEditor4 security/maintenance warning.
-- `store.W026`: in-memory realtime is not a production multi-process architecture; Redis/polling remains separate debt.
+- `store.W026`: in-memory realtime is not a production multi-process architecture; Redis/polling is separate debt.
 - Pillow `Image.getdata()` deprecation.
 - Google membership credential warning when intentionally unset in CI.
