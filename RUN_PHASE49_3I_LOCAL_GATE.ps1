@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.10"
+$RunnerVersion = "49.3I.11"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -141,6 +141,7 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_ai_execution_recovery.py",
     "catalog_center\app\phase49_3i_ai_refresh_completion.py",
     "catalog_center\app\phase49_3i_ai_trace_recovery.py",
+    "catalog_center\app\phase49_3i_schema_runtime_recovery.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
@@ -154,6 +155,7 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_ai_execution_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_ai_refresh_completion.py",
     "catalog_center\tests\test_epic49_phase49_3i_ai_trace_recovery.py",
+    "catalog_center\tests\test_epic49_phase49_3i_schema_runtime_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
     "store\test_phase49_3i_pricing_modes.py",
@@ -184,6 +186,10 @@ Write-Host "PHASE49_3I_SEO_SOURCE_SYNC=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_AI_TRACE_CONSOLE=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_TITLE_WATCHDOG=90S" -ForegroundColor Green
 Write-Host "PHASE49_3I_EXCEPTION_CALLBACK_GUARD=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_PROVIDER_SCHEMA_STRICT=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_SCHEMA_REPAIR_ONCE=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_MODEL_TRACE_COMPACT=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_BUSY_RELEASE_ON_ABORT=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -200,6 +206,7 @@ try {
         "catalog_center\app\phase49_3i_ai_execution_recovery.py",
         "catalog_center\app\phase49_3i_ai_refresh_completion.py",
         "catalog_center\app\phase49_3i_ai_trace_recovery.py",
+        "catalog_center\app\phase49_3i_schema_runtime_recovery.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
@@ -225,6 +232,7 @@ try {
         "tests.test_epic49_phase49_3i_ai_execution_recovery",
         "tests.test_epic49_phase49_3i_ai_refresh_completion",
         "tests.test_epic49_phase49_3i_ai_trace_recovery",
+        "tests.test_epic49_phase49_3i_schema_runtime_recovery",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -307,20 +315,18 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - Phase49.3I.10 AI observability/retry:" -ForegroundColor Cyan
-Write-Host "1) Use Translate Title on a product with a wrong Persian title; request/response/error tabs must be visible and scrollable."
-Write-Host "2) The title action must show Provider/Model, source title, exact sanitized HTTP payload/response and final result/error."
-Write-Host "3) A generic title must be rejected and the existing product value must not be replaced by generic output."
-Write-Host "4) Stop Waiting must leave the app responsive; any late result must not update the product."
-Write-Host "5) Title-only AI must stop waiting after 90 seconds; full AI keeps the 210-second stale-result watchdog."
-Write-Host "6) Invalid Provider/API key/network errors must stay visible in Diagnostics; the Product Workspace must remain open."
-Write-Host "7) Click the real bottom all-fields AI button twice, changing Provider/Model before the second run."
-Write-Host "8) All-fields AI must also show sanitized request/response traffic in the scrollable trace console."
-Write-Host "9) AI-owned/generated Persian title/content/SEO must refresh; a manual override must remain untouched."
-Write-Host "10) If images are below target, source refetch remains opt-in and reuses the mature refetch path."
-Write-Host "11) MakerWorld Preview -> Approve -> Full Fetch and image limit 1..20 must remain intact."
-Write-Host "12) Source/publisher, SEO sync, 500000 local fallback and explicit license/sale confirmations remain unchanged."
-Write-Host "13) LOCAL PUBLISH is still blocked until this visual/data QA passes."
+Write-Host "Manual QA - Phase49.3I.11 provider schema/runtime recovery:" -ForegroundColor Cyan
+Write-Host "1) Retry the exact product that previously returned seo_title/seo_description aliases instead of seo_title_fa/seo_description_fa."
+Write-Host "2) AvalAI/OpenRouter must receive the real JSON Schema; one malformed response may trigger one visible repair request only."
+Write-Host "3) Final accepted content must contain the exact required field names/types; otherwise Diagnostics must show the schema mismatch."
+Write-Host "4) The /models response in the trace must be summarized (count + sample), not dump the complete provider catalog into Tk."
+Write-Host "5) Change Provider/Model after Stop Waiting or watchdog; a new AI action must be allowed immediately and late old output must stay stale."
+Write-Host "6) Title-only still uses 90-second watchdog; full AI still uses 210-second stale-result watchdog."
+Write-Host "7) Request/response/error tabs remain scrollable and secrets stay redacted."
+Write-Host "8) AI-owned/generated fields refresh; proven manual overrides remain untouched."
+Write-Host "9) Low-image refetch, MakerWorld Preview -> Approve -> Full Fetch and image limit 1..20 remain intact."
+Write-Host "10) Fixed/Range/Formula pricing, source attribution, SEO sync and explicit license/sale confirmations remain unchanged."
+Write-Host "11) LOCAL PUBLISH is still blocked until this Windows visual/data QA passes."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
