@@ -70,45 +70,54 @@ Changing Provider/Model and pressing All-Fields regenerates AI-owned output whil
 
 ### REQ-49I-018 — AI request/result/error must be inspectable
 Status: `GITHUB_UPDATED IN 49.3I.10 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Operator must see scrollable sanitized outgoing request, incoming response and diagnostics; title retry uses current Provider/Model; title watchdog 90 seconds; app must remain open after provider errors.
-Canonical record: `ERR-49-028`.
+Operator sees scrollable sanitized outgoing request, incoming response and diagnostics; title retry uses current Provider/Model; title watchdog 90 seconds; app remains open after provider errors. Canonical record: `ERR-49-028`.
 
-### REQ-49I-019 — Provider output must satisfy the exact Catalog schema and abort must be immediately retryable
+### REQ-49I-019 — Provider output must satisfy exact Catalog schema and abort must be immediately retryable
 Status: `GITHUB_UPDATED IN 49.3I.11 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner expectation after real AvalAI trace:
-- a successful HTTP response is not sufficient if field names/types do not match the Catalog contract,
-- AvalAI/OpenRouter must receive the actual JSON Schema,
-- output aliases such as `seo_title` must not silently stand in for required `seo_title_fa`,
-- malformed valid JSON may receive at most one automatic schema-repair request,
-- if repair still violates schema, show the exact mismatch and do not persist partial content,
-- `/models` diagnostics must be summarized so large model catalogs do not freeze Tk,
-- Stop Waiting/watchdog must release Product Workspace busy state immediately,
-- operator must be able to change Provider/Model and start a new request immediately,
-- late output from the old request remains stale and cannot mutate the product,
-- 90-second title and 210-second full-AI watchdogs remain intact,
-- secrets remain redacted and no duplicate AI client is introduced.
+- AvalAI/OpenRouter receive actual JSON Schema,
+- aliases cannot silently replace required fields,
+- at most one schema-repair request,
+- exact mismatch shown if repair fails,
+- `/models` diagnostics summarized,
+- Stop Waiting/watchdog immediately releases busy state,
+- new Provider/Model run can start immediately,
+- late old output stays stale,
+- 90s title / 210s full-AI watchdogs remain,
+- secrets remain redacted.
 Canonical record: `ERR-49-029`.
+
+### REQ-49I-020 — Exact-page discovery must be visibly operable and single-product intake must be separate
+Status: `GITHUB_UPDATED IN 49.3I.12 / PR #58 MERGED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Owner acceptance:
+- pasted Search/Listing/Category URL must be the exact page scanned,
+- visible badge/progress/elapsed/current URL must show whether work is running/stopping/done,
+- candidate links from that page must be visible before Full Fetch,
+- direct Product URL has a separate manual action validated by source `model_url_pattern`,
+- Preview remains lightweight and Full Fetch remains approval-gated,
+- Stop request must be visible,
+- Product Workspace images must use equal fixed pixel viewports without crop/stretch,
+- landscape/portrait cards use 228x171 contain-fit semantics,
+- no duplicate crawler/extractor architecture.
+Canonical record: `ERR-49-030`.
 
 ## Operational Release Requests — 2026-08-23
 
 ### REQ-REL-001 — Hand Catalog Center to employees today
-Status: `REQUESTED / WINDOWS 49.3I.11 RELEASE QA PENDING`
+Status: `REQUESTED / WINDOWS 49.3I.12 RELEASE QA PENDING`
 Acceptance:
 - current Epic pulled by live ff-only snapshot,
-- runner `49.3I.11` passes,
-- exact formerly failing AvalAI schema case passes or gives one precise repair/failure,
-- model trace remains responsive/compact,
-- Stop Waiting → Provider/Model change → immediate retry passes,
-- All-Fields product-specific AI/SEO test passes,
-- low-image warning/refetch passes,
-- MakerWorld Preview → Approve → Full Fetch passes,
-- Provider/model/FTP/Bridge persistence passes,
-- Product open/selection and pricing modes pass.
+- runner `49.3I.12` passes,
+- exact MakerWorld Search URL shows visible page discovery state and candidates,
+- one candidate Preview → Approve → Full Fetch passes,
+- one direct Product URL intake passes,
+- Stop feedback passes,
+- Product Workspace image fit passes,
+- All-Fields/Provider/model/image-limit/pricing regressions remain healthy.
 
 After this QA passes employees may use Catalog Center for controlled data entry. Production still requires one Local Publish E2E + explicit owner approval.
 
 ### REQ-PAY-001 — Normal Store checkout must support online payment
-Status: `REQUESTED / IMPLEMENTATION REQUIRED`
+Status: `REQUESTED / IMPLEMENTATION REQUIRED AFTER CATALOG ACCEPTANCE`
 - reuse mature Phase30 ZarinPal security semantics,
 - server owns/recomputes amount,
 - idempotent attempt identity,
@@ -125,7 +134,7 @@ Status: `REQUESTED / IMPLEMENTATION REQUIRED`
 Current supported online provider in repository: `ZarinPal` only.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.11`.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.12`.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
