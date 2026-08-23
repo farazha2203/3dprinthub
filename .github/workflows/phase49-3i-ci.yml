@@ -42,7 +42,7 @@ jobs:
 
           $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.12"') { throw "49.3I.12 runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.13"') { throw "49.3I.13 runner version missing" }
           if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
           if ($runner -notmatch '\$ExpectedBranch\s*=\s*"epic/phase49-unified-product-slider-sync"') { throw "49.3I expected branch guard missing" }
           if ($runner -notmatch 'git"\s+-Arguments\s+@\("fetch",\s*"--prune",\s*"origin"\)') { throw "49.3I live GitHub fetch guard missing" }
@@ -75,6 +75,9 @@ jobs:
           if ($runner -notmatch 'PHASE49_3I_SINGLE_PRODUCT_OPERATOR=ENABLED') { throw "49.3I single product operator marker missing" }
           if ($runner -notmatch 'PHASE49_3I_DISCOVERY_LIVE_STATUS=ENABLED') { throw "49.3I discovery live-status marker missing" }
           if ($runner -notmatch 'PHASE49_3I_WORKSPACE_IMAGE_FIT=228X171_CONTAIN') { throw "49.3I workspace image-fit marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_URL_PASTE_RECOVERY=ENABLED') { throw "49.3I.13 URL paste recovery marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_BATCH_FULL_FETCH=BACKGROUND_HEADLESS') { throw "49.3I.13 batch headless marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_CANDIDATE_ERROR_DETAIL=ENABLED') { throw "49.3I.13 candidate error marker missing" }
           if ($runner -notmatch 'phase49_3i_ai_refresh_completion\.py') { throw "49.3I AI refresh source missing from runner" }
           if ($runner -notmatch 'test_epic49_phase49_3i_ai_refresh_completion') { throw "49.3I AI refresh tests missing from runner" }
           if ($runner -notmatch 'phase49_3i_ai_trace_recovery\.py') { throw "49.3I AI trace source missing from runner" }
@@ -83,6 +86,8 @@ jobs:
           if ($runner -notmatch 'test_epic49_phase49_3i_schema_runtime_recovery') { throw "49.3I schema runtime tests missing from runner" }
           if ($runner -notmatch 'phase49_3i12_discovery_image_recovery\.py') { throw "49.3I.12 operator/image source missing from runner" }
           if ($runner -notmatch 'test_epic49_phase49_3i12_discovery_image_recovery') { throw "49.3I.12 operator/image tests missing from runner" }
+          if ($runner -notmatch 'phase49_3i13_batch_fetch_paste_recovery\.py') { throw "49.3I.13 recovery source missing from runner" }
+          if ($runner -notmatch 'test_epic49_phase49_3i13_batch_fetch_paste_recovery') { throw "49.3I.13 recovery tests missing from runner" }
           if ($runner -notmatch 'phase49_3i9_seo_sync\.py') { throw "49.3I SEO sync source missing from runner" }
           if ($runner -notmatch 'test_phase49_3i9_seo_sync') { throw "49.3I SEO sync tests missing from runner" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
@@ -97,6 +102,7 @@ jobs:
           Write-Host "PHASE49_3I_AI_TRACE_RECOVERY_CONTRACT=OK"
           Write-Host "PHASE49_3I_SCHEMA_RUNTIME_RECOVERY_CONTRACT=OK"
           Write-Host "PHASE49_3I_DISCOVERY_OPERATOR_IMAGE_FIT_CONTRACT=OK"
+          Write-Host "PHASE49_3I13_PASTE_BATCH_ERROR_CONTRACT=OK"
           Write-Host "PHASE49_3I_SEO_SOURCE_SYNC_CONTRACT=OK"
           Write-Host "PHASE49_3I_RUNNER_CONTRACT=OK"
 
@@ -131,6 +137,8 @@ jobs:
             catalog_center/app/phase49_3i_ai_trace_recovery.py \
             catalog_center/app/phase49_3i_schema_runtime_recovery.py \
             catalog_center/app/phase49_3i12_discovery_image_recovery.py \
+            catalog_center/app/phase49_3i12_runtime_bridge.py \
+            catalog_center/app/phase49_3i13_batch_fetch_paste_recovery.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
             catalog_center/app/phase49_3i_secret_persistence.py \
             store/phase49_3i_pricing_modes.py \
@@ -153,6 +161,7 @@ jobs:
             tests.test_epic49_phase49_3i_ai_trace_recovery \
             tests.test_epic49_phase49_3i_schema_runtime_recovery \
             tests.test_epic49_phase49_3i12_discovery_image_recovery \
+            tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery \
             tests.test_epic49_phase49_3i_pricing_modes \
             tests.test_epic49_phase49_3i_secret_persistence \
             tests.test_epic49_phase49_3h_image_limits \
@@ -161,7 +170,7 @@ jobs:
             tests.test_epic49_phase49_3g_commerce_provenance \
             tests.test_epic49_phase49_3c_image_signature
 
-      - name: Phase49.3I AI discovery image and source safety contract
+      - name: Phase49.3I AI discovery batch-paste image and source safety contract
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -169,6 +178,8 @@ jobs:
           trace = Path("catalog_center/app/phase49_3i_ai_trace_recovery.py").read_text(encoding="utf-8")
           schema_runtime = Path("catalog_center/app/phase49_3i_schema_runtime_recovery.py").read_text(encoding="utf-8")
           operator = Path("catalog_center/app/phase49_3i12_discovery_image_recovery.py").read_text(encoding="utf-8")
+          runtime_bridge = Path("catalog_center/app/phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
+          recovery13 = Path("catalog_center/app/phase49_3i13_batch_fetch_paste_recovery.py").read_text(encoding="utf-8")
           pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           content = Path("catalog_center/app/openai_content.py").read_text(encoding="utf-8")
           local_qa = Path("catalog_center/app/phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
@@ -207,6 +218,16 @@ jobs:
           assert "درخواست توقف ثبت شد" in operator
           assert "ImageOps.contain" in operator
           assert "CARD_VIEWPORT = (228, 171)" in operator
+          assert "_install_phase49_3i13_app" in runtime_bridge
+          assert 'entry.bind("<Control-v>"' in recovery13
+          assert 'entry.bind("<Shift-Insert>"' in recovery13
+          assert 'entry.bind("<Button-3>"' in recovery13
+          assert 'text="چسباندن لینک"' in recovery13
+          assert 'text="جزئیات خطای انتخابی"' in recovery13
+          assert 'direct_cfg["headed"] = False' in recovery13
+          assert "_phase49_3i13_restore_batch_browser_mode" in recovery13
+          assert "extract_direct_link(" not in recovery13
+          assert "async_playwright" not in recovery13
           assert "_phase49_3i12_composition_bridge" in pricing
           assert "_install_phase49_3i12_workspace(workspace_class)" in pricing
           assert "validate_content_pack" in content
@@ -224,6 +245,9 @@ jobs:
           print("PHASE49_3I_MODEL_TRACE=COMPACT_UI_SAFE")
           print("PHASE49_3I_BUSY_RELEASE=ABORT_RETRY_SAFE")
           print("PHASE49_3I_DISCOVERY_OPERATOR=EXACT_PAGE_SINGLE_URL_LIVE_STATUS")
+          print("PHASE49_3I_URL_PASTE=CTRLV_SHIFTINSERT_CONTEXT_BUTTON")
+          print("PHASE49_3I_APPROVED_BATCH=BROWSER_BACKGROUND_HEADLESS")
+          print("PHASE49_3I_CANDIDATE_ERROR_DETAIL=VISIBLE")
           print("PHASE49_3I_WORKSPACE_IMAGE_FIT=228X171_CONTAIN")
           print("PHASE49_3I_TITLE_WATCHDOG=90S_STALE_SAFE")
           print("PHASE49_3I_EXCEPTION_CALLBACK_GUARD=ENABLED")
@@ -282,6 +306,7 @@ jobs:
               Path("catalog_center/app/phase49_3i_ai_trace_recovery.py"),
               Path("catalog_center/app/phase49_3i_schema_runtime_recovery.py"),
               Path("catalog_center/app/phase49_3i12_discovery_image_recovery.py"),
+              Path("catalog_center/app/phase49_3i13_batch_fetch_paste_recovery.py"),
               Path("catalog_center/app/phase49_3i_secret_persistence.py"),
               Path("store/phase49_3i9_seo_sync.py"),
           ]
