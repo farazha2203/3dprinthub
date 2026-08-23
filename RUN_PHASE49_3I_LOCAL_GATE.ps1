@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.7"
+$RunnerVersion = "49.3I.8"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -138,6 +138,7 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_product_list.py",
     "catalog_center\app\phase49_3i_explorer_hotfix.py",
     "catalog_center\app\phase49_3i_local_qa_hotfix.py",
+    "catalog_center\app\phase49_3i_ai_execution_recovery.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
@@ -147,6 +148,7 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_product_list.py",
     "catalog_center\tests\test_epic49_phase49_3i_explorer_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
+    "catalog_center\tests\test_epic49_phase49_3i_ai_execution_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
     "store\test_phase49_3i_pricing_modes.py"
@@ -165,6 +167,9 @@ Write-Host "PHASE49_3I_SECRET_PERSISTENCE=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_PREVIEW_EVAL_RECOVERY=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_PROVIDER_HUB_PERSISTENCE=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_PROVIDER_MODELS_AUTOLOAD=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_AI_EXECUTION_RECOVERY=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_LEGACY_AI_ROUTING=TASK_CENTER" -ForegroundColor Green
+Write-Host "PHASE49_3I_AI_WATCHDOG=210S" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -177,6 +182,7 @@ try {
         "catalog_center\app\phase49_3i_product_list.py",
         "catalog_center\app\phase49_3i_explorer_hotfix.py",
         "catalog_center\app\phase49_3i_local_qa_hotfix.py",
+        "catalog_center\app\phase49_3i_ai_execution_recovery.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
@@ -198,6 +204,7 @@ try {
         "tests.test_epic49_phase49_3i_product_list",
         "tests.test_epic49_phase49_3i_explorer_hotfix",
         "tests.test_epic49_phase49_3i_local_qa_hotfix",
+        "tests.test_epic49_phase49_3i_ai_execution_recovery",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -279,18 +286,18 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - Phase49.3I.7 recovery:" -ForegroundColor Cyan
-Write-Host "1) Saved FTP password and Bridge token must stay populated/masked after save and restart."
-Write-Host "2) Saved AvalAI/OpenRouter/OpenAI/Google keys must stay populated/masked in their real provider cards."
-Write-Host "3) Open AI Center; configured providers must background-load model catalogs into Model ID lists."
-Write-Host "4) Model picker must show the API model list; manual API refresh must still work."
-Write-Host "5) Use exact MakerWorld search URL and Preview; no Locator.evaluate_all SyntaxError is allowed."
-Write-Host "6) Preview must show lightweight candidates with one thumbnail/basic identity only."
-Write-Host "7) Approve one candidate with image limit 20; only then may full product/image fetch run."
-Write-Host "8) Archive another candidate and verify it does not full-fetch or reappear as new."
-Write-Host "9) Mature direct product URL intake must still work unchanged."
-Write-Host "10) Product selection/open must remain responsive with no feedback loop."
-Write-Host "11) Full AI autofill must paint startup progress before preflight."
+Write-Host "Manual QA - Phase49.3I.8 AI execution recovery:" -ForegroundColor Cyan
+Write-Host "1) Open a Product Workspace and click the bottom all-fields AI button."
+Write-Host "2) A progress window must appear immediately, then hand off to connection/send/receive progress."
+Write-Host "3) The progress window must show elapsed time and a Stop Waiting button."
+Write-Host "4) During AI wait, the Product Workspace and main app must remain responsive."
+Write-Host "5) Success must show connected/sent/received/save/result stages; errors must stay visible without closing the app."
+Write-Host "6) Stop Waiting or the 210-second watchdog must block any late response from mutating the product."
+Write-Host "7) Exact MakerWorld search Preview must not show Locator.evaluate_all SyntaxError."
+Write-Host "8) Preview must remain one-thumbnail/basic-identity only; full fetch only after approval."
+Write-Host "9) Approve one candidate with image limit 20 and verify mature full fetch."
+Write-Host "10) Saved FTP/Bridge/provider credentials and provider model lists must remain available."
+Write-Host "11) Product selection/open must remain responsive with no feedback loop."
 Write-Host "12) Pricing Fixed, Range, and Formula must remain independent."
 Write-Host "13) Do LOCAL PUBLISH ONLY after all visual/data/credential QA passes."
 
