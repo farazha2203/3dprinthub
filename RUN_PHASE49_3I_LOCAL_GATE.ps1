@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.8"
+$RunnerVersion = "49.3I.9"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -139,9 +139,11 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_explorer_hotfix.py",
     "catalog_center\app\phase49_3i_local_qa_hotfix.py",
     "catalog_center\app\phase49_3i_ai_execution_recovery.py",
+    "catalog_center\app\phase49_3i_ai_refresh_completion.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
+    "store\phase49_3i9_seo_sync.py",
     "catalog_center\tests\test_epic49_phase49_3i_discovery_review.py",
     "catalog_center\tests\test_epic49_phase49_3i_preview_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_source_safety.py",
@@ -149,9 +151,11 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_explorer_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_ai_execution_recovery.py",
+    "catalog_center\tests\test_epic49_phase49_3i_ai_refresh_completion.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
-    "store\test_phase49_3i_pricing_modes.py"
+    "store\test_phase49_3i_pricing_modes.py",
+    "store\test_phase49_3i9_seo_sync.py"
 )
 foreach ($relative in $requiredFiles) {
     if (-not (Test-Path (Join-Path $Root $relative))) {
@@ -170,12 +174,18 @@ Write-Host "PHASE49_3I_PROVIDER_MODELS_AUTOLOAD=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_AI_EXECUTION_RECOVERY=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_LEGACY_AI_ROUTING=TASK_CENTER" -ForegroundColor Green
 Write-Host "PHASE49_3I_AI_WATCHDOG=210S" -ForegroundColor Green
+Write-Host "PHASE49_3I_AI_REFRESH_COMPLETION=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_IMAGE_PREFLIGHT_REFETCH=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_GENERIC_TITLE_GUARD=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_DEFAULT_PRICE=500000" -ForegroundColor Green
+Write-Host "PHASE49_3I_SEO_SOURCE_SYNC=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
 try {
     Run-Native -File $Py -Arguments @(
         "-m", "compileall", "-q",
+        "catalog_center\app\openai_content.py",
         "catalog_center\app\phase49_3i_discovery_review.py",
         "catalog_center\app\phase49_3i_preview_recovery.py",
         "catalog_center\app\phase49_3i_source_safety.py",
@@ -183,9 +193,11 @@ try {
         "catalog_center\app\phase49_3i_explorer_hotfix.py",
         "catalog_center\app\phase49_3i_local_qa_hotfix.py",
         "catalog_center\app\phase49_3i_ai_execution_recovery.py",
+        "catalog_center\app\phase49_3i_ai_refresh_completion.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
+        "store\phase49_3i9_seo_sync.py",
         "store\apps.py",
         "catalog_center\launch.py"
     )
@@ -205,6 +217,7 @@ try {
         "tests.test_epic49_phase49_3i_explorer_hotfix",
         "tests.test_epic49_phase49_3i_local_qa_hotfix",
         "tests.test_epic49_phase49_3i_ai_execution_recovery",
+        "tests.test_epic49_phase49_3i_ai_refresh_completion",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -216,7 +229,7 @@ try {
     Pop-Location
 }
 
-Step "07. PHASE49.3I DJANGO PRICING + MIGRATION CONTRACT"
+Step "07. PHASE49.3I DJANGO PRICING + SEO + MIGRATION CONTRACT"
 Push-Location $Root
 try {
     Run-Native -File $Py -Arguments @("manage.py", "check")
@@ -225,6 +238,7 @@ try {
     Run-Native -File $Py -Arguments @(
         "manage.py", "test",
         "store.test_phase49_3i_pricing_modes",
+        "store.test_phase49_3i9_seo_sync",
         "store.test_phase49_3f_pricing",
         "store.test_phase49_3d_price_range",
         "store.test_phase49_unified_import_e2e",
@@ -286,20 +300,19 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - Phase49.3I.8 AI execution recovery:" -ForegroundColor Cyan
-Write-Host "1) Open a Product Workspace and click the bottom all-fields AI button."
-Write-Host "2) A progress window must appear immediately, then hand off to connection/send/receive progress."
-Write-Host "3) The progress window must show elapsed time and a Stop Waiting button."
-Write-Host "4) During AI wait, the Product Workspace and main app must remain responsive."
-Write-Host "5) Success must show connected/sent/received/save/result stages; errors must stay visible without closing the app."
-Write-Host "6) Stop Waiting or the 210-second watchdog must block any late response from mutating the product."
-Write-Host "7) Exact MakerWorld search Preview must not show Locator.evaluate_all SyntaxError."
-Write-Host "8) Preview must remain one-thumbnail/basic-identity only; full fetch only after approval."
-Write-Host "9) Approve one candidate with image limit 20 and verify mature full fetch."
-Write-Host "10) Saved FTP/Bridge/provider credentials and provider model lists must remain available."
-Write-Host "11) Product selection/open must remain responsive with no feedback loop."
-Write-Host "12) Pricing Fixed, Range, and Formula must remain independent."
-Write-Host "13) Do LOCAL PUBLISH ONLY after all visual/data/credential QA passes."
+Write-Host "Manual QA - Phase49.3I.9 AI refresh/completion:" -ForegroundColor Cyan
+Write-Host "1) Click the real bottom all-fields AI button twice, changing Provider/Model before the second run."
+Write-Host "2) AI-owned/generated Persian title/content/SEO must refresh; a manual override must remain untouched."
+Write-Host "3) A generic title such as generic 3D product must never be accepted as the new Persian title."
+Write-Host "4) If images are below the product image target, ask before source refetch; Yes must reuse mature refetch and then continue AI."
+Write-Host "5) Source/publisher name must resolve from the source registry, e.g. MakerWorld."
+Write-Host "6) Empty price min/max use the 500000 Toman local default without inventing source price."
+Write-Host "7) Empty material/color selections may use only real active local inventory, preferring an AI-recommended matching material."
+Write-Host "8) Suggested category may replace only empty/external or prior-AI category, never a manual category."
+Write-Host "9) Operator license/sale confirmations remain explicit and do not publish Production."
+Write-Host "10) Progress must remain visible/responsive with Stop Waiting and 210-second stale-result guard."
+Write-Host "11) MakerWorld Preview -> Approve -> Full Fetch and image limit 1..20 must remain intact."
+Write-Host "12) LOCAL PUBLISH is still blocked until this visual/data QA passes."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
