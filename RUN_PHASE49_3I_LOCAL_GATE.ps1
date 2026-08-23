@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.12"
+$RunnerVersion = "49.3I.13"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -143,6 +143,8 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_ai_trace_recovery.py",
     "catalog_center\app\phase49_3i_schema_runtime_recovery.py",
     "catalog_center\app\phase49_3i12_discovery_image_recovery.py",
+    "catalog_center\app\phase49_3i12_runtime_bridge.py",
+    "catalog_center\app\phase49_3i13_batch_fetch_paste_recovery.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
@@ -158,6 +160,7 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_ai_trace_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_schema_runtime_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i12_discovery_image_recovery.py",
+    "catalog_center\tests\test_epic49_phase49_3i13_batch_fetch_paste_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
     "store\test_phase49_3i_pricing_modes.py",
@@ -196,6 +199,9 @@ Write-Host "PHASE49_3I_EXACT_PAGE_OPERATOR=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_SINGLE_PRODUCT_OPERATOR=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_DISCOVERY_LIVE_STATUS=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_WORKSPACE_IMAGE_FIT=228X171_CONTAIN" -ForegroundColor Green
+Write-Host "PHASE49_3I_URL_PASTE_RECOVERY=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_BATCH_FULL_FETCH=BACKGROUND_HEADLESS" -ForegroundColor Green
+Write-Host "PHASE49_3I_CANDIDATE_ERROR_DETAIL=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -214,6 +220,8 @@ try {
         "catalog_center\app\phase49_3i_ai_trace_recovery.py",
         "catalog_center\app\phase49_3i_schema_runtime_recovery.py",
         "catalog_center\app\phase49_3i12_discovery_image_recovery.py",
+        "catalog_center\app\phase49_3i12_runtime_bridge.py",
+        "catalog_center\app\phase49_3i13_batch_fetch_paste_recovery.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
@@ -241,6 +249,7 @@ try {
         "tests.test_epic49_phase49_3i_ai_trace_recovery",
         "tests.test_epic49_phase49_3i_schema_runtime_recovery",
         "tests.test_epic49_phase49_3i12_discovery_image_recovery",
+        "tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -323,17 +332,15 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - Phase49.3I.12 discovery operator and image fit:" -ForegroundColor Cyan
-Write-Host "1) Paste the exact MakerWorld search URL and click Exact Page Discovery."
-Write-Host "2) The live badge/progress/elapsed/current URL must remain visible while scanning."
-Write-Host "3) The candidate panel must be visible in UX87 and show the links found on that exact page."
-Write-Host "4) Preview must remain lightweight: one thumbnail/basic identity only; full_fetch=0 until approval."
-Write-Host "5) Select candidates and run approved Full Fetch; status must switch to the full-fetch state."
-Write-Host "6) Paste one real MakerWorld product URL and click Single Product Intake; listing/search URLs must be rejected there."
-Write-Host "7) Stop must visibly register; no old late result may silently replace newer state."
-Write-Host "8) Open Product Workspace Images: landscape/portrait images must use equal 228x171 contain viewports without crop/stretch."
-Write-Host "9) AI title/all-fields, Provider/model, Preview/Approve, image limit 1..20 and Fixed/Range/Formula must remain healthy."
-Write-Host "10) LOCAL PUBLISH / PRODUCTION remain blocked until this Windows QA is accepted."
+Write-Host "Manual QA - Phase49.3I.13 Windows paste and approved batch recovery:" -ForegroundColor Cyan
+Write-Host "1) Use Ctrl+V, Shift+Insert, right-click Paste and the Paste Link button in the exact URL field."
+Write-Host "2) Paste the exact MakerWorld search URL and run Exact Page Discovery."
+Write-Host "3) Candidate links must stay visible before Full Fetch; Preview remains one thumbnail/basic identity only."
+Write-Host "4) Select two or more candidates and run approved Full Fetch. No browser window may flash/open per selected product."
+Write-Host "5) If a candidate fails, select it and use Candidate Error Detail to see the stored technical reason."
+Write-Host "6) Single Product Intake remains separate and may keep configured headed-browser recovery behavior."
+Write-Host "7) Stop/live status, 228x171 image fit, AI Provider/model, image limit 1..20 and Fixed/Range/Formula must remain healthy."
+Write-Host "8) LOCAL PUBLISH / PRODUCTION remain blocked until this Windows QA is accepted."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
