@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
 Current Hotfix: `49.3I.15 — Bulk Exact-Page Images + Add-to-Products`
-Status: `PR #61 VALIDATED RUNTIME / WINDOWS QA PENDING`
+Status: `MERGED / ALL REQUIRED PR CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
@@ -34,19 +34,20 @@ Mature compatibility path remains available:
 - `شروع اسکن` → original BaseApp worker,
 - Stop / smart direct / discovery actions preserved.
 
-Primary exact-page business path now is:
-`Search/Listing URL → product limit (max 100) → images/product (max 20) → verified link discovery → staged image collection with mature Classic browser helpers → visible image count → select → Add to Products / Archive`.
+Primary exact-page business path:
+`Search/Listing URL → product limit (max 100) → images/product (max 20) → verified link discovery → local staged image collection with mature Classic browser helpers → visible image count → select → Add to Products / Archive`.
 
-For this exact-page bulk path:
+For this bulk path:
 - no Rich Direct `extract_direct_link` dependency,
-- per-candidate staged image metadata lives under persistent Catalog DATA as JSON manifests,
+- candidate image manifests live under persistent Catalog DATA,
 - candidate DB schema is unchanged,
-- Add-to-Products uses staged identity/title/images and creates a review-state Product without another network fetch,
+- at least one local image download is required before readiness/Add-to-Products,
+- Add-to-Products creates a review-state Product from staged identity/title/images without another network fetch,
 - existing/blocked dedupe remains,
-- one failure does not abort the whole batch,
+- one failure does not abort the batch,
 - safe Stop is checked between candidates.
 
-The older one-thumbnail-only Preview→approved Full Fetch requirement is superseded only for this owner-approved exact-page bulk path.
+The older one-thumbnail Preview→approved Full Fetch requirement is superseded only for this owner-approved exact-page bulk path.
 
 ## Product Workspace / AI / Pricing
 Images remain fixed contain-fit `228x171` in Product Workspace.
@@ -54,31 +55,30 @@ AI remains observable with sanitized request/response/error, 90s title / 210s Al
 Pricing remains Fixed / Range / Formula independent.
 Credentials remain in Windows Credential Store/environment.
 
-## Latest Validation
-49.3I.15 runtime feature head: `a7cb319c2723ae2f9cfe87a1a00c8b33e7fcf619`.
-PR: `#61`.
+## Latest Validation / Merge
+PR `#61` merged.
+- final PR head `5f96d890b2e31e1f1d670c8afb716a1da4fc88d3`,
+- merge commit `953f975e883e6dfcbf61097ac8d324d68d4ca678`.
 
-Successful runs:
-- 49.3I.15 `32641268643`,
-- 49.3I `32641268627`,
-- 49.3I.14 `32641268644`,
-- 49.3H `32641268659`,
-- 49.3G `32641268651`,
-- Full Phase49 + Full Django `32641268645`.
-
-Runtime validation includes prior regression suites, no Rich Direct dependency in bulk flow, product limit 100, image limit 20, manifest/payload tests, compile, Django check/no-migration, Windows Catalog tests and Full Django suite.
+Final-head required workflows SUCCESS:
+- 49.3I.15 `32641815323`,
+- 49.3I `32641815273`,
+- 49.3I.14 `32641815287`,
+- 49.3H `32641815289`,
+- 49.3G `32641815380`,
+- Full Phase49 + Windows Catalog regressions + Full Django `32641815270`.
 
 Django migration: NONE.
 Catalog schema migration: NONE.
 Production untouched.
 
 ## Relevant Error/Request
-- latest previous regression: `ERR-49-032`,
-- new bulk business-flow correction: `ERR-49-033`,
+- previous regression: `ERR-49-032`,
+- bulk business-flow correction: `ERR-49-033`,
 - owner acceptance: `REQ-49I-022`.
 
-## Employee Release Goal
-After PR merge, Windows runs `RUN_PHASE49_3I15_BULK_GATE.ps1 -LaunchApp`. Focused QA starts with 10×10, selects 2–3 rows, Add-to-Products, Archive one row, and verifies one Product gallery. If PASS, employee batches may use 30/50/100 products and 10/20 images.
+## Exact Next Gate
+Windows runs `RUN_PHASE49_3I15_BULK_GATE.ps1 -LaunchApp` after a live ff-only pull of the current Epic remote HEAD. Focused QA starts with 10×10, selects 2–3 rows, Add-to-Products, Archive one row, and verifies one Product gallery. If PASS, employee batches may use 30/50/100 products and 10/20 images.
 
 Then exactly one Local Publish E2E → owner approval → Host/MySQL/backup/rollback verification → GitHub-only Production deploy.
 
