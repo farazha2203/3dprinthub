@@ -144,3 +144,11 @@ def install(workspace_class, phase49_3f_workspace_module) -> None:
     from .phase49_3i_ai_execution_recovery import install as install_ai_execution_recovery
 
     install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)
+
+    # 49.3I.9 extends the *real* all-fields button after 49.3I.8 routing exists:
+    # optional source-image preflight, repeatable AI-owned refresh, readiness
+    # defaults and operator-only final confirmations. No second AI/source client.
+    from . import phase49_3e_ai_task_center as task_center_module
+    from .phase49_3i_ai_refresh_completion import install as install_ai_refresh_completion
+
+    install_ai_refresh_completion(workspace_class, task_center_module)
