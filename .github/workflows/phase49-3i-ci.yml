@@ -42,7 +42,7 @@ jobs:
 
           $runner = [System.Text.Encoding]::ASCII.GetString($runnerBytes)
           [void][scriptblock]::Create($runner)
-          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.8"') { throw "49.3I.8 runner version missing" }
+          if ($runner -notmatch '\$RunnerVersion\s*=\s*"49\.3I\.9"') { throw "49.3I.9 runner version missing" }
           if ($runner -notmatch 'ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1') { throw "49.3I encoding contract marker missing" }
           if ($runner -notmatch '\$ExpectedBranch\s*=\s*"epic/phase49-unified-product-slider-sync"') { throw "49.3I expected branch guard missing" }
           if ($runner -notmatch 'git"\s+-Arguments\s+@\("fetch",\s*"--prune",\s*"origin"\)') { throw "49.3I live GitHub fetch guard missing" }
@@ -59,12 +59,15 @@ jobs:
           if ($runner -notmatch 'PHASE49_3I_AI_EXECUTION_RECOVERY=ENABLED') { throw "49.3I AI execution recovery marker missing" }
           if ($runner -notmatch 'PHASE49_3I_LEGACY_AI_ROUTING=TASK_CENTER') { throw "49.3I legacy AI routing marker missing" }
           if ($runner -notmatch 'PHASE49_3I_AI_WATCHDOG=210S') { throw "49.3I AI watchdog marker missing" }
-          if ($runner -notmatch 'phase49_3i_preview_recovery\.py') { throw "49.3I preview recovery source missing from runner" }
-          if ($runner -notmatch 'test_epic49_phase49_3i_preview_recovery') { throw "49.3I preview recovery test missing from runner" }
-          if ($runner -notmatch 'phase49_3i_ai_execution_recovery\.py') { throw "49.3I AI execution recovery source missing from runner" }
-          if ($runner -notmatch 'test_epic49_phase49_3i_ai_execution_recovery') { throw "49.3I AI execution recovery test missing from runner" }
-          if ($runner -notmatch 'phase49_3i_secret_persistence\.py') { throw "49.3I secure credential source missing from runner" }
-          if ($runner -notmatch 'test_epic49_phase49_3i_secret_persistence') { throw "49.3I secure credential tests missing from runner" }
+          if ($runner -notmatch 'PHASE49_3I_AI_REFRESH_COMPLETION=ENABLED') { throw "49.3I AI refresh completion marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_IMAGE_PREFLIGHT_REFETCH=ENABLED') { throw "49.3I image preflight marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_GENERIC_TITLE_GUARD=ENABLED') { throw "49.3I generic-title guard marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_DEFAULT_PRICE=500000') { throw "49.3I default price marker missing" }
+          if ($runner -notmatch 'PHASE49_3I_SEO_SOURCE_SYNC=ENABLED') { throw "49.3I storefront SEO/source sync marker missing" }
+          if ($runner -notmatch 'phase49_3i_ai_refresh_completion\.py') { throw "49.3I AI refresh source missing from runner" }
+          if ($runner -notmatch 'test_epic49_phase49_3i_ai_refresh_completion') { throw "49.3I AI refresh tests missing from runner" }
+          if ($runner -notmatch 'phase49_3i9_seo_sync\.py') { throw "49.3I SEO sync source missing from runner" }
+          if ($runner -notmatch 'test_phase49_3i9_seo_sync') { throw "49.3I SEO sync tests missing from runner" }
           if ($runner -notmatch 'RUN_PHASE49_3H_LOCAL_GATE\.ps1') { throw "49.3I must chain 49.3H gate" }
           if ($runner -notmatch 'EPIC49_3I_EXACT_SEARCH_URL=ENABLED') { throw "49.3I exact-search marker missing" }
           if ($runner -notmatch 'EPIC49_3I_PRODUCT_GALLERY_CARDS=ENABLED') { throw "49.3I product gallery marker missing" }
@@ -73,11 +76,8 @@ jobs:
           if ($runner -notmatch 'Production\s*=\s*UNTOUCHED') { throw "Production guard missing" }
           Write-Host "PHASE49_3I_RUNNER_ASCII=OK"
           Write-Host "PHASE49_3I_GIT_HANDOFF_CONTRACT=OK"
-          Write-Host "PHASE49_3I_EXPLORER_RUNNER_CONTRACT=OK"
-          Write-Host "PHASE49_3I_SELECTION_METADATA_CONTRACT=OK"
-          Write-Host "PHASE49_3I_SECRET_PERSISTENCE_CONTRACT=OK"
-          Write-Host "PHASE49_3I_PREVIEW_PROVIDER_RECOVERY_CONTRACT=OK"
-          Write-Host "PHASE49_3I_AI_EXECUTION_RECOVERY_CONTRACT=OK"
+          Write-Host "PHASE49_3I_AI_REFRESH_COMPLETION_CONTRACT=OK"
+          Write-Host "PHASE49_3I_SEO_SOURCE_SYNC_CONTRACT=OK"
           Write-Host "PHASE49_3I_RUNNER_CONTRACT=OK"
 
       - name: Set up Python 3.12
@@ -99,6 +99,7 @@ jobs:
       - name: Compile Phase49.3I
         run: |
           python -m compileall -q \
+            catalog_center/app/openai_content.py \
             catalog_center/app/phase49_3i_discovery_review.py \
             catalog_center/app/phase49_3i_preview_recovery.py \
             catalog_center/app/phase49_3i_source_safety.py \
@@ -106,9 +107,11 @@ jobs:
             catalog_center/app/phase49_3i_explorer_hotfix.py \
             catalog_center/app/phase49_3i_local_qa_hotfix.py \
             catalog_center/app/phase49_3i_ai_execution_recovery.py \
+            catalog_center/app/phase49_3i_ai_refresh_completion.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
             catalog_center/app/phase49_3i_secret_persistence.py \
             store/phase49_3i_pricing_modes.py \
+            store/phase49_3i9_seo_sync.py \
             store/apps.py \
             catalog_center/launch.py
 
@@ -123,6 +126,7 @@ jobs:
             tests.test_epic49_phase49_3i_explorer_hotfix \
             tests.test_epic49_phase49_3i_local_qa_hotfix \
             tests.test_epic49_phase49_3i_ai_execution_recovery \
+            tests.test_epic49_phase49_3i_ai_refresh_completion \
             tests.test_epic49_phase49_3i_pricing_modes \
             tests.test_epic49_phase49_3i_secret_persistence \
             tests.test_epic49_phase49_3h_image_limits \
@@ -131,57 +135,49 @@ jobs:
             tests.test_epic49_phase49_3g_commerce_provenance \
             tests.test_epic49_phase49_3c_image_signature
 
-      - name: Phase49.3I preview provider and AI execution composition contract
+      - name: Phase49.3I AI refresh completion and source safety contract
         run: |
           python - <<'PY'
           from pathlib import Path
-          source = Path("catalog_center/app/phase49_3i_product_list.py").read_text(encoding="utf-8")
-          secure_text = Path("catalog_center/app/phase49_3i_secret_persistence.py").read_text(encoding="utf-8")
-          secure = secure_text.lower()
-          preview = Path("catalog_center/app/phase49_3i_preview_recovery.py").read_text(encoding="utf-8")
+          completion = Path("catalog_center/app/phase49_3i_ai_refresh_completion.py").read_text(encoding="utf-8")
+          content = Path("catalog_center/app/openai_content.py").read_text(encoding="utf-8")
           local_qa = Path("catalog_center/app/phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
-          ai_recovery = Path("catalog_center/app/phase49_3i_ai_execution_recovery.py").read_text(encoding="utf-8")
-          operator = Path("catalog_center/app/phase49_3c_operator_recovery.py").read_text(encoding="utf-8")
-          providers = Path("catalog_center/app/ai_providers.py").read_text(encoding="utf-8")
+          seo_sync = Path("store/phase49_3i9_seo_sync.py").read_text(encoding="utf-8")
+          apps = Path("store/apps.py").read_text(encoding="utf-8")
 
-          assert "from .phase49_3i_secret_persistence import install as install_secret_persistence" in source
-          assert "install_secret_persistence(app_class)" in source
-          assert "install_preview_recovery()" in secure_text
-          assert "PREVIEW_CARD_EVAL_JS = r" in preview
-          assert "discover_preview_candidates = discover_preview_candidates_safe" in preview
-          assert "collect_classic_exact(" not in preview
-          assert "extract_direct_link(" not in preview
-          for forbidden in ("set_setting(", "logger.", "write_text(", "open("):
-              assert forbidden not in secure, forbidden
-          assert "_ai_hub_key_vars" in secure_text
-          assert "AIProviderClient(provider, key, preferred).list_model_info()" in secure_text
+          assert "install_ai_refresh_completion(workspace_class, task_center_module)" in local_qa
+          assert "self.refetch()" in completion
+          assert "normalize_image_limit" in completion
+          assert "extract_direct_link(" not in completion
+          assert "collect_classic_exact(" not in completion
+          assert "async_playwright" not in completion
+          assert "build_refresh_updates" in completion
+          assert "manual_override" in completion
+          assert "DEFAULT_PRICE_TOMAN = 500_000" in completion
+          assert "source_name" in completion
+          assert "validate_content_pack" in content
+          assert "SOURCE TITLE IS AUTHORITATIVE PRODUCT IDENTITY" in content
+          assert "Never replace a specific source title with generic phrases" in content
+          assert "install_phase49_3i9_seo_sync()" in apps
+          assert "publishing.convert_to_fixed_product = convert_to_fixed_product" in seo_sync
+          assert '"meta_title"' in seo_sync
+          assert '"meta_description"' in seo_sync
+          assert '"source_attribution"' in seo_sync
 
-          # Root cause contract: the visible Phase49.3C bottom all-fields button
-          # historically called generate_ai('commerce'), while 49.3I.8 must bridge
-          # that action into the mature Task Center and never create another worker.
-          assert "return self.generate_ai(\"commerce\")" in operator
-          assert "return self._phase49_3e_run_ai(\"all\")" in ai_recovery
-          assert "install_ai_execution_recovery(workspace_class, phase49_3f_workspace_module)" in local_qa
-          assert "AI_TOTAL_WATCHDOG_MS = 210_000" in ai_recovery
-          assert "stale-full-result-discarded" in ai_recovery
-          assert "threading.Thread" not in ai_recovery
-          assert "AIContentService" not in ai_recovery
-          assert "timeout=210" in providers
-
-          print("PHASE49_3I_PREVIEW_EVAL_RECOVERY=SAFE_JS_BOUNDARY")
-          print("PHASE49_3I_SECRET_PERSISTENCE=SECURE_STORE_ONLY")
-          print("PHASE49_3I_PROVIDER_MODELS_AUTOLOAD=ENABLED")
-          print("PHASE49_3I_AI_EXECUTION_RECOVERY=OBSERVABLE_TASK_CENTER")
-          print("PHASE49_3I_AI_WATCHDOG=210S_STALE_SAFE")
+          print("PHASE49_3I_AI_REFRESH_COMPLETION=AI_OWNED_REFRESH_MANUAL_SAFE")
+          print("PHASE49_3I_IMAGE_PREFLIGHT_REFETCH=MATURE_PATH_ONLY")
+          print("PHASE49_3I_GENERIC_TITLE_GUARD=ENABLED")
+          print("PHASE49_3I_SEO_SOURCE_SYNC=REAL_PRODUCT_FIELDS")
           PY
 
-      - name: Phase49.3I Django pricing and migration contract
+      - name: Phase49.3I Django pricing SEO and migration contract
         run: |
           python manage.py check
           python manage.py makemigrations --check --dry-run
           python manage.py migrate --plan
           python manage.py test \
             store.test_phase49_3i_pricing_modes \
+            store.test_phase49_3i9_seo_sync \
             store.test_phase49_3f_pricing \
             store.test_phase49_3d_price_range \
             store.test_phase49_unified_import_e2e \
@@ -220,7 +216,9 @@ jobs:
               Path("catalog_center/app/phase49_3i_explorer_hotfix.py"),
               Path("catalog_center/app/phase49_3i_local_qa_hotfix.py"),
               Path("catalog_center/app/phase49_3i_ai_execution_recovery.py"),
+              Path("catalog_center/app/phase49_3i_ai_refresh_completion.py"),
               Path("catalog_center/app/phase49_3i_secret_persistence.py"),
+              Path("store/phase49_3i9_seo_sync.py"),
           ]
           forbidden = ["drop table", "truncate table", "delete from products"]
           found = []
