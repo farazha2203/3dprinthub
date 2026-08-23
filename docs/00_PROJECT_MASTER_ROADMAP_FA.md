@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.13 — Windows URL Paste + Approved Batch Full-Fetch Recovery`  
+**Current Hotfix:** `49.3I.14 — Restore Mature Scan Controls + Single-Product Route`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
@@ -32,6 +32,7 @@ READ DOCS
 
 قواعد ثابت:
 - Mature behavior با Extend/Patch/Wrap اصلاح می‌شود؛ بازنویسی موازی بدون دلیل ممنوع.
+- افزودن UI جدید مجوز Hide/Replace/Rebind کردن رفتار سالم قبلی نیست.
 - Bugfix بدون Regression Test کامل نیست.
 - Source دائمی روی Production ویرایش نمی‌شود.
 - ZIP/Patch/Source مستقل از GitHub مسیر تحویل نیست.
@@ -98,22 +99,35 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3I.10 AI Trace/Safe Title Retry
 → 49.3I.11 Provider Schema/Trace/Busy Recovery
 → 49.3I.12 Exact-Page Operator/Single Product/Image Fit
-→ 49.3I.13 Windows Paste/Approved Batch Full-Fetch Recovery
+→ 49.3I.13 Windows Paste/Approved Batch Recovery
+→ 49.3I.14 Mature Scan Controls/Single-Product Route Restoration
 ```
 
-Current status: **49.3I.13 merged + all required GitHub CI SUCCESS; Windows release rerun pending; Production untouched.**
+Current status: **49.3I.14 implemented on PR #60; all required feature-head CI SUCCESS; focused Windows release QA pending; Production untouched.**
 
 ---
 
-## 4) معماری عملیاتی
+## 4) معماری عملیاتی دریافت محصول
 
+دو مسیر باید همزمان وجود داشته باشند:
+
+### Mature acquisition path
 ```text
 Operator
   ↓
-Windows Catalog Center 8.7.1
+Top Source / Mode / Method / URL / Query controls
   ↓
-Persistent Catalog SQLite + Windows Credential Store
+شروع اسکن
   ↓
+Original BaseApp start_scan / _scan_worker
+  ↓
+Mature discovery/queue/classic collector
+  ↓
+Product Workspace
+```
+
+### Review path
+```text
 Exact Search/Listing/Category URL
   ↓
 Visible Preview Discovery
@@ -122,66 +136,32 @@ Candidate Review: one thumbnail + basic identity
   ↓
 Approve / Archive
   ↓
-Approved Batch Full Fetch
-  ↓
-Existing RichPageExtractor in background/headless mode
+Approved Full Fetch
   ↓
 Product Workspace
-  ↓
-AI Task Center / Exact Schema / Trace / Pricing / Image Pipeline
-  ↓
-LOCAL PUBLISH ONLY
-  ↓
-Local Django SQLite + Store/Admin E2E
-  ↓
-Explicit Owner Approval
-  ↓
-GitHub-approved Commit
-  ↓
-Production Host pulls from GitHub
-  ↓
-MySQL + Passenger/LiteSpeed
-  ↓
-Production Verification
 ```
 
-Direct Product URL مسیر جداگانه دارد، با `model_url_pattern` Verify می‌شود و می‌تواند browser headed تنظیم‌شده را برای login/CAPTCHA recovery حفظ کند.
+قانون دائمی: مسیر دوم حق حذف، مخفی‌کردن یا Rebind کردن مسیر اول را ندارد مگر با درخواست صریح مالک پروژه.
 
 ---
 
-## 5) Discovery / Business Workflow — 49.3I.13
+## 5) 49.3I.14 — علت و قرارداد اصلاح
 
-```text
-Exact Search / Listing / Category URL
-→ Paste by Ctrl+V / Shift+Insert / Right-click / Paste Link
-→ "کشف لینک‌های همین صفحه"
-→ Visible Running State
-→ Preview Candidate
-→ one thumbnail + basic identity/title/url
-→ Operator Approve or Archive
-→ Approved only: mature Full Fetch
-→ Batch browser = background/headless
-→ selected image limit 1..20 (default 10)
-→ Product Workspace
-```
+Windows QA بعد از 49.3I.13 نشان داد:
+- `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک`, `کشف جدیدها` در 49.3I.12 عمداً Hide شده بودند.
+- Preview layer متد `App87.start_scan` را هم جایگزین کرده بود؛ بنابراین صرفاً Visible کردن دکمه کافی نبود.
+- اکشن جدید `دریافت محصول تکی` به اجبار Rich Direct Intake را اجرا می‌کرد و برای MakerWorld Product واقعی `400767` خطای `RuntimeError: HTTP 403` داد.
+- مسیر Mature BaseApp هنوز در Repository موجود بود و همان مسیری است که مالک قبلاً سالم گزارش کرده بود.
 
-Direct Product:
-```text
-Exact Product URL
-→ model_url_pattern verified
-→ "دریافت محصول تکی"
-→ mature direct intake
-→ configured headed behavior preserved
-→ Product Workspace
-```
+اصلاح 49.3I.14:
+- actionهای Mature بالا Restore می‌شوند.
+- `شروع اسکن` به BaseApp mature worker وصل می‌شود.
+- اکشن جدید `دریافت محصول تکی` بعد از Product URL validation، `mode=single` می‌گذارد و همان mature worker را اجرا می‌کند.
+- `دریافت هوشمند از لینک` همچنان به‌صورت Optional جداگانه باقی می‌ماند.
+- Preview/Approve/Archive/Paste/Error Detail حفظ می‌شوند.
+- crawler/extractor جدید ساخته نشده است.
 
-قواعد:
-- لینک صریح اپراتور authoritative است.
-- Preview و Archive حق Full Fetch ندارند.
-- Dedupe: source + external id + normalized URL.
-- Candidate failure reason باید از `last_error` برای اپراتور قابل مشاهده باشد.
-- approved batch نباید برای هر ردیف browser visible باز و بسته کند.
-- original direct browser setting بعد از batch restore می‌شود.
+Canonical error: `ERR-49-032`.
 
 ---
 
@@ -211,31 +191,33 @@ Pricing:
 
 ---
 
-## 7) Latest Validation — 49.3I.13
+## 7) Latest Validation — 49.3I.14 Feature Runtime
 
-PR #59 merged after CI.
-Validated feature head: `b47793c42d807285efbd8d3e005f9979856c4878`.
-Epic merge commit: `3ad097fb3c5ccd2aed82b2dab38f3c8951e00e51`.
+PR #60: OPEN at documentation time.
+Runtime fix commit: `bb6f456b50c1e12bbf6fc5c6b6cc3289f35ee6c8`.
 
 Runs:
-- Phase49.3I `32633932308` — SUCCESS
-- Phase49.3H `32633932302` — SUCCESS
-- Phase49.3G `32633932340` — SUCCESS
-- Full Phase49 + Full Django `32633932224` — SUCCESS
+- Phase49.3I.14 Legacy Scan Restore `32636391530` — SUCCESS
+- Phase49.3I `32636391489` — SUCCESS
+- Phase49.3H `32636391571` — SUCCESS
+- Phase49.3G `32636391563` — SUCCESS
+- Full Phase49 + Full Django `32636391518` — SUCCESS
+
+Initial targeted CI correctly caught a resolver bug (`preview-started` selected instead of `legacy-started`). The failed command was not repeated unchanged; code changed to resolve the deepest project `start_scan`, then fresh CI passed.
 
 Verified:
-- runner 49.3I.13,
-- ASCII/live-Git guard,
+- mature scan route resolution,
+- manual single-product route through mature worker,
+- preserved legacy action contract,
+- Preview/Approve/Paste regressions,
 - compile,
-- Windows clipboard query preservation,
-- approved-batch headless policy + original-setting restore,
-- Candidate Error Detail contract,
-- no duplicate crawler/extractor,
-- prior Discovery/AI/provider/SEO/image/pricing regressions,
-- no migration,
-- Windows Catalog tests,
+- Windows PowerShell safety gate,
+- Django check/no-migration,
+- Windows Catalog Epic49 tests,
 - Full Django suite.
 
+Django migration: NONE.  
+Catalog schema migration: NONE.  
 Production: UNTOUCHED.
 
 ---
@@ -243,35 +225,33 @@ Production: UNTOUCHED.
 ## 8) Error Knowledge Base
 
 قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
-Current Windows incident: **ERR-49-031**.
+Current incident: **ERR-49-032**.
 
-- ERR-49-019: fixed Chat SHA ممنوع؛ live fetched snapshot.
-- ERR-49-020: pixel images must not use Tk text-unit sizing.
-- ERR-49-030: final UX boundary must expose real discovery state.
-- ERR-49-031: business-critical URL paste must be explicit; approved batch must not inherit interactive headed-browser default; persisted candidate error must be visible.
+Permanent prevention rule:
+- New controls are additive.
+- Healthy mature acquisition actions remain visible and correctly routed.
+- Regression tests must verify both button visibility/label and the actual command path.
 
 ---
 
-## 9) Employee Release Gate — Next
+## 9) Focused Employee Release Gate — Next
 
-1. Catalog Center بسته باشد.
-2. worktree clean.
+بعد از Merge PR #60:
+1. Catalog Center کاملاً بسته باشد.
+2. Local worktree clean.
 3. live `git fetch --prune origin` + ff-only pull current Epic.
-4. Runner `49.3I.13` با `-LaunchApp`.
-5. چهار روش Paste روی URL تست شود.
-6. exact MakerWorld `cake+stand` Search URL → Preview.
-7. candidate links قبل از Full Fetch دیده شوند.
-8. حداقل 2 candidate → Approve → Full Fetch؛ هیچ browser visible برای هر محصول باز نشود.
-9. اگر row خطا شد `جزئیات خطای انتخابی` دلیل دقیق را نشان دهد.
-10. Direct Product URL مستقل تست شود.
-11. Stop/live state + image fit + AI/provider/model/image-limit/pricing regression.
+4. `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp`.
+5. mature top acquisition actions دیده شوند.
+6. MakerWorld + `single` + `auto` + Product URL واقعی → `شروع اسکن` و mature worker.
+7. همان URL با `دریافت محصول تکی` → همان mature worker؛ Rich Direct HTTP-403 اجباری نباشد.
+8. exact-page Preview/Approve همچنان موجود باشد.
 
-اگر PASS شد کارمندها می‌توانند controlled Catalog data entry را شروع کنند.
+این QA عمداً Focused است؛ ویژگی‌های بی‌ربط دوباره بازطراحی یا تست گسترده نمی‌شوند مگر regression جدید دیده شود.
 
-بعد:
+اگر PASS شد:
 - دقیقاً یک `LOCAL PUBLISH ONLY`
-- Local Django E2E
-- verify title/SEO/source/images/pricing
+- Local Django Store/Admin E2E
+- verify title/SEO/source/images/pricing/visibility
 - explicit owner approval
 
 ---
@@ -316,4 +296,4 @@ Next implementation after Catalog acceptance:
 
 ## 12) Exact Next Step
 
-Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.13 را اجرا کند. Local Publish و Production تا PASS این rerun ممنوع است.
+بعد از Merge PR #60، Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I14_HOTFIX_GATE.ps1 -LaunchApp` را اجرا کند. Local Publish و Production تا PASS این focused regression gate ممنوع است.
