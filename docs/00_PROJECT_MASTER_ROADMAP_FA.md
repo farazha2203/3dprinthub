@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.10 — AI Trace + Safe Title Retry Recovery`  
+**Current Hotfix:** `49.3I.11 — Provider Schema + Trace/Busy Runtime Recovery`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک پروژه ممنوع.
@@ -99,9 +99,10 @@ Private media: /home/sfkilvrs/3dprinthub/private_media
 → 49.3I.8 Observable All-Fields AI
 → 49.3I.9 AI Refresh/SEO Source Completion
 → 49.3I.10 AI Trace/Safe Title Retry
+→ 49.3I.11 Provider Schema/Trace/Busy Runtime Recovery
 ```
 
-Current status: **49.3I.10 GitHub CI SUCCESS; Windows release QA pending; Production untouched.**
+Current status: **49.3I.11 GitHub CI SUCCESS; Windows release QA pending; Production untouched.**
 
 ---
 
@@ -122,7 +123,7 @@ Approved Full Fetch (mature extractor)
   ↓
 Product Workspace
   ↓
-Mature AI Task Center / Trace Console / Pricing / Image Pipeline
+Mature AI Task Center / Exact Schema Adapter / Trace Console / Pricing / Image Pipeline
   ↓
 LOCAL PUBLISH ONLY
   ↓
@@ -176,43 +177,45 @@ Providers:
 - Google Gemini Direct
 - OpenAI Direct
 
-49.3I.7+:
 - real Provider-card fields hydrate securely,
-- model catalogs background-load through mature adapters,
+- model catalogs load through mature adapters,
 - FTP password + Bridge token preserve secure persistence,
 - Secret در SQLite/Git/source/log trace payload ذخیره نمی‌شود.
 
 ---
 
-## 7) AI Execution Contract — 49.3I.10
+## 7) AI Execution Contract — 49.3I.11
 
-### Preserved from 49.3I.8/9
-- real bottom All-Fields uses mature `_phase49_3e_run_ai()` Task Center,
+### Preserved from 49.3I.8–10
+- real bottom All-Fields uses mature Task Center,
 - immediate first-paint,
-- connection/send/wait/receive/save/result-error progress,
+- scrollable sanitized request / response / diagnostics tabs,
 - elapsed timer + Stop Waiting,
-- 210-second All-Fields watchdog,
+- title watchdog 90s,
+- All-Fields watchdog 210s,
 - cancel/timeout stale-result discard,
-- explicit All-Fields rerun refreshes AI-owned fields but protects manual overrides,
-- generic product titles are rejected,
+- explicit rerun refreshes AI-owned fields but protects proven manual overrides,
+- generic product titles rejected,
 - source-grounded Persian ecommerce/SEO content,
 - source website remains publisher/source identity.
 
-### 49.3I.10 / ERR-49-028
-Runtime log proved provider HTTP success could still be followed by UI failure because delayed Tk callbacks captured an `except ... as exc` variable that Python later cleared.
+### 49.3I.11 / ERR-49-029
+Owner trace proved AvalAI could return HTTP 200 + useful Persian content but violate the application schema (`seo_title` vs `seo_title_fa`, `seo_description` vs `seo_description_fa`, wrong `content_notes` type, missing required keys).
 
 Fix:
-- final progress dialog has scrollable **ارسالی / دریافتی / خطا-Diagnostics** tabs,
-- vertical + horizontal scrollbars,
-- sanitized outgoing/incoming HTTP payload/result for OpenAI-compatible providers and Gemini,
-- no key/token/Authorization header exposed,
-- same sanitized trace persisted to existing Phase49 JSONL,
-- title translation reruns with current Provider/Model even when old title exists,
-- title-only watchdog 90 seconds,
-- Stop Waiting/timeout/Workspace close makes late title response non-applicable,
-- generic/non-Persian/too-short title rejected before write,
-- targeted Tk after-callback exception closure freeze prevents cleared-`exc` NameError,
-- no duplicate AI client/network worker.
+- AvalAI/OpenRouter receive the real JSON Schema,
+- strict schema format preferred and exact schema always included in prompt,
+- bounded compatibility fallback,
+- schema validation before persistence,
+- one repair request for a schema-invalid valid JSON,
+- second schema failure becomes a precise visible error,
+- explicit selected model runs directly,
+- model catalog cached within request window,
+- duplicate model probes reduced,
+- `/models` trace summarized to keep Tk responsive,
+- Stop Waiting/watchdog/stale abort immediately releases Workspace busy flags,
+- new Provider/Model request can start immediately,
+- late old output remains stale/non-applicable.
 
 ---
 
@@ -221,10 +224,8 @@ Fix:
 Preserved:
 - Product Workspace = canonical detailed editor.
 - Explorer = visual/lightweight browse/select/preview surface.
-- Card metadata + Extra Large/Large/Medium/Small/List views.
-- Normal/Ctrl/Shift selection + context actions.
 - selection feedback-loop guard.
-- safe Remove From Publish Queue only changes local queue state.
+- safe local queue actions.
 
 Pricing modes مستقل:
 - Fixed
@@ -237,17 +238,17 @@ Range نباید Formula را اجرا کند.
 
 ## 9) Latest Validation
 
-PR #56 merged after CI.
-Validated feature head: `8d1f6e02d6f722b8f047f5d7f7763a5a42516191`.
-Epic merge commit: `256c130f179aaa4253898b0d5ec1ce2696ac4bb5`.
+PR #57 merged after CI.
+Validated feature head: `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`.
+Epic merge commit: `41d37d56437765119b9bb274037e9af7a5defbbe`.
 
 Runs:
-- Phase49.3I `32626758096` — SUCCESS
-- Phase49.3H `32626758114` — SUCCESS
-- Phase49.3G `32626758134` — SUCCESS
-- Full Phase49 + Full Django `32626758119` — SUCCESS
+- Phase49.3I `32628666588` — SUCCESS
+- Phase49.3H `32628666600` — SUCCESS
+- Phase49.3G `32628666558` — SUCCESS
+- Full Phase49 + Full Django `32628666582` — SUCCESS
 
-Verified runner 49.3I.10, ASCII/live Git guard, compile, title retry/watchdog, Tk exception callback safety, sanitized trace UI, stale-result protection, prior source/provider/Explorer/pricing/SEO regressions, no migration, Windows Catalog tests and Full Django suite.
+Verified runner 49.3I.11, ASCII/live-Git guard, compile, exact owner schema regression, strict provider schema, one repair, compact model trace, abort busy release, stale-result safety, prior AI/source/provider/Explorer/pricing/SEO regressions, no migration, Windows Catalog tests and Full Django suite.
 
 Production: UNTOUCHED.
 
@@ -256,7 +257,7 @@ Production: UNTOUCHED.
 ## 10) Error Knowledge Base
 
 قبل از Troubleshooting همیشه `docs/ERRORS.md` خوانده شود.
-Latest relevant: ERR-49-013, 014, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028.
+Latest relevant: ERR-49-013 through ERR-49-029, especially 026/027/028/029 for current AI behavior.
 
 ---
 
@@ -264,19 +265,18 @@ Latest relevant: ERR-49-013, 014, 018, 019, 020, 021, 022, 023, 024, 025, 026, 0
 
 1. Catalog Center بسته باشد.
 2. worktree clean.
-3. `git fetch --prune origin` + ff-only pull current Epic.
-4. Runner `49.3I.10` با `-LaunchApp`.
-5. wrong Persian title → Translate Title.
-6. request/response/error tabs + vertical/horizontal scrollbars visible.
-7. current Provider/Model + source title + sanitized request/response visible.
-8. change Provider/Model and retry.
-9. invalid key/network error stays visible; app remains open.
-10. Stop Waiting and 90s title timeout; late result must not mutate title.
-11. All-Fields trace + preserved 210s watchdog.
-12. low-image source refetch offer.
-13. MakerWorld Preview → Approve → Full Fetch.
-14. Provider/model/FTP/Bridge persistence.
-15. Product open/selection + Fixed/Range/Formula.
+3. live `git fetch --prune origin` + ff-only pull current Epic.
+4. Runner `49.3I.11` با `-LaunchApp`.
+5. همان محصول/مدل AvalAI که قبلاً schema غلط داد دوباره اجرا شود.
+6. schema exact یا حداکثر یک repair request دیده شود.
+7. `/models` trace خلاصه باشد و UI responsive بماند.
+8. Stop Waiting → تغییر Provider/Model → درخواست جدید فوراً قابل اجرا باشد.
+9. پاسخ دیرهنگام قبلی نباید روی محصول اعمال شود.
+10. title / All-Fields trace + watchdogها بررسی شوند.
+11. low-image source refetch offer.
+12. MakerWorld Preview → Approve → Full Fetch.
+13. Provider/model/FTP/Bridge persistence.
+14. Product open/selection + Fixed/Range/Formula.
 
 اگر PASS شد کارمندها می‌توانند controlled Catalog data entry را شروع کنند.
 
@@ -310,4 +310,4 @@ Current supported online provider: ZarinPal.
 
 ## 13) Exact Next Step
 
-Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.10 را اجرا کند. تا قبل از Windows acceptance، Local Publish/Production/live payment ممنوع است.
+Windows باید current Epic را با live Git snapshot guard دریافت کند و `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp` نسخه 49.3I.11 را اجرا کند. تا قبل از Windows acceptance، Local Publish/Production/live payment ممنوع است.
