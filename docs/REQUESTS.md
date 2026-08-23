@@ -88,16 +88,32 @@ Canonical record: `ERR-49-026`.
 
 ### REQ-49I-017 — Explicit All-Fields rerun refreshes AI-owned values
 Status: `GITHUB_UPDATED IN 49.3I.9 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner expectation:
-- changing Provider/Model and pressing `تکمیل هوشمند همه فیلدهای AI` must regenerate AI-owned/generated content,
-- proven manual edits must remain protected,
-- a generic title such as `محصول چاپ سه بعدی` must not be accepted as product-specific completion,
-- Persian title/description/SEO must remain grounded in real source identity/use/theme/facts,
+- changing Provider/Model and pressing All-Fields regenerates AI-owned/generated content,
+- proven manual edits remain protected,
+- generic Persian title is never accepted as product-specific completion,
+- Persian title/description/SEO remains grounded in real source identity/use/theme/facts,
 - low image count may offer mature source refetch before AI,
 - missing local preparation defaults may be filled without fabricating source facts,
 - source website is publisher/source identity while designer remains separate,
-- final Django Product meta/OG/source fields must receive the verified desktop SEO/source payload.
+- Django Product meta/OG/source fields receive verified desktop SEO/source payload.
 Canonical record: `ERR-49-027`.
+
+### REQ-49I-018 — Exact AI request/result diagnostics + safe title retry
+Status: `GITHUB_UPDATED IN 49.3I.10 / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Owner expectation:
+- when AI is slow, fails, returns poor output or times out, the operator must know the exact stage/result instead of guessing,
+- progress dialog must show sanitized data sent and data received,
+- high-volume request/result/error panes must have vertical and horizontal scrollbars,
+- no API key/token/Authorization header may be visible or logged,
+- title translation must rerun even when an old/wrong Persian title already exists,
+- title retry must use the Provider/Model active at the time of the click,
+- title-only wait is bounded to 90 seconds,
+- Stop Waiting/timeout/workspace closure must make late title results stale/non-applicable,
+- provider/network/validation errors remain visible and the app stays open,
+- generic/non-Persian/too-short title output is rejected before write,
+- delayed Tk callbacks must not crash because an `except ... as exc` closure was cleared by Python,
+- the existing All-Fields 210-second stale-result watchdog remains preserved.
+Canonical record: `ERR-49-028`.
 
 ## Operational Release Requests — 2026-08-23
 
@@ -107,7 +123,8 @@ Goal: employees begin entering/reviewing product/catalog data today.
 
 Acceptance:
 - current GitHub Epic pulled by ff-only live snapshot,
-- runner `49.3I.9` passes,
+- runner `49.3I.10` passes,
+- title retry/request-response diagnostics pass,
 - All-Fields product-specific AI/SEO test passes,
 - low-image warning/refetch passes,
 - MakerWorld Preview → Approve → Full Fetch passes,
@@ -141,7 +158,7 @@ Required implementation contract:
 Current supported online provider in repository: `ZarinPal` only.
 
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.9`.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.10`.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
