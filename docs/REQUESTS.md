@@ -27,35 +27,42 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-020: exact-page discovery visibly operable; single Product URL action separate; 228x171 contain image fit. Canonical: ERR-49-030.
 
 ### REQ-49I-021 — Windows URL paste and approved batch Full Fetch must be operator-safe
-Status: `GITHUB_UPDATED IN 49.3I.13 / PR #59 MERGED / FINAL CI SUCCESS / WINDOWS RERUN PENDING`
-Owner acceptance from real Windows QA:
-- exact URL field must accept Ctrl+V,
-- Shift+Insert and right-click Paste must work,
-- a visible Paste Link action must exist,
-- pasted query parameters such as `?keyword=cake+stand` must remain intact,
-- approved multi-candidate Full Fetch must not open/close one visible browser window per selected candidate,
-- approved batch continues to reuse the mature RichPageExtractor in the background,
-- separate direct single-product intake retains configured headed behavior for login/CAPTCHA recovery,
-- original direct-link headed configuration must be restored after batch completion/cancel/error,
-- any failed candidate must expose its persisted `last_error` directly to the operator,
-- no new crawler/extractor, no Preview/Approve contract regression, no data reset.
+Status: `GITHUB_UPDATED IN 49.3I.13 / PR #59 MERGED / FINAL CI SUCCESS / WINDOWS REGRESSION FOUND LATER`
+Preserved acceptance:
+- Ctrl+V / Shift+Insert / right-click / visible Paste Link,
+- pasted query parameters remain intact,
+- approved batch does not flash one visible browser per candidate,
+- failed candidate exposes persisted `last_error`,
+- no second crawler/extractor and no Preview/Approve regression.
 Canonical record: `ERR-49-031`.
+
+### REQ-49I-022 — New discovery controls must not replace healthy mature acquisition
+Status: `IMPLEMENTED IN 49.3I.14 / PR #60 OPEN / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
+Owner acceptance from real Windows QA:
+- restore the previously working top acquisition controls instead of hiding them,
+- specifically preserve `شروع اسکن`, `توقف محترمانه`, `دریافت هوشمند از لینک` and `کشف جدیدها`,
+- `شروع اسکن` must execute the original mature BaseApp scan worker, not the 49.3I Preview wrapper,
+- new `دریافت محصول تکی` must validate Product URL then route through the same mature `mode=single` scan path,
+- Rich Direct Intake remains optional and must not be forced when the mature route is available,
+- existing Preview/Approve/Archive/Paste/error-detail UX remains available alongside the mature workflow,
+- no unrelated UI removal, crawler replacement, DB/media rewrite, migration or Production change.
+Canonical record: `ERR-49-032`.
 
 ## Operational Release Request
 
-### REQ-REL-001 — Hand Catalog Center to employees today
-Status: `REQUESTED / WINDOWS 49.3I.13 RELEASE RERUN PENDING`
-Acceptance now requires:
-- current Epic pulled by live ff-only snapshot,
-- runner `49.3I.13` passes,
-- Windows paste controls pass,
-- exact MakerWorld page Preview remains correct,
-- 2+ approved candidates Full Fetch with no visible per-candidate browser windows,
-- any failed row exposes exact Candidate Error Detail,
-- direct Product URL intake remains healthy,
-- Stop/live state, image fit, All-Fields/Provider/model/image-limit/pricing regressions remain healthy.
+### REQ-REL-001 — Hand Catalog Center to employees as soon as the acquisition gate passes
+Status: `REQUESTED / WINDOWS 49.3I.14 FOCUSED RELEASE QA PENDING`
+Acceptance now requires only the release blocker regression to be rechecked:
+- current Epic pulled with live ff-only snapshot,
+- `RUN_PHASE49_3I14_HOTFIX_GATE.ps1` passes,
+- mature top acquisition controls are visible again,
+- MakerWorld `single` + `auto` + a known real product URL works through `شروع اسکن`,
+- new `دریافت محصول تکی` uses the same mature route and does not force the Rich Direct HTTP-403 path,
+- exact-page Preview/Approve remains present.
 
-After PASS employees may use Catalog Center for controlled data entry. Production still requires exactly one Local Publish E2E + explicit owner approval.
+Do not re-open unrelated accepted UX/features unless a focused regression appears.
+
+After PASS: exactly one Local Publish E2E + Store/Admin verification + explicit owner approval, then Production gate/deploy from GitHub.
 
 ## Next Product Request
 
@@ -76,8 +83,9 @@ Status: `REQUESTED / IMPLEMENTATION AFTER CATALOG ACCEPTANCE`
 
 Current supported online provider: `ZarinPal`.
 
-## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.13`.
+## Canonical Gates
+- existing full Phase49.3I gate: `RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.13`,
+- additive acquisition-regression gate: `RUN_PHASE49_3I14_HOTFIX_GATE.ps1`.
 
 ## Change Rule
-New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
+New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior; healthy controls/features remain frozen unless the owner explicitly asks to replace them. Regression tests must verify both visibility and command routing of preserved operator actions.
