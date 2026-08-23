@@ -66,7 +66,6 @@ Correct Solution: assert secret absence and masked Authorization semantically.
 Prevention Rule: security tests validate no-leak invariants, not cosmetic mask text.
 
 ### ERR-49-013 — Explicit MakerWorld search URL ignored
-Symptoms: operator supplied exact search URL but unrelated default listing was scanned.
 Root Cause: search mode chose configured listing instead of explicit seed.
 Correct Solution: a valid explicit HTTP(S) operator URL is authoritative.
 Prevention Rule: never silently substitute a default discovery URL.
@@ -77,7 +76,7 @@ Correct Solution: `Preview Candidate → Approve/Archive → Approved Full Fetch
 Prevention Rule: preview and acquisition are separate state transitions.
 
 ### ERR-49-015 — Runtime pricing choices created phantom Django migration
-Root Cause: runtime code mutated Django field `choices`, which is migration state metadata.
+Root Cause: runtime code mutated Django field `choices`, which is migration-state metadata.
 Correct Solution: preserve migration-owned field metadata and persist the semantic raw value in the existing CharField.
 Prevention Rule: model metadata changes are migration changes even without SQL type changes.
 
@@ -122,7 +121,6 @@ Correct Solution: hydrate from Windows Credential Store/environment after startu
 Prevention Rule: persistence tests target visible operator widgets as well as storage.
 
 ### ERR-49-024 — Preview `evaluate_all` JavaScript syntactically invalid
-Symptoms: `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`.
 Root Cause: Python string escaping turned intended JS `\n` into a literal newline inside a JS single-quoted string.
 Correct Solution: raw Python JavaScript expression preserving browser-side escape bytes.
 Prevention Rule: Python-embedded JS requires explicit escaping regression tests.
@@ -133,52 +131,62 @@ Correct Solution: hydrate real provider-card variables, rehydrate after Save, an
 Prevention Rule: credential/model readiness tests target the real current Provider Hub controls.
 
 ### ERR-49-026 — Bottom All-Fields AI bypassed mature Task Center
-Symptoms: operator waited ~5 minutes with only a status string and no durable connection/send/receive/result view.
 Root Cause: visible Phase49.3C button still called legacy `generate_ai("commerce")` instead of `_phase49_3e_run_ai()`.
-Correct Solution: route real operator All-Fields/non-Quick actions to mature Task Center; add elapsed time, Stop Waiting, 210-second watchdog and generation-based stale-result discard.
-Prevention Rule: tests must exercise the exact visible button command after all composition layers.
+Correct Solution: route real All-Fields/non-Quick actions to the mature Task Center; add elapsed time, Stop Waiting, 210-second watchdog and generation-based stale-result discard.
+Prevention Rule: tests exercise the exact visible button command after all composition layers.
 
 ### ERR-49-027 — All-Fields rerun could not refresh AI output and generic titles persisted
-Symptoms: specific source title could remain `محصول چاپ 3 بعدی`; changing Provider/Model and rerunning did not replace non-empty generated fields.
-Root Cause: mature Task Center correctly filled blanks only, but explicit refresh had no distinction between manual and AI-owned values.
-Correct Solution: 49.3I.9 refreshes AI-owned/previous-pack fields, protects proven manual overrides, rejects generic titles, strengthens source-grounded Persian/SEO prompt, optionally reuses mature image refetch, and re-applies publisher/SEO source attribution to real Product fields.
+Root Cause: mature Task Center filled blanks only; explicit refresh had no distinction between manual and AI-owned values.
+Correct Solution: 49.3I.9 refreshes AI-owned/previous-pack fields, protects proven manual overrides, rejects generic titles, strengthens source-grounded Persian/SEO prompt, optionally reuses mature image refetch, and re-applies publisher/SEO source attribution.
 Prevention Rule: explicit AI refresh distinguishes generated state from manual ownership and validates product identity before persistence.
 
 ### ERR-49-028 — AI HTTP succeeded but delayed Tk error callback crashed; title retry had no full trace
 Date: 2026-08-23
-Environment: Windows Catalog Center 8.7.1 / Product Workspace / Provider Hub
-Related Phase: 49.3I.10
+Root Cause: delayed Tk callbacks captured `except ... as exc`, but Python clears that exception target when the block exits; title-only action also lacked full observable bounded execution.
+Correct Solution: 49.3I.10 added scrollable sanitized request/response/error tabs, 90-second title watchdog, stale-result protection, explicit current-Provider/Model retry, generic-title validation and targeted exception-closure freezing.
+Verification: PR #56 merged; Phase49.3I `32626758096`, 3H `32626758114`, 3G `32626758134`, Full Phase49 `32626758119` all SUCCESS; no migration.
+Prevention Rule: delayed callbacks must freeze exception values; HTTP success alone is not acceptance—UI application/result state must also be observable.
+
+### ERR-49-029 — Provider returned useful JSON but wrong schema; model trace and stale busy state looked hung
+Date: 2026-08-23
+Environment: Windows Catalog Center 8.7.1 / AvalAI / Product Workspace
+Related Phase: 49.3I.11
 Symptoms:
-- operator could not tell what title request was sent, what was returned, or whether the provider/model failed,
-- an AI request could return HTTP 200 but the UI then raised `NameError: cannot access free variable 'exc' where it is not associated with a value in enclosing scope`,
-- title-only translation had no bounded progress/Stop Waiting/stale-result protection,
-- an already populated but wrong Persian title made retry behavior ambiguous.
+- AvalAI returned HTTP success and a semantically useful Persian product payload,
+- returned aliases included `seo_title` / `seo_description` instead of required `seo_title_fa` / `seo_description_fa`,
+- `content_notes` returned as a string while the Catalog schema requires an array,
+- multiple required fields were missing, so the validator reported `SEO Title فارسی ... خالی برگشت`,
+- the request/response console displayed the complete large `/models` payload and could make Tk appear frozen,
+- after Stop Waiting/watchdog the Workspace could remain busy, blocking an immediate Provider/Model retry until the old worker returned.
 Verified Root Cause:
-- delayed Tk callbacks used lambdas that closed over `except Exception as exc`; Python deliberately clears the exception target at the end of the except block, so the later Tk callback could dereference an empty closure cell,
-- the quick title action had its own minimal background path rather than the mature observable AI progress contract,
-- provider diagnostics logged request summaries but did not expose the actual sanitized payload/result to the operator.
-Correct Solution — Phase49.3I.10:
-- add `phase49_3i_ai_trace_recovery.py` at the final Workspace composition boundary,
-- wrap the final AI progress UI with scrollable outgoing request / incoming response / error-diagnostics tabs,
-- trace sanitized OpenAI-compatible and Google Gemini payloads/responses to the UI and existing Phase49 JSONL,
-- never include API key/token/Authorization header in those trace details,
-- replace title-only action with an explicit rerunnable current-Provider/Model flow,
-- title watchdog = 90 seconds,
-- Stop Waiting/timeout/workspace close invalidates generation; late result is discarded,
-- reject generic/non-Persian/too-short title before DB write,
-- install a narrow Tk `after()` exception-closure freezer that copies a live exception object before Python clears the original `exc` cell; unrelated callbacks remain unchanged.
+- non-OpenAI `AIProviderClient.structured_response()` asked AvalAI/OpenRouter only for a generic `json_object`; it did not transmit the actual repository JSON Schema to those compatible gateways,
+- 49.3I.10 traced the entire model catalog into a Tk `Text` widget on the UI thread,
+- abort/stale paths marked the generation cancelled but did not immediately clear parent busy flags; stale apply wrappers could return before the mature `finally` that normally clears them.
+Correct Solution — Phase49.3I.11:
+- send the actual JSON Schema to AvalAI/OpenRouter using strict `json_schema` where supported,
+- always include exact schema/property names/types in the system contract,
+- compatibility fallback is bounded: strict schema → `json_object` → no response format,
+- validate provider JSON against the required schema before application,
+- if the first valid JSON violates schema, perform exactly one visible repair request carrying the invalid output plus validation errors; reject precisely if repair still fails,
+- use an explicitly selected model directly for the current request,
+- cache model information inside the client request window and avoid duplicate model-catalog probes,
+- summarize `/models` trace as count + bounded sample instead of dumping the full catalog into Tk,
+- on Stop Waiting/watchdog/stale abort, release `_phase49_3e_busy`, `_ai_busy`, source/start flags immediately so another Provider/Model run can start while the old network worker finishes in the background,
+- late old output remains stale/non-applicable.
 Verification:
-- implementation PR #56 merged,
-- Phase49.3I Run `32626758096` SUCCESS,
-- Phase49.3H Run `32626758114` SUCCESS,
-- Phase49.3G Run `32626758134` SUCCESS,
-- Full Phase49 + Full Django Run `32626758119` SUCCESS,
-- dedicated `test_epic49_phase49_3i_ai_trace_recovery.py` PASS,
-- Django migration NONE; Catalog schema migration NONE.
+- implementation PR #57 merged,
+- validated feature head `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`,
+- merge commit `41d37d56437765119b9bb274037e9af7a5defbbe`,
+- Phase49.3I Run `32628666588` SUCCESS,
+- Phase49.3H Run `32628666600` SUCCESS,
+- Phase49.3G Run `32628666558` SUCCESS,
+- Full Phase49 + Full Django Run `32628666582` SUCCESS,
+- dedicated exact-owner-response/schema-repair/model-trace/busy-release tests PASS,
+- Django migration NONE; Catalog schema migration NONE; Production untouched.
 Prevention Rule:
-- never schedule a delayed callback that references a raw `except ... as exc` target without binding/freezing its value,
-- every operator AI action must expose a bounded, scrollable, sanitized request/result/error path and stale-result safety,
-- a successful provider HTTP status is not sufficient acceptance; UI application/result state must also be observable and tested.
+- HTTP 200 + syntactically valid JSON is not enough; provider output must satisfy the exact application schema before persistence,
+- never dump a full provider model catalog into the synchronous Tk display path,
+- cancel/timeout/stale paths must release operator busy state immediately while separately preventing late-result mutation.
 
 ## OPEN / SEPARATE ITEMS
 
