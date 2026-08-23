@@ -1,0 +1,113 @@
+name: Phase49.3I.15 Bulk Discovery Images CI
+
+on:
+  push:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+      - agent/phase49-3i15-bulk-discovery-images
+  pull_request:
+    branches:
+      - epic/phase49-unified-product-slider-sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3i15:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3i15-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3i15-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3i15/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3i15/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3i15/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3i15/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Windows gate encoding and contract
+        shell: pwsh
+        run: |
+          $path = "RUN_PHASE49_3I15_BULK_GATE.ps1"
+          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $path))
+          $nonAscii = @($bytes | Where-Object { $_ -gt 127 })
+          if ($nonAscii.Count -gt 0) { throw "Phase49.3I.15 runner must remain ASCII-only. Non-ASCII bytes: $($nonAscii.Count)" }
+          $text = [System.Text.Encoding]::ASCII.GetString($bytes)
+          [void][scriptblock]::Create($text)
+          if ($text -notmatch 'RUN_PHASE49_3I14_HOTFIX_GATE\.ps1') { throw "Previous regression gate chaining missing" }
+          if ($text -notmatch 'PHASE49_3I15_PRODUCT_LIMIT_MAX=100') { throw "Product-limit marker missing" }
+          if ($text -notmatch 'PHASE49_3I15_IMAGE_LIMIT_MAX=20') { throw "Image-limit marker missing" }
+          if ($text -notmatch 'PHASE49_3I15_ADD_TO_PRODUCTS=NO_DIRECT_FULL_FETCH') { throw "Add-to-products marker missing" }
+          if ($text -notmatch 'NO RESET / NO STASH / NO DELETE / NO PRODUCTION') { throw "Safety marker missing" }
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare isolated runtime directories
+        run: |
+          rm -rf /tmp/3dprinthub-3i15
+          mkdir -p "$MEDIA_ROOT" "$PRIVATE_MEDIA_ROOT" "$STATIC_ROOT" "$CATALOG_BRIDGE_PENDING_ROOT"
+
+      - name: Compile Phase49.3I.15 surfaces
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3i15_bulk_discovery_images.py \
+            catalog_center/app/phase49_3i12_runtime_bridge.py \
+            catalog_center/tests/test_epic49_phase49_3i15_bulk_discovery_images.py
+
+      - name: Phase49.3I.15 targeted tests
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_epic49_phase49_3i15_bulk_discovery_images \
+            tests.test_epic49_phase49_3i14_legacy_scan_restore \
+            tests.test_epic49_phase49_3i13_batch_fetch_paste_recovery \
+            tests.test_epic49_phase49_3i12_discovery_image_recovery \
+            tests.test_epic49_phase49_3i_discovery_review
+
+      - name: Verify focused bulk acquisition contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("catalog_center/app/phase49_3i15_bulk_discovery_images.py").read_text(encoding="utf-8")
+          bridge = Path("catalog_center/app/phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
+          assert "extract_direct_link(" not in text
+          assert "discover_preview_candidates(" in text
+          assert "_dom_image_urls" in text
+          assert "_download_context_images" in text
+          assert "PRODUCT_LIMIT_MAX = 100" in text
+          assert "اضافه کردن انتخاب‌شده‌ها به محصولات" in text
+          assert "_install_phase49_3i15_app(app_class)" in bridge
+          print("PHASE49_3I15_BULK_DISCOVERY_IMAGES=OK")
+          print("PHASE49_3I15_NO_RICH_DIRECT_DEPENDENCY=OK")
+          print("PHASE49_3I15_ADD_TO_PRODUCTS=OK")
+          PY
+
+      - name: Django no-migration safety
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+          echo "PHASE49_3I15_DJANGO_MIGRATION=NONE"
+
+      - name: Launcher smoke
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3i15-launch.txt
+          grep -F "EPIC49_3I_DISCOVERY_REVIEW_QUEUE=ENABLED" /tmp/phase49-3i15-launch.txt
+          grep -F "EPIC49_3I_APPROVAL_BEFORE_FULL_FETCH=ENABLED" /tmp/phase49-3i15-launch.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i15-launch.txt
