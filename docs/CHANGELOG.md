@@ -2,145 +2,95 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-23 — Phase49.3I.8 Observable AI Execution Recovery
+## 2026-08-23 — Phase49.3I.9 AI Refresh + SEO/Source Completion
 
-### Windows QA Input
-- the real bottom Product Workspace action `تکمیل هوشمند همه فیلدهای AI` remained on AvalAI content generation for roughly five minutes,
-- no durable connection/send/receive/save progress window was visible,
-- operator could not tell whether the request was running or stuck and eventually closed the Workspace.
+### Owner QA Input
+- a specific MakerWorld source title could remain translated as generic `محصول چاپ سه بعدی`,
+- changing AI Provider/Model and pressing All-Fields again did not refresh already-populated AI output,
+- source website/publisher identity and final storefront SEO fields needed to survive all mature post-conversion layers,
+- owner requested low-image warning/refetch before full AI completion.
 
-### Root Cause — ERR-49-026
-- the exact Phase49.3C bottom All-Fields action still called legacy `ProductStudio.generate_ai("commerce")`,
-- that legacy worker/status/preview path bypassed mature `_phase49_3e_run_ai()`,
-- therefore the already-existing 49.3I first-paint and 49.3F/3H Task Center progress/result/error/cost path never applied to the real visible button.
+### Root Cause — ERR-49-027
+- mature Task Center deliberately filled only missing fields,
+- there was no distinction between operator-authored values and stale/AI-owned values during an explicit All-Fields refresh,
+- generic legacy placeholders were treated as completed,
+- older import intelligence could overwrite source attribution after conversion.
 
 ### Fixed
-- added `catalog_center/app/phase49_3i_ai_execution_recovery.py`,
-- real bottom All-Fields action now routes to mature `_phase49_3e_run_ai("all")`,
-- non-Quick stage assistant actions route to mature Task Center; image stage keeps image scope,
-- Quick/title-only path remains preserved,
-- no duplicate AI client or network worker was introduced,
-- mature progress now includes elapsed time and a `توقف انتظار` control,
-- operator watchdog is 210 seconds, aligned with the existing single AI request upper-bound,
-- Stop/timeout invalidates the execution generation,
-- any later result from that stale generation is discarded and cannot mutate product/image data,
-- provider/network errors remain visible and the app stays open.
+- explicit All-Fields rerun refreshes AI-owned/previous-pack/generated fields,
+- real manual overrides remain protected,
+- generic Persian product titles are refreshable and new generic AI titles are rejected,
+- Persian ecommerce/SEO prompt is more source-grounded and product-specific,
+- low-image products may offer the existing mature source refetch before AI,
+- factual/local readiness defaults can be filled without inventing source facts,
+- missing price may receive local preparation fallback `500000` Toman,
+- source website is publisher/source identity; designer remains separate,
+- desktop SEO/source data is re-applied to real Django Product meta/OG/source fields after mature conversion/visibility layers,
+- commercial-license and sale approval remain explicit operator confirmations.
 
-### Source / MakerWorld Preservation
-- 49.3I.7 Preview recovery remains composed and regression-tested,
-- Stage-1 Preview remains one-thumbnail/basic-identity only,
-- approved Full Fetch still uses the mature source extractor only after approval,
-- Direct Product intake remains untouched,
-- image limit remains 1..20,
-- no full source extraction rewrite in 49.3I.8.
+### Final CI
+- CI-only PR #55 closed without merge,
+- validated runtime base `390c1aba9aaf5282f44a1ec97955af4e987100ba`,
+- marker `0e58324bfc87e39299b81b1fbe65f9cce21ec91e` not merged,
+- Phase49.3I `32623618842` SUCCESS,
+- Phase49.3H `32623618854` SUCCESS,
+- Phase49.3G `32623618950` SUCCESS,
+- Full Phase49 + Full Django `32623618792` SUCCESS,
+- Django migration NONE,
+- Catalog schema migration NONE,
+- Production untouched.
 
-### Tests / Runner / CI
-- added `catalog_center/tests/test_epic49_phase49_3i_ai_execution_recovery.py`,
-- runner upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.8 and remains ASCII-only/live-Git-snapshot guarded,
-- CI-only PR #53 closed without merge,
-- validated Epic runtime base `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`,
-- marker head `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` not merged,
-- Phase49.3I Run `32620646603` — SUCCESS,
-- Phase49.3H Run `32620646600` — SUCCESS,
-- Phase49.3G Run `32620646605` — SUCCESS,
-- Full Phase49 + Full Django Run `32620646657` — SUCCESS,
-- Django migration: NONE,
-- Catalog schema migration: NONE,
-- Production untouched / not approved.
+### Release Readiness / Payment Discovery
+Owner requested an operational handoff to employees today and online payments.
+Repository review confirmed:
+- employee Catalog release is waiting only on Windows 49.3I.9/manual QA + Local Publish E2E/owner approval for Production,
+- Phase30 ZarinPal is mature for accepted Quote payments,
+- normal Store cart checkout still exposes only bank transfer and redirects to manual payment,
+- StorePayment has a semantic `gateway` method but Store request/callback/verify wiring is not completed.
 
-### Next Gate
-- Windows ff-only pull current Epic,
-- run v49.3I.8 Local Gate with `-LaunchApp`,
-- verify the **bottom** All-Fields AI button paints immediately, shows elapsed connection/send/receive/save/result/error progress and remains responsive,
-- verify Stop Waiting / 210s watchdog prevents late product mutation,
-- verify exact MakerWorld Preview and approved image-limit-20 Full Fetch,
-- recheck Provider keys/model lists + FTP/Bridge persistence,
-- Local Publish remains blocked until manual QA passes.
+The Storefront online-payment bridge is therefore tracked as the next urgent implementation. Live Store payment must not be enabled merely by toggling existing Quote payment settings.
+
+## 2026-08-23 — Phase49.3I.8 Observable AI Execution Recovery
+
+### Root Cause — ERR-49-026
+The exact bottom Product Workspace All-Fields button still used legacy `ProductStudio.generate_ai("commerce")`, bypassing mature Task Center observability.
+
+### Fixed
+- real bottom All-Fields → mature `_phase49_3e_run_ai("all")`,
+- non-Quick stage AI → mature Task Center,
+- immediate first-paint preserved,
+- elapsed timer + Stop Waiting,
+- 210-second operator watchdog,
+- late cancelled/timed-out result discarded,
+- no duplicate AI client/network worker.
+
+### Validation
+CI-only PR #53 closed without merge; Phase49.3I/3H/3G and Full Phase49 + Full Django all SUCCESS. Django migration NONE. Production untouched.
 
 ## 2026-08-22 — Phase49.3I.7 Preview + Provider Hub Recovery
-
-### Windows QA Input
-- URL routing to MakerWorld Search/Group Preview was correct.
-- Preview failed before producing candidates with `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`.
-- real Phase49.3F AvalAI/OpenRouter/other Provider-card API Key fields still appeared empty after update/restart.
-- Provider model lists were therefore not reliably visible to the operator.
-
-### Root Causes
-- `ERR-49-024`: Python string escaping converted the intended JavaScript `\n` escape into a literal newline inside a single-quoted browser expression passed to Playwright `evaluate_all()`.
-- `ERR-49-025`: 49.3I.6 hydrated legacy `ai_key` but the actual modern Provider Hub uses `_ai_hub_key_vars`; mature Provider Save securely persisted the key and then cleared those real widget variables.
-
-### Fixed — Preview
-- added `catalog_center/app/phase49_3i_preview_recovery.py`.
-- raw Python JavaScript string preserves valid browser-side escaping.
-- existing `candidates_from_dom_rows()` remains the Stage-1 lightweight parser.
-- no Direct Product or Full Fetch function is called by the recovery layer.
-- mature `classic_methods.discover_classic` / `collect_classic_exact` remain untouched.
-- business flow preserved: Search → one-thumbnail/basic-identity Preview → Approve → Full Fetch → selected image limit 1..20.
-
-### Fixed — AI Provider Hub
-- real AvalAI/OpenRouter/OpenAI/Google `_ai_hub_key_vars` hydrate from Windows Credential Store.
-- Provider fields rehydrate after mature secure Save clears them.
-- OpenRouter management/OpenAI admin masked fields hydrate when stored.
-- FTP password + Bridge token secure hydration remains preserved.
-- configured Provider model catalogs background-load through the existing `AIProviderClient.list_model_info()` path.
-- existing Model ID combobox/cache and manual model picker/API refresh remain authoritative.
-- no secret is written to SQLite/Git/source/logs.
-
-### Tests / Runner / CI
-- added `test_epic49_phase49_3i_preview_recovery.py`.
-- expanded `test_epic49_phase49_3i_secret_persistence.py` for real Provider Hub variables and model catalog visibility.
-- runner upgraded to `RUN_PHASE49_3I_LOCAL_GATE.ps1` v49.3I.7; still ASCII-only for Windows PowerShell 5.1 and live-Git-snapshot guarded.
-- CI-only PR #52 closed without merge.
-- validated runtime base `4e0b1b7f0f8934a03ab74037bdce5f9abe55b425`.
-- marker head `5097f45f069e40af64d452ffaa8cd07399a977f2` not merged.
-- Phase49.3I Run `32585956198` — SUCCESS.
-- Phase49.3H Run `32585956149` — SUCCESS.
-- Phase49.3G Run `32585956156` — SUCCESS.
-- Full Phase49 + Full Django Run `32585956155` — SUCCESS.
-- Django migration: NONE.
-- Catalog schema migration: NONE.
-- Production untouched / not approved.
-
-### Next Gate
-- Windows ff-only pull current Epic,
-- run v49.3I.7 Local Gate with `-LaunchApp`,
-- verify secure keys/tokens after restart,
-- verify Provider model lists load visibly,
-- verify exact MakerWorld Preview works and remains lightweight,
-- approve one candidate with image limit 20 and confirm Full Fetch starts only after approval,
-- Local Publish remains blocked until manual QA passes.
+- fixed MakerWorld Preview browser JavaScript escaping (`ERR-49-024`),
+- real Provider-card keys hydrate from Windows Credential Store,
+- Provider model catalogs background-load through mature adapters,
+- FTP/Bridge persistence preserved,
+- no secret in SQLite/Git/source/logs,
+- all required CI SUCCESS, no migration, Production untouched.
 
 ## 2026-08-22 — Phase49.3I.6 Secure Credential Field Persistence
-
-### Changed
-- initial secure-field hydration layer added for legacy AI key, FTP password and Bridge token.
-- Windows Credential Store/environment remained source of truth.
-- CI-only PR #51 closed without merge.
-- Phase49.3I `32583277412`, 49.3H `32583277584`, 49.3G `32583277406`, Full Phase49 `32583277418` all SUCCESS.
-- later Windows QA proved modern Provider Hub variables were not covered; superseded by 49.3I.7 / `ERR-49-025`.
+- initial secure hydration for legacy AI/FTP/Bridge fields,
+- later superseded by 49.3I.7 for real Provider Hub variables.
 
 ## 2026-08-22 — Phase49.3I.5 Selection Loop Guard + Compact Product Metadata
-
-### Changed
-- fixed hidden Treeview selection feedback loop (`ERR-49-022`).
-- compact Product ID/state/source/image/date/publish metadata added.
-- Persian filter/sort controls restored.
-- CI-only PR #50 closed without merge; all required Phase49 CI SUCCESS.
-- no migration; Production untouched.
+- fixed hidden Treeview selection feedback loop (`ERR-49-022`),
+- compact Product metadata/filters/sorts preserved.
 
 ## 2026-08-22 — Phase49.3I.4 Explorer Product Gallery + Source URL Routing
-
-### Changed
-- fixed clipped thumbnail receiver (`ERR-49-020`).
-- added Explorer view modes/multi-select/context actions.
-- source `model_url_pattern` became authoritative Product-vs-Group routing boundary (`ERR-49-021`).
-- non-product source URLs route Preview-first.
-- no migration; Production untouched.
+- fixed clipped thumbnails (`ERR-49-020`),
+- Explorer view modes/multi-select/context actions,
+- source `model_url_pattern` became authoritative Product-vs-Group routing (`ERR-49-021`).
 
 ## 2026-08-22 — Earlier Phase49.3I Foundations
-
 Preserved:
-- exact Search/Listing URL authority (`ERR-49-013`),
+- exact Search/Listing authority (`ERR-49-013`),
 - Preview before Full Fetch (`ERR-49-014`),
 - image limit default 10 / hard max 20,
 - AI first-paint (`ERR-49-018`),
