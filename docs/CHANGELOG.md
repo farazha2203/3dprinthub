@@ -2,6 +2,35 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-23 — Phase49.3I.19 Canonical Source Identity Before AI
+
+### Owner Evidence
+A MakerWorld product with exact URL `2896217-ribbed-cake-stand-cookie-platter` entered Catalog with a generic model-number title. Image metadata, Persian title, descriptions and SEO were then generated from that wrong identity.
+
+### Root Fix
+- reject generic source titles such as `Model <id>`, `MakerWorld model <id>` and Persian equivalents,
+- preserve a valid scraped/page title when available,
+- use the exact MakerWorld model URL slug as deterministic fallback identity,
+- canonicalize before candidate persistence and again before Add-to-Products,
+- canonicalize legacy Product source context before AI,
+- add Product Workspace actions to repair source title and optionally rebuild all AI text/SEO from the corrected source identity,
+- keep 49.3I.18 manual authoritative Persian title and bulk image metadata editing unchanged.
+
+Focused tests include:
+- `2845731-cake-stand` → `Cake Stand`,
+- `2896217-ribbed-cake-stand-cookie-platter` → `Ribbed Cake Stand Cookie Platter`,
+- generic model-number placeholders never become authoritative.
+
+Implementation anchor: `d9d3d617ed22dd3096379e668697f0f9fab87ca0`. Windows Local gate pending. No migration. Production untouched.
+
+## 2026-08-23 — Phase49.3I.18 Operator Editing / Bulk Image Metadata / Authoritative AI Rebuild
+- global Windows clipboard contract for editable Tk/Ttk fields,
+- bulk image filename/Alt/Title/Caption operations using existing metadata contracts,
+- explicit operator-authoritative Persian product name,
+- replace wrong product name across generated editorial fields,
+- full AI rebuild path for operator-confirmed identity,
+- additive-only workspace composition; no DB migration; Production untouched.
+
 ## 2026-08-23 — Phase49.3I.17 Single Active AI Runtime
 
 ### Windows Evidence
