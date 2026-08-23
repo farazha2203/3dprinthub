@@ -5,7 +5,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.9"
+$RunnerVersion = "49.3I.10"
 $RunnerEncodingContract = "ASCII_ONLY_FOR_WINDOWS_POWERSHELL_5_1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
@@ -140,6 +140,7 @@ $requiredFiles = @(
     "catalog_center\app\phase49_3i_local_qa_hotfix.py",
     "catalog_center\app\phase49_3i_ai_execution_recovery.py",
     "catalog_center\app\phase49_3i_ai_refresh_completion.py",
+    "catalog_center\app\phase49_3i_ai_trace_recovery.py",
     "catalog_center\app\phase49_3i_pricing_modes.py",
     "catalog_center\app\phase49_3i_secret_persistence.py",
     "store\phase49_3i_pricing_modes.py",
@@ -152,6 +153,7 @@ $requiredFiles = @(
     "catalog_center\tests\test_epic49_phase49_3i_local_qa_hotfix.py",
     "catalog_center\tests\test_epic49_phase49_3i_ai_execution_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_ai_refresh_completion.py",
+    "catalog_center\tests\test_epic49_phase49_3i_ai_trace_recovery.py",
     "catalog_center\tests\test_epic49_phase49_3i_pricing_modes.py",
     "catalog_center\tests\test_epic49_phase49_3i_secret_persistence.py",
     "store\test_phase49_3i_pricing_modes.py",
@@ -179,6 +181,9 @@ Write-Host "PHASE49_3I_IMAGE_PREFLIGHT_REFETCH=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_GENERIC_TITLE_GUARD=ENABLED" -ForegroundColor Green
 Write-Host "PHASE49_3I_DEFAULT_PRICE=500000" -ForegroundColor Green
 Write-Host "PHASE49_3I_SEO_SOURCE_SYNC=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_AI_TRACE_CONSOLE=ENABLED" -ForegroundColor Green
+Write-Host "PHASE49_3I_TITLE_WATCHDOG=90S" -ForegroundColor Green
+Write-Host "PHASE49_3I_EXCEPTION_CALLBACK_GUARD=ENABLED" -ForegroundColor Green
 
 Step "05. COMPILE PHASE49.3I"
 Push-Location $Root
@@ -194,6 +199,7 @@ try {
         "catalog_center\app\phase49_3i_local_qa_hotfix.py",
         "catalog_center\app\phase49_3i_ai_execution_recovery.py",
         "catalog_center\app\phase49_3i_ai_refresh_completion.py",
+        "catalog_center\app\phase49_3i_ai_trace_recovery.py",
         "catalog_center\app\phase49_3i_pricing_modes.py",
         "catalog_center\app\phase49_3i_secret_persistence.py",
         "store\phase49_3i_pricing_modes.py",
@@ -218,6 +224,7 @@ try {
         "tests.test_epic49_phase49_3i_local_qa_hotfix",
         "tests.test_epic49_phase49_3i_ai_execution_recovery",
         "tests.test_epic49_phase49_3i_ai_refresh_completion",
+        "tests.test_epic49_phase49_3i_ai_trace_recovery",
         "tests.test_epic49_phase49_3i_pricing_modes",
         "tests.test_epic49_phase49_3i_secret_persistence",
         "tests.test_epic49_phase49_3h_image_limits",
@@ -300,19 +307,20 @@ Step "10. PHASE49.3I AUTOMATED LOCAL GATE PASSED"
 Write-Host "Runner     = $RunnerVersion" -ForegroundColor Green
 Write-Host "Production = UNTOUCHED" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Manual QA - Phase49.3I.9 AI refresh/completion:" -ForegroundColor Cyan
-Write-Host "1) Click the real bottom all-fields AI button twice, changing Provider/Model before the second run."
-Write-Host "2) AI-owned/generated Persian title/content/SEO must refresh; a manual override must remain untouched."
-Write-Host "3) A generic title such as generic 3D product must never be accepted as the new Persian title."
-Write-Host "4) If images are below the product image target, ask before source refetch; Yes must reuse mature refetch and then continue AI."
-Write-Host "5) Source/publisher name must resolve from the source registry, e.g. MakerWorld."
-Write-Host "6) Empty price min/max use the 500000 Toman local default without inventing source price."
-Write-Host "7) Empty material/color selections may use only real active local inventory, preferring an AI-recommended matching material."
-Write-Host "8) Suggested category may replace only empty/external or prior-AI category, never a manual category."
-Write-Host "9) Operator license/sale confirmations remain explicit and do not publish Production."
-Write-Host "10) Progress must remain visible/responsive with Stop Waiting and 210-second stale-result guard."
+Write-Host "Manual QA - Phase49.3I.10 AI observability/retry:" -ForegroundColor Cyan
+Write-Host "1) Use Translate Title on a product with a wrong Persian title; request/response/error tabs must be visible and scrollable."
+Write-Host "2) The title action must show Provider/Model, source title, exact sanitized HTTP payload/response and final result/error."
+Write-Host "3) A generic title must be rejected and the existing product value must not be replaced by generic output."
+Write-Host "4) Stop Waiting must leave the app responsive; any late result must not update the product."
+Write-Host "5) Title-only AI must stop waiting after 90 seconds; full AI keeps the 210-second stale-result watchdog."
+Write-Host "6) Invalid Provider/API key/network errors must stay visible in Diagnostics; the Product Workspace must remain open."
+Write-Host "7) Click the real bottom all-fields AI button twice, changing Provider/Model before the second run."
+Write-Host "8) All-fields AI must also show sanitized request/response traffic in the scrollable trace console."
+Write-Host "9) AI-owned/generated Persian title/content/SEO must refresh; a manual override must remain untouched."
+Write-Host "10) If images are below target, source refetch remains opt-in and reuses the mature refetch path."
 Write-Host "11) MakerWorld Preview -> Approve -> Full Fetch and image limit 1..20 must remain intact."
-Write-Host "12) LOCAL PUBLISH is still blocked until this visual/data QA passes."
+Write-Host "12) Source/publisher, SEO sync, 500000 local fallback and explicit license/sale confirmations remain unchanged."
+Write-Host "13) LOCAL PUBLISH is still blocked until this visual/data QA passes."
 
 if ($LaunchApp) {
     Step "11. START CATALOG CENTER FOR PHASE49.3I MANUAL QA"
