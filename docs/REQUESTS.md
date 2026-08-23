@@ -2,198 +2,146 @@
 
 Last Updated: 2026-08-23
 
-## Phase49.3H
+Older detailed request history remains available in Git history. This file keeps the currently active/relevant acceptance contracts.
+
+## Phase49.3H — Preserved
 
 ### REQ-49H-001 — Unified SEO execution visibility
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
-- every SEO-related action shows execution/result/error state,
-- provider/model/request/tokens/cost/log where available,
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- SEO/AI actions show execution/result/error state.
+- provider/model/request/tokens/cost/log where available.
 - sanitized recoverable errors/results.
 
 ### REQ-49H-002 — Per-product AI/SEO cost
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
-- record real AI/SEO cost per product where provider data supports it,
-- internal publish cost receipt,
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- record real provider-supported cost only.
 - never invent unsupported cost.
 
 ### REQ-49H-003 — Controlled image intake
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / LOCAL QA PENDING`
-- operator image limit,
-- default 10,
-- hard max 20,
-- applies to persisted/selected/downloaded images,
-- per-product cap must not stop later products.
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- default 10, hard max 20.
+- persisted/selected/downloaded image cap remains consistent.
 
-## Phase49.3I
+## Phase49.3I — Preserved Core Requests
 
 ### REQ-49I-001 — Exact search URL discovery
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- explicit MakerWorld/Search/Listing URL is authoritative,
-- do not silently replace with default popular/download listing.
+Explicit MakerWorld/Search/Listing URL is authoritative.
 
-### REQ-49I-002 — Two-stage candidate review before full fetch
+### REQ-49I-002 — Preview before Full Fetch
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- Preview: one thumbnail + title/basic source identity only,
-- Full Fetch only after approval,
-- image limit remains selectable 1..20.
+Preview is one thumbnail + basic identity only. Full Fetch only after approval.
 
 ### REQ-49I-003 — Archive / not-needed candidate
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- archive without Full Fetch,
-- preserve blocked identity so it does not reappear,
-- no destructive source deletion.
+Archive blocks rediscovery without Full Fetch/destructive deletion.
 
 ### REQ-49I-004 — Duplicate guard
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- prevent duplicate source products by source code + external id + normalized URL.
+Dedupe by source + external id + normalized URL.
 
 ### REQ-49I-005 — Safe source text persistence
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- discard unexpected scraped CJK/Cyrillic/emoji garbage from source text,
-- preserve URLs/source identity,
-- preserve Persian editorial `_fa` fields,
-- no historical mass rewrite.
+Unexpected scraped script garbage must not pollute editorial data; source URL/identity and Persian fields remain preserved.
 
-### REQ-49I-006 — Products surface remains visual/lightweight
+### REQ-49I-006 — Visual/lightweight Products Explorer
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- usable product image,
-- product name,
-- compact Product ID/state/source/image-count/date/publish-state,
-- Edit Product action,
-- click image for large preview,
-- detailed editing stays in Product Workspace.
+Explorer remains browse/select/preview oriented; Product Workspace remains canonical detailed editor.
 
-### REQ-49I-007 — Three explicit pricing modes
+### REQ-49I-007 — Fixed / Range / Formula pricing
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-1. Fixed exact price,
-2. Range min/max,
-3. Formula/Dynamic.
-- Range must not invoke Formula.
-
-### REQ-49I-008 — Full AI autofill progress immediately
-Status: `SUPERSEDED/EXTENDED BY REQ-49I-016 / WINDOWS QA PENDING`
-- first progress paint before synchronous preflight,
-- then connection/send/receive/save/result stages,
-- success/result/error stays visible and sanitized.
-Canonical root cause for the original preflight gap: `ERR-49-018`.
+Range must never invoke Formula.
 
 ### REQ-49I-009 — Windows handoff uses live GitHub snapshot
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / ACTIVE`
-- fetch current remote inside same execution,
+- fetch current remote inside the gate,
+- clean exact Epic branch,
 - Local HEAD equals fetched Remote Epic HEAD,
-- dirty Local stops for inspection,
 - ff-only pull,
 - no reset/stash/delete shortcut,
-- runner remains ASCII-only for Windows PowerShell 5.1.
-Canonical root cause: `ERR-49-019`.
+- ASCII-only Windows PowerShell runner.
+Canonical record: `ERR-49-019`.
 
-### REQ-49I-010 — Windows Explorer-style Products browsing
+### REQ-49I-014 — Real Provider Hub credentials/model lists persist
 Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- full thumbnails,
-- Extra Large / Large / Medium / Small / List,
-- persistent view preference,
-- normal/Ctrl/Shift selection,
-- Select All / Clear,
-- right-click actions,
-- safe Remove From Publish Queue.
-Canonical root cause: `ERR-49-020`.
-
-### REQ-49I-011 — Product URL vs Group/Category/Search routing
-Status: `WINDOWS OWNER QA CONFIRMED`
-- true product URL → mature direct intake,
-- Group/Category/Search/Listing/sub-branch → Preview first,
-- Full Fetch only after approval,
-- source `model_url_pattern` is authoritative.
-Canonical root cause: `ERR-49-021`.
-
-### REQ-49I-012 — Product selection/open never loops
-Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-- one Open action → one Product Workspace,
-- one-way Treeview sync,
-- re-entrancy guard,
-- state-only reverse callback,
-- useful Persian filters/sorts.
-Canonical root cause: `ERR-49-022`.
-
-### REQ-49I-013 — Token/API Key/FTP credentials persist visibly and securely
-Status: `SUPERSEDED BY 49.3I.7 REAL PROVIDER-HUB FIX / WINDOWS QA PENDING`
-- Windows Credential Store/environment stays source of truth,
-- FTP password + Bridge token remain masked/populated after Save/restart,
-- AI credentials remain masked/populated,
-- no secret in SQLite/Git/source/logs.
-Canonical root cause: `ERR-49-023`.
-
-### REQ-49I-014 — Real AI Provider Hub keys and model lists survive updates and stay visible
-Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 - AvalAI/OpenRouter/OpenAI/Google real Provider-card fields hydrate from secure storage,
-- Provider keys entered once do not visually disappear after update/restart,
-- configured Provider model catalogs background-load through the mature API client,
-- Model ID/model picker remains visible/selectable,
-- manual API refresh remains available,
-- no secret moves into SQLite/Git/source/logs.
-Canonical root cause: `ERR-49-025`.
+- model catalogs remain visible/selectable,
+- FTP/Bridge credentials remain secure/persistent,
+- no secret in SQLite/Git/source/logs.
+Canonical record: `ERR-49-025`.
 
-### REQ-49I-015 — Search Preview works without breaking mature full source extraction
-Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner workflow:
-1. Search/Listing URL is scanned,
-2. show lightweight candidate(s) with one thumbnail/basic identity,
-3. operator approves wanted product,
-4. only then follow product link and run mature full extraction,
-5. download/persist operator-selected image count, e.g. 20,
-6. rejected/archived candidates are not full-fetched.
-- raw/escaped Preview JavaScript fixes `Locator.evaluate_all` syntax regression,
-- mature `extract_direct_link` / direct Product / approved Full Fetch remain preserved.
-Canonical root cause: `ERR-49-024`.
+### REQ-49I-015 — MakerWorld Preview does not break mature source acquisition
+Status: `GITHUB_UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Search/Listing → lightweight Preview → Approve → mature Full Fetch → selected image limit.
+Canonical record: `ERR-49-024`.
 
-### REQ-49I-016 — Every real operator AI action must show a bounded, observable execution path
-Status: `GITHUB UPDATED IN 49.3I.8 / FINAL CI SUCCESS / WINDOWS QA PENDING`
-Owner report:
-- the bottom `تکمیل هوشمند همه فیلدهای AI` stayed on AvalAI content generation for ~5 minutes,
-- no useful progress window showed connection/send/receive/save state,
-- operator could not tell whether the request was working or stuck,
-- the Workspace eventually had to be closed.
-
-Required contract:
-- the actual visible bottom All-Fields action must use the mature Task Center,
-- immediate startup progress before preflight,
-- visible connection / data sent / waiting / response received / save / result-error path,
-- elapsed time visible continuously,
-- a `توقف انتظار` action,
-- bounded operator wait instead of indefinite-looking wait,
-- provider/network errors remain visible and do not close the app,
-- cancel/timeout must make any late network result stale so it cannot overwrite product data,
-- no duplicate AI client/worker implementation.
-
-Verified root cause:
-- Phase49.3C `_phase49_3c_all_ai()` still called legacy `generate_ai("commerce")`, bypassing `_phase49_3e_run_ai()` and therefore bypassing the already-correct 49.3I/3H progress stack.
+### REQ-49I-016 — All real AI actions are bounded and observable
+Status: `GITHUB_UPDATED IN 49.3I.8 / FINAL CI SUCCESS / WINDOWS QA PENDING`
+- real bottom All-Fields action uses mature Task Center,
+- immediate first-paint,
+- connection/send/wait/receive/save/result-error progress,
+- elapsed timer + Stop Waiting,
+- 210-second operator watchdog,
+- late cancelled/timed-out result cannot mutate product,
+- no duplicate AI client/network worker.
 Canonical record: `ERR-49-026`.
 
+### REQ-49I-017 — Explicit All-Fields rerun refreshes AI-owned values
+Status: `GITHUB_UPDATED IN 49.3I.9 / FINAL CI SUCCESS / WINDOWS QA PENDING`
+Owner expectation:
+- changing Provider/Model and pressing `تکمیل هوشمند همه فیلدهای AI` must regenerate AI-owned/generated content,
+- proven manual edits must remain protected,
+- a generic title such as `محصول چاپ سه بعدی` must not be accepted as product-specific completion,
+- Persian title/description/SEO must remain grounded in real source identity/use/theme/facts,
+- low image count may offer mature source refetch before AI,
+- missing local preparation defaults may be filled without fabricating source facts,
+- source website is publisher/source identity while designer remains separate,
+- final Django Product meta/OG/source fields must receive the verified desktop SEO/source payload.
+Canonical record: `ERR-49-027`.
+
+## Operational Release Requests — 2026-08-23
+
+### REQ-REL-001 — Hand Catalog Center to employees today
+Status: `REQUESTED / WINDOWS RELEASE QA PENDING`
+Goal: employees begin entering/reviewing product/catalog data today.
+
+Acceptance:
+- current GitHub Epic pulled by ff-only live snapshot,
+- runner `49.3I.9` passes,
+- All-Fields product-specific AI/SEO test passes,
+- low-image warning/refetch passes,
+- MakerWorld Preview → Approve → Full Fetch passes,
+- Provider/model/FTP/Bridge persistence passes,
+- Product open/selection and pricing modes pass.
+
+After this QA passes employees may use Catalog Center for data entry. Production publishing still requires Local Publish E2E + explicit owner approval.
+
+### REQ-PAY-001 — Normal Store checkout must support online payment
+Status: `REQUESTED / IMPLEMENTATION REQUIRED`
+Verified current gap:
+- mature Phase30 ZarinPal online payment exists for accepted Quote payments,
+- normal Store checkout currently exposes only `bank_transfer`,
+- active Store checkout always redirects to `store:manual_payment`,
+- `StorePayment` has a `gateway` method but Store request/callback/verify integration is not complete.
+
+Required implementation contract:
+- reuse mature ZarinPal/security semantics rather than build a parallel payment stack,
+- server owns/recomputes the order amount,
+- random/idempotent attempt identity,
+- callback cannot trust browser amount/status,
+- stored Authority must match callback Authority,
+- server-to-server Verify required before marking paid,
+- repeated callback cannot double-finalize payment/order/inventory,
+- cancelled/failed/temporary provider errors remain recoverable,
+- manual bank-transfer payment remains available,
+- Sandbox E2E before live merchant activation,
+- secrets remain in environment/secure server configuration only,
+- one owner-approved low-value Production payment before public live activation.
+
+Current supported online provider in repository: `ZarinPal` only.
+
 ## Canonical Runner
-`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.8`.
-
-Protected contracts:
-- ASCII-only Windows PowerShell 5.1 compatibility,
-- live fetched GitHub snapshot guard,
-- Preview JavaScript escape regression,
-- Preview-only lightweight candidate boundary,
-- real Provider-card secure hydration,
-- Provider model-catalog auto-load/cache/combobox visibility,
-- real bottom All-Fields AI → mature Task Center routing,
-- elapsed progress + Stop Waiting + 210s operator watchdog,
-- stale late AI result discard,
-- selection-loop and Explorer regressions,
-- Product-vs-Group routing,
-- Phase49.3H/3G + Django migration/full-suite regressions.
-
-## Preserved Requests From Prior Phases
-- Product Workspace remains canonical detailed editor.
-- AI provider/model remains selectable and persistent.
-- Image SEO is selected-only and text-only; image bytes/files/URLs are not sent to the mature Task Center AI path.
-- AI provenance/manual override/disable remains protected.
-- source refresh preserves human edits.
-- Local vs Production publish remains fail-closed.
-- Production cannot be touched before explicit owner approval.
+`RUN_PHASE49_3I_LOCAL_GATE.ps1` v`49.3I.9`.
 
 ## Change Rule
-A new request does not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact broken boundary.
+New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
