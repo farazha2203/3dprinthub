@@ -1,156 +1,138 @@
 # CURRENT PROJECT STATE
 
-Updated: 2026-08-22
+Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Branch: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.7 — Preview + Provider Hub Recovery`
+Active Hotfix: `49.3I.8 — Observable AI Execution Recovery`
 Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-Windows 49.3I.5/49.3I.6 QA established two facts:
-- Product URL vs Group/Category/Search/sub-branch routing is corrected.
-- the latest operator run still exposed two regressions: Preview candidate extraction failed with Playwright JavaScript syntax error, and real AI Provider Hub key fields/model lists were not staying visible.
+The latest Windows Product Workspace screenshot exposed a new execution-path bug in the bottom operator action `✨ تکمیل هوشمند همه فیلدهای AI`.
 
-Phase49.3I.7 fixes only those broken boundaries and preserves the mature direct/full source extraction path.
+The visible status stayed on `avalai ... در حال تولید محتوا...` for roughly five minutes with no durable progress window. The operator had no reliable indication of connection/send/receive/save state and eventually had to close the Workspace.
 
-## Owner Evidence From Windows
-MakerWorld exact URL:
-`https://makerworld.com/en/search/models?keyword=cake+stand`
+Repository inspection proved this was not the same bug as `ERR-49-018`.
 
-Observed log:
-- `PHASE49_3I_URL_ROUTE=preview_listing`
-- `PHASE49_3I_PREVIEW_TARGET=...cake+stand`
-- `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`
-- `candidates=0 failed=1 full_fetch=0`
-
-This proves URL routing was correct and the failure was inside the new Stage-1 Preview DOM evaluator.
-
-## ERR-49-024 — Preview JavaScript Escape Regression
+## ERR-49-026 — Bottom All-Fields AI Button Bypassed The Mature Task Center
 Verified Root Cause:
-- Stage-1 Preview passed a normal Python triple-quoted JavaScript expression to `Locator.evaluate_all()`.
-- the JavaScript contained `+'\n'+` at Python source level.
-- Python converted it into a literal newline before Playwright evaluated the expression.
-- the browser therefore received an invalid newline inside a JavaScript single-quoted string and raised `SyntaxError: Invalid or unexpected token`.
+- the exact bottom button is created by `phase49_3c_operator_recovery.py`,
+- `_phase49_3c_all_ai()` still called legacy `ProductStudio.generate_ai("commerce")`,
+- that legacy worker only changed a status string and later opened the old preview dialog,
+- it did **not** call the mature Phase49.3E/3F/3H `_phase49_3e_run_ai()` path,
+- therefore the existing 49.3I first-paint progress handoff, connection/send/receive progress, 49.3H result/error drawer and execution observability never applied to this real operator button.
 
-Correct Solution:
-- new `catalog_center/app/phase49_3i_preview_recovery.py`,
-- raw Python JavaScript string preserves the browser-side `\n` escape,
-- reuses existing lightweight `candidates_from_dom_rows()`,
-- only Stage-1 Preview is replaced,
-- mature `classic_methods.discover_classic` / `collect_classic_exact` and approved Full Fetch are untouched.
+This explains why earlier AI-progress tests could pass while the screenshot button still looked frozen.
 
-Required workflow remains:
-`Search/Listing → Preview candidate + one thumbnail → operator approval → mature full product fetch → selected image limit (e.g. 20)`.
+## Phase49.3I.8 Implemented Delta
+New additive module:
+`catalog_center/app/phase49_3i_ai_execution_recovery.py`
 
-## ERR-49-025 — Real Provider Hub Keys Were Not Hydrated
-Verified Root Cause:
-- 49.3I.6 hydrated legacy `ai_key`, FTP password and Bridge token,
-- the real Phase49.3F AI Center uses `_ai_hub_key_vars` per Provider,
-- mature Provider Save writes the key to Windows Credential Store then clears `_ai_hub_key_vars[provider]`,
-- therefore the current visible AvalAI/OpenRouter/OpenAI/Google cards still looked empty and model picker could behave as if no key existed.
+Behavior:
+- routes the real bottom `all fields` operator button into `_phase49_3e_run_ai("all")`,
+- routes non-Quick `AI this stage` actions into the same mature Task Center (`images` keeps image scope),
+- preserves the existing Quick/title-only path,
+- does not create another AI client or network worker,
+- preserves 49.3I immediate first-paint before synchronous preflight,
+- then uses the mature 49.3H progress/result/error/cost stack,
+- adds an always-visible elapsed timer,
+- adds `توقف انتظار`,
+- adds a 210-second operator watchdog matching the existing single AI request upper-bound contract,
+- Stop/timeout invalidates the execution generation,
+- a late network result from a cancelled/timed-out run is discarded and cannot mutate the product,
+- an error remains visible; the application is not closed.
 
-Correct Solution in 49.3I.7:
-- hydrate real per-provider card variables from Windows Credential Store,
-- rehydrate them after mature secure Save,
-- hydrate OpenRouter management/OpenAI admin masked fields when stored,
-- keep FTP password + Bridge token hydration,
-- background-load model catalogs for configured Providers into the existing Model ID combobox/cache,
-- keep manual model search/API refresh,
-- no credential moves into SQLite/Git/source/logs.
+The existing blocking network worker is not force-killed from Tk/Python. It may finish in the background, but after cancellation/timeout its result is explicitly stale and cannot be applied.
 
-## Provider Model Contract
-Existing mature `AIProviderClient` remains authoritative:
-- AvalAI → authenticated `/v1/models`,
-- OpenRouter → `/api/v1/models`,
-- OpenAI direct → provider models endpoint,
-- Google Gemini direct → existing Gemini adapter.
+## Source Reference / MakerWorld State
+The 49.3I.7 Preview recovery remains active and was regression-tested again:
+- explicit Search/Listing URL remains authoritative,
+- Preview uses the escaped raw JavaScript evaluator,
+- Preview remains one-thumbnail/basic-identity only,
+- approved candidate Full Fetch still calls the mature `extract_direct_link()` path only after approval,
+- image limit remains 1..20,
+- Direct Product path remains mature/unchanged.
 
-49.3I.7 does not create a parallel AI client. It only makes the existing Provider Hub secure state visible and loads its existing model catalog automatically when a stored key exists.
+No source-crawler/full-fetch code was rewritten in 49.3I.8.
+
+Real Windows MakerWorld QA is still required after pulling 49.3I.8; code/CI success is not being treated as Windows acceptance.
 
 ## Runtime Files Added/Changed
 Added:
-- `catalog_center/app/phase49_3i_preview_recovery.py`
-- `catalog_center/tests/test_epic49_phase49_3i_preview_recovery.py`
+- `catalog_center/app/phase49_3i_ai_execution_recovery.py`
+- `catalog_center/tests/test_epic49_phase49_3i_ai_execution_recovery.py`
 
 Changed:
-- `catalog_center/app/phase49_3i_secret_persistence.py`
-- `catalog_center/tests/test_epic49_phase49_3i_secret_persistence.py`
-- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → `49.3I.7`
-- `.github/workflows/phase49-3i-ci.yml`
+- `catalog_center/app/phase49_3i_local_qa_hotfix.py` for same-phase runtime composition,
+- `RUN_PHASE49_3I_LOCAL_GATE.ps1` → `49.3I.8`,
+- `.github/workflows/phase49-3i-ci.yml`.
 
-## Final GitHub Validation — 49.3I.7
-CI-only PR: `#52`
+No Django model/migration, Catalog schema, media or Production change.
+
+## Final GitHub Validation — 49.3I.8
+CI-only PR: `#53`
 State: `CLOSED / NOT MERGED`
-Validated Epic runtime base: `4e0b1b7f0f8934a03ab74037bdce5f9abe55b425`
-CI marker head: `5097f45f069e40af64d452ffaa8cd07399a977f2` — not merged.
+Validated Epic runtime base: `3fdab5dc4a56204b6370f72df04ec0956e8ba6ce`
+CI marker head: `0d05d0fb25f02daa07df93f9cf47d2ea0333b8b8` — not merged.
 
 Successful workflows:
-- Phase49.3I Discovery Review Pricing CI — Run `32585956198` — SUCCESS.
-- Phase49.3H SEO Cost Image Limit CI — Run `32585956149` — SUCCESS.
-- Phase49.3G Workspace Usability CI — Run `32585956156` — SUCCESS.
-- Phase49 Epic Unified CI / Full Django — Run `32585956155` — SUCCESS.
+- Phase49.3I Discovery Review Pricing CI — Run `32620646603` — SUCCESS.
+- Phase49.3H SEO Cost Image Limit CI — Run `32620646600` — SUCCESS.
+- Phase49.3G Workspace Usability CI — Run `32620646605` — SUCCESS.
+- Phase49 Epic Unified CI / Full Django — Run `32620646657` — SUCCESS.
 
 Validated:
-- runner v49.3I.7 ASCII-only Windows PowerShell 5.1 contract,
-- live fetched Git snapshot guard,
+- Windows runner v49.3I.8 / ASCII-only contract,
+- live fetched GitHub snapshot guard,
 - Python compile,
-- Preview JavaScript escape regression,
-- Preview recovery never calls full product extraction,
-- real Provider Hub secure hydration,
-- Provider post-save rehydration,
-- configured Provider model catalog scheduling/cache/combobox population,
-- prior Explorer/selection/routing regressions,
+- real legacy all-fields button → mature Task Center routing,
+- non-Quick stage assistant routing,
+- Quick/title-only behavior preserved,
+- observable elapsed-progress/watchdog source contract,
+- no second AI worker/client in the recovery module,
+- stale/cancelled full and image AI results cannot apply,
+- 49.3I.7 Preview evaluator recovery still composed,
+- provider credential/model-catalog regressions,
+- Explorer/selection/routing regressions,
 - 49.3H/3G regressions,
 - Django checks,
 - `makemigrations --check --dry-run` = no changes,
-- migration plan safe,
+- safe migration plan,
 - Windows Catalog Epic49 tests,
 - Full Django suite.
 
-Post-validation changes after runtime base are documentation-only.
-
 ## Database / Migration / Media / Secret Safety
-- Django migration for 49.3I.7: `NONE` — CI verified.
+- Django migration for 49.3I.8: `NONE` — CI verified.
 - Catalog schema migration: `NONE`.
 - no DB reset/drop/truncate.
-- no historical data rewrite.
-- no media rewrite/delete.
-- secrets remain in Windows Credential Store/environment only.
+- no data/media rewrite/delete.
+- no secret storage change.
 - Production DB/media/source untouched.
 
-## Preserved Contracts
-- Product Workspace remains canonical detailed editor,
-- Product-vs-Group routing by source `model_url_pattern`,
-- Preview → Approve → Full Fetch,
-- archive/blocked duplicate guard,
-- image default 10 / hard max 20,
-- mature direct/full source extraction,
-- AI progress/result/error/cost stack,
-- Fixed / Range / Formula independence,
-- Explorer selection-loop guard and view modes,
-- Local/Production publish separation,
-- live fetched GitHub snapshot handoff.
-
 ## Windows QA Required Now
-1. close Catalog Center,
-2. clean worktree,
+1. close Catalog Center completely,
+2. verify clean worktree,
 3. fetch/prune + ff-only pull current Epic,
 4. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-5. verify Runner `49.3I.7` and `PHASE49_3I_GIT_SNAPSHOT=OK`,
-6. confirm FTP password + Bridge token remain masked after Save and restart,
-7. confirm AvalAI/OpenRouter stored keys appear masked in their real Provider cards after restart,
-8. open AI Center and confirm configured Provider model lists load and are selectable,
-9. run exact MakerWorld search URL and confirm Preview produces candidates instead of `Locator.evaluate_all` syntax error,
-10. verify each Preview candidate is lightweight with one thumbnail/basic identity,
-11. approve one candidate with image limit 20 and verify only then mature full fetch runs,
-12. archive another candidate and verify no full fetch,
-13. verify direct Product URL path still works,
-14. regression-check Product open responsiveness, AI first-paint and Fixed/Range/Formula.
+5. verify Runner `49.3I.8` + `PHASE49_3I_GIT_SNAPSHOT=OK`,
+6. open one Product Workspace and press the **bottom** `تکمیل هوشمند همه فیلدهای AI`,
+7. immediate startup progress must appear before preflight,
+8. it must hand off to connection/send/receive/save/result progress,
+9. elapsed time + `توقف انتظار` must remain visible and the app must remain responsive,
+10. on provider/network error, the error must stay visible and the app must remain open,
+11. Stop Waiting or 210s timeout must prevent any late result from modifying the product,
+12. exact MakerWorld Search URL must produce Preview candidates without `Locator.evaluate_all` syntax error,
+13. Preview stays lightweight; approve one with image limit 20 and verify Full Fetch starts only after approval,
+14. recheck stored Provider keys/model lists + FTP/Bridge credentials,
+15. recheck Product open/selection and Fixed/Range/Formula.
 
 ## Local Publish Gate
-Still blocked until the Windows 49.3I.7 visual/data/credential QA above passes. Then exactly one `LOCAL PUBLISH ONLY` + Local Django E2E is required before explicit Production approval.
+Still blocked. Only after the Windows interaction/data QA above passes:
+- exactly one `LOCAL PUBLISH ONLY`,
+- Local Django E2E,
+- verify product/image/pricing/provenance payload,
+- explicit owner approval.
 
 ## Exact Next Task
-Windows must fast-forward from GitHub and run the repository-owned 49.3I.7 gate. No Local source patch, no reset/stash/delete shortcut, no Production action.
+Windows must fast-forward the live GitHub snapshot and run repository-owned Runner 49.3I.8. No direct Local source patch, no reset/stash/delete shortcut, no Local Publish yet, no Production action.
