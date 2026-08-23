@@ -65,20 +65,29 @@ Merge evidence:
 - Full Phase49 + Windows Catalog regressions + Full Django `32649623804` SUCCESS,
 - no migration; Production untouched.
 
+### REQ-49I-025 — Source title must be correct before translation/SEO
+Status: `IMPLEMENTED ON FEATURE BRANCH / LOCAL QA REQUIRED`
+Owner evidence: MakerWorld product `2896217-ribbed-cake-stand-cookie-platter` entered Catalog as a generic model-number title; AI then translated/generated all content from that wrong identity.
+
+Acceptance:
+- generic discovery placeholders such as `Model 2896217`, `MakerWorld model 2896217` or Persian equivalents are never authoritative product titles,
+- a valid scraped/page title wins,
+- if live title retrieval is unavailable, the exact MakerWorld product URL slug is the deterministic source-identity fallback,
+- `https://makerworld.com/en/models/2845731-cake-stand...` resolves to `Cake Stand`,
+- `https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter...` resolves to `Ribbed Cake Stand Cookie Platter`,
+- canonical source title is enforced again before Add-to-Products so a stale generic candidate cannot poison the Product DB,
+- Product AI receives canonical source title even for an already-imported legacy product,
+- Product Workspace exposes `بازخوانی و اصلاح عنوان منبع` and `اصلاح عنوان منبع + بازسازی کامل AI` for existing wrong products,
+- operator-entered Persian authoritative title from 49.3I.18 remains available and is not removed,
+- no DB migration, acquisition-limit, pricing, publish, FTP, Bridge or Production change.
+
+Implementation anchor: `d9d3d617ed22dd3096379e668697f0f9fab87ca0` plus following documentation commits on `agent/phase49-3i18-operator-bulk-ai-rebuild`.
+
 ## Operational Release Request
 
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED ONLY BY FOCUSED WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
-Acceptance now includes:
-- exact saved Provider/Model only for Product AI,
-- no hidden AI-on-open request,
-- no Product `/models` preflight/hang,
-- failed/stopped AI leaves the application responsive,
-- exact-page resilient acquisition and staged images remain functional,
-- selected rows Add to Products without Direct Full Fetch,
-- Archive/Block works,
-- exactly one Local Publish E2E passes,
-- explicit owner approval.
+Status: `BLOCKED BY FOCUSED WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Acceptance now additionally requires the 49.3I.18/49.3I.19 operator editing + source-identity acceptance to pass before release.
 
 After approval: verify Host/branch/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
 
@@ -99,7 +108,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - one owner-approved low-value Production payment before public activation.
 
 ## Canonical Windows Gate
-`RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1`; it chains 49.3I.16 and every prior Phase49.3I regression gate.
+Use the focused 49.3I.18/49.3I.19 test commands on the feature branch, then chain the existing `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1` baseline gate. Production remains untouched until PASS + owner approval.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
