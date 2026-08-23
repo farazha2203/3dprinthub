@@ -4,123 +4,110 @@ Updated: 2026-08-23
 Repository: `farazha2203/3dprinthub`
 Branch: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.9 — AI Refresh + SEO/Source Completion`
+Active Hotfix: `49.3I.10 — AI Trace + Safe Title Retry Recovery`
 Status: `GITHUB UPDATED / FINAL CI SUCCESS / WINDOWS QA PENDING`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-Phase49.3I.9 is implemented and CI-validated on GitHub. The owner now wants an operational release today so employees can start catalog/product entry and the live site can move toward accepting payments.
+49.3I.10 is merged into the active Epic after CI validation. The immediate business goal remains to release Catalog Center to employees today for controlled catalog/product entry, then complete one Local Publish E2E, obtain explicit owner approval, deploy the verified GitHub snapshot, and continue with Storefront ZarinPal integration.
 
-The immediate release policy remains fail-closed:
-`GitHub → Windows ff-only pull → Local automated gate → Manual visual/data QA → one LOCAL PUBLISH ONLY → Local Django E2E → explicit owner approval → Production backup/deploy/verify`.
+Canonical release order remains:
+`GitHub → Windows ff-only pull → Local automated gate → Manual visual/data/interaction QA → one LOCAL PUBLISH ONLY → Local Django E2E → explicit owner approval → Production backup/deploy/verify`.
 
-No Production action is authorized before those gates pass.
+## New Runtime Incident — ERR-49-028
+Owner runtime evidence showed an AI request could return HTTP 200 successfully and still appear broken because the delayed Tk error callback itself failed with `NameError: cannot access free variable 'exc'`.
 
-## Phase49.3I.9 Runtime Delta
-49.3I.9 addresses `ERR-49-027`:
-- explicit All-Fields AI rerun can refresh AI-owned/generated content when Provider/Model changes,
-- proven manual operator overrides remain protected,
-- generic Persian titles such as `محصول چاپ سه بعدی` are refreshable and newly generated generic titles are rejected,
-- Persian ecommerce/SEO prompt is more source-grounded and product-specific,
-- source website identity is stored as publisher/source rather than being replaced by designer identity,
-- desktop SEO/source attribution is applied to real Django Product meta/OG/source fields after mature conversion/visibility layers,
-- when product images are below the selected limit, All-Fields may offer the existing mature source `refetch()` before AI,
-- missing local readiness defaults can be filled without fabricating source facts,
-- missing price falls back locally to 500,000 Toman only as an operator-preparation default,
-- legal commercial-license confirmation and final sale approval still require explicit operator confirmation.
+Verified root cause:
+- several Tk `after(...)` callbacks captured the `except ... as exc` variable in a lambda,
+- Python clears the exception target when the `except` block exits,
+- the delayed UI callback could therefore crash after the provider/network operation had already completed,
+- the title-only quick action also had no mature request/response trace, no bounded operator wait and no stale-result protection.
 
-## Final GitHub Validation — 49.3I.9
-CI-only PR `#55`: `CLOSED / NOT MERGED`.
-Validated runtime base: `390c1aba9aaf5282f44a1ec97955af4e987100ba`.
-CI marker head: `0e58324bfc87e39299b81b1fbe65f9cce21ec91e` — not merged.
+## Phase49.3I.10 Implemented Delta
+New additive module:
+`catalog_center/app/phase49_3i_ai_trace_recovery.py`
+
+Behavior:
+- the AI progress dialog now exposes scrollable `ارسالی`, `دریافتی`, and `خطا / Diagnostics` tabs,
+- vertical and horizontal scrollbars are present for high-volume request/response data,
+- OpenAI-compatible provider and Google Gemini HTTP payload/response details are shown in sanitized form,
+- API keys/tokens/Authorization headers are never included in the visible trace payload,
+- the same sanitized trace is written to the existing Phase49 runtime JSONL diagnostics,
+- title-only translation can always be retried using the currently active Provider/Model even when `title_fa` is already populated,
+- title-only translation has a 90-second operator watchdog,
+- Stop Waiting/cancel and timeout make the title execution stale so a late response cannot overwrite the product,
+- closing/staling the Workspace prevents a late title result from applying,
+- generic/non-Persian/too-short Persian titles are rejected before persistence,
+- a targeted Tk `after()` exception-closure guard freezes live exception objects before Python clears them,
+- the mature 210-second All-Fields watchdog and stale-result safety remain preserved,
+- no second AI client/crawler/importer was created.
+
+## GitHub Validation — 49.3I.10
+Implementation PR: `#56` — MERGED after all required workflows succeeded.
+Validated feature head: `8d1f6e02d6f722b8f047f5d7f7763a5a42516191`.
+Epic merge commit: `256c130f179aaa4253898b0d5ec1ce2696ac4bb5`.
 
 Successful workflows:
-- Phase49.3I Discovery Review Pricing CI — Run `32623618842` — SUCCESS.
-- Phase49.3H SEO Cost Image Limit CI — Run `32623618854` — SUCCESS.
-- Phase49.3G Workspace Usability CI — Run `32623618950` — SUCCESS.
-- Phase49 Epic Unified CI / Full Django — Run `32623618792` — SUCCESS.
+- Phase49.3I Discovery Review Pricing CI — Run `32626758096` — SUCCESS.
+- Phase49.3H SEO Cost Image Limit CI — Run `32626758114` — SUCCESS.
+- Phase49.3G Workspace Usability CI — Run `32626758134` — SUCCESS.
+- Phase49 Epic Unified CI / Full Django — Run `32626758119` — SUCCESS.
 
 Validated:
-- runner `49.3I.9`, ASCII-only Windows PowerShell 5.1 contract,
+- runner `49.3I.10` and ASCII-only Windows PowerShell 5.1 contract,
 - live fetched GitHub snapshot guard,
 - Python compile,
-- AI-owned refresh/manual-override protection,
-- generic-title rejection,
-- source-image preflight/refetch contract,
-- publisher/source-site mapping,
-- real Product SEO meta/OG/source mapping,
-- Phase49.3I/3H/3G regressions,
-- Django checks,
-- `makemigrations --check --dry-run` = no changes,
-- safe migration plan,
+- dedicated title watchdog/retry/generic-title tests,
+- Tk exception-callback closure regression,
+- sanitized request/response trace contract,
+- scrollable diagnostics UI contract,
+- stale/cancelled title result discard,
+- existing 49.3I.9 refresh/manual override/source/SEO behavior,
+- prior Preview/provider/Explorer/pricing regressions,
+- Django check and no-migration contract,
 - Windows Catalog Epic49 tests,
 - Full Django suite.
 
 ## Database / Migration / Media / Secret Safety
-- Django migration for 49.3I.9: `NONE` — CI verified.
+- Django migration for 49.3I.10: `NONE` — CI verified.
 - Catalog schema migration: `NONE`.
 - no DB reset/drop/truncate.
 - no historical data/media rewrite/delete.
-- no secret storage change.
+- no credential storage change.
 - Production DB/media/source untouched.
-
-## Payment Readiness — Important Verified Gap
-The repository already has a mature Phase30 **ZarinPal** online-payment flow for accepted `Quote` payments (deposit/full/balance), including server-side amount calculation, callback token, Authority matching, server-to-server Verify, idempotent ledger and audit.
-
-However the current public **Store cart/checkout** is not yet wired to that online gateway:
-- active `CheckoutOperationsForm.payment_method` currently exposes only `bank_transfer`,
-- the active store `checkout_view` always redirects new orders to `store:manual_payment`,
-- `StorePayment` has a semantic `gateway` method but there is no completed Store checkout request/callback/verify flow using it.
-
-Therefore enabling the existing Quote ZarinPal environment switches alone does **not** make normal Store cart checkout pay online. Storefront gateway integration is an urgent release task and must be tested before live money is accepted.
-
-Current supported gateway implementation in repository: `ZarinPal` only.
 
 ## Windows QA Required Now — Employee Release Gate
 1. close Catalog Center completely,
 2. verify Local worktree is clean,
 3. fetch/prune and ff-only pull the live Epic branch,
-4. run repository `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
-5. verify Runner `49.3I.9` and `PHASE49_3I_GIT_SNAPSHOT=OK`,
-6. open one known Product Workspace,
-7. run bottom All-Fields AI and verify product-specific Persian title/SEO, current Provider/Model refresh, progress visibility and manual-override safety,
-8. test low-image warning/refetch once,
-9. test MakerWorld Preview → Approve → Full Fetch once,
-10. verify Provider keys/model lists + FTP/Bridge credentials remain available,
-11. verify Product open/selection and Fixed/Range/Formula remain healthy.
+4. run `RUN_PHASE49_3I_LOCAL_GATE.ps1 -LaunchApp`,
+5. verify Runner `49.3I.10` and `PHASE49_3I_GIT_SNAPSHOT=OK`,
+6. open a product with a deliberately wrong Persian title and press Translate Title,
+7. verify request/response/error tabs appear immediately and are scrollable,
+8. verify active Provider/Model, source title, sanitized outgoing request and incoming response/result are visible,
+9. test invalid key/network/provider error: error remains visible and Workspace stays open,
+10. test Stop Waiting and verify any late result cannot change the product,
+11. verify title watchdog stops waiting at 90 seconds,
+12. run bottom All-Fields AI and verify the same trace visibility plus the preserved 210-second stale-result guard,
+13. test low-image warning/refetch once,
+14. test MakerWorld Preview → Approve → Full Fetch once,
+15. verify Provider keys/model lists + FTP/Bridge credentials remain available,
+16. verify Product open/selection and Fixed/Range/Formula remain healthy.
 
-If those pass, employees may begin using the Windows Catalog Center for data entry while the Local Publish E2E/Production release is completed. They must not use direct Production source edits.
+If those pass, employees may use Catalog Center for controlled data entry. Production publishing remains separately gated.
 
-## Local Publish Gate
+## Local Publish / Production Gate
 After Windows QA passes:
 - exactly one `LOCAL PUBLISH ONLY`,
 - Local Django E2E,
-- verify product title/SEO/images/pricing/source attribution in Local Store/Admin,
-- verify no unexpected data/migration changes,
-- explicit owner approval.
+- verify title/SEO/images/pricing/source attribution in Local Store/Admin,
+- explicit owner approval,
+- then host read-only verification, MySQL/database/backup/rollback verification, GitHub-only deploy and Production smoke/data checks.
 
-## Production Release Gate
-Only after owner approval:
-- verify host project root, branch and fetched commit read-only,
-- verify host worktree safety,
-- verify effective `.env` without exposing secrets,
-- verify MySQL vendor and exact database name,
-- verify backup/rollback target,
-- pull approved GitHub commit only,
-- `manage.py check`, migration plan, collectstatic if needed, Passenger restart,
-- HTTP/admin/store/product/cart smoke tests,
-- Production data/media verification.
+## Payment Track — Verified Gap
+Mature Phase30 ZarinPal exists for accepted Quote payments, but normal Store cart checkout still exposes only `bank_transfer` and redirects to the manual-payment flow. `StorePayment` has a `gateway` semantic value, but Store request/callback/verify wiring is incomplete.
 
-## Payment Release Track
-After Store checkout gateway integration is implemented and tested:
-1. Local/Sandbox ZarinPal request → redirect → callback → verify,
-2. repeated callback idempotency,
-3. failed/cancelled/temporary-error cases,
-4. StoreOrder/StorePayment status transitions,
-5. inventory reservation/finalization behavior,
-6. Production configuration read-only precheck,
-7. live low-value payment only after explicit owner approval,
-8. payment audit and Production verification.
+Therefore live Store payments must not be enabled by environment switches alone. The next urgent implementation after Catalog release is a narrow Storefront ZarinPal integration that reuses the mature server-side amount, Authority match, callback/Verify and idempotency security contracts, followed by Sandbox E2E before any live money.
 
 ## Exact Next Task
-Do the Windows 49.3I.9 release gate first. Do **not** deploy Production or enable live Store payments yet. In parallel, treat Store-cart ZarinPal integration as the next urgent implementation task because the existing Phase30 gateway currently covers Quote payments, not the normal Store cart checkout.
+Windows must pull the current Epic with ff-only live snapshot semantics and run the repository-owned 49.3I.10 gate. No direct Local source patch, no Production deploy and no live payment activation before the acceptance gates pass.
