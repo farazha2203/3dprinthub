@@ -41,8 +41,9 @@ jobs:
           $text = [System.Text.Encoding]::ASCII.GetString($bytes)
           [void][scriptblock]::Create($text)
           if ($text -notmatch 'RUN_PHASE49_3I15_BULK_GATE\.ps1') { throw "Previous gate chaining missing" }
-          if ($text -notmatch 'PHASE49_3I16_DISCOVERY_FALLBACK=LOCATOR_SAFE_CLASSIC_HTTP') { throw "Discovery fallback marker missing" }
+          if ($text -notmatch 'PHASE49_3I16_DISCOVERY_FALLBACK=LOCATOR_SAFE_HTTP_CDP_CACHE') { throw "Discovery fallback marker missing" }
           if ($text -notmatch 'PHASE49_3I16_IMAGE_FALLBACK=LOCATOR_HTTP_MATURE_CDP_LISTING') { throw "Image fallback marker missing" }
+          if ($text -notmatch 'PHASE49_3I16_CACHED_CANDIDATE_REUSE=ENABLED') { throw "Cached candidate marker missing" }
           if ($text -notmatch 'NO RESET / NO STASH / NO DELETE / NO PRODUCTION') { throw "Safety marker missing" }
 
       - name: Set up Python 3.12
@@ -65,14 +66,17 @@ jobs:
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3i16_resilient_acquisition.py \
+            catalog_center/app/phase49_3i16_review_hardening.py \
             catalog_center/app/phase49_3i12_runtime_bridge.py \
-            catalog_center/tests/test_epic49_phase49_3i16_resilient_acquisition.py
+            catalog_center/tests/test_epic49_phase49_3i16_resilient_acquisition.py \
+            catalog_center/tests/test_epic49_phase49_3i16_review_hardening.py
 
       - name: Phase49.3I.16 targeted regression tests
         working-directory: catalog_center
         run: |
           python -m unittest -v \
             tests.test_epic49_phase49_3i16_resilient_acquisition \
+            tests.test_epic49_phase49_3i16_review_hardening \
             tests.test_epic49_phase49_3i15_staging_guard \
             tests.test_epic49_phase49_3i15_bulk_discovery_images \
             tests.test_epic49_phase49_3i14_legacy_scan_restore \
@@ -83,22 +87,29 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          text = Path("catalog_center/app/phase49_3i16_resilient_acquisition.py").read_text(encoding="utf-8")
+          base = Path("catalog_center/app/phase49_3i16_resilient_acquisition.py").read_text(encoding="utf-8")
+          hardening = Path("catalog_center/app/phase49_3i16_review_hardening.py").read_text(encoding="utf-8")
           bridge = Path("catalog_center/app/phase49_3i12_runtime_bridge.py").read_text(encoding="utf-8")
-          assert "extract_direct_link(" not in text
-          assert "evaluate_all(" not in text
-          assert '"locator-safe"' in text
-          assert '"classic-links"' in text
-          assert '"http-html-links"' in text
-          assert '"locator-safe-fresh"' in text
-          assert '"http-html-parse"' in text
-          assert '"mature-classic-dom"' in text
-          assert '"attached-chrome-locator"' in text
-          assert '"listing-thumbnail"' in text
-          assert "acquisition_trace" in text
-          assert "discovery_trace" in text
+          assert "extract_direct_link(" not in base
+          assert "evaluate_all(" not in base
+          assert "evaluate_all(" not in hardening
+          assert "discover_classic(" not in hardening
+          assert '"locator-safe"' in hardening
+          assert '"http-html-links"' in hardening
+          assert '"attached-chrome-listing"' in hardening
+          assert '"cached-candidate-db"' in hardening
+          assert '"locator-safe-fresh"' in base
+          assert '"http-html-parse"' in base
+          assert '"mature-classic-dom"' in base
+          assert '"attached-chrome-locator"' in base
+          assert '"listing-thumbnail"' in base
+          assert "acquisition_trace" in base
+          assert "discovery_trace" in base
           assert "_install_phase49_3i16_resilient_acquisition()" in bridge
-          print("PHASE49_3I16_FALLBACK_CHAIN=OK")
+          assert "_install_phase49_3i16_review_hardening(app_class)" in bridge
+          print("PHASE49_3I16_DISCOVERY_FALLBACK=OK")
+          print("PHASE49_3I16_CACHED_REUSE=OK")
+          print("PHASE49_3I16_IMAGE_FALLBACK=OK")
           print("PHASE49_3I16_TRACE=OK")
           print("PHASE49_3I16_NO_RICH_DIRECT=OK")
           PY
