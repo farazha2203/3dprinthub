@@ -2,47 +2,47 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-23 — Phase49.3I.11 Provider Schema + Trace/Busy Runtime Recovery
+## 2026-08-23 — Phase49.3I.12 Observable Exact-Page Discovery + Single-Product Intake + Workspace Image Fit
 
 ### Owner Windows Evidence
-The AI trace showed AvalAI `gemini-3.5-flash-lite` returned HTTP success and useful Persian content, including a good product-specific `title_fa`, but the JSON contract did not match the repository schema:
-- `seo_title` instead of `seo_title_fa`,
-- `seo_description` instead of `seo_description_fa`,
-- `content_notes` as a string instead of an array,
-- other required fields missing/incomplete.
+The owner-provided Catalog screenshot showed the exact MakerWorld Search URL was already used as `PREVIEW_TARGET` and the run completed with `candidates=20`, `failed=0`, `full_fetch=0`. Therefore the crawler/search backend was not the primary failure. The operator-facing UX still did not clearly expose candidate results, live running state, stop state, elapsed time or the current URL, and direct Product URL intake was not separated from Search/Listing discovery. Product Workspace image fitting was also visually unstable.
 
-The same trace showed the full `/models` provider catalog being rendered in the Tk diagnostics pane. After changing/stopping AI, the Workspace could also remain busy until the old worker returned.
-
-### Root Cause — ERR-49-029
-- AvalAI/OpenRouter `structured_response()` requested generic `json_object` but did not send the actual Catalog JSON Schema to the compatible gateway.
-- 49.3I.10 traced full model catalogs into Tk `Text`, adding avoidable UI work.
-- Stop Waiting/watchdog made a generation stale but did not immediately release all parent busy flags; stale wrappers could return before mature cleanup.
+### Root Cause — ERR-49-030
+- UX87 builds Discovery inside final `_ui()` using `super()._scan_ui()`, so the later Phase49.3I `_scan_ui` patch could be bypassed at the visible shell boundary even while backend discovery methods were active.
+- the visible candidate Treeview needed to reuse the mature thumbnail/status/title/source/external/url contract.
+- image cards needed ERR-49-020's fixed-pixel viewport rule applied at the final Product Workspace thumbnail boundary.
 
 ### Fixed
-- real JSON Schema sent to AvalAI/OpenRouter with strict schema response format where supported,
-- exact schema/property/type contract also embedded in prompt,
-- bounded fallback: strict schema → JSON object → compatibility mode,
-- exact schema validation before apply,
-- one automatic visible repair request for schema-invalid JSON, then fail precisely,
-- explicit selected model used directly,
-- model information cached within request window; duplicate model probes reduced,
-- model-list trace compacted to count + bounded sample,
-- Stop Waiting/watchdog/stale abort immediately releases busy/start/source flags,
-- late old result remains stale and cannot mutate product,
-- 90s title and 210s full-AI guards preserved,
-- no parallel AI client/crawler architecture introduced.
+- new Phase49.3I.12 operator UI mounted at final UX87 `_ui` boundary,
+- exact Search/Listing/Category page discovery action,
+- separate manual direct Product URL intake validated by source `model_url_pattern`,
+- visible running/stopping/done badge, progress, elapsed time, active URL/detail and Stop feedback,
+- candidate Treeview runtime bridge preserving mature thumbnail + identity renderer,
+- Preview remains one thumbnail/basic identity and `full_fetch=0` until approval,
+- approved Full Fetch still uses mature extractor path,
+- Product Workspace thumbnails now render in fixed `228x171` pixel `ImageOps.contain` letterboxed viewports without crop/stretch,
+- no parallel crawler/extractor or credential/publish rewrite introduced.
 
 ### Validation
-PR #57 merged.
-- feature head `9bdcfb3c7997cc9570d2d94e1bafd4f7bfad5651`,
-- merge commit `41d37d56437765119b9bb274037e9af7a5defbbe`,
-- Phase49.3I Run `32628666588` SUCCESS,
-- Phase49.3H Run `32628666600` SUCCESS,
-- Phase49.3G Run `32628666558` SUCCESS,
-- Full Phase49 + Full Django Run `32628666582` SUCCESS,
+PR #58 merged.
+- feature head `2a9442055d33777f675ccd3ebe11de8419bfb2b3`,
+- merge commit `24d5b8fdddb97fbcc4c07efa7d6f1d78a0ffb225`,
+- Phase49.3I Run `32631604990` SUCCESS,
+- Phase49.3H Run `32631604930` SUCCESS,
+- Phase49.3G Run `32631604945` SUCCESS,
+- Full Phase49 + Full Django Run `32631604928` SUCCESS,
 - Django migration NONE,
 - Catalog schema migration NONE,
 - Production untouched.
+
+## 2026-08-23 — Phase49.3I.11 Provider Schema + Trace/Busy Runtime Recovery
+- real JSON Schema delivery to AvalAI/OpenRouter,
+- exact provider schema validation before persistence,
+- one bounded repair request,
+- compact model catalog trace,
+- immediate busy-state release on Stop Waiting/watchdog,
+- stale late-result protection,
+- PR #57 merged; all required CI success; no migration; Production untouched.
 
 ## 2026-08-23 — Phase49.3I.10 AI Trace + Safe Title Retry Recovery
 - added scrollable sanitized outgoing/incoming/error tabs,
