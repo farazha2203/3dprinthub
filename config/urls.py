@@ -9,6 +9,11 @@ from store.public_media import serve_public_store_media
 from store.epic49_routes import product_detail_by_id_view, product_detail_compat_view
 from store.sitemaps import CategorySitemap, ProductSitemap, ServicePageSitemap, StaticViewSitemap
 from website.phase50a_admin_command_center import phase50_admin_command_center
+from website.phase50a_storefront_admin_parity import (
+    homepage_hero_deactivate_all_view,
+    homepage_hero_random_five_view,
+    homepage_hero_random_ten_view,
+)
 from django_smartbase_admin.admin.site import sb_admin_site
 admin.site.site_header = "مدیریت 3DPrintHub"
 admin.site.site_title = "3DPrintHub"
@@ -36,6 +41,21 @@ urlpatterns = [
         "admin/command-center/",
         admin.site.admin_view(phase50_admin_command_center),
         name="phase50_admin_command_center",
+    ),
+    path(
+        "admin/homepage-hero/random-5/",
+        admin.site.admin_view(homepage_hero_random_five_view),
+        name="phase50_homepage_hero_random_5",
+    ),
+    path(
+        "admin/homepage-hero/random-10/",
+        admin.site.admin_view(homepage_hero_random_ten_view),
+        name="phase50_homepage_hero_random_10",
+    ),
+    path(
+        "admin/homepage-hero/deactivate-all/",
+        admin.site.admin_view(homepage_hero_deactivate_all_view),
+        name="phase50_homepage_hero_deactivate_all",
     ),
     path("admin/", admin.site.urls),
     path("smart-admin/", sb_admin_site.urls),
