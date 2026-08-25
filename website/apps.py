@@ -94,5 +94,10 @@ class WebsiteConfig(AppConfig):
         from .phase50a_storefront_admin_parity import install_storefront_admin_parity
         install_storefront_admin_parity()
 
+        # Phase50.A.1C: make existing homepage Title/Description and Hero SEO state
+        # visible as one professional Admin audit surface. No duplicate SEO model.
+        from .phase50_home_seo_admin import install as install_phase50_home_seo_admin
+        install_phase50_home_seo_admin()
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
