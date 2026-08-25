@@ -4,109 +4,71 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Phase: `50.A.1B — Product Gallery + Variant 2.0 foundation`
-Status: `GITHUB CI TESTED / MANUAL QA NEXT`
+Current Phase: `50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`
+Status: `GITHUB CI TESTED / HOST AUDIT + MANUAL QA NEXT`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
 
 ## Phase49 closeout baseline
-- structured Product presentation deployed and verified,
-- Catalog Site Publish validated Product-owned media,
-- Hero Product-media ownership fixed,
-- owner reports Production site/hero healthy.
+Structured Product/Catalog/Hero/SEO/Bridge is operational. Product-owned public media remains the Production contract; imported Catalog working-media is not a public namespace.
 
 ## Phase50.A — Admin and commerce operational completeness
 ### 50.A.1 Admin Storefront / Hero parity — CI TESTED
-- business-oriented `/admin/command-center/`,
-- Sales / Storefront & Checkout / Treasury / Accounting / Purchasing / Inventory groups,
-- Store Product and Imported Asset actions for add/remove homepage slider,
-- Homepage Hero buttons for 5 random, 10 random and deactivate-all,
-- Product-backed/public-media eligibility guard,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location links surfaced.
+- `/admin/command-center/`,
+- Product/imported-asset add/remove Hero,
+- Hero 5-random / 10-random / deactivate-all,
+- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location Admin links.
 
 ### 50.A.1B Product Gallery + Variant 2.0 — CI TESTED
-- contain-fit main product viewer,
-- thumbnail click swaps main image,
-- full-screen accessible lightbox with previous/next/Escape,
-- sellable variant adds `size_label` and `build_profile` (standard/hollow/reinforced/solid/custom),
-- packaging weight and parcel dimensions added to ProductVariant,
-- size/build/package snapshots added to StoreOrderItem,
-- ProductVariant identity now includes size/build profile,
-- Admin exposes the new commerce fields,
-- public variant metadata endpoint enriches the mature selector,
+- contain-fit Product viewer + thumbnail swap + fullscreen lightbox,
+- `size_label`, build profile, packaging weight and parcel dimensions,
+- StoreOrderItem commerce snapshots,
 - migration `store.0034_phase50_variant2_commerce`,
-- CI compile/check/migration-state/migrate/tests PASS on snapshot `8e3c151159424437157d3ef6861881be08b1aea8`.
+- Variant Admin and public variant metadata endpoint.
 
-### 50.A.2 Checkout & Delivery — NEXT
-Preserve coupon/VAT/packaging/shipping calculations and extend them with:
-- snapshot Variant size/build/package fields when StoreOrderItem is created,
-- effective shipping weight from product + packaging when no explicit override exists,
-- parcel dimensions and shipment insured value,
-- normalized live quote provider contract,
-- Post / Tipax / Mahex adapters only after official current endpoints, credentials, units and commercial terms are verified,
-- provider timeout/error fallback to mature ShippingMethod weight rules,
-- immutable quote snapshot on finalized orders,
-- Admin controls for carrier/provider enablement and fallback pricing.
+### 50.A.1C Admin media / mobile / SEO / Windows dimensions — CI TESTED
+- ImportedPrintAsset Admin no longer renders private `store/imported-models/...` working files as public previews,
+- safe preview order: matching Product gallery → Product main image → source HTTP(S) image,
+- imported-model list/change views preserve mature Phase35 editable pricing/editorial controls and add public-media/data-completeness status,
+- imported image inline shows source pixel dimensions,
+- mobile Hero caption/title is substantially smaller; very narrow phones hide the description to preserve Product-image visibility,
+- SiteSetting Admin keeps existing homepage `meta_title/meta_description` and adds SEO length audit, SERP preview and Hero Alt/title audit,
+- Windows Product image cards now show original pixel dimensions,
+- no new migration in 50.A.1C,
+- CI run `32875771848` PASS on corrected code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83`.
 
-### 50.A.3 Secure Store ZarinPal payment
-Preserve the mature service-payment transaction locking, random callback token, Authority matching and server-to-server verification. Extend Store checkout with the same contract plus:
-- strict trusted gateway-host allowlist,
-- no card/PIN/CVV capture or storage,
-- server-owned amount and currency,
-- idempotent request/callback/verify,
-- reconciliation and immutable audit trail,
-- abuse/rate-limit monitoring,
-- Production HTTPS/HSTS/Secure-cookie/CSP/frame verification.
+### Immediate host reconciliation — BEFORE DEPLOY
+Owner screenshots show Phase50-era Admin UI on Production while repository docs previously said Phase50 was undeployed, and `/admin/store/product/` currently returns 500. Read-only verify exact Production branch/HEAD, worktree, MySQL DB and whether `store.0034` is applied/pending. Do not guess the 500 cause.
 
-### 50.A.4 Torob integration
-- current Torob Product API v3 contract,
-- product/variant grouping with stable unique identifiers,
-- size/color/material mapping,
-- current price and availability,
-- image-quality guards for marketplace export,
-- pagination/filtering required by Torob,
-- order-attribution/webhook only after official contract verification.
+### 50.A.2 Checkout & Delivery — NEXT AFTER CURRENT QA
+- snapshot size/build/package into finalized order items,
+- effective product + packaging shipping weight,
+- parcel dimensions / insured value,
+- normalized carrier quote + immutable order snapshot,
+- Post / Tipax / Mahex only with verified official contracts/credentials,
+- fallback to mature ShippingMethod rules.
+
+### 50.A.3 Secure Store ZarinPal
+Reuse mature server-owned amount, callback identity, Authority matching, server-to-server verify, idempotency and audit. Add trusted redirect-host allowlist and never collect/store card/PIN/CVV.
+
+### 50.A.4 Torob
+Torob Product API v3, stable product/variant grouping, size/color/material, price/availability, image-quality guards and official order attribution contract.
 
 ## Phase50.B — Accounting foundation
-- chart of accounts: کل / معین / تفصیلی,
-- fiscal periods,
-- accounting vouchers,
-- balanced debit/credit entries,
-- immutable posting/reversal,
-- party/subledger references,
-- audit-safe numbering.
+Chart of accounts کل/معین/تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal, party/subledger and numbering.
 
 ## Phase50.C — Treasury
-- bank/cash accounts,
-- receipt/payment vouchers,
-- allocation to StorePayment/service Payment,
-- refund workflow,
-- reconciliation.
+Bank/cash, receipts/payments, allocations, refunds and reconciliation.
 
 ## Phase50.D — Purchasing & payables
-- Supplier master,
-- purchase orders/invoices and lines,
-- general receiving beyond filament-only purchases,
-- supplier payable/subledger,
-- purchase returns/adjustments.
+Supplier master, purchase orders/invoices/receiving, payables and returns.
 
 ## Phase50.E — Sales & receivables accounting
-- normalize StoreOrder and custom Quote/Order accounting events,
-- customer receivable statements,
-- payment allocation,
-- discount/tax/shipping mapping,
-- sales returns/refunds/credit notes.
+Store/service receivables, allocations, tax/discount/shipping, returns/refunds/credit notes.
 
 ## Phase50.F — Reports & close
-- general/subledger,
-- trial balance,
-- customer/supplier statements,
-- AR/AP aging,
-- cashflow,
-- project profitability,
-- tax/VAT summary,
-- integrity audit and period close.
+GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and period close.
 
 ## Safety
-No Production schema work is authorized without exact MySQL verification, migration plan, successful backup and rollback target. Live carrier integrations are not implemented from guessed/unofficial API contracts.
+No Production schema work without exact MySQL verification, migration plan, successful fresh backup and rollback target. Do not widen public media routing to imported Catalog working-media. No guessed carrier endpoint.
