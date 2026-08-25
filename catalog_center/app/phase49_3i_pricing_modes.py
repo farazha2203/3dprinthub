@@ -154,3 +154,7 @@ def install(workspace_class) -> None:
     _install_phase49_3i21_observable_ai_link_refresh(workspace_class)
     from .phase49_3i21_cancel_guard import install as _install_phase49_3i21_cancel_guard
     _install_phase49_3i21_cancel_guard()
+    # Final UI-thread boundary. All prior AI workers remain background workers,
+    # but their Tk callbacks are handed back through the main-thread pump.
+    from .phase49_3i22_tk_thread_bridge import install as _install_phase49_3i22_tk_thread_bridge
+    _install_phase49_3i22_tk_thread_bridge(workspace_class)
