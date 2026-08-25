@@ -10,7 +10,9 @@ import traceback
 from pathlib import Path
 from tkinter import messagebox, ttk
 
-from .phase49_diagnostics import audit_event, redact
+from .ai_providers import AIProviderClient
+from .phase49_diagnostics import audit_event, export_diagnostic_bundle, redact
+from .phase49_3i23_avalai_chat_contract import product_text_model_reason
 
 
 PHASE = "49.3I.24"
@@ -18,6 +20,7 @@ _HEARTBEAT_MS = 500
 _LAG_WARN_SECONDS = 2.5
 _HANG_DUMP_SECONDS = 8.0
 _DUMP_COOLDOWN_SECONDS = 20.0
+_TAIL_CHARS = 240_000
 
 
 def _safe_line(value) -> str:
@@ -27,16 +30,70 @@ def _safe_line(value) -> str:
         return redact(str(value))
 
 
+def _tail(path: Path, limit: int = _TAIL_CHARS) -> str:
+    try:
+        if not path.is_file():
+            return ""
+        text = path.read_text(encoding="utf-8", errors="replace")
+        return redact(text[-limit:])
+    except Exception as exc:
+        return f"<unable to read {path.name}: {redact(exc)}>"
+
+
+def _install_ai_runtime_guards() -> None:
+    """Prevent hidden startup network scans and reject obvious non-text models."""
+    Client = AIProviderClient
+    if getattr(Client, "_phase49_3i24_runtime_guards", False):
+        return
+
+    original_list = Client.list_model_info
+    original_structured = Client.structured_response
+    Client._phase49_3i24_startup_guard = True
+    Client._phase49_3i24_startup_block_count = 0
+    guard_lock = threading.RLock()
+
+    def list_model_info(self):
+        if bool(getattr(Client, "_phase49_3i24_startup_guard", False)) and self.product_id is None:
+            with guard_lock:
+                Client._phase49_3i24_startup_block_count += 1
+            # UI model discovery is explicitly user-driven. During construction a
+            # legacy wrapper may still ask every provider for /models; returning
+            # an empty list avoids startup network, bad-key probes and UI stalls.
+            return []
+        info = original_list(self)
+        if self.provider == "avalai":
+            # AvalAI /models does not make a zero/missing pricing row a reliable
+            # promise of a free route. Do not label every model "رایگان" unless
+            # the model id explicitly advertises a free route.
+            for item in info:
+                item["free"] = str(item.get("id") or "").lower().endswith(":free")
+        return info
+
+    def structured_response(self, **kwargs):
+        if self.product_id is not None:
+            model = str(kwargs.get("preferred_model") or self.model or "").strip()
+            rejection = product_text_model_reason(model)
+            if rejection:
+                raise RuntimeError(rejection)
+        return original_structured(self, **kwargs)
+
+    Client.list_model_info = list_model_info
+    Client.structured_response = structured_response
+    Client._phase49_3i24_runtime_guards = True
+
+
 def install(app_class, data_root: str | Path) -> None:
     """Add first-launch-to-close observability without blocking Tk's UI thread."""
     if getattr(app_class, "_phase49_3i24_runtime_observability", False):
         return
 
+    _install_ai_runtime_guards()
     data_root = Path(data_root)
     log_dir = data_root / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     session_path = log_dir / "catalog-runtime-session.jsonl"
     hang_path = log_dir / "catalog-hang-thread-dump.log"
+    main_log_path = log_dir / "catalog-intelligence.log"
 
     original_init = app_class.__init__
     original_dashboard = app_class._build_ux87_dashboard
@@ -132,6 +189,18 @@ def install(app_class, data_root: str | Path) -> None:
         except Exception:
             pass
 
+    def _release_startup_guard(self):
+        blocked = int(getattr(AIProviderClient, "_phase49_3i24_startup_block_count", 0) or 0)
+        AIProviderClient._phase49_3i24_startup_guard = False
+        _runtime_write(self, "first_idle", blocked_hidden_model_scans=blocked)
+        audit_event(
+            "performance",
+            "startup_first_idle",
+            source_file=__file__,
+            message=f"startup model scans blocked={blocked}",
+            detail={"blocked_hidden_model_scans": blocked},
+        )
+
     def __init__(self, *args, **kwargs):
         started = time.monotonic()
         self._phase49_3i24_runtime_lock = threading.RLock()
@@ -169,6 +238,7 @@ def install(app_class, data_root: str | Path) -> None:
         _install_exception_hooks(self)
         self._phase49_3i24_heartbeat = lambda: _heartbeat(self)
         self.after(_HEARTBEAT_MS, self._phase49_3i24_heartbeat)
+        self.after_idle(lambda: _release_startup_guard(self))
         _start_watchdog(self)
 
     def _open_log_folder(self):
@@ -181,6 +251,47 @@ def install(app_class, data_root: str | Path) -> None:
                 subprocess.Popen(["xdg-open", str(log_dir)])
         except Exception as exc:
             messagebox.showerror("3DPrintHub — لاگ", str(exc), parent=self)
+
+    def _export_github_diagnostic(self):
+        try:
+            product_id = getattr(self, "current_product", None)
+            path = export_diagnostic_bundle(data_root, product_id=product_id)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["runtime_files"] = {
+                "catalog_runtime_session_tail": _tail(session_path),
+                "catalog_main_log_tail": _tail(main_log_path),
+                "catalog_hang_thread_dump_tail": _tail(hang_path),
+            }
+            payload["runtime_state"] = {
+                "active_threads": [thread.name for thread in threading.enumerate()],
+                "startup_hidden_model_scans_blocked": int(
+                    getattr(AIProviderClient, "_phase49_3i24_startup_block_count", 0) or 0
+                ),
+                "secrets_included": False,
+            }
+            path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2, default=str),
+                encoding="utf-8",
+            )
+            audit_event(
+                "diagnostics",
+                "github_ready_export",
+                product_id=product_id,
+                source_file=__file__,
+                message=str(path),
+            )
+            messagebox.showinfo(
+                "3DPrintHub — گزارش عیب‌یابی",
+                f"گزارش امن برای ارسال در GitHub ساخته شد:\n{path}\n\nRuntime log و Thread dump نیز داخل همین JSON قرار گرفت.",
+                parent=self,
+            )
+            try:
+                if os.name == "nt":
+                    os.startfile(str(path.parent))  # type: ignore[attr-defined]
+            except Exception:
+                pass
+        except Exception as exc:
+            messagebox.showerror("3DPrintHub — گزارش عیب‌یابی", str(exc), parent=self)
 
     def _build_ux87_dashboard(self):
         original_dashboard(self)
@@ -202,22 +313,14 @@ def install(app_class, data_root: str | Path) -> None:
             command=self.open_phase49_app_log,
             style="Primary.TButton",
         ).pack(side="left", padx=3)
-        ttk.Button(
-            card,
-            text="🤖 لاگ AI",
-            command=self.open_phase49_ai_log,
-        ).pack(side="left", padx=3)
+        ttk.Button(card, text="🤖 لاگ AI", command=self.open_phase49_ai_log).pack(side="left", padx=3)
         ttk.Button(
             card,
             text="🧰 ساخت گزارش امن برای GitHub",
-            command=self.export_phase49_diagnostics,
+            command=lambda: _export_github_diagnostic(self),
             style="Success.TButton",
         ).pack(side="left", padx=3)
-        ttk.Button(
-            card,
-            text="📂 پوشه لاگ",
-            command=lambda: _open_log_folder(self),
-        ).pack(side="left", padx=3)
+        ttk.Button(card, text="📂 پوشه لاگ", command=lambda: _open_log_folder(self)).pack(side="left", padx=3)
 
     def on_close(self):
         _runtime_write(
