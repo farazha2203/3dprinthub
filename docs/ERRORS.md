@@ -51,62 +51,73 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Correct Solution — Phase49.3I.22:** one final Product Workspace Tk-thread bridge queues worker UI callbacks in Python and drains them on the main thread; Tk-backed source is snapshotted before worker start; right Product rail is a Canvas + vertical Scrollbar.
 
-**Verification status:** implementation/focused tests committed; Windows Local gate required. No migration. Production untouched.
-
 **Prevention:** no worker thread may call Tk/Tcl directly/indirectly; worker completion/error/progress must use the main-thread handoff queue and Tk-backed input must be snapshotted before worker start.
 
 ### ERR-49-039 — AvalAI Product request did not match the exact saved-model Chat Completions contract
 **Date:** 2026-08-25  
 **Owner evidence:** exact MakerWorld product URL works directly in AvalAI, while Catalog Center's link-grounded completion did not reliably produce/apply content; canonical English source identity was correct but old generic Persian identity remained.
 
-**Verified Root Cause:**
-- generic `structured_response()` called `choose_model()` and therefore could issue a hidden `/models` request before normal Product generation,
-- Responses-style `input_text`/`input_image` wrapper objects were JSON-serialized into one chat user string,
-- the prompt demanded a response matching a schema but did not include the actual JSON schema,
-- image placeholder objects could consequently be sent as textual wrappers rather than a valid AvalAI multimodal contract,
-- this contradicted the existing Product AI rule: exact saved Provider/Model, no hidden model discovery.
+**Verified Root Cause:** generic structured generation performed hidden model discovery, serialized Responses-style wrappers into chat text and required schema-shaped JSON without the exact schema contract.
 
-**Correct Solution — Phase49.3I.23/24:**
-- exact saved AvalAI model with no hidden Product model discovery,
-- structured output prefers `json_schema`, with bounded `json_object` / prompt-JSON compatibility fallbacks,
-- deterministic app-side source fetch/sanitization remains authoritative,
-- explicit AvalAI URL tools may add evidence only on supported model families,
-- fake image placeholder serialization is removed,
-- diagnostics store sanitized contract metadata only.
+**Correct Solution — Phase49.3I.23/24:** exact saved AvalAI model, no hidden Product model discovery, `json_schema` first with bounded compatibility fallbacks, deterministic app-side source fetch, no fake image placeholder serialization and sanitized request metadata.
 
-**Verification status:** code and focused tests committed; Windows live AvalAI gate pending. No migration. Production untouched.
+**Prevention:** Product-bound provider adapters must test exact model, no hidden discovery, request shape, source grounding and schema visibility.
 
-**Prevention:** Product-bound provider adapters must have contract tests asserting exact saved model, no hidden discovery, exact request shape, source grounding, output schema visibility and no secret/pseudo-media leakage.
-
-### ERR-49-040 — AvalAI Product path crashed inside diagnostics before the provider request
+### ERR-49-040 — AvalAI Product path crashed inside diagnostics before provider request
 **Date:** 2026-08-25  
-**Owner evidence:** Product dialog failed immediately with `audit_event() got an unexpected keyword argument 'provider'` for multiple AvalAI models.
+**Owner evidence:** `audit_event() got an unexpected keyword argument 'provider'`.
 
-**Verified Root Cause:** 49.3I.23 called the generic application `audit_event()` with `provider=` and `model=` keyword arguments. Those fields belong in `ai_request_event()` or inside `audit_event(detail=...)`; the generic audit function never accepted them.
+**Root Cause:** Provider/Model were passed as unsupported generic audit keyword arguments.
 
-**Correct Solution — Phase49.3I.24:** use the actual audit signature and put Provider/Model/schema/source strategy inside sanitized `detail`. Provider HTTP request logging continues through `ai_request_event()`.
-
-**Prevention:** every diagnostics callsite must be regression-tested against the real function signature; adding observability must never become a new execution blocker.
+**Solution — 49.3I.24:** put Provider/Model inside sanitized `detail`; real provider HTTP logging remains in `ai_request_event()`.
 
 ### ERR-49-041 — Application startup performed hidden multi-provider model scans and bad-key probes
 **Date:** 2026-08-25  
-**Owner evidence:** the uploaded diagnostic shows `app_start` followed immediately by AvalAI/OpenRouter `/models`, and some sessions attempted OpenAI `/models` with an OpenRouter-style key and received HTTP 401.
+**Owner evidence:** startup diagnostics showed AvalAI/OpenRouter/OpenAI `/models`; OpenAI sometimes received an OpenRouter-style key and returned HTTP 401.
 
-**Verified Root Cause:** mature/legacy AI shell composition still allowed model-list work while the final application class was constructing. This violated the later rule that model discovery is an explicit operator action and added avoidable network latency/error traffic to startup.
+**49.3I.24 Partial Fix:** blocked model catalog calls only until first Tk idle.
 
-**Correct Solution — Phase49.3I.24:** a final App-shell startup guard prevents `product_id=None` model-catalog network calls until first Tk idle. Explicit model search works normally after first idle. Startup observability records how many legacy scans were blocked.
+**49.3I.25 Additional Finding:** fresh diagnostics proved requests were merely deferred: immediately after `startup_first_idle`, hidden OpenAI `/models` started and UI heartbeat lag reached roughly 3.5 seconds.
 
-**Prevention:** application construction and first paint must be local-only except for explicitly documented mandatory health dependencies; Provider model discovery is always user-driven.
+**Correct Solution — 49.3I.25:** model discovery is blocked for the entire process unless a visible operator Search/Test action grants a short explicit discovery window. Opening the application or Product never tests AI connectivity.
+
+**Prevention:** Provider discovery/test is always operator-driven; first idle is not authorization for network work.
 
 ### ERR-49-042 — Non-text Provider model accepted for Product structured content
 **Date:** 2026-08-25  
-**Owner evidence:** `google/lyria-3-pro-preview` returned HTTP 200 through OpenRouter after ~28 seconds but produced music-style marker output instead of JSON.
+**Owner evidence:** `google/lyria-3-pro-preview` returned HTTP 200 but music-style marker output instead of Product JSON.
 
-**Verified Root Cause:** model selection validated availability/name but not minimum capability for Product editorial JSON generation.
+**Solution — 49.3I.24:** obvious music/image/audio/embedding/moderation/video routes are filtered/rejected at Product text boundary.
 
-**Correct Solution — Phase49.3I.24:** obvious music/image/audio/embedding/moderation/video routes are filtered from the Product model picker and rejected again at the Product structured-response boundary.
+### ERR-49-043 — Exact-link AI started with a full layered Product save storm
+**Date:** 2026-08-25  
+**Owner evidence:** diagnostics show many consecutive Product update groups immediately before each `queued/source_fetch/ai_request`, including content, slider, pricing, material/color and commerce fields.
 
-**Prevention:** successful HTTP status is not proof of model suitability; Product AI requires a text/structured-output-capable route.
+**Verified Root Cause:** 49.3I.21 called `self.save(silent=True)` before starting exact-link AI. The mature Workspace has multiple additive save wrappers, so one preparation step caused many commits and UI refreshes before network work.
+
+**Correct Solution — 49.3I.25:** exact-link completion does not call the layered save chain. It snapshots current UI state and persists only the source URL if it actually changed. AI output is applied once after operator confirmation.
+
+**Prevention:** background preparation must never call broad save pipelines when only one prerequisite field changed; use minimal atomic updates.
+
+### ERR-49-044 — Worker diagnostics and Product writes shared one SQLite transaction connection
+**Date:** 2026-08-25  
+**Owner evidence:** `deferred_callback_error: cannot commit - no transaction is active` occurred while AI/image/product updates overlapped.
+
+**Verified Root Cause:** diagnostics had its own lock but still used the same `Database.conn` as Product/UI writes. Cross-thread commits on one sqlite connection can invalidate another transaction boundary.
+
+**Correct Solution — 49.3I.25:** diagnostics opens a dedicated SQLite connection with WAL + busy timeout; common Catalog Database operations are additionally serialized by an instance RLock. No schema migration is required.
+
+**Prevention:** cross-thread subsystems must not share a mutable SQLite transaction connection merely because `check_same_thread=False` is set.
+
+### ERR-49-045 — Finite runtime log rotation conflicted with cumulative troubleshooting requirement
+**Date:** 2026-08-25  
+**Owner evidence:** repeated open/hang cycles require history across sessions; owner explicitly requires old logs never be cleared on startup.
+
+**Root Cause:** database audit rows persisted, but the text runtime logger used a finite rotating handler and would eventually delete old archives.
+
+**Correct Solution — 49.3I.25:** canonical runtime log uses append-only `FileHandler`; existing rotated files remain untouched; diagnostic export only reads/exports and never clears history.
+
+**Prevention:** troubleshooting retention policy is append/preserve unless an explicit maintenance/retention action is introduced and approved.
 
 ## OPEN / SEPARATE ITEMS
 
