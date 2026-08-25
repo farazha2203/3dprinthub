@@ -1,16 +1,17 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
-Updated: 2026-08-23
+Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
-Active Branch: `epic/phase49-unified-product-slider-sync`
+Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
+Base Epic: `epic/phase49-unified-product-slider-sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.17 — Single Active AI Runtime`
-Status: `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`
+Current Hotfix: `49.3I.24 — Runtime Observability + AvalAI URL Tools + Startup No-Network Guard`
+Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Operating Rule
 GitHub/Repository is permanent source of truth.
-`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`.
+`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL GATE → MANUAL QA → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`.
 
 No direct Production edits. Dirty Local/Host stops for inspection. New features are additive unless the owner explicitly changes the business contract.
 
@@ -33,33 +34,37 @@ Discovery fallback: `locator-safe → HTTP/HTML → attached Chrome 9222 → cac
 Image fallback: `locator-safe → HTTP → mature Classic DOM → attached Chrome 9222 → listing thumbnail`.
 No Rich Direct Full Fetch dependency is part of bulk intake.
 
-## Product AI Contract — 49.3I.17
-- AI Center is the authority for selecting/saving one active Provider and Model,
-- Product AI reads only that saved Provider and its saved Model,
+## Product AI Contract — Current
+- AI Center owns exactly one saved Provider + Model for Product AI,
 - key comes only from that Provider's secure secret slot,
-- no fallback to another Provider because another key happens to exist,
-- Product open does not start AI automatically,
-- normal Product AI does not fetch `/models` before generation,
-- Google Product AI with exact saved Model skips model-list preflight,
-- explicit Settings Model Search/Test remains live,
-- stale destroyed-widget Tk callbacks are non-fatal and logged,
-- existing sanitized trace, schema repair, 90s title / 210s All-Fields watchdog, Stop Waiting, stale-result and manual-override protection remain.
+- Product open does not start hidden AI,
+- Product generation does not run hidden `/models`,
+- application startup does not run Provider model-catalog network calls before first Tk idle,
+- explicit Model Search/Test remains live after first paint,
+- Product editorial generation rejects obvious non-text models,
+- AvalAI structured output prefers strict JSON schema,
+- exact source page is fetched/sanitized by the application; supported AvalAI URL tools may add explicit evidence when source extraction is sparse,
+- a bare URL in chat is never treated as proof that the model browsed the page,
+- Tk worker completions use the main-thread bridge,
+- bounded job/cancel/stale-result/manual-override protections remain.
 
-## Latest Validation / Merge
-PR `#63` merged.
-- final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`,
-- merge commit `7f835f573b92e3aded6275c9421770c0c47d947a`.
+## Runtime / Diagnostics Contract — 49.3I.24
+- runtime JSONL starts before wrapped App construction,
+- Program/AI logs are available from Dashboard,
+- Tk heartbeat records recovered lag,
+- extended heartbeat stall writes an all-thread hang dump,
+- safe diagnostic export includes redacted runtime/main/hang-log tails,
+- no API key/password/token/full Authorization header is exported.
 
-All required runtime-head workflows SUCCESS: 49.3I.17 `32649623837`, 49.3I `32649623808`, 49.3I.16 `32649623695`, 49.3I.15 `32649623705`, 49.3I.14 `32649623679`, 49.3H `32649623825`, 49.3G `32649623755`, Full Epic + Windows Catalog + Full Django `32649623804`.
+## Current Evidence / Open Gate
+Latest owner diagnostic identified ERR-49-040/041/042: invalid AvalAI audit call, hidden startup Provider scans and non-text Product model selection. These are implemented/fixed on the feature branch but have not yet passed the Windows Local gate.
 
 Django migration: NONE. Catalog schema migration: NONE. Production untouched.
 
-Relevant latest records: `ERR-49-035`, `REQ-49I-024`.
-
 ## Exact Next Gate
-Windows: live ff-only pull current Epic → `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1 -LaunchApp` → save one active Provider/Model → open Product without hidden AI → run All-Fields once and verify only saved Provider/Model/no `/models` preflight → test Stop/failure responsiveness → optionally save one other Provider/Model and confirm exact switch.
+Windows: close app → clean worktree → live fetch/prune + ff-only pull feature branch → Local HEAD == Remote HEAD → compile + focused 49.3I.24/23/22/21/20/19/18 tests → `launch.py --verify-only` → launch → verify Dashboard diagnostics/no startup `/models` → explicit model search → MakerWorld 2896217 link completion → explicit AvalAI URL tool or app-fetch fallback + structured output → hang export if needed → normal close/reopen.
 
-Then complete any remaining short acquisition acceptance → exactly one Local Publish E2E → owner approval → Host/MySQL/backup/rollback verification → GitHub-only Production deploy.
+Then exactly one Local Publish E2E → owner approval → read-only Host/MySQL/backup/rollback verification → GitHub-only Production deploy.
 
 ## Next Product Phase
 After Catalog Production verification: normal Store ZarinPal request/callback/verify + Sandbox E2E, preserving bank transfer.
