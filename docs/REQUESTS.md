@@ -24,72 +24,47 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-027: AI actions must not freeze and must be diagnosable.
 - REQ-49I-028: exact Product URL grounds the full Product AI refresh.
 
-## REQ-49I-029 — AvalAI Product generation must use the exact working provider contract
+## REQ-49I-029 — AvalAI Product generation uses the exact working provider contract
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
-Acceptance:
-- exact saved AvalAI model; no hidden Product `/models`,
-- application fetches/sanitizes the exact source page as deterministic evidence,
-- supported AvalAI URL tools may add explicit page/web evidence when extracted facts are sparse,
-- bare URL text is never treated as proof that browsing occurred,
-- structured output prefers `json_schema`, with same-model compatibility fallback,
-- diagnostics identify Provider/Model/URL-tool/fallback stages without secret/full prompt,
-- resulting Persian identity must preserve the actual Product and reject generic model-number content.
+Exact saved model, no hidden Product model scan, deterministic source-page fetch, schema-first structured output, sanitized diagnostics and real Product identity are required.
 
 ## REQ-49I-030 — Re-audit SEO before Catalog Web publish
 Status: `CORE CONTRACT VERIFIED IN REPOSITORY / LOCAL PUBLISH E2E REQUIRED`
 
-Required before Production:
-- Persian title/H1 and useful product content,
-- unique SEO title and description,
-- canonical and index/follow state,
-- OG product title/description/image,
-- image Alt text,
-- Product/ProductGroup + Offer structured data,
-- breadcrumb and available review/FAQ structured data,
-- safe public slug/legacy redirect,
-- public product inclusion in `/sitemap.xml`,
-- media/product page data verified after Local publish.
+Persian title/content, unique SEO title/description, canonical, index state, OG, image Alt, Product/Offer/Breadcrumb/Review/FAQ structured data, safe slug/redirect, sitemap and Local media/product verification are required before Production.
 
-Dedicated Twitter title/description/image and `og:image:alt` are optional social-preview enhancements and are not blockers for this Catalog release.
-
-## REQ-49I-031 — Program logs, hang diagnostics and startup performance must be operator-accessible
+## REQ-49I-031 — Program logs, hang diagnostics and startup performance are operator-accessible
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
-Owner request: record the application from startup so slow open/close/hangs can be diagnosed, expose Program Log on Dashboard, and create one safe diagnostic file suitable for sharing/uploading to GitHub.
+Lifecycle logging, Dashboard Program/AI logs, safe diagnostic export, Tk lag/hang trace, secret redaction and no automatic provider work during startup are required.
 
-Acceptance:
-- lifecycle logging begins before the wrapped App constructor and continues through close,
-- Program Log and AI Log are visible from Dashboard,
-- safe diagnostic export includes redacted runtime/main/hang-log tails,
-- no API key/password/token/full Authorization header is exported,
-- Tk heartbeat records meaningful UI lag,
-- an extended UI stall creates an all-thread dump without asking Tk from the watchdog thread,
-- hidden Provider model-list network work is not allowed during application construction,
-- explicit model search remains available after first paint,
-- obvious non-text models cannot be selected for Product editorial structured generation,
-- AvalAI model rows are not falsely labeled all-free because generic pricing metadata is absent.
+## REQ-49I-032 — Product-first editing workflow and stable repeated operation
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Owner acceptance:
+- `محتوا و SEO` is Product Stage 1 so Persian identity/content/SEO can be filled first,
+- `اطلاعات پایه` is Stage 2 and contains `🌐 تکمیل همه اطلاعات بر اساس لینک محصول`,
+- any legacy Product-data-send action routes to that same exact-link workflow,
+- exact-link source intake also carries available weight/print time; MakerWorld exact `profileId` weight is preferred when present,
+- incomplete stages never block opening Images/Commerce/Source or another stage,
+- Images displays all controlled Product image cards in rows of five and scrolls vertically when needed; existing metadata/selection/primary/remove/open controls remain,
+- exact-link completion must not broadly resave the Product before AI,
+- Local/site publish preflight shows the actual missing items and may offer exact-link AI completion for AI-fillable gaps,
+- opening the application does not test provider connectivity or fetch models; only explicit operator Search/Test may do so,
+- historical Program/audit logs survive close/reopen and diagnostic export; startup never clears them,
+- repeated Product edit/AI cycles must not produce `cannot commit - no transaction is active`,
+- AI remains background/observable during legitimate slow provider responses.
 
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.24 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.25 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 
-Product data must move through the existing publish/bridge/import contract. Do not copy the Local SQLite database over Production MySQL.
-
-After approval: verify Host/branch/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
+Product data moves through the existing publish/bridge/import contract. Local SQLite is never copied over Production MySQL.
 
 ## Next Product Request
 ### REQ-PAY-001 — Normal Store checkout must support online payment
 Status: `REQUESTED / AFTER CATALOG DEPLOY`
-- reuse mature Phase30 ZarinPal security semantics,
-- server owns/recomputes amount,
-- idempotent attempt identity,
-- stored Authority must match callback,
-- server-to-server Verify before paid,
-- duplicate callback cannot double-finalize order/inventory,
-- bank transfer remains available,
-- Sandbox E2E before live activation,
-- secrets only in secure configuration.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
