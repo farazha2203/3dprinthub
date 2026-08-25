@@ -2,6 +2,38 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.22 Tk Main-Thread AI Bridge + Scrollable Product Rail
+
+### Owner Evidence
+- Product Workspace entered Windows `(Not Responding)` after multiple AI actions even after the 49.3I.21 timeout reduction,
+- all visible AI entry points were affected strongly enough to require closing the application,
+- the right Product stages rail clipped lower controls and had no vertical scrolling.
+
+### Verified Additional Root Cause
+The earlier 210-second HTTP timeout was real, but multiple mature AI workers also performed Tk handoff through `self.after(...)` from background threads, and the 49.3I.21 link worker read `_source_for_ai()` off the Tk thread. Tk/Tcl has one owning UI thread; cross-thread Tcl marshalling can freeze/deadlock the Windows window.
+
+### Implemented
+- final Product Workspace Tk-thread bridge installed after 49.3I.18/19/20/21,
+- off-main `workspace.after(...)` becomes a Python-only deferred callback instead of a Tcl call,
+- 25 ms main-thread pump executes deferred callbacks safely,
+- deferred callback cancellation support,
+- main-thread `_source_for_ai()` snapshot with deep-copy access from workers,
+- link-grounded refresh pre-snapshots Tk-backed source state before worker start,
+- sanitized bridge/callback diagnostics,
+- Product stages rail rebuilt as Canvas + vertical Scrollbar,
+- rail scrollregion updates when later AI/readiness panels are appended,
+- mouse-wheel scroll works while the pointer is inside the rail,
+- focused regression tests added.
+
+Files:
+- `catalog_center/app/phase49_3i22_tk_thread_bridge.py`
+- `catalog_center/app/phase49_3i_pricing_modes.py`
+- `catalog_center/app/product_workspace_v87.py`
+- `catalog_center/tests/test_phase49_3i22_tk_thread_bridge.py`
+- `docs/phases/PHASE49_3I22_TK_THREAD_AND_SCROLL_RAIL.md`
+
+No Django/Catalog migration. No Provider/Model identity change. No Production change. Windows Local QA pending.
+
 ## 2026-08-25 — Phase49.3I.21 Observable AI Jobs + Link-Grounded Full Refresh
 
 ### Owner Evidence
