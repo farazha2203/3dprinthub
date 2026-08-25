@@ -2,6 +2,31 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.26 Unified Exact-Link Completion + Canonical Wizard + Vertical Gallery + Product Archive
+
+### Owner / Diagnostic Evidence
+- 49.3I.25 Content-first ordering still produced a stage-lock popup and did not remove the practical Basic Info prerequisite.
+- the old 49.3G after-idle horizontal gallery layout overrode the later five-column intention.
+- exact-link completion still left Image SEO/Metadata work for a second AI action.
+- fresh diagnostic hang dump captured an 8.110s UI lag while image finalization was blocked in SSL/HTTP download code.
+- Product operator requested 0–100% progress/current stage, a two-minute AI ceiling, no image upload to AI, bulk archive/delete-block actions, default five images and one source-page screenshot.
+
+### Implemented
+- restored canonical stage order: Basic Info, Commerce, Images, Content/SEO, Source/License, Slider, Review/Publish.
+- all stages remain manually navigable; readiness blocks publish rather than browsing/editing stages.
+- exact-link completion shows determinate progress and explicit stages; timeout is 120 seconds and timeout handling rechecks the source URL separately.
+- AI receives textual source/Product facts only; no selected image URL/file is sent to AI.
+- one exact-link action now applies Product content/SEO plus image SEO text fields (filename/Alt/Title/Caption/Keywords).
+- physical image SEO finalization runs only when selected source images already exist locally; unified AI never starts hidden network image downloads just to finish metadata.
+- final gallery composition overrides 49.3G horizontal layout with five cards per row and vertical scrolling.
+- Product Workspace adds maximize/full-screen toggle.
+- Products gallery adds per-card/group selection, bulk archive and identity-preserving delete/block. Published/synced cards use white border treatment.
+- delete/block preserves source identity through existing blocked Product contract so the URL is not reacquired.
+- new acquisition default is five source images; one full-page source screenshot is added as an extra local, non-selected gallery reference.
+- focused 49.3I.26 regression tests and Windows runner added.
+
+No Django migration. No Catalog schema migration. Production untouched. Windows Local QA pending.
+
 ## 2026-08-25 — Phase49.3I.25 Product-First Workflow + Persistent Diagnostics + Startup No-AI
 
 ### Owner / Diagnostic Evidence
