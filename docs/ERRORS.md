@@ -17,7 +17,7 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 - **ERR-49-011 — test guessed `upsert_product()` return:** resolve persisted product by real identity after upsert.
 - **ERR-49-012 — security test coupled to one mask format:** assert secret absence semantically.
 - **ERR-49-013 — explicit MakerWorld Search URL ignored:** explicit valid operator URL is authoritative.
-- **ERR-49-014 — discovery full-fetched before review:** Preview and acquisition are separate; 49.3I.15 supersedes this for owner-approved bulk path.
+- **ERR-49-014 — discovery full-fetched before review:** Preview and acquisition are separate.
 - **ERR-49-015 — runtime pricing choices caused phantom migration:** never mutate migration-owned Django field metadata at runtime.
 - **ERR-49-016 — PS5.1 runner encoding failure:** Windows runners are ASCII-only and CI-enforced.
 - **ERR-49-017 — Products UI patch missed real UX87 boundary:** patch/test final visible composition boundary.
@@ -36,99 +36,48 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 - **ERR-49-030 — exact-page discovery worked but UI hid state/results:** final UX87 boundary + live state + contain-fit images.
 - **ERR-49-031 — Windows URL paste + batch browser flashing:** explicit paste, headless batch, visible per-candidate error.
 - **ERR-49-032 — new UI hid mature scan controls and forced 403-prone single route:** restore mature controls; optional paths are additive.
-- **ERR-49-033 — correct listing links still depended on fragile per-product Full Fetch:** 49.3I.15 bulk staging/Add-to-Products removes Rich Direct dependency.
+- **ERR-49-033 — correct listing links still depended on fragile per-product Full Fetch:** bulk staging/Add-to-Products removes Rich Direct dependency.
 
-### ERR-49-034 — Bulk exact-page run aborted on `Locator.evaluate_all` SyntaxError instead of trying known alternatives
-**Date:** 2026-08-23  
-**Environment:** Windows Catalog Center 8.7.1 after merged 49.3I.15.  
-**Owner evidence:** the MakerWorld `cake+stand` candidate rows from an earlier successful discovery were still visibly correct, but a new `کشف + دریافت تصاویر` run ended immediately with `Locator.evaluate_all: SyntaxError: Invalid or unexpected token`; counters showed discovery zero / error one.
+### ERR-49-034 — Locator JavaScript failure aborted bulk acquisition
+**Root cause:** one browser/parser technique remained a mandatory gate.  
+**Solution:** 49.3I.16 discovery/image fallback ladders + cached candidate reuse.  
+**Prevention:** a failed equivalent technique must fall through to the next verified method.
 
-**Verified Root Cause:**
-- the 49.3I.15 bulk worker still called the older `discover_preview_candidates()` as one mandatory discovery boundary,
-- that older function contains multiline Python-embedded JavaScript passed to Playwright `evaluate_all`, matching ERR-49-024,
-- failure happened before candidate image staging,
-- a single-method dependency contradicted the owner requirement that a failed route fall through to known alternatives.
+### ERR-49-035 — Product AI mixed saved identity with legacy provider fallback / redundant model probes
+**Root cause:** legacy provider resolution, model-list probes and hidden AI-on-open could conflict with the explicitly saved Provider/Model.  
+**Solution:** 49.3I.17 single active Provider/Model/key, no hidden Product AI, no normal `/models` preflight, stale Tk callback protection.  
+**Prevention:** Product AI must use exactly the saved identity and explicit operator execution.
 
-**Correct Solution — Phase49.3I.16:**
-- discovery ladder `locator-safe Playwright → public HTTP/HTML → attached Chrome 9222 → cached candidate DB`,
-- per-candidate image ladder `locator-safe fresh → HTTP parser/downloader → mature Classic DOM → attached Chrome 9222 → listing thumbnail`,
-- each failed method is traced and the next one is tried,
-- cached correct candidates for the same listing may be reused,
-- real local image staging remains required,
-- no Rich Direct dependency returns.
+### ERR-49-036 — Generic discovery title poisoned Product identity and downstream AI/SEO
+**Owner evidence:** MakerWorld product `2896217-ribbed-cake-stand-cookie-platter` persisted a generic model-number identity and AI generated matching generic Persian content.  
+**Root cause:** link-only fallback placeholder crossed the candidate/Product identity boundary.  
+**Solution:** 49.3I.19 rejects generic placeholders, prefers exact page title and uses MakerWorld URL slug as deterministic fallback; canonicalization occurs before persistence and before AI.  
+**Prevention:** crawler placeholders must never become authoritative Product identity.
 
-**Verification:** PR `#62` merged; all 49.3I.16/49.3I/49.3I.15/49.3I.14/49.3H/49.3G/Full Phase49 + Full Django workflows passed. No migration. Production untouched.
-
-**Prevention:** never make one browser/parser technique the only gate when equivalent verified methods or persisted results exist.
-
-### ERR-49-035 — Product AI mixed saved identity with legacy provider fallback and redundant model-catalog probes
-**Date:** 2026-08-23  
-**Environment:** Windows Catalog Center 8.7.1 after 49.3I.16.  
-**Owner evidence:** operator selected and saved one Provider/Model in AI Center, but Product AI often stayed at `در حال اتصال به هوش مصنوعی`, appeared to enumerate many models/providers, sometimes required Task Manager termination, and one async callback raised `TclError: invalid command name ...listbox`.
+### ERR-49-037 — AI actions appeared frozen because generation waited up to 210 seconds without an early request-start boundary
+**Date:** 2026-08-25  
+**Environment:** Windows Catalog Center 8.7.1 feature QA on `agent/phase49-3i18-operator-bulk-ai-rebuild`.  
+**Owner evidence:** `تکمیل هوشمند همه فیلدها با AI`, source-title + full AI rebuild, image SEO and other AI actions could remain at `در حال اتصال به هوش مصنوعی`; the visible Task Center ceiling was 03:30. Source-title reread itself succeeded.
 
 **Verified Root Cause:**
-- legacy `App._selected_ai_provider()` only treated AvalAI/OpenAI as explicit and otherwise scanned configured keys, so saved OpenRouter/Google could drift to a different provider,
-- Product Task Center and title paths still consumed that legacy resolver,
-- every Product AI run called `probe_connection()` before useful work; the 49.3I.11 probe downloaded the provider model catalog,
-- Google Product AI could list models again before the content request,
-- `ai_auto_prepare_on_open` defaulted to enabled and could start a hidden request about 900 ms after opening an incomplete product while the operator also started a manual request,
-- a delayed Tk callback could touch a destroyed Listbox and promote a stale UI callback into a fatal dialog.
+- `catalog_center/app/ai_providers.py` used `timeout=210` for chat generation,
+- 210 seconds is exactly 03:30,
+- existing 49.3I.18/49.3I.19 generation code already used daemon worker threads, so the Product DB did not need an extra field-write permission to explain the wait,
+- diagnostics were strongest after response/error but did not provide one central request-start boundary for every guarded provider call,
+- a very long provider/network wait therefore looked like an application hang.
 
-**Correct Solution — Phase49.3I.17:**
-- Product AI identity comes only from saved `ai_provider` + that provider's saved model,
-- secure key is read only for that exact provider and a cross-provider request is rejected,
-- `auto`/unsaved provider fails closed instead of selecting whichever key happens to exist,
-- hidden AI-on-open is disabled; Product AI runs only after explicit operator action,
-- Product-bound `probe_connection` is a local exact-model preflight and does not request `/models`; actual content generation is the network test,
-- Google Product-bound exact model bypasses `_google_model_info` before generation,
-- Settings Model Search / explicit connection test remain live,
-- stale `invalid command name` Tk callbacks are logged/suppressed and busy flags are released,
-- existing observable request/response/error trace, schema repair, watchdog/Stop Waiting and stale-result guards are preserved.
+**Correct Solution — Phase49.3I.21:**
+- install one global provider guard around AI JSON requests,
+- default POST ceiling 75 seconds, environment override `CATALOG_AI_TIMEOUT_SECONDS` constrained to 20..120 seconds,
+- write request-start before waiting and finish/error/timeout afterward,
+- preserve secret redaction,
+- add a visible link-grounded job dialog with elapsed time/stages/cancel/report,
+- cancelled late link-refresh response is ignored and busy state is released,
+- add one exact-link full-refresh path that fetches/parses the source, canonicalizes identity, sends URL + sanitized facts to AI, previews the result, and applies only after operator confirmation.
 
-**Verification:**
-- PR `#63` merged; final runtime head `2917a3db5225abac71fc3e80b64ad439acd7a4d0`; merge `7f835f573b92e3aded6275c9421770c0c47d947a`,
-- Phase49.3I.17 `32649623837` SUCCESS,
-- Phase49.3I `32649623808` SUCCESS,
-- Phase49.3I.16 `32649623695` SUCCESS,
-- Phase49.3I.15 `32649623705` SUCCESS,
-- Phase49.3I.14 `32649623679` SUCCESS,
-- Phase49.3H `32649623825` SUCCESS,
-- Phase49.3G `32649623755` SUCCESS,
-- Full Phase49 + Windows Catalog regressions + Full Django `32649623804` SUCCESS,
-- Django migration NONE; Catalog schema migration NONE; Production untouched.
+**Verification status:** GitHub implementation and regression tests are committed; canonical Windows Local gate is required before acceptance. No migration. Production untouched.
 
-**Prevention:** Product AI must never infer provider from available secrets or enumerate model catalogs during normal generation. Persist one active identity, use it exactly, keep discovery/test network calls explicit, and never start hidden AI work on Product open.
-
-### ERR-49-036 — Generic discovery title poisoned Product identity and all downstream AI/SEO
-**Date:** 2026-08-23  
-**Environment:** Windows Catalog Center feature QA on `agent/phase49-3i18-operator-bulk-ai-rebuild`.  
-**Owner evidence:** MakerWorld product URL `2896217-ribbed-cake-stand-cookie-platter` was stored with generic model-number identity and generated Persian image/SEO text such as `مدل میکرورلد 2896217`, although the product URL/page identifies a ribbed cake stand / cookie platter.
-
-**Verified Root Cause:**
-- 49.3I.16 classic-link and HTTP fallback discovery intentionally created placeholder text `Model <external_id>` because those methods only needed links,
-- `phase49_3i_discovery_review._candidate_title()` treated `Model 2896217` as a valid non-empty title because it rejected only the bare numeric ID,
-- 49.3I.15 `build_product_payload()` copied the candidate `source_title` directly into the Product payload,
-- therefore the generic placeholder became persistent Product identity before AI ran,
-- 49.3I.18 could manually override Persian identity, but it did not repair the acquisition boundary that supplied the wrong source title.
-
-**Correct Solution — Phase49.3I.19:**
-- classify bare/generic English and Persian model-number labels as non-authoritative,
-- prefer a valid exact-page/scraped title,
-- when live title is unavailable, derive deterministic identity from the exact MakerWorld `/models/<id>-<slug>` URL,
-- canonicalize candidate title before candidate upsert,
-- canonicalize again before Add-to-Products as a final persistence guard,
-- canonicalize Product AI source context so legacy wrong products cannot continue poisoning AI,
-- add Product Workspace actions to re-read/correct source title and optionally rebuild all AI text/SEO from the repaired identity,
-- preserve 49.3I.18 operator-authoritative Persian title and bulk image editing.
-
-**Acceptance examples:**
-- `2845731-cake-stand` → `Cake Stand`,
-- `2896217-ribbed-cake-stand-cookie-platter` → `Ribbed Cake Stand Cookie Platter`,
-- `Model 2896217`, `MakerWorld model 2896217`, `مدل میکرورلد 2896217` are rejected as authoritative titles.
-
-**Verification status:** implementation and focused unit tests are committed on the feature branch; Windows Local gate and manual MakerWorld acceptance are still required. No DB migration. Production untouched.
-
-**Prevention:** placeholders used only to keep a fallback crawler moving must never cross the candidate/Product identity boundary. Every externally sourced entity needs a canonical identity validation before persistence and again before AI generation.
+**Prevention:** every external AI request must be bounded, emit a start event before network wait, expose its active Provider/Model/operation, support stale-result rejection, and never use an opaque multi-minute network wait as normal Product Workspace behavior.
 
 ## OPEN / SEPARATE ITEMS
 
