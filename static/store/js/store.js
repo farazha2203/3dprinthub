@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
             seen.add(item.src);
             uniqueSources.push(item);
         });
+        if (!uniqueSources.length) return;
 
         let activeIndex = 0;
         function setActive(index) {
@@ -174,10 +175,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const weightText = chargeableWeight
                 ? `وزن قابل‌محاسبه ${formatNumber(chargeableWeight)} گرم${partWeight ? ` • قطعه ${formatNumber(partWeight)} گرم` : ""}${supportWeight ? ` • ساپورت ${formatNumber(supportWeight)} گرم` : ""}`
                 : "";
+            const shippingText = Number(option.dataset.shippingWeight || 0)
+                ? `وزن ارسال ${formatNumber(option.dataset.shippingWeight)} گرم`
+                : "";
             const commerceBits = [option.dataset.sizeLabel, option.dataset.buildProfileLabel].filter(Boolean);
             setText(
                 "variant-meta",
-                [...commerceBits, option.dataset.material + color, option.dataset.quality, weightText, timeText].filter(Boolean).join(" • ")
+                [...commerceBits, option.dataset.material + color, option.dataset.quality, weightText, shippingText, timeText].filter(Boolean).join(" • ")
             );
 
             const components = document.getElementById("price-components");
@@ -195,8 +199,41 @@ document.addEventListener("DOMContentLoaded", function () {
             if (variantInput) variantInput.value = option.value;
         }
 
+        async function hydrateCommerceMetadata() {
+            const options = Array.from(select.options).filter((option) => option.value);
+            const ids = options.map((option) => option.value).join(",");
+            if (!ids) return;
+            try {
+                const response = await fetch(`/store/api/variant-commerce-options/?ids=${encodeURIComponent(ids)}`, {
+                    credentials: "same-origin",
+                    headers: { "Accept": "application/json" },
+                });
+                if (!response.ok) return;
+                const payload = await response.json();
+                const variants = payload.variants || {};
+                options.forEach((option) => {
+                    const meta = variants[String(option.value)];
+                    if (!meta) return;
+                    option.dataset.sizeLabel = meta.size_label || "";
+                    option.dataset.buildProfile = meta.build_profile || "";
+                    option.dataset.buildProfileLabel = meta.build_profile_label || "";
+                    option.dataset.shippingWeight = meta.effective_shipping_weight_grams || "0";
+                    const prefix = [meta.size_label, meta.build_profile_label].filter(Boolean).join(" — ");
+                    if (prefix && !option.dataset.phase50LabelApplied) {
+                        option.textContent = `${prefix} — ${option.textContent}`;
+                        option.dataset.phase50LabelApplied = "1";
+                    }
+                });
+                updatePrice();
+            } catch (_error) {
+                // Variant metadata is an enhancement. Core price/cart behavior
+                // remains available if this lightweight endpoint is unavailable.
+            }
+        }
+
         select.addEventListener("change", updatePrice);
         updatePrice();
+        hydrateCommerceMetadata();
     }
 
     installProductGallery();
