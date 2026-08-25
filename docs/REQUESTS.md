@@ -14,52 +14,45 @@ Older detailed request history remains available in Git history. This file keeps
 
 ## REQ-49I-038 — Customer-readable Product intelligence
 Status: `PRODUCTION VERIFIED`
-Raw Catalog/AI internals are not exposed publicly.
 
 ## REQ-49I-039 — Homepage Hero uses Product-owned public media
 Status: `OWNER REPORTS PRODUCTION OK`
-Imported working-media namespace must remain private; public Hero resolves to Product-owned media.
 
 ## REQ-REL-001 — Catalog production release
 Status: `WEB/CATALOG RELEASE OPERATIONAL`
-Do not reopen completed Catalog architecture unless a new verified defect appears.
 
 ## REQ-50-001 — Complete business finance/accounting system
-Status: `REQUESTED / PHASE50 PLANNED`
-Owner requests completion of the business back-office including:
+Status: `REQUESTED / PHASE50 ACTIVE`
+Owner requests:
 - دفتر کل / معین / تفصیلی,
-- اسناد حسابداری بدهکار/بستانکار,
-- دریافت و پرداخت,
-- صندوق و بانک,
-- حساب مشتریان و تامین‌کنندگان,
-- خرید و فروش,
-- مانده بدهکار/بستانکار,
-- گزارش گردش حساب، دفتر کل/معین و تراز آزمایشی,
-- سود و زیان / جریان نقد / گزارش‌های مدیریتی,
-- اتصال واقعی فروشگاه، سفارش خدمات، خرید فیلامنت، انبار، تولید و پرداخت‌ها به حسابداری.
+- balanced debit/credit accounting documents,
+- receipt/payment, bank/cash,
+- customer/supplier accounts,
+- purchase/sales accounting,
+- debit/credit balances and statements,
+- GL/subledger/trial balance,
+- profit/loss, cashflow and management reports,
+- integration of Store, service orders, purchasing, inventory, production and payments.
 
-Existing PaymentLedgerEntry, CostEntry, BusinessFinanceDashboard and affiliate ledger are preserved as operational/audit sources; they must not be destructively replaced.
+Existing PaymentLedgerEntry, CostEntry, BusinessFinanceDashboard and affiliate ledger must be preserved as operational/audit sources.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `REQUESTED / PHASE50.A NEXT`
-Admin must become a precise business command center with explicit groups:
-- Dashboard & alerts,
-- Customers / CRM / support,
-- Sales & service orders,
-- Store sales / invoices / returns,
-- Treasury / receipts / payments / gateway / refunds,
-- Accounting / chart of accounts / vouchers / ledgers / reports,
-- Purchasing / suppliers / purchase invoices,
-- Inventory & production,
-- Affiliate / commissions / payouts,
-- Catalog / products / pricing / SEO,
-- Settings / users / permissions / integrations / audit.
+Status: `50.A IMPLEMENTED ON GITHUB / LOCAL QA REQUIRED`
 
-Each business ModelAdmin should have meaningful list columns, search, filters, date hierarchy where relevant, links to related documents, safe actions, immutable audit fields and permission-aware delete/change behavior.
+Implemented first slice:
+- authenticated `/admin/command-center/`,
+- Sales / Treasury / Accounting & Ledgers / Purchasing / Inventory & Production groups,
+- permission-aware links to real current ModelAdmins,
+- live operational counters,
+- sidebar shortcut `مرکز مالی و بازرگانی`,
+- date hierarchy and consistent pagination on key financial/commerce admins,
+- admin regression coverage.
+
+Acceptance still requires Windows `manage.py check`, migration dry-run, focused tests and manual Admin navigation QA.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
-Phase50 is additive. Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements, Product/media/Catalog history and payment idempotency/security rules must remain compatible and regression-tested.
+Phase50 is additive. Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements, Product/media/Catalog history and payment idempotency/security rules remain compatible and regression-tested.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass Local tests before Production deployment. No financial schema migration is deployed without MySQL verification, backup and rollback plan.
