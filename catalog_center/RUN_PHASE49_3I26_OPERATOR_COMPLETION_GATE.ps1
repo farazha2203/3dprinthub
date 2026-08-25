@@ -45,6 +45,7 @@ Write-Host ""
 Write-Host "===== PYTHON COMPILE ====="
 & $Py -m py_compile `
     "$Catalog\app\phase49_3i26_operator_completion.py" `
+    "$Catalog\app\phase49_3i26_runtime_patch.py" `
     "$Catalog\app\phase49_3i25_product_first_workflow.py" `
     "$Catalog\app\phase49_3i_pricing_modes.py" `
     "$Catalog\app\phase49_3h_image_limits.py"
