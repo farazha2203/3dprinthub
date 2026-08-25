@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.20 — Visible Operator Panels`
+Current Hotfix: `49.3I.21 — Observable AI Jobs + Link-Grounded Full Refresh`
 Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA NEXT`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -13,10 +13,10 @@ Production: `UNTOUCHED / NOT APPROVED`
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → COMMIT/PUSH IF LOCAL CODE CHANGES → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority
-1. focused Windows acceptance of 49.3I.20 visible operator controls,
-2. focused Windows acceptance of 49.3I.19 correct MakerWorld identity before AI,
-3. regression acceptance of 49.3I.18 clipboard/bulk image/manual identity controls,
-4. chain existing 49.3I.17 and acquisition gates,
+1. Windows acceptance of 49.3I.21 AI timeout/diagnostics/link-grounded full refresh,
+2. regression acceptance of 49.3I.20 visible panels,
+3. regression acceptance of 49.3I.19 source identity and 49.3I.18 operator/bulk metadata,
+4. chain 49.3I.17 and acquisition gates,
 5. exactly one Local Publish E2E,
 6. explicit owner approval,
 7. verify Production branch/path/venv/MySQL/backup/rollback,
@@ -24,89 +24,64 @@ Production: `UNTOUCHED / NOT APPROVED`
 9. then Store ZarinPal integration + Sandbox E2E.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse → Single Active AI Runtime → Operator Editing/Bulk Metadata → Canonical Source Identity Before AI → Visible Operator Panels`.
+`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse → Single Active AI Runtime → Operator Editing/Bulk Metadata → Canonical Source Identity Before AI → Visible Operator Panels → Observable AI Jobs + Link-Grounded Full Refresh`.
 
-## 49.3I.20 — Visible Operator Panels
-The 49.3I.18/49.3I.19 controls are already functionally implemented; this hotfix fixes only their final visible layout boundary.
+## 49.3I.21 — Observable AI Jobs + Link-Grounded Full Refresh
+Repository verification found the generation path had a 210-second provider timeout, matching the 03:30 operator-visible wait. 49.3I.21 hardens this boundary instead of treating the symptom as a DB field-permission problem.
 
-Required visible order:
-- Stage 3 Images: `عملیات گروهی همه تصاویر منتخب سایت` before the expandable image gallery,
-- Stage 4 Content/SEO: `هویت واقعی محصول در منبع — قبل از ترجمه و SEO` first,
-- then `اصلاح نام محصول و بازسازی متن / SEO`,
-- then the mature content toolbar/editor.
+Implemented contract:
+- global bounded provider POST timeout; default 75s, environment override 20..120s,
+- request-start / success / error / timeout diagnostics before and after network calls,
+- existing secret redaction retained,
+- AI content generation receives product URL plus sanitized source facts,
+- new Product Workspace action `تکمیل همه اطلاعات بر اساس لینک محصول`,
+- stages: source fetch → parse → canonical identity → AI request → received preview → explicit apply,
+- one unified apply path updates editable Persian content, SEO fields and image metadata,
+- price, stock, source URL and operator commercial choices remain protected,
+- explicit `توقف انتظار`; cancelled late result must not be applied,
+- local Diagnostics bundle export for deterministic troubleshooting.
 
-Implementation is additive and layout-only:
-- new `phase49_3i20_visible_operator_panels.py`,
-- wired after 49.3I.18 + 49.3I.19 in the final Product Workspace composition,
-- existing button commands/state are preserved,
-- no schema/migration/AI provider/pricing/publish/FTP/Bridge changes.
+Acceptance fixture:
+`2896217-ribbed-cake-stand-cookie-platter` must retain the exact source identity and, after a successful approved refresh, must not keep the generic Persian title `مدل میکرورلد 2896217`.
 
-## 49.3I.19 — Canonical Source Identity Rule
-A Product must have a validated source identity before AI may translate or generate SEO/content:
-- generic placeholders `Model <id>` / `MakerWorld model <id>` / Persian equivalents are rejected,
-- valid exact-page/scraped title wins,
-- exact MakerWorld model URL slug is the deterministic fallback,
-- candidate title is canonicalized before candidate persistence,
-- Add-to-Products canonicalizes again before Product persistence,
-- legacy Product AI source context is repaired in memory before generation,
-- Product Workspace can persist corrected source title and rebuild all AI text/SEO without deleting/reimporting the product.
+## Preserved Previous Contracts
+### 49.3I.20
+Visible Stage 3 bulk-image controls and Stage 4 source-identity/operator-AI panels stay above expandable editor/gallery content.
 
-Acceptance examples:
-- `2845731-cake-stand` → `Cake Stand`,
-- `2896217-ribbed-cake-stand-cookie-platter` → `Ribbed Cake Stand Cookie Platter`.
+### 49.3I.19
+Valid exact-page/source title is authoritative; generic model-number titles are rejected; MakerWorld URL slug remains deterministic fallback.
 
-## 49.3I.18 — Preserved Additive Operator Editing
-- global editable-widget clipboard shortcuts,
-- bulk image filename/Alt/Title/Caption operations,
-- explicit operator-authoritative Persian name,
-- replace wrong name across editorial content,
-- full AI rebuild for operator-confirmed identity.
+### 49.3I.18
+Global clipboard support, bulk image filename/Alt/Title/Caption operations, operator-authoritative Persian title and full AI rebuild remain intact.
 
-## 49.3I.17 — Preserved Canonical AI Rule
-- one saved Provider,
-- one saved Model for that Provider,
-- one secure key belonging to that Provider,
-- no automatic fallback to another configured Provider,
-- no hidden AI request when Product Workspace opens,
-- no `/models` catalog request before Product content generation,
-- explicit Settings model search/test remains available,
-- stale Tk callbacks cannot become fatal Product Workspace dialogs.
+### 49.3I.17
+One saved Provider/Model/key path; no hidden provider fallback and no hidden AI request on Product Workspace open.
 
-## Acquisition Contract Preserved
-49.3I.16 remains the fallback mechanism:
-- discovery `locator-safe → HTTP/HTML → attached Chrome 9222 → cached candidate DB`,
-- images `locator-safe → HTTP → mature DOM → Chrome 9222 → listing thumbnail`,
-- product max 100 / image max 20,
-- Add-to-Products without Rich Direct Full Fetch,
-- Archive/Block/dedupe and staged-image readiness.
+### Acquisition
+49.3I.16 resilient source/image acquisition, archive/block/dedupe, image caps and Add-to-Products contracts remain intact.
 
-## Git State
-Before 49.3I.20 implementation, the live feature branch remote HEAD was verified as `6c9cb06a573f6251c55e491ce187bab27fd7ffd7`.
-
-49.3I.20 implementation commits begin at:
-- `cf634206da426e6627cb47e9a860fd6591b169b9` — layout module,
-- `74b7de97531dae5346c864f06665269ffd8d84a3` — focused tests,
-- `658311877a7d79b1a2d923e91054626728d2ae37` — final composition wiring.
-
-Always use the live fetched branch HEAD for Windows delivery; documentation commits may follow.
-
-Django migration: NONE. Catalog schema migration: NONE. Production untouched.
+## Database / Migration
+Django migration: NONE.
+Catalog schema migration: NONE.
+Existing diagnostics tables are reused.
+Production untouched.
 
 ## Focused Windows Gate
 1. clean worktree + live fetch/ff-only feature branch,
-2. verify Local HEAD == fetched Remote HEAD,
-3. compile 49.3I.20 + touched composition modules,
-4. run 49.3I.20/19/18 tests plus 49.3I.16/15/discovery regressions,
-5. `launch.py --verify-only`,
-6. visually verify Stage 3 bulk panel is at the top,
-7. visually verify Stage 4 source-identity + AI rebuild panels are above the editor,
-8. repair existing MakerWorld product `2896217`; expect `Ribbed Cake Stand Cookie Platter`,
-9. run combined source-title repair + full AI rebuild and inspect Persian title/text/SEO/image metadata,
-10. verify `2845731` resolves to `Cake Stand`,
-11. verify 49.3I.18 clipboard/bulk/manual override features,
-12. chain existing 49.3I.17 baseline gate.
+2. verify Local HEAD equals fetched Remote HEAD,
+3. compile 49.3I.21 and composition modules,
+4. run 49.3I.21/20/19/18 tests plus 49.3I.16/15/discovery regressions,
+5. run `launch.py --verify-only`,
+6. verify new Stage 4 link-grounded AI panel,
+7. open product 2896217 and run full refresh from link,
+8. observe source-fetched → AI-request → received-preview → apply stages,
+9. confirm correct Persian identity/content/SEO/image metadata after explicit approval,
+10. test cancellation during provider wait and confirm no late apply,
+11. export Diagnostics and confirm no API key/token is present,
+12. retest legacy AI buttons; UI must remain responsive and diagnostics must expose provider/model/operation/timeout,
+13. chain previous 49.3I acceptance gates.
 
-If PASS, proceed to one Local Publish E2E and then Production approval gate.
+If PASS, proceed to exactly one Local Publish E2E and then owner-approved Production gate.
 
 ## Next Product Phase
 After Catalog Production verification: Store checkout ZarinPal request/callback/verify, Sandbox E2E, then one owner-approved low-value live payment while bank transfer remains available.
