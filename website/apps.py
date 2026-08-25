@@ -88,5 +88,11 @@ class WebsiteConfig(AppConfig):
         from .phase50a_admin_command_center import install_admin_completeness
         install_admin_completeness()
 
+        # Phase50.A.1: expose mature Product/Hero controls in Django Admin too.
+        # No schema change: Windows and web-admin both operate on the same
+        # Product/ImportedPrintAsset/HomepageHeroSlide contracts.
+        from .phase50a_storefront_admin_parity import install_storefront_admin_parity
+        install_storefront_admin_parity()
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
