@@ -13,6 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class V854LauncherTests(unittest.TestCase):
     def test_absolute_launcher_ignores_stale_app_in_callers_working_directory(self):
+        from app.version import APP_VERSION
+
         with tempfile.TemporaryDirectory() as temporary:
             shadow = Path(temporary)
             (shadow / "app").mkdir()
@@ -30,7 +32,7 @@ class V854LauncherTests(unittest.TestCase):
                 check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("ACTIVE_VERSION=8.7.1", result.stdout)
+        self.assertIn(f"ACTIVE_VERSION={APP_VERSION}", result.stdout)
         self.assertIn("UX87_SHELL=ENABLED", result.stdout)
         self.assertIn("PRODUCT_WORKSPACE_V87=ENABLED", result.stdout)
         self.assertIn("PRODUCT_WORKSPACE_V871=ENABLED", result.stdout)
@@ -46,7 +48,10 @@ class V854LauncherTests(unittest.TestCase):
         from app.version import APP_VERSION
         from launch import EXPECTED_VERSION
 
-        self.assertEqual({manifest["version"], config["package_version"], APP_VERSION, EXPECTED_VERSION}, {"8.7.1"})
+        self.assertEqual(
+            {manifest["version"], config["package_version"], APP_VERSION, EXPECTED_VERSION},
+            {APP_VERSION},
+        )
 
     def test_every_manifest_file_exists(self):
         manifest = json.loads((ROOT / "PACKAGE_MANIFEST.json").read_text(encoding="utf-8"))
