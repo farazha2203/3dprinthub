@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
-Current Hotfix: `49.3I.22 — Tk Main-Thread AI Bridge + Scrollable Product Rail`
+Current Hotfix: `49.3I.23 — AvalAI Exact Chat Contract + Publish SEO Audit`
 Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA NEXT`
 Production: `UNTOUCHED / NOT APPROVED`
 
@@ -13,64 +13,37 @@ Production: `UNTOUCHED / NOT APPROVED`
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → COMMIT/PUSH IF LOCAL CODE CHANGES → LOCAL PUBLISH E2E → OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY/VERIFY`
 
 ## Immediate Business Priority
-1. Windows acceptance of 49.3I.22 UI-thread safety across every Product AI button,
-2. verify the right Product rail scrolls and exposes all readiness/AI controls,
-3. regression acceptance of 49.3I.21 bounded diagnostics + link-grounded full refresh,
-4. regression acceptance of 49.3I.20/19/18/17 and acquisition gates,
-5. exactly one Local Publish E2E,
+1. Windows acceptance of 49.3I.23 exact AvalAI request contract on product 2896217,
+2. verify no Product `/models` preflight and correct non-generic Persian content preview/apply,
+3. regression 49.3I.22 UI responsiveness/scroll rail and 49.3I.21 diagnostics/link grounding,
+4. exactly one Local Publish E2E,
+5. Local Store/Admin/Product/Media/SEO verification including canonical/meta/OG/JSON-LD/sitemap,
 6. explicit owner approval,
-7. verify Production branch/path/venv/MySQL/backup/rollback,
+7. read-only Production branch/path/venv/MySQL/backup/rollback verification,
 8. deploy approved GitHub snapshot and verify Production,
 9. then Store ZarinPal integration + Sandbox E2E.
 
 ## Phase49.3I Path
-`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition → Single Active AI Runtime → Operator Editing/Bulk Metadata → Canonical Source Identity → Visible Operator Panels → Observable Link-Grounded AI → Tk Main-Thread AI Bridge + Scrollable Rail`.
+`Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition → Single Active AI Runtime → Operator Editing/Bulk Metadata → Canonical Source Identity → Visible Operator Panels → Observable Link-Grounded AI → Tk Main-Thread AI Bridge + Scrollable Rail → AvalAI Exact Chat Contract + Publish SEO Audit`.
 
-## 49.3I.22 — Tk Main-Thread AI Bridge + Scrollable Product Rail
-Fresh owner evidence after 49.3I.21 showed a full Windows `(Not Responding)` state, not merely a slow provider response.
+## 49.3I.23
+Verified defect: Product-bound AvalAI structured generation still passed through generic model discovery and serialized Responses-style content wrappers as chat text; the prompt also did not include the actual required JSON schema.
 
-Repository inspection found mature AI workers calling Tk handoff paths from worker threads. 49.3I.22 therefore establishes one final UI-thread boundary:
-- workers keep network/AI work off the Tk thread,
-- off-main `workspace.after(...)` is queued without calling Tcl,
-- a main-thread 25 ms pump executes UI callbacks,
-- Tk-backed Product source state is snapshotted on the main thread,
-- existing Task Center/image/all-fields/manual/source/link AI paths inherit the same protection,
-- Product stages rail uses Canvas + vertical Scrollbar and dynamically includes later readiness/AI panels.
+Implemented:
+- exact saved AvalAI model; no hidden Product `/models`,
+- documented Chat Completions `model + messages` request through existing transport,
+- real source/operator text payload rather than wrapper serialization,
+- actual JSON schema included in the system instruction,
+- no fake image placeholder serialization,
+- same-model compatibility fallback for unsupported `response_format`,
+- sanitized request-contract trace,
+- focused regression test.
 
-## Preserved 49.3I.21
-- provider POST default max 75s with bounded override,
-- request-start/success/error/timeout diagnostics,
-- secret redaction,
-- exact Product URL grounding,
-- one-click link-based source fetch → AI → preview → explicit apply,
-- Stop/Cancel prevents late apply.
-
-## Preserved Earlier Contracts
-- 49.3I.20 visible operator panels,
-- 49.3I.19 canonical source identity,
-- 49.3I.18 clipboard/bulk metadata/operator-authoritative Persian identity,
-- 49.3I.17 exactly one saved Provider/Model/key path,
-- 49.3I.16 resilient acquisition and Add-to-Products contracts.
+## Publish SEO Audit
+Current release has the core SEO path: Persian content/image Alt import, meta title/description, focus keyword, OG, canonical, robots, Product/ProductGroup + Offer + Breadcrumb + Review/FAQ JSON-LD, safe public slug/legacy redirect and public `/sitemap.xml`. Dedicated Twitter title/description/image and `og:image:alt` are enhancement debt, not a blocker for the Catalog release gate.
 
 ## Database / Migration
-Django migration: NONE.
-Catalog schema migration: NONE.
-Production untouched.
+Django migration: NONE. Catalog schema migration: NONE. Local SQLite is not copied into Production MySQL. Production untouched.
 
 ## Focused Windows Gate
-1. clean worktree + live fetch/ff-only feature branch,
-2. verify Local HEAD equals fetched Remote HEAD,
-3. compile 49.3I.22 + Product Workspace + composition modules,
-4. run 49.3I.22/21/20/19/18/17 focused tests,
-5. run inherited acquisition regressions and `launch.py --verify-only`,
-6. launch the same MakerWorld product,
-7. execute all-fields AI, image AI, source+AI rebuild, manual-authoritative rebuild and link-grounded full refresh,
-8. window must remain responsive while requests execute,
-9. progress/error/timeout controls must continue updating,
-10. vertical Product rail scrollbar must reach every lower control,
-11. if any action fails, export `D:\projects\3DPrintHub\diagnostics\catalog-diagnostic-*.json` and latest persistent workflow JSONL before closing the app.
-
-If PASS, proceed to exactly one Local Publish E2E and then owner-approved Production gate.
-
-## Next Product Phase
-After Catalog Production verification: Store checkout ZarinPal request/callback/verify, Sandbox E2E, then one owner-approved low-value live payment while bank transfer remains available.
+Clean/ff-only pull live feature branch → compile 49.3I.23/composition → run 49.3I.23 plus inherited 49.3I.22/21/20/19/18 tests → `launch.py --verify-only` → run link completion on MakerWorld 2896217 → verify `avalai_exact_chat_contract` and no Product model scan → verify correct preview/apply. If PASS, exactly one Local Publish E2E and complete Local SEO/media/store verification.
