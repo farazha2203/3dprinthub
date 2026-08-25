@@ -4,8 +4,8 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Phase: `50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`
-Status: `GITHUB CI TESTED / HOST AUDIT + MANUAL QA NEXT`
+Current Phase: `50.A.1D — Sales Profiles + Hero Admin Public Media`
+Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
@@ -14,36 +14,42 @@ Status: `GITHUB CI TESTED / HOST AUDIT + MANUAL QA NEXT`
 Structured Product/Catalog/Hero/SEO/Bridge is operational. Product-owned public media remains the Production contract; imported Catalog working-media is not a public namespace.
 
 ## Phase50.A — Admin and commerce operational completeness
-### 50.A.1 Admin Storefront / Hero parity — CI TESTED
+### 50.A.1 Admin Storefront / Hero parity — DEPLOYED
 - `/admin/command-center/`,
 - Product/imported-asset add/remove Hero,
 - Hero 5-random / 10-random / deactivate-all,
 - Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location Admin links.
 
-### 50.A.1B Product Gallery + Variant 2.0 — CI TESTED
+### 50.A.1B Product Gallery + Variant 2.0 — DEPLOYED
 - contain-fit Product viewer + thumbnail swap + fullscreen lightbox,
 - `size_label`, build profile, packaging weight and parcel dimensions,
 - StoreOrderItem commerce snapshots,
-- migration `store.0034_phase50_variant2_commerce`,
+- migration `store.0034_phase50_variant2_commerce` applied on Production,
 - Variant Admin and public variant metadata endpoint.
 
-### 50.A.1C Admin media / mobile / SEO / Windows dimensions — CI TESTED
-- ImportedPrintAsset Admin no longer renders private `store/imported-models/...` working files as public previews,
-- safe preview order: matching Product gallery → Product main image → source HTTP(S) image,
-- imported-model list/change views preserve mature Phase35 editable pricing/editorial controls and add public-media/data-completeness status,
-- imported image inline shows source pixel dimensions,
-- mobile Hero caption/title is substantially smaller; very narrow phones hide the description to preserve Product-image visibility,
-- SiteSetting Admin keeps existing homepage `meta_title/meta_description` and adds SEO length audit, SERP preview and Hero Alt/title audit,
-- Windows Product image cards now show original pixel dimensions,
-- no new migration in 50.A.1C,
-- CI run `32875771848` PASS on corrected code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83`.
+### 50.A.1C Admin media / mobile / SEO / Windows dimensions — DEPLOYED
+- ImportedPrintAsset Admin avoids private working-media previews,
+- safe Product-owned public image resolution,
+- mature imported-model editing preserved,
+- mobile Hero compacted,
+- homepage SEO Admin audit added,
+- Windows source image dimensions added,
+- Production verified at commit `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f` with HTTP 200 smoke and Product Admin 500 regression cleared.
 
-### Immediate host reconciliation — BEFORE DEPLOY
-Owner screenshots show Phase50-era Admin UI on Production while repository docs previously said Phase50 was undeployed, and `/admin/store/product/` currently returns 500. Read-only verify exact Production branch/HEAD, worktree, MySQL DB and whether `store.0034` is applied/pending. Do not guess the 500 cause.
+### 50.A.1D Sales Profiles + Hero Admin Public Media — CI TESTED / NEXT DEPLOY
+- Product chooses how customers select profiles: list / size / weight / build / size→build / build→size,
+- ProductVariant gains profile name/key/default/order,
+- profile key becomes part of uniqueness so identical size/material/color/build combinations can still have different weight/time/price profiles,
+- Admin supports copying a profile as a starting point and editing only changed commercial values,
+- profile metadata endpoint exposes selector/value/weight/time/price/shipping data,
+- Hero Studio product browser/gallery JSON now resolves public Product media and never emits private `store/imported-models/...` URLs,
+- migration `store.0035_phase50_sales_profiles`,
+- CI run `32879712980` PASS on snapshot `405d2c1daa85828d1a0dc68210d201c85b6db7ba`.
 
-### 50.A.2 Checkout & Delivery — NEXT AFTER CURRENT QA
-- snapshot size/build/package into finalized order items,
-- effective product + packaging shipping weight,
+### 50.A.2 Checkout & Delivery — NEXT AFTER 50.A.1D PRODUCTION QA
+- render profile-aware selector UI on Product page,
+- persist chosen profile/size/build/package snapshots at checkout,
+- use effective product + packaging shipping weight,
 - parcel dimensions / insured value,
 - normalized carrier quote + immutable order snapshot,
 - Post / Tipax / Mahex only with verified official contracts/credentials,
@@ -53,7 +59,7 @@ Owner screenshots show Phase50-era Admin UI on Production while repository docs 
 Reuse mature server-owned amount, callback identity, Authority matching, server-to-server verify, idempotency and audit. Add trusted redirect-host allowlist and never collect/store card/PIN/CVV.
 
 ### 50.A.4 Torob
-Torob Product API v3, stable product/variant grouping, size/color/material, price/availability, image-quality guards and official order attribution contract.
+Torob Product API v3, stable product/profile grouping, size/color/material/weight mapping, price/availability, image-quality guards and official order attribution contract.
 
 ## Phase50.B — Accounting foundation
 Chart of accounts کل/معین/تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal, party/subledger and numbering.
