@@ -2,6 +2,35 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase50.A.1B Product Gallery + Variant 2.0 Foundation
+
+### Implemented
+- upgraded Product detail main image into a contain-fit viewer,
+- gallery thumbnails now replace the main image without page reload,
+- added accessible full-screen lightbox with close, previous/next, Escape and arrow-key navigation,
+- added Variant 2.0 fields for sellable size, build/fill profile, packaging weight and parcel dimensions,
+- added matching StoreOrderItem snapshot columns for future immutable checkout history,
+- expanded ProductVariant uniqueness to include size/build profile,
+- exposed size/build/packaging fields through mature ProductVariant Admin and Product variant inline,
+- added safe public Variant metadata endpoint used by the existing selector to show size/build/shipping metadata,
+- added effective shipping-weight helper that prefers explicit shipping weight and otherwise returns product/final weight + packaging,
+- added migration `store.0034_phase50_variant2_commerce`.
+
+### Verification
+- GitHub Actions `Phase50 Variant2 Gallery CI` run `32872549545` PASS on snapshot `8e3c151159424437157d3ef6861881be08b1aea8`,
+- touched Python compile PASS,
+- `manage.py check` PASS,
+- `makemigrations --check --dry-run` PASS,
+- migration plan and SQLite migration apply PASS,
+- focused runtime-model/Admin/URL/gallery contract tests PASS.
+
+### Safety
+- no direct Production edit,
+- migration 0034 not yet applied to Production,
+- no payment/gateway semantics changed,
+- no Catalog/Bridge/Hero public media ownership change,
+- live Post/Tipax/Mahex endpoints not guessed or introduced.
+
 ## 2026-08-25 — Catalog Center Windows v8.8.1 Final Portable Release
 
 ### Released
