@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.7.1 — Homepage Slider SEO",
-  "version": "8.7.1",
+  "name": "3DPrintHub Catalog Center v8.8.0 — Final Phase49 Windows Release",
+  "version": "8.8.0",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -35,6 +35,8 @@
     "persistent_windows_profile",
     "windows_credential_store",
     "portable_exe",
+    "frozen_browser_runtime_smoke",
+    "resilient_source_acquisition_fallback",
     "locked_previous_exe_resilient_build"
   ],
   "files": [
@@ -60,6 +62,7 @@
     "app/epic49_product_studio_final.py",
     "app/product_workspace_v87.py",
     "app/product_workspace_v871.py",
+    "app/product_workspace_epic49.py",
     "app/ux87_shell.py",
     "app/ux87_icons.py",
     "app/epic49_desktop_schema.py",
@@ -72,6 +75,18 @@
     "app/v8_features.py",
     "app/workflow.py",
     "app/openai_content.py",
+    "app/phase49_3i16_resilient_acquisition.py",
+    "app/phase49_3i17_single_active_ai_runtime.py",
+    "app/phase49_3i18_operator_editing.py",
+    "app/phase49_3i19_source_identity.py",
+    "app/phase49_3i20_visible_operator_panels.py",
+    "app/phase49_3i21_observable_ai_link_refresh.py",
+    "app/phase49_3i22_tk_thread_bridge.py",
+    "app/phase49_3i23_avalai_chat_contract.py",
+    "app/phase49_3i24_runtime_observability.py",
+    "app/phase49_3i25_product_first_workflow.py",
+    "app/phase49_3i26_operator_completion.py",
+    "app/phase49_3i27_category_provider_bridge.py",
     "tests/test_epic49_editable_studio.py",
     "tests/test_epic49_final.py",
     "tests/test_epic49_studio_final.py",
@@ -81,12 +96,26 @@
     "tests/test_v854_launcher.py",
     "tests/test_v87_ux_rebuild.py",
     "tests/test_v871_slider_seo.py",
-    "tests/test_v85_upgrade.py"
+    "tests/test_v85_upgrade.py",
+    "tests/test_phase49_3i16_resilient_acquisition.py",
+    "tests/test_phase49_3i17_single_active_ai_runtime.py",
+    "tests/test_phase49_3i18_operator_editing.py",
+    "tests/test_phase49_3i19_source_identity.py",
+    "tests/test_phase49_3i20_visible_operator_panels.py",
+    "tests/test_phase49_3i21_observable_ai_link_refresh.py",
+    "tests/test_phase49_3i22_tk_thread_bridge.py",
+    "tests/test_phase49_3i23_avalai_chat_contract.py",
+    "tests/test_phase49_3i24_runtime_observability.py",
+    "tests/test_phase49_3i25_product_first_workflow.py",
+    "tests/test_phase49_3i26_operator_completion.py",
+    "tests/test_phase49_3i27_category_provider_bridge.py",
+    "tests/test_phase49_3i28_exact_link_contract.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
   "secret_store": "Windows Credential Manager",
   "ai_profile_migration": "preserved",
   "host_profile_migration": "preserved",
-  "installer_required": false
+  "installer_required": false,
+  "external_source_ci_policy": "runtime/browser packaging is release-gated; third-party website availability is verified separately"
 }
