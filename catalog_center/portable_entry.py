@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
@@ -112,9 +113,60 @@ def _portable_verify() -> int:
     return 0 if ok else 2
 
 
+def _portable_browser_smoke() -> int:
+    """Prove the frozen EXE can load Playwright and launch a real browser.
+
+    The smoke deliberately uses a data: URL, not MakerWorld or another external
+    service. Release validation therefore detects PyInstaller/browser packaging
+    regressions without turning a third-party website into a CI dependency.
+    """
+
+    from app.version import APP_VERSION, BUILD_ID
+    from app.classic_methods import launch_fresh_browser
+
+    async def _run() -> dict:
+        from playwright.async_api import async_playwright
+
+        async with async_playwright() as playwright:
+            browser, browser_label = await launch_fresh_browser(playwright, headed=False)
+            page = await browser.new_page()
+            await page.goto(
+                "data:text/html,<html><head><title>3DPrintHub Portable Browser Smoke</title></head><body>ok</body></html>",
+                wait_until="load",
+                timeout=30_000,
+            )
+            title = await page.title()
+            await browser.close()
+            return {
+                "browser": browser_label,
+                "title": title,
+                "ok": title == "3DPrintHub Portable Browser Smoke",
+            }
+
+    payload = {
+        "app_version": APP_VERSION,
+        "build_id": BUILD_ID,
+        "ok": False,
+    }
+    try:
+        payload.update(asyncio.run(_run()))
+    except Exception as error:  # packaged runtime diagnostics only; no secrets
+        payload["error_type"] = type(error).__name__
+        payload["error"] = str(error)[-1500:]
+
+    output = str(os.getenv("CATALOG_BROWSER_SMOKE_OUTPUT") or "").strip()
+    if output:
+        target = Path(output)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return 0 if payload.get("ok") is True else 3
+
+
 def main() -> int:
     if "--portable-verify" in sys.argv:
         return _portable_verify()
+    if "--portable-browser-smoke" in sys.argv:
+        return _portable_browser_smoke()
     _app_main, App87 = _configure_runtime()
     App87().mainloop()
     return 0
