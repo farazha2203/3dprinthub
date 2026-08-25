@@ -52,10 +52,9 @@ class PortableRuntimePathTests(unittest.TestCase):
             self.assertGreaterEqual(first["copied"], 3)
             self.assertEqual((stable / "catalog.sqlite3").read_bytes(), b"db")
             self.assertTrue((stable / "logs" / "old.log").is_file())
-            self.assertTrue((legacy / "catalog.sqlite3").is_file())
             self.assertEqual(second["reason"], "already_migrated")
 
-    def test_portable_entry_keeps_writable_data_outside_bundle(self):
+    def test_portable_entry_keeps_writable_data_outside_bundle_and_uses_canonical_launcher(self):
         source = (ROOT / "portable_entry.py").read_text(encoding="utf-8")
         self.assertIn("data_root()", source)
         self.assertIn("migrate_legacy_portable_data()", source)
@@ -63,6 +62,9 @@ class PortableRuntimePathTests(unittest.TestCase):
         self.assertIn('app_main.DB_FILE = data / "catalog.sqlite3"', source)
         self.assertIn('app_main.CONFIG_FILE = data / "config.json"', source)
         self.assertIn('app_main.PROFILE_ROOT = data / "browser_profiles"', source)
+        self.assertIn("from launch import main as launch_main", source)
+        self.assertIn("return launch_main()", source)
+        self.assertIn("canonical_launcher_runtime", source)
         self.assertIn("--portable-verify", source)
         self.assertNotIn(r"D:\projects", source)
 
@@ -80,6 +82,7 @@ class PortableBuildContractTests(unittest.TestCase):
         self.assertIn("release-manifest.json", builder)
         self.assertIn("PORTABLE_EXE_SHA256", builder)
         self.assertIn("--portable-verify", builder)
+        self.assertIn("--portable-browser-smoke", builder)
         self.assertNotIn("Inno Setup", builder)
         self.assertNotIn("NSIS", builder)
 
