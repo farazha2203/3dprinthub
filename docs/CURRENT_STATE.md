@@ -4,58 +4,47 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
-Current Release: `Phase49.3I`
-Last Hotfix: `49.3I.30 — Production Hero Product-Media Ownership`
-Next Phase: `Phase50 — Finance, Commerce & Admin Command Center`
-Status: `PHASE49 WEB OWNER-VERIFIED / PHASE50 PLANNED`
+Current Release: `Phase50.A — Admin Command Center completeness`
+Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL TEST REQUIRED`
 
-## Production / owner verification
-Owner reports the Production site is now healthy after the Hero media ownership fix. Previous machine-verified Production baseline remains:
-- Production project `/home/sfkilvrs/3dprinthub`,
+## Production baseline
+Owner reports the Phase49 Production site and Hero are healthy. Previously verified Production state remains:
+- project `/home/sfkilvrs/3dprinthub`,
 - MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
-- Phase49 migrations through `store.0033` and `website.0023` already applied,
-- Product page and Product-owned media healthy,
-- Product presentation sanitization PASS,
-- prior Production worktree verified clean,
+- Phase49 migrations through `store.0033` and `website.0023` applied,
+- Product / Store / Home healthy,
 - rollback DB backup retained at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-150401/mysql-before-deploy.sql.gz`.
 
-The latest owner message confirms the site/hero is visually OK. No new host command output was provided in that message, so this is recorded as owner visual acceptance rather than a fresh machine audit.
+No Phase50 code has been deployed to Production yet.
 
-## Verified existing business foundation
-Repository audit confirms substantial modules already exist:
-- StoreOrder / StoreOrderItem / StorePayment / StoreInvoice / Shipment / ReturnRequest,
-- custom service Order / Quote / Payment,
-- immutable `PaymentLedgerEntry` for service payment events,
-- ZarinPal-capable online payment gateway architecture with server-owned amount, callback/verify and idempotency contract,
-- FilamentPurchase / FilamentPurchaseItem / FilamentSpool / FilamentMovement,
-- ProductionJob / MaterialUsage / CostEntry / BusinessFinanceDashboard,
-- InventoryMovement and stock reservation/operations,
-- affiliate commission/payout/ledger modules,
-- broad custom Django Admin sidebar and operational dashboards.
+## Phase50.A implemented on GitHub
+Requested delta: make the mature back-office easier to operate before introducing new accounting schema.
 
-## Important gap
-The project does NOT yet have a complete accounting system. Existing finance pieces are operational ledgers and profitability/inventory tools, not a balanced double-entry accounting core.
+Implemented:
+- new business-oriented `/admin/command-center/` protected by Django Admin authentication,
+- unified sections for Sales, Treasury, existing accounting/ledgers, Purchasing, Inventory & Production,
+- permission-aware links to the already-registered mature ModelAdmins,
+- live operational counters for pending service/store payments, active Store orders, draft filament purchases, open affiliate payouts and cost records,
+- explicit upcoming Phase50.B-F accounting capabilities shown as roadmap items rather than fake/broken links,
+- Phase50 shortcut injected into the custom Admin sidebar,
+- safe ModelAdmin browsing ergonomics for Payment, PaymentLedgerEntry, StorePayment, StoreOrder, FilamentPurchase, CostEntry, ProductionJob and AffiliatePayout: date hierarchy + 50-row pagination,
+- focused regression test `website/test_phase50a_admin_command_center.py`.
 
-Missing major business capabilities are defined in `docs/phases/PHASE50_FINANCE_ADMIN_COMMAND_CENTER.md`, including:
-- chart of accounts: کل / معین / تفصیلی,
-- balanced accounting vouchers and posting/reversal,
-- customer/supplier subledgers,
-- generic receipt/payment vouchers and cash/bank accounts,
-- supplier master and general purchase invoices/orders beyond filament-only purchases,
-- receivable/payable aging and reconciliation,
-- general ledger / trial balance / statements,
-- controlled refund workflow,
-- consolidated sales/purchase/treasury/accounting reporting.
+## Safety / Must-not-touch
+- NO migration/schema change in Phase50.A,
+- no StoreOrder/Quote/Payment behavior change,
+- no payment gateway/idempotency change,
+- no Catalog/Bridge/Product/Hero/media change,
+- no destructive rewrite of PaymentLedgerEntry/AffiliateLedgerEntry,
+- Production untouched.
 
-## Admin status
-The Admin already exposes most operational models, but finance is fragmented across service orders, store orders, production and affiliate menus. Phase50 begins by reorganizing and completing the Admin Command Center before adding new accounting schema.
+## Verification status
+GitHub implementation exists, but no Windows Local execution result has been reported yet. Do not mark LOCAL_TESTED/DEPLOYED until the Local gate is run.
 
-## Exact next development task
-`Phase50.A — Admin Command Center completeness, NO migration`:
-1. audit every registered business ModelAdmin,
-2. reorganize admin navigation into Sales / Treasury / Accounting / Purchasing / Inventory & Production / Marketing / Catalog / Settings,
-3. add missing safe links, filters, searches, read-only audit fields and operational actions,
-4. add regression tests for admin registration/navigation/permissions,
-5. Windows Local Django check + migration dry-run + admin smoke.
-
-Only after Phase50.A passes do we design Phase50.B accounting schema/migrations.
+## Exact next task
+1. Windows clean worktree + live `fetch --prune` + ff-only pull of the current feature HEAD.
+2. Run `manage.py check`.
+3. Run `manage.py makemigrations --check --dry-run` and confirm NO migration.
+4. Run `manage.py test website.test_phase50a_admin_command_center -v 2`.
+5. Open `/admin/` and `/admin/command-center/`; verify sidebar shortcut, permission-aware links, Sales/Treasury/Accounting/Purchasing/Inventory sections and mobile/desktop layout.
+6. After owner approval, continue Phase50.A completeness or begin reviewed Phase50.B accounting schema design.
