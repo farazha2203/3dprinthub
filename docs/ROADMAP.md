@@ -4,8 +4,8 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Phase: `50.A.1 — Admin Storefront / Hero parity`
-Status: `GITHUB CI TESTED / MANUAL ADMIN QA NEXT`
+Current Phase: `50.A.1B — Product Gallery + Variant 2.0 foundation`
+Status: `GITHUB CI TESTED / MANUAL QA NEXT`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
@@ -22,34 +22,53 @@ Status: `GITHUB CI TESTED / MANUAL ADMIN QA NEXT`
 - Sales / Storefront & Checkout / Treasury / Accounting / Purchasing / Inventory groups,
 - Store Product and Imported Asset actions for add/remove homepage slider,
 - Homepage Hero buttons for 5 random, 10 random and deactivate-all,
-- Product-backed/public-media eligibility guard for random Hero selection,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location links surfaced in Command Center,
-- no destructive Hero deletion,
-- no migration,
-- GitHub CI compile/check/no-migration/admin regressions PASS.
+- Product-backed/public-media eligibility guard,
+- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location links surfaced.
+
+### 50.A.1B Product Gallery + Variant 2.0 — CI TESTED
+- contain-fit main product viewer,
+- thumbnail click swaps main image,
+- full-screen accessible lightbox with previous/next/Escape,
+- sellable variant adds `size_label` and `build_profile` (standard/hollow/reinforced/solid/custom),
+- packaging weight and parcel dimensions added to ProductVariant,
+- size/build/package snapshots added to StoreOrderItem,
+- ProductVariant identity now includes size/build profile,
+- Admin exposes the new commerce fields,
+- public variant metadata endpoint enriches the mature selector,
+- migration `store.0034_phase50_variant2_commerce`,
+- CI compile/check/migration-state/migrate/tests PASS on snapshot `8e3c151159424437157d3ef6861881be08b1aea8`.
 
 ### 50.A.2 Checkout & Delivery — NEXT
-Preserve the existing coupon/VAT/packaging/shipping calculations and extend them with:
-- package weight in addition to product/variant weight,
-- package dimensions and shipment insured value where required,
+Preserve coupon/VAT/packaging/shipping calculations and extend them with:
+- snapshot Variant size/build/package fields when StoreOrderItem is created,
+- effective shipping weight from product + packaging when no explicit override exists,
+- parcel dimensions and shipment insured value,
 - normalized live quote provider contract,
-- adapters for Post / Tipax / Mahex only after current official API endpoints, credentials, units and commercial terms are verified,
-- provider timeout/error handling with fallback to the mature ShippingMethod weight rules,
-- immutable shipping quote snapshot on the finalized order so later carrier price changes cannot mutate history,
+- Post / Tipax / Mahex adapters only after official current endpoints, credentials, units and commercial terms are verified,
+- provider timeout/error fallback to mature ShippingMethod weight rules,
+- immutable quote snapshot on finalized orders,
 - Admin controls for carrier/provider enablement and fallback pricing.
 
-### 50.A.3 Secure online payments — AFTER 50.A.2 DESIGN
+### 50.A.3 Secure Store ZarinPal payment
 Preserve the mature service-payment transaction locking, random callback token, Authority matching and server-to-server verification. Extend Store checkout with the same contract plus:
-- strict allowlist of payment redirect hosts,
-- no card/PIN/CVV capture or storage on 3DPrintHub,
+- strict trusted gateway-host allowlist,
+- no card/PIN/CVV capture or storage,
 - server-owned amount and currency,
 - idempotent request/callback/verify,
 - reconciliation and immutable audit trail,
 - abuse/rate-limit monitoring,
-- Production HTTPS/HSTS/Secure-cookie/CSP/frame protections verified at deploy time.
+- Production HTTPS/HSTS/Secure-cookie/CSP/frame verification.
+
+### 50.A.4 Torob integration
+- current Torob Product API v3 contract,
+- product/variant grouping with stable unique identifiers,
+- size/color/material mapping,
+- current price and availability,
+- image-quality guards for marketplace export,
+- pagination/filtering required by Torob,
+- order-attribution/webhook only after official contract verification.
 
 ## Phase50.B — Accounting foundation
-After commerce/admin acceptance:
 - chart of accounts: کل / معین / تفصیلی,
 - fiscal periods,
 - accounting vouchers,
@@ -90,4 +109,4 @@ After commerce/admin acceptance:
 - integrity audit and period close.
 
 ## Safety
-No Production schema work is authorized without exact MySQL verification, migration plan, successful backup and rollback target. Live-carrier integration is not implemented from guessed/unofficial API contracts.
+No Production schema work is authorized without exact MySQL verification, migration plan, successful backup and rollback target. Live carrier integrations are not implemented from guessed/unofficial API contracts.
