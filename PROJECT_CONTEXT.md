@@ -4,8 +4,8 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Subphase: `50.A.1 — Admin Storefront / Hero parity`
-Status: `GITHUB CI TESTED / MANUAL ADMIN QA REQUIRED`
+Current Subphase: `50.A.1B — Product Gallery + Variant 2.0 foundation`
+Status: `GITHUB CI TESTED / MANUAL QA REQUIRED`
 Production: `PHASE49 HEALTHY BY OWNER QA / PHASE50 UNDEPLOYED`
 
 ## Operating rule
@@ -38,26 +38,35 @@ Catalog/Product/Hero release is operational. Product-owned media remains the pub
 - affiliate commission/payout/ledger,
 - broad custom Admin.
 
-## Current 50.A.1 implementation
+## Phase50.A.1 Admin parity
 - authenticated `/admin/command-center/`,
-- business groups now include Storefront & Checkout alongside Sales/Treasury/Accounting/Purchasing/Inventory,
-- Product and Imported Catalog Asset bulk actions to add/remove homepage Hero membership,
-- Hero quick operations: 5 random Products, 10 random Products and non-destructive deactivate-all,
-- random selection limited to active Product-backed assets with public-renderable media,
-- existing manually edited Hero content preserved on reactivation,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location reference models surfaced from the Command Center,
-- no schema migration.
+- Product and Imported Catalog add/remove Hero actions,
+- Hero 5-random / 10-random / deactivate-all,
+- Coupon, ShippingMethod, PricingSetting, customer addresses and Iran location reference models surfaced,
+- GitHub CI tested.
+
+## Phase50.A.1B current implementation
+- product main media is a contain-fit interactive viewer,
+- thumbnails swap into the main viewer,
+- full-screen lightbox supports keyboard and previous/next navigation,
+- ProductVariant now has size/build profile, packaging weight and parcel dimensions through migration-owned additive runtime fields,
+- StoreOrderItem has matching snapshot columns,
+- Admin exposes the new commerce attributes,
+- safe public Variant metadata endpoint enriches the mature product selector,
+- migration `store.0034_phase50_variant2_commerce` exists and is not deployed to Production.
 
 ## Verification
-GitHub Actions `Phase50 Admin Storefront Parity CI` passed on code snapshot `7c8714b5715cd00900a76b99097823266251d4a2` with compile, Django check, no-migration dry-run and focused Admin regressions.
-Manual visual/operational Admin QA and Production deploy remain pending.
+GitHub Actions `Phase50 Variant2 Gallery CI` run `32872549545` passed on code snapshot `8e3c151159424437157d3ef6861881be08b1aea8` with compile, Django check, no-untracked-migration state, migration plan/apply on CI SQLite and focused regressions.
 
 ## Immediate next work
 ### 50.A.2 Checkout & Delivery
-Extend mature shipping with package weight/dimensions and a normalized live-carrier quote adapter. Post/Tipax/Mahex adapters require verified current official API contracts/credentials; mature ShippingMethod weight rules remain fallback.
+Persist selected size/build/package snapshots during checkout; use effective shipping weight; add normalized carrier quote snapshots and provider/fallback Admin controls. Post/Tipax/Mahex live adapters require verified current official contracts/credentials.
 
 ### 50.A.3 Secure Store Payment
 Unify StorePayment with the mature service-payment security model: server-owned amount, trusted gateway redirect hosts, random callback identity, exact provider Authority match, server-to-server verification, idempotency, audit/reconciliation and no collection/storage of card number/PIN/CVV.
+
+### 50.A.4 Torob
+Implement current official Product API v3 with stable product/variant grouping, size/color/material, price/availability and image-quality rules.
 
 ## Accounting path after commerce gate
 Phase50.B designs double-entry accounting: chart of accounts کل/معین/تفصیلی, fiscal periods, balanced journals, immutable posting/reversal and subledger references. No Production migration before MySQL verification, migration testing, backup and rollback review.
