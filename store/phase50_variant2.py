@@ -56,6 +56,24 @@ def _effective_shipping_weight_grams(self) -> Decimal:
     return product_weight + packaging
 
 
+def _install_variant_constraint_state() -> None:
+    constraints = [
+        constraint
+        for constraint in ProductVariant._meta.constraints
+        if constraint.name not in {
+            "uniq_product_material_quality_color",
+            "uniq_product_material_quality_color_size_build",
+        }
+    ]
+    constraints.append(
+        models.UniqueConstraint(
+            fields=("product", "material", "quality", "color", "size_label", "build_profile"),
+            name="uniq_product_material_quality_color_size_build",
+        )
+    )
+    ProductVariant._meta.constraints = constraints
+
+
 def install() -> None:
     """Add Phase50 Variant 2.0 runtime fields owned by migration 0034.
 
@@ -112,6 +130,8 @@ def install() -> None:
                 verbose_name=label,
             ),
         )
+
+    _install_variant_constraint_state()
 
     _contribute(
         StoreOrderItem,
