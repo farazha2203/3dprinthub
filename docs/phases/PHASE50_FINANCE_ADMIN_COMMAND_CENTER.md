@@ -2,100 +2,92 @@
 
 Updated: 2026-08-25
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `PLANNED / REPOSITORY AUDIT COMPLETE`
-Production: `PHASE49 WEB HEALTHY BY OWNER VISUAL QA`
+Current Subphase: `50.A — Admin Command Center completeness`
+Status: `IMPLEMENTED ON GITHUB / LOCAL TEST REQUIRED`
+Production: `PHASE49 WEB HEALTHY / PHASE50 UNDEPLOYED`
 
 ## Owner request
-After successful Production web/hero verification, continue development by completing the business back-office: finance, receipts/payments, purchases/sales, accounting detail, and a complete/clear Django Admin information architecture.
+Continue development after the healthy Phase49 web release by completing business back-office finance/accounting, receipts/payments, purchasing/sales and a precise Django Admin command center.
 
 ## Verified existing foundation
-The repository already contains substantial operational commerce/finance capabilities:
 - StoreOrder / StoreOrderItem / StorePayment / StoreInvoice / Shipment / ReturnRequest,
 - service Order / Quote / Payment and immutable PaymentLedgerEntry,
-- payment gateway architecture with ZarinPal request/callback/verify and idempotency contract,
+- ZarinPal-capable server-owned request/callback/verify architecture,
 - FilamentPurchase / FilamentPurchaseItem / FilamentSpool / FilamentMovement,
 - ProductionJob / MaterialUsage / CostEntry / BusinessFinanceDashboard,
-- InventoryMovement and stock reservation/operations dashboard,
-- affiliate commissions, payouts and immutable AffiliateLedgerEntry,
-- admin sections for orders, payments, invoices, production, inventory, costs, affiliate and catalog operations.
+- inventory reservation/movements and store operations dashboard,
+- affiliate commissions/payouts and immutable AffiliateLedgerEntry,
+- broad mature ModelAdmin registrations.
 
-These are operational modules, but they are not yet a complete general accounting system.
+## 50.A Requested Delta
+Make the current back-office business-oriented before introducing any new financial schema.
 
-## Remaining business gaps
-### A. Accounting core
-- chart of accounts (کل/معین/تفصیلی),
-- journal voucher / balanced debit-credit entries,
-- immutable posting and reversal instead of destructive edits,
-- fiscal periods, opening/closing balances and document numbering,
-- account/subledger statements and running balances,
-- trial balance and general ledger reports.
+### Touched surfaces
+- `website/phase50a_admin_command_center.py`,
+- `config/urls.py`,
+- `website/apps.py`,
+- `templates/admin/base_site.html`,
+- `templates/admin/phase50_command_center.html`,
+- `static/css/phase50a-admin-command-center.css`,
+- `static/js/phase50a-admin-command-center.js`,
+- `website/test_phase50a_admin_command_center.py`.
 
-### B. Treasury / receipts and payments
-- cash and bank accounts,
-- generic Receipt and Payment vouchers independent of only Quote/StoreOrder,
-- customer/supplier settlements,
-- cheque lifecycle if required,
-- bank reconciliation,
-- refund workflow with authorization/reason/audit trail.
-
-### C. Purchasing / supplier operations
-- Supplier master,
-- general PurchaseInvoice/PurchaseOrder beyond filament-only purchases,
-- purchase invoice lines for material/service/expense assets,
-- payable balance and supplier statement,
-- purchase return / debit adjustments,
-- linkage to filament warehouse receiving when applicable.
-
-### D. Sales accounting
-- normalized sales invoice accounting source for both StoreOrder and custom Quote/Order,
-- receivables/customer statement,
-- discount/tax/shipping accounting mapping,
-- sales returns/refunds/credit notes,
-- invoice/payment reconciliation.
-
-### E. Finance reporting
-- cash/bank position,
-- accounts receivable/payable aging,
-- customer and supplier statements,
-- daily cashflow,
-- revenue/cost/gross margin/net operating result,
-- tax/VAT summary,
-- project profitability with production/material usage integration.
-
-## Admin Command Center delta
-The current custom sidebar is already broad, but finance is fragmented across service orders, store orders, production and affiliate sections. Phase50 will make the operator-facing structure explicit:
-1. Dashboard & alerts
-2. Customers / CRM / support
-3. Sales — service orders, quotes, store orders, invoices, returns
-4. Treasury — receipts, payments, online gateway, bank/cash accounts, refunds
-5. Accounting — chart of accounts, vouchers, journal, general/subledger, trial balance
-6. Purchasing — suppliers, purchase invoices/orders, filament receiving
-7. Inventory & production — stock, spools, movements, jobs, material usage, costs
-8. Marketing / affiliate — commissions, payouts, affiliate ledger
-9. Catalog / products / pricing / SEO
-10. Settings / users / permissions / integrations / audit
-
-Every ModelAdmin must have useful list_display, search, filters, date hierarchy where useful, readonly audit fields, safe actions, links to related objects, and permission-aware destructive controls.
-
-## Safety / implementation order
-This phase will be additive. Existing StoreOrder, Quote, Payment, PaymentLedgerEntry, inventory and production history must not be rewritten or deleted.
-
-Implementation order:
-1. Admin information-architecture cleanup and current-model completeness with NO migration.
-2. Accounting schema design + migration review.
-3. Local SQLite migration/test gate.
-4. Finance service layer and posting rules.
-5. Reports/admin workflows.
-6. Local E2E using store sale + custom order + filament purchase + receipt/payment.
-7. Explicit owner approval.
-8. MySQL backup, Production migration/deploy and financial integrity audit.
+### Implemented
+- authenticated `/admin/command-center/`,
+- explicit Sales, Treasury, existing Accounting/Ledgers, Purchasing and Inventory/Production sections,
+- permission-aware real links only; future accounting modules are shown as roadmap text, not broken admin URLs,
+- live counters for pending payments/orders/purchases/payouts/cost entries,
+- visible `مرکز مالی و بازرگانی` shortcut in the custom sidebar,
+- date hierarchy + 50-row pagination applied to key mature finance/commerce ModelAdmins,
+- focused regression coverage for auth, sections/links, admin registration metadata and sidebar script loading.
 
 ## Must not touch
-- already healthy Catalog/Bridge/Product/Hero behavior,
-- existing Product media ownership,
-- payment idempotency/security rules,
-- historical PaymentLedgerEntry/AffiliateLedgerEntry rows,
-- Production data without a verified backup/rollback plan.
+- healthy Catalog/Bridge/Product/Hero/media behavior,
+- StoreOrder/Quote/payment semantics,
+- online-payment idempotency/security,
+- historical PaymentLedgerEntry/AffiliateLedgerEntry,
+- database schema in 50.A,
+- Production before Local gate and owner approval.
+
+## Regression / Local Gate
+- `python manage.py check`,
+- `python manage.py makemigrations --check --dry-run` => no changes,
+- `python manage.py test website.test_phase50a_admin_command_center -v 2`,
+- manual `/admin/` and `/admin/command-center/` desktop/mobile QA.
+
+## Remaining business gaps after 50.A
+### 50.B Accounting core
+- chart of accounts (کل/معین/تفصیلی),
+- fiscal periods,
+- balanced journal vouchers,
+- immutable posting/reversal,
+- party/subledger references,
+- general/subledger and trial balance.
+
+### 50.C Treasury
+- bank/cash accounts,
+- generic receipt/payment vouchers,
+- customer/supplier settlements,
+- reconciliation,
+- controlled refund workflow.
+
+### 50.D Purchasing
+- Supplier master,
+- general purchase orders/invoices/lines,
+- payables and supplier statement,
+- purchase returns/adjustments,
+- receiving integration.
+
+### 50.E Sales accounting
+- normalized sales accounting events for StoreOrder and custom Quote/Order,
+- receivable statements and payment allocation,
+- discount/tax/shipping mapping,
+- credit notes/refunds.
+
+### 50.F Reports & close
+- GL/subledger, trial balance, AR/AP aging,
+- cashflow, profitability, tax/VAT,
+- financial integrity audit and fiscal close.
 
 ## Acceptance target
-Phase50 is accepted only when the same transaction can be traced end-to-end from commercial document to payment/receipt, accounting posting, subledger, general ledger and reports without duplicate posting or balance mismatch.
+Phase50 is accepted only when a transaction can be traced from commercial document to payment/receipt, accounting posting, subledger, general ledger and reports without duplicate posting or balance mismatch.
