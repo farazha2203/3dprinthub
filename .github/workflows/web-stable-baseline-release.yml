@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Read and verify release marker without importing config package
+      - name: Read release marker without importing Django config package
         shell: bash
         run: |
           set -euo pipefail
@@ -50,7 +50,15 @@ jobs:
           print(f"WEB_RELEASE_TAG={module.WEB_RELEASE_TAG}")
           print(f"WEB_RELEASE_TARGET_SHA={module.WEB_RELEASE_TARGET_SHA}")
           PY
+
+      - name: Verify stable target commit
+        shell: bash
+        run: |
+          set -euo pipefail
           git cat-file -e "${WEB_RELEASE_TARGET_SHA}^{commit}"
+          echo "WEB_RELEASE_ID=$WEB_RELEASE_ID"
+          echo "WEB_RELEASE_TAG=$WEB_RELEASE_TAG"
+          echo "WEB_RELEASE_TARGET_SHA=$WEB_RELEASE_TARGET_SHA"
           echo "WEB_RELEASE_MARKER=PASS"
 
       - name: Publish immutable GitHub release marker
