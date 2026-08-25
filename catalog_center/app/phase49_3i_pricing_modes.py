@@ -51,6 +51,8 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
             Database.categories = _dict_categories
             Database._phase49_3i26_dict_categories = True
         _install_phase49_3i26_extractor(_page_extractor_module)
+        from .phase49_3i26_runtime_patch import install_extractor as _install_phase49_3i26_runtime_patch
+        _install_phase49_3i26_runtime_patch(_page_extractor_module)
         _install_phase49_3i26_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
