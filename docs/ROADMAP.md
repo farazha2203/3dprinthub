@@ -6,46 +6,44 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
 Current Phase: `49.3I`
 Current Hotfix: `49.3I.29 — Structured Web Product Presentation`
-Status: `IMPLEMENTED ON GITHUB / WINDOWS WEB QA NEXT`
-Production: `UNTOUCHED / NOT APPROVED`
+Status: `PRODUCTION VERIFIED / FIRST NEW CATALOG PRODUCT PUBLISH NEXT`
+Production Application Commit: `d27489f1c2e1d36e75fdadfa8ab24660d8bec720`
 
 ## Permanent Delivery Order
-`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → LOCAL PUBLISH/WEB E2E → OWNER APPROVAL → READ-ONLY HOST VERIFY → DEPLOY FROM GITHUB → PRODUCTION VERIFY`
+`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → LOCAL PUBLISH/WEB E2E → OWNER APPROVAL → READ-ONLY HOST VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
+
+## Completed Release Gate
+- Local Web QA approved by owner.
+- Production Host verified on MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+- MySQL backup created before migrations.
+- Approved GitHub application commit deployed.
+- `store.0030..0033` and `website.0020..0023` migrated successfully.
+- Post-migration plan is empty.
+- `collectstatic` and Passenger restart completed.
+- Home, Store and one public Product returned HTTP 200.
+- Public Product sanitization passed: no raw Catalog Intelligence or internal AI/source-hash fields.
+- Production worktree is clean after verified removal of four historical untracked host-only artifacts.
 
 ## Immediate Priority
-1. Pull the live 49.3I.29 GitHub snapshot to Windows.
-2. Run Django check + migration dry-run + focused storefront-presentation regression.
-3. Open the already-imported Local Product and verify customer-facing technical/source content.
-4. Confirm raw `technical_notes` JSON and internal Catalog/AI/audit fields are not public.
-5. Confirm useful AI-curated facts are shown as structured Persian cards/chips: highlights, weight, print time, materials, colors, categories, technical features and source attribution.
-6. Confirm missing designer/license values are hidden instead of showing `-`.
-7. Preserve existing SEO, Product media, pricing/cart, source URL, Product schema and Catalog publish behavior.
-8. After explicit owner approval, perform read-only Host/MySQL/backup/rollback audit and deploy the exact approved GitHub commit.
+1. Publish one newly prepared Product from Catalog Center using the official Site Publish/Bridge path.
+2. Verify Product row/update, main image/gallery ownership, Persian content and structured Product facts on Production.
+3. Verify canonical/meta/OG/schema/image Alt/source attribution.
+4. Verify re-publish/update is idempotent and does not duplicate media/Product identity.
+5. If this passes, mark Phase49.3I accepted.
+6. Then proceed to the requested Store online payment phase (ZarinPal), preserving bank transfer.
 
 ## 49.3I.29 Acceptance Contract
-- no public template renders `product.technical_notes|linebreaks`,
-- legacy embedded Catalog JSON is parsed server-side only as a compatibility source,
-- only allowlisted customer facts reach the template,
-- `ai_provider`, `ai_model`, fingerprints/hashes, batch UUID and desktop workflow internals are never returned,
-- Persian AI-authored Product description/use-description/technical features/sales bullets remain the content source; there is no web-time AI call,
-- weight/time have human-readable Persian formatting,
-- source URL remains available,
-- missing placeholder source fields are suppressed,
-- no migration and no publish batch change.
+- no public template renders raw `technical_notes`,
+- only allowlisted customer facts are shown,
+- internal AI/audit/runtime fields are not public,
+- missing source placeholders are hidden,
+- public web rendering performs no AI request,
+- existing pricing/cart/media/SEO/source URL behavior is preserved.
 
-## Preserved 49.3I Catalog Contract
-- canonical Product stage order: Basic Info → Commerce → Images → Content/SEO → Source/License → Slider → Review/Publish,
-- stage navigation stays free; readiness blocks publish only,
-- exact-link Product completion uses saved Provider/Model and sends text facts only with zero image upload,
-- Product SEO + selected-image text metadata remain one unified action,
-- images remain five cards/row with vertical scrolling,
-- Products selection/archive/identity-preserving block remains,
-- acquisition default remains five source images plus one local source screenshot,
-- startup never probes AI providers without explicit operator action,
-- diagnostic history remains cumulative.
+## Production Warning Debt
+- CKEditor4 warning remains open.
+- In-memory realtime `store.W026` remains open for a later Redis/polling architecture phase.
+- MySQL conditional unique-constraint warnings are known and non-blocking for this release.
 
-## Database / Migration
-Django migration: NONE. Catalog schema migration: NONE. Local SQLite is not copied into Production MySQL. Production untouched.
-
-## Release Gate
-49.3I.29 Windows Web PASS → explicit owner approval → read-only Production project/branch/commit/venv/MySQL/backup verification → approved GitHub snapshot only → `manage.py check` + migration plan → collectstatic → Passenger restart → Product/Home/Admin/Cart/Media/SEO HTTP verification.
+## Next Release Gate
+`Catalog Site Publish → Production Product/Media/SEO E2E → owner acceptance → Phase49.3I ACCEPTED → Store payment phase`.
