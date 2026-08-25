@@ -48,7 +48,10 @@ def _install_ai_runtime_guards() -> None:
 
     original_list = Client.list_model_info
     original_structured = Client.structured_response
-    Client._phase49_3i24_startup_guard = True
+    # Guard is enabled only by the real wrapped App constructor. Keeping it off
+    # at import/install time prevents unrelated tests and explicit utilities from
+    # inheriting a process-global network block before an App instance exists.
+    Client._phase49_3i24_startup_guard = False
     Client._phase49_3i24_startup_block_count = 0
     guard_lock = threading.RLock()
 
@@ -56,15 +59,9 @@ def _install_ai_runtime_guards() -> None:
         if bool(getattr(Client, "_phase49_3i24_startup_guard", False)) and self.product_id is None:
             with guard_lock:
                 Client._phase49_3i24_startup_block_count += 1
-            # UI model discovery is explicitly user-driven. During construction a
-            # legacy wrapper may still ask every provider for /models; returning
-            # an empty list avoids startup network, bad-key probes and UI stalls.
             return []
         info = original_list(self)
         if self.provider == "avalai":
-            # AvalAI /models does not make a zero/missing pricing row a reliable
-            # promise of a free route. Do not label every model "رایگان" unless
-            # the model id explicitly advertises a free route.
             for item in info:
                 item["free"] = str(item.get("id") or "").lower().endswith(":free")
         return info
@@ -81,9 +78,6 @@ def _install_ai_runtime_guards() -> None:
     Client.structured_response = structured_response
     Client._phase49_3i24_runtime_guards = True
 
-    # Keep the Product model picker text-only. The operator can still inspect all
-    # raw Provider models outside this product-content workflow in future tools,
-    # but obvious music/image/audio/embedding routes must not be selectable here.
     try:
         from . import phase49_3d_workflow_hardening as hardening
 
@@ -223,6 +217,9 @@ def install(app_class, data_root: str | Path) -> None:
 
     def __init__(self, *args, **kwargs):
         started = time.monotonic()
+        # Scope no-network behavior to the actual construction window only.
+        AIProviderClient._phase49_3i24_startup_guard = True
+        AIProviderClient._phase49_3i24_startup_block_count = 0
         self._phase49_3i24_runtime_lock = threading.RLock()
         self._phase49_3i24_dump_lock = threading.RLock()
         self._phase49_3i24_watchdog_stop = threading.Event()
@@ -241,6 +238,7 @@ def install(app_class, data_root: str | Path) -> None:
         try:
             original_init(self, *args, **kwargs)
         except Exception as exc:
+            AIProviderClient._phase49_3i24_startup_guard = False
             _runtime_write(
                 self,
                 "app_constructor_failed",
