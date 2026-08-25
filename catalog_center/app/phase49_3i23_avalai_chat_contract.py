@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from . import ai_providers
@@ -21,6 +22,15 @@ _NON_TEXT_MODEL_TOKENS = (
     "moderation",
     "video-generation",
 )
+_GEMINI_URL_CONTEXT_HINTS = (
+    "gemini-3.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-3.1-flash-lite",
+    "gemini-3-flash-preview",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+)
+_URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 
 
 def _clean_model(value: str) -> str:
@@ -66,13 +76,86 @@ def _unsupported_format_error(exc: Exception) -> bool:
     )
 
 
-def install() -> None:
-    """Use AvalAI's documented Chat Completions structured-output contract.
+def _source_url(payload: str) -> str:
+    match = _URL_RE.search(str(payload or ""))
+    return match.group(0).rstrip(".,);]") if match else ""
 
-    Product requests use the exact operator-saved model and do not perform a
-    hidden GET /models. We prefer json_schema, fall back to json_object for
-    routes that do not support strict schemas, and finally fall back to
-    prompt-enforced JSON when response_format itself is unsupported.
+
+def _source_is_sparse(payload: str) -> bool:
+    value = str(payload or "")
+    compact = value.replace(" ", "")
+    empty_description = any(
+        marker in compact
+        for marker in (
+            '"source_description":""',
+            '"description":""',
+            "SOURCE_DESCRIPTION:\n\n",
+        )
+    )
+    return empty_description or len(value) < 2400
+
+
+def _avalai_url_tool_evidence(client, model: str, url: str) -> tuple[str, str]:
+    """Ask AvalAI to actually retrieve a URL when the exact model supports a documented tool.
+
+    Normal chat does not browse a URL merely because it appears in the prompt.
+    Gemini URL Context and Responses web_search are explicit provider tools. Any
+    unsupported route falls back to the already-extracted application facts.
+    """
+    model_lower = model.lower()
+    prompt = (
+        "Open and inspect this exact public product URL. Return concise factual evidence only: "
+        "product identity/title, visible description, creator/author, category/tags, license text, "
+        "and useful physical/product facts explicitly present. Do not invent missing data. URL: "
+        + url
+    )
+    if any(hint in model_lower for hint in _GEMINI_URL_CONTEXT_HINTS):
+        data = ai_providers._json_request(
+            f"{client.spec.base_url}/chat/completions",
+            client.api_key,
+            payload={
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "tools": [{"urlContext": {}}],
+            },
+            method="POST",
+            timeout=35,
+            provider="avalai",
+            model=model,
+            operation="avalai_url_context",
+            product_id=client.product_id,
+        )
+        return ai_providers.response_output_text(data).strip(), "gemini_urlContext"
+
+    if model_lower.startswith("gpt-5"):
+        data = ai_providers._json_request(
+            f"{client.spec.base_url}/responses",
+            client.api_key,
+            payload={
+                "model": model,
+                "input": prompt,
+                "tools": [{"type": "web_search", "search_context_size": "low"}],
+            },
+            method="POST",
+            timeout=35,
+            provider="avalai",
+            model=model,
+            operation="avalai_url_web_search",
+            product_id=client.product_id,
+        )
+        return ai_providers.response_output_text(data).strip(), "responses_web_search"
+
+    return "", "app_fetch_only"
+
+
+def install() -> None:
+    """Use AvalAI's documented structured-output and URL-tool contracts.
+
+    Product requests keep the exact operator-saved model and never perform a
+    hidden GET /models. App-side fetch/sanitization remains the deterministic
+    source path. If that extracted source is sparse, documented AvalAI URL tools
+    are attempted only for exact model families that expose them; unsupported
+    routes safely fall back to app-fetched facts.
     """
     Client = ai_providers.AIProviderClient
     if getattr(Client, "_phase49_3i24_avalai_structured_contract", False):
@@ -110,6 +193,32 @@ def install() -> None:
         if not product_payload:
             raise RuntimeError("AvalAI product request has no extracted source text payload.")
 
+        url = _source_url(product_payload)
+        url_tool = "app_fetch_only"
+        url_evidence = ""
+        if url and _source_is_sparse(product_payload):
+            try:
+                url_evidence, url_tool = _avalai_url_tool_evidence(self, model, url)
+            except Exception as exc:
+                audit_event(
+                    "ai",
+                    "avalai_url_tool_fallback",
+                    status="fallback",
+                    level="WARNING",
+                    product_id=self.product_id,
+                    source_file=__file__,
+                    message=str(exc)[:900],
+                    detail={
+                        "provider": "avalai",
+                        "model": model,
+                        "url_host": url.split("/", 3)[2] if "/" in url else "",
+                        "fallback": "app_fetch_sanitize_then_prompt",
+                    },
+                )
+                url_tool = "app_fetch_fallback"
+        if url_evidence:
+            product_payload += "\n\nAVALAI_URL_TOOL_EVIDENCE:\n" + url_evidence[:12000]
+
         schema_json = json.dumps(schema or {}, ensure_ascii=False, separators=(",", ":"))
         system_text = (
             str(instructions or "").strip()
@@ -120,8 +229,8 @@ def install() -> None:
         user_text = (
             "PRODUCT_SOURCE_AND_OPERATOR_DATA:\n"
             + product_payload
-            + "\n\nUse only the extracted source/operator facts above. "
-            + "A URL by itself is not evidence that you browsed the page. Missing facts must not be invented."
+            + "\n\nUse only the extracted source/operator facts and explicit URL-tool evidence above. "
+            + "A bare URL is not evidence that you browsed the page. Missing facts must not be invented."
         )
         messages = [
             {"role": "system", "content": system_text},
@@ -142,7 +251,9 @@ def install() -> None:
                 "schema_chars": len(schema_json),
                 "source_chars": len(product_payload),
                 "hidden_model_list_request": False,
-                "source_strategy": "app_fetch_sanitize_then_prompt",
+                "source_strategy": "app_fetch_sanitize_plus_url_tool_when_supported",
+                "url_tool": url_tool,
+                "url_evidence_chars": len(url_evidence),
             },
         )
 
