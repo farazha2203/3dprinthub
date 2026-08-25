@@ -6,6 +6,13 @@ on:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
       - catalog_center/app/version.py
+      - catalog_center/launch.py
+      - catalog_center/portable_entry.py
+      - catalog_center/build_portable_exe.py
+      - catalog_center/PACKAGE_MANIFEST.json
+      - catalog_center/config.example.json
+      - catalog_center/tests/**
+      - .github/workflows/catalog-center-windows-release.yml
   workflow_dispatch:
     inputs:
       publish_release:
@@ -58,15 +65,41 @@ jobs:
       - name: Compile source before packaging
         shell: pwsh
         run: |
-          python -m compileall -q catalog_center/app catalog_center/tests catalog_center/portable_entry.py catalog_center/build_portable_exe.py
+          python -m compileall -q catalog_center/app catalog_center/tests catalog_center/launch.py catalog_center/portable_entry.py catalog_center/build_portable_exe.py
           if ($LASTEXITCODE -ne 0) { throw 'compileall failed' }
 
-      - name: Catalog Center unit and regression suite
+      - name: Current Phase49 release regression gate
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -m unittest discover -s tests -p "test_*.py" -v
-          if ($LASTEXITCODE -ne 0) { throw 'Catalog Center tests failed' }
+          python -m unittest -v `
+            tests.test_phase49_3i28_exact_link_contract `
+            tests.test_phase49_3i27_category_provider_bridge `
+            tests.test_phase49_3i26_operator_completion `
+            tests.test_phase49_3i25_product_first_workflow `
+            tests.test_phase49_3i24_runtime_observability `
+            tests.test_phase49_3i23_avalai_chat_contract `
+            tests.test_phase49_3i22_tk_thread_bridge `
+            tests.test_phase49_3i21_observable_ai_link_refresh `
+            tests.test_phase49_3i20_visible_operator_panels `
+            tests.test_phase49_3i19_source_identity `
+            tests.test_phase49_3i18_operator_editing `
+            tests.test_epic49_phase49_3i17_single_active_ai_runtime `
+            tests.test_epic49_phase49_3i16_resilient_acquisition `
+            tests.test_portable_exe_contract `
+            tests.test_v854_launcher `
+            tests.test_epic49_operator_workflow `
+            tests.test_v871_slider_seo `
+            tests.test_persistent_connection_profile `
+            tests.test_v85_upgrade
+          if ($LASTEXITCODE -ne 0) { throw 'Current release regression gate failed' }
+
+      - name: Launcher final composition verify
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only
+          if ($LASTEXITCODE -ne 0) { throw 'Launcher verify failed' }
 
       - name: Build and self-verify one-file EXE
         shell: pwsh
@@ -114,10 +147,8 @@ jobs:
           $manifestPath = Join-Path $release "release-manifest.json"
           $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
           $exe = Join-Path $release $manifest.versioned_exe
-          $shaFile = "$exe.sha256"
-          if (-not (Test-Path $shaFile)) {
-            $shaFile = Get-ChildItem $release -Filter "*.sha256" | Select-Object -First 1 -ExpandProperty FullName
-          }
+          $shaFile = Get-ChildItem $release -Filter "*.sha256" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $shaFile) { throw 'SHA256 sidecar not found' }
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Release $tag already exists; leaving immutable release untouched."
@@ -132,12 +163,13 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - Catalog Center unittest discovery
+          - current Phase49.3I regression suite
+          - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          External source websites are intentionally not release-gating CI dependencies. The application keeps the resilient acquisition ladder and can use installed Chrome/Edge/Playwright Chromium at runtime.
+          External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. The release preserves the resilient acquisition ladder and verifies that the frozen executable can launch a real Playwright/Chrome-compatible browser runtime. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
           gh release create $tag $exe $manifestPath $shaFile --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "3DPrintHub Catalog Center v$env:CATALOG_VERSION" --notes $notes
