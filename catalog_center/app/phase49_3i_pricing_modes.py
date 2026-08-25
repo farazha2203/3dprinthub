@@ -61,8 +61,6 @@ def install(workspace_class) -> None:
             panel.configure(text="قیمت‌گذاری حرفه‌ای — قطعی / بازه‌ای / فرمولی")
         except Exception:
             pass
-        # Remove only the old two-choice visual row. The underlying 49.3F
-        # pricing engine remains intact.
         for child in panel.grid_slaves(row=0):
             try:
                 texts = [str(grand.cget("text") or "") for grand in child.winfo_children() if isinstance(grand, ttk.Radiobutton)]
@@ -77,27 +75,9 @@ def install(workspace_class) -> None:
         mode = ttk.Frame(panel)
         mode.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 8))
         ttk.Label(mode, text="روش اعلام قیمت:", font=("Tahoma", 10, "bold")).pack(side="left", padx=4)
-        ttk.Radiobutton(
-            mode,
-            text="● قیمت قطعی",
-            variable=self.pricing_strategy_var,
-            value="fixed",
-            command=self._phase49_3f_refresh_pricing_state,
-        ).pack(side="left", padx=8)
-        ttk.Radiobutton(
-            mode,
-            text="● بازه قیمت",
-            variable=self.pricing_strategy_var,
-            value="range",
-            command=self._phase49_3f_refresh_pricing_state,
-        ).pack(side="left", padx=8)
-        ttk.Radiobutton(
-            mode,
-            text="● قیمت فرمولی",
-            variable=self.pricing_strategy_var,
-            value="dynamic",
-            command=self._phase49_3f_refresh_pricing_state,
-        ).pack(side="left", padx=8)
+        ttk.Radiobutton(mode, text="● قیمت قطعی", variable=self.pricing_strategy_var, value="fixed", command=self._phase49_3f_refresh_pricing_state).pack(side="left", padx=8)
+        ttk.Radiobutton(mode, text="● بازه قیمت", variable=self.pricing_strategy_var, value="range", command=self._phase49_3f_refresh_pricing_state).pack(side="left", padx=8)
+        ttk.Radiobutton(mode, text="● قیمت فرمولی", variable=self.pricing_strategy_var, value="dynamic", command=self._phase49_3f_refresh_pricing_state).pack(side="left", padx=8)
         self.phase49_3i_pricing_hint = tk.StringVar(value="")
         ttk.Label(mode, textvariable=self.phase49_3i_pricing_hint, style="SubHeader.TLabel").pack(side="right", padx=5)
         self._phase49_3i_pricing_mode_frame = mode
@@ -140,11 +120,7 @@ def install(workspace_class) -> None:
             minimum, maximum = normalize_range(self.price_min_var.get(), self.price_max_var.get())
             if minimum <= 0 or maximum <= minimum:
                 if not silent:
-                    messagebox.showwarning(
-                        "3DPrintHub — بازه قیمت",
-                        "برای حالت بازه‌ای، حداقل باید بیشتر از صفر و حداکثر باید بزرگ‌تر از حداقل باشد.",
-                        parent=self,
-                    )
+                    messagebox.showwarning("3DPrintHub — بازه قیمت", "برای حالت بازه‌ای، حداقل باید بیشتر از صفر و حداکثر باید بزرگ‌تر از حداقل باشد.", parent=self)
                 if hasattr(self, "footer_status"):
                     self.footer_status.set("بازه قیمت معتبر نیست")
                 return False
@@ -155,16 +131,7 @@ def install(workspace_class) -> None:
             return False
         if mode == "range":
             minimum, maximum = normalize_range(self.price_min_var.get(), self.price_max_var.get())
-            self.db.update_product(
-                self.product_id,
-                {
-                    "pricing_strategy": "range",
-                    "price_min": minimum,
-                    "price_max": maximum,
-                    "final_price": 0,
-                    "price_is_final": 0,
-                },
-            )
+            self.db.update_product(self.product_id, {"pricing_strategy": "range", "price_min": minimum, "price_max": maximum, "final_price": 0, "price_is_final": 0})
             self.row = self.db.product(self.product_id)
             if not silent and hasattr(self, "footer_status"):
                 self.footer_status.set(f"بازه قیمت {minimum:,} تا {maximum:,} تومان ذخیره شد")
@@ -176,23 +143,14 @@ def install(workspace_class) -> None:
     workspace_class.save = save
     workspace_class._phase49_3i_pricing_modes_installed = True
 
-    # Same-phase final workspace boundary: keep the mature gallery/network logic,
-    # replace only its pixel rendering contract with fixed contain/letterbox cards.
     _install_phase49_3i12_workspace(workspace_class)
-    # 49.3I.18 is imported only here, after launch.py has completed its module
-    # import phase, so this additive bridge cannot perturb startup import order.
     from .phase49_3i18_operator_editing import install as _install_phase49_3i18_operator_editing
     _install_phase49_3i18_operator_editing(workspace_class)
-    # 49.3I.19 extends the already-mounted 49.3I.18 editor with source-title
-    # identity repair. No prior workspace controls are removed or replaced.
     from .phase49_3i19_source_identity import install_workspace as _install_phase49_3i19_source_identity
     _install_phase49_3i19_source_identity(workspace_class)
-    # 49.3I.20 is layout-only. It runs after 49.3I.18/19 so their existing
-    # panels/commands stay intact, then moves those panels ahead of expandable
-    # gallery/content panes so the operator can actually see and use them.
     from .phase49_3i20_visible_operator_panels import install as _install_phase49_3i20_visible_operator_panels
     _install_phase49_3i20_visible_operator_panels(workspace_class)
-    # 49.3I.21 makes provider calls observable/fail-fast and adds a one-click,
-    # link-grounded full content/SEO/image-metadata refresh with preview/apply.
     from .phase49_3i21_observable_ai_link_refresh import install as _install_phase49_3i21_observable_ai_link_refresh
     _install_phase49_3i21_observable_ai_link_refresh(workspace_class)
+    from .phase49_3i21_cancel_guard import install as _install_phase49_3i21_cancel_guard
+    _install_phase49_3i21_cancel_guard()
