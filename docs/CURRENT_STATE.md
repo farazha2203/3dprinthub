@@ -6,8 +6,29 @@ Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
 Current Release: `Phase50.A.1 — Admin Storefront / Hero parity`
 Status: `GITHUB CI TESTED / MANUAL ADMIN QA + HOST DEPLOY PENDING`
-Latest documented branch checkpoint before this state commit: `267762ee05d9d230a1f4e8a69ddee00a52537e66`
-CI-tested code snapshot: `7c8714b5715cd00900a76b99097823266251d4a2`
+
+## Windows Catalog Center release
+Latest Windows application version: `8.8.1` (`BUILD_ID=2026.08.25.2`).
+GitHub Release: `catalog-center-v8.8.1`.
+Release asset: `3DPrintHub-CatalogCenter-v8.8.1.exe`.
+Release EXE SHA256: `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
+
+The 8.8.1 release gate passed on Windows GitHub Actions:
+- source compile,
+- 92 current Phase49 regression tests,
+- canonical `launch.py --verify-only`,
+- PyInstaller one-file/windowed build,
+- frozen `--portable-verify`,
+- frozen Playwright/browser smoke,
+- release manifest/SHA256 validation,
+- immutable artifact upload and GitHub Release publish.
+
+Release-recovery fixes completed before publication:
+- aligned `launch.py` EXPECTED_VERSION, package manifest, example config and release tests with `APP_VERSION=8.8.1`,
+- removed frozen verification's dependency on reading a physical `launch.py` source file from the PyInstaller one-file extraction bundle,
+- frozen verify now imports the packaged canonical launcher and validates `EXPECTED_VERSION == APP_VERSION` plus callable launcher entrypoint.
+
+External third-party source availability (MakerWorld/Printables/etc.) is intentionally not a CI dependency; Playwright/Chrome frozen runtime is release-tested and a final employee live-source smoke remains the operational acceptance check.
 
 ## Production baseline
 Owner reports the Phase49 Production site and Hero are healthy. Previously verified Production state remains:
@@ -51,32 +72,16 @@ GitHub Actions workflow `Phase50 Admin Storefront Parity CI` PASS on code snapsh
 
 Known warnings remain: Google credentials intentionally empty in CI, CKEditor4 maintenance/security debt, and `store.W026` in-memory realtime debt.
 
-## CI incidents fixed and documented
-- first new CI attempt used `SECRET_KEY` instead of canonical `DJANGO_SECRET_KEY`,
-- second attempt used generic `DEBUG` instead of `DJANGO_DEBUG`, causing HTTPS 301 responses in tests,
-- ModelAdmin dynamic custom URLs were not stable through the actual Admin URL composition; Hero quick-action endpoints were moved to explicit project URL routes wrapped by `admin.site.admin_view`,
-- prevention rules recorded as `ERR-50-001` and `ERR-50-002` in `docs/ERRORS.md`.
-
 ## Safety / Must-not-touch
 - NO migration/schema change in Phase50.A.1,
 - no StoreOrder/Quote/Payment semantics changed,
 - no gateway/idempotency behavior changed,
 - no Catalog Bridge/Product public rendering/media ownership changed,
 - no destructive Hero delete operation,
-- Production untouched.
+- Production untouched by Phase50.
 
-## Documentation updated
-- `docs/CURRENT_STATE.md`,
-- `docs/ROADMAP.md`,
-- `docs/CHANGELOG.md`,
-- `docs/ERRORS.md`,
-- `docs/REQUESTS.md`,
-- `docs/phases/PHASE50_FINANCE_ADMIN_COMMAND_CENTER.md`,
-- `PROJECT_CONTEXT.md`,
-- `docs/00_PROJECT_MASTER_ROADMAP_FA.md`.
-
-## Next exact work
-1. Manual Admin visual/operation QA on development/staging host: Product actions, Imported Asset actions, Hero 5/10-random and deactivate-all, Command Center links, mobile/desktop layout.
-2. Phase50.A.2 Checkout & Delivery: package weight/dimensions, normalized carrier quote adapter, Post/Tipax/Mahex only after current official API contracts/credentials are verified; retain current weight-rule fallback.
-3. Phase50.A.3 Payment hardening/unification: strict trusted gateway redirect allowlist, StorePayment integration with the already-safe server-to-server verification model, audit/reconciliation/rate-limit controls.
-4. After these commerce gates, continue Phase50.B accounting core.
+## Exact next work
+1. Employee acceptance smoke on `3DPrintHub-CatalogCenter-v8.8.1.exe`: open application, verify persisted profile/credentials, fetch one known MakerWorld exact/listing URL, and execute one approved publish path.
+2. Manual Admin visual/operation QA on development/staging host: Product actions, Imported Asset actions, Hero 5/10-random and deactivate-all, Command Center links, mobile/desktop layout.
+3. Phase50.A.2 Checkout & Delivery: package weight/dimensions, normalized carrier quote adapter, Post/Tipax/Mahex only after current official API contracts/credentials are verified; retain current weight-rule fallback.
+4. Phase50.A.3 Payment hardening/unification, then Phase50.B accounting core.
