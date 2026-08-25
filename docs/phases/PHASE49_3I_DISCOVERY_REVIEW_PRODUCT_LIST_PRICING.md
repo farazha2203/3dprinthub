@@ -2,12 +2,12 @@
 
 Updated: 2026-08-25
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Hotfix: `49.3I.21 — Observable AI Jobs + Link-Grounded Full Refresh`
+Current Hotfix: `49.3I.24 — Runtime Observability + AvalAI URL Tools + Startup No-Network Guard`
 Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Goal
-Deliver a business-usable Catalog Center that bulk-acquires exact products, preserves real source identity, keeps the UI responsive during AI work, exposes deterministic diagnostics, can rebuild all editorial data from one authoritative product link, then publishes only after Local acceptance.
+Deliver a business-usable Catalog Center that bulk-acquires exact products, preserves real source identity, keeps the UI responsive during AI work, exposes deterministic diagnostics from startup through close, can rebuild editorial data from one authoritative product link, then publishes only after Local acceptance.
 
 ## Preserved Acquisition Contract
 49.3I.16 remains authoritative:
@@ -45,44 +45,54 @@ Acceptance examples:
 - no Product `/models` preflight,
 - explicit Settings model search/test remain available.
 
-## Observable AI Runtime — 49.3I.21
-### Trigger
-Windows QA showed multiple AI commands could remain at `در حال اتصال به هوش مصنوعی`. The source-title refresh itself succeeded, but combined source repair + AI rebuild and other generation paths could wait until the visible 03:30 ceiling.
+## Observable AI + Tk Safety — 49.3I.21/22 Preserved
+- bounded provider wait and visible request stages,
+- cancellation ignores late result,
+- Product AI workers do not mutate Tk directly,
+- Tk-backed source state is snapshotted before worker work,
+- right Product rail has vertical scrolling.
 
-### Verified cause
-The provider chat generation path used a 210-second timeout, exactly matching 03:30. Existing generation workers were already threaded; the key failure was long provider waiting plus insufficient start-stage observability, not product field-write permissions.
+## Phase49.3I.24 — Current Runtime Contract
+### Verified owner evidence
+The latest diagnostic and screenshots show:
+- AvalAI Product request can fail before HTTP with `audit_event() got an unexpected keyword argument 'provider'`,
+- startup can perform hidden `/models` requests immediately after `app_start`,
+- a wrong Provider key can therefore be probed against another Provider during startup noise,
+- `google/lyria-3-pro-preview` can return HTTP 200 but cannot satisfy Product JSON content,
+- successful AvalAI Product calls can take tens of seconds,
+- `num_sources_used=0` proves a bare URL in normal chat is not equivalent to browsing the source page.
 
-### Runtime rule
-- all AI POST requests pass through a bounded provider guard,
-- default request ceiling is 75 seconds; `CATALOG_AI_TIMEOUT_SECONDS` may set 20..120 seconds,
-- request-start is persisted before network wait,
-- finish/error/timeout persists Provider/Model/operation/duration through the existing redacted diagnostics layer,
-- late/cancelled link-refresh results never apply to the Product,
-- cancel releases the local busy state,
-- no API key/token is exported to diagnostics.
+### Request rules
+- app-side exact-page fetch/sanitize is the deterministic evidence path,
+- exact saved Provider/Model remains authoritative,
+- AvalAI Product output prefers strict `json_schema`, then bounded compatibility fallback,
+- sparse source context may use explicit supported AvalAI URL tools:
+  - supported Gemini routes use `urlContext`,
+  - GPT-5 routes use Responses `web_search`,
+  - any unsupported/error tool path falls back to app-fetched facts without Provider/Model switching,
+- obvious non-text model families are hidden/rejected for Product editorial structured generation.
 
-## Link-Grounded Full Refresh — 49.3I.21
-New Stage 4 action: `🌐 تکمیل همه اطلاعات بر اساس لینک محصول`.
+### Startup/performance rules
+- application construction must not launch Provider model-catalog network requests,
+- model search is explicit and available after first Tk idle,
+- runtime session logging begins before wrapped App construction,
+- Tk heartbeat records meaningful recovered lag,
+- >8s heartbeat stall produces an all-thread `faulthandler` dump from a non-Tk watchdog,
+- Dashboard exposes Program Log, AI Log, safe diagnostic export and log folder,
+- safe export includes redacted runtime/main/hang-log tails.
 
-Flow:
-1. read the exact Product `source_url`,
-2. fetch and parse the actual source page using the mature crawler,
-3. derive canonical source title,
-4. build sanitized source facts,
-5. send URL + source facts + selected images/materials/colors to AI,
-6. show received preview,
-7. require explicit operator confirmation,
-8. use the mature 49.3I.18 apply path to update Persian title, descriptions, SEO, keywords and image metadata,
-9. preserve source URL, price, stock and commercial/operator choices.
-
-The job dialog shows elapsed time and live stages and provides `توقف انتظار` and sanitized report copy. Diagnostics bundle export is available directly from the same panel.
+### AvalAI Free-label rule
+Absence/zero of generic pricing metadata is not sufficient proof that every AvalAI model is free. The Product UI only marks a model Free when its routed ID explicitly denotes a free route.
 
 ## Implementation Surfaces
 - `catalog_center/app/phase49_3i21_observable_ai_link_refresh.py`
-- `catalog_center/app/phase49_3i21_cancel_guard.py`
-- `catalog_center/app/phase49_3i_pricing_modes.py`
-- `catalog_center/tests/test_phase49_3i21_observable_ai_link_refresh.py`
-- `docs/phases/PHASE49_3I21_OBSERVABLE_AI_LINK_REFRESH.md`
+- `catalog_center/app/phase49_3i22_tk_thread_bridge.py`
+- `catalog_center/app/phase49_3i23_avalai_chat_contract.py`
+- `catalog_center/app/phase49_3i24_runtime_observability.py`
+- `catalog_center/app/phase49_3i12_runtime_bridge.py`
+- `catalog_center/tests/test_phase49_3i23_avalai_chat_contract.py`
+- `catalog_center/tests/test_phase49_3i24_runtime_observability.py`
+- `docs/phases/PHASE49_3I24_RUNTIME_OBSERVABILITY_AVALAI_URL_TOOLS.md`
 - previous 49.3I.20/19/18/17/16 surfaces preserved.
 
 ## Database / Migration
@@ -92,20 +102,22 @@ Existing diagnostic tables are reused.
 Production untouched.
 
 ## Focused Windows Acceptance — Current Gate
-1. clean Local worktree and ff-only pull live feature HEAD,
-2. verify Local HEAD == fetched remote HEAD,
-3. compile 49.3I.21 + 49.3I.20/19/18 composition modules,
-4. run 49.3I.21/20/19/18 tests plus inherited 49.3I.16/15/discovery tests,
-5. run `catalog_center/launch.py --verify-only`,
-6. launch Catalog Center and confirm new AI panel is visible in Stage 4,
-7. open product `2896217`,
-8. run link-grounded full refresh and observe source fetch → AI request → received preview → apply,
-9. verify Persian identity no longer stays `مدل میکرورلد 2896217`,
-10. verify descriptions/SEO/image Alt/Title/Caption align to the same real product,
-11. cancel a waiting request and verify a late result is not applied and another AI action can be started,
-12. export Diagnostics and verify no API key/token appears,
-13. retest existing All-Fields/source-rebuild/image-SEO AI actions and verify responsive UI + useful failure stage,
-14. chain the existing 49.3I.17 and acquisition baseline gates.
+1. close Catalog Center; verify no project process remains,
+2. clean Local worktree and ff-only pull live feature HEAD,
+3. verify Local HEAD == fetched remote HEAD,
+4. compile 49.3I.24/23 + inherited AI/Tk composition modules,
+5. run focused 49.3I.24/23 tests plus inherited 49.3I.22/21/20/19/18 regressions,
+6. run `catalog_center/launch.py --verify-only`,
+7. launch Catalog Center and confirm Dashboard diagnostic card is visible,
+8. inspect logs: no automatic Provider `/models` HTTP should occur during startup,
+9. explicitly use model search and confirm live Provider model discovery still works,
+10. confirm Product model picker cannot select Lyria/obvious non-text routes,
+11. open product `2896217`, run `تکمیل همه اطلاعات بر اساس لینک محصول`,
+12. confirm source fetch → optional explicit AvalAI URL evidence/fallback → structured request → preview/apply,
+13. confirm no `audit_event provider` crash and no Product `/models` preflight,
+14. verify Persian title/content/SEO/image metadata align to the real product,
+15. if UI becomes unresponsive long enough, verify hang dump is persisted and included in safe diagnostic export,
+16. close/reopen normally and confirm lifecycle logging persists.
 
 ## Release / Production Gate
 Windows PASS → exactly one `LOCAL PUBLISH ONLY` → Local Store/Admin/Product/Media/SEO E2E → explicit owner approval → read-only Host path/branch/venv/MySQL/backup/rollback verification → deploy approved GitHub snapshot only → Production HTTP/data/media verification.
