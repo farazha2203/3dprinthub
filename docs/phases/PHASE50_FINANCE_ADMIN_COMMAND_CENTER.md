@@ -2,96 +2,114 @@
 
 Updated: 2026-08-25
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Subphase: `50.A.1 — Admin Storefront / Hero parity`
+Current Subphase: `50.A.1B — Product Gallery + Variant 2.0 foundation`
 Status: `GITHUB CI TESTED / MANUAL QA REQUIRED`
 Production: `PHASE49 WEB HEALTHY / PHASE50 UNDEPLOYED`
 
 ## Owner request
-Complete the business back-office so Django Admin exposes the same mature storefront controls used by Windows/front-end operations, then finish delivery pricing, discounts/VAT and secure online payment before continuing the accounting core.
+Complete the business back-office and storefront commerce before accounting core.
 
-Explicit current requests:
-- add/remove Product from homepage slider from Admin,
-- 5-random and 10-random Product Hero controls,
-- professional Admin access to front-end commerce/settings surfaces,
-- preserve the mature customer portal and Iran province/county/city address flow,
-- calculate delivery from product + packaging weight/dimensions with Post/Tipax/Mahex when a current supported API exists,
-- coupon and VAT visible/operational in checkout,
-- phishing-resistant comprehensive payment flow.
+Current explicit priorities:
+- professional product gallery: thumbnail -> main viewer -> full-screen zoom,
+- professional Admin parity for Product/Hero/catalog/front-end controls,
+- sellable size/build variants such as 20/24/26/28/30 cm with hollow/standard/solid weight profiles,
+- one server/Windows contract for price, material, color, size, weight and sellable variants,
+- package weight/dimensions for delivery calculation,
+- Post/Tipax/Mahex rate integration only from verified current official contracts,
+- coupon + VAT + shipping in checkout,
+- secure Store ZarinPal payment,
+- Torob integration before accounting core.
 
 ## Verified existing foundation
 - StoreOrder / StoreOrderItem / StorePayment / StoreInvoice / Shipment / ReturnRequest,
-- Coupon validation/discount application already exists,
-- PricingSetting VAT and packaging fee already exist,
-- ShippingMethod supports fixed and weight-rule pricing already,
-- StoreAddress plus IranProvince/IranCounty/IranCity already exist,
+- Coupon validation/discount application,
+- PricingSetting VAT and packaging fee,
+- ShippingMethod fixed and weight-rule pricing,
+- StoreAddress plus IranProvince/IranCounty/IranCity,
 - service Order / Quote / Payment and immutable PaymentLedgerEntry,
-- online payment already owns amount server-side, locks attempts, uses random callback tokens, validates Authority and requires server-to-server provider verification before paid state,
-- Production Django security already enables HTTPS redirect/HSTS/Secure cookies/SameSite/HttpOnly/nosniff/DENY framing when DEBUG is off,
-- Filament purchasing, inventory, production cost and affiliate ledgers remain mature sources for Phase50 accounting.
+- mature online payment engine with server-owned amounts, locking, random callback tokens, exact Authority matching and server-to-server verification,
+- Production HTTPS/HSTS/Secure-cookie/SameSite/HttpOnly/nosniff/DENY framing,
+- ProductVariant material/quality/color/weight/time/price/inventory foundation.
 
-## 50.A.1 Requested Delta
-Make Storefront/Hero/Checkout operations professional and directly reachable from Django Admin without changing schema or healthy public rendering.
+## 50.A.1 — Admin Storefront / Hero parity
+Implemented and CI tested:
+- authenticated `/admin/command-center/`,
+- Product and Imported Catalog add/remove Hero actions,
+- Hero 5-random / 10-random / deactivate-all,
+- permission-aware links to Product, Hero, Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data,
+- non-destructive Hero changes.
+
+## 50.A.1B — Product Gallery + Variant 2.0
+### Requested Delta
+Fix the owner-reported product gallery UX and introduce first-class sellable size/build/package attributes without rewriting the mature Product/Cart architecture.
 
 ### Touched surfaces
-- `website/phase50a_admin_command_center.py`,
-- `website/phase50a_storefront_admin_parity.py`,
-- `config/urls.py`,
-- `website/apps.py`,
-- `templates/admin/website/homepageheroslide/change_list.html`,
-- `website/test_phase50a_admin_command_center.py`,
-- `website/test_phase50a_storefront_admin_parity.py`,
-- `.github/workflows/phase50-admin-storefront-ci.yml`.
+- `store/phase50_variant2.py`,
+- `store/phase50_variant_admin.py`,
+- `store/phase50_variant_views.py`,
+- `store/apps.py`,
+- `store/urls.py`,
+- `store/migrations/0034_phase50_variant2_commerce.py`,
+- `store/test_phase50_variant2_gallery.py`,
+- `static/store/js/store.js`,
+- `static/store/css/store.css`,
+- `.github/workflows/phase50-variant2-gallery-ci.yml`.
 
 ### Implemented
-- authenticated `/admin/command-center/`,
-- Sales / Storefront & Checkout / Treasury / Accounting / Purchasing / Inventory sections,
-- permission-aware real links,
-- Product bulk actions: add selected to Hero / remove selected from Hero,
-- Imported Catalog Asset bulk actions: add/remove from Hero,
-- Hero quick buttons: 5 random, 10 random, deactivate all,
-- random selection only from active Product-backed and public-image-capable Catalog assets,
-- existing manually edited Hero copy preserved when reactivating an existing slide,
-- Hero removal is non-destructive deactivation,
-- quick mutation routes are POST-only and wrapped by `admin.site.admin_view`,
-- Admin exposes Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location reference areas.
+- contain-fit Product main viewer,
+- thumbnail click/keyboard selection replaces the main image,
+- full-screen lightbox with close, previous/next, Escape and arrow keys,
+- `ProductVariant.size_label`,
+- `ProductVariant.build_profile`: standard/hollow/reinforced/solid/custom,
+- packaging weight and package length/width/height,
+- StoreOrderItem snapshot columns for size/build/package history,
+- Variant uniqueness now includes size/build profile,
+- Admin list/filter/inline exposure of new commerce fields,
+- safe public Variant metadata endpoint for the current product selector,
+- effective shipping-weight helper using explicit shipping weight when present or product/final weight + packaging otherwise.
 
-## Regression gate
-GitHub Actions `Phase50 Admin Storefront Parity CI` PASS at code snapshot `7c8714b5715cd00900a76b99097823266251d4a2`:
+### Migration
+`store.0034_phase50_variant2_commerce` is additive but changes the ProductVariant uniqueness contract. It is NOT authorized for Production until exact MySQL vendor/name, migration plan, successful DB backup and rollback target are verified.
+
+### Regression gate
+GitHub Actions `Phase50 Variant2 Gallery CI`, run `32872549545`, PASS on code snapshot `8e3c151159424437157d3ef6861881be08b1aea8`:
 - compile PASS,
-- Django check PASS with known warnings only,
-- migration dry-run: no changes,
-- Phase50 admin tests PASS.
+- Django check PASS,
+- migration state dry-run PASS,
+- migration plan PASS,
+- SQLite migration apply PASS,
+- focused Variant/Admin/endpoint/gallery contract tests PASS.
 
-Manual desktop/mobile Admin QA is still required before Production deploy.
+## 50.A.2 — Checkout & Delivery — next
+- persist size/build/package snapshots from selected variant during checkout,
+- use effective shipping weight consistently,
+- normalize carrier quote inputs: origin/destination, postal code, weight, package dimensions, insured value, carrier/service,
+- immutable quote result snapshot: base fee, taxes/charges, total, ETA, provider reference,
+- Post/Tipax/Mahex adapters only after current official API/credentials are verified,
+- timeout/error fallback to mature ShippingMethod weight rules,
+- Admin provider/fallback controls.
 
-## 50.A.2 Checkout & Delivery — next
-Design additive shipping quote architecture around the existing ShippingMethod fallback. Required normalized inputs:
-- origin/destination province/county/city and postal code,
-- sellable item weight,
-- packaging weight,
-- parcel dimensions,
-- insured/order value,
-- carrier/service code.
-
-Provider result must snapshot base fee, provider taxes/charges, total, ETA and provider reference onto the finalized order. Direct Post/Tipax/Mahex adapters are only implemented after the current official API contract/credentials are verified. No guessed endpoint will enter Production.
-
-## 50.A.3 Payment hardening/unification
-Keep the mature service-payment contract and extend Store checkout to it:
+## 50.A.3 — Secure Store ZarinPal
+Reuse the mature service-payment engine for StorePayment:
 - server-owned amount/currency,
-- strict trusted gateway-host allowlist,
-- no card number/PIN/CVV collection or storage,
+- strict trusted redirect host allowlist,
+- no card/PIN/CVV collection or storage,
 - idempotent request/callback/verify,
-- random callback identity + exact provider Authority match,
+- random callback identity + exact Authority match,
 - server-to-server verification before paid state,
-- audit/reconciliation and abuse monitoring,
-- Production security-header verification.
+- reconciliation/audit/abuse monitoring,
+- real Production merchant activation only after secure checkout E2E.
+
+## 50.A.4 — Torob
+Implement the current official Torob Product API v3 contract with product/variant grouping, size/color/material mapping, price/availability, image-quality rules, pagination and stable unique identifiers. Order-attribution/webhook work follows only after official contract verification.
 
 ## Must not touch
 - healthy Catalog/Bridge/Product/Hero public media ownership,
-- historical order/payment/ledger data,
-- public customer portal address history,
-- accounting schema until its own reviewed migration phase,
-- Production source directly.
+- historical order/payment/ledger rows,
+- public customer address history,
+- Production source directly,
+- card data capture/storage,
+- unverified carrier endpoints.
 
 ## Remaining Phase50 path
 ### 50.B Accounting core
