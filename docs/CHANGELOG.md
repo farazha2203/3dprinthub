@@ -2,6 +2,37 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase50.A.1C Admin Media Integrity / Mobile Hero / Homepage SEO / Windows Image Dimensions
+
+### Owner evidence
+- Production Admin imported-model thumbnails requested private `store/imported-models/...` media and returned HTTP 404,
+- `/admin/store/product/` returned HTTP 500 and requires host-state diagnosis,
+- mobile Hero caption/title covered too much of the Product image,
+- imported-model Admin did not surface translated/public/commercial completeness clearly,
+- Windows Product image cards did not show original pixel dimensions.
+
+### Implemented
+- added safe ImportedPrintAsset Admin media resolver: Product gallery filename match → Product main image → HTTP(S) source fallback,
+- imported working-media remains private and is never used as a public Admin preview URL,
+- preserved mature Phase35 list editing/actions while adding safe preview and data completeness,
+- imported image inline now shows source pixel dimensions,
+- compact mobile Hero override reduces caption/title/button footprint and hides description on very narrow screens,
+- existing SiteSetting homepage `meta_title` / `meta_description` remain canonical and now have Admin SEO health, SERP preview and Hero Alt/title audit,
+- Windows image cards show original `W × H px` at the installed workspace thumbnail boundary,
+- no new schema migration in this subphase.
+
+### Verification
+- first CI run correctly failed because an initial Admin list replacement violated mature Phase35 `list_display_links/list_editable` invariants,
+- root cause fixed by extending rather than replacing the final Admin list/fieldsets,
+- corrected `Phase50 Admin Media Mobile CI` run `32875771848` PASS on snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83`,
+- compile, Django check, migration dry-run/apply, Admin/mobile/SEO tests and Windows image-dimension regression all PASS.
+
+### Safety
+- no direct Production edit/deploy,
+- no widening of imported working-media public routing,
+- existing `store.0034_phase50_variant2_commerce` still requires Production MySQL verification + fresh backup before application,
+- Product Admin 500 remains an evidence-driven host diagnosis item; root cause is not guessed.
+
 ## 2026-08-25 — Phase50.A.1B Product Gallery + Variant 2.0 Foundation
 
 ### Implemented
