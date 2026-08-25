@@ -2,6 +2,31 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Catalog Center Windows v8.8.1 Final Portable Release
+
+### Released
+- published GitHub Release `catalog-center-v8.8.1`,
+- release asset `3DPrintHub-CatalogCenter-v8.8.1.exe`,
+- build `2026.08.25.2`,
+- EXE SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
+
+### Release Gate
+- 92 current Phase49 regression tests PASS,
+- canonical launcher composition verify PASS,
+- PyInstaller one-file/windowed build PASS,
+- frozen portable self-verification PASS,
+- frozen Playwright/Chrome-compatible browser smoke PASS,
+- manifest/SHA256 validation PASS,
+- immutable workflow artifact + GitHub Release publication PASS.
+
+### Release fixes
+- aligned launcher/package/config/test version contracts with `APP_VERSION=8.8.1`,
+- frozen verification no longer assumes bundled `launch.py` exists as a physical source file; it validates the importable canonical launcher contract instead,
+- persistent Catalog data and Windows Credential Manager secret ownership remain outside the EXE bundle.
+
+### Remaining acceptance
+- live employee smoke against a known MakerWorld source remains required because third-party anti-bot availability is intentionally not a release CI dependency.
+
 ## 2026-08-25 — Phase50.A.1 Admin Storefront / Hero Parity
 
 ### Implemented
