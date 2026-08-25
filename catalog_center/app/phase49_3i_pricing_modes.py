@@ -39,6 +39,17 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
             install_extractor as _install_phase49_3i26_extractor,
         )
         _install_phase49_3i26_database(Database)
+        # Catalog categories are sqlite.Row objects in the mature DB layer.  The
+        # final exact-link category validation uses mapping `.get`, so normalize
+        # this read-only boundary to dictionaries once for all later consumers.
+        if hasattr(Database, "categories") and not getattr(Database, "_phase49_3i26_dict_categories", False):
+            _original_categories = Database.categories
+
+            def _dict_categories(self):
+                return [item if isinstance(item, dict) else dict(item) for item in _original_categories(self)]
+
+            Database.categories = _dict_categories
+            Database._phase49_3i26_dict_categories = True
         _install_phase49_3i26_extractor(_page_extractor_module)
         _install_phase49_3i26_app(app_class)
 
@@ -172,15 +183,10 @@ def install(workspace_class) -> None:
     _install_phase49_3i21_observable_ai_link_refresh(workspace_class)
     from .phase49_3i21_cancel_guard import install as _install_phase49_3i21_cancel_guard
     _install_phase49_3i21_cancel_guard()
-    # Final UI-thread boundary. All prior AI workers remain background workers,
-    # but their Tk callbacks are handed back through the main-thread pump.
     from .phase49_3i22_tk_thread_bridge import install as _install_phase49_3i22_tk_thread_bridge
     _install_phase49_3i22_tk_thread_bridge(workspace_class)
-    # Product-bound AvalAI requests use the exact saved model and documented
-    # chat/completions model+messages contract without hidden model discovery.
     from .phase49_3i23_avalai_chat_contract import install as _install_phase49_3i23_avalai_chat_contract
     _install_phase49_3i23_avalai_chat_contract()
-    # 49.3I.25 introduced the exact-link Product completion foundation.
     from . import phase49_readiness_wizard as _readiness_module
     from .phase49_3i25_product_first_workflow import install_workspace as _install_phase49_3i25_workspace
     _install_phase49_3i25_workspace(workspace_class, _readiness_module)
