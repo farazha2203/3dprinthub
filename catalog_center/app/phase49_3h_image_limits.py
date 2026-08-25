@@ -189,6 +189,7 @@ def install_workspace(workspace_class) -> None:
     original_images_ui = workspace_class._images_ui
     original_refetch = workspace_class.refetch
     original_reload = workspace_class.reload
+    original_apply_thumbnail = workspace_class._apply_thumbnail
 
     def _images_ui(self):
         result = original_images_ui(self)
@@ -209,7 +210,27 @@ def install_workspace(workspace_class) -> None:
             _limit_spinbox(getattr(self, "images_tab", self), self.product_image_limit_var)
         return result
 
+    def _apply_thumbnail(self, label, raw: bytes):
+        """Render the mature thumbnail plus the original source pixel size."""
+        width = height = 0
+        try:
+            import io
+            from PIL import Image
+
+            with Image.open(io.BytesIO(raw)) as source:
+                width, height = source.size
+        except Exception:
+            pass
+        result = original_apply_thumbnail(self, label, raw)
+        if width and height:
+            try:
+                label.configure(text=f"{width} × {height} px", compound="top")
+            except Exception:
+                pass
+        return result
+
     workspace_class._images_ui = _images_ui
     workspace_class.refetch = refetch
     workspace_class.reload = reload
+    workspace_class._apply_thumbnail = _apply_thumbnail
     workspace_class._phase49_3h_image_limit_workspace_installed = True
