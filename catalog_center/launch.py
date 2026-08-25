@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.7.1"
+EXPECTED_VERSION = "8.8.0"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -77,17 +77,9 @@ def main() -> int:
     from app.phase49_3b_server_slider_media import install as install_server_slider_media
     from app import ux87_shell
 
-    # Provider extension must happen before any settings/app state is constructed.
     install_phase49_3f_gemini_provider()
     prepare_phase49_3f_provider_modules()
-
-    # 49.3H intake policy is a runtime boundary contract. Install before `main`
-    # imports extract_direct_link so every old intake/refetch caller receives the
-    # same 1..20 normalizer without scattered rewrites.
     install_phase49_3h_image_extractor(page_extractor_module, image_pipeline_module)
-    # 49.3I source sanitation is installed after the 49.3H image wrapper and
-    # before `main` imports either extraction function. URLs/IDs are preserved;
-    # only scraped source text is normalized.
     install_phase49_3i_source_safety(page_extractor_module, crawler_module)
 
     install_ai_runtime_patch()
@@ -112,22 +104,12 @@ def main() -> int:
     install_phase49_3e_task_center(ProductWorkspace, readiness_module)
     install_phase49_3f_workspace(ProductWorkspace, readiness_module)
     install_phase49_3f_source_refresh_guard(ProductWorkspace)
-    # 49.3G belongs at the real ProductWorkspace composition boundary. Keeping it
-    # here preserves the independent 49.3F Source Refresh unit-test contract.
     install_phase49_3g_workspace(ProductWorkspace, readiness_module)
     install_phase49_3g_commerce_provenance(ProductWorkspace)
-    # 49.3H is another additive composition layer. Do not inject it into old
-    # independent installers: progress/result/cost/image-limit wrappers are
-    # composed here only after 49.3G has established its mature behavior.
     install_phase49_3h_progress(phase49_3f_workspace_module)
     install_phase49_3h_image_workspace(ProductWorkspace)
     install_phase49_3h_execution_workspace(ProductWorkspace)
-    # Local QA exposed a first-paint gap before 49.3F synchronous preflight.
-    # Compose the visual handoff here so AI provider/network/result logic stays
-    # owned by the mature 49.3F/49.3H stack.
     install_phase49_3i_local_qa_hotfix(ProductWorkspace, phase49_3f_workspace_module)
-    # 49.3I keeps the same composition-root rule. Pricing UI is extended only
-    # after the mature 49.3F/3G/3H workspace layers are complete.
     install_phase49_3i_pricing_workspace(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
@@ -268,7 +250,6 @@ def main() -> int:
     install_phase49_3d_ai_ui_cleanup(App87)
     install_phase49_3f_ai_shell(App87, app_module.DATA)
     install_phase49_3h_image_app(App87)
-    # 49.3I app-shell features compose only after the mature App87 class exists.
     install_phase49_3i_discovery_review(App87)
     install_phase49_3i_product_list(App87)
     app = App87()
