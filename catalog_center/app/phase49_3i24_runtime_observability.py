@@ -81,6 +81,26 @@ def _install_ai_runtime_guards() -> None:
     Client.structured_response = structured_response
     Client._phase49_3i24_runtime_guards = True
 
+    # Keep the Product model picker text-only. The operator can still inspect all
+    # raw Provider models outside this product-content workflow in future tools,
+    # but obvious music/image/audio/embedding routes must not be selectable here.
+    try:
+        from . import phase49_3d_workflow_hardening as hardening
+
+        if not getattr(hardening, "_phase49_3i24_product_text_model_filter", False):
+            original_matches = hardening.model_matches
+
+            def model_matches(query: str, item: dict) -> bool:
+                model_id = str((item or {}).get("id") or "")
+                if product_text_model_reason(model_id):
+                    return False
+                return original_matches(query, item)
+
+            hardening.model_matches = model_matches
+            hardening._phase49_3i24_product_text_model_filter = True
+    except Exception:
+        pass
+
 
 def install(app_class, data_root: str | Path) -> None:
     """Add first-launch-to-close observability without blocking Tk's UI thread."""
