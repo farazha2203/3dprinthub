@@ -1,0 +1,85 @@
+name: Phase50 Admin Media Mobile CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - store/apps.py
+      - store/phase50_admin_media_integrity.py
+      - store/test_phase50_admin_media_integrity.py
+      - website/apps.py
+      - website/phase50_home_seo_admin.py
+      - website/test_phase50_mobile_hero_seo.py
+      - templates/website/partials/hero.html
+      - static/css/phase50-mobile-hero.css
+      - catalog_center/app/phase49_3h_image_limits.py
+      - catalog_center/tests/test_phase50_image_dimensions.py
+      - .github/workflows/phase50-admin-media-mobile-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase50-admin-media-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SECRET_KEY: phase50-admin-media-ci-only-not-production
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+    steps:
+      - name: Checkout exact snapshot
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile touched Python surfaces
+        run: |
+          python -m py_compile \
+            store/apps.py \
+            store/phase50_admin_media_integrity.py \
+            store/test_phase50_admin_media_integrity.py \
+            website/apps.py \
+            website/phase50_home_seo_admin.py \
+            website/test_phase50_mobile_hero_seo.py \
+            catalog_center/app/phase49_3h_image_limits.py \
+            catalog_center/tests/test_phase50_image_dimensions.py
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Migration state must stay intentional
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Apply migrations in CI SQLite
+        run: python manage.py migrate --noinput
+
+      - name: Admin media and homepage regressions
+        run: |
+          python manage.py test \
+            store.test_phase50_admin_media_integrity \
+            website.test_phase50_mobile_hero_seo \
+            -v 2
+
+      - name: Windows workspace image dimensions regression
+        run: |
+          cd catalog_center
+          python -m unittest tests.test_phase50_image_dimensions -v
+
+      - name: Gate marker
+        run: |
+          echo "PHASE50_ADMIN_MEDIA_MOBILE_CI=PASS"
+          echo "COMMIT=$GITHUB_SHA"
