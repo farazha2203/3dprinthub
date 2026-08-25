@@ -6,61 +6,65 @@ Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
 Active Hotfix: `49.3I.29 — Structured Web Product Presentation`
-Status: `IMPLEMENTED ON GITHUB / WINDOWS WEB QA REQUIRED`
-Production: `UNTOUCHED / NOT APPROVED`
+Status: `PRODUCTION_VERIFIED / FIRST NEW CATALOG PRODUCT PUBLISH NEXT`
+Production Application Commit: `d27489f1c2e1d36e75fdadfa8ab24660d8bec720`
 
-## Current Evidence
-The owner reports the Local Catalog publish path successfully sent a Product into the Local Django Store. The resulting Product detail page then exposed an old generated `technical_notes` block directly to customers: source header lines followed by raw Catalog JSON and a duplicated `[Catalog Intelligence v8.5]` payload.
+## Production Verification — 2026-08-25
+Owner-provided Host output confirms the approved GitHub snapshot was deployed successfully to `/home/sfkilvrs/3dprinthub`.
 
-That payload contained useful customer facts such as weight/materials/categories, but also internal fields such as AI provider/model, fingerprint/source hash, batch UUID and desktop workflow state. Missing designer/license fields rendered as `-`.
+Verified production state:
+- active branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`,
+- application HEAD: `d27489f1c2e1d36e75fdadfa8ab24660d8bec720`,
+- Production DB vendor/name: MySQL / `sfkilvrs_EmiAdmin_3dprinthub`,
+- pre-deploy MySQL backup succeeded at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-150401/mysql-before-deploy.sql.gz`,
+- Phase49 pending migrations `store.0030..0033` and `website.0020..0023` applied successfully,
+- post-migration plan: no pending migrations,
+- `manage.py check`: no errors; known CKEditor4 and in-memory realtime warnings remain,
+- `collectstatic --noinput` completed,
+- Passenger restart signal completed,
+- public Home HTTP: 200,
+- public Store HTTP: 200,
+- public Product HTTP: 200,
+- Product presentation sanitization: PASS; raw `[Catalog Intelligence v8.5]`, AI provider/model and source hash were not exposed,
+- four historical host-only untracked artifacts were explicitly verified, backed up, then removed after successful deploy,
+- final Production worktree is clean.
 
-## Verified Root Cause
-`templates/store/product_detail.html` rendered `product.technical_notes|linebreaks` verbatim. Historical Catalog import code stores machine-oriented JSON inside that field for compatibility. The public template therefore treated an internal/debug persistence field as customer copy.
+## Deployment Incidents Resolved
+Two Host Git-state issues occurred during deployment and were resolved without destructive reset/delete of tracked project state:
+1. explicit feature fetch created a remote ref that `git switch --track` did not accept as a branch; deployment stopped before source activation,
+2. the failed switch left the approved target tree staged while HEAD remained on old `main`; before recovery, index and worktree were proven to match the exact approved commit, then HEAD/branch were completed safely.
 
-## 49.3I.29 Implemented on GitHub
-- added `store/templatetags/store_product_presentation.py`,
-- public presentation uses an explicit allowlist of customer-safe facts,
-- legacy JSON is parsed server-side only for safe facts and is never emitted verbatim,
-- canonical Product/Profile data takes precedence over legacy technical-notes payloads,
-- missing `-`/unknown designer/license values are suppressed,
-- weight and print time are formatted for Persian storefront display,
-- Product detail now renders professional sections for highlights, technical/build facts, materials/colors, category path and source attribution,
-- raw `product.technical_notes` is no longer rendered on the public Product page,
-- internal AI provider/model, hashes/fingerprint, batch/workflow metadata are not returned to the template,
-- existing AI-generated Persian description/use-description/technical features/sales bullets are reused; the public web request does not call AI,
-- focused regression test added in `store/test_phase49_web_product_presentation.py`,
-- dedicated phase document added at `docs/phases/PHASE49_3I29_WEB_PRODUCT_PRESENTATION.md`.
+No failed migration occurred. The database backup existed before migration application.
 
-## Preserved Catalog Contract
-- exact-link AI remains text-only and does not send image files/URLs,
-- Product stage order remains 1..7 with free navigation,
-- five-column vertical image gallery/full-screen/archive/block behavior remains,
-- persistent diagnostics/no hidden startup AI remain,
-- Product publish/bridge batch format is unchanged.
+## 49.3I.29 Production Result
+- raw `product.technical_notes` JSON is not rendered publicly,
+- customer-safe Product intelligence is shown as structured Persian content,
+- internal AI/runtime/audit fields are suppressed,
+- missing designer/license placeholders are hidden,
+- public rendering does not call AI,
+- existing pricing/cart/media/SEO/source-link contracts remain intact.
 
 ## Database / Migration / Safety
-- Django migration: `NONE`
-- Catalog schema migration: `NONE`
-- no Product/media/history deletion
-- no secret/API key changes
-- Local SQLite is not copied to Production MySQL
-- Production source and database untouched
+- Production MySQL backup: retained for rollback,
+- applied migrations: `store.0030`, `store.0031`, `store.0032`, `store.0033`, `website.0020`, `website.0021`, `website.0022`, `website.0023`,
+- pending migrations after deploy: NONE,
+- Local SQLite was not copied to Production,
+- no Product/media/history destructive deletion occurred,
+- no secrets were committed or printed.
 
-## Verification Status
-- owner reported the pre-49.3I.29 Local Publish path completed successfully,
-- 49.3I.29 source + test are committed to GitHub,
-- new storefront presentation still requires Windows Local pull/test/render QA,
-- do not deploy Production until this new web delta passes Local Product-page verification.
+## Known Warning Debt
+- `ckeditor.W001`: CKEditor4 maintenance/security debt,
+- `store.W026`: in-memory realtime channel layer is not multi-process production realtime,
+- MySQL conditional unique-constraint warnings are known framework/database limitations.
 
 ## Exact Next Task
-1. close Local Django/Catalog processes that hold stale code if needed,
-2. verify clean Windows worktree,
-3. fetch/prune + ff-only pull the live feature branch and verify Local HEAD == Remote HEAD,
-4. run `manage.py check`, `makemigrations --check --dry-run`, and `store.test_phase49_web_product_presentation`,
-5. start Local Django and open the already-imported Product,
-6. verify no raw JSON / `[Catalog Intelligence v8.5]` / AI provider/model/hash/batch text is visible,
-7. verify weight/materials/colors/categories/source are cleanly presented and missing fields are hidden,
-8. after owner approval, perform read-only Host audit and deploy the approved GitHub snapshot only.
+Publish one newly prepared Product from Catalog Center through the official Site Publish/Bridge path, then verify on Production:
+1. Product row/update in MySQL,
+2. main image + gallery media ownership,
+3. Persian title/description and structured Product facts,
+4. canonical/meta/OG/schema/image Alt,
+5. source attribution/link,
+6. no raw Catalog/AI internals,
+7. idempotent re-publish/update behavior.
 
-## Release Gate
-49.3I.29 Local Web PASS → explicit owner approval → read-only Production branch/HEAD/venv/MySQL/backup verification → approved GitHub snapshot deploy → collectstatic + Passenger restart → public Product/SEO/media verification.
+After that E2E passes, Phase49.3I release can be marked accepted and the next Store payment phase may begin.
