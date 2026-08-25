@@ -4,11 +4,12 @@ import random
 from typing import Iterable
 
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Max
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect
-from django.urls import path, reverse
+from django.urls import reverse
 
 from store.models import ImportedPrintAsset, Product
 from .models import HomepageHeroSlide
@@ -175,6 +176,44 @@ def _append_action(model_admin, action) -> None:
         model_admin.actions = tuple(actions)
 
 
+def _require_hero_change_permission(request) -> None:
+    if not request.user.has_perm("website.change_homepageheroslide"):
+        raise PermissionDenied
+
+
+def _hero_changelist_redirect():
+    return redirect(reverse("admin:website_homepageheroslide_changelist"))
+
+
+def homepage_hero_random_five_view(request):
+    return _homepage_hero_random_view(request, 5)
+
+
+def homepage_hero_random_ten_view(request):
+    return _homepage_hero_random_view(request, 10)
+
+
+def _homepage_hero_random_view(request, count: int):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    _require_hero_change_permission(request)
+    activated = replace_slider_with_random_products(count)
+    if activated:
+        messages.success(request, f"اسلایدر با {activated} محصول رندومِ معتبر جایگزین شد.")
+    else:
+        messages.warning(request, "هیچ محصول فعال دارای تصویر عمومی برای اسلایدر پیدا نشد.")
+    return _hero_changelist_redirect()
+
+
+def homepage_hero_deactivate_all_view(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    _require_hero_change_permission(request)
+    changed = HomepageHeroSlide.objects.filter(is_active=True).update(is_active=False)
+    messages.success(request, f"{changed} اسلاید غیرفعال شد؛ اطلاعات و سابقه حذف نشد.")
+    return _hero_changelist_redirect()
+
+
 def _install_product_actions() -> None:
     product_admin = admin.site._registry.get(Product)
     if product_admin is not None:
@@ -191,56 +230,7 @@ def _install_hero_controls() -> None:
     hero_admin = admin.site._registry.get(HomepageHeroSlide)
     if hero_admin is None:
         return
-
-    cls = hero_admin.__class__
-    if getattr(cls, "_phase50_storefront_parity_installed", False):
-        return
-
-    original_get_urls = cls.get_urls
-
-    def get_urls(self):
-        custom = [
-            path("random-5/", self.admin_site.admin_view(self.random_five_view), name="website_homepageheroslide_random_5"),
-            path("random-10/", self.admin_site.admin_view(self.random_ten_view), name="website_homepageheroslide_random_10"),
-            path("deactivate-all/", self.admin_site.admin_view(self.deactivate_all_view), name="website_homepageheroslide_deactivate_all"),
-        ]
-        return custom + original_get_urls(self)
-
-    def _replace_random(self, request, count: int):
-        if request.method != "POST":
-            return HttpResponseNotAllowed(["POST"])
-        if not self.has_change_permission(request):
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        activated = replace_slider_with_random_products(count)
-        if activated:
-            self.message_user(request, f"اسلایدر با {activated} محصول رندومِ معتبر جایگزین شد.", level=messages.SUCCESS)
-        else:
-            self.message_user(request, "هیچ محصول فعال دارای تصویر عمومی برای اسلایدر پیدا نشد.", level=messages.WARNING)
-        return redirect(reverse("admin:website_homepageheroslide_changelist"))
-
-    def random_five_view(self, request):
-        return _replace_random(self, request, 5)
-
-    def random_ten_view(self, request):
-        return _replace_random(self, request, 10)
-
-    def deactivate_all_view(self, request):
-        if request.method != "POST":
-            return HttpResponseNotAllowed(["POST"])
-        if not self.has_change_permission(request):
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        changed = HomepageHeroSlide.objects.filter(is_active=True).update(is_active=False)
-        self.message_user(request, f"{changed} اسلاید غیرفعال شد؛ اطلاعات و سابقه حذف نشد.", level=messages.SUCCESS)
-        return redirect(reverse("admin:website_homepageheroslide_changelist"))
-
-    cls.get_urls = get_urls
-    cls.random_five_view = random_five_view
-    cls.random_ten_view = random_ten_view
-    cls.deactivate_all_view = deactivate_all_view
-    cls.change_list_template = "admin/website/homepageheroslide/change_list.html"
-    cls._phase50_storefront_parity_installed = True
+    hero_admin.change_list_template = "admin/website/homepageheroslide/change_list.html"
 
 
 def install_storefront_admin_parity() -> None:
