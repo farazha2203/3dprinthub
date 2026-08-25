@@ -2,52 +2,41 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
-## 2026-08-25 — Phase49.3I.24 Runtime Observability + AvalAI URL Tools + Startup No-Network Guard
+## 2026-08-25 — Phase49.3I.25 Product-First Workflow + Persistent Diagnostics + Startup No-AI
 
 ### Owner / Diagnostic Evidence
-- Catalog Center can become slow or `(Not Responding)` around launch/AI/close.
-- AvalAI Product jobs failed with `audit_event() got an unexpected keyword argument 'provider'`.
-- startup diagnostics showed automatic AvalAI/OpenRouter/OpenAI model-list traffic before operator action.
-- OpenRouter accepted a Lyria music model and returned non-JSON marker output after a long call.
-- AvalAI successful jobs take tens of seconds; a Grok response reported `num_sources_used=0`, so a URL in normal chat was not proof of page browsing.
+- Product workflow required Persian name before reaching the existing Content/SEO AI tools.
+- Images were visually crowded rather than a simple five-card vertical grid.
+- repeated Product edits/AI attempts involved many save/update groups and frequent reopen/hang cycles.
+- fresh diagnostics proved hidden OpenAI `/models` still started after `startup_first_idle`, with HTTP 401 and UI lag.
+- diagnostics recorded `cannot commit - no transaction is active` during overlapping worker/UI activity.
+- exact-link source facts omitted weight even though the source parser already supports weight/time.
+- historical logs must survive repeated application sessions.
 
 ### Implemented
-- fixed the invalid diagnostics function call so observability cannot abort AvalAI Product execution,
-- AvalAI Product structured output prefers strict `json_schema`, with `json_object` / prompt JSON compatibility fallback,
-- keeps deterministic app-side source fetch/sanitization and adds explicit supported AvalAI URL-tool evidence for sparse source data,
-- rejects/filters obvious non-text Product AI models,
-- blocks hidden Provider `/models` network calls during application construction until first Tk idle,
-- leaves explicit operator model search live after first paint,
-- adds runtime lifecycle JSONL, Tk heartbeat lag events and all-thread hang dumps,
-- adds Dashboard Program Log / AI Log / log folder / safe GitHub-ready diagnostic export,
-- safe export includes redacted runtime/main/hang-log tails,
-- stops labeling generic AvalAI model rows as free solely because generic pricing metadata is zero/missing.
+- Product Stage 1 is Content/SEO; Basic Info is Stage 2; all stage buttons remain freely navigable.
+- Basic Info exposes `🌐 تکمیل همه اطلاعات بر اساس لینک محصول`; legacy Product-data-send actions are redirected to the same workflow where present.
+- exact-link preparation no longer calls the broad layered Product save chain.
+- source facts carry available weight/print time; MakerWorld exact `profileId` weight is preferred when present.
+- Images uses a single vertically scrollable gallery with five cards per row while preserving existing card controls/metadata.
+- publish preflight shows missing items and can launch exact-link AI for AI-fillable gaps.
+- model discovery is process-lifetime operator-explicit; startup/opening Product does not test provider connectivity.
+- diagnostics use a dedicated SQLite connection with WAL/busy timeout; common Catalog DB operations are serialized.
+- runtime text logging is append-only and no longer deletes old archives through finite rotation.
+- focused 49.3I.25 regression tests added.
 
 No Django migration. No Catalog schema migration. Production untouched. Windows Local QA pending.
+
+## 2026-08-25 — Phase49.3I.24 Runtime Observability + AvalAI URL Tools + Startup No-Network Guard
+- fixed invalid diagnostics call that could abort AvalAI execution,
+- structured output uses schema-first bounded compatibility handling,
+- deterministic source fetch and supported URL evidence preserved,
+- obvious non-text Product AI models rejected,
+- runtime lifecycle/heartbeat/hang diagnostics and Dashboard log controls added,
+- initial constructor-time provider scan guard added; 49.3I.25 later strengthened it after diagnostics proved post-idle leakage.
 
 ## 2026-08-25 — Phase49.3I.23 AvalAI Exact Chat Contract + Publish SEO Audit
-
-### Owner Evidence
-- exact MakerWorld product link works directly in AvalAI,
-- Catalog Center `تکمیل همه اطلاعات بر اساس لینک محصول` did not reliably return/apply useful content,
-- canonical source title could be correct while the Persian product identity remained the generic MakerWorld model number.
-
-### Verified Request Defect
-The generic non-OpenAI structured path performed hidden model discovery, serialized Responses-style content wrappers into chat text, and required schema-shaped JSON without actually including the schema in the prompt.
-
-### Implemented
-- product-bound AvalAI uses the exact operator-saved model without hidden `/models`,
-- sends normal Chat Completions `model + messages`,
-- sends real source/operator text instead of serialized Responses wrappers,
-- embeds the actual requested JSON schema,
-- does not serialize image placeholder objects,
-- preserves same model/prompt when falling back from unsupported `response_format`,
-- adds sanitized contract trace and regression tests.
-
-### Publish SEO Audit
-Confirmed existing core path for meta title/description, canonical, robots, OG, Product/ProductGroup/Offer/Breadcrumb/Review/FAQ JSON-LD, image Alt import, safe public slug/redirect and `/sitemap.xml`. Dedicated Twitter title/description/image and `og:image:alt` remain non-blocking enhancement debt.
-
-No Django migration. No Catalog schema migration. Production untouched. Windows Local QA pending.
+Exact saved AvalAI model, no hidden Product model scan, real source/operator text, actual JSON schema and sanitized contract trace. Core publish SEO path audited. No migration. Production untouched.
 
 ## 2026-08-25 — Phase49.3I.22 Tk Main-Thread AI Bridge + Scrollable Product Rail
 Worker-originated Tk/Tcl calls were isolated behind a Python queue/main-thread pump; right Product rail gained real vertical scrolling. No migration. Production untouched.
