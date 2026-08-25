@@ -3,7 +3,6 @@
 Search this file before troubleshooting. Never repeat a failed action unchanged. Detailed incident transcripts remain in Git history; this file keeps the current operational root-cause/fix/prevention knowledge.
 
 ## RESOLVED / CANONICAL PHASE49 ERRORS
-
 - **ERR-49-001 — Tk pack/grid collision:** one geometry manager per parent; use holder frames.
 - **ERR-49-002 — delayed thumbnail callback after widget destruction:** verify widget lifetime before async UI mutation.
 - **ERR-49-003 — destroyed ProductWorkspace used as messagebox parent:** async result must verify parent existence.
@@ -40,125 +39,53 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 - **ERR-49-034 — Locator.evaluate_all SyntaxError aborted discovery:** resilient discovery/image fallback ladder; never one technique as sole gate.
 - **ERR-49-035 — Product AI mixed saved identity with provider fallback/model probes:** exactly one saved Provider/Model/key; no hidden model scan or AI-on-open.
 - **ERR-49-036 — generic discovery title poisoned Product identity/SEO:** canonical source identity before persistence and before AI.
-- **ERR-49-037 — Product AI could wait 210 seconds with weak start diagnostics:** 49.3I.21 bounded provider timeout + request-start/success/error/timeout trace.
+- **ERR-49-037 — Product AI could wait 210 seconds with weak start diagnostics:** bounded provider timeout + request-start/success/error/timeout trace.
+- **ERR-49-038 — worker crossed Tk/Tcl thread boundary:** queue worker completions to the Tk main thread and snapshot Tk state before worker start.
+- **ERR-49-039 — AvalAI Product request contract mismatch:** exact saved model + schema-first structured output + deterministic source fetch.
+- **ERR-49-040 — diagnostics call rejected provider/model kwargs:** provider/model belong in sanitized detail; provider HTTP trace uses the dedicated AI request logger.
+- **ERR-49-041 — hidden startup provider model scans:** model discovery is process-lifetime operator-explicit only.
+- **ERR-49-042 — non-text model accepted for Product content:** reject obvious audio/music/image/video/embedding/moderation routes.
+- **ERR-49-043 — exact-link AI triggered layered save storm:** persist only prerequisites before background generation.
+- **ERR-49-044 — diagnostics/Product writes shared SQLite transaction connection:** dedicated diagnostics connection + serialized common DB writes.
+- **ERR-49-045 — finite runtime log rotation conflicted with cumulative troubleshooting:** append-only runtime logging.
+- **ERR-49-046 — delayed old gallery callback restored horizontal layout:** patch the final delayed layout callback at the outer composition boundary.
+- **ERR-49-047 — Product AI completion depended on hidden image downloads:** text AI and source-image network acquisition are separate boundaries.
+- **ERR-49-048 — readiness locking conflicted with canonical stage order:** readiness blocks publish, not navigation.
 
-### ERR-49-038 — Background AI workers crossed the Tk/Tcl thread boundary and could freeze Product Workspace
+### ERR-49-049 — Exact-link category lookup called nonexistent `Database.categories()`
 **Date:** 2026-08-25  
-**Environment:** Windows Catalog Center 8.7.1, feature branch `agent/phase49-3i18-operator-bulk-ai-rebuild`.  
-**Owner evidence:** after pressing multiple AI actions the entire Product Workspace title changed to `(Not Responding)` and often required force-close. The behavior remained after the 49.3I.21 HTTP timeout reduction. The right Product rail also clipped lower readiness/AI controls.
+**Symptom:** `AttributeError: 'Database' object has no attribute 'categories'` before exact-link source/AI work began.  
+**Root Cause:** the mature category provider is `App.get_all_categories()`; Catalog `Database` intentionally has no categories repository API.  
+**Correct Fix:** final workspace compatibility bridge delegates category retrieval to the existing App provider.  
+**Prevention:** never infer repository APIs from convenience naming; verify the mature provider boundary before adding a compatibility call.
 
-**Verified Additional Root Cause:** mature AI workers correctly background network work but several paths then called Tk/Tcl through worker-originated `self.after(...)`; 49.3I.21 also read Tk-backed source state inside its worker. Tk owns one UI thread, so this could block/deadlock Windows UI.
-
-**Correct Solution — Phase49.3I.22:** one final Product Workspace Tk-thread bridge queues worker UI callbacks in Python and drains them on the main thread; Tk-backed source is snapshotted before worker start; right Product rail is a Canvas + vertical Scrollbar.
-
-**Prevention:** no worker thread may call Tk/Tcl directly/indirectly; worker completion/error/progress must use the main-thread handoff queue and Tk-backed input must be snapshotted before worker start.
-
-### ERR-49-039 — AvalAI Product request did not match the exact saved-model Chat Completions contract
+### ERR-49-050 — Exact-link canonical title helper bound `current_title` twice
 **Date:** 2026-08-25  
-**Owner evidence:** exact MakerWorld product URL works directly in AvalAI, while Catalog Center's link-grounded completion did not reliably produce/apply content; canonical English source identity was correct but old generic Persian identity remained.
+**Symptom:** `canonical_source_title() got multiple values for argument 'current_title'`.  
+**Root Cause:** the wrapper passed source URL as positional `current_title` and also passed `current_title=` explicitly, violating the mature 49.3I.19 signature.  
+**Correct Fix:** compatibility adapter delegates to the mature signature with named arguments in the correct positions.  
+**Prevention:** when wrapping mature helpers, regression-test the exact call shape that failed in owner QA.
 
-**Verified Root Cause:** generic structured generation performed hidden model discovery, serialized Responses-style wrappers into chat text and required schema-shaped JSON without the exact schema contract.
-
-**Correct Solution — Phase49.3I.23/24:** exact saved AvalAI model, no hidden Product model discovery, `json_schema` first with bounded compatibility fallbacks, deterministic app-side source fetch, no fake image placeholder serialization and sanitized request metadata.
-
-**Prevention:** Product-bound provider adapters must test exact model, no hidden discovery, request shape, source grounding and schema visibility.
-
-### ERR-49-040 — AvalAI Product path crashed inside diagnostics before provider request
+### ERR-49-051 — Production Hero referenced internal imported-catalog media and returned HTTP 404
 **Date:** 2026-08-25  
-**Owner evidence:** `audit_event() got an unexpected keyword argument 'provider'`.
+**Environment:** Production Passenger/LiteSpeed, non-DEBUG media routing.  
+**Owner Evidence:** first real Catalog Site Publish produced a healthy Product page, but homepage Hero text rendered over a blank/dark area. Browser console showed 404 for `/media/store/imported-models/gallery/...`; Local `127.0.0.1:8000` rendered the same slide correctly.
 
-**Root Cause:** Provider/Model were passed as unsupported generic audit keyword arguments.
+**Verified Root Cause:** `ImportedPrintAssetImage.image` is stored under `store/imported-models/gallery/`, which is a Catalog working-media namespace. Production intentionally serves public Store media only (`store/products`, `store/categories`, `store/seo`), while DEBUG serves all media. The mature Hero Studio preferred `selected_asset_image.image.url`, so Local hid the ownership mismatch and Production correctly rejected the internal path.
 
-**Solution — 49.3I.24:** put Provider/Model inside sanitized `detail`; real provider HTTP logging remains in `ai_request_event()`.
+**Correct Solution — Phase49.3I.30:** keep the imported image relation for editor/audit identity, but resolve public Hero media to the matching Product-owned gallery copy by filename; fall back to Product main image; use remote source only when no Product-owned public media exists. Do not expand Production routing to expose imported working media.
 
-### ERR-49-041 — Application startup performed hidden multi-provider model scans and bad-key probes
-**Date:** 2026-08-25  
-**Owner evidence:** startup diagnostics showed AvalAI/OpenRouter/OpenAI `/models`; OpenAI sometimes received an OpenRouter-style key and returned HTTP 401.
-
-**49.3I.24 Partial Fix:** blocked model catalog calls only until first Tk idle.
-
-**49.3I.25 Additional Finding:** fresh diagnostics proved requests were merely deferred: immediately after `startup_first_idle`, hidden OpenAI `/models` started and UI heartbeat lag reached roughly 3.5 seconds.
-
-**Correct Solution — 49.3I.25:** model discovery is blocked for the entire process unless a visible operator Search/Test action grants a short explicit discovery window. Opening the application or Product never tests AI connectivity.
-
-**Prevention:** Provider discovery/test is always operator-driven; first idle is not authorization for network work.
-
-### ERR-49-042 — Non-text Provider model accepted for Product structured content
-**Date:** 2026-08-25  
-**Owner evidence:** `google/lyria-3-pro-preview` returned HTTP 200 but music-style marker output instead of Product JSON.
-
-**Solution — 49.3I.24:** obvious music/image/audio/embedding/moderation/video routes are filtered/rejected at Product text boundary.
-
-### ERR-49-043 — Exact-link AI started with a full layered Product save storm
-**Date:** 2026-08-25  
-**Owner evidence:** diagnostics show many consecutive Product update groups immediately before each `queued/source_fetch/ai_request`, including content, slider, pricing, material/color and commerce fields.
-
-**Verified Root Cause:** 49.3I.21 called `self.save(silent=True)` before starting exact-link AI. The mature Workspace has multiple additive save wrappers, so one preparation step caused many commits and UI refreshes before network work.
-
-**Correct Solution — 49.3I.25:** exact-link completion does not call the layered save chain. It snapshots current UI state and persists only the source URL if it actually changed. AI output is applied once after operator confirmation.
-
-**Prevention:** background preparation must never call broad save pipelines when only one prerequisite field changed; use minimal atomic updates.
-
-### ERR-49-044 — Worker diagnostics and Product writes shared one SQLite transaction connection
-**Date:** 2026-08-25  
-**Owner evidence:** `deferred_callback_error: cannot commit - no transaction is active` occurred while AI/image/product updates overlapped.
-
-**Verified Root Cause:** diagnostics had its own lock but still used the same `Database.conn` as Product/UI writes. Cross-thread commits on one sqlite connection can invalidate another transaction boundary.
-
-**Correct Solution — 49.3I.25:** diagnostics opens a dedicated SQLite connection with WAL + busy timeout; common Catalog Database operations are additionally serialized by an instance RLock. No schema migration is required.
-
-**Prevention:** cross-thread subsystems must not share a mutable SQLite transaction connection merely because `check_same_thread=False` is set.
-
-### ERR-49-045 — Finite runtime log rotation conflicted with cumulative troubleshooting requirement
-**Date:** 2026-08-25  
-**Owner evidence:** repeated open/hang cycles require history across sessions; owner explicitly requires old logs never be cleared on startup.
-
-**Root Cause:** database audit rows persisted, but the text runtime logger used a finite rotating handler and would eventually delete old archives.
-
-**Correct Solution — 49.3I.25:** canonical runtime log uses append-only `FileHandler`; existing rotated files remain untouched; diagnostic export only reads/exports and never clears history.
-
-**Prevention:** troubleshooting retention policy is append/preserve unless an explicit maintenance/retention action is introduced and approved.
-
-### ERR-49-046 — 49.3I.25 vertical gallery was overwritten by delayed 49.3G horizontal layout
-**Date:** 2026-08-25  
-**Owner evidence:** after updating to 49.3I.25 the Images page still rendered cards in a long horizontal strip and clipped the right side instead of five cards per row with vertical scrolling.
-
-**Verified Root Cause:** 49.3G schedules `_phase49_3g_layout_gallery_cards` with `after_idle` and grids every card at row 0/column N. 49.3I.25 regridded cards synchronously, then the older delayed callback ran afterward and restored horizontal layout.
-
-**Correct Solution — 49.3I.26:** patch the final 49.3G layout callback itself at the outermost composition boundary; grid card N at `row=N//5`, `column=N%5`, make the Canvas width own the inner window, remove the horizontal scrollbar and bind wheel to vertical yview.
-
-**Prevention:** when an older layer schedules delayed layout, a newer final-layout phase must override the delayed callback itself, not only re-layout once during construction.
-
-### ERR-49-047 — Unified Product completion still required a second Image SEO action and could wait on image downloads
-**Date:** 2026-08-25  
-**Owner evidence:** exact-link completion populated Product text, but Images still reported missing/stale Metadata and the operator had to press the separate Image SEO AI button. The fresh diagnostic bundle captured an 8.110s hang sample with a worker in SSL/HTTP under `_download_if_needed -> finalize_selected_images`.
-
-**Verified Root Cause:** 49.3I.25 delegated final apply to `_phase49_3i18_apply_ai`, which marks image metadata stale and immediately calls the image finalizer. The finalizer is allowed to download missing source files, coupling one Product AI job to potentially many network image operations.
-
-**Correct Solution — 49.3I.26:** exact-link AI sends no image URLs/files. One Product result creates Product SEO plus filename/Alt/Title/Caption/Keywords for selected images. Physical image finalization only runs when every selected source image is already local; otherwise metadata text is saved and physical finalization is explicitly deferred without a hidden image download.
-
-**Prevention:** Product text AI and source-image network acquisition are separate boundaries. Never make completion of a text generation request depend on N additional image downloads.
-
-### ERR-49-048 — Content-first wizard order conflicted with mature readiness locking
-**Date:** 2026-08-25  
-**Owner evidence:** Product opened on the renumbered Content/SEO stage but showed a popup saying the stage was still locked and then returned to Basic Info.
-
-**Verified Root Cause:** 49.3I.25 changed visible section labels/order after the guided wizard had already established its own canonical seven-stage locking order. The outer init then selected Content, while the older selection wrapper still treated Basic Info as the first incomplete stage.
-
-**Correct Solution — 49.3I.26:** restore the mature 1..7 order and make stage navigation non-blocking. Readiness remains visible and publish remains blocked until complete, but editing/navigation is never locked.
-
-**Prevention:** readiness is a publication gate, not a navigation ACL. Do not use stage incompleteness to prevent the operator from opening another editor.
+**Prevention:** every public media consumer must resolve to the target public entity's owned media namespace. A database FileField URL is not automatically a public URL in Production.
 
 ## OPEN / SEPARATE ITEMS
-
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
+Outside the current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
 Never invent cost; use provider response/verified lookup or mark unknown.
 
 ### ERR-OPEN-003 — Historical image-limit inconsistency
-Canonical controlled hard maximum is 20. From 49.3I.26 new acquisition defaults to 5; operator can still choose up to 20.
+Canonical controlled hard maximum is 20. New acquisition defaults to 5.
 
 ## WARNING DEBT
 - CKEditor4 security/maintenance warning.
