@@ -73,6 +73,12 @@ class StoreConfig(AppConfig):
         from .phase50_variant_admin import install as install_phase50_variant_admin
         install_phase50_variant_admin()
 
+        # Phase50.A.1C: ImportedPrintAsset working-media stays private on
+        # Production. Admin previews resolve Product-owned public media first and
+        # expose translation/price/license completeness without raw JSON hunting.
+        from .phase50_admin_media_integrity import install as install_phase50_admin_media_integrity
+        install_phase50_admin_media_integrity()
+
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
         # allowed to become Store metadata or homepage Hero copy.
