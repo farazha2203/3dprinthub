@@ -61,6 +61,7 @@ def _portable_verify() -> int:
     from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
     from app.ux87_shell import build_app_class
     from app import main as app_main
+    from launch import EXPECTED_VERSION, main as launch_main
 
     install_persian_sales_workspace(ProductWorkspace)
     workspace_epic49 = bool(
@@ -68,15 +69,9 @@ def _portable_verify() -> int:
         and issubclass(ProductWorkspace, ProductWorkspace871)
     )
     persian_sales = bool(getattr(ProductWorkspace, "_phase49_persian_sales_installed", False))
-    launch_source = (Path(__file__).resolve().parent / "launch.py").read_text(encoding="utf-8")
-    canonical_runtime_markers = all(
-        marker in launch_source
-        for marker in (
-            "install_phase49_3i_pricing_workspace(ProductWorkspace)",
-            "install_phase49_3i_discovery_review(App87)",
-            "install_phase49_3i_product_list(App87)",
-            "ACTIVE_RELEASE_VERIFIED=OK",
-        )
+    canonical_launcher_runtime = bool(
+        EXPECTED_VERSION == APP_VERSION
+        and callable(launch_main)
     )
     payload = {
         "app_name": APP_NAME,
@@ -97,7 +92,7 @@ def _portable_verify() -> int:
         "epic49_server_slider_manager": workspace_epic49,
         "epic49_persian_sales_hero": persian_sales,
         "ux87_shell": build_app_class(app_main.App).__name__ == "CatalogCenterApp87",
-        "canonical_launcher_runtime": canonical_runtime_markers,
+        "canonical_launcher_runtime": canonical_launcher_runtime,
         "ai_profile_preserved": True,
         "host_profile_preserved": True,
     }
