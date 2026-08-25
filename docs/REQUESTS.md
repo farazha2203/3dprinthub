@@ -1,6 +1,6 @@
 # OWNER REQUESTS
 
-Last Updated: 2026-08-23
+Last Updated: 2026-08-25
 
 Older detailed request history remains available in Git history. This file keeps the active acceptance contracts.
 
@@ -83,11 +83,29 @@ Acceptance:
 
 Implementation anchor: `d9d3d617ed22dd3096379e668697f0f9fab87ca0` plus following documentation commits on `agent/phase49-3i18-operator-bulk-ai-rebuild`.
 
+### REQ-49I-026 — Operator controls must be visibly reachable in normal Workspace use
+Status: `IMPLEMENTED ON FEATURE BRANCH / LOCAL QA REQUIRED`
+Owner evidence: the 49.3I.18/49.3I.19 controls existed in source but were not visible in the normal Product Workspace because they were mounted after expandable gallery/content panes.
+
+Acceptance:
+- Stage 3 immediately shows `عملیات گروهی همه تصاویر منتخب سایت` before the image gallery,
+- Stage 4 immediately shows `هویت واقعی محصول در منبع — قبل از ترجمه و SEO`,
+- Stage 4 shows `اصلاح نام محصول و بازسازی متن / SEO` directly below source identity,
+- mature content toolbar/editor remains below these additive operator panels,
+- existing commands/state are reused, not recreated,
+- missing optional panels are a safe no-op,
+- no AI provider/model, DB/schema, pricing, publish, FTP, Bridge or Production behavior changes.
+
+Implementation starts with:
+- `cf634206da426e6627cb47e9a860fd6591b169b9` — layout fixer,
+- `74b7de97531dae5346c864f06665269ffd8d84a3` — regression tests,
+- `658311877a7d79b1a2d923e91054626728d2ae37` — final composition wiring.
+
 ## Operational Release Request
 
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
 Status: `BLOCKED BY FOCUSED WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
-Acceptance now additionally requires the 49.3I.18/49.3I.19 operator editing + source-identity acceptance to pass before release.
+Acceptance now additionally requires the 49.3I.18/49.3I.19/49.3I.20 operator editing + source-identity + visible-layout acceptance to pass before release.
 
 After approval: verify Host/branch/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
 
@@ -108,7 +126,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - one owner-approved low-value Production payment before public activation.
 
 ## Canonical Windows Gate
-Use the focused 49.3I.18/49.3I.19 test commands on the feature branch, then chain the existing `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1` baseline gate. Production remains untouched until PASS + owner approval.
+Use the focused 49.3I.20/49.3I.19/49.3I.18 tests on the feature branch, then chain the existing `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1` baseline gate. Production remains untouched until PASS + Local Publish E2E + owner approval.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
