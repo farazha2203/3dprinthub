@@ -3,19 +3,19 @@
 
 {% block object-tools-items %}
   <li>
-    <form method="post" action="{% url 'admin:website_homepageheroslide_random_5' %}" style="display:inline">
+    <form method="post" action="{% url 'phase50_homepage_hero_random_5' %}" style="display:inline">
       {% csrf_token %}
       <button type="submit" class="button">۵ محصول رندوم</button>
     </form>
   </li>
   <li>
-    <form method="post" action="{% url 'admin:website_homepageheroslide_random_10' %}" style="display:inline">
+    <form method="post" action="{% url 'phase50_homepage_hero_random_10' %}" style="display:inline">
       {% csrf_token %}
       <button type="submit" class="button">۱۰ محصول رندوم</button>
     </form>
   </li>
   <li>
-    <form method="post" action="{% url 'admin:website_homepageheroslide_deactivate_all' %}" style="display:inline" onsubmit="return confirm('همه اسلایدهای فعال غیرفعال شوند؟ اطلاعات حذف نخواهد شد.');">
+    <form method="post" action="{% url 'phase50_homepage_hero_deactivate_all' %}" style="display:inline" onsubmit="return confirm('همه اسلایدهای فعال غیرفعال شوند؟ اطلاعات حذف نخواهد شد.');">
       {% csrf_token %}
       <button type="submit" class="button">حذف همه از اسلایدر</button>
     </form>
