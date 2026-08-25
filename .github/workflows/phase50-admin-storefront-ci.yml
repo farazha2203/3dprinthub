@@ -5,6 +5,7 @@ on:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - config/urls.py
       - website/phase50a_admin_command_center.py
       - website/phase50a_storefront_admin_parity.py
       - website/apps.py
@@ -24,8 +25,8 @@ jobs:
     env:
       DJANGO_SETTINGS_MODULE: config.settings
       DJANGO_SECRET_KEY: phase50-ci-only-not-production
-      DEBUG: "1"
-      ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
     steps:
       - name: Checkout exact snapshot
         uses: actions/checkout@v4
@@ -45,6 +46,7 @@ jobs:
       - name: Compile touched Python surfaces
         run: |
           python -m py_compile \
+            config/urls.py \
             website/phase50a_admin_command_center.py \
             website/phase50a_storefront_admin_parity.py \
             website/apps.py \
