@@ -17,23 +17,25 @@ from app.runtime_paths import (
 )
 
 
-def _configure_runtime():
+def _configure_runtime_paths() -> None:
+    """Prepare persistent portable paths before the canonical launcher starts.
+
+    Runtime composition itself remains owned by launch.py. This keeps the frozen
+    executable on the same Phase49.3I install order as the source launcher while
+    preserving release-independent data and Windows Credential Manager secrets.
+    """
+
     migration = migrate_legacy_portable_data()
 
     from app.env_settings import ENV_FILE, env_value, load_project_env
+
     load_project_env(ENV_FILE)
 
     from app.secure_secrets import migrate_connection_env_to_keyring
+
     migrated_secrets = migrate_connection_env_to_keyring(ENV_FILE)
 
     from app import main as app_main
-    from app.epic49_desktop_schema import install as install_epic49_desktop_schema
-    from app.persistent_connection_profile import install as install_persistent_connection_profile
-    from app.product_workspace_epic49 import ProductWorkspace
-    from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
-    from app.ux87_shell import build_app_class
-
-    install_persian_sales_workspace(ProductWorkspace)
 
     data = data_root()
     data.mkdir(parents=True, exist_ok=True)
@@ -49,10 +51,6 @@ def _configure_runtime():
     app_main.ASSET_ROOT = asset_root()
     app_main.PORTABLE_PROFILE_MIGRATION = migration
     app_main.PORTABLE_SECRET_MIGRATION = migrated_secrets
-    app_main.ProductStudio = ProductWorkspace
-    install_epic49_desktop_schema(app_main)
-    install_persistent_connection_profile(app_main)
-    return app_main, build_app_class(app_main.App)
 
 
 def _portable_verify() -> int:
@@ -70,6 +68,16 @@ def _portable_verify() -> int:
         and issubclass(ProductWorkspace, ProductWorkspace871)
     )
     persian_sales = bool(getattr(ProductWorkspace, "_phase49_persian_sales_installed", False))
+    launch_source = (Path(__file__).resolve().parent / "launch.py").read_text(encoding="utf-8")
+    canonical_runtime_markers = all(
+        marker in launch_source
+        for marker in (
+            "install_phase49_3i_pricing_workspace(ProductWorkspace)",
+            "install_phase49_3i_discovery_review(App87)",
+            "install_phase49_3i_product_list(App87)",
+            "ACTIVE_RELEASE_VERIFIED=OK",
+        )
+    )
     payload = {
         "app_name": APP_NAME,
         "app_version": APP_VERSION,
@@ -89,6 +97,7 @@ def _portable_verify() -> int:
         "epic49_server_slider_manager": workspace_epic49,
         "epic49_persian_sales_hero": persian_sales,
         "ux87_shell": build_app_class(app_main.App).__name__ == "CatalogCenterApp87",
+        "canonical_launcher_runtime": canonical_runtime_markers,
         "ai_profile_preserved": True,
         "host_profile_preserved": True,
     }
@@ -103,6 +112,7 @@ def _portable_verify() -> int:
         and payload["epic49_server_slider_manager"]
         and payload["epic49_persian_sales_hero"]
         and payload["ux87_shell"]
+        and payload["canonical_launcher_runtime"]
     )
     payload["ok"] = ok
     output = str(os.getenv("CATALOG_VERIFY_OUTPUT") or "").strip()
@@ -167,9 +177,11 @@ def main() -> int:
         return _portable_verify()
     if "--portable-browser-smoke" in sys.argv:
         return _portable_browser_smoke()
-    _app_main, App87 = _configure_runtime()
-    App87().mainloop()
-    return 0
+
+    _configure_runtime_paths()
+    from launch import main as launch_main
+
+    return launch_main()
 
 
 if __name__ == "__main__":
