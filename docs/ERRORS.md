@@ -66,20 +66,47 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 - image placeholder objects could consequently be sent as textual wrappers rather than a valid AvalAI multimodal contract,
 - this contradicted the existing Product AI rule: exact saved Provider/Model, no hidden model discovery.
 
-**Correct Solution — Phase49.3I.23:**
-- add an AvalAI-only Product structured adapter,
-- use exact saved model directly,
-- send normal `/chat/completions` `model + messages`,
-- send only real text/source/operator facts in the user message,
-- include the exact output JSON schema in the system instruction,
-- do not serialize image placeholder objects,
-- preserve bounded timeout/diagnostics/Tk handoff,
-- fallback only for unsupported `response_format`, keeping identical exact model/prompt,
-- log only sanitized contract metadata.
+**Correct Solution — Phase49.3I.23/24:**
+- exact saved AvalAI model with no hidden Product model discovery,
+- structured output prefers `json_schema`, with bounded `json_object` / prompt-JSON compatibility fallbacks,
+- deterministic app-side source fetch/sanitization remains authoritative,
+- explicit AvalAI URL tools may add evidence only on supported model families,
+- fake image placeholder serialization is removed,
+- diagnostics store sanitized contract metadata only.
 
-**Verification status:** code and focused test committed; Windows live AvalAI gate pending. No migration. Production untouched.
+**Verification status:** code and focused tests committed; Windows live AvalAI gate pending. No migration. Production untouched.
 
 **Prevention:** Product-bound provider adapters must have contract tests asserting exact saved model, no hidden discovery, exact request shape, source grounding, output schema visibility and no secret/pseudo-media leakage.
+
+### ERR-49-040 — AvalAI Product path crashed inside diagnostics before the provider request
+**Date:** 2026-08-25  
+**Owner evidence:** Product dialog failed immediately with `audit_event() got an unexpected keyword argument 'provider'` for multiple AvalAI models.
+
+**Verified Root Cause:** 49.3I.23 called the generic application `audit_event()` with `provider=` and `model=` keyword arguments. Those fields belong in `ai_request_event()` or inside `audit_event(detail=...)`; the generic audit function never accepted them.
+
+**Correct Solution — Phase49.3I.24:** use the actual audit signature and put Provider/Model/schema/source strategy inside sanitized `detail`. Provider HTTP request logging continues through `ai_request_event()`.
+
+**Prevention:** every diagnostics callsite must be regression-tested against the real function signature; adding observability must never become a new execution blocker.
+
+### ERR-49-041 — Application startup performed hidden multi-provider model scans and bad-key probes
+**Date:** 2026-08-25  
+**Owner evidence:** the uploaded diagnostic shows `app_start` followed immediately by AvalAI/OpenRouter `/models`, and some sessions attempted OpenAI `/models` with an OpenRouter-style key and received HTTP 401.
+
+**Verified Root Cause:** mature/legacy AI shell composition still allowed model-list work while the final application class was constructing. This violated the later rule that model discovery is an explicit operator action and added avoidable network latency/error traffic to startup.
+
+**Correct Solution — Phase49.3I.24:** a final App-shell startup guard prevents `product_id=None` model-catalog network calls until first Tk idle. Explicit model search works normally after first idle. Startup observability records how many legacy scans were blocked.
+
+**Prevention:** application construction and first paint must be local-only except for explicitly documented mandatory health dependencies; Provider model discovery is always user-driven.
+
+### ERR-49-042 — Non-text Provider model accepted for Product structured content
+**Date:** 2026-08-25  
+**Owner evidence:** `google/lyria-3-pro-preview` returned HTTP 200 through OpenRouter after ~28 seconds but produced music-style marker output instead of JSON.
+
+**Verified Root Cause:** model selection validated availability/name but not minimum capability for Product editorial JSON generation.
+
+**Correct Solution — Phase49.3I.24:** obvious music/image/audio/embedding/moderation/video routes are filtered from the Product model picker and rejected again at the Product structured-response boundary.
+
+**Prevention:** successful HTTP status is not proof of model suitability; Product AI requires a text/structured-output-capable route.
 
 ## OPEN / SEPARATE ITEMS
 
