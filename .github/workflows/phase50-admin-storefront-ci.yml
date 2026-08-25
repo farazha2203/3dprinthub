@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 20
     env:
       DJANGO_SETTINGS_MODULE: config.settings
-      SECRET_KEY: phase50-ci-only-not-production
+      DJANGO_SECRET_KEY: phase50-ci-only-not-production
       DEBUG: "1"
       ALLOWED_HOSTS: localhost,127.0.0.1,testserver
     steps:
