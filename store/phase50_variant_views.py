@@ -23,19 +23,38 @@ def variant_commerce_options_view(request):
             product__is_active=True,
         )
         .select_related("product", "material", "quality", "color")
-        .order_by("pk")
+        .order_by("product_id", "sales_profile_sort_order", "pk")
     )
     payload = {}
+    products = {}
     for variant in variants:
+        product = variant.product
+        products[str(product.pk)] = {
+            "selection_mode": str(getattr(product, "sales_profile_selection_mode", "size_build") or "size_build"),
+            "selector_label": str(getattr(product, "sales_profile_selector_label", "") or ""),
+        }
         payload[str(variant.pk)] = {
+            "product_id": product.pk,
+            "profile_name": str(getattr(variant, "sales_profile_name", "") or ""),
+            "profile_key": str(getattr(variant, "sales_profile_key", "") or ""),
+            "profile_label": str(getattr(variant, "sales_profile_display_label", "") or ""),
+            "selection_value": str(getattr(variant, "sales_profile_selection_value", "") or ""),
+            "profile_is_default": bool(getattr(variant, "sales_profile_is_default", False)),
+            "profile_sort_order": int(getattr(variant, "sales_profile_sort_order", 0) or 0),
             "size_label": str(getattr(variant, "size_label", "") or ""),
             "build_profile": str(getattr(variant, "build_profile", "standard") or "standard"),
             "build_profile_label": str(variant.get_build_profile_display()) if hasattr(variant, "get_build_profile_display") else "",
             "commerce_label": str(getattr(variant, "commerce_display_label", "") or ""),
+            "material": str(getattr(variant, "material", "") or ""),
+            "color": str(getattr(variant, "color", "") or ""),
+            "material_weight_grams": str(getattr(variant, "material_weight_grams", 0) or 0),
+            "final_weight_grams": str(getattr(variant, "final_weight_grams", 0) or 0),
+            "print_time_minutes": int(getattr(variant, "print_time_minutes", 0) or 0),
+            "unit_price": int(getattr(variant, "cached_unit_price", 0) or 0),
             "packaging_weight_grams": str(getattr(variant, "packaging_weight_grams", 0) or 0),
             "effective_shipping_weight_grams": str(getattr(variant, "effective_shipping_weight_grams", 0) or 0),
             "package_length_cm": str(getattr(variant, "package_length_cm", 0) or 0),
             "package_width_cm": str(getattr(variant, "package_width_cm", 0) or 0),
             "package_height_cm": str(getattr(variant, "package_height_cm", 0) or 0),
         }
-    return JsonResponse({"variants": payload})
+    return JsonResponse({"products": products, "variants": payload})
