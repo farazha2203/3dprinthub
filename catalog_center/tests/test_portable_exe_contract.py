@@ -63,9 +63,12 @@ class PortableRuntimePathTests(unittest.TestCase):
         self.assertIn('app_main.CONFIG_FILE = data / "config.json"', source)
         self.assertIn('app_main.PROFILE_ROOT = data / "browser_profiles"', source)
         self.assertIn("from launch import main as launch_main", source)
+        self.assertIn("from launch import EXPECTED_VERSION, main as launch_main", source)
+        self.assertIn("EXPECTED_VERSION == APP_VERSION", source)
         self.assertIn("return launch_main()", source)
         self.assertIn("canonical_launcher_runtime", source)
         self.assertIn("--portable-verify", source)
+        self.assertNotIn('Path(__file__).resolve().parent / "launch.py"', source)
         self.assertNotIn(r"D:\projects", source)
 
 
