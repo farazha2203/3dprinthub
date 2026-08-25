@@ -30,7 +30,7 @@ Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 Exact saved model, no hidden Product model scan, deterministic source-page fetch, schema-first structured output, sanitized diagnostics and real Product identity are required.
 
 ## REQ-49I-030 — Re-audit SEO before Catalog Web publish
-Status: `CORE CONTRACT VERIFIED IN REPOSITORY / LOCAL PUBLISH E2E REQUIRED`
+Status: `CORE CONTRACT VERIFIED IN REPOSITORY / LOCAL PUBLISH E2E REPORTED OK`
 
 Persian title/content, unique SEO title/description, canonical, index state, OG, image Alt, Product/Offer/Breadcrumb/Review/FAQ structured data, safe slug/redirect, sitemap and Local media/product verification are required before Production.
 
@@ -40,7 +40,7 @@ Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 Lifecycle logging, Dashboard Program/AI logs, safe diagnostic export, Tk lag/hang trace, secret redaction and no automatic provider work during startup are required.
 
 ## REQ-49I-032 — Product editing workflow and stable repeated operation
-Status: `SUPERSEDED/REFINED BY REQ-49I-033..037`
+Status: `SUPERSEDED/REFINED BY REQ-49I-033..038`
 
 49.3I.25 tested Content-first ordering. Owner QA determined the original 1..7 sequence is clearer and that readiness should not lock stage navigation.
 
@@ -88,9 +88,21 @@ Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
 Normal source image intake defaults to five while hard maximum remains 20. One full-page source screenshot is added as an extra local, non-selected Product gallery reference during approved full acquisition.
 
+## REQ-49I-038 — Storefront Product intelligence must be customer-readable, not raw JSON
+Status: `IMPLEMENTED ON GITHUB / WINDOWS WEB QA REQUIRED`
+
+Owner acceptance:
+- public Product page must not dump desktop Catalog JSON or `[Catalog Intelligence v8.5]`,
+- AI-generated useful data must be organized into clear Persian sections,
+- weight, print time, materials, colors, categories, technical features and sales highlights should be presented cleanly when available,
+- source link remains visible,
+- missing designer/license values are hidden instead of showing `-`,
+- AI provider/model, fingerprints/hashes, batch UUID and desktop workflow internals must never be public,
+- public web rendering must not make a runtime AI request.
+
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.26 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.29 WINDOWS WEB QA + OWNER APPROVAL`
 
 Product data moves through the existing publish/bridge/import contract. Local SQLite is never copied over Production MySQL.
 
