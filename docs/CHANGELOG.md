@@ -2,6 +2,20 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.27 Exact-Link Category Provider Crash Fix
+
+### Owner Evidence
+- pressing `تکمیل همه اطلاعات بر اساس لینک محصول` immediately raised `AttributeError: 'Database' object has no attribute 'categories'` before source/AI progress could start.
+
+### Root Cause / Fix
+- 49.3I.26 called `workspace.db.categories()` although the mature Catalog category contract lives on `App.get_all_categories()` and `Database` intentionally has no category repository API.
+- added a final additive workspace bridge that exposes the existing App category rows to the exact-link 49.3I.26 path without schema/database changes.
+- removed the ineffective `if hasattr(Database, "categories")` normalization assumption from the composition comment/path.
+- added focused regression coverage proving a Workspace with a Database that has no `categories` attribute can still start the exact-link action through the App category provider.
+- Windows local gate now compiles/tests 49.3I.27 first.
+
+No Django migration. No Catalog schema migration. Production untouched. Windows Local QA required.
+
 ## 2026-08-25 — Phase49.3I.26 Unified Exact-Link Completion + Canonical Wizard + Vertical Gallery + Product Archive
 
 ### Owner / Diagnostic Evidence
