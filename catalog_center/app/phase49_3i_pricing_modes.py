@@ -158,3 +158,7 @@ def install(workspace_class) -> None:
     # but their Tk callbacks are handed back through the main-thread pump.
     from .phase49_3i22_tk_thread_bridge import install as _install_phase49_3i22_tk_thread_bridge
     _install_phase49_3i22_tk_thread_bridge(workspace_class)
+    # Product-bound AvalAI requests use the exact saved model and documented
+    # chat/completions model+messages contract without hidden model discovery.
+    from .phase49_3i23_avalai_chat_contract import install as _install_phase49_3i23_avalai_chat_contract
+    _install_phase49_3i23_avalai_chat_contract()
