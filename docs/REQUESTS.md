@@ -38,21 +38,28 @@ Status: `IMPLEMENTED / PRODUCTION CODE DEPLOYED`
 ## REQ-49I-038 — Storefront Product intelligence must be customer-readable, not raw JSON
 Status: `PRODUCTION VERIFIED`
 
-Owner acceptance verified in Production:
-- public Product page does not dump raw Catalog JSON,
-- internal AI/runtime/hash fields are not exposed,
-- Product presentation endpoint returned HTTP 200 and sanitization checks passed,
-- missing-source placeholder noise is removed by the presentation layer,
-- public rendering performs no AI call.
+## REQ-49I-039 — Homepage Hero must use public Product-owned media on Production
+Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`
+
+Owner acceptance:
+- Local and Production Hero must render the same selected Product image,
+- public Hero must not reference `/media/store/imported-models/...`,
+- selected image identity should be preserved by mapping to the matching Product gallery copy,
+- if that exact Product gallery copy is unavailable, Product main image is the safe fallback,
+- remote source image is only a final fallback when Product-owned media is unavailable,
+- do not solve this by publicly exposing the imported Catalog working-media namespace,
+- Product page/media, Hero text/effects/timing, SEO, pricing/cart and publish batch format must remain healthy.
 
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `PRODUCTION CODE DEPLOYED / ONE REAL CATALOG SITE-PUBLISH E2E REMAINS`
+Status: `PRODUCTION CODE DEPLOYED / HERO MEDIA HOTFIX + FINAL SITE-PUBLISH E2E REMAIN`
 
 Remaining acceptance:
-- publish one new prepared Product through the official Site Publish/Bridge path,
-- verify Product + media + SEO on Production,
-- verify safe/idempotent re-publish,
+- pass 49.3I.30 Local test/visual gate,
+- deploy tested Hero media ownership hotfix,
+- verify Hero image HTTP 200 on Production,
+- re-publish one prepared Product through the official Site Publish/Bridge path,
+- verify Product + Slider + media + SEO and idempotent update,
 - then mark Phase49.3I accepted.
 
 ## Next Product Request
