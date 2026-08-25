@@ -50,12 +50,7 @@ def _product_main_url(product: Product | None) -> str:
 
 
 def public_asset_image(asset: ImportedPrintAsset | None) -> tuple[str, str]:
-    """Resolve an Admin preview without exposing imported working-media paths.
-
-    Production intentionally keeps ``store/imported-models`` private. Prefer the
-    Product-owned public copy, then the Product main image, then an HTTPS source.
-    """
-
+    """Resolve an Admin preview without exposing imported working-media paths."""
     if asset is None:
         return "", "ناموجود"
     product = getattr(asset, "product", None)
@@ -135,18 +130,19 @@ def install() -> None:
 
     asset_admin.safe_preview = safe_preview
     asset_admin.completeness = completeness
-    asset_admin.list_display = [
-        "safe_preview",
-        "title",
-        "source",
-        "persian_title",
-        "translation_status",
-        "price_status",
-        "commercial_license_status",
-        "product",
-        "completeness",
-        "imported_at",
-    ]
+
+    # Preserve Phase35 list_editable/list_display_links exactly; only add the two
+    # new informational columns around the mature operational columns.
+    display = list(getattr(asset_admin, "list_display", []) or [])
+    if "safe_preview" not in display:
+        display.insert(0, "safe_preview")
+    if "completeness" not in display:
+        if "imported_at" in display:
+            display.insert(display.index("imported_at"), "completeness")
+        else:
+            display.append("completeness")
+    asset_admin.list_display = display
+
     asset_admin.list_filter = _extend(
         getattr(asset_admin, "list_filter", []),
         ["translation_status", "price_status", "commercial_license_status", "editorial_status"],
@@ -161,48 +157,21 @@ def install() -> None:
     )
     asset_admin.list_per_page = 40
 
-    # Make extracted/translated/product state visible instead of forcing the
-    # operator to inspect raw source_payload JSON.
-    asset_admin.fieldsets = (
-        (
-            "پیش‌نمایش و وضعیت انتشار",
-            {"fields": ("safe_preview", "completeness", "status", "editorial_status", "product")},
-        ),
-        (
-            "اطلاعات استخراج‌شده از منبع",
-            {"fields": (
-                "source", "source_url_link", "external_id", "source_title", "title", "slug",
-                "source_description", "short_description", "description", "technical_specs", "tags",
-                "author_name", "license_name", "license_url",
-            )},
-        ),
-        (
-            "محتوای فارسی و فروش",
-            {"fields": (
-                "persian_title", "persian_short_description", "persian_description",
-                "translation_status", "translation_provider", "translated_at",
-                "fixed_print_price", "price_status", "price_is_final", "pricing_note",
-            )},
-        ),
-        (
-            "مجوز تجاری",
-            {"fields": (
-                "commercial_license_status", "commercial_license_source",
-                "commercial_license_note", "commercial_license_evidence",
-            )},
-        ),
-        (
-            "فایل و تصاویر",
-            {"fields": (
-                "preview_image", "remote_image_url", "file_format", "private_download_link",
-                "archive_status", "archived_model_file", "keep_public_when_source_disabled",
-            )},
-        ),
-        (
-            "داده خام و زمان‌ها",
-            {"fields": ("admin_note", "source_payload", "imported_at", "updated_at"), "classes": ("collapse",)},
-        ),
-    )
+    # Keep every mature Phase35 field, action and pricing control; add a compact
+    # health panel as the first fieldset instead of replacing the editor.
+    existing_fieldsets = list(getattr(asset_admin, "fieldsets", ()) or ())
+    if not any(title == "سلامت رسانه و داده" for title, _options in existing_fieldsets):
+        existing_fieldsets.insert(
+            0,
+            (
+                "سلامت رسانه و داده",
+                {
+                    "fields": ("safe_preview", "completeness"),
+                    "description": "پیش‌نمایش فقط از رسانه عمومی Product یا URL منبع استفاده می‌کند؛ فایل‌های working-media کاتالوگ عمداً عمومی نمی‌شوند.",
+                },
+            ),
+        )
+    asset_admin.fieldsets = tuple(existing_fieldsets)
 
     for inline in getattr(asset_admin, "inlines", ()):
         if getattr(inline, "model", None) is not ImportedPrintAssetImage:
