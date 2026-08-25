@@ -90,12 +90,13 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
 
     def test_current_release_and_resilient_staged_exe_build_are_enabled(self):
         from app.version import APP_VERSION
-        self.assertEqual(APP_VERSION, "8.7.1")
+        self.assertEqual(APP_VERSION, "8.8.0")
         builder = (ROOT / "build_portable_exe.py").read_text(encoding="utf-8")
         self.assertIn("staging_dir", builder)
         self.assertIn("except PermissionError", builder)
         self.assertIn("stable_exe_updated", builder)
         self.assertIn("--portable-verify", builder)
+        self.assertIn("--portable-browser-smoke", builder)
 
     def test_workspace_avoids_pack_grid_collision_in_commerce_page(self):
         source = (ROOT / "app" / "product_workspace_v87.py").read_text(encoding="utf-8")
