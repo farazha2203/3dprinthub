@@ -115,6 +115,15 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 **Verification:** Windows release run passed frozen self-verification, frozen Playwright/browser smoke, SHA256/manifest validation, artifact upload and GitHub Release publication for `catalog-center-v8.8.1`.  
 **Prevention:** frozen-runtime verification must test import/runtime contracts, never assume bundled Python modules are present as physical `.py` source files.
 
+### ERR-50-005 — Admin media patch replaced mature `list_display` but left Phase35 editable/link contracts active
+**Date:** 2026-08-25  
+**Symptom:** first `Phase50 Admin Media Mobile CI` stopped at `manage.py check` with `admin.E111` for `source_title_admin` and `admin.E122` for `editorial_status`, `fixed_print_price` and `price_is_final`.  
+**Root Cause:** the initial safe-preview patch replaced the ImportedPrintAsset `list_display`, while mature Phase35 still owned `list_display_links` and `list_editable` pointing to columns removed by that replacement.  
+**Failed Attempt:** repeating CI or selectively deleting those mature edit contracts would regress the existing professional catalog editor.  
+**Correct Fix:** preserve the mature Phase35 `list_display`, `list_display_links`, `list_editable`, actions and fieldsets; insert only readonly `safe_preview` and `completeness` columns plus a compact health fieldset.  
+**Verification:** corrected CI run `32875771848` passed Django check, migration dry-run/migrate, Admin/mobile/SEO regressions and Windows image-dimension regression.  
+**Prevention:** late Admin parity patches must extend the final composed ModelAdmin contract rather than replacing list/fieldsets without carrying dependent `list_editable` and `list_display_links` invariants.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside the current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
@@ -124,6 +133,9 @@ Never invent cost; use provider response/verified lookup or mark unknown.
 
 ### ERR-OPEN-003 — Historical image-limit inconsistency
 Canonical controlled hard maximum is 20. New acquisition defaults to 5.
+
+### ERR-OPEN-004 — Production `/admin/store/product/` HTTP 500 awaiting host-state evidence
+Owner screenshot on 2026-08-25 shows a Production 500. Do not attribute this to migration `0034` or any other cause until exact host HEAD/branch, `showmigrations store`, `migrate --plan`, effective MySQL database and relevant runtime error output are verified read-only.
 
 ## WARNING DEBT
 - CKEditor4 security/maintenance warning.
