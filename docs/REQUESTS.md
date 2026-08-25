@@ -24,21 +24,17 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-027: AI actions must not freeze and must be diagnosable.
 - REQ-49I-028: exact Product URL grounds the full Product AI refresh.
 
-## REQ-49I-029 — AvalAI Product generation must use the exact working chat contract
+## REQ-49I-029 — AvalAI Product generation must use the exact working provider contract
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
-Owner evidence: the same MakerWorld link works directly in AvalAI, while Catalog Center's link completion did not reliably return/apply usable content.
-
 Acceptance:
-- product request uses the exact saved AvalAI model,
-- no hidden Product `/models` request,
-- request is normal Chat Completions `model + messages`,
-- exact source/link/operator facts are visible to the model as text,
-- requested output JSON schema is actually included,
-- Responses API image placeholder objects are not serialized as fake chat content,
-- unsupported `response_format` may fall back without changing model/prompt,
-- diagnostics identify the exact contract stage without key/token/full prompt,
-- resulting Persian title must preserve the real source identity and reject generic model-number output.
+- exact saved AvalAI model; no hidden Product `/models`,
+- application fetches/sanitizes the exact source page as deterministic evidence,
+- supported AvalAI URL tools may add explicit page/web evidence when extracted facts are sparse,
+- bare URL text is never treated as proof that browsing occurred,
+- structured output prefers `json_schema`, with same-model compatibility fallback,
+- diagnostics identify Provider/Model/URL-tool/fallback stages without secret/full prompt,
+- resulting Persian identity must preserve the actual Product and reject generic model-number content.
 
 ## REQ-49I-030 — Re-audit SEO before Catalog Web publish
 Status: `CORE CONTRACT VERIFIED IN REPOSITORY / LOCAL PUBLISH E2E REQUIRED`
@@ -57,9 +53,26 @@ Required before Production:
 
 Dedicated Twitter title/description/image and `og:image:alt` are optional social-preview enhancements and are not blockers for this Catalog release.
 
+## REQ-49I-031 — Program logs, hang diagnostics and startup performance must be operator-accessible
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Owner request: record the application from startup so slow open/close/hangs can be diagnosed, expose Program Log on Dashboard, and create one safe diagnostic file suitable for sharing/uploading to GitHub.
+
+Acceptance:
+- lifecycle logging begins before the wrapped App constructor and continues through close,
+- Program Log and AI Log are visible from Dashboard,
+- safe diagnostic export includes redacted runtime/main/hang-log tails,
+- no API key/password/token/full Authorization header is exported,
+- Tk heartbeat records meaningful UI lag,
+- an extended UI stall creates an all-thread dump without asking Tk from the watchdog thread,
+- hidden Provider model-list network work is not allowed during application construction,
+- explicit model search remains available after first paint,
+- obvious non-text models cannot be selected for Product editorial structured generation,
+- AvalAI model rows are not falsely labeled all-free because generic pricing metadata is absent.
+
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.23 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.24 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 
 Product data must move through the existing publish/bridge/import contract. Do not copy the Local SQLite database over Production MySQL.
 
