@@ -4,79 +4,69 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
-Current Release: `Phase50.A.1B — Product Gallery + Variant 2.0 foundation`
-Status: `GITHUB CI TESTED / MANUAL QA + HOST DEPLOY PENDING`
+Current Release: `Phase50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`
+Status: `GITHUB CI TESTED / HOST READ-ONLY AUDIT + MANUAL QA REQUIRED`
 
 ## Windows Catalog Center release
-Latest Windows application version: `8.8.1` (`BUILD_ID=2026.08.25.2`).
-GitHub Release: `catalog-center-v8.8.1`.
-Release asset: `3DPrintHub-CatalogCenter-v8.8.1.exe`.
-Release EXE SHA256: `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
+Latest released Windows application remains `8.8.1` (`BUILD_ID=2026.08.25.2`), GitHub Release `catalog-center-v8.8.1`, asset `3DPrintHub-CatalogCenter-v8.8.1.exe`, SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
 
-The 8.8.1 release gate passed on Windows GitHub Actions with source compile, 92 current Phase49 regressions, canonical launcher verification, PyInstaller one-file/windowed build, frozen self-verification, frozen browser smoke and release SHA/manifest validation.
-External third-party availability remains an operational smoke, not a CI dependency.
+Phase50.A.1C source now additionally shows each Product image's original pixel dimensions (`W × H px`) on the Windows image card by extending the already-installed Phase49.3H workspace boundary. This has CI regression coverage but requires a future executable version bump/rebuild before it is present in the immutable released EXE.
 
-## Production baseline
-Owner reports the Phase49 Production site and Hero are healthy. Previously verified Production state remains:
+## Production baseline / discrepancy to verify
+Repository documentation previously recorded Production as Phase49 healthy with migrations through `store.0033` and Phase50 undeployed. Owner screenshots on 2026-08-25 now show Phase50-era Admin surfaces on `3dprinthub.ir`, plus `/admin/store/product/` returning HTTP 500. Therefore documentation and actual host state may differ.
+
+Before any new Production deploy/migration, perform a read-only host audit of exact branch/HEAD, tracked worktree, MySQL vendor/name, `store.0034` migration state and migration plan. Do not infer the 500 root cause before that evidence.
+
+Known verified Production paths remain:
 - project `/home/sfkilvrs/3dprinthub`,
+- venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`,
 - MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
-- Phase49 migrations through `store.0033` and `website.0023` applied,
-- Product / Store / Home healthy,
-- rollback DB backup retained at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-150401/mysql-before-deploy.sql.gz`.
+- static `/home/sfkilvrs/public_html/static`, media `/home/sfkilvrs/public_html/media`, private media `/home/sfkilvrs/3dprinthub/private_media`.
 
-No Phase50 migration/code from the current development branch has been deployed to Production yet.
+## Phase50.A.1B baseline
+Already CI tested:
+- contain-fit Product main viewer,
+- thumbnail-to-main switching + fullscreen lightbox,
+- Variant 2.0 size/build profile/packaging weight/parcel dimensions,
+- StoreOrderItem snapshot columns,
+- `store.0034_phase50_variant2_commerce`,
+- Variant Admin and public variant metadata endpoint.
 
-## Phase50.A.1 Admin storefront parity
-Already GitHub CI tested:
-- `/admin/command-center/`,
-- Product and imported Catalog add/remove Hero actions,
-- Hero 5-random / 10-random / deactivate-all,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data surfaced in Admin,
-- permission/POST/CSRF guarded mutations.
+`store.0034` must never be applied to Production without exact MySQL verification, migration plan, fresh successful backup and rollback target.
 
-## Phase50.A.1B implemented and CI tested
-Owner requested a product-page gallery upgrade and real sellable variants such as 20/24/26/28/30 cm with hollow/standard/solid weight profiles before shipping/payment/Torob work.
+## Phase50.A.1C implemented
+Owner evidence showed three distinct UX/data problems:
+1. Imported Catalog/Admin image previews were pointing at `store/imported-models/...` working-media and returning 404 in Production.
+2. mobile homepage Hero caption/title occupied too much of the viewport and hid the Product image.
+3. imported-model Admin did not surface translated/commercial completeness clearly; homepage SEO controls were hard to audit; Windows image cards did not show pixel dimensions.
 
-Implemented:
-- product detail main image is now a contain-fit viewer instead of forced crop,
-- clicking a thumbnail swaps it into the main viewer without page reload,
-- clicking/keyboard-activating the main viewer opens a full-screen lightbox,
-- lightbox supports close, previous/next, Escape and arrow keys,
-- Variant 2.0 runtime/schema fields: `size_label`, `build_profile`, packaging weight and parcel L/W/H,
-- StoreOrderItem snapshot columns prepared for size/build/packaging history,
-- ProductVariant unique identity expanded from material/quality/color to include size/build profile,
-- Admin exposes size/build/packaging dimensions on ProductVariant and Product variant inlines,
-- safe public `/store/api/variant-commerce-options/` metadata endpoint lets the existing product selector show size/build/shipping metadata without rewriting the mature product template,
-- effective shipping-weight helper prefers an explicit shipping weight and otherwise returns product/final weight + packaging weight.
-
-Migration:
-- new `store.0034_phase50_variant2_commerce` exists,
-- it has NOT been applied to Production,
-- Production deploy therefore requires exact MySQL verification, migration plan and a fresh successful DB backup.
+Implemented additively:
+- `store/phase50_admin_media_integrity.py`: Admin previews never expose imported working-media as public image URLs; they prefer filename-matched Product gallery media, then Product main image, then HTTP(S) source image.
+- ImportedPrintAsset changelist preserves all mature Phase35 editable/action contracts while adding safe preview and `4/4` completeness state.
+- ImportedPrintAsset image inline adds safe public preview and source `W × H px`; working FileFields remain editable/auditable but are not rendered as public preview URLs.
+- mobile Hero override reduces caption/title/buttons and hides description on very narrow phones so the Product image remains visible.
+- existing `SiteSetting.meta_title` / `meta_description` are preserved as the homepage SEO source; Admin now adds SEO length health, search-result preview and active-Hero Alt/title audit instead of creating duplicate SEO fields.
+- Windows Product image cards show original image pixel dimensions using the final installed workspace thumbnail boundary.
+- no new migration was created by Phase50.A.1C.
 
 ## Automated verification
-GitHub Actions `Phase50 Variant2 Gallery CI` run `32872549545` PASS on code snapshot `8e3c151159424437157d3ef6861881be08b1aea8`:
-- touched Python compile PASS,
+`Phase50 Admin Media Mobile CI` first run failed at Django system check because the initial patch replaced the mature ImportedPrintAsset `list_display` while Phase35 still owned `list_display_links/list_editable`. The failed condition was not repeated; the fix preserves the mature list and only inserts new readonly columns.
+
+Second CI run `32875771848` on code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83` PASS:
+- Python compile PASS,
 - `manage.py check` PASS,
-- `makemigrations --check --dry-run` PASS,
-- migration plan PASS,
-- migrations applied successfully in CI SQLite,
-- focused Variant 2.0 / Admin / endpoint / gallery contract regressions PASS.
+- migration dry-run PASS,
+- CI SQLite migrations PASS,
+- Admin media + homepage/mobile regressions PASS,
+- Windows image-dimension regression PASS.
 
-Known warnings remain: Google credentials intentionally empty in CI, CKEditor4 maintenance/security debt, and `store.W026` in-memory realtime debt.
+Known warnings remain Google credentials intentionally empty in CI, CKEditor4 maintenance/security debt and `store.W026` in-memory realtime debt.
 
-## Safety / Must-not-touch
-- no direct Production source edit,
-- no Production migration yet,
-- no historical order/payment/ledger deletion,
-- no Catalog/Bridge/Product media ownership change,
-- no gateway behavior change yet,
-- no guessed Post/Tipax/Mahex endpoint introduced.
+## Browser-console evidence
+The reported `jewelry-tree-box-3d-print-01.webp/02.webp` HTTP 404 is a real media-path symptom covered by the safe Admin preview work above. The Chrome message `A listener indicated an asynchronous response...` is not yet attributed to application code; it should only be classified after reproduction with extensions disabled/incognito.
 
 ## Exact next work
-1. Manual visual/operation QA of Product gallery + Variant Admin on the approved test environment.
-2. Phase50.A.2 Checkout & Delivery: persist Variant 2.0 size/build/packaging snapshots during checkout, use effective shipping weight, add normalized carrier quote snapshots and Admin provider/fallback settings.
-3. Verify current official Post/Tipax/Mahex API contracts/credentials before enabling live adapters.
-4. Phase50.A.3 Store ZarinPal integration using the mature secure service-payment request/callback/verify/idempotency engine.
-5. Phase50.A.4 Torob Product API v3 / variant mapping / price-stock-image quality contract.
-6. After commerce acceptance, continue Phase50.B accounting core.
+1. Read-only Production audit to resolve actual host HEAD and whether `store.0034` is pending; inspect the Product Admin 500 based on real migration/runtime state.
+2. If audit is safe: fresh DB backup, approved GitHub deploy, `store.0034` migration if pending, collectstatic, Passenger restart and Admin/Home/Product/mobile verification.
+3. Rebuild/version the Windows executable only after source-side image-dimension/manual smoke is accepted.
+4. Continue Phase50.A.2 Checkout & Delivery, then secure Store ZarinPal, Torob Product API v3, then Phase50.B accounting.
