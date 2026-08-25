@@ -3,70 +3,51 @@
 Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Base Epic: `epic/phase49-unified-product-slider-sync`
-Current Release: `Phase50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`
-Status: `GITHUB CI TESTED / HOST READ-ONLY AUDIT + MANUAL QA REQUIRED`
+Current Release: `Phase50.A.1D — Sales Profiles + Hero Admin Public Media`
+Status: `GITHUB CI TESTED / PRODUCTION DEPLOY REQUIRED`
 
-## Windows Catalog Center release
-Latest released Windows application remains `8.8.1` (`BUILD_ID=2026.08.25.2`), GitHub Release `catalog-center-v8.8.1`, asset `3DPrintHub-CatalogCenter-v8.8.1.exe`, SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
+## Production verified state
+Owner deployment on 2026-08-25 succeeded at application commit `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f`.
+Production MySQL is `sfkilvrs_EmiAdmin_3dprinthub`; `store.0034_phase50_variant2_commerce` is applied; final migration plan had no pending operations; Home/Store/Admin/Product Admin/Imported Asset Admin/Hero Admin all returned HTTP 200; public Home contained no `/media/store/imported-models/` references. Rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-205719`.
 
-Phase50.A.1C source now additionally shows each Product image's original pixel dimensions (`W × H px`) on the Windows image card by extending the already-installed Phase49.3H workspace boundary. This has CI regression coverage but requires a future executable version bump/rebuild before it is present in the immutable released EXE.
+Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memory realtime debt, and MySQL conditional-constraint warnings from third-party/account models. A prior `Too many connections` event was transient; later audit showed 26/151 total MySQL connections and only 3 for the application DB user.
 
-## Production baseline / discrepancy to verify
-Repository documentation previously recorded Production as Phase49 healthy with migrations through `store.0033` and Phase50 undeployed. Owner screenshots on 2026-08-25 now show Phase50-era Admin surfaces on `3dprinthub.ir`, plus `/admin/store/product/` returning HTTP 500. Therefore documentation and actual host state may differ.
+## Windows Catalog Center
+Latest immutable Windows release remains `8.8.1` (`BUILD_ID=2026.08.25.2`), GitHub Release `catalog-center-v8.8.1`, SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
+Source after 8.8.1 additionally shows original image dimensions; that source delta is not yet in a newer released EXE.
 
-Before any new Production deploy/migration, perform a read-only host audit of exact branch/HEAD, tracked worktree, MySQL vendor/name, `store.0034` migration state and migration plan. Do not infer the 500 root cause before that evidence.
+## Phase50.A.1D implemented on GitHub
+### Sales Profiles
+- Product-level profile selection mode: full list, size, weight, build, size→build, build→size.
+- optional Product selector label.
+- ProductVariant sales profile name, stable profile key, display order and default flag.
+- profile identity extends Variant uniqueness so otherwise-identical material/color/size/build rows can coexist when profile keys differ; this supports different weight/time/price profiles.
+- Admin action `کپی پروفایل‌های فروش انتخاب‌شده` clones mature Variant settings and generates a new profile/code while leaving the source unchanged.
+- Product Admin and Variant inline expose profile settings alongside size/build/material/color/weight/print-time/price/stock fields.
+- Variant metadata endpoint now exposes profile label/key/default/order, selection mode, weight, print time, unit price and shipping/package data.
+- migration `store.0035_phase50_sales_profiles` owns the new schema and is NOT deployed to Production yet.
 
-Known verified Production paths remain:
-- project `/home/sfkilvrs/3dprinthub`,
-- venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`,
-- MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
-- static `/home/sfkilvrs/public_html/static`, media `/home/sfkilvrs/public_html/media`, private media `/home/sfkilvrs/3dprinthub/private_media`.
+### Hero Admin media integrity
+Owner evidence showed `/admin/website/homepageheroslide/<id>/change/` loading product/album cards whose images failed because the legacy Hero Studio JSON endpoints emitted private `store/imported-models/...` working-media URLs.
 
-## Phase50.A.1B baseline
-Already CI tested:
-- contain-fit Product main viewer,
-- thumbnail-to-main switching + fullscreen lightbox,
-- Variant 2.0 size/build profile/packaging weight/parcel dimensions,
-- StoreOrderItem snapshot columns,
-- `store.0034_phase50_variant2_commerce`,
-- Variant Admin and public variant metadata endpoint.
+Implemented final Admin endpoint boundary:
+- Product browser thumbnails resolve Product-owned public media first.
+- Album rows resolve matching Product gallery images; if no public match exists, row-specific HTTP(S) source media may be used instead of exposing private working-media.
+- private imported Catalog paths are never returned by the replacement Hero Admin JSON endpoints.
+- existing Hero selection IDs, SEO suggestions, cinematic controls and public Hero rendering remain unchanged.
 
-`store.0034` must never be applied to Production without exact MySQL verification, migration plan, fresh successful backup and rollback target.
-
-## Phase50.A.1C implemented
-Owner evidence showed three distinct UX/data problems:
-1. Imported Catalog/Admin image previews were pointing at `store/imported-models/...` working-media and returning 404 in Production.
-2. mobile homepage Hero caption/title occupied too much of the viewport and hid the Product image.
-3. imported-model Admin did not surface translated/commercial completeness clearly; homepage SEO controls were hard to audit; Windows image cards did not show pixel dimensions.
-
-Implemented additively:
-- `store/phase50_admin_media_integrity.py`: Admin previews never expose imported working-media as public image URLs; they prefer filename-matched Product gallery media, then Product main image, then HTTP(S) source image.
-- ImportedPrintAsset changelist preserves all mature Phase35 editable/action contracts while adding safe preview and `4/4` completeness state.
-- ImportedPrintAsset image inline adds safe public preview and source `W × H px`; working FileFields remain editable/auditable but are not rendered as public preview URLs.
-- mobile Hero override reduces caption/title/buttons and hides description on very narrow phones so the Product image remains visible.
-- existing `SiteSetting.meta_title` / `meta_description` are preserved as the homepage SEO source; Admin now adds SEO length health, search-result preview and active-Hero Alt/title audit instead of creating duplicate SEO fields.
-- Windows Product image cards show original image pixel dimensions using the final installed workspace thumbnail boundary.
-- no new migration was created by Phase50.A.1C.
-
-## Automated verification
-`Phase50 Admin Media Mobile CI` first run failed at Django system check because the initial patch replaced the mature ImportedPrintAsset `list_display` while Phase35 still owned `list_display_links/list_editable`. The failed condition was not repeated; the fix preserves the mature list and only inserts new readonly columns.
-
-Second CI run `32875771848` on code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83` PASS:
-- Python compile PASS,
-- `manage.py check` PASS,
+## Verification
+GitHub Actions `Phase50 Sales Profiles Hero Admin CI` run `32879712980` PASS on snapshot `405d2c1daa85828d1a0dc68210d201c85b6db7ba`:
+- touched Python compile PASS,
+- Django system check PASS,
 - migration dry-run PASS,
-- CI SQLite migrations PASS,
-- Admin media + homepage/mobile regressions PASS,
-- Windows image-dimension regression PASS.
-
-Known warnings remain Google credentials intentionally empty in CI, CKEditor4 maintenance/security debt and `store.W026` in-memory realtime debt.
-
-## Browser-console evidence
-The reported `jewelry-tree-box-3d-print-01.webp/02.webp` HTTP 404 is a real media-path symptom covered by the safe Admin preview work above. The Chrome message `A listener indicated an asynchronous response...` is not yet attributed to application code; it should only be classified after reproduction with extensions disabled/incognito.
+- migration plan PASS,
+- SQLite migration apply PASS,
+- Sales Profile/Admin/Hero public-media regressions PASS.
 
 ## Exact next work
-1. Read-only Production audit to resolve actual host HEAD and whether `store.0034` is pending; inspect the Product Admin 500 based on real migration/runtime state.
-2. If audit is safe: fresh DB backup, approved GitHub deploy, `store.0034` migration if pending, collectstatic, Passenger restart and Admin/Home/Product/mobile verification.
-3. Rebuild/version the Windows executable only after source-side image-dimension/manual smoke is accepted.
-4. Continue Phase50.A.2 Checkout & Delivery, then secure Store ZarinPal, Torob Product API v3, then Phase50.B accounting.
+1. Read-only Production verify current HEAD/worktree/MySQL and confirm `0034` remains applied.
+2. Fresh MySQL backup, deploy current approved GitHub snapshot, inspect/apply only `store.0035`, collectstatic and Passenger restart.
+3. Manual QA: Hero Studio product cards/gallery images, Product profile copy/edit/default/order and selection mode.
+4. Extend storefront selector UI to consume the new profile metadata and persist selected profile snapshots in checkout.
+5. Continue Phase50.A.2 Shipping/Delivery, then secure Store ZarinPal, Torob Product API v3, then Phase50.B accounting core.
