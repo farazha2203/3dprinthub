@@ -23,6 +23,12 @@ class StoreConfig(AppConfig):
         from . import phase49_3f_pricing
         from . import phase49_3f_pricing_finalize
 
+        # Phase50 Variant 2.0 follows the same additive pattern: migration 0034
+        # owns the DB columns while this module contributes the runtime fields to
+        # the mature ProductVariant / StoreOrderItem classes.
+        from .phase50_variant2 import install as install_phase50_variant2
+        install_phase50_variant2()
+
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
@@ -61,6 +67,11 @@ class StoreConfig(AppConfig):
         # website/store admin implementations.
         from .phase49_3f_admin import install as install_phase49_3f_admin
         install_phase49_3f_admin()
+
+        # Phase50 exposes size/build/packaging fields through the mature Admin
+        # registration and order snapshots without replacing the existing Admin.
+        from .phase50_variant_admin import install as install_phase50_variant_admin
+        install_phase50_variant_admin()
 
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
