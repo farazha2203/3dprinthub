@@ -5,90 +5,77 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.20 — Visible Operator Panels`
+Active Hotfix: `49.3I.21 — Observable AI Jobs + Link-Grounded Full Refresh`
 Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`
 Production: `UNTOUCHED / NOT APPROVED`
 
 ## Current Position
-49.3I.18 additive operator editing and 49.3I.19 canonical source identity are implemented on the feature branch.
+49.3I.18 operator editing, 49.3I.19 canonical source identity and 49.3I.20 visible operator panels are present on the feature branch. Windows operator QA now verified that source-title refresh can read the correct MakerWorld identity, but multiple AI actions can remain waiting for the provider and appear hung.
 
-Owner Windows QA then exposed a UI-composition defect: the new bulk image panel and source-identity/AI rebuild panels existed in code, but they were packed after large `fill="both", expand=True` gallery/content panes. The controls could therefore be pushed below the visible viewport and appear to be missing from Product Workspace.
+The observed Task Center ceiling was 03:30. Repository verification found `catalog_center/app/ai_providers.py` used a 210-second chat request timeout. This matches the observed wait exactly. The current root cause is therefore provider/network waiting and weak request observability, not a database field-edit permission denial.
 
-49.3I.20 is a layout-only hotfix that keeps the existing controls and commands intact and moves the already-created panels ahead of expandable content.
+49.3I.21 adds a global bounded provider guard, request start/finish/timeout diagnostics, URL grounding for AI content generation, and a new one-click link-based full refresh with preview/apply.
 
-## Preserved 49.3I.19 Source Identity Contract
-- generic English/Persian model-number titles are non-authoritative,
-- valid scraped/page title is preferred,
-- exact MakerWorld `/models/<id>-<slug>` URL provides deterministic fallback identity,
-- candidate source title is canonicalized before candidate upsert,
-- source title is canonicalized again before Add-to-Products persistence,
-- Product AI source context canonicalizes legacy products before generation,
-- Product Workspace can repair source title and rebuild AI content without delete/reimport.
+## Implemented 49.3I.21 Contract
+- AI POST requests are bounded to a default maximum of 75 seconds (`CATALOG_AI_TIMEOUT_SECONDS`, constrained to 20..120 seconds).
+- request-start is logged before the network call, so a stalled request has a visible last stage.
+- timeout/error/success is logged with provider/model/operation/duration; secret redaction reuses `phase49_diagnostics`.
+- `AIContentService.enrich_product` receives the source URL plus sanitized source facts whenever a URL is available.
+- Product Workspace stage 4 gains `AI حرفه‌ای — تکمیل کامل از لینک + عیب‌یابی زنده`.
+- new action `🌐 تکمیل همه اطلاعات بر اساس لینک محصول` performs source fetch → parse → canonical identity → AI request → received preview → explicit apply.
+- apply updates the existing editable content/SEO/image-metadata fields through the mature 49.3I.18 apply path.
+- source URL, price, stock and commercial/operator choices are not overwritten.
+- the dialog has `توقف انتظار`; cancelled late results are ignored and must not update the product.
+- Diagnostics bundle export remains local and redacted. No PAT/API key is required or allowed in project logs.
 
-Acceptance fixtures remain:
-- `https://makerworld.com/en/models/2845731-cake-stand?...` → `Cake Stand`,
-- `https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter?...` → `Ribbed Cake Stand Cookie Platter`.
+## Acceptance Fixture
+Primary QA URL:
+`https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter?from=search#profileId-3236824`
 
-## Implemented 49.3I.20 Visible Layout Contract
-### Stage 3 — Images
-The panel `عملیات گروهی همه تصاویر منتخب سایت` is moved before the existing image toolbar/gallery so it is visible immediately when stage 3 opens.
+Expected canonical source identity:
+`Ribbed cake stand, cookie platter` or the normalized canonical equivalent.
 
-### Stage 4 — Content / SEO
-Visible order is:
-1. `هویت واقعی محصول در منبع — قبل از ترجمه و SEO`,
-2. `اصلاح نام محصول و بازسازی متن / SEO`,
-3. existing content toolbar/editor.
+The Persian product title must no longer remain a generic `مدل میکرورلد 2896217` after a successful link-grounded AI refresh.
 
-49.3I.20 does not recreate or replace AI/metadata controls. It only reorders already-created pack-managed panels after 49.3I.18 and 49.3I.19 have mounted them.
+## Files Added / Updated for 49.3I.21
+- added `catalog_center/app/phase49_3i21_observable_ai_link_refresh.py`
+- updated `catalog_center/app/phase49_3i_pricing_modes.py`
+- added `catalog_center/tests/test_phase49_3i21_observable_ai_link_refresh.py`
+- added `docs/phases/PHASE49_3I21_OBSERVABLE_AI_LINK_REFRESH.md`
+- updated active project documentation.
 
-## Git State
-Verified feature branch remote HEAD before 49.3I.20 work:
-- `6c9cb06a573f6251c55e491ce187bab27fd7ffd7`.
-
-49.3I.20 implementation commits so far:
-- `cf634206da426e6627cb47e9a860fd6591b169b9` — add layout-only visibility module,
-- `74b7de97531dae5346c864f06665269ffd8d84a3` — add focused layout regression tests,
-- `658311877a7d79b1a2d923e91054626728d2ae37` — wire 49.3I.20 after 49.3I.18/49.3I.19 composition,
-- `b0017bf4ba2bb94f6b6466b05989994fb8b5208b` — add 49.3I.20 phase documentation.
-
-Documentation commits may follow on the same branch. Always fetch the live remote HEAD before Local QA; do not rely on a stale chat-pinned SHA.
-
-## Files Changed for 49.3I.20
-- added `catalog_center/app/phase49_3i20_visible_operator_panels.py`,
-- updated `catalog_center/app/phase49_3i_pricing_modes.py`,
-- added `catalog_center/tests/test_phase49_3i20_visible_operator_panels.py`,
-- added/updated Phase49.3I documentation.
-
-## Database / Migration / Media / Secret Safety
-- Django migration: `NONE`,
-- Catalog schema migration: `NONE`,
-- no reset/drop/truncate,
-- no media/history deletion,
-- no secret-storage change,
-- no AI provider/model logic change,
-- no pricing/publish/FTP/Bridge contract change,
-- Production untouched.
+## Database / Migration / Secret Safety
+- Django migration: `NONE`
+- Catalog schema migration: `NONE`
+- no reset/drop/truncate
+- no media/history deletion
+- no source URL rewrite
+- no price/stock overwrite
+- no API key/token committed
+- existing redacted diagnostics tables are reused
+- Production untouched
 
 ## Test Status
-GitHub implementation and focused unit test code are committed. Canonical Windows Local execution is still required before this hotfix can be marked Local Tested or Accepted.
+GitHub code and focused regression tests are committed. Windows Local execution has NOT yet been reported for 49.3I.21, so this phase is not Local Tested and not Accepted.
 
-## Exact Next Task — Windows 49.3I.20 Acceptance
+## Current Git State
+Feature branch remote HEAD must be fetched live before Local QA. Do not rely on an older 49.3I.20 SHA from chat.
+
+## Exact Next Task — Windows 49.3I.21 Gate
 1. close Catalog Center,
-2. Local path is `D:\projects\3DPrintHub`,
-3. verify worktree is clean before branch switch/pull,
-4. fetch/prune, switch to `agent/phase49-3i18-operator-bulk-ai-rebuild`, ff-only pull live remote HEAD,
-5. verify Local HEAD equals fetched remote HEAD,
-6. compile 49.3I.20 + touched composition modules,
-7. run 49.3I.20 + 49.3I.19 + 49.3I.18 focused tests,
-8. run inherited 49.3I.16/15/discovery regressions,
-9. run `catalog_center\launch.py --verify-only`,
-10. launch Catalog Center and verify stage 3 bulk-image panel is visible at the top,
-11. verify stage 4 source-identity and AI rebuild panels are visible above the editor,
-12. open existing bad product `2896217`; repair source title and expect `Ribbed Cake Stand Cookie Platter`,
-13. run source repair + full AI rebuild and inspect Persian title, descriptions, SEO, image Alt/Title/Caption,
-14. verify `2845731` resolves to `Cake Stand`,
-15. verify 49.3I.18 clipboard/bulk metadata/manual Persian authoritative-name paths still work,
-16. chain the existing 49.3I.17 baseline gate.
+2. verify clean worktree at `D:\projects\3DPrintHub`,
+3. fetch/prune, switch to `agent/phase49-3i18-operator-bulk-ai-rebuild`, ff-only pull live remote HEAD,
+4. verify Local HEAD equals fetched remote HEAD,
+5. compile 49.3I.21 plus 49.3I.20/19/18 composition modules,
+6. run 49.3I.21 focused tests and inherited 49.3I.20/19/18 + 49.3I.16/15/discovery regressions,
+7. run `catalog_center\launch.py --verify-only`,
+8. launch Catalog Center and verify the new stage-4 panel is visible,
+9. open product 2896217 and run `تکمیل همه اطلاعات بر اساس لینک محصول`,
+10. verify source fetch, AI request, received preview and explicit apply stages,
+11. confirm content/SEO/image metadata update consistently only after approval,
+12. test `توقف انتظار`; late response must not apply,
+13. export Diagnostics and verify no key/token exists,
+14. retest existing AI buttons and verify UI remains responsive and request-start/finish/timeout diagnostics identify the failing provider/model/operation.
 
 ## Release Gate After Windows PASS
 - exactly one `LOCAL PUBLISH ONLY`,
@@ -98,5 +85,12 @@ GitHub implementation and focused unit test code are committed. Canonical Window
 - deploy only the approved GitHub snapshot,
 - Production HTTP/data/media verification.
 
-## Next Product Phase
-After Catalog Production verification: Store ZarinPal request/callback/verify + Sandbox E2E while retaining bank transfer.
+## What Remains
+- Windows automated gate,
+- visual/data QA of all important AI entry points,
+- one Local Publish E2E,
+- owner acceptance,
+- only then Production deploy/verification.
+
+## Exact Next Step
+Pull the live feature-branch HEAD onto the canonical Windows repo and run the 49.3I.21 Local acceptance gate. Production remains blocked.
