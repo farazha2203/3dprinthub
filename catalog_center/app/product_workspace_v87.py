@@ -62,9 +62,69 @@ class ProductWorkspace(Epic49ProductStudio):
 
         body = ttk.Frame(self, padding=(12, 0, 12, 8))
         body.pack(fill="both", expand=True)
-        rail = tk.Frame(body, bg="#0b2238", width=210, padx=8, pady=10)
-        rail.pack(side="right", fill="y", padx=(8, 0))
-        rail.pack_propagate(False)
+
+        # The stage rail can grow after later phases append readiness/AI panels.
+        # Keep it in a real vertical Canvas+Scrollbar so no control becomes
+        # unreachable on 780/900px-height Windows displays.
+        rail_host = tk.Frame(body, bg="#0b2238", width=228)
+        rail_host.pack(side="right", fill="y", padx=(8, 0))
+        rail_host.pack_propagate(False)
+        rail_canvas = tk.Canvas(
+            rail_host,
+            bg="#0b2238",
+            highlightthickness=0,
+            bd=0,
+            relief="flat",
+            takefocus=0,
+        )
+        rail_scroll = ttk.Scrollbar(rail_host, orient="vertical", command=rail_canvas.yview)
+        rail_canvas.configure(yscrollcommand=rail_scroll.set)
+        rail_scroll.pack(side="right", fill="y")
+        rail_canvas.pack(side="left", fill="both", expand=True)
+        rail = tk.Frame(rail_canvas, bg="#0b2238", padx=8, pady=10)
+        rail_window = rail_canvas.create_window((0, 0), window=rail, anchor="nw")
+
+        def _sync_rail_scrollregion(_event=None):
+            try:
+                rail_canvas.configure(scrollregion=rail_canvas.bbox("all"))
+            except Exception:
+                pass
+
+        def _sync_rail_width(event):
+            try:
+                rail_canvas.itemconfigure(rail_window, width=max(1, int(event.width)))
+            except Exception:
+                pass
+            _sync_rail_scrollregion()
+
+        def _rail_mousewheel(event):
+            try:
+                pointer = self.winfo_containing(*self.winfo_pointerxy())
+                current = pointer
+                inside = False
+                while current is not None:
+                    if current in {rail, rail_canvas, rail_host}:
+                        inside = True
+                        break
+                    current = getattr(current, "master", None)
+                if not inside:
+                    return None
+                delta = int(getattr(event, "delta", 0) or 0)
+                if delta:
+                    rail_canvas.yview_scroll(-1 if delta > 0 else 1, "units")
+                    return "break"
+            except Exception:
+                return None
+            return None
+
+        rail.bind("<Configure>", _sync_rail_scrollregion, add="+")
+        rail_canvas.bind("<Configure>", _sync_rail_width, add="+")
+        self.bind("<MouseWheel>", _rail_mousewheel, add="+")
+        self._workspace_rail_host = rail_host
+        self._workspace_rail_canvas = rail_canvas
+        self._workspace_rail_scrollbar = rail_scroll
+        self._workspace_rail = rail
+
         content = ttk.Frame(body)
         content.pack(side="left", fill="both", expand=True)
 
@@ -127,6 +187,7 @@ class ProductWorkspace(Epic49ProductStudio):
         self._publish_ui()
         self._remove_duplicate_legacy_actions()
         self._normalize_button_labels()
+        _sync_rail_scrollregion()
 
         footer = ttk.Frame(self, padding=(12, 4, 12, 10))
         footer.pack(fill="x")
