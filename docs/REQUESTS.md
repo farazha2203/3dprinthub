@@ -21,6 +21,20 @@ Status: `OWNER REPORTS PRODUCTION OK`
 ## REQ-REL-001 — Catalog production release
 Status: `WEB/CATALOG RELEASE OPERATIONAL`
 
+## REQ-REL-002 — Final Windows Catalog Center executable
+Status: `8.8.1 GITHUB RELEASE PUBLISHED / LIVE SOURCE EMPLOYEE SMOKE NEXT`
+
+Delivered:
+- `catalog-center-v8.8.1`,
+- `3DPrintHub-CatalogCenter-v8.8.1.exe`,
+- build `2026.08.25.2`,
+- one-file/windowed executable requiring no Python installation on the employee PC,
+- frozen runtime self-check and Playwright/browser launch smoke,
+- persistent Catalog data outside the executable and secrets in Windows Credential Manager,
+- SHA256-protected release artifact.
+
+Acceptance remaining: open the released EXE on the employee Windows machine, verify preserved connection/AI profile, fetch one known MakerWorld source and perform one approved publish operation.
+
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
 Owner requests full GL/subledger/accounting, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
