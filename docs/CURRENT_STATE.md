@@ -5,66 +5,62 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
 Active Phase: `49.3I`
-Active Hotfix: `49.3I.28 — Exact-Link Canonical Title Call Contract`
-Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`
+Active Hotfix: `49.3I.29 — Structured Web Product Presentation`
+Status: `IMPLEMENTED ON GITHUB / WINDOWS WEB QA REQUIRED`
 Production: `UNTOUCHED / NOT APPROVED`
 
-## Owner Evidence Driving 49.3I.28
-After 49.3I.27 removed the `Database.categories` crash, the same exact-link button reached source fetch and then failed with:
+## Current Evidence
+The owner reports the Local Catalog publish path successfully sent a Product into the Local Django Store. The resulting Product detail page then exposed an old generated `technical_notes` block directly to customers: source header lines followed by raw Catalog JSON and a duplicated `[Catalog Intelligence v8.5]` payload.
 
-`canonical_source_title() got multiple values for argument 'current_title'`
-
-The progress dialog reached queued/source_fetch, proving the category bridge is now active and this is the next independent failure.
+That payload contained useful customer facts such as weight/materials/categories, but also internal fields such as AI provider/model, fingerprint/source hash, batch UUID and desktop workflow state. Missing designer/license fields rendered as `-`.
 
 ## Verified Root Cause
-`phase49_3i19_source_identity.canonical_source_title` has the mature signature:
+`templates/store/product_detail.html` rendered `product.technical_notes|linebreaks` verbatim. Historical Catalog import code stores machine-oriented JSON inside that field for compatibility. The public template therefore treated an internal/debug persistence field as customer copy.
 
-`canonical_source_title(current_title, source_url, external_id='', *, candidates=())`
+## 49.3I.29 Implemented on GitHub
+- added `store/templatetags/store_product_presentation.py`,
+- public presentation uses an explicit allowlist of customer-safe facts,
+- legacy JSON is parsed server-side only for safe facts and is never emitted verbatim,
+- canonical Product/Profile data takes precedence over legacy technical-notes payloads,
+- missing `-`/unknown designer/license values are suppressed,
+- weight and print time are formatted for Persian storefront display,
+- Product detail now renders professional sections for highlights, technical/build facts, materials/colors, category path and source attribution,
+- raw `product.technical_notes` is no longer rendered on the public Product page,
+- internal AI provider/model, hashes/fingerprint, batch/workflow metadata are not returned to the template,
+- existing AI-generated Persian description/use-description/technical features/sales bullets are reused; the public web request does not call AI,
+- focused regression test added in `store/test_phase49_web_product_presentation.py`,
+- dedicated phase document added at `docs/phases/PHASE49_3I29_WEB_PRODUCT_PRESENTATION.md`.
 
-49.3I.26 called it using `source_url` as the first positional argument, external id as the second positional argument, and also supplied `current_title=` by keyword. Python therefore bound `current_title` twice and aborted before AI.
-
-## 49.3I.28 Implemented on GitHub
-- preserved the working 49.3I.19 source-identity implementation as authoritative,
-- added a narrow compatibility adapter at the final exact-link boundary so 49.3I.26 arguments are reordered into the mature 49.3I.19 signature,
-- no change to AI provider/model selection,
-- no image URL/file is sent to AI,
-- no change to source fetch, Product content generation, image text metadata, pricing, publish or archive behavior,
-- retained the 49.3I.27 App category-provider bridge,
-- added `tests.test_phase49_3i28_exact_link_contract`, including the exact MakerWorld-shaped call that previously raised the duplicate `current_title` error,
-- Windows gate now runs the 49.3I.28 regression before inherited 49.3I tests.
-
-## Preserved 49.3I.26/27 Contract
-- canonical stage order remains Basic Info → Commerce → Images → Content/SEO → Source/License → Slider → Review/Publish,
-- exact-link completion remains 0–100% observable with 120-second AI ceiling,
-- AI receives Product/source text only and `image_urls=[]`,
-- one workflow still applies Product Persian content/SEO plus image filename/Alt/Title/Caption/Keywords,
-- image network downloads are not started by the unified AI completion path,
-- five-column vertical gallery, full-screen toggle, archive/block and default-five acquisition remain unchanged,
-- logs remain cumulative and startup does not test AI connectivity.
+## Preserved Catalog Contract
+- exact-link AI remains text-only and does not send image files/URLs,
+- Product stage order remains 1..7 with free navigation,
+- five-column vertical image gallery/full-screen/archive/block behavior remains,
+- persistent diagnostics/no hidden startup AI remain,
+- Product publish/bridge batch format is unchanged.
 
 ## Database / Migration / Safety
 - Django migration: `NONE`
 - Catalog schema migration: `NONE`
-- no reset/drop/truncate
-- no Product/media/history physical deletion
-- no API key/token committed
-- Local Catalog SQLite is never copied to Production MySQL
-- Production untouched
+- no Product/media/history deletion
+- no secret/API key changes
+- Local SQLite is not copied to Production MySQL
+- Production source and database untouched
 
 ## Verification Status
-GitHub hotfix + regression + Windows runner are committed. No Windows execution result has been reported for 49.3I.28 yet. Do not mark accepted or deployable until the Local gate and real exact-link button test pass.
+- owner reported the pre-49.3I.29 Local Publish path completed successfully,
+- 49.3I.29 source + test are committed to GitHub,
+- new storefront presentation still requires Windows Local pull/test/render QA,
+- do not deploy Production until this new web delta passes Local Product-page verification.
 
-## Exact Next Task — Windows 49.3I.28 Gate
-1. close Catalog Center,
-2. verify Local worktree clean,
-3. fetch/prune + ff-only pull the live feature branch,
-4. verify Local HEAD equals fetched Remote HEAD,
-5. run `catalog_center\RUN_PHASE49_3I26_OPERATOR_COMPLETION_GATE.ps1` with the verified 49.3I.28 HEAD,
-6. press `تکمیل همه اطلاعات بر اساس لینک محصول`,
-7. verify queued → source_fetch → source_ready → ai_request,
-8. verify Product/source text is sent to AI with zero image URLs/files,
-9. verify preview and one-shot Product SEO + image text metadata apply,
-10. export fresh diagnostics if any new failure occurs.
+## Exact Next Task
+1. close Local Django/Catalog processes that hold stale code if needed,
+2. verify clean Windows worktree,
+3. fetch/prune + ff-only pull the live feature branch and verify Local HEAD == Remote HEAD,
+4. run `manage.py check`, `makemigrations --check --dry-run`, and `store.test_phase49_web_product_presentation`,
+5. start Local Django and open the already-imported Product,
+6. verify no raw JSON / `[Catalog Intelligence v8.5]` / AI provider/model/hash/batch text is visible,
+7. verify weight/materials/colors/categories/source are cleanly presented and missing fields are hidden,
+8. after owner approval, perform read-only Host audit and deploy the approved GitHub snapshot only.
 
 ## Release Gate
-Windows PASS → one Local Publish E2E → Local Store/Admin/Product/Media/SEO verification → explicit owner approval → read-only Production environment verification → approved GitHub snapshot only → Production verification.
+49.3I.29 Local Web PASS → explicit owner approval → read-only Production branch/HEAD/venv/MySQL/backup verification → approved GitHub snapshot deploy → collectstatic + Passenger restart → public Product/SEO/media verification.
