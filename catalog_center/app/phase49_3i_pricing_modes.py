@@ -187,3 +187,8 @@ def install(workspace_class) -> None:
     # identity repair. No prior workspace controls are removed or replaced.
     from .phase49_3i19_source_identity import install_workspace as _install_phase49_3i19_source_identity
     _install_phase49_3i19_source_identity(workspace_class)
+    # 49.3I.20 is layout-only. It runs after 49.3I.18/19 so their existing
+    # panels/commands stay intact, then moves those panels ahead of expandable
+    # gallery/content panes so the operator can actually see and use them.
+    from .phase49_3i20_visible_operator_panels import install as _install_phase49_3i20_visible_operator_panels
+    _install_phase49_3i20_visible_operator_panels(workspace_class)
