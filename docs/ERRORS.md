@@ -47,33 +47,44 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 **Environment:** Windows Catalog Center 8.7.1, feature branch `agent/phase49-3i18-operator-bulk-ai-rebuild`.  
 **Owner evidence:** after pressing multiple AI actions the entire Product Workspace title changed to `(Not Responding)` and often required force-close. The behavior remained after the 49.3I.21 HTTP timeout reduction. The right Product rail also clipped lower readiness/AI controls.
 
-**Verified Additional Root Cause:**
-- mature Task Center and Product AI code correctly runs network work in background Python threads,
-- several worker paths then call `self.after(0, ...)` from those worker threads,
-- progress helpers also eventually reach Tk through that worker-originated `after`,
-- 49.3I.18/19 rebuild workers use the same callback pattern,
-- 49.3I.21 additionally called `_source_for_ai()` from its worker although source building can read Tk-backed variables,
-- Tk/Tcl has one owning UI thread; cross-thread Tcl marshalling can block/deadlock Windows UI even when the HTTP request itself is on a worker.
+**Verified Additional Root Cause:** mature AI workers correctly background network work but several paths then called Tk/Tcl through worker-originated `self.after(...)`; 49.3I.21 also read Tk-backed source state inside its worker. Tk owns one UI thread, so this could block/deadlock Windows UI.
 
-**Correct Solution — Phase49.3I.22:**
-- install one final Product Workspace Tk-thread bridge after all existing AI layers,
-- record the owning Tk thread,
-- off-main `workspace.after(...)` must never invoke Tcl; enqueue a plain Python callback instead,
-- a pump scheduled by the Tk main thread drains the queue every 25 ms and executes callbacks on that thread,
-- support cancellation tokens for deferred callbacks,
-- snapshot `_source_for_ai()` on the main thread and return deep-copied plain data to workers,
-- pre-snapshot 49.3I.21 link refresh before worker start,
-- keep network/AI work backgrounded and preserve existing Provider/model/business logic,
-- rebuild Product right rail as Canvas + vertical Scrollbar so appended AI/readiness panels remain reachable.
+**Correct Solution — Phase49.3I.22:** one final Product Workspace Tk-thread bridge queues worker UI callbacks in Python and drains them on the main thread; Tk-backed source is snapshotted before worker start; right Product rail is a Canvas + vertical Scrollbar.
 
-**Verification status:** implementation and focused test code are committed on the feature branch. Canonical Windows Local gate is still required. No migration. Production untouched.
+**Verification status:** implementation/focused tests committed; Windows Local gate required. No migration. Production untouched.
 
-**Prevention:** no Python worker thread may call any Tk/Tcl API directly or indirectly. Worker completion/error/progress must use a Python-only handoff queue drained by the main UI thread. Any Tk-backed input required by a worker must be snapshotted before the worker starts.
+**Prevention:** no worker thread may call Tk/Tcl directly/indirectly; worker completion/error/progress must use the main-thread handoff queue and Tk-backed input must be snapshotted before worker start.
+
+### ERR-49-039 — AvalAI Product request did not match the exact saved-model Chat Completions contract
+**Date:** 2026-08-25  
+**Owner evidence:** exact MakerWorld product URL works directly in AvalAI, while Catalog Center's link-grounded completion did not reliably produce/apply content; canonical English source identity was correct but old generic Persian identity remained.
+
+**Verified Root Cause:**
+- generic `structured_response()` called `choose_model()` and therefore could issue a hidden `/models` request before normal Product generation,
+- Responses-style `input_text`/`input_image` wrapper objects were JSON-serialized into one chat user string,
+- the prompt demanded a response matching a schema but did not include the actual JSON schema,
+- image placeholder objects could consequently be sent as textual wrappers rather than a valid AvalAI multimodal contract,
+- this contradicted the existing Product AI rule: exact saved Provider/Model, no hidden model discovery.
+
+**Correct Solution — Phase49.3I.23:**
+- add an AvalAI-only Product structured adapter,
+- use exact saved model directly,
+- send normal `/chat/completions` `model + messages`,
+- send only real text/source/operator facts in the user message,
+- include the exact output JSON schema in the system instruction,
+- do not serialize image placeholder objects,
+- preserve bounded timeout/diagnostics/Tk handoff,
+- fallback only for unsupported `response_format`, keeping identical exact model/prompt,
+- log only sanitized contract metadata.
+
+**Verification status:** code and focused test committed; Windows live AvalAI gate pending. No migration. Production untouched.
+
+**Prevention:** Product-bound provider adapters must have contract tests asserting exact saved model, no hidden discovery, exact request shape, source grounding, output schema visibility and no secret/pseudo-media leakage.
 
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Outside current release gate. Verify route/client contract before adding a duplicate endpoint.
+Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
 Never invent cost; use provider response/verified lookup or mark unknown.
@@ -86,3 +97,4 @@ Canonical controlled limit is max 20; current bulk operator exposes 5/10/15/20.
 - `store.W026`: in-memory realtime is not a production multi-process solution; Redis/polling is separate debt.
 - Pillow `Image.getdata()` deprecation.
 - Google membership credential warning when intentionally unset in CI.
+- Social preview enhancement: dedicated `twitter:title`, `twitter:description`, `twitter:image` and `og:image:alt` are not yet emitted; core meta/OG/canonical/schema/sitemap are present.
