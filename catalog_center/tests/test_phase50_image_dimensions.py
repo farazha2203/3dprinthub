@@ -1,4 +1,5 @@
 import io
+import unittest
 
 from PIL import Image
 
@@ -28,15 +29,20 @@ class FakeWorkspace:
         return "done"
 
 
-def test_image_card_shows_original_pixel_dimensions():
-    install_workspace(FakeWorkspace)
-    image = Image.new("RGB", (1920, 1080), "white")
-    buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+class Phase50ImageDimensionTests(unittest.TestCase):
+    def test_image_card_shows_original_pixel_dimensions(self):
+        install_workspace(FakeWorkspace)
+        image = Image.new("RGB", (1920, 1080), "white")
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
 
-    label = FakeLabel()
-    result = FakeWorkspace()._apply_thumbnail(label, buffer.getvalue())
+        label = FakeLabel()
+        result = FakeWorkspace()._apply_thumbnail(label, buffer.getvalue())
 
-    assert result == "done"
-    assert label.values["text"] == "1920 × 1080 px"
-    assert label.values["compound"] == "top"
+        self.assertEqual(result, "done")
+        self.assertEqual(label.values["text"], "1920 × 1080 px")
+        self.assertEqual(label.values["compound"], "top")
+
+
+if __name__ == "__main__":
+    unittest.main()
