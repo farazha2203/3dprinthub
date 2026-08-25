@@ -29,6 +29,11 @@ class StoreConfig(AppConfig):
         from .phase50_variant2 import install as install_phase50_variant2
         install_phase50_variant2()
 
+        # Phase50.A.1D sales profiles build on Variant 2.0. Migration 0035 owns
+        # the Product selector mode and profile identity/order/default columns.
+        from .phase50_sales_profiles import install as install_phase50_sales_profiles
+        install_phase50_sales_profiles()
+
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
@@ -72,6 +77,11 @@ class StoreConfig(AppConfig):
         # registration and order snapshots without replacing the existing Admin.
         from .phase50_variant_admin import install as install_phase50_variant_admin
         install_phase50_variant_admin()
+
+        # Phase50.A.1D adds profile copy/default/order controls and Product-level
+        # selection strategy while preserving the existing ProductVariant model.
+        from .phase50_sales_profile_admin import install as install_phase50_sales_profile_admin
+        install_phase50_sales_profile_admin()
 
         # Phase50.A.1C: ImportedPrintAsset working-media stays private on
         # Production. Admin previews resolve Product-owned public media first and
