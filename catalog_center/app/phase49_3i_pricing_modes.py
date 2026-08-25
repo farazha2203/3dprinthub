@@ -15,14 +15,20 @@ PRICING_MODES = {"fixed", "range", "dynamic"}
 
 # launch.py imports this same-phase pricing module before importing
 # phase49_3i_product_list.install. Wrap that later same-phase composition point so
-# 49.3I.12 mounts *after* the mature Product Explorer while leaving prior phases
-# independently testable (ERR-49-009 prevention rule).
+# final 49.3I app-shell layers mount after the mature Product Explorer.
 if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridge", False):
     _phase49_3i_product_list_install = _phase49_3i_product_list_module.install
 
     def _phase49_3i12_product_list_install(app_class):
         _phase49_3i_product_list_install(app_class)
         _install_phase49_3i12_app(app_class, None)
+        from .db import Database
+        from .phase49_3i25_product_first_workflow import (
+            install_app as _install_phase49_3i25_app,
+            install_database as _install_phase49_3i25_database,
+        )
+        _install_phase49_3i25_database(Database)
+        _install_phase49_3i25_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -162,3 +168,9 @@ def install(workspace_class) -> None:
     # chat/completions model+messages contract without hidden model discovery.
     from .phase49_3i23_avalai_chat_contract import install as _install_phase49_3i23_avalai_chat_contract
     _install_phase49_3i23_avalai_chat_contract()
+    # 49.3I.25 is the final operator boundary: Content/SEO first, exact-link
+    # completion in basic info, five-column vertical gallery and publish missing
+    # assistance. It intentionally installs after the Tk bridge and AvalAI adapter.
+    from . import phase49_readiness_wizard as _readiness_module
+    from .phase49_3i25_product_first_workflow import install_workspace as _install_phase49_3i25_workspace
+    _install_phase49_3i25_workspace(workspace_class, _readiness_module)
