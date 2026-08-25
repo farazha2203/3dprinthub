@@ -4,8 +4,8 @@ Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Base Epic: `epic/phase49-unified-product-slider-sync`
-Current Release: `Phase50.A — Admin Command Center completeness`
-Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL TEST REQUIRED`
+Current Release: `Phase50.A.1 — Admin Storefront / Hero parity`
+Status: `GITHUB CI TESTED / MANUAL ADMIN QA + HOST DEPLOY PENDING`
 
 ## Production baseline
 Owner reports the Phase49 Production site and Hero are healthy. Previously verified Production state remains:
@@ -17,34 +17,53 @@ Owner reports the Phase49 Production site and Hero are healthy. Previously verif
 
 No Phase50 code has been deployed to Production yet.
 
-## Phase50.A implemented on GitHub
-Requested delta: make the mature back-office easier to operate before introducing new accounting schema.
+## Phase50.A / A.1 implemented on GitHub
+The business-oriented `/admin/command-center/` now groups mature Sales, Storefront/Checkout, Treasury, Accounting/Ledgers, Purchasing and Inventory/Production surfaces with permission-aware links and operational counters.
 
-Implemented:
-- new business-oriented `/admin/command-center/` protected by Django Admin authentication,
-- unified sections for Sales, Treasury, existing accounting/ledgers, Purchasing, Inventory & Production,
-- permission-aware links to the already-registered mature ModelAdmins,
-- live operational counters for pending service/store payments, active Store orders, draft filament purchases, open affiliate payouts and cost records,
-- explicit upcoming Phase50.B-F accounting capabilities shown as roadmap items rather than fake/broken links,
-- Phase50 shortcut injected into the custom Admin sidebar,
-- safe ModelAdmin browsing ergonomics for Payment, PaymentLedgerEntry, StorePayment, StoreOrder, FilamentPurchase, CostEntry, ProductionJob and AffiliatePayout: date hierarchy + 50-row pagination,
-- focused regression test `website/test_phase50a_admin_command_center.py`.
+Admin storefront parity added:
+- Store Product bulk action: add selected products to homepage slider,
+- Store Product bulk action: remove selected products from homepage slider,
+- Imported Catalog Asset actions for the same add/remove operations,
+- Homepage Hero professional quick controls: `۵ محصول رندوم`, `۱۰ محصول رندوم`, `حذف همه از اسلایدر`,
+- random Hero replacement uses only active Product-backed, publicly renderable assets,
+- existing operator-edited slide copy is preserved when a slide already exists,
+- removal deactivates slides instead of deleting history,
+- quick mutations are POST-only, CSRF-protected through Admin templates and permission protected,
+- Command Center links to Product, imported Catalog assets, Hero, Coupon, ShippingMethod, PricingSetting, customer addresses and Iran Province/County/City data.
+
+Existing backend confirmed before new shipping/payment work:
+- coupon validation and order discount calculation already exist,
+- VAT, packaging fee, shipping fee and total-weight calculations already exist in Store checkout,
+- ShippingMethod already supports flat/range-by-weight pricing,
+- Iran Province/County/City reference data and customer StoreAddress are already present,
+- service online payment already uses server-owned amount, random callback token, Authority matching, database locking, server-to-server verify and idempotent ledger creation,
+- Production security settings already include HTTPS redirect, HSTS, Secure cookies, SameSite, HttpOnly, nosniff and DENY framing when DEBUG is off.
+
+## Automated verification
+GitHub Actions workflow `Phase50 Admin Storefront Parity CI` PASS on commit `7c8714b5715cd00900a76b99097823266251d4a2`:
+- Python compile PASS,
+- `manage.py check` PASS with only known warnings,
+- `makemigrations --check --dry-run` => `No changes detected`,
+- Phase50 Admin regression suite PASS,
+- no migration/schema change.
+
+Known warnings remain: Google credentials intentionally empty in CI, CKEditor4 maintenance/security debt, and `store.W026` in-memory realtime debt.
+
+## CI incidents fixed
+- first new CI attempt used `SECRET_KEY` instead of canonical `DJANGO_SECRET_KEY`; corrected after reading actual settings contract,
+- second attempt used generic `DEBUG` instead of `DJANGO_DEBUG`, causing HTTPS 301 responses in tests; corrected,
+- ModelAdmin dynamic custom URLs were not stable through the actual Admin URL composition; Hero quick-action endpoints were moved to explicit project URL routes wrapped by `admin.site.admin_view`.
 
 ## Safety / Must-not-touch
-- NO migration/schema change in Phase50.A,
-- no StoreOrder/Quote/Payment behavior change,
-- no payment gateway/idempotency change,
-- no Catalog/Bridge/Product/Hero/media change,
-- no destructive rewrite of PaymentLedgerEntry/AffiliateLedgerEntry,
+- NO migration/schema change in Phase50.A.1,
+- no StoreOrder/Quote/Payment semantics changed,
+- no gateway/idempotency behavior changed,
+- no Catalog Bridge/Product public rendering/media ownership changed,
+- no destructive Hero delete operation,
 - Production untouched.
 
-## Verification status
-GitHub implementation exists, but no Windows Local execution result has been reported yet. Do not mark LOCAL_TESTED/DEPLOYED until the Local gate is run.
-
-## Exact next task
-1. Windows clean worktree + live `fetch --prune` + ff-only pull of the current feature HEAD.
-2. Run `manage.py check`.
-3. Run `manage.py makemigrations --check --dry-run` and confirm NO migration.
-4. Run `manage.py test website.test_phase50a_admin_command_center -v 2`.
-5. Open `/admin/` and `/admin/command-center/`; verify sidebar shortcut, permission-aware links, Sales/Treasury/Accounting/Purchasing/Inventory sections and mobile/desktop layout.
-6. After owner approval, continue Phase50.A completeness or begin reviewed Phase50.B accounting schema design.
+## Next exact work
+1. Manual Admin visual/operation QA on development/staging host: Product actions, Imported Asset actions, Hero 5/10-random and deactivate-all, Command Center links, mobile/desktop layout.
+2. Phase50.A.2 Checkout & Delivery design/implementation: package weight/dimensions, normalized carrier quote adapter, Post/Tipax/Mahex only after current official API contracts/credentials are verified; retain current weight-rule fallback.
+3. Phase50.A.3 Payment hardening/unification: strict trusted gateway redirect allowlist, StorePayment integration with the already-safe server-to-server verification model, audit/reconciliation/rate-limit controls.
+4. After these commerce gates, continue Phase50.B accounting core.
