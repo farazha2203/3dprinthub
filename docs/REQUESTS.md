@@ -49,8 +49,7 @@ Implemented:
 - Imported Catalog Asset add/remove slider actions,
 - Hero buttons for 5 random, 10 random and deactivate-all,
 - Coupon, ShippingMethod, PricingSetting, customer addresses and Iran Province/County/City surfaced in Admin,
-- non-destructive Hero deactivation and permission/POST/CSRF protected quick operations,
-- focused CI regression coverage with no schema migration.
+- non-destructive Hero deactivation and permission/POST/CSRF protected quick operations.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
@@ -68,5 +67,21 @@ Verified current Store checkout already validates Coupon and applies discount, V
 Status: `REQUESTED / 50.A.3 PLANNED`
 Preserve the mature service-payment contract: server-owned amount, transaction locking, random callback token, exact Authority match, server-to-server gateway verify and idempotent ledger. Extend StorePayment to the same model with trusted gateway-host allowlist, no card/PIN/CVV collection, secure redirect UX, immutable audit/reconciliation and abuse controls.
 
+## REQ-50-007 — Professional Product gallery
+Status: `IMPLEMENTED / GITHUB CI TESTED / MANUAL QA REQUIRED`
+Owner requires thumbnails to replace the main product image inside one fixed viewer, full image visibility rather than forced cropping, and click-to-open full-screen viewing. Implemented with contain-fit viewer, keyboard/click thumbnail switching and accessible lightbox navigation.
+
+## REQ-50-008 — Variant 2.0 size/build/packaging parity
+Status: `IMPLEMENTED FOUNDATION / GITHUB CI TESTED / CHECKOUT SNAPSHOT NEXT`
+Owner requires products to support multiple sizes and build/weight profiles (for example 20/24/26/28/30 cm and hollow/standard/solid), with material/color/quality, independent weight/price/inventory and package dimensions. Runtime/schema/Admin foundation and migration `store.0034` are implemented. Checkout snapshot/effective shipping use is next.
+
+## REQ-50-009 — Torob marketplace integration
+Status: `REQUESTED / 50.A.4 PLANNED`
+Implement current official Torob Product API v3 with stable product/variant grouping, size/color/material, current price/availability, image-quality rules and later verified order attribution/webhooks.
+
+## REQ-50-010 — ZarinPal Store checkout activation
+Status: `REQUESTED / 50.A.3 PLANNED`
+The mature secure ZarinPal engine already serves service Quote payments. StorePayment must be connected to the same server-owned amount, callback-token, Authority-match, server-to-server verification and idempotency contract before real Production merchant activation.
+
 ## Change rule
-New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping schema migration is deployed without MySQL verification, backup and rollback plan.
+New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target.
