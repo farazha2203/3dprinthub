@@ -23,36 +23,36 @@ Status: `WEB/CATALOG RELEASE OPERATIONAL`
 
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
-Owner requests:
-- دفتر کل / معین / تفصیلی,
-- balanced debit/credit accounting documents,
-- receipt/payment, bank/cash,
-- customer/supplier accounts,
-- purchase/sales accounting,
-- debit/credit balances and statements,
-- GL/subledger/trial balance,
-- profit/loss, cashflow and management reports,
-- integration of Store, service orders, purchasing, inventory, production and payments.
-
-Existing PaymentLedgerEntry, CostEntry, BusinessFinanceDashboard and affiliate ledger must be preserved as operational/audit sources.
+Owner requests full GL/subledger/accounting, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `50.A IMPLEMENTED ON GITHUB / LOCAL QA REQUIRED`
+Status: `50.A.1 GITHUB CI TESTED / MANUAL QA REQUIRED`
 
-Implemented first slice:
+Implemented:
 - authenticated `/admin/command-center/`,
-- Sales / Treasury / Accounting & Ledgers / Purchasing / Inventory & Production groups,
-- permission-aware links to real current ModelAdmins,
-- live operational counters,
-- sidebar shortcut `مرکز مالی و بازرگانی`,
-- date hierarchy and consistent pagination on key financial/commerce admins,
-- admin regression coverage.
-
-Acceptance still requires Windows `manage.py check`, migration dry-run, focused tests and manual Admin navigation QA.
+- Sales / Storefront & Checkout / Treasury / Accounting / Purchasing / Inventory groups,
+- Store Product actions to add/remove selected items from homepage slider,
+- Imported Catalog Asset add/remove slider actions,
+- Hero buttons for 5 random, 10 random and deactivate-all,
+- Coupon, ShippingMethod, PricingSetting, customer addresses and Iran Province/County/City surfaced in Admin,
+- non-destructive Hero deactivation and permission/POST/CSRF protected quick operations,
+- focused CI regression coverage with no schema migration.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
-Phase50 is additive. Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements, Product/media/Catalog history and payment idempotency/security rules remain compatible and regression-tested.
+Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements, Product/media/Catalog history and payment idempotency/security rules remain compatible and regression-tested.
+
+## REQ-50-004 — Dynamic delivery price
+Status: `REQUESTED / 50.A.2 NEXT`
+Owner requires shipping calculation from product weight + packaging weight/dimensions and destination. Prefer Post/Tipax/Mahex live rates when current supported provider APIs/credentials are verified. Existing ShippingMethod fixed/weight rules remain the fallback. No guessed carrier endpoint is allowed.
+
+## REQ-50-005 — Coupon + VAT checkout
+Status: `BACKEND FOUNDATION ALREADY PRESENT / ADMIN SURFACED`
+Verified current Store checkout already validates Coupon and applies discount, VAT, packaging fee, shipping fee and weight totals. Phase50 must preserve this and improve the customer/admin presentation rather than duplicate the logic.
+
+## REQ-50-006 — Phishing-resistant comprehensive payment
+Status: `REQUESTED / 50.A.3 PLANNED`
+Preserve the mature service-payment contract: server-owned amount, transaction locking, random callback token, exact Authority match, server-to-server gateway verify and idempotent ledger. Extend StorePayment to the same model with trusted gateway-host allowlist, no card/PIN/CVV collection, secure redirect UX, immutable audit/reconciliation and abuse controls.
 
 ## Change rule
-New work extends/wraps mature behavior and must pass Local tests before Production deployment. No financial schema migration is deployed without MySQL verification, backup and rollback plan.
+New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping schema migration is deployed without MySQL verification, backup and rollback plan.
