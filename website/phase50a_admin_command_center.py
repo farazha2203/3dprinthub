@@ -43,8 +43,8 @@ def phase50_admin_command_center(request):
     """Business-oriented Admin entry point using only already-registered models.
 
     Phase50.A deliberately adds no accounting schema. It organizes the mature
-    operational models first so finance/sales/purchasing work is visible and
-    permission-aware before Phase50.B introduces double-entry accounting.
+    operational models first so finance/sales/purchasing/storefront work is visible
+    and permission-aware before Phase50.B introduces double-entry accounting.
     """
 
     from store.models import (
@@ -76,6 +76,23 @@ def phase50_admin_command_center(request):
                 ("store.view_storeorder", "admin:store_storeorder_changelist", "سفارش‌های فروشگاه", "فروش محصولات، وضعیت تولید و تحویل"),
                 ("store.view_storeinvoice", "admin:store_storeinvoice_changelist", "فاکتورهای فروشگاه", "اسناد فروش صادرشده"),
                 ("store.view_returnrequest", "admin:store_returnrequest_changelist", "مرجوعی‌های فروش", "درخواست‌ها و چرخه بازگشت کالا"),
+            ],
+        ),
+        _section(
+            request,
+            "کاتالوگ، ویترین و Checkout",
+            "ri-store-2-line",
+            [
+                ("store.view_product", "admin:store_product_changelist", "محصولات فروشگاه", "ویرایش محصول، موجودی، قیمت و عملیات افزودن/حذف از اسلایدر"),
+                ("store.view_importedprintasset", "admin:store_importedprintasset_changelist", "محصولات واردشده Catalog", "منبع، تصاویر، مجوز و عملیات افزودن/حذف از اسلایدر"),
+                ("website.view_homepageheroslide", "admin:website_homepageheroslide_changelist", "اسلایدر صفحه اصلی", "مدیریت حرفه‌ای اسلایدها + ۵ یا ۱۰ محصول رندوم"),
+                ("store.view_coupon", "admin:store_coupon_changelist", "کدهای تخفیف", "درصدی/مبلغ ثابت، سقف، تاریخ، محدودیت کاربر و محصول"),
+                ("store.view_shippingmethod", "admin:store_shippingmethod_changelist", "روش‌های ارسال", "هزینه پایه فعلی؛ اتصال نرخ زنده شرکت‌های حمل در فاز بعد"),
+                ("store.view_pricingsetting", "admin:store_pricingsetting_changelist", "مالیات، بسته‌بندی و قیمت‌گذاری", "VAT، هزینه بسته‌بندی و قواعد پایه فروشگاه"),
+                ("store.view_storeaddress", "admin:store_storeaddress_changelist", "آدرس‌های مشتریان", "استان، شهرستان، شهر، کدپستی و آدرس‌های ذخیره‌شده"),
+                ("website.view_iranprovince", "admin:website_iranprovince_changelist", "استان‌ها", "داده مرجع تقسیمات کشوری"),
+                ("website.view_irancounty", "admin:website_irancounty_changelist", "شهرستان‌ها", "داده مرجع تقسیمات کشوری"),
+                ("website.view_irancity", "admin:website_irancity_changelist", "شهرها", "داده مرجع تقسیمات کشوری"),
             ],
         ),
         _section(
@@ -136,6 +153,8 @@ def phase50_admin_command_center(request):
             ("ردیف هزینه ثبت‌شده", open_cost_entries),
         ],
         "phase50_future": [
+            "نرخ زنده ارسال: Adapter رسمی پست / تیپاکس / ماهکس + وزن بسته‌بندی و ابعاد",
+            "سخت‌سازی پرداخت فروشگاه و یکپارچه‌سازی StorePayment با Verify سروربه‌سرور درگاه",
             "کدینگ حساب‌ها: کل / معین / تفصیلی",
             "اسناد حسابداری دوطرفه و دفتر روزنامه",
             "حساب بانکی، صندوق، دریافت و پرداخت عمومی",
