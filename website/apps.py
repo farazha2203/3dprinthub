@@ -78,5 +78,10 @@ class WebsiteConfig(AppConfig):
         # Windows/Product SEO and never from English/raw source-cookie boilerplate.
         from . import phase49_persian_sales_hero  # noqa: F401
 
+        # Phase49.3I.30: Production intentionally exposes Product-owned Store media,
+        # not the ImportedPrintAsset working-gallery namespace. Resolve Hero images
+        # to the Product-owned copy after all older Hero composition layers load.
+        from . import phase49_3i30_hero_media_ownership  # noqa: F401
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
