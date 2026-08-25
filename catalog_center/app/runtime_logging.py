@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import re
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
@@ -35,6 +34,12 @@ class RedactingFormatter(logging.Formatter):
 
 
 def configure_logging(data_root: Path, debug: bool = False) -> tuple[logging.Logger, Path]:
+    """Append forever to the canonical runtime log; startup never truncates history.
+
+    Historical rotated files created by older releases are intentionally left in
+    place. 49.3I.25 stops finite backup rotation because the owner uses the log as
+    a cumulative troubleshooting record across repeated app sessions.
+    """
     log_dir = data_root / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / "catalog-intelligence.log"
@@ -43,7 +48,7 @@ def configure_logging(data_root: Path, debug: bool = False) -> tuple[logging.Log
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
     logger.propagate = False
     if not logger.handlers:
-        handler = RotatingFileHandler(log_path, maxBytes=5_000_000, backupCount=5, encoding="utf-8")
+        handler = logging.FileHandler(log_path, mode="a", encoding="utf-8", delay=False)
         handler.setFormatter(RedactingFormatter("%(asctime)s %(levelname)s %(threadName)s %(message)s"))
         logger.addHandler(handler)
         if debug:
