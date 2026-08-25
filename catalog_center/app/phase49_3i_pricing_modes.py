@@ -192,3 +192,7 @@ def install(workspace_class) -> None:
     # gallery/content panes so the operator can actually see and use them.
     from .phase49_3i20_visible_operator_panels import install as _install_phase49_3i20_visible_operator_panels
     _install_phase49_3i20_visible_operator_panels(workspace_class)
+    # 49.3I.21 makes provider calls observable/fail-fast and adds a one-click,
+    # link-grounded full content/SEO/image-metadata refresh with preview/apply.
+    from .phase49_3i21_observable_ai_link_refresh import install as _install_phase49_3i21_observable_ai_link_refresh
+    _install_phase49_3i21_observable_ai_link_refresh(workspace_class)
