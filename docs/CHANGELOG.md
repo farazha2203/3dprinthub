@@ -2,6 +2,29 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.24 Runtime Observability + AvalAI URL Tools + Startup No-Network Guard
+
+### Owner / Diagnostic Evidence
+- Catalog Center can become slow or `(Not Responding)` around launch/AI/close.
+- AvalAI Product jobs failed with `audit_event() got an unexpected keyword argument 'provider'`.
+- startup diagnostics showed automatic AvalAI/OpenRouter/OpenAI model-list traffic before operator action.
+- OpenRouter accepted a Lyria music model and returned non-JSON marker output after a long call.
+- AvalAI successful jobs take tens of seconds; a Grok response reported `num_sources_used=0`, so a URL in normal chat was not proof of page browsing.
+
+### Implemented
+- fixed the invalid diagnostics function call so observability cannot abort AvalAI Product execution,
+- AvalAI Product structured output prefers strict `json_schema`, with `json_object` / prompt JSON compatibility fallback,
+- keeps deterministic app-side source fetch/sanitization and adds explicit supported AvalAI URL-tool evidence for sparse source data,
+- rejects/filters obvious non-text Product AI models,
+- blocks hidden Provider `/models` network calls during application construction until first Tk idle,
+- leaves explicit operator model search live after first paint,
+- adds runtime lifecycle JSONL, Tk heartbeat lag events and all-thread hang dumps,
+- adds Dashboard Program Log / AI Log / log folder / safe GitHub-ready diagnostic export,
+- safe export includes redacted runtime/main/hang-log tails,
+- stops labeling generic AvalAI model rows as free solely because generic pricing metadata is zero/missing.
+
+No Django migration. No Catalog schema migration. Production untouched. Windows Local QA pending.
+
 ## 2026-08-25 — Phase49.3I.23 AvalAI Exact Chat Contract + Publish SEO Audit
 
 ### Owner Evidence
