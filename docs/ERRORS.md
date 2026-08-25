@@ -77,6 +77,26 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Prevention:** every public media consumer must resolve to the target public entity's owned media namespace. A database FileField URL is not automatically a public URL in Production.
 
+## RESOLVED PHASE50 INCIDENTS
+
+### ERR-50-001 — Phase50 Admin CI used non-canonical Django environment names
+**Date:** 2026-08-25  
+**Symptom:** first CI run stopped at `manage.py check` with `DJANGO_SECRET_KEY must be configured`; a later run returned HTTPS 301 responses where test expectations required direct 200/302 behavior.  
+**Root Cause:** the new workflow guessed generic `SECRET_KEY` and `DEBUG` environment names instead of reading `config/settings.py`, which uses `DJANGO_SECRET_KEY`, `DJANGO_DEBUG` and `DJANGO_ALLOWED_HOSTS`.  
+**Failed Attempt:** repeating the workflow with generic environment variables would not change Django's effective settings.  
+**Correct Fix:** use the exact names consumed by project settings and run the CI test environment with `DJANGO_DEBUG=1`.  
+**Verification:** `manage.py check`, migration dry-run and focused Phase50 Admin tests passed in GitHub Actions.  
+**Prevention:** CI/runtime configuration names are repository contracts; never infer them from Django defaults or another project.
+
+### ERR-50-002 — Dynamic ModelAdmin URL patch was not stable at the actual Admin URL boundary
+**Date:** 2026-08-25  
+**Symptom:** Hero quick-action reverse lookups failed with `NoReverseMatch` even though actions were attached to the ModelAdmin class.  
+**Root Cause:** patching `ModelAdmin.get_urls()` after the mature Admin composition had already occurred did not guarantee those names existed in the final resolver used by the running project.  
+**Failed Attempt:** adding more reverse calls against the dynamically patched Admin namespace would preserve the same boundary mismatch.  
+**Correct Fix:** expose explicit project-level routes in `config/urls.py`, wrap each with `admin.site.admin_view`, keep mutations POST-only, and link the Admin template to those stable named routes.  
+**Verification:** focused Admin route/action tests passed in GitHub Actions.  
+**Prevention:** for late runtime Admin extensions, patch visual/actions at the Admin boundary but register new operational routes at a stable URL composition boundary unless registration order is proven by tests.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside the current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
