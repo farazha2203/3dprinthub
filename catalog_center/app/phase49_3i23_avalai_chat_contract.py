@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from . import ai_providers
+from .phase49_diagnostics import audit_event
 
 
 PHASE = "49.3I.23"
@@ -99,6 +100,24 @@ def install() -> None:
             {"role": "system", "content": system_text},
             {"role": "user", "content": user_text},
         ]
+
+        audit_event(
+            "ai",
+            "avalai_exact_chat_contract",
+            status="running",
+            product_id=self.product_id,
+            provider="avalai",
+            model=model,
+            source_file=__file__,
+            message="AvalAI product request prepared with exact saved model and chat/completions contract",
+            detail={
+                "schema_name": str(schema_name or ""),
+                "product_payload_chars": len(product_payload),
+                "schema_chars": len(schema_json),
+                "hidden_model_discovery": False,
+                "serialized_image_placeholders": False,
+            },
+        )
 
         try:
             data = self._chat(
