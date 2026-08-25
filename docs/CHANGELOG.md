@@ -2,6 +2,32 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.29 Structured Web Product Presentation
+
+### Owner Evidence
+- Local Publish succeeded, but the Product detail page exposed `technical_notes` as a large raw JSON dump.
+- customer-facing content included duplicated Catalog payloads, `-` placeholders and internal AI/audit fields that were not meaningful to buyers.
+
+### Implemented
+- added `store/templatetags/store_product_presentation.py` as a presentation-only compatibility layer,
+- legacy Catalog JSON is parsed server-side and filtered through an explicit customer-safe allowlist,
+- public Product page no longer renders `product.technical_notes|linebreaks`,
+- organized highlights, technical/build facts, materials, colors, category path and source attribution into storefront sections,
+- missing designer/license placeholders are suppressed,
+- internal AI provider/model, fingerprint/hash, batch UUID and workflow fields are never returned to the template,
+- existing AI-generated Persian Product description/use-description/technical features/sales bullets are reused without any web-time AI request,
+- added focused regression tests for legacy JSON parsing, internal-field suppression and template non-exposure.
+
+No Django migration. No Catalog schema migration. Production untouched. Windows Web QA required before deploy.
+
+## 2026-08-25 — Phase49.3I.28 Exact-Link Canonical Title Call Contract
+- fixed exact-link canonical source title adapter after Windows QA exposed duplicate `current_title` binding,
+- preserved mature 49.3I.19 canonical source identity contract,
+- no provider/model/image-upload behavior changed,
+- focused regression and Windows gate updated.
+
+No migration. Production untouched.
+
 ## 2026-08-25 — Phase49.3I.27 Exact-Link Category Provider Crash Fix
 
 ### Owner Evidence
