@@ -5,10 +5,9 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`  
-**Status:** `GITHUB CI TESTED / HOST READ-ONLY AUDIT + MANUAL QA REQUIRED`  
-**Backend:** Django / Python  
-**Production:** وضعیت واقعی Host باید قبل از Deploy بعدی با Read-only Audit تطبیق داده شود.
+**Current Subphase:** `50.A.1D — Sales Profiles + Hero Admin Public Media`  
+**Status:** `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`  
+**Backend:** Django / Python
 
 ## 1) قانون مادر
 `READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → MANUAL QA → EXPLICIT OWNER APPROVAL → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
@@ -28,99 +27,84 @@ Windows: `D:\projects\3DPrintHub`; venv: `D:\projects\3DPrintHub\.venv`; Local D
 Production: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`; static `/home/sfkilvrs/public_html/static`; media `/home/sfkilvrs/public_html/media`; private media `/home/sfkilvrs/3dprinthub/private_media`.
 
 ## 3) Phase49 completed baseline
-Catalog/Product/Hero/SEO/Bridge release is operational. Product-owned public media is the Production ownership contract; imported Catalog working-media remains private. Phase50 must not rewrite healthy Catalog architecture without a verified defect.
+Catalog/Product/Hero/SEO/Bridge release is operational. Product-owned public media is the Production ownership contract; imported Catalog working-media remains private.
 
-## 4) Existing commerce/finance foundation
-Repository includes StoreOrder/StorePayment/StoreInvoice, Coupon, VAT/packaging/shipping calculations, ShippingMethod weight rules, StoreAddress and Iran Province/County/City data, custom Order/Quote/Payment, immutable PaymentLedgerEntry, filament purchasing/inventory, ProductionJob/CostEntry, affiliate commissions/payouts/ledger and broad Django Admin coverage.
-
-The service-payment path already has server-owned amounts, transaction locking, random callback identity, exact Authority matching, server-to-server verification and idempotent ledger behavior. These are preserved and reused rather than rebuilt.
+## 4) Phase50 current Production baseline
+Owner deployment verified Phase50.A.1C at commit `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f`.
+`store.0034_phase50_variant2_commerce` is applied on Production MySQL; Home/Store/Admin/Product Admin/Imported Asset Admin/Hero Admin all return HTTP 200; rollback backup exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-205719`.
 
 ## 5) Phase50 path
-### 50.A.1 — Admin Storefront / Hero parity — CI TESTED
-- `/admin/command-center/`,
-- Product and imported Catalog add/remove Hero actions,
+### 50.A.1 — Admin Storefront / Hero parity — DEPLOYED
+- `/admin/command-center/`, Product/imported Catalog add/remove Hero,
 - 5-random / 10-random / deactivate-all Hero controls,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data surfaced,
-- no destructive Hero changes.
+- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data surfaced.
 
-### 50.A.1B — Product Gallery + Variant 2.0 — CI TESTED
-- contain-fit Product viewer and thumbnail-to-main behavior,
-- full-screen accessible lightbox,
-- ProductVariant size/build-profile/packaging-weight/package-dimensions,
-- StoreOrderItem matching snapshot columns,
-- Variant identity expanded to size/build,
-- Admin parity for new sellable fields,
-- public Variant metadata endpoint,
-- migration `store.0034_phase50_variant2_commerce`.
+### 50.A.1B — Product Gallery + Variant 2.0 — DEPLOYED
+- contain-fit Product viewer + thumbnail switching + fullscreen lightbox,
+- size/build/packaging weight/package dimensions,
+- StoreOrderItem matching snapshots,
+- migration `store.0034` applied,
+- Variant Admin and metadata endpoint.
 
-### 50.A.1C — Admin media / mobile / SEO / Windows dimensions — CI TESTED
-- ImportedPrintAsset Admin preview never emits private `store/imported-models/...` working-media as a public URL,
-- safe preview order: Product gallery match → Product main image → remote HTTP(S) source,
-- mature Phase35 editable pricing/editorial Admin contracts preserved,
-- imported image source dimensions visible in Admin,
-- mobile Hero title/caption/CTA compact; very narrow screens hide description so Product image remains visible,
-- existing homepage `meta_title/meta_description` remain canonical and have Admin SEO health/SERP/Hero Alt-title audit,
-- Windows Product image cards show original `W × H px`,
-- no new migration in this subphase,
-- corrected CI run `32875771848` PASS on code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83`.
+### 50.A.1C — Admin media / mobile / SEO / Windows dimensions — DEPLOYED
+- imported-model Admin avoids private working-media previews,
+- mobile Hero compacted,
+- homepage SEO operator audit,
+- Windows source shows image pixel dimensions.
 
-### Production reconciliation gate — NOW
-Owner screenshots show Phase50-era Admin UI on Production while earlier docs reported Phase50 undeployed, and `/admin/store/product/` returns 500. Before any deploy or migration:
-- verify exact Host branch/HEAD/worktree,
-- verify Django/Python runtime,
-- verify MySQL vendor/name,
-- verify `store.0034` migration state and migrate plan,
-- obtain real runtime evidence for the Product Admin 500,
-- create a fresh successful MySQL backup before any pending migration.
+### 50.A.1D — Sales Profiles + Hero Admin Public Media — CI TESTED / NEXT DEPLOY
+- Product selection mode: full list / size / weight / build / size→build / build→size,
+- ProductVariant profile name/key/default/order,
+- profile identity allows same material/color/size/build with distinct weight/time/price profiles,
+- Admin copy-profile action duplicates the mature Variant as a starting point,
+- Product/Variant Admin exposes profile controls,
+- Variant endpoint exposes profile selector, weight, time, price, packaging and shipping metadata,
+- Hero Studio change page product/album JSON endpoints resolve public Product media or remote source media and never private `store/imported-models/...` paths,
+- migration `store.0035_phase50_sales_profiles`,
+- GitHub CI run `32879712980` PASS on snapshot `405d2c1daa85828d1a0dc68210d201c85b6db7ba`.
 
-### 50.A.2 — Checkout & Delivery — NEXT AFTER CURRENT QA
-- persist size/build/package snapshots at checkout,
-- use effective product + packaging shipping weight,
-- normalized carrier quote interface and immutable order quote snapshot,
-- Post / Tipax / Mahex adapters only after current official API contract/credentials are verified,
-- timeout/error fallback to mature ShippingMethod fixed/weight rules,
-- Admin provider/fallback controls.
+### 50.A.2 — Checkout & Delivery — NEXT
+- storefront profile-aware selector,
+- persist selected profile/size/build/package snapshots,
+- effective product + packaging shipping weight,
+- carrier quote contract + immutable order snapshot,
+- Post/Tipax/Mahex only after current official contract/credentials verification,
+- fallback to mature ShippingMethod rules.
 
 ### 50.A.3 — Secure Store Payment
-- reuse server-owned amount + request/callback/verify/idempotency model,
+- reuse server-owned amount + request/callback/verify/idempotency,
 - strict trusted gateway-host allowlist,
-- never collect/store card number, PIN or CVV,
+- never collect/store card/PIN/CVV,
 - exact provider reference/Authority verification,
-- reconciliation, audit and abuse controls.
+- reconciliation and audit.
 
 ### 50.A.4 — Torob
-- official current Torob Product API v3,
-- stable product/variant grouping,
-- size/color/material mapping,
-- price/availability and image-quality contract,
-- pagination and stable unique IDs,
-- order attribution/webhooks only after official contract verification.
+- current Torob Product API v3,
+- stable product/profile grouping,
+- size/color/material/weight mapping,
+- price/availability/image-quality contract,
+- attribution/webhooks only after verified official contract.
 
 ### 50.B — Accounting Core
-- کدینگ کل / معین / تفصیلی,
-- دوره مالی,
-- سند حسابداری دوطرفه,
-- posting/reversal immutable,
-- subledger party references,
-- numbering/integrity rules.
+کل / معین / تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal, party/subledger and numbering.
 
 ### 50.C — Treasury
-Bank/cash accounts, generic receipts/payments, allocation, refunds and reconciliation.
+Bank/cash accounts, receipts/payments, allocations, refunds and reconciliation.
 
 ### 50.D — Purchasing
-Supplier master, general purchase orders/invoices/lines, payables and returns.
+Supplier master, purchase orders/invoices/receiving, payables and returns.
 
 ### 50.E — Sales Accounting
-Normalize Store and service sales into receivables/accounting events, payment allocation, tax/discount/shipping and credit notes.
+Store/service receivables, allocations, tax/discount/shipping, returns/refunds/credit notes.
 
 ### 50.F — Reports & Close
-General/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, tax/VAT and close audit.
+GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and close audit.
 
 ## 6) Current release gate
-- Phase50.A.1, A.1B and A.1C have relevant GitHub CI PASS,
-- current Host state must be reconciled before any Production mutation,
-- `store.0034` must not be assumed pending/applied until `showmigrations` and `migrate --plan` are read on the real MySQL environment,
-- Windows source includes image dimensions but the immutable 8.8.1 EXE does not; next EXE version follows source smoke and rebuild.
+- 50.A.1D code and regression gate are green on GitHub.
+- `store.0035` is not yet applied to Production.
+- before Production mutation verify exact Host branch/HEAD/worktree, MySQL vendor/name, `0034` applied, fresh backup and migration plan.
+- next Windows EXE version follows source/manual smoke; immutable 8.8.1 remains the released Windows build until then.
 
 ## 7) Migration and integration safety
-No Phase50 schema migration may reach Production until exact MySQL vendor/name, migration plan, successful fresh backup and rollback target are verified. No live carrier endpoint is introduced from guessed or unofficial contracts. Historical payment/ledger/order/inventory rows remain preserved and accounting/payment integrations must be additive and idempotent.
+No Phase50 schema migration reaches Production without exact MySQL vendor/name, migration plan, successful fresh backup and rollback target. No live carrier/gateway endpoint is guessed. Historical payment/ledger/order/inventory rows remain preserved and integrations stay additive/idempotent.
