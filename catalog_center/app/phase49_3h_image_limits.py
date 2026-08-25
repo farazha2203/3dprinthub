@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-DEFAULT_IMAGE_LIMIT = 10
+DEFAULT_IMAGE_LIMIT = 5
 HARD_MAX_IMAGE_LIMIT = 20
 
 
