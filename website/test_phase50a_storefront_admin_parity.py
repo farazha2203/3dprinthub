@@ -59,9 +59,9 @@ class Phase50AStorefrontAdminParityTests(TestCase):
 
     def test_random_and_deactivate_mutations_are_post_only(self):
         for url_name in [
-            "admin:website_homepageheroslide_random_5",
-            "admin:website_homepageheroslide_random_10",
-            "admin:website_homepageheroslide_deactivate_all",
+            "phase50_homepage_hero_random_5",
+            "phase50_homepage_hero_random_10",
+            "phase50_homepage_hero_deactivate_all",
         ]:
             with self.subTest(url_name=url_name):
                 response = self.client.get(reverse(url_name))
@@ -69,7 +69,7 @@ class Phase50AStorefrontAdminParityTests(TestCase):
 
     def test_deactivate_all_preserves_records(self):
         before = HomepageHeroSlide.objects.count()
-        response = self.client.post(reverse("admin:website_homepageheroslide_deactivate_all"))
+        response = self.client.post(reverse("phase50_homepage_hero_deactivate_all"))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(HomepageHeroSlide.objects.count(), before)
 
