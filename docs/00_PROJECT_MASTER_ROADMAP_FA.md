@@ -3,13 +3,25 @@
 > این فایل قبل از هر Phase/Hotfix/UI change/Migration/Sync/Deploy خوانده می‌شود. GitHub/Repository منبع اصلی حقیقت است.
 
 **Repository:** `farazha2203/3dprinthub`  
-**Branch توسعه:** `epic/phase49-unified-product-slider-sync`  
+**Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+**Base Epic:** `epic/phase49-unified-product-slider-sync`  
 **Current Phase:** `49.3I`  
-**Current Hotfix:** `49.3I.17 — Single Active AI Runtime`  
-**Status:** `MERGED / ALL REQUIRED CI SUCCESS / WINDOWS QA PENDING`  
+**Current Hotfix:** `49.3I.24 — Runtime Observability + AvalAI URL Tools + Startup No-Network Guard`  
+**Status:** `IMPLEMENTED ON GITHUB / WINDOWS LOCAL QA REQUIRED`  
 **Windows Operator:** Catalog Center 8.7.1  
 **Backend:** Django / Python  
 **Production:** تا Windows QA + Local Publish E2E + تأیید صریح مالک ممنوع.
+
+## Current Feature Override — 49.3I.24
+قرارداد جاری نسبت به بخش‌های تاریخی پایین‌تر اولویت دارد:
+- Product AI فقط Provider/Model ذخیره‌شده را استفاده می‌کند و Product `/models` پنهان ندارد.
+- Startup قبل از first Tk idle نباید model-list network چند Provider را اجرا کند.
+- URL داخل chat به‌تنهایی browsing محسوب نمی‌شود؛ exact-page app fetch/sanitize مرجع است و فقط tool پشتیبانی‌شده AvalAI می‌تواند evidence اضافه کند.
+- AvalAI structured output از `json_schema` شروع می‌شود و compatibility fallback دارد.
+- مدل‌های واضح غیرمتنی برای Product editorial AI رد می‌شوند.
+- Dashboard لاگ Program/AI و safe diagnostic export دارد؛ heartbeat/hang watchdog برای کندی و Not Responding فعال است.
+- ERR-49-040/041/042 و REQ-49I-031 رکوردهای جاری‌اند.
+- هیچ Migration جدید و هیچ تغییر Production در این Hotfix وجود ندارد.
 
 ## 1) قانون مادر
 `READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI → WINDOWS PULL --FF-ONLY → LOCAL AUTOMATED GATE → MANUAL QA → LOCAL PUBLISH E2E → EXPLICIT OWNER APPROVAL → PRODUCTION BACKUP/DEPLOY → PRODUCTION VERIFICATION → UPDATE DOCS`
@@ -29,7 +41,7 @@ Windows: `D:\projects\3DPrintHub`; Catalog: `D:\projects\3DPrintHub\catalog_cent
 Production: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`; static `/home/sfkilvrs/public_html/static`; media `/home/sfkilvrs/public_html/media`; private media `/home/sfkilvrs/3dprinthub/private_media`.
 
 ## 3) Epic49 Path
-`49.3A..49.3H → 49.3I Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse → Single Active AI Runtime`.
+`49.3A..49.3H → 49.3I Discovery Review → PS5.1 Guard → Gallery/AI First-Paint → Live Git Snapshot → Explorer/Routing → Selection Guard → Credential Persistence → Provider/Preview Recovery → Observable AI → SEO/Source → AI Trace → Provider Schema → Exact-Page UI/Image Fit → Paste/Batch Recovery → Mature Scan Restoration → Bulk Exact-Page Images/Add-to-Products → Resilient Acquisition Fallback/Cached Reuse → Single Active AI Runtime → Operator Editing → Canonical Source Identity → Visible Operator Panels → Observable Link Refresh → Tk Main-Thread Bridge → AvalAI Exact Contract → Runtime Observability/URL Tools/Startup Guard`.
 
 ## 4) معماری دریافت محصول — قرارداد فعلی
 مسیر اصلی:
@@ -46,49 +58,36 @@ Image fallback: `locator-safe → HTTP → mature Classic DOM → attached Chrom
 - Rich Direct Full Fetch مسیر اصلی Bulk نیست.
 
 ## 5) Product Workspace / AI / Pricing
-### AI — قرارداد 49.3I.17
+### AI — قرارداد پایه حفظ‌شده
 - فقط Provider/Model ذخیره‌شده توسط اپراتور مجاز است.
 - Product AI حق انتخاب خودکار Provider دیگر بر اساس API Keyهای موجود را ندارد.
 - Key فقط از secure slot همان Provider خوانده می‌شود.
 - بازکردن Product هیچ درخواست AI پنهانی شروع نمی‌کند.
-- Product AI قبل از تولید محتوا `/models` نمی‌خواند؛ درخواست واقعی محتوا تست اتصال هم هست.
-- Google با Model دقیق ذخیره‌شده model list اضافه نمی‌خواند.
+- Product AI قبل از تولید محتوا `/models` نمی‌خواند.
 - Search Model و Test Connection در AI Settings همچنان صریح و Live هستند.
-- خطای stale Tk مثل `invalid command name ...listbox` نباید برنامه را ببندد یا Busy دائمی ایجاد کند.
-- request/response/error trace، schema repair، title watchdog 90s، All-Fields watchdog 210s، Stop Waiting، stale-result و manual override حفظ شده‌اند.
+- workerهای AI از main-thread bridge برای Tk استفاده می‌کنند.
+- request/response/error trace، timeout/cancel، stale-result و manual override حفظ شده‌اند.
 
 ### سایر قراردادها
 - تصاویر Workspace: contain-fit `228x171`.
 - Pricing: Fixed / Range / Formula مستقل.
 - Secretها فقط secure storage/environment.
 
-## 6) Validation / Merge — 49.3I.17
-PR `#63` MERGED.
-- final runtime head: `2917a3db5225abac71fc3e80b64ad439acd7a4d0`
-- merge commit: `7f835f573b92e3aded6275c9421770c0c47d947a`
-
-SUCCESS:
-- 49.3I.17 `32649623837`
-- 49.3I `32649623808`
-- 49.3I.16 `32649623695`
-- 49.3I.15 `32649623705`
-- 49.3I.14 `32649623679`
-- 49.3H `32649623825`
-- 49.3G `32649623755`
-- Full Phase49 + Windows Catalog regressions + Full Django `32649623804`
+## 6) Validation / Merge — Historical Base
+PR `#63` برای 49.3I.17 MERGED شد و CIهای ثبت‌شده آن موفق بودند. Feature branch فعلی 49.3I.18..24 هنوز Windows Local acceptance جدید می‌خواهد؛ نتیجه قدیمی Base به معنی PASS شدن Hotfix جاری نیست.
 
 Django migration: NONE. Catalog schema migration: NONE. Production: UNTOUCHED.
 
 ## 7) Windows Release Gate — مرحله جاری
 1. Catalog Center بسته و worktree clean.
-2. live fetch/prune + ff-only pull current Epic.
-3. `RUN_PHASE49_3I17_SINGLE_AI_GATE.ps1 -LaunchApp`.
-4. در AI Center فقط یک Provider/Model را انتخاب و Active Save کن.
-5. Product Workspace را باز کن؛ هیچ AI پنهانی نباید شروع شود.
-6. All-Fields را یک‌بار اجرا کن؛ Trace فقط همان Provider/Model را نشان دهد و قبل از Request اصلی `/models` نباشد.
-7. Stop/Failure نباید برنامه را هنگ یا نیازمند Task Manager کند.
-8. در صورت نیاز یک Provider/Model دیگر را ذخیره و یک بار Verify کن که فقط همان Pair جدید استفاده می‌شود.
-9. Acquisition کوتاه 49.3I.16 را در صورت باقی‌ماندن Verify کن.
+2. live fetch/prune + ff-only pull Feature Branch و Local HEAD == Remote HEAD.
+3. compile و focused regressionهای 49.3I.24/23/22/21/20/19/18.
+4. `launch.py --verify-only`.
+5. Startup سریع + Dashboard diagnostics و عدم `/models` خودکار.
+6. Model Search صریح بعد از first idle.
+7. Product 2896217: exact link completion با AvalAI، URL-tool شفاف یا app-fetch fallback، structured JSON، بدون audit signature error.
+8. در کندی طولانی، thread dump و safe diagnostic export بررسی شود.
+9. Close/Reopen معمولی بررسی شود.
 
 ## 8) Publish / Production Gate
 بعد از PASS: دقیقاً یک `LOCAL PUBLISH ONLY` → Local Store/Admin/Product/Media/SEO E2E → تأیید صریح مالک → verify read-only مسیر/branch/commit/venv/MySQL/backup/rollback روی Host → deploy فقط از GitHub → collectstatic/restart/smoke/data verification.
