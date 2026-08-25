@@ -1,0 +1,143 @@
+name: Catalog Center Windows Portable Release
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - catalog_center/app/version.py
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "Publish GitHub Release after successful build"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  windows-portable-release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout exact GitHub snapshot
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: catalog_center/requirements.txt
+
+      - name: Install Catalog Center build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r catalog_center/requirements.txt
+          python -m playwright install chromium
+
+      - name: Resolve release metadata
+        shell: pwsh
+        run: |
+          $version = python -c "import sys; sys.path.insert(0, 'catalog_center'); from app.version import APP_VERSION; print(APP_VERSION)"
+          $build = python -c "import sys; sys.path.insert(0, 'catalog_center'); from app.version import BUILD_ID; print(BUILD_ID)"
+          if ([string]::IsNullOrWhiteSpace($version)) { throw 'APP_VERSION is empty' }
+          if ([string]::IsNullOrWhiteSpace($build)) { throw 'BUILD_ID is empty' }
+          "CATALOG_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CATALOG_BUILD_ID=$build" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "CATALOG_VERSION=$version"
+          Write-Host "CATALOG_BUILD_ID=$build"
+          Write-Host "GIT_SHA=$env:GITHUB_SHA"
+
+      - name: Compile source before packaging
+        shell: pwsh
+        run: |
+          python -m compileall -q catalog_center/app catalog_center/tests catalog_center/portable_entry.py catalog_center/build_portable_exe.py
+          if ($LASTEXITCODE -ne 0) { throw 'compileall failed' }
+
+      - name: Catalog Center unit and regression suite
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+          if ($LASTEXITCODE -ne 0) { throw 'Catalog Center tests failed' }
+
+      - name: Build and self-verify one-file EXE
+        shell: pwsh
+        run: |
+          $python = (Get-Command python).Source
+          python catalog_center/build_portable_exe.py --python $python
+          if ($LASTEXITCODE -ne 0) { throw 'Portable EXE build failed' }
+
+      - name: Verify release manifest and SHA256
+        shell: pwsh
+        run: |
+          $release = Join-Path "catalog_center/release" $env:CATALOG_VERSION
+          $manifestPath = Join-Path $release "release-manifest.json"
+          if (-not (Test-Path $manifestPath)) { throw "Missing manifest: $manifestPath" }
+          $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+          if ($manifest.app_version -ne $env:CATALOG_VERSION) { throw 'Manifest version mismatch' }
+          if ($manifest.git_sha -ne $env:GITHUB_SHA) { throw "Manifest SHA mismatch: $($manifest.git_sha) != $env:GITHUB_SHA" }
+          if ($manifest.portable_verify.ok -ne $true) { throw 'Portable self verify not OK' }
+          if ($manifest.browser_runtime_smoke.ok -ne $true) { throw 'Packaged browser runtime smoke not OK' }
+          $exe = Join-Path $release $manifest.versioned_exe
+          if (-not (Test-Path $exe)) { throw "Missing EXE: $exe" }
+          $actual = (Get-FileHash -Algorithm SHA256 $exe).Hash.ToLowerInvariant()
+          if ($actual -ne ([string]$manifest.sha256).ToLowerInvariant()) { throw 'SHA256 mismatch' }
+          Write-Host "WINDOWS_PORTABLE_RELEASE_GATE=PASS"
+          Write-Host "EXE=$exe"
+          Write-Host "SHA256=$actual"
+          Write-Host "BROWSER=$($manifest.browser_runtime_smoke.browser)"
+
+      - name: Upload immutable Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DPrintHub-CatalogCenter-v${{ env.CATALOG_VERSION }}
+          path: catalog_center/release/${{ env.CATALOG_VERSION }}/*
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' || inputs.publish_release == true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "catalog-center-v$env:CATALOG_VERSION"
+          $release = Join-Path "catalog_center/release" $env:CATALOG_VERSION
+          $manifestPath = Join-Path $release "release-manifest.json"
+          $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+          $exe = Join-Path $release $manifest.versioned_exe
+          $shaFile = "$exe.sha256"
+          if (-not (Test-Path $shaFile)) {
+            $shaFile = Get-ChildItem $release -Filter "*.sha256" | Select-Object -First 1 -ExpandProperty FullName
+          }
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag already exists; leaving immutable release untouched."
+            exit 0
+          }
+          $notes = @"
+          3DPrintHub Catalog Center Windows portable release.
+
+          Version: $env:CATALOG_VERSION
+          Build: $env:CATALOG_BUILD_ID
+          Commit: $env:GITHUB_SHA
+
+          Release gates passed on windows-latest:
+          - compileall
+          - Catalog Center unittest discovery
+          - PyInstaller one-file/windowed build
+          - frozen runtime self verification
+          - frozen Playwright/browser launch smoke
+          - SHA256 verification
+
+          External source websites are intentionally not release-gating CI dependencies. The application keeps the resilient acquisition ladder and can use installed Chrome/Edge/Playwright Chromium at runtime.
+          "@
+          gh release create $tag $exe $manifestPath $shaFile --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "3DPrintHub Catalog Center v$env:CATALOG_VERSION" --notes $notes
