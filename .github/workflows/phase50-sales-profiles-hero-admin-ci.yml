@@ -1,0 +1,77 @@
+name: Phase50 Sales Profiles Hero Admin CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - store/apps.py
+      - store/phase50_sales_profiles.py
+      - store/phase50_sales_profile_admin.py
+      - store/phase50_variant_views.py
+      - store/migrations/0035_phase50_sales_profiles.py
+      - website/apps.py
+      - website/phase50_hero_admin_media_integrity.py
+      - website/test_phase50_sales_profiles_hero_admin.py
+      - .github/workflows/phase50-sales-profiles-hero-admin-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sales-profiles-hero-admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SECRET_KEY: phase50-sales-profile-ci-only-not-production
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+    steps:
+      - name: Checkout exact snapshot
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile touched Python surfaces
+        run: |
+          python -m py_compile \
+            store/apps.py \
+            store/phase50_sales_profiles.py \
+            store/phase50_sales_profile_admin.py \
+            store/phase50_variant_views.py \
+            store/migrations/0035_phase50_sales_profiles.py \
+            website/apps.py \
+            website/phase50_hero_admin_media_integrity.py \
+            website/test_phase50_sales_profiles_hero_admin.py
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Migration state must match runtime models
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Migration plan
+        run: python manage.py migrate --plan
+
+      - name: Apply migrations in CI SQLite
+        run: python manage.py migrate --noinput
+
+      - name: Sales profile and Hero Admin regressions
+        run: python manage.py test website.test_phase50_sales_profiles_hero_admin -v 2
+
+      - name: Gate marker
+        run: |
+          echo "PHASE50_SALES_PROFILES_HERO_ADMIN_CI=PASS"
+          echo "COMMIT=$GITHUB_SHA"
