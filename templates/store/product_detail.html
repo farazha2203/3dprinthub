@@ -1,5 +1,5 @@
 {% extends "store/base.html" %}
-{% load humanize store_seo store_consultation %}
+{% load humanize store_seo store_consultation store_product_presentation %}
 
 {% block canonical %}{% if product.canonical_url %}{{ product.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endif %}{% endblock %}
 {% block title %}{{ product.seo_title }}{% endblock %}
@@ -17,6 +17,7 @@
 {% block og_image %}{% if product.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ product.og_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}{% endif %}{% endblock %}
 
 {% block content %}
+{% product_public_facts product as public_facts %}
 <section class="container mx-auto px-4 md:px-6 py-7 md:py-10 phase493f-product-detail">
     <nav class="text-sm text-slate-500 mb-5">
         <a href="{% url 'store:product_list' %}">فروشگاه</a><span class="px-2">/</span>
@@ -137,8 +138,48 @@
             {% if product.catalog_profile.technical_summary_fa %}<div class="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4"><h3 class="font-black text-base">خلاصه فنی و کاربردی</h3><div class="prose-content mt-2 text-sm md:text-base">{{ product.catalog_profile.technical_summary_fa|linebreaks }}</div></div>{% endif %}
             <div class="prose-content mt-4">{{ product.description|linebreaks }}</div>
             {% if product.catalog_profile.use_description %}<div class="mt-5"><h3 class="font-black text-lg">کاربرد محصول</h3><div class="prose-content mt-2">{{ product.catalog_profile.use_description|linebreaks }}</div></div>{% endif %}
-            {% if product.catalog_profile.technical_features %}<div class="mt-5"><h3 class="font-black text-lg">ویژگی‌های فنی</h3><dl class="grid sm:grid-cols-2 gap-2 mt-3">{% for key,value in product.catalog_profile.technical_features.items %}<div class="rounded-xl border border-slate-200 p-3"><dt class="font-bold text-sm">{{ key }}</dt><dd class="text-slate-600 mt-1 text-sm leading-6">{{ value }}</dd></div>{% endfor %}</dl></div>{% endif %}
-            {% if product.technical_notes %}<div class="mt-5"><h3 class="font-black text-lg">نکات فنی</h3><div class="prose-content mt-2">{{ product.technical_notes|linebreaks }}</div></div>{% endif %}
+
+            {% if public_facts.sales_bullets %}
+            <div class="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <h3 class="font-black text-lg">ویژگی‌های برجسته</h3>
+                <ul class="mt-3 grid gap-2 text-sm md:text-base text-slate-700">
+                    {% for item in public_facts.sales_bullets %}<li class="flex gap-2"><span class="text-emerald-600 font-black">✓</span><span>{{ item }}</span></li>{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if public_facts.specs or public_facts.technical_features %}
+            <div class="mt-5">
+                <h3 class="font-black text-lg">مشخصات فنی و ساخت</h3>
+                <dl class="grid sm:grid-cols-2 gap-2 mt-3">
+                    {% for item in public_facts.specs %}<div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><dt class="font-bold text-sm text-slate-800">{{ item.label }}</dt><dd class="text-slate-600 mt-1 text-sm leading-6">{{ item.value }}</dd></div>{% endfor %}
+                    {% for item in public_facts.technical_features %}<div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><dt class="font-bold text-sm text-slate-800">{{ item.label }}</dt><dd class="text-slate-600 mt-1 text-sm leading-6">{{ item.value }}</dd></div>{% endfor %}
+                </dl>
+            </div>
+            {% endif %}
+
+            {% if public_facts.materials or public_facts.colors %}
+            <div class="mt-5 grid md:grid-cols-2 gap-4">
+                {% if public_facts.materials %}<div><h3 class="font-black text-base">متریال‌های پیشنهادی</h3><div class="mt-2 flex flex-wrap gap-2">{% for item in public_facts.materials %}<span class="rounded-full border border-sky-200 bg-sky-50 text-sky-800 px-3 py-1.5 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+                {% if public_facts.colors %}<div><h3 class="font-black text-base">رنگ‌های ثبت‌شده</h3><div class="mt-2 flex flex-wrap gap-2">{% for item in public_facts.colors %}<span class="rounded-full border border-slate-200 bg-white text-slate-700 px-3 py-1.5 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if public_facts.categories %}<div class="mt-5"><h3 class="font-black text-base">دسته‌بندی کاربردی</h3><div class="mt-2 flex flex-wrap gap-2">{% for item in public_facts.categories %}<span class="rounded-full border border-orange-200 bg-orange-50 text-orange-800 px-3 py-1.5 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+
+            {% if public_facts.source.name or public_facts.source.url or public_facts.source.designer or public_facts.source.license_name %}
+            <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 class="font-black text-lg">منبع و اعتبار مدل</h3>
+                <dl class="grid sm:grid-cols-2 gap-x-5 gap-y-3 mt-3 text-sm">
+                    {% if public_facts.source.name %}<div><dt class="text-slate-500">منبع</dt><dd class="font-bold mt-1">{{ public_facts.source.name }}</dd></div>{% endif %}
+                    {% if public_facts.source.designer %}<div><dt class="text-slate-500">طراح / سازنده</dt><dd class="font-bold mt-1">{{ public_facts.source.designer }}</dd></div>{% endif %}
+                    {% if public_facts.source.license_name %}<div><dt class="text-slate-500">مجوز</dt><dd class="font-bold mt-1">{{ public_facts.source.license_name }}</dd></div>{% endif %}
+                    {% if public_facts.source.commercial_license_source %}<div><dt class="text-slate-500">مدرک مجوز تجاری</dt><dd class="font-bold mt-1">{{ public_facts.source.commercial_license_source }}</dd></div>{% endif %}
+                </dl>
+                {% if public_facts.source.url %}<a href="{{ public_facts.source.url }}" target="_blank" rel="nofollow noopener noreferrer" class="inline-flex mt-4 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700">مشاهده صفحه اصلی مدل</a>{% endif %}
+            </div>
+            {% endif %}
+
             {% if product.installation_guide %}<div class="mt-5"><h3 class="font-black text-lg">راهنمای نصب</h3><div class="prose-content mt-2">{{ product.installation_guide|linebreaks }}</div></div>{% endif %}
         </section>
         <aside class="store-content-card"><h2 class="text-xl font-black">اطلاعات سریع</h2><dl class="store-spec-list mt-4"><div><dt>کد محصول</dt><dd>{{ product.sku }}</dd></div><div><dt>ابعاد</dt><dd>{{ product.dimensions|default:'طبق مشخصات سفارش' }}</dd></div>{% if product.catalog_profile.stock_quantity %}<div><dt>موجودی</dt><dd>{{ product.catalog_profile.stock_quantity|intcomma }}</dd></div>{% endif %}<div><dt>بازدید</dt><dd>{{ product.view_count|intcomma }}</dd></div><div><dt>تعداد پسند</dt><dd>{{ product.like_count|default:0|intcomma }}</dd></div></dl>{% if product.catalog_profile.keywords %}<div class="mt-5 text-sm text-slate-500">{% for keyword in product.catalog_profile.keywords %}<span class="inline-block border border-slate-200 rounded-full px-2 py-1 m-1">{{ keyword }}</span>{% endfor %}</div>{% endif %}{% if product.hashtags %}<div class="phase39-hashtags">{{ product.hashtags }}</div>{% endif %}</aside>
