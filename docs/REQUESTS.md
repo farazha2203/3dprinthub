@@ -17,22 +17,22 @@ Older detailed request history remains available in Git history. This file keeps
 Status: `PRODUCTION VERIFIED`
 
 ## REQ-49I-039 — Homepage Hero uses Product-owned public media
-Status: `OWNER REPORTS PRODUCTION OK`
+Status: `PRODUCTION VERIFIED`
 
 ## REQ-REL-001 — Catalog production release
 Status: `WEB/CATALOG RELEASE OPERATIONAL`
 
 ## REQ-REL-002 — Final Windows Catalog Center executable
 Status: `8.8.1 RELEASED / SOURCE HAS NEW IMAGE-DIMENSION DELTA`
-Released EXE remains `3DPrintHub-CatalogCenter-v8.8.1.exe`; source now also shows original image pixel dimensions. A new immutable Windows version/rebuild is required only after this source delta passes owner smoke.
+Released EXE remains `3DPrintHub-CatalogCenter-v8.8.1.exe`; source now also shows original image pixel dimensions. A new immutable Windows version/rebuild is required after the current source delta passes owner smoke.
 
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
 Full GL/subledger, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `50.A.1 + 50.A.1C GITHUB CI TESTED / HOST QA REQUIRED`
-Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses and professional imported-model media/data visibility.
+Status: `PHASE50.A.1C DEPLOYED / 50.A.1D CI TESTED`
+Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses, professional imported-model media/data visibility and sales profile controls.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
@@ -40,7 +40,7 @@ Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements
 
 ## REQ-50-004 — Dynamic delivery price
 Status: `REQUESTED / 50.A.2 NEXT`
-Shipping from product + packaging weight/dimensions/destination; Post/Tipax/Mahex only with verified current official API credentials/contracts; mature ShippingMethod fallback preserved.
+Shipping from chosen profile/product + packaging weight/dimensions/destination; Post/Tipax/Mahex only with verified current official API credentials/contracts; mature ShippingMethod fallback preserved.
 
 ## REQ-50-005 — Coupon + VAT checkout
 Status: `BACKEND FOUNDATION ALREADY PRESENT / ADMIN SURFACED`
@@ -51,40 +51,48 @@ Status: `REQUESTED / 50.A.3 PLANNED`
 Reuse server-owned amount, DB locking, random callback identity, exact Authority matching, server-to-server gateway verify and idempotent ledger. Add trusted redirect-host allowlist and never collect/store card/PIN/CVV.
 
 ## REQ-50-007 — Professional Product gallery
-Status: `IMPLEMENTED / GITHUB CI TESTED / HOST QA REQUIRED`
+Status: `DEPLOYED FOUNDATION / OWNER QA CONTINUES`
 Thumbnail-to-main contain-fit viewer and accessible fullscreen lightbox.
 
 ## REQ-50-008 — Variant 2.0 size/build/packaging parity
-Status: `IMPLEMENTED FOUNDATION / GITHUB CI TESTED / CHECKOUT SNAPSHOT NEXT`
-Multiple sizes/build profiles with material/color/quality, independent weight/price/inventory and package dimensions. Migration `store.0034` requires verified Production migration gate.
+Status: `DEPLOYED / STORE.0034 APPLIED`
+Multiple sizes/build profiles with material/color/quality, independent weight/price/inventory and package dimensions. Checkout profile snapshot/presentation continues in 50.A.2.
 
 ## REQ-50-009 — Torob marketplace integration
 Status: `REQUESTED / 50.A.4 PLANNED`
-Current official Torob Product API v3, stable product/variant grouping, size/color/material, current price/availability, image-quality rules and verified attribution/webhooks.
+Current official Torob Product API v3, stable product/profile grouping, size/color/material/weight, current price/availability, image-quality rules and verified attribution/webhooks.
 
 ## REQ-50-010 — ZarinPal Store checkout activation
 Status: `REQUESTED / 50.A.3 PLANNED`
 Connect StorePayment to the mature secure service-payment engine before real Production merchant activation.
 
 ## REQ-50-011 — Imported-model Admin image/data integrity
-Status: `IMPLEMENTED / GITHUB CI TESTED / HOST QA REQUIRED`
-Owner requires uploaded/imported images to be visible in Admin without 404 and imported records to show useful translated/commercial data. Admin preview now resolves only Product-owned public media or remote source fallback and shows completeness; working-media remains private.
+Status: `DEPLOYED FOUNDATION / HERO STUDIO FINAL BOUNDARY IN 50.A.1D`
+Imported-model list/change previews resolve Product-owned public media or remote source fallback; working-media remains private.
 
 ## REQ-50-012 — Mobile Hero product visibility
-Status: `IMPLEMENTED / GITHUB CI TESTED / MOBILE QA REQUIRED`
+Status: `DEPLOYED / OWNER QA`
 Hero Product title and description must not hide the Product image. Mobile title/caption/buttons are reduced; very narrow phones hide description while preserving CTA.
 
 ## REQ-50-013 — Homepage SEO operator controls
-Status: `IMPLEMENTED ADMIN AUDIT / SOCIAL META EXECUTION STILL OPEN`
-Existing SiteSetting `meta_title/meta_description` remain canonical. Admin now shows length health, search-result preview and Hero title/Alt audit. Dedicated Twitter fields and `og:image:alt` remain separate execution debt rather than duplicated DB fields.
+Status: `DEPLOYED ADMIN AUDIT / SOCIAL META EXECUTION STILL OPEN`
+Existing SiteSetting `meta_title/meta_description` remain canonical. Admin shows length health, search-result preview and Hero title/Alt audit. Dedicated Twitter fields and `og:image:alt` remain separate execution debt.
 
 ## REQ-50-014 — Windows Product image pixel dimensions
 Status: `SOURCE IMPLEMENTED / CI TESTED / NEXT EXE VERSION AFTER SMOKE`
 Every Product image card must show original `width × height px` so operator can reject weak images before publish.
 
 ## REQ-50-015 — Reconcile Production Product Admin 500
-Status: `OPEN / READ-ONLY HOST AUDIT REQUIRED`
-Do not guess the cause. Verify exact Production HEAD/branch, MySQL, `store.0034` state and runtime evidence before any migration/deploy.
+Status: `RESOLVED / PRODUCTION VERIFIED`
+Production deploy after exact MySQL/migration/backup verification returned HTTP 200 for `/admin/store/product/` and all primary Admin smoke endpoints.
+
+## REQ-50-016 — Reusable sales profiles per Product
+Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Each Product can choose customer selection by full profile list, size, weight, build, size→build or build→size. Profiles can share material/color/size/build while differing in weight, print time, pricing inputs, packaging and shipping by using a distinct profile key. Admin provides copy-profile to duplicate all mature settings and then edit only changed values.
+
+## REQ-50-017 — Hero Studio images must load on slide edit pages
+Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+`/admin/website/homepageheroslide/<id>/change/` product and album thumbnails must never emit private `store/imported-models/...` URLs. Final Admin JSON endpoints resolve Product-owned public gallery/main media or row-specific remote HTTP(S) source media.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target.
