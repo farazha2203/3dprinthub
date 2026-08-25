@@ -4,14 +4,14 @@ import json
 import unittest
 
 from app.ai_providers import AIProviderClient
-from app.phase49_3i23_avalai_chat_contract import install
+from app.phase49_3i23_avalai_chat_contract import install, product_text_model_reason
 
 
-class Phase493I23AvalAIChatContractTests(unittest.TestCase):
+class Phase493I24AvalAIStructuredContractTests(unittest.TestCase):
     def setUp(self):
         install()
 
-    def test_product_request_uses_saved_model_without_model_scan(self):
+    def test_product_request_uses_saved_model_and_json_schema_without_model_scan(self):
         client = AIProviderClient("avalai", "dummy-key", "gpt-5-chat-latest", product_id=2896217)
         calls = []
 
@@ -50,21 +50,22 @@ class Phase493I23AvalAIChatContractTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         sent_model, messages, response_format, operation = calls[0]
         self.assertEqual(sent_model, "gpt-5-chat-latest")
-        self.assertEqual(response_format, {"type": "json_object"})
-        self.assertEqual(operation, "structured_content_avalai_exact")
-        self.assertIn("JSON_SCHEMA", messages[0]["content"])
-        self.assertIn('"title_fa"', messages[0]["content"])
+        self.assertEqual(response_format["type"], "json_schema")
+        self.assertEqual(response_format["json_schema"]["name"], "catalog_test")
+        self.assertTrue(response_format["json_schema"]["strict"])
+        self.assertEqual(response_format["json_schema"]["schema"], schema)
+        self.assertEqual(operation, "structured_content_avalai_json_schema")
         self.assertIn("Ribbed cake stand, cookie platter", messages[1]["content"])
         self.assertIn("makerworld.com/en/models/2896217", messages[1]["content"])
         self.assertNotIn("input_image", messages[1]["content"])
         self.assertNotIn("example.invalid", messages[1]["content"])
 
-    def test_response_format_compat_fallback_keeps_same_exact_model_and_prompt(self):
+    def test_response_format_fallback_is_schema_then_json_object_then_prompt_json(self):
         client = AIProviderClient("avalai", "dummy-key", "gpt-5-chat-latest", product_id=7)
         calls = []
 
         def fake_chat(model, messages, *, response_format=None, operation="chat"):
-            calls.append((model, messages, response_format, operation))
+            calls.append((model, [dict(item) for item in messages], response_format, operation))
             if response_format is not None:
                 raise RuntimeError("AI HTTP 400: unsupported response_format parameter")
             return {"choices": [{"message": {"content": '{"title_fa":"استند کیک"}'}}]}
@@ -80,11 +81,18 @@ class Phase493I23AvalAIChatContractTests(unittest.TestCase):
 
         self.assertEqual(result["title_fa"], "استند کیک")
         self.assertEqual(model, "gpt-5-chat-latest")
-        self.assertEqual(len(calls), 2)
-        self.assertEqual(calls[0][0], calls[1][0])
-        self.assertEqual(calls[0][1], calls[1][1])
-        self.assertIsNone(calls[1][2])
-        self.assertEqual(calls[1][3], "structured_content_avalai_compat")
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(calls[0][2]["type"], "json_schema")
+        self.assertEqual(calls[1][2], {"type": "json_object"})
+        self.assertIsNone(calls[2][2])
+        self.assertEqual(calls[2][3], "structured_content_avalai_prompt_json")
+        self.assertIn("JSON_SCHEMA", calls[2][1][0]["content"])
+
+    def test_lyria_is_rejected_for_product_structured_text(self):
+        reason = product_text_model_reason("google/lyria-3-pro-preview")
+        self.assertIn("مناسب نیست", reason)
+        self.assertIn("lyria", reason.lower())
+        self.assertEqual(product_text_model_reason("gpt-5-chat-latest"), "")
 
 
 if __name__ == "__main__":
