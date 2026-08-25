@@ -23,7 +23,7 @@ PRODUCT_BASENAME = "3DPrintHub-CatalogCenter"
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024, ), b""):
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
 
@@ -109,6 +109,26 @@ def _copy_with_locked_fallback(source: Path, preferred: Path, *, suffix: str) ->
         return fallback, False
 
 
+def _run_json_smoke(exe: Path, *, argument: str, env_name: str, timeout: int = 120) -> dict:
+    with tempfile.TemporaryDirectory() as temporary:
+        result_file = Path(temporary) / "result.json"
+        env = os.environ.copy()
+        env[env_name] = str(result_file)
+        result = subprocess.run(
+            [str(exe), argument],
+            cwd=exe.parent,
+            env=env,
+            timeout=timeout,
+            check=False,
+        )
+        if result.returncode != 0 or not result_file.is_file():
+            raise RuntimeError(f"Portable EXE {argument} failed with exit code {result.returncode}")
+        payload = json.loads(result_file.read_text(encoding="utf-8"))
+        if payload.get("ok") is not True:
+            raise RuntimeError(f"Portable EXE {argument} payload failed: {payload}")
+        return payload
+
+
 def build(python: Path) -> Path:
     release_dir = ROOT / "release" / APP_VERSION
     build_dir = ROOT / "build" / "portable-exe"
@@ -153,22 +173,18 @@ def build(python: Path) -> Path:
         raise RuntimeError(f"Portable EXE was not created correctly: {staged_exe}")
 
     # Verify the exact staged binary before touching the release folder.
-    with tempfile.TemporaryDirectory() as temporary:
-        verify_file = Path(temporary) / "verify.json"
-        env = os.environ.copy()
-        env["CATALOG_VERIFY_OUTPUT"] = str(verify_file)
-        result = subprocess.run(
-            [str(staged_exe), "--portable-verify"],
-            cwd=staging_dir,
-            env=env,
-            timeout=90,
-            check=False,
-        )
-        if result.returncode != 0 or not verify_file.is_file():
-            raise RuntimeError(f"Portable EXE verification failed with exit code {result.returncode}")
-        verify = json.loads(verify_file.read_text(encoding="utf-8"))
-        if verify.get("ok") is not True:
-            raise RuntimeError(f"Portable EXE verification payload failed: {verify}")
+    verify = _run_json_smoke(
+        staged_exe,
+        argument="--portable-verify",
+        env_name="CATALOG_VERIFY_OUTPUT",
+        timeout=90,
+    )
+    browser_smoke = _run_json_smoke(
+        staged_exe,
+        argument="--portable-browser-smoke",
+        env_name="CATALOG_BROWSER_SMOKE_OUTPUT",
+        timeout=120,
+    )
 
     build_suffix = "build-" + "".join(ch for ch in BUILD_ID if ch.isalnum())
     preferred_versioned = release_dir / f"{versioned_name}.exe"
@@ -208,6 +224,10 @@ def build(python: Path) -> Path:
         "stable_exe_updated": stable_updated,
         "sha256": versioned_sha,
         "size_bytes": versioned_exe.stat().st_size,
+        "portable_verify": verify,
+        "browser_runtime_smoke": browser_smoke,
+        "browser_runtime_contract": "Playwright package plus installed Chrome/Edge/Playwright Chromium",
+        "external_source_network_smoke_in_ci": False,
     }
     (release_dir / "release-manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -224,6 +244,8 @@ def build(python: Path) -> Path:
     print(f"PORTABLE_STABLE_ALIAS_UPDATED={int(stable_updated)}")
     print(r"PORTABLE_DATA_PROFILE=%LOCALAPPDATA%\3DPrintHub\CatalogCenter")
     print("PORTABLE_SECRET_STORE=WINDOWS_CREDENTIAL_MANAGER")
+    print(f"PORTABLE_BROWSER={browser_smoke.get('browser', '')}")
+    print("PORTABLE_BROWSER_SMOKE=OK")
     print("PORTABLE_EXE_VERIFY=OK")
     return versioned_exe
 
