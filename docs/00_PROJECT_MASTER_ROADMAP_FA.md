@@ -5,8 +5,8 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.1 — Admin Storefront / Hero parity`  
-**Status:** `GITHUB CI TESTED / MANUAL ADMIN QA REQUIRED`  
+**Current Subphase:** `50.A.1B — Product Gallery + Variant 2.0 foundation`  
+**Status:** `GITHUB CI TESTED / MANUAL QA REQUIRED`  
 **Backend:** Django / Python  
 **Production:** Phase49 healthy by owner visual QA; Phase50 undeployed.
 
@@ -37,20 +37,30 @@ The service-payment path already has server-owned amounts, transaction locking, 
 
 ## 5) Phase50 path
 ### 50.A.1 — Admin Storefront / Hero parity — CI TESTED
-- `/admin/command-center/` includes Storefront & Checkout alongside Sales/Treasury/Accounting/Purchasing/Inventory,
-- Product and imported Catalog assets can be added to or removed from the homepage Hero through bulk Admin actions,
-- Hero Admin provides 5-random, 10-random and non-destructive deactivate-all controls,
-- random selection uses active Product-backed assets with public-renderable media,
-- existing manually edited Hero copy is preserved,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data are directly surfaced,
-- no migration.
+- `/admin/command-center/`,
+- Product and imported Catalog add/remove Hero actions,
+- 5-random / 10-random / deactivate-all Hero controls,
+- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location data surfaced,
+- no destructive Hero changes.
+
+### 50.A.1B — Product Gallery + Variant 2.0 — CI TESTED
+- contain-fit Product viewer and thumbnail-to-main behavior,
+- full-screen accessible lightbox,
+- ProductVariant size/build-profile/packaging-weight/package-dimensions,
+- StoreOrderItem matching snapshot columns,
+- Variant identity expanded to size/build,
+- Admin parity for new sellable fields,
+- public Variant metadata endpoint for the mature selector,
+- migration `store.0034_phase50_variant2_commerce`, not yet Production-deployed,
+- CI run `32872549545` PASS on snapshot `8e3c151159424437157d3ef6861881be08b1aea8`.
 
 ### 50.A.2 — Checkout & Delivery — NEXT
-- preserve existing coupon/VAT/packaging/shipping totals,
-- add explicit package weight and dimensions to shipping quote inputs,
+- persist size/build/package snapshots at checkout,
+- use effective product + packaging shipping weight,
 - normalized carrier quote interface and immutable order quote snapshot,
 - Post / Tipax / Mahex adapters only after current official API contract/credentials are verified,
-- timeout/error fallback to mature ShippingMethod fixed/weight rules.
+- timeout/error fallback to mature ShippingMethod fixed/weight rules,
+- Admin provider/fallback controls.
 
 ### 50.A.3 — Secure Store Payment
 - reuse server-owned amount + request/callback/verify/idempotency model,
@@ -59,6 +69,14 @@ The service-payment path already has server-owned amounts, transaction locking, 
 - exact provider reference/Authority verification,
 - reconciliation, audit and abuse controls,
 - Production HTTPS/HSTS/Secure-cookie/header verification.
+
+### 50.A.4 — Torob
+- official current Torob Product API v3,
+- stable product/variant grouping,
+- size/color/material mapping,
+- price/availability and image-quality contract,
+- pagination and stable unique IDs,
+- order attribution/webhooks only after official contract verification.
 
 ### 50.B — Accounting Core
 - کدینگ کل / معین / تفصیلی,
@@ -81,9 +99,10 @@ Normalize Store and service sales into receivables/accounting events, payment al
 General/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, tax/VAT and close audit.
 
 ## 6) Current release gate
-- GitHub CI for 50.A.1 has passed compile, Django check, no-migration dry-run and focused Admin regressions on code snapshot `7c8714b5715cd00900a76b99097823266251d4a2`.
-- manual desktop/mobile Admin visual/operation QA remains required.
-- Production remains untouched for Phase50.
+- GitHub CI for 50.A.1 and 50.A.1B has passed relevant compile/check/regression gates,
+- manual Product gallery / Variant Admin QA remains required,
+- Production remains untouched for Phase50,
+- migration `store.0034` requires a fresh Production MySQL backup before any deploy.
 
 ## 7) Migration and integration safety
 No Phase50 schema migration may reach Production until exact MySQL vendor/name, migration plan, successful backup and rollback target are verified. No live carrier endpoint is introduced from guessed or unofficial contracts. Historical payment/ledger/order/inventory rows remain preserved and accounting/payment integrations must be additive and idempotent.
