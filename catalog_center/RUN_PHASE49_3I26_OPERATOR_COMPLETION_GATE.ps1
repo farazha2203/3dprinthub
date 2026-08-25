@@ -19,7 +19,7 @@ Set-Location $Root
 
 Write-Host ""
 Write-Host "=============================================="
-Write-Host "3DPRINTHUB PHASE49.3I.27 LOCAL GATE"
+Write-Host "3DPRINTHUB PHASE49.3I.28 LOCAL GATE"
 Write-Host "NO PRODUCTION / NO MIGRATION / NO RESET"
 Write-Host "=============================================="
 
@@ -56,6 +56,7 @@ Write-Host ""
 Write-Host "===== FOCUSED REGRESSION ====="
 Set-Location $Catalog
 & $Py -m unittest -v `
+    tests.test_phase49_3i28_exact_link_contract `
     tests.test_phase49_3i27_category_provider_bridge `
     tests.test_phase49_3i26_operator_completion `
     tests.test_phase49_3i25_product_first_workflow `
@@ -82,7 +83,7 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=============================================="
-Write-Host "PHASE49_3I27_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I28_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "PRODUCTION_TOUCHED=NO"
 Write-Host "=============================================="
