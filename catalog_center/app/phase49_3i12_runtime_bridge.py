@@ -11,6 +11,7 @@ from .phase49_3i15_staging_guard import install_guard as _install_phase49_3i15_s
 from .phase49_3i16_resilient_acquisition import install as _install_phase49_3i16_resilient_acquisition
 from .phase49_3i16_review_hardening import install as _install_phase49_3i16_review_hardening
 from .phase49_3i19_source_identity import install_runtime as _install_phase49_3i19_source_identity
+from .phase49_3i24_runtime_observability import install as _install_phase49_3i24_runtime_observability
 
 
 def _install_late_layers(app_class) -> None:
@@ -23,6 +24,11 @@ def _install_late_layers(app_class) -> None:
     # Install after 49.3I.16 because that phase swaps the acquisition entrypoints.
     # 49.3I.19 then canonicalizes candidate/source titles at the final runtime boundary.
     _install_phase49_3i19_source_identity()
+    # The final App87 shell is already composed when this bridge runs. Mount the
+    # startup/no-network guard, heartbeat, hang dump and Dashboard log controls
+    # here so every real launch gets the same observability contract.
+    from . import main as _main_module
+    _install_phase49_3i24_runtime_observability(app_class, _main_module.DATA)
 
 
 def install_app(app_class, discovery_module=None) -> None:
