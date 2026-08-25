@@ -83,6 +83,12 @@ class WebsiteConfig(AppConfig):
         # to the Product-owned copy after all older Hero composition layers load.
         from . import phase49_3i30_hero_media_ownership  # noqa: F401
 
+        # Phase50.A.1D: the Hero Studio editor itself must obey the same public-media
+        # ownership contract. Replace only the album JSON endpoints so thumbnails
+        # never point at private store/imported-models working-media.
+        from .phase50_hero_admin_media_integrity import install as install_phase50_hero_admin_media_integrity
+        install_phase50_hero_admin_media_integrity()
+
         # Phase50.A: organize mature Sales/Treasury/Finance/Purchasing/Admin surfaces
         # without introducing accounting schema or touching healthy commerce flows.
         from .phase50a_admin_command_center import install_admin_completeness
