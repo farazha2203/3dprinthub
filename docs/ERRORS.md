@@ -119,6 +119,36 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Prevention:** troubleshooting retention policy is append/preserve unless an explicit maintenance/retention action is introduced and approved.
 
+### ERR-49-046 — 49.3I.25 vertical gallery was overwritten by delayed 49.3G horizontal layout
+**Date:** 2026-08-25  
+**Owner evidence:** after updating to 49.3I.25 the Images page still rendered cards in a long horizontal strip and clipped the right side instead of five cards per row with vertical scrolling.
+
+**Verified Root Cause:** 49.3G schedules `_phase49_3g_layout_gallery_cards` with `after_idle` and grids every card at row 0/column N. 49.3I.25 regridded cards synchronously, then the older delayed callback ran afterward and restored horizontal layout.
+
+**Correct Solution — 49.3I.26:** patch the final 49.3G layout callback itself at the outermost composition boundary; grid card N at `row=N//5`, `column=N%5`, make the Canvas width own the inner window, remove the horizontal scrollbar and bind wheel to vertical yview.
+
+**Prevention:** when an older layer schedules delayed layout, a newer final-layout phase must override the delayed callback itself, not only re-layout once during construction.
+
+### ERR-49-047 — Unified Product completion still required a second Image SEO action and could wait on image downloads
+**Date:** 2026-08-25  
+**Owner evidence:** exact-link completion populated Product text, but Images still reported missing/stale Metadata and the operator had to press the separate Image SEO AI button. The fresh diagnostic bundle captured an 8.110s hang sample with a worker in SSL/HTTP under `_download_if_needed -> finalize_selected_images`.
+
+**Verified Root Cause:** 49.3I.25 delegated final apply to `_phase49_3i18_apply_ai`, which marks image metadata stale and immediately calls the image finalizer. The finalizer is allowed to download missing source files, coupling one Product AI job to potentially many network image operations.
+
+**Correct Solution — 49.3I.26:** exact-link AI sends no image URLs/files. One Product result creates Product SEO plus filename/Alt/Title/Caption/Keywords for selected images. Physical image finalization only runs when every selected source image is already local; otherwise metadata text is saved and physical finalization is explicitly deferred without a hidden image download.
+
+**Prevention:** Product text AI and source-image network acquisition are separate boundaries. Never make completion of a text generation request depend on N additional image downloads.
+
+### ERR-49-048 — Content-first wizard order conflicted with mature readiness locking
+**Date:** 2026-08-25  
+**Owner evidence:** Product opened on the renumbered Content/SEO stage but showed a popup saying the stage was still locked and then returned to Basic Info.
+
+**Verified Root Cause:** 49.3I.25 changed visible section labels/order after the guided wizard had already established its own canonical seven-stage locking order. The outer init then selected Content, while the older selection wrapper still treated Basic Info as the first incomplete stage.
+
+**Correct Solution — 49.3I.26:** restore the mature 1..7 order and make stage navigation non-blocking. Readiness remains visible and publish remains blocked until complete, but editing/navigation is never locked.
+
+**Prevention:** readiness is a publication gate, not a navigation ACL. Do not use stage incompleteness to prevent the operator from opening another editor.
+
 ## OPEN / SEPARATE ITEMS
 
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
@@ -128,7 +158,7 @@ Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify inter
 Never invent cost; use provider response/verified lookup or mark unknown.
 
 ### ERR-OPEN-003 — Historical image-limit inconsistency
-Canonical controlled limit is max 20; current bulk operator exposes 5/10/15/20.
+Canonical controlled hard maximum is 20. From 49.3I.26 new acquisition defaults to 5; operator can still choose up to 20.
 
 ## WARNING DEBT
 - CKEditor4 security/maintenance warning.
