@@ -5,10 +5,10 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.1B — Product Gallery + Variant 2.0 foundation`  
-**Status:** `GITHUB CI TESTED / MANUAL QA REQUIRED`  
+**Current Subphase:** `50.A.1C — Admin media integrity + mobile Hero + homepage SEO + Windows image dimensions`  
+**Status:** `GITHUB CI TESTED / HOST READ-ONLY AUDIT + MANUAL QA REQUIRED`  
 **Backend:** Django / Python  
-**Production:** Phase49 healthy by owner visual QA; Phase50 undeployed.
+**Production:** وضعیت واقعی Host باید قبل از Deploy بعدی با Read-only Audit تطبیق داده شود.
 
 ## 1) قانون مادر
 `READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → MANUAL QA → EXPLICIT OWNER APPROVAL → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
@@ -31,7 +31,7 @@ Production: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprint
 Catalog/Product/Hero/SEO/Bridge release is operational. Product-owned public media is the Production ownership contract; imported Catalog working-media remains private. Phase50 must not rewrite healthy Catalog architecture without a verified defect.
 
 ## 4) Existing commerce/finance foundation
-Repository already includes StoreOrder/StorePayment/StoreInvoice, Coupon, VAT/packaging/shipping calculations, ShippingMethod weight rules, StoreAddress and Iran Province/County/City data, custom Order/Quote/Payment, immutable PaymentLedgerEntry, filament purchasing/inventory, ProductionJob/CostEntry, affiliate commissions/payouts/ledger and broad Django Admin coverage.
+Repository includes StoreOrder/StorePayment/StoreInvoice, Coupon, VAT/packaging/shipping calculations, ShippingMethod weight rules, StoreAddress and Iran Province/County/City data, custom Order/Quote/Payment, immutable PaymentLedgerEntry, filament purchasing/inventory, ProductionJob/CostEntry, affiliate commissions/payouts/ledger and broad Django Admin coverage.
 
 The service-payment path already has server-owned amounts, transaction locking, random callback identity, exact Authority matching, server-to-server verification and idempotent ledger behavior. These are preserved and reused rather than rebuilt.
 
@@ -50,11 +50,30 @@ The service-payment path already has server-owned amounts, transaction locking, 
 - StoreOrderItem matching snapshot columns,
 - Variant identity expanded to size/build,
 - Admin parity for new sellable fields,
-- public Variant metadata endpoint for the mature selector,
-- migration `store.0034_phase50_variant2_commerce`, not yet Production-deployed,
-- CI run `32872549545` PASS on snapshot `8e3c151159424437157d3ef6861881be08b1aea8`.
+- public Variant metadata endpoint,
+- migration `store.0034_phase50_variant2_commerce`.
 
-### 50.A.2 — Checkout & Delivery — NEXT
+### 50.A.1C — Admin media / mobile / SEO / Windows dimensions — CI TESTED
+- ImportedPrintAsset Admin preview never emits private `store/imported-models/...` working-media as a public URL,
+- safe preview order: Product gallery match → Product main image → remote HTTP(S) source,
+- mature Phase35 editable pricing/editorial Admin contracts preserved,
+- imported image source dimensions visible in Admin,
+- mobile Hero title/caption/CTA compact; very narrow screens hide description so Product image remains visible,
+- existing homepage `meta_title/meta_description` remain canonical and have Admin SEO health/SERP/Hero Alt-title audit,
+- Windows Product image cards show original `W × H px`,
+- no new migration in this subphase,
+- corrected CI run `32875771848` PASS on code snapshot `d74683cd54b18cc0f02c3c117515e1a34bc8ec83`.
+
+### Production reconciliation gate — NOW
+Owner screenshots show Phase50-era Admin UI on Production while earlier docs reported Phase50 undeployed, and `/admin/store/product/` returns 500. Before any deploy or migration:
+- verify exact Host branch/HEAD/worktree,
+- verify Django/Python runtime,
+- verify MySQL vendor/name,
+- verify `store.0034` migration state and migrate plan,
+- obtain real runtime evidence for the Product Admin 500,
+- create a fresh successful MySQL backup before any pending migration.
+
+### 50.A.2 — Checkout & Delivery — NEXT AFTER CURRENT QA
 - persist size/build/package snapshots at checkout,
 - use effective product + packaging shipping weight,
 - normalized carrier quote interface and immutable order quote snapshot,
@@ -67,8 +86,7 @@ The service-payment path already has server-owned amounts, transaction locking, 
 - strict trusted gateway-host allowlist,
 - never collect/store card number, PIN or CVV,
 - exact provider reference/Authority verification,
-- reconciliation, audit and abuse controls,
-- Production HTTPS/HSTS/Secure-cookie/header verification.
+- reconciliation, audit and abuse controls.
 
 ### 50.A.4 — Torob
 - official current Torob Product API v3,
@@ -99,10 +117,10 @@ Normalize Store and service sales into receivables/accounting events, payment al
 General/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, tax/VAT and close audit.
 
 ## 6) Current release gate
-- GitHub CI for 50.A.1 and 50.A.1B has passed relevant compile/check/regression gates,
-- manual Product gallery / Variant Admin QA remains required,
-- Production remains untouched for Phase50,
-- migration `store.0034` requires a fresh Production MySQL backup before any deploy.
+- Phase50.A.1, A.1B and A.1C have relevant GitHub CI PASS,
+- current Host state must be reconciled before any Production mutation,
+- `store.0034` must not be assumed pending/applied until `showmigrations` and `migrate --plan` are read on the real MySQL environment,
+- Windows source includes image dimensions but the immutable 8.8.1 EXE does not; next EXE version follows source smoke and rebuild.
 
 ## 7) Migration and integration safety
-No Phase50 schema migration may reach Production until exact MySQL vendor/name, migration plan, successful backup and rollback target are verified. No live carrier endpoint is introduced from guessed or unofficial contracts. Historical payment/ledger/order/inventory rows remain preserved and accounting/payment integrations must be additive and idempotent.
+No Phase50 schema migration may reach Production until exact MySQL vendor/name, migration plan, successful fresh backup and rollback target are verified. No live carrier endpoint is introduced from guessed or unofficial contracts. Historical payment/ledger/order/inventory rows remain preserved and accounting/payment integrations must be additive and idempotent.
