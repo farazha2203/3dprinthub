@@ -77,7 +77,7 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 **Prevention:** every public media consumer must resolve to the target public entity's owned media namespace. A database FileField URL is not automatically a public URL in Production.
 
-## RESOLVED PHASE50 INCIDENTS
+## RESOLVED PHASE50 / RELEASE INCIDENTS
 
 ### ERR-50-001 — Phase50 Admin CI used non-canonical Django environment names
 **Date:** 2026-08-25  
@@ -96,6 +96,24 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 **Correct Fix:** expose explicit project-level routes in `config/urls.py`, wrap each with `admin.site.admin_view`, keep mutations POST-only, and link the Admin template to those stable named routes.  
 **Verification:** focused Admin route/action tests passed in GitHub Actions.  
 **Prevention:** for late runtime Admin extensions, patch visual/actions at the Admin boundary but register new operational routes at a stable URL composition boundary unless registration order is proven by tests.
+
+### ERR-50-003 — Catalog Center 8.8.1 app version advanced while release metadata remained 8.8.0
+**Date:** 2026-08-25  
+**Symptom:** Local launch failed with `Launcher expected 8.8.0, but imported 8.8.1`; the first 8.8.1 Windows release CI also failed two version-contract tests.  
+**Root Cause:** `app/version.py` was advanced to 8.8.1 while `launch.py`, `PACKAGE_MANIFEST.json`, `config.example.json` and one regression assertion still declared 8.8.0.  
+**Failed Attempt:** running the stale launcher or repeating the release workflow unchanged could never produce a valid 8.8.1 release.  
+**Correct Fix:** align all release identity surfaces with `APP_VERSION=8.8.1` and keep the manifest/config/launcher contract test as a release gate.  
+**Verification:** the next Windows run passed all 92 regression tests and canonical launcher verification.  
+**Prevention:** a Windows version bump is atomic across app version, launcher expected version, package manifest, example config and release tests.
+
+### ERR-50-004 — Frozen 8.8.1 portable verification blocked on a physical launcher source-file assumption
+**Date:** 2026-08-25  
+**Symptom:** PyInstaller produced `3DPrintHub-CatalogCenter-v8.8.1.exe`, but `--portable-verify` remained alive until the 90-second build timeout and the runner killed the orphan process.  
+**Root Cause:** the newer portable verification tried to read a physical `launch.py` beside `portable_entry.py`. In a one-file/windowed PyInstaller runtime Python modules are bundled/importable but are not guaranteed to exist as ordinary source files; an unhandled frozen GUI exception can remain behind a windowed error dialog, causing the parent smoke runner to time out.  
+**Failed Attempt:** increasing the timeout or repeating the same frozen verification would preserve the source-file assumption.  
+**Correct Fix:** validate the bundled canonical launcher by importing `launch.EXPECTED_VERSION` and `launch.main`, requiring `EXPECTED_VERSION == APP_VERSION` and a callable canonical entrypoint; do not read `launch.py` from the extraction filesystem.  
+**Verification:** Windows release run passed frozen self-verification, frozen Playwright/browser smoke, SHA256/manifest validation, artifact upload and GitHub Release publication for `catalog-center-v8.8.1`.  
+**Prevention:** frozen-runtime verification must test import/runtime contracts, never assume bundled Python modules are present as physical `.py` source files.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
