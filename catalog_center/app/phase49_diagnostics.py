@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import re
+import sqlite3
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from .db import utc_now
@@ -12,6 +14,7 @@ from .db import utc_now
 _DB = None
 _LOGGER = None
 _LOCK = threading.RLock()
+_DIAG_CONN = None
 
 _BEARER_RE = re.compile(r"(?i)\bbearer\s+[a-z0-9._~+/=-]+")
 _JSON_SECRET_RE = re.compile(
@@ -27,8 +30,6 @@ _HEADER_SECRET_RE = re.compile(
 
 def redact(value: Any) -> str:
     text = str(value if value is not None else "")
-    # Order matters: mask Bearer payload first so a later Authorization match
-    # cannot leave the token tail behind.
     text = _BEARER_RE.sub("Bearer ***", text)
     text = _JSON_SECRET_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}***{m.group(4)}", text)
     text = _ASSIGN_SECRET_RE.sub(lambda m: f"{m.group(1)}***", text)
@@ -98,11 +99,38 @@ def ensure_schema(db) -> None:
         db.conn.commit()
 
 
+def _dedicated_proxy(db):
+    """Open a dedicated WAL connection so worker diagnostics never commit UI DB work."""
+    global _DIAG_CONN
+    path = Path(getattr(db, "path"))
+    if _DIAG_CONN is not None:
+        try:
+            _DIAG_CONN.close()
+        except Exception:
+            pass
+    conn = sqlite3.connect(path, check_same_thread=False, timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=30000")
+    _DIAG_CONN = conn
+    return SimpleNamespace(conn=conn, path=path)
+
+
 def configure(db, logger=None) -> None:
     global _DB, _LOGGER
-    _DB = db
     _LOGGER = logger
-    ensure_schema(db)
+    try:
+        _DB = _dedicated_proxy(db)
+    except Exception:
+        # Startup must remain usable even if a dedicated connection cannot open.
+        # This fallback is intentionally visible in the main logger.
+        _DB = db
+        if _LOGGER is not None:
+            try:
+                _LOGGER.error("DIAGNOSTICS_DEDICATED_CONNECTION_FAILED; using shared fallback")
+            except Exception:
+                pass
+    ensure_schema(_DB)
 
 
 def audit_event(
@@ -214,28 +242,30 @@ def ai_request_event(
 def recent_app_events(limit: int = 300) -> list[dict[str, Any]]:
     if _DB is None:
         return []
-    ensure_schema(_DB)
-    rows = _DB.conn.execute(
-        "SELECT * FROM app_audit_log ORDER BY id DESC LIMIT ?", (max(1, min(int(limit), 5000)),)
-    ).fetchall()
+    with _LOCK:
+        ensure_schema(_DB)
+        rows = _DB.conn.execute(
+            "SELECT * FROM app_audit_log ORDER BY id DESC LIMIT ?", (max(1, min(int(limit), 5000)),)
+        ).fetchall()
     return [dict(row) for row in rows]
 
 
 def recent_ai_requests(limit: int = 300) -> list[dict[str, Any]]:
     if _DB is None:
         return []
-    ensure_schema(_DB)
-    rows = _DB.conn.execute(
-        "SELECT * FROM ai_request_log ORDER BY id DESC LIMIT ?", (max(1, min(int(limit), 5000)),)
-    ).fetchall()
+    with _LOCK:
+        ensure_schema(_DB)
+        rows = _DB.conn.execute(
+            "SELECT * FROM ai_request_log ORDER BY id DESC LIMIT ?", (max(1, min(int(limit), 5000)),)
+        ).fetchall()
     return [dict(row) for row in rows]
 
 
 def update_ai_cost(request_id: str, *, cost_usd: float | None = None, cost_irt: float | None = None, cost_source: str = "") -> int:
     if _DB is None or not str(request_id or "").strip():
         return 0
-    ensure_schema(_DB)
     with _LOCK:
+        ensure_schema(_DB)
         cursor = _DB.conn.execute(
             """
             UPDATE ai_request_log
@@ -266,7 +296,7 @@ def export_diagnostic_bundle(root: str | Path, *, product_id: int | None = None)
         "product_id": product_id,
         "app_events": app_events,
         "ai_requests": ai_events,
-        "note": "Secrets are redacted. Share this file for troubleshooting.",
+        "note": "Secrets are redacted. Historical audit rows are preserved; export does not clear them.",
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     audit_event("diagnostics", "export", message=str(path), product_id=product_id)
