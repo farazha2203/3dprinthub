@@ -2,6 +2,30 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.30 Production Hero Product-Media Ownership
+
+### Owner Evidence
+- first real Catalog Site Publish produced a healthy Product page on Production,
+- homepage Hero slide text rendered but selected images were blank,
+- browser console showed HTTP 404 for `/media/store/imported-models/gallery/...`,
+- Local `127.0.0.1:8000` rendered the same Hero correctly.
+
+### Verified Root Cause
+- Production non-DEBUG media routing intentionally exposes public Product/category/SEO media, not the imported Catalog working-gallery namespace,
+- Phase49 Hero Studio preferred `ImportedPrintAssetImage.image.url`, so public Hero HTML referenced an internal media path,
+- Local DEBUG served all media and masked the production-only ownership mismatch.
+
+### Implemented
+- added `website/phase49_3i30_hero_media_ownership.py` as the final Hero media resolver,
+- public Hero now maps the selected imported-image basename to the Product-owned gallery copy under `/media/store/products/gallery/`,
+- if the exact Product gallery image is unavailable, Product main image is used,
+- remote source image is only a final fallback,
+- imported working-media paths are never returned as the public Hero image,
+- public media routing was not widened,
+- focused regression test added at `website/test_phase49_3i30_hero_media_ownership.py`.
+
+No migration. Production still runs the previously verified application commit until this hotfix passes Windows Local QA and is explicitly approved for deploy.
+
 ## 2026-08-25 — Phase49.3I.29 Production Deployment Verified
 
 ### Production Result
