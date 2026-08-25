@@ -62,13 +62,17 @@ class V871SliderSeoTests(unittest.TestCase):
         ]:
             self.assertIn(marker, source)
 
-    def test_launchers_and_portable_verify_use_v871_workspace(self):
+    def test_launchers_and_portable_verify_preserve_v871_through_final_epic49_workspace(self):
         launch = (ROOT / "launch.py").read_text(encoding="utf-8")
         portable = (ROOT / "portable_entry.py").read_text(encoding="utf-8")
-        self.assertIn("from app.product_workspace_v871 import ProductWorkspace", launch)
+        epic49 = (ROOT / "app" / "product_workspace_epic49.py").read_text(encoding="utf-8")
+
+        self.assertIn("from app.product_workspace_epic49 import ProductWorkspace", launch)
+        self.assertIn("from app.product_workspace_epic49 import ProductWorkspace", portable)
+        self.assertIn("from .product_workspace_v871 import ProductWorkspace as ProductWorkspace871", epic49)
+        self.assertIn("class ProductWorkspace(ProductWorkspace871):", epic49)
         self.assertIn("PRODUCT_WORKSPACE_V871=ENABLED", launch)
         self.assertIn("HOMEPAGE_SLIDER_SEO_V871=ENABLED", launch)
-        self.assertIn("from app.product_workspace_v871 import ProductWorkspace", portable)
         self.assertIn('"homepage_slider_seo_v871"', portable)
 
     def test_server_sync_reads_operator_fields_and_ai_pack_fallback(self):
