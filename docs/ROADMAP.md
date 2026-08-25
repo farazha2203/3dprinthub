@@ -3,42 +3,91 @@
 Updated: 2026-08-25
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Epic: `Phase49 — Unified Product / Slider / Catalog Sync`
-Current Phase: `49.3I`
-Current Hotfix: `49.3I.30 — Production Hero Product-Media Ownership`
-Status: `IMPLEMENTED ON GITHUB / WINDOWS LOCAL TEST NEXT`
-Production Application Commit: `d27489f1c2e1d36e75fdadfa8ab24660d8bec720`
+Current Release: `Phase49.3I — Unified Product / Slider / Catalog Sync`
+Next Epic: `Phase50 — Finance, Commerce & Admin Command Center`
+Status: `PHASE49 WEB OWNER-VERIFIED / PHASE50.A NEXT`
 
-## Permanent Delivery Order
-`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → LOCAL PUBLISH/WEB E2E → OWNER APPROVAL → READ-ONLY HOST VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
+## Permanent delivery order
+`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → WINDOWS PULL --FF-ONLY → LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
 
-## Completed
-- 49.3I.29 storefront Product presentation deployed and Production verified.
-- Production MySQL migration/backup gate passed.
-- Home, Store and Product returned HTTP 200.
-- first real Catalog Site Publish produced a healthy Product page and Product-owned media.
+## Phase49 closeout
+- structured Product presentation is deployed and verified,
+- Product/Store/Home are healthy,
+- first Catalog Site Publish validated Product-owned media,
+- Hero production media ownership defect was fixed,
+- owner now reports Production site/hero is OK.
 
-## Current Production Defect
-Homepage Hero text renders but selected slide images return 404 under `/media/store/imported-models/gallery/...`. Local works because DEBUG serves all media. Production intentionally serves Product-owned Store media only.
+Phase49 remains subject to the existing rollback/safety records; no new Catalog redesign is planned in Phase50.
 
-## 49.3I.30 Contract
-- keep ImportedPrintAssetImage as internal selection/audit state,
-- public Hero resolves to matching Product-owned gallery image by filename,
-- if exact match is unavailable, use Product main image,
-- only use remote source as final fallback,
-- never widen Production public-media routing to expose imported working media,
-- no migration and no Catalog batch-format change.
+## Existing business modules already present
+- Store commerce: cart/checkout, StoreOrder, StoreOrderItem, StorePayment, invoice, shipping, returns, coupons, inventory reservation and order events.
+- Service commerce: custom Order, Quote, deposit/full/balance Payment, manual receipt flow and online-payment architecture.
+- Payment audit: immutable `PaymentLedgerEntry`; online payment uses server-owned amounts and idempotent callback/verify contract.
+- Inventory/production: filament purchasing, spools, movements, material usage, production jobs and cost entries.
+- Partner sales: affiliate partners, commissions, payouts and affiliate ledger.
+- Admin: custom sidebar, store operations dashboard, finance/profit dashboard and extensive ModelAdmin coverage.
 
-## Immediate Priority
-1. Pull live feature branch on Windows with clean worktree.
-2. Run Django check + migration dry-run + `website.test_phase49_3i30_hero_media_ownership`.
-3. Visual QA Local Hero for the newly published cake-stand slides.
-4. After owner approval, deploy exact tested GitHub HEAD to Production; no migration expected.
-5. Passenger restart and verify each Hero image URL returns HTTP 200 and uses `/media/store/products/...`.
-6. Re-publish/update one Catalog Product to verify Product/Slider identity and media remain idempotent.
-7. Mark Phase49.3I accepted, then proceed to Store payment phase.
+## What is NOT complete yet
+Operational finance is not equivalent to full accounting. The following remain:
+1. chart of accounts (کل / معین / تفصیلی),
+2. balanced accounting vouchers and debit/credit journal,
+3. immutable posting/reversal and fiscal periods,
+4. customer/supplier ledgers and running balances,
+5. generic receipt/payment vouchers, cash/bank accounts and reconciliation,
+6. Supplier master and general purchasing beyond filament-only purchases,
+7. receivable/payable aging,
+8. consolidated sales/purchase/refund accounting,
+9. general ledger, trial balance, account statements, cashflow and tax/VAT reports,
+10. controlled real refund workflow with permissions/audit.
 
-## Production Warning Debt
-- CKEditor4 warning remains open.
-- in-memory realtime `store.W026` remains open.
-- MySQL conditional unique constraints remain known non-blocking warnings.
+## Phase50 implementation order
+### 50.A — Admin Command Center completeness — NO MIGRATION
+- make navigation business-oriented rather than model-oriented,
+- dedicated Sales / Treasury / Accounting / Purchasing / Inventory & Production sections,
+- complete ModelAdmin search/filter/date/read-only/related-link/actions contracts,
+- expose current Store/Service payments, invoices, ledger, filament purchases, costs and affiliate settlement clearly,
+- admin registration/navigation/permission regression tests.
+
+### 50.B — Accounting foundation
+- chart of accounts,
+- account/subledger parties,
+- fiscal periods,
+- journal vouchers and balanced entries,
+- posting/reversal service layer,
+- audit-safe numbering.
+
+### 50.C — Treasury
+- bank/cash accounts,
+- receipt/payment vouchers,
+- link to StorePayment / service Payment,
+- refund/settlement workflow,
+- reconciliation.
+
+### 50.D — Purchasing & payables
+- supplier registry,
+- purchase invoice/order and lines,
+- warehouse receiving integration,
+- supplier payable/subledger,
+- returns/adjustments.
+
+### 50.E — Sales & receivables accounting
+- normalize StoreOrder and custom Quote/Order accounting events,
+- customer receivable statement,
+- invoice/payment allocation,
+- discount/tax/shipping mapping,
+- sales return/refund/credit note.
+
+### 50.F — Reports & close
+- general ledger and subledger,
+- trial balance,
+- customer/supplier statements,
+- AR/AP aging,
+- cashflow,
+- project profitability,
+- tax/VAT summary,
+- integrity audit and period close.
+
+## Immediate next gate
+`Phase50.A GitHub implementation → Windows ff-only pull → manage.py check → makemigrations --check --dry-run → admin regression tests → manual admin navigation QA`.
+
+No Production schema work is authorized until Phase50.A is accepted and Phase50.B migration design has been reviewed with backup/rollback requirements.
