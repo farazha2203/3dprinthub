@@ -6,6 +6,7 @@ on:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
       - config/release.py
+      - .github/workflows/web-stable-baseline-release.yml
   workflow_dispatch:
 
 permissions:
@@ -26,19 +27,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Read and verify release marker
+      - name: Read and verify release marker without importing config package
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY' >> "$GITHUB_ENV"
-          from config.release import WEB_RELEASE_ID, WEB_RELEASE_TAG, WEB_RELEASE_TARGET_SHA, WEB_RELEASE_STATUS
-          assert WEB_RELEASE_ID
-          assert WEB_RELEASE_TAG
-          assert len(WEB_RELEASE_TARGET_SHA) == 40
-          assert WEB_RELEASE_STATUS == "stable"
-          print(f"WEB_RELEASE_ID={WEB_RELEASE_ID}")
-          print(f"WEB_RELEASE_TAG={WEB_RELEASE_TAG}")
-          print(f"WEB_RELEASE_TARGET_SHA={WEB_RELEASE_TARGET_SHA}")
+          import importlib.util
+          from pathlib import Path
+
+          path = Path("config/release.py").resolve()
+          spec = importlib.util.spec_from_file_location("web_release_marker", path)
+          if spec is None or spec.loader is None:
+              raise SystemExit("Unable to load config/release.py")
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+
+          assert module.WEB_RELEASE_ID
+          assert module.WEB_RELEASE_TAG
+          assert len(module.WEB_RELEASE_TARGET_SHA) == 40
+          assert module.WEB_RELEASE_STATUS == "stable"
+          print(f"WEB_RELEASE_ID={module.WEB_RELEASE_ID}")
+          print(f"WEB_RELEASE_TAG={module.WEB_RELEASE_TAG}")
+          print(f"WEB_RELEASE_TARGET_SHA={module.WEB_RELEASE_TARGET_SHA}")
           PY
           git cat-file -e "${WEB_RELEASE_TARGET_SHA}^{commit}"
           echo "WEB_RELEASE_MARKER=PASS"
