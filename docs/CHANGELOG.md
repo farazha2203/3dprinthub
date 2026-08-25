@@ -2,6 +2,34 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase50.A.1 Admin Storefront / Hero Parity
+
+### Implemented
+- added Product Admin bulk actions to add/remove selected products from the homepage Hero,
+- added Imported Catalog Asset bulk actions for the same Hero add/remove operations,
+- added Hero Admin quick controls for `۵ محصول رندوم`, `۱۰ محصول رندوم` and non-destructive deactivate-all,
+- random Hero selection is limited to active Product-backed assets with a public-renderable image,
+- reactivating an existing slide preserves operator-edited Hero text/SEO instead of overwriting it,
+- quick Hero mutations are POST-only, permission-protected and CSRF-protected through Django Admin,
+- expanded `/admin/command-center/` with a Storefront/Checkout section linking Products, Catalog Assets, Hero, Coupons, Shipping Methods, Pricing Settings, customer addresses and Iran Province/County/City reference data,
+- verified the mature checkout already owns coupon discount, VAT, packaging, shipping and order-weight calculations; no duplicate pricing logic was added,
+- recorded the next delivery work as a carrier-adapter layer for Post/Tipax/Mahex only after a current official API contract is verified,
+- recorded StorePayment hardening/unification with the mature server-to-server payment verification contract.
+
+### Verification
+- GitHub Actions `Phase50 Admin Storefront Parity CI` passed on code snapshot `7c8714b5715cd00900a76b99097823266251d4a2`,
+- Python compile PASS,
+- `manage.py check` PASS with known warnings only,
+- `makemigrations --check --dry-run` => `No changes detected`,
+- Phase50 Admin regression tests PASS.
+
+### Safety
+- no schema/model migration,
+- no direct Production edit or deploy,
+- no StoreOrder/Quote/payment semantics changed,
+- no public Product/Hero media-ownership contract changed,
+- Hero removal deactivates rather than deletes history.
+
 ## 2026-08-25 — Phase50.A Admin Command Center
 
 ### Implemented
@@ -17,7 +45,7 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 ### Safety
 - no schema/model migration,
 - no commerce/payment/Catalog/Hero behavior change,
-- Production untouched pending Windows Local gate and owner QA.
+- Production untouched pending owner QA.
 
 ## 2026-08-25 — Phase49.3I.30 Production Hero Product-Media Ownership
 
