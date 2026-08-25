@@ -39,17 +39,10 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
             install_extractor as _install_phase49_3i26_extractor,
         )
         _install_phase49_3i26_database(Database)
-        # Catalog categories are sqlite.Row objects in the mature DB layer.  The
-        # final exact-link category validation uses mapping `.get`, so normalize
-        # this read-only boundary to dictionaries once for all later consumers.
-        if hasattr(Database, "categories") and not getattr(Database, "_phase49_3i26_dict_categories", False):
-            _original_categories = Database.categories
-
-            def _dict_categories(self):
-                return [item if isinstance(item, dict) else dict(item) for item in _original_categories(self)]
-
-            Database.categories = _dict_categories
-            Database._phase49_3i26_dict_categories = True
+        # Older 49.3I.26 attempted to normalize Database.categories only if that
+        # method existed. The mature Database has no category repository; the
+        # actual category provider is App.get_all_categories(). 49.3I.27 bridges
+        # that real boundary after workspace composition below.
         _install_phase49_3i26_extractor(_page_extractor_module)
         from .phase49_3i26_runtime_patch import install_extractor as _install_phase49_3i26_runtime_patch
         _install_phase49_3i26_runtime_patch(_page_extractor_module)
@@ -192,9 +185,7 @@ def install(workspace_class) -> None:
     from . import phase49_readiness_wizard as _readiness_module
     from .phase49_3i25_product_first_workflow import install_workspace as _install_phase49_3i25_workspace
     _install_phase49_3i25_workspace(workspace_class, _readiness_module)
-    # 49.3I.26 is deliberately last: restore canonical 1..7 order, make all stages
-    # navigable, force the gallery back to five-column vertical scrolling after
-    # the older 49.3G horizontal callback, and replace exact-link completion with
-    # one text-only-AI + Product SEO + local image-metadata workflow.
     from .phase49_3i26_operator_completion import install_workspace as _install_phase49_3i26_workspace
     _install_phase49_3i26_workspace(workspace_class, _readiness_module)
+    from .phase49_3i27_category_provider_bridge import install_workspace as _install_phase49_3i27_workspace
+    _install_phase49_3i27_workspace(workspace_class)
