@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/phase50a-admin-command-center.css' %}?v=50.0.1">
+{% endblock %}
+
+{% block content %}
+<div class="phase50-shell">
+    <div class="phase50-hero">
+        <div>
+            <span class="phase50-kicker">Phase50.A</span>
+            <h1>مرکز مالی، فروش و عملیات</h1>
+            <p>دسترسی یکپارچه به فروش، دریافت و پرداخت، دفاتر موجود، خرید، انبار و تولید. این صفحه فقط مدل‌های فعال فعلی را سازمان‌دهی می‌کند و هنوز دفتر کل/معین/تفصیلی جدید ایجاد نکرده است.</p>
+        </div>
+        <div class="phase50-state">بدون Migration</div>
+    </div>
+
+    <div class="phase50-metrics">
+        {% for label, value in phase50_metrics %}
+        <div class="phase50-metric">
+            <span>{{ label }}</span>
+            <strong>{{ value }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="phase50-grid">
+        {% for section in phase50_sections %}
+        <section class="phase50-card">
+            <div class="phase50-card-title">
+                <i class="{{ section.icon }}"></i>
+                <h2>{{ section.title }}</h2>
+            </div>
+            <div class="phase50-links">
+                {% for link in section.links %}
+                <a href="{{ link.url }}" class="phase50-link">
+                    <div>
+                        <strong>{{ link.label }}</strong>
+                        {% if link.note %}<small>{{ link.note }}</small>{% endif %}
+                    </div>
+                    <i class="ri-arrow-left-line"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+
+    <section class="phase50-card phase50-future-card">
+        <div class="phase50-card-title">
+            <i class="ri-road-map-line"></i>
+            <h2>مواردی که در Phase50.B–F ساخته می‌شوند</h2>
+        </div>
+        <div class="phase50-future-grid">
+            {% for item in phase50_future %}
+            <div class="phase50-future-item"><i class="ri-time-line"></i><span>{{ item }}</span></div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
