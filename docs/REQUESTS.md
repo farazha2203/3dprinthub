@@ -23,53 +23,61 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-026: operator controls must be visibly reachable in normal Workspace use.
 
 ## REQ-49I-027 — AI actions must not look frozen and must be diagnosable
-Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+Status: `IMPLEMENTED / SUPERSEDED IN PART BY 49.3I.22 WINDOWS QA`
+- provider requests are bounded and observable,
+- request start/success/error/timeout are sanitized,
+- Stop/Cancel blocks late apply,
+- diagnostics can be exported locally,
+- no GitHub PAT/API key is stored in logs.
 
-Owner evidence:
-- multiple AI buttons can stay at `در حال اتصال به هوش مصنوعی`,
-- Task Center showed a 03:30 ceiling,
-- source-title reread works while source-title + full AI rebuild can remain waiting,
-- image SEO/product info/all-fields AI actions exhibit the same failure class.
-
-Acceptance:
-- normal Product AI may not block the Tk UI thread,
-- provider request has a bounded fail-fast ceiling rather than an opaque multi-minute wait,
-- request-start must be recorded before network wait,
-- success/error/timeout must identify Provider/Model/operation/duration,
-- a Stop/Cancel action prevents late result application,
-- busy state is released after cancellation/failure,
-- diagnostics must redact API key/token/Authorization values,
-- operator can export a local diagnostic bundle for troubleshooting,
-- no GitHub PAT/API key is stored in logs or requested through Chat.
-
-Implementation: 49.3I.21 global provider guard + observable link-refresh job dialog. Default AI POST ceiling 75 seconds, environment override constrained to 20..120 seconds.
+49.3I.21 solved the long provider wait boundary, but fresh Windows evidence showed a separate Tk cross-thread freeze class; REQ-49I-029 below is now part of the same acceptance gate.
 
 ## REQ-49I-028 — Complete all editable product information from the exact Product URL
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+- action `تکمیل همه اطلاعات بر اساس لینک محصول`,
+- exact source URL authoritative,
+- source fetch/parse + canonical identity before AI,
+- AI receives URL + sanitized facts + selected media/material/color context,
+- visible source → AI → preview → apply lifecycle,
+- no Product update before operator confirmation,
+- unified Persian content/SEO/image metadata apply,
+- price/stock/source URL/commercial choices not overwritten,
+- failed/cancelled request preserves old Product data.
 
-Owner request: add one professional action that starts from the exact product link, reads the real source, gives the AI enough grounded information, shows received data, then updates the whole editable editorial surface only after confirmation.
-
-Acceptance:
-- new action `تکمیل همه اطلاعات بر اساس لینک محصول`,
-- exact persisted `source_url` is authoritative,
-- app fetches/parses the actual source page first,
-- canonical source title is established before generation,
-- AI receives the URL plus sanitized source facts and selected images/materials/colors,
-- dialog visibly shows source fetch → AI request → response received → preview → apply,
-- no DB update before operator confirmation,
-- apply updates Persian title, descriptions, SEO, keywords and image Alt/Title/Caption/metadata consistently through the existing mature apply path,
-- source URL, price, stock and commercial/operator choices are not overwritten,
-- if source/AI fails, previous Product data remains intact,
-- cancellation means a late result is ignored.
-
-Primary acceptance fixture:
+Primary fixture:
 `https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter?from=search#profileId-3236824`
 
-After successful refresh, the product must not retain the generic Persian identity `مدل میکرورلد 2896217`.
+## REQ-49I-029 — Every Product AI worker must be Tk-main-thread safe
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Owner evidence: Product Workspace becomes Windows `(Not Responding)` after AI actions and may require force-close even when the visible AI panels and source title are correct.
+
+Acceptance:
+- background network/AI work may remain on Python worker threads,
+- no worker thread may directly call Tk/Tcl,
+- worker `after(...)` handoffs must be serialized through a Python-only queue and executed by a pump owned by the Tk main thread,
+- Tk-backed source variables must be snapshotted on the main thread before worker access,
+- the same contract must protect Task Center, image AI, all-fields AI, manual-name rebuild, source+AI rebuild and link-grounded refresh,
+- errors/cancellation/stale-result behavior remains observable and sanitized,
+- no duplicate Provider/model or AI business path is introduced.
+
+Implementation: `phase49_3i22_tk_thread_bridge.py`, installed at the final Product Workspace composition boundary.
+
+## REQ-49I-030 — Product stages rail must scroll vertically
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Acceptance:
+- all Product stage/readiness/AI controls remain reachable on shorter Windows displays,
+- a visible vertical scrollbar exists,
+- later panels appended by mature phases participate in the same scrollregion,
+- mouse wheel scrolls the rail when the pointer is over it,
+- stage navigation semantics remain unchanged.
+
+Implementation: Canvas + `ttk.Scrollbar` host in `product_workspace_v87.py`.
 
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.21 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.22 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 
 After approval: verify Host/branch/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
 
@@ -87,7 +95,7 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - secrets only in secure configuration.
 
 ## Canonical Windows Gate
-Run 49.3I.21 focused tests + 49.3I.20/19/18 regressions, then chain the existing 49.3I.17 and acquisition baseline gates. Production remains untouched until PASS + Local Publish E2E + owner approval.
+Run 49.3I.22 focused tests + inherited 49.3I.21/20/19/18/17 regressions, then acquisition baseline gates. Production remains untouched until PASS + Local Publish E2E + owner approval.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
