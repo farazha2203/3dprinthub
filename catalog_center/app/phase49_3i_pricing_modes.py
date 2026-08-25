@@ -29,6 +29,18 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         )
         _install_phase49_3i25_database(Database)
         _install_phase49_3i25_app(app_class)
+        # 49.3I.26 owns the final Products gallery/archive UX and archive DB
+        # contract. It composes after 49.3I.25 so the visible card surface is the
+        # real final boundary and blocked identities continue to prevent re-import.
+        from . import page_extractor as _page_extractor_module
+        from .phase49_3i26_operator_completion import (
+            install_app as _install_phase49_3i26_app,
+            install_database as _install_phase49_3i26_database,
+            install_extractor as _install_phase49_3i26_extractor,
+        )
+        _install_phase49_3i26_database(Database)
+        _install_phase49_3i26_extractor(_page_extractor_module)
+        _install_phase49_3i26_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -168,9 +180,13 @@ def install(workspace_class) -> None:
     # chat/completions model+messages contract without hidden model discovery.
     from .phase49_3i23_avalai_chat_contract import install as _install_phase49_3i23_avalai_chat_contract
     _install_phase49_3i23_avalai_chat_contract()
-    # 49.3I.25 is the final operator boundary: Content/SEO first, exact-link
-    # completion in basic info, five-column vertical gallery and publish missing
-    # assistance. It intentionally installs after the Tk bridge and AvalAI adapter.
+    # 49.3I.25 introduced the exact-link Product completion foundation.
     from . import phase49_readiness_wizard as _readiness_module
     from .phase49_3i25_product_first_workflow import install_workspace as _install_phase49_3i25_workspace
     _install_phase49_3i25_workspace(workspace_class, _readiness_module)
+    # 49.3I.26 is deliberately last: restore canonical 1..7 order, make all stages
+    # navigable, force the gallery back to five-column vertical scrolling after
+    # the older 49.3G horizontal callback, and replace exact-link completion with
+    # one text-only-AI + Product SEO + local image-metadata workflow.
+    from .phase49_3i26_operator_completion import install_workspace as _install_phase49_3i26_workspace
+    _install_phase49_3i26_workspace(workspace_class, _readiness_module)
