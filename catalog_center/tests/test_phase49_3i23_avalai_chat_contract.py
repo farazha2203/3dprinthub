@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import patch
 
 from app.ai_providers import AIProviderClient
-from app.phase49_3i23_avalai_chat_contract import install, product_text_model_reason
+from app.phase49_3i23_avalai_chat_contract import (
+    _avalai_url_tool_evidence,
+    install,
+    product_text_model_reason,
+)
 
 
 class Phase493I24AvalAIStructuredContractTests(unittest.TestCase):
@@ -34,16 +39,20 @@ class Phase493I24AvalAIStructuredContractTests(unittest.TestCase):
             "properties": {"title_fa": {"type": "string"}},
             "required": ["title_fa"],
         }
-        result, model = client.structured_response(
-            instructions="Translate the exact product identity to Persian.",
-            input_content=[
-                {"type": "input_text", "text": '{"source_title":"Ribbed cake stand, cookie platter","source_url":"https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter"}'},
-                {"type": "input_image", "image_url": "https://example.invalid/image.webp", "detail": "auto"},
-            ],
-            schema=schema,
-            schema_name="catalog_test",
-            preferred_model="gpt-5-chat-latest",
-        )
+        with patch(
+            "app.phase49_3i23_avalai_chat_contract._avalai_url_tool_evidence",
+            return_value=("", "test_no_tool"),
+        ):
+            result, model = client.structured_response(
+                instructions="Translate the exact product identity to Persian.",
+                input_content=[
+                    {"type": "input_text", "text": '{"source_title":"Ribbed cake stand, cookie platter","source_url":"https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter"}'},
+                    {"type": "input_image", "image_url": "https://example.invalid/image.webp", "detail": "auto"},
+                ],
+                schema=schema,
+                schema_name="catalog_test",
+                preferred_model="gpt-5-chat-latest",
+            )
 
         self.assertEqual(model, "gpt-5-chat-latest")
         self.assertEqual(result["title_fa"], "استند کیک شیاردار")
@@ -71,13 +80,17 @@ class Phase493I24AvalAIStructuredContractTests(unittest.TestCase):
             return {"choices": [{"message": {"content": '{"title_fa":"استند کیک"}'}}]}
 
         client._chat = fake_chat
-        result, model = client.structured_response(
-            instructions="Return Persian product content.",
-            input_content=[{"type": "input_text", "text": '{"source_title":"Cake stand"}'}],
-            schema={"type": "object", "properties": {"title_fa": {"type": "string"}}},
-            schema_name="catalog_test",
-            preferred_model="gpt-5-chat-latest",
-        )
+        with patch(
+            "app.phase49_3i23_avalai_chat_contract._avalai_url_tool_evidence",
+            return_value=("", "test_no_tool"),
+        ):
+            result, model = client.structured_response(
+                instructions="Return Persian product content.",
+                input_content=[{"type": "input_text", "text": '{"source_title":"Cake stand"}'}],
+                schema={"type": "object", "properties": {"title_fa": {"type": "string"}}},
+                schema_name="catalog_test",
+                preferred_model="gpt-5-chat-latest",
+            )
 
         self.assertEqual(result["title_fa"], "استند کیک")
         self.assertEqual(model, "gpt-5-chat-latest")
@@ -87,6 +100,51 @@ class Phase493I24AvalAIStructuredContractTests(unittest.TestCase):
         self.assertIsNone(calls[2][2])
         self.assertEqual(calls[2][3], "structured_content_avalai_prompt_json")
         self.assertIn("JSON_SCHEMA", calls[2][1][0]["content"])
+
+    def test_gemini_url_context_uses_explicit_avalai_tool(self):
+        client = AIProviderClient("avalai", "dummy-key", "gemini-2.5-flash", product_id=7)
+        captured = {}
+
+        def fake_request(url, key, **kwargs):
+            captured.update({"url": url, "key": key, **kwargs})
+            return {"choices": [{"message": {"content": "source evidence"}}]}
+
+        with patch("app.phase49_3i23_avalai_chat_contract.ai_providers._json_request", side_effect=fake_request):
+            evidence, mode = _avalai_url_tool_evidence(
+                client,
+                "gemini-2.5-flash",
+                "https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter",
+            )
+
+        self.assertEqual(mode, "gemini_urlContext")
+        self.assertEqual(evidence, "source evidence")
+        self.assertTrue(captured["url"].endswith("/chat/completions"))
+        self.assertEqual(captured["payload"]["tools"], [{"urlContext": {}}])
+        self.assertEqual(captured["operation"], "avalai_url_context")
+
+    def test_gpt5_url_evidence_uses_responses_web_search(self):
+        client = AIProviderClient("avalai", "dummy-key", "gpt-5-chat-latest", product_id=7)
+        captured = {}
+
+        def fake_request(url, key, **kwargs):
+            captured.update({"url": url, "key": key, **kwargs})
+            return {"output_text": "verified source evidence"}
+
+        with patch("app.phase49_3i23_avalai_chat_contract.ai_providers._json_request", side_effect=fake_request):
+            evidence, mode = _avalai_url_tool_evidence(
+                client,
+                "gpt-5-chat-latest",
+                "https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter",
+            )
+
+        self.assertEqual(mode, "responses_web_search")
+        self.assertEqual(evidence, "verified source evidence")
+        self.assertTrue(captured["url"].endswith("/responses"))
+        self.assertEqual(
+            captured["payload"]["tools"],
+            [{"type": "web_search", "search_context_size": "low"}],
+        )
+        self.assertEqual(captured["operation"], "avalai_url_web_search")
 
     def test_lyria_is_rejected_for_product_structured_text(self):
         reason = product_text_model_reason("google/lyria-3-pro-preview")
