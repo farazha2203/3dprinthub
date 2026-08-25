@@ -2,6 +2,27 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-25 — Phase49.3I.20 Visible Operator Panels
+
+### Owner Evidence
+49.3I.18/49.3I.19 controls were present in source but were not visible in normal Product Workspace use. The bulk-image panel and source-identity/AI rebuild panels were packed after large expandable gallery/content panes and could be pushed below the visible viewport.
+
+### Root Fix
+- add a layout-only final composition layer,
+- keep the existing 49.3I.18/49.3I.19 controls and commands intact,
+- move `عملیات گروهی همه تصاویر منتخب سایت` before the expandable image gallery,
+- move `هویت واقعی محصول در منبع — قبل از ترجمه و SEO` to the top of Content/SEO,
+- keep `اصلاح نام محصول و بازسازی متن / SEO` immediately below it,
+- preserve mature toolbar/editor below both panels,
+- add focused regression tests for final visible order and safe no-op behavior.
+
+Implementation:
+- `catalog_center/app/phase49_3i20_visible_operator_panels.py`,
+- `catalog_center/tests/test_phase49_3i20_visible_operator_panels.py`,
+- final wiring in `catalog_center/app/phase49_3i_pricing_modes.py`.
+
+No migration. No AI provider/model change. No pricing/publish/FTP/Bridge change. Production untouched. Windows Local QA pending.
+
 ## 2026-08-23 — Phase49.3I.19 Canonical Source Identity Before AI
 
 ### Owner Evidence
