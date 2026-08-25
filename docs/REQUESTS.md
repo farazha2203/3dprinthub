@@ -21,63 +21,47 @@ Older detailed request history remains available in Git history. This file keeps
 - REQ-49I-024: exactly one saved Provider/Model/key path for Product AI; no hidden fallback/model scan/AI-on-open.
 - REQ-49I-025: source title must be canonical before translation/SEO.
 - REQ-49I-026: operator controls must be visibly reachable in normal Workspace use.
+- REQ-49I-027: AI actions must not freeze and must be diagnosable.
+- REQ-49I-028: exact Product URL grounds the full Product AI refresh.
 
-## REQ-49I-027 — AI actions must not look frozen and must be diagnosable
-Status: `IMPLEMENTED / SUPERSEDED IN PART BY 49.3I.22 WINDOWS QA`
-- provider requests are bounded and observable,
-- request start/success/error/timeout are sanitized,
-- Stop/Cancel blocks late apply,
-- diagnostics can be exported locally,
-- no GitHub PAT/API key is stored in logs.
-
-49.3I.21 solved the long provider wait boundary, but fresh Windows evidence showed a separate Tk cross-thread freeze class; REQ-49I-029 below is now part of the same acceptance gate.
-
-## REQ-49I-028 — Complete all editable product information from the exact Product URL
-Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
-- action `تکمیل همه اطلاعات بر اساس لینک محصول`,
-- exact source URL authoritative,
-- source fetch/parse + canonical identity before AI,
-- AI receives URL + sanitized facts + selected media/material/color context,
-- visible source → AI → preview → apply lifecycle,
-- no Product update before operator confirmation,
-- unified Persian content/SEO/image metadata apply,
-- price/stock/source URL/commercial choices not overwritten,
-- failed/cancelled request preserves old Product data.
-
-Primary fixture:
-`https://makerworld.com/en/models/2896217-ribbed-cake-stand-cookie-platter?from=search#profileId-3236824`
-
-## REQ-49I-029 — Every Product AI worker must be Tk-main-thread safe
+## REQ-49I-029 — AvalAI Product generation must use the exact working chat contract
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
-Owner evidence: Product Workspace becomes Windows `(Not Responding)` after AI actions and may require force-close even when the visible AI panels and source title are correct.
+Owner evidence: the same MakerWorld link works directly in AvalAI, while Catalog Center's link completion did not reliably return/apply usable content.
 
 Acceptance:
-- background network/AI work may remain on Python worker threads,
-- no worker thread may directly call Tk/Tcl,
-- worker `after(...)` handoffs must be serialized through a Python-only queue and executed by a pump owned by the Tk main thread,
-- Tk-backed source variables must be snapshotted on the main thread before worker access,
-- the same contract must protect Task Center, image AI, all-fields AI, manual-name rebuild, source+AI rebuild and link-grounded refresh,
-- errors/cancellation/stale-result behavior remains observable and sanitized,
-- no duplicate Provider/model or AI business path is introduced.
+- product request uses the exact saved AvalAI model,
+- no hidden Product `/models` request,
+- request is normal Chat Completions `model + messages`,
+- exact source/link/operator facts are visible to the model as text,
+- requested output JSON schema is actually included,
+- Responses API image placeholder objects are not serialized as fake chat content,
+- unsupported `response_format` may fall back without changing model/prompt,
+- diagnostics identify the exact contract stage without key/token/full prompt,
+- resulting Persian title must preserve the real source identity and reject generic model-number output.
 
-Implementation: `phase49_3i22_tk_thread_bridge.py`, installed at the final Product Workspace composition boundary.
+## REQ-49I-030 — Re-audit SEO before Catalog Web publish
+Status: `CORE CONTRACT VERIFIED IN REPOSITORY / LOCAL PUBLISH E2E REQUIRED`
 
-## REQ-49I-030 — Product stages rail must scroll vertically
-Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+Required before Production:
+- Persian title/H1 and useful product content,
+- unique SEO title and description,
+- canonical and index/follow state,
+- OG product title/description/image,
+- image Alt text,
+- Product/ProductGroup + Offer structured data,
+- breadcrumb and available review/FAQ structured data,
+- safe public slug/legacy redirect,
+- public product inclusion in `/sitemap.xml`,
+- media/product page data verified after Local publish.
 
-Acceptance:
-- all Product stage/readiness/AI controls remain reachable on shorter Windows displays,
-- a visible vertical scrollbar exists,
-- later panels appended by mature phases participate in the same scrollregion,
-- mouse wheel scrolls the rail when the pointer is over it,
-- stage navigation semantics remain unchanged.
-
-Implementation: Canvas + `ttk.Scrollbar` host in `product_workspace_v87.py`.
+Dedicated Twitter title/description/image and `og:image:alt` are optional social-preview enhancements and are not blockers for this Catalog release.
 
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.22 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.23 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+
+Product data must move through the existing publish/bridge/import contract. Do not copy the Local SQLite database over Production MySQL.
 
 After approval: verify Host/branch/MySQL/backup/rollback and deploy only the approved GitHub snapshot.
 
@@ -93,9 +77,6 @@ Status: `REQUESTED / AFTER CATALOG DEPLOY`
 - bank transfer remains available,
 - Sandbox E2E before live activation,
 - secrets only in secure configuration.
-
-## Canonical Windows Gate
-Run 49.3I.22 focused tests + inherited 49.3I.21/20/19/18/17 regressions, then acquisition baseline gates. Production remains untouched until PASS + Local Publish E2E + owner approval.
 
 ## Change Rule
 New requests do not authorize unrelated redesign. Extend/Patch/Wrap mature behavior and regression-test the exact active operator/store boundary.
