@@ -1,0 +1,70 @@
+name: Phase50 Admin Storefront Parity CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - website/phase50a_admin_command_center.py
+      - website/phase50a_storefront_admin_parity.py
+      - website/apps.py
+      - website/test_phase50a_admin_command_center.py
+      - website/test_phase50a_storefront_admin_parity.py
+      - templates/admin/website/homepageheroslide/change_list.html
+      - .github/workflows/phase50-admin-storefront-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase50-admin-storefront:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings
+      SECRET_KEY: phase50-ci-only-not-production
+      DEBUG: "1"
+      ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+    steps:
+      - name: Checkout exact snapshot
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile touched Python surfaces
+        run: |
+          python -m py_compile \
+            website/phase50a_admin_command_center.py \
+            website/phase50a_storefront_admin_parity.py \
+            website/apps.py \
+            website/test_phase50a_admin_command_center.py \
+            website/test_phase50a_storefront_admin_parity.py
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: No unintended migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Phase50 admin regressions
+        run: |
+          python manage.py test \
+            website.test_phase50a_admin_command_center \
+            website.test_phase50a_storefront_admin_parity \
+            -v 2
+
+      - name: Gate marker
+        run: |
+          echo "PHASE50_ADMIN_STOREFRONT_CI=PASS"
+          echo "COMMIT=$GITHUB_SHA"
