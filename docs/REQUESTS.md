@@ -7,7 +7,7 @@ Older detailed request history remains available in Git history. This file keeps
 ## Preserved Core Contracts
 - REQ-49H-001: AI/SEO execution/result/error visibility with sanitized diagnostics.
 - REQ-49H-002: real provider-supported cost only; never invent unknown cost.
-- REQ-49H-003: image intake default 10 / hard max 20.
+- REQ-49H-003: image intake default 5 / hard max 20 from 49.3I.26 onward.
 - REQ-49I-001: explicit Search/Listing URL is authoritative.
 - REQ-49I-003: Archive/Not Needed blocks rediscovery without destructive deletion.
 - REQ-49I-004: dedupe by source + external id + normalized URL.
@@ -39,26 +39,58 @@ Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
 Lifecycle logging, Dashboard Program/AI logs, safe diagnostic export, Tk lag/hang trace, secret redaction and no automatic provider work during startup are required.
 
-## REQ-49I-032 — Product-first editing workflow and stable repeated operation
+## REQ-49I-032 — Product editing workflow and stable repeated operation
+Status: `SUPERSEDED/REFINED BY REQ-49I-033..037`
+
+49.3I.25 tested Content-first ordering. Owner QA determined the original 1..7 sequence is clearer and that readiness should not lock stage navigation.
+
+## REQ-49I-033 — Restore canonical 1..7 Product order with free navigation
 Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
 
 Owner acceptance:
-- `محتوا و SEO` is Product Stage 1 so Persian identity/content/SEO can be filled first,
-- `اطلاعات پایه` is Stage 2 and contains `🌐 تکمیل همه اطلاعات بر اساس لینک محصول`,
-- any legacy Product-data-send action routes to that same exact-link workflow,
-- exact-link source intake also carries available weight/print time; MakerWorld exact `profileId` weight is preferred when present,
-- incomplete stages never block opening Images/Commerce/Source or another stage,
-- Images displays all controlled Product image cards in rows of five and scrolls vertically when needed; existing metadata/selection/primary/remove/open controls remain,
-- exact-link completion must not broadly resave the Product before AI,
-- Local/site publish preflight shows the actual missing items and may offer exact-link AI completion for AI-fillable gaps,
-- opening the application does not test provider connectivity or fetch models; only explicit operator Search/Test may do so,
-- historical Program/audit logs survive close/reopen and diagnostic export; startup never clears them,
-- repeated Product edit/AI cycles must not produce `cannot commit - no transaction is active`,
-- AI remains background/observable during legitimate slow provider responses.
+- 1 Basic Info, 2 Commerce, 3 Images, 4 Content/SEO, 5 Source/License, 6 Slider, 7 Review/Publish,
+- Product opens on Basic Info with no Content-first lock popup,
+- operator can open every stage even when another stage is incomplete,
+- readiness remains visible and blocks publish only,
+- Product Workspace has a maximize/full-screen action.
+
+## REQ-49I-034 — Exact-link completion is the single complete Product AI action
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Owner acceptance:
+- progress shows percentage and current phase from source read through apply,
+- AI wait ceiling is 120 seconds,
+- if AI response times out, source URL is rechecked separately and source/provider failure is distinguished,
+- source facts include real title, creator/manufacturer where available, source/category, URL, description, weight and print time,
+- selected image files/URLs are not sent to AI,
+- the same Product result fills Persian Product content/SEO and image filename/Alt/Title/Caption/Keywords,
+- a second Image SEO AI request is not required for the normal locally-acquired Product path,
+- unified completion must not start hidden network image downloads merely to finish image Metadata.
+
+## REQ-49I-035 — Images page is five-column vertical gallery
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Five image cards per row, continue downward, vertical scrollbar/mouse wheel when needed, mature image controls preserved. A delayed older horizontal layout must not overwrite this final layout.
+
+## REQ-49I-036 — Products gallery bulk archive/delete with duplicate prevention
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Owner acceptance:
+- Product cards can be selected individually and as a visible group,
+- both unpublished and already-synced Products can be archived from the Products gallery,
+- synced/edited cards have a white visual treatment,
+- delete/block keeps source identity/link so the same Product is not downloaded again,
+- physical files are not deleted by this Catalog list action,
+- archive and delete/block remain distinct operations.
+
+## REQ-49I-037 — New acquisition defaults to five images plus source screenshot
+Status: `IMPLEMENTED ON FEATURE BRANCH / WINDOWS LOCAL QA REQUIRED`
+
+Normal source image intake defaults to five while hard maximum remains 20. One full-page source screenshot is added as an extra local, non-selected Product gallery reference during approved full acquisition.
 
 ## Operational Release Request
 ### REQ-REL-001 — Hand Catalog Center to employees and deploy approved release
-Status: `BLOCKED BY 49.3I.25 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
+Status: `BLOCKED BY 49.3I.26 WINDOWS QA + ONE LOCAL PUBLISH E2E + OWNER APPROVAL`
 
 Product data moves through the existing publish/bridge/import contract. Local SQLite is never copied over Production MySQL.
 
