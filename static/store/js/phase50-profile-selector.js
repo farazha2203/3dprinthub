@@ -91,7 +91,7 @@
 
     function buildDimensions(mode, variants) {
         const dimensions = [...(MODE_DIMENSIONS[mode] || MODE_DIMENSIONS.size_build)];
-        ["profile", "weight", "material", "color", "quality"].forEach((dim) => {
+        ["weight", "material", "color", "quality"].forEach((dim) => {
             if (dimensions.includes(dim)) return;
             if (uniqueOptions(variants, dim).length > 1) dimensions.push(dim);
         });
