@@ -61,6 +61,27 @@ Correct fix: delegate with named arguments matching the mature signature.
 ### ERR-49-051 — Production Hero referenced internal imported-catalog media
 Correct fix: public Hero uses Product-owned gallery/main media or safe remote fallback; never widen public routing to imported working-media.
 
+### ERR-49-052 — Product Save/AI rebuilt the entire Products gallery and thumbnails
+**Date:** 2026-08-26  
+**Environment:** Windows Catalog Center with a large Product catalog.
+
+**Symptoms:**
+- pressing AI or performing a Product edit visibly refreshed the Products page,
+- repeated edits/AI calls became progressively expensive with many Product cards/images,
+- AI appeared slow before/after the provider request because unrelated UI work was executed.
+
+**Root Cause:** mature `ProductStudio.save()` called `app.refresh_products()`, `app.refresh_published()` and `app.load_product()` even for `save(silent=True)`. Product AI paths invoked silent save as preflight, while the Product Explorer renderer destroyed/rebuilt every visible card and requeued thumbnails. This coupled product-scoped writes to a global gallery rebuild.
+
+**Correct Fix:**
+- Phase49.3I.29 makes Workspace save/AI set a dirty marker while temporarily deferring global `refresh_products`/`refresh_published`/`load_product`,
+- Products presentation is paged to 48 cards while retaining the complete SQLite/Treeview result set,
+- Product AI uses the exact mother Provider/Model without hidden per-request model-list scans,
+- Phase49.3I.31 batch processing never refreshes globally per item and performs one final Products refresh only after the selected-product batch finishes/stops.
+
+**Prevention Rule:** product-scoped Save/AI must not rebuild the global Products Explorer. Batch operations may refresh the Products Explorer once at the explicit batch boundary. Performance tests must assert bounded presentation and deferred refresh contracts.
+
+**Release status:** implemented in candidate 8.8.2; full Windows regression/frozen/live-source QA still required before acceptance.
+
 ## RESOLVED PHASE50 / RELEASE INCIDENTS
 
 ### ERR-50-001 — Phase50 Admin CI used non-canonical Django environment names
