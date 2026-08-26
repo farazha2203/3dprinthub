@@ -39,6 +39,12 @@ class StoreConfig(AppConfig):
         from . import phase50_checkout_snapshot
         phase50_checkout_snapshot.install_model_fields()
 
+        # Phase50.A.2C migration 0037 owns professional pricing policy, explicit
+        # color-stock enforcement, shipping-service semantics and payment details.
+        # The mature Product/ProductVariant/ShippingMethod classes remain stable.
+        from . import phase50_commerce_policy
+        phase50_commerce_policy.install_model_fields()
+
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
@@ -101,6 +107,11 @@ class StoreConfig(AppConfig):
         from .phase50_product_admin_workspace import install as install_phase50_product_admin_workspace
         install_phase50_product_admin_workspace()
 
+        # Phase50.A.2C extends the final Product/Admin composition with explicit
+        # pricing policy, inventory controls, shipping semantics and payment data.
+        from .phase50_commerce_policy_admin import install as install_phase50_commerce_policy_admin
+        install_phase50_commerce_policy_admin()
+
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
         # allowed to become Store metadata or homepage Hero copy.
@@ -112,6 +123,10 @@ class StoreConfig(AppConfig):
         # from Windows Catalog Center into the same HomepageHeroSlide record.
         from .phase49_3b_hero_media_sync import install as install_phase49_3b_hero_media_sync
         install_phase49_3b_hero_media_sync()
+
+        # Phase50.A.2C owns the final price/shipping/form policy boundary. Install
+        # it before the checkout snapshot wrapper freezes the resulting values.
+        phase50_commerce_policy.install_runtime()
 
         # Phase50.A.2B is the final Cart/Checkout boundary. It preserves mature
         # coupon, inventory, notification and payment creation behavior, then
