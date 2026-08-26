@@ -76,7 +76,7 @@
       "daily_limit": 20
     }
   ],
-  "package_version": "8.8.1",
+  "package_version": "8.8.2",
   "portfolio_harvest_sources": ["makerworld", "printables", "thingiverse", "grabcad"],
   "local_categories": [
     {"slug": "external-other", "name": "سایر محصولات"},
