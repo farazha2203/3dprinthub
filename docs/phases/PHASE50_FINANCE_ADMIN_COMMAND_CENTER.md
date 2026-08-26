@@ -3,8 +3,9 @@
 Updated: 2026-08-26
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Subphase: `50.A.1E — Unified Product Admin Workspace`
-Status: `GITHUB CI TESTED / PRODUCTION DEPLOY REQUIRED`
-Production baseline: `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f`, MySQL `store.0034` applied. Repository state does not yet record `store.0035` as Production-applied.
+Status: `PRODUCTION VERIFIED / OWNER MANUAL QA NEXT`
+Production application commit: `9cfbc54ed4196144864b5f4201976d8466a88134`.
+Production MySQL has both `store.0034_phase50_variant2_commerce` and `store.0035_phase50_sales_profiles` applied.
 
 ## Owner request
 Complete storefront/Admin commerce before accounting core. The Product Admin must be one professional operator workspace ordered exactly as:
@@ -29,13 +30,13 @@ Current surrounding priorities remain reusable sales profiles, Hero Studio media
 - imported Admin safe preview, mobile Hero compaction, homepage SEO audit, Windows source image dimensions.
 
 ## 50.A.1D — Sales Profiles + Hero Admin Public Media
-Implemented/GitHub CI tested:
+Implemented, CI tested and deployed:
 - Product `sales_profile_selection_mode` and optional selector label,
 - ProductVariant profile name/key/default/order,
 - profile identity supports same material/color/size/build with different weight/time/price profiles,
 - copy-profile Admin action,
 - Hero Studio Product/album JSON endpoints resolve Product-owned public media or safe remote HTTP(S) source media,
-- migration `store.0035_phase50_sales_profiles`.
+- migration `store.0035_phase50_sales_profiles` applied on Production.
 
 GitHub Actions `Phase50 Sales Profiles Hero Admin CI` run `32879712980` PASS on snapshot `405d2c1daa85828d1a0dc68210d201c85b6db7ba`.
 
@@ -68,9 +69,6 @@ Present one Product change page with the operator's exact business sequence whil
 - no new migration in 50.A.1E.
 
 ### Regression gate
-First CI run `32941533091` reached compile, Django check, migration drift and SQLite migration apply, then failed only because the test incorrectly expected a stale `seo_status` list column.
-The mature Admin was preserved; the bad test assumption was corrected.
-
 Corrected GitHub Actions `Phase50 Product Admin Workspace CI` run `32941662288` PASS on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`:
 - compile PASS,
 - Django check PASS with known warnings only,
@@ -78,18 +76,40 @@ Corrected GitHub Actions `Phase50 Product Admin Workspace CI` run `32941662288` 
 - SQLite migrations through `store.0035` PASS,
 - unified Product Admin regressions PASS.
 
-### Production gate
-1. verify exact Production HEAD/worktree and current remote HEAD,
-2. verify MySQL vendor/name and actual `0034`/`0035` state,
-3. if `0035` is pending: fresh successful MySQL backup + exact migration plan + rollback commit,
-4. deploy committed GitHub snapshot only,
-5. apply only approved pending migration(s), collectstatic and Passenger restart,
-6. manual QA Product unified sections, Variant/Profile inline, pricing/SEO/Hero/source/sync links and Hero Studio images.
+### Production deployment and verification
+Owner deployment completed on 2026-08-26 at application commit `9cfbc54ed4196144864b5f4201976d8466a88134`.
 
-## 50.A.2 — Checkout & Delivery — next after Admin/0035 Production QA
+Verified:
+- Production root/branch/worktree correct and final worktree clean,
+- MySQL vendor/name correct,
+- `0034` and `0035` both applied,
+- migration plan empty after source deploy,
+- no new migration executed,
+- Product Admin section order runtime gate PASS,
+- ProductImage and ProductVariant inlines preserved,
+- collectstatic PASS,
+- Passenger restart completed,
+- Home/Store/Admin login HTTP 200,
+- public Home emitted zero private imported working-media references.
+
+Fresh rollback backup:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20260826-114327`
+
+Rollback source HEAD:
+`8fbe3413cada1099745f4d17312b8eb519694379`
+
+### Deployment incident / prevention
+The first deployment attempt stopped safely because `git fetch --prune origin` did not advance the branch remote-tracking ref. Host `remote.origin.fetch` was configured only for tag `v0.33.0` and the branch had no upstream. Correct recovery explicitly fetched `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`, verified exact SHA and ancestry, then used ff-only merge. Future host deployments must verify the fetch refspec before trusting `origin/<branch>`.
+
+### Remaining acceptance
+- owner manual Product Admin visual/data QA,
+- owner manual Hero Studio slide-edit image QA.
+
+## 50.A.2 — Checkout & Delivery — NEXT
 - profile-aware selector on Product page,
 - persist chosen profile/size/build/package snapshots,
 - effective product + packaging shipping weight,
+- parcel dimensions and insured value,
 - normalized carrier quote + immutable order snapshot,
 - Post/Tipax/Mahex only after verified current official API credentials/contracts,
 - preserve ShippingMethod fallback.
@@ -101,7 +121,7 @@ Reuse server-owned amount/currency, random callback identity, exact Authority, s
 Implement official current Torob Product API v3 using stable Product/profile identifiers, size/color/material/weight, price/availability and image-quality contract.
 
 ## Remaining Phase50
-- 50.B Accounting core: کل/معین/تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal.
+- 50.B Accounting core: کل / معین / تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal.
 - 50.C Treasury: bank/cash, receipts/payments, allocations/refunds/reconciliation.
 - 50.D Purchasing: suppliers, purchase orders/invoices/receiving/payables/returns.
 - 50.E Sales accounting: receivables, payment allocation, tax/discount/shipping, credit notes.
