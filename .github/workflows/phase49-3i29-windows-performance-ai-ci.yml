@@ -1,5 +1,6 @@
 name: Phase49.3I.29 Windows Performance and AI CI
 
+# Corrective Windows gate: no production deploy.
 on:
   push:
     branches:
