@@ -80,7 +80,32 @@ Correct fix: public Hero uses Product-owned gallery/main media or safe remote fa
 
 **Prevention Rule:** product-scoped Save/AI must not rebuild the global Products Explorer. Batch operations may refresh the Products Explorer once at the explicit batch boundary. Performance tests must assert bounded presentation and deferred refresh contracts.
 
-**Release status:** implemented in candidate 8.8.2; full Windows regression/frozen/live-source QA still required before acceptance.
+**Release status:** implemented in candidate 8.8.2; targeted 49.3I.31-32 CI PASS, Windows packaged/live QA still required before acceptance.
+
+### ERR-49-053 — Generic/silent Product Save could erase the canonical source URL
+**Date:** 2026-08-26  
+**Environment:** Windows Catalog Center Product Workspace.
+
+**Symptom:** after pressing an apparently unrelated Product action, the saved Product source link disappeared.
+
+**Root Cause:** mature `ProductStudio.save()` calculated the canonical link only as `source_url.get().strip() or spec_source_url.get().strip()`. When both mirrored UI controls were temporarily blank, generic/silent Save wrote an empty `source_url`, recomputed `normalized_url` from the empty value and regenerated the Product fingerprint from the empty identity. Silent Save is reused by close, refetch, AI preflight, publish and layered Workspace actions, so the visible triggering button did not need to be a link-edit action.
+
+**Important previous condition:** this was not a crawler/OpenRouter/AvalAI deletion. The destructive write happened at the common Save boundary before/around those feature-specific flows.
+
+**Correct Fix — Phase49.3I.32:**
+- compose a final Workspace Save wrapper after all older layers,
+- resolve explicit non-empty edits first, but when both mirrored URL controls are blank preserve an already stored DB source URL,
+- feed the resolved canonical URL back into both controls before entering the mature Save chain,
+- enforce a post-save invariant that restores `source_url`, `normalized_url` and fingerprint if any legacy layer still clears them,
+- for Products already damaged by the old bug, recover only an exact previously persisted HTTP/HTTPS URL: latest `product_history` snapshots first, matching `discovered_urls(source_code, external_id)` second,
+- recovery is local-only, uses no network and never guesses/reconstructs a URL,
+- record recovery in Product history/diagnostics.
+
+**Regression coverage:** `tests.test_phase49_3i32_source_url_guard` proves: both blank controls preserve an existing URL; explicit main/spec edits remain valid; a never-linked Product stays blank; the exact pre-delete URL is recovered from history; matching discovery identity is the fallback; the final Workspace wrapper blocks the old destructive Save behavior.
+
+**Verification:** GitHub Actions `Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI` run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`.
+
+**Prevention Rule:** generic Save, silent Save, AI, close, refetch, image or publish-related flows may never be destructive source-unlink operations. Clearing a persisted canonical Product source URL requires a future explicit, separately confirmed unlink operation; transient empty UI state is never authority to destroy source identity.
 
 ## RESOLVED PHASE50 / RELEASE INCIDENTS
 
