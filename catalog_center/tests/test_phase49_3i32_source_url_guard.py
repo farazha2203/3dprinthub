@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
+import sqlite3
 import unittest
 
 from app.phase49_3i32_source_url_guard import (
     install_workspace,
+    recover_source_url_from_history,
     resolve_source_url_for_save,
 )
 
@@ -54,6 +57,19 @@ class _Workspace:
         return True
 
 
+class _HistoryDB:
+    def __init__(self):
+        self.conn = sqlite3.connect(":memory:")
+        self.conn.row_factory = sqlite3.Row
+        self.conn.execute(
+            "CREATE TABLE product_history(id INTEGER PRIMARY KEY, product_id INTEGER, before_json TEXT, after_json TEXT)"
+        )
+        self.conn.execute(
+            "CREATE TABLE discovered_urls(id INTEGER PRIMARY KEY, source_code TEXT, external_id TEXT, url TEXT)"
+        )
+        self.conn.commit()
+
+
 class Phase49I32SourceUrlGuardTests(unittest.TestCase):
     def test_resolver_preserves_existing_when_both_controls_are_blank(self):
         existing = "https://makerworld.com/en/models/3176140-product-name"
@@ -71,6 +87,36 @@ class Phase49I32SourceUrlGuardTests(unittest.TestCase):
 
     def test_resolver_does_not_invent_url_for_never_linked_product(self):
         self.assertEqual(resolve_source_url_for_save("", "", ""), "")
+
+    def test_recovery_uses_exact_pre_delete_url_from_product_history(self):
+        db = _HistoryDB()
+        expected = "https://makerworld.com/en/models/3176140-product-name?from=search#profileId-3591648"
+        db.conn.execute(
+            "INSERT INTO product_history(id, product_id, before_json, after_json) VALUES(1, 7, ?, ?)",
+            (json.dumps({"source_url": expected}), json.dumps({"source_url": ""})),
+        )
+        db.conn.commit()
+        recovered = recover_source_url_from_history(
+            db,
+            7,
+            {"source_code": "makerworld", "external_id": "3176140", "source_url": ""},
+        )
+        self.assertEqual(recovered, expected)
+
+    def test_recovery_falls_back_to_exact_discovered_identity_without_network(self):
+        db = _HistoryDB()
+        expected = "https://makerworld.com/en/models/3176140-product-name"
+        db.conn.execute(
+            "INSERT INTO discovered_urls(id, source_code, external_id, url) VALUES(1, 'makerworld', '3176140', ?)",
+            (expected,),
+        )
+        db.conn.commit()
+        recovered = recover_source_url_from_history(
+            db,
+            7,
+            {"source_code": "makerworld", "external_id": "3176140", "source_url": ""},
+        )
+        self.assertEqual(recovered, expected)
 
     def test_final_workspace_save_guard_prevents_accidental_link_deletion(self):
         existing = "https://makerworld.com/en/models/3176140-product-name?from=search#profileId-3591648"
