@@ -32,7 +32,7 @@ class Phase50Variant2GalleryContractTests(SimpleTestCase):
             self.assertIsNotNone(StoreOrderItem._meta.get_field(name))
 
         names = {constraint.name for constraint in ProductVariant._meta.constraints}
-        self.assertIn("uniq_product_material_quality_color_size_build", names)
+        self.assertIn("uniq_product_material_quality_color_size_build_profile", names)
         self.assertNotIn("uniq_product_material_quality_color", names)
 
     def test_effective_shipping_weight_includes_packaging_without_manual_override(self):
@@ -67,3 +67,28 @@ class Phase50Variant2GalleryContractTests(SimpleTestCase):
         self.assertIn("store-gallery-thumb-active", js)
         self.assertIn("/store/api/variant-commerce-options/", js)
         self.assertIn("object-fit:contain!important", css)
+
+    def test_storefront_profile_selector_uses_existing_variant_contract(self):
+        root = Path(__file__).resolve().parents[1]
+        selector_js = (root / "static" / "store" / "js" / "phase50-profile-selector.js").read_text(encoding="utf-8")
+        selector_css = (root / "static" / "store" / "css" / "phase50-profile-selector.css").read_text(encoding="utf-8")
+        base = (root / "templates" / "store" / "base.html").read_text(encoding="utf-8")
+
+        for marker in (
+            "MODE_DIMENSIONS",
+            "installSelector",
+            "store-profile-option",
+            "/store/api/variant-commerce-options/",
+            'select.dispatchEvent(new Event("change"',
+        ):
+            self.assertIn(marker, selector_js)
+
+        for marker in (
+            "store-profile-selector",
+            "store-profile-summary__price",
+            "store-profile-native-fallback",
+        ):
+            self.assertIn(marker, selector_css)
+
+        self.assertIn("store/css/phase50-profile-selector.css", base)
+        self.assertIn("store/js/phase50-profile-selector.js", base)
