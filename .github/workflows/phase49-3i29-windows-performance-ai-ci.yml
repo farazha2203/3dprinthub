@@ -1,0 +1,94 @@
+name: Phase49.3I.29 Windows Performance and AI CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - "catalog_center/app/phase49_3i29_windows_performance_ai.py"
+      - "catalog_center/app/phase49_3i_pricing_modes.py"
+      - "catalog_center/app/phase49_3i17_single_active_ai_runtime.py"
+      - "catalog_center/app/ai_providers.py"
+      - "catalog_center/app/openai_content.py"
+      - "catalog_center/app/product_studio.py"
+      - "catalog_center/app/phase49_3i_explorer_hotfix.py"
+      - "catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py"
+      - ".github/workflows/phase49-3i29-windows-performance-ai-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3i29:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3i29-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3i29-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3i29/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3i29/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3i29/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3i29/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile Windows corrective surfaces
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3i29_windows_performance_ai.py \
+            catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py
+
+      - name: Phase49.3I.29 targeted regressions
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_epic49_phase49_3i29_windows_performance_ai \
+            tests.test_epic49_phase49_3i17_single_active_ai_runtime
+
+      - name: Static performance and AI contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("catalog_center/app/phase49_3i29_windows_performance_ai.py").read_text(encoding="utf-8")
+          pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
+          assert 'PRODUCT_PAGE_SIZE = 48' in text
+          assert 'minimal_product_payload' in text
+          assert '"source_title"' in text and '"source_description"' in text
+          assert '_phase49_3i29_mark_products_dirty' in text
+          assert '_phase49_3i29_flush_products_refresh' in text
+          assert '_install_phase49_3i29_app(app_class)' in pricing
+          assert '_install_phase49_3i29_workspace(workspace_class' in pricing
+          print("PHASE49_3I29_PRODUCT_SAVE_REFRESH=DEFERRED")
+          print("PHASE49_3I29_PRODUCT_CARDS=PAGED_48")
+          print("PHASE49_3I29_AI_BUSINESS_PAYLOAD=TITLE_DESCRIPTION_ONLY")
+          print("PHASE49_3I29_AI_ACTIVE_PROFILE=MOTHER_SETTINGS")
+          print("PHASE49_3I29_HIDDEN_PRODUCT_MODEL_SCAN=FORBIDDEN")
+          PY
+
+      - name: Django safety
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Launcher smoke
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3i29-launch.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i29-launch.txt
