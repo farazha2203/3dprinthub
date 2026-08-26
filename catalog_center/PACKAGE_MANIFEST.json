@@ -46,7 +46,8 @@
     "smart_exact_link_ai",
     "selected_image_ai_seo_and_metadata",
     "selected_products_bulk_link_ai",
-    "single_refresh_after_bulk_ai"
+    "single_refresh_after_bulk_ai",
+    "canonical_source_url_save_guard"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -98,6 +99,7 @@
     "app/phase49_3i27_category_provider_bridge.py",
     "app/phase49_3i29_windows_performance_ai.py",
     "app/phase49_3i31_smart_link_bulk_ai.py",
+    "app/phase49_3i32_source_url_guard.py",
     "tests/test_epic49_editable_studio.py",
     "tests/test_epic49_final.py",
     "tests/test_epic49_studio_final.py",
@@ -122,7 +124,8 @@
     "tests/test_phase49_3i27_category_provider_bridge.py",
     "tests/test_phase49_3i28_exact_link_contract.py",
     "tests/test_epic49_phase49_3i29_windows_performance_ai.py",
-    "tests/test_phase49_3i31_smart_link_bulk_ai.py"
+    "tests/test_phase49_3i31_smart_link_bulk_ai.py",
+    "tests/test_phase49_3i32_source_url_guard.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
