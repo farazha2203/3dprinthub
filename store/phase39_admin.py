@@ -51,7 +51,12 @@ sold_quantity_admin.short_description = "فروش موفق"
 
 def estimated_profit_admin(self, obj):
     total = obj.store_order_items.filter(order__payment_status="paid").aggregate(v=Sum("gross_profit"))["v"] or 0
-    return format_html('<strong style="color:#059669">{:,.0f} تومان</strong>', total)
+    # Django 6 format_html() escapes every argument before interpolation, so a
+    # numeric format specifier such as {:,.0f} is applied to SafeString and
+    # raises ValueError. Format the numeric value first, then pass plain text
+    # through format_html() for safe markup output.
+    formatted_total = f"{total:,.0f}"
+    return format_html('<strong style="color:#059669">{} تومان</strong>', formatted_total)
 estimated_profit_admin.short_description = "سود ثبت‌شده"
 
 product_admin = admin.site._registry.get(Product)
