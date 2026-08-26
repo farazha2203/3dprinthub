@@ -3,63 +3,78 @@
 Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Release: `Phase50.A.1G — Velzon Operator Surface V2`
-Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Current Release: `Phase50.A.1H Admin Shell Stability + Phase50.A.2A Storefront Sales Profile Selector`
+Status: `GITHUB CI TESTED / HOST READ-ONLY VERIFY NEXT`
 
-## Production verified state
-Production is currently verified at commit `bc7b97f9c63432b8105f52f61cf5cdae1369689b` on the active branch.
+## Last documented Production state
+The last terminal-verified Production application commit recorded in repository documentation is `bc7b97f9c63432b8105f52f61cf5cdae1369689b`. The owner subsequently supplied screenshots showing the newer Velzon V2 surface, but no terminal transcript proving the exact current host HEAD was supplied in that step. Therefore the actual host HEAD must be re-verified read-only before the next deployment and must not be guessed.
 
-Verified Production environment:
-- project root `/home/sfkilvrs/3dprinthub`,
-- Python venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`,
+Last verified Production environment:
+- root `/home/sfkilvrs/3dprinthub`,
+- venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`,
 - MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
 - `store.0034_phase50_variant2_commerce` applied,
 - `store.0035_phase50_sales_profiles` applied,
-- migration plan empty,
-- Product Admin real changelist HTTP/render gate PASS,
-- Home/Store/Admin login HTTP 200,
-- public Home private imported-media refs = 0,
-- Production worktree clean.
+- no pending migration at last verification,
+- Home/Store/Admin HTTP 200,
+- public Home private imported-media refs = 0.
 
-Fresh rollback backup for the `bc7b97f` deployment exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848` and contains a verified MySQL dump.
+Known fresh rollback backup from the Product Admin/business-navigation deployment: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`.
 
-## Owner QA after `bc7b97f`
-Owner visual QA confirmed that the Product Admin 500 is fixed and the business navigation is active, but exposed a remaining visual/interaction defect on Django changelist pages: the legacy `#changelist-filter` remained permanently visible as a narrow sticky column, squeezed the result table, and retained old Django labels/controls. The owner requested a substantially more modern, professional Velzon experience across Admin rather than another small CSS patch.
+## Owner QA — current requested delta
+Owner QA of the Velzon V2 Admin identified two shell defects and one unfinished Storefront surface:
+1. during refresh/navigation, the Velzon footer line/text could appear across the viewport before settling,
+2. opening/navigating the right Admin menu produced a visible page jump and the 250px menu remained too narrow for Persian labels,
+3. Product page still exposed the old flat Variant select even though sales-profile/size/build/weight/color/price backend metadata already existed.
 
-The owner re-supplied `master.zip`. The package was reviewed as Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6`. Purchased vendor assets remain private and gitignored under `static/velzon_master/`; the public repository contains only project-owned adapter/integration code.
+## Phase50.A.1H — Admin Shell Stability
+Implemented on GitHub without schema changes:
+- added `static/admin/phase50-admin-shell-stability.css`,
+- Velzon footer is kept in normal document flow instead of vendor absolute positioning,
+- Admin shell/content use a stable flex-column min-height contract,
+- right operator sidebar width increased from Velzon's 250px default to 290px with improved Persian label spacing/readability,
+- disabled broad shell geometry transitions that visually amplify navigation movement,
+- replaced active-menu `scrollIntoView()` with explicit scrolling of the internal SimpleBar/sidebar scroll element only,
+- V2 filter drawer/full-width table behavior remains intact.
 
-## Phase50.A.1G — Velzon Operator Surface V2
-Implemented on GitHub as a final additive presentation layer over the mature Django Admin/Velzon shell:
-- `static/admin/phase50-admin-console-v2.css`,
-- `static/admin/phase50-admin-console-v2.js`,
-- `templates/admin/base.html` loads the V2 assets,
-- expanded Admin HTTP/static regression tests,
-- CI now also performs `node --check` on the new JavaScript.
+Root cause and prevention are recorded as `ERR-50-009`.
 
-Visible behavior:
-- changelists use the full content width instead of reserving a permanent filter column,
-- native Django filters are preserved functionally but moved into an on-demand off-canvas/drawer opened by a `فیلترها` button,
-- filter backdrop/close/Escape/reset and active-filter count are supported,
-- legacy English Filter/Search/Action labels are normalized for the Persian operator UI,
-- search toolbar, bulk actions, result table and pagination are card-based Velzon surfaces,
-- result table has modern sticky headers, row hover and contained horizontal scrolling only when required,
-- long Product/change forms gain a sticky horizontal section navigator and card fieldsets,
-- existing Admin permissions/actions/models remain authoritative; no business or schema state is duplicated.
-
-## Verification
-GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on runtime snapshot `3687d0922959fca53f2118be6dacd32639159346`:
-- Python compile PASS,
-- Admin V2 JavaScript syntax validation PASS,
+Verification:
+- GitHub Actions `Phase50 Product Admin Workspace CI` run `32958276378` PASS,
+- Admin CI snapshot `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
+- JavaScript syntax PASS,
 - Django check PASS,
 - migration drift NONE,
 - CI SQLite migrations PASS,
-- unified Product Admin and representative Admin HTTP regressions PASS,
-- no schema migration added.
+- Product/representative Admin regressions PASS,
+- no migration added.
 
-Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memory realtime debt, and MySQL conditional-constraint warnings.
+## Phase50.A.2A — Storefront Sales Profile Selector
+The backend contract already existed and is now surfaced on the customer Product page as progressive enhancement:
+- Product selection modes remain authoritative: full profile list / size / weight / build / size→build / build→size,
+- uses existing public endpoint `/store/api/variant-commerce-options/`,
+- renders modern choices for the configured selection mode and available size/build/weight/material/color/quality dimensions,
+- selected profile updates displayed profile price and summary facts including part/shipping weight, print time and package dimensions,
+- keeps the mature native `variant-select` as a fallback,
+- synchronizes the native Variant ID and dispatches the existing change event, so current price/cart logic and `AddToCartForm` remain authoritative,
+- no duplicate Product/Profile/Variant state and no new migration.
+
+Verification:
+- GitHub Actions `Phase50 Variant2 Gallery CI` run `32958296546` PASS,
+- Storefront selector CI snapshot `e3c57311c0c3980befeaf6012f3bb8fc502333bc`,
+- Storefront JavaScript syntax PASS,
+- Django check PASS,
+- migration drift NONE,
+- migration plan/CI migrations PASS,
+- Variant2/gallery/profile-selector regression PASS.
+
+## Scope boundary
+This release makes the Product selector visible/usable and keeps the canonical Variant ID flowing into the mature cart path. Full immutable selected-profile snapshot completion, normalized carrier quotes, insured value and final shipping/delivery workflow remain subsequent Phase50.A.2 work and must not be claimed complete yet.
+
+Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memory realtime debt and MySQL conditional-constraint warnings.
 
 ## Exact next work
-1. Deploy the CI-tested Admin V2 snapshot from GitHub to Production with explicit verified `FETCH_HEAD` because of `ERR-50-007`, fresh rollback backup, no-migration gate, collectstatic and Passenger restart.
-2. Production visual QA: Product changelist must have no permanent filter column; `فیلترها` opens only on demand; Product edit page must show the section navigator; representative Admin list/change pages must remain usable on desktop/mobile.
-3. After Admin V2 acceptance, continue the requested Product engagement package separately: real Favorite/Save model, Product like/save/review/comment counters, and verified-purchase-only review policy with its own migration/tests/backup.
-4. Then continue `Phase50.A.2 — Checkout & Delivery`.
+1. Run a read-only Host audit: actual branch/HEAD/worktree, live GitHub HEAD, fetch refspec, Python/Django, exact MySQL DB and `0034/0035`, migration drift/plan, private Velzon runtime assets and HTTP baseline.
+2. If all gates are clean, compare actual host HEAD to the approved GitHub target, create fresh rollback/source/.env/MySQL backup, explicit verified branch fetch to `FETCH_HEAD`, no-migration gate, ff-only deploy, collectstatic and Passenger restart.
+3. Production QA: footer must never cross the viewport during refresh; menu navigation must not scroll the document; sidebar must be 290px/readable; Product page must show profile-aware selectors and update the canonical Variant/price correctly.
+4. Continue Phase50.A.2 checkout snapshot/shipping work, then Product engagement package (Favorite/Save + counters + verified-buyer review policy) according to owner priority.
