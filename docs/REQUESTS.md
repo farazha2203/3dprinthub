@@ -4,122 +4,83 @@ Last Updated: 2026-08-26
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
-## Preserved Phase49 contracts
-- GitHub-first delivery; live branch/HEAD verification before Local/Host operations.
-- Catalog Product Workspace remains canonical editor.
-- exact Search/Listing URL remains authoritative.
-- Product AI uses exactly one saved Provider/Model/key path and no hidden AI/model scan on open.
-- fixed/range/formula pricing modes remain independent.
-- Product/SEO/media/Bridge security and idempotency contracts remain intact.
-- imported Catalog working-media is not a Production-public media namespace.
-
-## REQ-REL-002 — Final Windows Catalog Center executable
-Status: `8.8.1 RELEASED / SOURCE HAS NEW IMAGE-DIMENSION DELTA`
-Released EXE remains `3DPrintHub-CatalogCenter-v8.8.1.exe`; a newer immutable Windows build is required only after pending desktop source changes pass smoke/release gates.
+## Preserved project contracts
+- GitHub-first delivery; live branch/HEAD verification before Host operations.
+- Product/SEO/media/Bridge security/idempotency and Product-owned public media remain intact.
+- imported Catalog working-media is not a public Production namespace.
+- healthy StoreOrder/Payment/Invoice/inventory/coupon/VAT behavior is extended rather than duplicated.
+- no guessed carrier/gateway endpoint or tariff.
 
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
 Full GL/subledger, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `PRODUCTION VERIFIED / OWNER VISUAL QA NEXT`
-Admin must be a professional operator console, not legacy Django with cosmetic styling. Business navigation, unified Product workspace and Product 500 fix remain preserved. Current acceptance requires:
-- no permanent Filter column,
-- full-width operational tables and on-demand filter drawer,
-- Persian controls and modern Velzon cards/forms,
-- footer never flashes across content on refresh,
-- menu navigation must not scroll/jump the document viewport,
-- right operator sidebar approximately 290px with readable Persian labels,
-- purchased Velzon vendor assets remain private; only project-owned integration code is committed publicly.
-
-Admin shell stability deployed at Production `c283864290f9c989a9fcdf24ee8eef519560e917`; Admin CI run `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`. Final browser visual acceptance remains owner QA.
+Status: `PRODUCTION VERIFIED / VISUAL QA CONTINUES`
+Professional Velzon operator console with business navigation, full-width lists, on-demand filters, Persian controls, stable footer, no document jump and approximately 290px readable right sidebar.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
-Existing StoreOrder, Quote, Payment, StorePayment, invoices, inventory movements, Product/media/Catalog history and payment idempotency/security remain compatible.
+StoreOrder, StorePayment, invoices, inventory, coupon/VAT, Product/Profile/Variant history and payment security remain compatible.
 
 ## REQ-50-004 — Dynamic delivery price
-Status: `REQUESTED / 50.A.2B NEXT`
-Shipping from chosen profile/product + packaging weight/dimensions/destination; Post/Tipax/Mahex only with verified current official API credentials/contracts; mature ShippingMethod fallback preserved.
+Status: `50.A.2B GITHUB CI TESTED / PRODUCTION MIGRATION NEXT`
+Shipping calculation must use the chosen profile/product effective shipping weight, packaging weight/dimensions and destination. Current ShippingMethod/rate rules remain the explicit fallback. Post/Tipax/Mahex adapters are allowed only after verified official current contracts/credentials.
 
 ## REQ-50-005 — Coupon + VAT checkout
-Status: `BACKEND FOUNDATION PRESENT / ADMIN SURFACED`
-Improve presentation/integration rather than duplicate current Coupon/VAT/packaging/shipping calculations.
+Status: `PRESERVED / INCLUDED IN 50.A.2B REGRESSION BOUNDARY`
+Do not duplicate current Coupon/VAT logic; shipping snapshot finalization must preserve discount, packaging, tax and payment totals.
 
 ## REQ-50-006 — Phishing-resistant comprehensive payment
 Status: `REQUESTED / 50.A.3 PLANNED`
-Reuse server-owned amount, DB locking, callback identity, exact Authority, server-to-server verify and idempotent ledger; never collect/store card/PIN/CVV.
-
-## REQ-50-007 — Professional Product gallery
-Status: `DEPLOYED FOUNDATION / OWNER QA CONTINUES`
-Thumbnail-to-main contain-fit viewer and accessible fullscreen lightbox.
+Server-owned amount, DB locking, callback identity, exact Authority, server-to-server verification and idempotency; never collect/store card/PIN/CVV.
 
 ## REQ-50-008 — Variant 2.0 size/build/packaging parity
-Status: `BACKEND + STOREFRONT SELECTOR PRODUCTION VERIFIED`
-Multiple sales profiles may vary by size/build/material/color/quality/weight/time/price/package. `store.0034` and `store.0035` are the existing schema foundation. Customer Product page exposes these choices while keeping canonical ProductVariant state.
+Status: `PRODUCTION VERIFIED FOUNDATION`
+`store.0034` and `store.0035` are applied; customer selector uses canonical ProductVariant state.
 
 ## REQ-50-009 — Torob marketplace integration
 Status: `REQUESTED / 50.A.4 PLANNED`
-Current official Torob Product API v3, stable grouping, current price/availability, image-quality rules and verified attribution/webhooks.
+Official Product API v3 with stable Product/Profile grouping, price/availability and image-quality rules.
 
 ## REQ-50-010 — ZarinPal Store checkout activation
 Status: `REQUESTED / 50.A.3 PLANNED`
-Connect StorePayment to mature secure service-payment architecture before Production merchant activation.
-
-## REQ-50-011 — Imported-model Admin image/data integrity
-Status: `PRODUCTION VERIFIED / OWNER QA CONTINUES`
-Imported-model Admin/public Hero uses Product-owned public media or safe remote fallback; working-media remains private.
-
-## REQ-50-012 — Mobile Hero product visibility
-Status: `DEPLOYED / OWNER QA`
-Product image must remain visible with compact responsive title/description/CTA behavior.
-
-## REQ-50-013 — Homepage SEO operator controls
-Status: `DEPLOYED ADMIN AUDIT / SOCIAL META ENHANCEMENT OPEN`
-Existing SiteSetting SEO state stays canonical.
+Connect StorePayment to mature secure payment architecture before merchant activation.
 
 ## REQ-50-014 — Windows Product image pixel dimensions
 Status: `SOURCE IMPLEMENTED / CI TESTED / NEXT EXE VERSION AFTER SMOKE`
 Each Product image card shows original width × height px.
 
-## REQ-50-015 — Reconcile Production Product Admin 500
-Status: `RESOLVED / PRODUCTION VERIFIED`
-Real Product changelist renders 200 after `estimated_profit_admin` correction.
-
-## REQ-50-016 — Reusable sales profiles per Product
-Status: `BACKEND + CUSTOMER SELECTOR PRODUCTION VERIFIED`
-Product can choose selection by full profile list, size, weight, build, size→build or build→size. ProductVariant profile identity/default/order remains authoritative; `store.0035_phase50_sales_profiles` is applied on Production.
-
-## REQ-50-017 — Hero Studio images load on slide edit pages
-Status: `PRODUCTION DEPLOYED / OWNER QA CONTINUES`
-Never emit private imported working-media paths.
-
 ## REQ-50-018 — Unified Product Admin workspace
 Status: `PRODUCTION VERIFIED / VISUAL QA CONTINUES`
-Product edit keeps exact business order: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`.
+Product edit business order remains: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`.
 
 ## REQ-50-019 — Modern Velzon Admin interaction surface
-Status: `PRODUCTION VERIFIED / OWNER VISUAL QA NEXT`
-Full-width list, on-demand filter drawer, modern table/search/actions, section navigation, responsive/dark-mode friendly, native Django permission/action/query semantics preserved. Follow-up shell stability at `c283864...` puts footer in normal flow, prevents document-level active-menu scrolling and widens the right sidebar to 290px.
+Status: `PRODUCTION VERIFIED / VISUAL QA CONTINUES`
+Full-width list, on-demand filter drawer, modern table/search/actions, section navigation, stable footer and internal-only sidebar scrolling.
 
 ## REQ-50-020 — Product likes, saved/favorites, comments and verified-buyer reviews
-Status: `REQUESTED / SEPARATE SCHEMA-BUSINESS PHASE`
-Preserve existing ProductLike/ProductComment/ProductReview. Add Favorite/Save if absent, Product engagement counters/Admin visibility and qualifying-purchase checks for buyer feedback. Dedicated migration/tests/backup required.
+Status: `REQUESTED / NEXT SCHEMA-BUSINESS PACKAGE AFTER 50.A.2B`
+Preserve ProductLike/ProductComment/ProductReview. Add Favorite/Save if absent, engagement counters/Admin visibility and qualifying purchased/paid Product checks for buyer feedback. Dedicated migration/tests/backup required.
 
 ## REQ-50-021 — Customer Product profile/size/weight/color/price selector
-Status: `PRODUCTION VERIFIED / OWNER VISUAL QA NEXT`
-Customer Product view uses the existing Product/ProductVariant/Variant API/cart contract. Acceptance:
-- obey Product selection mode list/size/weight/build/size→build/build→size,
-- expose available size/build/weight/material/color/quality choices,
-- immediately show selected profile price and operational facts,
-- keep canonical ProductVariant ID as the value submitted to the mature cart path,
-- keep native select as progressive-enhancement fallback,
-- use existing `/store/api/variant-commerce-options/`, Product/ProductVariant fields and current AddToCartForm rather than duplicate state,
-- no migration for this presentation release.
+Status: `PRODUCTION VERIFIED`
+Customer Product view obeys list/size/weight/build/size→build/build→size selection, exposes available profile dimensions and price/facts, keeps canonical ProductVariant ID and native fallback, and reuses `/store/api/variant-commerce-options/`.
 
-Production verification at `c283864290f9c989a9fcdf24ee8eef519560e917`: Product detail 200, selector CSS/JS 200 and present in HTML, native fallback present, Variant API parsed successfully. Storefront CI run `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`.
+## REQ-50-022 — Immutable selected-profile checkout and shipping snapshot
+Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION MIGRATION NEXT`
+Acceptance:
+- finalized order item freezes profile name/key/label and the customer-visible selection mode/value,
+- finalized order item freezes size/build/material/color/quality, final weight, packaging weight, effective shipping weight, print time and package dimensions,
+- Cart/checkout effective weight includes packaging when there is no explicit shipping-weight override,
+- order freezes `insured_value` and normalized `shipping_quote_snapshot`,
+- ShippingMethod/rate rules remain current fallback and quote source is explicit; no external carrier claim,
+- do not invent combined parcel geometry from multiple units/items; preserve per-line package facts and require final packing,
+- coupon/VAT/inventory/payment/notification behavior remains mature and authoritative,
+- snapshot stays unchanged after later ProductVariant edits,
+- migration `store.0036_phase50_checkout_snapshot` requires exact Production MySQL verification, fresh backup and rollback before apply.
 
-Full immutable profile/customer-choice snapshot, shipping weight/package/insured value and normalized delivery quote remain 50.A.2B.
+CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
 
 ## Change rule
-New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Current host deployments must verify Git fetch refspec and use explicit live branch fetch to `FETCH_HEAD` because remote-tracking refs are stale. On this cPanel host avoid `/dev/fd`/process-substitution dependencies in deployment scripts; use Python or portable temporary-file approaches.
+New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
