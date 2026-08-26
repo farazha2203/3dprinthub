@@ -18,30 +18,40 @@ Canonical validated pre-49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3H_LOC
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Admin V2 CI-tested runtime snapshot: `3687d0922959fca53f2118be6dacd32639159346`
+Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
+Current Storefront selector CI runtime: `e3c57311c0c3980befeaf6012f3bb8fc502333bc`
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
 ## PRODUCTION
 Project Root: `/home/sfkilvrs/3dprinthub`
 Venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
+Python: 3.12.13
+Django: 6.0.7
 Database Engine: MySQL
 Database Name: `sfkilvrs_EmiAdmin_3dprinthub`
 Static Base: `/home/sfkilvrs/public_html/static`
 Media Base: `/home/sfkilvrs/public_html/media`
 Private Media: `/home/sfkilvrs/3dprinthub/private_media`
 Passenger Restart Pattern: `mkdir -p tmp && touch tmp/restart.txt`
-Current verified Production application commit: `bc7b97f9c63432b8105f52f61cf5cdae1369689b`
-Latest verified rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`
+Current verified Production application commit: `c283864290f9c989a9fcdf24ee8eef519560e917`
+Latest verified rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`
+Previous incomplete pre-deploy audit backup retained for evidence: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143245`
 
 ## PRIVATE / PURCHASED ADMIN ASSETS
-Velzon vendor assets are expected privately at runtime under `static/velzon_master/` and are intentionally gitignored in the public Repository. Public GitHub stores only project-owned Django/Velzon adapter CSS/JS/templates. Do not infer absence on Production from absence in the public Git tree; verify runtime/static files on the target host when relevant.
+Velzon vendor assets are expected privately at runtime under `static/velzon_master/` and are intentionally gitignored in the public Repository. Production verification confirmed required Bootstrap RTL, app RTL, layout.js and Bootstrap bundle files are present. Public GitHub stores only project-owned Django/Velzon adapter CSS/JS/templates.
 
 ## DOMAIN
 Main: `https://3dprinthub.ir`
 
+## Production Git caveat
+The current Host `remote.origin.fetch` still tracks only `+refs/tags/v0.33.0:refs/tags/v0.33.0`; normal `git fetch origin` does not update the active branch remote-tracking ref. Per `ERR-50-007`, verify the live branch with `git ls-remote` and explicitly fetch `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`, then verify SHA/ancestry and use ff-only merge.
+
+## Production shell caveat
+This cPanel environment did not provide a reliable `/dev/fd` path for Bash process substitution during deployment backup. Per `ERR-50-010`, avoid `< <(...)` in Production deployment scripts; use the Production Python runtime or portable temporary-file approaches for enumeration/copy operations.
+
 ## Safety
-- Do not assume `.env` paths equal these defaults; inspect runtime settings before Production.
+- Do not assume `.env` paths equal defaults; inspect runtime settings before Production operations.
 - Do not assume Local SQLite and Production MySQL behavior are identical.
 - Dirty Local/Host worktree: STOP/INSPECT; no reset/delete shortcut.
 - Before Production migration verify exact project root, branch, commit, Python venv, DB vendor/name, backup target and rollback.
-- Current Production Git remote-tracking branch may be stale because `remote.origin.fetch` historically tracked only tag `v0.33.0`; per `ERR-50-007`, verify live branch with `git ls-remote` and explicitly fetch the branch to `FETCH_HEAD` before ff-only deploy unless refspec is deliberately corrected.
+- JSON/API smoke payloads are data, not executable source; use `python - <args>` and explicit `json.load` when verifying endpoint responses.
