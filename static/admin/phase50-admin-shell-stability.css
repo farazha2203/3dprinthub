@@ -1,0 +1,92 @@
+/* Phase50.A.1H — Admin shell stability
+ * Fixes owner-observed refresh/footer flash and improves sidebar readability.
+ * Velzon vendor assets remain authoritative/private; this is project-owned glue.
+ */
+
+:root {
+    /* Velzon 4.3.0 defaults to 250px. Owner QA requested roughly +1cm. */
+    --vz-vertical-menu-width: 290px;
+}
+
+html.admin-console-v2 #layout-wrapper {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+html.admin-console-v2 .main-content {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+html.admin-console-v2 .page-content {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+/* Velzon positions .footer absolutely by default. In Django Admin the content
+ * height changes after widgets/SimpleBar initialize, which can briefly paint
+ * the footer across the viewport. Keep the footer in normal document flow. */
+html.admin-console-v2 .footer {
+    position: static !important;
+    inset: auto !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    flex: 0 0 auto;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 52px;
+    margin: auto 0 0 !important;
+    padding: 14px calc(var(--vz-grid-gutter-width) * .5) !important;
+    border-top: 1px solid var(--vz-border-color) !important;
+    background: var(--vz-footer-bg, var(--vz-card-bg, #fff)) !important;
+    z-index: 1;
+}
+
+/* Wider, calmer operator navigation. */
+html.admin-console-v2 .admin-business-sidebar,
+html.admin-console-v2 .app-menu.navbar-menu {
+    width: var(--vz-vertical-menu-width) !important;
+}
+
+html.admin-console-v2 .admin-business-nav > .nav-item > .menu-link {
+    padding-inline: .9rem !important;
+    gap: .7rem !important;
+    font-size: .84rem;
+}
+
+html.admin-console-v2 .admin-business-nav .menu-dropdown .nav-link {
+    padding-inline-start: .85rem !important;
+    padding-inline-end: 2.3rem !important;
+    font-size: .78rem;
+    line-height: 1.75;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+
+html.admin-console-v2 .admin-business-nav .menu-title {
+    padding-inline: 1.2rem !important;
+}
+
+html.admin-console-v2 .admin-master-menu-search {
+    padding-inline: .75rem;
+}
+
+html.admin-console-v2 .admin-master-menu-search .form-control {
+    font-size: .78rem;
+}
+
+/* Do not animate the entire content/sidebar geometry during a fresh page
+ * navigation. Interactive collapse still has its own Bootstrap transition. */
+html.admin-console-v2 .main-content,
+html.admin-console-v2 .navbar-menu,
+html.admin-console-v2 #page-topbar {
+    transition-property: none !important;
+}
+
+@media (max-width: 991.98px) {
+    :root { --vz-vertical-menu-width: 290px; }
+    html.admin-console-v2 .footer { width: 100% !important; }
+}
