@@ -108,9 +108,24 @@ and the active branch had no configured upstream. Therefore normal `git fetch --
 
 **Correct Fix:** verify live GitHub HEAD with `git ls-remote`, then explicitly fetch `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`; verify exact SHA and fast-forward ancestry; deploy with ff-only merge from `FETCH_HEAD`.
 
-**Verification:** explicit fetch returned `FETCH_HEAD=9cfbc54ed4196144864b5f4201976d8466a88134`; fast-forward succeeded; Django check, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and Production HTTP smoke all passed; final Production worktree was clean.
+**Verification:** explicit fetch returned the approved branch snapshot; fast-forward succeeded; Django check, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and Production HTTP smoke all passed; final Production worktree was clean.
 
 **Prevention:** before relying on `origin/<branch>` on Production, inspect `git config --get-all remote.origin.fetch` and branch upstream. If branch heads are not fetched, either correct the refspec deliberately or use explicit verified branch fetch to `FETCH_HEAD`. Never repeat a stale remote-tracking fetch unchanged.
+
+### ERR-50-008 — Legacy permanent Django filter column crushed modern Admin changelists
+**Date:** 2026-08-26  
+**Environment:** owner QA of Production Admin at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`.  
+**Symptom:** Product changelist was HTTP 200 but visually poor: `#changelist-filter` stayed permanently visible as a narrow sticky column, squeezed the Product result table, required its own long vertical scroll, and exposed legacy English labels such as `FILTER`, `Show counts` and `Action`.
+
+**Root Cause:** multiple historical presentation layers (`master-django.css` and the first Phase50 console CSS) both treated Django's native filter block as a permanent second changelist column. Server-side Admin tests verified renderability, but did not own the final browser composition boundary.
+
+**Rejected Fix:** merely shrinking/restyling the filter column would preserve the same usability problem and continue competing with wide Product tables.
+
+**Correct Fix:** preserve the native Django filter links/query semantics but move the existing `#changelist-filter` node at runtime into an on-demand off-canvas filter drawer. The default changelist becomes full-width. Add project-owned Velzon V2 CSS/JS for drawer/backdrop/reset/active count, Persian labels, modern search/actions/table/pagination, and long-form section navigation.
+
+**Verification:** `node --check` PASS; GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on code snapshot `3687d0922959fca53f2118be6dacd32639159346`; Django check, migration drift, CI migrations and focused Admin HTTP/static regressions all PASS. Production visual verification remains required after deployment.
+
+**Prevention:** test both server-render contracts and the final composition adapter. Do not reserve permanent layout width for optional filters on wide operational tables. Purchased Velzon vendor assets remain private/gitignored; public GitHub contains only project-owned integration layers.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
