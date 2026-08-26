@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Primary Web/Commerce Release: `Phase50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
 Parallel Windows Track: `Phase49.3I.32 — Canonical Product Source URL Guard`
-Status: `WEB 50.A.2B GITHUB CI TESTED / WINDOWS 8.8.2 BUILD 2026.08.26.2 TARGETED CI PASS / PACKAGED WINDOWS GATE RUNNING`
+Status: `WEB 50.A.2B GITHUB CI TESTED / WINDOWS 8.8.2 BUILD 2026.08.26.2 PACKAGED WINDOWS CI PASS / OWNER LOCAL QA NEXT`
 
 ## Production state — terminal verified
 Current Production application commit: `c283864290f9c989a9fcdf24ee8eef519560e917`.
@@ -30,31 +30,33 @@ Preserved candidate behavior:
 - Workspace Save/AI marks the global Product list dirty instead of rebuilding all cards/thumbnails on each edit,
 - mother AI settings remain authoritative: exact saved Provider + exact saved Model + secure key,
 - Product AI uses the exact Product source link, parses the real page, converts safe facts into one structured text body and sends only `source_title` + `source_description` as factual Product fields,
-- selected images may be included only for the explicit image-aware AI action,
+- selected images are attached only by explicit image-aware AI actions,
 - the main AI action completes Persian content + SEO + selected-image metadata,
 - selected Products can run the same grounded AI pipeline in batch with per-item error isolation and one final Products refresh.
 
-## Phase49.3I.32 — Canonical Product Source URL Guard — TARGETED CI PASS
-Owner reported that one unrelated Product action could erase the saved source link. Repository inspection found the mature `ProductStudio.save()` used only the two mirrored URL controls. When both were temporarily blank, a generic/silent Save wrote empty `source_url`, then recomputed `normalized_url` and `fingerprint` from the empty value. Because silent Save is reused by close/refetch/AI/publish/layered actions, the symptom could appear after pressing a button that was not intended to edit the link.
+## Phase49.3I.32 — Canonical Product Source URL Guard — PACKAGED WINDOWS CI PASS
+Root cause of the operator-reported disappearing Product link was verified in mature `ProductStudio.save()`: it used only two mirrored UI URL controls. If both were temporarily blank, any generic/silent Save wrote an empty `source_url`, then recomputed `normalized_url` and `fingerprint` from the empty value. Silent Save is reused by close/refetch/AI/publish/layered actions, so the apparent triggering button did not need to be a link-edit control.
 
-Fix is additive at the final Workspace-save boundary:
-- an explicit non-empty URL edit remains allowed,
-- if both mirrored URL controls are blank, an existing DB source URL is preserved before the old Save chain runs,
+Final additive fix:
+- explicit non-empty URL edits remain allowed,
+- when both mirrored URL controls are blank, an existing DB source URL is preserved before the mature Save chain,
 - a post-save invariant restores source URL/normalized URL/fingerprint if a legacy layer still tries to erase them,
-- a Product already damaged by the old bug can recover its exact link locally from `product_history` first and matching `discovered_urls` second,
-- recovery uses only an exact previously stored HTTP/HTTPS URL; no URL is guessed or reconstructed and no network is used,
+- a Product already damaged by the old bug can recover its exact local link from `product_history` first and matching `discovered_urls` second,
+- recovery accepts only an exact previously stored HTTP/HTTPS URL; no URL is guessed/reconstructed and no network is used,
 - recovery/preservation is recorded in Product history/diagnostics,
-- no price, stock, material, color, AI provider/model or Production schema behavior is changed.
+- price, stock, material, color, AI provider/model and Web/Production schema behavior are untouched.
 
 Candidate identity:
 - Catalog Center `8.8.2`,
 - build `2026.08.26.2`,
-- targeted runtime/CI snapshot `2ca69c4928333fc15247b99014a8fe77d781b50b`,
-- targeted CI run `32996526852` PASS.
+- source/runtime Windows snapshot `5208aa4dd3b070e9a7c7c6d6dde9b60569879631`.
 
-Targeted CI covered source-link preservation, intentional URL edits, exact local history recovery, exact discovery fallback, final Workspace guard, Phase49.3I.31 smart/batch AI, Phase49.3I.29 performance, single-active-AI, exact-link regressions, Django safety and launcher smoke.
-
-Windows portable release workflow run `32996526842` is the remaining packaged-runtime gate as of this update. GitHub Release publication is now manual-only (`workflow_dispatch` + `publish_release=true`) so a push cannot publish an unaccepted EXE automatically.
+Verification:
+- targeted `Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI` run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`,
+- first Windows portable run `32996526842` failed only because an old regression test still hard-coded `APP_VERSION == "8.8.1"`; all new source-link tests in that run had already passed,
+- stale literal was replaced with an atomic `APP_VERSION == PACKAGE_MANIFEST.version` contract instead of another future-stale literal,
+- Windows portable release workflow run `32997106056` PASS on `5208aa4dd3b070e9a7c7c6d6dde9b60569879631`, including dependency setup, compile, full Phase49 regression gate, launcher composition, source-URL invariant, PyInstaller one-file build/self-verify, release-manifest/SHA256 verification and immutable artifact upload,
+- artifact `3DPrintHub-CatalogCenter-v8.8.2` created as Actions artifact ID `9617048629`; release publication intentionally skipped because publication is manual-only pending owner QA.
 
 ## Phase50.A.1H — Admin Shell Stability — PRODUCTION VERIFIED
 - footer normal/static flow,
@@ -78,6 +80,7 @@ GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e
 ## Known operational incidents
 - `ERR-49-052`: repeated Product Save/AI rebuilt the entire Products gallery; candidate correction is 49.3I.29 deferred refresh + 48-card paging.
 - `ERR-49-053`: generic/silent Product Save could erase canonical source identity when both mirrored URL controls were temporarily blank; corrected by 49.3I.32 preserve/recover guard.
+- `ERR-49-054`: first 8.8.2 Windows packaged gate failed on a stale test literal expecting 8.8.1; corrected by comparing runtime version with manifest version; rerun `32997106056` PASS.
 - `ERR-50-007`: Production remote fetch refspec is stale/tag-only; live `ls-remote` + explicit branch fetch to `FETCH_HEAD` + ff-only.
 - `ERR-50-010`: avoid cPanel `/dev/fd` process substitution for backup enumeration.
 - `ERR-50-011`: JSON verifier uses `python - <args>` + `json.load`.
@@ -85,9 +88,10 @@ GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e
 Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memory realtime debt and MySQL conditional-constraint warnings.
 
 ## Exact next work
-1. Wait for/inspect Windows portable release workflow `32996526842`; do not claim packaged 8.8.2 acceptance before it passes.
-2. Re-verify live GitHub branch HEAD, then on canonical Windows checkout run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` (now 3I.31+3I.32) with exact expected HEAD.
-3. QA the previously damaged Product: Save or smart-AI should restore its exact historical source URL if history/discovery contains it; then verify Save/AI/image/publish actions cannot erase a populated source link.
-4. Run controlled OpenRouter + AvalAI exact-link AI and selected-Product batch smoke; confirm no per-action full Products refresh.
-5. Only after owner QA may Catalog Center 8.8.2 be published/accepted.
-6. Separately, Web Production Phase50.A.2B still requires read-only Host/MySQL audit + fresh backup before `store.0036` migration/deploy.
+1. Re-verify live GitHub branch HEAD and clean canonical Windows checkout.
+2. Pull exact GitHub head and run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` (covers 3I.31+3I.32) using the exact expected HEAD.
+3. QA a healthy linked Product: Save, smart AI, image-related and publish-related actions must leave the source link intact.
+4. QA the already damaged Product: Save/smart-AI should recover the exact historical/discovered source URL when local evidence exists.
+5. Run controlled OpenRouter + AvalAI exact-link AI and selected-Product batch smoke; confirm no per-action full Products refresh.
+6. Only after owner QA may Catalog Center 8.8.2 be explicitly published/accepted.
+7. Separately, Web Production Phase50.A.2B still requires read-only Host/MySQL audit + fresh backup before `store.0036` migration/deploy.
