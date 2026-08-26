@@ -47,6 +47,12 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         from .phase49_3i26_runtime_patch import install_extractor as _install_phase49_3i26_runtime_patch
         _install_phase49_3i26_runtime_patch(_page_extractor_module)
         _install_phase49_3i26_app(app_class)
+        # 49.3I.29 is the final Windows app-shell boundary: only a bounded page
+        # of product cards/thumbnails is rendered, while the complete Treeview/
+        # SQLite result set remains available. It also applies the mother AI
+        # profile from app startup, before any ProductWorkspace is opened.
+        from .phase49_3i29_windows_performance_ai import install_app as _install_phase49_3i29_app
+        _install_phase49_3i29_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -189,3 +195,9 @@ def install(workspace_class) -> None:
     _install_phase49_3i26_workspace(workspace_class, _readiness_module)
     from .phase49_3i27_category_provider_bridge import install_workspace as _install_phase49_3i27_workspace
     _install_phase49_3i27_workspace(workspace_class)
+    # Final corrective boundary for operator-reported Windows slowness and AI
+    # provider drift. Compose after 49.3I.27 so no later same-phase patch can
+    # reintroduce global Product refreshes or bypass the saved mother AI profile.
+    from . import phase49_3f_workspace as _phase49_3f_workspace_module
+    from .phase49_3i29_windows_performance_ai import install_workspace as _install_phase49_3i29_workspace
+    _install_phase49_3i29_workspace(workspace_class, _phase49_3f_workspace_module)
