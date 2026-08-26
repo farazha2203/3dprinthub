@@ -5,139 +5,98 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.1G — Velzon Operator Surface V2`  
-**Status:** `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`  
+**Current Subphase:** `50.A.1H Admin Shell Stability + 50.A.2A Storefront Sales Profile Selector`  
+**Status:** `GITHUB CI TESTED / HOST READ-ONLY VERIFY NEXT`  
 **Backend:** Django / Python
 
 ## 1) قانون مادر
-`READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → MANUAL QA → EXPLICIT OWNER APPROVAL → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
+`READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
 
 قواعد ثابت:
 - Mature behavior با Extend/Patch/Wrap اصلاح می‌شود.
-- تغییر جدید حق خراب‌کردن مسیر سالم قبلی را ندارد.
 - Bugfix بدون Regression Test کامل نیست.
 - Source دائمی روی Production ویرایش نمی‌شود.
-- Dirty Local/Host = STOP/INSPECT؛ reset/stash/delete ممنوع.
+- Dirty Local/Host = STOP/INSPECT.
 - Secret در Git/log/chat ذخیره نمی‌شود.
-- SHA ثابت Chat مرجع Branch متحرک نیست؛ Remote بعد از fetch مرجع است.
-- Assetهای خریداری‌شده/private پوسته و فونت در Repository عمومی منتشر نمی‌شوند؛ فقط adapter/integration اختصاصی پروژه Commit می‌شود.
+- Remote زنده مرجع Branch است؛ SHA حدس زده نمی‌شود.
+- Assetهای خریداری‌شده/private پوسته و فونت در Repository عمومی منتشر نمی‌شوند.
 
 ## 2) مسیرهای ثبت‌شده
-Windows: `D:\projects\3DPrintHub`; venv: `D:\projects\3DPrintHub\.venv`; Local Django DB: `D:\projects\3DPrintHub\db.sqlite3`.
-
+Windows: `D:\projects\3DPrintHub`; venv `D:\projects\3DPrintHub\.venv`.
 Production: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`; static `/home/sfkilvrs/public_html/static`; media `/home/sfkilvrs/public_html/media`; private media `/home/sfkilvrs/3dprinthub/private_media`.
 
-## 3) Phase49 completed baseline
-Catalog/Product/Hero/SEO/Bridge release is operational. Product-owned public media is the Production ownership contract; imported Catalog working-media remains private.
+## 3) Production evidence boundary
+Last terminal-verified Production application HEAD recorded in docs is `bc7b97f9c63432b8105f52f61cf5cdae1369689b`, with `store.0034` and `store.0035` applied and rollback backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`.
 
-## 4) Current Production baseline
-Production verified application commit: `bc7b97f9c63432b8105f52f61cf5cdae1369689b`.
+Later owner screenshots show newer Velzon V2 visuals but no terminal transcript proving current host HEAD. Therefore the next operation starts with a read-only Host audit; no Production baseline is guessed.
 
-Verified:
-- MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
-- `store.0034_phase50_variant2_commerce` applied,
-- `store.0035_phase50_sales_profiles` applied,
-- Product Admin real-row changelist render HTTP 200,
-- Product Admin 500 fixed,
-- business-oriented Admin navigation active,
-- Home/Store/Admin login HTTP 200,
-- Home private imported-media refs = 0,
-- no pending migration,
-- Production worktree clean,
-- fresh rollback backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`.
+## 4) Phase50 completed/deployed foundation
+- Admin command center + Hero controls,
+- Product gallery/lightbox,
+- Variant2 size/build/weight/package + StoreOrderItem snapshots (`store.0034`),
+- Sales Profiles + Hero public-media resolver (`store.0035`),
+- unified Product workspace,
+- Product Admin 500 fix + business navigation,
+- Product-owned public media contract preserved.
 
-## 5) Phase50 path
-### 50.A.1 — Admin Storefront / Hero parity — DEPLOYED
-Command center, Product/imported Catalog Hero controls, Coupon/Shipping/Pricing/address surfaces.
+## 5) Current GitHub-tested work
+### 50.A.1G — Velzon Operator Surface V2
+Full-width changelists, on-demand filter drawer, Persian controls, modern Velzon search/actions/results/pagination, long-form section navigation. Initial V2 CI run `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
 
-### 50.A.1B — Product Gallery + Variant 2.0 — DEPLOYED
-Product viewer/lightbox, Variant size/build/package data, StoreOrderItem snapshots, `store.0034` applied.
+### 50.A.1H — Admin Shell Stability
+Owner QA found footer flash/mid-page placement, page jump on menu navigation and narrow right sidebar.
 
-### 50.A.1C — Admin media / mobile / SEO / Windows dimensions — DEPLOYED
-Safe imported-model previews, mobile Hero, homepage SEO audit, Windows image dimensions.
-
-### 50.A.1D — Sales Profiles + Hero Admin Public Media — DEPLOYED
-Sales profile selection modes, profile key/default/order/copy action, safe Hero Admin media, `store.0035` applied.
-
-### 50.A.1E — Unified Product Admin Workspace — DEPLOYED
-Product change page follows:
-`اطلاعات کالا → تصاویر → فروش و موجودی → پروفایل‌ها و سایز/وزن → قیمت‌گذاری → ارسال و بسته‌بندی → SEO → اسلایدر صفحه اول → منبع و لایسنس → همگام‌سازی ویندوز`.
-Mature Product/ProductCatalogProfile/ProductVariant/SEO state remains authoritative.
-
-### 50.A.1F — Business Admin Navigation + Product Admin 500 Fix — PRODUCTION VERIFIED
-- fixed real Product changelist 500,
-- added real-row render regression,
-- business navigation groups Store, Orders, Finance/Coupons, Production/Inventory, Windows/Catalog, Homepage, Content, Engagement, Support, Affiliate and System,
-- Production verification at `bc7b97f...` PASS,
+Implemented:
+- footer normal/static flow instead of Velzon absolute positioning,
+- stable flex/min-height Admin shell,
+- 290px right sidebar with improved Persian readability,
+- no broad shell geometry transition,
+- active menu scroll constrained to internal SimpleBar/sidebar; document `scrollIntoView` removed,
 - no migration.
 
-### 50.A.1G — Velzon Operator Surface V2 — GITHUB CI TESTED / DEPLOY NEXT
-Owner visual QA rejected the remaining permanent Django Filter column and cramped changelist layout. Owner re-supplied `master.zip`; verified theme reference is Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6`.
+CI: `Phase50 Product Admin Workspace CI` run `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`.
 
-Implementation:
-- full-width changelists,
-- native Django filters preserved but moved to on-demand `فیلترها` drawer/off-canvas,
-- backdrop/close/Escape/reset + active-filter count,
-- Persian search/filter/action presentation,
-- card-based search, bulk actions, result table and pagination,
-- sticky table headers + controlled table overflow,
-- long Product/change forms gain sticky section navigator + card fieldsets,
-- responsive/dark-mode integration,
-- no schema migration.
+### 50.A.2A — Storefront Sales Profile Selector
+Existing Product/ProductVariant profile backend is now surfaced to customers:
+- list / size / weight / build / size→build / build→size modes,
+- available size/build/weight/material/color/quality controls,
+- selected profile price/weight/time/package summary,
+- canonical ProductVariant ID synced into mature native select/cart contract,
+- native select fallback retained,
+- existing `/store/api/variant-commerce-options/` reused,
+- no migration.
 
-CI:
-- `Phase50 Product Admin Workspace CI` run `32955310832` PASS,
-- runtime code snapshot `3687d0922959fca53f2118be6dacd32639159346`,
-- Python compile PASS,
-- V2 JavaScript `node --check` PASS,
-- Django check PASS,
-- migration drift NONE,
-- CI SQLite migrations PASS,
-- focused Admin HTTP/static regressions PASS.
+CI: `Phase50 Variant2 Gallery CI` run `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`.
 
-### Product Engagement — NEXT AFTER ADMIN V2 QA
-- preserve ProductLike/ProductComment/ProductReview,
-- add real Favorite/Save contract if absent,
-- Product like/save/review/comment counters in Product/Admin,
-- buyer-feedback review/comment requires qualifying paid/purchased Product,
-- separate migration/tests/Production backup/rollback.
-
-### 50.A.2 — Checkout & Delivery
-- storefront profile-aware selector,
-- selected profile/size/build/package snapshots,
-- effective shipping weight + parcel dimensions,
+### 50.A.2B — Checkout/Delivery completion — NEXT
+- explicit immutable selected-profile/customer-choice order snapshot where required,
+- effective product + packaging shipping weight,
+- parcel dimensions / insured value,
 - normalized carrier quote + immutable order snapshot,
-- Post/Tipax/Mahex only with verified official contracts/credentials,
-- mature ShippingMethod fallback.
+- Post/Tipax/Mahex only after verified official credentials/contracts,
+- ShippingMethod fallback preserved.
+
+### Product Engagement — OWNER REQUESTED
+Favorite/Save + Product counters + verified-purchase buyer review policy in a separate schema/migration/test/backup package, preserving ProductLike/ProductComment/ProductReview.
 
 ### 50.A.3 — Secure Store Payment
-Server-owned amount, request/callback/verify/idempotency, strict trusted gateway host allowlist, exact Authority/provider reference, never card/PIN/CVV storage.
+Server-owned amount, exact callback/verify/idempotency and trusted gateway-host allowlist; never card/PIN/CVV storage.
 
 ### 50.A.4 — Torob
-Torob Product API v3, stable Product/Profile identity, size/color/material/weight, price/availability/image quality and verified attribution contract.
+Current official Product API v3 with stable Product/Profile identity, current price/availability and image-quality contract.
 
-### 50.B — Accounting Core
-کل / معین / تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal, party/subledger and numbering.
-
-### 50.C — Treasury
-Bank/cash accounts, receipts/payments, allocations, refunds and reconciliation.
-
-### 50.D — Purchasing
-Supplier master, purchase orders/invoices/receiving, payables and returns.
-
-### 50.E — Sales Accounting
-Store/service receivables, allocations, tax/discount/shipping, returns/refunds/credit notes.
-
-### 50.F — Reports & Close
-GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and close audit.
+### 50.B–50.F
+Accounting Core → Treasury → Purchasing → Sales Accounting → Reports/Close.
 
 ## 6) Current release gate
-- 50.A.1G runtime is CI green.
-- current Production must remain clean at `bc7b97f...` until deploy gate begins.
-- because of `ERR-50-007`, Production must verify live branch SHA and explicitly fetch the branch to `FETCH_HEAD`; do not trust stale `origin/<branch>`.
-- before mutation: verify exact root/branch/HEAD/MySQL, no migration-file delta, fresh backup and rollback target.
-- after ff-only deploy: Django check, migration drift/plan, collectstatic, Passenger restart, HTTP/static/Product Admin/private-media verification, then owner Ctrl+F5 visual QA.
-- immutable Windows release remains 8.8.1 until a separately tested/released EXE replaces it.
+1. Host read-only verify actual root/branch/HEAD/worktree/refspec/MySQL/0034/0035/private Velzon assets/HTTP.
+2. Verify target is a clean fast-forward with no migration-file delta.
+3. Fresh source/.env/MySQL backup and rollback HEAD.
+4. Explicit branch fetch to `FETCH_HEAD` per ERR-50-007.
+5. ff-only deploy; Django check/model drift/empty migration plan; no `migrate` for this batch.
+6. collectstatic + Passenger restart.
+7. Home/Store/Admin/new static/private-media checks.
+8. Owner QA: footer stable on refresh, no document jump, 290px sidebar readable, Product selector/price/cart synchronization correct.
 
-## 7) Migration and integration safety
-No Phase50 schema migration reaches Production without exact MySQL vendor/name, migration plan, successful fresh backup and rollback target. No live carrier/gateway endpoint is guessed. Historical payment/ledger/order/inventory rows remain preserved and integrations stay additive/idempotent.
+## 7) Safety
+No schema migration without exact MySQL vendor/name, migration plan, fresh verified backup and rollback. No public imported working-media. No guessed carrier/gateway API. Purchased Velzon/font assets remain private.
