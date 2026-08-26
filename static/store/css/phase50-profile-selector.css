@@ -1,0 +1,171 @@
+/* Phase50.A.2 storefront profile selector — project-owned presentation layer. */
+.store-profile-selector {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.35rem;
+    background: linear-gradient(180deg, #fff, #f8fafc);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, .06);
+}
+.store-profile-selector__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .8rem;
+    margin-bottom: .9rem;
+}
+.store-profile-selector__head h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 900;
+}
+.store-profile-selector__head p {
+    margin: .25rem 0 0;
+    color: #64748b;
+    font-size: .78rem;
+    line-height: 1.8;
+}
+.store-profile-selector__badge {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: .35rem .65rem;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #c2410c;
+    font-size: .7rem;
+    font-weight: 900;
+}
+.store-profile-controls {
+    display: grid;
+    gap: .85rem;
+}
+.store-profile-control {
+    display: grid;
+    gap: .45rem;
+}
+.store-profile-control__label {
+    color: #334155;
+    font-size: .78rem;
+    font-weight: 900;
+}
+.store-profile-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+}
+.store-profile-option {
+    min-height: 38px;
+    border: 1px solid #d7dee7;
+    border-radius: 11px;
+    background: #fff;
+    color: #334155;
+    padding: .5rem .75rem;
+    font: inherit;
+    font-size: .76rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.store-profile-option:hover {
+    transform: translateY(-1px);
+    border-color: #fb923c;
+    box-shadow: 0 7px 18px rgba(249, 115, 22, .09);
+}
+.store-profile-option[aria-pressed="true"] {
+    border-color: #f97316;
+    background: #fff7ed;
+    color: #9a3412;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, .1);
+}
+.store-profile-option:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.store-profile-summary {
+    display: grid;
+    gap: .8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #d7dee7;
+}
+.store-profile-summary__price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-radius: 1rem;
+    padding: .8rem .9rem;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+}
+.store-profile-summary__price span {
+    color: #047857;
+    font-size: .78rem;
+    font-weight: 800;
+}
+.store-profile-summary__price strong {
+    color: #047857;
+    font-size: 1.1rem;
+    font-weight: 950;
+}
+.store-profile-summary__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+}
+.store-profile-fact {
+    min-width: 0;
+    padding: .65rem .75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: .9rem;
+    background: #fff;
+}
+.store-profile-fact span,
+.store-profile-fact strong {
+    display: block;
+}
+.store-profile-fact span {
+    color: #94a3b8;
+    font-size: .68rem;
+    font-weight: 700;
+}
+.store-profile-fact strong {
+    margin-top: .18rem;
+    color: #334155;
+    font-size: .76rem;
+    font-weight: 900;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+.store-profile-native-fallback {
+    margin-top: .75rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 1rem;
+    background: #fff;
+}
+.store-profile-native-fallback summary {
+    cursor: pointer;
+    padding: .65rem .8rem;
+    color: #64748b;
+    font-size: .72rem;
+    font-weight: 800;
+}
+.store-profile-native-fallback__body {
+    padding: 0 .75rem .75rem;
+}
+.store-profile-native-fallback__body .form-input {
+    width: 100%;
+}
+.store-profile-selector.is-ready + .store-profile-original-label {
+    display: none !important;
+}
+@media (max-width: 640px) {
+    .store-profile-selector { border-radius: 1.1rem; padding: .85rem; }
+    .store-profile-selector__head { display: grid; }
+    .store-profile-selector__badge { justify-self: start; }
+    .store-profile-option { flex: 1 1 calc(50% - .45rem); }
+    .store-profile-summary__facts { grid-template-columns: 1fr; }
+}
