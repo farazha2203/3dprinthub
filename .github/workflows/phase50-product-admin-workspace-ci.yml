@@ -8,12 +8,15 @@ on:
       - store/apps.py
       - store/phase50_product_admin_workspace.py
       - store/test_phase50_product_admin_workspace.py
+      - store/test_phase50_admin_http_regression.py
       - store/phase50_sales_profile_admin.py
       - store/phase50_sales_profiles.py
       - store/phase50_variant_admin.py
       - store/phase50_variant2.py
       - store/admin_seo.py
       - store/epic49_catalog_admin.py
+      - templates/admin/**
+      - static/admin/**
       - .github/workflows/phase50-product-admin-workspace-ci.yml
   workflow_dispatch:
 
@@ -50,7 +53,8 @@ jobs:
           python -m py_compile \
             store/apps.py \
             store/phase50_product_admin_workspace.py \
-            store/test_phase50_product_admin_workspace.py
+            store/test_phase50_product_admin_workspace.py \
+            store/test_phase50_admin_http_regression.py
 
       - name: Django system check
         run: python manage.py check
@@ -62,7 +66,11 @@ jobs:
         run: python manage.py migrate --noinput
 
       - name: Unified Product Admin regressions
-        run: python manage.py test store.test_phase50_product_admin_workspace -v 2
+        run: |
+          python manage.py test \
+            store.test_phase50_product_admin_workspace \
+            store.test_phase50_admin_http_regression \
+            -v 2
 
       - name: Gate marker
         run: |
