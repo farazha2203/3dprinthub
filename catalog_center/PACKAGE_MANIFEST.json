@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.8.1 — Final Phase49 Windows Release",
-  "version": "8.8.1",
+  "name": "3DPrintHub Catalog Center v8.8.2 — Smart Link + Batch AI Windows Release",
+  "version": "8.8.2",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -37,7 +37,16 @@
     "portable_exe",
     "frozen_browser_runtime_smoke",
     "resilient_source_acquisition_fallback",
-    "locked_previous_exe_resilient_build"
+    "locked_previous_exe_resilient_build",
+    "products_page_paged_48",
+    "deferred_global_product_refresh",
+    "mother_ai_provider_model_contract",
+    "product_ai_exact_saved_model_no_hidden_scan",
+    "product_ai_title_plus_grounded_text_payload",
+    "smart_exact_link_ai",
+    "selected_image_ai_seo_and_metadata",
+    "selected_products_bulk_link_ai",
+    "single_refresh_after_bulk_ai"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -87,6 +96,8 @@
     "app/phase49_3i25_product_first_workflow.py",
     "app/phase49_3i26_operator_completion.py",
     "app/phase49_3i27_category_provider_bridge.py",
+    "app/phase49_3i29_windows_performance_ai.py",
+    "app/phase49_3i31_smart_link_bulk_ai.py",
     "tests/test_epic49_editable_studio.py",
     "tests/test_epic49_final.py",
     "tests/test_epic49_studio_final.py",
@@ -109,7 +120,9 @@
     "tests/test_phase49_3i25_product_first_workflow.py",
     "tests/test_phase49_3i26_operator_completion.py",
     "tests/test_phase49_3i27_category_provider_bridge.py",
-    "tests/test_phase49_3i28_exact_link_contract.py"
+    "tests/test_phase49_3i28_exact_link_contract.py",
+    "tests/test_epic49_phase49_3i29_windows_performance_ai.py",
+    "tests/test_phase49_3i31_smart_link_bulk_ai.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
