@@ -208,3 +208,8 @@ def install(workspace_class) -> None:
     # execution function is reused by selected-product batch processing.
     from .phase49_3i31_smart_link_bulk_ai import install_workspace as _install_phase49_3i31_workspace
     _install_phase49_3i31_workspace(workspace_class)
+    # Final save invariant after every older composition layer. A generic save,
+    # AI action, close, refetch or publish action must not erase a persisted source
+    # URL merely because both mirrored URL controls are temporarily blank.
+    from .phase49_3i32_source_url_guard import install_workspace as _install_phase49_3i32_workspace
+    _install_phase49_3i32_workspace(workspace_class)
