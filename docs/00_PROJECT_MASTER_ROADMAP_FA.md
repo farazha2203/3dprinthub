@@ -5,7 +5,7 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.1D — Sales Profiles + Hero Admin Public Media`  
+**Current Subphase:** `50.A.1E — Unified Product Admin Workspace`  
 **Status:** `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`  
 **Backend:** Django / Python
 
@@ -31,7 +31,8 @@ Catalog/Product/Hero/SEO/Bridge release is operational. Product-owned public med
 
 ## 4) Phase50 current Production baseline
 Owner deployment verified Phase50.A.1C at commit `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f`.
-`store.0034_phase50_variant2_commerce` is applied on Production MySQL; Home/Store/Admin/Product Admin/Imported Asset Admin/Hero Admin all return HTTP 200; rollback backup exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-205719`.
+`store.0034_phase50_variant2_commerce` is applied on Production MySQL; Home/Store/Admin/Product Admin/Imported Asset Admin/Hero Admin returned HTTP 200; rollback backup exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-205719`.
+Repository state does not yet record `store.0035_phase50_sales_profiles` as Production-applied.
 
 ## 5) Phase50 path
 ### 50.A.1 — Admin Storefront / Hero parity — DEPLOYED
@@ -52,18 +53,27 @@ Owner deployment verified Phase50.A.1C at commit `5c5c5e1e141fd3ff8df3c079abc55e
 - homepage SEO operator audit,
 - Windows source shows image pixel dimensions.
 
-### 50.A.1D — Sales Profiles + Hero Admin Public Media — CI TESTED / NEXT DEPLOY
+### 50.A.1D — Sales Profiles + Hero Admin Public Media — GITHUB CI TESTED / PRODUCTION GATE REQUIRED
 - Product selection mode: full list / size / weight / build / size→build / build→size,
 - ProductVariant profile name/key/default/order,
 - profile identity allows same material/color/size/build with distinct weight/time/price profiles,
 - Admin copy-profile action duplicates the mature Variant as a starting point,
-- Product/Variant Admin exposes profile controls,
 - Variant endpoint exposes profile selector, weight, time, price, packaging and shipping metadata,
 - Hero Studio change page product/album JSON endpoints resolve public Product media or remote source media and never private `store/imported-models/...` paths,
 - migration `store.0035_phase50_sales_profiles`,
-- GitHub CI run `32879712980` PASS on snapshot `405d2c1daa85828d1a0dc68210d201c85b6db7ba`.
+- CI run `32879712980` PASS.
 
-### 50.A.2 — Checkout & Delivery — NEXT
+### 50.A.1E — Unified Product Admin Workspace — GITHUB CI TESTED / NEXT DEPLOY
+- Product change page follows the exact operator sequence:
+  `اطلاعات کالا → تصاویر → فروش و موجودی → پروفایل‌ها و سایز/وزن → قیمت‌گذاری → ارسال و بسته‌بندی → SEO → اسلایدر صفحه اول → منبع و لایسنس → همگام‌سازی ویندوز`,
+- Product gallery and Variant/Profile inlines stay mature/authoritative,
+- pricing/slider/license/sync are surfaced from ProductCatalogProfile rather than duplicated,
+- actual Product SEO fields plus SERP preview are consolidated in the Product page,
+- shipping/package completeness summarizes existing Variant 2.0 data,
+- no new schema migration,
+- `Phase50 Product Admin Workspace CI` run `32941662288` PASS on code snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
+
+### 50.A.2 — Checkout & Delivery — NEXT AFTER ADMIN/0035 PRODUCTION QA
 - storefront profile-aware selector,
 - persist selected profile/size/build/package snapshots,
 - effective product + packaging shipping weight,
@@ -101,9 +111,9 @@ Store/service receivables, allocations, tax/discount/shipping, returns/refunds/c
 GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and close audit.
 
 ## 6) Current release gate
-- 50.A.1D code and regression gate are green on GitHub.
-- `store.0035` is not yet applied to Production.
-- before Production mutation verify exact Host branch/HEAD/worktree, MySQL vendor/name, `0034` applied, fresh backup and migration plan.
+- 50.A.1D + 50.A.1E code/regression gates are green on GitHub.
+- `store.0035` must be verified against actual Production before any schema mutation.
+- before Production mutation verify exact Host branch/HEAD/worktree, MySQL vendor/name, actual `0034`/`0035` state, fresh backup and migration plan.
 - next Windows EXE version follows source/manual smoke; immutable 8.8.1 remains the released Windows build until then.
 
 ## 7) Migration and integration safety
