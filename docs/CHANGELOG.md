@@ -2,62 +2,67 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Phase49.3I.32 Canonical Product Source URL Guard — Targeted CI PASS
+- root cause confirmed in mature `ProductStudio.save()`: both mirrored URL controls could be temporarily blank and generic/silent Save would overwrite `source_url`, `normalized_url` and fingerprint with empty identity,
+- silent Save is reused by close/refetch/AI/publish/layered Workspace actions, explaining why an unrelated button could appear to delete the Product link,
+- added final additive `phase49_3i32_source_url_guard.py` after 49.3I.31; existing canonical URL is fed into both URL controls before the mature Save chain when both are blank,
+- explicit non-empty main/spec URL edits remain supported,
+- defensive post-save invariant restores canonical URL/normalized URL/fingerprint if a legacy layer still erases it,
+- already damaged Products can recover the exact prior HTTP/HTTPS source URL locally from Product history, with matching `discovered_urls(source_code, external_id)` as fallback; no network or guessed/reconstructed URL,
+- recovery is recorded in Product history/diagnostics,
+- Catalog Center candidate remains `8.8.2` with build advanced to `2026.08.26.2`,
+- Phase49.3I.31-32 targeted CI run `32996526852` PASS on runtime snapshot `2ca69c4928333fc15247b99014a8fe77d781b50b`, including source-link preserve/edit/recovery tests plus smart/batch AI, performance, exact-link, Django safety and launcher smoke,
+- Windows portable release run `32996526842` remains the packaged-runtime gate,
+- Windows release publication changed to explicit manual `workflow_dispatch` with `publish_release=true`; branch pushes build/test artifacts but cannot publish an unaccepted release automatically.
+
 ## 2026-08-26 — Catalog Center 8.8.2 Smart Link + Batch AI — GitHub Candidate
 - added Phase49.3I.29 Windows performance base: 48-card Product presentation paging, full SQLite result preservation, deferred global Product refresh and exact saved mother Provider/Model execution without hidden Product model scans,
 - added Phase49.3I.31 unified Product AI pipeline: exact Product URL validation/fetch, canonical source identity, safe source facts flattened into one heading-structured text body, Persian content/SEO generation and selected-image metadata/finalization,
 - normal Product AI transmits only `source_title` + one `source_description` text field; raw HTML, auth/cookies/secrets and unrelated pricing/stock/workflow state stay local,
-- main Product AI/link actions now converge on the same grounded runtime boundary,
-- Products Explorer now supports selected-product batch AI using each Product's own exact source URL, isolated per-item errors/cancel and one global Products refresh at batch end,
-- existing mother AI settings remain authoritative for AvalAI/OpenRouter/Google/OpenAI; no cross-provider fallback,
-- release identity advanced atomically to candidate `8.8.2`, build `2026.08.26.1` across app/launcher/manifest/config,
-- Windows release workflow now includes Phase49.3I.29 + 49.3I.31 regressions and launcher markers,
-- added `ERR-49-052` prevention rule for Product save/AI global gallery rebuild storms,
-- source/pure helper syntax checks passed in isolated tooling, but connected GitHub writes did not auto-create a new Actions run; full Windows regression, one-file build, frozen browser smoke and live OpenRouter/AvalAI exact-link QA remain mandatory before release acceptance.
+- main Product AI/link actions converge on the same grounded runtime boundary,
+- Products Explorer supports selected-product batch AI using each Product's own exact source URL, isolated per-item errors/cancel and one global Products refresh at batch end,
+- mother AI settings remain authoritative for AvalAI/OpenRouter/Google/OpenAI; no cross-provider fallback,
+- release identity advanced to candidate `8.8.2`; current correction build is `2026.08.26.2`,
+- Windows release workflow includes Phase49.3I.29/31/32 regressions and launcher/portable gates,
+- `ERR-49-052` records the global Product refresh storm prevention rule.
 
 ## 2026-08-26 — Phase50.A.2B Immutable Checkout/Profile/Shipping Snapshot — GitHub CI Tested
 - added migration `store.0036_phase50_checkout_snapshot`,
 - StoreOrderItem now has immutable sales-profile name/key/label, selection mode/value, final weight, effective shipping weight and print-time snapshots,
-- existing `0034` StoreOrderItem size/build/packaging-weight/package-dimension fields are now populated during successful checkout finalization,
+- existing `0034` StoreOrderItem size/build/packaging-weight/package-dimension fields are populated during successful checkout finalization,
 - StoreOrder now has `insured_value` and normalized `shipping_quote_snapshot`,
-- added `store/phase50_checkout_snapshot.py` following the existing additive runtime-field pattern rather than rewriting mature `store/models.py`,
-- Cart summary now uses `ProductVariant.effective_shipping_weight_grams`, including packaging when no explicit shipping-weight override exists,
-- mature Phase6 checkout remains authoritative for form validation, coupon, inventory reservation, address, notifications, payment creation and redirect,
-- successful checkout is wrapped in an outer atomic boundary and finalized before commit; finalizer failure restores the session cart and rolls back DB writes,
+- added `store/phase50_checkout_snapshot.py` following the additive runtime-field pattern rather than rewriting mature `store/models.py`,
+- Cart summary uses `ProductVariant.effective_shipping_weight_grams`, including packaging when no explicit shipping-weight override exists,
+- mature Phase6 checkout remains authoritative for validation, coupon, inventory reservation, address, notifications, payment creation and redirect,
+- successful checkout is wrapped in an outer atomic boundary and finalized before commit; finalizer failure restores session cart and rolls back DB writes,
 - normalized shipping snapshot uses current `ShippingMethod`/rate rules as explicit `shipping_method_fallback`; no external carrier API is claimed,
 - insured value is frozen as merchandise value after order discount,
 - per-line/unit package dimensions are preserved; combined carton geometry is deliberately not invented,
-- pending StorePayment amount is synchronized if effective shipping weight changes the final fallback shipping fee,
-- added integration regressions proving profile/package/weight snapshotting, packaging-aware shipping weight, payment synchronization and immutability after later Variant changes,
-- GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on snapshot `fba0631e60bce1f6e3f622317b70c2f7f35d978f`, including compile, Django check, migration drift/plan, SQLite migration through `0036`, Variant2/gallery/profile-selector tests and checkout snapshot tests,
-- Production remains at `c283864290f9c989a9fcdf24ee8eef519560e917`; `0036` is not yet applied and requires a fresh Production backup/migration gate.
+- pending StorePayment amount is synchronized if effective shipping weight changes final fallback shipping fee,
+- integration regressions prove profile/package/weight snapshotting, packaging-aware shipping weight, payment synchronization and immutability after later Variant changes,
+- GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on snapshot `fba0631e60bce1f6e3f622317b70c2f7f35d978f`,
+- Production remains at `c283864290f9c989a9fcdf24ee8eef519560e917`; `0036` is not yet applied and requires fresh Production backup/migration gate.
 
 ## 2026-08-26 — Phase50.A.1H + Phase50.A.2A Production Verified
-- Production fast-forwarded from `0f7f22fdcef4b8e288e0530bfe74f5b2411599dc` to `c283864290f9c989a9fcdf24ee8eef519560e917` using explicit verified branch fetch to `FETCH_HEAD` because the Host refspec still tracks only tag `v0.33.0`,
-- fresh rollback backup created at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`, containing tracked source archive + SHA256, copied `.env*` files, MySQL dump + SHA256 and deploy metadata,
-- MySQL `sfkilvrs_EmiAdmin_3dprinthub` verified; `store.0034_phase50_variant2_commerce` and `store.0035_phase50_sales_profiles` applied; migration plan empty; no migration executed,
-- deployed Admin shell stability: normal-flow footer, stable shell, 290px right sidebar, internal-only active-menu scrolling,
-- deployed Storefront sales-profile selector using existing Product/ProductVariant/API/cart contracts,
-- `collectstatic` deployed `phase50-admin-shell-stability.css`, `phase50-profile-selector.css` and `phase50-profile-selector.js`,
+- Production fast-forwarded from `0f7f22fdcef4b8e288e0530bfe74f5b2411599dc` to `c283864290f9c989a9fcdf24ee8eef519560e917` using explicit verified branch fetch to `FETCH_HEAD`,
+- fresh rollback backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`,
+- MySQL `sfkilvrs_EmiAdmin_3dprinthub` verified; `store.0034` and `store.0035` applied; no migration executed,
+- deployed Admin shell stability and Storefront sales-profile selector,
 - Home/Store/Admin/Product/new static resources HTTP 200,
-- Product HTML selector contract PASS and native `variant-select` fallback preserved,
-- Variant commerce API parsed and verified for Product ID 1 / Variant ID 1 (`selection_mode=size_build`, profile `استاندارد`, build `standard`, material `PLA`, unit price `2131170`),
+- Product HTML selector and Variant commerce API verified,
 - public Home private imported-media refs = 0,
 - final Production worktree clean at `c283864...`.
 
 ### Deployment-verifier incidents
-- first recovery attempt stopped before mutation because cPanel Bash process substitution depended on `/dev/fd`; corrected by enumerating/copying `.env*` files with Python (`ERR-50-010`),
-- first post-deploy Variant API verifier passed a JSON file as the Python script, causing JSON `false` to be parsed as Python; corrected with `python - <json-path> <variant-id>` + `json.load` (`ERR-50-011`).
+- cPanel Bash process substitution `/dev/fd` failure corrected with Python enumeration (`ERR-50-010`),
+- JSON verifier execution mistake corrected with `python - <json-path> ...` + `json.load` (`ERR-50-011`).
 
 ## 2026-08-26 — Phase50.A.1H Admin Shell Stability + Phase50.A.2A Storefront Profile Selector
-- owner reported Admin footer flash, whole-page menu jump and narrow 250px sidebar,
-- added normal-flow footer/stable shell, 290px sidebar and internal-only sidebar scrolling,
-- added customer sales-profile selector using existing ProductVariant/API/cart contracts,
 - Admin CI `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
 - Storefront CI `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`.
 
 ## 2026-08-26 — Phase50.A.1G Velzon Operator Surface V2
 - replaced permanent legacy Django filter column with on-demand drawer and full-width lists,
-- added Persian modern table/search/action/form surfaces while preserving Django Admin semantics,
 - CI `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
 
 ## 2026-08-26 — Phase50.A.1F Business Admin Navigation / Product Admin 500 Fix — Production Verified
@@ -72,7 +77,7 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - stale remote-tracking incident fixed through explicit `FETCH_HEAD` (`ERR-50-007`).
 
 ## 2026-08-26 — Phase50.A.1E Unified Product Admin Workspace
-- added business-ordered Product workspace preserving mature Product/Profile/Variant/SEO contracts,
+- business-ordered Product workspace preserving mature Product/Profile/Variant/SEO contracts,
 - CI `32941662288` PASS on `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
 
 ## 2026-08-25 — Phase50.A.1C Admin Media / Mobile / SEO / Windows Dimensions
