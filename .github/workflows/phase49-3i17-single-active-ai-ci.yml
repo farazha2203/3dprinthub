@@ -5,6 +5,7 @@ on:
     branches:
       - epic/phase49-unified-product-slider-sync
       - agent/phase49-3i17-single-active-ai-runtime
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
   pull_request:
     branches:
       - epic/phase49-unified-product-slider-sync
@@ -68,29 +69,35 @@ jobs:
           rm -rf /tmp/3dprinthub-3i17
           mkdir -p "$MEDIA_ROOT" "$PRIVATE_MEDIA_ROOT" "$STATIC_ROOT" "$CATALOG_BRIDGE_PENDING_ROOT"
 
-      - name: Compile Phase49.3I.17 surfaces
+      - name: Compile Phase49.3I.17 and 49.3I.29 surfaces
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3i17_single_active_ai_runtime.py \
+            catalog_center/app/phase49_3i29_windows_performance_ai.py \
+            catalog_center/app/phase49_3i_pricing_modes.py \
             catalog_center/app/phase49_3i_local_qa_hotfix.py \
-            catalog_center/tests/test_epic49_phase49_3i17_single_active_ai_runtime.py
+            catalog_center/tests/test_epic49_phase49_3i17_single_active_ai_runtime.py \
+            catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py
 
-      - name: Phase49.3I.17 targeted regression tests
+      - name: Phase49.3I targeted regression tests
         working-directory: catalog_center
         run: |
           python -m unittest -v \
             tests.test_epic49_phase49_3i17_single_active_ai_runtime \
+            tests.test_epic49_phase49_3i29_windows_performance_ai \
             tests.test_epic49_phase49_3i_schema_runtime_recovery \
             tests.test_epic49_phase49_3i_ai_trace_recovery \
             tests.test_epic49_phase49_3i_ai_execution_recovery \
             tests.test_epic49_phase49_3i_ai_refresh_completion
 
-      - name: Verify exact single-AI architecture contract
+      - name: Verify exact single-AI and performance architecture contract
         run: |
           python - <<'PY'
           from pathlib import Path
           text = Path("catalog_center/app/phase49_3i17_single_active_ai_runtime.py").read_text(encoding="utf-8")
           bridge = Path("catalog_center/app/phase49_3i_local_qa_hotfix.py").read_text(encoding="utf-8")
+          perf = Path("catalog_center/app/phase49_3i29_windows_performance_ai.py").read_text(encoding="utf-8")
+          pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           assert 'ALLOWED_PROVIDERS = ("avalai", "openrouter", "google", "openai")' in text
           assert 'db.setting("ai_provider"' in text
           assert 'db.setting(f"ai_model_{provider}"' in text
@@ -100,10 +107,19 @@ jobs:
           assert 'requested != active_provider' in text
           assert 'invalid command name' in text
           assert 'install_single_active_ai_runtime(workspace_class, phase49_3f_workspace_module)' in bridge
+          assert 'PRODUCT_PAGE_SIZE = 48' in perf
+          assert 'minimal_product_payload' in perf
+          assert '_phase49_3i29_mark_products_dirty' in perf
+          assert '_phase49_3i29_flush_products_refresh' in perf
+          assert '_install_phase49_3i29_app(app_class)' in pricing
+          assert '_install_phase49_3i29_workspace(workspace_class' in pricing
           print("PHASE49_3I17_EXACT_ACTIVE_AI=OK")
           print("PHASE49_3I17_NO_CROSS_PROVIDER_FALLBACK=OK")
           print("PHASE49_3I17_NO_HIDDEN_AUTO_AI=OK")
           print("PHASE49_3I17_NO_PRODUCT_MODEL_PREFLIGHT=OK")
+          print("PHASE49_3I29_PRODUCT_SAVE_REFRESH=DEFERRED")
+          print("PHASE49_3I29_PRODUCT_CARDS=PAGED_48")
+          print("PHASE49_3I29_AI_BUSINESS_PAYLOAD=TITLE_DESCRIPTION_ONLY")
           PY
 
       - name: Django no-migration safety
@@ -111,7 +127,7 @@ jobs:
           python manage.py check
           python manage.py makemigrations --check --dry-run
           python manage.py migrate --plan
-          echo "PHASE49_3I17_DJANGO_MIGRATION=NONE"
+          echo "PHASE49_3I29_WINDOWS_DB_MIGRATION=NONE"
 
       - name: Launcher smoke
         working-directory: catalog_center
