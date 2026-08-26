@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
 Current Phase: `50.A.1E — Unified Product Admin Workspace`
-Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Status: `PRODUCTION VERIFIED / MANUAL ADMIN QA NEXT`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
@@ -35,23 +35,29 @@ Structured Product/Catalog/Hero/SEO/Bridge is operational. Product-owned public 
 - homepage SEO Admin audit added,
 - Windows source image dimensions added.
 
-### 50.A.1D Sales Profiles + Hero Admin Public Media — GITHUB CI TESTED / PRODUCTION GATE REQUIRED
+### 50.A.1D Sales Profiles + Hero Admin Public Media — PRODUCTION DEPLOYED / QA CONTINUES
 - Product profile selection: list / size / weight / build / size→build / build→size,
 - ProductVariant profile name/key/default/order,
 - copy-profile Admin action,
 - Hero Studio JSON uses Product-owned public media or safe remote source fallback,
-- migration `store.0035_phase50_sales_profiles`.
+- migration `store.0035_phase50_sales_profiles` applied on Production.
 
-### 50.A.1E Unified Product Admin Workspace — GITHUB CI TESTED / NEXT DEPLOY
+### 50.A.1E Unified Product Admin Workspace — PRODUCTION VERIFIED
 - Product change page follows the exact business sequence:
   `اطلاعات کالا → تصاویر → فروش و موجودی → پروفایل‌ها و سایز/وزن → قیمت‌گذاری → ارسال و بسته‌بندی → SEO → اسلایدر صفحه اول → منبع و لایسنس → همگام‌سازی ویندوز`,
 - mature Product fields and SEO fields remain authoritative,
 - gallery and Variant/Profile inlines are preserved rather than replaced,
 - operator summaries/links expose Product Catalog Profile pricing, Hero, commercial license and Windows sync without duplicating state,
-- no schema migration added,
-- `Phase50 Product Admin Workspace CI` run `32941662288` PASS on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
+- no schema migration added by 50.A.1E,
+- `Phase50 Product Admin Workspace CI` run `32941662288` PASS on runtime snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`,
+- Production deployed at `9cfbc54ed4196144864b5f4201976d8466a88134`,
+- Production checks, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and HTTP smoke all PASS,
+- Home emits zero private imported working-media references.
 
-### 50.A.2 Checkout & Delivery — NEXT AFTER ADMIN/0035 PRODUCTION QA
+### 50.A.2 Checkout & Delivery — NEXT
+Entry gate: owner manual QA of unified Product Admin + Hero Studio images.
+
+Implementation targets:
 - render profile-aware selector UI on Product page,
 - persist chosen profile/size/build/package snapshots at checkout,
 - use effective product + packaging shipping weight,
@@ -82,4 +88,4 @@ Store/service receivables, allocations, tax/discount/shipping, returns/refunds/c
 GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and period close.
 
 ## Safety
-No Production schema work without exact MySQL verification, migration plan, successful fresh backup and rollback target. Do not widen public media routing to imported Catalog working-media. No guessed carrier/gateway endpoint.
+No Production schema work without exact MySQL verification, migration plan, successful fresh backup and rollback target. Do not widen public media routing to imported Catalog working-media. No guessed carrier/gateway endpoint. On the current Production host, do not rely on stale `origin/<branch>` unless the branch fetch refspec is first verified; explicit live branch fetch to `FETCH_HEAD` is the known-good recovery path.
