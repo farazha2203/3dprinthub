@@ -1,0 +1,101 @@
+name: Phase49.3I.31 Smart Link Bulk AI CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - "catalog_center/app/phase49_3i31_smart_link_bulk_ai.py"
+      - "catalog_center/app/phase49_3i29_windows_performance_ai.py"
+      - "catalog_center/app/phase49_3i_pricing_modes.py"
+      - "catalog_center/app/phase49_3i17_single_active_ai_runtime.py"
+      - "catalog_center/app/phase49_3i18_operator_editing.py"
+      - "catalog_center/app/phase49_3i25_product_first_workflow.py"
+      - "catalog_center/app/ai_providers.py"
+      - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py"
+      - "catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py"
+      - ".github/workflows/phase49-3i31-smart-link-bulk-ai-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase49-3i31:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_SECRET_KEY: "ci-only-phase49-3i31-secret-key"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      CATALOG_BRIDGE_TOKEN: "phase49-3i31-ci-token-12345678901234567890"
+      MEDIA_ROOT: "/tmp/3dprinthub-3i31/media"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-3i31/private-media"
+      STATIC_ROOT: "/tmp/3dprinthub-3i31/static"
+      CATALOG_BRIDGE_PENDING_ROOT: "/tmp/3dprinthub-3i31/imports/pending"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile smart AI surfaces
+        run: |
+          python -m compileall -q \
+            catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
+            catalog_center/app/phase49_3i29_windows_performance_ai.py \
+            catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py
+
+      - name: Smart AI targeted regressions
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v \
+            tests.test_phase49_3i31_smart_link_bulk_ai \
+            tests.test_epic49_phase49_3i29_windows_performance_ai \
+            tests.test_epic49_phase49_3i17_single_active_ai_runtime \
+            tests.test_phase49_3i25_product_first_workflow \
+            tests.test_phase49_3i28_exact_link_contract
+
+      - name: Static smart AI contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          phase31 = Path("catalog_center/app/phase49_3i31_smart_link_bulk_ai.py").read_text(encoding="utf-8")
+          pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
+          assert 'PHASE = "49.3I.31"' in phase31
+          assert '"sent_product_fields": ["source_title", "source_description"]' in phase31
+          assert 'workspace_class._phase49_3e_run_all_ai = smart_ai' in phase31
+          assert 'workspace_class._phase49_3c_stage_ai = smart_ai' in phase31
+          assert 'workspace_class._phase49_3i21_link_refresh = smart_ai' in phase31
+          assert '_phase49_3i31_start_bulk_ai' in phase31
+          assert '_phase49_3i29_flush_products_refresh' in phase31
+          assert '_install_phase49_3i31_app(app_class)' in pricing
+          assert '_install_phase49_3i31_workspace(workspace_class)' in pricing
+          print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
+          print("PHASE49_3I31_BATCH_AI=SELECTED_PRODUCTS_ONLY")
+          print("PHASE49_3I31_AI_PAYLOAD=TITLE_PLUS_TEXT_ONLY")
+          print("PHASE49_3I31_GLOBAL_REFRESH=ONCE_AT_BATCH_END")
+          PY
+
+      - name: Django safety
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Launcher smoke
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | tee /tmp/phase49-3i31-launch.txt
+          grep -F "ACTIVE_RELEASE_VERIFIED=OK" /tmp/phase49-3i31-launch.txt
