@@ -11,9 +11,13 @@ on:
       - store/phase50_variant_views.py
       - store/urls.py
       - store/migrations/0034_phase50_variant2_commerce.py
+      - store/migrations/0035_phase50_sales_profiles.py
       - store/test_phase50_variant2_gallery.py
+      - templates/store/base.html
       - static/store/js/store.js
+      - static/store/js/phase50-profile-selector.js
       - static/store/css/store.css
+      - static/store/css/phase50-profile-selector.css
       - .github/workflows/phase50-variant2-gallery-ci.yml
   workflow_dispatch:
 
@@ -54,7 +58,13 @@ jobs:
             store/phase50_variant_views.py \
             store/urls.py \
             store/migrations/0034_phase50_variant2_commerce.py \
+            store/migrations/0035_phase50_sales_profiles.py \
             store/test_phase50_variant2_gallery.py
+
+      - name: Validate Storefront JavaScript
+        run: |
+          node --check static/store/js/store.js
+          node --check static/store/js/phase50-profile-selector.js
 
       - name: Django system check
         run: python manage.py check
