@@ -2,6 +2,36 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Phase50.A.1E Unified Product Admin Workspace
+
+### Requested delta
+Owner requested one professional Product Admin page organized exactly as:
+`اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`.
+
+### Implemented
+- added `store/phase50_product_admin_workspace.py` as the final additive Product Admin composition boundary,
+- kept mature Product, ProductCatalogProfile, ProductVariant and SEO models authoritative instead of copying state,
+- reorganized Product edit fieldsets in the requested business order,
+- preserved Product gallery and Variant/Profile inlines and relabeled them for operator clarity,
+- added read-only operator control blocks linking to gallery, sales profiles, pricing, shipping/package data, Hero Studio, commercial license and Windows sync,
+- SEO block exposes the real Product focus keyword/meta/canonical/robots/OpenGraph/schema fields plus the existing SERP preview,
+- pricing/slider/license/sync summaries read from the existing ProductCatalogProfile,
+- shipping summary reads existing Variant 2.0 product/package/shipping weight and parcel dimensions,
+- no new schema migration; the workspace builds on existing `0034` and approved `0035` runtime/schema.
+
+### Verification
+- first CI run `32941533091` reached compile, Django check, migration drift and SQLite migration apply successfully, then failed one regression assertion because the test incorrectly assumed the mature Product list still contained `seo_status`,
+- working Admin behavior was not changed to satisfy the bad assumption; the test was aligned with the actual mature Product list contract,
+- corrected `Phase50 Product Admin Workspace CI` run `32941662288` PASS on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`,
+- compile PASS, Django check PASS with known warnings only, migration drift NONE, SQLite migrations through `store.0035` PASS, focused Product Admin regressions PASS.
+
+### Safety
+- no direct Production edit/deploy,
+- no new migration,
+- no Product/Catalog/SEO/Hero state duplication,
+- imported working-media routing remains private,
+- payment/shipping carrier behavior unchanged.
+
 ## 2026-08-25 — Phase50.A.1C Admin Media Integrity / Mobile Hero / Homepage SEO / Windows Image Dimensions
 
 ### Owner evidence
