@@ -3,7 +3,7 @@
 Updated: 2026-08-26
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Candidate: Catalog Center `8.8.2`, build `2026.08.26.2`
-Status: `GITHUB CI TESTED / WINDOWS PORTABLE RELEASE GATE RUNNING`
+Status: `PACKAGED WINDOWS CI PASS / OWNER LOCAL QA NEXT`
 
 ## Requested delta
 An operator reported that pressing an unrelated Product action could erase the saved Product source link. Existing Product/AI/publish/image behavior must remain intact; only accidental source-identity loss is corrected.
@@ -39,24 +39,29 @@ Only an exact existing HTTP/HTTPS URL is reused. No network request, guessed URL
 - no automatic public release before owner/local acceptance.
 
 ## Verification
-GitHub Actions `Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI` run `32996526852` PASS on runtime snapshot `2ca69c4928333fc15247b99014a8fe77d781b50b`.
-Coverage includes:
-- both blank controls preserve an existing source URL,
-- explicit primary URL edit is allowed,
-- explicit secondary URL edit is allowed,
-- never-linked Product remains empty rather than inventing a URL,
-- exact pre-delete URL is recovered from Product history,
-- exact discovered identity is used as local fallback,
-- final Workspace save wrapper prevents the old destructive behavior,
-- 49.3I.31 smart/batch AI, 49.3I.29 performance, single-active-AI and exact-link regressions remain green,
-- Django check/migration-drift safety and launcher smoke pass in the targeted CI.
+Targeted CI:
+- `Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI` run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`,
+- preserve/edit/recovery tests PASS,
+- smart/batch AI, performance, single-active-AI, exact-link, Django safety and launcher smoke PASS.
 
-Windows one-file release workflow run `32996526842` is the remaining packaged-runtime gate at the time of this document update.
+Packaged Windows gate:
+- first run `32996526842` reached the full Windows regression suite and failed only because legacy `tests.test_epic49_operator_workflow` still asserted the literal version `8.8.1`; all new 3I.32 tests had already passed,
+- the stale literal was replaced by an atomic runtime-version == package-manifest-version contract,
+- rerun `32997106056` PASS on source/runtime snapshot `5208aa4dd3b070e9a7c7c6d6dde9b60569879631`,
+- compile PASS,
+- full Phase49 regression gate PASS,
+- launcher composition PASS,
+- source URL invariant PASS,
+- one-file PyInstaller build/self-verify PASS,
+- release manifest + SHA256 verification PASS,
+- immutable Windows artifact upload PASS,
+- Actions artifact `3DPrintHub-CatalogCenter-v8.8.2`, artifact ID `9617048629`, created successfully,
+- publish step skipped intentionally because GitHub Release publication is manual-only until owner QA.
 
 ## Acceptance gate
-1. Windows checkout must be clean and exactly match the approved GitHub head.
-2. Run `catalog_center/RUN_PHASE49_3I31_SMART_AI_GATE.ps1` (now covering 3I.31 + 3I.32).
+1. Windows checkout must be clean and exactly match the current approved GitHub head.
+2. Run `catalog_center/RUN_PHASE49_3I31_SMART_AI_GATE.ps1` (covers 3I.31 + 3I.32).
 3. Open a Product whose link is populated; execute Save/AI/image/publish-related actions and verify the link remains.
-4. Open the Product already affected by the bug; Save or run the smart AI action and verify the exact historical source link is recovered when local history exists.
+4. Open the Product already affected by the bug; Save or run the smart AI action and verify the exact historical source link is recovered when local history/discovery evidence exists.
 5. Run OpenRouter/AvalAI exact-link AI smoke and batch selected-Product smoke.
-6. Only after owner QA may the 8.8.2 release be published/accepted.
+6. Only after owner QA may the 8.8.2 release be explicitly published/accepted.
