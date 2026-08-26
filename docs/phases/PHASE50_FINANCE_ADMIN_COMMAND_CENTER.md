@@ -2,141 +2,119 @@
 
 Updated: 2026-08-26
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Subphase: `50.A.2 Checkout & Delivery`
-Status: `50.A.1H + 50.A.2A PRODUCTION_VERIFIED / OWNER VISUAL QA NEXT / 50.A.2B NEXT`
+Current Subphase: `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
+Status: `GITHUB CI TESTED / PRODUCTION MIGRATION AUDIT NEXT`
 
 Current Production application commit: `c283864290f9c989a9fcdf24ee8eef519560e917`.
-Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` has both `store.0034_phase50_variant2_commerce` and `store.0035_phase50_sales_profiles` applied. Fresh rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
-
-## Owner request
-Complete storefront/Admin commerce before accounting core. Admin must be a professional operator console. Product management keeps the business sequence:
-`اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`.
-
-Current owner priorities also include visible customer Product selection for price/profile/size/build/weight/color, Product engagement, shipping/VAT/coupon, secure ZarinPal and Torob.
+Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` has `store.0034_phase50_variant2_commerce` and `store.0035_phase50_sales_profiles` applied. `store.0036_phase50_checkout_snapshot` exists on GitHub but is NOT yet applied on Production.
 
 ## Preserved foundation
-- Product/Catalog/Bridge/Hero public media ownership remains Product-owned; imported Catalog working-media remains private.
+- Product/Catalog/Bridge/Hero public media is Product-owned; imported Catalog working-media remains private.
 - Product, ProductCatalogProfile and ProductVariant remain authoritative.
-- StoreOrder/StorePayment/StoreInvoice and mature Coupon/VAT/packaging/shipping calculations remain authoritative.
-- StoreAddress + Iran location data remain intact.
+- mature Phase6 Checkout, Coupon/VAT, StoreOrder/StorePayment/StoreInvoice, inventory reservation, addresses and notifications remain authoritative.
 - no direct Production source edits.
-- purchased/private Velzon vendor assets and fonts remain private/gitignored; public GitHub contains project-owned integration code only.
-
-## Production foundation through 50.A.1G
-- Admin command center and Hero controls,
-- Product gallery/lightbox,
-- Variant2 size/build/weight/package fields and StoreOrderItem snapshots,
-- `store.0034` applied,
-- Sales Profiles and Hero public-media resolver, `store.0035` applied,
-- unified Product business workspace,
-- Product changelist 500 fix and business-oriented Admin navigation,
-- Velzon V2 full-width changelists, on-demand filter drawer, modern controls and section navigation.
+- purchased/private Velzon/font assets stay private/gitignored.
 
 ## 50.A.1H — Admin Shell Stability — PRODUCTION VERIFIED
-### Owner QA finding
-- footer line/text could appear across Admin content during refresh/navigation,
-- menu navigation could feel like the whole page jumped,
-- 250px sidebar was too narrow for long Persian labels.
+Footer normal flow, stable shell, 290px right sidebar and internal-only sidebar scrolling are deployed at `c283864...` with CI `32958276378` PASS.
 
-### Root cause
-- Velzon 4.3.0 absolute `.footer`,
-- dynamic Django/SimpleBar layout,
-- project active-menu `scrollIntoView({behavior:'smooth'})`,
-- Velzon default 250px vertical menu.
+## 50.A.2A — Storefront Sales Profile Selector — PRODUCTION VERIFIED
+Customer profile/size/build/weight/material/color/quality selector is deployed at `c283864...`, uses `/store/api/variant-commerce-options/`, keeps canonical ProductVariant ID and native fallback. Storefront CI `32958296546` PASS.
 
-### Deployed fix
-- `static/admin/phase50-admin-shell-stability.css`,
-- footer normal/static flow,
-- stable flex/min-height shell,
-- sidebar 290px,
-- broad geometry transitions disabled,
-- active-menu centering uses internal SimpleBar/sidebar `scrollTop` only,
-- document `scrollIntoView` removed,
-- V2 filter drawer and mature Django Admin behavior preserved,
-- no migration.
+## 50.A.2B — Immutable Checkout/Profile/Shipping Snapshot — GITHUB CI TESTED
+### Requested delta
+The customer selection must not disappear or mutate after checkout. Shipping must use the exact effective ProductVariant weight including packaging, while preserving current Coupon/VAT/inventory/payment behavior and not inventing external carrier contracts.
+
+### Schema
+Migration `store.0036_phase50_checkout_snapshot` adds:
+
+StoreOrderItem:
+- `sales_profile_name`,
+- `sales_profile_key`,
+- `sales_profile_label`,
+- `sales_profile_selection_mode`,
+- `sales_profile_selection_value`,
+- `final_weight_grams`,
+- `shipping_weight_grams`,
+- `print_time_minutes`.
+
+Existing `0034` snapshot fields are reused for:
+- `size_label`,
+- `build_profile`,
+- `packaging_weight_grams`,
+- package length/width/height.
+
+StoreOrder:
+- `insured_value`,
+- `shipping_quote_snapshot` JSON.
+
+### Runtime architecture
+`store/phase50_checkout_snapshot.py` follows the additive Phase50 model pattern:
+- model fields are contributed at app setup and owned by migration `0036`,
+- Cart item weights are normalized through `ProductVariant.effective_shipping_weight_grams`,
+- mature final Phase6 `checkout_view` is wrapped rather than copied/replaced,
+- POST checkout executes inside an outer atomic transaction; mature inner checkout performs validation/coupon/inventory/order/payment/notification work,
+- before the response transaction commits, the created order is locked and finalized with immutable profile/package/weight snapshots,
+- unexpected finalizer errors rollback DB work and restore the session cart.
+
+### Shipping snapshot semantics
+- `StoreOrder.total_weight_grams` = sum of effective per-unit shipping weight × quantity,
+- explicit ProductVariant shipping weight remains authoritative when non-zero,
+- otherwise final/material weight + packaging weight is used,
+- current ShippingMethod/rate rules remain the fallback fee authority,
+- `insured_value` freezes merchandise value after order discount,
+- `shipping_quote_snapshot.source = shipping_method_fallback`,
+- `external_carrier_quote = false`,
+- destination, merchandise/insured value, total weight, fee and each line/package snapshot are frozen,
+- combined carton dimensions are NOT guessed; per-unit package dimensions are retained and multi-item/multi-quantity orders are marked as requiring final packing,
+- pending payment amount is synchronized with the finalized total.
+
+### Must-not-touch
+- do not alter historical paid orders,
+- do not replace Coupon/VAT logic,
+- do not bypass inventory reservation,
+- do not expose imported working-media,
+- do not call or claim Post/Tipax/Mahex without verified official API credentials/contracts,
+- do not apply `0036` on Production without exact MySQL/plan/backup/rollback verification.
 
 ### Verification
-- Admin CI `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
-- deployed at `c283864290f9c989a9fcdf24ee8eef519560e917`,
-- new Admin static HTTP 200,
-- Django/migration gates PASS,
-- final browser refresh/menu visual acceptance remains owner QA.
+GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on snapshot `fba0631e60bce1f6e3f622317b70c2f7f35d978f`:
+- touched Python compile PASS,
+- Storefront JS syntax PASS,
+- Django check PASS,
+- `makemigrations --check --dry-run` PASS,
+- migration plan PASS,
+- migrations through `0036` apply on CI SQLite,
+- Variant2/gallery/profile-selector regressions PASS,
+- checkout profile/package/shipping snapshot integration PASS,
+- snapshot immutability after later Variant edits PASS.
 
-## 50.A.2 — Checkout & Delivery — ACTIVE
-### 50.A.2A — Storefront Sales Profile Selector — PRODUCTION VERIFIED
-Authoritative existing contracts:
-- Product `sales_profile_selection_mode` + optional selector label,
-- ProductVariant profile key/name/default/order, size, build, material, color, quality, weights, print time, price and package dimensions,
-- public `/store/api/variant-commerce-options/`,
-- native `variant-select`, existing `store.js`, and `AddToCartForm` Variant ID remain canonical.
+## Production deployment gate for 50.A.2B
+1. Read-only verify actual Host branch/HEAD/worktree and live GitHub SHA.
+2. Verify MySQL vendor/name, applied `0034/0035`, actual `0036` state and exact plan.
+3. Verify mysqldump and disk; create fresh source/.env/MySQL rollback backup.
+4. Explicitly fetch active branch to `FETCH_HEAD` because of ERR-50-007 and verify ff-only ancestry.
+5. Deploy approved GitHub snapshot.
+6. Re-run Django/model drift/DB gate and inspect exact `store 0036` migration plan.
+7. Apply only `store.0036_phase50_checkout_snapshot` if pending.
+8. Passenger restart; verify Home/Store/Admin/Product/Checkout and new DB/runtime fields.
+9. Controlled new-order QA may be used after schema deployment; never rewrite existing paid order snapshots.
+10. Update Production documentation.
 
-Deployed behavior:
-- `static/store/css/phase50-profile-selector.css`,
-- `static/store/js/phase50-profile-selector.js`,
-- assets loaded in `templates/store/base.html`,
-- list / size / weight / build / size→build / build→size modes,
-- additional material/color/quality dimensions when meaningful,
-- selected profile summary for price/profile/size/build/material/color/quality/part weight/shipping weight/print time/package dimensions,
-- native select retained as fallback,
-- chosen customer combination resolves to canonical ProductVariant ID and dispatches existing change event,
-- endpoint failure leaves mature native selection usable,
-- no migration.
+## Next after 50.A.2B
+### Product Engagement
+Favorite/Save + like/save/review/comment counters + verified-purchased/paid buyer-feedback policy, preserving existing ProductLike/ProductComment/ProductReview, with dedicated migration/tests/backup.
 
-Verification:
-- Storefront CI `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`,
-- deployed at `c283864290f9c989a9fcdf24ee8eef519560e917`,
-- Product detail HTTP 200,
-- selector CSS/JS HTTP 200 and present in Product HTML,
-- native fallback present,
-- Variant API parsed successfully for Product 1 / Variant 1,
-- Home private imported-media refs 0,
-- no migration executed.
+### 50.A.3 Secure ZarinPal
+Server-owned amount/currency, random callback identity, exact Authority, server-to-server verify, idempotency and trusted redirect-host allowlist; never store card/PIN/CVV.
 
-### 50.A.2B — Checkout immutable profile/shipping snapshot — NEXT
-The selector alone does not complete checkout/shipping. Remaining work:
-- make selected sales-profile identity/customer-visible choice explicit in final immutable order state where needed while preserving existing Variant2 snapshots,
-- effective product + packaging shipping weight,
-- parcel dimensions and insured value,
-- normalized carrier quote + immutable order snapshot,
-- Post/Tipax/Mahex only after verified official API credentials/contracts,
-- preserve mature ShippingMethod fallback.
+### 50.A.4 Torob
+Official Product API v3 with stable Product/Profile identity, price/availability and image-quality contract.
 
-## Product Engagement — OWNER REQUESTED SEPARATE SCHEMA PHASE
-Preserve ProductLike/ProductComment/ProductReview. Add real Favorite/Save if absent, Product counters/Admin visibility and qualifying purchased/paid Product verification for buyer-feedback reviews/comments. Dedicated migration/tests/Production backup required.
+### 50.B–50.F
+Accounting Core → Treasury → Purchasing/Payables → Sales/Receivables → Reports/Close.
 
-## 50.A.3 — Secure Store ZarinPal
-Reuse server-owned amount/currency, random callback identity, exact Authority, server-to-server verify and idempotency. Trusted redirect-host allowlist; never capture/store card/PIN/CVV.
-
-## 50.A.4 — Torob
-Official current Torob Product API v3 using stable Product/profile identifiers, price/availability and image-quality contract.
-
-## Remaining Phase50
-- 50.B Accounting core: کل / معین / تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal.
-- 50.C Treasury: bank/cash, receipts/payments, allocations/refunds/reconciliation.
-- 50.D Purchasing: suppliers, purchase orders/invoices/receiving/payables/returns.
-- 50.E Sales accounting: receivables, payment allocation, tax/discount/shipping, credit notes.
-- 50.F Reports/close: GL/subledger, trial balance, aging, cashflow, profitability, VAT/tax, fiscal close.
-
-## Current deployment evidence
-- Production HEAD `c283864290f9c989a9fcdf24ee8eef519560e917`, clean worktree,
-- fresh backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`,
-- exact MySQL verified; `0034`/`0035` applied,
-- migration drift NONE and plan empty,
-- no migration executed,
-- collectstatic + Passenger restart completed,
-- Home/Store/Admin/Product/new static HTTP 200,
-- Product selector HTML/native fallback/API PASS,
-- public Home private imported-media refs 0.
-
-Deployment-script incidents now canonical:
-- `ERR-50-007`: stale remote-tracking ref; explicit branch fetch to `FETCH_HEAD` required,
-- `ERR-50-010`: avoid Bash `/dev/fd` process substitution on this cPanel host,
-- `ERR-50-011`: JSON verifier data must be parsed as data via `python -`, never executed as Python source.
-
-## Must not touch
-- no direct Production source edit,
-- no public exposure of imported working-media,
-- no destructive historical order/payment/ledger reset,
-- no guessed carrier/gateway endpoint,
-- no Production migration without exact DB/plan/backup/rollback verification,
-- no purchased/private Velzon/font assets committed to public GitHub.
+## Canonical host incidents
+- ERR-50-007: stale tag-only fetch refspec → live `ls-remote` + explicit branch fetch to `FETCH_HEAD`.
+- ERR-50-010: no reliable cPanel `/dev/fd` process substitution → Python filesystem backup enumeration.
+- ERR-50-011: JSON is data, not a Python script → `python - <args>` + `json.load`.
