@@ -2,6 +2,51 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Phase50.A.1G Velzon Operator Surface V2
+
+### Owner QA / requested delta
+- owner confirmed the `bc7b97f` Product Admin 500 fix and business navigation deployment,
+- visual QA showed the legacy Django `#changelist-filter` remained permanently visible, squeezed the Product table and retained old English Filter/Action controls,
+- owner re-supplied `master.zip` and requested a substantially more modern/professional Admin comparable to the best project Admin experience rather than another small CSS adjustment.
+
+### Theme review
+- reviewed owner-supplied Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6` package,
+- reused Velzon design/composition patterns for cards, off-canvas controls, tables/forms and responsive operator UI,
+- purchased vendor assets remain private/gitignored under `static/velzon_master/` and are not published to the public GitHub repository,
+- project-owned adapter CSS/JS/templates are committed normally.
+
+### Implemented
+- added `static/admin/phase50-admin-console-v2.css`,
+- added `static/admin/phase50-admin-console-v2.js`,
+- loaded V2 assets from `templates/admin/base.html`,
+- default changelist is now full-width; the native Django filter node is moved into an on-demand `فیلترها` drawer rather than reserving a permanent column,
+- added backdrop, close/Escape, reset filters and active-filter count,
+- normalized legacy Filter/Search/Action labels to the Persian operator UI,
+- modernized search toolbar, bulk actions, result table and pagination as Velzon card surfaces,
+- added sticky result headers, controlled horizontal table scrolling and row hover,
+- long change forms gain sticky horizontal section navigation and card fieldsets,
+- preserved native Django ModelAdmin actions, permissions, filters, query semantics and business models,
+- no migration/schema change.
+
+### Verification
+- added static/UI contract regressions to `store/test_phase50_admin_http_regression.py`,
+- CI workflow now validates the V2 JavaScript with `node --check`,
+- GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on runtime snapshot `3687d0922959fca53f2118be6dacd32639159346`,
+- Python compile PASS, JavaScript syntax PASS, Django check PASS, migration drift NONE, CI SQLite migrations PASS, focused Admin HTTP/static regressions PASS.
+
+### Production status
+- current Production remains verified at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`,
+- Admin V2 is not yet deployed,
+- next gate is fresh Production backup + explicit `FETCH_HEAD` ff-only deploy + collectstatic + Passenger restart + owner visual QA.
+
+## 2026-08-26 — Phase50.A.1F Business Admin Navigation / Product Admin 500 Fix — Production Verified
+- fixed Product changelist 500 caused by formatting a SafeString with numeric format code in `estimated_profit_admin`,
+- added real-row Product changelist regression,
+- reorganized Admin navigation around Store, Orders, Finance, Production, Windows/Catalog, Homepage, Content, Engagement, Support, Affiliate and System groups,
+- deployed and verified at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`,
+- fresh rollback backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`,
+- Product Admin render 200, Velzon business navigation PASS, Home/Store/Admin login 200, private imported-media refs 0, no migration.
+
 ## 2026-08-26 — Phase50.A.1E Production Deployment Verified
 
 ### Deployment
@@ -33,86 +78,44 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - corrected path explicitly fetched `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`, verified SHA/ancestry and used ff-only merge,
 - incident recorded as `ERR-50-007`.
 
-### Next
-- owner manual QA of unified Product Admin + Hero Studio images,
-- then Phase50.A.2 profile-aware storefront selector, checkout profile snapshots and shipping/delivery contract.
-
 ## 2026-08-26 — Phase50.A.1E Unified Product Admin Workspace
-
-### Requested delta
-Owner requested one professional Product Admin page organized exactly as:
-`اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`.
-
-### Implemented
-- added `store/phase50_product_admin_workspace.py` as the final additive Product Admin composition boundary,
-- kept mature Product, ProductCatalogProfile, ProductVariant and SEO models authoritative instead of copying state,
-- reorganized Product edit fieldsets in the requested business order,
-- preserved Product gallery and Variant/Profile inlines and relabeled them for operator clarity,
-- added read-only operator control blocks linking to gallery, sales profiles, pricing, shipping/package data, Hero Studio, commercial license and Windows sync,
-- SEO block exposes the real Product focus keyword/meta/canonical/robots/OpenGraph/schema fields plus existing SERP preview,
-- pricing/slider/license/sync summaries read from the existing ProductCatalogProfile,
-- shipping summary reads existing Variant 2.0 product/package/shipping weight and parcel dimensions,
-- no new schema migration; workspace builds on `0034` and `0035`.
-
-### Verification
-- first CI run `32941533091` failed only a stale regression assertion about `seo_status`,
-- working mature Admin behavior was preserved and the test was corrected,
-- corrected `Phase50 Product Admin Workspace CI` run `32941662288` PASS on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`,
-- compile PASS, Django check PASS with known warnings only, migration drift NONE, SQLite migrations through `store.0035` PASS, focused Product Admin regressions PASS.
+- added `store/phase50_product_admin_workspace.py` as final additive Product Admin composition boundary,
+- organized Product edit in the exact requested business order while preserving mature Product/ProductCatalogProfile/ProductVariant/SEO data,
+- no new migration,
+- corrected CI run `32941662288` PASS on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
 
 ## 2026-08-25 — Phase50.A.1C Admin Media Integrity / Mobile Hero / Homepage SEO / Windows Image Dimensions
-- added safe ImportedPrintAsset Admin media resolver using Product-owned public media,
-- preserved mature Phase35 editing/actions,
-- compacted mobile Hero presentation,
-- added homepage SEO health/preview audit,
-- Windows image cards show original pixel dimensions,
+- safe ImportedPrintAsset Admin media resolver using Product-owned public media,
+- compact mobile Hero, homepage SEO audit and Windows image dimensions,
 - corrected CI run `32875771848` PASS.
 
 ## 2026-08-25 — Phase50.A.1B Product Gallery + Variant 2.0 Foundation
-- upgraded Product gallery to contain-fit viewer + thumbnail switch + fullscreen lightbox,
-- added Variant 2.0 size/build/material/color/quality/weight/package dimensions,
-- added StoreOrderItem commerce snapshots,
-- added migration `store.0034_phase50_variant2_commerce`,
-- CI run `32872549545` PASS.
+- Product gallery/lightbox, Variant 2.0 size/build/package fields, StoreOrderItem snapshots,
+- migration `store.0034_phase50_variant2_commerce`, CI run `32872549545` PASS.
 
 ## 2026-08-25 — Catalog Center Windows v8.8.1 Final Portable Release
-- released `3DPrintHub-CatalogCenter-v8.8.1.exe`, build `2026.08.25.2`,
-- SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`,
-- 92 regression tests, launcher verification, PyInstaller build, frozen self-verification, browser smoke and release publication PASS.
+- released `3DPrintHub-CatalogCenter-v8.8.1.exe`, build `2026.08.25.2`, SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
 
 ## 2026-08-25 — Phase50.A.1 Admin Storefront / Hero Parity
-- Product/imported-asset Hero add/remove actions,
-- 5/10 random Hero and deactivate-all,
-- command-center Storefront/Checkout links,
-- Coupon/Shipping/Pricing/address surfaces,
-- CI PASS.
+- Product/imported-asset Hero controls and Storefront/Coupon/Shipping/Pricing/address Admin surfaces.
 
 ## 2026-08-25 — Phase50.A Admin Command Center
-- added authenticated `/admin/command-center/`,
-- organized Sales, Treasury, Accounting/Ledgers, Purchasing and Inventory/Production,
-- added permission-aware links and live counters,
-- no schema migration.
+- authenticated `/admin/command-center/` organized around Sales, Treasury, Accounting/Ledgers, Purchasing and Inventory/Production.
 
 ## 2026-08-25 — Phase49.3I.30 Production Hero Product-Media Ownership
-- fixed Production Hero blank images by resolving imported selection to Product-owned public gallery/main media,
-- imported working-media remained private,
-- no migration.
+- fixed Production Hero media ownership to Product-owned public gallery/main media; imported working-media remained private.
 
 ## 2026-08-25 — Phase49.3I.29 Production Deployment Verified
-- owner-approved Phase49 application deployed,
-- MySQL verified and backup created,
-- migrations/collectstatic/Passenger restart completed,
-- Home/Store/Product HTTP checks returned 200,
-- final Production worktree clean.
+- Phase49 application deployed with MySQL backup, migrations/collectstatic/Passenger restart and HTTP verification.
 
 ## 2026-08-25 — Phase49.3I.29 Structured Web Product Presentation
-- replaced raw technical JSON-like output with customer-readable Product sections.
+- customer-readable Product sections replaced raw technical output.
 
 ## 2026-08-25 — Phase49.3I.28 Exact-Link Canonical Title Call Contract
-- fixed duplicate `current_title` binding while preserving mature source identity.
+- fixed duplicate `current_title` binding.
 
 ## 2026-08-25 — Phase49.3I.27 Exact-Link Category Provider Crash Fix
-- bridged mature `App.get_all_categories()` provider into exact-link completion.
+- bridged mature `App.get_all_categories()` provider.
 
 ## 2026-08-25 — Phase49.3I.26 Unified Exact-Link Completion
 - restored canonical Product stages, observable AI, vertical gallery and bulk archive/delete workflow.
