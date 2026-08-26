@@ -48,7 +48,7 @@ Status: `REQUESTED / 50.A.3 PLANNED`
 Connect StorePayment to mature secure payment architecture before merchant activation.
 
 ## REQ-50-014 — Windows Product image pixel dimensions
-Status: `SOURCE IMPLEMENTED / CI TESTED / NEXT EXE VERSION AFTER SMOKE`
+Status: `SOURCE IMPLEMENTED / CI TESTED / INCLUDED IN NEXT OWNER-ACCEPTED EXE`
 Each Product image card shows original width × height px.
 
 ## REQ-50-018 — Unified Product Admin workspace
@@ -70,37 +70,37 @@ Customer Product view obeys list/size/weight/build/size→build/build→size sel
 ## REQ-50-022 — Immutable selected-profile checkout and shipping snapshot
 Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION MIGRATION NEXT`
 Acceptance:
-- finalized order item freezes profile name/key/label and the customer-visible selection mode/value,
-- finalized order item freezes size/build/material/color/quality, final weight, packaging weight, effective shipping weight, print time and package dimensions,
+- finalized order item freezes profile name/key/label and customer-visible selection mode/value,
+- freezes size/build/material/color/quality, final weight, packaging weight, effective shipping weight, print time and package dimensions,
 - Cart/checkout effective weight includes packaging when there is no explicit shipping-weight override,
 - order freezes `insured_value` and normalized `shipping_quote_snapshot`,
-- ShippingMethod/rate rules remain current fallback and quote source is explicit; no external carrier claim,
-- do not invent combined parcel geometry from multiple units/items; preserve per-line package facts and require final packing,
-- coupon/VAT/inventory/payment/notification behavior remains mature and authoritative,
-- snapshot stays unchanged after later ProductVariant edits,
-- migration `store.0036_phase50_checkout_snapshot` requires exact Production MySQL verification, fresh backup and rollback before apply.
+- current ShippingMethod/rate rules remain fallback; no external carrier claim,
+- combined parcel geometry is not invented,
+- coupon/VAT/inventory/payment/notification behavior remains authoritative,
+- snapshot remains immutable after later ProductVariant edits,
+- migration `store.0036_phase50_checkout_snapshot` requires exact Production MySQL verification, fresh backup and rollback.
 
 CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
 
 ## REQ-50-023 — Fast Windows AI + exact-link grounding + selected-product batch AI
-Status: `8.8.2 TARGETED CI PASS / WINDOWS PACKAGED GATE + OWNER QA PENDING`
+Status: `8.8.2 PACKAGED WINDOWS CI PASS / OWNER LOCAL QA + EXPLICIT RELEASE PUBLISH PENDING`
 Acceptance:
-- Product edit/AI must not rebuild the global Products gallery on every save/request,
-- Products presentation must remain usable with a large catalog and must not discard older products,
-- exact saved mother AI Provider/Model/key controls all Product AI, including OpenRouter and AvalAI; no hidden fallback/model scan,
+- Product edit/AI must not rebuild global Products gallery on every save/request,
+- large catalog remains usable and older products are never discarded,
+- exact saved mother AI Provider/Model/key controls Product AI including OpenRouter/AvalAI; no hidden fallback/model scan,
 - normal Product AI factual payload contains only Product title + one bounded text body,
-- exact source page facts are extracted first and organized under headings; unsupported facts are never invented,
-- raw HTML/auth/cookies/secrets and unrelated price/stock/internal workflow state are excluded,
+- exact source page facts are extracted first and organized under headings; unsupported facts are not invented,
+- raw HTML/auth/cookies/secrets and unrelated price/stock/workflow state are excluded,
 - main AI action completes Persian title/content/SEO and selected image alt/title/caption/metadata/finalization,
 - selected Products support the same exact-link operation in batch,
-- batch errors are isolated per Product, stop is operator-controlled, and global Products refresh occurs once at batch end,
+- batch errors are isolated per Product, stop is operator-controlled and global Products refresh occurs once at batch end,
 - Product price/stock/availability/business selections remain untouched by editorial AI,
-- Windows regression + launcher + one-file build + frozen browser smoke + live OpenRouter/AvalAI QA must PASS before acceptance.
+- Windows regression + launcher + one-file build + frozen browser smoke must pass before Local owner QA.
 
-Implementation: Phase49.3I.29 + 49.3I.31; version `8.8.2`, current build `2026.08.26.2`. Targeted CI run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`.
+Implementation: Phase49.3I.29 + 49.3I.31; version `8.8.2`, build `2026.08.26.2`. Targeted CI run `32996526852` PASS; Windows packaged run `32997106056` PASS on runtime snapshot `5208aa4dd3b070e9a7c7c6d6dde9b60569879631`.
 
 ## REQ-50-024 — Product source link must never disappear from unrelated actions
-Status: `IMPLEMENTED 49.3I.32 / TARGETED CI PASS / OWNER WINDOWS QA PENDING`
+Status: `IMPLEMENTED 49.3I.32 / TARGETED + PACKAGED WINDOWS CI PASS / OWNER QA PENDING`
 Acceptance:
 - Save, silent Save, AI, close, refetch, image actions and publish-related flows must not erase an already persisted canonical Product source URL merely because mirrored URL controls are temporarily blank,
 - intentional non-empty URL edits remain supported,
@@ -110,7 +110,7 @@ Acceptance:
 - recovery is recorded in Product history/diagnostics,
 - no Product price/stock/material/color/business state or AI provider/model is changed by this guard.
 
-Verification: Phase49.3I.31-32 CI run `32996526852` PASS. Remaining: Windows packaged gate `32996526842` + owner QA of both a healthy linked Product and the already affected Product.
+Verification: targeted run `32996526852` PASS; packaged Windows run `32997106056` PASS. Remaining acceptance is Local owner QA of a healthy linked Product, the already affected Product, OpenRouter/AvalAI live exact-link AI and selected-Product batch behavior.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
