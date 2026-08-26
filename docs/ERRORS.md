@@ -124,6 +124,15 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 **Verification:** corrected CI run `32875771848` passed Django check, migration dry-run/migrate, Admin/mobile/SEO regressions and Windows image-dimension regression.  
 **Prevention:** late Admin parity patches must extend the final composed ModelAdmin contract rather than replacing list/fieldsets without carrying dependent `list_editable` and `list_display_links` invariants.
 
+### ERR-50-006 — Unified Product Admin regression assumed a stale `seo_status` list column
+**Date:** 2026-08-26  
+**Symptom:** first `Phase50 Product Admin Workspace CI` run `32941533091` passed compile, Django check, migration drift and SQLite migration apply, then failed one test because `seo_status` was not in the final Product `list_display`.  
+**Root Cause:** the new regression test asserted an intermediate/older SEO list-column composition instead of the actual mature Product Admin list after later sales/commerce extensions. SEO remained available through the real Product SEO fieldset and `seo_preview`.  
+**Failed Attempt:** re-adding a stale list column just to satisfy the test would couple the new Product workspace to an obsolete intermediate Admin composition.  
+**Correct Fix:** preserve the actual mature Product list and align the test with its owned invariants (`minimum_price`, `price_is_final`, sales-profile selection and `seo_preview`).  
+**Verification:** corrected run `32941662288` PASS: compile, Django check, no migration drift, SQLite migrations through `store.0035`, unified Product Admin regressions and gate marker all passed.  
+**Prevention:** regression tests for late Admin composition must assert final behavior/invariants owned by the active boundary, not stale columns from an earlier composition layer.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside the current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
@@ -134,8 +143,8 @@ Never invent cost; use provider response/verified lookup or mark unknown.
 ### ERR-OPEN-003 — Historical image-limit inconsistency
 Canonical controlled hard maximum is 20. New acquisition defaults to 5.
 
-### ERR-OPEN-004 — Production `/admin/store/product/` HTTP 500 awaiting host-state evidence
-Owner screenshot on 2026-08-25 shows a Production 500. Do not attribute this to migration `0034` or any other cause until exact host HEAD/branch, `showmigrations store`, `migrate --plan`, effective MySQL database and relevant runtime error output are verified read-only.
+### ERR-OPEN-004 — Historical Product Admin 500
+The 2026-08-25 Production `/admin/store/product/` 500 was later cleared in owner deployment/smoke verification. Keep historical evidence in Git history; do not treat it as a currently open blocker without fresh evidence.
 
 ## WARNING DEBT
 - CKEditor4 security/maintenance warning.
