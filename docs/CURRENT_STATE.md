@@ -3,51 +3,63 @@
 Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Release: `Phase50.A.1E — Unified Product Admin Workspace`
-Status: `PRODUCTION VERIFIED / MANUAL ADMIN QA NEXT`
+Current Release: `Phase50.A.1G — Velzon Operator Surface V2`
+Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
 
 ## Production verified state
-Production is verified at commit `9cfbc54ed4196144864b5f4201976d8466a88134` on the active branch.
+Production is currently verified at commit `bc7b97f9c63432b8105f52f61cf5cdae1369689b` on the active branch.
 
-Verified environment:
+Verified Production environment:
 - project root `/home/sfkilvrs/3dprinthub`,
 - Python venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`,
 - MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
 - `store.0034_phase50_variant2_commerce` applied,
 - `store.0035_phase50_sales_profiles` applied,
-- migration plan empty after deploy,
-- no new migration executed for Phase50.A.1E.
+- migration plan empty,
+- Product Admin real changelist HTTP/render gate PASS,
+- Home/Store/Admin login HTTP 200,
+- public Home private imported-media refs = 0,
+- Production worktree clean.
 
-Fresh rollback backup created and verified before deployment at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-114327`. Rollback source HEAD is `8fbe3413cada1099745f4d17312b8eb519694379`.
+Fresh rollback backup for the `bc7b97f` deployment exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848` and contains a verified MySQL dump.
 
-Phase50.A.1E runtime was CI-tested on snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e` by GitHub Actions run `32941662288` with PASS. Commits between that runtime snapshot and deployed HEAD are documentation/archive-only.
+## Owner QA after `bc7b97f`
+Owner visual QA confirmed that the Product Admin 500 is fixed and the business navigation is active, but exposed a remaining visual/interaction defect on Django changelist pages: the legacy `#changelist-filter` remained permanently visible as a narrow sticky column, squeezed the result table, and retained old Django labels/controls. The owner requested a substantially more modern, professional Velzon experience across Admin rather than another small CSS patch.
 
-## Production verification
-- Django system check PASS with known warnings only,
+The owner re-supplied `master.zip`. The package was reviewed as Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6`. Purchased vendor assets remain private and gitignored under `static/velzon_master/`; the public repository contains only project-owned adapter/integration code.
+
+## Phase50.A.1G — Velzon Operator Surface V2
+Implemented on GitHub as a final additive presentation layer over the mature Django Admin/Velzon shell:
+- `static/admin/phase50-admin-console-v2.css`,
+- `static/admin/phase50-admin-console-v2.js`,
+- `templates/admin/base.html` loads the V2 assets,
+- expanded Admin HTTP/static regression tests,
+- CI now also performs `node --check` on the new JavaScript.
+
+Visible behavior:
+- changelists use the full content width instead of reserving a permanent filter column,
+- native Django filters are preserved functionally but moved into an on-demand off-canvas/drawer opened by a `فیلترها` button,
+- filter backdrop/close/Escape/reset and active-filter count are supported,
+- legacy English Filter/Search/Action labels are normalized for the Persian operator UI,
+- search toolbar, bulk actions, result table and pagination are card-based Velzon surfaces,
+- result table has modern sticky headers, row hover and contained horizontal scrolling only when required,
+- long Product/change forms gain a sticky horizontal section navigator and card fieldsets,
+- existing Admin permissions/actions/models remain authoritative; no business or schema state is duplicated.
+
+## Verification
+GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on runtime snapshot `3687d0922959fca53f2118be6dacd32639159346`:
+- Python compile PASS,
+- Admin V2 JavaScript syntax validation PASS,
+- Django check PASS,
 - migration drift NONE,
-- unified Product Admin runtime gate PASS,
-- ProductImage and ProductVariant inlines preserved,
-- Product Admin sections verified in the required business order,
-- collectstatic PASS,
-- Passenger restart completed,
-- Home HTTP 200,
-- Store HTTP 200,
-- Admin login HTTP 200,
-- public Home contains zero `store/imported-models/` media references,
-- final Production worktree clean.
+- CI SQLite migrations PASS,
+- unified Product Admin and representative Admin HTTP regressions PASS,
+- no schema migration added.
 
 Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memory realtime debt, and MySQL conditional-constraint warnings.
 
-## Resolved host Git fetch incident
-The first deploy stopped safely before source mutation because the host `remote.origin.fetch` refspec tracked only tag `v0.33.0`, leaving the branch remote-tracking ref stale. `git ls-remote` showed the correct GitHub branch HEAD while normal `git fetch --prune origin` did not advance `origin/<branch>`.
-
-The successful recovery explicitly fetched `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`, verified the exact SHA and fast-forward ancestry, then used ff-only merge. Do not repeat the stale remote-tracking fetch pattern unless the refspec is corrected or explicitly bypassed.
-
-## Windows Catalog Center
-Latest immutable Windows release remains `8.8.1` (`BUILD_ID=2026.08.25.2`), GitHub Release `catalog-center-v8.8.1`, SHA256 `c32f37affcbd2c6ffacb803247daf804a490fecd7c8162bc37c2729a2197e990`.
-Source after 8.8.1 additionally shows original image dimensions; that source delta is not yet in a newer released EXE.
-
 ## Exact next work
-1. Manual QA of unified Product Admin and Hero Studio images.
-2. Start `Phase50.A.2 — Checkout & Delivery`: profile-aware Product selector, immutable selected-profile snapshots, effective shipping weight/package dimensions and normalized delivery quote contract while preserving mature ShippingMethod fallback.
-3. Continue secure Store ZarinPal → Torob Product API v3 → accounting core.
+1. Deploy the CI-tested Admin V2 snapshot from GitHub to Production with explicit verified `FETCH_HEAD` because of `ERR-50-007`, fresh rollback backup, no-migration gate, collectstatic and Passenger restart.
+2. Production visual QA: Product changelist must have no permanent filter column; `فیلترها` opens only on demand; Product edit page must show the section navigator; representative Admin list/change pages must remain usable on desktop/mobile.
+3. After Admin V2 acceptance, continue the requested Product engagement package separately: real Favorite/Save model, Product like/save/review/comment counters, and verified-purchase-only review policy with its own migration/tests/backup.
+4. Then continue `Phase50.A.2 — Checkout & Delivery`.
