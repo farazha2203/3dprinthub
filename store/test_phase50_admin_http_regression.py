@@ -43,15 +43,22 @@ class Phase50AdminHttpRegressionTests(TestCase):
         self.assertContains(response, 'id="changelist-filter"')
         self.assertContains(response, "admin/phase50-admin-console-v2.css")
         self.assertContains(response, "admin/phase50-admin-console-v2.js")
+        self.assertContains(response, "admin/phase50-admin-shell-stability.css")
 
     def test_velzon_v2_static_contract_is_present(self):
         css_path = finders.find("admin/phase50-admin-console-v2.css")
         js_path = finders.find("admin/phase50-admin-console-v2.js")
+        stability_path = finders.find("admin/phase50-admin-shell-stability.css")
+        master_js_path = finders.find("admin/master-django.js")
         self.assertIsNotNone(css_path)
         self.assertIsNotNone(js_path)
+        self.assertIsNotNone(stability_path)
+        self.assertIsNotNone(master_js_path)
 
         css = Path(css_path).read_text(encoding="utf-8")
         js = Path(js_path).read_text(encoding="utf-8")
+        stability = Path(stability_path).read_text(encoding="utf-8")
+        master_js = Path(master_js_path).read_text(encoding="utf-8")
 
         for marker in (
             "admin-filter-drawer",
@@ -67,6 +74,16 @@ class Phase50AdminHttpRegressionTests(TestCase):
             'heading.textContent = "فیلترها"',
         ):
             self.assertIn(marker, js)
+        for marker in (
+            "--vz-vertical-menu-width: 290px",
+            "html.admin-console-v2 .footer",
+            "position: static !important",
+            "transition-property: none !important",
+        ):
+            self.assertIn(marker, stability)
+        self.assertIn("centerActiveInSidebar", master_js)
+        self.assertIn("getSidebarScrollElement", master_js)
+        self.assertNotIn("best.scrollIntoView", master_js)
 
     def test_product_change_page_renders_unified_workspace(self):
         response = self.client.get(reverse("admin:store_product_change", args=[self.product.pk]))
@@ -98,3 +115,4 @@ class Phase50AdminHttpRegressionTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, "navbar-menu")
                 self.assertContains(response, "admin/phase50-admin-console-v2.css")
+                self.assertContains(response, "admin/phase50-admin-shell-stability.css")
