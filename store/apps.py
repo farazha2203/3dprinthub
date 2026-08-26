@@ -34,6 +34,11 @@ class StoreConfig(AppConfig):
         from .phase50_sales_profiles import install as install_phase50_sales_profiles
         install_phase50_sales_profiles()
 
+        # Phase50.A.2B migration 0036 owns immutable selected-profile/shipping
+        # snapshot fields. Contribute them before Admin/views are composed.
+        from . import phase50_checkout_snapshot
+        phase50_checkout_snapshot.install_model_fields()
+
         from .epic49_runtime_contract import install as install_epic49_runtime_contract
         install_epic49_runtime_contract()
         from . import epic49_catalog_admin  # noqa: F401
@@ -107,5 +112,10 @@ class StoreConfig(AppConfig):
         # from Windows Catalog Center into the same HomepageHeroSlide record.
         from .phase49_3b_hero_media_sync import install as install_phase49_3b_hero_media_sync
         install_phase49_3b_hero_media_sync()
+
+        # Phase50.A.2B is the final Cart/Checkout boundary. It preserves mature
+        # coupon, inventory, notification and payment creation behavior, then
+        # atomically freezes customer-visible profile/package/weight/quote state.
+        phase50_checkout_snapshot.install_runtime()
 
         from . import checks  # noqa: F401
