@@ -2,6 +2,23 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Phase50.A.1H + Phase50.A.2A Production Verified
+- Production fast-forwarded from `0f7f22fdcef4b8e288e0530bfe74f5b2411599dc` to `c283864290f9c989a9fcdf24ee8eef519560e917` using explicit verified branch fetch to `FETCH_HEAD` because the Host refspec still tracks only tag `v0.33.0`,
+- fresh rollback backup created at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`, containing tracked source archive + SHA256, copied `.env*` files, MySQL dump + SHA256 and deploy metadata,
+- MySQL `sfkilvrs_EmiAdmin_3dprinthub` verified; `store.0034_phase50_variant2_commerce` and `store.0035_phase50_sales_profiles` applied; migration plan empty; no migration executed,
+- deployed Admin shell stability: normal-flow footer, stable shell, 290px right sidebar, internal-only active-menu scrolling,
+- deployed Storefront sales-profile selector using existing Product/ProductVariant/API/cart contracts,
+- `collectstatic` deployed `phase50-admin-shell-stability.css`, `phase50-profile-selector.css` and `phase50-profile-selector.js`,
+- Home/Store/Admin/Product/new static resources HTTP 200,
+- Product HTML selector contract PASS and native `variant-select` fallback preserved,
+- Variant commerce API parsed and verified for Product ID 1 / Variant ID 1 (`selection_mode=size_build`, profile `استاندارد`, build `standard`, material `PLA`, unit price `2131170`),
+- public Home private imported-media refs = 0,
+- final Production worktree clean at `c283864...`.
+
+### Deployment-verifier incidents
+- first recovery attempt stopped before mutation because cPanel Bash process substitution depended on `/dev/fd`; corrected by enumerating/copying `.env*` files with Python (`ERR-50-010`),
+- first post-deploy Variant API verifier passed a JSON file as the Python script, causing JSON `false` to be parsed as Python; corrected with `python - <json-path> <variant-id>` + `json.load` (`ERR-50-011`).
+
 ## 2026-08-26 — Phase50.A.1H Admin Shell Stability + Phase50.A.2A Storefront Profile Selector
 
 ### Owner QA
@@ -38,40 +55,14 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Storefront CI `Phase50 Variant2 Gallery CI` run `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`,
 - JS syntax, Django checks, migration drift, CI migrations and focused regressions PASS.
 
-### Production status
-- no deployment is claimed from screenshots alone; the actual Host HEAD must be read-only verified before this combined no-migration deploy,
-- next gate is Host branch/HEAD/worktree/MySQL/static/HTTP audit, then fresh backup + explicit `FETCH_HEAD` ff-only deploy + collectstatic + Passenger restart + visual/data QA.
-
 ## 2026-08-26 — Phase50.A.1G Velzon Operator Surface V2
-
-### Owner QA / requested delta
-- owner confirmed the `bc7b97f` Product Admin 500 fix and business navigation deployment,
-- visual QA showed the legacy Django `#changelist-filter` remained permanently visible, squeezed the Product table and retained old English Filter/Action controls,
-- owner re-supplied `master.zip` and requested a substantially more modern/professional Admin comparable to the best project Admin experience rather than another small CSS adjustment.
-
-### Theme review
-- reviewed owner-supplied Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6` package,
-- reused Velzon design/composition patterns for cards, off-canvas controls, tables/forms and responsive operator UI,
-- purchased vendor assets remain private/gitignored under `static/velzon_master/` and are not published to the public GitHub repository,
-- project-owned adapter CSS/JS/templates are committed normally.
-
-### Implemented
-- added `static/admin/phase50-admin-console-v2.css`,
-- added `static/admin/phase50-admin-console-v2.js`,
-- loaded V2 assets from `templates/admin/base.html`,
-- default changelist is now full-width; the native Django filter node is moved into an on-demand `فیلترها` drawer rather than reserving a permanent column,
-- added backdrop, close/Escape, reset filters and active-filter count,
-- normalized legacy Filter/Search/Action labels to the Persian operator UI,
-- modernized search toolbar, bulk actions, result table and pagination as Velzon card surfaces,
-- added sticky result headers, controlled horizontal table scrolling and row hover,
-- long change forms gain sticky horizontal section navigation and card fieldsets,
-- preserved native Django ModelAdmin actions, permissions, filters, query semantics and business models,
-- no migration/schema change.
-
-### Verification
-- added static/UI contract regressions to `store/test_phase50_admin_http_regression.py`,
-- CI workflow validates the V2 JavaScript with `node --check`,
-- GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on runtime snapshot `3687d0922959fca53f2118be6dacd32639159346`.
+- owner rejected the permanent legacy Django `#changelist-filter` column and requested a substantially more modern/professional Admin,
+- reviewed owner-supplied Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6`,
+- reused Velzon design/composition patterns while keeping purchased vendor assets private/gitignored,
+- added V2 CSS/JS, full-width changelists, on-demand filter drawer, Persian controls, modern search/actions/results/pagination and sticky change-form section navigation,
+- preserved native Django ModelAdmin actions/permissions/filters/query semantics,
+- no migration,
+- CI run `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
 
 ## 2026-08-26 — Phase50.A.1F Business Admin Navigation / Product Admin 500 Fix — Production Verified
 - fixed Product changelist 500 caused by formatting a SafeString with numeric format code in `estimated_profit_admin`,
