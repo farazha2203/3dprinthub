@@ -1,10 +1,11 @@
-name: Phase49.3I.31 Smart Link Bulk AI CI
+name: Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI
 
 on:
   push:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - "catalog_center/app/phase49_3i32_source_url_guard.py"
       - "catalog_center/app/phase49_3i31_smart_link_bulk_ai.py"
       - "catalog_center/app/phase49_3i29_windows_performance_ai.py"
       - "catalog_center/app/phase49_3i_pricing_modes.py"
@@ -13,6 +14,7 @@ on:
       - "catalog_center/app/phase49_3i25_product_first_workflow.py"
       - "catalog_center/app/ai_providers.py"
       - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i32_source_url_guard.py"
       - "catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py"
       - "catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py"
       - ".github/workflows/phase49-3i31-smart-link-bulk-ai-ci.yml"
@@ -22,7 +24,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31:
+  phase49-3i31-32:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -50,29 +52,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Compile smart AI surfaces
+      - name: Compile smart AI and source-identity surfaces
         run: |
           python -m compileall -q \
+            catalog_center/app/phase49_3i32_source_url_guard.py \
             catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i32_source_url_guard.py \
             catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py
 
-      - name: Smart AI targeted regressions
+      - name: Smart AI and source URL targeted regressions
         working-directory: catalog_center
         run: |
           python -m unittest -v \
+            tests.test_phase49_3i32_source_url_guard \
             tests.test_phase49_3i31_smart_link_bulk_ai \
             tests.test_epic49_phase49_3i29_windows_performance_ai \
             tests.test_epic49_phase49_3i17_single_active_ai_runtime \
             tests.test_phase49_3i25_product_first_workflow \
             tests.test_phase49_3i28_exact_link_contract
 
-      - name: Static smart AI contract
+      - name: Static smart AI and source URL contract
         run: |
           python - <<'PY'
           from pathlib import Path
           phase31 = Path("catalog_center/app/phase49_3i31_smart_link_bulk_ai.py").read_text(encoding="utf-8")
+          phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
           pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           assert 'PHASE = "49.3I.31"' in phase31
           assert '"sent_product_fields": ["source_title", "source_description"]' in phase31
@@ -81,12 +87,18 @@ jobs:
           assert 'workspace_class._phase49_3i21_link_refresh = smart_ai' in phase31
           assert '_phase49_3i31_start_bulk_ai' in phase31
           assert '_phase49_3i29_flush_products_refresh' in phase31
+          assert 'PHASE = "49.3I.32"' in phase32
+          assert 'resolve_source_url_for_save' in phase32
+          assert 'source_url_preserved_before_save' in phase32
+          assert 'source_url_restored_after_save' in phase32
           assert '_install_phase49_3i31_app(app_class)' in pricing
           assert '_install_phase49_3i31_workspace(workspace_class)' in pricing
+          assert '_install_phase49_3i32_workspace(workspace_class)' in pricing
           print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
           print("PHASE49_3I31_BATCH_AI=SELECTED_PRODUCTS_ONLY")
           print("PHASE49_3I31_AI_PAYLOAD=TITLE_PLUS_TEXT_ONLY")
           print("PHASE49_3I31_GLOBAL_REFRESH=ONCE_AT_BATCH_END")
+          print("PHASE49_3I32_SOURCE_URL=GENERIC_SAVE_CANNOT_ERASE_EXISTING")
           PY
 
       - name: Django safety
