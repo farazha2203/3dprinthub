@@ -1,6 +1,6 @@
 # OWNER REQUESTS
 
-Last Updated: 2026-08-25
+Last Updated: 2026-08-26
 
 Older detailed request history remains available in Git history. This file keeps the active acceptance contracts.
 
@@ -31,8 +31,8 @@ Status: `REQUESTED / PHASE50 ACTIVE`
 Full GL/subledger, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `PHASE50.A.1C DEPLOYED / 50.A.1D CI TESTED`
-Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses, professional imported-model media/data visibility and sales profile controls.
+Status: `50.A.1E IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses, professional imported-model media/data visibility, sales profile controls, and one unified Product edit workspace ordered by the operator's business workflow.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
@@ -93,6 +93,10 @@ Each Product can choose customer selection by full profile list, size, weight, b
 ## REQ-50-017 — Hero Studio images must load on slide edit pages
 Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
 `/admin/website/homepageheroslide/<id>/change/` product and album thumbnails must never emit private `store/imported-models/...` URLs. Final Admin JSON endpoints resolve Product-owned public gallery/main media or row-specific remote HTTP(S) source media.
+
+## REQ-50-018 — Unified Product Admin workspace
+Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+The Product change page must present one professional operator workspace in this exact order: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`. Existing Product, ProductCatalogProfile, ProductVariant and SEO data stay authoritative; the workspace links/summarizes them instead of duplicating state.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target.
