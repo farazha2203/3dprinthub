@@ -83,21 +83,34 @@ Acceptance:
 CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
 
 ## REQ-50-023 — Fast Windows AI + exact-link grounding + selected-product batch AI
-Status: `IMPLEMENTED AS 8.8.2 CANDIDATE / FULL WINDOWS RELEASE GATE PENDING`
+Status: `8.8.2 TARGETED CI PASS / WINDOWS PACKAGED GATE + OWNER QA PENDING`
 Acceptance:
 - Product edit/AI must not rebuild the global Products gallery on every save/request,
 - Products presentation must remain usable with a large catalog and must not discard older products,
 - exact saved mother AI Provider/Model/key controls all Product AI, including OpenRouter and AvalAI; no hidden fallback/model scan,
-- the normal Product AI payload contains only Product title + one bounded text body,
-- exact source page facts are extracted first, organized under clear headings inside that one text body, and unsupported facts are never invented,
-- raw HTML/auth/cookies/secrets and unrelated price/stock/internal workflow state are excluded from AI input,
-- pressing the main AI action completes Persian title/content/SEO and selected image alt/title/caption/metadata/finalization,
+- normal Product AI factual payload contains only Product title + one bounded text body,
+- exact source page facts are extracted first and organized under headings; unsupported facts are never invented,
+- raw HTML/auth/cookies/secrets and unrelated price/stock/internal workflow state are excluded,
+- main AI action completes Persian title/content/SEO and selected image alt/title/caption/metadata/finalization,
 - selected Products support the same exact-link operation in batch,
-- batch errors are isolated per Product, stop is operator-controlled, and the global Products page refreshes once at batch end,
-- Product price/stock/availability/business selections remain untouched by this editorial AI workflow,
-- full Windows regression + launcher + one-file build + frozen browser smoke + live OpenRouter/AvalAI exact-link QA must PASS before release acceptance.
+- batch errors are isolated per Product, stop is operator-controlled, and global Products refresh occurs once at batch end,
+- Product price/stock/availability/business selections remain untouched by editorial AI,
+- Windows regression + launcher + one-file build + frozen browser smoke + live OpenRouter/AvalAI QA must PASS before acceptance.
 
-Implementation: Phase49.3I.29 + Phase49.3I.31, candidate version `8.8.2`, build `2026.08.26.1`.
+Implementation: Phase49.3I.29 + 49.3I.31; version `8.8.2`, current build `2026.08.26.2`. Targeted CI run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`.
+
+## REQ-50-024 — Product source link must never disappear from unrelated actions
+Status: `IMPLEMENTED 49.3I.32 / TARGETED CI PASS / OWNER WINDOWS QA PENDING`
+Acceptance:
+- Save, silent Save, AI, close, refetch, image actions and publish-related flows must not erase an already persisted canonical Product source URL merely because mirrored URL controls are temporarily blank,
+- intentional non-empty URL edits remain supported,
+- a missing URL is never guessed,
+- a Product already damaged by the old bug should recover the exact previous HTTP/HTTPS URL from local Product history, or matching discovery identity when history is unavailable,
+- recovery does not use the network and updates canonical `source_url`, `normalized_url` and fingerprint consistently,
+- recovery is recorded in Product history/diagnostics,
+- no Product price/stock/material/color/business state or AI provider/model is changed by this guard.
+
+Verification: Phase49.3I.31-32 CI run `32996526852` PASS. Remaining: Windows packaged gate `32996526842` + owner QA of both a healthy linked Product and the already affected Product.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
