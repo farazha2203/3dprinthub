@@ -1,14 +1,28 @@
 {% extends "store/base.html" %}
-{% load humanize %}
+{% load humanize store_commerce %}
 {% block title %}پرداخت سفارش {{ order.order_number }}{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
+{% store_payment_settings as payment_settings %}
 <section class="container mx-auto px-4 md:px-6 py-10 max-w-4xl">
   <div class="store-content-card">
     <h1 class="text-3xl font-black">پرداخت سفارش {{ order.order_number }}</h1>
     <div class="rounded-2xl bg-orange-50 border border-orange-200 p-5 mt-6">
       <div class="flex justify-between"><span>مبلغ قابل پرداخت</span><strong class="text-2xl text-orange-600">{{ order.total_amount|intcomma }} تومان</strong></div>
-      <p class="text-sm text-slate-600 leading-7 mt-3">مبلغ را به حساب اعلام‌شده توسط مجموعه واریز کنید و تصویر رسید را در این فرم قرار دهید. اطلاعات حساب بانکی را می‌توانید از تنظیمات محتوایی سایت یا پشتیبانی دریافت کنید.</p>
+      {% if payment_settings and payment_settings.is_active %}
+        <div class="mt-5 grid gap-3 rounded-2xl bg-white/80 border border-orange-100 p-4">
+          <h2 class="font-black text-lg">{{ payment_settings.title }}</h2>
+          {% if payment_settings.bank_name %}<div><span class="text-slate-500">بانک:</span> <strong>{{ payment_settings.bank_name }}</strong></div>{% endif %}
+          {% if payment_settings.account_holder %}<div><span class="text-slate-500">صاحب حساب:</span> <strong>{{ payment_settings.account_holder }}</strong></div>{% endif %}
+          {% if payment_settings.card_number %}<div class="font-mono text-lg"><span class="font-sans text-slate-500">شماره کارت:</span> <strong dir="ltr">{{ payment_settings.card_number }}</strong></div>{% endif %}
+          {% if payment_settings.sheba_number %}<div class="font-mono"><span class="font-sans text-slate-500">شماره شبا:</span> <strong dir="ltr">{{ payment_settings.sheba_number }}</strong></div>{% endif %}
+          {% if payment_settings.account_number %}<div><span class="text-slate-500">شماره حساب:</span> <strong dir="ltr">{{ payment_settings.account_number }}</strong></div>{% endif %}
+          {% if payment_settings.transfer_instructions %}<p class="text-sm text-slate-600 leading-7 whitespace-pre-line">{{ payment_settings.transfer_instructions }}</p>{% endif %}
+        </div>
+      {% else %}
+        <p class="text-sm text-slate-600 leading-7 mt-3">اطلاعات حساب مقصد هنوز در پنل مدیریت فروشگاه ثبت نشده است. قبل از واریز با پشتیبانی هماهنگ کنید.</p>
+      {% endif %}
+      <p class="text-sm text-slate-600 leading-7 mt-3">پس از واریز، تصویر رسید را در فرم زیر ثبت کنید. هیچ رمز کارت، CVV2 یا رمز پویا در سایت وارد نکنید.</p>
     </div>
     <form method="post" enctype="multipart/form-data" class="grid gap-5 mt-7">{% csrf_token %}
       {% for field in form %}<div><label class="block font-bold mb-2">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="text-rose-600 text-sm mt-1">{{ error }}</p>{% endfor %}</div>{% endfor %}
