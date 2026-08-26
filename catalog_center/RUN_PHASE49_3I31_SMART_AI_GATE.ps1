@@ -12,6 +12,7 @@ $Catalog = "$Root\catalog_center"
 $Py = "$Root\.venv\Scripts\python.exe"
 $Branch = "agent/phase49-3i18-operator-bulk-ai-rebuild"
 $ExpectedVersion = "8.8.2"
+$ExpectedBuild = "2026.08.26.2"
 
 function Fail([string]$Message) {
     throw $Message
@@ -21,7 +22,7 @@ Set-Location $Root
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "3DPRINTHUB PHASE49.3I.31 / WINDOWS 8.8.2 GATE"
+Write-Host "3DPRINTHUB PHASE49.3I.31-32 / WINDOWS 8.8.2 GATE"
 Write-Host "NO PRODUCTION / NO MIGRATION / NO RESET / NO STASH"
 Write-Host "=================================================="
 
@@ -44,28 +45,39 @@ if ($ExpectedHead -and $Head -ne $ExpectedHead) { Fail "EXPECTED HEAD MISMATCH" 
 if (-not (Test-Path -LiteralPath $Py)) { Fail "VENV PYTHON NOT FOUND: $Py" }
 
 $Version = (& $Py -c "import sys; sys.path.insert(0, r'$Catalog'); from app.version import APP_VERSION; print(APP_VERSION)").Trim()
-if ($LASTEXITCODE -ne 0) { Fail "VERSION READ FAILED" }
+$Build = (& $Py -c "import sys; sys.path.insert(0, r'$Catalog'); from app.version import BUILD_ID; print(BUILD_ID)").Trim()
+if ($LASTEXITCODE -ne 0) { Fail "VERSION/BUILD READ FAILED" }
 if ($Version -ne $ExpectedVersion) { Fail "VERSION MISMATCH: $Version != $ExpectedVersion" }
+if ($Build -ne $ExpectedBuild) { Fail "BUILD MISMATCH: $Build != $ExpectedBuild" }
 Write-Host "APP_VERSION=$Version"
+Write-Host "BUILD_ID=$Build"
 
 Write-Host ""
 Write-Host "===== PYTHON COMPILE ====="
 & $Py -m py_compile `
+    "$Catalog\app\phase49_3i32_source_url_guard.py" `
     "$Catalog\app\phase49_3i31_smart_link_bulk_ai.py" `
     "$Catalog\app\phase49_3i29_windows_performance_ai.py" `
     "$Catalog\app\phase49_3i_pricing_modes.py" `
     "$Catalog\app\phase49_3i17_single_active_ai_runtime.py" `
     "$Catalog\app\phase49_3i18_operator_editing.py" `
     "$Catalog\app\phase49_3i25_product_first_workflow.py" `
+    "$Catalog\tests\test_phase49_3i32_source_url_guard.py" `
     "$Catalog\launch.py" `
     "$Catalog\portable_entry.py" `
     "$Catalog\build_portable_exe.py"
 if ($LASTEXITCODE -ne 0) { Fail "PY_COMPILE FAILED" }
 
 Write-Host ""
+Write-Host "===== SOURCE URL INVARIANT ====="
+& $Py -c "import sys; sys.path.insert(0, r'$Catalog'); from app.phase49_3i32_source_url_guard import resolve_source_url_for_save as r; u='https://example.com/model/1'; assert r(u,'','') == u; assert r(u,u,'https://example.com/model/2').endswith('/2'); print('PHASE49_3I32_SOURCE_URL_GUARD=PASS')"
+if ($LASTEXITCODE -ne 0) { Fail "SOURCE URL GUARD FAILED" }
+
+Write-Host ""
 Write-Host "===== FOCUSED REGRESSION ====="
 Set-Location $Catalog
 & $Py -m unittest -v `
+    tests.test_phase49_3i32_source_url_guard `
     tests.test_phase49_3i31_smart_link_bulk_ai `
     tests.test_epic49_phase49_3i29_windows_performance_ai `
     tests.test_phase49_3i28_exact_link_contract `
@@ -115,9 +127,11 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "PHASE49_3I31_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I31_32_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "APP_VERSION=$ExpectedVersion"
+Write-Host "BUILD_ID=$ExpectedBuild"
+Write-Host "SOURCE_URL_GUARD=PASS"
 Write-Host "PRODUCTION_TOUCHED=NO"
 Write-Host "=================================================="
 
@@ -127,7 +141,7 @@ if ($BuildExe) {
     Write-Host "===== PORTABLE EXE BUILD / SELF VERIFY ====="
     & $Py build_portable_exe.py --python $Py
     if ($LASTEXITCODE -ne 0) { Fail "PORTABLE EXE BUILD FAILED" }
-    Write-Host "PHASE49_3I31_PORTABLE_BUILD=PASS"
+    Write-Host "PHASE49_3I31_32_PORTABLE_BUILD=PASS"
 }
 
 if ($LaunchApp) {
