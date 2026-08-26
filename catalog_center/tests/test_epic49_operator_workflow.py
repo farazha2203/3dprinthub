@@ -90,7 +90,9 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
 
     def test_current_release_and_resilient_staged_exe_build_are_enabled(self):
         from app.version import APP_VERSION
-        self.assertEqual(APP_VERSION, "8.8.1")
+
+        manifest = json.loads((ROOT / "PACKAGE_MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual(APP_VERSION, manifest["version"])
         builder = (ROOT / "build_portable_exe.py").read_text(encoding="utf-8")
         self.assertIn("staging_dir", builder)
         self.assertIn("except PermissionError", builder)
