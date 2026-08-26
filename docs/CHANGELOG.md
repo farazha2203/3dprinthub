@@ -2,6 +2,23 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Phase50.A.2B Immutable Checkout/Profile/Shipping Snapshot — GitHub CI Tested
+- added migration `store.0036_phase50_checkout_snapshot`,
+- StoreOrderItem now has immutable sales-profile name/key/label, selection mode/value, final weight, effective shipping weight and print-time snapshots,
+- existing `0034` StoreOrderItem size/build/packaging-weight/package-dimension fields are now populated during successful checkout finalization,
+- StoreOrder now has `insured_value` and normalized `shipping_quote_snapshot`,
+- added `store/phase50_checkout_snapshot.py` following the existing additive runtime-field pattern rather than rewriting mature `store/models.py`,
+- Cart summary now uses `ProductVariant.effective_shipping_weight_grams`, including packaging when no explicit shipping-weight override exists,
+- mature Phase6 checkout remains authoritative for form validation, coupon, inventory reservation, address, notifications, payment creation and redirect,
+- successful checkout is wrapped in an outer atomic boundary and finalized before commit; finalizer failure restores the session cart and rolls back DB writes,
+- normalized shipping snapshot uses current `ShippingMethod`/rate rules as explicit `shipping_method_fallback`; no external carrier API is claimed,
+- insured value is frozen as merchandise value after order discount,
+- per-line/unit package dimensions are preserved; combined carton geometry is deliberately not invented,
+- pending StorePayment amount is synchronized if effective shipping weight changes the final fallback shipping fee,
+- added integration regressions proving profile/package/weight snapshotting, packaging-aware shipping weight, payment synchronization and immutability after later Variant changes,
+- GitHub Actions `Phase50 Variant2 Gallery CI` run `32966720475` PASS on snapshot `fba0631e60bce1f6e3f622317b70c2f7f35d978f`, including compile, Django check, migration drift/plan, SQLite migration through `0036`, Variant2/gallery/profile-selector tests and checkout snapshot tests,
+- Production remains at `c283864290f9c989a9fcdf24ee8eef519560e917`; `0036` is not yet applied and requires a fresh Production backup/migration gate.
+
 ## 2026-08-26 — Phase50.A.1H + Phase50.A.2A Production Verified
 - Production fast-forwarded from `0f7f22fdcef4b8e288e0530bfe74f5b2411599dc` to `c283864290f9c989a9fcdf24ee8eef519560e917` using explicit verified branch fetch to `FETCH_HEAD` because the Host refspec still tracks only tag `v0.33.0`,
 - fresh rollback backup created at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`, containing tracked source archive + SHA256, copied `.env*` files, MySQL dump + SHA256 and deploy metadata,
@@ -20,68 +37,31 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - first post-deploy Variant API verifier passed a JSON file as the Python script, causing JSON `false` to be parsed as Python; corrected with `python - <json-path> <variant-id>` + `json.load` (`ERR-50-011`).
 
 ## 2026-08-26 — Phase50.A.1H Admin Shell Stability + Phase50.A.2A Storefront Profile Selector
-
-### Owner QA
-- owner confirmed the new on-demand filter/full-width Product table direction but reported a footer line/text flashing or appearing across the Admin viewport during refresh,
-- right Admin menu navigation felt like the page jumped,
-- 250px sidebar remained too narrow for Persian business labels,
-- owner asked to activate the already-designed Product price/color/weight/profile selection experience at the same time.
-
-### Admin root cause / implementation
-- Velzon 4.3.0 vendor CSS positions `.footer` absolutely; dynamic Django/SimpleBar initialization can therefore paint the footer across content before final height settles,
-- project `master-django.js` used `scrollIntoView({behavior:'smooth'})` for the active menu, which can scroll the document rather than only the sidebar,
-- added `static/admin/phase50-admin-shell-stability.css`,
-- footer is now normal-flow/static inside a stable flex-column shell,
-- right sidebar width increased from 250px to 290px with larger Persian spacing/readability,
-- broad shell geometry transitions removed,
-- active-menu centering now changes only the internal sidebar/SimpleBar `scrollTop`; document-level `scrollIntoView` removed,
-- no schema migration.
-
-### Storefront selector implementation
-- existing Product sales-profile modes and ProductVariant metadata remain authoritative,
-- added `static/store/css/phase50-profile-selector.css` and `static/store/js/phase50-profile-selector.js`,
-- `templates/store/base.html` loads the selector assets,
-- Product detail progressively enhances the mature `variant-select` using `/store/api/variant-commerce-options/`,
-- supports configured list/size/weight/build/size→build/build→size selection plus available material/color/quality distinctions,
-- selected profile summary shows price, profile, size, build, material, color, quality, part/shipping weight, print time and parcel dimensions,
-- native select remains available as fallback,
-- canonical Variant ID is synchronized back into the existing select/change event, preserving current price/cart/AddToCartForm behavior,
-- no schema migration.
-
-### Regression/CI
-- Admin shell tests assert static footer flow, 290px sidebar, internal-only active-menu scrolling and absence of `best.scrollIntoView`,
-- Product selector tests assert existing variant endpoint/native select integration and selector asset contract,
-- Admin CI `Phase50 Product Admin Workspace CI` run `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
-- Storefront CI `Phase50 Variant2 Gallery CI` run `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`,
-- JS syntax, Django checks, migration drift, CI migrations and focused regressions PASS.
+- owner reported Admin footer flash, whole-page menu jump and narrow 250px sidebar,
+- added normal-flow footer/stable shell, 290px sidebar and internal-only sidebar scrolling,
+- added customer sales-profile selector using existing ProductVariant/API/cart contracts,
+- Admin CI `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
+- Storefront CI `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`.
 
 ## 2026-08-26 — Phase50.A.1G Velzon Operator Surface V2
-- owner rejected the permanent legacy Django `#changelist-filter` column and requested a substantially more modern/professional Admin,
-- reviewed owner-supplied Velzon Django Corporate `4.3.0` / Bootstrap `5.3.6`,
-- reused Velzon design/composition patterns while keeping purchased vendor assets private/gitignored,
-- added V2 CSS/JS, full-width changelists, on-demand filter drawer, Persian controls, modern search/actions/results/pagination and sticky change-form section navigation,
-- preserved native Django ModelAdmin actions/permissions/filters/query semantics,
-- no migration,
-- CI run `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
+- replaced permanent legacy Django filter column with on-demand drawer and full-width lists,
+- added Persian modern table/search/action/form surfaces while preserving Django Admin semantics,
+- CI `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
 
 ## 2026-08-26 — Phase50.A.1F Business Admin Navigation / Product Admin 500 Fix — Production Verified
-- fixed Product changelist 500 caused by formatting a SafeString with numeric format code in `estimated_profit_admin`,
-- added real-row Product changelist regression,
-- reorganized Admin navigation around Store, Orders, Finance, Production, Windows/Catalog, Homepage, Content, Engagement, Support, Affiliate and System groups,
-- deployed and verified at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`,
-- fresh rollback backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`,
-- Product Admin render 200, Velzon business navigation PASS, Home/Store/Admin login 200, private imported-media refs 0, no migration.
+- fixed Product changelist 500 caused by SafeString numeric formatting,
+- reorganized Admin by business domains,
+- deployed/verified at `bc7b97f9c63432b8105f52f61cf5cdae1369689b` with backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`.
 
 ## 2026-08-26 — Phase50.A.1E Production Deployment Verified
-- deployed application snapshot `9cfbc54ed4196144864b5f4201976d8466a88134`,
-- fresh rollback backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-114327`,
-- MySQL `0034`/`0035` applied, migration plan empty, Django/product/HTTP/private-media gates PASS,
-- first stale remote-tracking fetch stopped safely and was corrected through explicit `FETCH_HEAD`; incident `ERR-50-007`.
+- deployed `9cfbc54ed4196144864b5f4201976d8466a88134`,
+- backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-114327`,
+- `0034`/`0035` applied and HTTP/private-media gates PASS,
+- stale remote-tracking incident fixed through explicit `FETCH_HEAD` (`ERR-50-007`).
 
 ## 2026-08-26 — Phase50.A.1E Unified Product Admin Workspace
-- added business-ordered Product workspace while preserving mature Product/ProductCatalogProfile/ProductVariant/SEO data,
-- no new migration,
-- corrected CI run `32941662288` PASS on `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
+- added business-ordered Product workspace preserving mature Product/Profile/Variant/SEO contracts,
+- CI `32941662288` PASS on `f34eaa3bbad965b2092279291ff8adf93f3d908e`.
 
 ## 2026-08-25 — Phase50.A.1C Admin Media / Mobile / SEO / Windows Dimensions
 - safe ImportedPrintAsset Admin public-media resolver, compact mobile Hero, homepage SEO audit and Windows image dimensions; CI PASS.
