@@ -4,8 +4,8 @@ Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Phase: `50.A.1E — Unified Product Admin Workspace`
-Status: `PRODUCTION VERIFIED / MANUAL ADMIN QA NEXT`
+Current Phase: `50.A.1G — Velzon Operator Surface V2`
+Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
@@ -15,62 +15,83 @@ Structured Product/Catalog/Hero/SEO/Bridge is operational. Product-owned public 
 
 ## Phase50.A — Admin and commerce operational completeness
 ### 50.A.1 Admin Storefront / Hero parity — DEPLOYED
-- `/admin/command-center/`,
-- Product/imported-asset add/remove Hero,
-- Hero 5-random / 10-random / deactivate-all,
-- Coupon, ShippingMethod, PricingSetting, StoreAddress and Iran location Admin links.
+Command center, Product/imported-asset Hero actions, Coupon/Shipping/Pricing/address surfaces.
 
 ### 50.A.1B Product Gallery + Variant 2.0 — DEPLOYED
-- contain-fit Product viewer + thumbnail swap + fullscreen lightbox,
-- size/build/packaging weight and parcel dimensions,
-- StoreOrderItem commerce snapshots,
-- migration `store.0034_phase50_variant2_commerce` applied on Production,
-- Variant Admin and public variant metadata endpoint.
+Product viewer/lightbox, Variant 2.0 size/build/package data, `store.0034` applied.
 
 ### 50.A.1C Admin media / mobile / SEO / Windows dimensions — DEPLOYED
-- ImportedPrintAsset Admin avoids private working-media previews,
-- safe Product-owned public image resolution,
-- mature imported-model editing preserved,
-- mobile Hero compacted,
-- homepage SEO Admin audit added,
-- Windows source image dimensions added.
+Safe imported-media Admin, mobile Hero, homepage SEO audit, Windows image dimensions.
 
-### 50.A.1D Sales Profiles + Hero Admin Public Media — PRODUCTION DEPLOYED / QA CONTINUES
-- Product profile selection: list / size / weight / build / size→build / build→size,
-- ProductVariant profile name/key/default/order,
-- copy-profile Admin action,
-- Hero Studio JSON uses Product-owned public media or safe remote source fallback,
-- migration `store.0035_phase50_sales_profiles` applied on Production.
+### 50.A.1D Sales Profiles + Hero Admin Public Media — DEPLOYED
+Profile selection modes, profile identity/copy controls, public Hero media resolver, `store.0035` applied.
 
 ### 50.A.1E Unified Product Admin Workspace — PRODUCTION VERIFIED
-- Product change page follows the exact business sequence:
-  `اطلاعات کالا → تصاویر → فروش و موجودی → پروفایل‌ها و سایز/وزن → قیمت‌گذاری → ارسال و بسته‌بندی → SEO → اسلایدر صفحه اول → منبع و لایسنس → همگام‌سازی ویندوز`,
-- mature Product fields and SEO fields remain authoritative,
-- gallery and Variant/Profile inlines are preserved rather than replaced,
-- operator summaries/links expose Product Catalog Profile pricing, Hero, commercial license and Windows sync without duplicating state,
-- no schema migration added by 50.A.1E,
-- `Phase50 Product Admin Workspace CI` run `32941662288` PASS on runtime snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`,
-- Production deployed at `9cfbc54ed4196144864b5f4201976d8466a88134`,
-- Production checks, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and HTTP smoke all PASS,
-- Home emits zero private imported working-media references.
+Business-ordered Product change workspace; mature gallery/Variant/Profile/SEO/Catalog state preserved. Product Admin 500 regression was subsequently fixed and Production verified.
 
-### 50.A.2 Checkout & Delivery — NEXT
-Entry gate: owner manual QA of unified Product Admin + Hero Studio images.
+### 50.A.1F Business Admin Navigation + Product Admin 500 hotfix — PRODUCTION VERIFIED
+Production at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`:
+- Product changelist real-row render 200,
+- business-oriented Admin navigation active,
+- Windows/Catalog imports, Finance/Coupons, Orders, Store, Production and interaction models grouped by operator intent,
+- Home/Store/Admin HTTP 200,
+- no new migration.
 
-Implementation targets:
-- render profile-aware selector UI on Product page,
-- persist chosen profile/size/build/package snapshots at checkout,
-- use effective product + packaging shipping weight,
+### 50.A.1G Velzon Operator Surface V2 — GITHUB CI TESTED / DEPLOY NEXT
+Owner QA showed that the legacy permanent Django `#changelist-filter` column still squeezed result tables and retained old UI behavior. Owner re-supplied Velzon Django Corporate 4.3.0 `master.zip` for reference.
+
+Implementation:
+- full-width modern changelists,
+- native Django filter functionality moved to an on-demand off-canvas/drawer instead of always-visible sidebar,
+- Persian filter/search/action labels,
+- modern Velzon search toolbar, bulk action card, result card/table and pagination,
+- sticky result headers and controlled table overflow,
+- long change forms gain sticky horizontal section navigation and card fieldsets,
+- existing permission, action, filtering and ModelAdmin contracts remain authoritative,
+- purchased Velzon vendor assets remain private/gitignored; only project-owned adapter CSS/JS/templates are committed publicly,
+- no schema migration.
+
+Verification:
+- GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS,
+- CI-tested runtime snapshot `3687d0922959fca53f2118be6dacd32639159346`,
+- JavaScript `node --check` PASS,
+- Django check PASS,
+- migration drift NONE,
+- CI SQLite migrations PASS,
+- focused Product/representative Admin HTTP regressions PASS.
+
+Production gate:
+1. host must still be clean on verified `bc7b97f...`,
+2. explicit live branch fetch to `FETCH_HEAD` because `ERR-50-007`,
+3. fresh rollback backup,
+4. no migration-file delta and empty migration plan,
+5. ff-only deploy,
+6. collectstatic + Passenger restart,
+7. Home/Store/Admin/Product Admin/static/private-media gates,
+8. owner Ctrl+F5 visual QA of Product changelist/filter drawer/Product edit section navigator.
+
+### Product engagement package — NEXT AFTER ADMIN V2 ACCEPTANCE
+Separate schema/business-rule phase:
+- real Favorite/Save model,
+- Product like/save/review/comment counters and Admin visibility,
+- verified-purchase-only Product review/comment policy where applicable,
+- preserve existing ProductLike/ProductComment/ProductReview contracts,
+- dedicated migration, regression tests, Production backup and rollback.
+
+### 50.A.2 Checkout & Delivery — NEXT COMMERCE PHASE
+- profile-aware Product selector,
+- selected profile/size/build/package snapshots at checkout,
+- effective product + packaging shipping weight,
 - parcel dimensions / insured value,
 - normalized carrier quote + immutable order snapshot,
 - Post / Tipax / Mahex only with verified official contracts/credentials,
-- fallback to mature ShippingMethod rules.
+- preserve mature ShippingMethod fallback.
 
 ### 50.A.3 Secure Store ZarinPal
-Reuse mature server-owned amount, callback identity, Authority matching, server-to-server verify, idempotency and audit. Add trusted redirect-host allowlist and never collect/store card/PIN/CVV.
+Reuse server-owned amount, callback identity, Authority matching, server-to-server verify, idempotency and audit. Trusted redirect-host allowlist; never collect/store card/PIN/CVV.
 
 ### 50.A.4 Torob
-Torob Product API v3, stable product/profile grouping, size/color/material/weight mapping, price/availability, image-quality guards and official order attribution contract.
+Torob Product API v3, stable product/profile grouping, size/color/material/weight, current price/availability and image-quality contract.
 
 ## Phase50.B — Accounting foundation
 Chart of accounts کل/معین/تفصیلی, fiscal periods, balanced vouchers, immutable posting/reversal, party/subledger and numbering.
@@ -88,4 +109,4 @@ Store/service receivables, allocations, tax/discount/shipping, returns/refunds/c
 GL/subledger, trial balance, statements, AR/AP aging, cashflow, profitability, VAT/tax and period close.
 
 ## Safety
-No Production schema work without exact MySQL verification, migration plan, successful fresh backup and rollback target. Do not widen public media routing to imported Catalog working-media. No guessed carrier/gateway endpoint. On the current Production host, do not rely on stale `origin/<branch>` unless the branch fetch refspec is first verified; explicit live branch fetch to `FETCH_HEAD` is the known-good recovery path.
+No Production schema work without exact MySQL verification, migration plan, successful fresh backup and rollback target. Do not widen public media routing to imported Catalog working-media. No guessed carrier/gateway endpoint. Do not publish purchased/private `static/velzon_master/` or font assets to the public repository. On Production, do not trust stale `origin/<branch>` unless the branch fetch refspec is verified; explicit fetch to `FETCH_HEAD` is the known-good path.
