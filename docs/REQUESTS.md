@@ -82,5 +82,22 @@ Acceptance:
 
 CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
 
+## REQ-50-023 — Fast Windows AI + exact-link grounding + selected-product batch AI
+Status: `IMPLEMENTED AS 8.8.2 CANDIDATE / FULL WINDOWS RELEASE GATE PENDING`
+Acceptance:
+- Product edit/AI must not rebuild the global Products gallery on every save/request,
+- Products presentation must remain usable with a large catalog and must not discard older products,
+- exact saved mother AI Provider/Model/key controls all Product AI, including OpenRouter and AvalAI; no hidden fallback/model scan,
+- the normal Product AI payload contains only Product title + one bounded text body,
+- exact source page facts are extracted first, organized under clear headings inside that one text body, and unsupported facts are never invented,
+- raw HTML/auth/cookies/secrets and unrelated price/stock/internal workflow state are excluded from AI input,
+- pressing the main AI action completes Persian title/content/SEO and selected image alt/title/caption/metadata/finalization,
+- selected Products support the same exact-link operation in batch,
+- batch errors are isolated per Product, stop is operator-controlled, and the global Products page refreshes once at batch end,
+- Product price/stock/availability/business selections remain untouched by this editorial AI workflow,
+- full Windows regression + launcher + one-file build + frozen browser smoke + live OpenRouter/AvalAI exact-link QA must PASS before release acceptance.
+
+Implementation: Phase49.3I.29 + Phase49.3I.31, candidate version `8.8.2`, build `2026.08.26.1`.
+
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
