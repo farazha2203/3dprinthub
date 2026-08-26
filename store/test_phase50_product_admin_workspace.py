@@ -96,4 +96,6 @@ class Phase50ProductAdminWorkspaceTests(SimpleTestCase):
         self.assertIn("is_featured", self.product_admin.list_editable)
         self.assertIn("is_active", self.product_admin.list_editable)
         self.assertIn("sales_profile_selection_mode", self.product_admin.list_filter)
-        self.assertIn("seo_status", self.product_admin.list_display)
+        self.assertIn("minimum_price", self.product_admin.list_display)
+        self.assertIn("price_is_final", self.product_admin.list_display)
+        self.assertIn("seo_preview", self.product_admin.readonly_fields)
