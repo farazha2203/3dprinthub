@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.test import TestCase
 from django.urls import reverse
 
@@ -37,6 +40,33 @@ class Phase50AdminHttpRegressionTests(TestCase):
         response = self.client.get(reverse("admin:store_product_changelist"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "CI Admin Product")
+        self.assertContains(response, 'id="changelist-filter"')
+        self.assertContains(response, "admin/phase50-admin-console-v2.css")
+        self.assertContains(response, "admin/phase50-admin-console-v2.js")
+
+    def test_velzon_v2_static_contract_is_present(self):
+        css_path = finders.find("admin/phase50-admin-console-v2.css")
+        js_path = finders.find("admin/phase50-admin-console-v2.js")
+        self.assertIsNotNone(css_path)
+        self.assertIsNotNone(js_path)
+
+        css = Path(css_path).read_text(encoding="utf-8")
+        js = Path(js_path).read_text(encoding="utf-8")
+
+        for marker in (
+            "admin-filter-drawer",
+            "body.change-list #changelist",
+            "admin-result-table",
+            "admin-section-nav",
+        ):
+            self.assertIn(marker, css)
+        for marker in (
+            "buildFilterDrawer",
+            "decorateResults",
+            "buildFormSectionNav",
+            'heading.textContent = "فیلترها"',
+        ):
+            self.assertIn(marker, js)
 
     def test_product_change_page_renders_unified_workspace(self):
         response = self.client.get(reverse("admin:store_product_change", args=[self.product.pk]))
@@ -67,3 +97,4 @@ class Phase50AdminHttpRegressionTests(TestCase):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, "navbar-menu")
+                self.assertContains(response, "admin/phase50-admin-console-v2.css")
