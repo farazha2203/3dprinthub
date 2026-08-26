@@ -60,6 +60,9 @@ jobs:
             store/test_phase50_admin_http_regression.py \
             website/templatetags/admin_console.py
 
+      - name: Validate Admin console JavaScript
+        run: node --check static/admin/phase50-admin-console-v2.js
+
       - name: Django system check
         run: python manage.py check
 
