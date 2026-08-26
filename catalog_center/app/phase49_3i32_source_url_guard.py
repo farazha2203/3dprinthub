@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from .db import normalize_url
@@ -20,6 +21,11 @@ def _row_value(row, key: str, default=""):
     except Exception:
         value = default
     return default if value is None else value
+
+
+def _valid_source_url(value: Any) -> str:
+    value = _clean(value)
+    return value if value.lower().startswith(("http://", "https://")) else ""
 
 
 def resolve_source_url_for_save(existing: str, primary: str, secondary: str) -> str:
@@ -48,11 +54,76 @@ def resolve_source_url_for_save(existing: str, primary: str, secondary: str) -> 
     return primary or secondary or existing
 
 
+def recover_source_url_from_history(db, product_id: int, row=None) -> str:
+    """Recover a previously persisted source URL without using the network.
+
+    The accidental-delete bug wrote Product history immediately after the mature
+    save, so the exact pre-delete URL normally remains in ``before_json``. As a
+    secondary local source, the discovery queue can restore the exact discovered
+    URL for the same source/external ID. No URL is guessed or reconstructed.
+    """
+    conn = getattr(db, "conn", None)
+    if conn is None:
+        return ""
+
+    try:
+        history = conn.execute(
+            "SELECT before_json, after_json FROM product_history WHERE product_id=? ORDER BY id DESC LIMIT 80",
+            (int(product_id),),
+        ).fetchall()
+    except Exception:
+        history = []
+
+    for item in history:
+        for key in ("before_json", "after_json"):
+            try:
+                raw = item[key] if not isinstance(item, dict) else item.get(key)
+                payload = json.loads(raw or "{}")
+            except Exception:
+                continue
+            if isinstance(payload, dict):
+                recovered = _valid_source_url(payload.get("source_url"))
+                if recovered:
+                    return recovered
+
+    row = row if row is not None else db.product(int(product_id))
+    source_code = _clean(_row_value(row, "source_code", ""))
+    external_id = _clean(_row_value(row, "external_id", ""))
+    if not source_code or not external_id:
+        return ""
+    try:
+        candidates = conn.execute(
+            "SELECT url FROM discovered_urls WHERE source_code=? AND external_id=? ORDER BY id DESC LIMIT 20",
+            (source_code, external_id),
+        ).fetchall()
+    except Exception:
+        candidates = []
+    for item in candidates:
+        try:
+            raw = item["url"] if not isinstance(item, dict) else item.get("url")
+        except Exception:
+            raw = ""
+        recovered = _valid_source_url(raw)
+        if recovered:
+            return recovered
+    return ""
+
+
 def _set_var(widget_var, value: str) -> None:
     try:
         widget_var.set(value)
     except Exception:
         pass
+
+
+def _identity_values(row, source_url: str) -> dict[str, str]:
+    source_code = _clean(_row_value(row, "source_code", ""))
+    external_id = _clean(_row_value(row, "external_id", ""))
+    return {
+        "source_url": source_url,
+        "normalized_url": normalize_url(source_url),
+        "fingerprint": product_fingerprint(source_code, external_id, source_url),
+    }
 
 
 def install_workspace(workspace_class) -> None:
@@ -75,6 +146,39 @@ def install_workspace(workspace_class) -> None:
             secondary = _clean(secondary_var.get()) if secondary_var is not None else ""
         except Exception:
             secondary = ""
+
+        # Repair products already damaged by the pre-49.3I.32 bug. Recovery is
+        # local-only and exact: Product history first, discovery identity second.
+        if not existing and not primary and not secondary:
+            recovered = recover_source_url_from_history(self.db, self.product_id, before)
+            if recovered:
+                recovery_before = dict(before) if before is not None else {}
+                self.db.update_product(self.product_id, _identity_values(before, recovered))
+                recovered_row = self.db.product(self.product_id)
+                try:
+                    self.db.save_history(
+                        self.product_id,
+                        "source_url_recovered",
+                        recovery_before,
+                        dict(recovered_row) if recovered_row is not None else {},
+                        "Phase49.3I.32 restored exact canonical source URL from local history/discovery",
+                    )
+                except Exception:
+                    pass
+                before = recovered_row
+                existing = recovered
+                try:
+                    audit_event(
+                        "source_identity",
+                        "source_url_recovered",
+                        status="ok",
+                        product_id=int(self.product_id),
+                        source_file=__file__,
+                        message="canonical source URL recovered from local Product history/discovery",
+                        detail={"phase": PHASE, "network_used": False},
+                    )
+                except Exception:
+                    pass
 
         intended = resolve_source_url_for_save(existing, primary, secondary)
 
@@ -108,16 +212,7 @@ def install_workspace(workspace_class) -> None:
         # unnecessary, but no later/legacy save layer is allowed to erase a known
         # canonical identity silently.
         if intended and not after_url:
-            source_code = _clean(_row_value(before, "source_code", ""))
-            external_id = _clean(_row_value(before, "external_id", ""))
-            self.db.update_product(
-                self.product_id,
-                {
-                    "source_url": intended,
-                    "normalized_url": normalize_url(intended),
-                    "fingerprint": product_fingerprint(source_code, external_id, intended),
-                },
-            )
+            self.db.update_product(self.product_id, _identity_values(before, intended))
             after = self.db.product(self.product_id)
             after_url = _clean(_row_value(after, "source_url", ""))
             try:
