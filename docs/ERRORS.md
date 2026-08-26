@@ -100,26 +100,47 @@ Correct fix: preserve mature Product list and assert current boundary-owned inva
 **Environment:** owner QA of the Velzon V2 Admin.
 
 **Symptoms:**
-- during refresh/navigation the footer text/line (`Velzon Master ...` / `© 3DPrintHub.ir`) could appear across the visible page before settling,
+- during refresh/navigation the footer text/line could appear across the visible page before settling,
 - clicking/navigating Admin menu items felt like the entire page jumped,
-- the default 250px right sidebar made long Persian business labels difficult to read.
+- the default 250px right sidebar made long Persian labels difficult to read.
 
-**Verified Root Cause:**
-- Velzon 4.3.0 vendor CSS positions `.footer` absolutely and assumes a stable SPA-style content height; Django Admin widgets/SimpleBar alter the final layout after initial paint,
-- project `static/admin/master-django.js` centered the active navigation link with `best.scrollIntoView({block:'center', behavior:'smooth'})`, which can move the browser document viewport rather than only the sidebar scroll container,
-- Velzon default vertical menu width is 250px.
+**Root Cause:** Velzon 4.3.0 absolute footer assumptions + Django/SimpleBar dynamic layout + project `scrollIntoView({behavior:'smooth'})` on the active menu + default 250px sidebar.
 
-**Rejected Fix:** hiding the footer or adding arbitrary bottom padding would mask symptoms while retaining unstable positioning. Likewise disabling active-state navigation entirely would reduce usability.
+**Correct Fix:** normal-flow footer, stable flex shell, 290px sidebar, no broad geometry transitions, active link centered by internal sidebar/SimpleBar `scrollTop` only.
 
-**Correct Fix:**
-- project-owned `phase50-admin-shell-stability.css` puts the footer in normal/static document flow within a stable flex/min-height Admin shell,
-- widen sidebar to 290px and improve Persian menu spacing,
-- disable broad shell geometry transitions,
-- replace document-level `scrollIntoView` with explicit `scrollTop` adjustment on the internal SimpleBar/sidebar scrolling element only.
+**Verification:** Admin CI run `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`; deployed at `c283864290f9c989a9fcdf24ee8eef519560e917`. Owner browser visual QA remains before ACCEPTED.
 
-**Verification:** `Phase50 Product Admin Workspace CI` run `32958276378` PASS on snapshot `27335832e90c35dd95bb8a686dd89d1efd46dc8f`; JS syntax, Django check, migration drift, CI migrations and Admin regressions PASS. Production browser QA remains required after deploy.
+### ERR-50-010 — cPanel Bash process substitution failed because `/dev/fd` was unavailable
+**Date:** 2026-08-26  
+**Environment:** Production deployment backup step.
 
-**Prevention:** vendor layout assumptions must be adapted at the project boundary; footer/layout geometry and navigation scroll ownership must be regression-tested. Sidebar activation must never scroll the top-level document.
+**Symptom:** `.env*` backup loop using `done < <(find ... -print0)` stopped with `bash: /dev/fd/63: No such file or directory`.
+
+**Root Cause:** this cPanel/shared-host shell does not provide a reliable `/dev/fd` process-substitution path in the deployment execution context.
+
+**Failed attempt:** Bash process substitution for enumerating environment files. The deployment stopped before fetch/merge/migration/restart, leaving Production unchanged.
+
+**Correct Fix:** enumerate `Path.rglob('.env*')` and copy files using the verified Production Python runtime; avoid `/dev/fd` dependency.
+
+**Verification:** recovery deployment created 8 environment backups and completed source/MySQL backup successfully at `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
+
+**Prevention:** Production scripts for this host must avoid process substitution and `/dev/fd`; use Python or portable temporary files/pipelines instead.
+
+### ERR-50-011 — Variant API verifier executed JSON as Python source
+**Date:** 2026-08-26  
+**Environment:** post-deploy Production verification.
+
+**Symptom:** valid API JSON caused `NameError: name 'false' is not defined`.
+
+**Root Cause:** verifier invoked `python <variant-api.json> ...`, making Python execute the JSON file as source code. JSON booleans (`false`) are not Python literals.
+
+**Failed attempt:** treating the JSON path as the Python script argument.
+
+**Correct Fix:** invoke `python - <json-path> <variant-id>` and parse the supplied JSON file with `json.load` from the heredoc/stdin Python program.
+
+**Verification:** final Production read-only verify returned `VARIANT_API=PASS`, Product ID 1, selection mode `size_build`, profile `استاندارد`, build `standard`, material `PLA`, price `2131170`, final/shipping weight `1.00`, and `FINAL_PRODUCTION_VERIFY=PASS`.
+
+**Prevention:** verifier data files are arguments, never executable source; parse JSON explicitly and include a regression/smoke contract for endpoint schema.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
