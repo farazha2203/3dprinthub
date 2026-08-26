@@ -89,6 +89,13 @@ class StoreConfig(AppConfig):
         from .phase50_admin_media_integrity import install as install_phase50_admin_media_integrity
         install_phase50_admin_media_integrity()
 
+        # Phase50.A.1E is the final Product Admin composition boundary. It keeps
+        # the mature Product/SEO/Profile models intact, but presents one operator
+        # workspace ordered by business task: product, media, sales/profile,
+        # pricing, shipping, SEO, Hero, source/license and Windows sync.
+        from .phase50_product_admin_workspace import install as install_phase50_product_admin_workspace
+        install_phase50_product_admin_workspace()
+
         # Epic49 Persian Sales Hero: dedicated Windows Persian Slider SEO is the
         # public source of truth. Imported English/raw source boilerplate is not
         # allowed to become Store metadata or homepage Hero copy.
