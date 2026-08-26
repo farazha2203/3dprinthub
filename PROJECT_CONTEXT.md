@@ -4,14 +4,14 @@ Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Subphase: `50.A.1E — Unified Product Admin Workspace`
+Current Subphase: `50.A.1G — Velzon Operator Surface V2`
 Status: `GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
 
 ## Operating rule
 GitHub/Repository is permanent source of truth.
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → MANUAL QA → OWNER APPROVAL → HOST READ-ONLY VERIFY → BACKUP/DEPLOY/VERIFY`.
 
-No permanent Production source edit. Dirty Local/Host stops for inspection. New commerce/finance work is additive and preserves mature orders, payments, inventory and Catalog history.
+No permanent Production source edit. Dirty Local/Host stops for inspection. New commerce/finance work is additive and preserves mature orders, payments, inventory and Catalog history. Purchased/private theme/font assets are not published into this public repository.
 
 ## Canonical paths
 Windows project: `D:\projects\3DPrintHub`
@@ -22,67 +22,73 @@ Production venv: `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
 Production DB: MySQL `sfkilvrs_EmiAdmin_3dprinthub`
 
 ## Production verified baseline
-Owner deployed Phase50.A.1C at commit `5c5c5e1e141fd3ff8df3c079abc55e4593feb41f`.
-`store.0034_phase50_variant2_commerce` is applied; Home/Store/Admin/Product Admin/Imported Asset Admin/Hero Admin returned HTTP 200; public Home emitted no private imported-media references. Rollback backup exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260825-205719`.
-Repository state does not yet record `store.0035_phase50_sales_profiles` as Production-applied.
+Current Production application commit is `bc7b97f9c63432b8105f52f61cf5cdae1369689b`.
+Verified:
+- `store.0034_phase50_variant2_commerce` applied,
+- `store.0035_phase50_sales_profiles` applied,
+- Product Admin real-row changelist render 200,
+- Product Admin 500 fixed,
+- business-oriented Velzon navigation active,
+- Home/Store/Admin login HTTP 200,
+- public Home private imported-media refs = 0,
+- no pending migration,
+- clean Production worktree.
+
+Fresh rollback backup for this Production baseline: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-125848`.
 
 ## Existing business foundation
 - StoreOrder/StoreOrderItem/StorePayment/StoreInvoice/Shipment/ReturnRequest,
-- Coupon discount + VAT + packaging + shipping + order-weight calculation,
+- Coupon + VAT + packaging + shipping + order-weight calculation,
 - ShippingMethod fixed/weight-rule pricing,
-- StoreAddress and Iran Province/County/City reference data,
-- custom service Order/Quote/Payment and immutable PaymentLedgerEntry,
-- mature online payment request/callback/verify/idempotency architecture,
+- StoreAddress + Iran Province/County/City,
+- service Order/Quote/Payment + immutable PaymentLedgerEntry,
+- mature payment request/callback/verify/idempotency architecture,
 - filament purchasing/spools/movements,
 - inventory reservation/movements,
 - ProductionJob/MaterialUsage/CostEntry/BusinessFinanceDashboard,
 - affiliate commission/payout/ledger,
-- broad custom Admin.
+- broad custom Django Admin.
 
-## Phase50 deployed foundation through 50.A.1C
-- authenticated `/admin/command-center/`,
-- Product/Imported Catalog Hero actions and 5/10 random/deactivate-all,
-- Product contain-fit gallery + thumbnail switch + fullscreen lightbox,
-- Variant 2.0 size/build/packaging fields,
-- StoreOrderItem snapshot columns,
-- migration `store.0034` applied,
-- imported-model safe Admin preview,
-- compact mobile Hero,
-- homepage SEO Admin audit,
-- Windows source image dimensions.
+## Phase50 deployed foundation
+- `/admin/command-center/`,
+- Product/imported Catalog Hero actions,
+- Product contain-fit gallery/lightbox,
+- Variant 2.0 size/build/package data and StoreOrderItem snapshots,
+- Sales Profiles with `store.0035`,
+- unified business-ordered Product edit workspace,
+- safe imported-model/Hero public media resolution,
+- mobile Hero, homepage SEO audit and Windows image dimensions,
+- business-oriented Admin navigation,
+- Product changelist 500 regression fix.
 
-## Phase50.A.1D GitHub implementation
-- Product selection mode: list / size / weight / build / size→build / build→size.
-- ProductVariant profile name/key/default/order.
-- profile key permits otherwise-identical material/color/size/build profiles to differ in weight, print time, pricing and shipping.
-- Admin copy-profile action clones current mature Variant settings.
-- Hero Studio Admin endpoints resolve Product-owned public media or safe remote source fallback.
-- migration `store.0035_phase50_sales_profiles`.
-- CI run `32879712980` PASS.
+## Phase50.A.1G implementation
+Owner visual QA of `bc7b97f` showed the remaining permanent Django `#changelist-filter` column made list pages cramped and visually legacy. Owner re-supplied `master.zip`; it was reviewed as Velzon Django Corporate 4.3.0 / Bootstrap 5.3.6.
 
-## Phase50.A.1E GitHub implementation
-The Product change page is now one business-oriented workspace. Exact primary section order:
-`اطلاعات کالا → تصاویر → فروش و موجودی → پروفایل‌ها و سایز/وزن → قیمت‌گذاری → ارسال و بسته‌بندی → SEO → اسلایدر صفحه اول → منبع و لایسنس → همگام‌سازی ویندوز`.
+Implemented final presentation layer:
+- `static/admin/phase50-admin-console-v2.css`,
+- `static/admin/phase50-admin-console-v2.js`,
+- V2 assets loaded by `templates/admin/base.html`,
+- default changelists are full-width,
+- native Django filters move into an on-demand `فیلترها` drawer with backdrop/close/Escape/reset and active-filter count,
+- Persian search/filter/action labels,
+- card-based search, actions, result table and pagination,
+- long change forms gain sticky horizontal section navigation and card fieldsets,
+- existing ModelAdmin permissions/actions/query semantics stay authoritative,
+- no schema migration.
 
-Implementation contract:
-- no duplicate Product/SEO/Catalog/Profile state,
-- mature ProductImage and ProductVariant inlines remain,
-- sales profile copy/edit/default/order remain available through the mature Variant Admin,
-- pricing summary links to ProductCatalogProfile pricing,
-- shipping summary reads existing Variant 2.0 weight/package fields,
-- Product SEO exposes real focus/meta/canonical/robots/OpenGraph/schema plus SERP preview,
-- Hero section links slider controls/Hero Studio,
-- source/license and Windows sync surface existing ProductCatalogProfile metadata,
-- no new schema migration.
+Purchased Velzon vendor assets stay private/gitignored under `static/velzon_master/`; only project-owned adapters/integration code are committed to the public GitHub repository.
 
 ## Verification
-`Phase50 Product Admin Workspace CI` run `32941662288` PASS on code snapshot `f34eaa3bbad965b2092279291ff8adf93f3d908e`: compile, Django check, migration drift, SQLite migration apply through `store.0035`, and focused Product Admin regressions all PASS.
-
-An earlier run `32941533091` failed only a stale regression-test assumption about a `seo_status` list column. Mature Admin behavior was preserved; the test was corrected and the incident is recorded as ERR-50-006.
+GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on code snapshot `3687d0922959fca53f2118be6dacd32639159346`:
+- Python compile PASS,
+- V2 JavaScript `node --check` PASS,
+- Django check PASS,
+- migration drift NONE,
+- CI SQLite migrations PASS,
+- Product and representative Admin HTTP/static regressions PASS.
 
 ## Immediate next work
-1. Production read-only verify current HEAD/worktree/MySQL and actual `0035` state.
-2. Fresh backup; deploy current approved GitHub snapshot; apply only `store.0035` if pending after exact migration-plan inspection.
-3. Manual QA unified Product Admin + Sales Profiles + Hero Studio media.
-4. Build storefront profile selector and immutable checkout snapshots.
-5. Continue Shipping/Delivery → secure Store ZarinPal → Torob Product API v3 → accounting core.
+1. Deploy the CI-tested Admin V2 snapshot from GitHub to Production using explicit verified `FETCH_HEAD`, fresh backup, no-migration gate, collectstatic and Passenger restart.
+2. Owner Ctrl+F5 visual QA: Product list has no permanent Filter column; `فیلترها` opens only on demand; Product edit section navigator is present and usable.
+3. Separate Product engagement phase: Favorite/Save + like/save/review/comment counters + verified-purchase buyer feedback rules with its own migration/tests/backup.
+4. Continue Phase50.A.2 Shipping/Delivery → secure Store ZarinPal → Torob Product API v3 → accounting core.
