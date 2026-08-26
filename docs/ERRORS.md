@@ -53,79 +53,73 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 - **ERR-49-048 — readiness locking conflicted with canonical stage order:** readiness blocks publish, not navigation.
 
 ### ERR-49-049 — Exact-link category lookup called nonexistent `Database.categories()`
-**Date:** 2026-08-25  
-**Symptom:** `AttributeError: 'Database' object has no attribute 'categories'`.  
-**Root Cause:** mature category provider is `App.get_all_categories()`.  
-**Correct Fix:** compatibility bridge delegates to the existing App provider.  
-**Prevention:** verify mature provider APIs before adding wrappers.
+Correct fix: compatibility bridge delegates to mature `App.get_all_categories()` provider.
 
 ### ERR-49-050 — Exact-link canonical title helper bound `current_title` twice
-**Date:** 2026-08-25  
-**Symptom:** `canonical_source_title() got multiple values for argument 'current_title'`.  
-**Root Cause:** wrapper violated the mature helper signature.  
-**Correct Fix:** delegate with named arguments in the correct positions.  
-**Prevention:** regression-test exact call shapes for mature helper wrappers.
+Correct fix: delegate with named arguments matching the mature signature.
 
-### ERR-49-051 — Production Hero referenced internal imported-catalog media and returned HTTP 404
-**Date:** 2026-08-25  
-**Root Cause:** Hero Studio emitted imported working-media URLs that Production intentionally does not serve publicly.  
-**Correct Solution:** resolve public Hero media to Product-owned gallery/main image, with safe remote fallback only when needed.  
-**Prevention:** public consumers must use public entity-owned media; never widen Production routing to imported working-media.
+### ERR-49-051 — Production Hero referenced internal imported-catalog media
+Correct fix: public Hero uses Product-owned gallery/main media or safe remote fallback; never widen public routing to imported working-media.
 
 ## RESOLVED PHASE50 / RELEASE INCIDENTS
 
 ### ERR-50-001 — Phase50 Admin CI used non-canonical Django environment names
-Use exact project settings names `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`; do not infer generic names.
+Use `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`.
 
-### ERR-50-002 — Dynamic ModelAdmin URL patch was unstable at final URL boundary
-Use explicit project-level routes wrapped by `admin.site.admin_view` for late operational Admin endpoints.
+### ERR-50-002 — Dynamic ModelAdmin URL patch unstable at final URL boundary
+Use explicit project-level routes wrapped by `admin.site.admin_view`.
 
 ### ERR-50-003 — Catalog Center 8.8.1 version identity mismatch
-A version bump is atomic across app version, launcher, package manifest, example config and release tests.
+Version bump is atomic across app version, launcher, manifest, config and release tests.
 
-### ERR-50-004 — Frozen portable verification assumed physical launcher source
-Frozen verification must test import/runtime contracts, not physical `.py` presence.
+### ERR-50-004 — Frozen portable verification assumed launcher source file
+Frozen verification tests import/runtime contracts, not physical `.py` presence.
 
 ### ERR-50-005 — Admin media patch replaced mature list contract
-Extend final mature ModelAdmin composition; do not replace `list_display` without preserving dependent edit/link invariants.
+Extend final mature ModelAdmin composition; preserve dependent list/edit/link invariants.
 
 ### ERR-50-006 — Unified Product Admin regression assumed stale `seo_status`
-**Date:** 2026-08-26  
-**Root Cause:** test asserted an older intermediate Admin composition.  
-**Correct Fix:** preserve mature Product list and assert current boundary-owned invariants.  
-**Verification:** GitHub Actions run `32941662288` PASS.
+Correct fix: preserve mature Product list and assert current boundary-owned invariants. CI run `32941662288` PASS.
 
 ### ERR-50-007 — Production `git fetch --prune origin` left active branch remote-tracking ref stale
 **Date:** 2026-08-26  
-**Environment:** Production host `/home/sfkilvrs/3dprinthub`.  
-**Symptom:** pre-deploy `git ls-remote` correctly returned active GitHub branch HEAD `9cfbc54ed4196144864b5f4201976d8466a88134`, but after `git fetch --prune origin`, `origin/agent/phase49-3i18-operator-bulk-ai-rebuild` remained at `8fbe3413cada1099745f4d17312b8eb519694379`; deployment stopped before source mutation.
-
-**Verified Root Cause:** host Git configuration had only this fetch refspec:
-`+refs/tags/v0.33.0:refs/tags/v0.33.0`
-and the active branch had no configured upstream. Therefore normal `git fetch --prune origin` did not fetch/update branch remote-tracking refs.
-
-**Failed Attempt:** repeating `git fetch --prune origin` and trusting `origin/<branch>` would keep the same stale result because the refspec did not include branch heads.
-
-**Correct Fix:** verify live GitHub HEAD with `git ls-remote`, then explicitly fetch `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`; verify exact SHA and fast-forward ancestry; deploy with ff-only merge from `FETCH_HEAD`.
-
-**Verification:** explicit fetch returned the approved branch snapshot; fast-forward succeeded; Django check, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and Production HTTP smoke all passed; final Production worktree was clean.
-
-**Prevention:** before relying on `origin/<branch>` on Production, inspect `git config --get-all remote.origin.fetch` and branch upstream. If branch heads are not fetched, either correct the refspec deliberately or use explicit verified branch fetch to `FETCH_HEAD`. Never repeat a stale remote-tracking fetch unchanged.
+**Environment:** `/home/sfkilvrs/3dprinthub`.  
+**Root Cause:** host `remote.origin.fetch` tracked only `+refs/tags/v0.33.0:refs/tags/v0.33.0`; normal fetch did not advance branch refs.  
+**Correct Fix:** verify `git ls-remote`, explicitly fetch `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`, verify exact SHA/ancestry, ff-only merge.  
+**Prevention:** never trust `origin/<branch>` on this host without checking refspec/upstream.
 
 ### ERR-50-008 — Legacy permanent Django filter column crushed modern Admin changelists
 **Date:** 2026-08-26  
-**Environment:** owner QA of Production Admin at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`.  
-**Symptom:** Product changelist was HTTP 200 but visually poor: `#changelist-filter` stayed permanently visible as a narrow sticky column, squeezed the Product result table, required its own long vertical scroll, and exposed legacy English labels such as `FILTER`, `Show counts` and `Action`.
+**Symptom:** `#changelist-filter` permanently occupied a narrow sticky column and squeezed Product results.  
+**Root Cause:** historical adapter CSS layers both reserved layout width for the native filter block.  
+**Correct Fix:** keep native filter semantics but move the node into an on-demand Velzon drawer; full-width results remain default.  
+**Verification:** Product Admin CI run `32955310832` PASS on `3687d0922959fca53f2118be6dacd32639159346`.
 
-**Root Cause:** multiple historical presentation layers (`master-django.css` and the first Phase50 console CSS) both treated Django's native filter block as a permanent second changelist column. Server-side Admin tests verified renderability, but did not own the final browser composition boundary.
+### ERR-50-009 — Velzon absolute footer and document-level active-menu scroll caused refresh flash/page jump
+**Date:** 2026-08-26  
+**Environment:** owner QA of the Velzon V2 Admin.
 
-**Rejected Fix:** merely shrinking/restyling the filter column would preserve the same usability problem and continue competing with wide Product tables.
+**Symptoms:**
+- during refresh/navigation the footer text/line (`Velzon Master ...` / `© 3DPrintHub.ir`) could appear across the visible page before settling,
+- clicking/navigating Admin menu items felt like the entire page jumped,
+- the default 250px right sidebar made long Persian business labels difficult to read.
 
-**Correct Fix:** preserve the native Django filter links/query semantics but move the existing `#changelist-filter` node at runtime into an on-demand off-canvas filter drawer. The default changelist becomes full-width. Add project-owned Velzon V2 CSS/JS for drawer/backdrop/reset/active count, Persian labels, modern search/actions/table/pagination, and long-form section navigation.
+**Verified Root Cause:**
+- Velzon 4.3.0 vendor CSS positions `.footer` absolutely and assumes a stable SPA-style content height; Django Admin widgets/SimpleBar alter the final layout after initial paint,
+- project `static/admin/master-django.js` centered the active navigation link with `best.scrollIntoView({block:'center', behavior:'smooth'})`, which can move the browser document viewport rather than only the sidebar scroll container,
+- Velzon default vertical menu width is 250px.
 
-**Verification:** `node --check` PASS; GitHub Actions `Phase50 Product Admin Workspace CI` run `32955310832` PASS on code snapshot `3687d0922959fca53f2118be6dacd32639159346`; Django check, migration drift, CI migrations and focused Admin HTTP/static regressions all PASS. Production visual verification remains required after deployment.
+**Rejected Fix:** hiding the footer or adding arbitrary bottom padding would mask symptoms while retaining unstable positioning. Likewise disabling active-state navigation entirely would reduce usability.
 
-**Prevention:** test both server-render contracts and the final composition adapter. Do not reserve permanent layout width for optional filters on wide operational tables. Purchased Velzon vendor assets remain private/gitignored; public GitHub contains only project-owned integration layers.
+**Correct Fix:**
+- project-owned `phase50-admin-shell-stability.css` puts the footer in normal/static document flow within a stable flex/min-height Admin shell,
+- widen sidebar to 290px and improve Persian menu spacing,
+- disable broad shell geometry transitions,
+- replace document-level `scrollIntoView` with explicit `scrollTop` adjustment on the internal SimpleBar/sidebar scrolling element only.
+
+**Verification:** `Phase50 Product Admin Workspace CI` run `32958276378` PASS on snapshot `27335832e90c35dd95bb8a686dd89d1efd46dc8f`; JS syntax, Django check, migration drift, CI migrations and Admin regressions PASS. Production browser QA remains required after deploy.
+
+**Prevention:** vendor layout assumptions must be adapted at the project boundary; footer/layout geometry and navigation scroll ownership must be regression-tested. Sidebar activation must never scroll the top-level document.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
