@@ -2,6 +2,18 @@
 
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
+## 2026-08-26 — Catalog Center 8.8.2 Smart Link + Batch AI — GitHub Candidate
+- added Phase49.3I.29 Windows performance base: 48-card Product presentation paging, full SQLite result preservation, deferred global Product refresh and exact saved mother Provider/Model execution without hidden Product model scans,
+- added Phase49.3I.31 unified Product AI pipeline: exact Product URL validation/fetch, canonical source identity, safe source facts flattened into one heading-structured text body, Persian content/SEO generation and selected-image metadata/finalization,
+- normal Product AI transmits only `source_title` + one `source_description` text field; raw HTML, auth/cookies/secrets and unrelated pricing/stock/workflow state stay local,
+- main Product AI/link actions now converge on the same grounded runtime boundary,
+- Products Explorer now supports selected-product batch AI using each Product's own exact source URL, isolated per-item errors/cancel and one global Products refresh at batch end,
+- existing mother AI settings remain authoritative for AvalAI/OpenRouter/Google/OpenAI; no cross-provider fallback,
+- release identity advanced atomically to candidate `8.8.2`, build `2026.08.26.1` across app/launcher/manifest/config,
+- Windows release workflow now includes Phase49.3I.29 + 49.3I.31 regressions and launcher markers,
+- added `ERR-49-052` prevention rule for Product save/AI global gallery rebuild storms,
+- source/pure helper syntax checks passed in isolated tooling, but connected GitHub writes did not auto-create a new Actions run; full Windows regression, one-file build, frozen browser smoke and live OpenRouter/AvalAI exact-link QA remain mandatory before release acceptance.
+
 ## 2026-08-26 — Phase50.A.2B Immutable Checkout/Profile/Shipping Snapshot — GitHub CI Tested
 - added migration `store.0036_phase50_checkout_snapshot`,
 - StoreOrderItem now has immutable sales-profile name/key/label, selection mode/value, final weight, effective shipping weight and print-time snapshots,
