@@ -8,6 +8,7 @@ on:
       - catalog_center/app/version.py
       - catalog_center/app/phase49_3i29_windows_performance_ai.py
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
+      - catalog_center/app/phase49_3i32_source_url_guard.py
       - catalog_center/app/phase49_3i_pricing_modes.py
       - catalog_center/launch.py
       - catalog_center/portable_entry.py
@@ -76,6 +77,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v `
+            tests.test_phase49_3i32_source_url_guard `
             tests.test_phase49_3i31_smart_link_bulk_ai `
             tests.test_epic49_phase49_3i29_windows_performance_ai `
             tests.test_phase49_3i28_exact_link_contract `
@@ -118,6 +120,13 @@ jobs:
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
           }
 
+      - name: Verify source URL preservation contract
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -c "from app.phase49_3i32_source_url_guard import resolve_source_url_for_save as r; u='https://example.com/model/1'; assert r(u,'','') == u; assert r(u,u,'https://example.com/model/2').endswith('/2'); print('PHASE49_3I32_SOURCE_URL_GUARD=PASS')"
+          if ($LASTEXITCODE -ne 0) { throw 'Source URL preservation contract failed' }
+
       - name: Build and self-verify one-file EXE
         shell: pwsh
         run: |
@@ -154,7 +163,7 @@ jobs:
           retention-days: 90
 
       - name: Publish GitHub Release
-        if: github.event_name == 'push' || inputs.publish_release == true
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -180,14 +189,14 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance and 3I.31 smart/batch AI
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI and 3I.32 source URL preservation
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.8.2 adds bounded Products rendering, deferred global refresh, one mother Provider/Model contract, exact-link grounded Persian/SEO generation, selected-image SEO/finalization and selected-product batch AI with one final Products refresh.
+          8.8.2 adds bounded Products rendering, deferred global refresh, one mother Provider/Model contract, exact-link grounded Persian/SEO generation, selected-image SEO/finalization, selected-product batch AI and a canonical source URL guard so unrelated Save/AI/close/publish actions cannot erase the Product source link.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
