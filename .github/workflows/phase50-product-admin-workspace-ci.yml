@@ -61,7 +61,9 @@ jobs:
             website/templatetags/admin_console.py
 
       - name: Validate Admin console JavaScript
-        run: node --check static/admin/phase50-admin-console-v2.js
+        run: |
+          node --check static/admin/master-django.js
+          node --check static/admin/phase50-admin-console-v2.js
 
       - name: Django system check
         run: python manage.py check
