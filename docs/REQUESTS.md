@@ -31,8 +31,8 @@ Status: `REQUESTED / PHASE50 ACTIVE`
 Full GL/subledger, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `50.A.1E PRODUCTION VERIFIED / OWNER MANUAL QA NEXT`
-Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses, professional imported-model media/data visibility, sales profile controls, and one unified Product edit workspace ordered by the operator's business workflow.
+Status: `ACTIVE / 50.A.1G CI TESTED / PRODUCTION DEPLOY NEXT`
+The Admin must be a professional operator console rather than a lightly styled legacy Django Admin. Business navigation, Product workspace and Product 500 fix are already Production-verified at `bc7b97f9c63432b8105f52f61cf5cdae1369689b`. Current delta modernizes final changelist/change-form composition using the owner-supplied Velzon Django Corporate 4.3.0 theme as reference while preserving mature Django Admin behavior.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
 Status: `ACTIVE CONSTRAINT`
@@ -84,19 +84,38 @@ Every Product image card must show original `width × height px` so operator can
 
 ## REQ-50-015 — Reconcile Production Product Admin 500
 Status: `RESOLVED / PRODUCTION VERIFIED`
-Production deploy after exact MySQL/migration/backup verification returned HTTP 200 for `/admin/store/product/` and all primary Admin smoke endpoints.
+Product changelist real-row render is HTTP 200 after the `estimated_profit_admin` fix; regression coverage now renders the actual changelist with a Product row.
 
 ## REQ-50-016 — Reusable sales profiles per Product
-Status: `PRODUCTION DEPLOYED / OWNER QA NEXT`
-Each Product can choose customer selection by full profile list, size, weight, build, size→build or build→size. Profiles can share material/color/size/build while differing in weight, print time, pricing inputs, packaging and shipping by using a distinct profile key. Admin provides copy-profile to duplicate all mature settings and then edit only changed values. `store.0035_phase50_sales_profiles` is applied on Production.
+Status: `PRODUCTION DEPLOYED / OWNER QA CONTINUES`
+Each Product can choose customer selection by full profile list, size, weight, build, size→build or build→size. `store.0035_phase50_sales_profiles` is applied on Production.
 
 ## REQ-50-017 — Hero Studio images must load on slide edit pages
-Status: `PRODUCTION DEPLOYED / OWNER QA NEXT`
-`/admin/website/homepageheroslide/<id>/change/` product and album thumbnails must never emit private `store/imported-models/...` URLs. Final Admin JSON endpoints resolve Product-owned public gallery/main media or row-specific remote HTTP(S) source media. Public Homepage private-media leak gate is zero after deploy.
+Status: `PRODUCTION DEPLOYED / OWNER QA CONTINUES`
+Hero Admin must never emit private `store/imported-models/...` URLs. Product-owned public gallery/main media or safe remote fallback remains the contract.
 
 ## REQ-50-018 — Unified Product Admin workspace
-Status: `PRODUCTION VERIFIED / OWNER MANUAL QA NEXT`
-The Product change page presents one professional operator workspace in this exact order: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`. Existing Product, ProductCatalogProfile, ProductVariant and SEO data stay authoritative; the workspace links/summarizes them instead of duplicating state. Runtime composition gate passed on Production at deployed application commit `9cfbc54ed4196144864b5f4201976d8466a88134`.
+Status: `PRODUCTION VERIFIED / VISUAL REFINEMENT CONTINUES IN 50.A.1G`
+The Product change page retains the exact business order `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`. Existing Product, ProductCatalogProfile, ProductVariant and SEO data remain authoritative.
+
+## REQ-50-019 — Modern Velzon Admin interaction surface
+Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Owner QA rejected the remaining legacy changelist presentation. Acceptance contract:
+- no permanently visible Django Filter column,
+- full-width operational tables,
+- `فیلترها` opens only on demand as a professional drawer/off-canvas,
+- Persian search/filter/action controls,
+- modern Velzon cards for search, bulk actions, tables and pagination,
+- long Product/change forms have fast section navigation,
+- responsive/dark-mode friendly,
+- existing Django permissions/actions/filter query semantics remain authoritative,
+- purchased Velzon vendor package stays private/gitignored; only project-owned integration code belongs in the public repository.
+
+GitHub Actions run `32955310832` PASS on code snapshot `3687d0922959fca53f2118be6dacd32639159346`.
+
+## REQ-50-020 — Product likes, saved/favorites, comments and verified-buyer reviews
+Status: `REQUESTED / NEXT SEPARATE SCHEMA-BUSINESS PHASE AFTER ADMIN V2 QA`
+Preserve existing ProductLike/ProductComment/ProductReview. Add a real Favorite/Save contract if absent, Product-level engagement counters and Admin visibility. Review/comment rules representing buyer feedback must verify a qualifying purchased/paid Product order. This work requires its own migration/tests/backup and must not be mixed into the no-migration Admin skin deploy.
 
 ## Change rule
-New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target. On the current Production host, verify the Git fetch refspec before relying on `origin/<branch>`; explicit live branch fetch to `FETCH_HEAD` is the verified recovery path when remote-tracking refs are stale.
+New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target. On the current Production host, verify the Git fetch refspec before relying on `origin/<branch>`; explicit live branch fetch to `FETCH_HEAD` is the verified path when remote-tracking refs are stale.
