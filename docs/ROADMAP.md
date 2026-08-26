@@ -3,12 +3,38 @@
 Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Phase: `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
-Status: `GITHUB CI TESTED / PRODUCTION MIGRATION AUDIT NEXT`
+Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`
+Current Web Phase: `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
+Parallel Windows Phase: `49.3I.31 — Smart Link + Bulk Product AI / Catalog Center 8.8.2`
+Status: `WEB 50.A.2B GITHUB CI TESTED / WINDOWS 8.8.2 FULL RELEASE GATE PENDING`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
+
+## Parallel Windows track — 49.3I.31 / Catalog Center 8.8.2
+Goal: remove catalog-size dependent UI stalls and make the visible AI actions reliable, exact-link grounded and useful for both one Product and explicitly selected Products.
+
+Implemented candidate:
+- Phase49.3I.29 Products presentation paging: max 48 cards rendered per page without truncating the complete SQLite result set,
+- ProductWorkspace global refresh deferral: edit/AI marks Products dirty instead of rebuilding cards/thumbnails per save,
+- exact saved mother Provider/Model/key for Product AI; no hidden Product `/models` discovery or cross-provider fallback,
+- Phase49.3I.31 exact Product link validation + real page fetch/parser + canonical source title,
+- all safe extracted page facts organized under headings inside one bounded `source_description` text body,
+- AI Product fact payload remains exactly `source_title` + `source_description`, with raw HTML/auth/cookies/secrets and unrelated business state excluded,
+- main Product AI action completes Persian content/SEO plus selected-image alt/title/caption/metadata/finalization,
+- selected-product batch AI uses the same per-Product exact-link engine, isolates failures and refreshes the global Products page once at batch end,
+- release identity prepared as `8.8.2`, build `2026.08.26.1`.
+
+Windows acceptance gate before release:
+1. Re-verify live GitHub branch HEAD and clean canonical Windows checkout.
+2. Pull exact GitHub candidate to Local; no source edits directly in a frozen/release folder.
+3. Run compile + Phase31 + Phase29 + Phase17/18/21/23/25/28 + launcher/portable regressions.
+4. Run `launch.py --verify-only` and assert 49.3I.29/31 markers.
+5. Build one-file EXE and pass frozen self-verify + Playwright/browser smoke.
+6. Live operator QA: large Products list, repeated Product edits/AI without per-action global refresh, exact MakerWorld Product link, OpenRouter active mother profile, AvalAI active mother profile, selected-image SEO, selected-product batch/cancel/error continuation.
+7. Only after all gates PASS: publish/verify immutable `catalog-center-v8.8.2` release and record exact SHA256/commit.
+
+The connected GitHub write path has not auto-created Actions runs for the latest candidate heads, so no 8.8.2 PASS/release claim exists yet.
 
 ## Phase50.A — Admin and commerce operational completeness
 - 50.A.1 Admin Storefront/Hero parity — DEPLOYED.
