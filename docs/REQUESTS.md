@@ -31,7 +31,7 @@ Status: `REQUESTED / PHASE50 ACTIVE`
 Full GL/subledger, Treasury, Purchasing/Sales accounting, customer/supplier statements and management reports integrated with Store/service/inventory/production/payments.
 
 ## REQ-50-002 — Complete and reorganize Django Admin
-Status: `50.A.1E IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
+Status: `50.A.1E PRODUCTION VERIFIED / OWNER MANUAL QA NEXT`
 Includes command center, Product/imported asset Hero actions, 5/10 random Hero, Coupon/Shipping/Pricing/addresses, professional imported-model media/data visibility, sales profile controls, and one unified Product edit workspace ordered by the operator's business workflow.
 
 ## REQ-50-003 — Preserve healthy commerce while adding accounting
@@ -67,7 +67,7 @@ Status: `REQUESTED / 50.A.3 PLANNED`
 Connect StorePayment to the mature secure service-payment engine before real Production merchant activation.
 
 ## REQ-50-011 — Imported-model Admin image/data integrity
-Status: `DEPLOYED FOUNDATION / HERO STUDIO FINAL BOUNDARY IN 50.A.1D`
+Status: `PRODUCTION VERIFIED / HERO STUDIO OWNER QA CONTINUES`
 Imported-model list/change previews resolve Product-owned public media or remote source fallback; working-media remains private.
 
 ## REQ-50-012 — Mobile Hero product visibility
@@ -87,16 +87,16 @@ Status: `RESOLVED / PRODUCTION VERIFIED`
 Production deploy after exact MySQL/migration/backup verification returned HTTP 200 for `/admin/store/product/` and all primary Admin smoke endpoints.
 
 ## REQ-50-016 — Reusable sales profiles per Product
-Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
-Each Product can choose customer selection by full profile list, size, weight, build, size→build or build→size. Profiles can share material/color/size/build while differing in weight, print time, pricing inputs, packaging and shipping by using a distinct profile key. Admin provides copy-profile to duplicate all mature settings and then edit only changed values.
+Status: `PRODUCTION DEPLOYED / OWNER QA NEXT`
+Each Product can choose customer selection by full profile list, size, weight, build, size→build or build→size. Profiles can share material/color/size/build while differing in weight, print time, pricing inputs, packaging and shipping by using a distinct profile key. Admin provides copy-profile to duplicate all mature settings and then edit only changed values. `store.0035_phase50_sales_profiles` is applied on Production.
 
 ## REQ-50-017 — Hero Studio images must load on slide edit pages
-Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
-`/admin/website/homepageheroslide/<id>/change/` product and album thumbnails must never emit private `store/imported-models/...` URLs. Final Admin JSON endpoints resolve Product-owned public gallery/main media or row-specific remote HTTP(S) source media.
+Status: `PRODUCTION DEPLOYED / OWNER QA NEXT`
+`/admin/website/homepageheroslide/<id>/change/` product and album thumbnails must never emit private `store/imported-models/...` URLs. Final Admin JSON endpoints resolve Product-owned public gallery/main media or row-specific remote HTTP(S) source media. Public Homepage private-media leak gate is zero after deploy.
 
 ## REQ-50-018 — Unified Product Admin workspace
-Status: `IMPLEMENTED / GITHUB CI TESTED / PRODUCTION DEPLOY NEXT`
-The Product change page must present one professional operator workspace in this exact order: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`. Existing Product, ProductCatalogProfile, ProductVariant and SEO data stay authoritative; the workspace links/summarizes them instead of duplicating state.
+Status: `PRODUCTION VERIFIED / OWNER MANUAL QA NEXT`
+The Product change page presents one professional operator workspace in this exact order: `اطلاعات کالا | تصاویر | فروش و موجودی | پروفایل‌ها و سایز/وزن | قیمت‌گذاری | ارسال و بسته‌بندی | SEO | اسلایدر صفحه اول | منبع و لایسنس | همگام‌سازی ویندوز`. Existing Product, ProductCatalogProfile, ProductVariant and SEO data stay authoritative; the workspace links/summarizes them instead of duplicating state. Runtime composition gate passed on Production at deployed application commit `9cfbc54ed4196144864b5f4201976d8466a88134`.
 
 ## Change rule
-New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target.
+New work extends/wraps mature behavior and must pass CI/Local tests before Production deployment. No financial/shipping/schema migration is deployed without exact MySQL verification, migration plan, successful backup and rollback target. On the current Production host, verify the Git fetch refspec before relying on `origin/<branch>`; explicit live branch fetch to `FETCH_HEAD` is the verified recovery path when remote-tracking refs are stale.
