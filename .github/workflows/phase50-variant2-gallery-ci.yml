@@ -9,10 +9,13 @@ on:
       - store/phase50_variant2.py
       - store/phase50_variant_admin.py
       - store/phase50_variant_views.py
+      - store/phase50_checkout_snapshot.py
       - store/urls.py
       - store/migrations/0034_phase50_variant2_commerce.py
       - store/migrations/0035_phase50_sales_profiles.py
+      - store/migrations/0036_phase50_checkout_snapshot.py
       - store/test_phase50_variant2_gallery.py
+      - store/test_phase50_checkout_snapshot.py
       - templates/store/base.html
       - static/store/js/store.js
       - static/store/js/phase50-profile-selector.js
@@ -56,10 +59,13 @@ jobs:
             store/phase50_variant2.py \
             store/phase50_variant_admin.py \
             store/phase50_variant_views.py \
+            store/phase50_checkout_snapshot.py \
             store/urls.py \
             store/migrations/0034_phase50_variant2_commerce.py \
             store/migrations/0035_phase50_sales_profiles.py \
-            store/test_phase50_variant2_gallery.py
+            store/migrations/0036_phase50_checkout_snapshot.py \
+            store/test_phase50_variant2_gallery.py \
+            store/test_phase50_checkout_snapshot.py
 
       - name: Validate Storefront JavaScript
         run: |
@@ -78,10 +84,15 @@ jobs:
       - name: Apply migrations in CI SQLite
         run: python manage.py migrate --noinput
 
-      - name: Phase50 Variant2 and gallery regressions
-        run: python manage.py test store.test_phase50_variant2_gallery -v 2
+      - name: Phase50 Variant2, gallery and checkout snapshot regressions
+        run: |
+          python manage.py test \
+            store.test_phase50_variant2_gallery \
+            store.test_phase50_checkout_snapshot \
+            -v 2
 
       - name: Gate marker
         run: |
           echo "PHASE50_VARIANT2_GALLERY_CI=PASS"
+          echo "PHASE50_CHECKOUT_SNAPSHOT_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
