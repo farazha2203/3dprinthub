@@ -4,61 +4,61 @@ Updated: 2026-08-26
 Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Subphase: `50.A.2 Checkout & Delivery`
-Status: `50.A.1H + 50.A.2A PRODUCTION_VERIFIED / OWNER VISUAL QA NEXT / 50.A.2B NEXT`
+Current Subphase: `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
+Status: `GITHUB CI TESTED / PRODUCTION MIGRATION AUDIT NEXT`
 
 ## Operating rule
-GitHub/Repository is permanent source of truth.
-`READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → UPDATE DOCS`.
+GitHub is permanent source of truth.
+`READ DOCS → VERIFY REAL STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → UPDATE DOCS`.
 No permanent Production source edits; dirty worktree stops for inspection.
 
 ## Canonical paths
-Windows project `D:\projects\3DPrintHub`; Windows venv `D:\projects\3DPrintHub\.venv`.
-Production root `/home/sfkilvrs/3dprinthub`; Production venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; Production DB MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+Windows project `D:\projects\3DPrintHub`; venv `D:\projects\3DPrintHub\.venv`.
+Production root `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; DB MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
 
-## Current Production baseline
-Application commit: `c283864290f9c989a9fcdf24ee8eef519560e917`.
-Fresh rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
-Verified:
-- Python 3.12.13 / Django 6.0.7,
-- MySQL `sfkilvrs_EmiAdmin_3dprinthub`,
-- `store.0034` and `store.0035` applied,
-- migration drift NONE / migration plan empty / no migration executed,
-- clean Production worktree,
-- Home/Store/Admin/Product/new static HTTP 200,
-- Product selector HTML/native fallback/API PASS,
-- public Home private imported-media refs 0.
+## Production baseline
+Application commit `c283864290f9c989a9fcdf24ee8eef519560e917`.
+Latest verified rollback backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
+`store.0034` + `store.0035` are applied; `store.0036` is NOT yet Production-applied.
+Home/Store/Admin/Product/Variant API are healthy; private imported-media refs are zero.
 
-## Existing commerce foundation
-Product/ProductVariant/ProductCatalogProfile, StoreOrder/StoreOrderItem/StorePayment/StoreInvoice/Shipment/ReturnRequest, Coupon/VAT/packaging/shipping calculations, ShippingMethod, StoreAddress/location data, payment idempotency architecture and inventory/production remain authoritative.
+## Production-verified current UX
+- Admin shell: normal-flow footer, stable shell, 290px sidebar, internal-only menu scrolling, Velzon V2 on-demand filters/full-width lists.
+- Storefront: profile/size/build/weight/material/color/quality selector uses public Variant API and canonical ProductVariant ID with native fallback.
 
-## Production-verified Admin shell stability
-- footer normal/static flow instead of Velzon absolute positioning,
-- stable flex/min-height shell,
-- right sidebar 290px,
-- active-menu centering scrolls only internal SimpleBar/sidebar; document-level `scrollIntoView` removed,
-- Velzon V2 filter drawer/full-width table preserved,
-- Admin CI `32958276378` PASS on `27335832e90c35dd95bb8a686dd89d1efd46dc8f`,
-- browser visual acceptance remains owner QA.
+## 50.A.2B GitHub-tested runtime
+Migration `0036_phase50_checkout_snapshot` + `store/phase50_checkout_snapshot.py` add immutable final order state while preserving mature Phase6 checkout.
 
-## Production-verified Storefront sales-profile selector
-- existing Product selection mode and ProductVariant profile/size/build/weight/material/color/quality/price/package metadata reused,
-- Product page progressively enhances native `variant-select`,
-- uses `/store/api/variant-commerce-options/`,
-- modern selection controls + selected price/profile/weight/time/package summary,
-- canonical ProductVariant ID remains submitted to existing cart logic,
-- native selector remains fallback,
-- no migration,
-- Storefront CI `32958296546` PASS on `e3c57311c0c3980befeaf6012f3bb8fc502333bc`,
-- Production Product/Variant API smoke PASS.
+StoreOrderItem freezes:
+- sales-profile name/key/label,
+- profile selection mode/value visible to customer,
+- size/build/material/color/quality,
+- final/package/effective shipping weight,
+- print time and package dimensions.
 
-## Production deployment constraints learned
-- Host remote-tracking branch is stale because `remote.origin.fetch` tracks only tag `v0.33.0`; explicit branch fetch to `FETCH_HEAD` is canonical (`ERR-50-007`).
-- cPanel deployment scripts must avoid `/dev/fd` process substitution; use Python/portable file handling (`ERR-50-010`).
-- JSON/API verifier payloads must be parsed as data through `python -` + `json.load`, never executed as Python source (`ERR-50-011`).
+StoreOrder freezes:
+- `insured_value` as merchandise value after discount,
+- normalized `shipping_quote_snapshot` with ShippingMethod fallback source, destination, total weight, fee and per-line packages.
+
+Runtime guarantees:
+- Cart weight uses `effective_shipping_weight_grams`,
+- successful checkout is finalized in an outer atomic transaction,
+- coupon/VAT/inventory/address/notification/payment logic remains the mature Phase6 path,
+- payment amount stays synchronized with finalized shipping fee,
+- no combined parcel geometry is guessed,
+- no external carrier API is called/claimed,
+- finalizer failure rolls DB state back and restores cart session.
+
+CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`, including migration through `0036` and integration snapshot immutability tests.
+
+## Host-specific deployment constraints
+- ERR-50-007: remote fetch refspec is tag-only; verify live branch and explicit fetch to `FETCH_HEAD` before ff-only.
+- ERR-50-010: do not depend on cPanel `/dev/fd` process substitution for backups.
+- ERR-50-011: JSON verifier payloads are parsed with `python -` + `json.load`.
 
 ## Immediate next work
-1. Owner browser QA: footer refresh stability, no whole-page menu jump, 290px sidebar readability, Product profile/size/weight/color/price interaction and price synchronization.
-2. Continue 50.A.2B immutable profile/customer-choice snapshot and normalized shipping/delivery contract.
-3. Product engagement schema package: Favorite/Save + counters + verified-buyer review policy.
-4. Secure Store ZarinPal → Torob → accounting core.
+1. Read-only Production audit for actual HEAD/worktree/live GitHub SHA/MySQL `0034/0035/0036`/migration plan/backup capability.
+2. Fresh source/.env/MySQL rollback backup.
+3. Deploy approved GitHub snapshot, inspect and apply only `store.0036_phase50_checkout_snapshot`, restart and verify Production.
+4. Then Product engagement: Favorite/Save + counters + verified-purchase buyer feedback.
+5. Secure ZarinPal → Torob → accounting core.
