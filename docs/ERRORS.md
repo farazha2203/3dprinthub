@@ -54,88 +54,67 @@ Search this file before troubleshooting. Never repeat a failed action unchanged.
 
 ### ERR-49-049 — Exact-link category lookup called nonexistent `Database.categories()`
 **Date:** 2026-08-25  
-**Symptom:** `AttributeError: 'Database' object has no attribute 'categories'` before exact-link source/AI work began.  
-**Root Cause:** the mature category provider is `App.get_all_categories()`; Catalog `Database` intentionally has no categories repository API.  
-**Correct Fix:** final workspace compatibility bridge delegates category retrieval to the existing App provider.  
-**Prevention:** never infer repository APIs from convenience naming; verify the mature provider boundary before adding a compatibility call.
+**Symptom:** `AttributeError: 'Database' object has no attribute 'categories'`.  
+**Root Cause:** mature category provider is `App.get_all_categories()`.  
+**Correct Fix:** compatibility bridge delegates to the existing App provider.  
+**Prevention:** verify mature provider APIs before adding wrappers.
 
 ### ERR-49-050 — Exact-link canonical title helper bound `current_title` twice
 **Date:** 2026-08-25  
 **Symptom:** `canonical_source_title() got multiple values for argument 'current_title'`.  
-**Root Cause:** the wrapper passed source URL as positional `current_title` and also passed `current_title=` explicitly, violating the mature 49.3I.19 signature.  
-**Correct Fix:** compatibility adapter delegates to the mature signature with named arguments in the correct positions.  
-**Prevention:** when wrapping mature helpers, regression-test the exact call shape that failed in owner QA.
+**Root Cause:** wrapper violated the mature helper signature.  
+**Correct Fix:** delegate with named arguments in the correct positions.  
+**Prevention:** regression-test exact call shapes for mature helper wrappers.
 
 ### ERR-49-051 — Production Hero referenced internal imported-catalog media and returned HTTP 404
 **Date:** 2026-08-25  
-**Environment:** Production Passenger/LiteSpeed, non-DEBUG media routing.  
-**Owner Evidence:** first real Catalog Site Publish produced a healthy Product page, but homepage Hero text rendered over a blank/dark area. Browser console showed 404 for `/media/store/imported-models/gallery/...`; Local `127.0.0.1:8000` rendered the same slide correctly.
-
-**Verified Root Cause:** `ImportedPrintAssetImage.image` is stored under `store/imported-models/gallery/`, which is a Catalog working-media namespace. Production intentionally serves public Store media only (`store/products`, `store/categories`, `store/seo`), while DEBUG serves all media. The mature Hero Studio preferred `selected_asset_image.image.url`, so Local hid the ownership mismatch and Production correctly rejected the internal path.
-
-**Correct Solution — Phase49.3I.30:** keep the imported image relation for editor/audit identity, but resolve public Hero media to the matching Product-owned gallery copy by filename; fall back to Product main image; use remote source only when no Product-owned public media exists. Do not expand Production routing to expose imported working media.
-
-**Prevention:** every public media consumer must resolve to the target public entity's owned media namespace. A database FileField URL is not automatically a public URL in Production.
+**Root Cause:** Hero Studio emitted imported working-media URLs that Production intentionally does not serve publicly.  
+**Correct Solution:** resolve public Hero media to Product-owned gallery/main image, with safe remote fallback only when needed.  
+**Prevention:** public consumers must use public entity-owned media; never widen Production routing to imported working-media.
 
 ## RESOLVED PHASE50 / RELEASE INCIDENTS
 
 ### ERR-50-001 — Phase50 Admin CI used non-canonical Django environment names
-**Date:** 2026-08-25  
-**Symptom:** first CI run stopped at `manage.py check` with `DJANGO_SECRET_KEY must be configured`; a later run returned HTTPS 301 responses where test expectations required direct 200/302 behavior.  
-**Root Cause:** the new workflow guessed generic `SECRET_KEY` and `DEBUG` environment names instead of reading `config/settings.py`, which uses `DJANGO_SECRET_KEY`, `DJANGO_DEBUG` and `DJANGO_ALLOWED_HOSTS`.  
-**Failed Attempt:** repeating the workflow with generic environment variables would not change Django's effective settings.  
-**Correct Fix:** use the exact names consumed by project settings and run the CI test environment with `DJANGO_DEBUG=1`.  
-**Verification:** `manage.py check`, migration dry-run and focused Phase50 Admin tests passed in GitHub Actions.  
-**Prevention:** CI/runtime configuration names are repository contracts; never infer them from Django defaults or another project.
+Use exact project settings names `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`; do not infer generic names.
 
-### ERR-50-002 — Dynamic ModelAdmin URL patch was not stable at the actual Admin URL boundary
-**Date:** 2026-08-25  
-**Symptom:** Hero quick-action reverse lookups failed with `NoReverseMatch` even though actions were attached to the ModelAdmin class.  
-**Root Cause:** patching `ModelAdmin.get_urls()` after the mature Admin composition had already occurred did not guarantee those names existed in the final resolver used by the running project.  
-**Failed Attempt:** adding more reverse calls against the dynamically patched Admin namespace would preserve the same boundary mismatch.  
-**Correct Fix:** expose explicit project-level routes in `config/urls.py`, wrap each with `admin.site.admin_view`, keep mutations POST-only, and link the Admin template to those stable named routes.  
-**Verification:** focused Admin route/action tests passed in GitHub Actions.  
-**Prevention:** for late runtime Admin extensions, patch visual/actions at the Admin boundary but register new operational routes at a stable URL composition boundary unless registration order is proven by tests.
+### ERR-50-002 — Dynamic ModelAdmin URL patch was unstable at final URL boundary
+Use explicit project-level routes wrapped by `admin.site.admin_view` for late operational Admin endpoints.
 
-### ERR-50-003 — Catalog Center 8.8.1 app version advanced while release metadata remained 8.8.0
-**Date:** 2026-08-25  
-**Symptom:** Local launch failed with `Launcher expected 8.8.0, but imported 8.8.1`; the first 8.8.1 Windows release CI also failed two version-contract tests.  
-**Root Cause:** `app/version.py` was advanced to 8.8.1 while `launch.py`, `PACKAGE_MANIFEST.json`, `config.example.json` and one regression assertion still declared 8.8.0.  
-**Failed Attempt:** running the stale launcher or repeating the release workflow unchanged could never produce a valid 8.8.1 release.  
-**Correct Fix:** align all release identity surfaces with `APP_VERSION=8.8.1` and keep the manifest/config/launcher contract test as a release gate.  
-**Verification:** the next Windows run passed all 92 regression tests and canonical launcher verification.  
-**Prevention:** a Windows version bump is atomic across app version, launcher expected version, package manifest, example config and release tests.
+### ERR-50-003 — Catalog Center 8.8.1 version identity mismatch
+A version bump is atomic across app version, launcher, package manifest, example config and release tests.
 
-### ERR-50-004 — Frozen 8.8.1 portable verification blocked on a physical launcher source-file assumption
-**Date:** 2026-08-25  
-**Symptom:** PyInstaller produced `3DPrintHub-CatalogCenter-v8.8.1.exe`, but `--portable-verify` remained alive until the 90-second build timeout and the runner killed the orphan process.  
-**Root Cause:** the newer portable verification tried to read a physical `launch.py` beside `portable_entry.py`. In a one-file/windowed PyInstaller runtime Python modules are bundled/importable but are not guaranteed to exist as ordinary source files; an unhandled frozen GUI exception can remain behind a windowed error dialog, causing the parent smoke runner to time out.  
-**Failed Attempt:** increasing the timeout or repeating the same frozen verification would preserve the source-file assumption.  
-**Correct Fix:** validate the bundled canonical launcher by importing `launch.EXPECTED_VERSION` and `launch.main`, requiring `EXPECTED_VERSION == APP_VERSION` and a callable canonical entrypoint; do not read `launch.py` from the extraction filesystem.  
-**Verification:** Windows release run passed frozen self-verification, frozen Playwright/browser smoke, SHA256/manifest validation, artifact upload and GitHub Release publication for `catalog-center-v8.8.1`.  
-**Prevention:** frozen-runtime verification must test import/runtime contracts, never assume bundled Python modules are present as physical `.py` source files.
+### ERR-50-004 — Frozen portable verification assumed physical launcher source
+Frozen verification must test import/runtime contracts, not physical `.py` presence.
 
-### ERR-50-005 — Admin media patch replaced mature `list_display` but left Phase35 editable/link contracts active
-**Date:** 2026-08-25  
-**Symptom:** first `Phase50 Admin Media Mobile CI` stopped at `manage.py check` with `admin.E111` for `source_title_admin` and `admin.E122` for `editorial_status`, `fixed_print_price` and `price_is_final`.  
-**Root Cause:** the initial safe-preview patch replaced the ImportedPrintAsset `list_display`, while mature Phase35 still owned `list_display_links` and `list_editable` pointing to columns removed by that replacement.  
-**Failed Attempt:** repeating CI or selectively deleting those mature edit contracts would regress the existing professional catalog editor.  
-**Correct Fix:** preserve the mature Phase35 `list_display`, `list_display_links`, `list_editable`, actions and fieldsets; insert only readonly `safe_preview` and `completeness` columns plus a compact health fieldset.  
-**Verification:** corrected CI run `32875771848` passed Django check, migration dry-run/migrate, Admin/mobile/SEO regressions and Windows image-dimension regression.  
-**Prevention:** late Admin parity patches must extend the final composed ModelAdmin contract rather than replacing list/fieldsets without carrying dependent `list_editable` and `list_display_links` invariants.
+### ERR-50-005 — Admin media patch replaced mature list contract
+Extend final mature ModelAdmin composition; do not replace `list_display` without preserving dependent edit/link invariants.
 
-### ERR-50-006 — Unified Product Admin regression assumed a stale `seo_status` list column
+### ERR-50-006 — Unified Product Admin regression assumed stale `seo_status`
 **Date:** 2026-08-26  
-**Symptom:** first `Phase50 Product Admin Workspace CI` run `32941533091` passed compile, Django check, migration drift and SQLite migration apply, then failed one test because `seo_status` was not in the final Product `list_display`.  
-**Root Cause:** the new regression test asserted an intermediate/older SEO list-column composition instead of the actual mature Product Admin list after later sales/commerce extensions. SEO remained available through the real Product SEO fieldset and `seo_preview`.  
-**Failed Attempt:** re-adding a stale list column just to satisfy the test would couple the new Product workspace to an obsolete intermediate Admin composition.  
-**Correct Fix:** preserve the actual mature Product list and align the test with its owned invariants (`minimum_price`, `price_is_final`, sales-profile selection and `seo_preview`).  
-**Verification:** corrected run `32941662288` PASS: compile, Django check, no migration drift, SQLite migrations through `store.0035`, unified Product Admin regressions and gate marker all passed.  
-**Prevention:** regression tests for late Admin composition must assert final behavior/invariants owned by the active boundary, not stale columns from an earlier composition layer.
+**Root Cause:** test asserted an older intermediate Admin composition.  
+**Correct Fix:** preserve mature Product list and assert current boundary-owned invariants.  
+**Verification:** GitHub Actions run `32941662288` PASS.
+
+### ERR-50-007 — Production `git fetch --prune origin` left active branch remote-tracking ref stale
+**Date:** 2026-08-26  
+**Environment:** Production host `/home/sfkilvrs/3dprinthub`.  
+**Symptom:** pre-deploy `git ls-remote` correctly returned active GitHub branch HEAD `9cfbc54ed4196144864b5f4201976d8466a88134`, but after `git fetch --prune origin`, `origin/agent/phase49-3i18-operator-bulk-ai-rebuild` remained at `8fbe3413cada1099745f4d17312b8eb519694379`; deployment stopped before source mutation.
+
+**Verified Root Cause:** host Git configuration had only this fetch refspec:
+`+refs/tags/v0.33.0:refs/tags/v0.33.0`
+and the active branch had no configured upstream. Therefore normal `git fetch --prune origin` did not fetch/update branch remote-tracking refs.
+
+**Failed Attempt:** repeating `git fetch --prune origin` and trusting `origin/<branch>` would keep the same stale result because the refspec did not include branch heads.
+
+**Correct Fix:** verify live GitHub HEAD with `git ls-remote`, then explicitly fetch `refs/heads/agent/phase49-3i18-operator-bulk-ai-rebuild` to `FETCH_HEAD`; verify exact SHA and fast-forward ancestry; deploy with ff-only merge from `FETCH_HEAD`.
+
+**Verification:** explicit fetch returned `FETCH_HEAD=9cfbc54ed4196144864b5f4201976d8466a88134`; fast-forward succeeded; Django check, migration drift, Product Admin runtime gate, collectstatic, Passenger restart and Production HTTP smoke all passed; final Production worktree was clean.
+
+**Prevention:** before relying on `origin/<branch>` on Production, inspect `git config --get-all remote.origin.fetch` and branch upstream. If branch heads are not fetched, either correct the refspec deliberately or use explicit verified branch fetch to `FETCH_HEAD`. Never repeat a stale remote-tracking fetch unchanged.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
-Outside the current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
+Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding a duplicate endpoint.
 
 ### ERR-OPEN-002 — AI request cost may be unknown
 Never invent cost; use provider response/verified lookup or mark unknown.
@@ -144,11 +123,11 @@ Never invent cost; use provider response/verified lookup or mark unknown.
 Canonical controlled hard maximum is 20. New acquisition defaults to 5.
 
 ### ERR-OPEN-004 — Historical Product Admin 500
-The 2026-08-25 Production `/admin/store/product/` 500 was later cleared in owner deployment/smoke verification. Keep historical evidence in Git history; do not treat it as a currently open blocker without fresh evidence.
+Resolved and Production verified; do not treat as currently open without fresh evidence.
 
 ## WARNING DEBT
 - CKEditor4 security/maintenance warning.
 - `store.W026`: in-memory realtime is not a production multi-process solution; Redis/polling is separate debt.
 - Pillow `Image.getdata()` deprecation.
 - Google membership credential warning when intentionally unset in CI.
-- Social preview enhancement: dedicated `twitter:title`, `twitter:description`, `twitter:image` and `og:image:alt` are not yet emitted; core meta/OG/canonical/schema/sitemap are present.
+- Social preview enhancement: dedicated `twitter:title`, `twitter:description`, `twitter:image` and `og:image:alt` remain open; core meta/OG/canonical/schema/sitemap are present.
