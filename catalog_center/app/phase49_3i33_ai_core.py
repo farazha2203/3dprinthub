@@ -389,6 +389,7 @@ def _ai_instructions() -> str:
         "تو مترجم فنی فارسی و ویراستار SEO فروشگاه ایرانی 3DPrintHub هستی. "
         "ترجمه باید فارسی طبیعی و معنایی باشد؛ آوانویسی واژه‌های عمومی انگلیسی با حروف فارسی ممنوع است. "
         "برای نمونه stand=پایه، holder=نگهدارنده، Christmas tree=درخت کریسمس و flexi=انعطاف‌پذیر. "
+        "Twistmas Tree یک بازی واژه برای Christmas Tree پیچ‌خورده/اسپیرال است؛ آن را «درخت کریسمس اسپیرال» یا ترجمه معنایی هم‌ارز بنویس، نه «تویست‌ماس تری». "
         "نام خاص یا برند را فقط وقتی ترجمه معنایی هویت را خراب می‌کند حفظ کن. "
         "source_title هویت قطعی محصول و source_description تنها منبع واقعیت است. "
         "وزن، زمان چاپ، لایک/ذخیره/دانلود/چاپ/Boost و تنظیمات layer/wall/infill/plate را فقط وقتی در منبع صریح‌اند در متن و مشخصات فنی منعکس کن. "
@@ -405,6 +406,16 @@ def title_quality_guard(source_title: str, title_fa: str) -> None:
         raise RuntimeError("خروجی AI ترجمه فارسی معتبر نیست.")
     source = str(source_title or "").casefold()
     fa = title.replace("ي", "ی").replace("ك", "ک")
+    if "twistmas tree" in source:
+        required_groups = (
+            ("درخت",),
+            ("کریسمس",),
+            ("اسپیرال", "مارپیچ", "پیچ"),
+        )
+        if any(not any(token in fa for token in group) for group in required_groups):
+            raise RuntimeError(
+                "ترجمه Twistmas Tree باید معنایی باشد (درخت کریسمس اسپیرال/مارپیچ)؛ آوانویسی «تویست‌ماس تری» پذیرفته نیست."
+            )
     for english, tokens in COMMON_TRANSLATIONS.items():
         if english in source and not any(token in fa for token in tokens):
             raise RuntimeError(
@@ -585,9 +596,18 @@ def apply_ai_pack(app, product_id: int, pack: dict[str, Any], source: dict[str, 
     for forbidden in ("materials_json", "colors_json", "material_options_json", "color_options_json", "material_color_options_json", "fixed_price_material_name", "fixed_price_color_name"):
         updates.pop(forbidden, None)
 
+    from .phase49_3i36_stage_finalization import filter_ai_updates, is_stage_locked
+    updates, blocked = filter_ai_updates(row, updates)
+    if blocked:
+        audit_event(
+            "ai", "locked_stage_fields_skipped", status="blocked", level="WARNING",
+            product_id=product_id, source_file=__file__, message="AI respected finalized stages",
+            detail={"fields": blocked, "mode": mode},
+        )
+
     app.db.update_product(product_id, updates)
     selected = image_pipeline.cap_unique_urls(_list(row_value(row, "selected_images_json", "[]")))
-    if selected:
+    if selected and not is_stage_locked(row, "images"):
         try:
             image_pipeline.finalize_selected_images(app.db, product_id)
         except Exception as exc:
