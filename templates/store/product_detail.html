@@ -86,7 +86,7 @@
             {% endif %}
 
             {% if product.compatibilities.all %}<div class="store-compatibility mt-5"><div class="font-black mb-3">سازگاری محصول</div><div class="flex flex-wrap gap-2">{% for item in product.compatibilities.all %}<span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
-            {% if material_options %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
+            {% if material_options and not variants %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
 
             {% if variants %}
             <div class="mt-6">
