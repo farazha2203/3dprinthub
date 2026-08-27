@@ -1,5 +1,22 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Product Profile Matrix 49.3I.34 / 50.A.2D — GitHub CI Tested
+- Catalog Center 8.9.0 build 2026.08.27.2 now has a Step-2 Product Profile Matrix with add/clone/delete/edit profile workflow,
+- every profile can independently own size, final/material weight, fixed price, print time, part dimensions, build, material, color, quality, package facts, stock/default/sort state,
+- Desktop profile JSON travels through the mature batch/import boundary and idempotently becomes canonical Django ProductVariant rows; unrelated manual Variants are preserved,
+- added compound customer modes including size→weight and 3-level size/weight/build flows,
+- migration `0037` adds professional pricing/shipping/payment policy; migration `0038` adds profile descriptions, size↔weight modes and actual part dimensions with immutable order-item snapshot dimensions,
+- Storefront selected Profile is the single product price/facts authority; navy/gold presentation aligns with the Catalog Center visual language,
+- fixed Variant API callable price-contract bug (ERR-50-012),
+- fixed saved-address checkout rejection in the shipping policy wrapper (ERR-50-013),
+- fixed dependent selector hierarchy so downstream state cannot hide upstream choices and weight/profile prices are scoped to the selected size (ERR-50-014),
+- added dedicated Node behavior gate `PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS`,
+- Web CI `33051311828` PASS on runtime snapshot `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`; migrations through `0038` and 15 Store/Profile/Checkout tests PASS,
+- Windows release trigger now watches mature Product studio files (ERR-50-015),
+- Windows portable run `33051114515` PASS on `b3280dd67cd7772f337f6792036ea92d3f252747`; artifact ID `9637671099`; EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`,
+- Production remains unchanged at `c283864290f9c989a9fcdf24ee8eef519560e917`; Local owner QA + fresh Host/MySQL audit/backup are required before the pending `0036 → 0037 → 0038` chain.
+
+
 ## 2026-08-27 — Catalog Center Local Gate Self-Dirty Hotfix
 - root cause of the reported “does not come up” log was not a startup exception: the gate stopped before `-LaunchApp` because a prior portable build left untracked `catalog_center/release/` output,
 - added `/catalog_center/release/` to `.gitignore` without deleting existing local EXEs/manifests,
