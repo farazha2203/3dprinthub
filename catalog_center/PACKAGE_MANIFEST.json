@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.5 — Seven-stage AI Orchestrator + Screenshot Site SEO",
-  "version": "8.9.5",
+  "name": "3DPrintHub Catalog Center v8.9.6 — Permanent Crawl Ledger + Stage-scoped AI",
+  "version": "8.9.6",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -94,7 +94,16 @@
     "source_screenshot_selected_for_site",
     "screenshot_source_page_upstream_metadata",
     "seo_multilingual_contamination_guard",
-    "single_and_bulk_same_ai_source_authority"
+    "single_and_bulk_same_ai_source_authority",
+    "permanent_crawled_received_url_ledger",
+    "rejected_product_local_file_purge_with_url_tombstone",
+    "crawl_listing_continuation_cursor",
+    "skip_collected_rejected_urls_before_requeue",
+    "direct_link_terminal_identity_pre_acquisition_guard",
+    "single_ai_engine_stage_scope",
+    "bulk_selected_stage4_same_ai_engine",
+    "targeted_stage_cleanup_and_completion",
+    "no_image_ai_when_image_seo_is_complete"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -185,7 +194,9 @@
     "app/phase49_3i36_stage_finalization.py",
     "tests/test_phase49_3i36_stage_finalization.py",
     "app/phase49_3i37_seven_stage_ai.py",
-    "tests/test_phase49_3i37_seven_stage_ai.py"
+    "tests/test_phase49_3i37_seven_stage_ai.py",
+    "app/phase49_3i38_crawl_ledger_stage_ai.py",
+    "tests/test_phase49_3i38_crawl_ledger_stage_ai.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
