@@ -1,6 +1,6 @@
 # PROJECT PATHS AND ENVIRONMENTS
 
-Last Verified: 2026-08-26 from Repository + owner Production verification. Re-verify actual Local/Host state again before operations.
+Last Verified: 2026-08-27 from Repository + prior owner Production verification. Re-verify actual Local/Host state again before operations.
 
 ## LOCAL / WINDOWS
 OS: Windows / PowerShell
@@ -14,12 +14,18 @@ Legacy Retained Data: `D:\projects\3dprinthub_catalog_center`
 Backups: `D:\projects\3dprinthub-backups`
 Runtime Logs: under persistent Catalog data root, including `logs\phase49_3f\YYYY-MM-DD\workflow-*.jsonl`
 Canonical validated pre-49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3H_LOCAL_GATE.ps1`
+Canonical current Local gate: `D:\projects\3DPrintHub\catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1`
 
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
-Current Storefront selector CI runtime: `e3c57311c0c3980befeaf6012f3bb8fc502333bc`
+Current Store/Profile Matrix CI runtime: `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`
+Current Store/Profile Matrix CI run: `33051311828` PASS
+Current Windows packaged runtime: `b3280dd67cd7772f337f6792036ea92d3f252747`
+Catalog Center: `8.9.0` / build `2026.08.27.2`
+Windows artifact ID: `9637671099`
+Windows EXE SHA256: `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
 ## PRODUCTION
