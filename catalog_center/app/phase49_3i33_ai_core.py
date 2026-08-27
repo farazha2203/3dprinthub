@@ -597,9 +597,6 @@ def apply_ai_pack(app, product_id: int, pack: dict[str, Any], source: dict[str, 
         app.db.save_history(product_id, f"phase49_3i33_ai_{mode}", before, dict(after), f"3I.33 {mode} translation/SEO")
     except Exception:
         pass
-    updater = getattr(app, "_phase49_3i33_update_product_card", None)
-    if callable(updater):
-        app.after(0, lambda: updater(product_id))
     return {"product_id": product_id, "mode": mode, "title_fa": title, "changed_fields": sorted(updates)}
 
 
