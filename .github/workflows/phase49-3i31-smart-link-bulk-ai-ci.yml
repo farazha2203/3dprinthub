@@ -1,10 +1,15 @@
-name: Phase49.3I.31-35 Smart Link + Operator Ledger CI
+name: Phase49.3I.31-36 Stage Finalization + Operator Ledger CI
 
 on:
   push:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - "catalog_center/app/phase49_3i36_stage_finalization.py"
+      - "catalog_center/app/phase49_readiness_wizard.py"
+      - "catalog_center/app/phase49_3e_ai_task_center.py"
+      - "catalog_center/app/phase49_3f_workspace.py"
+      - "catalog_center/app/phase49_3b_guided_wizard.py"
       - "catalog_center/app/phase49_3i35_operator_ledger.py"
       - "catalog_center/app/phase49_3i35_resilient_ai.py"
       - "catalog_center/app/phase49_3i35_readiness_review.py"
@@ -20,6 +25,7 @@ on:
       - "catalog_center/app/phase49_3i25_product_first_workflow.py"
       - "catalog_center/app/ai_providers.py"
       - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i36_stage_finalization.py"
       - "catalog_center/tests/test_phase49_3i35_operator_workflow.py"
       - "catalog_center/tests/test_phase49_3i34_profile_matrix.py"
       - "catalog_center/tests/test_phase49_3i33_operator_workflow.py"
@@ -33,7 +39,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-35:
+  phase49-3i31-36:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -64,6 +70,7 @@ jobs:
       - name: Compile smart AI and source-identity surfaces
         run: |
           python -m compileall -q \
+            catalog_center/app/phase49_3i36_stage_finalization.py \
             catalog_center/app/phase49_3i35_operator_ledger.py \
             catalog_center/app/phase49_3i35_resilient_ai.py \
             catalog_center/app/phase49_3i35_readiness_review.py \
@@ -74,6 +81,7 @@ jobs:
             catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i36_stage_finalization.py \
             catalog_center/tests/test_phase49_3i35_operator_workflow.py \
             catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
@@ -84,6 +92,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v \
+            tests.test_phase49_3i36_stage_finalization \
             tests.test_phase49_3i35_operator_workflow \
             tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
@@ -102,6 +111,7 @@ jobs:
           phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
           phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
           phase34 = Path("catalog_center/app/phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
+          phase36 = Path("catalog_center/app/phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
           phase35_ledger = Path("catalog_center/app/phase49_3i35_operator_ledger.py").read_text(encoding="utf-8")
           phase35_ai = Path("catalog_center/app/phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
           phase35_review = Path("catalog_center/app/phase49_3i35_readiness_review.py").read_text(encoding="utf-8")
@@ -133,6 +143,10 @@ jobs:
           assert '_install_phase49_3i35_resilient_workspace(workspace_class)' in pricing
           assert '_install_phase49_3i35_readiness_review(workspace_class)' in pricing
           assert '_install_phase49_3i35_resilient_app(app_class)' in pricing
+          assert '_install_phase49_3i36_workspace(workspace_class, _readiness_module)' in pricing
+          assert '_install_phase49_3i36_database(Database)' in pricing
+          assert 'operator_stage_locks_json' in phase36
+          assert 'filter_ai_updates' in phase36
           assert 'sales_profile_ledger_json' in phase35_ledger
           assert 'configured_ai_candidates' in phase35_ai
           assert 'seo_manual_approved' in phase35_review
@@ -151,6 +165,8 @@ jobs:
           print("PHASE49_3I35_OPERATOR_LEDGER=REGISTERED_SNAPSHOTS")
           print("PHASE49_3I35_AI=VISIBLE_PREFLIGHT_RETRY_FAILOVER")
           print("PHASE49_3I35_READINESS=MANUAL_SEO_SOURCE_REVIEW")
+          print("PHASE49_3I36_STAGE_LOCKS=SEVEN_PERSISTED_OPERATOR_FINALIZATIONS")
+          print("PHASE49_3I36_AI_WRITE_SCOPE=UNLOCKED_STAGES_ONLY")
           PY
 
       - name: Django safety
