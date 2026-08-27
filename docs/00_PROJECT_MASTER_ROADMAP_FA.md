@@ -7,7 +7,7 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
-**Status:** `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`  
+**Status:** `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
 ## 1) قانون مادر
@@ -73,8 +73,8 @@ Current approved GitHub runtime:
 - canonical Variant/Profile storefront selector,
 - Product-owned public media boundary.
 
-## 5) Current Windows development — Phase49.3I.34
-Catalog Center `8.9.0`, build `2026.08.27.2`.
+## 5) Current Windows development — Phase49.3I.35
+Catalog Center `8.9.1`, build `2026.08.27.3`.
 
 New Step-2 Profile Matrix:
 - add Profile,
@@ -96,10 +96,11 @@ Preserved:
 - image/source identity safety.
 
 Windows verification:
-- packaged snapshot `b3280dd67cd7772f337f6792036ea92d3f252747`,
-- workflow `33051114515` PASS,
-- artifact ID `9637671099`,
-- EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`.
+- packaged snapshot `2622818d898e19b745c61ff653b80c03d22288f1`,
+- workflow `33060047878` PASS,
+- artifact ID `9641338334`,
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
+- owner automated Local gate PASS with 107 Catalog tests and Local SQLite through `0039`.
 
 ## 6) Current Web development — Phase50.A.2B → 2C → 2D
 
@@ -152,7 +153,7 @@ Web verification:
 9. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; exact target + ff-only.
 10. Deploy GitHub source.
 11. Repeat Django check/drift/DB/plan.
-12. Apply only verified pending `0036 → 0037 → 0038`.
+12. Apply only actually pending verified migrations, expected from last Production evidence as `0036 → 0037 → 0038 → 0039`.
 13. collectstatic + Passenger restart.
 14. Home/Store/Admin/Product/Profile API/Checkout/private-media verification.
 15. Controlled new order using multi-size/multi-weight Profile.
