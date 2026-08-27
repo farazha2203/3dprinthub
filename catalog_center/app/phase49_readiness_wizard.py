@@ -379,11 +379,9 @@ def install(workspace_class) -> None:
         self.select_section(target)
 
     def _phase49_complete_missing(self):
-        try:
-            self.save(silent=True)
-        except Exception:
-            pass
-        self._phase49_sync_reference_lists(update_widgets=True)
+        # AI completion must never persist the whole Product Workspace. The
+        # operator may have unrelated commerce/profile edits in memory.
+        self._phase49_sync_reference_lists(update_widgets=False)
         state = evaluate_readiness(self.db.product(self.product_id))
         content_missing = not state["stages"].get("content", {}).get("ready", False)
         if content_missing:
