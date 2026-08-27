@@ -190,7 +190,7 @@ def build_ai_updates(row, pack: dict, *, scope: str = "all") -> dict:
         put_list("specs_fa_json", "specs_fa")
         put_list("sales_bullets_json", "sales_bullets")
         put_text("social_caption_fa", "social_caption_fa")
-        put_list("material_recommendations_json", "material_recommendations")
+        # Material/filament selection is operator-owned in 3I.35+.
 
     # Product SEO is also an input to image SEO metadata, so images scope may fill it when absent.
     put_text("seo_title_fa", "seo_title_fa")
@@ -442,10 +442,8 @@ def install(workspace_class, readiness_module) -> None:
                 parent=self,
             )
             return
-        try:
-            self.save(silent=True)
-        except Exception:
-            pass
+        # Product AI reads the last durable Product state; it must not commit
+        # unrelated UI/profile/commerce fields before the request.
         row = self.db.product(self.product_id)
         images = image_pipeline.cap_unique_urls(_json_list(_row_value(row, "selected_images_json", "[]")))
         source = dict(self._source_for_ai() or {})
