@@ -288,7 +288,7 @@ def install(workspace_class):
         title=self._phase49_3i18_title.get().strip()
         if not title: messagebox.showwarning("3DPrintHub","ابتدا نام فارسی صحیح را وارد کن.",parent=self); return
         if not messagebox.askyesno("3DPrintHub — بازسازی کامل AI","متن فارسی، SEO و Alt تصاویر از نو ساخته شوند؟\nنام واردشده مرجع قطعی است؛ Source/URL/قیمت/موجودی/متریال و رنگ تغییر نمی‌کنند.",parent=self):return
-        try:self.save(silent=True); provider,key,model=self._phase49_3e_provider()
+        try:provider,key,model=self._phase49_3e_provider()
         except Exception as exc:messagebox.showerror("3DPrintHub",str(exc),parent=self);return
         row=self.db.product(self.product_id); selected=images.cap_unique_urls(_list(_v(row,"selected_images_json","[]"))); source=dict(self._source_for_ai() or {})
         raw_title=str(source.get("source_title") or ""); raw_desc=str(source.get("source_description") or "")
@@ -303,7 +303,10 @@ def install(workspace_class):
         threading.Thread(target=worker,daemon=True).start()
 
     def apply_ai(self,pack,title):
-        row=self.db.product(self.product_id); updates=ai_updates(row,pack,title); selected=images.cap_unique_urls(_list(_v(row,"selected_images_json","[]"))); alts=_list(updates["image_alt_texts_json"]); kws=_list(updates["keywords_json"]); by={str(x.get("source_url") or ""):dict(x) for x in _list(_v(row,images.IMAGE_METADATA_COLUMN,"[]")) if isinstance(x,dict)}; meta=[]
+        row=self.db.product(self.product_id); updates=ai_updates(row,pack,title)
+        from .phase49_3i36_stage_finalization import filter_ai_updates
+        updates,_blocked=filter_ai_updates(row,updates)
+        selected=images.cap_unique_urls(_list(_v(row,"selected_images_json","[]"))); alts=_list(updates.get("image_alt_texts_json","[]")); kws=_list(updates.get("keywords_json","[]")); by={str(x.get("source_url") or ""):dict(x) for x in _list(_v(row,images.IMAGE_METADATA_COLUMN,"[]")) if isinstance(x,dict)}; meta=[]
         caption=str(updates.get("short_description_fa") or updates.get("seo_description_fa") or "")
         for n,url in enumerate(selected,1):
             x=by.get(url,{"source_url":url}); x.update(alt_text=str(alts[n-1] if n-1<len(alts) else f"{title} - تصویر {n}"),title=title,caption=caption,keywords=kws[:16],operator_override=True,metadata_ready=False,seo_signature=""); fields=set(x.get("operator_override_fields") or []); fields.update({"alt_text","title","caption","keywords"}); x["operator_override_fields"]=sorted(fields); meta.append(x)
