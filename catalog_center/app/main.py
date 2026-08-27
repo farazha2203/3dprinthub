@@ -1421,6 +1421,7 @@ class App(tk.Tk):
                     record_listing_progress,
                 )
                 enough=False
+                discovery_exhausted=False
                 stagnant_targets={}
                 for page_no in range(1,max_pages+1):
                     if enough or self.stop_requested:
@@ -1482,12 +1483,15 @@ class App(tk.Tk):
                         if pending_now>=requested:
                             enough=True
                             break
-                        if stagnant_targets[target_key]>=2:
+                        if stagnant_targets[target_key]>=4:
                             self.log(
                                 f"DISCOVERY_EXHAUSTED_CURRENT_DEPTH target={target} "
                                 f"scroll_rounds={scroll_rounds}"
                             )
+                            discovery_exhausted=True
                             break
+                    if discovery_exhausted:
+                        break
                     if not enough and page_no<max_pages:
                         await asyncio.sleep(3)
 
