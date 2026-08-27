@@ -3,7 +3,7 @@
 Updated: 2026-08-27  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Status: `GITHUB CI TESTED / WINDOWS 8.9.2 STARTUP HOTFIX PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
+Status: `GITHUB CI TESTED / WINDOWS 8.9.3 PROFILE WORKSPACE HOTFIX PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
 
 Current verified Production application commit:
 `c283864290f9c989a9fcdf24ee8eef519560e917`.
@@ -200,12 +200,12 @@ Gates:
 
 ### Windows runtime
 Catalog Center:
-- version `8.9.2`,
-- build `2026.08.27.4`,
-- packaged snapshot `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
-- workflow `33066468014` PASS,
-- artifact ID `9643957471`,
-- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
+- version `8.9.3`,
+- build `2026.08.27.5`,
+- packaged snapshot `9637829a255a1d09800bc062c2f049cf5d92b585`,
+- workflow `33067618679` PASS,
+- artifact ID `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`.
 
 Public GitHub Release remains manual-only after owner Local QA.
 
