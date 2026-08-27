@@ -164,6 +164,11 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
             "unit_shipping_weight_grams": _decimal_text(getattr(item, "shipping_weight_grams", 0)),
             "line_shipping_weight_grams": _decimal_text(_decimal(getattr(item, "shipping_weight_grams", 0)) * int(item.quantity)),
             "packaging_weight_grams": _decimal_text(getattr(item, "packaging_weight_grams", 0)),
+            "part_dimensions_cm": {
+                "length": _decimal_text(getattr(item, "part_length_cm", 0)),
+                "width": _decimal_text(getattr(item, "part_width_cm", 0)),
+                "height": _decimal_text(getattr(item, "part_height_cm", 0)),
+            },
             "package_dimensions_cm": {
                 "length": _decimal_text(getattr(item, "package_length_cm", 0)),
                 "width": _decimal_text(getattr(item, "package_width_cm", 0)),
@@ -195,6 +200,9 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
     item.shipping_weight_grams = shipping_weight
     item.unit_weight_grams = shipping_weight
     item.print_time_minutes = int(getattr(variant, "print_time_minutes", 0) or 0)
+    item.part_length_cm = _decimal(getattr(variant, "part_length_cm", 0))
+    item.part_width_cm = _decimal(getattr(variant, "part_width_cm", 0))
+    item.part_height_cm = _decimal(getattr(variant, "part_height_cm", 0))
     item.package_length_cm = _decimal(getattr(variant, "package_length_cm", 0))
     item.package_width_cm = _decimal(getattr(variant, "package_width_cm", 0))
     item.package_height_cm = _decimal(getattr(variant, "package_height_cm", 0))
@@ -213,6 +221,9 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
             "shipping_weight_grams",
             "unit_weight_grams",
             "print_time_minutes",
+            "part_length_cm",
+            "part_width_cm",
+            "part_height_cm",
             "package_length_cm",
             "package_width_cm",
             "package_height_cm",
@@ -238,6 +249,11 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
         "line_shipping_weight_grams": _decimal_text(shipping_weight * int(item.quantity)),
         "packaging_weight_grams": _decimal_text(item.packaging_weight_grams),
         "print_time_minutes": int(item.print_time_minutes),
+        "part_dimensions_cm": {
+            "length": _decimal_text(item.part_length_cm),
+            "width": _decimal_text(item.part_width_cm),
+            "height": _decimal_text(item.part_height_cm),
+        },
         "package_dimensions_cm": {
             "length": _decimal_text(item.package_length_cm),
             "width": _decimal_text(item.package_width_cm),
