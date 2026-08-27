@@ -595,6 +595,10 @@ def install(workspace_class, readiness_module=None) -> None:
     def _phase49_3f_apply_selected_image_ai(self, pack, selected, progress, provider, model, started):
         try:
             current = self.db.product(self.product_id)
+            from .phase49_3i36_stage_finalization import is_stage_locked
+            if is_stage_locked(current, "images"):
+                progress.done("🔒 مرحله تصاویر نهایی است؛ AI هیچ Metadata یا فایل تصویری را تغییر نداد.")
+                return
             existing = _json_list(_row_value(current, image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
             merged = merge_selected_metadata(existing, selected, pack)
             result_by_slot = {int(item.get("slot") or 0): item for item in (pack.get("items") or []) if isinstance(item, dict)}
