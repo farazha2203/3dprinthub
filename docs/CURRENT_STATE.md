@@ -4,45 +4,49 @@ Updated: 2026-08-27
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Track: `Phase49.3I.37 — Seven-stage AI + Operator Finalization + Screenshot Site SEO / Catalog Center 8.9.5`  
-Status: `8.9.5 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.37 QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Track: `Phase49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
+Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
-The current runtime-changing commit verified by all Windows Catalog gates is:
+The current runtime-changing commit verified by all current Windows Catalog gates is:
 
-`8d5e58a839c89eedbe258d9236889834fc02d9a9`
+`c904193a7f0af9aad80365834ec3f0b856e77dc9`
 
 Catalog Center:
-- version `8.9.5`,
-- build `2026.08.27.7`,
-- Phase49.3I.31–37 targeted run `33074245603` PASS with 77 tests,
-- Single Active AI run `33074245489` PASS,
-- Windows portable workflow `33074245604` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.5`,
-- artifact ID `9647216177`,
-- EXE size `65,494,809` bytes,
-- EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`,
-- artifact ZIP digest `sha256:393b4464a9503fd4fabd75b5f81c1621c0736b0dbe1f2d0c7df92c22c414ab34`,
+- version `8.9.6`,
+- build `2026.08.27.8`,
+- Phase49.3I.31–38 targeted run `33077213590` PASS with 84 tests,
+- Single Active AI run `33077239617` PASS,
+- Windows portable workflow `33077239660` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.6`,
+- artifact ID `9648474905`,
+- EXE size `65,520,499` bytes,
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
+- artifact ZIP digest `sha256:13ae8582be09b71f90e607c2230075d875b7445f8a46b6462a9241edf9d52563`,
 - browser smoke PASS,
 - portable self verify PASS,
-- source URL preservation gate PASS.
-
-### Phase49.3I.37 behavior now verified in CI
-- one persisted Product AI source mode: Link / Saved Data / Screenshot,
-- one seven-stage missing-only AI orchestrator for both single and selected-Product bulk runs,
-- stage data readiness `✅` is separate from operator finalization `🔒`,
-- locked stages are protected at the SQLite `Database.update_product()` boundary,
-- both `sales_profile_ledger_json` and legacy `sales_profiles_json` are Commerce-locked,
-- Product AI never owns Profile/price/material/color/brand/stock/publication,
-- Twistmas identity is normalized to `درخت کریسمس اسپیرال` and key Persian SEO fields reject mixed Cyrillic/unrelated Latin contamination,
-- image AI is SEO-only; deterministic image tooling owns rename/WebP/metadata,
-- Product-page Screenshot can become a selected site image with SEO metadata and preserved `source_page_url`,
-- existing primary image is preserved when Screenshot is added,
+- source URL preservation gate PASS,
 - Production touched = NO.
 
+### Phase49.3I.38 behavior verified in CI
+- mature Browser/Parser/image/file receive pipeline is preserved; 3I.38 wraps its boundaries rather than replacing it,
+- permanent crawled/received ledger keeps known Product identities across scans,
+- previously `collected`/terminal Product links are skipped instead of being requeued,
+- same Listing uses a persisted deeper-scroll continuation cursor,
+- 100 known Products + discovery of 1..200 produces exactly the next 100 pending Products,
+- operator can `رد دائمی + حذف فایل‌ها و عکس‌های محلی`; Product source identity remains as `rejected` tombstone,
+- physical deletion is allowed only below the canonical Catalog `collected/` root,
+- Direct Link rejects terminal identities before browser/HTTP/image/file acquisition,
+- explicit restore is required before a rejected Product may be received again,
+- one mother AI engine remains authoritative with Link / Saved-Crawled Data / Screenshot inputs,
+- selected-Product Bulk Content/SEO calls that same engine with `target_stages={"content"}`,
+- Product workspace can clean/complete one selected unlocked Stage only,
+- Stage 4 cleanup cannot write Quick/Profile/Source/Slider or any other out-of-scope stage,
+- image-only scoped AI makes no provider request when image SEO is already complete.
+
 Canonical active phase doc:
-`docs/phases/PHASE49_3I37_SEVEN_STAGE_AI_SCREENSHOT.md`.
+`docs/phases/PHASE49_3I38_CRAWL_LEDGER_STAGE_AI.md`.
 
 Store/Phase50 runtime was verified at commit:
 `d519a360e65b79db4b62af206b95f63c3539bc12`
