@@ -137,7 +137,7 @@ Verification:
 
 
 ## REQ-50-026 — Operator-ledger Profiles, resilient AI and brand-aware filament offers
-Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / CI + WINDOWS PACKAGE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / CI + WINDOWS PACKAGE PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Product Step 2 uses the upper controls as a working form and registered Profiles as the transport/publish authority,
@@ -164,7 +164,8 @@ Verification:
 - Windows portable run `33060047878` PASS,
 - Catalog Center `8.9.1` / build `2026.08.27.3`,
 - artifact ID `9641338334`,
-- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`.
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
+- Owner Local automated gate: PASS at `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local SQLite `0039` applied; 16 Store regressions + 107 Catalog tests PASS; Production untouched.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
