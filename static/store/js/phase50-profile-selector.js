@@ -8,6 +8,10 @@
         build: ["build"],
         size_build: ["size", "build"],
         build_size: ["build", "size"],
+        size_weight: ["size", "weight"],
+        weight_size: ["weight", "size"],
+        size_weight_build: ["size", "weight", "build"],
+        size_build_weight: ["size", "build", "weight"],
     };
 
     const LABELS = {
@@ -35,6 +39,7 @@
             option,
             profileKey: clean(meta.profile_key || option.value),
             profileLabel: profileLabel || clean(option.textContent),
+            profileDescription: clean(meta.profile_description || ""),
             isDefault: Boolean(meta.profile_is_default),
             size: clean(meta.size_label || option.dataset.sizeLabel),
             build: clean(meta.build_profile || option.dataset.buildProfile),
@@ -48,6 +53,10 @@
             packagingWeight: Number(meta.packaging_weight_grams || 0),
             printMinutes: Number(meta.print_time_minutes || option.dataset.printTime || 0),
             price: Number(meta.unit_price || option.dataset.total || 0),
+            partLength: Number(meta.part_length_cm || 0),
+            partWidth: Number(meta.part_width_cm || 0),
+            partHeight: Number(meta.part_height_cm || 0),
+            partDimensionsLabel: clean(meta.part_dimensions_label || ""),
             packageLength: Number(meta.package_length_cm || 0),
             packageWidth: Number(meta.package_width_cm || 0),
             packageHeight: Number(meta.package_height_cm || 0),
@@ -184,6 +193,11 @@
                 summary.innerHTML = `<div class="text-sm text-slate-500">برای مشاهده قیمت و مشخصات، یک پروفایل را انتخاب کنید.</div>`;
                 return;
             }
+            const partText = variant.partDimensionsLabel || (
+                [variant.partLength, variant.partWidth, variant.partHeight].some(Boolean)
+                    ? `${formatNumber(variant.partLength)} × ${formatNumber(variant.partWidth)} × ${formatNumber(variant.partHeight)} سانتی‌متر`
+                    : "طبق پروفایل"
+            );
             const packageText = [variant.packageLength, variant.packageWidth, variant.packageHeight].some(Boolean)
                 ? `${formatNumber(variant.packageLength)} × ${formatNumber(variant.packageWidth)} × ${formatNumber(variant.packageHeight)} سانتی‌متر`
                 : "طبق تنظیمات سفارش";
@@ -195,12 +209,14 @@
                 ["رنگ", variant.color || "—"],
                 ["کیفیت چاپ", variant.quality || "—"],
                 ["وزن قطعه", variant.finalWeight ? `${formatNumber(variant.finalWeight)} گرم` : "—"],
+                ["ابعاد قطعه", partText],
                 ["وزن ارسال", variant.shippingWeight ? `${formatNumber(variant.shippingWeight)} گرم` : "—"],
                 ["زمان چاپ", variant.printMinutes ? `${formatNumber(variant.printMinutes)} دقیقه` : "—"],
                 ["ابعاد بسته", packageText],
             ];
             summary.innerHTML = `
                 <div class="store-profile-summary__price"><span>قیمت پروفایل انتخابی</span><strong>${formatToman(variant.price)}</strong></div>
+                ${variant.profileDescription ? `<p class="store-profile-summary__description">${variant.profileDescription}</p>` : ""}
                 <div class="store-profile-summary__facts">
                     ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${key}</span><strong>${value}</strong></div>`).join("")}
                 </div>
@@ -222,6 +238,17 @@
                     button.type = "button";
                     button.className = "store-profile-option";
                     button.textContent = item.label;
+                    const optionVariants = variants.filter((variant) => valueFor(variant, dim) === item.value);
+                    if (dim === "weight" || dim === "profile") {
+                        const matchingPrices = optionVariants.map((variant) => variant.price).filter((value) => value > 0);
+                        if (matchingPrices.length) {
+                            const minPrice = Math.min(...matchingPrices);
+                            const price = document.createElement("small");
+                            price.className = "store-profile-option__price";
+                            price.textContent = formatToman(minPrice);
+                            button.appendChild(price);
+                        }
+                    }
                     button.dataset.dimension = dim;
                     button.dataset.value = item.value;
                     button.setAttribute("aria-pressed", state[dim] === item.value ? "true" : "false");
