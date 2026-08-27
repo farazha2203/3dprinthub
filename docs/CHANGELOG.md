@@ -1,5 +1,14 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Local Owner Gate PowerShell DB Probe Runbook Fix
+- owner Local checkout fast-forwarded cleanly to `35ab63105f30fdca42518d5273a424a3200977e3`,
+- packaged-runtime/tooling ancestry and Catalog SQLite backup passed,
+- the wrapper stopped before any new migration because multiline PowerShell `python -c` quoting corrupted the embedded Python DB detector,
+- recorded as `ERR-49-057`; this is a command-transport defect, not a Django/schema failure,
+- resume procedure now uses a single-quoted PowerShell here-string piped to Python stdin, then backs up the effective Local Django SQLite DB before migration,
+- Production remains untouched.
+
+
 ## 2026-08-27 — Phase49.3I.35 / Phase50.A.2E — Operator Ledger, Resilient AI and Brand-aware Filament
 - Catalog Center bumped to `8.9.1`, build `2026.08.27.3`,
 - replaced duplicate Profile editing surface with accounting-style registered Profile ledger while preserving the mature 3I.34 transport,
