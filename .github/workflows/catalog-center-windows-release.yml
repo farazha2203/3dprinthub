@@ -8,6 +8,8 @@ on:
       - catalog_center/app/version.py
       - catalog_center/app/phase49_3i29_windows_performance_ai.py
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
+      - catalog_center/app/phase49_3i33_ai_core.py
+      - catalog_center/app/phase49_3i33_operator_workflow.py
       - catalog_center/app/phase49_3i32_source_url_guard.py
       - catalog_center/app/phase49_3i_pricing_modes.py
       - catalog_center/launch.py
@@ -15,6 +17,7 @@ on:
       - catalog_center/build_portable_exe.py
       - catalog_center/PACKAGE_MANIFEST.json
       - catalog_center/config.example.json
+      - catalog_center/requirements.txt
       - catalog_center/tests/**
       - .github/workflows/catalog-center-windows-release.yml
   workflow_dispatch:
@@ -77,6 +80,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v `
+            tests.test_phase49_3i33_operator_workflow `
             tests.test_phase49_3i32_source_url_guard `
             tests.test_phase49_3i31_smart_link_bulk_ai `
             tests.test_epic49_phase49_3i29_windows_performance_ai `
@@ -115,6 +119,13 @@ jobs:
             'EPIC49_3I31_BATCH_SELECTED_PRODUCTS_AI=ENABLED',
             'EPIC49_3I31_AI_TITLE_TEXT_ONLY=ENABLED',
             'EPIC49_3I31_AI_SELECTED_IMAGE_SEO=ENABLED',
+            'EPIC49_3I33_CONSOLIDATED_PRODUCT_AI=ENABLED',
+            'EPIC49_3I33_SCREENSHOT_VISION_AI=ENABLED',
+            'EPIC49_3I33_OPERATOR_MATERIAL_COLOR_ONLY=ENABLED',
+            'EPIC49_3I33_EXPLICIT_PRODUCTS_REFRESH=ENABLED',
+            'EPIC49_3I33_SINGLE_CARD_UPDATE=ENABLED',
+            'EPIC49_3I33_IMAGE_FILE_METADATA=ENABLED',
+            'EPIC49_3I33_RUNTIME_TELEMETRY=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -189,14 +200,14 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI and 3I.32 source URL preservation
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation and 3I.33 consolidated operator workflow
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.8.2 adds bounded Products rendering, deferred global refresh, one mother Provider/Model contract, exact-link grounded Persian/SEO generation, selected-image SEO/finalization, selected-product batch AI and a canonical source URL guard so unrelated Save/AI/close/publish actions cannot erase the Product source link.
+          8.9.0 keeps the 8.8.2 performance/source-identity foundation and consolidates Product AI into live-link, saved-data, screenshot-vision and repair modes; material/color remain operator-owned, stage saves never rebuild Products, final save updates one card, images show local dimensions/ratio/size, and performance telemetry records CPU/RAM/system-network deltas.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
