@@ -751,7 +751,7 @@ def install(workspace_class, readiness_module=None) -> None:
         if self._phase49_3f_source_busy:
             self.footer_status.set("بازخوانی/تحلیل منبع در حال اجرا است.")
             return
-        self.save(silent=True)
+        # Source/technical AI must not persist unrelated Profile/commerce UI.
         before = self.db.product(self.product_id)
         marker = str(_row_value(before, "last_refetched_at", "") or _row_value(before, "updated_at", "") or "")
         progress = AIProgress(self, "بازخوانی منبع و ساخت توضیحات فنی", self.product_id)
