@@ -233,6 +233,41 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(meta["unit_price"], 850000)
         self.assertEqual(meta["part_dimensions_label"], "30 × 30 × 10 سانتی‌متر")
 
+    def test_brand_aware_filament_offer_sync_support_weight_and_api(self):
+        rows = self._profiles()[:1]
+        rows[0].update({
+            "fixed_price": 0,
+            "material": self.material.name,
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "سفید مات",
+            "support_weight_grams": 20,
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 1,
+            "purchase_price_per_roll": 2_500_000,
+            "sale_price_per_roll": 3_600_000,
+            "usd_price_per_roll": 30,
+            "usd_fx_rate_toman": 130_000,
+        })
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+        variant = self.product.variants.get(sales_profile_key="20-100")
+        self.assertEqual(variant.support_weight_grams, Decimal("20.00"))
+        self.assertIsNotNone(variant.color)
+        self.assertEqual(variant.color.brand_name, "Bambu Lab")
+        self.assertEqual(variant.color.manufacturer_name, "Bambu Lab")
+        self.assertEqual(variant.color.sale_price_per_roll, 3_600_000)
+        self.assertEqual(variant.color.effective_sale_price_per_gram, Decimal("3900"))
+
+        response = self.client.get(
+            reverse("store:variant_commerce_options"),
+            {"ids": str(variant.pk)},
+        )
+        self.assertEqual(response.status_code, 200)
+        meta = response.json()["variants"][str(variant.pk)]
+        self.assertEqual(meta["filament_brand_name"], "Bambu Lab")
+        self.assertEqual(meta["filament_manufacturer_name"], "Bambu Lab")
+        self.assertEqual(meta["support_weight_grams"], "20.00")
+
     def test_storefront_marks_profile_as_single_price_authority(self):
         root = Path(__file__).resolve().parents[1]
         template = (root / "templates" / "store" / "product_detail.html").read_text(encoding="utf-8")
@@ -246,6 +281,8 @@ class Phase50ProfileMatrixTests(TestCase):
             'size_weight: ["size", "weight"]',
             "profileDescription",
             "partDimensionsLabel",
+            "filamentBrand",
+            "supportWeight",
             "store-profile-option__price",
             "escapeHtml",
         ):
