@@ -1,91 +1,122 @@
 # PROJECT ROADMAP
 
-Updated: 2026-08-26
-Repository: `farazha2203/3dprinthub`
-Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`
-Current Web Phase: `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`
-Parallel Windows Phase: `49.3I.32 — Canonical Product Source URL Guard / Catalog Center 8.8.2`
-Status: `WEB 50.A.2B GITHUB CI TESTED / WINDOWS 8.8.2 PACKAGED CI PASS / OWNER LOCAL QA NEXT`
+Updated: 2026-08-27  
+Repository: `farazha2203/3dprinthub`  
+Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
+Current Web Phase: `50.A.2D — Product Profile Matrix + Dependent Storefront Selector`  
+Parallel Windows Phase: `49.3I.34 — Step-2 Product Profile Matrix / Catalog Center 8.9.0`  
+Status: `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
-`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFY → DOCUMENT`
+`READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
-## Parallel Windows track — 49.3I.29 → 49.3I.31 → 49.3I.32
-Goal: keep Catalog Center responsive on large catalogs, make Product AI exact-link grounded/batch-capable and protect canonical Product identity from unrelated UI actions.
+## Phase49 Windows track — current target 49.3I.34
+Preserved foundations:
+- 48-card paged Product Explorer,
+- no global Product refresh on each Product Save/AI action,
+- exact saved mother AI Provider/Model/key with no hidden cross-provider fallback,
+- exact-link grounded Product AI,
+- source-link preserve/recover guard,
+- local Product identity/history preservation,
+- selected-Product bulk AI with isolated errors and one final refresh.
 
-Implemented candidate:
-- max 48 rendered Product cards/page without truncating SQLite results,
-- deferred global Products refresh for Workspace Save/AI,
-- exact saved mother Provider/Model/key; no hidden Product model scan/cross-provider fallback,
-- exact Product link validation + page fetch/parser + canonical source title,
-- safe extracted source facts organized as one bounded text body,
-- AI factual payload exactly `source_title` + `source_description`, excluding raw HTML/auth/cookies/secrets/business state,
-- Persian content/SEO + selected-image metadata/finalization from the main AI action,
-- selected-Product batch AI using each Product's own exact source link, per-item failure isolation and one final refresh,
-- Phase49.3I.32 final Save guard: generic/silent Save cannot erase a persisted source URL when mirrored UI fields are temporarily blank,
-- explicit non-empty link edits remain allowed,
-- already damaged links can be recovered locally from exact Product history first, matching discovery identity second; no guessed URL/network reconstruction,
-- release identity `8.8.2`, build `2026.08.26.2`.
+49.3I.34 adds:
+- Product-owned Step-2 profile matrix,
+- add/clone/delete/edit profiles,
+- independent per-profile size, weight, fixed price, print time, part dimensions, build, material, color, quality, package and stock settings,
+- customer-selection modes including size→weight and 3-level modes,
+- batch transport of the exact profile JSON to Django,
+- profile/range minimum as valid publish readiness price.
 
-Verification:
-- targeted 49.3I.31-32 run `32996526852` PASS on `2ca69c4928333fc15247b99014a8fe77d781b50b`,
-- initial Windows run `32996526842` failed only on a stale legacy test literal expecting 8.8.1; new source-link tests were already green,
-- stale version literal fixed by comparing runtime version to package-manifest version,
-- Windows packaged run `32997106056` PASS on runtime snapshot `5208aa4dd3b070e9a7c7c6d6dde9b60569879631`, including full regression, launcher composition, source-link invariant, one-file EXE build/self-verify, manifest/SHA256 verification and artifact upload,
-- Actions artifact `3DPrintHub-CatalogCenter-v8.8.2`, ID `9617048629`, exists,
-- public GitHub Release is deliberately NOT published yet; publish is manual-only after owner Local QA.
-
-Windows acceptance gate before release:
-1. Re-verify live GitHub HEAD and clean `D:\projects\3DPrintHub` checkout.
-2. Pull exact current head; no direct edits in frozen/release output.
-3. Run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` with exact HEAD; it covers 3I.31 + 3I.32 and build `2026.08.26.2`.
-4. Verify a healthy populated source link survives Save/AI/image/publish-related actions.
-5. Verify the Product previously damaged by the bug recovers its exact historical/discovered source URL when local evidence exists.
-6. Run large Products UI, OpenRouter, AvalAI, selected-image SEO and selected-Product batch/cancel/error-continuation QA.
-7. Only after all Local owner gates PASS: explicitly publish/verify immutable `catalog-center-v8.8.2` and record exact EXE SHA256/commit.
+Windows package verification:
+- runtime snapshot `b3280dd67cd7772f337f6792036ea92d3f252747`,
+- workflow `33051114515` PASS,
+- version `8.9.0`, build `2026.08.27.2`,
+- artifact ID `9637671099`,
+- EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`,
+- public Release publication remains explicit/manual after owner Local QA.
 
 ## Phase50.A — Admin and commerce operational completeness
-- 50.A.1 Admin Storefront/Hero parity — DEPLOYED.
-- 50.A.1B Product Gallery + Variant2 — DEPLOYED; `store.0034` applied.
-- 50.A.1C Admin media/mobile/SEO/Windows dimensions — DEPLOYED.
-- 50.A.1D Sales Profiles + Hero public media — DEPLOYED; `store.0035` applied.
-- 50.A.1E Unified Product Admin Workspace — PRODUCTION VERIFIED.
-- 50.A.1F Business Admin Navigation + Product Admin 500 hotfix — PRODUCTION VERIFIED.
-- 50.A.1G Velzon Operator Surface V2 — PRODUCTION FOUNDATION.
-- 50.A.1H Admin Shell Stability — PRODUCTION VERIFIED.
-- 50.A.2A Storefront Sales Profile Selector — PRODUCTION VERIFIED.
+Production verified foundation:
+- 50.A.1 Admin Storefront/Hero parity,
+- 50.A.1B Gallery + Variant2 / `0034`,
+- 50.A.1D Sales Profiles / `0035`,
+- unified Product Admin,
+- Admin 500 hotfix/business navigation,
+- Velzon V2 lists/filter drawer,
+- stable footer/290px sidebar/internal menu scroll,
+- initial canonical Storefront Profile selector.
 
-Current Production application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`; `0034` and `0035` are applied and 50.A.2B is not yet deployed.
+Current Production application commit remains:
+`c283864290f9c989a9fcdf24ee8eef519560e917`.
 
-## 50.A.2B — Immutable Checkout/Profile/Shipping Snapshot — GITHUB CI TESTED
-Migration `store.0036_phase50_checkout_snapshot` adds immutable StoreOrderItem profile/selection/final-weight/shipping-weight/print-time snapshots plus StoreOrder `insured_value` and normalized `shipping_quote_snapshot`, preserving existing `0034` size/build/package snapshots.
+Last verified Production DB has only `store.0034` + `store.0035` from the new Phase50 chain.
 
-Runtime preserves mature Phase6 checkout/coupon/inventory/address/notification/payment flow, uses effective ProductVariant shipping weight, finalizes snapshots inside an outer atomic boundary, keeps ShippingMethod/rate rules as explicit fallback and does not invent combined carton geometry or external carrier contracts.
+## 50.A.2B — Immutable Checkout/Profile/Shipping Snapshot
+`store.0036_phase50_checkout_snapshot`
+- immutable selected profile/size/build/material/color/quality,
+- final/package/effective shipping weight,
+- print time/package facts,
+- order insured value and normalized shipping quote,
+- mature Coupon/VAT/inventory/payment flow preserved.
 
-Verification: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
+## 50.A.2C — Professional Commerce Policy
+`store.0037_phase50_professional_commerce_policy`
+- Product pricing-policy authority,
+- per-Variant fixed price override,
+- customer sales notice,
+- optional strict color-stock rule,
+- shipping service/scope/fee semantics,
+- safe default Isfahan pickup/courier + disabled Post/Tipax presets,
+- Store payment-display settings,
+- saved-address shipping-policy validation fixed at the mature form boundary.
 
-### Production gate for 50.A.2B
-1. Read-only verify Host HEAD/worktree/live GitHub SHA and MySQL `0034/0035/0036` state.
-2. Verify exact migration plan and backup capability.
-3. Fresh source + `.env*` + MySQL backup; preserve rollback HEAD.
-4. Explicit branch fetch to `FETCH_HEAD` per ERR-50-007; verify ff-only target.
-5. Apply only approved `store.0036_phase50_checkout_snapshot` after backup/DB verification.
-6. Passenger restart + Production schema/runtime/HTTP/order-snapshot verification without altering historical paid orders.
+## 50.A.2D — Product Profile Matrix — GITHUB CI TESTED
+`store.0038_phase50_profile_matrix`
+- size/weight/build compound selection modes,
+- per-Variant profile description,
+- actual part dimensions,
+- immutable ordered-item part dimensions,
+- Desktop profile JSON → canonical ProductVariant upsert,
+- per-profile fixed price and Profile as single Storefront price/facts authority,
+- dependent selector hierarchy: downstream choices filter only from upstream choices,
+- size-scoped weight/profile prices,
+- professional navy/gold Profile UI aligned visually with Catalog Center,
+- manual server variants remain preserved.
 
-## Product engagement package — NEXT AFTER 50.A.2B
-Favorite/Save if absent, like/save/review/comment counters/Admin visibility, qualifying paid/purchased buyer-feedback policy, dedicated migration/tests/backup while preserving ProductLike/ProductComment/ProductReview.
+Web runtime verification:
+- snapshot `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`,
+- `Phase50 Variant2 + Profile Matrix CI` run `33051311828` PASS,
+- `PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS`,
+- no migration drift,
+- migrations through `0038` apply on CI SQLite,
+- 15 Store/Profile/Checkout tests PASS.
 
-## 50.A.3 Secure Store ZarinPal
-Server-owned amount, exact callback/Authority verification, idempotency and trusted gateway-host allowlist; never store card/PIN/CVV.
+## Production gate for 50.A.2B–2D
+1. Owner Local Windows/Django QA on exact current GitHub head.
+2. Read-only Host verify: root, branch, HEAD, clean worktree, live branch SHA, Python/Django, exact MySQL DB and actual `0034..0038` migration state.
+3. Inspect exact migration plan; do not assume `0036/0037/0038` are still pending.
+4. Verify disk + `mysqldump`.
+5. Fresh tracked-source + environment + MySQL backups with checksums and rollback HEAD.
+6. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; verify exact SHA and ff-only ancestry.
+7. Deploy approved GitHub snapshot.
+8. Re-run Django check/drift/plan; apply only verified pending `0036 → 0037 → 0038`.
+9. `collectstatic --noinput`, Passenger restart.
+10. Verify Home/Store/Admin/Product/Profile API/Checkout/static/private-media and a controlled new order.
+11. Owner browser QA of dependent size/weight prices and Profile presentation.
+12. Update Production docs.
 
-## 50.A.4 Torob
-Official Product API v3 with stable Product/Profile identity, price/availability and image-quality contract.
-
-## Phase50.B–F
-Accounting Core → Treasury → Purchasing/Payables → Sales/Receivables → Reports/Close.
+## Following business packages
+After 50.A.2D Production verification:
+- Product Engagement: Favorite/Save + counters + verified-purchased buyer feedback,
+- 50.A.3 Secure ZarinPal,
+- 50.A.4 Torob Product API v3,
+- 50.B Accounting Core,
+- 50.C Treasury,
+- 50.D Purchasing/Payables,
+- 50.E Sales/Receivables,
+- 50.F Reports/Close.
 
 ## Safety
-No Production schema work without exact MySQL verification, migration plan, fresh successful backup and rollback target. Imported Catalog working-media remains private. Purchased/private Velzon/font assets stay out of public GitHub. Production branch fetch uses explicit live branch → `FETCH_HEAD` because Host refspec remains tag-only.
-
-Operational note (2026-08-27): `/catalog_center/release/` is now Git-ignored so generated EXE/manifest/SHA output cannot block the next clean-worktree gate/launch. Regression + full Windows packaged CI `33042158052` PASS on `1a490fecb5a22b855c4f10a12bb74f04a28c57b9`; owner Local relaunch is next.
+No Production schema work without exact MySQL verification, exact migration plan, fresh successful backup and rollback target. Imported Catalog working-media stays private. Purchased Velzon/font assets stay outside public GitHub. Host deploy always uses live branch → explicit `FETCH_HEAD` because the Production refspec remains tag-only.
