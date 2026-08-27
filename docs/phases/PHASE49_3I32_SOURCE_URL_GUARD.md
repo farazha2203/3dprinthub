@@ -65,3 +65,7 @@ Packaged Windows gate:
 4. Open the Product already affected by the bug; Save or run the smart AI action and verify the exact historical source link is recovered when local history/discovery evidence exists.
 5. Run OpenRouter/AvalAI exact-link AI smoke and batch selected-Product smoke.
 6. Only after owner QA may the 8.8.2 release be explicitly published/accepted.
+
+## 2026-08-27 Local gate launch hotfix
+A successful prior `-BuildExe` generated `catalog_center/release/`, but that path was not ignored. The next gate therefore stopped at the clean-worktree preflight before reaching `-LaunchApp`; this log is not evidence of a runtime startup crash. `/catalog_center/release/` is now ignored and regression-tested. Windows packaged CI `33042158052` PASS on `1a490fecb5a22b855c4f10a12bb74f04a28c57b9`; owner Local pull/relaunch is next.
+
