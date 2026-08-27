@@ -76,6 +76,14 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         # source mode and one seven-stage missing-only orchestrator.
         from .phase49_3i37_seven_stage_ai import install_app as _install_phase49_3i37_app
         _install_phase49_3i37_app(app_class)
+        # 49.3I.38 adds permanent crawl/rejection ledger semantics and
+        # stage-scoped UI shortcuts while reusing the exact 3I.37 AI engine.
+        from .phase49_3i38_crawl_ledger_stage_ai import (
+            install_app as _install_phase49_3i38_app,
+            install_database as _install_phase49_3i38_database,
+        )
+        _install_phase49_3i38_database(Database)
+        _install_phase49_3i38_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -256,3 +264,5 @@ def install(workspace_class) -> None:
     _install_phase49_3i36_workspace(workspace_class, _readiness_module)
     from .phase49_3i37_seven_stage_ai import install_workspace as _install_phase49_3i37_workspace
     _install_phase49_3i37_workspace(workspace_class)
+    from .phase49_3i38_crawl_ledger_stage_ai import install_workspace as _install_phase49_3i38_workspace
+    _install_phase49_3i38_workspace(workspace_class)
