@@ -87,3 +87,5 @@ Accounting Core → Treasury → Purchasing/Payables → Sales/Receivables → R
 
 ## Safety
 No Production schema work without exact MySQL verification, migration plan, fresh successful backup and rollback target. Imported Catalog working-media remains private. Purchased/private Velzon/font assets stay out of public GitHub. Production branch fetch uses explicit live branch → `FETCH_HEAD` because Host refspec remains tag-only.
+
+Operational note (2026-08-27): `/catalog_center/release/` is now Git-ignored so generated EXE/manifest/SHA output cannot block the next clean-worktree gate/launch. Regression + full Windows packaged CI `33042158052` PASS on `1a490fecb5a22b855c4f10a12bb74f04a28c57b9`; owner Local relaunch is next.
