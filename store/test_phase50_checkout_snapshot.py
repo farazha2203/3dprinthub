@@ -70,6 +70,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
             final_weight_grams=Decimal("120"),
             shipping_weight_grams=Decimal("0"),
             packaging_weight_grams=Decimal("30"),
+            part_length_cm=Decimal("18"),
+            part_width_cm=Decimal("11"),
+            part_height_cm=Decimal("7"),
             package_length_cm=Decimal("20"),
             package_width_cm=Decimal("12"),
             package_height_cm=Decimal("8"),
@@ -164,6 +167,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(item.shipping_weight_grams, Decimal("150.00"))
         self.assertEqual(item.unit_weight_grams, Decimal("150.00"))
         self.assertEqual(item.print_time_minutes, 90)
+        self.assertEqual(item.part_length_cm, Decimal("18.00"))
+        self.assertEqual(item.part_width_cm, Decimal("11.00"))
+        self.assertEqual(item.part_height_cm, Decimal("7.00"))
         self.assertEqual(item.package_length_cm, Decimal("20.00"))
         self.assertEqual(item.package_width_cm, Decimal("12.00"))
         self.assertEqual(item.package_height_cm, Decimal("8.00"))
@@ -181,6 +187,10 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(len(quote["packages"]), 1)
         self.assertEqual(quote["packages"][0]["quantity"], 2)
         self.assertEqual(quote["packages"][0]["unit_shipping_weight_grams"], "150.00")
+        self.assertEqual(
+            quote["packages"][0]["part_dimensions_cm"],
+            {"length": "18.00", "width": "11.00", "height": "7.00"},
+        )
         self.assertFalse(quote["combined_parcel_dimensions_inferred"])
         self.assertTrue(quote["requires_final_packing"])
         self.assertEqual(order.payments.get().amount, order.total_amount)
@@ -196,6 +206,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.variant.build_profile = "solid"
         self.variant.final_weight_grams = Decimal("999")
         self.variant.packaging_weight_grams = Decimal("99")
+        self.variant.part_length_cm = Decimal("88")
+        self.variant.part_width_cm = Decimal("88")
+        self.variant.part_height_cm = Decimal("88")
         self.variant.package_length_cm = Decimal("99")
         self.variant.save()
 
@@ -208,5 +221,8 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(item.build_profile, "reinforced")
         self.assertEqual(item.final_weight_grams, Decimal("120.00"))
         self.assertEqual(item.shipping_weight_grams, Decimal("150.00"))
+        self.assertEqual(item.part_length_cm, Decimal("18.00"))
+        self.assertEqual(item.part_width_cm, Decimal("11.00"))
+        self.assertEqual(item.part_height_cm, Decimal("7.00"))
         self.assertEqual(item.package_length_cm, Decimal("20.00"))
         self.assertEqual(order.shipping_quote_snapshot, original_quote)
