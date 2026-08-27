@@ -25,6 +25,7 @@ PROFILE_SELECTION_CHOICES = [
 ]
 
 PROFILE_BUILD_VALUES = {"standard", "hollow", "reinforced", "solid", "custom"}
+PROFILE_STOCK_VALUES = {"made_to_order", "in_stock", "preorder", "out_of_stock"}
 
 
 def _has_field(model, name: str) -> bool:
@@ -260,6 +261,12 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         if is_default:
             default_seen = True
 
+        stock_status = str(item.get("stock_status") or "made_to_order")
+        if stock_status not in PROFILE_STOCK_VALUES:
+            raise ValidationError(
+                f"وضعیت موجودی پروفایل «{stock_status}» معتبر نیست."
+            )
+
         defaults = {
             "product": product,
             "material": material,
@@ -285,7 +292,7 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "print_time_minutes": max(1, _integer(item, "print_time_minutes", 60)),
             "fixed_price_override": fixed_price,
             "cached_unit_price": fixed_price,
-            "stock_status": str(item.get("stock_status") or "made_to_order")[:20],
+            "stock_status": stock_status,
             "stock_quantity": _integer(item, "stock_quantity", 0),
             "track_inventory": bool(item.get("track_inventory", False)),
             "is_active": bool(item.get("is_active", True)),
