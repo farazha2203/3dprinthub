@@ -1,10 +1,11 @@
-name: Phase49.3I.31-33 Smart Link + Operator Workflow CI
+name: Phase49.3I.31-34 Smart Link + Profile Matrix CI
 
 on:
   push:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - "catalog_center/app/phase49_3i34_profile_matrix.py"
       - "catalog_center/app/phase49_3i33_ai_core.py"
       - "catalog_center/app/phase49_3i33_operator_workflow.py"
       - "catalog_center/app/phase49_3i32_source_url_guard.py"
@@ -16,6 +17,7 @@ on:
       - "catalog_center/app/phase49_3i25_product_first_workflow.py"
       - "catalog_center/app/ai_providers.py"
       - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i34_profile_matrix.py"
       - "catalog_center/tests/test_phase49_3i33_operator_workflow.py"
       - "catalog_center/tests/test_phase49_3i32_source_url_guard.py"
       - "catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py"
@@ -27,7 +29,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-33:
+  phase49-3i31-34:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -58,12 +60,14 @@ jobs:
       - name: Compile smart AI and source-identity surfaces
         run: |
           python -m compileall -q \
+            catalog_center/app/phase49_3i34_profile_matrix.py \
             catalog_center/app/phase49_3i33_ai_core.py \
             catalog_center/app/phase49_3i33_operator_workflow.py \
             catalog_center/app/phase49_3i32_source_url_guard.py \
             catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
             catalog_center/tests/test_phase49_3i32_source_url_guard.py \
             catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py
@@ -72,6 +76,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v \
+            tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
             tests.test_phase49_3i32_source_url_guard \
             tests.test_phase49_3i31_smart_link_bulk_ai \
@@ -87,6 +92,7 @@ jobs:
           phase31 = Path("catalog_center/app/phase49_3i31_smart_link_bulk_ai.py").read_text(encoding="utf-8")
           phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
           phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
+          phase34 = Path("catalog_center/app/phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
           core33 = Path("catalog_center/app/phase49_3i33_ai_core.py").read_text(encoding="utf-8")
           pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           assert 'PHASE = "49.3I.31"' in phase31
@@ -110,6 +116,9 @@ jobs:
           assert 'AI_MODES = {' in core33
           assert 'material_recommendations' in core33
           assert 'makerworld_evidence_from_html' in core33
+          assert '_install_phase49_3i34_workspace(workspace_class)' in pricing
+          assert 'sales_profiles_json' in phase34
+          assert 'کپی پروفایل انتخابی' in phase34
           print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
           print("PHASE49_3I31_BATCH_AI=SELECTED_PRODUCTS_ONLY")
           print("PHASE49_3I31_AI_PAYLOAD=TITLE_PLUS_TEXT_ONLY")
@@ -118,6 +127,8 @@ jobs:
           print("PHASE49_3I33_AI=LINK_DATA_SCREENSHOT_REPAIR")
           print("PHASE49_3I33_PRODUCTS_REFRESH=EXPLICIT_ONLY")
           print("PHASE49_3I33_MATERIAL_COLOR=OPERATOR_ONLY")
+          print("PHASE49_3I34_PROFILE_MATRIX=SIZE_WEIGHT_DEPENDENT")
+          print("PHASE49_3I34_PROFILE_CLONE=ENABLED")
           PY
 
       - name: Django safety
