@@ -205,6 +205,8 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
         product = asset.product
         _sync_product_fields(product, asset)
         _ensure_default_variant(product, asset)
+        from .phase50_profile_matrix import sync_desktop_profile_matrix
+        sync_desktop_profile_matrix(product, asset)
         asset.status = "converted"
         asset.editorial_status = "product"
         asset.save(update_fields=["status", "editorial_status", "updated_at"])
@@ -247,6 +249,8 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
     _copy_image(asset.preview_image, product.main_image, Path(asset.preview_image.name).name)
     product.save()
     _ensure_default_variant(product, asset)
+    from .phase50_profile_matrix import sync_desktop_profile_matrix
+    sync_desktop_profile_matrix(product, asset)
 
     for index, row in enumerate(_selected_asset_images(asset)):
         target = product.images.create(
