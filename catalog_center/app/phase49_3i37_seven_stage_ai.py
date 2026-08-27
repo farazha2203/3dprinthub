@@ -552,7 +552,8 @@ def install_app(app_class) -> None:
         self._phase49_3i37_bulk_source_var = tk.StringVar(
             value=f"منبع مادر: {AI_SOURCE_MODES[source_mode(self)]}"
         )
-        for candidate in getattr(self, "products_tab", ttk.Frame(self)).winfo_children():
+        products_tab = getattr(self, "products_tab", None)
+        for candidate in products_tab.winfo_children() if products_tab is not None else []:
             try:
                 if not isinstance(candidate, ttk.LabelFrame):
                     continue
