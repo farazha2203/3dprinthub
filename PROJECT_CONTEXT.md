@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
-Status: `GITHUB CI + WINDOWS ONE-FILE PACKAGE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `GITHUB CI + WINDOWS ONE-FILE PACKAGE PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -90,6 +90,21 @@ Verification:
 - no migration drift,
 - clean CI SQLite migration through `0039`,
 - 16 Variant/Profile/Checkout tests PASS.
+
+## Owner Local automated acceptance
+- owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
+- Local fast-forwarded to `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`,
+- effective Local Django DB verified as SQLite `D:\\projects\\3DPrintHub\\db.sqlite3`,
+- fresh pre-0039 DB backup `D:\\projects\\3dprinthub-backups\\phase49-3i35-resume-20260827-142404\\django-local-before-0039.sqlite3` with matching SHA256,
+- `store.0038` verified applied and `store.0039` verified pending before write,
+- exact `0039_phase50_filament_offer_pricing` plan inspected, then `0039` applied successfully,
+- 16 Store/Profile/Checkout regressions PASS,
+- post-migration `makemigrations --check --dry-run` = no changes detected,
+- Catalog Center 31–35 Local gate PASS with 107 tests, source URL invariant PASS, launcher verify PASS,
+- Catalog Center `8.9.1` / build `2026.08.27.3` launched successfully,
+- Production touched = NO.
+
+Manual operator/visual QA is the only remaining Local acceptance gate before Host read-only audit.
 
 ## Resolved current incidents
 - `ERR-50-016`: support-weight runtime metadata mismatch tried to create fake 0040 → align runtime with migration 0039; no fake migration.
