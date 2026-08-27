@@ -506,7 +506,8 @@ def install(workspace_class, readiness_module) -> None:
         finalize_error = ""
         row_after = self.db.product(self.product_id)
         selected = image_pipeline.cap_unique_urls(_json_list(_row_value(row_after, "selected_images_json", "[]")))
-        if selected:
+        from .phase49_3i36_stage_finalization import is_stage_locked
+        if selected and not is_stage_locked(row_after, "images"):
             try:
                 image_pipeline.finalize_selected_images(self.db, self.product_id)
             except Exception as exc:
