@@ -413,7 +413,7 @@ class ProductVariant(models.Model):
             else pricing.default_labor_percent
         )
 
-        color_sale = getattr(self.color, "sale_price_per_gram_override", None) if self.color_id else None
+        color_sale = getattr(self.color, "effective_sale_price_per_gram", None) if self.color_id else None
         material_sale_per_gram = Decimal(
             self.material_price_per_gram_override
             or color_sale
