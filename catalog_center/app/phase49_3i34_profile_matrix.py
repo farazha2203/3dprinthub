@@ -392,10 +392,6 @@ def install_workspace(workspace_class) -> None:
             if not quiet:
                 messagebox.showwarning("پروفایل محصول", "وزن نهایی پروفایل باید بیشتر از صفر باشد.", parent=self)
             return False
-        if updated["fixed_price"] <= 0:
-            if not quiet:
-                messagebox.showwarning("پروفایل محصول", "قیمت قطعی پروفایل باید بیشتر از صفر باشد.", parent=self)
-            return False
         if updated["is_default"]:
             for item in self._phase49_3i34_profiles:
                 item["is_default"] = item["key"] == key
@@ -492,10 +488,6 @@ def install_workspace(workspace_class) -> None:
                     messagebox.showwarning("پروفایل محصول", f"کلید پروفایل #{index} خالی یا تکراری است.", parent=self)
                 return False
             seen_keys.add(key)
-            if _int(item.get("fixed_price"), 0) <= 0:
-                if not silent:
-                    messagebox.showwarning("پروفایل محصول", f"قیمت قطعی «{item.get('name') or index}» باید بیشتر از صفر باشد.", parent=self)
-                return False
             if "weight" in mode and _num(item.get("weight_grams"), 0) <= 0:
                 if not silent:
                     messagebox.showwarning("پروفایل محصول", f"وزن «{item.get('name') or index}» برای روش انتخاب فعلی لازم است.", parent=self)
