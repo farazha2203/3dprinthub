@@ -52,7 +52,7 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
         install_database(LockedDatabase)
         db = LockedDatabase(path)
         ensure_ledger_schema(db)
-        product_id = db.upsert_product({
+        db.upsert_product({
             "source_code": "makerworld",
             "external_id": "twistmas-test",
             "source_url": "https://makerworld.com/en/models/twistmas-test",
@@ -61,7 +61,8 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
             "short_description_fa": "مدل سه‌بعدی درخت کریسمس اسپیرال.",
             "description_fa": "این محصول یک درخت کریسمس اسپیرال برای چاپ سه‌بعدی است.",
         })
-        return db, int(product_id)
+        product_id = int(db.products()[0]["id"])
+        return db, product_id
 
     def test_seven_canonical_operator_stages_remain_present(self):
         self.assertEqual(
