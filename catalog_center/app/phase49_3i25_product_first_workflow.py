@@ -88,7 +88,7 @@ def makerworld_profile_weight_from_html(html: str, source_url: str):
 
 
 def _first_incomplete(state: dict) -> str:
-    order = ("content", "quick", "images", "commerce", "specs", "publish")
+    order = ("content", "quick", "images", "commerce", "specs", "slider", "publish")
     stages = state.get("stages") or {}
     return next((key for key in order if not (stages.get(key) or {}).get("ready", False)), "publish")
 
