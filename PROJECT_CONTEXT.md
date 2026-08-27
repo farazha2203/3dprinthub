@@ -43,14 +43,18 @@ Last verified Phase50 migration state:
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
 ## Approved Windows runtime candidate
-Runtime snapshot:
+Application runtime snapshot:
 `2622818d898e19b745c61ff653b80c03d22288f1`.
+
+Latest test-tooling head before documentation finalization:
+`b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
+Only the local 31–35 gate/workflow changed after the packaged application runtime; no packaged application module changed.
 
 Catalog Center:
 - version `8.9.1`,
 - build `2026.08.27.3`,
-- Smart/Profile run `33060047750` PASS,
-- Single-AI run `33060047790` PASS,
+- Smart/Profile 31–35 run `33060613937` PASS,
+- Single-AI run `33060613914` PASS,
 - Windows portable run `33060047878` PASS,
 - artifact `3DPrintHub-CatalogCenter-v8.9.1`,
 - artifact ID `9641338334`,
