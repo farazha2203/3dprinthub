@@ -1315,6 +1315,19 @@ class App(tk.Tk):
                 external_id=__import__("hashlib").sha1(
                     seed.encode("utf-8")
                 ).hexdigest()[:16]
+                from .phase49_3i38_crawl_ledger_stage_ai import (
+                    remember_ledger,
+                    terminal_identity_state,
+                )
+                terminal_state=terminal_identity_state(self.db,code,external_id,seed)
+                if terminal_state:
+                    duplicates+=1
+                    message=f"این لینک قبلاً {terminal_state} شده و HTML دوباره وارد نشد."
+                    self.log(
+                        f"SAVED_HTML_SKIP_TERMINAL status={terminal_state} "
+                        f"source={code} external_id={external_id} url={seed}"
+                    )
+                    return
                 local_dir=DATA/"collected"/code/external_id
                 result=import_saved_html(
                     Path(html_path),
@@ -1353,6 +1366,15 @@ class App(tk.Tk):
                     **parsed,
                 }
                 self.db.upsert_product(data)
+                remember_ledger(
+                    self.db,
+                    code,
+                    external_id,
+                    seed,
+                    status="collected",
+                    discovered_from="saved_html",
+                    force=False,
+                )
                 collected+=1
                 message="HTML ذخیره‌شده وارد شد."
                 return
