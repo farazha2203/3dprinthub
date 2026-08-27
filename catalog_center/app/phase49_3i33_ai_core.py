@@ -51,13 +51,13 @@ COMMON_TRANSLATIONS = {
     "night light": ("چراغ",),
     "lamp": ("چراغ",),
     "stand": ("پایه",),
-    "holder": ("نگهدار",),
-    "organizer": ("نظم",),
-    "organiser": ("نظم",),
+    "holder": ("نگهدار", "پایه"),
+    "organizer": ("نظم", "سامان", "مرتب"),
+    "organiser": ("نظم", "سامان", "مرتب"),
     "bracket": ("براکت", "پایه"),
     "mount": ("پایه", "نگهدار"),
     "box": ("جعبه",),
-    "case": ("قاب",),
+    "case": ("قاب", "محفظه"),
     "vase": ("گلدان",),
     "pot": ("گلدان",),
     "gear": ("چرخ", "دنده"),
@@ -67,7 +67,7 @@ COMMON_TRANSLATIONS = {
     "hook": ("قلاب",),
     "keychain": ("جاکلیدی",),
     "toy": ("اسباب", "بازی"),
-    "flexi": ("انعطاف",),
+    "flexi": ("انعطاف", "مفصل"),
 }
 
 SCREENSHOT_FACT_SCHEMA = {
