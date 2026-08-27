@@ -8,6 +8,9 @@ on:
       - catalog_center/app/version.py
       - catalog_center/app/phase49_3i29_windows_performance_ai.py
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
+      - catalog_center/app/phase49_3i35_operator_ledger.py
+      - catalog_center/app/phase49_3i35_resilient_ai.py
+      - catalog_center/app/phase49_3i35_readiness_review.py
       - catalog_center/app/phase49_3i34_profile_matrix.py
       - catalog_center/app/phase49_3i33_ai_core.py
       - catalog_center/app/phase49_3i33_operator_workflow.py
@@ -83,6 +86,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v `
+            tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
             tests.test_phase49_3i32_source_url_guard `
@@ -135,6 +139,11 @@ jobs:
             'EPIC49_3I34_SIZE_WEIGHT_DEPENDENCY=ENABLED',
             'EPIC49_3I34_PROFILE_PRICE_AUTHORITY=ENABLED',
             'EPIC49_3I34_DESKTOP_STORE_SYNC=ENABLED',
+            'EPIC49_3I35_OPERATOR_LEDGER=ENABLED',
+            'EPIC49_3I35_BRAND_AWARE_FILAMENT_OFFERS=ENABLED',
+            'EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED',
+            'EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED',
+            'EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -209,14 +218,14 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow and 3I.34 Product Profile Matrix
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix and 3I.35 operator-ledger/resilient-AI contracts
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.0 keeps the 8.8.2 performance/source-identity foundation, consolidates Product AI, and adds the Step-2 Product Profile Matrix: clone/edit profiles with independent size, weight, price, print time and dimensions; the same profile JSON is transported through the existing batch contract so the Store can expose dependent size/weight choices.
+          8.9.1 keeps the 8.9.0 Profile Matrix transport, replaces the duplicated profile editor with operator-ledger snapshots, adds weight/time/support production rows, brand-aware filament offers, and observable AI preflight/retry/failover while preserving explicit refresh and source identity guards.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
