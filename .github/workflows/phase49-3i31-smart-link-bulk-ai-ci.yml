@@ -1,10 +1,13 @@
-name: Phase49.3I.31-34 Smart Link + Profile Matrix CI
+name: Phase49.3I.31-35 Smart Link + Operator Ledger CI
 
 on:
   push:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - "catalog_center/app/phase49_3i35_operator_ledger.py"
+      - "catalog_center/app/phase49_3i35_resilient_ai.py"
+      - "catalog_center/app/phase49_3i35_readiness_review.py"
       - "catalog_center/app/phase49_3i34_profile_matrix.py"
       - "catalog_center/app/phase49_3i33_ai_core.py"
       - "catalog_center/app/phase49_3i33_operator_workflow.py"
@@ -17,6 +20,7 @@ on:
       - "catalog_center/app/phase49_3i25_product_first_workflow.py"
       - "catalog_center/app/ai_providers.py"
       - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i35_operator_workflow.py"
       - "catalog_center/tests/test_phase49_3i34_profile_matrix.py"
       - "catalog_center/tests/test_phase49_3i33_operator_workflow.py"
       - "catalog_center/tests/test_phase49_3i32_source_url_guard.py"
@@ -29,7 +33,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-34:
+  phase49-3i31-35:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -60,6 +64,9 @@ jobs:
       - name: Compile smart AI and source-identity surfaces
         run: |
           python -m compileall -q \
+            catalog_center/app/phase49_3i35_operator_ledger.py \
+            catalog_center/app/phase49_3i35_resilient_ai.py \
+            catalog_center/app/phase49_3i35_readiness_review.py \
             catalog_center/app/phase49_3i34_profile_matrix.py \
             catalog_center/app/phase49_3i33_ai_core.py \
             catalog_center/app/phase49_3i33_operator_workflow.py \
@@ -67,6 +74,7 @@ jobs:
             catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i35_operator_workflow.py \
             catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
             catalog_center/tests/test_phase49_3i32_source_url_guard.py \
@@ -76,6 +84,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v \
+            tests.test_phase49_3i35_operator_workflow \
             tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
             tests.test_phase49_3i32_source_url_guard \
@@ -93,6 +102,9 @@ jobs:
           phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
           phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
           phase34 = Path("catalog_center/app/phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
+          phase35_ledger = Path("catalog_center/app/phase49_3i35_operator_ledger.py").read_text(encoding="utf-8")
+          phase35_ai = Path("catalog_center/app/phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
+          phase35_review = Path("catalog_center/app/phase49_3i35_readiness_review.py").read_text(encoding="utf-8")
           core33 = Path("catalog_center/app/phase49_3i33_ai_core.py").read_text(encoding="utf-8")
           pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           assert 'PHASE = "49.3I.31"' in phase31
@@ -117,6 +129,13 @@ jobs:
           assert 'material_recommendations' in core33
           assert 'makerworld_evidence_from_html' in core33
           assert '_install_phase49_3i34_workspace(workspace_class)' in pricing
+          assert '_install_phase49_3i35_operator_ledger(workspace_class)' in pricing
+          assert '_install_phase49_3i35_resilient_workspace(workspace_class)' in pricing
+          assert '_install_phase49_3i35_readiness_review(workspace_class)' in pricing
+          assert '_install_phase49_3i35_resilient_app(app_class)' in pricing
+          assert 'sales_profile_ledger_json' in phase35_ledger
+          assert 'configured_ai_candidates' in phase35_ai
+          assert 'seo_manual_approved' in phase35_review
           assert 'sales_profiles_json' in phase34
           assert 'کپی پروفایل انتخابی' in phase34
           print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
@@ -129,6 +148,9 @@ jobs:
           print("PHASE49_3I33_MATERIAL_COLOR=OPERATOR_ONLY")
           print("PHASE49_3I34_PROFILE_MATRIX=SIZE_WEIGHT_DEPENDENT")
           print("PHASE49_3I34_PROFILE_CLONE=ENABLED")
+          print("PHASE49_3I35_OPERATOR_LEDGER=REGISTERED_SNAPSHOTS")
+          print("PHASE49_3I35_AI=VISIBLE_PREFLIGHT_RETRY_FAILOVER")
+          print("PHASE49_3I35_READINESS=MANUAL_SEO_SOURCE_REVIEW")
           PY
 
       - name: Django safety
