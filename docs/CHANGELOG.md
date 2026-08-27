@@ -1,5 +1,19 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Catalog Center 8.9.2 Visible Startup Hotfix
+- owner foreground 8.9.1 launch exposed a real Tk startup failure: 3I.35 AI-resilience settings used `grid` directly inside UX87 `settings_tab`, whose existing children use `pack`,
+- root cause matches permanent `ERR-49-001`; incident recorded as `ERR-49-059`,
+- fixed only the outer AI-resilience panel to `pack(fill="x", padx=8, pady=8)`; internal panel controls remain grid-managed safely,
+- added regression `test_ai_resilience_settings_respects_pack_managed_settings_tab`,
+- bumped release atomically to Catalog Center `8.9.2` / build `2026.08.27.4`,
+- targeted 31–35 run `33066472847` PASS,
+- Windows portable run `33066468014` PASS on `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
+- artifact `3DPrintHub-CatalogCenter-v8.9.2`, ID `9643957471`,
+- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`,
+- artifact ZIP digest `sha256:78a371693563b3293d7b49e39e5acd8dbf3032be9f6fee1b5252fffc5a29d0fb`,
+- Production untouched; owner foreground visual QA remains required.
+
+
 ## 2026-08-27 — Owner Local 3I.35 / 50.A.2E Automated Gate PASS
 - owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
 - Local fast-forwarded to `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`,
