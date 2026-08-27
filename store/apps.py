@@ -40,6 +40,11 @@ class StoreConfig(AppConfig):
         from .phase50_profile_matrix import install_model_fields as install_phase50_profile_matrix
         install_phase50_profile_matrix()
 
+        # Phase50.A.2E migration 0039 owns brand/manufacturer/roll price facts,
+        # support-weight Variant state and immutable order snapshots.
+        from .phase50_filament_offer import install_model_fields as install_phase50_filament_offer
+        install_phase50_filament_offer()
+
         # Phase50.A.2B migration 0036 owns immutable selected-profile/shipping
         # snapshot fields. Contribute them before Admin/views are composed.
         from . import phase50_checkout_snapshot
