@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.9.4"
+EXPECTED_VERSION = "8.9.5"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -243,6 +243,11 @@ def main() -> int:
     print("EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED", flush=True)
     print("EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED", flush=True)
     print("EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED", flush=True)
+    print("EPIC49_3I37_SEVEN_STAGE_AI_ORCHESTRATOR=ENABLED", flush=True)
+    print("EPIC49_3I37_PERSISTED_SOURCE_MODE=ENABLED", flush=True)
+    print("EPIC49_3I37_SCREENSHOT_SELECTED_FOR_SITE=ENABLED", flush=True)
+    print("EPIC49_3I37_STAGE_BY_STAGE_APPLY=ENABLED", flush=True)
+    print("EPIC49_3I37_SEO_LANGUAGE_GUARD=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
