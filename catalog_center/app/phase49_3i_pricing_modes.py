@@ -64,6 +64,14 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         # preflight/retry/failover without introducing a second AI pipeline.
         from .phase49_3i35_resilient_ai import install_app as _install_phase49_3i35_resilient_app
         _install_phase49_3i35_resilient_app(app_class)
+        # 49.3I.36 is the final persistence authority: durable stage locks,
+        # no-network AI settings hydration and lock-aware database writes.
+        from .phase49_3i36_stage_finalization import (
+            install_app as _install_phase49_3i36_app,
+            install_database as _install_phase49_3i36_database,
+        )
+        _install_phase49_3i36_database(Database)
+        _install_phase49_3i36_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -238,3 +246,7 @@ def install(workspace_class) -> None:
     _install_phase49_3i35_resilient_workspace(workspace_class)
     from .phase49_3i35_readiness_review import install_workspace as _install_phase49_3i35_readiness_review
     _install_phase49_3i35_readiness_review(workspace_class)
+    # Final seven-stage operator lock layer. It composes after every older
+    # save/AI/readiness wrapper so locked fields cannot be rewritten downstream.
+    from .phase49_3i36_stage_finalization import install_workspace as _install_phase49_3i36_workspace
+    _install_phase49_3i36_workspace(workspace_class, _readiness_module)
