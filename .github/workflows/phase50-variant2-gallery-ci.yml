@@ -13,6 +13,9 @@ on:
       - store/phase50_sales_profile_admin.py
       - store/phase50_commerce_policy.py
       - store/phase50_profile_matrix.py
+      - store/phase50_filament_offer.py
+      - store/phase49_3f_pricing.py
+      - store/models.py
       - store/phase50_sales_profiles.py
       - store/phase50_checkout_snapshot.py
       - store/urls.py
@@ -21,6 +24,7 @@ on:
       - store/migrations/0036_phase50_checkout_snapshot.py
       - store/migrations/0037_phase50_professional_commerce_policy.py
       - store/migrations/0038_phase50_profile_matrix.py
+      - store/migrations/0039_phase50_filament_offer_pricing.py
       - store/test_phase50_variant2_gallery.py
       - store/test_phase50_checkout_snapshot.py
       - store/test_phase50_profile_matrix.py
@@ -70,6 +74,8 @@ jobs:
             store/phase50_variant_views.py \
             store/phase50_sales_profiles.py \
             store/phase50_profile_matrix.py \
+            store/phase50_filament_offer.py \
+            store/phase49_3f_pricing.py \
             store/phase50_commerce_policy.py \
             store/phase50_sales_profile_admin.py \
             store/phase34b_publishing.py \
@@ -80,6 +86,7 @@ jobs:
             store/migrations/0036_phase50_checkout_snapshot.py \
             store/migrations/0037_phase50_professional_commerce_policy.py \
             store/migrations/0038_phase50_profile_matrix.py \
+            store/migrations/0039_phase50_filament_offer_pricing.py \
             store/test_phase50_variant2_gallery.py \
             store/test_phase50_checkout_snapshot.py \
             store/test_phase50_profile_matrix.py
@@ -138,4 +145,6 @@ jobs:
           echo "PHASE50_VARIANT2_GALLERY_CI=PASS"
           echo "PHASE50_CHECKOUT_SNAPSHOT_CI=PASS"
           echo "PHASE50_PROFILE_MATRIX_CI=PASS"
+          echo "PHASE50_FILAMENT_OFFER_0039_CI=PASS"
+          echo "PHASE50_CHECKOUT_FILAMENT_SNAPSHOT_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
