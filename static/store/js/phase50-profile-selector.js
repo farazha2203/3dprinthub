@@ -27,6 +27,14 @@
     const formatNumber = (value) => Number(value || 0).toLocaleString("fa-IR");
     const formatToman = (value) => `${formatNumber(value)} تومان`;
     const clean = (value) => String(value == null ? "" : value).trim();
+    const escapeHtml = (value) => clean(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+
 
     function readNativeOption(option, metadata) {
         const meta = metadata || {};
@@ -141,7 +149,7 @@
         shell.innerHTML = `
             <div class="store-profile-selector__head">
                 <div>
-                    <h3>${selectorLabel}</h3>
+                    <h3>${escapeHtml(selectorLabel)}</h3>
                     <p>سایز، مدل ساخت، وزن، متریال، رنگ و کیفیت موجود را انتخاب کنید؛ قیمت و مشخصات همان پروفایل بلافاصله به‌روزرسانی می‌شود.</p>
                 </div>
                 <span class="store-profile-selector__badge">پروفایل فروش</span>
@@ -216,9 +224,9 @@
             ];
             summary.innerHTML = `
                 <div class="store-profile-summary__price"><span>قیمت پروفایل انتخابی</span><strong>${formatToman(variant.price)}</strong></div>
-                ${variant.profileDescription ? `<p class="store-profile-summary__description">${variant.profileDescription}</p>` : ""}
+                ${variant.profileDescription ? `<p class="store-profile-summary__description">${escapeHtml(variant.profileDescription)}</p>` : ""}
                 <div class="store-profile-summary__facts">
-                    ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${key}</span><strong>${value}</strong></div>`).join("")}
+                    ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
                 </div>
             `;
         }
