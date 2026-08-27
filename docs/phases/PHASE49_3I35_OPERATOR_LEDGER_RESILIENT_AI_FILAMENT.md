@@ -3,9 +3,9 @@
 Updated: 2026-08-27  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Catalog Center: `8.9.2` / build `2026.08.27.4`  
-Windows runtime snapshot: `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`  
-Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Catalog Center: `8.9.3` / build `2026.08.27.5`  
+Windows runtime snapshot: `9637829a255a1d09800bc062c2f049cf5d92b585`  
+Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Goal
 
@@ -163,12 +163,12 @@ GitHub Actions run `33059883188` PASS on runtime ancestor `d519a360e65b79db4b62a
 - support/brand/manufacturer immutable checkout snapshot regression PASS.
 
 ### Catalog targeted gates
-Application runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1` is the packaged code. Later test-tooling head `b9c4d8d5f94c61c536736a1a828eff809f8e109d` changes only the local gate/workflow and docs; application runtime is unchanged.
-- Phase49.3I.31–35 Smart Link + Operator Ledger run `33060613937` PASS,
-- Single Active AI run `33060613914` PASS.
+Current packaged application runtime snapshot is `9637829a255a1d09800bc062c2f049cf5d92b585`. Later test-tooling head `b9c4d8d5f94c61c536736a1a828eff809f8e109d` changes only the local gate/workflow and docs; application runtime is unchanged.
+- Phase49.3I.31–35 Smart Link + Operator Ledger run `33067612565` PASS,
+- Single Active AI run `33067618639` PASS.
 
 ### Windows one-file release gate
-Run `33060047878` PASS:
+Run `33067618679` PASS:
 - current Phase49 regression PASS,
 - launcher composition PASS,
 - source URL preservation PASS,
@@ -179,10 +179,10 @@ Run `33060047878` PASS:
 - artifact upload PASS.
 
 Artifact:
-- name `3DPrintHub-CatalogCenter-v8.9.1`,
-- artifact ID `9641338334`,
-- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
-- EXE size `65,456,439` bytes.
+- name `3DPrintHub-CatalogCenter-v8.9.3`,
+- artifact ID `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
+- artifact ZIP digest `sha256:216b62072fd95a0a4d292b28ce99605fd60f3e4d9622d06987d6fe5b434e6141`.
 
 Public GitHub Release publication remains skipped/manual until owner Local QA.
 
@@ -224,6 +224,21 @@ Fix:
 - EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
 
 Manual foreground visual acceptance remains required.
+
+## 8.9.3 Profile Workspace binding hotfix
+
+After 8.9.2 started successfully, owner diagnostics showed the Product Workspace callback failure `ERR-49-060` for Products 305 and 303. 3I.34 installed its helper as `_phase49_3i34_profile_by_key` but selected-row loading called the nonexistent short alias `_profile_by_key`.
+
+Fix:
+- selected Profile loader now uses the exact installed namespaced helper,
+- executable non-Tk regression exercises the installed wrapper callback,
+- targeted run `33067612565` PASS,
+- Single Active AI run `33067618639` PASS,
+- Windows one-file run `33067618679` PASS on `9637829a255a1d09800bc062c2f049cf5d92b585`,
+- artifact `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`.
+
+Manual foreground Product Workspace acceptance remains required.
 
 ## Production state and migration gate
 
