@@ -144,6 +144,11 @@ foreach ($Marker in @(
     "EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED",
     "EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED",
     "EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED",
+    "EPIC49_3I36_SEVEN_STAGE_FINALIZATION=ENABLED",
+    "EPIC49_3I36_AI_UNLOCKED_STAGE_ONLY=ENABLED",
+    "EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED",
+    "EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED",
+    "EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED",
     "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
     if ($LaunchOutput -notmatch [regex]::Escape($Marker)) { Fail "MISSING LAUNCHER MARKER: $Marker" }
@@ -159,7 +164,7 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "PHASE49_3I31_35_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I31_36_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "APP_VERSION=$ExpectedVersion"
 Write-Host "BUILD_ID=$ExpectedBuild"
@@ -173,7 +178,7 @@ if ($BuildExe) {
     Write-Host "===== PORTABLE EXE BUILD / SELF VERIFY ====="
     & $Py build_portable_exe.py --python $Py
     if ($LASTEXITCODE -ne 0) { Fail "PORTABLE EXE BUILD FAILED" }
-    Write-Host "PHASE49_3I31_35_PORTABLE_BUILD=PASS"
+    Write-Host "PHASE49_3I31_36_PORTABLE_BUILD=PASS"
 }
 
 if ($LaunchApp) {
