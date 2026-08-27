@@ -1030,7 +1030,7 @@ class ProductStudio(tk.Toplevel):
     def _checklist(self):
         row = self.db.product(self.product_id)
         selected = self._json_list(row["selected_images_json"])
-        price = int(row["final_price"] or row["suggested_price"] or 0)
+        price = int(row["final_price"] or row["suggested_price"] or (row["price_min"] if "price_min" in row.keys() else 0) or 0)
         checks = [
             ("تصویر انتخاب‌شده", bool(selected)),
             ("تصویر اصلی", bool(row["primary_image_url"])),
@@ -1066,7 +1066,7 @@ class ProductStudio(tk.Toplevel):
             missing.append("توضیحات فارسی")
         if not (row["local_category_slug"] or "").strip() or row["local_category_slug"] == "external-other":
             missing.append("گروه سایت")
-        if row["product_type"] == "ready_product" and int(row["final_price"] or row["suggested_price"] or 0) <= 0:
+        if row["product_type"] == "ready_product" and int(row["final_price"] or row["suggested_price"] or (row["price_min"] if "price_min" in row.keys() else 0) or 0) <= 0:
             missing.append("قیمت")
         if not commercial_license_allows_publish(row["commercial_status"]):
             missing.append("مجوز تجاری مجاز (allowed / owned / public_domain)")
