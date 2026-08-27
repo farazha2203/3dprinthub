@@ -264,6 +264,14 @@ def configure_readiness(readiness_module) -> None:
         return state
 
     readiness_module.evaluate_readiness = evaluate_readiness
+    # 3I.25 imported evaluate_readiness by value before this final wrapper was
+    # composed. Rebind that module-level reference so publication/next-stage
+    # checks see the same finalized seven-stage state as the visible rail.
+    try:
+        from . import phase49_3i25_product_first_workflow as product_first
+        product_first.evaluate_readiness = evaluate_readiness
+    except Exception:
+        pass
     readiness_module._phase49_3i36_stage_finalization = True
 
 
