@@ -5,8 +5,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Subphase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
-Status: `GITHUB CI + WINDOWS ONE-FILE PACKAGE PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Subphase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.2`  
+Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -44,22 +44,22 @@ Production remains on the stable baseline. Never infer that later migrations wer
 
 ## Approved Windows runtime candidate
 Application runtime snapshot:
-`2622818d898e19b745c61ff653b80c03d22288f1`.
+`9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`.
 
 Latest test-tooling head before documentation finalization:
 `b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
 Only the local 31–35 gate/workflow changed after the packaged application runtime; no packaged application module changed.
 
 Catalog Center:
-- version `8.9.1`,
-- build `2026.08.27.3`,
-- Smart/Profile 31–35 run `33060613937` PASS,
-- Single-AI run `33060613914` PASS,
-- Windows portable run `33060047878` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.1`,
-- artifact ID `9641338334`,
-- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
-- public Release publication skipped/manual until owner Local QA.
+- version `8.9.2`,
+- build `2026.08.27.4`,
+- targeted 31–35 run `33066472847` PASS,
+- Single-AI final-head run PASS,
+- Windows portable run `33066468014` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.2`,
+- artifact ID `9643957471`,
+- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`,
+- public Release publication skipped/manual until owner foreground QA.
 
 3I.35 owns:
 - registered Product Profile ledger over the mature 3I.34 transport,
@@ -107,6 +107,7 @@ Verification:
 Manual operator/visual QA is the only remaining Local acceptance gate before Host read-only audit.
 
 ## Resolved current incidents
+- `ERR-49-059`: foreground 8.9.1 startup failed because the 3I.35 AI settings panel used grid in the pack-managed Settings parent → outer panel now uses pack; 8.9.2 package CI PASS.
 - `ERR-50-016`: support-weight runtime metadata mismatch tried to create fake 0040 → align runtime with migration 0039; no fake migration.
 - `ERR-49-056`: Windows 8.9.1 gate had stale quick-price UI assertion + config 8.9.0 → align test/business contract and package version.
 
