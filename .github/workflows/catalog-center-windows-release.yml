@@ -225,7 +225,7 @@ jobs:
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.3 keeps the 8.9.2 visible-startup geometry fix and repairs the Profile Matrix selection callback to use the installed namespaced profile lookup, allowing Product Workspace Profile/Order UI to open without AttributeError.
+          8.9.4 adds seven persisted operator stage finalization locks, prevents Product AI from committing unrelated Profile/commerce state, restores saved AI settings locally without hidden model scans, allows manual Content/SEO finalization when real Persian core SEO fields exist, and rejects Twistmas Tree transliteration in favor of semantic Persian.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
