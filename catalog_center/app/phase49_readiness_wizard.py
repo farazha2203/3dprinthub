@@ -117,6 +117,8 @@ def evaluate_readiness(row) -> dict:
     seo_description = str(_value(row, "seo_description_fa", "") or "").strip()
     keywords = _unique_text(_json_list(_value(row, "keywords_json", "[]")))
     alts = _unique_text(_json_list(_value(row, "image_alt_texts_json", "[]")))
+    seo_manual_approved = bool(int(_value(row, "seo_manual_approved", 0) or 0))
+    source_review_manual_approved = bool(int(_value(row, "source_review_manual_approved", 0) or 0))
 
     slider_enabled = bool(int(_value(row, "homepage_slider_enabled", 0) or 0))
     slider_fields = {
@@ -149,10 +151,10 @@ def evaluate_readiness(row) -> dict:
         "content": [
             ("عنوان فارسی", bool(title)),
             ("توضیح فارسی", bool(short_desc or description)),
-            ("SEO Title فارسی", bool(seo_title)),
-            ("SEO Description فارسی", bool(seo_description)),
-            ("عبارت‌های هدف SEO", len(keywords) >= 3),
-            ("Alt تصویر", bool(alts)),
+            ("SEO Title فارسی", bool(seo_title) or seo_manual_approved),
+            ("SEO Description فارسی", bool(seo_description) or seo_manual_approved),
+            ("عبارت‌های هدف SEO", len(keywords) >= 3 or seo_manual_approved),
+            ("Alt تصویر", bool(alts) or seo_manual_approved),
         ],
         "specs": [
             ("لینک منبع", bool(source_url)),
@@ -185,6 +187,9 @@ def evaluate_readiness(row) -> dict:
         "colors": colors,
         "keywords": keywords,
         "slider_enabled": slider_enabled,
+        "seo_manual_approved": seo_manual_approved,
+        "source_review_manual_approved": source_review_manual_approved,
+        "license_ok": license_ok,
     }
 
 
