@@ -95,3 +95,6 @@ Known warnings remain CKEditor4 maintenance/security debt, `store.W026` in-memor
 5. Run controlled OpenRouter + AvalAI exact-link AI and selected-Product batch smoke; confirm no per-action full Products refresh.
 6. Only after owner QA may Catalog Center 8.8.2 be explicitly published/accepted.
 7. Separately, Web Production Phase50.A.2B still requires read-only Host/MySQL audit + fresh backup before `store.0036` migration/deploy.
+
+## 2026-08-27 Local gate hotfix
+Current Windows operational hotfix: generated `catalog_center/release/` is now ignored by Git so a previous portable build cannot make the next clean-worktree gate stop before `-LaunchApp`. Regression is in `catalog_center/tests/test_epic49_operator_workflow.py`. Windows portable CI run `33042158052` PASS on `1a490fecb5a22b855c4f10a12bb74f04a28c57b9`, including full regression, launcher composition, source-URL invariant, one-file build/self-verify, manifest/SHA and artifact upload. Artifact ID `9634303271`. Owner Local pull/relaunch is next.
