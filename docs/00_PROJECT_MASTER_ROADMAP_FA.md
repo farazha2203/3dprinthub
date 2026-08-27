@@ -6,8 +6,8 @@
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-**Parallel Windows Subphase:** `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.2`  
-**Status:** `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION BLOCKED`  
+**Parallel Windows Subphase:** `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
+**Status:** `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
 ## 1) قانون مادر
@@ -74,7 +74,7 @@ Current approved GitHub runtime:
 - Product-owned public media boundary.
 
 ## 5) Current Windows development — Phase49.3I.35
-Catalog Center `8.9.2`, build `2026.08.27.4`.
+Catalog Center `8.9.3`, build `2026.08.27.5`.
 
 New Step-2 Profile Matrix:
 - add Profile,
@@ -96,12 +96,14 @@ Preserved:
 - image/source identity safety.
 
 Windows verification:
-- packaged snapshot `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
-- workflow `33066468014` PASS,
-- artifact ID `9643957471`,
-- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`,
+- packaged snapshot `9637829a255a1d09800bc062c2f049cf5d92b585`,
+- workflow `33067618679` PASS,
+- artifact ID `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
 - owner automated Local DB/test gate PASS with Local SQLite through `0039`,
-- owner foreground 8.9.1 launch exposed and 8.9.2 fixed `ERR-49-059`; foreground visual QA is next.
+- owner foreground 8.9.1 launch exposed and 8.9.2 fixed `ERR-49-059`,
+- owner 8.9.2 Product Workspace QA exposed `ERR-49-060`; 8.9.3 fixes the Product Workspace Profile selection binding,
+- foreground Product Workspace visual QA is next.
 
 ## 6) Current Web development — Phase50.A.2B → 2C → 2D
 
