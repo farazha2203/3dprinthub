@@ -1,5 +1,20 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Owner Local 3I.35 / 50.A.2E Automated Gate PASS
+- owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
+- Local fast-forwarded to `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`,
+- effective Local Django DB verified as SQLite `D:\\projects\\3DPrintHub\\db.sqlite3`,
+- fresh pre-0039 DB backup `D:\\projects\\3dprinthub-backups\\phase49-3i35-resume-20260827-142404\\django-local-before-0039.sqlite3` with matching SHA256,
+- `store.0038` verified applied and `store.0039` verified pending before write,
+- exact `0039_phase50_filament_offer_pricing` plan inspected, then `0039` applied successfully,
+- 16 Store/Profile/Checkout regressions PASS,
+- post-migration `makemigrations --check --dry-run` = no changes detected,
+- Catalog Center 31–35 Local gate PASS with 107 tests, source URL invariant PASS, launcher verify PASS,
+- Catalog Center `8.9.1` / build `2026.08.27.3` launched successfully,
+- Production touched = NO.
+- next gate is manual owner visual/functional QA; no Host/Production operation performed.
+
+
 ## 2026-08-27 — Local Owner Gate PowerShell DB Probe Runbook Fix
 - owner Local checkout fast-forwarded cleanly to `35ab63105f30fdca42518d5273a424a3200977e3`,
 - packaged-runtime/tooling ancestry and Catalog SQLite backup passed,
