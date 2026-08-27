@@ -225,7 +225,7 @@ jobs:
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.1 keeps the 8.9.0 Profile Matrix transport, replaces the duplicated profile editor with operator-ledger snapshots, adds weight/time/support production rows, brand-aware filament offers, and observable AI preflight/retry/failover while preserving explicit refresh and source identity guards.
+          8.9.2 keeps the 8.9.1 operator-ledger/resilient-AI runtime and fixes the owner-visible startup blocker by respecting the pack-managed Settings parent; the new AI resilience panel no longer mixes grid into that parent.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
