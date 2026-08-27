@@ -5,8 +5,8 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Web Subphase:** `50.A.2D — Product Profile Matrix + Dependent Storefront Selector`  
-**Parallel Windows Subphase:** `49.3I.34 — Product Profile Matrix / Catalog Center 8.9.0`  
+**Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
+**Parallel Windows Subphase:** `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
 **Status:** `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
@@ -49,9 +49,17 @@ Last verified Phase50 DB state:
 - applied `store.0034`,
 - applied `store.0035`,
 - `store.0036` pending,
-- `store.0037` and `store.0038` were created after that verification and are not claimed applied.
+- `store.0037`, `store.0038` and `store.0039` were created after that verification and are not claimed applied.
 
 Production remains on the prior stable release until Local QA + fresh Host audit/backup.
+
+Current approved GitHub runtime:
+- Catalog Center `8.9.1` / build `2026.08.27.3`,
+- Windows runtime `2622818d898e19b745c61ff653b80c03d22288f1`,
+- Windows run `33060047878` PASS; artifact `9641338334`; EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
+- Phase50 run `33059883188` PASS through migration `0039` and 16 regressions,
+- pending Production chain is `0036 → 0037 → 0038 → 0039`, subject to fresh read-only MySQL verification.
+
 
 ## 4) Deployed foundation
 - Admin command center/Hero controls,
