@@ -137,7 +137,7 @@ Verification:
 
 
 ## REQ-50-026 — Operator-ledger Profiles, resilient AI and brand-aware filament offers
-Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / 8.9.3 PACKAGED HOTFIX PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / SUPERSEDED BY CATALOG 8.9.6 QA TRACK / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Product Step 2 uses the upper controls as a working form and registered Profiles as the transport/publish authority,
@@ -170,6 +170,46 @@ Verification:
 - 8.9.2 startup hotfix run `33066468014` PASS, but owner Product Workspace QA then exposed `ERR-49-060`,
 - 8.9.3 fixes `ERR-49-060` by using the installed namespaced Profile lookup,
 - 8.9.3 run `33067618679` PASS; artifact `9644438652`; EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`.
+
+## REQ-50-027 — Permanent crawl ledger, reject/purge tombstones and one stage-scoped AI engine
+Status: `IMPLEMENTED 49.3I.38 / GITHUB CI + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- healthy existing Browser/Crawl/Parser/image/file receive behavior is preserved and extended rather than replaced,
+- every crawled/received Product identity remains durably known in the Catalog ledger,
+- previously collected/rejected/blocked Product links do not become new receive work when the same source/listing is scanned again,
+- a repeated Listing can continue deeper after already-known results so requesting another 100 Products can skip the first known 100 and queue the next 100 new identities,
+- operator can permanently reject an unwanted Product, remove its local acquired files/images and still retain source URL/external ID as a rejection tombstone,
+- physical purge is restricted to the Product directory below the canonical Catalog `collected/` root and fails closed outside that boundary,
+- rejected/blocked Direct Link identities are checked before Browser/HTTP/image/file acquisition,
+- explicit operator restore is the only action that permits a rejected identity to be received again,
+- Product AI has one configured engine/Provider/Model/retry/fallback authority,
+- Product AI source mode remains exactly Link / Saved-Crawled Data / Screenshot,
+- selected-Product Bulk Content/SEO calls the same mother orchestrator rather than a separate AI implementation,
+- a single Product can explicitly clean/complete only one selected unlocked Stage,
+- Stage 4 cleanup may replace/clean Content/SEO but cannot change Profile, price, material, Source, images, slider or other out-of-scope stages,
+- finalized/locked stages are immutable until the operator presses `اصلاح`,
+- Commerce and Publish remain operator-owned,
+- image-only AI work does not call a Provider when image SEO/metadata is already complete,
+- no full Products Explorer rebuild occurs per Product during bulk AI.
+
+Verification:
+- runtime `c904193a7f0af9aad80365834ec3f0b856e77dc9`,
+- Catalog Center `8.9.6` / build `2026.08.27.8`,
+- Phase49.3I.31–38 run `33077213590` PASS with 84 tests,
+- Single Active AI run `33077239617` PASS,
+- Windows Portable run `33077239660` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.6`, ID `9648474905`,
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
+- source URL preservation, portable self-verify and browser smoke PASS,
+- Production touched = NO.
+
+Rollback:
+- `backup/pre-phase49-3i38-crawl-ledger-stage-ai-20260827` → `d1ed566a82d3818aa45a5c720df3e7efcb0044f3`.
+
+Current remaining acceptance:
+- owner Local visual/functional QA on the final GitHub docs head,
+- then and only then Host read-only audit/backups/deploy/Production verification.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
