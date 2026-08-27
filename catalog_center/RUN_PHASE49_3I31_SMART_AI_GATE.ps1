@@ -11,8 +11,8 @@ $Root = "D:\projects\3DPrintHub"
 $Catalog = "$Root\catalog_center"
 $Py = "$Root\.venv\Scripts\python.exe"
 $Branch = "agent/phase49-3i18-operator-bulk-ai-rebuild"
-$ExpectedVersion = "8.9.1"
-$ExpectedBuild = "2026.08.27.3"
+$ExpectedVersion = "8.9.2"
+$ExpectedBuild = "2026.08.27.4"
 
 function Fail([string]$Message) {
     throw $Message
@@ -22,7 +22,7 @@ Set-Location $Root
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "3DPRINTHUB PHASE49.3I.31-35 / WINDOWS 8.9.1 GATE"
+Write-Host "3DPRINTHUB PHASE49.3I.31-35 / WINDOWS 8.9.2 GATE"
 Write-Host "NO PRODUCTION / NO MIGRATION / NO RESET / NO STASH"
 Write-Host "=================================================="
 
@@ -117,7 +117,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host $LaunchOutput
 foreach ($Marker in @(
-    "ACTIVE_VERSION=8.9.1",
+    "ACTIVE_VERSION=8.9.2",
     "EPIC49_3I29_PRODUCTS_PAGE_PAGED_48=ENABLED",
     "EPIC49_3I29_DEFERRED_GLOBAL_REFRESH=ENABLED",
     "EPIC49_3I31_SMART_LINK_AI=ENABLED",
