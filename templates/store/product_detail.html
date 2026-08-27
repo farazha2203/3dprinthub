@@ -100,6 +100,8 @@
                         data-material="{{ variant.material.name }}"
                         data-quality="{{ variant.quality.name }}"
                         data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
+                        data-filament-brand="{% if variant.color %}{{ variant.color.brand_name }}{% endif %}"
+                        data-filament-manufacturer="{% if variant.color %}{{ variant.color.manufacturer_name }}{% endif %}"
                         {% if variant.color and variant.material.track_filament_inventory and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
                         data-material-cost="{{ price.material_cost|default:0 }}"
                         data-machine-cost="{{ price.machine_cost|default:0 }}"
@@ -114,7 +116,7 @@
                         data-billable-time="{{ price.billable_print_minutes|default:variant.print_time_minutes }}"
                         data-part-weight="{{ price.part_weight_grams|default:variant.final_weight_grams }}"
                         data-support-weight="{{ price.support_weight_grams|default:0 }}"
-                        data-chargeable-weight="{{ price.chargeable_material_grams|default:variant.material_weight_grams }}">{{ variant.material.name }}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان</option>
+                        data-chargeable-weight="{{ price.chargeable_material_grams|default:variant.material_weight_grams }}">{{ variant.material.name }}{% if variant.color and variant.color.brand_name %} — {{ variant.color.brand_name }}{% endif %}{% if variant.color %} — {{ variant.color.name }}{% endif %} — {{ variant.quality.name }} — {{ price.unit_price|intcomma }} تومان</option>
                     {% endwith %}{% endfor %}
                 </select>
             </div>
