@@ -8,7 +8,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from PIL import Image
+from PIL import Image, ImageTk
 
 from .phase49_3i17_single_active_ai_runtime import active_ai_config
 from .phase49_3i21_observable_ai_link_refresh import ObservableJobDialog
@@ -103,10 +103,18 @@ def fixed_price_from_row(row):
     return ""
 
 
-def image_file_info(path: str) -> str:
+def image_file_info(path: str, url: str = "") -> str:
     candidate = Path(str(path or ""))
+    name = candidate.name if candidate.is_file() else ""
+    if not name and url:
+        try:
+            from urllib.parse import urlsplit
+            name = Path(urlsplit(str(url)).path).name
+        except Exception:
+            name = ""
     if not candidate.is_file():
-        return "فایل محلی موجود نیست • ابعاد/حجم پس از دریافت فایل نمایش داده می‌شود"
+        prefix = f"{name} • " if name else ""
+        return prefix + "فایل محلی موجود نیست • ابعاد/حجم پس از دریافت فایل نمایش داده می‌شود"
     size = candidate.stat().st_size
     try:
         with Image.open(candidate) as opened:
@@ -116,9 +124,11 @@ def image_file_info(path: str) -> str:
         divisor = math.gcd(int(width), int(height)) or 1
         ratio = f"{width // divisor}:{height // divisor}"
         human = f"{size / 1048576:.2f} MB" if size >= 1048576 else f"{size / 1024:.0f} KB"
-        return f"{width}×{height}px • نسبت {ratio} • {human} • {fmt}"
+        prefix = f"{name} • " if name else ""
+        return prefix + f"{width}×{height}px • نسبت {ratio} • {human} • {fmt}"
     except Exception:
-        return f"{size / 1024:.0f} KB • خواندن ابعاد ناموفق"
+        prefix = f"{name} • " if name else ""
+        return prefix + f"{size / 1024:.0f} KB • خواندن ابعاد ناموفق"
 
 
 def start_runtime_sampler(app):
@@ -365,6 +375,7 @@ def install_workspace(workspace_class) -> None:
     original_save = workspace_class.save
     original_close = workspace_class.close
     original_gallery = workspace_class.refresh_gallery
+    original_apply_thumbnail = workspace_class._apply_thumbnail
     original_pricing_state = getattr(workspace_class, "_phase49_3f_refresh_pricing_state", None)
 
     def __init__(self, app, product_id: int):
@@ -593,22 +604,42 @@ def install_workspace(workspace_class) -> None:
 
         threading.Thread(target=worker, daemon=True, name=f"catalog-3i33-ai-{mode}").start()
 
+    def apply_thumbnail(self, label, raw: bytes):
+        try:
+            import io
+            image = Image.open(io.BytesIO(raw)).convert("RGB")
+            image.thumbnail((300, 220), Image.Resampling.LANCZOS)
+            photo = ImageTk.PhotoImage(image)
+            self._photos.append(photo)
+            label.configure(image=photo, text="")
+        except Exception:
+            return original_apply_thumbnail(self, label, raw)
+
     def refresh_gallery(self):
         result = original_gallery(self)
-        for meta in list(getattr(self, "_gallery_cards", []) or []):
+        cards = list(getattr(self, "_gallery_cards", []) or [])
+        for index, meta in enumerate(cards):
             label = meta.get("label")
             if label is None:
                 continue
             try:
+                card = label.master
+                card.grid_configure(row=index // 3, column=index % 3, sticky="nsew", padx=7, pady=7)
                 ttk.Label(
-                    label.master,
-                    text=image_file_info(str(meta.get("local") or "")),
+                    card,
+                    text=image_file_info(str(meta.get("local") or ""), str(meta.get("url") or "")),
                     style="SubHeader.TLabel",
                     wraplength=235,
                     justify="center",
                 ).pack(fill="x", pady=(3, 3))
             except Exception:
                 pass
+        try:
+            for column in range(3):
+                self.gallery_inner.columnconfigure(column, weight=1)
+            self.gallery_inner.columnconfigure(3, weight=0)
+        except Exception:
+            pass
         return result
 
     def wrap_local_action(name: str):
@@ -635,6 +666,7 @@ def install_workspace(workspace_class) -> None:
         workspace_class._phase49_3f_refresh_pricing_state = pricing_state
     workspace_class.close = close
     workspace_class.refresh_gallery = refresh_gallery
+    workspace_class._apply_thumbnail = apply_thumbnail
     workspace_class._phase49_3i33_final_commit = final_commit
     workspace_class._phase49_3i33_capture_screenshot = capture_screenshot_ui
     workspace_class._phase49_3i33_run_ai = run_ai_ui
