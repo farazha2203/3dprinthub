@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import migrations, models
 
 
@@ -49,6 +50,7 @@ class Migration(migrations.Migration):
                 decimal_places=2,
                 default=0,
                 max_digits=8,
+                validators=[MinValueValidator(0)],
                 verbose_name="طول خود قطعه به سانتی‌متر",
             ),
         ),
@@ -59,6 +61,7 @@ class Migration(migrations.Migration):
                 decimal_places=2,
                 default=0,
                 max_digits=8,
+                validators=[MinValueValidator(0)],
                 verbose_name="عرض خود قطعه به سانتی‌متر",
             ),
         ),
@@ -69,6 +72,7 @@ class Migration(migrations.Migration):
                 decimal_places=2,
                 default=0,
                 max_digits=8,
+                validators=[MinValueValidator(0)],
                 verbose_name="ارتفاع خود قطعه به سانتی‌متر",
             ),
         ),
