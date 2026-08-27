@@ -454,8 +454,74 @@ def orchestrate_once(
     return result
 
 
-def run_resilient_orchestrator(app, product_id: int, dialog, mode: str | None = None) -> dict:
+def _no_ai_needed_result(app, product_id: int, mode: str, stages: set[str] | None, reason: str) -> dict:
+    state, row = _readiness(app, int(product_id))
+    return {
+        "product_id": int(product_id),
+        "mode": mode,
+        "provider": "",
+        "model": "",
+        "title_fa": str(row_value(row, "title_fa", "") or ""),
+        "stages": {},
+        "changed_fields": [],
+        "target_stages": sorted(stages) if stages else list(STAGE_ORDER),
+        "refresh_existing": False,
+        "no_ai_needed": True,
+        "reason": reason,
+        "readiness": {
+            stage: {
+                "data_ready": bool((state.get("stages", {}).get(stage) or {}).get("data_ready")),
+                "finalized": bool((stage_locks(row).get(stage) or {}).get("locked")),
+            }
+            for stage in STAGE_ORDER
+        },
+    }
+
+
+def _scope_requires_ai(app, product_id: int, stages: set[str] | None, refresh_existing: bool) -> tuple[bool, str]:
+    state, row = _readiness(app, int(product_id))
+    editable = {"quick", "images", "content", "specs", "slider"}
+    scope = set(stages or editable)
+    actionable = [stage for stage in STAGE_ORDER if stage in scope and stage in editable]
+    if not actionable:
+        return False, "Scope فقط شامل Stageهای اپراتوری است."
+    for stage in actionable:
+        if is_stage_locked(row, stage):
+            continue
+        if stage == "images":
+            if image_pipeline.image_metadata_missing(row):
+                return True, ""
+            continue
+        if refresh_existing:
+            return True, ""
+        if not bool((state.get("stages", {}).get(stage) or {}).get("data_ready")):
+            return True, ""
+    return False, "فیلد AI-مالک ناقصی در Scope باز وجود ندارد."
+
+
+def run_resilient_orchestrator(
+    app,
+    product_id: int,
+    dialog,
+    mode: str | None = None,
+    *,
+    target_stages: set[str] | None = None,
+    refresh_existing: bool = False,
+) -> dict:
     mode = mode if mode in AI_SOURCE_MODES else source_mode(app)
+    scoped_stages = (
+        {str(stage) for stage in target_stages if str(stage) in STAGE_ORDER}
+        if target_stages
+        else None
+    )
+    required, reason = _scope_requires_ai(
+        app, int(product_id), scoped_stages, bool(refresh_existing)
+    )
+    if not required:
+        _emit(dialog, "no_ai_needed", f"✅ AI لازم نیست: {reason}")
+        _progress(dialog, 100, "بدون درخواست AI")
+        return _no_ai_needed_result(app, int(product_id), mode, scoped_stages, reason)
+
     candidates = configured_ai_candidates(app, require_key=True)
     attempts = retry_attempts(app)
     health_cache = {}
@@ -480,8 +546,18 @@ def run_resilient_orchestrator(app, product_id: int, dialog, mode: str | None = 
                 {"provider": provider, "model": model, "attempt": attempt, "mode": mode},
             )
             try:
-                result = orchestrate_once(app, product_id, mode, provider, key, model, dialog)
-                _progress(dialog, 100, "هفت مرحله بازبینی شد")
+                result = orchestrate_once(
+                    app,
+                    product_id,
+                    mode,
+                    provider,
+                    key,
+                    model,
+                    dialog,
+                    target_stages=scoped_stages,
+                    refresh_existing=bool(refresh_existing),
+                )
+                _progress(dialog, 100, "Scope هوش مصنوعی بازبینی شد")
                 return result
             except Exception as exc:
                 failures.append(f"{provider}/attempt-{attempt}: {redact(exc)}")
