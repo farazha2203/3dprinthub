@@ -5,12 +5,13 @@
 **Repository:** `farazha2203/3dprinthub`  
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
-**Current Subphase:** `50.A.2B — Immutable Checkout/Profile/Shipping Snapshot`  
-**Status:** `GITHUB CI TESTED / PRODUCTION MIGRATION AUDIT NEXT`  
+**Current Web Subphase:** `50.A.2D — Product Profile Matrix + Dependent Storefront Selector`  
+**Parallel Windows Subphase:** `49.3I.34 — Product Profile Matrix / Catalog Center 8.9.0`  
+**Status:** `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
 ## 1) قانون مادر
-`READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
+`READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
 
 قواعد ثابت:
 - Mature behavior با Extend/Patch/Wrap اصلاح می‌شود.
@@ -20,78 +21,150 @@
 - Secret در Git/log/chat ذخیره نمی‌شود.
 - Remote زنده مرجع Branch است؛ SHA حدس زده نمی‌شود.
 - Assetهای خریداری‌شده/private پوسته و فونت در Repository عمومی منتشر نمی‌شوند.
+- Database migration فقط بعد از Verify دقیق Engine/DB/Plan/Backup/Rollback اجرا می‌شود.
 
-## 2) مسیرهای ثبت‌شده
-Windows: `D:\projects\3DPrintHub`; venv `D:\projects\3DPrintHub\.venv`.
-Production: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`; static `/home/sfkilvrs/public_html/static`; media `/home/sfkilvrs/public_html/media`; private media `/home/sfkilvrs/3dprinthub/private_media`.
+## 2) مسیرهای Canonical
+Windows:
+- root `D:\projects\3DPrintHub`
+- venv `D:\projects\3DPrintHub\.venv`
+- Catalog persistent root `D:\projects\3dprinthub-catalog-manager`
+- Catalog SQLite `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
+
+Production:
+- root `/home/sfkilvrs/3dprinthub`
+- venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`
+- MySQL `sfkilvrs_EmiAdmin_3dprinthub`
+- static `/home/sfkilvrs/public_html/static`
+- media `/home/sfkilvrs/public_html/media`
+- private media `/home/sfkilvrs/3dprinthub/private_media`
 
 ## 3) Production baseline
-Application commit: `c283864290f9c989a9fcdf24ee8eef519560e917`.
-Rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
-Applied: `store.0034_phase50_variant2_commerce`, `store.0035_phase50_sales_profiles`.
-Not yet Production-applied: `store.0036_phase50_checkout_snapshot`.
-Home/Store/Admin/Product/Variant API are healthy and public imported-working-media refs remain zero.
+Verified Production application commit:
+`c283864290f9c989a9fcdf24ee8eef519560e917`.
 
-## 4) Phase50 deployed foundation
+Verified rollback backup:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20260826-143650`.
+
+Last verified Phase50 DB state:
+- applied `store.0034`,
+- applied `store.0035`,
+- `store.0036` pending,
+- `store.0037` and `store.0038` were created after that verification and are not claimed applied.
+
+Production remains on the prior stable release until Local QA + fresh Host audit/backup.
+
+## 4) Deployed foundation
 - Admin command center/Hero controls,
 - Product gallery/lightbox,
-- Variant2 size/build/weight/package schema (`0034`),
-- Sales Profiles (`0035`),
-- unified Product workspace,
-- Product Admin 500 fix + business navigation,
-- Velzon V2 full-width tables/on-demand filters,
-- Admin shell stability with 290px sidebar/internal-only menu scroll,
-- Storefront profile/size/build/weight/color/price selector using canonical ProductVariant.
+- Variant2 size/build/weight/package schema,
+- Sales Profiles,
+- unified Product Admin,
+- Admin 500 fix + business navigation,
+- Velzon V2 full-width lists/on-demand filters,
+- stable footer / 290px sidebar / internal menu scroll,
+- canonical Variant/Profile storefront selector,
+- Product-owned public media boundary.
 
-## 5) Current GitHub-tested work — 50.A.2B
-Migration `store.0036_phase50_checkout_snapshot` and `store/phase50_checkout_snapshot.py` implement immutable successful-checkout state.
+## 5) Current Windows development — Phase49.3I.34
+Catalog Center `8.9.0`, build `2026.08.27.2`.
 
-### Item snapshot
-- profile name/key/label,
-- selection mode + customer-visible selection value,
-- size/build/material/color/quality,
-- final weight, packaging weight, effective shipping weight,
-- print time,
-- package dimensions.
+New Step-2 Profile Matrix:
+- add Profile,
+- clone Profile,
+- delete/edit Profile,
+- independent size/weight/price/print-time/part-dimensions/build/material/color/quality/package/stock values,
+- selection modes including size→weight and 3-level combinations,
+- exact Profile JSON persisted locally,
+- exact Profile JSON transported through mature batch/import path,
+- profile/range minimum accepted by mature publish gate.
 
-### Order/shipping snapshot
-- `insured_value`,
-- normalized `shipping_quote_snapshot`,
-- total effective shipping weight,
-- ShippingMethod fallback source, destination, fee and per-line package facts.
+Preserved:
+- 48-card Product paging,
+- explicit-only global Product refresh,
+- exact saved AI provider/model/key,
+- exact-link source grounding,
+- canonical source-link guard,
+- selected-product batch AI,
+- image/source identity safety.
 
-### Important semantics
-- explicit Variant shipping weight overrides calculated final+packaging weight,
-- otherwise packaging is included,
-- mature Phase6 coupon/VAT/inventory/address/notification/payment flow remains authoritative,
-- successful checkout is finalized inside an outer atomic boundary,
-- pending payment amount is synchronized with finalized total,
-- no combined carton geometry is guessed,
-- no Post/Tipax/Mahex API is called or claimed without verified official credentials/contracts,
-- finalizer failure rolls DB writes back and restores the cart session.
+Windows verification:
+- packaged snapshot `b3280dd67cd7772f337f6792036ea92d3f252747`,
+- workflow `33051114515` PASS,
+- artifact ID `9637671099`,
+- EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`.
 
-CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`; compile, Django check, migration state/plan, migration through `0036`, Variant/gallery/selector and immutable checkout tests all PASS.
+## 6) Current Web development — Phase50.A.2B → 2C → 2D
 
-## 6) Next Production gate
-1. Read-only verify Host HEAD/worktree/live GitHub SHA and exact MySQL DB.
-2. Verify `0034/0035` applied, `0036` actual state and exact migration plan.
-3. Verify disk/mysqldump; make fresh source/.env/MySQL backup and record rollback HEAD.
-4. Explicit branch fetch to `FETCH_HEAD` per ERR-50-007 and verify ff-only ancestry.
-5. Deploy approved GitHub target.
-6. Recheck Django/migration state and apply only approved `store.0036_phase50_checkout_snapshot` if pending.
-7. Passenger restart + Production schema/runtime/HTTP verification; never rewrite historical paid orders.
-8. Update docs with Production commit/backup/migration state.
+### 2B / `0036`
+Immutable Profile/selection/shipping checkout snapshot.
 
-## 7) After 50.A.2B
-- Product Engagement: Favorite/Save + counters + verified-purchased/paid buyer feedback.
-- 50.A.3 Secure ZarinPal.
-- 50.A.4 Torob Product API v3.
-- 50.B–50.F Accounting Core → Treasury → Purchasing → Sales Accounting → Reports/Close.
+### 2C / `0037`
+Professional Product price-policy + per-Variant fixed price, shipping service/scope/fee semantics, Store payment-display settings and safe shipping presets.
 
-## 8) Host prevention rules
-- ERR-50-007: host fetch refspec is tag-only → live `ls-remote` + explicit branch fetch to `FETCH_HEAD`.
-- ERR-50-010: avoid `/dev/fd` process substitution → Python/portable backup enumeration.
-- ERR-50-011: parse JSON as data through `python -` + `json.load`.
+### 2D / `0038`
+Profile description + size↔weight modes + actual part dimensions + immutable ordered part dimensions.
 
-## 9) Safety
+Runtime profile sync:
+- Desktop Profile becomes canonical ProductVariant,
+- republish is idempotent,
+- manual non-Desktop Variants remain intact,
+- invalid mappings fail closed.
+
+Storefront:
+- selected Profile is the single price/facts authority,
+- size/weight/build/material/color/quality dependent choices,
+- options follow prefix hierarchy,
+- weight/Profile prices are scoped to selected upstream size,
+- professional Profile summary with part/shipping/package facts,
+- native Variant fallback retained.
+
+Web verification:
+- runtime snapshot `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`,
+- CI run `33051311828` PASS,
+- hierarchy behavior gate PASS,
+- no migration drift,
+- CI DB applies through `0038`,
+- 15 Variant/Profile/Checkout tests PASS.
+
+## 7) Current known corrected incidents
+- `ERR-50-012`: execute callable price contract in Variant API.
+- `ERR-50-013`: saved-address shipping policy validates persisted address.
+- `ERR-50-014`: prefix-only selector dependency + size-scoped price badges.
+- `ERR-50-015`: Windows packaging watches mature Product studio source boundaries.
+
+## 8) Production gate
+1. Local Windows clean pull + exact HEAD verify.
+2. Run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` with exact HEAD and launch.
+3. Owner QA multi-size/multi-weight Profile create/clone/edit/save/reopen + existing Product data/source link/AI/images.
+4. Local Django/SQLite regression.
+5. Read-only Host verify actual branch/HEAD/worktree/live remote SHA/Python/Django/MySQL/migration state.
+6. Exact migration plan.
+7. Disk + mysqldump verify.
+8. Fresh tracked-source + environment + MySQL backup with checksums.
+9. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; exact target + ff-only.
+10. Deploy GitHub source.
+11. Repeat Django check/drift/DB/plan.
+12. Apply only verified pending `0036 → 0037 → 0038`.
+13. collectstatic + Passenger restart.
+14. Home/Store/Admin/Product/Profile API/Checkout/private-media verification.
+15. Controlled new order using multi-size/multi-weight Profile.
+16. Owner browser QA.
+17. Update docs with exact Production SHA/backup/migrations.
+
+## 9) بعد از 50.A.2D
+- Product Engagement،
+- Secure ZarinPal،
+- Torob API،
+- Accounting Core،
+- Treasury،
+- Purchasing/Payables،
+- Sales/Receivables،
+- Reports/Close.
+
+## 10) Host prevention rules
+- `ERR-50-007`: tag-only refspec → live `ls-remote` + explicit `FETCH_HEAD`.
+- `ERR-50-010`: روی cPanel به `/dev/fd`/process substitution تکیه نکن.
+- `ERR-50-011`: JSON داده است؛ با `python -` + `json.load` Verify شود.
+
+## 11) Safety
 No Production migration without exact MySQL vendor/name, exact plan, fresh verified backup and rollback. No public imported working-media. No guessed carrier/gateway endpoint. Purchased Velzon/font assets remain private.
