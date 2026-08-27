@@ -5,8 +5,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.2`  
-Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
+Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
@@ -38,6 +38,15 @@ Preserved foundations:
 - targeted run `33066472847` PASS,
 - Windows one-file run `33066468014` PASS on runtime `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
 - artifact ID `9643957471`, EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
+
+8.9.3 Profile Workspace hotfix:
+- 8.9.2 starts successfully but owner diagnostics exposed `ERR-49-060` when opening Products 305/303,
+- Profile Matrix selected-row callback used unbound `self._profile_by_key` instead of installed `self._phase49_3i34_profile_by_key`,
+- exact callback binding fixed with executable regression,
+- targeted run `33067612565` PASS,
+- Single Active AI run `33067618639` PASS,
+- Windows one-file run `33067618679` PASS on runtime `9637829a255a1d09800bc062c2f049cf5d92b585`,
+- artifact ID `9644438652`, EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`.
 
 Windows verification:
 - runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1`,
