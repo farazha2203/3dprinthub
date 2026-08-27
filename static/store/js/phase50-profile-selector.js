@@ -124,6 +124,40 @@
         });
     }
 
+    function upstreamState(state, dimensions, endExclusive) {
+        const scoped = {};
+        dimensions.slice(0, endExclusive).forEach((dim) => {
+            if (state[dim]) scoped[dim] = state[dim];
+        });
+        return scoped;
+    }
+
+    function variantsForDimension(variants, state, dimensions, dimIndex) {
+        return matching(variants, upstreamState(state, dimensions, dimIndex));
+    }
+
+    function clearDownstreamState(state, dimensions, dimIndex) {
+        dimensions.slice(dimIndex + 1).forEach((dim) => {
+            delete state[dim];
+        });
+    }
+
+    const TEST_API = {
+        MODE_DIMENSIONS,
+        buildDimensions,
+        matching,
+        upstreamState,
+        variantsForDimension,
+        clearDownstreamState,
+        valueFor,
+        uniqueOptions,
+    };
+
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = TEST_API;
+    }
+    if (typeof document === "undefined") return;
+
     function installSelector(select, payload) {
         if (!select || select.dataset.phase50ProfileReady === "1") return;
         const optionNodes = Array.from(select.options).filter((option) => option.value && !option.disabled);
@@ -233,8 +267,8 @@
 
         function render() {
             controls.innerHTML = "";
-            dimensions.forEach((dim) => {
-                const possibleVariants = matching(variants, state, dim);
+            dimensions.forEach((dim, dimIndex) => {
+                const possibleVariants = variantsForDimension(variants, state, dimensions, dimIndex);
                 const options = uniqueOptions(possibleVariants.length ? possibleVariants : variants, dim);
                 if (!options.length) return;
                 const group = document.createElement("div");
@@ -246,7 +280,8 @@
                     button.type = "button";
                     button.className = "store-profile-option";
                     button.textContent = item.label;
-                    const optionVariants = variants.filter((variant) => valueFor(variant, dim) === item.value);
+                    const optionVariants = (possibleVariants.length ? possibleVariants : variants)
+                        .filter((variant) => valueFor(variant, dim) === item.value);
                     if (dim === "weight" || dim === "profile") {
                         const matchingPrices = optionVariants.map((variant) => variant.price).filter((value) => value > 0);
                         if (matchingPrices.length) {
@@ -262,14 +297,13 @@
                     button.setAttribute("aria-pressed", state[dim] === item.value ? "true" : "false");
                     button.addEventListener("click", () => {
                         state[dim] = item.value;
-                        let candidates = matching(variants, state);
-                        if (!candidates.length) {
-                            Object.keys(state).forEach((key) => {
-                                if (key !== dim) delete state[key];
-                            });
-                            candidates = matching(variants, state);
-                        }
-                        const preferred = candidates.find((variant) => variant.isDefault) || candidates[0];
+                        clearDownstreamState(state, dimensions, dimIndex);
+                        const prefix = upstreamState(state, dimensions, dimIndex + 1);
+                        const candidates = matching(variants, prefix);
+                        const current = variants.find((variant) => variant.id === select.value);
+                        const preferred = (
+                            current && candidates.includes(current) ? current : null
+                        ) || candidates.find((variant) => variant.isDefault) || candidates[0];
                         if (preferred) chooseVariant(preferred);
                     });
                     optionHost.appendChild(button);
