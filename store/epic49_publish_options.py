@@ -92,27 +92,9 @@ def _normalized_colors(data: dict) -> list[dict]:
 
 
 def normalized_material_color_options(data: dict) -> list[dict]:
-    # Epic49 rich contract: materials and colors are selected independently in
-    # Windows. Build the compatibility pair list server-side. This preserves all
-    # existing variant logic while allowing one color to be offered on multiple
-    # selected materials.
-    materials = _normalized_materials(data)
-    colors = _normalized_colors(data)
-    if materials and colors:
-        return [
-            {
-                "material": material,
-                "color": color["color"],
-                "hex": color.get("hex", ""),
-                "color_type": color.get("color_type", "solid"),
-                "secondary_hex": color.get("secondary_hex", ""),
-                "tertiary_hex": color.get("tertiary_hex", ""),
-            }
-            for material in materials
-            for color in colors
-        ]
-
-    # Legacy pair contract remains fully supported for older desktop rows.
+    # Prefer the exact pair/offer payload when present because brand,
+    # manufacturer and roll-price facts belong to a specific material+color
+    # offer. The independent material/color lists remain a legacy fallback.
     raw = _safe_list(data.get("material_color_options_json"))
     output = []
     seen = set()
@@ -121,25 +103,59 @@ def normalized_material_color_options(data: dict) -> list[dict]:
             continue
         material = str(item.get("material") or item.get("material_name") or "").strip()
         color = str(item.get("color") or item.get("color_name") or "").strip()
+        brand = str(item.get("brand") or item.get("brand_name") or "").strip()
         if not material or not color:
             continue
         kind = str(item.get("color_type") or item.get("type") or "solid").strip().lower()
         if kind not in COLOR_TYPE_CODES:
             kind = "solid"
-        key = (material.casefold(), color.casefold(), kind)
+        key = (material.casefold(), brand.casefold(), color.casefold(), kind)
         if key in seen:
             continue
         seen.add(key)
         output.append({
             "material": material,
+            "brand": brand,
+            "manufacturer": str(item.get("manufacturer") or item.get("manufacturer_name") or "").strip(),
             "color": color,
             "hex": str(item.get("hex") or item.get("hex_code") or "").strip(),
             "color_type": kind,
             "secondary_hex": str(item.get("secondary_hex") or item.get("hex2") or "").strip(),
             "tertiary_hex": str(item.get("tertiary_hex") or item.get("hex3") or "").strip(),
+            "roll_weight_grams": _positive_int(item.get("roll_weight_grams"), 1000),
+            "stock_roll_count": item.get("stock_roll_count") or 0,
+            "purchase_price_per_roll": _positive_int(item.get("purchase_price_per_roll"), 0),
+            "sale_price_per_roll": _positive_int(item.get("sale_price_per_roll"), 0),
+            "usd_price_per_roll": item.get("usd_price_per_roll") or 0,
+            "usd_fx_rate_toman": item.get("usd_fx_rate_toman") or 0,
         })
-    return output
+    if output:
+        return output
 
+    materials = _normalized_materials(data)
+    colors = _normalized_colors(data)
+    if materials and colors:
+        return [
+            {
+                "material": material,
+                "brand": "",
+                "manufacturer": "",
+                "color": color["color"],
+                "hex": color.get("hex", ""),
+                "color_type": color.get("color_type", "solid"),
+                "secondary_hex": color.get("secondary_hex", ""),
+                "tertiary_hex": color.get("tertiary_hex", ""),
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 0,
+                "purchase_price_per_roll": 0,
+                "sale_price_per_roll": 0,
+                "usd_price_per_roll": 0,
+                "usd_fx_rate_toman": 0,
+            }
+            for material in materials
+            for color in colors
+        ]
+    return []
 
 def _homepage_slider_seo(data: dict, product) -> dict:
     """Return operator-approved 8.7.1 slider copy with AI-pack fallback."""
@@ -257,16 +273,30 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
             Material.objects.filter(pk=material.pk).update(is_active=True)
             material.is_active = True
 
-        color = MaterialColorOption.objects.filter(material=material, name__iexact=item["color"]).order_by("id").first()
+        brand = str(item.get("brand") or "").strip()[:120]
+        manufacturer = str(item.get("manufacturer") or "").strip()[:160]
+        color = MaterialColorOption.objects.filter(
+            material=material,
+            name__iexact=item["color"],
+            brand_name__iexact=brand,
+        ).order_by("id").first()
         color_defaults = {
+            "brand_name": brand,
+            "manufacturer_name": manufacturer,
             "hex_code": item.get("hex", "")[:20],
             "color_type": item.get("color_type", "solid"),
             "secondary_hex": item.get("secondary_hex", "")[:20],
             "tertiary_hex": item.get("tertiary_hex", "")[:20],
+            "roll_weight_grams": Decimal(str(item.get("roll_weight_grams") or 1000)),
+            "stock_roll_count_snapshot": Decimal(str(item.get("stock_roll_count") or 0)),
+            "purchase_price_per_roll": _positive_int(item.get("purchase_price_per_roll"), 0),
+            "sale_price_per_roll": _positive_int(item.get("sale_price_per_roll"), 0),
+            "usd_price_per_roll": Decimal(str(item.get("usd_price_per_roll") or 0)),
+            "usd_fx_rate_toman": Decimal(str(item.get("usd_fx_rate_toman") or 0)),
             "is_active": True,
         }
         if color is None:
-            code = _color_code(material.pk, item["color"])
+            code = _color_code(material.pk, f"{brand}-{item['color']}" if brand else item["color"])
             suffix = 1
             candidate = code
             while MaterialColorOption.objects.filter(material=material, code=candidate).exists():
@@ -331,6 +361,8 @@ def apply_material_color_variants(product, asset, data: dict, *, minimum_price: 
             variant.save()
         output.append({
             "material": material.name,
+            "brand": str(getattr(color, "brand_name", "") or ""),
+            "manufacturer": str(getattr(color, "manufacturer_name", "") or ""),
             "color": color.name,
             "color_type": color.color_type,
             "hex": color.hex_code,
