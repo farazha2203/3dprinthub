@@ -170,6 +170,64 @@ Use Production Python or portable temp-file/pipeline enumeration; do not depend 
 ### ERR-50-011 — Variant API verifier executed JSON as Python source
 Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads are arguments/data, never executable source.
 
+### ERR-50-012 — Profile Variant API treated `price_breakdown` callable as a dict
+**Date:** 2026-08-27  
+**Environment:** Phase50 Profile Matrix CI.
+
+**Symptom:** `/store/api/variant-commerce-options/` raised `AttributeError: 'function' object has no attribute 'get'` when the Profile Matrix test requested the selected Variant price.
+
+**Root Cause:** `ProductVariant.price_breakdown` is the mature callable pricing contract. The new API serialization boundary read the method object with `getattr(...)` but did not execute it before using `.get("unit_price")`.
+
+**Failed condition:** do not rerun the failing Profile Matrix CI unchanged; the failure is deterministic at the API boundary.
+
+**Correct Fix:** resolve `price_contract = variant.price_breakdown`, execute it when callable, then serialize the returned pricing dict. This preserves the canonical Phase50 pricing policy wrapper and avoids duplicating price logic in the endpoint.
+
+**Verification:** Profile Matrix/Checkout CI run `33051311828` PASS; profile fixed-price API regression returns the expected Variant price.
+
+**Prevention:** API serializers must execute mature no-argument domain contracts before reading their returned mapping; do not treat bound methods as data.
+
+### ERR-50-013 — Saved-address checkout was rejected by the new shipping policy wrapper
+**Date:** 2026-08-27  
+**Environment:** Phase50 Checkout regression.
+
+**Symptom:** checkout using a valid saved address returned HTTP 200 with form errors instead of the expected 302 success. Two immutable-checkout tests failed.
+
+**Root Cause:** mature `CheckoutOperationsForm.clean()` intentionally returns early when `saved_address` is selected. The Phase50 commerce wrapper then validated `cleaned["address"]` / `postal_code` / location fields, which are empty in that mature saved-address flow.
+
+**Correct Fix:** when `saved_address` exists, shipping scope/address/postal rules resolve province/county/city/address/postal code from that persisted address object; only new-address checkout uses raw cleaned form fields.
+
+**Verification:** CI run `33051311828` PASS, including both immutable checkout tests and saved-address checkout redirect.
+
+**Prevention:** wrappers around mature forms must honor the mature form's alternate data source/early-return semantics instead of assuming every field is populated in `cleaned_data`.
+
+### ERR-50-014 — Downstream Profile state hid valid size/weight choices and could show another size's price
+**Date:** 2026-08-27  
+**Environment:** Storefront dependent Profile selector.
+
+**Risk/Symptom:** after a customer changed size, the currently selected downstream weight/build could constrain the option list for an upstream dimension. Price badges for a weight were also calculated from every Product Variant with that weight, so a 150 g price from size 20 could appear while viewing size 30.
+
+**Root Cause:** option rendering used the complete current state for every dimension and calculated option-price pools globally by dimension value.
+
+**Correct Fix:** each dimension now filters only by selections that occur **before** it in the configured Profile hierarchy. Clicking an upstream option clears downstream state before choosing a valid canonical Variant. Weight/Profile price badges are computed from the upstream-scoped candidate pool.
+
+**Verification:** dedicated Node behavior gate `PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS` plus full Store run `33051311828` PASS. The gate proves size 30 exposes all of its 150/200/300 g rows and uses the size-30 price for 150 g.
+
+**Prevention:** dependent option matrices are prefix trees: later selections never determine the availability or price of earlier-level options.
+
+### ERR-50-015 — Windows portable workflow did not watch mature Product studio publish-gate files
+**Date:** 2026-08-27  
+**Environment:** GitHub Actions Windows portable release.
+
+**Risk:** Profile Matrix publish-readiness fixes in `catalog_center/app/product_studio.py` and `catalog_center/app/epic49_product_studio.py` could pass targeted CI without automatically producing a fresh immutable Windows artifact.
+
+**Root Cause:** `Catalog Center Windows Portable Release` path filters watched the newer 3I modules but omitted those two mature Product studio files even though the packaged application imports them.
+
+**Correct Fix:** add both mature Product studio files to the Windows release workflow trigger.
+
+**Verification:** Windows portable run `33051114515` PASS on `b3280dd67cd7772f337f6792036ea92d3f252747`; artifact ID `9637671099`; EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`.
+
+**Prevention:** immutable release workflows must watch every source boundary that materially changes the packaged runtime, including mature wrapped files.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
