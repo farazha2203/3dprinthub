@@ -542,7 +542,7 @@ def install_workspace(workspace_class, readiness_module) -> None:
             if locked:
                 variable.set("🔒 نهایی")
             elif data_ready or (stage == "content" and content_manual_minimum(row)[0]):
-                variable.set("🟢 آماده ثبت")
+                variable.set("✅ کامل؛ منتظر ثبت")
             else:
                 variable.set("⚪ ناقص/باز")
         try:
