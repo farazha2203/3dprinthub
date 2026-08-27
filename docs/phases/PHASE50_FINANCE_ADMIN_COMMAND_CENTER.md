@@ -3,7 +3,7 @@
 Updated: 2026-08-27  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Status: `GITHUB CI TESTED / OWNER LOCAL QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
+Status: `GITHUB CI TESTED / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
 
 Current verified Production application commit:
 `c283864290f9c989a9fcdf24ee8eef519560e917`.
@@ -200,14 +200,27 @@ Gates:
 
 ### Windows runtime
 Catalog Center:
-- version `8.9.0`,
-- build `2026.08.27.2`,
-- packaged snapshot `b3280dd67cd7772f337f6792036ea92d3f252747`,
-- workflow `33051114515` PASS,
-- artifact ID `9637671099`,
-- EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`.
+- version `8.9.1`,
+- build `2026.08.27.3`,
+- packaged snapshot `2622818d898e19b745c61ff653b80c03d22288f1`,
+- workflow `33060047878` PASS,
+- artifact ID `9641338334`,
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`.
 
 Public GitHub Release remains manual-only after owner Local QA.
+
+### Owner Local automated gate
+- owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
+- Local fast-forwarded to `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`,
+- effective Local Django DB verified as SQLite `D:\\projects\\3DPrintHub\\db.sqlite3`,
+- fresh pre-0039 DB backup `D:\\projects\\3dprinthub-backups\\phase49-3i35-resume-20260827-142404\\django-local-before-0039.sqlite3` with matching SHA256,
+- `store.0038` verified applied and `store.0039` verified pending before write,
+- exact `0039_phase50_filament_offer_pricing` plan inspected, then `0039` applied successfully,
+- 16 Store/Profile/Checkout regressions PASS,
+- post-migration `makemigrations --check --dry-run` = no changes detected,
+- Catalog Center 31–35 Local gate PASS with 107 tests, source URL invariant PASS, launcher verify PASS,
+- Catalog Center `8.9.1` / build `2026.08.27.3` launched successfully,
+- Production touched = NO.
 
 ## Resolved incidents in this subphase
 - `ERR-50-012`: API executed bound pricing contract incorrectly → call canonical `price_breakdown()`.
