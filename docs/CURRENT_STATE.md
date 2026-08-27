@@ -98,7 +98,7 @@ The runtime fix changes only the outer panel geometry to `pack`, preserving inte
 
 8.9.3 changes the call to the actually installed namespaced method `self._phase49_3i34_profile_by_key`, adds an executable wrapper-binding regression, and passes targeted/Single-AI/Windows package gates on runtime `9637829a255a1d09800bc062c2f049cf5d92b585`.
 
-The next gate is owner foreground Product Workspace QA on 8.9.3. Production remains untouched.
+That 8.9.3 checkpoint is historical and was superseded by 3I.37/3I.38. The current owner gate is Catalog Center 8.9.6 visual/functional QA. Production remains untouched.
 
 ## What is implemented now
 
@@ -252,70 +252,65 @@ These are source rollback anchors only.
 
 ## Exact next work
 
-### 1. Owner Local Windows gate
+### 1. Owner Local Windows 3I.38 gate
 Canonical root:
 `D:\projects\3DPrintHub`.
 
-Verify:
-- exact repository,
-- branch,
+Required preflight:
+- verify exact repository,
+- branch `agent/phase49-3i18-operator-bulk-ai-rebuild`,
 - clean worktree,
 - live GitHub branch head,
-- ff-only pull.
+- ff-only pull,
+- run current `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1`.
 
-Run:
-`catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` with exact head and `-LaunchApp`.
+Owner visual/functional QA on 8.9.6:
+- crawl/received ledger opens and shows known URLs/statuses,
+- a disposable Product can be rejected + local files/images purged while source URL/external ID remain as a rejected tombstone,
+- deletion cannot escape the Catalog `collected\` root,
+- rerunning the same Listing skips previously collected/rejected identities and continues to newer Products,
+- ordinary new Product Crawl/Direct Link/image/file receive still works,
+- Direct Link to a rejected Product skips before receive/download,
+- selected-Product bulk Content/SEO uses the same mother AI source mode,
+- single Product can clean/complete only Stage 4 without changing Profile/price/source/images/slider,
+- locked stages remain unchanged until explicit `اصلاح`,
+- image-only complete SEO does not spend an AI request,
+- existing 3I.35 Profile/filament behavior remains healthy.
 
-Owner QA:
-- existing Product opens and source URL remains intact,
-- register Profile from working form,
-- new Profile from latest,
-- multiple weight/time/support rows,
-- select-all materials/colors + local register,
-- same PLA/color across Bambu/eSUN stays distinct,
-- roll stock/rate preview,
-- fixed vs formula pricing,
-- AI preflight/progress/retry/configured fallback,
-- manual SEO/source review,
-- image/source/AI existing functions remain intact,
-- local actions do not rebuild the full Products page,
-- close/reopen preserves ledger.
+### 2. Local Django/Store regression
+Local SQLite is already owner-verified through `store.0039` from the prior gate. Re-verify:
+- effective DB path,
+- fresh backup if any schema write becomes necessary,
+- `django check`,
+- `makemigrations --check --dry-run`,
+- Store/Profile/Checkout regressions.
+3I.38 itself adds only Catalog SQLite state and no Django migration.
 
-### 2. Local Django/Store gate
-Use local SQLite only:
-- backup local DB,
-- inspect migration plan,
-- migrate local through 0039,
-- run Store/Profile/Checkout regressions,
-- verify no migration drift.
-
-### 3. Only after Local QA PASS
-Read-only Host audit:
+### 3. Only after owner Local QA PASS
+Perform read-only Host audit:
 - project root,
 - branch/current HEAD,
 - clean worktree,
 - live GitHub branch SHA,
 - exact Python/Django,
 - exact MySQL DB,
-- actual 0034..0039 rows,
+- actual `0034..0039` migration rows,
 - exact migration plan,
-- disk,
+- disk space,
 - `mysqldump` availability.
 
-Then fresh source + `.env*` + MySQL backups/checksums and rollback HEAD.
+Then create fresh tracked-source + environment + MySQL backups/checksums and record rollback HEAD.
 
 ### 4. Production deploy
-Only the owner-approved GitHub head is deployed:
+Deploy only the owner-approved GitHub head:
 - explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`,
-- verify exact SHA + fast-forward ancestry,
-- deploy source,
+- verify exact SHA + ff-only ancestry,
 - re-run Django checks/drift/DB/plan,
 - apply only actually pending approved migrations,
 - collectstatic,
 - Passenger restart,
 - Home/Store/Admin/Product/Profile API/Checkout/static/private-media/order verification,
 - update docs with exact Production SHA/migrations/backup.
-
 
 ## Owner Local QA checkpoint — 2026-08-27 PowerShell DB-probe stop
 
@@ -337,9 +332,11 @@ Earlier owner evidence on `ca9cc1160f407c0a78302ad75cb38396616aed52`:
 
 Current correction:
 - `ERR-49-057` records the wrapper defect,
-- resume from effective Local Django DB verification using Python stdin, create a fresh Django SQLite backup, inspect pending plan (expected only `0039` if the same Local DB is active), then migrate/test and run the current 31–35 Catalog gate.
+- historical 3I.35 DB-probe correction completed; the current Catalog gate is 31–38 and Local Django SQLite was subsequently verified through `0039`.
 
 ## Related docs
+- `docs/phases/PHASE49_3I38_CRAWL_LEDGER_STAGE_AI.md`
+- `docs/phases/PHASE49_3I37_SEVEN_STAGE_AI_SCREENSHOT.md`
 - `docs/phases/PHASE49_3I35_OPERATOR_LEDGER_RESILIENT_AI_FILAMENT.md`
 - `docs/phases/PHASE50_FINANCE_ADMIN_COMMAND_CENTER.md`
 - `docs/ERRORS.md`
