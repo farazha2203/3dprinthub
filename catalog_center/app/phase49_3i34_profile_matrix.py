@@ -478,6 +478,32 @@ def install_workspace(workspace_class) -> None:
         if not original_save(self, silent=True):
             return False
         profiles = [normalize_profile(item, index + 1) for index, item in enumerate(self._phase49_3i34_profiles)]
+        active_profiles = [item for item in profiles if item.get("is_active", True)]
+        if not active_profiles:
+            if not silent:
+                messagebox.showwarning("پروفایل محصول", "حداقل یک پروفایل فعال برای فروش لازم است.", parent=self)
+            return False
+        mode = MODE_BY_LABEL.get(self._phase49_3i34_mode_var.get(), "size_weight")
+        seen_keys = set()
+        for index, item in enumerate(active_profiles, 1):
+            key = str(item.get("key") or "")
+            if not key or key in seen_keys:
+                if not silent:
+                    messagebox.showwarning("پروفایل محصول", f"کلید پروفایل #{index} خالی یا تکراری است.", parent=self)
+                return False
+            seen_keys.add(key)
+            if _int(item.get("fixed_price"), 0) <= 0:
+                if not silent:
+                    messagebox.showwarning("پروفایل محصول", f"قیمت قطعی «{item.get('name') or index}» باید بیشتر از صفر باشد.", parent=self)
+                return False
+            if "weight" in mode and _num(item.get("weight_grams"), 0) <= 0:
+                if not silent:
+                    messagebox.showwarning("پروفایل محصول", f"وزن «{item.get('name') or index}» برای روش انتخاب فعلی لازم است.", parent=self)
+                return False
+            if "size" in mode and not str(item.get("size_label") or "").strip():
+                if not silent:
+                    messagebox.showwarning("پروفایل محصول", f"سایز «{item.get('name') or index}» برای روش انتخاب فعلی لازم است.", parent=self)
+                return False
         if profiles:
             defaults = [item for item in profiles if item.get("is_default")]
             if not defaults:
@@ -489,8 +515,7 @@ def install_workspace(workspace_class) -> None:
                         seen = True
                     elif item.get("is_default"):
                         item["is_default"] = False
-        mode = MODE_BY_LABEL.get(self._phase49_3i34_mode_var.get(), "size_weight")
-        low, high = profile_price_range(profiles)
+        low, high = profile_price_range(active_profiles)
         values = {
             "sales_profiles_json": json.dumps(profiles, ensure_ascii=False),
             "sales_profile_selection_mode": mode,
