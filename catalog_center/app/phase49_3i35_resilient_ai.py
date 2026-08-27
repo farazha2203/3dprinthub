@@ -242,7 +242,7 @@ def install_app(app_class) -> None:
             padding=10,
             style="Card.TLabelframe",
         )
-        panel.grid(row=50, column=0, columnspan=2, sticky="ew", padx=8, pady=8)
+        # settings_tab is pack-managed by UX87. Keep one geometry manager per parent.\n        panel.pack(fill="x", padx=8, pady=8)
         self._phase49_3i35_retry_var = tk.StringVar(
             value=str(retry_attempts(self))
         )
