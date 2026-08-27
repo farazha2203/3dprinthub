@@ -8,6 +8,11 @@ on:
       - catalog_center/app/version.py
       - catalog_center/app/phase49_3i29_windows_performance_ai.py
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
+      - catalog_center/app/phase49_3i36_stage_finalization.py
+      - catalog_center/app/phase49_readiness_wizard.py
+      - catalog_center/app/phase49_3e_ai_task_center.py
+      - catalog_center/app/phase49_3f_workspace.py
+      - catalog_center/app/phase49_3b_guided_wizard.py
       - catalog_center/app/phase49_3i35_operator_ledger.py
       - catalog_center/app/phase49_3i35_resilient_ai.py
       - catalog_center/app/phase49_3i35_readiness_review.py
@@ -86,6 +91,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v `
+            tests.test_phase49_3i36_stage_finalization `
             tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
@@ -144,6 +150,11 @@ jobs:
             'EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED',
             'EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED',
             'EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED',
+            'EPIC49_3I36_SEVEN_STAGE_FINALIZATION=ENABLED',
+            'EPIC49_3I36_AI_UNLOCKED_STAGE_ONLY=ENABLED',
+            'EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED',
+            'EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED',
+            'EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -218,7 +229,7 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix and 3I.35 operator-ledger/resilient-AI contracts
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI and 3I.36 seven-stage finalization contracts
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
