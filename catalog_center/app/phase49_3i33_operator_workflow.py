@@ -383,7 +383,7 @@ def install_workspace(workspace_class) -> None:
         ensure_schema(app.db)
         original_init(self, app, product_id)
         row = app.db.product(int(product_id))
-        self._phase49_3i33_quick_fixed_price = tk.StringVar(value=fixed_price_from_row(row))
+        self._phase49_3i33_quick_fixed_price = tk.StringVar(value="")
         self._phase49_3i33_ai_busy = False
         self._phase49_3i33_source_metrics_var = tk.StringVar(value="")
         hide_legacy_ai_buttons(self)
@@ -405,18 +405,9 @@ def install_workspace(workspace_class) -> None:
                 hide_widget(widget)
         ttk.Label(
             self.quick_tab,
-            text="قیمت قطعی فروش (تومان)",
-            font=("Tahoma", 10, "bold"),
-        ).grid(row=3, column=0, sticky="w", pady=5)
-        ttk.Entry(
-            self.quick_tab,
-            textvariable=self._phase49_3i33_quick_fixed_price,
-        ).grid(row=3, column=1, sticky="ew", padx=6, pady=5)
-        ttk.Label(
-            self.quick_tab,
-            text="فقط قیمت قطعی. وزن، نرخ متریال و قیمت پیشنهادی در مرحله «سفارش، قیمت و گزینه‌ها» مدیریت می‌شوند.",
+            text="قیمت، وزن و پروفایل فقط در مرحله «سفارش، قیمت و گزینه‌ها» مدیریت می‌شوند.",
             style="SubHeader.TLabel",
-        ).grid(row=3, column=2, columnspan=2, sticky="w", padx=6, pady=5)
+        ).grid(row=3, column=0, columnspan=4, sticky="w", padx=6, pady=5)
 
     def install_ai_panel(self):
         panel = ttk.LabelFrame(
@@ -508,17 +499,7 @@ def install_workspace(workspace_class) -> None:
         ).pack(side="left", padx=5)
 
     def pricing_state(self):
-        result = original_pricing_state(self) if callable(original_pricing_state) else None
-        variable = getattr(self, "_phase49_3i33_quick_fixed_price", None)
-        mode_var = getattr(self, "pricing_strategy_var", None)
-        if variable is not None and mode_var is not None:
-            mode = str(mode_var.get() or "dynamic")
-            if mode != "fixed":
-                variable.set("")
-            elif not str(variable.get() or "").strip():
-                row = self.db.product(int(self.product_id))
-                variable.set(fixed_price_from_row(row))
-        return result
+        return original_pricing_state(self) if callable(original_pricing_state) else None
 
     def refresh_metrics_text(self, row=None):
         row = row or self.db.product(int(self.product_id))
@@ -551,37 +532,12 @@ def install_workspace(workspace_class) -> None:
     def reload(self):
         result = original_reload(self)
         if hasattr(self, "_phase49_3i33_quick_fixed_price"):
-            self._phase49_3i33_quick_fixed_price.set(
-                fixed_price_from_row(self.db.product(int(self.product_id)))
-            )
+            self._phase49_3i33_quick_fixed_price.set("")
         if hasattr(self, "_phase49_3i33_source_metrics_var"):
             refresh_metrics_text(self)
         return result
 
     def save(self, silent=False):
-        fixed_text = str(self._phase49_3i33_quick_fixed_price.get() or "").replace(",", "").strip()
-        if fixed_text:
-            try:
-                fixed = int(float(fixed_text))
-            except Exception:
-                if not silent:
-                    messagebox.showwarning("3DPrintHub", "قیمت قطعی باید عدد معتبر تومان باشد.", parent=self)
-                return False
-            if fixed <= 0:
-                if not silent:
-                    messagebox.showwarning("3DPrintHub", "قیمت قطعی باید بیشتر از صفر باشد.", parent=self)
-                return False
-            self.final_price_var.set(str(fixed))
-            if hasattr(self, "price_min_var"):
-                self.price_min_var.set(str(fixed))
-            if hasattr(self, "price_max_var"):
-                self.price_max_var.set(str(fixed))
-            if hasattr(self, "pricing_strategy_var"):
-                self.pricing_strategy_var.set("fixed")
-                refresh_state = getattr(self, "_phase49_3f_refresh_pricing_state", None)
-                if callable(refresh_state):
-                    refresh_state()
-
         span = OperationTelemetry("workspace-local-save", int(self.product_id))
         try:
             with suppress_global_products_refresh(self.app):
