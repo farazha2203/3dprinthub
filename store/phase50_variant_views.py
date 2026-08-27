@@ -33,7 +33,8 @@ def variant_commerce_options_view(request):
             "selection_mode": str(getattr(product, "sales_profile_selection_mode", "size_build") or "size_build"),
             "selector_label": str(getattr(product, "sales_profile_selector_label", "") or ""),
         }
-        price = getattr(variant, "price_breakdown", {}) or {}
+        price_contract = getattr(variant, "price_breakdown", {})
+        price = price_contract() if callable(price_contract) else (price_contract or {})
         payload[str(variant.pk)] = {
             "product_id": product.pk,
             "profile_name": str(getattr(variant, "sales_profile_name", "") or ""),
