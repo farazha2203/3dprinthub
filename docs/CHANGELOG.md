@@ -1,5 +1,19 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Catalog Center 8.9.5 / Phase49.3I.37
+- added one persisted Product AI source mode: Link / Saved Data / Screenshot;
+- replaced visible per-run Product AI modes with one missing-only seven-stage orchestrator shared by single and selected-Product bulk runs;
+- separated stage data completion (`✅`) from operator finalization (`🔒`) and persisted finalization locks in Catalog SQLite;
+- AI now skips finalized stages and never owns Profile/price/material/color/brand/stock/publication fields;
+- fixed `ERR-49-061`: both `sales_profile_ledger_json` and legacy `sales_profiles_json` are protected by the Commerce lock;
+- unified Persian identity/SEO validation; `Twistmas Tree` is normalized to `درخت کریسمس اسپیرال`, with mixed Cyrillic/unrelated Latin SEO contamination rejected;
+- kept image rename/WebP generation deterministic and separate from AI; AI image ownership is SEO metadata only when missing;
+- upgraded Product-page Screenshot to a selected site image with SEO/metadata and preserved `source_page_url`;
+- runtime `8d5e58a839c89eedbe258d9236889834fc02d9a9`; targeted run `33074245603` PASS (77 tests); Single Active AI `33074245489` PASS; Windows run `33074245604` PASS;
+- artifact ID `9647216177`; EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`;
+- Production untouched; owner Local visual 3I.37 acceptance remains the next gate.
+
+
 ## 2026-08-27 — Catalog Center 8.9.3 Profile Workspace Binding Hotfix
 - owner 8.9.2 diagnostic confirmed startup success, then Product 305/303 open callbacks failed with `AttributeError: ProductWorkspace has no attribute _profile_by_key`,
 - recorded as `ERR-49-060`,
