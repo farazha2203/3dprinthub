@@ -117,6 +117,12 @@ Verification:
 - brand-aware rate/API regression PASS,
 - immutable support/brand/manufacturer checkout snapshot PASS.
 
+## Owner Local QA checkpoint
+- owner Local fast-forward to `35ab63105f30fdca42518d5273a424a3200977e3` succeeded,
+- previous Local SQLite run already reached `0038` with 15 tests PASS,
+- current 3I.35 owner gate stopped before any new migration because the wrapper's multiline PowerShell `python -c` DB probe lost quotes (`ERR-49-057`),
+- resume from read-only effective Local DB detection via stdin, backup the actual Django SQLite file, then inspect/apply only the pending plan and run the current 31–35 gate.
+
 ## Production gate for 50.A.2B–2E
 1. Owner Local Windows/Django QA on exact current GitHub head.
 2. Read-only Host verify: root, branch, HEAD, clean worktree, live branch SHA, Python/Django, exact MySQL DB and actual `0034..0039` migration state.
