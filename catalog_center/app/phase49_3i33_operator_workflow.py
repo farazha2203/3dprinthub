@@ -392,6 +392,7 @@ def install_workspace(workspace_class) -> None:
         install_metrics_panel(self)
         install_image_panel(self)
         install_final_panel(self)
+        refresh_metrics_text(self, row)
         self.refresh_gallery()
 
     def install_quick_price(self):
@@ -428,6 +429,9 @@ def install_workspace(workspace_class) -> None:
         try:
             panel.pack(fill="x", pady=(0, 8), before=children[0] if children else None)
         except Exception:
+            try:
+            panel.pack(fill="x", pady=(0, 8), after=self._phase49_3i33_ai_panel)
+        except Exception:
             panel.pack(fill="x", pady=(0, 8))
         for mode in ("link", "data", "screenshot", "repair"):
             ttk.Button(
@@ -441,6 +445,7 @@ def install_workspace(workspace_class) -> None:
             text="متریال و رنگ به AI سپرده نمی‌شوند. هر مسیر متن فارسی، SEO و Metadata تصاویر منتخب را تکمیل می‌کند.",
             style="SubHeader.TLabel",
         ).pack(side="left", padx=5)
+        self._phase49_3i33_ai_panel = panel
 
     def install_metrics_panel(self):
         panel = ttk.LabelFrame(
