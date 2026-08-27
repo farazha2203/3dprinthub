@@ -429,9 +429,6 @@ def install_workspace(workspace_class) -> None:
         try:
             panel.pack(fill="x", pady=(0, 8), before=children[0] if children else None)
         except Exception:
-            try:
-            panel.pack(fill="x", pady=(0, 8), after=self._phase49_3i33_ai_panel)
-        except Exception:
             panel.pack(fill="x", pady=(0, 8))
         for mode in ("link", "data", "screenshot", "repair"):
             ttk.Button(
@@ -454,7 +451,10 @@ def install_workspace(workspace_class) -> None:
             padding=7,
             style="Card.TLabelframe",
         )
-        panel.pack(fill="x", pady=(0, 8))
+        try:
+            panel.pack(fill="x", pady=(0, 8), after=self._phase49_3i33_ai_panel)
+        except Exception:
+            panel.pack(fill="x", pady=(0, 8))
         ttk.Label(
             panel,
             textvariable=self._phase49_3i33_source_metrics_var,
