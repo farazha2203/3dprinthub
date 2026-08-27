@@ -58,8 +58,9 @@ SPECS_FIELDS = {
     "source_print_count", "source_boost_count", "source_rating", "source_rating_count",
 }
 PUBLISH_FIELDS = {
+    # Operator publication choices are finalizable; runtime queue/ACK fields such
+    # as upload_ready/workflow_status/server_status must remain writable by publish.
     "approved_for_sale", "publish_as_product", "publish_as_portfolio",
-    "upload_ready", "workflow_status",
 }
 
 
@@ -379,6 +380,20 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
             "lead_time_min_days": max(0, number("lead_min_var", _row_value(row, "lead_time_min_days", 1))),
             "lead_time_max_days": max(0, number("lead_max_var", _row_value(row, "lead_time_max_days", 3))),
         })
+        strategy = str(_get_var(workspace, "pricing_strategy_var") or "").strip()
+        if strategy in {"fixed", "range", "dynamic"}:
+            values["pricing_strategy"] = strategy
+        try:
+            from .product_studio import AVAILABILITY_CODES
+            availability = str(_get_var(workspace, "availability_var") or "").strip()
+            if availability:
+                values["availability_status"] = AVAILABILITY_CODES.get(
+                    availability, str(_row_value(row, "availability_status", "made_to_order"))
+                )
+        except Exception:
+            pass
+        if hasattr(workspace, "has_3d_file_var"):
+            values["has_3d_file"] = int(bool(_get_var(workspace, "has_3d_file_var", 0)))
 
     elif stage == "images":
         # Selection/upload/image editor actions already persist locally. Finalize only
@@ -592,13 +607,16 @@ def install_workspace(workspace_class, readiness_module) -> None:
             return False
         locks = stage_locks(row)
         locks.pop(stage, None)
-        values = {LOCK_COLUMN: json.dumps(locks, ensure_ascii=False)}
+        # Unlock first. The manual-approval field belongs to the stage itself and
+        # would correctly be blocked while the old lock is still active.
+        self.db.update_product(
+            int(self.product_id),
+            {LOCK_COLUMN: json.dumps(locks, ensure_ascii=False)},
+        )
         if stage == "content":
-            values["seo_manual_approved"] = 0
+            self.db.update_product(int(self.product_id), {"seo_manual_approved": 0})
         if stage == "specs":
-            values["source_review_manual_approved"] = 0
-        # Lock column is deliberately outside every stage and is always writable.
-        self.db.update_product(int(self.product_id), values)
+            self.db.update_product(int(self.product_id), {"source_review_manual_approved": 0})
         audit_event(
             "workflow", "stage_unlocked", product_id=int(self.product_id),
             source_file=__file__, message=stage, detail={"stage": stage, "phase": PHASE},
