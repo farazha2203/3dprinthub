@@ -147,9 +147,17 @@ def _resolve_material(product, name: str):
     from website.models import Material
     name = str(name or "").strip()
     if name:
-        obj = Material.objects.filter(name__iexact=name, is_active=True).first()
+        obj = Material.objects.filter(name__iexact=name).order_by("pk").first()
         if obj is None:
-            raise ValidationError(f"متریال پروفایل «{name}» روی سایت تعریف نشده است.")
+            obj = Material.objects.create(
+                name=name[:100],
+                main_usage="تعریف‌شده توسط Catalog Center",
+                sample_parts="پروفایل‌های فروش 3DPrintHub",
+                is_active=True,
+            )
+        elif not obj.is_active:
+            Material.objects.filter(pk=obj.pk).update(is_active=True)
+            obj.is_active = True
         return obj
     current = product.variants.filter(is_active=True).select_related("material").order_by("pk").first()
     if current is not None:
@@ -177,16 +185,54 @@ def _resolve_quality(product, name: str):
     return obj
 
 
-def _resolve_color(material, name: str):
+def _resolve_color(material, item: dict):
     from .models import MaterialColorOption
-    name = str(name or "").strip()
+    name = str(item.get("color") or "").strip()
     if not name:
         return None
-    obj = MaterialColorOption.objects.filter(material=material, name__iexact=name, is_active=True).first()
-    if obj is None:
-        raise ValidationError(f"رنگ «{name}» برای متریال «{material}» روی سایت تعریف نشده است.")
-    return obj
+    brand = str(item.get("brand") or item.get("brand_name") or "").strip()[:120]
+    manufacturer = str(item.get("manufacturer") or item.get("manufacturer_name") or "").strip()[:160]
+    obj = MaterialColorOption.objects.filter(
+        material=material,
+        name__iexact=name,
+        brand_name__iexact=brand,
+    ).order_by("pk").first()
 
+    defaults = {
+        "brand_name": brand,
+        "manufacturer_name": manufacturer,
+        "roll_weight_grams": _number(item, "roll_weight_grams", 1000),
+        "stock_roll_count_snapshot": _number(item, "stock_roll_count", 0),
+        "purchase_price_per_roll": _integer(item, "purchase_price_per_roll", 0),
+        "sale_price_per_roll": _integer(item, "sale_price_per_roll", 0),
+        "usd_price_per_roll": _number(item, "usd_price_per_roll", 0),
+        "usd_fx_rate_toman": _number(item, "usd_fx_rate_toman", 0),
+        "is_active": True,
+    }
+    if obj is None:
+        base = re.sub(r"[^a-z0-9]+", "-", f"{brand}-{name}".lower()).strip("-") or "color"
+        code = base[:100]
+        suffix = 1
+        candidate = code
+        while MaterialColorOption.objects.filter(material=material, code=candidate).exists():
+            suffix += 1
+            candidate = f"{code[:108]}-{suffix}"
+        obj = MaterialColorOption.objects.create(
+            material=material,
+            name=name[:100],
+            code=candidate,
+            **defaults,
+        )
+    else:
+        changed = {}
+        for field, value in defaults.items():
+            if getattr(obj, field) != value:
+                changed[field] = value
+        if changed:
+            MaterialColorOption.objects.filter(pk=obj.pk).update(**changed)
+            for field, value in changed.items():
+                setattr(obj, field, value)
+    return obj
 
 def _number(item: dict, key: str, default=0):
     value = item.get(key, default)
@@ -227,6 +273,10 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         product.pricing_policy = "profile_fixed"
         product.fixed_price = 0
         product.price_is_final = all(_integer(row, "fixed_price", 0) > 0 for row in rows)
+    else:
+        product.pricing_policy = "formula"
+        product.fixed_price = 0
+        product.price_is_final = False
     product.save(
         update_fields=[
             "order_mode",
@@ -255,7 +305,7 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         active_codes.add(code)
         material = _resolve_material(product, str(item.get("material") or ""))
         quality = _resolve_quality(product, str(item.get("quality") or ""))
-        color = _resolve_color(material, str(item.get("color") or ""))
+        color = _resolve_color(material, item)
 
         weight = _number(item, "weight_grams", item.get("final_weight_grams") or 0)
         material_weight = _number(item, "material_weight_grams", weight)
@@ -287,6 +337,7 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "build_profile": build_profile,
             "material_weight_grams": material_weight,
             "final_weight_grams": weight,
+            "support_weight_grams": _number(item, "support_weight_grams", 0),
             "shipping_weight_grams": _number(item, "shipping_weight_grams", 0),
             "packaging_weight_grams": _number(item, "packaging_weight_grams", 0),
             "part_length_cm": _number(item, "part_length_cm", 0),
