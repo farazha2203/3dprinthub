@@ -103,7 +103,7 @@
       "daily_limit": 20
     }
   ],
-  "package_version": "8.9.3",
+  "package_version": "8.9.4",
   "portfolio_harvest_sources": [
     "makerworld",
     "printables",
