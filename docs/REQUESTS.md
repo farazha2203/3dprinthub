@@ -137,7 +137,7 @@ Verification:
 
 
 ## REQ-50-026 — Operator-ledger Profiles, resilient AI and brand-aware filament offers
-Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / 8.9.2 PACKAGED HOTFIX PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / 8.9.3 PACKAGED HOTFIX PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Product Step 2 uses the upper controls as a working form and registered Profiles as the transport/publish authority,
@@ -167,7 +167,9 @@ Verification:
 - EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
 - Owner Local automated gate: PASS at `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local SQLite `0039` applied; 16 Store regressions + 107 Catalog tests PASS; Production untouched,
 - 8.9.1 foreground launch then exposed `ERR-49-059` before visible UI; 8.9.2 fixes the pack/grid parent collision,
-- 8.9.2 startup hotfix run `33066468014` PASS; artifact `9643957471`; EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
+- 8.9.2 startup hotfix run `33066468014` PASS, but owner Product Workspace QA then exposed `ERR-49-060`,
+- 8.9.3 fixes `ERR-49-060` by using the installed namespaced Profile lookup,
+- 8.9.3 run `33067618679` PASS; artifact `9644438652`; EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
