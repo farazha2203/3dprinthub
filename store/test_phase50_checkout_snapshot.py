@@ -17,6 +17,7 @@ from .models import (
     StoreOrder,
     StoreOrderItem,
 )
+from .phase39_models import MaterialColorOption
 from .phase50_checkout_snapshot import QUOTE_SCHEMA
 
 
@@ -45,6 +46,16 @@ class Phase50CheckoutSnapshotTests(TestCase):
             code="snapshot-quality",
             name="کیفیت تست اسنپ‌شات",
         )
+        self.color = MaterialColorOption.objects.create(
+            material=self.material,
+            name="سفید مات",
+            code="snapshot-white-bambu",
+            brand_name="Bambu Lab",
+            manufacturer_name="Bambu Lab",
+            roll_weight_grams=Decimal("1000"),
+            stock_roll_count_snapshot=Decimal("1"),
+            sale_price_per_roll=3_600_000,
+        )
         self.category = Category.objects.create(
             name="اسنپ‌شات",
             slug="snapshot-category",
@@ -65,9 +76,11 @@ class Phase50CheckoutSnapshotTests(TestCase):
             product=self.product,
             material=self.material,
             quality=self.quality,
+            color=self.color,
             code="SNAPSHOT-V1",
             material_weight_grams=Decimal("115"),
             final_weight_grams=Decimal("120"),
+            support_weight_grams=Decimal("12"),
             shipping_weight_grams=Decimal("0"),
             packaging_weight_grams=Decimal("30"),
             part_length_cm=Decimal("18"),
@@ -140,6 +153,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
             "sales_profile_selection_mode",
             "sales_profile_selection_value",
             "final_weight_grams",
+            "support_weight_grams",
+            "filament_brand_name",
+            "filament_manufacturer_name",
             "shipping_weight_grams",
             "print_time_minutes",
         ):
@@ -163,6 +179,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(item.size_label, "20 سانتی‌متر")
         self.assertEqual(item.build_profile, "reinforced")
         self.assertEqual(item.final_weight_grams, Decimal("120.00"))
+        self.assertEqual(item.support_weight_grams, Decimal("12.00"))
+        self.assertEqual(item.filament_brand_name, "Bambu Lab")
+        self.assertEqual(item.filament_manufacturer_name, "Bambu Lab")
         self.assertEqual(item.packaging_weight_grams, Decimal("30.00"))
         self.assertEqual(item.shipping_weight_grams, Decimal("150.00"))
         self.assertEqual(item.unit_weight_grams, Decimal("150.00"))
@@ -187,6 +206,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(len(quote["packages"]), 1)
         self.assertEqual(quote["packages"][0]["quantity"], 2)
         self.assertEqual(quote["packages"][0]["unit_shipping_weight_grams"], "150.00")
+        self.assertEqual(quote["packages"][0]["support_weight_grams"], "12.00")
+        self.assertEqual(quote["packages"][0]["filament_brand_name"], "Bambu Lab")
+        self.assertEqual(quote["packages"][0]["filament_manufacturer_name"], "Bambu Lab")
         self.assertEqual(
             quote["packages"][0]["part_dimensions_cm"],
             {"length": "18.00", "width": "11.00", "height": "7.00"},
@@ -205,12 +227,16 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.variant.size_label = "99 سانتی‌متر"
         self.variant.build_profile = "solid"
         self.variant.final_weight_grams = Decimal("999")
+        self.variant.support_weight_grams = Decimal("77")
         self.variant.packaging_weight_grams = Decimal("99")
         self.variant.part_length_cm = Decimal("88")
         self.variant.part_width_cm = Decimal("88")
         self.variant.part_height_cm = Decimal("88")
         self.variant.package_length_cm = Decimal("99")
         self.variant.save()
+        self.color.brand_name = "Changed Brand"
+        self.color.manufacturer_name = "Changed Manufacturer"
+        self.color.save()
 
         item.refresh_from_db()
         order.refresh_from_db()
@@ -220,6 +246,9 @@ class Phase50CheckoutSnapshotTests(TestCase):
         self.assertEqual(item.size_label, "20 سانتی‌متر")
         self.assertEqual(item.build_profile, "reinforced")
         self.assertEqual(item.final_weight_grams, Decimal("120.00"))
+        self.assertEqual(item.support_weight_grams, Decimal("12.00"))
+        self.assertEqual(item.filament_brand_name, "Bambu Lab")
+        self.assertEqual(item.filament_manufacturer_name, "Bambu Lab")
         self.assertEqual(item.shipping_weight_grams, Decimal("150.00"))
         self.assertEqual(item.part_length_cm, Decimal("18.00"))
         self.assertEqual(item.part_width_cm, Decimal("11.00"))
