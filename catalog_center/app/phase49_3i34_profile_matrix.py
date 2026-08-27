@@ -379,7 +379,7 @@ def install_workspace(workspace_class) -> None:
         key = str(self._phase49_3i34_selected_key or "")
         if not key:
             return True
-        current = self._profile_by_key(key)
+        current = self._phase49_3i34_profile_by_key(key)
         if current is None:
             return True
         try:
