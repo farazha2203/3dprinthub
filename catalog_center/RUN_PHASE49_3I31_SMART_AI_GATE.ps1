@@ -55,6 +55,7 @@ Write-Host "BUILD_ID=$Build"
 Write-Host ""
 Write-Host "===== PYTHON COMPILE ====="
 & $Py -m py_compile `
+    "$Catalog\app\phase49_3i36_stage_finalization.py" `
     "$Catalog\app\phase49_3i35_operator_ledger.py" `
     "$Catalog\app\phase49_3i35_resilient_ai.py" `
     "$Catalog\app\phase49_3i35_readiness_review.py" `
@@ -68,6 +69,7 @@ Write-Host "===== PYTHON COMPILE ====="
     "$Catalog\app\phase49_3i17_single_active_ai_runtime.py" `
     "$Catalog\app\phase49_3i18_operator_editing.py" `
     "$Catalog\app\phase49_3i25_product_first_workflow.py" `
+    "$Catalog\tests\test_phase49_3i36_stage_finalization.py" `
     "$Catalog\tests\test_phase49_3i35_operator_workflow.py" `
     "$Catalog\tests\test_phase49_3i34_profile_matrix.py" `
     "$Catalog\tests\test_phase49_3i33_operator_workflow.py" `
@@ -86,6 +88,7 @@ Write-Host ""
 Write-Host "===== FOCUSED REGRESSION ====="
 Set-Location $Catalog
 & $Py -m unittest -v `
+    tests.test_phase49_3i36_stage_finalization `
     tests.test_phase49_3i35_operator_workflow `
     tests.test_phase49_3i34_profile_matrix `
     tests.test_phase49_3i33_operator_workflow `
