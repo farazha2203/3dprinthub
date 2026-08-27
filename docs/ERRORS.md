@@ -314,6 +314,30 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** any additive UI layer must inspect the final visible parent’s existing geometry manager before mounting widgets. A launch marker or `--verify-only` does not replace foreground owner startup QA.
 
+
+### ERR-49-060 — Profile Matrix selection callback called an unbound short-name helper
+**Date:** 2026-08-27  
+**Environment:** owner foreground Local QA of Catalog Center 8.9.2 after `ERR-49-059` startup geometry fix.
+
+**Symptom:** Catalog Center 8.9.2 itself started successfully, but opening real Products 305 and 303 emitted repeated Tk callback failures and prevented the Profile/Order workspace from becoming usable:
+`AttributeError: 'ProductWorkspace' object has no attribute '_profile_by_key'`.
+
+**Evidence:** owner diagnostic generated at local 14:54:17 showed 8.9.2/build 2026.08.27.4 startup success, Product Workspace open events for 305 and 303, then four repeated callback failures at 14:53:54 and 14:54:00. The current-session hidden-model-scan warnings are expected safeguards, not this failure.
+
+**Root Cause:** `phase49_3i34_profile_matrix.install_workspace()` defined local helper `_profile_by_key` but installed it on the wrapped class only as `_phase49_3i34_profile_by_key`. `_load_selected()` incorrectly called `self._profile_by_key(key)`, a name never installed on `ProductWorkspace`. Other Profile Matrix call sites already used the correct namespaced method.
+
+**Correct Fix:** change the selected-profile lookup to `self._phase49_3i34_profile_by_key(key)`. No schema, Product data, Store migration or Host behavior changed.
+
+**Regression:** `test_selected_profile_loader_uses_installed_namespaced_lookup` installs the real 3I.34 wrapper on a minimal class and executes the selected-profile loader without Tk; the old call raises and the corrected namespaced binding succeeds.
+
+**Verification:** targeted Phase49.3I.31–35 run `33067612565` PASS; final-head Single Active AI run `33067618639` PASS; Windows one-file run `33067618679` PASS on runtime `9637829a255a1d09800bc062c2f049cf5d92b585`, including full Phase49 regression, launcher composition, source URL guard, one-file build/self-verify, manifest/SHA and artifact upload.
+
+**Release:** Catalog Center `8.9.3` / build `2026.08.27.5`; artifact `9644438652`; EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`; artifact ZIP digest `sha256:216b62072fd95a0a4d292b28ce99605fd60f3e4d9622d06987d6fe5b434e6141`.
+
+**Rollback anchor:** `backup/pre-err49-060-profile-matrix-bind-fix-20260827` → `6f9334705c74a65d47473580944d79d61d501293`.
+
+**Prevention:** nested UI helper methods must be called through the exact namespaced attribute actually installed on the final wrapped class. Static presence tests are insufficient for wrapped callback binding; execute callback contracts on a minimal installed class.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
