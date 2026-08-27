@@ -22,10 +22,10 @@ Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
 Current Store/Profile/Filament CI runtime: `d519a360e65b79db4b62af206b95f63c3539bc12`
 Current Store/Profile/Filament CI run: `33059883188` PASS
-Current Windows packaged runtime: `9637829a255a1d09800bc062c2f049cf5d92b585`
-Catalog Center: `8.9.3` / build `2026.08.27.5`
-Windows artifact ID: `9644438652`
-Windows EXE SHA256: `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`
+Current Windows packaged runtime: `8d5e58a839c89eedbe258d9236889834fc02d9a9`
+Catalog Center: `8.9.5` / build `2026.08.27.7`
+Windows artifact ID: `9647216177`
+Windows EXE SHA256: `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`
 Last owner Local automated gate: PASS at local head `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local Django SQLite is through `store.0039`; backup `D:\projects\3dprinthub-backups\phase49-3i35-resume-20260827-142404\django-local-before-0039.sqlite3`.
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
