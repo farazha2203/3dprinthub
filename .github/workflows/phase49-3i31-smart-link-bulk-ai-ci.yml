@@ -1,4 +1,4 @@
-name: Phase49.3I.31-36 Stage Finalization + Operator Ledger CI
+name: Phase49.3I.31-37 Stage Finalization + Operator Ledger CI
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
       - "catalog_center/app/phase49_3i36_stage_finalization.py"
+      - "catalog_center/app/phase49_3i37_seven_stage_ai.py"
+      - "catalog_center/tests/test_phase49_3i37_seven_stage_ai.py"
       - "catalog_center/app/phase49_readiness_wizard.py"
       - "catalog_center/app/phase49_3e_ai_task_center.py"
       - "catalog_center/app/phase49_3f_workspace.py"
@@ -39,7 +41,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-36:
+  phase49-3i31-37:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -71,6 +73,7 @@ jobs:
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3i36_stage_finalization.py \
+            catalog_center/app/phase49_3i37_seven_stage_ai.py \
             catalog_center/app/phase49_3i35_operator_ledger.py \
             catalog_center/app/phase49_3i35_resilient_ai.py \
             catalog_center/app/phase49_3i35_readiness_review.py \
@@ -82,6 +85,7 @@ jobs:
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
             catalog_center/tests/test_phase49_3i36_stage_finalization.py \
+            catalog_center/tests/test_phase49_3i37_seven_stage_ai.py \
             catalog_center/tests/test_phase49_3i35_operator_workflow.py \
             catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
@@ -93,6 +97,7 @@ jobs:
         run: |
           python -m unittest -v \
             tests.test_phase49_3i36_stage_finalization \
+            tests.test_phase49_3i37_seven_stage_ai \
             tests.test_phase49_3i35_operator_workflow \
             tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
@@ -112,6 +117,7 @@ jobs:
           phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
           phase34 = Path("catalog_center/app/phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
           phase36 = Path("catalog_center/app/phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
+          phase37 = Path("catalog_center/app/phase49_3i37_seven_stage_ai.py").read_text(encoding="utf-8")
           phase35_ledger = Path("catalog_center/app/phase49_3i35_operator_ledger.py").read_text(encoding="utf-8")
           phase35_ai = Path("catalog_center/app/phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
           phase35_review = Path("catalog_center/app/phase49_3i35_readiness_review.py").read_text(encoding="utf-8")
@@ -147,6 +153,11 @@ jobs:
           assert '_install_phase49_3i36_database(Database)' in pricing
           assert 'operator_stage_locks_json' in phase36
           assert 'filter_ai_updates' in phase36
+          assert '_install_phase49_3i37_workspace(workspace_class)' in pricing
+          assert 'AI_SOURCE_MODES' in phase37
+          assert 'run_resilient_orchestrator' in phase37
+          assert 'capture_screenshot_for_site' in phase37
+          assert 'validate_editorial_pack' in phase37
           assert 'sales_profile_ledger_json' in phase35_ledger
           assert 'configured_ai_candidates' in phase35_ai
           assert 'seo_manual_approved' in phase35_review
@@ -167,6 +178,9 @@ jobs:
           print("PHASE49_3I35_READINESS=MANUAL_SEO_SOURCE_REVIEW")
           print("PHASE49_3I36_STAGE_LOCKS=SEVEN_PERSISTED_OPERATOR_FINALIZATIONS")
           print("PHASE49_3I36_AI_WRITE_SCOPE=UNLOCKED_STAGES_ONLY")
+          print("PHASE49_3I37_AI_ORCHESTRATOR=SEVEN_STAGE_MISSING_ONLY")
+          print("PHASE49_3I37_SOURCE_MODE=LINK_DATA_SCREENSHOT")
+          print("PHASE49_3I37_SCREENSHOT=SELECTED_SITE_IMAGE_WITH_UPSTREAM")
           PY
 
       - name: Django safety
