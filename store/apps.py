@@ -34,6 +34,12 @@ class StoreConfig(AppConfig):
         from .phase50_sales_profiles import install as install_phase50_sales_profiles
         install_phase50_sales_profiles()
 
+        # Phase50.A.2D profile matrix extends sales profiles with dependent
+        # size/weight selection and per-profile part dimensions. Migration 0038
+        # owns these columns while this module contributes the runtime fields.
+        from .phase50_profile_matrix import install_model_fields as install_phase50_profile_matrix
+        install_phase50_profile_matrix()
+
         # Phase50.A.2B migration 0036 owns immutable selected-profile/shipping
         # snapshot fields. Contribute them before Admin/views are composed.
         from . import phase50_checkout_snapshot
