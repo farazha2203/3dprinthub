@@ -1,0 +1,300 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from PIL import Image
+
+from app.db import Database
+from app import phase49_3c_image_pipeline as image_pipeline
+from app.phase49_3i34_profile_matrix import ensure_schema as ensure_profile_schema
+from app.phase49_3i35_operator_ledger import ensure_schema as ensure_ledger_schema
+from app.phase49_3i36_stage_finalization import LOCK_COLUMN, install_database
+from app.phase49_3i37_seven_stage_ai import (
+    AI_SOURCE_MODES,
+    SOURCE_SETTING,
+    capture_screenshot_for_site,
+    orchestrate_once,
+    source_mode,
+    validate_editorial_pack,
+)
+
+
+class _Settings:
+    def __init__(self, values=None):
+        self.values = dict(values or {})
+
+    def setting(self, key, default=""):
+        return self.values.get(key, default)
+
+
+class Phase493I37SevenStageAITests(unittest.TestCase):
+    def _db(self, path: Path):
+        class LockedDatabase(Database):
+            pass
+
+        install_database(LockedDatabase)
+        db = LockedDatabase(path)
+        ensure_profile_schema(db)
+        ensure_ledger_schema(db)
+        image_pipeline.ensure_schema(db)
+        return db
+
+    def _product(self, db, local_dir: Path, **extra):
+        local_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "source_code": "makerworld",
+            "external_id": "twistmas-303",
+            "source_url": "https://makerworld.com/en/models/1936731-twistmas-tree",
+            "source_title": "Twistmas Tree",
+            "title_fa": "",
+            "short_description_fa": "",
+            "description_fa": "",
+            "local_dir": str(local_dir),
+        }
+        payload.update(extra)
+        db.upsert_product(payload)
+        return int(db.products()[0]["id"])
+
+    def test_source_mode_has_exact_three_persisted_choices(self):
+        self.assertEqual(set(AI_SOURCE_MODES), {"link", "data", "screenshot"})
+        self.assertEqual(source_mode(SimpleNamespace(db=_Settings({SOURCE_SETTING: "data"}))), "data")
+        self.assertEqual(source_mode(SimpleNamespace(db=_Settings({SOURCE_SETTING: "bad"}))), "link")
+
+    def test_editorial_guard_canonicalizes_twistmas_identity_and_rejects_language_noise(self):
+        pack = {
+            "title_fa": "تویست‌ماس تری",
+            "short_description_fa": "یک مدل سه‌بعدی تزئینی برای کریسمس.",
+            "description_fa": "این مدل برای چاپ سه‌بعدی و دکور کریسمس طراحی شده است.",
+            "seo_title_fa": "خرید Twistmas Tree",
+            "seo_description_fa": "مدل درخت کریسمس اسپیرال برای دکور و چاپ سه‌بعدی.",
+            "material_recommendations": ["PLA"],
+            "suggested_category_slug": "decor",
+        }
+        clean = validate_editorial_pack("Twistmas Tree", pack)
+        self.assertEqual(clean["title_fa"], "درخت کریسمس اسپیرال")
+        self.assertIn("درخت کریسمس اسپیرال", clean["seo_title_fa"])
+        self.assertEqual(clean["material_recommendations"], [])
+        self.assertEqual(clean["suggested_category_slug"], "")
+
+        noisy = dict(clean)
+        noisy["seo_description_fa"] = "مدل درخت کریسمس для دکوراسیون."
+        with self.assertRaises(RuntimeError):
+            validate_editorial_pack("Twistmas Tree", noisy)
+
+        latin_noise = dict(clean)
+        latin_noise["seo_description_fa"] = "مدل درخت کریسمس اسپیرال kecil برای دکور."
+        with self.assertRaises(RuntimeError):
+            validate_editorial_pack("Twistmas Tree", latin_noise)
+
+    def test_orchestrator_fills_missing_editorial_stages_without_touching_profile_commerce(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_id = self._product(db, root / "product")
+                profile = [{
+                    "key": "20cm",
+                    "name": "۲۰ سانت",
+                    "production_rows": [{"weight_grams": 100, "print_time_minutes": 60, "support_weight_grams": 10}],
+                }]
+                db.update_product(product_id, {
+                    "sales_profiles_json": json.dumps(profile, ensure_ascii=False),
+                    "sales_profile_ledger_json": json.dumps(profile, ensure_ascii=False),
+                    "price_min": 250000,
+                    "price_max": 300000,
+                    LOCK_COLUMN: json.dumps({"commerce": {"locked": True}}, ensure_ascii=False),
+                })
+                app = SimpleNamespace(db=db)
+                source = {
+                    "source_url": "https://makerworld.com/en/models/1936731-twistmas-tree",
+                    "source_title": "Twistmas Tree",
+                    "source_description": "Verified source facts",
+                    "raw_source_description": "A spiral Christmas tree model.",
+                    "facts": {"like_count": 12, "estimated_weight_grams": 139},
+                    "evidence": {"like_count": 12, "estimated_weight_grams": 139},
+                }
+                pack = {
+                    "title_fa": "تویست‌ماس تری",
+                    "short_description_fa": "مدل سه‌بعدی درخت کریسمس اسپیرال برای دکور.",
+                    "description_fa": "درخت کریسمس اسپیرال یک مدل تزئینی مناسب چاپ سه‌بعدی است.",
+                    "use_description_fa": "برای دکور کریسمس و تزئینات مناسب است.",
+                    "categories_fa": ["دکور کریسمس"],
+                    "specs_fa": ["مدل چاپ سه‌بعدی"],
+                    "tags_fa": ["کریسمس"],
+                    "hashtags_fa": ["درخت_کریسمس"],
+                    "target_keywords_fa": ["درخت کریسمس اسپیرال"],
+                    "sales_bullets": ["طراحی اسپیرال"],
+                    "image_alt_texts": [],
+                    "seo_title_fa": "خرید Twistmas Tree",
+                    "seo_description_fa": "مدل درخت کریسمس اسپیرال برای چاپ سه‌بعدی و دکور کریسمس.",
+                    "social_caption_fa": "درخت کریسمس اسپیرال برای دکور.",
+                    "homepage_slider_seo": {},
+                    "material_recommendations": [],
+                    "suggested_category_slug": "",
+                }
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.resolve_source",
+                    return_value=source,
+                ) as resolver, patch(
+                    "app.phase49_3i37_seven_stage_ai.generate_translation_pack",
+                    return_value=pack,
+                ) as generator:
+                    result = orchestrate_once(
+                        app, product_id, "link", "openrouter", "key", "model", None
+                    )
+
+                resolver.assert_called_once()
+                generator.assert_called_once()
+                row = db.product(product_id)
+                self.assertEqual(row["title_fa"], "درخت کریسمس اسپیرال")
+                self.assertIn("درخت کریسمس اسپیرال", row["seo_title_fa"])
+                self.assertEqual(json.loads(row["sales_profile_ledger_json"]), profile)
+                self.assertEqual(json.loads(row["sales_profiles_json"]), profile)
+                self.assertEqual(int(row["price_min"]), 250000)
+                self.assertEqual(int(row["price_max"]), 300000)
+                self.assertNotIn("sales_profile_ledger_json", result["changed_fields"])
+                self.assertNotIn("price_min", result["changed_fields"])
+            finally:
+                db.close()
+
+    def test_locked_quick_and_content_are_not_rewritten_by_orchestrator(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_id = self._product(
+                    db, root / "product",
+                    title_fa="نام نهایی اپراتور",
+                    short_description_fa="توضیح کوتاه نهایی اپراتور",
+                    description_fa="توضیح کامل نهایی اپراتور",
+                )
+                db.update_product(product_id, {
+                    "seo_title_fa": "عنوان سئو نهایی اپراتور",
+                    "seo_description_fa": "توضیح سئو نهایی اپراتور",
+                    LOCK_COLUMN: json.dumps({
+                        "quick": {"locked": True},
+                        "content": {"locked": True},
+                    }, ensure_ascii=False),
+                })
+                app = SimpleNamespace(db=db)
+                source = {
+                    "source_title": "Twistmas Tree",
+                    "source_description": "facts",
+                    "raw_source_description": "facts",
+                    "facts": {},
+                    "evidence": {},
+                }
+                pack = {
+                    "title_fa": "درخت کریسمس اسپیرال",
+                    "short_description_fa": "AI کوتاه",
+                    "description_fa": "AI کامل",
+                    "use_description_fa": "AI کاربرد",
+                    "categories_fa": [], "specs_fa": [], "tags_fa": [], "hashtags_fa": [],
+                    "target_keywords_fa": [], "sales_bullets": [], "image_alt_texts": [],
+                    "seo_title_fa": "درخت کریسمس اسپیرال",
+                    "seo_description_fa": "توضیح فارسی AI درباره درخت کریسمس اسپیرال.",
+                    "social_caption_fa": "",
+                    "homepage_slider_seo": {},
+                }
+                with patch("app.phase49_3i37_seven_stage_ai.resolve_source", return_value=source), patch(
+                    "app.phase49_3i37_seven_stage_ai.generate_translation_pack", return_value=pack
+                ):
+                    orchestrate_once(app, product_id, "data", "openrouter", "key", "model", None)
+                row = db.product(product_id)
+                self.assertEqual(row["title_fa"], "نام نهایی اپراتور")
+                self.assertEqual(row["short_description_fa"], "توضیح کوتاه نهایی اپراتور")
+                self.assertEqual(row["description_fa"], "توضیح کامل نهایی اپراتور")
+                self.assertEqual(row["seo_title_fa"], "عنوان سئو نهایی اپراتور")
+            finally:
+                db.close()
+
+    def test_screenshot_becomes_selected_site_image_with_seo_and_source_page_link(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_dir = root / "product"
+                product_id = self._product(
+                    db, product_dir,
+                    title_fa="درخت کریسمس اسپیرال",
+                    short_description_fa="مدل دکور کریسمس",
+                    description_fa="مدل سه‌بعدی برای دکور کریسمس",
+                )
+                db.update_product(product_id, {
+                    "seo_title_fa": "درخت کریسمس اسپیرال",
+                    "seo_description_fa": "مدل سه‌بعدی درخت کریسمس اسپیرال برای دکور.",
+                })
+                image_dir = product_dir / "images"
+                image_dir.mkdir(parents=True, exist_ok=True)
+                target = image_dir / "source-page-screenshot-test.png"
+                Image.new("RGB", (640, 480), "white").save(target)
+
+                app = SimpleNamespace(db=db)
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.capture_source_screenshot",
+                    return_value=target,
+                ):
+                    result = capture_screenshot_for_site(app, product_id)
+
+                row = db.product(product_id)
+                pseudo = "local://source-page-screenshot-test.png"
+                self.assertIn(pseudo, json.loads(row["images_json"]))
+                self.assertIn(pseudo, json.loads(row["selected_images_json"]))
+                self.assertEqual(row["primary_image_url"], pseudo)
+                self.assertTrue(result["metadata"]["metadata_ready"])
+                self.assertEqual(result["metadata"]["source_page_url"], row["source_url"])
+                self.assertTrue(Path(result["metadata"]["final_local_file"]).is_file())
+                self.assertTrue(str(result["metadata"]["seo_filename"]).endswith(".webp"))
+            finally:
+                db.close()
+
+    def test_screenshot_preserves_existing_primary_and_image_lock_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_dir = root / "product"
+                product_id = self._product(
+                    db, product_dir,
+                    title_fa="درخت کریسمس اسپیرال",
+                    short_description_fa="مدل دکور کریسمس",
+                    description_fa="مدل سه‌بعدی دکور کریسمس",
+                )
+                image_dir = product_dir / "images"
+                image_dir.mkdir(parents=True, exist_ok=True)
+                old = image_dir / "old.png"
+                shot = image_dir / "source-page-screenshot-test.png"
+                Image.new("RGB", (320, 240), "white").save(old)
+                Image.new("RGB", (640, 480), "black").save(shot)
+                old_url = "local://old.png"
+                db.update_product(product_id, {
+                    "images_json": json.dumps([old_url], ensure_ascii=False),
+                    "selected_images_json": json.dumps([old_url], ensure_ascii=False),
+                    "primary_image_url": old_url,
+                })
+
+                app = SimpleNamespace(db=db)
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.capture_source_screenshot",
+                    return_value=shot,
+                ):
+                    result = capture_screenshot_for_site(app, product_id)
+                self.assertEqual(result["primary"], old_url)
+                self.assertEqual(db.product(product_id)["primary_image_url"], old_url)
+
+                db.update_product(product_id, {
+                    LOCK_COLUMN: json.dumps({"images": {"locked": True}}, ensure_ascii=False)
+                })
+                with self.assertRaises(RuntimeError):
+                    capture_screenshot_for_site(app, product_id)
+            finally:
+                db.close()
+
+
+if __name__ == "__main__":
+    unittest.main()
