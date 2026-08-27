@@ -1153,6 +1153,20 @@ class App(tk.Tk):
                 async def go():
                     code=detect_source_code(url)
                     external_id=detect_external_id(url,code)
+                    from .phase49_3i38_crawl_ledger_stage_ai import (
+                        remember_ledger,
+                        terminal_identity_state,
+                    )
+                    terminal_state=terminal_identity_state(self.db,code,external_id,url)
+                    if terminal_state:
+                        self.log(
+                            f"DIRECT_LINK_SKIP_TERMINAL status={terminal_state} "
+                            f"source={code} external_id={external_id} url={url}"
+                        )
+                        self.status.set(
+                            "این لینک قبلاً رد/بلاک شده و قبل از دانلود Skip شد"
+                        )
+                        return
                     local_dir=DATA/"collected"/code/external_id
                     self.log(f"DIRECT_LINK_START {url}")
                     data=await extract_direct_link(
@@ -1206,6 +1220,15 @@ class App(tk.Tk):
                         self.db.upsert_product(data)
                         row_new=self.db.conn.execute("SELECT id FROM products WHERE source_code=? AND external_id=?",(data["source_code"],data["external_id"])).fetchone()
                         if row_new:self.db.save_history(row_new["id"],"initial_extract",{},data,"Direct intelligent extraction")
+                    remember_ledger(
+                        self.db,
+                        data["source_code"],
+                        data["external_id"],
+                        data["source_url"],
+                        status="collected",
+                        discovered_from="direct_link",
+                        force=False,
+                    )
                     self.log(f"DIRECT_LINK_IMAGES={len(json.loads(data.get('images_json') or '[]'))}")
                     self.log(f"DIRECT_LINK_FILES={len(json.loads(data.get('file_links_json') or '[]'))}")
                     self.log(f"DIRECT_LINK_WEIGHT_G={data.get('estimated_weight_grams')}")
