@@ -100,6 +100,10 @@ class Epic49OperatorUIContractTests(unittest.TestCase):
         self.assertIn("--portable-verify", builder)
         self.assertIn("--portable-browser-smoke", builder)
 
+    def test_generated_release_output_is_gitignored(self):
+        gitignore = (ROOT.parent / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("/catalog_center/release/", gitignore)
+
     def test_workspace_avoids_pack_grid_collision_in_commerce_page(self):
         source = (ROOT / "app" / "product_workspace_v87.py").read_text(encoding="utf-8")
         start = source.index("def _commerce_ui")
