@@ -126,6 +126,52 @@ class Phase49I34ProfileMatrixTests(unittest.TestCase):
         ):
             self.assertIn(mode, SELECTION_MODES)
 
+    def test_selected_profile_loader_uses_installed_namespaced_lookup(self):
+        from app.phase49_3i34_profile_matrix import install_workspace
+
+        class Base:
+            def __init__(self, *_args, **_kwargs):
+                pass
+
+            def reload(self):
+                return True
+
+            def save(self, silent=False):
+                return True
+
+        class Tree:
+            def selection(self):
+                return ("profile-1",)
+
+        class Value:
+            def __init__(self):
+                self.value = None
+
+            def set(self, value):
+                self.value = value
+
+        install_workspace(Base)
+        workspace = object.__new__(Base)
+        workspace._phase49_3i34_tree = Tree()
+        workspace._phase49_3i34_profiles = [{
+            "key": "profile-1",
+            "is_default": True,
+            "is_active": True,
+            "track_inventory": False,
+        }]
+        workspace._phase49_3i34_vars = {}
+        workspace._phase49_3i34_default_var = Value()
+        workspace._phase49_3i34_active_var = Value()
+        workspace._phase49_3i34_track_var = Value()
+        workspace._phase49_3i34_selected_key = ""
+
+        workspace._phase49_3i34_load_selected()
+
+        self.assertEqual(workspace._phase49_3i34_selected_key, "profile-1")
+        self.assertEqual(workspace._phase49_3i34_default_var.value, 1)
+        self.assertEqual(workspace._phase49_3i34_active_var.value, 1)
+        self.assertEqual(workspace._phase49_3i34_track_var.value, 0)
+
     def test_final_composition_and_batch_transport_are_present(self):
         pricing = (ROOT / "app" / "phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
         matrix = (ROOT / "app" / "phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
