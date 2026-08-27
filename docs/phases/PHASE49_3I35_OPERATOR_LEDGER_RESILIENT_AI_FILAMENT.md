@@ -163,9 +163,9 @@ GitHub Actions run `33059883188` PASS on runtime ancestor `d519a360e65b79db4b62a
 - support/brand/manufacturer immutable checkout snapshot regression PASS.
 
 ### Catalog targeted gates
-On exact runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1`:
-- Smart Link + Profile Matrix run `33060047750` PASS,
-- Single Active AI run `33060047790` PASS.
+Application runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1` is the packaged code. Later test-tooling head `b9c4d8d5f94c61c536736a1a828eff809f8e109d` changes only the local gate/workflow and docs; application runtime is unchanged.
+- Phase49.3I.31–35 Smart Link + Operator Ledger run `33060613937` PASS,
+- Single Active AI run `33060613914` PASS.
 
 ### Windows one-file release gate
 Run `33060047878` PASS:
