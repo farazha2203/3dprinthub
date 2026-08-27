@@ -1,5 +1,11 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Catalog Center Local Gate Self-Dirty Hotfix
+- root cause of the reported “does not come up” log was not a startup exception: the gate stopped before `-LaunchApp` because a prior portable build left untracked `catalog_center/release/` output,
+- added `/catalog_center/release/` to `.gitignore` without deleting existing local EXEs/manifests,
+- added regression coverage so generated portable output stays outside Git status,
+- Windows portable CI run `33042158052` PASS on `1a490fecb5a22b855c4f10a12bb74f04a28c57b9`; one-file build/self-verify and artifact upload PASS; release publication remains manual pending owner QA.
+
 Record meaningful changes only. Older detailed entries remain available in Git history.
 
 ## 2026-08-26 — Phase49.3I.32 Canonical Product Source URL Guard — Packaged Windows CI PASS
