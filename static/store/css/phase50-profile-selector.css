@@ -255,3 +255,23 @@
     .store-profile-selector__head { margin: -.85rem -.85rem .85rem; }
     .store-profile-option { min-width: 0; }
 }
+
+.store-profile-price-authority {
+    display: grid;
+    gap: .25rem;
+    padding: .8rem .9rem;
+    border: 1px solid #dbe3ea;
+    border-right: 4px solid #c99a2e;
+    border-radius: 1rem;
+    background: #f8fbfd;
+}
+.store-profile-price-authority strong {
+    color: #0b2238;
+    font-size: .86rem;
+    font-weight: 950;
+}
+.store-profile-price-authority span {
+    color: #64748b;
+    font-size: .75rem;
+    line-height: 1.8;
+}
