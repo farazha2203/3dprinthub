@@ -263,6 +263,24 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** a Catalog version bump is an atomic contract across `app/version.py`, `launch.py`, `PACKAGE_MANIFEST.json`, `config.example.json` and launcher tests. Contract tests must represent current business ownership, not require intentionally retired UI controls.
 
+
+### ERR-49-057 — PowerShell multiline `python -c` DB probe stripped Python quotes in Local owner gate
+**Date:** 2026-08-27  
+**Environment:** canonical Windows checkout `D:\projects\3DPrintHub`, owner Local QA wrapper at branch HEAD `35ab63105f30fdca42518d5273a424a3200977e3`.
+
+**Symptom:** Local owner gate passed repository verification, live GitHub verification and Catalog SQLite backup, then failed before any new migration with:
+`SyntaxError: unterminated string literal` while executing the embedded Python DB detector. The received Python text had lost quote characters around mapping keys/strings (for example `db.get(ENGINE)` instead of `db.get("ENGINE")`).
+
+**Root Cause:** a PowerShell expandable multiline here-string was passed directly as a native `python -c` argument. Native argument quoting/serialization changed the embedded Python quoting. This is a wrapper/command transport defect, not a Django/database/schema failure.
+
+**Failed condition:** do not repeat the same multiline `& $Py -c @"..."@` probe unchanged.
+
+**Correct Fix:** feed a single-quoted PowerShell here-string to Python standard input (`... | & $Py -`) or use a simple one-line command whose quoting is unambiguous. Continue from the failed DB-verification boundary after re-verifying exact branch/head/clean worktree. Create a fresh backup of the effective Local Django SQLite file before applying any pending migration.
+
+**Safety:** the failed owner run stopped before its migration stage, therefore that failed run did not apply `0039`. An earlier Local run at `ca9cc116...` had already applied `0034..0038` and passed 15 Store/Profile/Checkout tests.
+
+**Prevention:** Windows operational runbooks must not pass nontrivial multiline Python source as an expandable native `-c` argument. Prefer stdin with a single-quoted here-string for read-only probes.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
