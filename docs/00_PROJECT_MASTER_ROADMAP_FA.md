@@ -6,8 +6,8 @@
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-**Parallel Windows Subphase:** `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
-**Status:** `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION BLOCKED`  
+**Parallel Windows Subphase:** `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
+**Status:** `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
 ## 1) قانون مادر
@@ -73,37 +73,43 @@ Current approved GitHub runtime:
 - canonical Variant/Profile storefront selector,
 - Product-owned public media boundary.
 
-## 5) Current Windows development — Phase49.3I.35
-Catalog Center `8.9.3`, build `2026.08.27.5`.
+## 5) Current Windows development — Phase49.3I.38
+Catalog Center `8.9.6`, build `2026.08.27.8`.
 
-New Step-2 Profile Matrix:
-- add Profile,
-- clone Profile,
-- delete/edit Profile,
-- independent size/weight/price/print-time/part-dimensions/build/material/color/quality/package/stock values,
-- selection modes including size→weight and 3-level combinations,
-- exact Profile JSON persisted locally,
-- exact Profile JSON transported through mature batch/import path,
-- profile/range minimum accepted by mature publish gate.
+Preserved mature foundations:
+- Product Explorer paging and explicit-only global refresh,
+- existing browser/profile/parser/image/file receive pipeline,
+- mature `discovered_urls` identity ledger,
+- Product source URL/history guard,
+- registered Profile ledger and Store transport,
+- material/brand/manufacturer/color offers,
+- one configured AI Provider/Model/key boundary,
+- one Link / Saved-Crawled Data / Screenshot Product AI engine,
+- seven-stage readiness/finalization locks.
 
-Preserved:
-- 48-card Product paging,
-- explicit-only global Product refresh,
-- exact saved AI provider/model/key,
-- exact-link source grounding,
-- canonical source-link guard,
-- selected-product batch AI,
-- image/source identity safety.
+3I.38 adds:
+- permanent visibility of crawled/received/rejected Product URLs in a dedicated ledger UI,
+- Listing continuation cursor that moves deeper after old results instead of replacing the discoverer,
+- exact behavior for repeated acquisition: old 100 identities skipped, next 100 new identities queued,
+- operator `رد دائمی + حذف فایل‌ها و عکس‌های محلی`,
+- deletion confined to the Product directory below Catalog `collected/`,
+- source URL/external ID retained as a rejected tombstone,
+- terminal Direct Link guard before browser/HTTP/image/file acquisition,
+- explicit restore required before a rejected identity can be received again,
+- same mother AI engine for selected-Product Bulk Content/SEO,
+- single-stage cleanup/completion such as Stage 4 only,
+- out-of-scope and finalized Stage immutability,
+- image-only AI no-op when image SEO is already complete.
 
 Windows verification:
-- packaged snapshot `9637829a255a1d09800bc062c2f049cf5d92b585`,
-- workflow `33067618679` PASS,
-- artifact ID `9644438652`,
-- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
-- owner automated Local DB/test gate PASS with Local SQLite through `0039`,
-- owner foreground 8.9.1 launch exposed and 8.9.2 fixed `ERR-49-059`,
-- owner 8.9.2 Product Workspace QA exposed `ERR-49-060`; 8.9.3 fixes the Product Workspace Profile selection binding,
-- foreground Product Workspace visual QA is next.
+- runtime snapshot `c904193a7f0af9aad80365834ec3f0b856e77dc9`,
+- Phase49.3I.31–38 run `33077213590` PASS with 84 tests,
+- Single Active AI run `33077239617` PASS,
+- Windows Portable run `33077239660` PASS,
+- artifact ID `9648474905`,
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
+- owner automated Local Django DB/test evidence from the previous gate remains through `0039`,
+- current next gate is owner visual/functional Local QA of 8.9.6 before any Host work.
 
 ## 6) Current Web development — Phase50.A.2B → 2C → 2D
 
@@ -145,10 +151,17 @@ Web verification:
 - `ERR-50-015`: Windows packaging watches mature Product studio source boundaries.
 
 ## 8) Production gate
-1. Local Windows clean pull + exact HEAD verify.
-2. Run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` with exact HEAD and launch.
-3. Owner QA multi-size/multi-weight Profile create/clone/edit/save/reopen + existing Product data/source link/AI/images.
-4. Local Django/SQLite regression.
+1. Local Windows clean pull + exact final GitHub HEAD verify.
+2. Run current `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1`.
+3. Foreground owner QA of Catalog Center 8.9.6:
+   - ordinary new Crawl/Direct/image/file receive remains healthy,
+   - crawl ledger shows known identities,
+   - reject/purge keeps tombstone and deletes only the Product collected folder,
+   - repeated Listing skips old identities and continues deeper,
+   - rejected Direct Link skips before acquisition,
+   - Bulk Stage-4 SEO and single-stage cleanup use the same mother AI engine,
+   - locked stages/Profile ledger remain intact.
+4. Local Django/SQLite check/drift/Store/Profile/Checkout regression.
 5. Read-only Host verify actual branch/HEAD/worktree/live remote SHA/Python/Django/MySQL/migration state.
 6. Exact migration plan.
 7. Disk + mysqldump verify.
@@ -156,12 +169,11 @@ Web verification:
 9. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; exact target + ff-only.
 10. Deploy GitHub source.
 11. Repeat Django check/drift/DB/plan.
-12. Apply only actually pending verified migrations, expected from last Production evidence as `0036 → 0037 → 0038 → 0039`.
+12. Apply only actually pending verified migrations; last Production evidence still confirms only `0034` and `0035`.
 13. collectstatic + Passenger restart.
 14. Home/Store/Admin/Product/Profile API/Checkout/private-media verification.
-15. Controlled new order using multi-size/multi-weight Profile.
-16. Owner browser QA.
-17. Update docs with exact Production SHA/backup/migrations.
+15. Controlled new order and owner browser QA.
+16. Update docs with exact Production SHA/backup/migrations.
 
 ## 9) بعد از 50.A.2D
 - Product Engagement،
