@@ -10,6 +10,8 @@ on:
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
       - catalog_center/app/phase49_3i36_stage_finalization.py
       - catalog_center/app/phase49_3i37_seven_stage_ai.py
+      - catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py
+      - catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py
       - catalog_center/tests/test_phase49_3i37_seven_stage_ai.py
       - catalog_center/app/phase49_readiness_wizard.py
       - catalog_center/app/phase49_3e_ai_task_center.py
@@ -95,6 +97,7 @@ jobs:
           python -m unittest -v `
             tests.test_phase49_3i36_stage_finalization `
             tests.test_phase49_3i37_seven_stage_ai `
+            tests.test_phase49_3i38_crawl_ledger_stage_ai `
             tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
@@ -163,6 +166,12 @@ jobs:
             'EPIC49_3I37_SCREENSHOT_SELECTED_FOR_SITE=ENABLED',
             'EPIC49_3I37_STAGE_BY_STAGE_APPLY=ENABLED',
             'EPIC49_3I37_SEO_LANGUAGE_GUARD=ENABLED',
+            'EPIC49_3I38_PERMANENT_CRAWL_LEDGER=ENABLED',
+            'EPIC49_3I38_REJECT_PURGE_TOMBSTONE=ENABLED',
+            'EPIC49_3I38_CONTINUATION_CURSOR=ENABLED',
+            'EPIC49_3I38_DIRECT_LINK_PRE_ACQUISITION_GUARD=ENABLED',
+            'EPIC49_3I38_STAGE_SCOPED_AI=ENABLED',
+            'EPIC49_3I38_BULK_STAGE4_SAME_ENGINE=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -244,7 +253,7 @@ jobs:
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.5 adds one persisted Link/Data/Screenshot source mode, a missing-only seven-stage AI orchestrator shared by single and bulk Product runs, screenshot-to-selected-site-image SEO/metadata with preserved upstream source page, and stricter Persian SEO language validation while preserving 3I.36 operator finalization locks.
+          8.9.6 adds a permanent crawled/received URL ledger, reject-and-purge tombstones that keep source identity while deleting only the Product collected directory, continuation cursors that scroll beyond previously collected listing windows, a pre-acquisition terminal guard for Direct Link, and stage-scoped cleanup that reuses the exact 3I.37 AI engine for selected Product SEO/content.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
