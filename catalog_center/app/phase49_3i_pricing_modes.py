@@ -72,6 +72,10 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         )
         _install_phase49_3i36_database(Database)
         _install_phase49_3i36_app(app_class)
+        # 49.3I.37 is the final AI UX/source-mode boundary: one persisted
+        # source mode and one seven-stage missing-only orchestrator.
+        from .phase49_3i37_seven_stage_ai import install_app as _install_phase49_3i37_app
+        _install_phase49_3i37_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -250,3 +254,5 @@ def install(workspace_class) -> None:
     # save/AI/readiness wrapper so locked fields cannot be rewritten downstream.
     from .phase49_3i36_stage_finalization import install_workspace as _install_phase49_3i36_workspace
     _install_phase49_3i36_workspace(workspace_class, _readiness_module)
+    from .phase49_3i37_seven_stage_ai import install_workspace as _install_phase49_3i37_workspace
+    _install_phase49_3i37_workspace(workspace_class)
