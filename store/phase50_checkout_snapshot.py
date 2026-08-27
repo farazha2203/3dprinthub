@@ -161,6 +161,9 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
             "profile_label": str(getattr(item, "sales_profile_label", "") or ""),
             "size_label": str(getattr(item, "size_label", "") or ""),
             "build_profile": str(getattr(item, "build_profile", "") or ""),
+            "support_weight_grams": _decimal_text(getattr(item, "support_weight_grams", 0)),
+            "filament_brand_name": str(getattr(item, "filament_brand_name", "") or ""),
+            "filament_manufacturer_name": str(getattr(item, "filament_manufacturer_name", "") or ""),
             "unit_shipping_weight_grams": _decimal_text(getattr(item, "shipping_weight_grams", 0)),
             "line_shipping_weight_grams": _decimal_text(_decimal(getattr(item, "shipping_weight_grams", 0)) * int(item.quantity)),
             "packaging_weight_grams": _decimal_text(getattr(item, "packaging_weight_grams", 0)),
@@ -187,6 +190,10 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
     profile_key = str(getattr(variant, "sales_profile_key", "") or "")
     profile_label = str(getattr(variant, "sales_profile_display_label", "") or "")
     selection_value = str(getattr(variant, "sales_profile_selection_value", "") or profile_label)
+    support_weight = _decimal(getattr(variant, "support_weight_grams", 0))
+    color_option = getattr(variant, "color", None)
+    filament_brand_name = str(getattr(color_option, "brand_name", "") or "")
+    filament_manufacturer_name = str(getattr(color_option, "manufacturer_name", "") or "")
 
     item.sales_profile_name = profile_name
     item.sales_profile_key = profile_key
@@ -196,6 +203,9 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
     item.size_label = str(getattr(variant, "size_label", "") or "")
     item.build_profile = str(getattr(variant, "build_profile", "standard") or "standard")
     item.final_weight_grams = final_weight
+    item.support_weight_grams = support_weight
+    item.filament_brand_name = filament_brand_name
+    item.filament_manufacturer_name = filament_manufacturer_name
     item.packaging_weight_grams = _decimal(getattr(variant, "packaging_weight_grams", 0))
     item.shipping_weight_grams = shipping_weight
     item.unit_weight_grams = shipping_weight
@@ -217,6 +227,9 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
             "size_label",
             "build_profile",
             "final_weight_grams",
+            "support_weight_grams",
+            "filament_brand_name",
+            "filament_manufacturer_name",
             "packaging_weight_grams",
             "shipping_weight_grams",
             "unit_weight_grams",
@@ -244,7 +257,10 @@ def _snapshot_item(item: StoreOrderItem) -> dict:
         "material": item.material_name,
         "color": item.color_name,
         "quality": item.quality_name,
+        "filament_brand_name": filament_brand_name,
+        "filament_manufacturer_name": filament_manufacturer_name,
         "final_weight_grams": _decimal_text(final_weight),
+        "support_weight_grams": _decimal_text(support_weight),
         "unit_shipping_weight_grams": _decimal_text(shipping_weight),
         "line_shipping_weight_grams": _decimal_text(shipping_weight * int(item.quantity)),
         "packaging_weight_grams": _decimal_text(item.packaging_weight_grams),
