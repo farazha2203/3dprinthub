@@ -60,6 +60,10 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         # paths, explicit-only Products refresh, single-card updates and telemetry.
         from .phase49_3i33_operator_workflow import install_app as _install_phase49_3i33_app
         _install_phase49_3i33_app(app_class)
+        # 49.3I.35 keeps 3I.33 as the AI ownership boundary and adds observable
+        # preflight/retry/failover without introducing a second AI pipeline.
+        from .phase49_3i35_resilient_ai import install_app as _install_phase49_3i35_resilient_app
+        _install_phase49_3i35_resilient_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -225,3 +229,12 @@ def install(workspace_class) -> None:
     # travel through the existing Batch editorial contract to Django.
     from .phase49_3i34_profile_matrix import install_workspace as _install_phase49_3i34_workspace
     _install_phase49_3i34_workspace(workspace_class)
+    # 49.3I.35 finalizes the operator-ledger workflow on top of the mature
+    # profile transport, then replaces the 3I.33 AI runner with observable
+    # retry/failover and finally adds manual SEO/source review gates.
+    from .phase49_3i35_operator_ledger import install_workspace as _install_phase49_3i35_operator_ledger
+    _install_phase49_3i35_operator_ledger(workspace_class)
+    from .phase49_3i35_resilient_ai import install_workspace as _install_phase49_3i35_resilient_workspace
+    _install_phase49_3i35_resilient_workspace(workspace_class)
+    from .phase49_3i35_readiness_review import install_workspace as _install_phase49_3i35_readiness_review
+    _install_phase49_3i35_readiness_review(workspace_class)
