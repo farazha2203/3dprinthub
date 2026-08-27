@@ -55,6 +55,9 @@ Write-Host "BUILD_ID=$Build"
 Write-Host ""
 Write-Host "===== PYTHON COMPILE ====="
 & $Py -m py_compile `
+    "$Catalog\app\phase49_3i35_operator_ledger.py" `
+    "$Catalog\app\phase49_3i35_resilient_ai.py" `
+    "$Catalog\app\phase49_3i35_readiness_review.py" `
     "$Catalog\app\phase49_3i34_profile_matrix.py" `
     "$Catalog\app\phase49_3i33_ai_core.py" `
     "$Catalog\app\phase49_3i33_operator_workflow.py" `
@@ -65,6 +68,7 @@ Write-Host "===== PYTHON COMPILE ====="
     "$Catalog\app\phase49_3i17_single_active_ai_runtime.py" `
     "$Catalog\app\phase49_3i18_operator_editing.py" `
     "$Catalog\app\phase49_3i25_product_first_workflow.py" `
+    "$Catalog\tests\test_phase49_3i35_operator_workflow.py" `
     "$Catalog\tests\test_phase49_3i34_profile_matrix.py" `
     "$Catalog\tests\test_phase49_3i33_operator_workflow.py" `
     "$Catalog\tests\test_phase49_3i32_source_url_guard.py" `
@@ -82,6 +86,7 @@ Write-Host ""
 Write-Host "===== FOCUSED REGRESSION ====="
 Set-Location $Catalog
 & $Py -m unittest -v `
+    tests.test_phase49_3i35_operator_workflow `
     tests.test_phase49_3i34_profile_matrix `
     tests.test_phase49_3i33_operator_workflow `
     tests.test_phase49_3i32_source_url_guard `
@@ -134,6 +139,11 @@ foreach ($Marker in @(
     "EPIC49_3I34_SIZE_WEIGHT_DEPENDENCY=ENABLED",
     "EPIC49_3I34_PROFILE_PRICE_AUTHORITY=ENABLED",
     "EPIC49_3I34_DESKTOP_STORE_SYNC=ENABLED",
+    "EPIC49_3I35_OPERATOR_LEDGER=ENABLED",
+    "EPIC49_3I35_BRAND_AWARE_FILAMENT_OFFERS=ENABLED",
+    "EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED",
+    "EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED",
+    "EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED",
     "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
     if ($LaunchOutput -notmatch [regex]::Escape($Marker)) { Fail "MISSING LAUNCHER MARKER: $Marker" }
@@ -149,7 +159,7 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "PHASE49_3I31_34_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I31_35_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "APP_VERSION=$ExpectedVersion"
 Write-Host "BUILD_ID=$ExpectedBuild"
@@ -163,7 +173,7 @@ if ($BuildExe) {
     Write-Host "===== PORTABLE EXE BUILD / SELF VERIFY ====="
     & $Py build_portable_exe.py --python $Py
     if ($LASTEXITCODE -ne 0) { Fail "PORTABLE EXE BUILD FAILED" }
-    Write-Host "PHASE49_3I31_34_PORTABLE_BUILD=PASS"
+    Write-Host "PHASE49_3I31_35_PORTABLE_BUILD=PASS"
 }
 
 if ($LaunchApp) {
