@@ -54,8 +54,11 @@
             buildLabel: clean(meta.build_profile_label || option.dataset.buildProfileLabel),
             material: clean(meta.material || option.dataset.material),
             color: clean(meta.color || option.dataset.color),
+            filamentBrand: clean(meta.filament_brand_name || option.dataset.filamentBrand || ""),
+            filamentManufacturer: clean(meta.filament_manufacturer_name || option.dataset.filamentManufacturer || ""),
             quality: clean(meta.quality || option.dataset.quality),
             finalWeight,
+            supportWeight: Number(meta.support_weight_grams || option.dataset.supportWeight || 0),
             materialWeight,
             shippingWeight,
             packagingWeight: Number(meta.packaging_weight_grams || 0),
@@ -76,7 +79,7 @@
         if (dim === "size") return variant.size;
         if (dim === "weight") return String(variant.finalWeight || variant.materialWeight || 0);
         if (dim === "build") return variant.build;
-        if (dim === "material") return variant.material;
+        if (dim === "material") return variant.filamentBrand ? `${variant.material}::${variant.filamentBrand}` : variant.material;
         if (dim === "color") return variant.color;
         if (dim === "quality") return variant.quality;
         return "";
@@ -90,7 +93,7 @@
             return value ? `${formatNumber(value)} گرم` : "وزن ثبت‌نشده";
         }
         if (dim === "build") return variant.buildLabel || variant.build || "استاندارد";
-        if (dim === "material") return variant.material || "بدون متریال";
+        if (dim === "material") return variant.filamentBrand ? `${variant.material || "متریال"} — ${variant.filamentBrand}` : (variant.material || "بدون متریال");
         if (dim === "color") return variant.color || "بدون رنگ";
         if (dim === "quality") return variant.quality || "استاندارد";
         return "";
@@ -248,9 +251,12 @@
                 ["سایز", variant.size || "—"],
                 ["مدل ساخت", variant.buildLabel || variant.build || "استاندارد"],
                 ["متریال", variant.material || "—"],
+                ...(variant.filamentBrand ? [["برند فیلامنت", variant.filamentBrand]] : []),
+                ...(variant.filamentManufacturer ? [["سازنده فیلامنت", variant.filamentManufacturer]] : []),
                 ["رنگ", variant.color || "—"],
                 ["کیفیت چاپ", variant.quality || "—"],
                 ["وزن قطعه", variant.finalWeight ? `${formatNumber(variant.finalWeight)} گرم` : "—"],
+                ...(variant.supportWeight ? [["وزن ساپورت", `${formatNumber(variant.supportWeight)} گرم`]] : []),
                 ["ابعاد قطعه", partText],
                 ["وزن ارسال", variant.shippingWeight ? `${formatNumber(variant.shippingWeight)} گرم` : "—"],
                 ["زمان چاپ", variant.printMinutes ? `${formatNumber(variant.printMinutes)} دقیقه` : "—"],
