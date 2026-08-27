@@ -40,6 +40,7 @@ Thumbs.db
 # Packaging, cache, temp
 build/
 dist/
+/catalog_center/release/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
