@@ -225,7 +225,7 @@ jobs:
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.2 keeps the 8.9.1 operator-ledger/resilient-AI runtime and fixes the owner-visible startup blocker by respecting the pack-managed Settings parent; the new AI resilience panel no longer mixes grid into that parent.
+          8.9.3 keeps the 8.9.2 visible-startup geometry fix and repairs the Profile Matrix selection callback to use the installed namespaced profile lookup, allowing Product Workspace Profile/Order UI to open without AttributeError.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
