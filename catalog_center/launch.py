@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.9.3"
+EXPECTED_VERSION = "8.9.4"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -238,7 +238,7 @@ def main() -> int:
     print("EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED", flush=True)
     print("EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED", flush=True)
     print("EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED", flush=True)
-    print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
+    print("EPIC49_3I36_SEVEN_STAGE_FINALIZATION=ENABLED", flush=True)\n    print("EPIC49_3I36_AI_UNLOCKED_STAGE_ONLY=ENABLED", flush=True)\n    print("EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED", flush=True)\n    print("EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED", flush=True)\n    print("EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED", flush=True)\n    print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
     if "--verify-only" in sys.argv:
