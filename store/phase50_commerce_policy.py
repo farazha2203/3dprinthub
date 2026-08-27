@@ -310,16 +310,31 @@ def _install_checkout_form_contract() -> None:
         shipping = cleaned.get("shipping_method")
         if shipping is None:
             return cleaned
+
+        saved_address = cleaned.get("saved_address")
+        if saved_address is not None:
+            province = getattr(saved_address, "province", "")
+            county = getattr(saved_address, "county", "")
+            city = getattr(saved_address, "city", "")
+            address = getattr(saved_address, "address", "")
+            postal_code = getattr(saved_address, "postal_code", "")
+        else:
+            province = cleaned.get("province")
+            county = cleaned.get("county")
+            city = cleaned.get("city")
+            address = cleaned.get("address")
+            postal_code = cleaned.get("postal_code")
+
         if not shipping_method_available(
             shipping,
-            province=cleaned.get("province"),
-            county=cleaned.get("county"),
-            city=cleaned.get("city"),
+            province=province,
+            county=county,
+            city=city,
         ):
             self.add_error("shipping_method", "این روش ارسال فقط برای مقصد اصفهان قابل انتخاب است.")
-        if getattr(shipping, "requires_address", True) and not str(cleaned.get("address") or "").strip():
+        if getattr(shipping, "requires_address", True) and not str(address or "").strip():
             self.add_error("address", "برای این روش ارسال، نشانی کامل الزامی است.")
-        if getattr(shipping, "requires_postal_code", False) and not str(cleaned.get("postal_code") or "").strip():
+        if getattr(shipping, "requires_postal_code", False) and not str(postal_code or "").strip():
             self.add_error("postal_code", "برای این روش ارسال، کد پستی الزامی است.")
         return cleaned
 
