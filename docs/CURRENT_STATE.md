@@ -63,6 +63,10 @@ Phase50 workflow:
 
 Only manual/visual operator acceptance remains before Host read-only audit. Automated Local acceptance is complete; this does not count as Production approval by itself.
 
+
+### Detached launch note — visual QA not yet completed
+The owner automated gate emitted `CATALOG_CENTER_LAUNCHED=YES`, but the owner did not see the new UI. The gate uses detached PowerShell `Start-Process`; therefore this marker is not evidence of visible/manual acceptance. Per `ERR-49-058`, the next action is a foreground `launch.py --debug` run from the canonical Local checkout and visual verification inside the Product workspace/order-pricing-options stage. Production remains blocked.
+
 ## What is implemented now
 
 ### Phase49.3I.35 — Windows operator workflow
