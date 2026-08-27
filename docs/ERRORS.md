@@ -338,6 +338,24 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** nested UI helper methods must be called through the exact namespaced attribute actually installed on the final wrapped class. Static presence tests are insufficient for wrapped callback binding; execute callback contracts on a minimal installed class.
 
+### ERR-49-061 — Commerce lock protected ledger JSON but missed legacy plural Profile transport
+**Date:** 2026-08-27  
+**Environment:** Phase49.3I.36/3I.37 Catalog Center regression gate.
+
+**Symptom:** the finalized-Commerce regression showed `sales_profile_ledger_json` stayed protected while the mature legacy transport `sales_profiles_json` could still be overwritten to `[]` after the Commerce stage was locked. This matched the owner-visible risk that a later AI/Save path could make previously registered Profiles disappear.
+
+**Root Cause:** the stage ownership mapper recognized fields beginning with `sales_profile_`, but the older transport is plural `sales_profiles_json`; that key did not match the prefix and therefore escaped the Commerce write lock.
+
+**Failed condition:** do not weaken the lock regression or treat only the newest ledger field as authoritative persistence protection. Both mature transports remain part of the current synchronization path.
+
+**Correct Fix:** classify both `sales_profile_` and `sales_profiles_` prefixes as Commerce-owned. The final `Database.update_product()` guard now blocks both transports while Stage 2 is finalized.
+
+**Regression:** `test_stage_field_ownership_keeps_profile_and_slider_separate` asserts both transports map to Commerce, and `test_finalized_commerce_protects_registered_profile_ledger` proves both remain unchanged under the lock.
+
+**Verification:** Phase49.3I.31–37 run `33074245603` PASS with 77 tests; Single Active AI run `33074245489` PASS; Windows Portable run `33074245604` PASS on runtime `8d5e58a839c89eedbe258d9236889834fc02d9a9`.
+
+**Prevention:** write-scope/lock mappings must cover every mature alias/transport that can persist the same business object, not only the newest authoritative field name.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
