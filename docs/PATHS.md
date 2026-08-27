@@ -20,12 +20,13 @@ Canonical current Local gate: `D:\projects\3DPrintHub\catalog_center\RUN_PHASE49
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
-Current Store/Profile Matrix CI runtime: `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`
-Current Store/Profile Matrix CI run: `33051311828` PASS
-Current Windows packaged runtime: `b3280dd67cd7772f337f6792036ea92d3f252747`
-Catalog Center: `8.9.0` / build `2026.08.27.2`
-Windows artifact ID: `9637671099`
-Windows EXE SHA256: `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`
+Current Store/Profile/Filament CI runtime: `d519a360e65b79db4b62af206b95f63c3539bc12`
+Current Store/Profile/Filament CI run: `33059883188` PASS
+Current Windows packaged runtime: `2622818d898e19b745c61ff653b80c03d22288f1`
+Catalog Center: `8.9.1` / build `2026.08.27.3`
+Windows artifact ID: `9641338334`
+Windows EXE SHA256: `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`
+Last owner Local automated gate: PASS at local head `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local Django SQLite is through `store.0039`; backup `D:\projects\3dprinthub-backups\phase49-3i35-resume-20260827-142404\django-local-before-0039.sqlite3`.
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
 ## PRODUCTION
