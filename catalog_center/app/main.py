@@ -1401,7 +1401,11 @@ class App(tk.Tk):
                 encoded=__import__("urllib.parse").parse.quote_plus(query or "3d print")
                 if mode in {"category","site_crawl"}:
                     target_templates=[seed]
-                    max_pages=1
+                    # Same listing can be an infinite-scroll page. Revisit it at
+                    # progressively deeper scroll cursors until enough NEW ledger
+                    # identities are found; previously collected/rejected URLs
+                    # remain duplicates and are never re-queued.
+                    max_pages=12
                 elif mode=="search":
                     target_templates=listing[:1]
                     max_pages=8
@@ -1412,7 +1416,12 @@ class App(tk.Tk):
                 if not target_templates or not target_templates[0]:
                     raise RuntimeError("لینک شروع یا Listing URL وجود ندارد.")
 
+                from .phase49_3i38_crawl_ledger_stage_ai import (
+                    next_scroll_rounds,
+                    record_listing_progress,
+                )
                 enough=False
+                stagnant_targets={}
                 for page_no in range(1,max_pages+1):
                     if enough or self.stop_requested:
                         break
@@ -1421,11 +1430,22 @@ class App(tk.Tk):
                             target=template.format(query=encoded,page=page_no)
                         except Exception:
                             target=template
-                        self.log(f"CLASSIC_DISCOVERY PAGE={page_no}: {target}")
+                        scroll_rounds=next_scroll_rounds(
+                            self.db,
+                            code,
+                            target,
+                            default_rounds=8,
+                            step=8,
+                            maximum=96,
+                        )
+                        self.log(
+                            f"CLASSIC_DISCOVERY PAGE={page_no} "
+                            f"SCROLL_ROUNDS={scroll_rounds}: {target}"
+                        )
                         result=await discover_classic(
                             target,
                             model_pattern=src["model_url_pattern"],
-                            scroll_rounds=8,
+                            scroll_rounds=scroll_rounds,
                             headed=False,
                         )
                         self.log(
@@ -1433,13 +1453,40 @@ class App(tk.Tk):
                             f"BROWSER={result['browser']} "
                             f"FOUND={len(result['links'])}"
                         )
+                        new_this_round=0
                         for external_id,url in result["links"]:
                             if self.db.add_discovered(code,external_id,url,target):
                                 discovered+=1
+                                new_this_round+=1
                             else:
                                 duplicates+=1
-                        if len(self.db.pending_urls(code,requested,include_failed=False))>=requested:
+                        record_listing_progress(
+                            self.db,
+                            code,
+                            target,
+                            scroll_rounds=scroll_rounds,
+                            found_count=len(result["links"]),
+                            new_count=new_this_round,
+                        )
+                        target_key=normalize_url(target)
+                        if new_this_round:
+                            stagnant_targets[target_key]=0
+                        else:
+                            stagnant_targets[target_key]=int(stagnant_targets.get(target_key,0))+1
+                        pending_now=len(self.db.pending_urls(code,requested,include_failed=False))
+                        self.log(
+                            f"DISCOVERY_LEDGER NEW_THIS_ROUND={new_this_round} "
+                            f"PENDING_NOW={pending_now} "
+                            f"STAGNANT={stagnant_targets[target_key]}"
+                        )
+                        if pending_now>=requested:
                             enough=True
+                            break
+                        if stagnant_targets[target_key]>=2:
+                            self.log(
+                                f"DISCOVERY_EXHAUSTED_CURRENT_DEPTH target={target} "
+                                f"scroll_rounds={scroll_rounds}"
+                            )
                             break
                     if not enough and page_no<max_pages:
                         await asyncio.sleep(3)
