@@ -1,5 +1,32 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Catalog Center 8.9.6 / Phase49.3I.38
+- preserved the mature Browser/Crawl/Parser/image/file receive pipeline and extended only its identity/continuation boundaries;
+- added permanent crawled/received Product ledger UI over the existing `discovered_urls` authority;
+- added persisted `crawl_listing_state` continuation cursor so repeated Listing scans go deeper instead of repeatedly stopping at the first fixed discovery window;
+- verified the 100+next-100 contract: 100 previously collected identities are skipped and Products 101–200 become the next 100 pending entries;
+- added `رد دائمی + حذف فایل‌ها و عکس‌های محلی`: local Product acquisition files are purged while source URL/external ID remain as a `rejected` tombstone;
+- physical deletion is restricted to the Product directory below Catalog `collected/`; out-of-bound paths fail closed;
+- fixed `ERR-49-062`: Direct Link now checks terminal rejected/blocked identity before browser/HTTP/image/file acquisition;
+- fixed `ERR-49-063`: category/site crawl now persists bounded deeper scroll progress while keeping the mature `discover_classic()` implementation;
+- explicit restore is required before a rejected identity can be received again;
+- kept one Product AI engine with Link / Saved-Crawled Data / Screenshot inputs and the same configured Provider/Model/retry/fallback authority;
+- added optional Stage write scope to the same resilient orchestrator;
+- Products bulk Content/SEO now uses that same engine with Stage 4 scope rather than a separate AI path;
+- added single-stage cleanup/completion; out-of-scope and finalized stages remain immutable;
+- image-only scoped AI makes no Provider request when image SEO is already complete;
+- runtime `c904193a7f0af9aad80365834ec3f0b856e77dc9`;
+- Phase49.3I.31–38 run `33077213590` PASS with 84 tests;
+- Single Active AI run `33077239617` PASS;
+- Windows Portable run `33077239660` PASS;
+- Catalog Center `8.9.6` / build `2026.08.27.8`;
+- artifact `3DPrintHub-CatalogCenter-v8.9.6`, ID `9648474905`;
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`;
+- artifact ZIP digest `sha256:13ae8582be09b71f90e607c2230075d875b7445f8a46b6462a9241edf9d52563`;
+- browser smoke, portable self-verify and source URL preservation gate PASS;
+- rollback branch `backup/pre-phase49-3i38-crawl-ledger-stage-ai-20260827` → `d1ed566a82d3818aa45a5c720df3e7efcb0044f3`;
+- Production untouched; owner Local visual/functional 3I.38 QA remains the next gate.
+
 ## 2026-08-27 — Catalog Center 8.9.5 / Phase49.3I.37
 - added one persisted Product AI source mode: Link / Saved Data / Screenshot;
 - replaced visible per-run Product AI modes with one missing-only seven-stage orchestrator shared by single and selected-Product bulk runs;
