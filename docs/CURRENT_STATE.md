@@ -263,6 +263,29 @@ Only the owner-approved GitHub head is deployed:
 - Home/Store/Admin/Product/Profile API/Checkout/static/private-media/order verification,
 - update docs with exact Production SHA/migrations/backup.
 
+
+## Owner Local QA checkpoint — 2026-08-27 PowerShell DB-probe stop
+
+Owner terminal evidence on canonical Windows root `D:\projects\3DPrintHub`:
+- branch `agent/phase49-3i18-operator-bulk-ai-rebuild`,
+- Local fast-forwarded successfully to `35ab63105f30fdca42518d5273a424a3200977e3`,
+- worktree clean before the owner gate,
+- live GitHub SHA matched that target,
+- packaged runtime/tooling ancestry checks PASS,
+- fresh Catalog SQLite backup created at `D:\projects\3dprinthub-backups\phase49-3i35-20260827-133859\catalog.sqlite3`,
+- owner gate then stopped at the read-only Django DB detector because multiline PowerShell `python -c` quoting corrupted the Python source,
+- this failed run stopped **before** Local Django migration execution; no new migration was applied by this failed run.
+
+Earlier owner evidence on `ca9cc1160f407c0a78302ad75cb38396616aed52`:
+- Local SQLite migration through `store.0038` PASS,
+- 15 Store/Profile/Checkout tests PASS,
+- post-migration drift check PASS,
+- Catalog 49.3I.31–34 gate PASS.
+
+Current correction:
+- `ERR-49-057` records the wrapper defect,
+- resume from effective Local Django DB verification using Python stdin, create a fresh Django SQLite backup, inspect pending plan (expected only `0039` if the same Local DB is active), then migrate/test and run the current 31–35 Catalog gate.
+
 ## Related docs
 - `docs/phases/PHASE49_3I35_OPERATOR_LEDGER_RESILIENT_AI_FILAMENT.md`
 - `docs/phases/PHASE50_FINANCE_ADMIN_COMMAND_CENTER.md`
