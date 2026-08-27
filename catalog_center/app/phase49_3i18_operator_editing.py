@@ -312,7 +312,8 @@ def install(workspace_class):
             x=by.get(url,{"source_url":url}); x.update(alt_text=str(alts[n-1] if n-1<len(alts) else f"{title} - تصویر {n}"),title=title,caption=caption,keywords=kws[:16],operator_override=True,metadata_ready=False,seo_signature=""); fields=set(x.get("operator_override_fields") or []); fields.update({"alt_text","title","caption","keywords"}); x["operator_override_fields"]=sorted(fields); meta.append(x)
         if meta:updates[images.IMAGE_METADATA_COLUMN]=json.dumps(meta,ensure_ascii=False)
         self.db.update_product(self.product_id,updates)
-        if selected:
+        from .phase49_3i36_stage_finalization import is_stage_locked
+        if selected and not is_stage_locked(row,"images"):
             try:images.finalize_selected_images(self.db,self.product_id)
             except Exception as exc:messagebox.showwarning("3DPrintHub",f"متن و SEO بازسازی شد ولی فایل تصویر کامل نشد:\n{exc}",parent=self)
         self.reload();self._phase49_3i18_title.set(title);getattr(self,"_phase49_3e_refresh_tasks",lambda:None)();self.footer_status.set("بازسازی کامل متن، SEO و Alt تصاویر با نام صحیح انجام شد")
