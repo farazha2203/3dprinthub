@@ -601,6 +601,22 @@ def install_workspace(workspace_class) -> None:
     def final_commit(self):
         if not self.save(silent=True):
             return False
+        missing = []
+        checklist = getattr(self, "_checklist", None)
+        if callable(checklist):
+            try:
+                missing = [str(label) for label, ok in checklist() if not bool(ok)]
+            except Exception:
+                missing = []
+        if missing:
+            messagebox.showwarning(
+                "ثبت نهایی محصول",
+                "ثبت مرحله‌ای انجام شده اما برای ثبت نهایی این موارد هنوز ناقص‌اند:\n- "
+                + "\n- ".join(missing[:20]),
+                parent=self,
+            )
+            self.footer_status.set("محصول محلی ذخیره شد اما ثبت نهایی به‌دلیل موارد ناقص انجام نشد")
+            return False
         updater = getattr(self.app, "_phase49_3i33_update_product_card", None)
         if callable(updater):
             updater(int(self.product_id))
