@@ -375,6 +375,7 @@ def install_workspace(workspace_class) -> None:
     original_save = workspace_class.save
     original_close = workspace_class.close
     original_gallery = workspace_class.refresh_gallery
+    original_reload = workspace_class.reload
     original_apply_thumbnail = workspace_class._apply_thumbnail
     original_pricing_state = getattr(workspace_class, "_phase49_3f_refresh_pricing_state", None)
 
@@ -384,9 +385,11 @@ def install_workspace(workspace_class) -> None:
         row = app.db.product(int(product_id))
         self._phase49_3i33_quick_fixed_price = tk.StringVar(value=fixed_price_from_row(row))
         self._phase49_3i33_ai_busy = False
+        self._phase49_3i33_source_metrics_var = tk.StringVar(value="")
         hide_legacy_ai_buttons(self)
         install_quick_price(self)
         install_ai_panel(self)
+        install_metrics_panel(self)
         install_image_panel(self)
         install_final_panel(self)
         self.refresh_gallery()
@@ -438,6 +441,22 @@ def install_workspace(workspace_class) -> None:
             text="متریال و رنگ به AI سپرده نمی‌شوند. هر مسیر متن فارسی، SEO و Metadata تصاویر منتخب را تکمیل می‌کند.",
             style="SubHeader.TLabel",
         ).pack(side="left", padx=5)
+
+    def install_metrics_panel(self):
+        panel = ttk.LabelFrame(
+            self.content_tab,
+            text="داده واقعی منبع / MakerWorld",
+            padding=7,
+            style="Card.TLabelframe",
+        )
+        panel.pack(fill="x", pady=(0, 8))
+        ttk.Label(
+            panel,
+            textvariable=self._phase49_3i33_source_metrics_var,
+            style="SubHeader.TLabel",
+            justify="right",
+            wraplength=1250,
+        ).pack(fill="x")
 
     def install_image_panel(self):
         panel = ttk.LabelFrame(
@@ -494,6 +513,44 @@ def install_workspace(workspace_class) -> None:
             elif not str(variable.get() or "").strip():
                 row = self.db.product(int(self.product_id))
                 variable.set(fixed_price_from_row(row))
+        return result
+
+    def refresh_metrics_text(self, row=None):
+        row = row or self.db.product(int(self.product_id))
+        if row is None:
+            return
+        profiles_raw = row_value(row, "source_print_profiles_json", "[]")
+        try:
+            import json
+            profiles = json.loads(profiles_raw or "[]")
+            profile_count = len(profiles) if isinstance(profiles, list) else 0
+        except Exception:
+            profile_count = 0
+        items = [
+            ("پسند", row_value(row, "source_like_count", 0)),
+            ("ذخیره", row_value(row, "source_save_count", 0)),
+            ("دانلود", row_value(row, "source_download_count", 0)),
+            ("چاپ", row_value(row, "source_print_count", 0)),
+            ("Boost", row_value(row, "source_boost_count", 0)),
+            ("وزن", row_value(row, "estimated_weight_grams", "")),
+            ("زمان چاپ", row_value(row, "estimated_print_minutes", "")),
+            ("پروفایل چاپ", profile_count),
+        ]
+        text = " • ".join(
+            f"{label}: {value}"
+            for label, value in items
+            if value not in (None, "", 0, "0")
+        )
+        self._phase49_3i33_source_metrics_var.set(text or "هنوز آمار/پروفایل قابل استنادی ثبت نشده است.")
+
+    def reload(self):
+        result = original_reload(self)
+        if hasattr(self, "_phase49_3i33_quick_fixed_price"):
+            self._phase49_3i33_quick_fixed_price.set(
+                fixed_price_from_row(self.db.product(int(self.product_id)))
+            )
+        if hasattr(self, "_phase49_3i33_source_metrics_var"):
+            refresh_metrics_text(self)
         return result
 
     def save(self, silent=False):
@@ -662,6 +719,7 @@ def install_workspace(workspace_class) -> None:
 
     workspace_class.__init__ = __init__
     workspace_class.save = save
+    workspace_class.reload = reload
     if callable(original_pricing_state):
         workspace_class._phase49_3f_refresh_pricing_state = pricing_state
     workspace_class.close = close
