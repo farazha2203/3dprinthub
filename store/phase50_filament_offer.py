@@ -1,0 +1,186 @@
+from __future__ import annotations
+
+from decimal import Decimal
+
+from django.db import models
+
+from .models import ProductVariant, StoreOrderItem
+from .phase39_models import MaterialColorOption
+
+
+def _has_field(model, name: str) -> bool:
+    return any(field.name == name for field in model._meta.get_fields())
+
+
+def _contribute(model, name: str, field: models.Field) -> None:
+    if not _has_field(model, name):
+        field.contribute_to_class(model, name)
+
+
+def install_model_fields() -> None:
+    for name, field in (
+        (
+            "brand_name",
+            models.CharField(
+                max_length=120,
+                blank=True,
+                default="",
+                verbose_name="برند فیلامنت",
+            ),
+        ),
+        (
+            "manufacturer_name",
+            models.CharField(
+                max_length=160,
+                blank=True,
+                default="",
+                verbose_name="کارخانه / سازنده فیلامنت",
+            ),
+        ),
+        (
+            "roll_weight_grams",
+            models.DecimalField(
+                max_digits=10,
+                decimal_places=2,
+                default=1000,
+                verbose_name="وزن هر رول به گرم",
+            ),
+        ),
+        (
+            "stock_roll_count_snapshot",
+            models.DecimalField(
+                max_digits=10,
+                decimal_places=2,
+                default=0,
+                verbose_name="اسنپ‌شات تعداد رول موجود",
+            ),
+        ),
+        (
+            "purchase_price_per_roll",
+            models.PositiveBigIntegerField(default=0, verbose_name="قیمت خرید هر رول"),
+        ),
+        (
+            "sale_price_per_roll",
+            models.PositiveBigIntegerField(default=0, verbose_name="قیمت فروش هر رول"),
+        ),
+        (
+            "usd_price_per_roll",
+            models.DecimalField(
+                max_digits=14,
+                decimal_places=4,
+                default=0,
+                verbose_name="قیمت دلاری هر رول",
+            ),
+        ),
+        (
+            "usd_fx_rate_toman",
+            models.DecimalField(
+                max_digits=14,
+                decimal_places=2,
+                default=0,
+                verbose_name="نرخ دلار ثبت‌شده برای این رول",
+            ),
+        ),
+    ):
+        _contribute(MaterialColorOption, name, field)
+
+    _contribute(
+        ProductVariant,
+        "support_weight_grams",
+        models.DecimalField(
+            max_digits=10,
+            decimal_places=2,
+            default=0,
+            verbose_name="وزن ساپورت مصرفی",
+        ),
+    )
+    for name, field in (
+        (
+            "support_weight_grams",
+            models.DecimalField(
+                max_digits=10,
+                decimal_places=2,
+                default=0,
+                verbose_name="وزن ساپورت هنگام سفارش",
+            ),
+        ),
+        (
+            "filament_brand_name",
+            models.CharField(
+                max_length=120,
+                blank=True,
+                default="",
+                verbose_name="برند فیلامنت هنگام سفارش",
+            ),
+        ),
+        (
+            "filament_manufacturer_name",
+            models.CharField(
+                max_length=160,
+                blank=True,
+                default="",
+                verbose_name="سازنده فیلامنت هنگام سفارش",
+            ),
+        ),
+    ):
+        _contribute(StoreOrderItem, name, field)
+
+    MaterialColorOption.current_stock_grams = property(_current_stock_grams)
+    MaterialColorOption.current_roll_count = property(_current_roll_count)
+    MaterialColorOption.effective_sale_price_per_gram = property(_effective_sale_price_per_gram)
+
+
+def _matching_spools(option):
+    qs = option.material.filament_spools.exclude(
+        status__in=["empty", "archived", "quarantine"]
+    ).filter(color_name__iexact=option.name)
+    brand = str(getattr(option, "brand_name", "") or "").strip()
+    if brand:
+        qs = qs.filter(brand__iexact=brand)
+    return qs
+
+
+def _current_stock_grams(option):
+    qs = _matching_spools(option)
+    if qs.exists():
+        return qs.aggregate(value=models.Sum("remaining_weight_grams"))["value"] or Decimal("0")
+    rolls = Decimal(getattr(option, "stock_roll_count_snapshot", 0) or 0)
+    roll_weight = Decimal(getattr(option, "roll_weight_grams", 0) or 0)
+    return rolls * roll_weight
+
+
+def _current_roll_count(option):
+    qs = _matching_spools(option).filter(remaining_weight_grams__gt=0)
+    if qs.exists():
+        return qs.count()
+    return Decimal(getattr(option, "stock_roll_count_snapshot", 0) or 0)
+
+
+def _effective_sale_price_per_gram(option):
+    roll_weight = Decimal(getattr(option, "roll_weight_grams", 0) or 0)
+    candidates = []
+
+    override = getattr(option, "sale_price_per_gram_override", None)
+    if override is not None and Decimal(override or 0) > 0:
+        candidates.append(Decimal(override))
+
+    if roll_weight > 0:
+        sale_roll = Decimal(getattr(option, "sale_price_per_roll", 0) or 0)
+        if sale_roll > 0:
+            candidates.append(sale_roll / roll_weight)
+
+        usd_roll = Decimal(getattr(option, "usd_price_per_roll", 0) or 0)
+        fx = Decimal(getattr(option, "usd_fx_rate_toman", 0) or 0)
+        if usd_roll > 0 and fx > 0:
+            candidates.append((usd_roll * fx) / roll_weight)
+
+    material_rate = Decimal(
+        getattr(option.material, "effective_sale_price_per_gram", 0)
+        or getattr(option.material, "sale_price_per_gram", 0)
+        or getattr(option.material, "price_per_gram", 0)
+        or 0
+    )
+    if material_rate > 0:
+        candidates.append(material_rate)
+
+    return max(candidates) if candidates else Decimal("0")
