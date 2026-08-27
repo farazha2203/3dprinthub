@@ -235,7 +235,7 @@ def makerworld_evidence_from_html(html: str, source_url: str) -> dict[str, Any]:
         settings = any(
             key in node for key in (
                 "layerHeight", "layer_height", "wallCount", "wall_count",
-                "infill", "infillPercent", "plateCount", "plate_count", "rating", "score",
+                "infill", "infillPercent", "plateCount", "plate_count",
             )
         )
         if minutes is None and not settings:
