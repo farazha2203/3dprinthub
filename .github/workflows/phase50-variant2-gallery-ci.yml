@@ -89,6 +89,30 @@ jobs:
           node --check static/store/js/store.js
           node --check static/store/js/phase50-profile-selector.js
 
+      - name: Profile selector dependency behavior
+        run: |
+          node - <<'NODE'
+          const assert = require("node:assert/strict");
+          const core = require("./static/store/js/phase50-profile-selector.js");
+          const variants = [
+            {id:"20-100", size:"20", finalWeight:100, materialWeight:100, price:350000, build:"standard", material:"PLA", color:"", quality:"standard"},
+            {id:"20-150", size:"20", finalWeight:150, materialWeight:150, price:450000, build:"standard", material:"PLA", color:"", quality:"standard"},
+            {id:"30-150", size:"30", finalWeight:150, materialWeight:150, price:650000, build:"standard", material:"PLA", color:"", quality:"standard"},
+            {id:"30-200", size:"30", finalWeight:200, materialWeight:200, price:750000, build:"standard", material:"PLA", color:"", quality:"standard"},
+            {id:"30-300", size:"30", finalWeight:300, materialWeight:300, price:900000, build:"standard", material:"PLA", color:"", quality:"standard"},
+          ];
+          const dims = core.buildDimensions("size_weight", variants);
+          assert.deepEqual(dims.slice(0,2), ["size","weight"]);
+          const state = {size:"30", weight:"150"};
+          const weightPool = core.variantsForDimension(variants, state, dims, 1);
+          assert.deepEqual(weightPool.map(v => v.id), ["30-150","30-200","30-300"]);
+          const priceFor150At30 = Math.min(...weightPool.filter(v => core.valueFor(v,"weight") === "150").map(v => v.price));
+          assert.equal(priceFor150At30, 650000);
+          core.clearDownstreamState(state, dims, 0);
+          assert.deepEqual(state, {size:"30"});
+          console.log("PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS");
+          NODE
+
       - name: Django system check
         run: python manage.py check
 
