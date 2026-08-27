@@ -1,5 +1,5 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.0 — Consolidated Product AI + Explicit Refresh Windows Release",
+  "name": "3DPrintHub Catalog Center v8.9.0 — Consolidated AI + Product Profile Matrix Windows Release",
   "version": "8.9.0",
   "phase": 49,
   "release_kind": "portable-single-file",
@@ -63,7 +63,13 @@
     "explicit_only_global_products_refresh",
     "single_product_card_update",
     "selected_products_bulk_multi_mode_ai",
-    "runtime_cpu_ram_network_telemetry"
+    "runtime_cpu_ram_network_telemetry",
+    "step2_product_profile_matrix",
+    "profile_clone_edit_workflow",
+    "dependent_size_weight_customer_options",
+    "profile_fixed_price_authority",
+    "profile_part_dimensions",
+    "desktop_to_store_profile_sync"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -144,7 +150,9 @@
     "tests/test_phase49_3i32_source_url_guard.py",
     "app/phase49_3i33_ai_core.py",
     "app/phase49_3i33_operator_workflow.py",
-    "tests/test_phase49_3i33_operator_workflow.py"
+    "tests/test_phase49_3i33_operator_workflow.py",
+    "app/phase49_3i34_profile_matrix.py",
+    "tests/test_phase49_3i34_profile_matrix.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
