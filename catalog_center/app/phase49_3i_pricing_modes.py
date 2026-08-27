@@ -56,6 +56,10 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         # the 49.3I.29 deferred-refresh contract intact.
         from .phase49_3i31_smart_link_bulk_ai import install_app as _install_phase49_3i31_app
         _install_phase49_3i31_app(app_class)
+        # 49.3I.33 is the final Windows operator boundary: four explicit AI
+        # paths, explicit-only Products refresh, single-card updates and telemetry.
+        from .phase49_3i33_operator_workflow import install_app as _install_phase49_3i33_app
+        _install_phase49_3i33_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -213,3 +217,6 @@ def install(workspace_class) -> None:
     # URL merely because both mirrored URL controls are temporarily blank.
     from .phase49_3i32_source_url_guard import install_workspace as _install_phase49_3i32_workspace
     _install_phase49_3i32_workspace(workspace_class)
+    # Final UI/persistence layer after source identity protection.
+    from .phase49_3i33_operator_workflow import install_workspace as _install_phase49_3i33_workspace
+    _install_phase49_3i33_workspace(workspace_class)
