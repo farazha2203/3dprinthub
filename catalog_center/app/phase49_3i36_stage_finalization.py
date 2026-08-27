@@ -130,7 +130,7 @@ def field_stage(field: str) -> str:
         return ""
     if key.startswith("homepage_slider_"):
         return "slider"
-    if key.startswith("sales_profile_"):
+    if key.startswith("sales_profile_") or key.startswith("sales_profiles_"):
         return "commerce"
     if key in QUICK_FIELDS:
         return "quick"
