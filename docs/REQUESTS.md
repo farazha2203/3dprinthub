@@ -1,6 +1,6 @@
 # OWNER REQUESTS
 
-Last Updated: 2026-08-26
+Last Updated: 2026-08-27
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
@@ -24,7 +24,7 @@ Status: `ACTIVE CONSTRAINT`
 StoreOrder, StorePayment, invoices, inventory, coupon/VAT, Product/Profile/Variant history and payment security remain compatible.
 
 ## REQ-50-004 — Dynamic delivery price
-Status: `50.A.2B GITHUB CI TESTED / PRODUCTION MIGRATION NEXT`
+Status: `50.A.2B–2D GITHUB CI TESTED / PRODUCTION MIGRATION CHAIN NEXT AFTER LOCAL QA`
 Shipping calculation must use the chosen profile/product effective shipping weight, packaging weight/dimensions and destination. Current ShippingMethod/rate rules remain the explicit fallback. Post/Tipax/Mahex adapters are allowed only after verified official current contracts/credentials.
 
 ## REQ-50-005 — Coupon + VAT checkout
@@ -83,7 +83,7 @@ Acceptance:
 CI: `Phase50 Variant2 Gallery CI` run `32966720475` PASS on `fba0631e60bce1f6e3f622317b70c2f7f35d978f`.
 
 ## REQ-50-023 — Fast Windows AI + exact-link grounding + selected-product batch AI
-Status: `8.8.2 PACKAGED WINDOWS CI PASS / OWNER LOCAL QA + EXPLICIT RELEASE PUBLISH PENDING`
+Status: `PRESERVED IN 8.9.0 / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA PENDING`
 Acceptance:
 - Product edit/AI must not rebuild global Products gallery on every save/request,
 - large catalog remains usable and older products are never discarded,
@@ -111,6 +111,29 @@ Acceptance:
 - no Product price/stock/material/color/business state or AI provider/model is changed by this guard.
 
 Verification: targeted run `32996526852` PASS; packaged Windows run `32997106056` PASS. Remaining acceptance is Local owner QA of a healthy linked Product, the already affected Product, OpenRouter/AvalAI live exact-link AI and selected-Product batch behavior.
+
+## REQ-50-025 — Product Profile Matrix shared by Windows and Storefront
+Status: `IMPLEMENTED 49.3I.34 + 50.A.2D / GITHUB CI TESTED / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- Product Step 2 can add a Profile or clone the selected Profile so Profile 2 initially equals Profile 1 and then diverges safely,
+- each Profile owns its own size, final/material weight, price, print time, actual part dimensions, build mode, material, color, quality, package weight/dimensions, stock/default/sort state,
+- examples such as size 20 with 100/150/200 g and size 30 with 150/200/300 g are represented as separate real orderable ProductVariants,
+- customer selection supports size→weight and deeper configured hierarchies,
+- selecting a size shows only valid downstream options for that size,
+- later selections never hide valid upstream choices,
+- price badges for a weight/profile are scoped to the selected upstream size/choices,
+- selected Profile is the single Product detail price/facts authority,
+- the same Desktop profile payload is persisted and transported through the existing Catalog batch boundary; no separate hidden Store dataset,
+- manual server-side Variants outside the Desktop-managed namespace are preserved,
+- selected Profile part dimensions and existing shipping/package facts are frozen on successful checkout,
+- Profile content and Storefront presentation remain safe when JS/API progressive enhancement is unavailable,
+- Production migration chain is verified and backed up before any schema write.
+
+Verification:
+- Windows Catalog Center 8.9.0 build `2026.08.27.2`, workflow `33051114515` PASS on `b3280dd67cd7772f337f6792036ea92d3f252747`; artifact ID `9637671099`, EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`,
+- Web runtime snapshot `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`, Profile Matrix CI `33051311828` PASS, 15 Store/Profile/Checkout tests PASS and `PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS`,
+- pending Production migrations: `0036 → 0037 → 0038` subject to fresh read-only MySQL verify + backup.
 
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
