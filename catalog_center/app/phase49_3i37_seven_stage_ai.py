@@ -210,7 +210,23 @@ def _full_ai_updates(app, row, pack: dict, source: dict, mode: str) -> dict:
     return updates
 
 
-def _stage_candidate_updates(row, full: dict, stage: str, source_title: str) -> dict:
+def _meaningful_ai_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, (list, tuple, set, dict)):
+        return bool(value)
+    text = str(value).strip()
+    return text not in {"", "[]", "{}", "null", "None"}
+
+
+def _stage_candidate_updates(
+    row,
+    full: dict,
+    stage: str,
+    source_title: str,
+    *,
+    refresh_existing: bool = False,
+) -> dict:
     candidates = {
         key: value
         for key, value in full.items()
@@ -219,10 +235,19 @@ def _stage_candidate_updates(row, full: dict, stage: str, source_title: str) -> 
     if stage == "images":
         # Image AI is SEO only. Never use AI to rename/move binary files. The
         # deterministic image finalizer owns SEO filenames and file metadata.
+        # Even an explicit clean pass does not spend AI when image SEO is ready.
         if not image_pipeline.image_metadata_missing(row):
             return {}
         allowed = {"image_alt_texts_json", image_pipeline.IMAGE_METADATA_COLUMN}
         candidates = {key: value for key, value in candidates.items() if key in allowed}
+        refresh_existing = False
+
+    if refresh_existing:
+        return {
+            key: value
+            for key, value in candidates.items()
+            if _meaningful_ai_value(value)
+        }
 
     return {
         key: value
