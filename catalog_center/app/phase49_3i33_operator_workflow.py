@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import queue
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -171,7 +172,32 @@ def install_app(app_class) -> None:
     def __init__(self, *args, **kwargs):
         original_init(self, *args, **kwargs)
         ensure_schema(self.db)
+        self._phase49_3i33_ui_queue = queue.Queue()
+
+        def pump_ui():
+            while True:
+                try:
+                    callback = self._phase49_3i33_ui_queue.get_nowait()
+                except queue.Empty:
+                    break
+                try:
+                    callback()
+                except Exception as exc:
+                    audit_event(
+                        "ui", "phase49_3i33_deferred_callback_error",
+                        status="error", level="ERROR", source_file=__file__,
+                        message=redact(exc),
+                    )
+            try:
+                self.after(30, pump_ui)
+            except Exception:
+                pass
+
+        self.after(30, pump_ui)
         start_runtime_sampler(self)
+
+    def post_ui(self, callback):
+        self._phase49_3i33_ui_queue.put(callback)
 
     def modernize_products_page(self):
         if callable(original_modernize):
@@ -299,6 +325,9 @@ def install_app(app_class) -> None:
                     try:
                         result = run_ai_mode(self, product_id, mode, provider, key, model)
                         ok += 1
+                        self._phase49_3i33_post_ui(
+                            lambda pid=product_id: self._phase49_3i33_update_product_card(pid)
+                        )
                         dialog.event("done", f"#{product_id}: {result.get('title_fa') or 'انجام شد'}")
                     except Exception as exc:
                         failed += 1
@@ -322,6 +351,7 @@ def install_app(app_class) -> None:
     if callable(original_render):
         app_class._phase49_3i_render_gallery = render_gallery
     app_class._phase49_3i33_update_product_card = update_product_card
+    app_class._phase49_3i33_post_ui = post_ui
     app_class._phase49_3i33_bulk_run = bulk_run
     app_class._phase49_3i29_flush_products_refresh = no_auto_flush
     app_class._phase49_3i33_operator_workflow = True
@@ -546,7 +576,14 @@ def install_workspace(workspace_class) -> None:
                 result = run_ai_mode(self.app, int(self.product_id), mode, provider, key, model)
                 dialog.done(f"انجام شد: {result.get('title_fa') or ''}")
                 span.finish("ok", {"mode": mode, "changed_fields": result.get("changed_fields")})
-                self.after(0, self.reload)
+
+                def complete_ui():
+                    self.reload()
+                    updater = getattr(self.app, "_phase49_3i33_update_product_card", None)
+                    if callable(updater):
+                        updater(int(self.product_id))
+
+                self.after(0, complete_ui)
             except Exception as exc:
                 span.finish("error", {"mode": mode, "error": redact(exc)})
                 dialog.fail(exc)
