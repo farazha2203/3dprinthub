@@ -12,6 +12,10 @@ PROFILE_SELECTION_CHOICES = [
     ("build", "انتخاب بر اساس مدل ساخت"),
     ("size_build", "سایز ← مدل ساخت"),
     ("build_size", "مدل ساخت ← سایز"),
+    ("size_weight", "سایز ← وزن"),
+    ("weight_size", "وزن ← سایز"),
+    ("size_weight_build", "سایز ← وزن ← مدل ساخت"),
+    ("size_build_weight", "سایز ← مدل ساخت ← وزن"),
 ]
 
 
@@ -46,6 +50,14 @@ def _selection_value(self) -> str:
         return " • ".join(part for part in (size, build) if part)
     if mode == "build_size":
         return " • ".join(part for part in (build, size) if part)
+    if mode == "size_weight":
+        return " • ".join(part for part in (size, weight_label) if part)
+    if mode == "weight_size":
+        return " • ".join(part for part in (weight_label, size) if part)
+    if mode == "size_weight_build":
+        return " • ".join(part for part in (size, weight_label, build) if part)
+    if mode == "size_build_weight":
+        return " • ".join(part for part in (size, build, weight_label) if part)
     return str(getattr(self, "sales_profile_name", "") or getattr(self, "commerce_display_label", "") or "")
 
 
