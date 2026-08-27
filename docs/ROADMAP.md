@@ -4,38 +4,43 @@ Updated: 2026-08-27
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
-Current Web Phase: `50.A.2D — Product Profile Matrix + Dependent Storefront Selector`  
-Parallel Windows Phase: `49.3I.34 — Step-2 Product Profile Matrix / Catalog Center 8.9.0`  
+Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
+Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
 Status: `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
-## Phase49 Windows track — current target 49.3I.34
+## Phase49 Windows track — current target 49.3I.35
 Preserved foundations:
 - 48-card paged Product Explorer,
 - no global Product refresh on each Product Save/AI action,
-- exact saved mother AI Provider/Model/key with no hidden cross-provider fallback,
+- exact saved mother AI Provider/Model/key ownership,
 - exact-link grounded Product AI,
 - source-link preserve/recover guard,
 - local Product identity/history preservation,
-- selected-Product bulk AI with isolated errors and one final refresh.
+- mature 3I.34 Profile transport and Store ProductVariant sync.
 
-49.3I.34 adds:
-- Product-owned Step-2 profile matrix,
-- add/clone/delete/edit profiles,
-- independent per-profile size, weight, fixed price, print time, part dimensions, build, material, color, quality, package and stock settings,
-- customer-selection modes including size→weight and 3-level modes,
-- batch transport of the exact profile JSON to Django,
-- profile/range minimum as valid publish readiness price.
+49.3I.35 adds:
+- accounting-style registered Profile ledger; upper Product controls are working state, not publish authority,
+- legacy 3I.34 duplicate Profile panel hidden,
+- Profile production rows: weight / print time / support weight,
+- select-all + local-register material/color actions without global Products refresh,
+- material + brand + manufacturer + color + roll stock/purchase/sale/USD/FX offer facts,
+- highest explicit positive sale-rate basis with no guessed FX,
+- visible AI preflight/progress/retry/failover using only configured candidates,
+- bulk AI per-Product error isolation,
+- manual SEO readiness approval and manual source review without license bypass.
 
-Windows package verification:
-- runtime snapshot `b3280dd67cd7772f337f6792036ea92d3f252747`,
-- workflow `33051114515` PASS,
-- version `8.9.0`, build `2026.08.27.2`,
-- artifact ID `9637671099`,
-- EXE SHA256 `32aed719e6d374447fc4b05f09a30fe12f0ce4dc05e570382f2e74036044900c`,
-- public Release publication remains explicit/manual after owner Local QA.
+Windows verification:
+- runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1`,
+- Smart/Profile run `33060047750` PASS,
+- Single-AI run `33060047790` PASS,
+- Windows portable run `33060047878` PASS,
+- version `8.9.1`, build `2026.08.27.3`,
+- artifact ID `9641338334`,
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
+- public Release remains manual after owner Local QA.
 
 ## Phase50.A — Admin and commerce operational completeness
 Production verified foundation:
@@ -93,15 +98,34 @@ Web runtime verification:
 - migrations through `0038` apply on CI SQLite,
 - 15 Store/Profile/Checkout tests PASS.
 
-## Production gate for 50.A.2B–2D
+## 50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot — GITHUB CI TESTED
+`store.0039_phase50_filament_offer_pricing`
+- MaterialColorOption carries brand/manufacturer, roll weight/stock snapshot, purchase/sale/USD/explicit FX,
+- current stock prefers matching real FilamentSpool grams and falls back to roll-count snapshot,
+- dynamic pricing consumes the effective brand/color sale rate,
+- ProductVariant carries support weight,
+- StoreOrderItem freezes support weight + filament brand/manufacturer,
+- Storefront distinguishes same material/color across different brands,
+- Profile summary/API expose brand/manufacturer/support,
+- no guessed FX and no duplicate Product-level price authority.
+
+Verification:
+- Phase50 run `33059883188` PASS,
+- no migration drift,
+- clean CI SQLite migration through `0039`,
+- 16 Store/Profile/Checkout tests PASS,
+- brand-aware rate/API regression PASS,
+- immutable support/brand/manufacturer checkout snapshot PASS.
+
+## Production gate for 50.A.2B–2E
 1. Owner Local Windows/Django QA on exact current GitHub head.
-2. Read-only Host verify: root, branch, HEAD, clean worktree, live branch SHA, Python/Django, exact MySQL DB and actual `0034..0038` migration state.
+2. Read-only Host verify: root, branch, HEAD, clean worktree, live branch SHA, Python/Django, exact MySQL DB and actual `0034..0039` migration state.
 3. Inspect exact migration plan; do not assume `0036/0037/0038` are still pending.
 4. Verify disk + `mysqldump`.
 5. Fresh tracked-source + environment + MySQL backups with checksums and rollback HEAD.
 6. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; verify exact SHA and ff-only ancestry.
 7. Deploy approved GitHub snapshot.
-8. Re-run Django check/drift/plan; apply only verified pending `0036 → 0037 → 0038`.
+8. Re-run Django check/drift/plan; apply only verified pending `0036 → 0037 → 0038 → 0039`.
 9. `collectstatic --noinput`, Passenger restart.
 10. Verify Home/Store/Admin/Product/Profile API/Checkout/static/private-media and a controlled new order.
 11. Owner browser QA of dependent size/weight prices and Profile presentation.
