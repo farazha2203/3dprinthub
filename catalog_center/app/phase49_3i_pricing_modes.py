@@ -220,3 +220,8 @@ def install(workspace_class) -> None:
     # Final UI/persistence layer after source identity protection.
     from .phase49_3i33_operator_workflow import install_workspace as _install_phase49_3i33_workspace
     _install_phase49_3i33_workspace(workspace_class)
+    # 49.3I.34 adds the final Step-2 profile matrix editor on top of the
+    # explicit-refresh/AI boundary. Profiles persist as product-owned JSON and
+    # travel through the existing Batch editorial contract to Django.
+    from .phase49_3i34_profile_matrix import install_workspace as _install_phase49_3i34_workspace
+    _install_phase49_3i34_workspace(workspace_class)
