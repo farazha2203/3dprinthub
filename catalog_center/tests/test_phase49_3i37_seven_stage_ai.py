@@ -10,6 +10,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from app.db import Database
+from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app import phase49_3c_image_pipeline as image_pipeline
 from app.phase49_3i34_profile_matrix import ensure_schema as ensure_profile_schema
 from app.phase49_3i35_operator_ledger import ensure_schema as ensure_ledger_schema
@@ -39,6 +40,7 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
 
         install_database(LockedDatabase)
         db = LockedDatabase(path)
+        ensure_epic49_desktop_schema(db)
         ensure_profile_schema(db)
         ensure_ledger_schema(db)
         image_pipeline.ensure_schema(db)
