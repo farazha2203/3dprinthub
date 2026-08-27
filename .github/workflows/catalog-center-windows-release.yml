@@ -9,6 +9,8 @@ on:
       - catalog_center/app/phase49_3i29_windows_performance_ai.py
       - catalog_center/app/phase49_3i31_smart_link_bulk_ai.py
       - catalog_center/app/phase49_3i36_stage_finalization.py
+      - catalog_center/app/phase49_3i37_seven_stage_ai.py
+      - catalog_center/tests/test_phase49_3i37_seven_stage_ai.py
       - catalog_center/app/phase49_readiness_wizard.py
       - catalog_center/app/phase49_3e_ai_task_center.py
       - catalog_center/app/phase49_3f_workspace.py
@@ -92,6 +94,7 @@ jobs:
         run: |
           python -m unittest -v `
             tests.test_phase49_3i36_stage_finalization `
+            tests.test_phase49_3i37_seven_stage_ai `
             tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
@@ -155,6 +158,11 @@ jobs:
             'EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED',
             'EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED',
             'EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED',
+            'EPIC49_3I37_SEVEN_STAGE_AI_ORCHESTRATOR=ENABLED',
+            'EPIC49_3I37_PERSISTED_SOURCE_MODE=ENABLED',
+            'EPIC49_3I37_SCREENSHOT_SELECTED_FOR_SITE=ENABLED',
+            'EPIC49_3I37_STAGE_BY_STAGE_APPLY=ENABLED',
+            'EPIC49_3I37_SEO_LANGUAGE_GUARD=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -229,14 +237,14 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI and 3I.36 seven-stage finalization contracts
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI , 3I.36 seven-stage finalization and 3I.37 stage AI/source/screenshot contracts
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.4 adds seven persisted operator stage finalization locks, prevents Product AI from committing unrelated Profile/commerce state, restores saved AI settings locally without hidden model scans, allows manual Content/SEO finalization when real Persian core SEO fields exist, and rejects Twistmas Tree transliteration in favor of semantic Persian.
+          8.9.5 adds one persisted Link/Data/Screenshot source mode, a missing-only seven-stage AI orchestrator shared by single and bulk Product runs, screenshot-to-selected-site-image SEO/metadata with preserved upstream source page, and stricter Persian SEO language validation while preserving 3I.36 operator finalization locks.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
