@@ -2,7 +2,7 @@
 
 Updated: 2026-08-27  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Current Subphase: `50.A.2D — Product Profile Matrix + Dependent Storefront Selector`  
+Current Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Status: `GITHUB CI TESTED / OWNER LOCAL QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
 
 Current verified Production application commit:
@@ -12,7 +12,7 @@ Last verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
 - `store.0034_phase50_variant2_commerce` applied,
 - `store.0035_phase50_sales_profiles` applied,
 - `store.0036_phase50_checkout_snapshot` pending at last verify,
-- `0037` and `0038` were created after that verify and are not claimed applied.
+- `0037`, `0038` and `0039` were created after that verify and are not claimed applied.
 
 ## Preserved foundation
 - Product/Catalog/Bridge/Hero public media is Product-owned; imported Catalog working-media remains private.
@@ -143,6 +143,43 @@ Dependent selector semantics:
 ### Checkout snapshot extension
 `0038` adds immutable part L/W/H fields to StoreOrderItem. A later ProductVariant edit cannot mutate the ordered Profile dimensions.
 
+## 50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot
+Migration:
+`store.0039_phase50_filament_offer_pricing`.
+
+Adds to `MaterialColorOption`:
+- filament brand,
+- manufacturer/factory,
+- roll weight,
+- synchronized roll-count stock snapshot,
+- purchase price per roll,
+- sale price per roll,
+- USD price per roll,
+- explicit USD/Toman FX snapshot.
+
+Adds:
+- `ProductVariant.support_weight_grams`,
+- immutable `StoreOrderItem.support_weight_grams`,
+- immutable `StoreOrderItem.filament_brand_name`,
+- immutable `StoreOrderItem.filament_manufacturer_name`.
+
+Pricing/stock semantics:
+- effective offer rate is the highest positive explicit sale basis,
+- USD pricing participates only with an explicitly stored FX rate,
+- current stock uses matching real spool remaining grams first, then roll-count × roll-weight snapshot,
+- purchase price is stored for inventory/accounting and does not silently become customer sale price.
+
+Storefront/checkout:
+- same material/color with different brands remains a distinct customer choice,
+- selected Profile summary/API include brand/manufacturer/support facts,
+- successful checkout freezes those facts so later stock/brand edits cannot mutate old orders.
+
+Verification:
+- run `33059883188` PASS,
+- no migration drift,
+- migration through `0039` PASS on clean CI SQLite,
+- 16 Store/Profile/Checkout tests PASS.
+
 ## Verification
 
 ### Web runtime
@@ -191,14 +228,14 @@ Public GitHub Release remains manual-only after owner Local QA.
 ## Production deployment gate
 1. Owner Local Windows and Django QA on the exact current GitHub head.
 2. Read-only verify Host branch/HEAD/worktree/live remote SHA.
-3. Verify exact effective MySQL DB and actual `0034..0038` migration rows.
+3. Verify exact effective MySQL DB and actual `0034..0039` migration rows.
 4. Run exact migration plan and stop on any unapproved operation.
 5. Verify disk and `mysqldump`.
 6. Fresh tracked-source + `.env*` + MySQL backup, gzip/checksum, rollback HEAD.
 7. Explicit branch fetch to `FETCH_HEAD` per `ERR-50-007`; verify exact target and ff-only ancestry.
 8. Deploy source from GitHub.
 9. Re-run Django check/drift/DB/plan.
-10. Apply only verified pending chain `0036 → 0037 → 0038`.
+10. Apply only verified pending chain `0036 → 0037 → 0038 → 0039`.
 11. `collectstatic --noinput`.
 12. Passenger restart.
 13. Verify Home/Store/Admin/Product/Profile API/Checkout/static/private-media.
