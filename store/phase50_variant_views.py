@@ -35,6 +35,7 @@ def variant_commerce_options_view(request):
         }
         price_contract = getattr(variant, "price_breakdown", {})
         price = price_contract() if callable(price_contract) else (price_contract or {})
+        color_option = getattr(variant, "color", None)
         payload[str(variant.pk)] = {
             "product_id": product.pk,
             "profile_name": str(getattr(variant, "sales_profile_name", "") or ""),
@@ -50,7 +51,10 @@ def variant_commerce_options_view(request):
             "commerce_label": str(getattr(variant, "commerce_display_label", "") or ""),
             "material": str(getattr(variant, "material", "") or ""),
             "color": str(getattr(variant, "color", "") or ""),
+            "filament_brand_name": str(getattr(color_option, "brand_name", "") or ""),
+            "filament_manufacturer_name": str(getattr(color_option, "manufacturer_name", "") or ""),
             "material_weight_grams": str(getattr(variant, "material_weight_grams", 0) or 0),
+            "support_weight_grams": str(getattr(variant, "support_weight_grams", 0) or 0),
             "final_weight_grams": str(getattr(variant, "final_weight_grams", 0) or 0),
             "print_time_minutes": int(getattr(variant, "print_time_minutes", 0) or 0),
             "unit_price": int(price.get("unit_price") or getattr(variant, "cached_unit_price", 0) or 0),
