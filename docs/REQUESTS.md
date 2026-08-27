@@ -135,5 +135,36 @@ Verification:
 - Web runtime snapshot `7d0a2a1125e8f38771ba325427d1efa8b8d07da6`, Profile Matrix CI `33051311828` PASS, 15 Store/Profile/Checkout tests PASS and `PHASE50_PROFILE_SELECTOR_HIERARCHY=PASS`,
 - pending Production migrations: `0036 → 0037 → 0038` subject to fresh read-only MySQL verify + backup.
 
+
+## REQ-50-026 — Operator-ledger Profiles, resilient AI and brand-aware filament offers
+Status: `IMPLEMENTED 49.3I.35 + 50.A.2E / CI + WINDOWS PACKAGE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- Product Step 2 uses the upper controls as a working form and registered Profiles as the transport/publish authority,
+- registering a Profile snapshots current fields; new Profile can load the latest snapshot without mutating older Profiles,
+- Profile production supports multiple `weight | print time | support weight` rows,
+- quick/basic Product page no longer owns fixed price/weight/Profile authority,
+- material/color has select-all, clear and local-register actions without global Product-list refresh,
+- material offers preserve material + brand + manufacturer + color + roll weight + stock rolls + purchase/sale/USD/FX facts,
+- customer sale-rate uses the highest positive explicit sale basis; FX is never guessed,
+- same material/color from different brands remains distinguishable and orderable,
+- synchronized roll stock participates in color availability when no real spool rows exist,
+- AI dialog exposes preflight/progress/send/wait/reply/apply state, retries up to the configured attempt count and uses only explicit configured fallbacks,
+- bulk AI isolates Product errors and does not refresh the complete Products list per item,
+- editorial AI does not own material/color,
+- manual SEO review can accept complete actual Persian SEO without another AI call,
+- manual source review cannot bypass invalid commercial-license policy,
+- support weight + filament brand/manufacturer freeze into historical StoreOrderItem snapshots,
+- migration `0039` reaches Production only after exact MySQL verification, fresh backup and rollback.
+
+Verification:
+- Store run `33059883188` PASS through migration `0039` and 16 regressions,
+- Smart/Profile run `33060047750` PASS,
+- Single-AI run `33060047790` PASS,
+- Windows portable run `33060047878` PASS,
+- Catalog Center `8.9.1` / build `2026.08.27.3`,
+- artifact ID `9641338334`,
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`.
+
 ## Change rule
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
