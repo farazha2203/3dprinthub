@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from decimal import Decimal
@@ -240,12 +241,17 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
 
     prefix = f"CC-P{product.pk}-"
     active_codes = set()
+    seen_profile_keys = set()
     default_seen = False
     created_or_updated = 0
 
     for index, item in enumerate(rows, 1):
         key = str(item["key"])[:80]
-        code = f"{prefix}{_slug_token(key)}"[:100]
+        if key in seen_profile_keys:
+            raise ValidationError(f"کلید پروفایل تکراری است: {key}")
+        seen_profile_keys.add(key)
+        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:10]
+        code = f"{prefix}{_slug_token(key)[:32]}-{digest}"[:100]
         active_codes.add(code)
         material = _resolve_material(product, str(item.get("material") or ""))
         quality = _resolve_quality(product, str(item.get("quality") or ""))
