@@ -347,7 +347,7 @@ def install(workspace_class) -> None:
         def work():
             client = AIProviderClient(provider, key, model, product_id=self.product_id)
             result, used = client.structured_response(
-                instructions="Translate only the supplied 3D product title to fluent Persian. Preserve brand/model identifiers. Do not add marketing claims.",
+                instructions="Translate only the supplied 3D product title to fluent semantic Persian; transliteration of generic English words is forbidden. Twistmas Tree means a twisted/spiral Christmas tree and should be rendered as «درخت کریسمس اسپیرال» or a faithful Persian semantic equivalent. Preserve only true brand/model identifiers. Do not add marketing claims.",
                 input_content=[{"type": "input_text", "text": source}],
                 schema=schema, schema_name="title_fa_only", preferred_model=model,
             )
@@ -356,6 +356,8 @@ def install(workspace_class) -> None:
             try:
                 title, used = work()
                 if not title: raise RuntimeError("AI عنوان فارسی خالی برگرداند.")
+                from .phase49_3i33_ai_core import title_quality_guard
+                title_quality_guard(source, title)
                 self.db.update_product(self.product_id, {"title_fa": title, "ai_provider": provider, "ai_model": used})
                 audit_event("ai", "title_only", product_id=self.product_id, message=f"provider={provider} model={used}")
                 self.after(0, lambda: (self.reload(), self._phase49_3b_refresh_wizard(), self.footer_status.set("عنوان فارسی ترجمه شد")))
