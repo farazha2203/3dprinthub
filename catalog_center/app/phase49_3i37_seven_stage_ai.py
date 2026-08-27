@@ -446,12 +446,17 @@ def capture_screenshot_for_site(app, product_id: int) -> dict:
     target = capture_source_screenshot(app, product_id)
     row = app.db.product(product_id)
     pseudo = f"local://{target.name}"
-    all_images = image_pipeline.cap_unique_urls(
-        _json_list(row_value(row, "images_json", "[]")) + [pseudo]
-    )
-    selected = image_pipeline.cap_unique_urls(
-        _json_list(row_value(row, "selected_images_json", "[]")) + [pseudo]
-    )
+    def include_screenshot(values):
+        current = image_pipeline.cap_unique_urls(values)
+        if pseudo in current:
+            return current
+        limit = int(getattr(image_pipeline, "MAX_SOURCE_IMAGES", 10) or 10)
+        if len(current) >= limit:
+            current = current[: max(0, limit - 1)]
+        return [*current, pseudo]
+
+    all_images = include_screenshot(_json_list(row_value(row, "images_json", "[]")))
+    selected = include_screenshot(_json_list(row_value(row, "selected_images_json", "[]")))
     primary = str(row_value(row, "primary_image_url", "") or "").strip() or pseudo
     app.db.update_product(
         product_id,
@@ -547,7 +552,8 @@ def install_app(app_class) -> None:
             ok = original_save(self)
             if ok is False:
                 return False
-        label = str(getattr(self, "_phase49_3i37_source_mode_var", tk.StringVar(value="")).get() or "")
+        var = getattr(self, "_phase49_3i37_source_mode_var", None)
+        label = str(var.get() if var is not None else AI_SOURCE_MODES[source_mode(self)])
         mode = AI_SOURCE_BY_LABEL.get(label, "link")
         self.db.set_setting(SOURCE_SETTING, mode)
         self.status.set(
@@ -555,8 +561,78 @@ def install_app(app_class) -> None:
         )
         return True
 
+    def bulk_run(self):
+        if getattr(self, "_phase49_3i33_bulk_busy", False):
+            return
+        ids = []
+        for name in ("_phase49_3i26_product_selection", "_phase49_3i_selected_products"):
+            for raw in getattr(self, name, set()) or set():
+                try:
+                    value = int(raw)
+                except Exception:
+                    continue
+                if value not in ids:
+                    ids.append(value)
+        ids.sort()
+        if not ids:
+            messagebox.showwarning("3DPrintHub", "ابتدا چند محصول را از لیست انتخاب کن.", parent=self)
+            return
+
+        mode = source_mode(self)
+        self._phase49_3i33_bulk_busy = True
+        dialog = ObservableJobDialog(
+            self, f"تکمیل ۷ مرحله گروهی • {AI_SOURCE_MODES[mode]} • {len(ids)} محصول"
+        )
+        dialog.event(
+            "queue",
+            f"{len(ids)} محصول • منبع مادر {AI_SOURCE_MODES[mode]} • هر محصول مستقل و بدون Refresh سراسری",
+        )
+
+        def worker():
+            success = 0
+            failed = 0
+            try:
+                for index, product_id in enumerate(ids, 1):
+                    if dialog.cancelled.is_set():
+                        break
+                    dialog.set_progress(
+                        ((index - 1) / len(ids)) * 100,
+                        f"محصول {index}/{len(ids)} • #{product_id}",
+                    )
+                    try:
+                        result = run_resilient_orchestrator(
+                            self, product_id, dialog, mode=mode
+                        )
+                    except Exception as exc:
+                        failed += 1
+                        dialog.event(
+                            "product_failed",
+                            f"محصول #{product_id}: {redact(exc)}",
+                        )
+                        continue
+                    success += 1
+                    updater = getattr(self, "_phase49_3i33_update_product_card", None)
+                    if callable(updater):
+                        self.after(0, lambda pid=product_id: updater(pid))
+                    dialog.event(
+                        "product_done",
+                        f"✅ محصول #{product_id}: {result.get('title_fa') or 'بدون عنوان'}",
+                    )
+                dialog.set_progress(100, "پایان پردازش گروهی")
+                dialog.done(f"پایان • {success} موفق • {failed} خطا • Refresh سراسری انجام نشد")
+            except Exception as exc:
+                dialog.fail(exc)
+            finally:
+                self.after(0, lambda: setattr(self, "_phase49_3i33_bulk_busy", False))
+
+        import threading
+        threading.Thread(
+            target=worker, daemon=True, name="catalog-3i37-bulk-seven-stage"
+        ).start()
+
     app_class.__init__ = __init__
     app_class._phase49_3i35_save_ai_resilience_settings = save_settings
+    app_class._phase49_3i33_bulk_run = bulk_run
     app_class._phase49_3i37_source_mode = True
 
 
