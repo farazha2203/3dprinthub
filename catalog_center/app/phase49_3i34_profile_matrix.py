@@ -326,7 +326,7 @@ def install_workspace(workspace_class) -> None:
         if not selected:
             return
         key = str(selected[0])
-        item = self._profile_by_key(key)
+        item = self._phase49_3i34_profile_by_key(key)
         if item is None:
             return
         self._phase49_3i34_selected_key = key
