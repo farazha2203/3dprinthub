@@ -547,6 +547,31 @@ def install_app(app_class) -> None:
             wraplength=1050,
         ).grid(row=8, column=0, columnspan=2, sticky="w", padx=4, pady=4)
 
+        # Bulk uses the same mother source mode. Remove the older per-run
+        # four-mode selector so single and selected-product AI cannot diverge.
+        self._phase49_3i37_bulk_source_var = tk.StringVar(
+            value=f"منبع مادر: {AI_SOURCE_MODES[source_mode(self)]}"
+        )
+        for candidate in getattr(self, "products_tab", ttk.Frame(self)).winfo_children():
+            try:
+                if not isinstance(candidate, ttk.LabelFrame):
+                    continue
+                if "ترجمه و SEO گروهی" not in str(candidate.cget("text") or ""):
+                    continue
+                candidate.configure(text="تکمیل هوشمند ۷ مرحله‌ای محصولات انتخاب‌شده")
+                for child in candidate.winfo_children():
+                    if isinstance(child, ttk.Combobox):
+                        child.pack_forget()
+                    elif isinstance(child, ttk.Button):
+                        child.configure(text="✨ تکمیل ۷ مرحله روی انتخاب‌شده‌ها")
+                    elif isinstance(child, ttk.Label):
+                        child.configure(
+                            textvariable=self._phase49_3i37_bulk_source_var,
+                            text="",
+                        )
+            except Exception:
+                continue
+
     def save_settings(self):
         if callable(original_save):
             ok = original_save(self)
@@ -556,6 +581,9 @@ def install_app(app_class) -> None:
         label = str(var.get() if var is not None else AI_SOURCE_MODES[source_mode(self)])
         mode = AI_SOURCE_BY_LABEL.get(label, "link")
         self.db.set_setting(SOURCE_SETTING, mode)
+        bulk_var = getattr(self, "_phase49_3i37_bulk_source_var", None)
+        if bulk_var is not None:
+            bulk_var.set(f"منبع مادر: {AI_SOURCE_MODES[mode]}")
         self.status.set(
             f"تنظیمات AI ذخیره شد • منبع ترجمه/SEO: {AI_SOURCE_MODES[mode]}"
         )
