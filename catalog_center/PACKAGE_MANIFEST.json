@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.4 — Seven-stage Finalization + AI Write-Scope Guard",
-  "version": "8.9.4",
+  "name": "3DPrintHub Catalog Center v8.9.5 — Seven-stage AI Orchestrator + Screenshot Site SEO",
+  "version": "8.9.5",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -86,7 +86,15 @@
     "profile_commerce_ai_immutability",
     "manual_content_seo_finalization",
     "semantic_twistmas_translation_guard",
-    "ai_settings_no_network_hydration"
+    "ai_settings_no_network_hydration",
+    "seven_stage_missing_only_ai_orchestrator",
+    "persisted_ai_source_mode_link_data_screenshot",
+    "stage_by_stage_ai_apply_and_recheck",
+    "image_ai_seo_only_no_binary_rename_ownership",
+    "source_screenshot_selected_for_site",
+    "screenshot_source_page_upstream_metadata",
+    "seo_multilingual_contamination_guard",
+    "single_and_bulk_same_ai_source_authority"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -175,7 +183,9 @@
     "app/phase49_3i35_readiness_review.py",
     "tests/test_phase49_3i35_operator_workflow.py",
     "app/phase49_3i36_stage_finalization.py",
-    "tests/test_phase49_3i36_stage_finalization.py"
+    "tests/test_phase49_3i36_stage_finalization.py",
+    "app/phase49_3i37_seven_stage_ai.py",
+    "tests/test_phase49_3i37_seven_stage_ai.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
