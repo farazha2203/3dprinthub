@@ -5,8 +5,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
-Status: `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.2`  
+Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
@@ -31,6 +31,13 @@ Preserved foundations:
 - visible AI preflight/progress/retry/failover using only configured candidates,
 - bulk AI per-Product error isolation,
 - manual SEO readiness approval and manual source review without license bypass.
+
+8.9.2 foreground-startup hotfix:
+- 8.9.1 owner foreground launch exposed `ERR-49-059`: 3I.35 used `grid` in the pack-managed Settings parent,
+- fixed outer resilience panel to use `pack`, with dedicated regression,
+- targeted run `33066472847` PASS,
+- Windows one-file run `33066468014` PASS on runtime `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
+- artifact ID `9643957471`, EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
 
 Windows verification:
 - runtime snapshot `2622818d898e19b745c61ff653b80c03d22288f1`,
