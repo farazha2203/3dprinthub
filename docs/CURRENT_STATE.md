@@ -4,30 +4,30 @@ Updated: 2026-08-27
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Track: `Phase49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.2`  
-Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Track: `Phase49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
+Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
 The current runtime-changing commit verified by all Windows Catalog gates is:
 
-`9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`
+`9637829a255a1d09800bc062c2f049cf5d92b585`
 
 The branch contains only CI/local-gate tooling plus documentation commits after that packaged runtime snapshot. No packaged application module was changed after the successful Windows run documented below. The latest tooling head before documentation finalization is `b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
 
 Catalog Center:
-- version `8.9.2`,
-- build `2026.08.27.4`,
-- targeted Smart Link + Operator Ledger run `33066472847` PASS,
-- Single Active AI run on final release head PASS,
-- Windows portable workflow `33066468014` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.2`,
-- artifact ID `9643957471`,
-- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`,
-- artifact ZIP digest `sha256:78a371693563b3293d7b49e39e5acd8dbf3032be9f6fee1b5252fffc5a29d0fb`,
+- version `8.9.3`,
+- build `2026.08.27.5`,
+- targeted Smart Link + Operator Ledger run `33067612565` PASS,
+- Single Active AI run `33067618639` PASS,
+- Windows portable workflow `33067618679` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.3`,
+- artifact ID `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
+- artifact ZIP digest `sha256:216b62072fd95a0a4d292b28ce99605fd60f3e4d9622d06987d6fe5b434e6141`,
 - packaged browser smoke PASS,
 - portable self verify PASS,
-- public GitHub Release publication skipped/manual until owner foreground QA.
+- public GitHub Release publication skipped/manual until owner foreground Product Workspace QA.
 
 Store/Phase50 runtime was verified at commit:
 `d519a360e65b79db4b62af206b95f63c3539bc12`
@@ -72,6 +72,14 @@ The owner automated gate emitted `CATALOG_CENTER_LAUNCHED=YES`, but the owner di
 Owner foreground launch of 8.9.1 exposed a real startup blocker after automated gates: 3I.35 mounted an AI settings panel with `grid` directly into the pack-managed UX87 `settings_tab`, causing Tk `TclError` before the window became usable. This is recorded as `ERR-49-059`.
 
 The runtime fix changes only the outer panel geometry to `pack`, preserving internal panel layout and all previous AI/Profile behavior. Regression and Windows package CI now PASS on runtime `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`. Owner must now pull the documentation-final head and run foreground `launch.py --debug`; visual acceptance is still open. Production remains untouched.
+
+## Owner foreground Product Workspace incident — fixed in 8.9.3
+
+8.9.2 confirmed the application startup geometry fix, but owner diagnostics exposed a second real Visual-QA blocker when Products 305/303 were opened: Profile Matrix selection called an unbound short helper `self._profile_by_key`. This is `ERR-49-060`.
+
+8.9.3 changes the call to the actually installed namespaced method `self._phase49_3i34_profile_by_key`, adds an executable wrapper-binding regression, and passes targeted/Single-AI/Windows package gates on runtime `9637829a255a1d09800bc062c2f049cf5d92b585`.
+
+The next gate is owner foreground Product Workspace QA on 8.9.3. Production remains untouched.
 
 ## What is implemented now
 
