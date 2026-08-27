@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.9.2"
+EXPECTED_VERSION = "8.9.3"
 ROOT = Path(__file__).resolve().parent
 
 
