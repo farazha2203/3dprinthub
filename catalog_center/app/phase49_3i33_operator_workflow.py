@@ -335,6 +335,7 @@ def install_workspace(workspace_class) -> None:
     original_save = workspace_class.save
     original_close = workspace_class.close
     original_gallery = workspace_class.refresh_gallery
+    original_pricing_state = getattr(workspace_class, "_phase49_3f_refresh_pricing_state", None)
 
     def __init__(self, app, product_id: int):
         ensure_schema(app.db)
@@ -440,6 +441,19 @@ def install_workspace(workspace_class) -> None:
             text="ذخیره هر مرحله فقط SQLite محلی را ثبت می‌کند؛ لیست کامل فقط با Refresh دستی بازسازی می‌شود.",
             style="SubHeader.TLabel",
         ).pack(side="left", padx=5)
+
+    def pricing_state(self):
+        result = original_pricing_state(self) if callable(original_pricing_state) else None
+        variable = getattr(self, "_phase49_3i33_quick_fixed_price", None)
+        mode_var = getattr(self, "pricing_strategy_var", None)
+        if variable is not None and mode_var is not None:
+            mode = str(mode_var.get() or "dynamic")
+            if mode != "fixed":
+                variable.set("")
+            elif not str(variable.get() or "").strip():
+                row = self.db.product(int(self.product_id))
+                variable.set(fixed_price_from_row(row))
+        return result
 
     def save(self, silent=False):
         fixed_text = str(self._phase49_3i33_quick_fixed_price.get() or "").replace(",", "").strip()
@@ -580,6 +594,8 @@ def install_workspace(workspace_class) -> None:
 
     workspace_class.__init__ = __init__
     workspace_class.save = save
+    if callable(original_pricing_state):
+        workspace_class._phase49_3f_refresh_pricing_state = pricing_state
     workspace_class.close = close
     workspace_class.refresh_gallery = refresh_gallery
     workspace_class._phase49_3i33_final_commit = final_commit
