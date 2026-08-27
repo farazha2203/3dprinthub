@@ -5,8 +5,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Subphase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
-Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Subphase: `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
+Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -44,36 +44,32 @@ Production remains on the stable baseline. Never infer that later migrations wer
 
 ## Approved Windows runtime candidate
 Application runtime snapshot:
-`9637829a255a1d09800bc062c2f049cf5d92b585`.
-
-Latest test-tooling head before documentation finalization:
-`b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
-Only the local 31–35 gate/workflow changed after the packaged application runtime; no packaged application module changed.
+`c904193a7f0af9aad80365834ec3f0b856e77dc9`.
 
 Catalog Center:
-- version `8.9.3`,
-- build `2026.08.27.5`,
-- targeted 31–35 run `33067612565` PASS,
-- Single-AI run `33067618639` PASS,
-- Windows portable run `33067618679` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.3`,
-- artifact ID `9644438652`,
-- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
-- public Release publication skipped/manual until owner foreground Product Workspace QA.
+- version `8.9.6`,
+- build `2026.08.27.8`,
+- targeted 31–38 run `33077213590` PASS with 84 tests,
+- Single Active AI run `33077239617` PASS,
+- Windows portable run `33077239660` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.6`,
+- artifact ID `9648474905`,
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
+- artifact ZIP digest `sha256:13ae8582be09b71f90e607c2230075d875b7445f8a46b6462a9241edf9d52563`.
 
-3I.35 owns:
-- registered Product Profile ledger over the mature 3I.34 transport,
-- temporary working form → independent Profile snapshots,
-- multiple weight/time/support production rows,
-- material/brand/manufacturer/color roll offers and local Product selection commit,
-- effective explicit sale-rate calculation,
-- visible AI preflight/progress/retries/configured fallback,
-- bulk Product isolation,
-- manual SEO/source readiness review,
-- existing source identity/link/history protections.
+3I.38 preserves 3I.35–3I.37 and adds:
+- permanent crawled/received Product identity ledger,
+- persisted deeper Listing crawl cursor without replacing the mature discoverer,
+- reject + safe local-file/image purge while retaining source URL/external-ID tombstone,
+- Direct Link terminal identity check before browser/HTTP/image/file acquisition,
+- explicit restore as the only path to receive a rejected identity again,
+- one Product AI engine with Link / Saved-Crawled Data / Screenshot inputs,
+- same engine for selected-Product Bulk Stage-4 SEO,
+- explicit single-stage cleanup/completion with out-of-scope Stage immutability,
+- no Provider request for image-only work when image SEO is already complete.
 
 Canonical phase document:
-`docs/phases/PHASE49_3I35_OPERATOR_LEDGER_RESILIENT_AI_FILAMENT.md`.
+`docs/phases/PHASE49_3I38_CRAWL_LEDGER_STAGE_AI.md`.
 
 ## Approved Web/Store candidate
 Phase50.A.2E extends 2B–2D with:
@@ -107,6 +103,8 @@ Verification:
 Manual operator/visual QA is the only remaining Local acceptance gate before Host read-only audit.
 
 ## Resolved current incidents
+- `ERR-49-063`: fixed-depth category/site crawl repeatedly exposed the first discovery window → persisted bounded deeper-scroll cursor while retaining mature discoverer.
+- `ERR-49-062`: Direct Link terminal identity was checked after acquisition → rejected/blocked identities now stop before browser/HTTP/image/file receive.
 - `ERR-49-060`: 8.9.2 Product Workspace selected Profile callback called nonexistent `_profile_by_key` → 8.9.3 uses installed `_phase49_3i34_profile_by_key`; package CI PASS.
 - `ERR-49-059`: foreground 8.9.1 startup failed because the 3I.35 AI settings panel used grid in the pack-managed Settings parent → outer panel now uses pack; 8.9.2 package CI PASS.
 - `ERR-50-016`: support-weight runtime metadata mismatch tried to create fake 0040 → align runtime with migration 0039; no fake migration.
@@ -114,6 +112,7 @@ Manual operator/visual QA is the only remaining Local acceptance gate before Hos
 
 ## Rollback anchors
 Git:
+- `backup/pre-phase49-3i38-crawl-ledger-stage-ai-20260827` → `d1ed566a82d3818aa45a5c720df3e7efcb0044f3`,
 - `backup/pre-phase49-3i35-operator-ledger-20260827` → `ca9cc1160f407c0a78302ad75cb38396616aed52`,
 - `backup/pre-phase49-3i35-integration-20260827` → `1b02d413be00c09631661eafaf252d011ad45d40`.
 
@@ -121,22 +120,22 @@ A fresh Production source/environment/MySQL backup is still mandatory before sch
 
 ## Exact next step
 1. On `D:\projects\3DPrintHub`, verify correct repo, branch, clean worktree and live GitHub head.
-2. Pull ff-only.
-3. Run `catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1` against the exact live head with `-LaunchApp`.
-4. Owner visual/functional QA:
-   - Profile ledger registration/load/new-from-last,
-   - multiple weight/time/support rows,
-   - Bambu/eSUN same material/color distinction,
-   - roll stock and formula/fixed price,
-   - AI visible progress/retry/fallback,
-   - manual SEO/source review,
-   - source URL/images remain intact,
-   - no global Products refresh on local step actions.
-5. Run local Django Store regressions and local SQLite migrations only.
-6. Only after Local QA PASS: Host read-only branch/HEAD/worktree/remote/MySQL/migration-plan/disk/mysqldump audit.
-7. Fresh Production backups/checksums.
+2. Pull ff-only and run the current 31–38 Local gate.
+3. Foreground launch Catalog Center 8.9.6.
+4. Owner QA:
+   - crawl/received ledger,
+   - reject + purge on a disposable Product,
+   - rejected Direct Link pre-download skip,
+   - repeated Listing skips known identities and continues to new ones,
+   - ordinary new Crawl/Direct/image/file receive remains healthy,
+   - selected-Product Stage-4 SEO uses the mother AI source,
+   - single-stage cleanup changes only the selected unlocked Stage,
+   - locked Profile/Commerce/content rules remain intact.
+5. Re-run local Django Store/Profile/Checkout regression; 3I.38 adds no Django migration.
+6. Only after Local QA PASS: Host read-only branch/HEAD/worktree/live-remote/MySQL/migration-plan/disk/mysqldump audit.
+7. Fresh Production source/environment/MySQL backups/checksums.
 8. Deploy exact approved GitHub commit with explicit `FETCH_HEAD` per `ERR-50-007`.
-9. Apply only the read-only-verified pending chain, expected today as `0036 → 0037 → 0038 → 0039`.
+9. Apply only read-only-verified pending migrations.
 10. collectstatic, Passenger restart, Production HTTP/API/schema/order/private-media verification, then docs.
 
 ## Host constraints
