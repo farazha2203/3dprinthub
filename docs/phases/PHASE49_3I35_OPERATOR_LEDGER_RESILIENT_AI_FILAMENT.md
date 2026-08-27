@@ -3,9 +3,9 @@
 Updated: 2026-08-27  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Catalog Center: `8.9.1` / build `2026.08.27.3`  
-Windows runtime snapshot: `2622818d898e19b745c61ff653b80c03d22288f1`  
-Status: `GITHUB CI + WINDOWS ONE-FILE PACKAGE PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Catalog Center: `8.9.2` / build `2026.08.27.4`  
+Windows runtime snapshot: `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`  
+Status: `8.9.2 STARTUP HOTFIX PACKAGED CI PASS / OWNER FOREGROUND VISUAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Goal
 
@@ -209,6 +209,21 @@ These do not replace a fresh Production source/environment/MySQL backup.
 - Production touched = NO.
 
 This validates automated Local acceptance. Manual operator/visual verification of ledger behavior, material-brand UX, AI progress/retry/fallback and no-global-refresh remains required before Host audit.
+
+## 8.9.2 owner-visible startup hotfix
+
+Foreground owner launch of 8.9.1 exposed `ERR-49-059`: the new AI resilience settings LabelFrame was mounted with `grid` directly into UX87 `settings_tab`, while that parent is pack-managed. Tk aborted startup before the new UI could be seen.
+
+Fix:
+- outer resilience panel now uses `pack(fill="x", padx=8, pady=8)`,
+- child controls remain grid-managed inside their own panel,
+- regression prevents reintroducing the direct parent `grid`,
+- targeted run `33066472847` PASS,
+- Windows one-file run `33066468014` PASS on `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`,
+- artifact `9643957471`,
+- EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
+
+Manual foreground visual acceptance remains required.
 
 ## Production state and migration gate
 
