@@ -430,7 +430,7 @@ class ProductStudio(BaseProductStudio):
             missing.append("گروه سایت")
         if not publish_product and not publish_portfolio:
             missing.append("حداقل یکی از «محصول فروشگاه» یا «نمونه‌کار»")
-        if publish_product and row["product_type"] == "ready_product" and int(row["final_price"] or row["suggested_price"] or 0) <= 0:
+        if publish_product and row["product_type"] == "ready_product" and int(row["final_price"] or row["suggested_price"] or (row["price_min"] if "price_min" in row.keys() else 0) or 0) <= 0:
             missing.append("قیمت")
         if not commercial_license_allows_publish(row["commercial_status"]):
             missing.append("مجوز تجاری مجاز (allowed / owned / public_domain)")
