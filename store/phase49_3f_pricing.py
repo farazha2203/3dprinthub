@@ -85,7 +85,7 @@ def install_model_contract() -> None:
             max_digits=10,
             decimal_places=2,
             default=0,
-            verbose_name="وزن ساپورت (گرم)",
+            verbose_name="وزن ساپورت مصرفی",
         ).contribute_to_class(ProductVariant, "support_weight_grams")
     if not _field_exists(ProductVariant, "support_cost_multiplier"):
         models.DecimalField(
