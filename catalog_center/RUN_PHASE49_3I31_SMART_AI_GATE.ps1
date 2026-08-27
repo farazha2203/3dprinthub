@@ -11,8 +11,8 @@ $Root = "D:\projects\3DPrintHub"
 $Catalog = "$Root\catalog_center"
 $Py = "$Root\.venv\Scripts\python.exe"
 $Branch = "agent/phase49-3i18-operator-bulk-ai-rebuild"
-$ExpectedVersion = "8.8.2"
-$ExpectedBuild = "2026.08.26.2"
+$ExpectedVersion = "8.9.0"
+$ExpectedBuild = "2026.08.27.1"
 
 function Fail([string]$Message) {
     throw $Message
@@ -22,7 +22,7 @@ Set-Location $Root
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "3DPRINTHUB PHASE49.3I.31-32 / WINDOWS 8.8.2 GATE"
+Write-Host "3DPRINTHUB PHASE49.3I.31-33 / WINDOWS 8.9.0 GATE"
 Write-Host "NO PRODUCTION / NO MIGRATION / NO RESET / NO STASH"
 Write-Host "=================================================="
 
@@ -55,6 +55,8 @@ Write-Host "BUILD_ID=$Build"
 Write-Host ""
 Write-Host "===== PYTHON COMPILE ====="
 & $Py -m py_compile `
+    "$Catalog\app\phase49_3i33_ai_core.py" `
+    "$Catalog\app\phase49_3i33_operator_workflow.py" `
     "$Catalog\app\phase49_3i32_source_url_guard.py" `
     "$Catalog\app\phase49_3i31_smart_link_bulk_ai.py" `
     "$Catalog\app\phase49_3i29_windows_performance_ai.py" `
@@ -62,6 +64,7 @@ Write-Host "===== PYTHON COMPILE ====="
     "$Catalog\app\phase49_3i17_single_active_ai_runtime.py" `
     "$Catalog\app\phase49_3i18_operator_editing.py" `
     "$Catalog\app\phase49_3i25_product_first_workflow.py" `
+    "$Catalog\tests\test_phase49_3i33_operator_workflow.py" `
     "$Catalog\tests\test_phase49_3i32_source_url_guard.py" `
     "$Catalog\launch.py" `
     "$Catalog\portable_entry.py" `
@@ -77,6 +80,7 @@ Write-Host ""
 Write-Host "===== FOCUSED REGRESSION ====="
 Set-Location $Catalog
 & $Py -m unittest -v `
+    tests.test_phase49_3i33_operator_workflow `
     tests.test_phase49_3i32_source_url_guard `
     tests.test_phase49_3i31_smart_link_bulk_ai `
     tests.test_epic49_phase49_3i29_windows_performance_ai `
@@ -105,13 +109,23 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host $LaunchOutput
 foreach ($Marker in @(
-    "ACTIVE_VERSION=8.8.2",
+    "ACTIVE_VERSION=8.9.0",
     "EPIC49_3I29_PRODUCTS_PAGE_PAGED_48=ENABLED",
     "EPIC49_3I29_DEFERRED_GLOBAL_REFRESH=ENABLED",
     "EPIC49_3I31_SMART_LINK_AI=ENABLED",
     "EPIC49_3I31_BATCH_SELECTED_PRODUCTS_AI=ENABLED",
     "EPIC49_3I31_AI_TITLE_TEXT_ONLY=ENABLED",
     "EPIC49_3I31_AI_SELECTED_IMAGE_SEO=ENABLED",
+    "EPIC49_3I33_CONSOLIDATED_PRODUCT_AI=ENABLED",
+    "EPIC49_3I33_LIVE_LINK_AI=ENABLED",
+    "EPIC49_3I33_SAVED_DATA_AI=ENABLED",
+    "EPIC49_3I33_SCREENSHOT_VISION_AI=ENABLED",
+    "EPIC49_3I33_REPAIR_AI=ENABLED",
+    "EPIC49_3I33_OPERATOR_MATERIAL_COLOR_ONLY=ENABLED",
+    "EPIC49_3I33_EXPLICIT_PRODUCTS_REFRESH=ENABLED",
+    "EPIC49_3I33_SINGLE_CARD_UPDATE=ENABLED",
+    "EPIC49_3I33_IMAGE_FILE_METADATA=ENABLED",
+    "EPIC49_3I33_RUNTIME_TELEMETRY=ENABLED",
     "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
     if ($LaunchOutput -notmatch [regex]::Escape($Marker)) { Fail "MISSING LAUNCHER MARKER: $Marker" }
@@ -127,7 +141,7 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "PHASE49_3I31_32_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I31_33_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "APP_VERSION=$ExpectedVersion"
 Write-Host "BUILD_ID=$ExpectedBuild"
@@ -141,7 +155,7 @@ if ($BuildExe) {
     Write-Host "===== PORTABLE EXE BUILD / SELF VERIFY ====="
     & $Py build_portable_exe.py --python $Py
     if ($LASTEXITCODE -ne 0) { Fail "PORTABLE EXE BUILD FAILED" }
-    Write-Host "PHASE49_3I31_32_PORTABLE_BUILD=PASS"
+    Write-Host "PHASE49_3I31_33_PORTABLE_BUILD=PASS"
 }
 
 if ($LaunchApp) {
