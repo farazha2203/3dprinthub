@@ -356,6 +356,38 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** write-scope/lock mappings must cover every mature alias/transport that can persist the same business object, not only the newest authoritative field name.
 
+### ERR-49-062 — Rejected/blocked Direct Link identity was checked only after acquisition
+**Date:** 2026-08-27  
+**Environment:** Catalog Center Direct Link import.
+
+**Symptom/Risk:** a Product that was already blocked/rejected could still enter `extract_direct_link()` and reopen browser/HTTP/image acquisition. The later DB upsert guard could prevent the Product record from becoming active, but local images/files might already have been downloaded again.
+
+**Root Cause:** terminal Product identity was enforced at the persistence boundary, not at the network/binary acquisition boundary.
+
+**Correct Fix:** resolve source code + external ID, query the permanent crawl/Product tombstone with `terminal_identity_state()`, and return before `extract_direct_link()` for terminal states. Successful Direct Link acquisition records `collected` in the mature discovery ledger.
+
+**Regression:** 3I.38 static execution-order regression asserts the terminal identity check occurs before the Direct Link extractor; reject/purge integration proves a rejected identity remains terminal.
+
+**Verification:** Phase49.3I.31–38 run `33077213590` PASS with 84 tests; Single Active AI `33077239617` PASS; Windows Portable `33077239660` PASS on runtime `c904193a7f0af9aad80365834ec3f0b856e77dc9`.
+
+**Prevention:** any permanent skip/block/reject decision must be evaluated before browser, HTTP, image or file acquisition—not only before DB persistence.
+
+### ERR-49-063 — Category/site crawl repeatedly exposed the same fixed first discovery window
+**Date:** 2026-08-27  
+**Environment:** Catalog Center category/site crawl.
+
+**Symptom/Risk:** `category/site_crawl` used one discovery pass with a fixed `scroll_rounds=8`. Although `discovered_urls` correctly rejected already-known Product identities, re-running the same Listing could repeatedly rediscover the first visible set instead of moving deeper to new Products.
+
+**Root Cause:** deduplication was durable but Listing traversal depth was not. The mature discoverer had no persisted continuation state.
+
+**Correct Fix:** keep `discover_classic()` unchanged and add a separate `crawl_listing_state` cursor. Same-Listing runs progress 8 → 16 → 24 … up to 96 scroll rounds. Every discovered identity still passes through the existing `add_discovered()` ledger, and four consecutive deeper no-growth attempts stop the current run.
+
+**Regression:** the 3I.38 tests prove 100 previously collected IDs are skipped while 101–200 become the next 100 pending items, and prove the continuation cursor advances across runs.
+
+**Verification:** Phase49.3I.31–38 run `33077213590` PASS; Windows Portable `33077239660` PASS.
+
+**Prevention:** keep Product identity dedupe and Listing traversal progress as separate durable concerns; never replace a healthy parser/downloader just to continue past previously seen results.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
