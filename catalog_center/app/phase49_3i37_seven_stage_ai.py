@@ -280,12 +280,20 @@ def orchestrate_once(
     key: str,
     model: str,
     dialog=None,
+    *,
+    target_stages: set[str] | None = None,
+    refresh_existing: bool = False,
 ) -> dict:
-    """One grounded AI request; seven bounded stage applications."""
+    """One grounded AI request with an optional bounded stage scope."""
     product_id = int(product_id)
     row = app.db.product(product_id)
     if row is None:
         raise RuntimeError(f"محصول #{product_id} پیدا نشد.")
+    scoped_stages = (
+        {str(stage) for stage in target_stages if str(stage) in STAGE_ORDER}
+        if target_stages
+        else None
+    )
 
     _progress(dialog, 5, "خواندن منبع انتخاب‌شده")
     _emit(dialog, "source", f"منبع AI: {AI_SOURCE_MODES.get(mode, mode)}")
@@ -309,6 +317,8 @@ def orchestrate_once(
         "title_fa": str(pack.get("title_fa") or ""),
         "stages": {},
         "changed_fields": [],
+        "target_stages": sorted(scoped_stages) if scoped_stages else list(STAGE_ORDER),
+        "refresh_existing": bool(refresh_existing),
     }
     image_deferred = False
 
