@@ -215,6 +215,7 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
 
     def test_stage_field_ownership_keeps_profile_and_slider_separate(self):
         self.assertEqual(field_stage("sales_profile_ledger_json"), "commerce")
+        self.assertEqual(field_stage("sales_profiles_json"), "commerce")
         self.assertEqual(field_stage("material_color_options_json"), "commerce")
         self.assertEqual(field_stage("homepage_slider_title_fa"), "slider")
         self.assertEqual(field_stage("seo_description_fa"), "content")
