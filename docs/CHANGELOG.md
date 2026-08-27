@@ -1,5 +1,21 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Catalog Center 8.9.3 Profile Workspace Binding Hotfix
+- owner 8.9.2 diagnostic confirmed startup success, then Product 305/303 open callbacks failed with `AttributeError: ProductWorkspace has no attribute _profile_by_key`,
+- recorded as `ERR-49-060`,
+- fixed 3I.34 selected Profile loader to call installed namespaced `_phase49_3i34_profile_by_key`,
+- added executable non-Tk wrapper-binding regression,
+- backup anchor `backup/pre-err49-060-profile-matrix-bind-fix-20260827` → `6f9334705c74a65d47473580944d79d61d501293`,
+- bumped release atomically to Catalog Center `8.9.3` / build `2026.08.27.5`,
+- targeted run `33067612565` PASS,
+- Single Active AI run `33067618639` PASS,
+- Windows portable run `33067618679` PASS on `9637829a255a1d09800bc062c2f049cf5d92b585`,
+- artifact `3DPrintHub-CatalogCenter-v8.9.3`, ID `9644438652`,
+- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
+- artifact ZIP digest `sha256:216b62072fd95a0a4d292b28ce99605fd60f3e4d9622d06987d6fe5b434e6141`,
+- Production untouched; owner foreground Product Workspace QA remains required.
+
+
 ## 2026-08-27 — Catalog Center 8.9.2 Visible Startup Hotfix
 - owner foreground 8.9.1 launch exposed a real Tk startup failure: 3I.35 AI-resilience settings used `grid` directly inside UX87 `settings_tab`, whose existing children use `pack`,
 - root cause matches permanent `ERR-49-001`; incident recorded as `ERR-49-059`,
