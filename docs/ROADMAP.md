@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.1`  
-Status: `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / OWNER LOCAL QA NEXT / PRODUCTION BLOCKED`
+Status: `GITHUB CI TESTED / WINDOWS PACKAGED CI PASS / AUTOMATED LOCAL GATE PASS / OWNER VISUAL QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
@@ -118,10 +118,20 @@ Verification:
 - immutable support/brand/manufacturer checkout snapshot PASS.
 
 ## Owner Local QA checkpoint
-- owner Local fast-forward to `35ab63105f30fdca42518d5273a424a3200977e3` succeeded,
-- previous Local SQLite run already reached `0038` with 15 tests PASS,
-- current 3I.35 owner gate stopped before any new migration because the wrapper's multiline PowerShell `python -c` DB probe lost quotes (`ERR-49-057`),
-- resume from read-only effective Local DB detection via stdin, backup the actual Django SQLite file, then inspect/apply only the pending plan and run the current 31–35 gate.
+Automated Local acceptance now PASS:
+- owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
+- Local fast-forwarded to `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`,
+- effective Local Django DB verified as SQLite `D:\\projects\\3DPrintHub\\db.sqlite3`,
+- fresh pre-0039 DB backup `D:\\projects\\3dprinthub-backups\\phase49-3i35-resume-20260827-142404\\django-local-before-0039.sqlite3` with matching SHA256,
+- `store.0038` verified applied and `store.0039` verified pending before write,
+- exact `0039_phase50_filament_offer_pricing` plan inspected, then `0039` applied successfully,
+- 16 Store/Profile/Checkout regressions PASS,
+- post-migration `makemigrations --check --dry-run` = no changes detected,
+- Catalog Center 31–35 Local gate PASS with 107 tests, source URL invariant PASS, launcher verify PASS,
+- Catalog Center `8.9.1` / build `2026.08.27.3` launched successfully,
+- Production touched = NO.
+
+Remaining Local gate: owner visual/functional QA of the actual Catalog Center workflow. Production remains blocked until that visual acceptance is confirmed.
 
 ## Production gate for 50.A.2B–2E
 1. Owner Local Windows/Django QA on exact current GitHub head.
