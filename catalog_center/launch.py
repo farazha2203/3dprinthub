@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.8.2"
+EXPECTED_VERSION = "8.9.0"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -218,6 +218,16 @@ def main() -> int:
     print("EPIC49_3I31_BATCH_SELECTED_PRODUCTS_AI=ENABLED", flush=True)
     print("EPIC49_3I31_AI_TITLE_TEXT_ONLY=ENABLED", flush=True)
     print("EPIC49_3I31_AI_SELECTED_IMAGE_SEO=ENABLED", flush=True)
+    print("EPIC49_3I33_CONSOLIDATED_PRODUCT_AI=ENABLED", flush=True)
+    print("EPIC49_3I33_LIVE_LINK_AI=ENABLED", flush=True)
+    print("EPIC49_3I33_SAVED_DATA_AI=ENABLED", flush=True)
+    print("EPIC49_3I33_SCREENSHOT_VISION_AI=ENABLED", flush=True)
+    print("EPIC49_3I33_REPAIR_AI=ENABLED", flush=True)
+    print("EPIC49_3I33_OPERATOR_MATERIAL_COLOR_ONLY=ENABLED", flush=True)
+    print("EPIC49_3I33_EXPLICIT_PRODUCTS_REFRESH=ENABLED", flush=True)
+    print("EPIC49_3I33_SINGLE_CARD_UPDATE=ENABLED", flush=True)
+    print("EPIC49_3I33_IMAGE_FILE_METADATA=ENABLED", flush=True)
+    print("EPIC49_3I33_RUNTIME_TELEMETRY=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
