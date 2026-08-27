@@ -281,6 +281,19 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** Windows operational runbooks must not pass nontrivial multiline Python source as an expandable native `-c` argument. Prefer stdin with a single-quoted here-string for read-only probes.
 
+
+### ERR-49-058 — Local gate `CATALOG_CENTER_LAUNCHED=YES` did not prove visible owner UI launch
+**Date:** 2026-08-27  
+**Environment:** Windows owner Local QA, Catalog Center 8.9.1.
+
+**Symptom:** automated gate ended with `CATALOG_CENTER_LAUNCHED=YES`, but the owner did not see the new UI and could not perform visual acceptance.
+
+**Root Cause:** `RUN_PHASE49_3I31_SMART_AI_GATE.ps1 -LaunchApp` uses PowerShell `Start-Process`, which starts Catalog Center as a detached process and immediately prints the launch marker. The marker proves the process-start command was issued; it does not prove the window was visible/focused or that owner visual QA occurred.
+
+**Correct Fix:** for owner visual QA, launch the exact GitHub-synced source in the foreground with the canonical venv Python and `launch.py --debug`. Keep the terminal attached so startup/runtime errors remain visible. The 3I.35 UI is inside the Product workspace/order-pricing-options surface, not a replacement for the home screen.
+
+**Prevention:** do not use `CATALOG_CENTER_LAUNCHED=YES` as evidence of visual acceptance. Automated launch verification and owner-visible UI QA are separate gates.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
