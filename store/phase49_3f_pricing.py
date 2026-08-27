@@ -198,7 +198,7 @@ def _dynamic_breakdown(variant, profile) -> dict:
     actual_material_grams = (part + support) if explicit_weights else _decimal(getattr(variant, "material_weight_grams", 0))
     chargeable_grams = (part + (support * multiplier)) if explicit_weights else actual_material_grams
 
-    color_sale = getattr(variant.color, "sale_price_per_gram_override", None) if getattr(variant, "color_id", None) else None
+    color_sale = getattr(variant.color, "effective_sale_price_per_gram", None) if getattr(variant, "color_id", None) else None
     material_sale_per_gram = Decimal(
         getattr(variant, "material_price_per_gram_override", None)
         or color_sale
