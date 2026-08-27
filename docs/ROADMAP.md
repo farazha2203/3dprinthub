@@ -5,13 +5,13 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
-Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.37 — Seven-stage AI + Operator Finalization + Screenshot Site SEO / Catalog Center 8.9.5`  
+Status: `8.9.5 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.37 QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
-## Phase49 Windows track — current target 49.3I.35
+## Phase49 Windows track — current target 49.3I.37
 Preserved foundations:
 - 48-card paged Product Explorer,
 - no global Product refresh on each Product Save/AI action,
@@ -57,6 +57,29 @@ Windows verification:
 - artifact ID `9641338334`,
 - EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
 - public Release remains manual after owner Local QA.
+
+## 49.3I.37 — Seven-stage AI / Finalization / Screenshot-to-Site — GITHUB + WINDOWS CI TESTED
+- one persisted mother AI source mode: Link / Saved Data / Screenshot,
+- single and selected-Product bulk runs share the same source authority and seven-stage orchestrator,
+- AI fills only missing/invalid fields in unlocked stages and re-checks readiness after each stage,
+- `✅` means stage data is complete; `🔒` is created only by operator `ثبت`,
+- stage locks persist in Catalog SQLite and block later AI/Save writes at the Database boundary,
+- both `sales_profile_ledger_json` and legacy `sales_profiles_json` are protected by the Commerce lock,
+- Profile/price/material/color/brand/stock/publication remain operator-owned,
+- Product image AI is SEO-only; deterministic tooling owns rename/WebP/metadata,
+- Product-page Screenshot becomes a selected site image and preserves `source_page_url`,
+- semantic Persian SEO guard normalizes `Twistmas Tree` to `درخت کریسمس اسپیرال` and rejects mixed-language contamination.
+
+Verification:
+- runtime `8d5e58a839c89eedbe258d9236889834fc02d9a9`,
+- targeted run `33074245603` PASS, 77 tests,
+- Single Active AI run `33074245489` PASS,
+- Windows Portable run `33074245604` PASS,
+- Catalog Center `8.9.5` / build `2026.08.27.7`,
+- artifact ID `9647216177`,
+- EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`.
+
+Current next gate: owner Local visual/functional QA on 8.9.5. Production remains untouched.
 
 ## Phase50.A — Admin and commerce operational completeness
 Production verified foundation:
