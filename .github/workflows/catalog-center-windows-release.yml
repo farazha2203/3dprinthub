@@ -13,6 +13,8 @@ on:
       - catalog_center/app/phase49_3i33_operator_workflow.py
       - catalog_center/app/phase49_3i32_source_url_guard.py
       - catalog_center/app/phase49_3i_pricing_modes.py
+      - catalog_center/app/product_studio.py
+      - catalog_center/app/epic49_product_studio.py
       - catalog_center/launch.py
       - catalog_center/portable_entry.py
       - catalog_center/build_portable_exe.py
