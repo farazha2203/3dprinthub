@@ -5,13 +5,13 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.37 — Seven-stage AI + Operator Finalization + Screenshot Site SEO / Catalog Center 8.9.5`  
-Status: `8.9.5 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.37 QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
+Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
-## Phase49 Windows track — current target 49.3I.37
+## Phase49 Windows track — current target 49.3I.38
 Preserved foundations:
 - 48-card paged Product Explorer,
 - no global Product refresh on each Product Save/AI action,
@@ -80,6 +80,30 @@ Verification:
 - EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`.
 
 Current next gate: owner Local visual/functional QA on 8.9.5. Production remains untouched.
+
+## 49.3I.38 — Permanent Crawl Ledger / Reject-Purge / Stage-scoped AI — GITHUB + WINDOWS CI TESTED
+- preserve the mature crawl/browser/parser/image/file receive path,
+- permanent `discovered_urls` ledger remains the Product identity authority,
+- new `crawl_listing_state` persists deeper Listing traversal without changing `discover_classic()`,
+- known collected/rejected/blocked identities do not become new receive work,
+- explicit reject/purge removes only the Product local directory under `collected/` and keeps a rejected URL/external-ID tombstone,
+- Direct Link checks terminal identity before acquisition/download,
+- explicit restore is required before a rejected identity becomes receivable again,
+- the one 3I.37 AI engine now accepts optional Stage scope,
+- Products bulk Content/SEO uses the same engine with Stage 4 scope,
+- single Product can clean/complete one unlocked Stage without changing any other Stage,
+- image-only complete SEO is a no-provider no-op.
+
+Verification:
+- runtime `c904193a7f0af9aad80365834ec3f0b856e77dc9`,
+- targeted run `33077213590` PASS with 84 tests,
+- Single Active AI `33077239617` PASS,
+- Windows Portable `33077239660` PASS,
+- Catalog Center `8.9.6` / build `2026.08.27.8`,
+- artifact ID `9648474905`,
+- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`.
+
+Next gate: owner Local visual/functional QA on the final docs head. Production remains untouched.
 
 ## Phase50.A — Admin and commerce operational completeness
 Production verified foundation:
