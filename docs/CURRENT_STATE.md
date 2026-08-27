@@ -13,14 +13,14 @@ The last runtime-changing commit verified by all Windows Catalog gates is:
 
 `2622818d898e19b745c61ff653b80c03d22288f1`
 
-The branch contains documentation-only commits after that runtime snapshot. No runtime code was changed after the successful Windows run documented below.
+The branch contains only CI/local-gate tooling plus documentation commits after that packaged runtime snapshot. No packaged application module was changed after the successful Windows run documented below. The latest tooling head before documentation finalization is `b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
 
 Catalog Center:
 - version `8.9.1`,
 - build `2026.08.27.3`,
 - Windows portable workflow `33060047878` PASS,
-- Smart Link + Profile Matrix workflow `33060047750` PASS,
-- Single Active AI workflow `33060047790` PASS,
+- Smart Link + Operator Ledger 31–35 workflow `33060613937` PASS,
+- Single Active AI workflow `33060613914` PASS,
 - artifact `3DPrintHub-CatalogCenter-v8.9.1`,
 - artifact ID `9641338334`,
 - EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
