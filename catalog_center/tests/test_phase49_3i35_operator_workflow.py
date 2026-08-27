@@ -137,6 +137,11 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         self.assertIn("reply", [item[0] for item in dialog.events])
         self.assertEqual(dialog.progress[-1][0], 100.0)
 
+    def test_ai_resilience_settings_respects_pack_managed_settings_tab(self):
+        source = (ROOT / "app" / "phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
+        self.assertIn('panel.pack(fill="x", padx=8, pady=8)', source)
+        self.assertNotIn('panel.grid(row=50, column=0, columnspan=2', source)
+
     def test_final_composition_and_release_manifest_include_3i35(self):
         composition = (ROOT / "app" / "phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
         launcher = (ROOT / "launch.py").read_text(encoding="utf-8")
