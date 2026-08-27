@@ -37,6 +37,7 @@
             <h1 class="text-2xl md:text-3xl font-black mt-2 leading-snug phase493f-product-title">{{ product.title }}</h1>
             <p class="text-slate-600 leading-7 mt-3 text-sm md:text-base phase493f-product-summary">{{ product.short_description }}</p>
 
+            {% if not variants %}
             {% if product.catalog_profile %}
                 {% if product.catalog_profile.pricing_strategy == 'fixed' and product.catalog_profile.price_min %}
                 <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700">
@@ -64,6 +65,8 @@
             <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700"><strong class="text-orange-700">قیمت پایه: {{ product.fixed_price|intcomma }} تومان</strong></div>
             {% endif %}
 
+            {% endif %}
+
             {% if active_promotions %}<div class="phase39-promo-row">{% for promo in active_promotions %}<span class="phase39-promo-badge">{{ promo.title|default:promo.get_kind_display }}{% if promo.discount_percent %} • {{ promo.discount_percent }}٪ تخفیف{% endif %}{% if promo.stock_limit %} • {{ promo.remaining_quantity }} عدد باقی‌مانده{% endif %}</span>{% endfor %}</div>{% endif %}
             {% if product.show_public_order_count %}<div class="phase39-order-proof">بیش از {{ public_order_count }} سفارش ثبت‌شده برای این محصول</div>{% endif %}
 
@@ -87,7 +90,8 @@
 
             {% if variants %}
             <div class="mt-6">
-                <label for="variant-select" class="block font-black mb-2">انتخاب متریال، رنگ و کیفیت چاپ</label>
+                <div class="store-profile-price-authority mb-3"><strong>قیمت و مشخصات بر اساس پروفایل انتخابی</strong><span>ابتدا سایز را انتخاب کنید؛ سپس فقط وزن‌ها و گزینه‌های معتبر همان سایز نمایش داده می‌شوند.</span></div>
+                <label for="variant-select" class="block font-black mb-2">انتخاب پروفایل و مشخصات سفارش</label>
                 <select id="variant-select" class="form-input">
                     <option value="">انتخاب کنید</option>
                     {% for variant in variants %}{% with price=variant.price_breakdown %}
