@@ -4,30 +4,45 @@ Updated: 2026-08-27
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Track: `Phase49.3I.35 — Operator Ledger + Resilient AI / Catalog Center 8.9.3`  
-Status: `8.9.3 PROFILE WORKSPACE HOTFIX PACKAGED CI PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Track: `Phase49.3I.37 — Seven-stage AI + Operator Finalization + Screenshot Site SEO / Catalog Center 8.9.5`  
+Status: `8.9.5 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.37 QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
 The current runtime-changing commit verified by all Windows Catalog gates is:
 
-`9637829a255a1d09800bc062c2f049cf5d92b585`
-
-The branch contains only CI/local-gate tooling plus documentation commits after that packaged runtime snapshot. No packaged application module was changed after the successful Windows run documented below. The latest tooling head before documentation finalization is `b9c4d8d5f94c61c536736a1a828eff809f8e109d`.
+`8d5e58a839c89eedbe258d9236889834fc02d9a9`
 
 Catalog Center:
-- version `8.9.3`,
-- build `2026.08.27.5`,
-- targeted Smart Link + Operator Ledger run `33067612565` PASS,
-- Single Active AI run `33067618639` PASS,
-- Windows portable workflow `33067618679` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.3`,
-- artifact ID `9644438652`,
-- EXE SHA256 `fd525fad977f592dc62e68fc3a4310bba98c7ed9689c5101cbdc35589fef7bed`,
-- artifact ZIP digest `sha256:216b62072fd95a0a4d292b28ce99605fd60f3e4d9622d06987d6fe5b434e6141`,
-- packaged browser smoke PASS,
+- version `8.9.5`,
+- build `2026.08.27.7`,
+- Phase49.3I.31–37 targeted run `33074245603` PASS with 77 tests,
+- Single Active AI run `33074245489` PASS,
+- Windows portable workflow `33074245604` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.5`,
+- artifact ID `9647216177`,
+- EXE size `65,494,809` bytes,
+- EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`,
+- artifact ZIP digest `sha256:393b4464a9503fd4fabd75b5f81c1621c0736b0dbe1f2d0c7df92c22c414ab34`,
+- browser smoke PASS,
 - portable self verify PASS,
-- public GitHub Release publication skipped/manual until owner foreground Product Workspace QA.
+- source URL preservation gate PASS.
+
+### Phase49.3I.37 behavior now verified in CI
+- one persisted Product AI source mode: Link / Saved Data / Screenshot,
+- one seven-stage missing-only AI orchestrator for both single and selected-Product bulk runs,
+- stage data readiness `✅` is separate from operator finalization `🔒`,
+- locked stages are protected at the SQLite `Database.update_product()` boundary,
+- both `sales_profile_ledger_json` and legacy `sales_profiles_json` are Commerce-locked,
+- Product AI never owns Profile/price/material/color/brand/stock/publication,
+- Twistmas identity is normalized to `درخت کریسمس اسپیرال` and key Persian SEO fields reject mixed Cyrillic/unrelated Latin contamination,
+- image AI is SEO-only; deterministic image tooling owns rename/WebP/metadata,
+- Product-page Screenshot can become a selected site image with SEO metadata and preserved `source_page_url`,
+- existing primary image is preserved when Screenshot is added,
+- Production touched = NO.
+
+Canonical active phase doc:
+`docs/phases/PHASE49_3I37_SEVEN_STAGE_AI_SCREENSHOT.md`.
 
 Store/Phase50 runtime was verified at commit:
 `d519a360e65b79db4b62af206b95f63c3539bc12`
