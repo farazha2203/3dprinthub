@@ -294,6 +294,26 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** do not use `CATALOG_CENTER_LAUNCHED=YES` as evidence of visual acceptance. Automated launch verification and owner-visible UI QA are separate gates.
 
+
+### ERR-49-059 — 3I.35 AI resilience panel mixed `grid` into the pack-managed Settings parent
+**Date:** 2026-08-27  
+**Environment:** owner foreground Local launch of Catalog Center 8.9.1 on `D:\projects\3DPrintHub`.
+
+**Symptom:** foreground `launch.py --debug` reached real application initialization and then aborted before any window became usable with:
+`_tkinter.TclError: cannot use geometry manager grid inside ...!frame10 which already has slaves managed by pack`.
+
+**Root Cause:** UX87 `settings_tab` is a pack-managed parent. Phase49.3I.35 created the new “پایداری AI گروهی — تنظیمات مادر” LabelFrame directly under `settings_tab` but called `panel.grid(...)`. This violated the existing `ERR-49-001` rule: one geometry manager per parent.
+
+**Correct Fix:** keep the outer 3I.35 AI settings panel on the parent’s existing manager with `panel.pack(fill="x", padx=8, pady=8)`. Internal controls may continue using `grid` because they are children of the panel, not siblings in `settings_tab`.
+
+**Regression:** `test_ai_resilience_settings_respects_pack_managed_settings_tab` asserts the outer panel uses `pack` and that the old direct `panel.grid(row=50,...)` contract does not return.
+
+**Verification:** targeted Phase49.3I.31–35 run `33066472847` PASS; Single Active AI run on the final release head PASS; Windows one-file run `33066468014` PASS on runtime `9bd9d0b4cd070a35c82c6ecefd6f6b3027b20284`, including compile, Phase49 regression, launcher composition, source URL guard, one-file build/self-verify, manifest/SHA and artifact upload.
+
+**Release:** Catalog Center `8.9.2` / build `2026.08.27.4`; artifact `9643957471`; EXE SHA256 `fac29fc610215cfc4115fcdb4c005fc69f99c3e6569b44c501d63ec82d6ba257`.
+
+**Prevention:** any additive UI layer must inspect the final visible parent’s existing geometry manager before mounting widgets. A launch marker or `--verify-only` does not replace foreground owner startup QA.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
