@@ -1,5 +1,29 @@
 # PROJECT CHANGELOG
 
+## 2026-08-27 — Phase49.3I.35 / Phase50.A.2E — Operator Ledger, Resilient AI and Brand-aware Filament
+- Catalog Center bumped to `8.9.1`, build `2026.08.27.3`,
+- replaced duplicate Profile editing surface with accounting-style registered Profile ledger while preserving the mature 3I.34 transport,
+- working form now registers independent Profile snapshots; new Profile can load the latest snapshot safely,
+- production rows now model Product weight, print time and support weight,
+- quick/basic Product page no longer owns fixed-price/weight/Profile authority,
+- material/color UI adds select-all and local-register without full Products refresh,
+- added material + brand + manufacturer + color + roll stock/purchase/sale/USD/explicit FX offer facts,
+- dynamic formula pricing consumes effective brand/color sale rate; FX is never guessed,
+- added observable AI preflight/progress/retry/failover and per-Product bulk isolation,
+- added manual SEO readiness and source-review controls without commercial-license bypass,
+- migration `0039_phase50_filament_offer_pricing` adds brand-aware offer fields, Variant support weight and immutable order support/brand/manufacturer snapshots,
+- Storefront distinguishes same material/color across brands and exposes brand/manufacturer/support in selected Profile/API,
+- fixed migration metadata drift `ERR-50-016` without creating a fake 0040,
+- fixed stale 8.9.0 config + retired quick-price test contract `ERR-49-056`,
+- Phase50 run `33059883188` PASS: no migration drift, clean CI migration through `0039`, 16 regressions PASS,
+- Smart/Profile run `33060047750` PASS,
+- Single-AI run `33060047790` PASS,
+- Windows portable run `33060047878` PASS on runtime `2622818d898e19b745c61ff653b80c03d22288f1`,
+- artifact `3DPrintHub-CatalogCenter-v8.9.1`, ID `9641338334`,
+- EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
+- Production remains unchanged at `c283864290f9c989a9fcdf24ee8eef519560e917`; last verified DB has `0034/0035` only and owner Local QA is required before any `0036 → 0037 → 0038 → 0039` Production work.
+
+
 ## 2026-08-27 — Product Profile Matrix 49.3I.34 / 50.A.2D — GitHub CI Tested
 - Catalog Center 8.9.0 build 2026.08.27.2 now has a Step-2 Product Profile Matrix with add/clone/delete/edit profile workflow,
 - every profile can independently own size, final/material weight, fixed price, print time, part dimensions, build, material, color, quality, package facts, stock/default/sort state,
