@@ -329,6 +329,18 @@ def orchestrate_once(
         progress = 18 + (index / len(STAGE_ORDER)) * 70
         _progress(dialog, progress, f"{label}")
 
+        if scoped_stages is not None and stage not in scoped_stages:
+            state, _ = _readiness(app, product_id)
+            ready = bool((state.get("stages", {}).get(stage) or {}).get("data_ready"))
+            result["stages"][stage] = {
+                "locked": locked,
+                "changed_fields": [],
+                "data_ready": ready,
+                "out_of_scope": True,
+            }
+            _emit(dialog, "stage_out_of_scope", f"↷ {label}: خارج از Scope این اجرا؛ بدون تغییر.")
+            continue
+
         if locked:
             result["stages"][stage] = {"locked": True, "changed_fields": [], "data_ready": True}
             _emit(dialog, "stage_locked", f"🔒 {label}: قبلاً ثبت نهایی شده؛ بدون تغییر رد شد.")
@@ -345,7 +357,13 @@ def orchestrate_once(
             continue
 
         current = app.db.product(product_id)
-        updates = _stage_candidate_updates(current, full, stage, source_title)
+        updates = _stage_candidate_updates(
+            current,
+            full,
+            stage,
+            source_title,
+            refresh_existing=bool(refresh_existing and scoped_stages and stage in scoped_stages),
+        )
         updates, blocked = filter_ai_updates(current, updates)
         if blocked:
             _emit(dialog, "stage_blocked_fields", f"{label}: فیلدهای محافظت‌شده حذف شدند.", {"fields": blocked})
@@ -354,7 +372,17 @@ def orchestrate_once(
         # If stage 4 still needs AI writes, defer the binary metadata pass until
         # after content is committed to avoid instant stale signatures.
         if stage == "images":
-            content_pending = bool(_stage_candidate_updates(current, full, "content", source_title))
+            content_pending = bool(
+                _stage_candidate_updates(
+                    current,
+                    full,
+                    "content",
+                    source_title,
+                    refresh_existing=bool(
+                        refresh_existing and scoped_stages and "content" in scoped_stages
+                    ),
+                )
+            )
             if content_pending:
                 image_deferred = True
                 updates = {k: v for k, v in updates.items() if k == "image_alt_texts_json"}
