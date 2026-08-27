@@ -1,10 +1,12 @@
-name: Phase49.3I.31-32 Smart Link Bulk AI + Source Guard CI
+name: Phase49.3I.31-33 Smart Link + Operator Workflow CI
 
 on:
   push:
     branches:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
+      - "catalog_center/app/phase49_3i33_ai_core.py"
+      - "catalog_center/app/phase49_3i33_operator_workflow.py"
       - "catalog_center/app/phase49_3i32_source_url_guard.py"
       - "catalog_center/app/phase49_3i31_smart_link_bulk_ai.py"
       - "catalog_center/app/phase49_3i29_windows_performance_ai.py"
@@ -14,6 +16,7 @@ on:
       - "catalog_center/app/phase49_3i25_product_first_workflow.py"
       - "catalog_center/app/ai_providers.py"
       - "catalog_center/app/openai_content.py"
+      - "catalog_center/tests/test_phase49_3i33_operator_workflow.py"
       - "catalog_center/tests/test_phase49_3i32_source_url_guard.py"
       - "catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py"
       - "catalog_center/tests/test_epic49_phase49_3i29_windows_performance_ai.py"
@@ -24,7 +27,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-32:
+  phase49-3i31-33:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -55,10 +58,13 @@ jobs:
       - name: Compile smart AI and source-identity surfaces
         run: |
           python -m compileall -q \
+            catalog_center/app/phase49_3i33_ai_core.py \
+            catalog_center/app/phase49_3i33_operator_workflow.py \
             catalog_center/app/phase49_3i32_source_url_guard.py \
             catalog_center/app/phase49_3i31_smart_link_bulk_ai.py \
             catalog_center/app/phase49_3i29_windows_performance_ai.py \
             catalog_center/app/phase49_3i_pricing_modes.py \
+            catalog_center/tests/test_phase49_3i33_operator_workflow.py \
             catalog_center/tests/test_phase49_3i32_source_url_guard.py \
             catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py
 
@@ -66,6 +72,7 @@ jobs:
         working-directory: catalog_center
         run: |
           python -m unittest -v \
+            tests.test_phase49_3i33_operator_workflow \
             tests.test_phase49_3i32_source_url_guard \
             tests.test_phase49_3i31_smart_link_bulk_ai \
             tests.test_epic49_phase49_3i29_windows_performance_ai \
@@ -79,6 +86,8 @@ jobs:
           from pathlib import Path
           phase31 = Path("catalog_center/app/phase49_3i31_smart_link_bulk_ai.py").read_text(encoding="utf-8")
           phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
+          phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
+          core33 = Path("catalog_center/app/phase49_3i33_ai_core.py").read_text(encoding="utf-8")
           pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           assert 'PHASE = "49.3I.31"' in phase31
           assert '"sent_product_fields": ["source_title", "source_description"]' in phase31
@@ -94,11 +103,21 @@ jobs:
           assert '_install_phase49_3i31_app(app_class)' in pricing
           assert '_install_phase49_3i31_workspace(workspace_class)' in pricing
           assert '_install_phase49_3i32_workspace(workspace_class)' in pricing
+          assert '_install_phase49_3i33_app(app_class)' in pricing
+          assert '_install_phase49_3i33_workspace(workspace_class)' in pricing
+          assert 'suppress_global_products_refresh' in phase33
+          assert 'app_class._phase49_3i29_flush_products_refresh = no_auto_flush' in phase33
+          assert 'AI_MODES = {' in core33
+          assert 'material_recommendations' in core33
+          assert 'makerworld_evidence_from_html' in core33
           print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
           print("PHASE49_3I31_BATCH_AI=SELECTED_PRODUCTS_ONLY")
           print("PHASE49_3I31_AI_PAYLOAD=TITLE_PLUS_TEXT_ONLY")
           print("PHASE49_3I31_GLOBAL_REFRESH=ONCE_AT_BATCH_END")
           print("PHASE49_3I32_SOURCE_URL=GENERIC_SAVE_CANNOT_ERASE_EXISTING")
+          print("PHASE49_3I33_AI=LINK_DATA_SCREENSHOT_REPAIR")
+          print("PHASE49_3I33_PRODUCTS_REFRESH=EXPLICIT_ONLY")
+          print("PHASE49_3I33_MATERIAL_COLOR=OPERATOR_ONLY")
           PY
 
       - name: Django safety
