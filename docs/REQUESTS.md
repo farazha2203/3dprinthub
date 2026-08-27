@@ -159,8 +159,8 @@ Acceptance:
 
 Verification:
 - Store run `33059883188` PASS through migration `0039` and 16 regressions,
-- Smart/Profile run `33060047750` PASS,
-- Single-AI run `33060047790` PASS,
+- Smart/Profile 31–35 run `33060613937` PASS,
+- Single-AI run `33060613914` PASS,
 - Windows portable run `33060047878` PASS,
 - Catalog Center `8.9.1` / build `2026.08.27.3`,
 - artifact ID `9641338334`,
