@@ -1,5 +1,16 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — ERR-49-072 Stage-2 regression fixture schema alignment
+- owner ERR-49-071 gate on exact `34c65bc...`: repo/head PASS, fresh Catalog SQLite backup + SHA256 PASS, changed-source compile PASS;
+- exact 7-test gate stopped on one deterministic test error before OpenRouter/full-suite/foreground launch: `sqlite3.OperationalError: no such column: price_min`;
+- root cause: the new clean test DB initialized minimal Database + Profile/Ledger schemas but omitted the real ProductWorkspace schema layers that create `price_min/price_max` and `pricing_strategy`;
+- test helper now calls `ensure_epic49_desktop_schema()` and 3F pricing `ensure_schema()` before Profile/Ledger setup;
+- runtime application source and real Catalog DB behavior unchanged;
+- fix `1307f4c438de184a930041d365976c2ce018bff8`;
+- rollback `backup/pre-err49-072-commerce-test-schema-20260829` → `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`;
+- owner Local rerun pending; Production untouched.
+
+
 ## 2026-08-29 — ERR-49-071 explicit Stage confirmation + historical layout recovery
 - executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`; Stage-2 explicit confirmation also persists its visible Product type + dimensions before locking;
 - current-head GitHub Actions: none attached; Local verification pending;
