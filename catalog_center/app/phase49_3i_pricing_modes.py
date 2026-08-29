@@ -275,3 +275,9 @@ def install(workspace_class) -> None:
     _install_phase49_3i39_commerce(workspace_class)
     from .phase49_3i39_completion_loop import install_workspace as _install_phase49_3i39_completion
     _install_phase49_3i39_completion(workspace_class)
+    # 49.3I.40 is the final Stage-2/rail precision layer: preserve cross-filter
+    # multi-brand Offer selections, separate global filament facts from per-Product
+    # fixed price, add operator color preview, and stop counting finalization-only
+    # pending stages as data/SEO errors.
+    from .phase49_3i40_commerce_precision import install_workspace as _install_phase49_3i40_precision
+    _install_phase49_3i40_precision(workspace_class)
