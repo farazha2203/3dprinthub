@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY GITHUB / OWNER LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-075
+
+Owner screenshots proved the final Stage-2 defects: saved Filament hidden by old filter, stale edit dialog, and zero/stale price preview. Root causes are now fixed at DB hydration + final callback + pricing-context boundaries. No schema/migration/Host/Production change. Rollback: `backup/pre-err49-075-filament-refresh-pricing-preview-20260829` → `d66c68f36d1fd3e4143d461bccd999046c4baaf7`.
+
+One short Local QA remains. If it passes, website receive/sync becomes the active work immediately.
 
 ## Current owner checkpoint — ERR-49-074
 
