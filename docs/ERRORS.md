@@ -570,6 +570,53 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** a visible Windows workflow must have an executable persist → validate → confirm → advance path in the same viewport; do not make progress depend on an off-screen/secondary control. Tk widget commands created before later wrappers must be explicitly rebound at the final visible composition boundary. Provider fallbacks must keep key and model identities provider-specific.
 
+
+### ERR-49-069 — late Wizard repaint, incomplete stage ownership UI and AvalAI fallback after 60/60 Local PASS
+**Date:** 2026-08-29  
+**Environment:** owner foreground Windows QA on exact Local head `3f43260db669b458a682f594b5d50eb5221b9ef3`, Catalog Center 8.9.8 / build 2026.08.29.2.
+
+**Owner evidence:** the ERR-49-068 Local gate verified the canonical checkout, created backup `D:\projects\3dprinthub-backups\err49-068-20260829-174512\catalog-before-err49-068-qa.sqlite3` with SHA256 `5A6DB948ADACA81014DEDFA7FF117A0C4AF26364936575ACB15D21D632D4C321`, passed compile and 60/60 focused tests, then launched the exact 8.9.8 source. Real Product 63/295 QA still showed:
+- the visible footer reverted to the old `مرحله بعد برای انتشار →` action after final composition,
+- Stage 1 could be data-complete yet stay practically unconfirmed/not advance,
+- Stage-1-owned Product type/dimensions/use-case controls were not all visible in Stage 1,
+- Stage-5-owned source/license/technical controls were split across older Stage 2/7 surfaces,
+- Stage-specific AI reported global defects from unrelated Stages, so a completed Stage 1 run could still claim 4 AI-fixable defects remained,
+- Product 63 and Product 295 AI jobs overlapped,
+- despite OpenRouter being the saved active Provider, resilient fallback still invoked AvalAI,
+- OpenRouter primary model was intermittently 404/403/no-text but also produced valid 3–5k-token responses, so the correct policy is same-Provider fallback rather than changing Provider automatically.
+
+**Root Causes:**
+1. `phase49_3i26_operator_completion` scheduled an `after_idle` callback that captured the older `_phase49_3b_refresh_wizard` before 3I.39 finished installing. That late callback could repaint the footer after 3I.39 had configured it.
+2. The old 3B Next handler still had a read-before-save fallback path. Rebinding the visible Button alone was therefore insufficient.
+3. Canonical field ownership and visible stage composition had drifted: Quick owns `product_type/dimensions/use_case_class`, but those controls lived in the older Commerce form; Specs owns source/license/technical fields, but some controls remained elsewhere.
+4. `persist_stage_from_ui()` did not persist every field declared/visible for Quick and Specs.
+5. `repair_until_stable()` used global `ai_fixable_count` for stage-scoped completion, causing false retry/stall/incomplete reporting from defects outside the requested Stage.
+6. AI busy state was per Workspace, allowing concurrent Product AI jobs in the same process.
+7. 3I.35 resilience still treated AvalAI/Google/OpenAI as Product-AI fallback candidates even when the owner explicitly selected OpenRouter.
+
+**Correct Fix:**
+- make the base guided refresh itself call the final 3I.39 footer-sync hook, so even already-captured old callbacks finish by restoring `✅ تأیید و مرحله بعد →`;
+- make legacy `_phase49_3b_go_next` delegate to final stage confirmation and, for any legacy-only fallback, persist before readiness evaluation;
+- route the old title-only button through final Stage-1 AI when 3I.39 exists and freeze legacy exception text before deferred Tk callbacks;
+- restore an additive Stage-1 identity panel with Product type, dimensions and use-case/class; persist all Quick-owned fields both in stage-specific finalization and normal Workspace Save;
+- restore an additive Stage-5 panel for source/designer, commercial license, Persian technical summary and technical-features JSON; persist those fields before finalization and keep compatibility editors synchronized;
+- make repair counts, terminal messages and 3I.40 progress scope-aware for single-stage AI while retaining global truth for whole-product AI;
+- add one process/app-level Product-AI runtime guard so another Product Workspace cannot start a second Product AI job until the first finishes/cancels;
+- make Product AI **OpenRouter-only**: exact saved OpenRouter model is Primary; optional fallback is only `openrouter/free` with the same OpenRouter key. AvalAI/Google/OpenAI are not Product-AI fallbacks. No model is guessed or silently changed.
+
+**Git changes:** source changes begin at `3ea7033bfe46d892d72d96eb47cbe3e7c02b63d8` and currently extend through `136011971dea907ac777b3e66190dd27982a0c38`; focused regression updates are included in the same branch history.
+
+**Rollback anchor:** `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`.
+
+**Touched surfaces:** Windows Catalog stage footer/navigation, Stage 1 and Stage 5 operator controls/persistence, stage-scoped AI completion accounting, Product-AI concurrency guard, Product-AI Provider resilience, focused tests/documentation.
+
+**Must not touch:** Stage-2 Offer/Profile pricing authority, crawler/parser/acquisition identity, Product media binaries, secure key values, Django schema/migrations, Host or Production.
+
+**Verification status:** owner Local evidence on the rollback head is 60/60 PASS and foreground failure reproduced. ERR-49-069 source/tests are committed on GitHub but **have not yet been pulled/tested on the owner Windows checkout**. Production remains untouched.
+
+**Prevention:** final visible composition must be tested against deferred callbacks, not only class method aliases. Every Stage must have a single ownership table that matches visible controls, stage-specific persistence and readiness. Stage-scoped AI must judge only its Scope. Product-AI Provider policy is explicit and must not silently cross providers.
+
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
