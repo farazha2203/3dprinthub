@@ -53,6 +53,53 @@ def _json_list(value) -> list:
     return list(parsed) if isinstance(parsed, list) else []
 
 
+def _scoped_items(snapshot: dict, key: str, target_stages: set[str] | None) -> dict:
+    groups = dict(snapshot.get(key) or {})
+    if not target_stages:
+        return groups
+    return {
+        stage: list(groups.get(stage) or [])
+        for stage in target_stages
+        if stage in STAGE_ORDER
+    }
+
+
+def _scoped_count(snapshot: dict, key: str, target_stages: set[str] | None) -> int:
+    return sum(len(items) for items in _scoped_items(snapshot, key, target_stages).values())
+
+
+_AI_RUNTIME_GUARD = threading.Lock()
+
+
+def _claim_ai_runtime(workspace, label: str) -> object | None:
+    app = getattr(workspace, "app", None)
+    if app is None:
+        return object()
+    token = object()
+    with _AI_RUNTIME_GUARD:
+        owner = getattr(app, "_phase49_3i39_active_ai_job", None)
+        if owner:
+            return None
+        app._phase49_3i39_active_ai_job = {
+            "token": token,
+            "product_id": int(getattr(workspace, "product_id", 0) or 0),
+            "label": str(label or ""),
+        }
+    return token
+
+
+def _release_ai_runtime(workspace, token: object | None) -> None:
+    if token is None:
+        return
+    app = getattr(workspace, "app", None)
+    if app is None:
+        return
+    with _AI_RUNTIME_GUARD:
+        owner = getattr(app, "_phase49_3i39_active_ai_job", None)
+        if isinstance(owner, dict) and owner.get("token") is token:
+            app._phase49_3i39_active_ai_job = None
+
+
 def configure_readiness() -> None:
     if getattr(readiness_module, "_phase49_3i39_readiness_contract", False):
         return
@@ -243,14 +290,18 @@ def repair_until_stable(
     mode = mode if mode in AI_SOURCE_MODES else source_mode(app)
     initial = defect_snapshot(app, product_id)
     before_ids = _defect_ids(initial)
+    scoped_data_count = _scoped_count(initial, "data_missing", target_stages)
+    scoped_ai_count = _scoped_count(initial, "ai_fixable", target_stages)
     dialog.event(
         "readiness_before",
-        f"شروع عیب‌یابی • {initial['total_data_defects']} نقص داده • "
-        f"{initial['ai_fixable_count']} قابل اصلاح خودکار",
+        f"شروع عیب‌یابی • {scoped_data_count} نقص داده در Scope • "
+        f"{scoped_ai_count} قابل اصلاح خودکار در Scope",
         {
-            "data_defects": initial["data_missing"],
-            "ai_fixable": initial["ai_fixable"],
-            "operator_only": initial["operator_only"],
+            "data_defects": _scoped_items(initial, "data_missing", target_stages),
+            "ai_fixable": _scoped_items(initial, "ai_fixable", target_stages),
+            "operator_only": _scoped_items(initial, "operator_only", target_stages),
+            "global_data_defect_count": initial["total_data_defects"],
+            "global_ai_fixable_count": initial["ai_fixable_count"],
             "finalization_pending": [
                 STAGE_LABELS[s] for s in initial["finalization_pending"]
             ],
@@ -327,42 +378,56 @@ def repair_until_stable(
             "fixed": fixed,
             "remaining": after["data_missing"],
         })
+        scoped_remaining = _scoped_count(after, "ai_fixable", target_stages)
         dialog.event(
             "repair_pass_result",
             f"Pass {pass_no}: {len(fixed)} نقص رفع شد • "
-            f"{after['ai_fixable_count']} نقص AI-قابل‌اصلاح باقی",
+            f"{scoped_remaining} نقص AI-قابل‌اصلاح در Scope باقی",
             {
                 "changed_fields": result.get("changed_fields") or [],
                 "fixed_defects": fixed,
-                "remaining_data_defects": after["data_missing"],
-                "operator_only": after["operator_only"],
+                "remaining_data_defects": _scoped_items(after, "data_missing", target_stages),
+                "operator_only": _scoped_items(after, "operator_only", target_stages),
+                "global_ai_fixable_count": after["ai_fixable_count"],
             },
         )
         last = after
-        if after["ai_fixable_count"] <= 0:
+        if scoped_remaining <= 0:
             break
-        if after_ids == current_ids and not run_for_cleanup:
+        current_scope_ids = {
+            item for item in current_ids
+            if not target_stages or item.split("|", 1)[0] in target_stages
+        }
+        after_scope_ids = {
+            item for item in after_ids
+            if not target_stages or item.split("|", 1)[0] in target_stages
+        }
+        if after_scope_ids == current_scope_ids and not run_for_cleanup:
             dialog.event(
                 "repair_stalled",
-                "این Pass نقص جدیدی را کم نکرد؛ Retry/Fallback همان موتور مصرف شد و Loop متوقف می‌شود.",
-                {"remaining": after["ai_fixable"]},
+                "این Pass نقصی در Scope انتخابی کم نکرد؛ Loop متوقف می‌شود.",
+                {"remaining": _scoped_items(after, "ai_fixable", target_stages)},
             )
             break
 
     final = defect_snapshot(app, product_id)
     after_ids = _defect_ids(final)
     fixed_all = sorted(before_ids - after_ids)
-    dialog.set_progress(100, "عیب‌یابی و بازبینی نهایی ۷ مرحله انجام شد")
+    scoped_ai_fixable_count = _scoped_count(final, "ai_fixable", target_stages)
+    scoped_operator_only_count = _scoped_count(final, "operator_only", target_stages)
+    dialog.set_progress(100, "عیب‌یابی و بازبینی Scope انتخابی انجام شد")
     dialog.event(
         "readiness_after",
-        f"پایان • {len(fixed_all)} نقص رفع شد • "
-        f"{final['ai_fixable_count']} قابل اصلاح خودکار • "
-        f"{final['operator_only_count']} اپراتوری باقی",
+        f"پایان Scope • {len(fixed_all)} نقص رفع شد • "
+        f"{scoped_ai_fixable_count} قابل اصلاح خودکار • "
+        f"{scoped_operator_only_count} اپراتوری باقی",
         {
             "fixed_defects": fixed_all,
-            "remaining_data_defects": final["data_missing"],
-            "remaining_ai_fixable": final["ai_fixable"],
-            "remaining_operator_only": final["operator_only"],
+            "remaining_data_defects": _scoped_items(final, "data_missing", target_stages),
+            "remaining_ai_fixable": _scoped_items(final, "ai_fixable", target_stages),
+            "remaining_operator_only": _scoped_items(final, "operator_only", target_stages),
+            "global_ai_fixable_count": final["ai_fixable_count"],
+            "target_stages": sorted(target_stages or []),
             "finalization_pending": [
                 STAGE_LABELS[s] for s in final["finalization_pending"]
             ],
@@ -373,20 +438,32 @@ def repair_until_stable(
         "final": final,
         "history": history,
         "fixed_defects": fixed_all,
+        "target_stages": sorted(target_stages or []),
+        "scoped_ai_fixable_count": scoped_ai_fixable_count,
+        "scoped_operator_only_count": scoped_operator_only_count,
     }
 
 
 def _done_message(result: dict) -> str:
     final = result["final"]
-    if final["ai_fixable_count"] == 0:
-        if final["operator_only_count"]:
+    scoped = int(result.get("scoped_ai_fixable_count", final["ai_fixable_count"]) or 0)
+    operator_scoped = int(
+        result.get("scoped_operator_only_count", final["operator_only_count"]) or 0
+    )
+    target_stages = list(result.get("target_stages") or [])
+    scope_label = (
+        "این مرحله" if len(target_stages) == 1
+        else ("Scope انتخابی" if target_stages else "محصول")
+    )
+    if scoped == 0:
+        if operator_scoped:
             return (
-                f"AI تمام نقص‌های قابل اصلاح را برطرف کرد. "
-                f"{final['operator_only_count']} مورد اپراتوری باقی است؛ سپس Stageهای کامل را «ثبت» کن."
+                f"AI تمام نقص‌های قابل اصلاح {scope_label} را برطرف کرد. "
+                f"{operator_scoped} مورد اپراتوری در همین Scope باقی است."
             )
-        return "تمام نقص‌های داده قابل اصلاح برطرف شد؛ Stageهای کامل را برای قفل نهایی «ثبت» کن."
+        return f"تمام نقص‌های AI-قابل‌اصلاح {scope_label} برطرف شد."
     return (
-        f"عملیات تمام شد ولی {final['ai_fixable_count']} نقص AI-قابل‌اصلاح باقی مانده؛ "
+        f"عملیات تمام شد ولی {scoped} نقص AI-قابل‌اصلاح در {scope_label} باقی مانده؛ "
         "جزئیات دقیق در گزارش بالا نوشته شده است."
     )
 
@@ -499,14 +576,86 @@ def install_workspace(workspace_class) -> None:
     if getattr(workspace_class, "_phase49_3i39_completion_loop", False):
         return
     original_init = workspace_class.__init__
+    original_reload = workspace_class.reload
 
     def __init__(self, app, product_id):
         original_init(self, app, product_id)
         self._phase49_3i39_add_stage_ai_buttons()
+        self._phase49_3i39_add_quick_identity_panel()
         self._phase49_3i39_rebind_legacy_complete_buttons()
         self._phase49_3i39_add_fixed_footer_actions()
         self._phase49_3i39_bind_footer_refresh()
         self._phase49_3i39_sync_footer_actions()
+        self.after_idle(self._phase49_3i39_sync_footer_actions)
+        self.after(80, self._phase49_3i39_sync_footer_actions)
+        self.after(250, self._phase49_3i39_sync_footer_actions)
+
+    def add_quick_identity_panel(self):
+        if getattr(self, "_phase49_3i39_quick_identity_panel", None) is not None:
+            return
+        from .product_studio import PRODUCT_TYPE_CODES
+
+        panel = ttk.LabelFrame(
+            self.quick_tab,
+            text="اطلاعات پایه کامل — نوع محصول / ابعاد / کاربری",
+            padding=8,
+            style="Card.TLabelframe",
+        )
+        panel.grid(row=4, column=0, columnspan=4, sticky="ew", padx=4, pady=(5, 8))
+        panel.columnconfigure(1, weight=1)
+        panel.columnconfigure(3, weight=1)
+
+        ttk.Label(panel, text="نوع محصول").grid(row=0, column=0, sticky="e", padx=4, pady=4)
+        ttk.Combobox(
+            panel,
+            textvariable=self.product_type_var,
+            values=list(PRODUCT_TYPE_CODES),
+            state="readonly",
+            width=28,
+        ).grid(row=0, column=1, sticky="ew", padx=4, pady=4)
+
+        ttk.Label(panel, text="ابعاد محصول").grid(row=0, column=2, sticky="e", padx=4, pady=4)
+        ttk.Entry(panel, textvariable=self.dimensions_var).grid(
+            row=0, column=3, sticky="ew", padx=4, pady=4
+        )
+
+        if not hasattr(self, "use_case_class_var"):
+            self.use_case_class_var = tk.StringVar()
+        ttk.Label(panel, text="کاربری / کلاس محصول").grid(
+            row=1, column=0, sticky="e", padx=4, pady=4
+        )
+        ttk.Entry(panel, textvariable=self.use_case_class_var).grid(
+            row=1, column=1, columnspan=3, sticky="ew", padx=4, pady=4
+        )
+        ttk.Label(
+            panel,
+            text="قیمت و Offer در مرحله ۲؛ مجوز در مرحله ۵؛ تنظیمات انتشار در مرحله ۷ کنترل می‌شوند.",
+            style="SubHeader.TLabel",
+        ).grid(row=2, column=0, columnspan=4, sticky="e", padx=4, pady=(2, 0))
+        self._phase49_3i39_quick_identity_panel = panel
+        self._phase49_3i39_refresh_quick_identity()
+
+    def refresh_quick_identity(self):
+        row = self.db.product(int(self.product_id))
+        if row is None:
+            return
+        var = getattr(self, "use_case_class_var", None)
+        if var is not None:
+            try:
+                var.set(str(_row_value(row, "use_case_class", "") or ""))
+            except Exception:
+                pass
+
+    def reload(self):
+        result = original_reload(self)
+        if hasattr(self, "_phase49_3i39_quick_identity_panel"):
+            self._phase49_3i39_refresh_quick_identity()
+        if hasattr(self, "_phase49_3b_next"):
+            try:
+                self._phase49_3i39_sync_footer_actions()
+            except Exception:
+                pass
+        return result
 
     def add_stage_ai_buttons(self):
         panel = getattr(self, "_phase49_3i36_lock_panel", None)
@@ -640,6 +789,15 @@ def install_workspace(workspace_class) -> None:
         if getattr(self, "_phase49_3i33_ai_busy", False):
             self.footer_status.set("یک عملیات هوش مصنوعی در حال اجرا است.")
             return
+        runtime_token = _claim_ai_runtime(self, "all")
+        if runtime_token is None:
+            self.footer_status.set("یک عملیات AI برای محصول دیگری در حال اجرا است؛ ابتدا همان را تمام/لغو کن.")
+            messagebox.showinfo(
+                "هوش مصنوعی",
+                "هم‌زمان فقط یک عملیات Product AI اجرا می‌شود. عملیات قبلی را تمام یا لغو کن.",
+                parent=self,
+            )
+            return
         self._phase49_3i33_ai_busy = True
         mode = forced_mode if forced_mode in AI_SOURCE_MODES else source_mode(self.app)
         dialog = ObservableJobDialog(
@@ -674,6 +832,7 @@ def install_workspace(workspace_class) -> None:
                     ),
                 )
             finally:
+                _release_ai_runtime(self, runtime_token)
                 self.after(0, lambda: setattr(self, "_phase49_3i33_ai_busy", False))
 
         threading.Thread(
@@ -710,6 +869,15 @@ def install_workspace(workspace_class) -> None:
             return
         if getattr(self, "_phase49_3i33_ai_busy", False):
             return
+        runtime_token = _claim_ai_runtime(self, stage)
+        if runtime_token is None:
+            self.footer_status.set("یک عملیات AI برای محصول دیگری در حال اجرا است؛ ابتدا همان را تمام/لغو کن.")
+            messagebox.showinfo(
+                "هوش مصنوعی",
+                "هم‌زمان فقط یک عملیات Product AI اجرا می‌شود. عملیات قبلی را تمام یا لغو کن.",
+                parent=self,
+            )
+            return
 
         self._phase49_3i33_ai_busy = True
         mode = source_mode(self.app)
@@ -736,6 +904,7 @@ def install_workspace(workspace_class) -> None:
             except Exception as exc:
                 dialog.fail(exc)
             finally:
+                _release_ai_runtime(self, runtime_token)
                 self.after(0, lambda: setattr(self, "_phase49_3i33_ai_busy", False))
 
         threading.Thread(
@@ -752,6 +921,9 @@ def install_workspace(workspace_class) -> None:
         return run_stage_ai(self, stage)
 
     workspace_class.__init__ = __init__
+    workspace_class.reload = reload
+    workspace_class._phase49_3i39_add_quick_identity_panel = add_quick_identity_panel
+    workspace_class._phase49_3i39_refresh_quick_identity = refresh_quick_identity
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
     workspace_class._phase49_3i39_add_fixed_footer_actions = add_fixed_footer_actions
     workspace_class._phase49_3i39_sync_footer_actions = sync_footer_actions
