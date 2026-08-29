@@ -13,7 +13,7 @@ Older detailed request history remains available in Git history. This file keeps
 
 
 ## REQ-50-028 — Professional Stage-2 Offer flow, Profile snapshot and truthful AI completion
-Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / BASELINE CI+PORTABLE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / BASELINE CI+PORTABLE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Stage 2 order is manufacturer/company → filament/material → color → register Offer → professional pricing → production rows → Profile identity/dimensions,
@@ -50,6 +50,11 @@ Verification:
 - ERR-49-068 restores the owner-requested visible Windows flow: the current Stage must always expose `✅ تأیید و مرحله بعد` plus AI fill/edit controls; manual values are persisted before readiness is checked, and success advances to the next Stage.
 - A visible legacy AI button must execute the same final 3I.39 engine as the new controls; class-method rebinding alone is not sufficient for Tk Buttons created earlier.
 - Provider fallback must never reuse a key or model that belongs to another Provider.
+- ERR-49-069 owner contract: Product AI is OpenRouter-only. The saved OpenRouter model is primary; the only optional fallback is `openrouter/free` with the same OpenRouter key. AvalAI/Google/OpenAI must not be invoked by Product AI.
+- Stage-specific AI completion is judged only against the selected Stage; unrelated defects in other Stages must not trigger retries or false incomplete status.
+- Only one Product AI job may run in the process at a time; another Product Workspace must be blocked until the active job finishes/cancels.
+- Stage 1 must visibly expose Product type, dimensions and use-case/class. Stage 5 must visibly expose source/designer, commercial license, technical summary and technical features. Stage confirm must persist every owned visible field before readiness/finalization.
+- A late/deferred legacy Wizard callback must never restore the old read-before-save Next action after final composition.
 - Hotfix source `aa37dcf916dfab71409738f7087a171daffe4a0a` + regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`; owner Local retest remains required.
 
 ## REQ-50-001 — Complete business finance/accounting system
