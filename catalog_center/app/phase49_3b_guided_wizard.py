@@ -348,6 +348,13 @@ def install(workspace_class) -> None:
         ttk.Label(holder, text="فقط title_fa را تکمیل می‌کند و توضیحات/SEO/قیمت را تغییر نمی‌دهد.", style="SubHeader.TLabel").pack(side="left", padx=8)
 
     def translate_title_only(self):
+        # Mature Windows composition routes every Product-AI action through the
+        # final stage engine (OpenRouter-only + single-job guard). This also
+        # catches Tk Buttons that captured this legacy callable before 3I.39.
+        final_runner = getattr(self, "_phase49_3i39_run_stage_ai", None)
+        if callable(final_runner):
+            return final_runner("quick")
+
         row = self.db.product(self.product_id)
         source = str(_value(row, "source_title", "") or "").strip()
         if not source:
@@ -380,7 +387,15 @@ def install(workspace_class) -> None:
                 audit_event("ai", "title_only", product_id=self.product_id, message=f"provider={provider} model={used}")
                 self.after(0, lambda: (self.reload(), self._phase49_3b_refresh_wizard(), self.footer_status.set("عنوان فارسی ترجمه شد")))
             except Exception as exc:
-                self.after(0, lambda: messagebox.showerror("3DPrintHub", f"ترجمه عنوان ناموفق بود:\n{exc}", parent=self))
+                error_text = str(exc)
+                self.after(
+                    0,
+                    lambda message=error_text: messagebox.showerror(
+                        "3DPrintHub",
+                        f"ترجمه عنوان ناموفق بود:\n{message}",
+                        parent=self,
+                    ),
+                )
         threading.Thread(target=runner, daemon=True).start()
 
     def _phase49_3b_load_media(self):
