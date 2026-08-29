@@ -20,6 +20,7 @@ from .phase49_3i35_operator_ledger import (
     normalize_ledger_profile,
     normalize_production_row,
 )
+from .phase49_3i36_stage_finalization import is_stage_locked
 
 PHASE = "49.3I.39"
 
@@ -635,14 +636,15 @@ def install_workspace(workspace_class) -> None:
             }])
             if normalized:
                 new_offer = normalized[0]
-                replaced = False
-                for idx, item in enumerate(self._phase49_3i39_selected_product_offers):
-                    if offer_key(item) == offer_key(new_offer):
-                        self._phase49_3i39_selected_product_offers[idx] = new_offer
-                        replaced = True
-                        break
-                if source and not replaced:
-                    self._phase49_3i39_selected_product_offers.append(new_offer)
+                was_selected = any(
+                    offer_key(item) == offer_key(source)
+                    for item in self._phase49_3i39_selected_product_offers
+                ) if source else False
+                if was_selected:
+                    for idx, item in enumerate(self._phase49_3i39_selected_product_offers):
+                        if offer_key(item) == offer_key(source):
+                            self._phase49_3i39_selected_product_offers[idx] = new_offer
+                            break
             top.destroy()
             self._phase49_3i39_refresh_offer_filter()
             self.footer_status.set(f"Offer «{offer_display(normalized[0] if normalized else saved)}» ذخیره شد.")
@@ -664,6 +666,9 @@ def install_workspace(workspace_class) -> None:
         open_offer_editor(self, offer)
 
     def commit_selected_offers(self):
+        if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Offer ابتدا «اصلاح» را بزن.")
+            return False
         selected = selected_inventory_offers(self)
         if not selected:
             messagebox.showwarning("Offer", "حداقل یک Offer را انتخاب کن.", parent=self)
@@ -680,6 +685,9 @@ def install_workspace(workspace_class) -> None:
         return persist_selected_offers(self, propagate_profiles=True)
 
     def persist_selected_offers(self, propagate_profiles=True):
+        if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Offer ابتدا «اصلاح» را بزن.")
+            return False
         offers = normalize_material_color_options(self._phase49_3i39_selected_product_offers)
         materials = list(dict.fromkeys(item["material"] for item in offers if item.get("material")))
         colors = list(dict.fromkeys(item["color"] for item in offers if item.get("color")))
@@ -689,6 +697,20 @@ def install_workspace(workspace_class) -> None:
                 "material_color_options_json": json.dumps(offers, ensure_ascii=False),
                 "materials_json": json.dumps(materials, ensure_ascii=False),
                 "colors_json": json.dumps(colors, ensure_ascii=False),
+                "material_options_json": json.dumps(materials, ensure_ascii=False),
+                "color_options_json": json.dumps(
+                    [
+                        {
+                            "name": item.get("color") or "",
+                            "hex": item.get("hex") or "",
+                            "color_type": item.get("color_type") or "solid",
+                            "secondary_hex": item.get("secondary_hex") or "",
+                            "tertiary_hex": item.get("tertiary_hex") or "",
+                        }
+                        for item in offers
+                    ],
+                    ensure_ascii=False,
+                ),
             },
         )
         if propagate_profiles and getattr(self, "_phase49_3i35_ledger", None):
@@ -870,6 +892,9 @@ def install_workspace(workspace_class) -> None:
             )
 
     def register_profile(self):
+        if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر پروفایل ابتدا «اصلاح» را بزن.")
+            return False
         try:
             validate_profile_identity(
                 self._phase49_3i35_ledger,
@@ -916,6 +941,9 @@ def install_workspace(workspace_class) -> None:
         self.footer_status.set("پروفایل برای اصلاح بارگذاری شد؛ اصل Snapshot تا زدن «اعمال اصلاح» تغییر نمی‌کند.")
 
     def update_profile(self):
+        if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر پروفایل ابتدا «اصلاح» را بزن.")
+            return False
         profile = selected_profile(self)
         if profile is None:
             messagebox.showinfo("پروفایل", "یک پروفایل را انتخاب کن.", parent=self)
@@ -947,6 +975,9 @@ def install_workspace(workspace_class) -> None:
         return True
 
     def delete_profile(self):
+        if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر پروفایل ابتدا «اصلاح» را بزن.")
+            return False
         profile = selected_profile(self)
         if profile is None:
             return
