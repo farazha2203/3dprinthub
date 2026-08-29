@@ -42,6 +42,9 @@ Canonical active phase doc:
 
 ## Current Windows blocker/fix — ERR-49-071
 
+ERR-49-071 executable code/regression head: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head GitHub Actions run is attached; owner Local compile/regression/foreground verification is the next gate. Stage-2 confirmation now also persists its historically visible Product type and dimensions before the Stage lock is written.
+
+
 Owner Local on exact `d4da99744659d06ebe5c04fd69532cd0e03db3e8` passed compile, the exact ERR-49-070 regressions, OpenRouter-only 4/4 and the full 67/67 Windows stage contract, then foreground-launched the real 8.9.8 source. Visual acceptance still failed: Stage 1 stayed red despite filled title/category, the rejected type/dimensions/use-case panel appeared there, the generic missing count inflated to 46 because pending confirmations were counted as missing data, and the bottom control was still the legacy Next instead of one explicit Stage confirmation action. The runtime trace also proved the title-only AI button could start Product 286 while Product 63 AI was still active.
 
 ERR-49-071 is a targeted rollback of those bad UX decisions while preserving Stage-2 commerce and OpenRouter-only AI:
