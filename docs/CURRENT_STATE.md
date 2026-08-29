@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 TEST FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,33 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Windows blocker/fix — ERR-49-068
+
+Owner reran the corrected ERR-49-067 gate on exact head `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`: the exact previously failing regression PASSed, the full focused set ran 43/43 PASS, worktree/head verification PASSed, and foreground Catalog Center 8.9.8 launched from the canonical source.
+
+Real Product 63 QA then proved the current Windows workflow itself still had a stage-confirmation regression:
+- Stage 1 could be visibly filled/manually edited but did not become a usable confirmed step;
+- the expected visible bottom confirmation control was absent from the practical workflow;
+- the older Next flow checked persisted readiness before persisting the current widget values;
+- 3I.36 `ثبت` existed in a separate rail panel but was not a reliable visible operator path in the current composition;
+- already-created legacy Tk AI buttons could retain old callbacks even after class aliases were replaced.
+
+The same trace also exposed secondary AI/runtime issues: legitimate `Flexi Gecko` source identity was rejected inside SEO; an OpenRouter-shaped key/model was attempted under OpenAI fallback; and a deferred callback captured the cleared `exc` variable.
+
+ERR-49-068 is now on GitHub:
+- fixed footer: `✅ تأیید و مرحله بعد →` persists/finalizes the current Stage before advancing,
+- adjacent `✨ پرکردن ناقص‌ها با AI` and `✏ اصلاح مرحله`,
+- footer confirm authority is restored after every Wizard refresh,
+- visible legacy AI buttons are rebound across the entire Workspace to final 3I.39 execution,
+- exact source-title identity is allowed inside otherwise-Persian title/description/SEO; unrelated Latin remains invalid,
+- cross-provider key reuse is blocked and fallback models must be provider-specific,
+- deferred exception text is frozen before scheduling.
+
+Rollback:
+`backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`.
+
+No schema/migration, Product media, Host or Production change. GitHub source/regressions are updated; owner Local pull + focused tests + foreground Product 63 confirmation/AI QA is the next gate.
 
 ## Latest Local gate — ERR-49-067 fixture-only stop
 
