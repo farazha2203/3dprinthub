@@ -186,6 +186,9 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn('"request_payload"', core)
         self.assertIn('"response_payload"', core)
         self.assertIn("finalize_progress", core)
+        self.assertIn("workspace_class._phase49_3e_run_all_ai = run_all", source)
+        self.assertIn("workspace_class._phase49_3i31_smart_ai = run_link_all", source)
+        self.assertIn("workspace_class._phase49_3c_stage_ai = run_current_stage", source)
 
 
 if __name__ == "__main__":
