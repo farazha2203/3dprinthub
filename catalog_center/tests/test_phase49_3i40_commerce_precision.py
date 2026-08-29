@@ -8,6 +8,7 @@ from app.phase49_3i40_commerce_precision import (
     _CompletionProgressProxy,
     apply_product_fixed_prices,
     color_preview_hex,
+    filament_rate_calculation,
     merge_offer_scope,
     readiness_display,
 )
@@ -73,6 +74,38 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertEqual(updated[0]["sale_price_per_roll"], 3_600_000)
         self.assertNotIn("fixed_product_price", global_offer)
 
+    def test_filament_rate_calculation_shows_final_roll_basis_and_per_gram_rate(self):
+        result = filament_rate_calculation({
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 3_000_000,
+            "usd_price_per_roll": 40,
+            "usd_fx_rate_toman": 100_000,
+        })
+        self.assertEqual(result["final_roll_toman"], 4_000_000)
+        self.assertEqual(result["rate_per_gram"], 4_000)
+        self.assertEqual(result["basis"], "دلار × نرخ ثبت‌شده")
+
+        no_fx = filament_rate_calculation({
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 3_000_000,
+            "usd_price_per_roll": 40,
+            "usd_fx_rate_toman": 0,
+        })
+        self.assertEqual(no_fx["final_roll_toman"], 3_000_000)
+        self.assertEqual(no_fx["rate_per_gram"], 3_000)
+        self.assertEqual(no_fx["basis"], "قیمت فروش هر رول")
+
+    def test_global_editor_exposes_final_rate_calculation_and_filament_labels(self):
+        root = Path(__file__).resolve().parents[1]
+        source = (root / "app" / "phase49_3i40_commerce_precision.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("محاسبه نرخ نهایی Filament", source)
+        self.assertIn("مبلغ نهایی مبنای هر رول", source)
+        self.assertIn("نرخ نهایی مصرف", source)
+        self.assertIn("ذخیره Filament جهانی", source)
+        self.assertNotIn('text="ذخیره Offer جهانی"', source)
+
     def test_color_preview_uses_hex_then_name_fallback(self):
         self.assertEqual(color_preview_hex({"color": "صورتی", "hex": "#ABCDEF"}), "#ABCDEF")
         self.assertEqual(color_preview_hex({"color": "صورتی"}), "#EC407A")
@@ -83,7 +116,7 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         state = {
             "stages": {
                 "quick": {"data_ready": True, "missing_data": []},
-                "commerce": {"data_ready": False, "missing_data": ["حداقل یک Offer برند/فیلامنت/رنگ ثبت‌شده"]},
+                "commerce": {"data_ready": False, "missing_data": ["حداقل یک Filament برند/متریال/رنگ ثبت‌شده"]},
                 "images": {"data_ready": True, "missing_data": []},
                 "content": {"data_ready": True, "missing_data": []},
                 "specs": {"data_ready": False, "missing_data": ["مجوز تجاری مجاز"]},
@@ -97,7 +130,7 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertEqual(
             result["data_defects"],
             [
-                "۲. سفارش، قیمت و گزینه‌ها: حداقل یک Offer برند/فیلامنت/رنگ ثبت‌شده",
+                "۲. سفارش، قیمت و گزینه‌ها: حداقل یک Filament برند/متریال/رنگ ثبت‌شده",
                 "۵. منبع و مجوز: مجوز تجاری مجاز",
             ],
         )
