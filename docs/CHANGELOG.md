@@ -1,5 +1,29 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — Catalog Center 8.9.8 / Phase49.3I.40 + Store 0040
+- preserved the mature 3I.38 Crawl/Direct Link/parser/image/file acquisition path and extended only the final Stage-2/readiness boundaries;
+- Stage 2 now follows manufacturer → filament/material → color → Product Offer registration → pricing → production rows → Profile identity/dimensions;
+- fixed multi-brand selection scope so registering eSUN/Bambu/other filtered Offers does not erase previously selected manufacturer Offers;
+- separated global filament Offer inventory/rates/preheat from Product-specific fixed price per exact Offer;
+- added Catalog color preview with explicit HEX/name fallback and optional filament image access;
+- kept production weight/print-time/support in the upstream production rows; Profile identity remains name/size/actual dimensions with snapshot registration;
+- hardened readiness UX to distinguish real missing data from complete data waiting for operator finalization;
+- blocked cosmetic terminal 100% until final `ai_fixable_count == 0`; remaining AI defects stop below 100 and are reported;
+- kept AI source authority at Link / Saved-Crawled Data / Screenshot; Repair is an operation, not another source;
+- added Store migration `0040_phase50_filament_offer_operations` for hourly print/supervision, preheat hours/temperature/cost and filament image URL;
+- first Store 0040 run `33246706102` failed on Decimal string representation only; migration plan/apply/no-drift had already passed;
+- corrected tests to compare Decimal values numerically; Store run `33246843145` PASS with full SQLite migration through 0040 and 21 regressions;
+- Catalog targeted run `33247729316` PASS;
+- final Single Active AI run `33247815007` PASS;
+- Windows Portable run `33247815027` PASS on `55139b909f214f33994d76bc1e6fdfd028b5d6c7`;
+- Catalog Center `8.9.8` / build `2026.08.29.2`;
+- artifact `3DPrintHub-CatalogCenter-v8.9.8`, ID `9713426658`;
+- artifact digest `sha256:776eebb4daa1039119721697988508558991c6c4ccd6a2b1cca8b50b6f3b57a2`;
+- EXE SHA256 `2be8be49e05575cb20ea12f061d006935df070ec9abb0f87e4f00e4151d5f02a`;
+- rollback branch `backup/pre-phase49-3i40-commerce-readiness-20260829` → `b59c93cf37dcb66d3e97f61d2669df6e1d1644a4`;
+- Production untouched; owner Local SQLite 0040 + 31–40 visual/functional QA is next.
+
+
 ## 2026-08-27 — Catalog Center 8.9.6 / Phase49.3I.38
 - preserved the mature Browser/Crawl/Parser/image/file receive pipeline and extended only its identity/continuation boundaries;
 - added permanent crawled/received Product ledger UI over the existing `discovered_urls` authority;
