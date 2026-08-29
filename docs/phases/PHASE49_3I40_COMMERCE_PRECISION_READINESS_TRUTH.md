@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION UNTOUCHED`
 
 ## Requested delta
 
@@ -122,6 +122,27 @@ Adds to `MaterialColorOption`:
 - `filament_image_url`.
 
 The Store selector and Variant metadata keep exact manufacturer/material/color identity, stock, preheat and visual facts.
+
+## Owner SEO/readiness follow-up — ERR-49-065
+
+After ERR-49-064, the professional 3I.39/3I.40 surface became visible. Owner QA then showed that seven-stage AI could persist complete Persian/SEO fields while older cached readiness/help widgets still displayed the previous red defects.
+
+The final contract now includes post-AI persisted-state reconciliation:
+- re-read the Product from Catalog SQLite,
+- reload visible fields,
+- refresh finalization/lock state,
+- refresh the guided wizard,
+- render final 3I.40 readiness last,
+- repeat the readiness reconciliation after a short UI-settle delay.
+
+This does not auto-finalize stages. Data-ready stages may become green/complete while still waiting for explicit operator `ثبت`. Commerce, license/legal and Publish remain operator-owned.
+
+Git:
+- source `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4`,
+- regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26`,
+- rollback `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`.
+
+Owner Local targeted test and foreground same-product SEO retest remain required.
 
 ## Owner visual-QA incident — ERR-49-064
 
