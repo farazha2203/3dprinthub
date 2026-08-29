@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 OWNER UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 CHECKER + STAGE OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,29 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current owner blocker — ERR-49-066 checker/stage ownership mismatch
+
+Owner Local retest of `c679c66d8c6554ff14e5705b7eb3aada24495990` proved the prior repaint fix was not the remaining root cause: 12/12 targeted tests passed and the correct 8.9.8 foreground runtime launched, but Product 63 still showed completed inputs as red/missing.
+
+The foreground audit isolated the contract failure:
+- an older visible 3I.31 full-AI action still ran and persisted Persian/SEO/image fields,
+- the final readiness loop then saw 7 data defects / 5 AI-fixable,
+- it scoped Stage 4 Content/SEO,
+- a valid fallback Provider response was accepted,
+- but no Product field update followed and the loop reported 0 defects fixed / 5 still AI-fixable.
+
+The new GitHub hotfix aligns the whole chain:
+- one field owner: `title_fa → quick`, image Alt → `images`, editorial/SEO → `content`,
+- persisted title/description may preserve only exact Latin source-identity tokens; SEO/list fields remain Persian-only,
+- AI repair uses the same semantic checker as readiness, including non-empty invalid keyword/tag/hashtag lists,
+- guided Wizard uses `data_ready/missing_data` for red stars, stage icons and Next gating rather than operator-finalization `ready`,
+- final 3I.39 class aliases route mature full-AI/link/current-stage actions through the same seven-stage repair engine.
+
+Rollback:
+`backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`.
+
+GitHub code/regressions are updated; no current-head Actions run is attached yet. Owner Local targeted tests + foreground Product 63 retest are the next gate. No DB/schema/media/secret/Host/Production change.
 
 ## Owner SEO/readiness reconciliation hotfix — ERR-49-065
 
