@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
 
 ## Requested delta
 
@@ -123,6 +123,27 @@ Adds to `MaterialColorOption`:
 
 The Store selector and Variant metadata keep exact manufacturer/material/color identity, stock, preheat and visual facts.
 
+## Windows stage-confirmation recovery — ERR-49-068
+
+Owner rerun after ERR-49-067 passed the full focused 43-test set and launched the canonical 8.9.8 source, but foreground Product 63 still demonstrated the user-facing deadlock: manually complete Stage 1 values could not become a usable confirmed/advanced step because the mature footer Next path evaluated persisted readiness before persisting the current UI, while the later 3I.36 `ثبت` action lived in a separate rail panel rather than the fixed bottom workflow the operator previously used.
+
+Final Windows interaction contract now requires:
+1. the fixed footer always exposes `✅ تأیید و مرحله بعد →`,
+2. clicking it persists only the current Stage through 3I.36, evaluates readiness, finalizes on success, then navigates to the next Stage,
+3. the footer also exposes `✨ پرکردن ناقص‌ها با AI` and `✏ اصلاح مرحله`,
+4. later Wizard refreshes must not replace the confirm command with the old read-before-save Next command,
+5. already-created legacy Tk AI buttons are explicitly rebound across the full Workspace to the final 3I.39 engine,
+6. real source identity tokens may remain beside Persian title/description/SEO text, while unrelated Latin remains invalid; keyword/tag/hashtag editorial lists remain Persian-controlled,
+7. fallback key/model identity is Provider-specific,
+8. deferred error callbacks freeze exception text before leaving the `except` scope.
+
+Observed owner runtime evidence also showed the Provider path problem clearly: OpenRouter produced empty output, AvalAI generated structured output rejected by the over-strict identity rule, and an OpenRouter-shaped credential/model was later attempted as OpenAI and returned 401. Those cross-provider attempts are now filtered rather than treated as useful fallback.
+
+Rollback:
+`backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`.
+
+No Stage-2 Offer/Profile pricing contract, crawler/parser, media file, Django schema/migration, Host or Production boundary changed. Owner Local regression + foreground Product 63 confirmation/AI test remains mandatory.
+
 ## Local regression fixture correction — ERR-49-067
 
 Owner Local evidence after pulling `9f3b765...`:
@@ -148,7 +169,7 @@ Final readiness contract is now:
 3. selected-image Alt belongs to Images,
 4. descriptions/SEO/search phrases belong to Content,
 5. a defect is AI-fixable only when the scoped AI path can write the same owning field,
-6. title/description may preserve only exact source-identity Latin tokens; SEO/search fields stay Persian-only,
+6. title/description/SEO may preserve only exact source-identity Latin tokens beside Persian text; unrelated Latin fails, while keyword/tag/hashtag editorial lists remain Persian-controlled,
 7. `data_ready` controls visible completion/navigation,
 8. `locked/finalized` controls operator approval only,
 9. mature visible AI buttons converge on the same 3I.39 seven-stage repair authority.
