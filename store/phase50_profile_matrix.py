@@ -276,9 +276,16 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
     product.sales_profile_selection_mode = mode
     product.sales_profile_selector_label = selector_label
     if any(_integer(row, "fixed_price", 0) > 0 for row in rows):
-        # Desktop 3I.39 fixed prices belong to the exact Profile × material ×
-        # brand × color Variant, not one Product-wide price.
-        product.pricing_policy = "profile_material_color_fixed"
+        # Keep historical Profile-only fixed pricing stable. 3I.39 rows that
+        # carry an explicit material/color Offer use per-Variant fixed pricing.
+        has_offer_identity = any(
+            str(row.get("material") or "").strip()
+            and str(row.get("color") or "").strip()
+            for row in rows
+        )
+        product.pricing_policy = (
+            "profile_material_color_fixed" if has_offer_identity else "profile_fixed"
+        )
         product.fixed_price = 0
         product.price_is_final = all(_integer(row, "fixed_price", 0) > 0 for row in rows)
     else:
