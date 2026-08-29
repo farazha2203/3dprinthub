@@ -4,6 +4,10 @@ Last Updated: 2026-08-29
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
+## ERR-49-072 verification rule
+
+The Stage-2 confirmation regression must use the same additive Catalog schemas as the real ProductWorkspace. Test-only schema setup may not be mistaken for a Product/runtime defect. After the fixture fix, rerun the full ERR-49-071 acceptance path before judging the visible Stage workflow.
+
 ## ERR-49-071 owner acceptance request
 Executable checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation must persist the visible Product type/dimensions before it is marked confirmed.
 
