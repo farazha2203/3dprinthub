@@ -11,6 +11,8 @@ on:
       - catalog_center/app/phase49_3i36_stage_finalization.py
       - catalog_center/app/phase49_3i37_seven_stage_ai.py
       - catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py
+      - catalog_center/app/phase49_3i39_professional_commerce.py
+      - catalog_center/app/phase49_3i39_completion_loop.py
       - catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py
       - catalog_center/tests/test_phase49_3i37_seven_stage_ai.py
       - catalog_center/app/phase49_readiness_wizard.py
@@ -98,6 +100,8 @@ jobs:
             tests.test_phase49_3i36_stage_finalization `
             tests.test_phase49_3i37_seven_stage_ai `
             tests.test_phase49_3i38_crawl_ledger_stage_ai `
+            tests.test_phase49_3i39_professional_commerce `
+            tests.test_phase49_3i39_completion_loop `
             tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
@@ -172,6 +176,13 @@ jobs:
             'EPIC49_3I38_DIRECT_LINK_PRE_ACQUISITION_GUARD=ENABLED',
             'EPIC49_3I38_STAGE_SCOPED_AI=ENABLED',
             'EPIC49_3I38_BULK_STAGE4_SAME_ENGINE=ENABLED',
+            'EPIC49_3I39_PROFESSIONAL_STAGE2=ENABLED',
+            'EPIC49_3I39_OFFER_MANUFACTURER_MATERIAL_COLOR=ENABLED',
+            'EPIC49_3I39_OFFER_PREHEAT_PRICING=ENABLED',
+            'EPIC49_3I39_PROFILE_IDENTITY_DIMENSIONS_ONLY=ENABLED',
+            'EPIC49_3I39_READINESS_REPAIR_LOOP=ENABLED',
+            'EPIC49_3I39_AI_DIALOG_BEFORE_AFTER=ENABLED',
+            'EPIC49_3I39_TOP_VIEWPORT_SCREENSHOT=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -246,14 +257,14 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI , 3I.36 seven-stage finalization and 3I.37 stage AI/source/screenshot contracts
+          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI , 3I.36 seven-stage finalization and 3I.37 stage AI/source/screenshot contracts, 3I.38 crawl ledger/stage scope and 3I.39 professional Stage-2/readiness-repair contracts
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.6 adds a permanent crawled/received URL ledger, reject-and-purge tombstones that keep source identity while deleting only the Product collected directory, continuation cursors that scroll beyond previously collected listing windows, a pre-acquisition terminal guard for Direct Link, and stage-scoped cleanup that reuses the exact 3I.37 AI engine for selected Product SEO/content.
+          8.9.7 adds a professional Stage-2 workflow (manufacturer → filament → color Offer, stock/rates/preheat, fixed/formula pricing, common production rows, profile identity/dimensions only), readiness-driven AI repair with before/after defect accounting, and top-viewport Product screenshots while preserving the mature acquisition/crawl/file pipeline.
 
           External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
           "@
