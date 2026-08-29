@@ -94,6 +94,15 @@ class Phase493I41FilamentLibraryTests(unittest.TestCase):
         self.assertIn("_phase49_3i41_selected_draft_offers", pricing)
         self.assertIn("EPIC49_3I41_FILAMENT_LIBRARY=ENABLED", launch)
 
+    def test_central_editor_preserves_multicolor_fields_and_deactivation_sync_contract(self):
+        phase = (ROOT / "app" / "phase49_3i41_filament_library.py").read_text(encoding="utf-8")
+        self.assertIn('("color_type", "نوع رنگ")', phase)
+        self.assertIn('("secondary_hex", "HEX دوم")', phase)
+        self.assertIn('("tertiary_hex", "HEX سوم")', phase)
+        self.assertIn('color_type=vars_["color_type"].get()', phase)
+        self.assertIn('disabled["_is_active"] = False', phase)
+        self.assertIn("_async_site_sync(self, disabled)", phase)
+
     def test_product_checklist_has_explicit_save_and_no_ctrl_shift_contract(self):
         phase = (ROOT / "app" / "phase49_3i41_filament_library.py").read_text(encoding="utf-8")
         self.assertIn("✓ ثبت انتخاب‌ها روی این محصول", phase)
