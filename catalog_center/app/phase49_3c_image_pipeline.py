@@ -434,6 +434,36 @@ def _download_if_needed(row, url: str, local_dir: Path) -> Path | None:
         return None
 
 
+DERIVED_IMAGE_STATE_FIELDS = {
+    "selected_images_json",
+    "primary_image_url",
+    "image_alt_texts_json",
+    IMAGE_METADATA_COLUMN,
+}
+
+
+def _persist_derived_image_state(db, product_id: int, values: dict) -> None:
+    """Persist deterministic image-finalizer output even after operator lock.
+
+    The Stage lock protects operator/AI edits. SEO file regeneration is derived
+    state from already-approved image selection + current product metadata, so
+    it must be able to refresh signatures after later Content/Source stages
+    change. Only the explicit derived-image whitelist may bypass the lock guard.
+    """
+    payload = dict(values or {})
+    unknown = set(payload) - DERIVED_IMAGE_STATE_FIELDS
+    if unknown:
+        raise RuntimeError(
+            "Derived image refresh attempted non-image fields: "
+            + ", ".join(sorted(unknown))
+        )
+    raw_update = getattr(db, "_phase49_3i36_raw_update_product", None)
+    if callable(raw_update):
+        raw_update(int(product_id), payload)
+        return
+    db.update_product(int(product_id), payload)
+
+
 def finalize_selected_images(db, product_id: int) -> dict:
     ensure_schema(db)
     row = db.product(int(product_id))
@@ -520,7 +550,8 @@ def finalize_selected_images(db, product_id: int) -> dict:
         json.dumps(manifest, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    db.update_product(
+    _persist_derived_image_state(
+        db,
         int(product_id),
         {
             "selected_images_json": json.dumps(kept_urls, ensure_ascii=False),
