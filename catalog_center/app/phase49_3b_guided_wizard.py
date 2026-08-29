@@ -25,8 +25,8 @@ STAGE_LABELS = {
 STAGE_HELP = {
     "quick": "برای ادامه: ★ عنوان فارسی، ★ گروه سایت و ★ نوع محصول را تکمیل کن. ترجمه فقط عنوان فارسی از همین مرحله قابل انجام است.",
     "commerce": "برای ادامه: ★ قیمت/حالت سفارش، ★ حداقل یک متریال و ★ حداقل یک رنگ را مشخص کن.",
-    "images": "برای ادامه: ★ تصویر اصلی و ★ حداقل یک تصویر منتخب سایت لازم است.",
-    "content": "برای ادامه: ★ توضیح فارسی، ★ SEO Title/Description، ★ عبارت‌های هدف و ★ Alt تصاویر لازم است.",
+    "images": "برای ادامه: ★ تصویر اصلی، ★ حداقل یک تصویر منتخب سایت و ★ Alt تصاویر لازم است.",
+    "content": "برای ادامه: ★ توضیحات فارسی، ★ SEO Title/Description و ★ عبارت‌های هدف لازم است.",
     "specs": "برای ادامه: ★ لینک منبع و ★ وضعیت مجوز تجاری معتبر لازم است.",
     "slider": "اسلایدر اختیاری است. اگر فعالش کنی، ★ عنوان/توضیح/Alt/Focus/عکس Hero و تنظیم نمایش باید کامل باشند.",
     "publish": "گزارش نهایی را بررسی کن. Local Publish برای QA است؛ Production فقط وقتی همه Gateها سبز باشند فعال می‌شود.",
@@ -94,6 +94,24 @@ def _bounded(value, default: int, minimum: int, maximum: int) -> int:
     except Exception:
         parsed = default
     return min(maximum, max(minimum, parsed))
+
+
+def _stage_data_ready(stage: dict | None) -> bool:
+    stage = dict(stage or {})
+    if "data_ready" in stage:
+        return bool(stage.get("data_ready"))
+    return bool(stage.get("ready"))
+
+
+def _stage_data_missing(stage: dict | None) -> list[str]:
+    stage = dict(stage or {})
+    if "missing_data" in stage:
+        return list(stage.get("missing_data") or [])
+    return [
+        str(item)
+        for item in (stage.get("missing") or [])
+        if str(item) != "تأیید نهایی اپراتور (ثبت مرحله)"
+    ]
 
 
 def configure_readiness(readiness_module) -> None:
@@ -425,7 +443,7 @@ def install(workspace_class) -> None:
         # Lock future steps based on the first incomplete stage, but always allow going back.
         state = getattr(self, "_phase49_readiness_state", None)
         if state and key in STAGE_ORDER:
-            first_incomplete = next((i for i, stage_key in enumerate(STAGE_ORDER) if not state["stages"].get(stage_key, {}).get("ready", False)), len(STAGE_ORDER) - 1)
+            first_incomplete = next((i for i, stage_key in enumerate(STAGE_ORDER) if not _stage_data_ready(state["stages"].get(stage_key, {}))), len(STAGE_ORDER) - 1)
             current = self._phase49_3b_current_key(default="quick")
             current_index = STAGE_ORDER.index(current)
             requested = STAGE_ORDER.index(key)
@@ -463,20 +481,20 @@ def install(workspace_class) -> None:
         current = self._phase49_3b_current_key()
         stage = state.get("stages", {}).get(current, {"ready": False, "missing": []})
         self._phase49_3b_help_var.set(STAGE_HELP[current])
-        missing = stage.get("missing", [])
+        missing = _stage_data_missing(stage)
         self._phase49_3b_required_var.set("" if not missing else "★ الزامی برای ادامه: " + " • ".join(missing))
         index = STAGE_ORDER.index(current)
         self._phase49_3b_prev.configure(state="disabled" if index == 0 else "normal")
         if index == len(STAGE_ORDER) - 1:
             self._phase49_3b_next.configure(text="💾 ذخیره نهایی", state="normal", command=lambda: self.save())
         else:
-            self._phase49_3b_next.configure(text="مرحله بعد برای انتشار →", state="normal" if stage.get("ready") else "disabled", command=self._phase49_3b_go_next)
-        first_incomplete = next((i for i, key in enumerate(STAGE_ORDER) if not state.get("stages", {}).get(key, {}).get("ready", False)), len(STAGE_ORDER))
+            self._phase49_3b_next.configure(text="مرحله بعد برای انتشار →", state="normal" if _stage_data_ready(stage) else "disabled", command=self._phase49_3b_go_next)
+        first_incomplete = next((i for i, key in enumerate(STAGE_ORDER) if not _stage_data_ready(state.get("stages", {}).get(key, {}))), len(STAGE_ORDER))
         for idx, key in enumerate(STAGE_ORDER):
             button = self._section_buttons.get(key)
             if button is None: continue
-            ready = state.get("stages", {}).get(key, {}).get("ready", False)
-            icon = "✅" if ready else ("🔒" if idx > first_incomplete else "❌ ★")
+            data_ready = _stage_data_ready(state.get("stages", {}).get(key, {}))
+            icon = "✅" if data_ready else ("🔒" if idx > first_incomplete else "❌ ★")
             try:
                 button.configure(text=f"{icon} {STAGE_LABELS[key]}", state="disabled" if idx > max(first_incomplete, index) else "normal")
             except Exception:
@@ -489,7 +507,7 @@ def install(workspace_class) -> None:
     def _phase49_3b_go_next(self):
         current = self._phase49_3b_current_key(); index = STAGE_ORDER.index(current)
         state = getattr(self, "_phase49_readiness_state", {})
-        if not state.get("stages", {}).get(current, {}).get("ready", False):
+        if not _stage_data_ready(state.get("stages", {}).get(current, {})):
             self._phase49_3b_refresh_wizard(); return
         self.save(silent=True)
         if index < len(STAGE_ORDER) - 1: self.select_section(STAGE_ORDER[index + 1])
