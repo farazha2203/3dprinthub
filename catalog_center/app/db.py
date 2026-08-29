@@ -223,6 +223,7 @@ class Database:
             ,"has_3d_file": "INTEGER NOT NULL DEFAULT 0"
             ,"source_name": "TEXT NOT NULL DEFAULT ''"
             ,"technical_features_json": "TEXT NOT NULL DEFAULT '{}'"
+            ,"technical_summary_fa": "TEXT NOT NULL DEFAULT ''"
             ,"keywords_json": "TEXT NOT NULL DEFAULT '[]'"
             ,"is_blocked": "INTEGER NOT NULL DEFAULT 0"
             ,"blocked_at": "TEXT NOT NULL DEFAULT ''"
