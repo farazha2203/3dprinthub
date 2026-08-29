@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 CHECKER + STAGE OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 TEST FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,18 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Latest Local gate — ERR-49-067 fixture-only stop
+
+Owner pulled exact head `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c` on the canonical Windows checkout and created a fresh Catalog SQLite backup:
+`D:\projects\3dprinthub-backups\err49-066-20260829-170052\catalog-before-err49-066-qa.sqlite3`
+with SHA256 `AE475E39040B8BF8F7BEF7B13D3176F2B83BBA956E2121D53CC2F5CC087F185F`.
+
+Compile passed. The focused suite ran 43 tests and stopped on exactly one deterministic regression-fixture error. The locked-stage test fed `seo_description_fa` containing the Latin token `AI`, while ERR-49-066 deliberately made SEO title/description Persian-only. Runtime validation therefore rejected the mock payload before the test reached its lock/immutability assertion.
+
+The production checker was not loosened. Only the stale fixture was corrected at `38cb415bc12d7ec08943809fd14f3478b3ddac1b`. Rollback: `backup/pre-err49-067-seven-stage-test-fixture-20260829` → `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
+
+Next gate: owner ff-only pull current docs-final head, rerun the same focused 43-test gate, and only on PASS launch Product 63 in foreground. Production remains untouched.
 
 ## Current owner blocker — ERR-49-066 checker/stage ownership mismatch
 
