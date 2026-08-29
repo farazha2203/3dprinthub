@@ -368,6 +368,13 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
         })
 
     elif stage == "commerce":
+        # Phase49.3I.41 grouped Filament checklist is the final visible selection
+        # authority. Persist it before older ledger compatibility paths so the
+        # footer "ثبت و تأیید مرحله" sees exactly what the operator checked.
+        phase41_commit = getattr(workspace, "_phase49_3i41_commit_checklist", None)
+        if callable(phase41_commit):
+            if not phase41_commit():
+                raise ValueError("انتخاب Filamentهای این محصول هنوز ثبت نشده است.")
         # Registered 3I.35 ledger is the commerce/profile authority.
         persist = getattr(workspace, "_phase49_3i35_persist_ledger", None)
         if callable(persist) and list(getattr(workspace, "_phase49_3i35_ledger", []) or []):
