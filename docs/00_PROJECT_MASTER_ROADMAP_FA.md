@@ -7,8 +7,16 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner Windows workflow checkpoint — ERR-49-068
+
+روی Head `0191a07...` تست قبلی و مجموعه 43 تست هدفمند کامل PASS شد و نسخه صحیح 8.9.8 در Foreground اجرا شد؛ بنابراین مشکل از Checkout/نسخه قدیمی نبود. QA واقعی Product 63 نشان داد خود Workflow ویندوز معیوب شده بود: فیلدهای Stage 1 می‌توانستند پر باشند ولی مسیر پایین صفحه قبل از Persist همان Stage، Readiness ذخیره‌شده را چک می‌کرد و کنترل `ثبت` نیز در پنل جداگانه Rail قرار گرفته بود. نتیجه برای اپراتور همان حالت «پر است ولی تیک نمی‌خورد و جلو نمی‌رود» بود.
+
+Hotfix جدید پایین صفحه را دوباره مرجع عملیات می‌کند: `✅ تأیید و مرحله بعد` ابتدا Stage جاری را Persist/Finalize می‌کند، سپس جلو می‌رود؛ `✨ پرکردن ناقص‌ها با AI` و `✏ اصلاح مرحله` کنار آن هستند و Refresh آنها را پس نمی‌زند. Callback واقعی Buttonهای قدیمی AI نیز به موتور 3I.39 وصل شده است. هویت واقعی انگلیسی Source مثل `Flexi Gecko` در کنار متن فارسی مجاز است، اما لاتین نامرتبط رد می‌شود. Fallback دیگر Key/Model یک Provider را برای Provider دیگر استفاده نمی‌کند.
+
+Rollback: `backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`. تست Local و QA Product 63 روی Head نهایی جدید لازم است؛ Production دست نخورده است.
 
 ### Owner Local test checkpoint — ERR-49-067
 
