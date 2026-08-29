@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.9.7"
+EXPECTED_VERSION = "8.9.8"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -261,6 +261,11 @@ def main() -> int:
     print("EPIC49_3I39_READINESS_REPAIR_LOOP=ENABLED", flush=True)
     print("EPIC49_3I39_AI_DIALOG_BEFORE_AFTER=ENABLED", flush=True)
     print("EPIC49_3I39_TOP_VIEWPORT_SCREENSHOT=ENABLED", flush=True)
+    print("EPIC49_3I40_MULTI_BRAND_FILTER_SELECTION=ENABLED", flush=True)
+    print("EPIC49_3I40_PRODUCT_OFFER_FIXED_PRICE=ENABLED", flush=True)
+    print("EPIC49_3I40_COLOR_PREVIEW=ENABLED", flush=True)
+    print("EPIC49_3I40_READINESS_DATA_VS_FINALIZATION=ENABLED", flush=True)
+    print("EPIC49_3I40_AI_PROGRESS_TRUTH=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
