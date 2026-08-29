@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,10 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Owner SEO/readiness hotfix checkpoint — ERR-49-065
+
+After ERR-49-064 made the professional Product Workspace visible, owner QA proved that AI-persisted Persian/SEO fields could remain shown as red/missing in cached readiness/help widgets. Source `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4` + regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26` now rehydrate from Catalog SQLite and make final readiness the last post-AI painter, with a short settle recheck. Rollback: `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`. Local targeted test/foreground retest pending; Production untouched.
 
 ## Owner visual-QA hotfix checkpoint — ERR-49-064
 
