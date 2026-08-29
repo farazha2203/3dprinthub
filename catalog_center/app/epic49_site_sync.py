@@ -74,6 +74,28 @@ def update_product(settings: SiteConnection, product_id: int, expected_revision:
     )
 
 
+def list_filaments(settings: SiteConnection, query: str = "", material: str = "") -> list[dict]:
+    params = urlencode({
+        "q": str(query or ""),
+        "material": str(material or ""),
+        "limit": 500,
+    })
+    data = _request(settings, f"filaments/?{params}")
+    return list(data.get("items") or [])
+
+
+def sync_filament(settings: SiteConnection, filament: dict, *, operator="desktop") -> dict:
+    return _request(
+        settings,
+        "filaments/sync/",
+        {
+            "operator": str(operator or "desktop")[:120],
+            "filament": dict(filament or {}),
+        },
+        timeout=max(30, settings.timeout),
+    )
+
+
 def list_hero_slides(settings: SiteConnection) -> list[dict]:
     data = _request(settings, "hero-slides/")
     return list(data.get("items") or [])
