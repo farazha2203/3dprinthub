@@ -69,6 +69,11 @@ class Phase493AReadinessWizardTests(unittest.TestCase):
         self.assertIn("Alt تصویر", state["stages"]["images"]["missing"])
         self.assertNotIn("Alt تصویر", state["stages"]["content"]["missing"])
 
+    def test_explicit_other_category_is_valid_for_stage_one(self):
+        state = evaluate_readiness(ready_row(local_category_slug="external-other"))
+        self.assertNotIn("گروه سایت", state["stages"]["quick"]["missing"])
+        self.assertTrue(state["stages"]["quick"]["ready"])
+
     def test_missing_seo_marks_content_stage_red(self):
         state = evaluate_readiness(
             ready_row(seo_title_fa="", seo_description_fa="", keywords_json="[]")
