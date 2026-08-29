@@ -514,7 +514,61 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Verification status:** owner Local evidence before the correction: repository/branch/head verified, Catalog SQLite backup created with SHA256 `AE475E39040B8BF8F7BEF7B13D3176F2B83BBA956E2121D53CC2F5CC087F185F`, compile PASS, 43 focused tests ran with 1 deterministic fixture error, foreground launch correctly did not run. Owner must ff-only pull the corrected head and rerun the same focused gate; do not rerun the failed head unchanged. Production untouched.
 
+**Superseded detail:** the fixture-only correction itself remains valid, but the interim assumption that SEO title/description must reject every Latin token was too strict for real product identity. Owner runtime evidence immediately after this gate showed legitimate source identity such as `Flexi Gecko` being rejected. ERR-49-068 replaces that rule with: Persian SEO may preserve exact Latin tokens from `source_title`; unrelated Latin remains invalid.
+
 **Prevention:** regression fixtures that feed production validators must themselves satisfy the current production contract unless the test explicitly verifies rejection. A lock/immutability test must use a valid AI payload so validation does not mask the behavior under test.
+
+
+### ERR-49-068 — Windows stage confirmation deadlock + stale Tk callbacks + AI fallback identity mismatch
+**Date:** 2026-08-29  
+**Environment:** owner foreground Windows QA on exact Local head `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`, Catalog Center 8.9.8 / build 2026.08.29.2 / Product 63.
+
+**Owner evidence:** the corrected ERR-49-067 gate passed the previously failing test and then all 43 focused tests. The canonical source launched successfully. In the real Product Workspace, Stage 1 fields could be visibly complete or manually edited but the Stage stayed unconfirmed/red, the expected bottom confirmation control was not available in the visible workflow, and the operator could not naturally advance. The same runtime trace also showed:
+- initial readiness `6` data defects / `4` AI-fixable,
+- OpenRouter returned no output text on repeated attempts,
+- AvalAI returned structured output but legitimate source identity in SEO was rejected, then one request timed out,
+- an OpenRouter-shaped key/model was later attempted under the OpenAI fallback and received HTTP 401,
+- the failure UI then raised `cannot access free variable 'exc' where it is not associated with a value in enclosing scope`,
+- a later explicit Product save persisted many fields successfully, proving the database write path itself was alive.
+
+**Historical comparison:** the original 3B guided wizard commit `eb865e78c70b862f51e6918dee074c8bb9c0536f` had a persistent footer Next action and visible AI helper. 3I.36 commit `8d6e9ca1bee40da3ffbd57ec328ef77de451c781` introduced separate stage finalization/locking and moved `ثبت` into a seven-row rail panel. The mature 3B Next path still evaluated readiness before its later `save(silent=True)`; once readiness depended on persisted stage data/finalization, manual widget edits could never pass the pre-save gate. In current layout the rail finalization panel was not a reliable visible operator control, producing a practical deadlock.
+
+**Root Causes:**
+1. Manual stage progression evaluated persisted readiness before persisting current UI values.
+2. Stage finalization existed only in the separate 3I.36 rail panel; the fixed footer no longer provided the old obvious confirm/advance workflow.
+3. Older Tk Buttons captured bound callback objects when they were created. Later 3I.39 class alias reassignment did not change those already-created widget commands; the rebind scan covered only Content, not the whole Workspace.
+4. SEO validation rejected every Latin token instead of allowing the exact real source identity tokens already present in `source_title`.
+5. fallback candidate construction could reuse a key/model belonging to another Provider. The observed OpenAI attempt used an OpenRouter-shaped key and an OpenRouter/Nvidia model.
+6. a deferred lambda closed over `exc` from an `except` block; Python clears that exception binding after the block, causing the secondary UI error.
+
+**Correct Fix:**
+- restore a persistent visible footer action `✅ تأیید و مرحله بعد →` that calls the 3I.36 stage-specific persist/finalize method first and advances only after success;
+- add adjacent visible `✨ پرکردن ناقص‌ها با AI` and `✏ اصلاح مرحله` actions;
+- wrap the mature Wizard refresh so later refreshes cannot silently replace the fixed confirm command/text with the old read-before-save Next behavior;
+- rebind actual already-created legacy AI buttons across the whole Workspace to the final 3I.39 engine rather than relying only on class aliases;
+- allow exact Latin tokens from `source_title` in Persian title/description/SEO fields while continuing to reject unrelated Latin; keyword/tag/hashtag lists remain Persian editorial text;
+- skip positively identifiable cross-provider keys and require fallback models to be saved for that exact Provider rather than inheriting the primary model;
+- freeze the redacted exception text before scheduling the deferred footer callback.
+
+**Git changes:**
+- source-aware SEO readiness `7e4fbd198af0252bb83f613a984e1bf675237158`,
+- source-aware AI SEO validator/repair `e0e08c668acbed3cbb084b82728994ee3e22299d`,
+- visible footer confirm/AI/edit + deferred exception fix `6ece94c2c8a9431517ee08c0ffd131863e844d0c`,
+- actual legacy Tk button rebind `d0514357907a96c96edc4151cc845dd08f2a1bfc`,
+- footer authority retained after Wizard refresh `d461ab981b7ce490fb24c68ac8ea92c39a8046fa`,
+- cross-provider key guard `0856868ea057b2cc9f0081ceeef723df4fd95702`,
+- provider-specific fallback model guard `c1746545f0fb8c591f01591c91487d9c721bbcc6`,
+- regressions `8d31f0dd011028c407eb609e3a58b5e03e6430ce`, `21913aa409757e1b3a9b41136d434fc498801dc0`, `ef6b2f033cd4d0aac359df0497bd8e593ed9d2bc`, `3822d407438b21a1bccd9484805fe937bf789b51`, `e184e629d3ac55a62c1f501d1ab684bc8c212701`, `dbe10616c691292e4e74358a08a9de2d43fdf333`, `4d6426f8f2a4ea01643bb763cf00a2dae3947e3f`.
+
+**Rollback anchor:** `backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`.
+
+**Touched surfaces:** Windows Catalog Center stage footer/navigation, 3I.39 AI button routing, Persian/source-identity readiness and repair validation, fallback candidate safety, focused tests and documentation.
+
+**Must not touch:** Stage-2 Offer/Profile/pricing ownership, crawler/parser/download identity, Product media binaries, Django schema/migrations, Production Host, secure key values themselves.
+
+**Verification status:** GitHub hotfix/regressions are committed. The last owner Local runtime at `0191a07...` passed 43 focused tests but predates this ERR-49-068 delta. Current hotfix requires a new Local pull, compile/regression gate and foreground Product 63 QA. Production untouched.
+
+**Prevention:** a visible Windows workflow must have an executable persist → validate → confirm → advance path in the same viewport; do not make progress depend on an off-screen/secondary control. Tk widget commands created before later wrappers must be explicitly rebound at the final visible composition boundary. Provider fallbacks must keep key and model identities provider-specific.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
