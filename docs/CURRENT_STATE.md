@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-071+072 LOCAL PASS 71/71 / ERR-49-073 IMAGE METADATA LOCK-REFRESH FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,20 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Windows delta — ERR-49-074
+
+Owner pulled exact `954c0516661e6c70145d7f6f395b4e92ceeb40bd`, created checksum-backed Catalog SQLite backup `D:\projects\3dprinthub-backups\err49-073-20260829-201331\catalog-before-err49-073-qa.sqlite3` (SHA256 `DA9CC61848CF41EED1674B0B9D6EBC1B8D53BA6CE700F6BCEF42A565CF8F18BC`), passed compile, 2/2 exact ERR-49-073 regressions, 4/4 OpenRouter-only and 73/73 full Windows stage regression, then foreground-launched 8.9.8. The image Metadata issue cleared and the owner reported the Product ready for publication.
+
+The remaining requested Windows delta is Stage 2 only:
+- restore the continuously visible final calculated amount that existed before;
+- show the live final roll/rate calculation inside Filament rate editing;
+- all operator-facing buttons/dialogs use `Filament`, never `Offer`;
+- keep internal `offer_*` identifiers unchanged for compatibility.
+
+GitHub implementation is complete; Local retest is next. Rollback: `backup/pre-err49-074-filament-rate-final-display-20260829` → `954c0516661e6c70145d7f6f395b4e92ceeb40bd`.
+
+No Catalog/Django schema, migration, Product media, AI provider, Host or Production change. After this Local QA passes, the next work item is the website receive/sync path for the same Filament/Profile/pricing data.
 
 ## Current foreground blocker/fix — ERR-49-073
 
