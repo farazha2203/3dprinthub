@@ -159,7 +159,7 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
             "EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED",
         ):
             self.assertIn(marker, launcher)
-        self.assertEqual(manifest["version"], "8.9.6")
+        self.assertEqual(manifest["version"], "8.9.7")
         for path in (
             "app/phase49_3i35_operator_ledger.py",
             "app/phase49_3i35_resilient_ai.py",
