@@ -1,6 +1,6 @@
 # OWNER REQUESTS
 
-Last Updated: 2026-08-27
+Last Updated: 2026-08-29
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
@@ -10,6 +10,39 @@ Older detailed request history remains available in Git history. This file keeps
 - imported Catalog working-media is not a public Production namespace.
 - healthy StoreOrder/Payment/Invoice/inventory/coupon/VAT behavior is extended rather than duplicated.
 - no guessed carrier/gateway endpoint or tariff.
+
+
+## REQ-50-028 — Professional Stage-2 Offer flow, Profile snapshot and truthful AI completion
+Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / GITHUB CI + WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- Stage 2 order is manufacturer/company → filament/material → color → register Offer → professional pricing → production rows → Profile identity/dimensions,
+- registering Offers in a new manufacturer/material filter preserves selected Offers from other filters,
+- global Offer editor owns stock, roll weight, purchase/sale/USD+explicit FX, hourly print/supervision, preheat and filament image/HEX,
+- Product fixed price is separate and can differ per exact manufacturer/material/color Offer without changing the global filament rate,
+- formula pricing consumes exact Offer facts and production weight/time/support; preheat is optional and costs zero when absent,
+- same material/color from Bambu Lab, eSUN or another manufacturer stays distinct through Desktop sync and Storefront selection,
+- Storefront selection is manufacturer → material → color, with exact price and orderability after the selection is known,
+- insufficient Offer/color stock prevents orderability,
+- colors show filament image when available, otherwise explicit/fallback swatch,
+- production weight/print-time/support rows are not duplicated in the bottom Profile identity form,
+- Profile registration uses operator name + size + actual dimensions and creates an immutable snapshot; later Profiles may reuse the working form without mutating previous registered Profiles,
+- duplicate Profile identity is rejected,
+- Product screenshot selected for Site is the top viewport reference rather than full-page,
+- full Link completion repairs AI-owned readiness defects stage-by-stage and reports request/response/apply/before/fixed/remaining state,
+- 100% is forbidden while `ai_fixable_count > 0`,
+- data-ready-but-not-finalized is not displayed as a data defect,
+- each stage remains editable by default, can be finalized by the operator and must be explicitly returned to edit before later AI changes,
+- AI sources are exactly Link / Saved-Crawled Data / Screenshot; Repair is an operation on the same engine,
+- mature Crawl/Direct Link/parser/image/file receive behavior must remain unchanged,
+- Store migration `0040_phase50_filament_offer_operations` reaches Production only after Local backup/migration/regression, owner visual acceptance and fresh Production MySQL backup/rollback verification.
+
+Verification:
+- Catalog targeted `33247729316` PASS,
+- Single Active AI `33247815007` PASS,
+- Windows Portable `33247815027` PASS on `55139b909f214f33994d76bc1e6fdfd028b5d6c7`,
+- Store/0040 `33246843145` PASS,
+- Production untouched.
 
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
