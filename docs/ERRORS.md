@@ -1,5 +1,32 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+### ERR-49-076 — Stage-2 multi-Filament selection was technically possible but operationally ambiguous
+**Date:** 2026-08-29  
+**Environment:** Catalog Center 8.9.8 / Stage 2 after ERR-49-075.
+
+**Symptom:** an inventory with many Filaments could only be managed through an extended Treeview selection whose multi-select behavior depended on Ctrl/Shift. The operator could not clearly see the complete Product selection set, global Filament definition was mixed into Product editing, and repeated Products encouraged repeated manufacturer/material typing.
+
+**Root Cause:** the older UI modeled global Filament inventory and per-Product assignment as one filtered table. The data model already had reusable global inventory, but the final operator surface did not expose that ownership boundary.
+
+**Correct Fix:** Phase49.3I.41:
+- global main-app Filament Library;
+- grouped PLA/PETG/etc. rows;
+- one-click child/group checklist;
+- dedicated Product selected-Filament pane;
+- reusable manufacturer/brand/material selectors;
+- explicit Product commit;
+- Product fixed-price preservation;
+- Site Bridge Filament entity synchronization.
+
+**Site consistency:** Save/update/deactivate uses authenticated Bridge Filament upsert. Local save remains successful if the Site is temporarily unreachable; status is reported truthfully and Sync All is available.
+
+**Migration safety:** no new migration. The bridge endpoint depends on existing `store.0039` + `0040`; do not deploy to Production until actual Host migration state and backups are verified.
+
+**Rollback:** `backup/pre-phase49-3i41-filament-library-sync-20260829` → `92a3f4dfcf64d5fedaf837eb9a37dac028cabd59`.
+
+**Prevention:** global reference/master data must have a dedicated management surface; Product forms should select from it and separately display the Product-owned selection state rather than overload native multi-select keyboard semantics.
+
+
 ### ERR-49-075 — saved Filament hidden after save and price preview used stale/zero facts
 **Date:** 2026-08-29  
 **Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after ERR-49-074 owner visual QA.
