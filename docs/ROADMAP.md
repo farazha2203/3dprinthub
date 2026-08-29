@@ -6,10 +6,22 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 PACKAGED BASELINE PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Owner visual-QA hotfix gate — ERR-49-064
+
+Foreground owner QA on the canonical 8.9.8 checkout exposed a ProductWorkspace constructor stop before the new 3I.39/3I.40 surfaces were built. The modern grid-managed material/color picker and obsolete 3I.35 Listbox action row mixed `grid`/`pack` in the same parent.
+
+Current hotfix:
+- code `aa37dcf916dfab71409738f7087a171daffe4a0a`,
+- regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`,
+- rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`,
+- no schema/DB/Host/Production change.
+
+Immediate gate is now: owner Local ff-only pull → targeted 3I.35 + 3I.40 tests → foreground open Product Workspace → confirm the professional Stage-2 Offer UI and seven-stage AI surface are actually visible → only then resume the broader 31–40 acceptance gate.
 
 ## Phase49 Windows track — current target 49.3I.40
 
