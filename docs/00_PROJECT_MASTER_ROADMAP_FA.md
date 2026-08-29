@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner Local gate checkpoint — ERR-49-070
+
+Gate جدید روی `382a34f...` کامپایل و 4 تست OpenRouter-only را PASS کرد اما قبل از Launch در مجموعه 67 تست دو نقص واقعی سورس را گرفت: ستون `technical_summary_fa` در دیتابیس تمیز Catalog ساخته نمی‌شد و توابع واقعی پنل کامل Stage 5 فقط فراخوانی شده بودند ولی تعریف نشده بودند. هر دو مورد همراه با Persist انتخاب فارسی مجوز و Regression مربوطه روی GitHub اصلاح شدند.
+
+Rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`. مرحله بعد Pull و تکرار همان Gate محلی است؛ Production دست نخورده است.
 
 ### Owner Windows workflow checkpoint — ERR-49-069
 
