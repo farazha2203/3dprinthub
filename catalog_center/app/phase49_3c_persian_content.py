@@ -12,6 +12,7 @@ from .openai_content import AIContentService, CONTENT_SCHEMA
 
 _PERSIAN_RE = re.compile(r"[\u0600-\u06FF]")
 _LATIN_RE = re.compile(r"[A-Za-z]")
+_LATIN_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9._+\\-]*")
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _EDITORIAL_SCALARS = (
     "title_fa", "short_description_fa", "description_fa", "use_description_fa",
@@ -36,6 +37,23 @@ def has_persian_editorial_text(value: Any, *, minimum: int = 2) -> bool:
         return False
     latin = len(_LATIN_RE.findall(text))
     return latin == 0
+
+
+def has_persian_editorial_text_for_source(
+    value: Any,
+    source_title: Any,
+    *,
+    minimum: int = 2,
+) -> bool:
+    """Accept Persian text plus only Latin identity tokens found in source_title."""
+    text = _plain_text(value)
+    if len(_PERSIAN_RE.findall(text)) < minimum:
+        return False
+    actual = {token.casefold() for token in _LATIN_TOKEN_RE.findall(text)}
+    if not actual:
+        return True
+    allowed = {token.casefold() for token in _LATIN_TOKEN_RE.findall(_plain_text(source_title))}
+    return bool(allowed) and actual.issubset(allowed)
 
 
 class _SafeHtml(HTMLParser):
@@ -426,16 +444,23 @@ def install_readiness(readiness_module) -> None:
                 return row.get(key, "") if isinstance(row, dict) else row[key]
             except Exception:
                 return ""
+        source_title = str(value("source_title") or "").strip()
         missing = []
-        for key, label in (
-            ("title_fa", "عنوان فارسی"),
-            ("short_description_fa", "توضیح کوتاه فارسی"),
-            ("description_fa", "توضیح کامل فارسی"),
-            ("use_description", "توضیحات کاربرد محصول"),
-            ("seo_title_fa", "SEO Title فارسی"),
-            ("seo_description_fa", "SEO Description فارسی"),
+        for key, label, allow_source_identity in (
+            ("title_fa", "عنوان فارسی", True),
+            ("short_description_fa", "توضیح کوتاه فارسی", True),
+            ("description_fa", "توضیح کامل فارسی", True),
+            ("use_description", "توضیحات کاربرد محصول", True),
+            ("seo_title_fa", "SEO Title فارسی", False),
+            ("seo_description_fa", "SEO Description فارسی", False),
         ):
-            if not has_persian_editorial_text(value(key)):
+            current = value(key)
+            valid = (
+                has_persian_editorial_text_for_source(current, source_title)
+                if allow_source_identity
+                else has_persian_editorial_text(current)
+            )
+            if not valid:
                 missing.append(label)
         for key, label in (("keywords_json", "کلمات کلیدی فارسی"), ("tags_fa_json", "تگ‌های فارسی"), ("hashtags_fa_json", "هشتگ‌های فارسی")):
             try:
@@ -449,7 +474,15 @@ def install_readiness(readiness_module) -> None:
             alts = json.loads(value("image_alt_texts_json") or "[]")
         except Exception:
             selected, alts = [], []
-        if selected and len(alts) < min(len(selected), 10):
+        required_alt_count = min(len(selected), 10) if isinstance(selected, list) else 0
+        usable_alts = list(alts) if isinstance(alts, list) else []
+        if required_alt_count and (
+            len(usable_alts) < required_alt_count
+            or any(
+                not has_persian_editorial_text_for_source(item, source_title)
+                for item in usable_alts[:required_alt_count]
+            )
+        ):
             missing.append("Alt فارسی همه تصاویر انتخاب‌شده")
         if missing:
             content = state.setdefault("stages", {}).setdefault("content", {"label": "۴. محتوا و SEO", "missing": []})
