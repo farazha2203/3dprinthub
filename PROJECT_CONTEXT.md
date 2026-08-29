@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,14 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-068
+
+Owner Local `0191a07...` gate now has strong evidence: the exact formerly failing test PASSed, the focused 43-test set PASSed, and the canonical foreground 8.9.8 runtime launched. Real Product 63 still exposed the Windows stage-confirmation defect. Manual/current UI values could be persisted by a later global Save, but the normal Stage workflow checked persisted readiness before a visible current-stage persist/confirm action, so it did not naturally become green/advance.
+
+GitHub now restores a fixed bottom `✅ تأیید و مرحله بعد` path that persists/finalizes the current Stage first; adds adjacent AI fill/edit controls; keeps that footer authoritative across refreshes; rebinds actual legacy Tk callbacks to 3I.39; accepts exact source identity in Persian SEO; blocks cross-provider key/model reuse; and fixes the deferred exception closure.
+
+Rollback: `backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`. New Local focused regression and foreground Product 63 QA are pending. Production untouched.
 
 ## Latest owner checkpoint — ERR-49-067
 
