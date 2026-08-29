@@ -119,6 +119,33 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         self.assertEqual(candidates[2], ("google", "g-key", "gemini-test", "fallback"))
         self.assertEqual(len(candidates), 3)
 
+    def test_openrouter_key_is_not_reused_as_openai_fallback(self):
+        app = SimpleNamespace(db=_SettingsDB({
+            "ai_fallback_enabled": "1",
+            "ai_fallback_openrouter_free": "1",
+            "ai_fallback_order": "avalai,openai",
+            "ai_model_avalai": "avalai-test",
+            "ai_model_openai": "gpt-test",
+        }))
+        keys = {
+            "avalai": "avalai-key",
+            "openai": "sk-or-v1-wrong-provider-key",
+        }
+        with patch.object(
+            resilient_ai,
+            "active_ai_config",
+            return_value=("openrouter", "sk-or-v1-primary", "openrouter/free"),
+        ), patch.object(
+            resilient_ai,
+            "get_provider_key",
+            side_effect=lambda provider: keys.get(provider, ""),
+        ):
+            candidates = resilient_ai.configured_ai_candidates(app)
+
+        self.assertEqual(candidates[0][0], "openrouter")
+        self.assertEqual(candidates[1][0], "avalai")
+        self.assertNotIn("openai", [item[0] for item in candidates])
+
     def test_retry_exhaustion_falls_through_to_next_provider(self):
         app = SimpleNamespace(db=_SettingsDB({"ai_retry_attempts": "3"}))
         dialog = _Dialog()
