@@ -117,11 +117,16 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                     source_url=_Var("https://makerworld.com/en/models/twistmas-test"),
                     spec_source_url=_Var(""),
                     source_name_var=_Var("Maker Designer"),
-                    license_var=_Var("allowed"),
+                    license_var=_Var("review"),
+                    _phase49_3i39_spec_license_label_var=_Var("مجاز برای فروش"),
                     fa_specs=_Text('{"نوع":"دکور"}'),
                     _phase49_3i39_spec_features=_Text('{"لایه":"0.2mm"}'),
                     _phase49_3i39_spec_summary=_Text("مشخصات فنی بررسی شد"),
                 )
+                columns = {
+                    item["name"] for item in db.conn.execute("PRAGMA table_info(products)")
+                }
+                self.assertIn("technical_summary_fa", columns)
                 persist_stage_from_ui(workspace, "specs")
                 row = db.product(product_id)
                 self.assertEqual(row["source_name"], "Maker Designer")
