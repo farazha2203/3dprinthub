@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,10 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Latest owner checkpoint — ERR-49-067
+
+Owner Local gate on `9f3b765...` verified the canonical checkout, created a checksum-verified Catalog SQLite backup, passed compile, and ran 43 focused tests. One stale locked-stage fixture failed because its mock SEO description contained Latin `AI`, violating the newly explicit Persian-only SEO contract. Runtime behavior was not relaxed; fixture-only correction is `38cb415bc12d7ec08943809fd14f3478b3ddac1b`. Foreground launch did not run. Owner rerun is next; Production untouched.
 
 ## Current owner checkpoint — ERR-49-066
 
