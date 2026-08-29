@@ -5,6 +5,8 @@ Last Updated: 2026-08-29
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
 ## ERR-49-071 owner acceptance request
+Executable checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation must persist the visible Product type/dimensions before it is marked confirmed.
+
 
 - Restore the older Stage layout; do not place Product type/dimensions/use-case in Stage 1.
 - Stage 1 must accept a deliberately selected `سایر محصولات` category.
