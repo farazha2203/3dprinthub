@@ -138,13 +138,10 @@ def validate_editorial_pack(source_title: str, pack: dict) -> dict:
             raise RuntimeError(f"خروجی AI برای {key} فارسی معتبر نیست.")
         if CYRILLIC_RE.search(value):
             raise RuntimeError(f"خروجی AI برای {key} دارای حروف غیرمجاز سیریلیک/چندزبانه است.")
-        # Descriptions may legitimately contain a source brand/model. Unknown
-        # free-floating Latin prose is rejected because it was observed in the
-        # owner log as language contamination (for example Indonesian fragments).
+        # Real brand/model/source identity may remain beside Persian text.
+        # Unknown free-floating Latin prose is still rejected.
         foreign = _foreign_latin_words(value, source_title)
-        if key in {"seo_title_fa", "seo_description_fa"} and re.search(r"[A-Za-z]", value):
-            raise RuntimeError(f"خروجی AI برای {key} باید SEO فارسی باشد و متن لاتین نداشته باشد.")
-        if foreign and key == "title_fa":
+        if foreign and key in {"title_fa", "seo_title_fa", "seo_description_fa"}:
             raise RuntimeError(
                 f"خروجی AI برای {key} متن لاتین نامرتبط دارد: {', '.join(foreign[:4])}"
             )
@@ -172,13 +169,19 @@ def _field_needs_fill(row, key: str, source_title: str) -> bool:
             title_quality_guard(source_title, text)
         except Exception:
             return True
-        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text(text)
+        return (
+            bool(CYRILLIC_RE.search(text))
+            or not has_persian_editorial_text_for_source(text, source_title)
+        )
 
     if key in {"short_description_fa", "description_fa", "use_description"}:
         return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text_for_source(text, source_title)
 
     if key == "seo_description_fa":
-        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text(text)
+        return (
+            bool(CYRILLIC_RE.search(text))
+            or not has_persian_editorial_text_for_source(text, source_title)
+        )
 
     if key in {"keywords_json", "tags_fa_json", "hashtags_fa_json"}:
         values = _json_list(value)
