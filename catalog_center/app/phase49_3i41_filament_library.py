@@ -142,6 +142,12 @@ def _async_site_sync(owner, item: dict, on_done=None) -> None:
                     owner,
                     f"Filament محلی ذخیره شد؛ Sync سایت انجام نشد: {error}",
                 )
+            refresher = getattr(app, "_phase49_3i41_refresh_library", None)
+            if callable(refresher):
+                try:
+                    refresher(select_key=key)
+                except Exception:
+                    pass
             if callable(on_done):
                 on_done(result, error)
 
@@ -407,7 +413,8 @@ def install_app(app_class) -> None:
         tree = getattr(self, "_phase49_3i41_library_tree", None)
         if tree is None:
             return
-        query = str(getattr(self, "_phase49_3i41_search_var", tk.StringVar()).get() or "").strip().casefold()
+        search_var = getattr(self, "_phase49_3i41_search_var", None)
+        query = str(search_var.get() if search_var is not None else "").strip().casefold()
         for iid in tree.get_children():
             tree.delete(iid)
         inventory = [
@@ -797,8 +804,10 @@ def install_workspace(workspace_class) -> None:
         if ok:
             refresh_checklist(self)
             self.footer_status.set(
-                f"{len(self._phase49_3i39_selected_product_offers)} Filament روی محصول ثبت شد."
+                f"{len(self._phase49_3i39_selected_product_offers)} Filament روی محصول ثبت شد؛ Sync سایت در حال انجام است."
             )
+            for item in self._phase49_3i39_selected_product_offers:
+                _async_site_sync(self, item)
         return ok
 
     def clear_checklist(self):
