@@ -7,6 +7,17 @@ Catalog Center: `8.9.8` / build `2026.08.29.2`
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
 Status: `BASELINE CI PASS / ERR-49-070 OWNER 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
 
+## ERR-49-072 clean-test schema composition
+
+The first owner rerun of ERR-49-071 stopped before foreground launch because the newly added Stage-2 persistence regression created a minimal temporary Catalog DB without the additive pricing schemas used by real ProductWorkspace construction.
+
+Runtime schema truth:
+- `epic49_desktop_schema.ensure_epic49_desktop_schema()` supplies `price_min / price_max`;
+- `phase49_3f_workspace.ensure_schema()` supplies `pricing_strategy`;
+- Stage-2 confirmation regression must initialize both before exercising commerce persistence.
+
+Test-only fix: `1307f4c438de184a930041d365976c2ce018bff8`. No Product/runtime/Host/Production change.
+
 ## ERR-49-071 operator-confirmation truth and targeted UX rollback
 Executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation persists the historically visible Product type and dimensions before locking. No current-head Actions run is attached; owner Local foreground acceptance is pending.
 
