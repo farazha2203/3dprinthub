@@ -3,9 +3,9 @@
 Updated: 2026-08-29  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-074 VISUAL PARTIAL / ERR-49-075 FILAMENT LIST+PRICING ROOT FIX GITHUB / OWNER QUICK LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION NOT DEPLOYED`
+Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
+Parallel Windows Track: `Phase49.3I.41 — Central Filament Library + Grouped Product Checklist + Site Sync / Catalog Center 8.9.8`  
+Status: `8.9.8 / PHASE49.3I.41 IMPLEMENTED+GITHUB_UPDATED / OWNER LOCAL TEST NEXT / SITE BRIDGE CODE READY / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -37,8 +37,32 @@ Catalog Center:
 - mature Crawl/Direct Link/parser/image/file acquisition remains the authority.
 
 Canonical active phase doc:
-`docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
+`docs/phases/PHASE49_3I41_FILAMENT_LIBRARY_SITE_SYNC.md`.
 
+
+## Current active delta — Phase49.3I.41 central Filament library
+
+Owner rejected the ambiguous Ctrl/Shift multi-select workflow for a real inventory of many Filaments. The final Windows design is now a global reusable Filament Library plus a Product checklist.
+
+Implemented on GitHub:
+- main sidebar page `فیلامنت‌ها`;
+- reusable manufacturer/brand/material editable selectors;
+- inventory grouped by material type (PLA/PETG/etc.);
+- one-click checkbox semantics for individual Filaments and whole material groups;
+- dedicated `انتخاب‌های این محصول` box;
+- explicit Product selection save;
+- Product fixed-price preservation across library refresh/checklist save;
+- Stage-2 confirmation persists the same checklist draft before finalization;
+- authenticated Bridge Filament GET/upsert endpoints;
+- automatic Site sync after Filament Save/Product checklist commit;
+- soft deactivate + Site inactive sync;
+- all weight/stock/rate/preheat/image/color facts travel with the Filament.
+
+No new migration was added. The Site endpoint relies on existing `store.0039` + `store.0040`. Production is still verified only through `store.0035`, therefore Production is untouched and deployment is blocked pending the normal read-only Host audit, backup and migration gate.
+
+Rollback: `backup/pre-phase49-3i41-filament-library-sync-20260829` → `92a3f4dfcf64d5fedaf837eb9a37dac028cabd59`.
+
+Owner Local compile/tests/foreground QA are next. Active phase: `docs/phases/PHASE49_3I41_FILAMENT_LIBRARY_SITE_SYNC.md`.
 
 ## Current Windows delta — ERR-49-075
 
