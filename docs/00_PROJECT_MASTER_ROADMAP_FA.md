@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 / ERR-49-071 IMPLEMENTED / ERR-49-072 TEST-FIXTURE SCHEMA FIX GITHUB / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY GITHUB / LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner Stage-2 checkpoint — ERR-49-074
+
+روی Head دقیق `954c051...` بکاپ/Checksum، Compile، دو تست مستقیم ERR-49-073، چهار تست OpenRouter-only و کل مجموعه Windows با 73/73 PASS شدند و QA Foreground نیز مشکل Metadata تصویر را رفع‌شده تأیید کرد؛ محصول در Local به وضعیت آماده انتشار رسید.
+
+درخواست بعدی اپراتور فقط در Stage 2 بود: نمایش دائمی مبلغ نهایی محاسبه‌شده که قبلاً در UI وجود داشت و جایگزینی متن ظاهری `Offer` با `Filament`. اکنون محاسبه نرخ نهایی رول و تومان/گرم داخل ویرایش Filament زنده نمایش داده می‌شود و کارت قیمت‌گذاری نیز مبلغ نهایی قطعی/فرمولی/بازه را همیشه نشان می‌دهد. نام‌های داخلی `offer_*` برای سازگاری تغییر نکرده‌اند. Production دست نخورده است. بعد از PASS محلی، توسعه Receiver سایت برای همین دیتاها مرحله بعد است.
 
 ### Owner foreground checkpoint — ERR-49-073
 
