@@ -6,9 +6,25 @@
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-**Parallel Windows Subphase:** `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
-**Status:** `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION BLOCKED`  
+**Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
+**Status:** `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+## Current verified checkpoint — 2026-08-29
+
+- Catalog Center: `8.9.8` / build `2026.08.29.2`
+- Runtime/package candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`
+- Catalog 31–40 CI: `33247729316` PASS
+- Single Active AI: `33247815007` PASS
+- Windows Portable: `33247815027` PASS
+- Artifact ID: `9713426658`
+- EXE SHA256: `2be8be49e05575cb20ea12f061d006935df070ec9abb0f87e4f00e4151d5f02a`
+- Store migration `0040_phase50_filament_offer_operations`: CI `33246843145` PASS through full SQLite migration and regressions.
+- Last verified Production DB state remains only `0034/0035` applied; later migrations are not assumed.
+- Next gate: owner Local backup + 0040 apply/regression + foreground 3I.40 visual QA.
+- Canonical phase doc: `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
+
+Older 3I.38/8.9.6 sections below are preserved as historical foundation and do not override this checkpoint.
 
 ## 1) قانون مادر
 `READ DOCS → VERIFY REAL STATE → CHECK PREVIOUS ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL GATE → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → PRODUCTION VERIFICATION → UPDATE DOCS`
