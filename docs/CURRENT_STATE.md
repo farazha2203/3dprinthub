@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX ON GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 OWNER UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,21 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Owner SEO/readiness reconciliation hotfix — ERR-49-065
+
+After the ERR-49-064 geometry hotfix, the owner confirmed the professional 3I.39/3I.40 Product Workspace is now visible. The next foreground test exposed a narrower SEO/readiness problem: seven-stage AI filled the Persian/SEO fields, but red/missing readiness widgets remained stale.
+
+Root cause: AI persisted the new fields, then the wrapped UI refresh chain allowed older guided-wizard cached state to repaint after the final 3I.40 readiness renderer.
+
+Git hotfix:
+- source `b9eb9d74b0c0be49ca8d04a4333750e68e93f4`,
+- regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26`,
+- rollback `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`.
+
+Behavior: whole-product and single-stage AI completion now rehydrate the Product from SQLite, reload, refresh lock/wizard/readiness surfaces, and run final readiness last again after a short settle delay. This changes only post-AI UI reconciliation; no AI Provider/source ownership, Offer/Profile, schema, Host or Production behavior changed.
+
+Verification status: GitHub updated; owner Local targeted tests and foreground SEO retest are next. No Production work is allowed before that pass.
 
 ## Owner foreground 8.9.8 blocker — ERR-49-064
 
