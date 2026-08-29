@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,16 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — Phase49.3I.41
+
+The final Stage-2 UX now separates global Filament master data from Product assignment. Main Catalog Center owns a reusable grouped Filament Library; each Product owns a one-click checklist and a separate selected-Filament pane. Save/update/deactivate is synchronized through the existing authenticated Site Bridge into the canonical Store MaterialColorOption entity.
+
+No new migration. Existing `store.0039/0040` are required on the Site before the new Bridge contract can run. Production is untouched and still requires Host read-only migration verification/backups.
+
+Rollback: `backup/pre-phase49-3i41-filament-library-sync-20260829` → `92a3f4dfcf64d5fedaf837eb9a37dac028cabd59`.
+
+Active phase: `docs/phases/PHASE49_3I41_FILAMENT_LIBRARY_SITE_SYNC.md`.
 
 ## Current owner checkpoint — ERR-49-075
 
