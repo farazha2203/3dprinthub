@@ -1,5 +1,23 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — Phase49.3I.41 Central Filament Library + grouped Product checklist + Site sync
+- replaced the ambiguous Ctrl/Shift Stage-2 Filament selection surface with a grouped one-click checklist;
+- added a dedicated Product selection pane showing all currently checked Filaments;
+- material groups such as PLA/PETG can toggle all child Filaments in one click;
+- moved normal Filament definition/editing into a new main-app `فیلامنت‌ها` library page;
+- manufacturer, brand and material are reusable editable selector histories rather than mandatory retyping;
+- central editor preserves color type, primary/secondary/tertiary HEX, image, roll weight, stock, purchase/sale/USD+FX, print/supervision and preheat facts;
+- live final roll/per-gram calculation remains visible;
+- Product checklist save preserves Product-specific fixed price while refreshing global operational Filament facts;
+- Stage-2 confirmation now persists the Phase49.3I.41 checklist before readiness/finalization;
+- added authenticated Site Bridge routes for global Filament list/upsert;
+- Filament Save, Product Filament commit and soft deactivation synchronize to Site without making local save depend on network success;
+- added Catalog and Django Bridge regression coverage;
+- no new migration; Site contract uses existing `store.0039` and `store.0040`;
+- rollback `backup/pre-phase49-3i41-filament-library-sync-20260829` → `92a3f4dfcf64d5fedaf837eb9a37dac028cabd59`;
+- Production untouched; owner Local + local Site verification next.
+
+
 ## 2026-08-29 — ERR-49-075 Filament list refresh + authoritative price preview
 - owner screenshots showed a newly saved Filament not appearing under the retained filter and a price preview row with zero material/print/supervision/preheat/total despite valid inventory rate;
 - fixed the post-upsert return SELECT so immediately saved Filament objects include hourly/preheat/image operational fields;
