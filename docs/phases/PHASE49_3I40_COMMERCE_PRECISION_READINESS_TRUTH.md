@@ -5,7 +5,29 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+
+## ERR-49-070 Stage-5 clean-schema/visible-contract correction
+
+Owner Local gate on `382a34fa6e876dc7098c8152c98c7cb076d508e8` passed compile and the 4 OpenRouter-only contracts, then stopped the 67-test Windows suite before launch on two source omissions:
+- clean temporary Catalog SQLite lacked `technical_summary_fa`;
+- 3I.39 referenced `add_specs_contract_panel` / `refresh_specs_contract` but their implementations were absent.
+
+The phase contract now includes one complete Stage-5 chain:
+`clean schema -> visible Stage-5 controls -> persisted hydrate -> stage-specific save/finalize -> readiness`.
+
+Visible Stage 5 now owns:
+- source URL (existing top control),
+- source/designer,
+- Persian commercial-license selector,
+- Persian technical summary,
+- technical-features JSON.
+
+The Persian selector is converted back to the canonical stored license code during Stage finalization. No Stage-2 commerce, crawler, media, Provider policy, Django schema, Host or Production boundary changed.
+
+Rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`.
+
+Owner Local rerun of the same 67-test gate is mandatory.
 
 ## ERR-49-069 final Windows interaction contract
 
