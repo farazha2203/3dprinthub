@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-074 VISUAL PARTIAL / ERR-49-075 FILAMENT LIST+PRICING ROOT FIX GITHUB / OWNER QUICK LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,21 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Windows delta — ERR-49-075
+
+Owner screenshots on the ERR-49-074 build exposed the last Stage-2 defects before moving to the website:
+- newly saved Filament could remain hidden because the list kept the previous manufacturer/material filter;
+- selected-Filament editing still used the old 3I.39 dialog and bypassed the final live-rate editor;
+- immediate upsert return omitted hourly/preheat/image fields, allowing a just-edited Product snapshot to carry zeros;
+- price preview could use a stale registered Filament instead of the fresh/current selection;
+- range mode still opened a formula-style table.
+
+GitHub now fixes all five at the source boundary. Saving a Filament moves the filters to that exact row and selects it; editing delegates to the final 3I.40 editor; pricing refreshes registered snapshots from the global Filament inventory while preserving Product fixed price; a new unregistered current selection can be previewed as a draft; range preview is truthful and no longer shows fake zero formula rows.
+
+Rollback: `backup/pre-err49-075-filament-refresh-pricing-preview-20260829` → `d66c68f36d1fd3e4143d461bccd999046c4baaf7`.
+
+No schema/migration/AI/image/Host/Production change. After a short Local Stage-2 verification, proceed directly to website receive/sync.
 
 ## Current Windows delta — ERR-49-074
 
