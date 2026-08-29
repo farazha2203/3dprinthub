@@ -8,6 +8,8 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.db import Database
+from app.epic49_desktop_schema import ensure_epic49_desktop_schema
+from app.phase49_3f_workspace import ensure_schema as ensure_pricing_schema
 from app.phase49_3i33_ai_core import title_quality_guard
 from app.phase49_3i34_profile_matrix import ensure_schema as ensure_profile_schema
 from app.phase49_3i35_operator_ledger import ensure_schema as ensure_ledger_schema
@@ -61,6 +63,12 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
 
         install_database(LockedDatabase)
         db = LockedDatabase(path)
+        # Match the real ProductWorkspace construction order. The commerce
+        # confirmation test writes price_min/price_max/pricing_strategy, which
+        # are owned by the Epic49 desktop + 3F pricing schemas rather than the
+        # minimal Database bootstrap.
+        ensure_epic49_desktop_schema(db)
+        ensure_pricing_schema(db)
         ensure_profile_schema(db)
         ensure_ledger_schema(db)
         db.upsert_product({
