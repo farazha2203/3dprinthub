@@ -500,17 +500,41 @@ def install(workspace_class) -> None:
             except Exception:
                 pass
 
+        # Final mature Windows layers may replace the navigation action with
+        # persist -> validate -> finalize -> advance. Older callbacks can be
+        # captured before those layers finish installing, so the base painter
+        # must always give the final layer one last chance to restore its button.
+        final_sync = getattr(self, "_phase49_3i39_sync_footer_actions", None)
+        if callable(final_sync):
+            try:
+                final_sync()
+            except Exception:
+                pass
+
     def _phase49_3b_go_prev(self):
         current = self._phase49_3b_current_key(); index = STAGE_ORDER.index(current)
         if index > 0: self.select_section(STAGE_ORDER[index - 1])
 
     def _phase49_3b_go_next(self):
+        # On the mature seven-stage workspace the authoritative action is the
+        # 3I.39/3I.36 confirm path. Delegate even if an older Tk button captured
+        # this method before the final footer was rebound.
+        confirm = getattr(self, "_phase49_3i39_confirm_current_stage", None)
+        if callable(confirm):
+            return confirm()
+
         current = self._phase49_3b_current_key(); index = STAGE_ORDER.index(current)
+        # Legacy fallback must persist current UI before reading readiness.
+        # The previous read-before-save order trapped valid manual edits.
+        if not self.save(silent=True):
+            return False
+        self._phase49_3b_refresh_wizard()
         state = getattr(self, "_phase49_readiness_state", {})
         if not _stage_data_ready(state.get("stages", {}).get(current, {})):
-            self._phase49_3b_refresh_wizard(); return
-        self.save(silent=True)
-        if index < len(STAGE_ORDER) - 1: self.select_section(STAGE_ORDER[index + 1])
+            return False
+        if index < len(STAGE_ORDER) - 1:
+            self.select_section(STAGE_ORDER[index + 1])
+        return True
 
     def _preview_image_path(self):
         selected_url = str(_value(self.db.product(self.product_id), "homepage_slider_image_url", "") or "")
