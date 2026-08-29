@@ -1,5 +1,18 @@
 # OWNER REQUESTS
 
+## REQ-49-074 — restore final pricing result and use Filament terminology
+Status: `IMPLEMENTED ON GITHUB / LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- rate editor visibly shows the final calculated roll basis and rate per gram;
+- Stage-2 pricing visibly shows the final amount/range without requiring the popup preview;
+- formula result is based only on registered Filament facts + product weight/time/support + configured supervision/preheat/assembly;
+- no hidden/default FX is invented;
+- operator buttons/dialogs say `Filament`, not `Offer`;
+- internal compatibility identifiers may remain `offer_*` and must not trigger a schema/API rename;
+- after Local acceptance, website receiver must consume the same manufacturer/Filament/color/Profile/pricing facts.
+
+
 Last Updated: 2026-08-29
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
