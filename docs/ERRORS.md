@@ -408,6 +408,30 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** keep Product identity dedupe and Listing traversal progress as separate durable concerns; never replace a healthy parser/downloader just to continue past previously seen results.
 
+
+### ERR-49-064 — 3I.35 legacy material actions aborted ProductWorkspace before 3I.39/3I.40 UI
+**Date:** 2026-08-29  
+**Environment:** owner foreground Local QA, Catalog Center 8.9.8 / build 2026.08.29.2, canonical checkout `D:\\projects\\3DPrintHub`.
+
+**Symptom:** the owner opened a real Product Workspace and still saw the older Stage-2/SEO surface even though launcher verification printed every 3I.39/3I.40 feature marker. Foreground diagnostics then raised:
+`TclError: cannot use geometry manager pack inside ...!labelframe which already has slaves managed by grid`.
+
+**Root Cause:** `phase49_material_color_picker` had already replaced the mature material/color Listbox surface with a grid-managed checkbox picker. During the later 3I.35 wrapper, `build_material_actions()` still treated the obsolete `material_color_list` parent as an active pack-managed host and tried to mount another Frame with `pack`. ProductWorkspace construction stopped inside the 3I.35 constructor, so the already-created older widgets remained visible while 3I.39 Professional Commerce and 3I.40 Commerce Precision never reached their UI-build steps.
+
+**Failed condition:** do not interpret launcher feature markers or the 8.9.8 title as proof that the final wrapped ProductWorkspace constructor completed. A callback exception after partial construction can leave an older surface visible.
+
+**Correct Fix:** when the modern checkbox picker is installed (`_epic49_materials_box` exists), 3I.35 now skips mounting the obsolete Listbox action row entirely. The 3I.35 business methods/data remain intact, and 3I.39 remains the final visible Stage-2 authority.
+
+**Regression:** `test_operator_ledger_skips_obsolete_listbox_actions_when_modern_picker_is_installed` installs the real 3I.35 wrapper on a minimal workspace and proves no `ttk.Frame` is created for the obsolete action row when the modern picker marker exists.
+
+**Git hotfix:** source fix `aa37dcf916dfab71409738f7087a171daffe4a0a`; regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`.
+
+**Rollback anchor:** `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`.
+
+**Verification status:** GitHub source/regression update complete. Owner Local ff-only pull + targeted tests + foreground ProductWorkspace retest are still required before this incident is marked fully verified. Production untouched.
+
+**Prevention:** every additive wrapper must inspect whether the surface it is extending is still the active visible generation. Never mount legacy controls into a parent that a newer layer has already replaced; and do not use feature-marker prints as a substitute for successful final constructor completion.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
