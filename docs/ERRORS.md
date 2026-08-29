@@ -720,6 +720,34 @@ The real ProductWorkspace initializes those schemas before Stage-2 editing, so t
 
 **Prevention:** any clean temporary Catalog DB test that exercises a mature Workspace layer must initialize the same schema composition that the runtime initializes; do not assume the minimal `Database._init()` contains every additive Epic49/3F column.
 
+
+### ERR-49-073 — image Stage confirms, then downstream Content/Source makes Metadata look stale while lock blocks refresh
+**Date:** 2026-08-29  
+**Environment:** owner Windows foreground QA on exact `6d5897ecefc427c940c690daabc311f85cc6e044`, Catalog Center 8.9.8 / build 2026.08.29.2.
+
+**Owner verification before defect:** exact ERR-49-071/072 regressions 7/7 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 71/71 PASS, foreground launch PASS. Stage 1/Content/Source/Slider confirmation worked. Owner intentionally left Stage-2 price/profile incomplete.
+
+**Observed image defect:** Stage 3 could be finalized, but after later Content/SEO and Source/License stages changed, the image task surface reported `Metadata تصویر 1/2 • بروزرسانی Metadata`. The runtime repeatedly logged `stage_locked_write_blocked` around successful `images seo_finalize` events. Manual Metadata editor could also attempt a save against the already-confirmed image Stage.
+
+**Root Cause:** image SEO signature intentionally includes later Product SEO/source facts. After those later stages change, deterministic image files are regenerated with the new facts, but `finalize_selected_images()` persisted its derived `image_metadata_json / image_alt_texts_json / selected_images_json / primary_image_url` through the normal guarded Product update. Because Images was already locked, the lock guard discarded those derived DB updates. Files were rebuilt, but the persisted signature stayed old, so the UI continuously reported stale Metadata. This is not a missing image-selection problem and not an AI-provider problem.
+
+**Correct Fix:**
+- add a strict derived-image persistence boundary that may use the existing raw DB updater only for the four finalizer-owned image fields;
+- keep Stage lock protection for arbitrary operator/AI edits;
+- when first confirming Images, run deterministic image finalization before readiness/lock;
+- when Images is already confirmed and the owner presses `ثبت و تأیید مرحله` again, rebuild current SEO/Metadata under the derived-state exception and keep the Stage confirmed;
+- in the final manual Metadata editor, block manual override saves while Images is locked and instruct the operator to use `اصلاح مرحله` for real edits; for stale derived Metadata, use Confirm or `نهایی‌سازی فایل‌های SEO`.
+
+**Git changes:** derived refresh `b3eab828db5b09d1ac3a94fad4abdaa511e3c208`; image-confirm refresh `a1776471c773be3cdb221070d9b8f543d6701986`; locked editor guard `a97cf94772bb4422e5aa68fa2bed171f5a830ccf`; locked-image refresh regression `10b4dcd65407754deacc9bed45276623971f4dd9`; image-confirm finalization regression `b807cf837af6b6f46ca16149fec1acc031f4f890`.
+
+**Rollback:** `backup/pre-err49-073-image-confirm-metadata-refresh-20260829` → `6d5897ecefc427c940c690daabc311f85cc6e044`.
+
+**Must not touch:** Stage-2 pricing/Profile/Offer logic, OpenRouter-only AI, image selection itself, crawler/acquisition, secure keys, Django schema/migrations, Host/Production.
+
+**Verification status:** code/regressions on GitHub; owner Local rerun required. Production untouched.
+
+**Prevention:** distinguish immutable operator choices from deterministic derived artifacts. A Stage lock may block editing the approved inputs, but must not prevent the system from refreshing derived fingerprints/files when downstream authoritative metadata changes.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
