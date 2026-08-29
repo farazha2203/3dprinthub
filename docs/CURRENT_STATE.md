@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-071 IMPLEMENTED / ERR-49-072 TEST-FIXTURE SCHEMA FIX ON GITHUB / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-071+072 LOCAL PASS 71/71 / ERR-49-073 IMAGE METADATA LOCK-REFRESH FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,16 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current foreground blocker/fix — ERR-49-073
+
+Owner Local `6d5897ecefc427c940c690daabc311f85cc6e044` passed exact regressions 7/7, OpenRouter-only 4/4, full Windows stage suite 71/71 and foreground launch. Explicit confirmation now works for the other Stages. The remaining foreground issue is isolated to Images: after Images was confirmed, later Content/SEO and Source/License changes made image Metadata signatures stale; deterministic SEO file regeneration ran, but the image Stage lock blocked the derived DB signature update, causing repeated `بروزرسانی Metadata تصویر 1/2` warnings.
+
+GitHub now allows only deterministic image-finalizer fields to refresh through the lock, finalizes image Metadata during Stage-3 confirmation, permits re-confirming an already-locked image Stage to refresh derived Metadata, and blocks misleading manual override saves while locked.
+
+Rollback: `backup/pre-err49-073-image-confirm-metadata-refresh-20260829` → `6d5897ecefc427c940c690daabc311f85cc6e044`.
+
+Stage-2 pricing/Profile remains intentionally incomplete in owner QA and was not changed. Production untouched.
 
 ## Current Local gate/fix — ERR-49-072
 
