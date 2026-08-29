@@ -406,7 +406,16 @@ class ProductVariant(models.Model):
 
     def price_breakdown(self) -> dict[str, int | str]:
         pricing = PricingSetting.load()
-        hourly_rate = self.hourly_rate_override or pricing.default_hourly_rate
+        color_option = self.color if self.color_id else None
+        offer_hourly_rate = int(getattr(color_option, "print_hourly_rate", 0) or 0)
+        hourly_rate = self.hourly_rate_override or offer_hourly_rate or pricing.default_hourly_rate
+        supervision_hourly_rate = int(
+            getattr(color_option, "supervision_hourly_rate", 0) or 0
+        )
+        preheat_hours = Decimal(getattr(color_option, "preheat_hours", 0) or 0)
+        preheat_hourly_rate = int(
+            getattr(color_option, "preheat_hourly_rate", 0) or 0
+        )
         labor_percent = (
             self.labor_percent_override
             if self.labor_percent_override is not None
@@ -428,11 +437,19 @@ class ProductVariant(models.Model):
             * Decimal(self.print_time_minutes)
             / MINUTES_PER_HOUR
         )
+        supervision_cost_decimal = (
+            Decimal(supervision_hourly_rate)
+            * Decimal(self.print_time_minutes)
+            / MINUTES_PER_HOUR
+        )
+        preheat_cost_decimal = preheat_hours * Decimal(preheat_hourly_rate)
         labor_base = material_cost_decimal + machine_cost_decimal
         labor_cost_decimal = labor_base * Decimal(labor_percent) / PERCENT_DIVISOR
 
         material_cost = self._round_money(material_cost_decimal)
         machine_cost = self._round_money(machine_cost_decimal)
+        supervision_cost = self._round_money(supervision_cost_decimal)
+        preheat_cost = self._round_money(preheat_cost_decimal)
         labor_cost = self._round_money(labor_cost_decimal)
         bom_items = list(self.product.bom_items.filter(is_active=True, is_required=True).select_related("component")) if self.product_id else []
         accessory_sale = sum(item.sale_total for item in bom_items)
@@ -442,7 +459,18 @@ class ProductVariant(models.Model):
             assembly_cost = int(self.assembly_fee_override)
         else:
             assembly_cost = self._round_money(Decimal(pricing.assembly_hourly_rate) * Decimal(assembly_minutes) / MINUTES_PER_HOUR)
-        subtotal = material_cost + machine_cost + labor_cost + self.post_processing_fee + self.fixed_fee + int(self.color_price_adjustment or 0) + accessory_sale + assembly_cost
+        subtotal = (
+            material_cost
+            + machine_cost
+            + supervision_cost
+            + preheat_cost
+            + labor_cost
+            + self.post_processing_fee
+            + self.fixed_fee
+            + int(self.color_price_adjustment or 0)
+            + accessory_sale
+            + assembly_cost
+        )
         unit_price_before_discount = max(subtotal, pricing.minimum_order_amount)
         unit_price = unit_price_before_discount
         promotion = None
@@ -450,14 +478,36 @@ class ProductVariant(models.Model):
             promotion = next((item for item in self.product.promotions.filter(is_active=True).order_by("-created_at") if item.is_current), None)
         if promotion:
             unit_price = promotion.apply(unit_price_before_discount)
-        purchase_per_gram = Decimal(getattr(self.material, "purchase_cost_per_gram", 0) or 0)
-        direct_material_cost = self._round_money(purchase_per_gram * Decimal(self.material_weight_grams))
-        estimated_cost = direct_material_cost + machine_cost + accessory_cost + assembly_cost + self.post_processing_fee + self.fixed_fee
+        purchase_per_gram = Decimal("0")
+        if color_option is not None:
+            roll_weight = Decimal(getattr(color_option, "roll_weight_grams", 0) or 0)
+            roll_purchase = Decimal(getattr(color_option, "purchase_price_per_roll", 0) or 0)
+            if roll_weight > 0 and roll_purchase > 0:
+                purchase_per_gram = roll_purchase / roll_weight
+        if purchase_per_gram <= 0:
+            purchase_per_gram = Decimal(
+                getattr(self.material, "purchase_cost_per_gram", 0) or 0
+            )
+        direct_material_cost = self._round_money(
+            purchase_per_gram * Decimal(self.material_weight_grams)
+        )
+        estimated_cost = (
+            direct_material_cost
+            + machine_cost
+            + supervision_cost
+            + preheat_cost
+            + accessory_cost
+            + assembly_cost
+            + self.post_processing_fee
+            + self.fixed_fee
+        )
         gross_profit = int(unit_price) - int(estimated_cost)
 
         return {
             "material_cost": material_cost,
             "machine_cost": machine_cost,
+            "supervision_cost": supervision_cost,
+            "preheat_cost": preheat_cost,
             "labor_cost": labor_cost,
             "post_processing_fee": self.post_processing_fee,
             "fixed_fee": self.fixed_fee,
@@ -470,6 +520,12 @@ class ProductVariant(models.Model):
             "estimated_cost": estimated_cost,
             "gross_profit": gross_profit,
             "hourly_rate": hourly_rate,
+            "supervision_hourly_rate": supervision_hourly_rate,
+            "preheat_hours": str(preheat_hours),
+            "preheat_temperature_c": str(
+                Decimal(getattr(color_option, "preheat_temperature_c", 0) or 0)
+            ),
+            "preheat_hourly_rate": preheat_hourly_rate,
             "labor_percent": str(labor_percent),
         }
 
