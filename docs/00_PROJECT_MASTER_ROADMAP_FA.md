@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY GITHUB / LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner final Stage-2 checkpoint — ERR-49-075
+
+اسکرین‌شات‌های QA نشان دادند Filament جدید بعد از Save زیر Filter قبلی پنهان می‌ماند، Edit انتخابی هنوز Dialog قدیمی را باز می‌کند و Preview قیمت از Snapshot قدیمی/صفر استفاده می‌کند. Fix جدید خروجی Upsert را کامل می‌کند، Edit را به Composition نهایی می‌فرستد، بعد از Save همان Filament را در لیست پیدا/انتخاب می‌کند و Price Preview را از نرخ‌های زنده همان Filament می‌سازد؛ در عین حال ثبت Filament روی Product همچنان یک اقدام صریح باقی می‌ماند.
+
+حالت Range دیگر جدول فرمول صفر نشان نمی‌دهد. بعد از یک تست Local کوتاه، توسعه Windows متوقف و Receiver سایت مرحله بعد می‌شود. Production دست نخورده است.
 
 ### Owner Stage-2 checkpoint — ERR-49-074
 
