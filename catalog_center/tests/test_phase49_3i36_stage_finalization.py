@@ -38,6 +38,14 @@ class _Var:
         self.value = value
 
 
+class _Text:
+    def __init__(self, value=""):
+        self.value = value
+
+    def get(self, *_args):
+        return self.value
+
+
 class _Settings:
     def __init__(self, values):
         self.values = dict(values)
@@ -96,6 +104,31 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                 self.assertEqual(row["product_type"], "ready_product")
                 self.assertEqual(row["dimensions"], "20 × 20 × 30 cm")
                 self.assertEqual(row["use_case_class"], "دکوراسیون")
+            finally:
+                db.close()
+
+    def test_specs_stage_persists_visible_source_license_and_technical_fields(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
+            try:
+                workspace = SimpleNamespace(
+                    db=db,
+                    product_id=product_id,
+                    source_url=_Var("https://makerworld.com/en/models/twistmas-test"),
+                    spec_source_url=_Var(""),
+                    source_name_var=_Var("Maker Designer"),
+                    license_var=_Var("allowed"),
+                    fa_specs=_Text('{"نوع":"دکور"}'),
+                    _phase49_3i39_spec_features=_Text('{"لایه":"0.2mm"}'),
+                    _phase49_3i39_spec_summary=_Text("مشخصات فنی بررسی شد"),
+                )
+                persist_stage_from_ui(workspace, "specs")
+                row = db.product(product_id)
+                self.assertEqual(row["source_name"], "Maker Designer")
+                self.assertEqual(row["commercial_status"], "allowed")
+                self.assertEqual(json.loads(row["specs_fa_json"]), {"نوع": "دکور"})
+                self.assertEqual(json.loads(row["technical_features_json"]), {"لایه": "0.2mm"})
+                self.assertEqual(row["technical_summary_fa"], "مشخصات فنی بررسی شد")
             finally:
                 db.close()
 
