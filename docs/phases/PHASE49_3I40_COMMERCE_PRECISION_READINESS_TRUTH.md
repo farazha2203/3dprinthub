@@ -5,7 +5,28 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 LIVE FILAMENT RATE+FINAL PRICE GITHUB / OWNER LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION UNTOUCHED`
+Status: `ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT VISIBILITY+AUTHORITATIVE PRICING FIX GITHUB / QUICK LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION UNTOUCHED`
+
+## ERR-49-075 Filament save visibility and authoritative pricing context
+
+Owner visual QA after ERR-49-074 found the final Stage-2 composition problems:
+- the saved row could be hidden by the previous manufacturer/material filters;
+- edit-selected still called an earlier local closure rather than the final class-composed editor;
+- the immediate DB upsert return was narrower than the full inventory read and omitted hourly/preheat/image fields;
+- pricing used stale Product snapshot facts and ignored a newly selected unregistered Filament;
+- range mode could display a formula table with zero components.
+
+Final contract:
+- DB upsert return and full list return expose the same operational Filament facts;
+- New/Edit visible actions route through final 3I.40 UI;
+- successful save reveals/selects the exact Filament row but does **not** silently register it on the Product;
+- Product pricing refreshes global operational facts by exact brand/material/color key while keeping Product-specific fixed price;
+- an unregistered visible selection is allowed only as a clearly marked draft preview;
+- `range` preview is range-only; formula component math runs only in `dynamic/formula` mode.
+
+Rollback: `backup/pre-err49-075-filament-refresh-pricing-preview-20260829` → `d66c68f36d1fd3e4143d461bccd999046c4baaf7`.
+
+No DB schema or Django migration change. Quick Local QA is the only remaining Windows gate before Phase50 website receive/sync.
 
 ## ERR-49-074 visible Filament pricing result and terminology
 
