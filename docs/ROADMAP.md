@@ -6,10 +6,23 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-068
+
+The corrected 43-test gate on `0191a07...` passed, so the remaining problem is now proven to be real foreground Windows behavior rather than a stale test or wrong checkout. Historical source comparison shows the guided wizard originally had a persistent footer Next/AI workflow, while 3I.36 later introduced separate stage finalization. The current Next flow could inspect persisted readiness before saving current UI, which trapped manual edits when the separate `ثبت` control was not visible/usable in the operator viewport.
+
+Current GitHub hotfix restores one obvious footer workflow:
+`manual/AI fill → ✅ تأیید و مرحله بعد → stage-specific persist → readiness validate → finalization → next Stage`.
+
+It also rebinds already-created legacy AI buttons to 3I.39, permits exact source identity such as `Flexi Gecko` inside Persian SEO while rejecting unrelated Latin, prevents cross-provider key/model fallback reuse, and fixes the deferred exception closure.
+
+Rollback: `backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`.
+
+Next gate: Local ff-only pull docs-final head → focused 3I35/3C/3I37/3I39/3I40 regressions → foreground Product 63 → confirm Stage 1 with the new footer → verify it advances to Stage 2 and the rail becomes 🔒/✅ → run AI on a real remaining editorial defect and verify exact identity is accepted. Production remains blocked.
 
 ## Immediate rerun gate — ERR-49-067
 
