@@ -102,78 +102,56 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         no_fx["usd_fx_rate_toman"] = 0
         self.assertEqual(offer_price_preview(no_fx, production), 432_000)
 
-    def test_configured_fallbacks_are_explicit_and_bounded(self):
+    def test_product_ai_candidates_are_openrouter_only(self):
         app = SimpleNamespace(db=_SettingsDB({
             "ai_fallback_enabled": "1",
             "ai_fallback_openrouter_free": "1",
-            "ai_fallback_order": "openrouter,google,avalai,openai",
-            "ai_model_google": "gemini-test",
-            "ai_model_avalai": "avalai-test",
         }))
-        keys = {"openrouter": "or-key", "google": "g-key", "avalai": "a-key", "openai": "primary-key"}
-        with patch.object(resilient_ai, "active_ai_config", return_value=("openai", "primary-key", "gpt-test")), \
-             patch.object(resilient_ai, "get_provider_key", side_effect=lambda provider: keys.get(provider, "")):
+        with patch.object(
+            resilient_ai,
+            "active_ai_config",
+            return_value=("openrouter", "sk-or-v1-primary", "nvidia/test-model"),
+        ):
             candidates = resilient_ai.configured_ai_candidates(app)
-        self.assertEqual(candidates[0], ("openai", "primary-key", "gpt-test", "primary"))
-        self.assertEqual(candidates[1], ("openrouter", "or-key", "openrouter/free", "fallback-free"))
-        self.assertEqual(candidates[2], ("google", "g-key", "gemini-test", "fallback"))
-        self.assertEqual(len(candidates), 3)
 
-    def test_openrouter_key_is_not_reused_as_openai_fallback(self):
+        self.assertEqual(
+            candidates,
+            [
+                ("openrouter", "sk-or-v1-primary", "nvidia/test-model", "primary"),
+                ("openrouter", "sk-or-v1-primary", "openrouter/free", "openrouter-free-router"),
+            ],
+        )
+        self.assertEqual({item[0] for item in candidates}, {"openrouter"})
+
+    def test_non_openrouter_active_provider_is_rejected_for_product_ai(self):
+        app = SimpleNamespace(db=_SettingsDB())
+        with patch.object(
+            resilient_ai,
+            "active_ai_config",
+            return_value=("avalai", "avalai-key", "gemini-test"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "OpenRouter"):
+                resilient_ai.configured_ai_candidates(app)
+
+    def test_openrouter_free_is_not_duplicated_when_already_primary(self):
         app = SimpleNamespace(db=_SettingsDB({
             "ai_fallback_enabled": "1",
             "ai_fallback_openrouter_free": "1",
-            "ai_fallback_order": "avalai,openai",
-            "ai_model_avalai": "avalai-test",
-            "ai_model_openai": "gpt-test",
         }))
-        keys = {
-            "avalai": "avalai-key",
-            "openai": "sk-or-v1-wrong-provider-key",
-        }
         with patch.object(
             resilient_ai,
             "active_ai_config",
             return_value=("openrouter", "sk-or-v1-primary", "openrouter/free"),
-        ), patch.object(
-            resilient_ai,
-            "get_provider_key",
-            side_effect=lambda provider: keys.get(provider, ""),
         ):
             candidates = resilient_ai.configured_ai_candidates(app)
+        self.assertEqual(candidates, [("openrouter", "sk-or-v1-primary", "openrouter/free", "primary")])
 
-        self.assertEqual(candidates[0][0], "openrouter")
-        self.assertEqual(candidates[1][0], "avalai")
-        self.assertNotIn("openai", [item[0] for item in candidates])
-
-    def test_fallback_does_not_reuse_primary_model_for_another_provider(self):
-        app = SimpleNamespace(db=_SettingsDB({
-            "ai_fallback_enabled": "1",
-            "ai_fallback_openrouter_free": "0",
-            "ai_fallback_order": "openai",
-            "ai_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
-            "ai_model_openai": "",
-        }))
-        with patch.object(
-            resilient_ai,
-            "active_ai_config",
-            return_value=("openrouter", "sk-or-v1-primary", "nvidia/nemotron-3-ultra-550b-a55b:free"),
-        ), patch.object(
-            resilient_ai,
-            "get_provider_key",
-            return_value="sk-proj-valid-openai-shape",
-        ):
-            candidates = resilient_ai.configured_ai_candidates(app)
-
-        self.assertEqual(len(candidates), 1)
-        self.assertEqual(candidates[0][0], "openrouter")
-
-    def test_retry_exhaustion_falls_through_to_next_provider(self):
+    def test_retry_exhaustion_falls_through_to_openrouter_free_route(self):
         app = SimpleNamespace(db=_SettingsDB({"ai_retry_attempts": "3"}))
         dialog = _Dialog()
         candidates = [
-            ("openai", "key-1", "model-1", "primary"),
-            ("google", "key-2", "model-2", "fallback"),
+            ("openrouter", "key-1", "model-1", "primary"),
+            ("openrouter", "key-1", "openrouter/free", "openrouter-free-router"),
         ]
         good = {"title_fa": "عنوان فارسی", "changed_fields": ["title_fa"]}
         failures = [RuntimeError("one"), RuntimeError("two"), RuntimeError("three"), good]
@@ -187,10 +165,13 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         self.assertIn("reply", [item[0] for item in dialog.events])
         self.assertEqual(dialog.progress[-1][0], 100.0)
 
-    def test_ai_resilience_settings_respects_pack_managed_settings_tab(self):
+    def test_ai_resilience_settings_are_pack_managed_and_openrouter_only(self):
         source = (ROOT / "app" / "phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
         self.assertIn('panel.pack(fill="x", padx=8, pady=8)', source)
         self.assertNotIn('panel.grid(row=50, column=0, columnspan=2', source)
+        self.assertIn("پایداری AI محصول — فقط OpenRouter", source)
+        self.assertIn('self.db.set_setting("ai_fallback_order", "openrouter")', source)
+        self.assertIn("AvalAI / Google / OpenAI در این مسیر استفاده نمی‌شوند", source)
 
     def test_operator_ledger_skips_obsolete_listbox_actions_when_modern_picker_is_installed(self):
         class DummyWorkspace:
