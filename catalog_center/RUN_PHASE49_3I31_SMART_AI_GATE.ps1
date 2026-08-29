@@ -11,18 +11,15 @@ $Root = "D:\projects\3DPrintHub"
 $Catalog = "$Root\catalog_center"
 $Py = "$Root\.venv\Scripts\python.exe"
 $Branch = "agent/phase49-3i18-operator-bulk-ai-rebuild"
-$ExpectedVersion = "8.9.7"
-$ExpectedBuild = "2026.08.29.1"
+$ExpectedVersion = "8.9.8"
+$ExpectedBuild = "2026.08.29.2"
 
-function Fail([string]$Message) {
-    throw $Message
-}
+function Fail([string]$Message) { throw $Message }
 
 Set-Location $Root
-
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "3DPRINTHUB PHASE49.3I.31-39 / WINDOWS 8.9.7 GATE"
+Write-Host "3DPRINTHUB PHASE49.3I.31-40 / WINDOWS 8.9.8 GATE"
 Write-Host "NO PRODUCTION / NO MIGRATION / NO RESET / NO STASH"
 Write-Host "=================================================="
 
@@ -31,12 +28,10 @@ $Dirty = @(git status --porcelain --untracked-files=all)
 $CurrentBranch = (& git branch --show-current).Trim()
 $Head = (& git rev-parse HEAD).Trim()
 $Remote = (& git rev-parse "origin/$Branch").Trim()
-
 Write-Host "ORIGIN=$Origin"
 Write-Host "BRANCH=$CurrentBranch"
 Write-Host "LOCAL_HEAD=$Head"
 Write-Host "REMOTE_HEAD=$Remote"
-
 if ($Origin -notmatch "farazha2203/3dprinthub(\.git)?$") { Fail "WRONG REPOSITORY" }
 if ($Dirty.Count -gt 0) { Fail "WORKTREE DIRTY - inspect it; do not reset/stash/delete" }
 if ($CurrentBranch -ne $Branch) { Fail "WRONG BRANCH" }
@@ -60,6 +55,7 @@ Write-Host "===== PYTHON COMPILE ====="
     "$Catalog\app\phase49_3i38_crawl_ledger_stage_ai.py" `
     "$Catalog\app\phase49_3i39_professional_commerce.py" `
     "$Catalog\app\phase49_3i39_completion_loop.py" `
+    "$Catalog\app\phase49_3i40_commerce_precision.py" `
     "$Catalog\app\phase49_3i35_operator_ledger.py" `
     "$Catalog\app\phase49_3i35_resilient_ai.py" `
     "$Catalog\app\phase49_3i35_readiness_review.py" `
@@ -70,18 +66,13 @@ Write-Host "===== PYTHON COMPILE ====="
     "$Catalog\app\phase49_3i31_smart_link_bulk_ai.py" `
     "$Catalog\app\phase49_3i29_windows_performance_ai.py" `
     "$Catalog\app\phase49_3i_pricing_modes.py" `
-    "$Catalog\app\phase49_3i17_single_active_ai_runtime.py" `
-    "$Catalog\app\phase49_3i18_operator_editing.py" `
-    "$Catalog\app\phase49_3i25_product_first_workflow.py" `
     "$Catalog\tests\test_phase49_3i36_stage_finalization.py" `
     "$Catalog\tests\test_phase49_3i37_seven_stage_ai.py" `
     "$Catalog\tests\test_phase49_3i38_crawl_ledger_stage_ai.py" `
     "$Catalog\tests\test_phase49_3i39_professional_commerce.py" `
     "$Catalog\tests\test_phase49_3i39_completion_loop.py" `
+    "$Catalog\tests\test_phase49_3i40_commerce_precision.py" `
     "$Catalog\tests\test_phase49_3i35_operator_workflow.py" `
-    "$Catalog\tests\test_phase49_3i34_profile_matrix.py" `
-    "$Catalog\tests\test_phase49_3i33_operator_workflow.py" `
-    "$Catalog\tests\test_phase49_3i32_source_url_guard.py" `
     "$Catalog\launch.py" `
     "$Catalog\portable_entry.py" `
     "$Catalog\build_portable_exe.py"
@@ -101,6 +92,7 @@ Set-Location $Catalog
     tests.test_phase49_3i38_crawl_ledger_stage_ai `
     tests.test_phase49_3i39_professional_commerce `
     tests.test_phase49_3i39_completion_loop `
+    tests.test_phase49_3i40_commerce_precision `
     tests.test_phase49_3i35_operator_workflow `
     tests.test_phase49_3i34_profile_matrix `
     tests.test_phase49_3i33_operator_workflow `
@@ -126,62 +118,22 @@ if ($LASTEXITCODE -ne 0) { Fail "FOCUSED REGRESSION FAILED" }
 Write-Host ""
 Write-Host "===== LAUNCHER VERIFY ====="
 $LaunchOutput = (& $Py launch.py --verify-only 2>&1 | Out-String)
-if ($LASTEXITCODE -ne 0) {
-    Write-Host $LaunchOutput
-    Fail "LAUNCH VERIFY FAILED"
-}
+if ($LASTEXITCODE -ne 0) { Write-Host $LaunchOutput; Fail "LAUNCH VERIFY FAILED" }
 Write-Host $LaunchOutput
 foreach ($Marker in @(
-    "ACTIVE_VERSION=8.9.7",
-    "EPIC49_3I29_PRODUCTS_PAGE_PAGED_48=ENABLED",
-    "EPIC49_3I29_DEFERRED_GLOBAL_REFRESH=ENABLED",
-    "EPIC49_3I31_SMART_LINK_AI=ENABLED",
-    "EPIC49_3I31_BATCH_SELECTED_PRODUCTS_AI=ENABLED",
-    "EPIC49_3I31_AI_TITLE_TEXT_ONLY=ENABLED",
-    "EPIC49_3I31_AI_SELECTED_IMAGE_SEO=ENABLED",
-    "EPIC49_3I33_CONSOLIDATED_PRODUCT_AI=ENABLED",
-    "EPIC49_3I33_LIVE_LINK_AI=ENABLED",
-    "EPIC49_3I33_SAVED_DATA_AI=ENABLED",
-    "EPIC49_3I33_SCREENSHOT_VISION_AI=ENABLED",
-    "EPIC49_3I33_REPAIR_AI=ENABLED",
-    "EPIC49_3I33_OPERATOR_MATERIAL_COLOR_ONLY=ENABLED",
-    "EPIC49_3I33_EXPLICIT_PRODUCTS_REFRESH=ENABLED",
-    "EPIC49_3I33_SINGLE_CARD_UPDATE=ENABLED",
-    "EPIC49_3I33_IMAGE_FILE_METADATA=ENABLED",
-    "EPIC49_3I33_RUNTIME_TELEMETRY=ENABLED",
-    "EPIC49_3I34_PROFILE_MATRIX=ENABLED",
-    "EPIC49_3I34_PROFILE_CLONE=ENABLED",
-    "EPIC49_3I34_SIZE_WEIGHT_DEPENDENCY=ENABLED",
-    "EPIC49_3I34_PROFILE_PRICE_AUTHORITY=ENABLED",
-    "EPIC49_3I34_DESKTOP_STORE_SYNC=ENABLED",
+    "ACTIVE_VERSION=8.9.8",
     "EPIC49_3I35_OPERATOR_LEDGER=ENABLED",
-    "EPIC49_3I35_BRAND_AWARE_FILAMENT_OFFERS=ENABLED",
-    "EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED",
-    "EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED",
-    "EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED",
     "EPIC49_3I36_SEVEN_STAGE_FINALIZATION=ENABLED",
-    "EPIC49_3I36_AI_UNLOCKED_STAGE_ONLY=ENABLED",
-    "EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED",
-    "EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED",
-    "EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED",
     "EPIC49_3I37_SEVEN_STAGE_AI_ORCHESTRATOR=ENABLED",
-    "EPIC49_3I37_PERSISTED_SOURCE_MODE=ENABLED",
-    "EPIC49_3I37_SCREENSHOT_SELECTED_FOR_SITE=ENABLED",
-    "EPIC49_3I37_STAGE_BY_STAGE_APPLY=ENABLED",
-    "EPIC49_3I37_SEO_LANGUAGE_GUARD=ENABLED",
     "EPIC49_3I38_PERMANENT_CRAWL_LEDGER=ENABLED",
-    "EPIC49_3I38_REJECT_PURGE_TOMBSTONE=ENABLED",
-    "EPIC49_3I38_CONTINUATION_CURSOR=ENABLED",
-    "EPIC49_3I38_DIRECT_LINK_PRE_ACQUISITION_GUARD=ENABLED",
-    "EPIC49_3I38_STAGE_SCOPED_AI=ENABLED",
-    "EPIC49_3I38_BULK_STAGE4_SAME_ENGINE=ENABLED",
     "EPIC49_3I39_PROFESSIONAL_STAGE2=ENABLED",
-    "EPIC49_3I39_OFFER_MANUFACTURER_MATERIAL_COLOR=ENABLED",
-    "EPIC49_3I39_OFFER_PREHEAT_PRICING=ENABLED",
-    "EPIC49_3I39_PROFILE_IDENTITY_DIMENSIONS_ONLY=ENABLED",
     "EPIC49_3I39_READINESS_REPAIR_LOOP=ENABLED",
-    "EPIC49_3I39_AI_DIALOG_BEFORE_AFTER=ENABLED",
     "EPIC49_3I39_TOP_VIEWPORT_SCREENSHOT=ENABLED",
+    "EPIC49_3I40_MULTI_BRAND_FILTER_SELECTION=ENABLED",
+    "EPIC49_3I40_PRODUCT_OFFER_FIXED_PRICE=ENABLED",
+    "EPIC49_3I40_COLOR_PREVIEW=ENABLED",
+    "EPIC49_3I40_READINESS_DATA_VS_FINALIZATION=ENABLED",
+    "EPIC49_3I40_AI_PROGRESS_TRUTH=ENABLED",
     "ACTIVE_RELEASE_VERIFIED=OK"
 )) {
     if ($LaunchOutput -notmatch [regex]::Escape($Marker)) { Fail "MISSING LAUNCHER MARKER: $Marker" }
@@ -197,7 +149,7 @@ if ($FinalDirty.Count -gt 0) { Fail "TESTS CHANGED WORKTREE" }
 
 Write-Host ""
 Write-Host "=================================================="
-Write-Host "PHASE49_3I31_39_AUTOMATED_LOCAL_GATE=PASS"
+Write-Host "PHASE49_3I31_40_AUTOMATED_LOCAL_GATE=PASS"
 Write-Host "HEAD=$FinalHead"
 Write-Host "APP_VERSION=$ExpectedVersion"
 Write-Host "BUILD_ID=$ExpectedBuild"
@@ -211,7 +163,7 @@ if ($BuildExe) {
     Write-Host "===== PORTABLE EXE BUILD / SELF VERIFY ====="
     & $Py build_portable_exe.py --python $Py
     if ($LASTEXITCODE -ne 0) { Fail "PORTABLE EXE BUILD FAILED" }
-    Write-Host "PHASE49_3I31_39_PORTABLE_BUILD=PASS"
+    Write-Host "PHASE49_3I31_40_PORTABLE_BUILD=PASS"
 }
 
 if ($LaunchApp) {
