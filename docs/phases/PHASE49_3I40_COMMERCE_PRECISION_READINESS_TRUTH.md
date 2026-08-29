@@ -5,7 +5,24 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE CI PASS / ERR-49-070 OWNER 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+
+## ERR-49-071 operator-confirmation truth and targeted UX rollback
+
+Owner foreground acceptance on `d4da997...` invalidated the previous visual contract despite 67/67 automated PASS. Final phase truth is now:
+- field population and operator confirmation are distinct;
+- real missing Product data is `missing_data`;
+- complete stages awaiting approval are `pending_finalization`, not defects;
+- the rail uses `❌` for data-incomplete, `◌` for complete/waiting-confirmation and `✅` only after explicit confirmation;
+- the stable operator action is an independent permanent `✅ ثبت و تأیید مرحله →` button, not a mutation of the legacy Next widget;
+- Stage 1 returns to title/category only; existing product type/dimensions/use-case controls stay in Stage 2;
+- the ERR-49-069/070 additive relocation panels are not mounted;
+- explicit `external-other / سایر محصولات` is valid;
+- title-only AI must pass through the same global one-Product-AI guard and OpenRouter-only path.
+
+This changes no Stage-2 Offer/Profile/pricing business contract, crawler/acquisition, media, Django schema/migration or Production state.
+
+Rollback: `backup/pre-err49-071-stage-confirm-rollback-20260829` → `d4da99744659d06ebe5c04fd69532cd0e03db3e8`.
 
 ## ERR-49-070 Stage-5 clean-schema/visible-contract correction
 
