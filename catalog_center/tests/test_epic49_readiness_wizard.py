@@ -62,6 +62,13 @@ class Phase493AReadinessWizardTests(unittest.TestCase):
         self.assertEqual(["PLA", "PETG"], state["materials"])
         self.assertEqual(["مشکی", "شفاف"], state["colors"])
 
+    def test_title_and_image_alt_have_one_authoritative_stage(self):
+        state = evaluate_readiness(ready_row(title_fa="", image_alt_texts_json="[]"))
+        self.assertIn("عنوان فارسی", state["stages"]["quick"]["missing"])
+        self.assertNotIn("عنوان فارسی", state["stages"]["content"]["missing"])
+        self.assertIn("Alt تصویر", state["stages"]["images"]["missing"])
+        self.assertNotIn("Alt تصویر", state["stages"]["content"]["missing"])
+
     def test_missing_seo_marks_content_stage_red(self):
         state = evaluate_readiness(
             ready_row(seo_title_fa="", seo_description_fa="", keywords_json="[]")
