@@ -26,9 +26,10 @@ STAGE_LABELS = {
 }
 
 QUICK_FIELDS = {
-    "title_fa", "local_category_slug", "product_type", "dimensions", "use_case_class",
+    "title_fa", "local_category_slug",
 }
 COMMERCE_FIELDS = {
+    "product_type", "dimensions", "use_case_class",
     "material_price_per_gram", "suggested_price", "final_price", "price_is_final",
     "price_min", "price_max", "pricing_strategy", "support_cost_multiplier",
     "assembly_fee", "materials_json", "colors_json", "material_options_json",
@@ -255,11 +256,18 @@ def configure_readiness(readiness_module) -> None:
 
         state["stages"] = ordered
         state["stage_locks"] = locks
+        state["pending_finalization"] = [
+            stage for stage in STAGE_ORDER
+            if not bool((locks.get(stage) or {}).get("locked"))
+        ]
         state["production_ready"] = all(bool(item.get("ready")) for item in ordered.values())
+        # "missing" is data truth only. Operator confirmation is tracked
+        # separately in pending_finalization so the UI never turns 7 pending
+        # confirmations into fake product-data defects.
         state["missing"] = [
             f"{STAGE_LABELS[stage]}: {item}"
             for stage in STAGE_ORDER
-            for item in ordered[stage].get("missing", [])
+            for item in ordered[stage].get("missing_data", [])
         ]
         return state
 
@@ -349,19 +357,14 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
     values = {}
 
     if stage == "quick":
-        from .product_studio import PRODUCT_TYPE_CODES
         title = str(_get_var(workspace, "content_title_fa") or _get_var(workspace, "title_fa") or "").strip()
         category_name = str(_get_var(workspace, "category_var") or "").strip()
         category_slug = getattr(workspace.app, "category_label_to_slug", {}).get(
             category_name, category_name or "external-other"
         )
-        product_label = str(_get_var(workspace, "product_type_var") or "").strip()
         values.update({
             "title_fa": title,
             "local_category_slug": category_slug,
-            "product_type": PRODUCT_TYPE_CODES.get(product_label, str(_row_value(row, "product_type", "ready_product"))),
-            "dimensions": str(_get_var(workspace, "dimensions_var", _row_value(row, "dimensions", "")) or "").strip(),
-            "use_case_class": str(_get_var(workspace, "use_case_class_var", _row_value(row, "use_case_class", "")) or "").strip(),
         })
 
     elif stage == "commerce":
@@ -433,53 +436,9 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
         source_name = str(_get_var(workspace, "source_name_var") or "").strip()
         if source_name:
             values["source_name"] = source_name
-        license_code = str(
-            _get_var(workspace, "license_var")
-            or _row_value(row, "commercial_status", "review")
-        ).strip()
-        spec_license_var = getattr(
-            workspace, "_phase49_3i39_spec_license_label_var", None
-        )
-        if spec_license_var is not None:
-            try:
-                from .epic49_product_studio import LICENSE_LABEL_TO_CODE
-                label = str(spec_license_var.get() or "").strip()
-                license_code = LICENSE_LABEL_TO_CODE.get(label, license_code)
-            except Exception:
-                pass
+        license_code = str(_get_var(workspace, "license_var") or _row_value(row, "commercial_status", "review")).strip()
         if license_code:
             values["commercial_status"] = license_code
-
-        fa_specs = getattr(workspace, "fa_specs", None)
-        if fa_specs is not None:
-            raw = _get_text(workspace, "fa_specs", "")
-            try:
-                parsed = json.loads(raw or "{}")
-                if not isinstance(parsed, dict):
-                    raise ValueError("مشخصات فارسی باید JSON Object باشد.")
-                values["specs_fa_json"] = json.dumps(parsed, ensure_ascii=False)
-            except Exception as exc:
-                raise ValueError(f"JSON مشخصات فارسی معتبر نیست: {exc}") from exc
-
-        feature_widget = (
-            "_phase49_3i39_spec_features"
-            if hasattr(workspace, "_phase49_3i39_spec_features")
-            else "technical_features_text"
-        )
-        if hasattr(workspace, feature_widget):
-            raw = _get_text(workspace, feature_widget, "")
-            try:
-                parsed = json.loads(raw or "{}")
-                if not isinstance(parsed, dict):
-                    raise ValueError("ویژگی‌های فنی باید JSON Object باشد.")
-                values["technical_features_json"] = json.dumps(parsed, ensure_ascii=False)
-            except Exception as exc:
-                raise ValueError(f"JSON ویژگی‌های فنی معتبر نیست: {exc}") from exc
-
-        if hasattr(workspace, "_phase49_3i39_spec_summary"):
-            values["technical_summary_fa"] = _get_text(
-                workspace, "_phase49_3i39_spec_summary", ""
-            )
 
     elif stage == "slider":
         media_values = getattr(workspace, "_phase49_3b_media_values", None)
@@ -586,9 +545,9 @@ def install_workspace(workspace_class, readiness_module) -> None:
             locked = bool((locks.get(stage) or {}).get("locked"))
             data_ready = bool(((state.get("stages") or {}).get(stage) or {}).get("data_ready"))
             if locked:
-                variable.set("🔒 نهایی")
+                variable.set("✅ تأیید شد")
             elif data_ready or (stage == "content" and content_manual_minimum(row)[0]):
-                variable.set("✅ کامل؛ منتظر ثبت")
+                variable.set("◌ کامل؛ منتظر ثبت و تأیید")
             else:
                 variable.set("⚪ ناقص/باز")
         try:
