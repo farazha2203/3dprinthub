@@ -1,6 +1,18 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — Catalog Center 8.9.8 SEO Readiness Reconciliation Hotfix (ERR-49-065)
+- owner QA confirmed the new professional Stage-2 / seven-stage workspace renders after ERR-49-064;
+- seven-stage AI persisted Persian/SEO fields but some red readiness/help widgets remained stale after completion;
+- added a post-AI reconciliation boundary that rehydrates the Product from Catalog SQLite, reloads the workspace, refreshes lock/guided-wizard/readiness surfaces, and leaves 3I.40 readiness as the final painter;
+- the same reconciliation runs again after a short UI settle delay for both whole-product and single-stage repair;
+- source `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4`;
+- regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26`;
+- rollback `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`;
+- no Provider/source/Offer/Profile/schema/Host/Production change; owner Local targeted test + foreground retest pending.
+
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 Owner Visual-QA Hotfix (ERR-49-064)
 - foreground owner QA on canonical `D:\\projects\\3DPrintHub` proved the correct 8.9.8 source/branch was running;
 - opening Product 63 raised a Tk `pack`/`grid` geometry conflict in `phase49_3i35_operator_ledger.build_material_actions()`;
