@@ -303,8 +303,30 @@ def orchestrate_once(
         raise RuntimeError("هویت/عنوان منبع برای AI خالی است.")
 
     _progress(dialog, 16, "ارسال یک درخواست محتوای ساختاریافته")
+    _emit(
+        dialog,
+        "request_payload",
+        "داده واقعی ارسالی به موتور AI",
+        {
+            "product_id": product_id,
+            "provider": provider,
+            "model": model,
+            "source_mode": mode,
+            "source_url": str(source.get("source_url") or ""),
+            "source_title": source_title,
+            "source_description": str(source.get("source_description") or ""),
+            "target_stages": sorted(scoped_stages) if scoped_stages else list(STAGE_ORDER),
+            "refresh_existing": bool(refresh_existing),
+        },
+    )
     pack = generate_translation_pack(
         provider, key, model, source_title, source["source_description"], product_id
+    )
+    _emit(
+        dialog,
+        "response_payload",
+        "پاسخ ساختاریافته AI دریافت شد",
+        {k: v for k, v in dict(pack or {}).items() if not str(k).startswith("_")},
     )
     pack = validate_editorial_pack(source_title, pack)
     full = _full_ai_updates(app, row, pack, source, mode)
@@ -507,6 +529,7 @@ def run_resilient_orchestrator(
     *,
     target_stages: set[str] | None = None,
     refresh_existing: bool = False,
+    finalize_progress: bool = True,
 ) -> dict:
     mode = mode if mode in AI_SOURCE_MODES else source_mode(app)
     scoped_stages = (
@@ -519,7 +542,7 @@ def run_resilient_orchestrator(
     )
     if not required:
         _emit(dialog, "no_ai_needed", f"✅ AI لازم نیست: {reason}")
-        _progress(dialog, 100, "بدون درخواست AI")
+        _progress(dialog, 100 if finalize_progress else 92, "بدون درخواست AI")
         return _no_ai_needed_result(app, int(product_id), mode, scoped_stages, reason)
 
     candidates = configured_ai_candidates(app, require_key=True)
@@ -557,7 +580,11 @@ def run_resilient_orchestrator(
                     target_stages=scoped_stages,
                     refresh_existing=bool(refresh_existing),
                 )
-                _progress(dialog, 100, "Scope هوش مصنوعی بازبینی شد")
+                _progress(
+                    dialog,
+                    100 if finalize_progress else 92,
+                    "Scope هوش مصنوعی بازبینی شد",
+                )
                 return result
             except Exception as exc:
                 failures.append(f"{provider}/attempt-{attempt}: {redact(exc)}")
