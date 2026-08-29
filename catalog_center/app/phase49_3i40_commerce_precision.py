@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import json
 import re
 import webbrowser
 from pathlib import Path
@@ -9,16 +8,11 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .epic49_desktop_schema import (
-    add_available_material_color,
-    normalize_material_color_options,
-)
+from .epic49_desktop_schema import add_available_material_color, normalize_material_color_options
 from .phase49_3i36_stage_finalization import STAGE_LABELS, STAGE_ORDER, is_stage_locked, stage_locks
-from .phase49_3i39_completion_loop import defect_snapshot
 from .phase49_3i39_professional_commerce import (
     _integer,
     _number,
-    offer_company,
     offer_display,
     offer_key,
     offer_stock_grams,
@@ -59,16 +53,11 @@ def color_preview_hex(offer: dict) -> str:
 
 
 def merge_offer_scope(existing: list[dict], visible: list[dict], selected: list[dict]) -> list[dict]:
-    """Replace only the currently visible company/material scope.
-
-    Selecting eSUN after Bambu must not erase Bambu offers. Deselecting all rows
-    in the currently visible filter deliberately clears only that visible scope.
-    """
+    """Replace only the visible company/material filter, preserving other brands."""
     current = normalize_material_color_options(existing or [])
     visible_keys = {offer_key(item) for item in normalize_material_color_options(visible or [])}
     selected_rows = normalize_material_color_options(selected or [])
     previous = {offer_key(item): item for item in current}
-
     kept = [copy.deepcopy(item) for item in current if offer_key(item) not in visible_keys]
     for item in selected_rows:
         old = previous.get(offer_key(item), {})
@@ -96,9 +85,7 @@ def readiness_display(state: dict, row) -> dict:
         info = stages.get(stage) or {}
         for item in info.get("missing_data") or []:
             data_defects.append(f"{STAGE_LABELS[stage]}: {item}")
-        data_ready = bool(info.get("data_ready"))
-        locked = is_stage_locked(row, stage)
-        if data_ready and not locked:
+        if bool(info.get("data_ready")) and not is_stage_locked(row, stage):
             pending_finalization.append(stage)
     return {
         "data_defects": data_defects,
@@ -106,6 +93,61 @@ def readiness_display(state: dict, row) -> dict:
         "pending_finalization": pending_finalization,
         "pending_finalization_count": len(pending_finalization),
     }
+
+
+class _CompletionProgressProxy:
+    """Suppress cosmetic 100% until the final defect snapshot proves AI is done."""
+
+    def __init__(self, dialog):
+        self._dialog = dialog
+        self.cancelled = dialog.cancelled
+        self.held_terminal = None
+
+    def event(self, *args, **kwargs):
+        return self._dialog.event(*args, **kwargs)
+
+    def set_progress(self, value, message=""):
+        numeric = float(value or 0)
+        if numeric >= 100:
+            self.held_terminal = (numeric, message)
+            return None
+        return self._dialog.set_progress(numeric, message)
+
+    def __getattr__(self, name):
+        return getattr(self._dialog, name)
+
+
+def install_completion_progress_truth() -> None:
+    from . import phase49_3i39_completion_loop as completion
+
+    if getattr(completion, "_phase49_3i40_progress_truth", False):
+        return
+    original = completion.repair_until_stable
+
+    def repair_until_stable(app, product_id, dialog, **kwargs):
+        proxy = _CompletionProgressProxy(dialog)
+        result = original(app, product_id, proxy, **kwargs)
+        final = dict(result.get("final") or {})
+        remaining = int(final.get("ai_fixable_count") or 0)
+        if remaining <= 0:
+            dialog.set_progress(100, "بازبینی نهایی انجام شد • نقص AI-قابل‌اصلاح صفر")
+        else:
+            dialog.set_progress(
+                94,
+                f"متوقف با {remaining} نقص AI-قابل‌اصلاح باقی‌مانده — 100٪ ثبت نشد",
+            )
+            dialog.event(
+                "completion_not_100",
+                f"{remaining} نقص AI-قابل‌اصلاح باقی مانده؛ عملیات 100٪ اعلام نشد.",
+                {
+                    "remaining_ai_fixable": final.get("ai_fixable") or {},
+                    "remaining_data_defects": final.get("data_missing") or {},
+                },
+            )
+        return result
+
+    completion.repair_until_stable = repair_until_stable
+    completion._phase49_3i40_progress_truth = True
 
 
 def _find_label_frame(root, prefix: str):
@@ -175,10 +217,9 @@ def _global_offer_editor(workspace, offer=None):
     for index, (key, label) in enumerate(fields):
         ttk.Label(body, text=label).grid(row=index, column=0, sticky="w", padx=4, pady=4)
         ttk.Entry(body, textvariable=vars_[key]).grid(row=index, column=1, sticky="ew", padx=4, pady=4)
-
     ttk.Label(
         body,
-        text="قیمت قطعی محصول اینجا نیست؛ آن قیمت فقط در بخش «قیمت قطعی Offerهای همین محصول» ثبت می‌شود.",
+        text="قیمت قطعی محصول اینجا ثبت نمی‌شود؛ آن مبلغ فقط به همین محصول تعلق دارد و در بخش قیمت‌گذاری وارد می‌شود.",
         style="SubHeader.TLabel",
     ).grid(row=len(fields), column=0, columnspan=2, sticky="w", padx=4, pady=(8, 4))
 
@@ -223,7 +264,9 @@ def _global_offer_editor(workspace, offer=None):
             return
         top.destroy()
         workspace._phase49_3i39_refresh_offer_filter()
-        workspace.footer_status.set(f"Offer جهانی «{offer_display(saved)}» ذخیره شد؛ قیمت قطعی محصول دست‌نخورده است.")
+        workspace.footer_status.set(
+            f"Offer جهانی «{offer_display(saved)}» ذخیره شد؛ قیمت قطعی این محصول دست‌نخورده است."
+        )
 
     actions = ttk.Frame(body)
     actions.grid(row=len(fields) + 1, column=0, columnspan=2, sticky="e", pady=(10, 0))
@@ -232,6 +275,7 @@ def _global_offer_editor(workspace, offer=None):
 
 
 def install_workspace(workspace_class) -> None:
+    install_completion_progress_truth()
     if getattr(workspace_class, "_phase49_3i40_commerce_precision", False):
         return
 
@@ -343,9 +387,7 @@ def install_workspace(workspace_class) -> None:
         canvas.delete("all")
         canvas.create_rectangle(0, 0, 52, 52, fill=color, outline="")
         stock = offer_stock_grams(offer) / 1000.0
-        label.set(
-            f"{offer_display(offer)} • رنگ {offer.get('color') or '—'} • {color} • موجودی {stock:g} kg"
-        )
+        label.set(f"{offer_display(offer)} • {color} • موجودی {stock:g} kg")
         image_url = str(offer.get("filament_image_url") or "").strip()
         self._phase49_3i40_image_url = image_url
         if image_button is not None:
@@ -361,8 +403,7 @@ def install_workspace(workspace_class) -> None:
         path = Path(value.replace("file://", "", 1))
         if path.is_file():
             try:
-                path = path.resolve()
-                webbrowser.open(path.as_uri())
+                webbrowser.open(path.resolve().as_uri())
             except Exception:
                 pass
 
@@ -426,8 +467,12 @@ def install_workspace(workspace_class) -> None:
                 preview, width=52, height=52, highlightthickness=1, highlightbackground="#888"
             )
             self._phase49_3i40_color_canvas.pack(side="right", padx=6)
-            self._phase49_3i40_offer_preview_var = tk.StringVar(value="یک رنگ/Offer را انتخاب کن؛ Preview اینجا نمایش داده می‌شود.")
-            ttk.Label(preview, textvariable=self._phase49_3i40_offer_preview_var, style="SubHeader.TLabel").pack(side="right", padx=5)
+            self._phase49_3i40_offer_preview_var = tk.StringVar(
+                value="یک رنگ/Offer را انتخاب کن؛ Preview اینجا نمایش داده می‌شود."
+            )
+            ttk.Label(
+                preview, textvariable=self._phase49_3i40_offer_preview_var, style="SubHeader.TLabel"
+            ).pack(side="right", padx=5)
             self._phase49_3i40_image_button = ttk.Button(
                 preview,
                 text="🖼 باز کردن عکس فیلامنت",
@@ -435,7 +480,11 @@ def install_workspace(workspace_class) -> None:
             )
             self._phase49_3i40_image_button.pack(side="left", padx=5)
             self._phase49_3i40_image_button.state(["disabled"])
-            tree.bind("<<TreeviewSelect>>", lambda _e: self._phase49_3i40_refresh_offer_preview(), add="+")
+            tree.bind(
+                "<<TreeviewSelect>>",
+                lambda _e: self._phase49_3i40_refresh_offer_preview(),
+                add="+",
+            )
             self._phase49_3i40_refresh_offer_preview()
         self._phase49_refresh_readiness()
 
