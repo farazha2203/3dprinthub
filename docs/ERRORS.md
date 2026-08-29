@@ -647,6 +647,8 @@ Prevention: a new Stage-owned field must land together in clean schema, upgrade 
 
 
 ### ERR-49-071 — 67/67 PASS but Stage confirmation UX still broken and false missing count exploded
+**Executable checkpoint:** `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation persists visible Product type/dimensions before locking. No current-head Actions run is attached; owner Local verification remains pending.
+
 **Date:** 2026-08-29  
 **Environment:** owner foreground Windows QA on exact Local head `d4da99744659d06ebe5c04fd69532cd0e03db3e8`, Catalog Center 8.9.8 / build 2026.08.29.2.
 
