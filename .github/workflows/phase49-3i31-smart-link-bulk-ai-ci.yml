@@ -1,4 +1,4 @@
-name: Phase49.3I.31-39 Stage Finalization + Operator Ledger CI
+name: Phase49.3I.31-40 Stage Finalization + Commerce Precision CI
 
 on:
   push:
@@ -10,8 +10,10 @@ on:
       - "catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py"
       - "catalog_center/app/phase49_3i39_professional_commerce.py"
       - "catalog_center/app/phase49_3i39_completion_loop.py"
+      - "catalog_center/app/phase49_3i40_commerce_precision.py"
       - "catalog_center/tests/test_phase49_3i39_professional_commerce.py"
       - "catalog_center/tests/test_phase49_3i39_completion_loop.py"
+      - "catalog_center/tests/test_phase49_3i40_commerce_precision.py"
       - "catalog_center/app/epic49_desktop_schema.py"
       - "catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py"
       - "catalog_center/app/main.py"
@@ -49,7 +51,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-39:
+  phase49-3i31-40:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -77,7 +79,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Compile smart AI and source-identity surfaces
+      - name: Compile smart AI and commerce precision surfaces
         run: |
           python -m compileall -q \
             catalog_center/app/phase49_3i36_stage_finalization.py \
@@ -85,6 +87,7 @@ jobs:
             catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py \
             catalog_center/app/phase49_3i39_professional_commerce.py \
             catalog_center/app/phase49_3i39_completion_loop.py \
+            catalog_center/app/phase49_3i40_commerce_precision.py \
             catalog_center/app/phase49_3i35_operator_ledger.py \
             catalog_center/app/phase49_3i35_resilient_ai.py \
             catalog_center/app/phase49_3i35_readiness_review.py \
@@ -100,13 +103,14 @@ jobs:
             catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py \
             catalog_center/tests/test_phase49_3i39_professional_commerce.py \
             catalog_center/tests/test_phase49_3i39_completion_loop.py \
+            catalog_center/tests/test_phase49_3i40_commerce_precision.py \
             catalog_center/tests/test_phase49_3i35_operator_workflow.py \
             catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
             catalog_center/tests/test_phase49_3i32_source_url_guard.py \
             catalog_center/tests/test_phase49_3i31_smart_link_bulk_ai.py
 
-      - name: Smart AI and source URL targeted regressions
+      - name: Smart AI and commerce precision regressions
         working-directory: catalog_center
         run: |
           python -m unittest -v \
@@ -115,6 +119,7 @@ jobs:
             tests.test_phase49_3i38_crawl_ledger_stage_ai \
             tests.test_phase49_3i39_professional_commerce \
             tests.test_phase49_3i39_completion_loop \
+            tests.test_phase49_3i40_commerce_precision \
             tests.test_phase49_3i35_operator_workflow \
             tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
@@ -125,104 +130,38 @@ jobs:
             tests.test_phase49_3i25_product_first_workflow \
             tests.test_phase49_3i28_exact_link_contract
 
-      - name: Static smart AI and source URL contract
+      - name: Static composition contract
         run: |
           python - <<'PY'
           from pathlib import Path
-          phase31 = Path("catalog_center/app/phase49_3i31_smart_link_bulk_ai.py").read_text(encoding="utf-8")
-          phase32 = Path("catalog_center/app/phase49_3i32_source_url_guard.py").read_text(encoding="utf-8")
-          phase33 = Path("catalog_center/app/phase49_3i33_operator_workflow.py").read_text(encoding="utf-8")
-          phase34 = Path("catalog_center/app/phase49_3i34_profile_matrix.py").read_text(encoding="utf-8")
-          phase36 = Path("catalog_center/app/phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
+          pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
           phase37 = Path("catalog_center/app/phase49_3i37_seven_stage_ai.py").read_text(encoding="utf-8")
           phase38 = Path("catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py").read_text(encoding="utf-8")
           phase39_commerce = Path("catalog_center/app/phase49_3i39_professional_commerce.py").read_text(encoding="utf-8")
           phase39_completion = Path("catalog_center/app/phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
-          phase35_ledger = Path("catalog_center/app/phase49_3i35_operator_ledger.py").read_text(encoding="utf-8")
-          phase35_ai = Path("catalog_center/app/phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
-          phase35_review = Path("catalog_center/app/phase49_3i35_readiness_review.py").read_text(encoding="utf-8")
-          core33 = Path("catalog_center/app/phase49_3i33_ai_core.py").read_text(encoding="utf-8")
-          pricing = Path("catalog_center/app/phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
-          assert 'PHASE = "49.3I.31"' in phase31
-          assert '"sent_product_fields": ["source_title", "source_description"]' in phase31
-          assert 'workspace_class._phase49_3e_run_all_ai = smart_ai' in phase31
-          assert 'workspace_class._phase49_3c_stage_ai = smart_ai' in phase31
-          assert 'workspace_class._phase49_3i21_link_refresh = smart_ai' in phase31
-          assert '_phase49_3i31_start_bulk_ai' in phase31
-          assert '_phase49_3i29_flush_products_refresh' in phase31
-          assert 'PHASE = "49.3I.32"' in phase32
-          assert 'resolve_source_url_for_save' in phase32
-          assert 'source_url_preserved_before_save' in phase32
-          assert 'source_url_restored_after_save' in phase32
-          assert '_install_phase49_3i31_app(app_class)' in pricing
-          assert '_install_phase49_3i31_workspace(workspace_class)' in pricing
-          assert '_install_phase49_3i32_workspace(workspace_class)' in pricing
-          assert '_install_phase49_3i33_app(app_class)' in pricing
-          assert '_install_phase49_3i33_workspace(workspace_class)' in pricing
-          assert 'suppress_global_products_refresh' in phase33
-          assert 'app_class._phase49_3i29_flush_products_refresh = no_auto_flush' in phase33
-          assert 'AI_MODES = {' in core33
-          assert 'material_recommendations' in core33
-          assert 'makerworld_evidence_from_html' in core33
-          assert '_install_phase49_3i34_workspace(workspace_class)' in pricing
-          assert '_install_phase49_3i35_operator_ledger(workspace_class)' in pricing
-          assert '_install_phase49_3i35_resilient_workspace(workspace_class)' in pricing
-          assert '_install_phase49_3i35_readiness_review(workspace_class)' in pricing
-          assert '_install_phase49_3i35_resilient_app(app_class)' in pricing
-          assert '_install_phase49_3i36_workspace(workspace_class, _readiness_module)' in pricing
-          assert '_install_phase49_3i36_database(Database)' in pricing
-          assert 'operator_stage_locks_json' in phase36
-          assert 'filter_ai_updates' in phase36
-          assert '_install_phase49_3i37_workspace(workspace_class)' in pricing
-          assert 'AI_SOURCE_MODES' in phase37
-          assert 'run_resilient_orchestrator' in phase37
-          assert 'capture_screenshot_for_site' in phase37
-          assert 'validate_editorial_pack' in phase37
-          assert '_install_phase49_3i38_workspace(workspace_class)' in pricing
-          assert '_install_phase49_3i38_database(Database)' in pricing
-          assert 'reject_and_purge_product' in phase38
-          assert 'next_scroll_rounds' in phase38
-          assert 'run_resilient_orchestrator' in phase38
-          assert 'target_stages={"content"}' in phase38
+          phase40 = Path("catalog_center/app/phase49_3i40_commerce_precision.py").read_text(encoding="utf-8")
           assert '_install_phase49_3i39_commerce(workspace_class)' in pricing
           assert '_install_phase49_3i39_completion(workspace_class)' in pricing
+          assert '_install_phase49_3i40_precision(workspace_class)' in pricing
+          assert 'run_resilient_orchestrator' in phase37
+          assert 'reject_and_purge_product' in phase38
           assert 'formula_price_breakdown' in phase39_commerce
           assert 'validate_profile_identity' in phase39_commerce
           assert 'repair_until_stable' in phase39_completion
           assert 'readiness_before' in phase39_completion
           assert 'readiness_after' in phase39_completion
-          assert 'target_stages={"content"}' in phase39_completion
-          assert 'sales_profile_ledger_json' in phase35_ledger
-          assert 'configured_ai_candidates' in phase35_ai
-          assert 'seo_manual_approved' in phase35_review
-          assert 'sales_profiles_json' in phase34
-          assert 'کپی پروفایل انتخابی' in phase34
-          print("PHASE49_3I31_SINGLE_AI=LINK_CONTENT_SEO_IMAGES")
-          print("PHASE49_3I31_BATCH_AI=SELECTED_PRODUCTS_ONLY")
-          print("PHASE49_3I31_AI_PAYLOAD=TITLE_PLUS_TEXT_ONLY")
-          print("PHASE49_3I31_GLOBAL_REFRESH=ONCE_AT_BATCH_END")
-          print("PHASE49_3I32_SOURCE_URL=GENERIC_SAVE_CANNOT_ERASE_EXISTING")
-          print("PHASE49_3I33_AI=LINK_DATA_SCREENSHOT_REPAIR")
-          print("PHASE49_3I33_PRODUCTS_REFRESH=EXPLICIT_ONLY")
-          print("PHASE49_3I33_MATERIAL_COLOR=OPERATOR_ONLY")
-          print("PHASE49_3I34_PROFILE_MATRIX=SIZE_WEIGHT_DEPENDENT")
-          print("PHASE49_3I34_PROFILE_CLONE=ENABLED")
-          print("PHASE49_3I35_OPERATOR_LEDGER=REGISTERED_SNAPSHOTS")
-          print("PHASE49_3I35_AI=VISIBLE_PREFLIGHT_RETRY_FAILOVER")
-          print("PHASE49_3I35_READINESS=MANUAL_SEO_SOURCE_REVIEW")
-          print("PHASE49_3I36_STAGE_LOCKS=SEVEN_PERSISTED_OPERATOR_FINALIZATIONS")
-          print("PHASE49_3I36_AI_WRITE_SCOPE=UNLOCKED_STAGES_ONLY")
-          print("PHASE49_3I37_AI_ORCHESTRATOR=SEVEN_STAGE_MISSING_ONLY")
-          print("PHASE49_3I37_SOURCE_MODE=LINK_DATA_SCREENSHOT")
-          print("PHASE49_3I37_SCREENSHOT=SELECTED_SITE_IMAGE_WITH_UPSTREAM")
-          print("PHASE49_3I38_CRAWL_LEDGER=PERMANENT_COLLECTED_REJECTED")
-          print("PHASE49_3I38_CRAWL_CONTINUATION=DEEPER_SCROLL_CURSOR")
-          print("PHASE49_3I38_REJECT_PURGE=SAFE_COLLECTED_ROOT_ONLY")
-          print("PHASE49_3I38_STAGE4_AI=SAME_ENGINE_SCOPED_CONTENT")
+          assert 'merge_offer_scope' in phase40
+          assert 'apply_product_fixed_prices' in phase40
+          assert 'install_completion_progress_truth' in phase40
+          assert '100٪ ثبت نشد' in phase40
+          assert 'قیمت قطعی محصول اینجا ثبت نمی‌شود' in phase40
           print("PHASE49_3I39_STAGE2=MANUFACTURER_MATERIAL_COLOR_OFFER")
           print("PHASE49_3I39_PROFILE=IDENTITY_DIMENSIONS_ONLY")
           print("PHASE49_3I39_AI=READINESS_REPAIR_LOOP")
-          print("PHASE49_3I39_DIALOG=BEFORE_AFTER_FIXED_REMAINING")
+          print("PHASE49_3I40_OFFER_SELECTION=CROSS_FILTER_MULTI_BRAND_SAFE")
+          print("PHASE49_3I40_FIXED_PRICE=PRODUCT_SPECIFIC_NOT_GLOBAL_OFFER")
+          print("PHASE49_3I40_READINESS=DATA_DEFECTS_SEPARATE_FROM_FINALIZATION")
+          print("PHASE49_3I40_PROGRESS=100_ONLY_WHEN_AI_FIXABLE_ZERO")
           PY
 
       - name: Django safety
