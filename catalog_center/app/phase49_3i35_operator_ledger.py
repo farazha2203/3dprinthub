@@ -224,9 +224,12 @@ def flatten_ledger_profiles(ledger: list[dict]) -> list[dict]:
                         "part_width_cm": profile["part_width_cm"],
                         "part_height_cm": profile["part_height_cm"],
                         "fixed_price": (
-                            _integer(offer.get("fixed_product_price"), 0)
+                            (
+                                _integer(offer.get("fixed_product_price"), 0)
+                                or fixed
+                            )
                             if profile["pricing_strategy"] == "fixed"
-                            else fixed
+                            else 0
                         ),
                         "stock_status": profile["availability_status"] if profile["availability_status"] in {
                             "made_to_order", "in_stock", "preorder", "out_of_stock"
