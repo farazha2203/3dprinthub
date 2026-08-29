@@ -70,6 +70,10 @@ def main() -> int:
     )
     from app.phase49_3i_local_qa_hotfix import install as install_phase49_3i_local_qa_hotfix
     from app.phase49_3i_pricing_modes import install as install_phase49_3i_pricing_workspace
+    from app.phase49_3i41_filament_library import (
+        install_app as install_phase49_3i41_app,
+        install_workspace as install_phase49_3i41_workspace,
+    )
     from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
     from app.phase49_3i_product_list import install as install_phase49_3i_product_list
     from app.phase49_3i_source_safety import install as install_phase49_3i_source_safety
@@ -111,6 +115,7 @@ def main() -> int:
     install_phase49_3h_execution_workspace(ProductWorkspace)
     install_phase49_3i_local_qa_hotfix(ProductWorkspace, phase49_3f_workspace_module)
     install_phase49_3i_pricing_workspace(ProductWorkspace)
+    install_phase49_3i41_workspace(ProductWorkspace)
     ux87_shell.ProductWorkspace = ProductWorkspace
     ux87_shell.NAV_ITEMS[:] = [
         (key, "لاگ برنامه" if key == "logs" else label, icon)
@@ -266,6 +271,9 @@ def main() -> int:
     print("EPIC49_3I40_COLOR_PREVIEW=ENABLED", flush=True)
     print("EPIC49_3I40_READINESS_DATA_VS_FINALIZATION=ENABLED", flush=True)
     print("EPIC49_3I40_AI_PROGRESS_TRUTH=ENABLED", flush=True)
+    print("EPIC49_3I41_FILAMENT_LIBRARY=ENABLED", flush=True)
+    print("EPIC49_3I41_GROUPED_FILAMENT_CHECKLIST=ENABLED", flush=True)
+    print("EPIC49_3I41_FILAMENT_SITE_SYNC=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -299,6 +307,7 @@ def main() -> int:
     install_diagnostic_identity_ui(app_module.App)
     app_module.ProductStudio = ProductWorkspace
     App87 = ux87_shell.build_app_class(app_module.App)
+    install_phase49_3i41_app(App87)
     install_ai_shell(App87)
     install_phase49_3d_ai_shell(App87)
     install_phase49_3d_ai_ui_cleanup(App87)
