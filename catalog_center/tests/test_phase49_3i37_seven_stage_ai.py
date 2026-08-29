@@ -18,6 +18,7 @@ from app.phase49_3i36_stage_finalization import LOCK_COLUMN, install_database
 from app.phase49_3i37_seven_stage_ai import (
     AI_SOURCE_MODES,
     SOURCE_SETTING,
+    _field_needs_fill,
     capture_screenshot_for_site,
     orchestrate_once,
     source_mode,
@@ -92,6 +93,42 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
         latin_noise["seo_description_fa"] = "مدل درخت کریسمس اسپیرال kecil برای دکور."
         with self.assertRaises(RuntimeError):
             validate_editorial_pack("Twistmas Tree", latin_noise)
+
+    def test_checker_and_repair_agree_on_source_identity_and_persian_seo(self):
+        source_title = "Flexi Gecko"
+        row = {
+            "external_id": "3128884",
+            "title_fa": "گکوی مفصلی فلکسی (Flexi Gecko)",
+            "short_description_fa": "مدل گکوی مفصلی برای چاپ سه‌بعدی.",
+            "description_fa": "مدل گکوی مفصلی فلکسی برای دکور و چاپ سه‌بعدی.",
+            "use_description": "برای دکور و هدیه مناسب است.",
+            "seo_title_fa": "خرید Flexi Gecko",
+            "seo_description_fa": "خرید گکوی مفصلی فلکسی با چاپ سه‌بعدی.",
+            "keywords_json": json.dumps(["گکوی مفصلی", "Flexi Gecko"], ensure_ascii=False),
+            "tags_fa_json": json.dumps(["گکو"], ensure_ascii=False),
+            "hashtags_fa_json": json.dumps(["گکوی_مفصلی"], ensure_ascii=False),
+        }
+        self.assertFalse(_field_needs_fill(row, "title_fa", source_title))
+        self.assertTrue(_field_needs_fill(row, "seo_title_fa", source_title))
+        self.assertTrue(_field_needs_fill(row, "keywords_json", source_title))
+
+        row["seo_title_fa"] = "خرید گکوی مفصلی فلکسی"
+        row["keywords_json"] = json.dumps(["گکوی مفصلی", "چاپ سه‌بعدی"], ensure_ascii=False)
+        self.assertFalse(_field_needs_fill(row, "seo_title_fa", source_title))
+        self.assertFalse(_field_needs_fill(row, "keywords_json", source_title))
+
+    def test_editorial_guard_rejects_latin_even_when_it_is_source_identity_inside_seo(self):
+        pack = {
+            "title_fa": "گکوی مفصلی فلکسی (Flexi Gecko)",
+            "short_description_fa": "مدل گکوی مفصلی برای چاپ سه‌بعدی.",
+            "description_fa": "این مدل گکوی مفصلی برای چاپ سه‌بعدی طراحی شده است.",
+            "seo_title_fa": "خرید Flexi Gecko",
+            "seo_description_fa": "خرید گکوی مفصلی فلکسی برای چاپ سه‌بعدی.",
+            "material_recommendations": [],
+            "suggested_category_slug": "",
+        }
+        with self.assertRaises(RuntimeError):
+            validate_editorial_pack("Flexi Gecko", pack)
 
     def test_orchestrator_fills_missing_editorial_stages_without_touching_profile_commerce(self):
         with tempfile.TemporaryDirectory() as temporary:
