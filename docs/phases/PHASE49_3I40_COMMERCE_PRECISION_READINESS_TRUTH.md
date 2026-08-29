@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `GITHUB CI + WINDOWS PORTABLE PASS / OWNER LOCAL 3I.40 VISUAL QA NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
 
 ## Requested delta
 
@@ -122,6 +122,31 @@ Adds to `MaterialColorOption`:
 - `filament_image_url`.
 
 The Store selector and Variant metadata keep exact manufacturer/material/color identity, stock, preheat and visual facts.
+
+## Owner visual-QA incident — ERR-49-064
+
+The first foreground owner run against the canonical 8.9.8 source proved that launcher composition markers alone were insufficient. ProductWorkspace construction stopped inside the older 3I.35 wrapper before this phase's visible 3I.39/3I.40 UI could be created.
+
+Observed exception:
+`TclError: cannot use geometry manager pack inside ...!labelframe which already has slaves managed by grid`.
+
+Cause:
+- `phase49_material_color_picker` had already installed the modern grid-managed checkbox picker,
+- `phase49_3i35_operator_ledger.build_material_actions()` still tried to mount an obsolete Listbox action row with `pack` into that same legacy parent,
+- the constructor aborted before 3I.39 Professional Commerce and 3I.40 Precision UI builders completed.
+
+Hotfix contract:
+- when `_epic49_materials_box` exists, the obsolete 3I.35 Listbox action row is not mounted,
+- 3I.35 ledger/data methods remain intact,
+- 3I.39/3I.40 remain the final visible Commerce surface,
+- no database, migration, crawl, image, AI-provider, secret or Production boundary is changed.
+
+Git:
+- source `aa37dcf916dfab71409738f7087a171daffe4a0a`,
+- regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`,
+- rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`.
+
+Owner Local foreground verification is required before the phase can return to its normal 31–40 acceptance sequence.
 
 ## Verification
 
