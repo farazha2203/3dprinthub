@@ -161,12 +161,12 @@ def configure_readiness() -> None:
         strategy = str(_row_value(row, "pricing_strategy", "dynamic") or "dynamic")
         commerce_missing = []
         if not offers:
-            commerce_missing.append("حداقل یک Offer برند/فیلامنت/رنگ ثبت‌شده")
+            commerce_missing.append("حداقل یک Filament برند/متریال/رنگ ثبت‌شده")
         if not profiles:
             commerce_missing.append("حداقل یک پروفایل فروش ثبت‌شده")
         if strategy == "fixed":
             if any(int(float(str(item.get("fixed_product_price") or 0))) <= 0 for item in offers if isinstance(item, dict)):
-                commerce_missing.append("قیمت قطعی برای همه Offerهای انتخاب‌شده")
+                commerce_missing.append("قیمت قطعی برای همه Filamentهای انتخاب‌شده")
         elif strategy == "dynamic":
             if profiles and not any(
                 _json_list(item.get("production_rows")) for item in profiles if isinstance(item, dict)
@@ -637,7 +637,7 @@ def install_workspace(workspace_class) -> None:
         )
         ttk.Label(
             panel,
-            text="قیمت و Offer در مرحله ۲؛ مجوز در مرحله ۵؛ تنظیمات انتشار در مرحله ۷ کنترل می‌شوند.",
+            text="قیمت و Filament در مرحله ۲؛ مجوز در مرحله ۵؛ تنظیمات انتشار در مرحله ۷ کنترل می‌شوند.",
             style="SubHeader.TLabel",
         ).grid(row=2, column=0, columnspan=4, sticky="e", padx=4, pady=(2, 0))
         self._phase49_3i39_quick_identity_panel = panel
