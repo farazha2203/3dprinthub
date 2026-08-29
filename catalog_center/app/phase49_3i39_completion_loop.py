@@ -434,6 +434,66 @@ def _refresh_workspace_after_ai(workspace, *, reload_first: bool = True) -> None
             pass
 
 
+def _current_stage_key(workspace) -> str:
+    getter = getattr(workspace, "_phase49_3b_current_key", None)
+    try:
+        stage = str(getter(default="quick") if callable(getter) else "quick")
+    except Exception:
+        stage = "quick"
+    return stage if stage in STAGE_ORDER else "quick"
+
+
+def confirm_current_stage(workspace) -> bool:
+    """Persist/finalize the visible stage first, then advance.
+
+    This is the visible Windows workflow boundary that prevents the old
+    read-before-save deadlock: manually edited widgets are persisted by the
+    3I.36 stage-specific saver before readiness is evaluated.
+    """
+    stage = _current_stage_key(workspace)
+    finalize = getattr(workspace, "_phase49_3i36_finalize_stage", None)
+    if not callable(finalize):
+        messagebox.showerror(
+            "ثبت مرحله",
+            "کنترل ثبت مرحله در این Workspace نصب نشده است.",
+            parent=workspace,
+        )
+        return False
+
+    if not bool(finalize(stage)):
+        return False
+
+    refresher = getattr(workspace, "_phase49_3b_refresh_wizard", None)
+    if callable(refresher):
+        try:
+            refresher()
+        except Exception:
+            pass
+
+    if stage != "publish":
+        try:
+            workspace.select_section(STAGE_ORDER[STAGE_ORDER.index(stage) + 1])
+        except Exception:
+            pass
+    return True
+
+
+def unlock_current_stage(workspace) -> bool:
+    stage = _current_stage_key(workspace)
+    unlock = getattr(workspace, "_phase49_3i36_unlock_stage", None)
+    if not callable(unlock):
+        return False
+    return bool(unlock(stage))
+
+
+def run_current_stage_ai(workspace):
+    stage = _current_stage_key(workspace)
+    runner = getattr(workspace, "_phase49_3i39_run_stage_ai", None)
+    if not callable(runner):
+        return None
+    return runner(stage)
+
+
 def install_workspace(workspace_class) -> None:
     configure_readiness()
     if getattr(workspace_class, "_phase49_3i39_completion_loop", False):
@@ -444,6 +504,7 @@ def install_workspace(workspace_class) -> None:
         original_init(self, app, product_id)
         self._phase49_3i39_add_stage_ai_buttons()
         self._phase49_3i39_rebind_legacy_complete_buttons()
+        self._phase49_3i39_add_fixed_footer_actions()
 
     def add_stage_ai_buttons(self):
         panel = getattr(self, "_phase49_3i36_lock_panel", None)
@@ -463,6 +524,49 @@ def install_workspace(workspace_class) -> None:
             panel.configure(text="کنترل ۷ مرحله — AI اصلاح / ثبت نهایی / اصلاح اپراتور")
         except Exception:
             pass
+
+    def add_fixed_footer_actions(self):
+        next_button = getattr(self, "_phase49_3b_next", None)
+        if next_button is None:
+            return
+        try:
+            nav = next_button.master
+        except Exception:
+            return
+
+        try:
+            next_button.configure(
+                text="✅ تأیید و مرحله بعد →",
+                command=self._phase49_3i39_confirm_current_stage,
+                style="Success.TButton",
+            )
+        except Exception:
+            pass
+
+        if getattr(self, "_phase49_3i39_footer_ai", None) is None:
+            button = ttk.Button(
+                nav,
+                text="✨ پرکردن ناقص‌ها با AI",
+                command=self._phase49_3i39_run_current_stage,
+                style="Primary.TButton",
+            )
+            try:
+                button.pack(side="left", padx=3, before=next_button)
+                self._phase49_3i39_footer_ai = button
+            except Exception:
+                pass
+
+        if getattr(self, "_phase49_3i39_footer_unlock", None) is None:
+            button = ttk.Button(
+                nav,
+                text="✏ اصلاح مرحله",
+                command=self._phase49_3i39_unlock_current_stage,
+            )
+            try:
+                button.pack(side="left", padx=3, before=next_button)
+                self._phase49_3i39_footer_unlock = button
+            except Exception:
+                pass
 
     def rebind_legacy_complete_buttons(self):
         root = getattr(self, "content_tab", None)
@@ -523,8 +627,14 @@ def install_workspace(workspace_class) -> None:
                 self.after(0, lambda: _refresh_workspace_after_ai(self, reload_first=True))
                 self.after(160, lambda: _refresh_workspace_after_ai(self, reload_first=False))
             except Exception as exc:
+                error_text = redact(exc)
                 dialog.fail(exc)
-                self.after(0, lambda: self.footer_status.set(f"AI کامل محصول ناموفق: {redact(exc)}"))
+                self.after(
+                    0,
+                    lambda message=error_text: self.footer_status.set(
+                        f"AI کامل محصول ناموفق: {message}"
+                    ),
+                )
             finally:
                 self.after(0, lambda: setattr(self, "_phase49_3i33_ai_busy", False))
 
@@ -605,7 +715,11 @@ def install_workspace(workspace_class) -> None:
 
     workspace_class.__init__ = __init__
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
+    workspace_class._phase49_3i39_add_fixed_footer_actions = add_fixed_footer_actions
     workspace_class._phase49_3i39_rebind_legacy_complete_buttons = rebind_legacy_complete_buttons
+    workspace_class._phase49_3i39_confirm_current_stage = confirm_current_stage
+    workspace_class._phase49_3i39_unlock_current_stage = unlock_current_stage
+    workspace_class._phase49_3i39_run_current_stage = run_current_stage_ai
     workspace_class._phase49_3i39_run_all_with_mode = run_all_with_mode
     workspace_class._phase49_3i37_run_all = run_all
     workspace_class._phase49_3i39_run_stage_ai = run_stage_ai
