@@ -433,7 +433,20 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
         source_name = str(_get_var(workspace, "source_name_var") or "").strip()
         if source_name:
             values["source_name"] = source_name
-        license_code = str(_get_var(workspace, "license_var") or _row_value(row, "commercial_status", "review")).strip()
+        license_code = str(
+            _get_var(workspace, "license_var")
+            or _row_value(row, "commercial_status", "review")
+        ).strip()
+        spec_license_var = getattr(
+            workspace, "_phase49_3i39_spec_license_label_var", None
+        )
+        if spec_license_var is not None:
+            try:
+                from .epic49_product_studio import LICENSE_LABEL_TO_CODE
+                label = str(spec_license_var.get() or "").strip()
+                license_code = LICENSE_LABEL_TO_CODE.get(label, license_code)
+            except Exception:
+                pass
         if license_code:
             values["commercial_status"] = license_code
 
