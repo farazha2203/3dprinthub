@@ -425,8 +425,16 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
             values["has_3d_file"] = int(bool(_get_var(workspace, "has_3d_file_var", 0)))
 
     elif stage == "images":
-        # Selection/upload/image editor actions already persist locally. Finalize only
-        # acknowledges that durable image state; no gallery rebuild or download here.
+        # Stage confirmation must leave the deterministic SEO/Metadata state current.
+        # This is local file/metadata work only; no AI call is made here.
+        from . import phase49_3c_image_pipeline as image_pipeline
+        selected = image_pipeline.cap_unique_urls(
+            _json_list(_row_value(row, "selected_images_json", "[]"))
+        )
+        if selected:
+            image_pipeline.finalize_selected_images(
+                workspace.db, int(workspace.product_id)
+            )
         values = {}
 
     elif stage == "content":
@@ -581,7 +589,32 @@ def install_workspace(workspace_class, readiness_module) -> None:
             return False
         row_before = self.db.product(int(self.product_id))
         if is_stage_locked(row_before, stage):
-            self.footer_status.set(f"{STAGE_LABELS[stage]} قبلاً نهایی شده؛ برای تغییر ابتدا «اصلاح» را بزن.")
+            if stage == "images":
+                try:
+                    from . import phase49_3c_image_pipeline as image_pipeline
+                    selected = image_pipeline.cap_unique_urls(
+                        _json_list(_row_value(row_before, "selected_images_json", "[]"))
+                    )
+                    if selected:
+                        image_pipeline.finalize_selected_images(
+                            self.db, int(self.product_id)
+                        )
+                    self._phase49_3i36_refresh_locks()
+                    self.footer_status.set(
+                        "✅ مرحله تصاویر قبلاً تأیید شده بود؛ Metadata/فایل‌های SEO "
+                        "با اطلاعات فعلی محصول بازسازی شد."
+                    )
+                except Exception as exc:
+                    messagebox.showerror(
+                        "بازسازی تصاویر",
+                        f"مرحله تصاویر تأیید شده است، اما بازسازی Metadata/SEO ناموفق بود:\n{exc}",
+                        parent=self,
+                    )
+                    return False
+            else:
+                self.footer_status.set(
+                    f"{STAGE_LABELS[stage]} قبلاً نهایی شده؛ برای تغییر ابتدا «اصلاح» را بزن."
+                )
             return True
         try:
             persist_stage_from_ui(self, stage)
