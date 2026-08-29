@@ -266,38 +266,36 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertEqual(result["final"]["operator_only_count"], 3)
         self.assertEqual(dialog.progress[-1][0], 100)
 
-    def test_seven_stage_visible_field_contract_keeps_owned_controls_available(self):
-        quick = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
-        ownership = (ROOT / "app" / "phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
-        commerce = (ROOT / "app" / "phase49_3i39_professional_commerce.py").read_text(encoding="utf-8")
-        content = (ROOT / "app" / "epic49_product_studio.py").read_text(encoding="utf-8")
-        slider = (ROOT / "app" / "phase49_3b_guided_wizard.py").read_text(encoding="utf-8")
+    def test_final_composition_keeps_historical_stage_layout_and_dedicated_confirm(self):
+        source = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(
+            encoding="utf-8"
+        )
+        ownership = (ROOT / "app" / "phase49_3i36_stage_finalization.py").read_text(
+            encoding="utf-8"
+        )
+        commerce = (ROOT / "app" / "phase49_3i39_professional_commerce.py").read_text(
+            encoding="utf-8"
+        )
+        content = (ROOT / "app" / "epic49_product_studio.py").read_text(
+            encoding="utf-8"
+        )
 
-        for token in ("نوع محصول", "ابعاد محصول", "کاربری / کلاس محصول"):
-            self.assertIn(token, quick)
-        for token in ("dimensions", "use_case_class", "product_type"):
-            self.assertIn(token, ownership)
+        init_start = source.index("    def __init__(self, app, product_id):")
+        init_end = source.index("\n    def add_quick_identity_panel", init_start)
+        init_block = source[init_start:init_end]
+        self.assertNotIn("_phase49_3i39_add_quick_identity_panel()", init_block)
+        self.assertNotIn("_phase49_3i39_add_specs_contract_panel()", init_block)
+
+        self.assertIn('"product_type", "dimensions", "use_case_class"', ownership)
         for token in ("ثبت Offerهای انتخابی روی محصول", "قیمت‌گذاری", "وزن", "پروفایل"):
             self.assertIn(token, commerce)
-        for token in (
-            "SEO Title فارسی",
-            "SEO Description فارسی",
-            "تگ‌های فارسی",
-            "هشتگ‌ها",
-            "کلمات کلیدی سایت",
-            "بولت‌های فروش",
-        ):
+        for token in ("SEO Title فارسی", "SEO Description فارسی", "کلمات کلیدی سایت"):
             self.assertIn(token, content)
-        for token in ("source_url", "commercial_status", "technical_features_json"):
-            self.assertIn(token, ownership)
-        for token in ("منبع و مجوز کامل", "نام منبع / طراح", "مجوز تجاری", "خلاصه فنی فارسی", "ویژگی‌های فنی JSON"):
-            self.assertIn(token, quick)
-        self.assertIn("def add_specs_contract_panel(self):", quick)
-        self.assertIn("def refresh_specs_contract(self):", quick)
-        for token in ("homepage_slider_title_fa", "homepage_slider_image_url"):
-            self.assertIn(token, slider)
-        for token in ("approved_for_sale", "publish_as_product", "publish_as_portfolio"):
-            self.assertIn(token, ownership)
+
+        self.assertIn("✅ ثبت و تأیید مرحله →", source)
+        self.assertIn("legacy_next.pack_forget()", source)
+        self.assertIn("ترجمه فقط عنوان فارسی", source)
+        self.assertIn('self._phase49_3i39_run_stage_ai("quick")', source)
 
     def test_single_bulk_and_stage_repair_share_one_engine(self):
         source = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
@@ -312,7 +310,7 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("workspace_class._phase49_3e_run_all_ai = run_all", source)
         self.assertIn("workspace_class._phase49_3i31_smart_ai = run_link_all", source)
         self.assertIn("workspace_class._phase49_3c_stage_ai = run_current_stage", source)
-        self.assertIn("✅ تأیید و مرحله بعد →", source)
+        self.assertIn("✅ ثبت و تأیید مرحله →", source)
         self.assertIn("✨ پرکردن ناقص‌ها با AI", source)
         self.assertIn("پیشنهاد AI برای موارد ناقص", source)
         self.assertIn("انجام وظایف ناقص AI", source)
@@ -321,8 +319,8 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("_phase49_3i39_sync_footer_actions", source)
         self.assertIn('state="normal"', source)
         self.assertIn("lambda message=error_text", source)
-        self.assertIn("اطلاعات پایه کامل — نوع محصول / ابعاد / کاربری", source)
-        self.assertIn("use_case_class_var", source)
+        self.assertIn("legacy_next.pack_forget()", source)
+        self.assertIn("_phase49_3i39_footer_confirm", source)
         self.assertIn("self.after_idle(self._phase49_3i39_sync_footer_actions)", source)
         self.assertIn("_claim_ai_runtime", source)
 
