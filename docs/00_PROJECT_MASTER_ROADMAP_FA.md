@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner SEO/readiness hotfix checkpoint — ERR-49-065
+
+پس از رفع ERR-49-064 رابط حرفه‌ای 3I.39/3I.40 واقعاً نمایش داده شد، اما QA مالک نشان داد مقادیر SEO که AI در SQLite ذخیره کرده بود در بعضی Widgetهای قدیمی Readiness هنوز قرمز/ناقص نمایش داده می‌شد. Hotfix جدید پس از AI رکورد Product را از SQLite دوباره می‌خواند، Workspace/Lock/Wizard را Refresh می‌کند و Readiness نهایی 3I.40 را آخرین Painter قرار می‌دهد؛ یک Refresh کوتاهِ دوم نیز بعد از settle رابط انجام می‌شود.
+
+Source: `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4`؛ Regression: `375961a1621c43f168b7c3fd76523c6d3c9c9a26`؛ Rollback: `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`. تست Local/Foreground هنوز لازم است؛ Production دست نخورده است.
 
 ### Owner visual-QA hotfix checkpoint — ERR-49-064
 
