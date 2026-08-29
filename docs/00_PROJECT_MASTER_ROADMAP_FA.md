@@ -69,12 +69,12 @@ Last verified Phase50 DB state:
 
 Production remains on the prior stable release until Local QA + fresh Host audit/backup.
 
-Current approved GitHub runtime:
+Historical 3I.35 GitHub runtime (superseded by the Current verified checkpoint above):
 - Catalog Center `8.9.1` / build `2026.08.27.3`,
 - Windows runtime `2622818d898e19b745c61ff653b80c03d22288f1`,
 - Windows run `33060047878` PASS; artifact `9641338334`; EXE SHA256 `3099b26713a460fbd55c1204ef750b37dbef542269b5520fd393526cd8c9476c`,
 - Phase50 run `33059883188` PASS through migration `0039` and 16 regressions,
-- pending Production chain is `0036 → 0037 → 0038 → 0039`, subject to fresh read-only MySQL verification.
+- historical pending chain at that checkpoint was `0036 → 0037 → 0038 → 0039`; current code also contains `0040`, and actual Production pending state must be freshly read-only verified.
 
 
 ## 4) Deployed foundation
