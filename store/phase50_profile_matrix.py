@@ -207,6 +207,12 @@ def _resolve_color(material, item: dict):
         "sale_price_per_roll": _integer(item, "sale_price_per_roll", 0),
         "usd_price_per_roll": _number(item, "usd_price_per_roll", 0),
         "usd_fx_rate_toman": _number(item, "usd_fx_rate_toman", 0),
+        "print_hourly_rate": _integer(item, "print_hourly_rate", 0),
+        "supervision_hourly_rate": _integer(item, "supervision_hourly_rate", 0),
+        "preheat_hours": _number(item, "preheat_hours", 0),
+        "preheat_temperature_c": _number(item, "preheat_temperature_c", 0),
+        "preheat_hourly_rate": _integer(item, "preheat_hourly_rate", 0),
+        "filament_image_url": str(item.get("filament_image_url") or "")[:500],
         "is_active": True,
     }
     if obj is None:
@@ -270,7 +276,9 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
     product.sales_profile_selection_mode = mode
     product.sales_profile_selector_label = selector_label
     if any(_integer(row, "fixed_price", 0) > 0 for row in rows):
-        product.pricing_policy = "profile_fixed"
+        # Desktop 3I.39 fixed prices belong to the exact Profile × material ×
+        # brand × color Variant, not one Product-wide price.
+        product.pricing_policy = "profile_material_color_fixed"
         product.fixed_price = 0
         product.price_is_final = all(_integer(row, "fixed_price", 0) > 0 for row in rows)
     else:
@@ -347,6 +355,11 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "package_width_cm": _number(item, "package_width_cm", 0),
             "package_height_cm": _number(item, "package_height_cm", 0),
             "print_time_minutes": max(1, _integer(item, "print_time_minutes", 60)),
+            "hourly_rate_override": (
+                _integer(item, "print_hourly_rate", 0)
+                if _integer(item, "print_hourly_rate", 0) > 0
+                else None
+            ),
             "fixed_price_override": fixed_price,
             "cached_unit_price": fixed_price,
             "stock_status": stock_status,
