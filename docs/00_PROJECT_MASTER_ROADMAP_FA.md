@@ -10,6 +10,12 @@
 **Status:** `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
+### Owner Local gate checkpoint — ERR-49-072
+
+اجرای ERR-49-071 روی Head دقیق `34c65bc...` تا Compile PASS پیش رفت، اما مجموعه 7 تست جدید روی یک Fixture تمیز با خطای `no such column: price_min` متوقف شد و بنابراین OpenRouter/full-suite/foreground عمداً اجرا نشد. این نقص مربوط به Fixture تست بود: DB تمیز تست لایه‌های واقعی `epic49_desktop_schema` و `phase49_3f_workspace` را که در ProductWorkspace واقعی قبل از Stage 2 اجرا می‌شوند، مقداردهی نکرده بود.
+
+Fix تست `1307f4c438de184a930041d365976c2ce018bff8` ترتیب Schema واقعی را در Fixture تکرار می‌کند. Runtime/داده واقعی/Host/Production تغییر نکرده است. مرحله بعد Pull Head جدید و تکرار Gate با شرایط اصلاح‌شده است.
+
 ### Owner foreground checkpoint — ERR-49-071
 Checkpoint اجرایی کد/Regression: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. برای این Head هنوز GitHub Actions متصل ثبت نشده و Gate بعدی، تست کامل Local و سپس Foreground QA است.
 
