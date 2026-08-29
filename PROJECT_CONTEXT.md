@@ -42,6 +42,10 @@ Last verified Phase50 migration state:
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
+## Current owner checkpoint — ERR-49-073
+
+Owner exact `6d5897e...` passed the repaired Local gate: 7/7 exact regressions, 4/4 OpenRouter-only, 71/71 full Windows stage regression, then foreground launch. Stage confirmation is functioning except for the Images Metadata refresh loop. Root cause is derived image signatures being blocked by the already-confirmed image Stage lock after later Content/Source facts change. GitHub now permits only deterministic finalizer-owned image fields to refresh through the lock, finalizes on Stage-3 confirm and allows a confirmed Images Stage to refresh without unlock. Production untouched.
+
 ## Current owner checkpoint — ERR-49-072
 
 Owner Local `34c65bc...` passed repo verification, backup and compile, then the new exact ERR-49-071 suite stopped on a test-only clean-schema omission: `price_min` was absent because the fixture did not initialize the real Epic49 desktop + 3F pricing schema layers. Fix `1307f4c438de184a930041d365976c2ce018bff8` aligns the fixture with ProductWorkspace construction. Production untouched; Local rerun is next.
