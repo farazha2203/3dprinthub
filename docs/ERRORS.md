@@ -1,5 +1,42 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+### ERR-49-075 — saved Filament hidden after save and price preview used stale/zero facts
+**Date:** 2026-08-29  
+**Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after ERR-49-074 owner visual QA.
+
+**Owner visual evidence:**
+- a newly created Filament saved successfully but did not become visible in the current list;
+- the main inventory row showed a valid sale rate (example owner evidence: `4,200 تومان/گرم`) while the price preview opened on a different/stale Filament and showed material/print/supervision/preheat/total as zero;
+- the selected-Filament editor was still the older 3I.39 dialog (including the Product fixed-price field) instead of the final 3I.40 global Filament editor with live rate calculation;
+- current mode could be `range`, while the popup still attempted formula-style component rows, which was misleading.
+
+**Root Cause:**
+1. `add_available_material_color()` wrote all operational fields but its immediate post-upsert SELECT omitted `print_hourly_rate`, `supervision_hourly_rate`, preheat fields and `filament_image_url`; a just-saved in-memory snapshot therefore lost those facts until a later full inventory reload.
+2. `edit_selected_offer()` directly called the local 3I.39 `open_offer_editor` closure, bypassing the final 3I.40 method override.
+3. after save, the current manufacturer/material filters were not switched to the saved Filament, so a valid new row could be hidden by the previous filter.
+4. pricing preview/summary primarily used the persisted Product Filament snapshot; it did not refresh that snapshot from current global Filament facts and did not use an unregistered currently selected Filament as a draft preview.
+5. `range` preview fell through to the formula table instead of explaining the active range mode.
+
+**Correct Fix:**
+- return the complete operational Filament row immediately after upsert;
+- route selected-Filament editing through the final composed 3I.40 editor;
+- after save, switch company/material filters to the saved Filament, refresh the list, select/focus/scroll to the exact row;
+- resolve pricing from fresh global Filament facts while preserving Product-only fixed price;
+- if the operator selects a not-yet-registered Filament, use it as a clearly marked draft price preview;
+- make range preview show the stored range and explicitly instruct switching to formula mode for component calculation;
+- keep the explicit `ثبت Filamentهای انتخابی روی محصول` boundary; saving a global Filament does not silently attach it to the Product.
+
+**Code:** `38d030024463a2057a10ad338abff5b030eb7e50`, `ab5f35523cbd76c79ed81344be57eb6b7485b075`, `cb78cb3ceb771fab54fcb8876dcd080516dcd462`, ttk fix `93b6e5c017965e50e62052afea37bfb30a86cc9d`.
+
+**Regressions:** `ed4784f3019b2cf48c212ea429cb1b67420cbc97`, `58aac85bfd4bc0875d21c107515c8050fe0ddf74`, `7e7f8fcf3c07b5aeae9bc59684cc6fac97699f2d`, `d8661288273834a98627a1ec257b838b4a4ab086`.
+
+**Rollback:** `backup/pre-err49-075-filament-refresh-pricing-preview-20260829` → `d66c68f36d1fd3e4143d461bccd999046c4baaf7`.
+
+**Verification status:** GitHub source/tests updated. Owner Local compile + focused/full regression + short foreground Stage-2 QA is required. Production untouched.
+
+**Prevention:** any DB upsert helper used to hydrate UI state must return the same operational facts that a full list/read returns; final composed UI callbacks must delegate through the class method override rather than close over an earlier implementation.
+
+
 ### ERR-49-074 — final Stage-2 price/rate calculation disappeared from the visible operator surface
 **Date:** 2026-08-29  
 **Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after owner acceptance of ERR-49-073.
