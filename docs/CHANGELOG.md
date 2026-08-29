@@ -1,6 +1,23 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — Catalog Center 8.9.8 Stage Contract + OpenRouter-only Recovery (ERR-49-069)
+- owner exact Local `3f43260...` gate: backup/checksum PASS, compile PASS, 60/60 focused tests PASS, canonical foreground launch PASS;
+- real Product 63/295 UI still reproduced late footer repaint, Stage ownership drift, out-of-scope AI defect counting, overlapping Product AI jobs and AvalAI fallback;
+- base 3B refresh now always yields to final 3I.39 footer authority; legacy Next persists before readiness and delegates to final confirmation;
+- restored Stage-1 Product type/dimensions/use-case controls and both stage-specific/global persistence;
+- restored Stage-5 source/designer/license/technical summary/features controls and stage-specific persistence;
+- legacy title-only AI delegates to the final Stage-1 engine; deferred error text is frozen safely;
+- single-stage repair and 3I.40 completion progress now count only the selected Scope while whole-product runs keep global truth;
+- one app/process Product-AI guard blocks concurrent Product Workspace AI jobs;
+- Product AI candidates are now OpenRouter-only: saved model Primary + optional `openrouter/free`; AvalAI/Google/OpenAI are not fallback Providers;
+- focused regressions updated for OpenRouter-only policy, late repaint protection, Stage-1/5 persistence, Scope-aware completion and single-job behavior;
+- executable-code hotfix head `136011971dea907ac777b3e66190dd27982a0c38`;
+- rollback `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`;
+- Production/Host/Django schema/media/secrets untouched; owner Local retest pending.
+
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 Windows Stage Confirmation Recovery (ERR-49-068)
 - owner rerun on `0191a07...`: exact prior failure PASS, focused 43-test set PASS, canonical foreground launch PASS;
 - real Product 63 still exposed a Windows workflow deadlock: manually filled Stage 1 had no practical visible confirm path and the mature Next flow read persisted readiness before saving current widget values;
