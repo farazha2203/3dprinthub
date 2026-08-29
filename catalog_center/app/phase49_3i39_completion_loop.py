@@ -400,6 +400,7 @@ def install_workspace(workspace_class) -> None:
     def __init__(self, app, product_id):
         original_init(self, app, product_id)
         self._phase49_3i39_add_stage_ai_buttons()
+        self._phase49_3i39_rebind_legacy_complete_buttons()
 
     def add_stage_ai_buttons(self):
         panel = getattr(self, "_phase49_3i36_lock_panel", None)
@@ -420,12 +421,42 @@ def install_workspace(workspace_class) -> None:
         except Exception:
             pass
 
-    def run_all(self):
+    def rebind_legacy_complete_buttons(self):
+        root = getattr(self, "content_tab", None)
+        if root is None:
+            return
+
+        def walk(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from walk(child)
+
+        for widget in walk(root):
+            if not isinstance(widget, (ttk.Button, tk.Button)):
+                continue
+            try:
+                text = str(widget.cget("text") or "")
+            except Exception:
+                continue
+            if (
+                ("تکمیل" in text and "لینک" in text)
+                or "کامل محصول" in text
+                or "تکمیل همه اطلاعات" in text
+            ):
+                try:
+                    widget.configure(
+                        text="✨ تکمیل واقعی همه اطلاعات بر اساس لینک محصول",
+                        command=lambda: self._phase49_3i39_run_all_with_mode("link"),
+                    )
+                except Exception:
+                    pass
+
+    def run_all_with_mode(self, forced_mode=None):
         if getattr(self, "_phase49_3i33_ai_busy", False):
             self.footer_status.set("یک عملیات هوش مصنوعی در حال اجرا است.")
             return
         self._phase49_3i33_ai_busy = True
-        mode = source_mode(self.app)
+        mode = forced_mode if forced_mode in AI_SOURCE_MODES else source_mode(self.app)
         dialog = ObservableJobDialog(
             self,
             f"تکمیل واقعی ۷ مرحله • {AI_SOURCE_MODES[mode]}",
@@ -433,6 +464,7 @@ def install_workspace(workspace_class) -> None:
         dialog.event(
             "queue",
             "Readiness واقعی قبل/بعد سنجیده می‌شود؛ 100٪ فقط بعد از بازبینی نهایی نمایش داده می‌شود.",
+            {"forced_source_mode": forced_mode or "", "effective_source_mode": mode},
         )
 
         def worker():
@@ -458,6 +490,9 @@ def install_workspace(workspace_class) -> None:
             daemon=True,
             name=f"catalog-3i39-repair-all-{self.product_id}",
         ).start()
+
+    def run_all(self):
+        return run_all_with_mode(self, None)
 
     def run_stage_ai(self, stage: str):
         stage = str(stage)
@@ -510,12 +545,15 @@ def install_workspace(workspace_class) -> None:
 
     # 3I.38's generic target-stage button now routes through the same repair loop.
     def run_target_stage(self):
-        label = str(getattr(self, "_phase49_3i38_stage_var", tk.StringVar(value=STAGE_LABELS["content"])).get() or "")
+        var = getattr(self, "_phase49_3i38_stage_var", None)
+        label = str(var.get() if var is not None else STAGE_LABELS["content"])
         stage = next((key for key, value in STAGE_LABELS.items() if value == label), "content")
         return run_stage_ai(self, stage)
 
     workspace_class.__init__ = __init__
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
+    workspace_class._phase49_3i39_rebind_legacy_complete_buttons = rebind_legacy_complete_buttons
+    workspace_class._phase49_3i39_run_all_with_mode = run_all_with_mode
     workspace_class._phase49_3i37_run_all = run_all
     workspace_class._phase49_3i39_run_stage_ai = run_stage_ai
     workspace_class._phase49_3i38_run_target_stage = run_target_stage
