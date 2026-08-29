@@ -320,6 +320,14 @@ def install_workspace(workspace_class) -> None:
         return selected_offers(self)
 
     def build_material_actions(self):
+        # The modern material/color picker (Phase49 material_color_picker) owns
+        # this surface and already uses grid inside the legacy commerce card.
+        # 3I.39 replaces/hides that card with the professional Offer workflow,
+        # so mounting the obsolete Listbox actions here is both unnecessary and
+        # unsafe: using pack in the grid-managed parent aborts ProductWorkspace
+        # construction before 3I.39/3I.40 can build their visible UI.
+        if getattr(self, "_epic49_materials_box", None) is not None:
+            return
         widget = getattr(self, "material_color_list", None)
         if widget is None:
             return
