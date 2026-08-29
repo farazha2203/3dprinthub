@@ -1,5 +1,18 @@
 # PROJECT CHANGELOG
 
+
+## 2026-08-29 — Catalog Center 8.9.8 Owner Visual-QA Hotfix (ERR-49-064)
+- foreground owner QA on canonical `D:\\projects\\3DPrintHub` proved the correct 8.9.8 source/branch was running;
+- opening Product 63 raised a Tk `pack`/`grid` geometry conflict in `phase49_3i35_operator_ledger.build_material_actions()`;
+- the exception occurred before 3I.39/3I.40 ProductWorkspace wrappers completed, explaining why the owner still saw the older Stage-2/SEO UI;
+- modern material/color picker presence now suppresses the obsolete 3I.35 Listbox action row instead of mounting it into the grid-managed legacy card;
+- added executable regression proving no obsolete `ttk.Frame` mount occurs when the modern picker marker exists;
+- source fix `aa37dcf916dfab71409738f7087a171daffe4a0a`;
+- regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`;
+- rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`;
+- Production untouched; owner Local retest is the next gate.
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 / Phase49.3I.40 + Store 0040
 - preserved the mature 3I.38 Crawl/Direct Link/parser/image/file acquisition path and extended only the final Stage-2/readiness boundaries;
 - Stage 2 now follows manufacturer → filament/material → color → Product Offer registration → pricing → production rows → Profile identity/dimensions;
