@@ -77,15 +77,24 @@ class Phase493CPersianReadinessAlignmentTests(unittest.TestCase):
         self.assertTrue(state["stages"]["quick"]["ready"])
         self.assertNotIn("عنوان فارسی", state["stages"]["content"]["missing"])
 
-    def test_latin_seo_or_keyword_remains_a_real_content_defect(self):
-        state = self._module().evaluate_readiness(
+    def test_exact_source_identity_is_allowed_in_seo_but_arbitrary_latin_is_not(self):
+        allowed = self._module().evaluate_readiness(
             _row(
-                seo_title_fa="خرید Flexi Gecko",
+                seo_title_fa="خرید گکوی مفصلی Flexi Gecko",
+                seo_description_fa="خرید مدل Flexi Gecko با چاپ سه‌بعدی دقیق.",
+            )
+        )
+        self.assertNotIn("SEO Title فارسی", allowed["stages"]["content"]["missing"])
+        self.assertNotIn("SEO Description فارسی", allowed["stages"]["content"]["missing"])
+
+        blocked = self._module().evaluate_readiness(
+            _row(
+                seo_title_fa="خرید premium Gecko",
                 keywords_json=json.dumps(["گکوی مفصلی", "Flexi Gecko"], ensure_ascii=False),
             )
         )
-        self.assertIn("SEO Title فارسی", state["stages"]["content"]["missing"])
-        self.assertIn("کلمات کلیدی فارسی", state["stages"]["content"]["missing"])
+        self.assertIn("SEO Title فارسی", blocked["stages"]["content"]["missing"])
+        self.assertIn("کلمات کلیدی فارسی", blocked["stages"]["content"]["missing"])
 
     def test_alt_count_defect_belongs_to_images_not_content(self):
         state = self._module().evaluate_readiness(
