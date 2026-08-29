@@ -7,7 +7,10 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.phase49_3i39_completion_loop import (
+    _claim_ai_runtime,
+    _done_message,
     _refresh_workspace_after_ai,
+    _release_ai_runtime,
     confirm_current_stage,
     defect_snapshot,
     repair_until_stable,
@@ -38,11 +41,12 @@ class _Dialog:
         self.progress.append((value, message))
 
 
-def _snapshot(content_missing=None, operator=None):
+def _snapshot(content_missing=None, operator=None, quick_missing=None):
     content_missing = list(content_missing or [])
+    quick_missing = list(quick_missing or [])
     operator = dict(operator or {})
     data = {
-        "quick": [],
+        "quick": quick_missing,
         "commerce": operator.get("commerce", []),
         "images": [],
         "content": content_missing,
@@ -50,16 +54,25 @@ def _snapshot(content_missing=None, operator=None):
         "slider": [],
         "publish": operator.get("publish", []),
     }
+    ai_fixable = {}
+    if quick_missing:
+        ai_fixable["quick"] = quick_missing
+    if content_missing:
+        ai_fixable["content"] = content_missing
     return {
         "state": {},
         "data_missing": data,
-        "ai_fixable": {"content": content_missing} if content_missing else {},
+        "ai_fixable": ai_fixable,
         "operator_only": operator,
-        "ai_fixable_flat": [f"content:{x}" for x in content_missing],
+        "ai_fixable_flat": [
+            f"{stage}:{item}"
+            for stage, items in ai_fixable.items()
+            for item in items
+        ],
         "operator_only_flat": [],
         "finalization_pending": [],
         "total_data_defects": sum(len(v) for v in data.values()),
-        "ai_fixable_count": len(content_missing),
+        "ai_fixable_count": sum(len(v) for v in ai_fixable.values()),
         "operator_only_count": sum(len(v) for v in operator.values()),
     }
 
@@ -127,6 +140,43 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("repair_pass_result", stages)
         self.assertIn("readiness_after", stages)
 
+    def test_stage_scoped_repair_ignores_defects_owned_by_other_stages(self):
+        before = _snapshot(
+            ["SEO Title فارسی", "SEO Description فارسی"],
+            quick_missing=["عنوان فارسی"],
+        )
+        after = _snapshot(
+            ["SEO Title فارسی", "SEO Description فارسی"],
+            quick_missing=[],
+        )
+        app = SimpleNamespace(db=_DB())
+        dialog = _Dialog()
+
+        with patch(
+            "app.phase49_3i39_completion_loop.defect_snapshot",
+            side_effect=[before, before, before, after, after],
+        ), patch(
+            "app.phase49_3i39_completion_loop.run_resilient_orchestrator",
+            return_value={"changed_fields": ["title_fa"]},
+        ) as runner:
+            result = repair_until_stable(
+                app,
+                63,
+                dialog,
+                mode="data",
+                target_stages={"quick"},
+                refresh_existing=False,
+                max_passes=3,
+            )
+
+        runner.assert_called_once()
+        self.assertEqual(result["scoped_ai_fixable_count"], 0)
+        self.assertEqual(result["final"]["ai_fixable_count"], 2)
+        self.assertEqual(result["target_stages"], ["quick"])
+        self.assertIn("این مرحله", _done_message(result))
+        messages = [message for code, message, _payload in dialog.events if code == "repair_pass_result"]
+        self.assertTrue(any("0 نقص AI-قابل‌اصلاح در Scope باقی" in message for message in messages))
+
     def test_post_ai_refresh_rehydrates_db_and_leaves_final_readiness_as_last_painter(self):
         calls = []
 
@@ -184,6 +234,18 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
             ],
         )
 
+    def test_product_ai_runtime_lock_blocks_second_workspace(self):
+        app = SimpleNamespace()
+        first = SimpleNamespace(app=app, product_id=63)
+        second = SimpleNamespace(app=app, product_id=295)
+        token = _claim_ai_runtime(first, "quick")
+        self.assertIsNotNone(token)
+        self.assertIsNone(_claim_ai_runtime(second, "content"))
+        _release_ai_runtime(first, token)
+        second_token = _claim_ai_runtime(second, "content")
+        self.assertIsNotNone(second_token)
+        _release_ai_runtime(second, second_token)
+
     def test_operator_only_defects_do_not_spend_an_ai_request(self):
         snapshot = _snapshot([], {
             "commerce": ["حداقل یک پروفایل فروش ثبت‌شده"],
@@ -203,6 +265,35 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertEqual(result["final"]["ai_fixable_count"], 0)
         self.assertEqual(result["final"]["operator_only_count"], 3)
         self.assertEqual(dialog.progress[-1][0], 100)
+
+    def test_seven_stage_visible_field_contract_keeps_owned_controls_available(self):
+        quick = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
+        ownership = (ROOT / "app" / "phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
+        commerce = (ROOT / "app" / "phase49_3i39_professional_commerce.py").read_text(encoding="utf-8")
+        content = (ROOT / "app" / "epic49_product_studio.py").read_text(encoding="utf-8")
+        slider = (ROOT / "app" / "phase49_3b_guided_wizard.py").read_text(encoding="utf-8")
+
+        for token in ("نوع محصول", "ابعاد محصول", "کاربری / کلاس محصول"):
+            self.assertIn(token, quick)
+        for token in ("dimensions", "use_case_class", "product_type"):
+            self.assertIn(token, ownership)
+        for token in ("ثبت Offerهای انتخابی روی محصول", "قیمت‌گذاری", "وزن", "پروفایل"):
+            self.assertIn(token, commerce)
+        for token in (
+            "SEO Title فارسی",
+            "SEO Description فارسی",
+            "تگ‌های فارسی",
+            "هشتگ‌ها",
+            "کلمات کلیدی سایت",
+            "بولت‌های فروش",
+        ):
+            self.assertIn(token, content)
+        for token in ("source_url", "commercial_status", "technical_features_json"):
+            self.assertIn(token, ownership)
+        for token in ("homepage_slider_title_fa", "homepage_slider_image_url"):
+            self.assertIn(token, slider)
+        for token in ("approved_for_sale", "publish_as_product", "publish_as_portfolio"):
+            self.assertIn(token, ownership)
 
     def test_single_bulk_and_stage_repair_share_one_engine(self):
         source = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
@@ -226,6 +317,10 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("_phase49_3i39_sync_footer_actions", source)
         self.assertIn('state="normal"', source)
         self.assertIn("lambda message=error_text", source)
+        self.assertIn("اطلاعات پایه کامل — نوع محصول / ابعاد / کاربری", source)
+        self.assertIn("use_case_class_var", source)
+        self.assertIn("self.after_idle(self._phase49_3i39_sync_footer_actions)", source)
+        self.assertIn("_claim_ai_runtime", source)
 
 
 if __name__ == "__main__":
