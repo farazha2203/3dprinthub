@@ -219,6 +219,9 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("workspace_class._phase49_3c_stage_ai = run_current_stage", source)
         self.assertIn("✅ تأیید و مرحله بعد →", source)
         self.assertIn("✨ پرکردن ناقص‌ها با AI", source)
+        self.assertIn("پیشنهاد AI برای موارد ناقص", source)
+        self.assertIn("انجام وظایف ناقص AI", source)
+        self.assertIn("root = self", source)
         self.assertIn("lambda message=error_text", source)
 
 
