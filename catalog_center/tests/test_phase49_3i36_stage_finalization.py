@@ -148,6 +148,47 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_commerce_confirmation_persists_phase41_filament_checklist_first(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
+            try:
+                calls = []
+                workspace = SimpleNamespace(
+                    db=db,
+                    product_id=product_id,
+                    app=SimpleNamespace(),
+                    _phase49_3i41_commit_checklist=lambda: calls.append("commit") or True,
+                    product_type_var=_Var("محصول آماده"),
+                    dimensions_var=_Var("10 × 10 × 10 cm"),
+                    price_min_var=_Var("0"),
+                    price_max_var=_Var("0"),
+                    stock_var=_Var("0"),
+                    lead_min_var=_Var("1"),
+                    lead_max_var=_Var("3"),
+                    pricing_strategy_var=_Var("dynamic"),
+                    availability_var=_Var("تولید پس از سفارش"),
+                    has_3d_file_var=_Var(0),
+                )
+                persist_stage_from_ui(workspace, "commerce")
+                self.assertEqual(calls, ["commit"])
+            finally:
+                db.close()
+
+    def test_commerce_confirmation_stops_when_phase41_checklist_is_not_registered(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
+            try:
+                workspace = SimpleNamespace(
+                    db=db,
+                    product_id=product_id,
+                    app=SimpleNamespace(),
+                    _phase49_3i41_commit_checklist=lambda: False,
+                )
+                with self.assertRaisesRegex(ValueError, "Filament"):
+                    persist_stage_from_ui(workspace, "commerce")
+            finally:
+                db.close()
+
     def test_images_stage_persist_builds_current_metadata_before_confirmation(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
