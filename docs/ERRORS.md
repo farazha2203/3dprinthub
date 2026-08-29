@@ -645,6 +645,53 @@ Verification: GitHub updated; owner Local rerun pending. Production untouched.
 
 Prevention: a new Stage-owned field must land together in clean schema, upgrade path, visible control, stage persistence and regression coverage.
 
+
+### ERR-49-071 — 67/67 PASS but Stage confirmation UX still broken and false missing count exploded
+**Date:** 2026-08-29  
+**Environment:** owner foreground Windows QA on exact Local head `d4da99744659d06ebe5c04fd69532cd0e03db3e8`, Catalog Center 8.9.8 / build 2026.08.29.2.
+
+**Owner evidence:** repository/branch/head verification PASS; fresh Catalog backup `D:\projects\3dprinthub-backups\err49-070-20260829-185545\catalog-before-err49-070-qa.sqlite3` with SHA256 `C1538C91C9F9E2173E7CA4E28B3F60DFCC1E38449A276F96845BC065CE689033`; compile PASS; exact two ERR-49-070 regressions PASS; OpenRouter-only 4/4 PASS; full Windows stage contract 67/67 PASS; foreground launch PASS. Visual QA nevertheless failed.
+
+Observed UI/runtime:
+- Stage 1 title and category were visibly filled but the rail still showed a red X and did not provide the simple explicit confirmation path the operator expects.
+- ERR-49-069 had inserted `نوع محصول / ابعاد / کاربری` into Stage 1 even though those controls historically belong to the commerce/order surface; the owner explicitly rejected this relocation.
+- explicit category `سایر محصولات` maps to `external-other`, but readiness treated that exact selected category as missing.
+- every unlocked Stage appended `تأیید نهایی اپراتور (ثبت مرحله)` into its generic missing list; older/base readiness UI then counted pending confirmations as product-data defects, inflating the visible missing count to dozens.
+- the visual rail used data completeness as a green check in some layers while the requested contract is: complete data may be pending, but the green check appears only after explicit `ثبت و تأیید`.
+- the visible legacy Next button continued to be repainted by older layers, so rebinding that same widget remained fragile.
+- while Product 63 Product-AI was still running, the visible title-only action on Product 286 started a second direct OpenRouter request. The title-only Tk callback had been created before the final runtime guard and was not included in the actual-widget rebind sweep.
+
+**Root Cause:**
+1. ERR-49-066 changed guided progress from confirmed `ready` to raw `data_ready`, which made visual completion semantics diverge from the operator's explicit approval workflow.
+2. ERR-49-069 incorrectly moved Product type/dimensions/use-case into Stage 1 instead of preserving the historical visible stage layout.
+3. 3I.36 and 3I.39 mixed operator-finalization markers into `state["missing"]`, so a confirmation workflow was reported as missing Product data.
+4. Stage-1 category validation treated `external-other` as a placeholder even when `سایر محصولات` was a deliberate operator selection.
+5. The final footer tried to mutate the legacy Next widget instead of owning an independent confirmation widget, allowing late callbacks to repaint it.
+6. The title-only button retained a direct legacy callback and bypassed the app-level Product-AI runtime guard.
+
+**Correct Fix — targeted rollback of the bad UX, not a broad source rollback:**
+- restore Stage 1 to the historical visible responsibility: Persian title + site category; remove mounting of the added type/dimensions/use-case panel;
+- keep Product type/dimensions/use-case in the existing Stage-2 commerce surface;
+- stop mounting the added Stage-5 panel from ERR-49-070; retain the historical source/license surface and keep the additive DB column harmless;
+- treat any explicit non-empty category, including `external-other / سایر محصولات`, as a valid Stage-1 category;
+- separate real `missing_data` from `pending_finalization`; pending confirmation must never inflate the missing-data count;
+- green `✅` means the Stage is data-complete **and explicitly confirmed**; data-complete but unconfirmed is `◌`;
+- hide the repaint-prone legacy Next widget and create an independent permanent bottom action `✅ ثبت و تأیید مرحله →`; clicking it persists the current Stage, validates, writes the Stage lock, refreshes the rail, then advances;
+- keep `✨ پرکردن ناقص‌ها با AI` and `✏ اصلاح مرحله` adjacent to the new confirmation action;
+- rebind the actual visible `ترجمه فقط عنوان فارسی` Tk button to the same final Stage-1 AI runner so the app-level one-Product-AI-at-a-time guard and OpenRouter-only policy apply.
+
+**Git source/test sequence:** starts at `a6f4d9d34d9a3963f34da7fe62fd206f0cd3364c` and currently extends through `950824d4104a7c0585ce417e9e57a498d5e2f4cf` before documentation commits.
+
+**Rollback anchor:** `backup/pre-err49-071-stage-confirm-rollback-20260829` → `d4da99744659d06ebe5c04fd69532cd0e03db3e8`.
+
+**Touched surfaces:** Windows guided Stage rail, Stage-1 readiness/category rule, stage ownership map/persistence, bottom confirmation controls, base/final readiness summaries, actual-widget AI callback rebinding, focused regressions and documentation.
+
+**Must not touch:** Stage-2 Offer/Profile/pricing implementation itself, OpenRouter-only Provider policy, crawler/parser/acquisition, Product media binaries, secure key values, Django schema/migrations, Host or Production.
+
+**Verification status:** owner proved the pre-fix head had 67/67 automated PASS but failed visual acceptance. ERR-49-071 code/regressions are on GitHub; new Local pull/test/foreground acceptance is mandatory. Production untouched.
+
+**Prevention:** a visual acceptance gate must test the exact operator meaning of icons/actions, not just data persistence. A green Stage check is an explicit business-state transition and must not be inferred from field population. Pending approval and missing data are separate domains. Final-composition controls that must survive old callbacks should own independent widgets rather than repeatedly mutating legacy widgets.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
