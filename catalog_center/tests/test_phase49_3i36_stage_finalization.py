@@ -120,7 +120,7 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                     db=db,
                     product_id=product_id,
                     app=SimpleNamespace(),
-                    product_type_var=_Var("سفارش اختصاصی"),
+                    product_type_var=_Var("سفارش سفارشی"),
                     dimensions_var=_Var("20 × 30 × 40 cm"),
                     price_min_var=_Var("500000"),
                     price_max_var=_Var("500000"),
