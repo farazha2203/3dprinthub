@@ -85,3 +85,19 @@ When AI code becomes stronger in one project, generalize the reusable improvemen
 ### Mandatory execution sequence
 READ DOCS -> VERIFY REAL STATE -> CHECK ERRORS -> SEARCH SHARED/OTHER REPOS -> PLAN DEPENDENCIES -> IMPLEMENT -> LOCAL TEST -> DOCUMENT -> COMMIT/PUSH -> DEPLOY FROM GITHUB -> PRODUCTION VERIFY
 
+## UI/UX Shared Library
+
+Before any meaningful UI/UX, Frontend, Admin, Dashboard, Form, Wizard,
+Navigation, Table/Card, Empty/Loading/Error state or design-system change, read:
+- `docs/library/ui-ux/UI_UX_LIBRARY_INDEX_FA.md`
+- `docs/library/ui-ux/UI_UX_ENGINEERING_PLAYBOOK_FA.md`
+- `docs/library/ui-ux/UI_UX_PROJECT_ADOPTION_CHECKLIST_FA.md`
+- `docs/library/ui-ux/UI_UX_SOURCE_TOPIC_MAP_FA.md`
+- `docs/library/ui-ux/UI_UX_SOURCE_MANIFEST_2026-08-29_FA.md`
+
+Rules:
+- task/usability/accessibility before decoration;
+- preserve the project-specific design system and verified constraints;
+- verify RTL/LTR, responsive behavior, keyboard/focus, contrast and loading/empty/error/success states;
+- use real operational data, not placeholder status;
+- source PDFs/books must not be committed; only derivative project knowledge is stored.
