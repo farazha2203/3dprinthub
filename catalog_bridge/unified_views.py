@@ -354,11 +354,16 @@ def filament_sync_view(request):
             brand_name__iexact=brand,
         ).order_by("id").first()
 
+        color_type = str(data.get("color_type") or "solid").strip().lower()
+        valid_color_types = {code for code, _label in MaterialColorOption.COLOR_TYPE_CHOICES}
+        if color_type not in valid_color_types:
+            color_type = "solid"
+
         values = {
             "brand_name": brand,
             "manufacturer_name": manufacturer,
             "hex_code": str(data.get("hex") or data.get("hex_code") or "").strip()[:20],
-            "color_type": str(data.get("color_type") or "solid").strip()[:20] or "solid",
+            "color_type": color_type,
             "secondary_hex": str(data.get("secondary_hex") or "").strip()[:20],
             "tertiary_hex": str(data.get("tertiary_hex") or "").strip()[:20],
             "roll_weight_grams": roll_weight,
