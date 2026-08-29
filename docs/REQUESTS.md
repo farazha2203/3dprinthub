@@ -4,6 +4,18 @@ Last Updated: 2026-08-29
 
 Older detailed request history remains available in Git history. This file keeps active acceptance contracts.
 
+## ERR-49-071 owner acceptance request
+
+- Restore the older Stage layout; do not place Product type/dimensions/use-case in Stage 1.
+- Stage 1 must accept a deliberately selected `سایر محصولات` category.
+- Every Stage must have one obvious permanent bottom `✅ ثبت و تأیید مرحله` action.
+- Filled fields alone do not earn the final green check; `✅` appears after successful explicit confirmation.
+- Clicking confirmation must persist the current UI first, validate it, confirm/lock the Stage, refresh the rail, then advance.
+- Pending confirmation must not be counted as missing Product data.
+- The legacy Next button must not be the authority because late wrappers repaint it.
+- Title-only AI must obey the same global one-Product-AI-at-a-time/OpenRouter-only runtime guard.
+- Preserve Stage-2 Offer/Profile/pricing, crawler/acquisition and current Product data.
+
 ## Preserved project contracts
 - GitHub-first delivery; live branch/HEAD verification before Host operations.
 - Product/SEO/media/Bridge security/idempotency and Product-owned public media remain intact.
