@@ -103,6 +103,20 @@ def _sync_payload(item: dict) -> dict:
     return value
 
 
+def _broadcast_filament_refresh(app) -> None:
+    try:
+        children = list(app.winfo_children())
+    except Exception:
+        children = []
+    for child in children:
+        refresher = getattr(child, "_phase49_3i41_refresh_checklist", None)
+        if callable(refresher):
+            try:
+                refresher()
+            except Exception:
+                pass
+
+
 def _status_set(owner, text: str) -> None:
     var = getattr(owner, "footer_status", None) or getattr(owner, "status", None)
     if var is not None:
@@ -321,6 +335,8 @@ def open_filament_editor(owner, offer=None, *, on_saved=None):
         _status_set(owner, f"Filament «{offer_display(target)}» ذخیره شد؛ Sync سایت در حال انجام است.")
         if callable(on_saved):
             on_saved(target)
+        app = getattr(owner, "app", owner)
+        _broadcast_filament_refresh(app)
         _async_site_sync(owner, target)
 
     actions = ttk.Frame(body)
@@ -652,6 +668,11 @@ def install_workspace(workspace_class) -> None:
             text="مدیریت / تعریف Filament در کتابخانه اصلی",
             command=self._phase49_3i41_open_main_library,
             style="Primary.TButton",
+        ).pack(side="right", padx=3)
+        ttk.Button(
+            actions,
+            text="↻ بروزرسانی لیست Filamentها",
+            command=self._phase49_3i41_refresh_checklist,
         ).pack(side="right", padx=3)
         self._phase49_3i41_selection_status = tk.StringVar()
         ttk.Label(actions, textvariable=self._phase49_3i41_selection_status, style="SubHeader.TLabel").pack(side="left", padx=5)
