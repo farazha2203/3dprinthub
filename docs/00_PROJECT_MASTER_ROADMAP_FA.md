@@ -10,6 +10,12 @@
 **Status:** `8.9.8 / ERR-49-071 IMPLEMENTED / ERR-49-072 TEST-FIXTURE SCHEMA FIX GITHUB / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
+### Owner foreground checkpoint — ERR-49-073
+
+روی `6d5897e...` تست‌های دقیق 7/7، قرارداد OpenRouter-only چهار تست، و مجموعه کامل Windows با 71/71 PASS شدند و برنامه در Foreground بالا آمد. تأیید مراحل دیگر کار می‌کند؛ ایراد باقی‌مانده فقط Stage تصاویر است: بعد از تغییر محتوا/SEO/منبع، امضای Metadata تصویر عوض می‌شود اما Lock مرحله تصاویر جلوی ثبت Metadata مشتق‌شده جدید را می‌گرفت. فایل SEO ساخته می‌شد ولی دیتابیس Signature قدیمی می‌ماند.
+
+Fix جدید فقط خروجی مشتق‌شده Finalizer تصاویر را از Lock عبور می‌دهد، نه ویرایش دلخواه کاربر/AI. تأیید Stage 3 خودش Metadata را نهایی می‌کند و تأیید مجدد Stage قفل‌شده نیز فقط Metadata مشتق‌شده را Refresh می‌کند. Stage 2 قیمت/Profile دست نخورده است. Production دست نخورده است.
+
 ### Owner Local gate checkpoint — ERR-49-072
 
 اجرای ERR-49-071 روی Head دقیق `34c65bc...` تا Compile PASS پیش رفت، اما مجموعه 7 تست جدید روی یک Fixture تمیز با خطای `no such column: price_min` متوقف شد و بنابراین OpenRouter/full-suite/foreground عمداً اجرا نشد. این نقص مربوط به Fixture تست بود: DB تمیز تست لایه‌های واقعی `epic49_desktop_schema` و `phase49_3f_workspace` را که در ProductWorkspace واقعی قبل از Stage 2 اجرا می‌شوند، مقداردهی نکرده بود.
