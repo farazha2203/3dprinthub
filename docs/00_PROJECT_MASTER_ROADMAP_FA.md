@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner readiness/checker checkpoint — ERR-49-066
+
+تست واقعی Product 63 نشان داد مشکل باقی‌مانده فقط Refresh نبود: Stage ownership، Checker، AI repair و علامت‌های Wizard قرارداد واحدی نداشتند. اکنون عنوان فارسی فقط متعلق به Stage 1، Alt تصاویر متعلق به Stage 3 و متن/SEO متعلق به Stage 4 است؛ Checker و Fixer از قواعد یکسان استفاده می‌کنند؛ Wizard برای تیک و ادامه از `data_ready` استفاده می‌کند و `ثبت` فقط Finalization است؛ مسیرهای قدیمی AI نیز به موتور نهایی 3I.39 متصل شده‌اند.
+
+Rollback: `backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`. تست Local و QA foreground روی Head جدید هنوز لازم است؛ Production دست نخورده است.
 
 ### Owner SEO/readiness hotfix checkpoint — ERR-49-065
 
