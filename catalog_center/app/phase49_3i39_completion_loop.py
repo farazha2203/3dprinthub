@@ -189,11 +189,16 @@ def configure_readiness() -> None:
 
         ordered = {stage: stages.get(stage, {}) for stage in STAGE_ORDER}
         state["stages"] = ordered
+        state["pending_finalization"] = [
+            stage
+            for stage in STAGE_ORDER
+            if not bool((stage_locks(row).get(stage) or {}).get("locked"))
+        ]
         state["production_ready"] = all(bool(item.get("ready")) for item in ordered.values())
         state["missing"] = [
             f"{STAGE_LABELS[stage]}: {item}"
             for stage in STAGE_ORDER
-            for item in ordered[stage].get("missing", [])
+            for item in ordered[stage].get("missing_data", [])
         ]
         return state
 
@@ -582,8 +587,9 @@ def install_workspace(workspace_class) -> None:
     def __init__(self, app, product_id):
         original_init(self, app, product_id)
         self._phase49_3i39_add_stage_ai_buttons()
-        self._phase49_3i39_add_quick_identity_panel()
-        self._phase49_3i39_add_specs_contract_panel()
+        # Keep the historical stage layout. Stage 1 remains title/category;
+        # Product type/dimensions stay in Stage 2 and source/license stays in Stage 5.
+        # The ERR-49-069 additive panels are intentionally not mounted.
         self._phase49_3i39_rebind_legacy_complete_buttons()
         self._phase49_3i39_add_fixed_footer_actions()
         self._phase49_3i39_bind_footer_refresh()
@@ -874,12 +880,25 @@ def install_workspace(workspace_class) -> None:
             pass
 
     def sync_footer_actions(self):
-        next_button = getattr(self, "_phase49_3b_next", None)
-        if next_button is None:
+        legacy_next = getattr(self, "_phase49_3b_next", None)
+        if legacy_next is not None:
+            try:
+                legacy_next.pack_forget()
+            except Exception:
+                pass
+
+        confirm = getattr(self, "_phase49_3i39_footer_confirm", None)
+        if confirm is None:
             return
+        stage = _current_stage_key(self)
+        text = (
+            "✅ ثبت و تأیید نهایی"
+            if stage == "publish"
+            else "✅ ثبت و تأیید مرحله →"
+        )
         try:
-            next_button.configure(
-                text="✅ تأیید و مرحله بعد →",
+            confirm.configure(
+                text=text,
                 command=self._phase49_3i39_confirm_current_stage,
                 state="normal",
                 style="Success.TButton",
@@ -903,15 +922,24 @@ def install_workspace(workspace_class) -> None:
         self._phase49_3i39_footer_refresh_wrapped = True
 
     def add_fixed_footer_actions(self):
-        next_button = getattr(self, "_phase49_3b_next", None)
-        if next_button is None:
+        legacy_next = getattr(self, "_phase49_3b_next", None)
+        if legacy_next is None:
             return
         try:
-            nav = next_button.master
+            nav = legacy_next.master
+            legacy_next.pack_forget()
         except Exception:
             return
 
-        self._phase49_3i39_sync_footer_actions()
+        if getattr(self, "_phase49_3i39_footer_confirm", None) is None:
+            button = ttk.Button(
+                nav,
+                text="✅ ثبت و تأیید مرحله →",
+                command=self._phase49_3i39_confirm_current_stage,
+                style="Success.TButton",
+            )
+            button.pack(side="left", padx=5)
+            self._phase49_3i39_footer_confirm = button
 
         if getattr(self, "_phase49_3i39_footer_ai", None) is None:
             button = ttk.Button(
@@ -920,11 +948,8 @@ def install_workspace(workspace_class) -> None:
                 command=self._phase49_3i39_run_current_stage,
                 style="Primary.TButton",
             )
-            try:
-                button.pack(side="left", padx=3, before=next_button)
-                self._phase49_3i39_footer_ai = button
-            except Exception:
-                pass
+            button.pack(side="left", padx=3)
+            self._phase49_3i39_footer_ai = button
 
         if getattr(self, "_phase49_3i39_footer_unlock", None) is None:
             button = ttk.Button(
@@ -932,11 +957,10 @@ def install_workspace(workspace_class) -> None:
                 text="✏ اصلاح مرحله",
                 command=self._phase49_3i39_unlock_current_stage,
             )
-            try:
-                button.pack(side="left", padx=3, before=next_button)
-                self._phase49_3i39_footer_unlock = button
-            except Exception:
-                pass
+            button.pack(side="left", padx=3)
+            self._phase49_3i39_footer_unlock = button
+
+        self._phase49_3i39_sync_footer_actions()
 
     def rebind_legacy_complete_buttons(self):
         # Older AI controls were created before the final 3I.39 methods were
@@ -966,10 +990,15 @@ def install_workspace(workspace_class) -> None:
                 "پیشنهاد AI برای موارد ناقص" in text
                 or "انجام وظایف ناقص AI" in text
             )
-            if not (is_link_action or is_missing_action):
+            is_title_action = "ترجمه فقط عنوان فارسی" in text
+            if not (is_link_action or is_missing_action or is_title_action):
                 continue
             try:
-                if is_link_action:
+                if is_title_action:
+                    widget.configure(
+                        command=lambda: self._phase49_3i39_run_stage_ai("quick"),
+                    )
+                elif is_link_action:
                     widget.configure(
                         text="✨ تکمیل واقعی همه اطلاعات بر اساس لینک محصول",
                         command=lambda: self._phase49_3i39_run_all_with_mode("link"),
