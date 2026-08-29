@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import threading
 import unittest
 
 from app.phase49_3i40_commerce_precision import (
+    _CompletionProgressProxy,
     apply_product_fixed_prices,
     color_preview_hex,
     merge_offer_scope,
@@ -21,6 +23,19 @@ def offer(brand, material, color, **extra):
         "sale_price_per_roll": 3_000_000,
         **extra,
     }
+
+
+class _Dialog:
+    def __init__(self):
+        self.cancelled = threading.Event()
+        self.progress = []
+        self.events = []
+
+    def set_progress(self, value, message=""):
+        self.progress.append((float(value), message))
+
+    def event(self, *args, **kwargs):
+        self.events.append((args, kwargs))
 
 
 class Phase493I40CommercePrecisionTests(unittest.TestCase):
@@ -100,6 +115,14 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertNotIn("content", result["pending_finalization"])
         self.assertNotIn("commerce", result["pending_finalization"])
         self.assertIn("quick", result["pending_finalization"])
+
+    def test_progress_proxy_suppresses_internal_100_percent(self):
+        dialog = _Dialog()
+        proxy = _CompletionProgressProxy(dialog)
+        proxy.set_progress(75, "pass")
+        proxy.set_progress(100, "old cosmetic terminal")
+        self.assertEqual(dialog.progress, [(75.0, "pass")])
+        self.assertEqual(proxy.held_terminal, (100.0, "old cosmetic terminal"))
 
 
 if __name__ == "__main__":
