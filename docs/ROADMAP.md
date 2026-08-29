@@ -6,10 +6,22 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-071 IMPLEMENTED / ERR-49-072 TEST-FIXTURE SCHEMA FIX GITHUB / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 / ERR-49-071+072 LOCAL PASS / ERR-49-073 IMAGE METADATA REFRESH FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-073
+
+The Windows workflow is now narrowed to one remaining Images issue. Owner proved 71/71 automated PASS and successful foreground confirmation for the other stages. The next gate is:
+1. pull the ERR-49-073 head;
+2. run focused image-lock/finalization regressions plus the existing 71-test stage suite;
+3. foreground-open Product 63;
+4. on Stage 3 press `ثبت و تأیید مرحله` — current Metadata must rebuild and the stale Metadata warning must disappear;
+5. change no price/Profile fields yet; Stage 2 may remain intentionally incomplete;
+6. verify manual Metadata override on a locked Images stage asks for `اصلاح مرحله`, while deterministic `نهایی‌سازی فایل‌های SEO` remains allowed.
+
+Production remains blocked.
 
 ## Immediate rerun gate — ERR-49-072
 
