@@ -9,6 +9,7 @@ from app.phase49_3b_guided_wizard import (
     HERO_COLUMNS,
     STAGE_ORDER,
     STAGE_LABELS,
+    _stage_confirmed,
     _stage_data_missing,
     _stage_data_ready,
     ensure_schema,
@@ -21,15 +22,21 @@ class Phase493BGuidedWizardTests(unittest.TestCase):
         self.assertEqual(STAGE_LABELS["slider"], "۶. اسلایدر صفحه اصلی")
         self.assertEqual(STAGE_LABELS["publish"], "۷. بررسی و انتشار")
 
-    def test_visual_progress_uses_data_ready_not_finalization_lock(self):
+    def test_complete_stage_waits_for_explicit_confirmation_before_tick(self):
         stage = {
             "ready": False,
             "data_ready": True,
+            "finalized": False,
+            "locked": False,
             "missing": ["تأیید نهایی اپراتور (ثبت مرحله)"],
             "missing_data": [],
         }
         self.assertTrue(_stage_data_ready(stage))
+        self.assertFalse(_stage_confirmed(stage))
         self.assertEqual(_stage_data_missing(stage), [])
+
+        confirmed = dict(stage, ready=True, finalized=True, locked=True, missing=[])
+        self.assertTrue(_stage_confirmed(confirmed))
 
     def test_hero_media_columns_upgrade_existing_windows_sqlite_additively(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -52,6 +59,7 @@ class Phase493BGuidedWizardTests(unittest.TestCase):
             "← مرحله قبل",
             "مرحله بعد برای انتشار →",
             "★ الزامی برای ادامه",
+            "ثبت و تأیید مرحله",
             "✨ ترجمه فقط عنوان فارسی",
             "استودیوی اسلایدر صفحه اصلی",
             "پیش‌نمایش Desktop/Mobile",
