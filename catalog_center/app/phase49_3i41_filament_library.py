@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 
 from .env_settings import env_value
 from .epic49_desktop_schema import (
+    COLOR_TYPES,
     add_available_material_color,
     deactivate_available_material_color,
     list_available_material_colors,
@@ -194,7 +195,10 @@ def open_filament_editor(owner, offer=None, *, on_saved=None):
         "brand": source.get("brand") or source.get("brand_name") or "",
         "material": source.get("material") or source.get("material_name") or "PLA",
         "color": source.get("color") or source.get("color_name") or "",
+        "color_type": source.get("color_type") or "solid",
         "hex": source.get("hex") or source.get("hex_code") or "",
+        "secondary_hex": source.get("secondary_hex") or "",
+        "tertiary_hex": source.get("tertiary_hex") or "",
         "image": source.get("filament_image_url") or "",
         "roll_weight": source.get("roll_weight_grams") or 1000,
         "stock_kg": offer_stock_grams(source) / 1000.0 if source else 0,
@@ -221,7 +225,10 @@ def open_filament_editor(owner, offer=None, *, on_saved=None):
         ("brand", "برند"),
         ("material", "نوع Filament / متریال"),
         ("color", "رنگ"),
-        ("hex", "HEX رنگ"),
+        ("color_type", "نوع رنگ"),
+        ("hex", "HEX اصلی"),
+        ("secondary_hex", "HEX دوم"),
+        ("tertiary_hex", "HEX سوم"),
         ("image", "عکس Filament (URL اختیاری)"),
         ("roll_weight", "وزن هر رول (گرم)"),
         ("stock_kg", "موجودی فعلی (کیلوگرم)"),
@@ -239,6 +246,7 @@ def open_filament_editor(owner, offer=None, *, on_saved=None):
         "manufacturer": choices["manufacturers"],
         "brand": choices["brands"],
         "material": choices["materials"],
+        "color_type": [code for code, _label in COLOR_TYPES],
     }
     for index, (key, label) in enumerate(fields, start=1):
         ttk.Label(body, text=label).grid(row=index, column=0, sticky="w", padx=4, pady=4)
@@ -308,6 +316,9 @@ def open_filament_editor(owner, offer=None, *, on_saved=None):
                 material,
                 color,
                 vars_["hex"].get().strip(),
+                color_type=vars_["color_type"].get().strip() or "solid",
+                secondary_hex=vars_["secondary_hex"].get().strip(),
+                tertiary_hex=vars_["tertiary_hex"].get().strip(),
                 brand_name=brand,
                 manufacturer_name=manufacturer,
                 roll_weight_grams=roll_weight,
@@ -505,9 +516,13 @@ def install_app(app_class) -> None:
             parent=self,
         ):
             return
+        disabled = dict(item)
+        disabled["_is_active"] = False
         deactivate_available_material_color(self.db, int(item.get("_row_id") or 0))
         refresh_library(self)
-        _status_set(self, "Filament غیرفعال شد؛ حذف دائمی انجام نشد.")
+        _status_set(self, "Filament غیرفعال شد؛ Sync وضعیت با سایت در حال انجام است.")
+        _broadcast_filament_refresh(self)
+        _async_site_sync(self, disabled)
 
     def sync_all(self):
         inventory = _active_inventory(self.db)
