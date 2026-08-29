@@ -7,8 +7,12 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner Local test checkpoint — ERR-49-067
+
+روی Head `9f3b765...` کامپایل PASS شد و از 43 تست هدفمند فقط یک Fixture قدیمی خطا داد: داخل Mock مربوط به `seo_description_fa` عبارت لاتین `AI` وجود داشت، درحالی‌که قرارداد جدید SEO را فارسی-only می‌خواهد. قانون Runtime تغییر نکرد؛ فقط Fixture در `38cb415bc12d7ec08943809fd14f3478b3ddac1b` اصلاح شد. Launch طبق Gate اجرا نشد. قدم بعدی Pull و تکرار همان تست‌هاست؛ Production دست نخورده است.
 
 ### Owner readiness/checker checkpoint — ERR-49-066
 
