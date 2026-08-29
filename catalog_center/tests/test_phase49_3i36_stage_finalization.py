@@ -112,6 +112,32 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_commerce_stage_persists_visible_product_type_and_dimensions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
+            try:
+                workspace = SimpleNamespace(
+                    db=db,
+                    product_id=product_id,
+                    app=SimpleNamespace(),
+                    product_type_var=_Var("سفارش اختصاصی"),
+                    dimensions_var=_Var("20 × 30 × 40 cm"),
+                    price_min_var=_Var("500000"),
+                    price_max_var=_Var("500000"),
+                    stock_var=_Var("0"),
+                    lead_min_var=_Var("1"),
+                    lead_max_var=_Var("3"),
+                    pricing_strategy_var=_Var("fixed"),
+                    availability_var=_Var("تولید پس از سفارش"),
+                    has_3d_file_var=_Var(0),
+                )
+                persist_stage_from_ui(workspace, "commerce")
+                row = db.product(product_id)
+                self.assertEqual(row["product_type"], "custom_order")
+                self.assertEqual(row["dimensions"], "20 × 30 × 40 cm")
+            finally:
+                db.close()
+
     def test_specs_stage_keeps_historical_visible_source_and_license_contract(self):
         with tempfile.TemporaryDirectory() as temporary:
             db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
