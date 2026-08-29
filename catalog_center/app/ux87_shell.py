@@ -124,7 +124,9 @@ def build_app_class(BaseApp):
             self._build_ux87_dashboard()
             super()._products_ui()
             self._modernize_products_page()
-            self._build_phase49_3i41_filament_library()
+            filament_builder = getattr(self, "_build_phase49_3i41_filament_library", None)
+            if callable(filament_builder):
+                filament_builder()
             super()._scan_ui()
             super()._upload_ui()
             super()._published_ui()
