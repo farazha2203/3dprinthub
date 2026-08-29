@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from app.phase49_3i39_professional_commerce import pricing_summary_range
 from app.phase49_3i39_completion_loop import (
     _claim_ai_runtime,
     _done_message,
@@ -266,6 +267,59 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertEqual(result["final"]["operator_only_count"], 3)
         self.assertEqual(dialog.progress[-1][0], 100)
 
+    def test_live_pricing_summary_restores_exact_final_amount_for_formula_and_fixed_modes(self):
+        filament = {
+            "manufacturer": "Bambu Lab",
+            "brand": "Bambu Lab",
+            "material": "PLA",
+            "color": "White",
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 3_000_000,
+            "print_hourly_rate": 120_000,
+            "supervision_hourly_rate": 60_000,
+            "preheat_hours": 2,
+            "preheat_hourly_rate": 20_000,
+        }
+        production = [{
+            "weight_grams": 100,
+            "support_weight_grams": 10,
+            "print_time_minutes": 60,
+        }]
+        dynamic = pricing_summary_range(
+            [filament],
+            production,
+            "dynamic",
+            support_multiplier=2,
+            assembly_fee=50_000,
+        )
+        self.assertEqual(dynamic["min"], 630_000)
+        self.assertEqual(dynamic["max"], 630_000)
+        self.assertEqual(dynamic["count"], 1)
+
+        fixed = pricing_summary_range(
+            [
+                {**filament, "fixed_product_price": 900_000},
+                {**filament, "brand": "eSUN", "fixed_product_price": 950_000},
+                {**filament, "brand": "Generic", "fixed_product_price": 0},
+            ],
+            production,
+            "fixed",
+        )
+        self.assertEqual(fixed["min"], 900_000)
+        self.assertEqual(fixed["max"], 950_000)
+        self.assertEqual(fixed["count"], 2)
+        self.assertEqual(fixed["incomplete"], 1)
+
+    def test_operator_buttons_say_filament_not_offer(self):
+        commerce = (ROOT / "app" / "phase49_3i39_professional_commerce.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("＋ تعریف Filament جدید", commerce)
+        self.assertIn("✏ ویرایش Filament انتخابی", commerce)
+        self.assertIn("✓ ثبت Filamentهای انتخابی روی محصول", commerce)
+        self.assertIn("مبلغ نهایی محاسباتی", commerce)
+        self.assertNotIn("＋ تعریف Offer جدید", commerce)
+
     def test_final_composition_keeps_historical_stage_layout_and_dedicated_confirm(self):
         source = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(
             encoding="utf-8"
@@ -287,7 +341,7 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertNotIn("_phase49_3i39_add_specs_contract_panel()", init_block)
 
         self.assertIn('"product_type", "dimensions", "use_case_class"', ownership)
-        for token in ("ثبت Offerهای انتخابی روی محصول", "قیمت‌گذاری", "وزن", "پروفایل"):
+        for token in ("ثبت Filamentهای انتخابی روی محصول", "قیمت‌گذاری", "وزن", "پروفایل"):
             self.assertIn(token, commerce)
         for token in ("SEO Title فارسی", "SEO Description فارسی", "کلمات کلیدی سایت"):
             self.assertIn(token, content)
