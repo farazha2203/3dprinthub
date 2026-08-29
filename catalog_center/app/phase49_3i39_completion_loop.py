@@ -569,9 +569,10 @@ def install_workspace(workspace_class) -> None:
                 pass
 
     def rebind_legacy_complete_buttons(self):
-        root = getattr(self, "content_tab", None)
-        if root is None:
-            return
+        # Older AI controls were created before the final 3I.39 methods were
+        # installed, so changing the class alias alone does not change the
+        # callable already captured by Tk. Rebind the actual visible buttons.
+        root = self
 
         def walk(widget):
             for child in widget.winfo_children():
@@ -585,18 +586,31 @@ def install_workspace(workspace_class) -> None:
                 text = str(widget.cget("text") or "")
             except Exception:
                 continue
-            if (
+
+            is_link_action = (
                 ("تکمیل" in text and "لینک" in text)
                 or "کامل محصول" in text
                 or "تکمیل همه اطلاعات" in text
-            ):
-                try:
+            )
+            is_missing_action = (
+                "پیشنهاد AI برای موارد ناقص" in text
+                or "انجام وظایف ناقص AI" in text
+            )
+            if not (is_link_action or is_missing_action):
+                continue
+            try:
+                if is_link_action:
                     widget.configure(
                         text="✨ تکمیل واقعی همه اطلاعات بر اساس لینک محصول",
                         command=lambda: self._phase49_3i39_run_all_with_mode("link"),
                     )
-                except Exception:
-                    pass
+                else:
+                    widget.configure(
+                        text="✨ تکمیل همه نقص‌های قابل اصلاح با AI",
+                        command=self._phase49_3i37_run_all,
+                    )
+            except Exception:
+                pass
 
     def run_all_with_mode(self, forced_mode=None):
         if getattr(self, "_phase49_3i33_ai_busy", False):
