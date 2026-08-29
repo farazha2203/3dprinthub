@@ -114,7 +114,7 @@ Verification:
 - artifact ID `9647216177`,
 - EXE SHA256 `4a3e15a3c475460c2dac035cedcd8ccebb40107fec6360b7be6a313f69186079`.
 
-Historical 3I.37 gate was superseded by 3I.38; the current owner Local visual/functional gate is Catalog Center 8.9.6. Production remains untouched.
+Historical 3I.37 gate was superseded by 3I.38 and then by current 3I.40. Current owner Local visual/functional gate is Catalog Center 8.9.8 with Local Store 0040 verification. Production remains untouched.
 
 ## 49.3I.38 — Permanent Crawl Ledger / Reject-Purge / Stage-scoped AI — GITHUB + WINDOWS CI TESTED
 - preserve the mature crawl/browser/parser/image/file receive path,
