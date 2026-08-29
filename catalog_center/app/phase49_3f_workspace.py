@@ -726,6 +726,17 @@ def install(workspace_class, readiness_module=None) -> None:
                 load_index(int(sel[0]))
 
         def save_all():
+            from .phase49_3i36_stage_finalization import is_stage_locked
+            current_row = self.db.product(self.product_id)
+            if is_stage_locked(current_row, "images"):
+                messagebox.showinfo(
+                    "مرحله تصاویر تأیید شده",
+                    "برای تغییر دستی Metadata ابتدا «اصلاح مرحله» را بزن.\n"
+                    "اگر فقط Metadata به‌خاطر تغییرات بعدی محتوا/منبع نیاز به بروزرسانی دارد، "
+                    "همان «ثبت و تأیید مرحله» یا «نهایی‌سازی فایل‌های SEO» را بزن.",
+                    parent=win,
+                )
+                return
             save_current()
             # Preserve every unselected metadata record. Only selected records are replaced.
             unselected = [item for item in original_items if str(item.get("source_url") or "") not in set(selected)]
