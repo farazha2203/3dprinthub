@@ -124,3 +124,52 @@ class Phase493I41FilamentBridgeTests(TestCase):
         self.assertEqual(str(option.stock_roll_count_snapshot), "3.00")
         self.assertEqual(option.sale_price_per_roll, 4_500_000)
         self.assertEqual(option.print_hourly_rate, 170_000)
+
+
+    def test_invalid_color_type_is_normalized_and_inactive_sync_updates_same_row(self):
+        created = self._post({
+            "filament": {
+                "material": "PLA",
+                "brand": "Bambu Lab",
+                "manufacturer": "Bambu Lab",
+                "color": "دو رنگ",
+                "color_type": "not-a-real-type",
+                "secondary_hex": "#112233",
+                "tertiary_hex": "#445566",
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 1,
+                "sale_price_per_roll": 4_000_000,
+            },
+        })
+        self.assertEqual(created.status_code, 200)
+        row_id = created.json()["filament"]["id"]
+        option = MaterialColorOption.objects.get(pk=row_id)
+        self.assertEqual(option.color_type, "solid")
+        self.assertEqual(option.secondary_hex, "#112233")
+        self.assertEqual(option.tertiary_hex, "#445566")
+
+        disabled = self._post({
+            "filament": {
+                "material": "PLA",
+                "brand": "Bambu Lab",
+                "manufacturer": "Bambu Lab",
+                "color": "دو رنگ",
+                "color_type": "dual",
+                "secondary_hex": "#112233",
+                "tertiary_hex": "#445566",
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 1,
+                "sale_price_per_roll": 4_000_000,
+                "is_active": False,
+            },
+        })
+        self.assertEqual(disabled.status_code, 200)
+        self.assertFalse(disabled.json()["created"])
+        self.assertEqual(disabled.json()["filament"]["id"], row_id)
+        option.refresh_from_db()
+        self.assertFalse(option.is_active)
+        self.assertEqual(option.color_type, "dual")
+
+        listing = self.client.get(reverse("catalog_bridge:filaments"), **HEADERS)
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()["count"], 0)
