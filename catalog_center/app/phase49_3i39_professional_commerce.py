@@ -834,13 +834,21 @@ def install_workspace(workspace_class) -> None:
 
     def pricing_offer_context(self):
         draft_getter = getattr(self, "_phase49_3i41_selected_draft_offers", None)
-        visible = draft_getter() if callable(draft_getter) else selected_inventory_offers(self)
-        offers, draft = resolve_pricing_offer_context(
+        if callable(draft_getter):
+            visible = normalize_material_color_options(draft_getter() or [])
+            registered = normalize_material_color_options(
+                getattr(self, "_phase49_3i39_selected_product_offers", []) or []
+            )
+            return visible, (
+                {offer_key(item) for item in visible}
+                != {offer_key(item) for item in registered}
+            )
+        visible = selected_inventory_offers(self)
+        return resolve_pricing_offer_context(
             getattr(self, "_phase49_3i39_selected_product_offers", []) or [],
             global_offers(self),
             visible,
         )
-        return offers, draft
 
     def refresh_price_summary(self):
         label = getattr(self, "_phase49_3i39_price_summary_var", None)
