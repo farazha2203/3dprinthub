@@ -25,6 +25,8 @@ on:
       - store/migrations/0037_phase50_professional_commerce_policy.py
       - store/migrations/0038_phase50_profile_matrix.py
       - store/migrations/0039_phase50_filament_offer_pricing.py
+      - store/migrations/0040_phase50_filament_offer_operations.py
+      - store/test_phase50_filament_offer_operations.py
       - store/test_phase50_variant2_gallery.py
       - store/test_phase50_checkout_snapshot.py
       - store/test_phase50_profile_matrix.py
@@ -87,7 +89,9 @@ jobs:
             store/migrations/0037_phase50_professional_commerce_policy.py \
             store/migrations/0038_phase50_profile_matrix.py \
             store/migrations/0039_phase50_filament_offer_pricing.py \
+            store/migrations/0040_phase50_filament_offer_operations.py \
             store/test_phase50_variant2_gallery.py \
+            store/test_phase50_filament_offer_operations.py \
             store/test_phase50_checkout_snapshot.py \
             store/test_phase50_profile_matrix.py
 
@@ -138,6 +142,7 @@ jobs:
             store.test_phase50_variant2_gallery \
             store.test_phase50_checkout_snapshot \
             store.test_phase50_profile_matrix \
+            store.test_phase50_filament_offer_operations \
             -v 2
 
       - name: Gate marker
@@ -146,5 +151,7 @@ jobs:
           echo "PHASE50_CHECKOUT_SNAPSHOT_CI=PASS"
           echo "PHASE50_PROFILE_MATRIX_CI=PASS"
           echo "PHASE50_FILAMENT_OFFER_0039_CI=PASS"
+          echo "PHASE50_FILAMENT_OFFER_0040_OPERATIONS_CI=PASS"
+          echo "PHASE50_FILAMENT_SELECTOR_MANUFACTURER_COLOR_CI=PASS"
           echo "PHASE50_CHECKOUT_FILAMENT_SNAPSHOT_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
