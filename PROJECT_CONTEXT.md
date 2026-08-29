@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-066
+
+The owner completed the ERR-49-065 pull/test/foreground run: exact Local head matched `c679c66...`, 12 targeted tests passed, and the correct 8.9.8 runtime opened. Real Product 63 still failed readiness. Audit showed checker/stage/fixer disagreement and a legacy full-AI entrypoint bypass.
+
+GitHub now aligns title/Alt/Content ownership, persisted Persian/source-identity validation, AI repair eligibility, data-ready Wizard progress and final 3I.39 AI entrypoint authority. Rollback: `backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`. Current-head Local regression and foreground QA are pending; Production untouched.
 
 ## Owner SEO/readiness hotfix checkpoint — ERR-49-065
 
