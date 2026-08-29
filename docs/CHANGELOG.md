@@ -1,6 +1,8 @@
 # PROJECT CHANGELOG
 
 ## 2026-08-29 — ERR-49-071 explicit Stage confirmation + historical layout recovery
+- executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`; Stage-2 explicit confirmation also persists its visible Product type + dimensions before locking;
+- current-head GitHub Actions: none attached; Local verification pending;
 - owner exact `d4da997...`: backup PASS, compile PASS, exact regressions PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 67/67 PASS, foreground launch PASS, **visual acceptance FAIL**;
 - removed mounting of the rejected Stage-1 type/dimensions/use-case panel and returned those existing controls to Stage 2;
 - stopped mounting the ERR-49-070 additive Stage-5 panel so the historical source/license surface remains visible authority;
