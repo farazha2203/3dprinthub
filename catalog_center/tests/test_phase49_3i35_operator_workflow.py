@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from app.phase49_3i35_operator_ledger import (
     flatten_ledger_profiles,
+    install_workspace,
     normalize_ledger_profile,
     offer_price_preview,
 )
@@ -141,6 +142,23 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         source = (ROOT / "app" / "phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
         self.assertIn('panel.pack(fill="x", padx=8, pady=8)', source)
         self.assertNotIn('panel.grid(row=50, column=0, columnspan=2', source)
+
+    def test_operator_ledger_skips_obsolete_listbox_actions_when_modern_picker_is_installed(self):
+        class DummyWorkspace:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def reload(self):
+                return None
+
+            def save(self, silent=False):
+                return True
+
+        install_workspace(DummyWorkspace)
+        workspace = SimpleNamespace(_epic49_materials_box=object())
+        with patch("app.phase49_3i35_operator_ledger.ttk.Frame") as frame:
+            DummyWorkspace._phase49_3i35_build_material_actions(workspace)
+        frame.assert_not_called()
 
     def test_final_composition_and_release_manifest_include_3i35(self):
         composition = (ROOT / "app" / "phase49_3i_pricing_modes.py").read_text(encoding="utf-8")
