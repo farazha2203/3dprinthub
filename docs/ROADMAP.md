@@ -13,6 +13,9 @@ Status: `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLIC
 
 ## Immediate owner gate — ERR-49-071
 
+Executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head Actions run is attached. The next owner gate must compile, run the focused readiness/finalization tests, then the full Windows stage suite, and only on PASS foreground-launch the real Product Workspace.
+
+
 The owner has now proven that automated 67/67 PASS was insufficient: the real foreground UI on `d4da997...` still failed the core Stage-confirmation workflow. The current GitHub fix restores the older visual ownership and makes confirmation explicit rather than inferred.
 
 Acceptance sequence:
