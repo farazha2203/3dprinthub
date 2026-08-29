@@ -8,6 +8,7 @@ from app.phase49_3i35_operator_ledger import flatten_ledger_profiles
 from app.phase49_3i39_professional_commerce import (
     formula_price_breakdown,
     offer_display,
+    resolve_pricing_offer_context,
     validate_profile_identity,
 )
 
@@ -77,6 +78,69 @@ class Phase493I39ProfessionalCommerceTests(unittest.TestCase):
         self.assertEqual(first["total"], 642000)
         self.assertEqual(second["preheat_cost"], 720000)
         self.assertGreater(second["total"], first["total"])
+
+    def test_pricing_context_refreshes_registered_snapshot_from_global_filament_facts(self):
+        registered = [{
+            "material": "PLA",
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "صورتی",
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 0,
+            "print_hourly_rate": 0,
+            "supervision_hourly_rate": 0,
+            "fixed_product_price": 900_000,
+        }]
+        inventory = [{
+            "material": "PLA",
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "صورتی",
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 4_200_000,
+            "print_hourly_rate": 160_000,
+            "supervision_hourly_rate": 50_000,
+            "preheat_hours": 8,
+            "preheat_temperature_c": 45,
+            "preheat_hourly_rate": 30_000,
+        }]
+        resolved, draft = resolve_pricing_offer_context(registered, inventory, [])
+        self.assertFalse(draft)
+        self.assertEqual(resolved[0]["sale_price_per_roll"], 4_200_000)
+        self.assertEqual(resolved[0]["print_hourly_rate"], 160_000)
+        self.assertEqual(resolved[0]["supervision_hourly_rate"], 50_000)
+        self.assertEqual(resolved[0]["preheat_hourly_rate"], 30_000)
+        self.assertEqual(resolved[0]["fixed_product_price"], 900_000)
+
+    def test_pricing_context_uses_new_visible_filament_as_draft_preview(self):
+        registered = [{
+            "material": "PETG",
+            "brand": "Generic",
+            "color": "شفاف",
+            "sale_price_per_roll": 0,
+        }]
+        selected = [{
+            "material": "PLA",
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "صورتی",
+            "sale_price_per_roll": 4_200_000,
+            "print_hourly_rate": 160_000,
+        }]
+        resolved, draft = resolve_pricing_offer_context(registered, selected, selected)
+        self.assertTrue(draft)
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0]["brand"], "Bambu Lab")
+        self.assertEqual(resolved[0]["sale_price_per_roll"], 4_200_000)
+
+    def test_edit_selected_filament_delegates_to_final_composed_editor(self):
+        source = (
+            __import__("pathlib").Path(__file__).resolve().parents[1]
+            / "app"
+            / "phase49_3i39_professional_commerce.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("self._phase49_3i39_open_offer_editor(offer)", source)
+        self.assertNotIn("        open_offer_editor(self, offer)\n", source)
 
     def test_profile_identity_rejects_duplicate_name_size_and_dimensions(self):
         ledger = [{
