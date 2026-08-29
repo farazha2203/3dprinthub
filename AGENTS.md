@@ -29,3 +29,59 @@ Use PLANNED, IN_PROGRESS, IMPLEMENTED, LOCAL_TESTED, GITHUB_UPDATED, DEPLOYED, P
 At session end `docs/CURRENT_STATE.md` must show what changed, what passed/failed, current branch/approved commit, production commit, known issues, remaining work and exact next task.
 
 READ -> VERIFY -> IMPLEMENT -> TEST -> DOCUMENT -> COMMIT -> PUSH -> DEPLOY -> VERIFY
+
+## CROSS-PROJECT SHARED CORE RULES
+
+These rules are mandatory for all projects owned by this account.
+
+### Guided UI, setup order and dependency visibility
+Every important admin option, button, setting, wizard, integration, configuration page, data-entry section or operational action must explain:
+1. What it does.
+2. Where its result appears or is used.
+3. Why it exists.
+4. What prerequisites must exist first.
+5. What data must be entered.
+6. How to configure it.
+7. What happens after Save/Run/Enable.
+8. Dependencies on earlier steps/modules.
+9. How to verify success.
+10. Common missing prerequisites/errors.
+
+When steps depend on each other, present them as a numbered workflow/wizard. A later step must not silently run when required earlier data is missing; show the missing requirement and the action/path to complete it.
+
+Dashboards and main admin pages should report real useful data and setup progress (counts, configured entities, records, missing setup, integration/health status, pending work). Never use hard-coded placeholder counts as operational status.
+
+### Authentication and security
+Review authentication and sensitive forms. Where bot/abuse protection is appropriate, use reCAPTCHA or the project-approved equivalent, but never make Google a single point of failure.
+
+If Google/reCAPTCHA/Google Login is blocked, filtered, unavailable or fails, use a secure approved fallback appropriate to the project, such as SMS OTP or username/password with rate limiting, lockout/brute-force protection and secure recovery. Never bypass authentication merely because Google is unavailable.
+
+Document login methods, fallback order, provider configuration, environment variables, rate limits, audit/logging, failure/recovery behavior and tests. Never commit secrets/tokens/passwords/private keys.
+
+### Shared code first
+Before implementing or upgrading a capability, inspect:
+- this repository's `shared/` folder,
+- `shared/REGISTRY.md`,
+- relevant implementations in the owner's other GitHub repositories.
+
+Common reusable areas include authentication/login, SMS/OTP, Telegram, WhatsApp, AI providers, API clients, admin UI, guided setup, workers, crawlers, file handling, logging, retry/idempotency, security, data sync, deployment helpers and monitoring.
+
+Prefer a proven implementation over rebuilding from zero, but never copy blindly. Before reuse verify source repo/path/commit, runtime/framework compatibility, security assumptions, DB/schema dependencies, environment variables and external providers. Adapt, test locally, then document the reusable pattern in `shared/REGISTRY.md`.
+
+When a broadly useful fix or stronger implementation is discovered in one project, update the shared knowledge/registry so all projects can reuse it where compatible.
+
+### SMS, Telegram and WhatsApp
+Use provider/service adapters instead of scattering provider-specific logic through business code.
+
+For SMS document configuration, templates/sender, OTP flow, retry/timeout, delivery logging, rate limits, fallback strategy if supported and tests.
+
+For Telegram/WhatsApp document approved API method, authentication, webhook/polling architecture as applicable, retries, idempotency, media handling, rate limits, logs, failure behavior and tests.
+
+### AI shared-core
+AI integrations should use reusable provider/service abstractions when practical. Record provider/model purpose, configuration, request/response contract, structured output rules, retries/timeouts, rate/cost controls, logging, privacy/data rules, prompt/version strategy, fallback, tests and known fixes.
+
+When AI code becomes stronger in one project, generalize the reusable improvement and update `shared/REGISTRY.md` for other projects. Never copy project-specific secrets/private data/business-only prompts blindly.
+
+### Mandatory execution sequence
+READ DOCS -> VERIFY REAL STATE -> CHECK ERRORS -> SEARCH SHARED/OTHER REPOS -> PLAN DEPENDENCIES -> IMPLEMENT -> LOCAL TEST -> DOCUMENT -> COMMIT/PUSH -> DEPLOY FROM GITHUB -> PRODUCTION VERIFY
+
