@@ -537,6 +537,16 @@ def install_workspace(workspace_class) -> None:
     def run_all(self):
         return run_all_with_mode(self, None)
 
+    def run_link_all(self):
+        return run_all_with_mode(self, "link")
+
+    def run_current_stage(self):
+        getter = getattr(self, "_phase49_3b_current_key", None)
+        stage = str(getter(default="quick") if callable(getter) else "quick")
+        if stage not in STAGE_ORDER:
+            stage = "quick"
+        return run_stage_ai(self, stage)
+
     def run_stage_ai(self, stage: str):
         stage = str(stage)
         row = self.db.product(int(self.product_id))
@@ -600,6 +610,13 @@ def install_workspace(workspace_class) -> None:
     workspace_class._phase49_3i37_run_all = run_all
     workspace_class._phase49_3i39_run_stage_ai = run_stage_ai
     workspace_class._phase49_3i38_run_target_stage = run_target_stage
+    # Final authority for mature/legacy AI entry points. The older 3I.31/3E
+    # buttons are still visible in some workspace surfaces, but they must not
+    # bypass the seven-stage checker/repair loop anymore.
+    workspace_class._phase49_3e_run_all_ai = run_all
+    workspace_class._phase49_3i31_smart_ai = run_link_all
+    workspace_class._phase49_3i21_link_refresh = run_link_all
+    workspace_class._phase49_3c_stage_ai = run_current_stage
     workspace_class._phase49_3i39_completion_loop = True
 
 
