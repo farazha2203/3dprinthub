@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Owner visual-QA hotfix checkpoint — ERR-49-064
+
+Canonical foreground 8.9.8 execution opened Product 63 and exposed a Tk geometry exception in the older 3I.35 wrapper before the visible 3I.39/3I.40 workspace could finish construction. The modern checkbox picker already owned the legacy material/color card with `grid`, while 3I.35 attempted to add obsolete Listbox actions with `pack`.
+
+Hotfix source `aa37dcf916dfab71409738f7087a171daffe4a0a`, regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`, rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`. No DB/Host/Production change. Owner Local pull/test/foreground retest is the next gate.
 
 ## Approved Windows runtime candidate
 
