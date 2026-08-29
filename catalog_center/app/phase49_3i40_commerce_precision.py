@@ -128,9 +128,12 @@ def install_completion_progress_truth() -> None:
         proxy = _CompletionProgressProxy(dialog)
         result = original(app, product_id, proxy, **kwargs)
         final = dict(result.get("final") or {})
-        remaining = int(final.get("ai_fixable_count") or 0)
+        remaining = int(
+            result.get("scoped_ai_fixable_count", final.get("ai_fixable_count"))
+            or 0
+        )
         if remaining <= 0:
-            dialog.set_progress(100, "بازبینی نهایی انجام شد • نقص AI-قابل‌اصلاح صفر")
+            dialog.set_progress(100, "بازبینی Scope انجام شد • نقص AI-قابل‌اصلاح صفر")
         else:
             dialog.set_progress(
                 94,
