@@ -61,7 +61,7 @@ class _Tree:
     def selection(self):
         return tuple(self.selected)
 
-    def selection_remove(self, items):
+    def selection_remove(self, *items):
         self.selected = [item for item in self.selected if item not in set(items)]
 
     def selection_set(self, iid):
