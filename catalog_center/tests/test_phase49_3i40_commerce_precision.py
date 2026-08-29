@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import unittest
+from pathlib import Path
 
 from app.phase49_3i40_commerce_precision import (
     _CompletionProgressProxy,
@@ -115,6 +116,12 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertNotIn("content", result["pending_finalization"])
         self.assertNotIn("commerce", result["pending_finalization"])
         self.assertIn("quick", result["pending_finalization"])
+
+    def test_completion_truth_uses_scope_remaining_when_stage_ai_is_targeted(self):
+        root = Path(__file__).resolve().parents[1]
+        source = (root / "app" / "phase49_3i40_commerce_precision.py").read_text(encoding="utf-8")
+        self.assertIn('result.get("scoped_ai_fixable_count"', source)
+        self.assertIn("بازبینی Scope انجام شد", source)
 
     def test_progress_proxy_suppresses_internal_100_percent(self):
         dialog = _Dialog()
