@@ -46,6 +46,7 @@ Verification:
 - Owner foreground QA on 2026-08-29 exposed `ERR-49-064`: the obsolete 3I.35 Listbox action row mixed `pack` into the modern grid-managed material/color card and aborted ProductWorkspace before 3I.39/3I.40 visible UI construction.
 - Follow-up owner QA exposed `ERR-49-065`: AI-persisted SEO fields must immediately reconcile the visible readiness/help widgets; fixed by DB rehydration + final post-AI readiness repaint without auto-finalizing operator stages.
 - Owner retest exposed `ERR-49-066`: each displayed defect must have exactly one Stage owner, AI-fixable defects must map to an actual write path, Stage UI must turn complete from persisted `data_ready` without requiring finalization, and all mature full-AI actions must route through the same final checker/repair engine.
+- ERR-49-067 confirms the acceptance contract: SEO Title/Description remain Persian-only; test fixtures must comply with that validator unless explicitly testing rejection. The runtime rule must not be weakened to accommodate stale mocks.
 - Hotfix source `aa37dcf916dfab71409738f7087a171daffe4a0a` + regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`; owner Local retest remains required.
 
 ## REQ-50-001 — Complete business finance/accounting system
