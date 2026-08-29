@@ -1,5 +1,22 @@
 # OWNER REQUESTS
 
+## REQ-49-076 — Central reusable Filament library and clear multi-select
+Status: `IMPLEMENTED / GITHUB_UPDATED / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+
+Requested behavior:
+- maintain roughly any number of Filaments globally rather than redefining them per Product;
+- group by Filament/material type (PLA, PETG, etc.);
+- select one or many with a visible checklist, with a separate box showing Product selections;
+- no Ctrl/Shift dependency;
+- remember/reuse manufacturer, brand and material values;
+- allow normal Filament management from the main application;
+- sync newly created/updated Filaments to Site with roll weight, stock and operational rates;
+- keep Product-specific fixed pricing Product-owned;
+- when a Product is duplicated by a path that copies its persisted Product fields, its saved Filament selection can rehydrate from the same Product-owned selection JSON.
+
+Implementation: Phase49.3I.41. No new migration; local/Site verification is required before Production.
+
+
 ## REQ-49-075 — last Stage-2 fixes before website
 Status: `IMPLEMENTED ON GITHUB / QUICK LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
