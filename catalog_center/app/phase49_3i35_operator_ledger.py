@@ -100,6 +100,9 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
         "key": str(source.get("key") or f"ledger-{uuid4().hex[:12]}")[:80],
         "name": str(source.get("name") or f"پروفایل {index}")[:120],
         "size_label": str(source.get("size_label") or "")[:80],
+        "part_length_cm": _number(source.get("part_length_cm"), 0),
+        "part_width_cm": _number(source.get("part_width_cm"), 0),
+        "part_height_cm": _number(source.get("part_height_cm"), 0),
         "production_rows": rows,
         "material_options": materials,
         "pricing_strategy": str(source.get("pricing_strategy") or "dynamic")[:30],
@@ -199,7 +202,6 @@ def flatten_ledger_profiles(ledger: list[dict]) -> list[dict]:
                         "material_weight_grams": _number(weight + support, 0),
                         "support_weight_grams": support,
                         "print_time_minutes": row["print_time_minutes"],
-                        "fixed_price": fixed,
                         "build_profile": "standard",
                         "material": material,
                         "brand": brand,
@@ -212,6 +214,20 @@ def flatten_ledger_profiles(ledger: list[dict]) -> list[dict]:
                         "sale_price_per_roll": _integer(offer.get("sale_price_per_roll"), 0),
                         "usd_price_per_roll": _number(offer.get("usd_price_per_roll"), 0),
                         "usd_fx_rate_toman": _number(offer.get("usd_fx_rate_toman"), 0),
+                        "print_hourly_rate": _integer(offer.get("print_hourly_rate"), 0),
+                        "supervision_hourly_rate": _integer(offer.get("supervision_hourly_rate"), 0),
+                        "preheat_hours": _number(offer.get("preheat_hours"), 0),
+                        "preheat_temperature_c": _number(offer.get("preheat_temperature_c"), 0),
+                        "preheat_hourly_rate": _integer(offer.get("preheat_hourly_rate"), 0),
+                        "filament_image_url": str(offer.get("filament_image_url") or "")[:500],
+                        "part_length_cm": profile["part_length_cm"],
+                        "part_width_cm": profile["part_width_cm"],
+                        "part_height_cm": profile["part_height_cm"],
+                        "fixed_price": (
+                            _integer(offer.get("fixed_product_price"), 0)
+                            if profile["pricing_strategy"] == "fixed"
+                            else fixed
+                        ),
                         "stock_status": profile["availability_status"] if profile["availability_status"] in {
                             "made_to_order", "in_stock", "preorder", "out_of_stock"
                         } else "made_to_order",
@@ -250,6 +266,9 @@ def install_workspace(workspace_class) -> None:
         self._phase49_3i35_edit_key = ""
         self._phase49_3i35_profile_name_var = tk.StringVar(value="پروفایل ۱")
         self._phase49_3i35_profile_size_var = tk.StringVar(value="")
+        self._phase49_3i35_profile_length_var = tk.StringVar(value="")
+        self._phase49_3i35_profile_width_var = tk.StringVar(value="")
+        self._phase49_3i35_profile_height_var = tk.StringVar(value="")
         self._phase49_3i35_production_rows = []
         self._phase49_3i35_build_production_matrix()
         self._phase49_3i35_build_material_actions()
@@ -283,6 +302,13 @@ def install_workspace(workspace_class) -> None:
                     "sale_price_per_roll": _integer(item.get("sale_price_per_roll"), 0),
                     "usd_price_per_roll": _number(item.get("usd_price_per_roll"), 0),
                     "usd_fx_rate_toman": _number(item.get("usd_fx_rate_toman"), 0),
+                    "print_hourly_rate": _integer(item.get("print_hourly_rate"), 0),
+                    "supervision_hourly_rate": _integer(item.get("supervision_hourly_rate"), 0),
+                    "preheat_hours": _number(item.get("preheat_hours"), 0),
+                    "preheat_temperature_c": _number(item.get("preheat_temperature_c"), 0),
+                    "preheat_hourly_rate": _integer(item.get("preheat_hourly_rate"), 0),
+                    "filament_image_url": str(item.get("filament_image_url") or ""),
+                    "fixed_product_price": _integer(item.get("fixed_product_price"), 0),
                 }
             )
         return normalize_material_color_options(output)
@@ -355,7 +381,7 @@ def install_workspace(workspace_class) -> None:
 
         frame = ttk.LabelFrame(
             panel,
-            text="ردیف‌های تولید این پروفایل — وزن / زمان چاپ / وزن ساپورت",
+            text="وزن / زمان چاپ / ساپورت — ورودی مشترک Snapshot پروفایل",
             padding=7,
             style="Card.TLabelframe",
         )
@@ -570,6 +596,9 @@ def install_workspace(workspace_class) -> None:
                 "key": key or f"ledger-{uuid4().hex[:12]}",
                 "name": name if name is not None else self._phase49_3i35_profile_name_var.get(),
                 "size_label": self._phase49_3i35_profile_size_var.get(),
+                "part_length_cm": self._phase49_3i35_profile_length_var.get(),
+                "part_width_cm": self._phase49_3i35_profile_width_var.get(),
+                "part_height_cm": self._phase49_3i35_profile_height_var.get(),
                 "production_rows": rows,
                 "material_options": selected,
                 "pricing_strategy": strategy,
@@ -732,6 +761,9 @@ def install_workspace(workspace_class) -> None:
         profile = normalize_ledger_profile(profile, 1)
         self._phase49_3i35_profile_name_var.set(profile["name"])
         self._phase49_3i35_profile_size_var.set(profile["size_label"])
+        self._phase49_3i35_profile_length_var.set(str(profile.get("part_length_cm") or ""))
+        self._phase49_3i35_profile_width_var.set(str(profile.get("part_width_cm") or ""))
+        self._phase49_3i35_profile_height_var.set(str(profile.get("part_height_cm") or ""))
         set_production_values(self, profile["production_rows"])
         for attr, value in (
             ("price_min_var", profile["price_min"]),
