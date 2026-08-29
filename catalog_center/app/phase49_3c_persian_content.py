@@ -454,8 +454,8 @@ def install_readiness(readiness_module) -> None:
             ("short_description_fa", "توضیح کوتاه فارسی", True),
             ("description_fa", "توضیح کامل فارسی", True),
             ("use_description", "توضیحات کاربرد محصول", True),
-            ("seo_title_fa", "SEO Title فارسی", False),
-            ("seo_description_fa", "SEO Description فارسی", False),
+            ("seo_title_fa", "SEO Title فارسی", True),
+            ("seo_description_fa", "SEO Description فارسی", True),
         ):
             current = value(key)
             valid = (
