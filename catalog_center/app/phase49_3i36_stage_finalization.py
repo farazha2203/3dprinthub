@@ -437,6 +437,37 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
         if license_code:
             values["commercial_status"] = license_code
 
+        fa_specs = getattr(workspace, "fa_specs", None)
+        if fa_specs is not None:
+            raw = _get_text(workspace, "fa_specs", "")
+            try:
+                parsed = json.loads(raw or "{}")
+                if not isinstance(parsed, dict):
+                    raise ValueError("مشخصات فارسی باید JSON Object باشد.")
+                values["specs_fa_json"] = json.dumps(parsed, ensure_ascii=False)
+            except Exception as exc:
+                raise ValueError(f"JSON مشخصات فارسی معتبر نیست: {exc}") from exc
+
+        feature_widget = (
+            "_phase49_3i39_spec_features"
+            if hasattr(workspace, "_phase49_3i39_spec_features")
+            else "technical_features_text"
+        )
+        if hasattr(workspace, feature_widget):
+            raw = _get_text(workspace, feature_widget, "")
+            try:
+                parsed = json.loads(raw or "{}")
+                if not isinstance(parsed, dict):
+                    raise ValueError("ویژگی‌های فنی باید JSON Object باشد.")
+                values["technical_features_json"] = json.dumps(parsed, ensure_ascii=False)
+            except Exception as exc:
+                raise ValueError(f"JSON ویژگی‌های فنی معتبر نیست: {exc}") from exc
+
+        if hasattr(workspace, "_phase49_3i39_spec_summary"):
+            values["technical_summary_fa"] = _get_text(
+                workspace, "_phase49_3i39_spec_summary", ""
+            )
+
     elif stage == "slider":
         media_values = getattr(workspace, "_phase49_3b_media_values", None)
         if callable(media_values):
