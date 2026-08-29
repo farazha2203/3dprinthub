@@ -1,5 +1,17 @@
 # OWNER REQUESTS
 
+## REQ-49-075 — last Stage-2 fixes before website
+Status: `IMPLEMENTED ON GITHUB / QUICK LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+
+Requested acceptance:
+- a newly saved Filament immediately appears in the list and is selected;
+- selected Filament edit uses the final live-rate editor;
+- price preview uses the currently authoritative Filament facts and does not show zeros when rates are present;
+- a newly selected Filament can be previewed before explicit Product registration, but attachment to Product remains an explicit action;
+- range and formula modes must not be conflated;
+- once these pass, move directly to website receive/sync.
+
+
 ## REQ-49-074 — restore final pricing result and use Filament terminology
 Status: `IMPLEMENTED ON GITHUB / LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
