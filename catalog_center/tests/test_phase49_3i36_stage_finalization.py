@@ -7,6 +7,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from PIL import Image
+
 from app.db import Database
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3f_workspace import ensure_schema as ensure_pricing_schema
@@ -143,6 +145,34 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                 row = db.product(product_id)
                 self.assertEqual(row["product_type"], "custom_order")
                 self.assertEqual(row["dimensions"], "20 × 30 × 40 cm")
+            finally:
+                db.close()
+
+    def test_images_stage_persist_builds_current_metadata_before_confirmation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db, product_id = self._db(root / "catalog.sqlite3")
+            try:
+                product_dir = root / "product"
+                image_dir = product_dir / "images"
+                image_dir.mkdir(parents=True, exist_ok=True)
+                image_path = image_dir / "selected.png"
+                Image.new("RGB", (320, 240), "white").save(image_path)
+                url = "local://selected.png"
+                db.update_product(product_id, {
+                    "local_dir": str(product_dir),
+                    "images_json": json.dumps([url], ensure_ascii=False),
+                    "selected_images_json": json.dumps([url], ensure_ascii=False),
+                    "primary_image_url": url,
+                    "image_alt_texts_json": json.dumps(["نمای مدل آزمایشی"], ensure_ascii=False),
+                })
+                workspace = SimpleNamespace(db=db, product_id=product_id)
+                persist_stage_from_ui(workspace, "images")
+                from app import phase49_3c_image_pipeline as image_pipeline
+                self.assertEqual(
+                    image_pipeline.image_metadata_missing(db.product(product_id)),
+                    [],
+                )
             finally:
                 db.close()
 
