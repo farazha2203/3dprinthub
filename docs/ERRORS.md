@@ -496,6 +496,26 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** a readiness defect must map to exactly one owning Stage and to at least one executable repair path when labeled AI-fixable. UI completion indicators must distinguish persisted data completeness from operator finalization.
 
+
+### ERR-49-067 — Locked-stage regression fixture violated the new Persian SEO contract
+**Date:** 2026-08-29  
+**Environment:** owner Local ERR-49-066 focused gate on `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
+
+**Symptom:** compile passed, then the 43-test focused suite stopped with exactly one error in `test_locked_quick_and_content_are_not_rewritten_by_orchestrator`. The exception occurred before the lock assertion path:
+`RuntimeError: خروجی AI برای seo_description_fa باید SEO فارسی باشد و متن لاتین نداشته باشد.`
+
+**Root Cause:** ERR-49-066 intentionally strengthened the production SEO contract so `seo_title_fa` and `seo_description_fa` cannot contain Latin text. The older regression fixture still mocked its generated SEO description as `توضیح فارسی AI درباره ...`. The literal Latin token `AI` made the mock payload invalid, so validation correctly rejected it before the test could reach the behavior it was actually intended to verify: locked Quick/Content stages are not rewritten.
+
+**Correct Fix:** keep the stricter runtime contract unchanged and repair only the stale test fixture. Replace the mock Latin `AI` wording with fully Persian generated-content placeholders. This preserves the purpose of the regression and avoids weakening real SEO validation merely to satisfy a stale fixture.
+
+**Git:** test-fixture correction `38cb415bc12d7ec08943809fd14f3478b3ddac1b`.
+
+**Rollback anchor:** `backup/pre-err49-067-seven-stage-test-fixture-20260829` → `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
+
+**Verification status:** owner Local evidence before the correction: repository/branch/head verified, Catalog SQLite backup created with SHA256 `AE475E39040B8BF8F7BEF7B13D3176F2B83BBA956E2121D53CC2F5CC087F185F`, compile PASS, 43 focused tests ran with 1 deterministic fixture error, foreground launch correctly did not run. Owner must ff-only pull the corrected head and rerun the same focused gate; do not rerun the failed head unchanged. Production untouched.
+
+**Prevention:** regression fixtures that feed production validators must themselves satisfy the current production contract unless the test explicitly verifies rejection. A lock/immutability test must use a valid AI payload so validation does not mask the behavior under test.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
