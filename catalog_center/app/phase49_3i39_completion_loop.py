@@ -391,6 +391,49 @@ def _done_message(result: dict) -> str:
     )
 
 
+def _refresh_workspace_after_ai(workspace, *, reload_first: bool = True) -> None:
+    """Rehydrate persisted AI data and then repaint every readiness surface.
+
+    Older ProductWorkspace layers keep their own cached readiness/help variables.
+    A plain reload is not enough after the seven-stage worker because the guided
+    wizard can repaint its cached state after the final 3I.40 rail. Re-read the
+    Product from SQLite, reload widgets, refresh lock/help surfaces, and always
+    leave the final readiness renderer as the last painter.
+    """
+    product_id = int(getattr(workspace, "product_id", 0) or 0)
+    try:
+        workspace.row = workspace.db.product(product_id)
+    except Exception:
+        pass
+
+    if reload_first:
+        try:
+            workspace.reload()
+        except Exception as exc:
+            try:
+                workspace.report_callback_exception(type(exc), exc, exc.__traceback__)
+            except Exception:
+                pass
+            return
+
+    for name in ("_phase49_3i36_refresh_locks", "_phase49_3b_refresh_wizard", "_phase49_refresh_readiness"):
+        callback = getattr(workspace, name, None)
+        if callable(callback):
+            try:
+                callback()
+            except Exception:
+                continue
+
+    # 3I.40 readiness is intentionally last so legacy guided-wizard painting
+    # cannot leave already-fixed SEO fields shown as stale/red defects.
+    final_refresh = getattr(workspace, "_phase49_refresh_readiness", None)
+    if callable(final_refresh):
+        try:
+            final_refresh()
+        except Exception:
+            pass
+
+
 def install_workspace(workspace_class) -> None:
     configure_readiness()
     if getattr(workspace_class, "_phase49_3i39_completion_loop", False):
@@ -477,8 +520,8 @@ def install_workspace(workspace_class) -> None:
                     max_passes=3,
                 )
                 dialog.done(_done_message(result))
-                self.after(0, self.reload)
-                self.after(0, lambda: getattr(self, "_phase49_3i36_refresh_locks", lambda: None)())
+                self.after(0, lambda: _refresh_workspace_after_ai(self, reload_first=True))
+                self.after(160, lambda: _refresh_workspace_after_ai(self, reload_first=False))
             except Exception as exc:
                 dialog.fail(exc)
                 self.after(0, lambda: self.footer_status.set(f"AI کامل محصول ناموفق: {redact(exc)}"))
@@ -530,8 +573,8 @@ def install_workspace(workspace_class) -> None:
                     max_passes=3,
                 )
                 dialog.done(_done_message(result))
-                self.after(0, self.reload)
-                self.after(0, lambda: getattr(self, "_phase49_3i36_refresh_locks", lambda: None)())
+                self.after(0, lambda: _refresh_workspace_after_ai(self, reload_first=True))
+                self.after(160, lambda: _refresh_workspace_after_ai(self, reload_first=False))
             except Exception as exc:
                 dialog.fail(exc)
             finally:
