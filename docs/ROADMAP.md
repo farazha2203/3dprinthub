@@ -6,10 +6,21 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY FIX GITHUB / LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-075
+
+This is intentionally the final short Windows gate before website work:
+1. add a Filament under a different manufacturer/material; after Save, the filter must jump to it and the new row must be selected/visible;
+2. edit that selected Filament; the final editor must show the live final roll/rate calculator (not the old Product-fixed field editor);
+3. choose `قیمت فرمولی`, enter weight/time/support, and preview: material/print/supervision/preheat/total must be non-zero when their rates are non-zero;
+4. before registering a newly selected Filament, preview may work as an explicit draft; after `ثبت Filamentهای انتخابی روی محصول`, the same facts become the Product authority;
+5. in `بازه قیمت` mode, preview must show the range/explanation instead of a zero formula table.
+
+If this passes, stop Windows changes and continue with Phase50 website receiver/sync. Production remains blocked until the website side is verified.
 
 ## Immediate owner gate — ERR-49-074
 
