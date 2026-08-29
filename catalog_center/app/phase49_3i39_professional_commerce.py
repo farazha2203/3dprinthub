@@ -833,7 +833,8 @@ def install_workspace(workspace_class) -> None:
         refresh_price_summary(self)
 
     def pricing_offer_context(self):
-        visible = selected_inventory_offers(self)
+        draft_getter = getattr(self, "_phase49_3i41_selected_draft_offers", None)
+        visible = draft_getter() if callable(draft_getter) else selected_inventory_offers(self)
         offers, draft = resolve_pricing_offer_context(
             getattr(self, "_phase49_3i39_selected_product_offers", []) or [],
             global_offers(self),
