@@ -432,6 +432,29 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Prevention:** every additive wrapper must inspect whether the surface it is extending is still the active visible generation. Never mount legacy controls into a parent that a newer layer has already replaced; and do not use feature-marker prints as a substitute for successful final constructor completion.
 
+
+### ERR-49-065 — AI filled SEO fields but stale readiness/UI still showed them as missing
+**Date:** 2026-08-29  
+**Environment:** owner foreground Local QA after ERR-49-064, Catalog Center 8.9.8 / Phase49.3I.40.
+
+**Symptom:** the seven-stage AI completed and persisted Persian/SEO fields, but the Product Workspace still showed red/missing SEO items and stale stage icons. The owner correctly observed that the Product appeared to need a post-AI refresh before publish readiness reflected the saved fields.
+
+**Root Cause:** the 3I.39 completion worker queued a generic `reload()` and one lock refresh after the AI loop. Multiple mature wrappers keep cached readiness/help state; the older guided-wizard painter could repaint its cached `ready/missing` state after the final 3I.40 data-readiness renderer. Persisted SQLite values were therefore newer than some visible readiness widgets.
+
+**Correct Fix:** add one explicit post-AI reconciliation boundary that rehydrates the Product row from SQLite, reloads the workspace, refreshes stage locks and the guided wizard, and deliberately leaves the final `_phase49_refresh_readiness` call as the last painter. Run the same reconciliation again after a short UI-settle delay. Apply this to both whole-product and single-stage repair completion paths.
+
+**Scope:** no Provider/model/source semantics, no AI field ownership, no Commerce/Profile/Offer mutation, no auto-finalization, no migration/schema, no Host or Production change.
+
+**Git hotfix:** source `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4`; regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26`.
+
+**Regression:** `test_post_ai_refresh_rehydrates_db_and_leaves_final_readiness_as_last_painter` verifies DB rehydration and that final readiness is the last UI painter after reload/lock/wizard refresh.
+
+**Rollback anchor:** `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`.
+
+**Verification status:** GitHub source + regression committed. No workflow run was attached to the regression commit at documentation time. Owner Local targeted tests + foreground retest remain mandatory. Production untouched.
+
+**Prevention:** after background AI writes, do not assume one generic reload synchronizes every wrapped readiness surface. Rehydrate from persisted state and define one final painter for the visible readiness contract.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
