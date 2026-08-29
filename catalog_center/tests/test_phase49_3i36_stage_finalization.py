@@ -81,10 +81,15 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
             ("quick", "commerce", "images", "content", "specs", "slider", "publish"),
         )
 
-    def test_quick_stage_persists_all_owned_identity_fields(self):
+    def test_quick_stage_persists_only_visible_title_and_category(self):
         with tempfile.TemporaryDirectory() as temporary:
             db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
             try:
+                db.update_product(product_id, {
+                    "product_type": "custom_order",
+                    "dimensions": "قدیمی-مرحله-دو",
+                    "use_case_class": "کاربری-قدیمی-مرحله-دو",
+                })
                 workspace = SimpleNamespace(
                     db=db,
                     product_id=product_id,
@@ -101,13 +106,13 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                 persist_stage_from_ui(workspace, "quick")
                 row = db.product(product_id)
                 self.assertEqual(row["local_category_slug"], "home-decor")
-                self.assertEqual(row["product_type"], "ready_product")
-                self.assertEqual(row["dimensions"], "20 × 20 × 30 cm")
-                self.assertEqual(row["use_case_class"], "دکوراسیون")
+                self.assertEqual(row["product_type"], "custom_order")
+                self.assertEqual(row["dimensions"], "قدیمی-مرحله-دو")
+                self.assertEqual(row["use_case_class"], "کاربری-قدیمی-مرحله-دو")
             finally:
                 db.close()
 
-    def test_specs_stage_persists_visible_source_license_and_technical_fields(self):
+    def test_specs_stage_keeps_historical_visible_source_and_license_contract(self):
         with tempfile.TemporaryDirectory() as temporary:
             db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
             try:
@@ -117,11 +122,7 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                     source_url=_Var("https://makerworld.com/en/models/twistmas-test"),
                     spec_source_url=_Var(""),
                     source_name_var=_Var("Maker Designer"),
-                    license_var=_Var("review"),
-                    _phase49_3i39_spec_license_label_var=_Var("مجاز برای فروش"),
-                    fa_specs=_Text('{"نوع":"دکور"}'),
-                    _phase49_3i39_spec_features=_Text('{"لایه":"0.2mm"}'),
-                    _phase49_3i39_spec_summary=_Text("مشخصات فنی بررسی شد"),
+                    license_var=_Var("allowed"),
                 )
                 columns = {
                     item["name"] for item in db.conn.execute("PRAGMA table_info(products)")
@@ -131,11 +132,23 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
                 row = db.product(product_id)
                 self.assertEqual(row["source_name"], "Maker Designer")
                 self.assertEqual(row["commercial_status"], "allowed")
-                self.assertEqual(json.loads(row["specs_fa_json"]), {"نوع": "دکور"})
-                self.assertEqual(json.loads(row["technical_features_json"]), {"لایه": "0.2mm"})
-                self.assertEqual(row["technical_summary_fa"], "مشخصات فنی بررسی شد")
+                self.assertEqual(
+                    row["source_url"],
+                    "https://makerworld.com/en/models/twistmas-test",
+                )
             finally:
                 db.close()
+
+    def test_finalization_is_not_counted_as_missing_product_data(self):
+        source = (ROOT / "app" / "phase49_3i36_stage_finalization.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('state["pending_finalization"]', source)
+        self.assertIn('get("missing_data", [])', source)
+        self.assertNotIn(
+            'for item in ordered[stage].get("missing", [])',
+            source,
+        )
 
     def test_locked_stage_blocks_database_overwrite_but_other_stage_can_change(self):
         with tempfile.TemporaryDirectory() as temporary:
