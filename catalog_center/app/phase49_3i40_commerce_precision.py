@@ -428,7 +428,7 @@ def install_workspace(workspace_class) -> None:
             info = (state.get("stages") or {}).get(stage) or {}
             data_ready = bool(info.get("data_ready"))
             locked = bool((locks.get(stage) or {}).get("locked"))
-            icon = "🔒" if locked and data_ready else ("✅" if data_ready else "❌")
+            icon = "✅" if locked and data_ready else ("◌" if data_ready else "❌")
             try:
                 button.configure(text=f"{icon} {STAGE_LABELS.get(stage, stage)}")
             except Exception:
@@ -438,12 +438,12 @@ def install_workspace(workspace_class) -> None:
             self._phase49_readiness_missing.set("همه نقص‌های داده رفع و همه Stageها ثبت نهایی شده‌اند.")
         else:
             self._phase49_readiness_summary.set(
-                f"نقص داده: {len(defects)} • منتظر ثبت نهایی: {len(pending)}"
+                f"نقص داده: {len(defects)} • منتظر ثبت و تأیید: {len(pending)}"
             )
             lines = defects[:4]
             if pending:
                 lines.append(
-                    "✅ کامل ولی منتظر ثبت: "
+                    "◌ کامل ولی منتظر ثبت و تأیید: "
                     + "، ".join(STAGE_LABELS[s] for s in pending[:3])
                     + ("…" if len(pending) > 3 else "")
                 )
