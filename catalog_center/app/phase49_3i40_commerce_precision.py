@@ -8,7 +8,11 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .epic49_desktop_schema import add_available_material_color, normalize_material_color_options
+from .epic49_desktop_schema import (
+    add_available_material_color,
+    effective_filament_offer_price_per_gram,
+    normalize_material_color_options,
+)
 from .phase49_3i36_stage_finalization import STAGE_LABELS, STAGE_ORDER, is_stage_locked, stage_locks
 from .phase49_3i39_professional_commerce import (
     _integer,
@@ -75,6 +79,38 @@ def apply_product_fixed_prices(offers: list[dict], prices: dict[tuple[str, str, 
             row["fixed_product_price"] = max(0, _integer(prices[key], 0))
         output.append(row)
     return normalize_material_color_options(output)
+
+
+def filament_rate_calculation(item: dict) -> dict[str, float | str]:
+    """Return the explicit final roll basis + per-gram rate; never invent FX."""
+    roll_weight = max(1.0, float(_number(item.get("roll_weight_grams"), 1000)))
+    sale_roll = max(0.0, float(_number(item.get("sale_price_per_roll"), 0)))
+    usd_roll = max(0.0, float(_number(item.get("usd_price_per_roll"), 0)))
+    fx = max(0.0, float(_number(item.get("usd_fx_rate_toman"), 0)))
+    usd_toman = usd_roll * fx if usd_roll > 0 and fx > 0 else 0.0
+    final_roll = max(sale_roll, usd_toman)
+    if final_roll <= 0:
+        basis = "نرخ فروش/دلار هنوز کامل نیست"
+    elif usd_toman > sale_roll:
+        basis = "دلار × نرخ ثبت‌شده"
+    elif sale_roll > usd_toman:
+        basis = "قیمت فروش هر رول"
+    else:
+        basis = "فروش رول = دلار × نرخ"
+    return {
+        "roll_weight_grams": roll_weight,
+        "sale_roll_toman": sale_roll,
+        "usd_roll_toman": usd_toman,
+        "final_roll_toman": final_roll,
+        "rate_per_gram": float(effective_filament_offer_price_per_gram({
+            **dict(item or {}),
+            "roll_weight_grams": roll_weight,
+            "sale_price_per_roll": sale_roll,
+            "usd_price_per_roll": usd_roll,
+            "usd_fx_rate_toman": fx,
+        })),
+        "basis": basis,
+    }
 
 
 def readiness_display(state: dict, row) -> dict:
@@ -170,7 +206,7 @@ def _find_label_frame(root, prefix: str):
 def _global_offer_editor(workspace, offer=None):
     source = dict(offer or {})
     top = tk.Toplevel(workspace)
-    top.title("Offer جهانی فیلامنت — سازنده / متریال / رنگ / نرخ / موجودی / پیش‌گرم")
+    top.title("Filament جهانی — سازنده / متریال / رنگ / نرخ / موجودی / پیش‌گرم")
     top.geometry("780x700")
     top.transient(workspace)
     top.grab_set()
@@ -226,6 +262,38 @@ def _global_offer_editor(workspace, offer=None):
         style="SubHeader.TLabel",
     ).grid(row=len(fields), column=0, columnspan=2, sticky="w", padx=4, pady=(8, 4))
 
+    rate_box = ttk.LabelFrame(
+        body,
+        text="محاسبه نرخ نهایی Filament",
+        padding=7,
+    )
+    rate_box.grid(row=len(fields) + 1, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 8))
+    self_rate = tk.StringVar(value="")
+    ttk.Label(
+        rate_box,
+        textvariable=self_rate,
+        style="SubHeader.TLabel",
+    ).pack(anchor="e")
+
+    def refresh_rate_calculation(*_args):
+        result = filament_rate_calculation({
+            "roll_weight_grams": vars_["roll_weight"].get(),
+            "sale_price_per_roll": vars_["sale"].get(),
+            "usd_price_per_roll": vars_["usd"].get(),
+            "usd_fx_rate_toman": vars_["fx"].get(),
+        })
+        final_roll = int(round(float(result["final_roll_toman"])))
+        rate = float(result["rate_per_gram"])
+        self_rate.set(
+            f"مبلغ نهایی مبنای هر رول: {final_roll:,} تومان"
+            f" • نرخ نهایی مصرف: {rate:,.0f} تومان/گرم"
+            f" • مبنا: {result['basis']}"
+        )
+
+    for key in ("roll_weight", "sale", "usd", "fx"):
+        vars_[key].trace_add("write", refresh_rate_calculation)
+    refresh_rate_calculation()
+
     def save_offer():
         material = vars_["material"].get().strip()
         color = vars_["color"].get().strip()
@@ -236,7 +304,7 @@ def _global_offer_editor(workspace, offer=None):
         if not manufacturer:
             manufacturer = brand
         if not material or not color or not brand:
-            messagebox.showwarning("Offer", "برند/شرکت، متریال و رنگ الزامی هستند.", parent=top)
+            messagebox.showwarning("Filament", "برند/شرکت، متریال و رنگ الزامی هستند.", parent=top)
             return
         roll_weight = max(1, _integer(vars_["roll_weight"].get(), 1000))
         stock_kg = max(0.0, float(_number(vars_["stock_kg"].get(), 0)))
@@ -263,18 +331,21 @@ def _global_offer_editor(workspace, offer=None):
                 filament_image_url=vars_["image"].get().strip(),
             )
         except Exception as exc:
-            messagebox.showerror("Offer", str(exc), parent=top)
+            messagebox.showerror("Filament", str(exc), parent=top)
             return
         top.destroy()
         workspace._phase49_3i39_refresh_offer_filter()
+        refresher = getattr(workspace, "_phase49_3i39_refresh_price_summary", None)
+        if callable(refresher):
+            refresher()
         workspace.footer_status.set(
-            f"Offer جهانی «{offer_display(saved)}» ذخیره شد؛ قیمت قطعی این محصول دست‌نخورده است."
+            f"Filament جهانی «{offer_display(saved)}» ذخیره شد؛ قیمت قطعی این محصول دست‌نخورده است."
         )
 
     actions = ttk.Frame(body)
-    actions.grid(row=len(fields) + 1, column=0, columnspan=2, sticky="e", pady=(10, 0))
+    actions.grid(row=len(fields) + 2, column=0, columnspan=2, sticky="e", pady=(10, 0))
     ttk.Button(actions, text="انصراف", command=top.destroy).pack(side="right", padx=3)
-    ttk.Button(actions, text="ذخیره Offer جهانی", command=save_offer, style="Success.TButton").pack(side="right", padx=3)
+    ttk.Button(actions, text="ذخیره Filament جهانی", command=save_offer, style="Success.TButton").pack(side="right", padx=3)
 
 
 def install_workspace(workspace_class) -> None:
@@ -287,21 +358,21 @@ def install_workspace(workspace_class) -> None:
 
     def commit_selected_offers(self):
         if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
-            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Offer ابتدا «اصلاح» را بزن.")
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Filament ابتدا «اصلاح» را بزن.")
             return False
         selected = self._phase49_3i39_selected_inventory_offers()
         visible = list(getattr(self, "_phase49_3i39_working_offer_rows", []) or [])
         existing = list(getattr(self, "_phase49_3i39_selected_product_offers", []) or [])
         merged = merge_offer_scope(existing, visible, selected)
         if not merged:
-            messagebox.showwarning("Offer", "محصول باید حداقل یک Offer ثبت‌شده داشته باشد.", parent=self)
+            messagebox.showwarning("Filament", "محصول باید حداقل یک Filament ثبت‌شده داشته باشد.", parent=self)
             return False
         self._phase49_3i39_selected_product_offers = merged
         ok = self._phase49_3i39_persist_selected_offers(propagate_profiles=True)
         if ok:
             outside = len(merged) - len(selected)
             self.footer_status.set(
-                f"{len(merged)} Offer روی محصول ثبت است • {len(selected)} در فیلتر فعلی • {max(0, outside)} از برند/فیلترهای دیگر حفظ شد"
+                f"{len(merged)} Filament روی محصول ثبت است • {len(selected)} در فیلتر فعلی • {max(0, outside)} از برند/فیلترهای دیگر حفظ شد"
             )
         return ok
 
@@ -316,10 +387,10 @@ def install_workspace(workspace_class) -> None:
             getattr(self, "_phase49_3i39_selected_product_offers", []) or []
         )
         if not offers:
-            messagebox.showinfo("قیمت قطعی", "ابتدا Offerهای برند/فیلامنت/رنگ را روی محصول ثبت کن.", parent=self)
+            messagebox.showinfo("قیمت قطعی", "ابتدا Filamentهای برند/متریال/رنگ را روی محصول ثبت کن.", parent=self)
             return
         top = tk.Toplevel(self)
-        top.title("قیمت قطعی Offerهای همین محصول")
+        top.title("قیمت قطعی Filamentهای همین محصول")
         top.geometry("860x620")
         top.transient(self)
         top.grab_set()
@@ -362,7 +433,10 @@ def install_workspace(workspace_class) -> None:
                 return
             top.destroy()
             self._phase49_3i39_refresh_offer_filter()
-            self.footer_status.set("قیمت قطعی هر Offer فقط برای همین محصول ذخیره شد.")
+            refresher = getattr(self, "_phase49_3i39_refresh_price_summary", None)
+            if callable(refresher):
+                refresher()
+            self.footer_status.set("قیمت قطعی هر Filament فقط برای همین محصول ذخیره شد.")
 
         ttk.Button(actions, text="انصراف", command=top.destroy).pack(side="right", padx=3)
         ttk.Button(actions, text="✓ ذخیره قیمت‌های قطعی محصول", command=save_prices, style="Success.TButton").pack(side="right", padx=3)
@@ -376,7 +450,7 @@ def install_workspace(workspace_class) -> None:
             return
         selection = tree.selection()
         if not selection:
-            label.set("یک رنگ/Offer را انتخاب کن؛ Preview اینجا نمایش داده می‌شود.")
+            label.set("یک رنگ/Filament را انتخاب کن؛ Preview اینجا نمایش داده می‌شود.")
             canvas.delete("all")
             canvas.create_rectangle(0, 0, 52, 52, fill="#D9D9D9", outline="")
             if image_button is not None:
@@ -457,7 +531,7 @@ def install_workspace(workspace_class) -> None:
             if pricing is not None:
                 ttk.Button(
                     pricing,
-                    text="✏ قیمت قطعی Offerهای همین محصول",
+                    text="✏ قیمت قطعی Filamentهای همین محصول",
                     command=self._phase49_3i40_open_fixed_price_editor,
                     style="Primary.TButton",
                 ).pack(side="right", padx=6)
@@ -471,7 +545,7 @@ def install_workspace(workspace_class) -> None:
             )
             self._phase49_3i40_color_canvas.pack(side="right", padx=6)
             self._phase49_3i40_offer_preview_var = tk.StringVar(
-                value="یک رنگ/Offer را انتخاب کن؛ Preview اینجا نمایش داده می‌شود."
+                value="یک رنگ/Filament را انتخاب کن؛ Preview اینجا نمایش داده می‌شود."
             )
             ttk.Label(
                 preview, textvariable=self._phase49_3i40_offer_preview_var, style="SubHeader.TLabel"
