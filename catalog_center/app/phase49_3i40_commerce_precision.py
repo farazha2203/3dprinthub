@@ -207,7 +207,7 @@ def _global_offer_editor(workspace, offer=None):
     source = dict(offer or {})
     top = tk.Toplevel(workspace)
     top.title("Filament جهانی — سازنده / متریال / رنگ / نرخ / موجودی / پیش‌گرم")
-    top.geometry("780x700")
+    top.geometry("780x790")
     top.transient(workspace)
     top.grab_set()
     body = ttk.Frame(top, padding=12)
