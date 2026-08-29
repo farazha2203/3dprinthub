@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,34 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Windows blocker/fix — ERR-49-069
+
+Owner Local pulled exact `3f43260db669b458a682f594b5d50eb5221b9ef3`, created checksum-verified Catalog SQLite backup `D:\projects\3dprinthub-backups\err49-068-20260829-174512\catalog-before-err49-068-qa.sqlite3` (SHA256 `5A6DB948ADACA81014DEDFA7FF117A0C4AF26364936575ACB15D21D632D4C321`), passed compile and **60/60** focused tests, and launched the canonical 8.9.8 source. The real foreground UI nevertheless reproduced the remaining defect, proving it is a final-composition/runtime problem rather than wrong checkout or stale tests.
+
+Observed runtime facts:
+- footer was repainted back to old `مرحله بعد برای انتشار →` after 3I.39 had installed the new actions;
+- Stage 1 could become data-complete but still not naturally confirm/advance;
+- Product type/dimensions/use-case were not all visible in their Quick owner stage;
+- source/license/technical fields were split away from Stage 5 ownership;
+- stage-scoped AI counted unrelated global defects and falsely reported remaining defects after its own Scope was complete;
+- Product 63 and Product 295 AI jobs overlapped;
+- saved active Provider was OpenRouter, but resilience still fell back to AvalAI.
+
+ERR-49-069 executable-code hotfix head is `136011971dea907ac777b3e66190dd27982a0c38` (later branch commits are documentation only until the next code change). It now:
+- makes even late/captured Wizard refreshes finish by restoring `✅ تأیید و مرحله بعد →`;
+- makes legacy Next persist before readiness and delegate to final stage confirmation;
+- restores Stage-1 `نوع محصول / ابعاد / کاربری` controls and persistence;
+- restores Stage-5 `طراح / مجوز / خلاصه فنی / ویژگی‌های فنی` controls and persistence;
+- routes legacy title AI through the final Stage-1 engine;
+- makes single-stage AI completion/progress Scope-aware;
+- blocks concurrent Product AI jobs across Product Workspaces;
+- makes Product AI OpenRouter-only: saved OpenRouter model first, optional `openrouter/free` second; **no AvalAI/Google/OpenAI fallback**.
+
+Rollback:
+`backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`.
+
+No Django schema/migration, Host, Production, Product media or secure-key-value change. Owner Local pull + focused regression + foreground Product 63/295 QA is mandatory before acceptance.
 
 ## Current Windows blocker/fix — ERR-49-068
 
