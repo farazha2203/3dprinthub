@@ -43,6 +43,8 @@ Last verified Phase50 migration state:
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
 ## Current owner checkpoint — ERR-49-071
+ERR-49-071 executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head Actions run is attached; Local compile/regression/foreground acceptance is next.
+
 
 Owner exact `d4da997...` achieved compile PASS, exact ERR-49-070 PASS, OpenRouter-only 4/4 PASS and 67/67 Windows stage PASS, but foreground visual QA still failed. The real cause is now isolated to final operator semantics/composition: confirmation was mixed into missing-data counts, green icons followed data fill instead of explicit approval, a deliberate `سایر محصولات` category was rejected, bad Stage-1 relocation UI was mounted, and the legacy Next/title-only Tk callbacks survived final composition.
 
