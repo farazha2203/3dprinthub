@@ -6,10 +6,18 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate rerun gate — ERR-49-067
+
+The owner Local gate on `9f3b765...` compiled cleanly and ran 43 focused tests; one test errored because its mock SEO description still contained literal Latin `AI`, which now correctly violates the ERR-49-066 Persian-only SEO contract. This is a stale fixture, not a reason to weaken runtime validation.
+
+Fixture-only correction: `38cb415bc12d7ec08943809fd14f3478b3ddac1b`. Rollback: `backup/pre-err49-067-seven-stage-test-fixture-20260829` → `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
+
+Next: pull docs-final head → rerun the identical focused suite → launch only if all tests pass → foreground Product 63 readiness/AI verification. Production remains blocked.
 
 ## Immediate owner gate — ERR-49-066
 
