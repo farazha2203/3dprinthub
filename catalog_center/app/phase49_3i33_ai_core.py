@@ -644,6 +644,26 @@ def capture_source_screenshot(app, product_id: int) -> Path:
     image_dir.mkdir(parents=True, exist_ok=True)
     target = image_dir / f"source-page-screenshot-{time.strftime('%Y%m%d-%H%M%S')}.png"
     shutil.copy2(screenshot, target)
+    # Site/editorial Screenshot is intentionally the top visible viewport, not a
+    # full-page capture. The mature browser/crawler screenshot remains untouched;
+    # only this copied Product image is cropped.
+    try:
+        from PIL import Image
+        with Image.open(target) as image:
+            viewport_height = min(image.height, max(720, int(image.width * 0.58)))
+            if image.height > viewport_height:
+                cropped = image.crop((0, 0, image.width, viewport_height))
+                cropped.save(target, format="PNG", optimize=True)
+    except Exception as exc:
+        audit_event(
+            "acquisition",
+            "phase49_3i39_screenshot_crop_warning",
+            status="warning",
+            level="WARNING",
+            product_id=product_id,
+            source_file=__file__,
+            message=redact(exc),
+        )
     pseudo = f"local://{target.name}"
     urls = list(dict.fromkeys(_list(row_value(row, "images_json", "[]")) + [pseudo]))
     values = {"local_dir": str(local_dir), "images_json": json.dumps(urls, ensure_ascii=False)}
