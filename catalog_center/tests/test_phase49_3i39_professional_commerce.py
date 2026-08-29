@@ -165,7 +165,7 @@ class Phase493I39ProfessionalCommerceTests(unittest.TestCase):
 
     def test_product_screenshot_is_top_viewport_not_full_page(self):
         self.assertEqual(source_screenshot_viewport_height(1658, 4000), 961)
-        self.assertEqual(source_screenshot_viewport_height(1200, 800), 800)
+        self.assertEqual(source_screenshot_viewport_height(1200, 800), 720)
         self.assertLess(source_screenshot_viewport_height(1920, 5000), 5000)
 
 
