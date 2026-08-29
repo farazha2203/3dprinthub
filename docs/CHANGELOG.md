@@ -1,5 +1,17 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — ERR-49-073 image Metadata refresh through confirmed Stage lock
+- owner exact `6d5897e...`: ERR-49-071/072 exact 7/7 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 71/71 PASS, foreground launch PASS;
+- explicit Stage confirmation now works outside Images; Stage-2 price/Profile intentionally left incomplete for this QA;
+- isolated remaining Images defect: later Content/Source updates changed image SEO signatures, SEO files rebuilt, but image Stage lock blocked the derived DB metadata/signature write;
+- added a strict finalizer-owned derived-image persistence boundary for only selected/primary/Alt/Metadata fields;
+- Stage-3 confirmation now finalizes current image SEO/Metadata before locking;
+- pressing confirm again on an already-confirmed Images Stage refreshes deterministic Metadata and keeps the lock;
+- manual Metadata override save now refuses while Images is locked and directs the operator to `اصلاح مرحله`;
+- rollback `backup/pre-err49-073-image-confirm-metadata-refresh-20260829` → `6d5897ecefc427c940c690daabc311f85cc6e044`;
+- Production untouched; owner Local focused/full/foreground retest pending.
+
+
 ## 2026-08-29 — ERR-49-072 Stage-2 regression fixture schema alignment
 - owner ERR-49-071 gate on exact `34c65bc...`: repo/head PASS, fresh Catalog SQLite backup + SHA256 PASS, changed-source compile PASS;
 - exact 7-test gate stopped on one deterministic test error before OpenRouter/full-suite/foreground launch: `sqlite3.OperationalError: no such column: price_min`;
