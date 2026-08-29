@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-070
+
+Owner Local `382a34f...` passed compile and OpenRouter-only 4/4, then the 67-test Windows gate correctly stopped before launch. Clean Catalog SQLite lacked `technical_summary_fa`, and the Stage-5 builder names wired by 3I.39 had no actual implementations. GitHub now adds the clean schema column, real Stage-5 source/license/technical panel + hydration, visible Persian license persistence and focused regressions.
+
+Rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`. Production untouched. Owner Local rerun is next.
 
 ## Current owner checkpoint — ERR-49-069
 
