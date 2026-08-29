@@ -6,10 +6,24 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-071
+
+The owner has now proven that automated 67/67 PASS was insufficient: the real foreground UI on `d4da997...` still failed the core Stage-confirmation workflow. The current GitHub fix restores the older visual ownership and makes confirmation explicit rather than inferred.
+
+Acceptance sequence:
+1. Stage 1 shows the historical fields only; no added type/dimensions/use-case panel.
+2. A deliberate `سایر محصولات` category is accepted.
+3. Filled data displays `◌` until the operator clicks `✅ ثبت و تأیید مرحله →`.
+4. That click persists the current Stage, confirms it, changes its rail icon to `✅`, then advances to Stage 2.
+5. Readiness reports actual data defects separately from stages merely waiting for confirmation; no fake 46-item inflation.
+6. title-only Product AI uses the same one-at-a-time OpenRouter guard as the other Product-AI actions.
+
+Only after this foreground acceptance passes may the Windows track continue. Production remains blocked.
 
 ## Immediate owner gate — ERR-49-070
 
