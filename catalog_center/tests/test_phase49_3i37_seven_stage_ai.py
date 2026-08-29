@@ -230,13 +230,13 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                 }
                 pack = {
                     "title_fa": "درخت کریسمس اسپیرال",
-                    "short_description_fa": "AI کوتاه",
-                    "description_fa": "AI کامل",
-                    "use_description_fa": "AI کاربرد",
+                    "short_description_fa": "توضیح کوتاه تولیدشده",
+                    "description_fa": "توضیح کامل تولیدشده",
+                    "use_description_fa": "توضیح کاربرد تولیدشده",
                     "categories_fa": [], "specs_fa": [], "tags_fa": [], "hashtags_fa": [],
                     "target_keywords_fa": [], "sales_bullets": [], "image_alt_texts": [],
                     "seo_title_fa": "درخت کریسمس اسپیرال",
-                    "seo_description_fa": "توضیح فارسی AI درباره درخت کریسمس اسپیرال.",
+                    "seo_description_fa": "توضیح فارسی درباره درخت کریسمس اسپیرال.",
                     "social_caption_fa": "",
                     "homepage_slider_seo": {},
                 }
