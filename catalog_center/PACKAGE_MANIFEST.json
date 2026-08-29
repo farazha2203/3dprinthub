@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.6 — Permanent Crawl Ledger + Stage-scoped AI",
-  "version": "8.9.6",
+  "name": "3DPrintHub Catalog Center v8.9.7 — Professional Stage-2 + Readiness Repair Loop",
+  "version": "8.9.7",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -103,7 +103,16 @@
     "single_ai_engine_stage_scope",
     "bulk_selected_stage4_same_ai_engine",
     "targeted_stage_cleanup_and_completion",
-    "no_image_ai_when_image_seo_is_complete"
+    "no_image_ai_when_image_seo_is_complete",
+    "professional_stage2_manufacturer_material_color_flow",
+    "offer_specific_fixed_and_formula_pricing",
+    "filament_offer_inventory_preheat_operations",
+    "profile_identity_dimensions_only_ui",
+    "immutable_registered_profile_snapshot",
+    "readiness_driven_ai_repair_loop",
+    "ai_dialog_before_after_fixed_remaining",
+    "legacy_complete_link_rebound_to_single_ai_engine",
+    "top_viewport_product_screenshot"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -196,7 +205,11 @@
     "app/phase49_3i37_seven_stage_ai.py",
     "tests/test_phase49_3i37_seven_stage_ai.py",
     "app/phase49_3i38_crawl_ledger_stage_ai.py",
-    "tests/test_phase49_3i38_crawl_ledger_stage_ai.py"
+    "tests/test_phase49_3i38_crawl_ledger_stage_ai.py",
+    "app/phase49_3i39_professional_commerce.py",
+    "app/phase49_3i39_completion_loop.py",
+    "tests/test_phase49_3i39_professional_commerce.py",
+    "tests/test_phase49_3i39_completion_loop.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
