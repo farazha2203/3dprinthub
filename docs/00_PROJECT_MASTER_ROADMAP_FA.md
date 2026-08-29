@@ -7,8 +7,23 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner Windows workflow checkpoint — ERR-49-069
+
+روی Head دقیق `3f43260...` بکاپ Catalog با SHA256 ثبت شد، Compile PASS و 60/60 تست هدفمند PASS شد و سورس واقعی 8.9.8 در Foreground بالا آمد؛ با این حال UI واقعی هنوز نشان داد مشکل Final Composition باقی است. Callback قدیمی که قبل از نصب 3I.39 برای `after_idle` ثبت شده بود می‌توانست دوباره دکمه پایین را به `مرحله بعد برای انتشار` برگرداند. هم‌زمان Field ownership مرحله 1/5 ناقص بود، Stage AI نقص‌های مراحل دیگر را می‌شمرد، Productهای 63 و 295 هم‌زمان AI اجرا کردند و Fallback هنوز به AvalAI می‌رفت.
+
+Hotfix اجرایی `136011971dea907ac777b3e66190dd27982a0c38`:
+- Next قدیمی هم در نهایت به Confirm نهایی Delegate می‌کند و هر مسیر Legacy ابتدا Save می‌کند؛
+- هر Refresh قدیمی در پایان Footer نهایی را دوباره Restore می‌کند؛
+- Stage 1 نوع محصول، ابعاد و کاربری/کلاس را دوباره دارد و ذخیره می‌کند؛
+- Stage 5 طراح/منبع، مجوز، خلاصه و ویژگی‌های فنی را دوباره دارد و ذخیره می‌کند؛
+- Stage AI فقط Scope خودش را برای Completion حساب می‌کند؛
+- هم‌زمانی Product AI در یک Process مسدود شده است؛
+- Product AI فقط OpenRouter است: Model ذخیره‌شده اصلی + در صورت نیاز فقط `openrouter/free` با همان Key؛ AvalAI/Google/OpenAI fallback نیستند.
+
+Rollback: `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`. Local retest و QA تصویری Product 63/295 قبل از هر Production لازم است.
 
 ### Owner Windows workflow checkpoint — ERR-49-068
 
