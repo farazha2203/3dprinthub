@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX ON GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -38,6 +38,24 @@ Catalog Center:
 
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
+
+
+## Owner foreground 8.9.8 blocker — ERR-49-064
+
+Owner foreground execution on the canonical checkout/branch/head proved the correct 8.9.8 source was running, but opening Product 63 raised a real Tk callback exception before 3I.39/3I.40 could finish ProductWorkspace construction:
+
+`TclError: cannot use geometry manager pack inside ...!labelframe which already has slaves managed by grid`.
+
+The traceback terminates in `phase49_3i35_operator_ledger.build_material_actions()`. The modern material/color checkbox picker had already converted that legacy commerce card to a grid-managed surface; the 3I.35 layer then attempted to mount obsolete Listbox actions with `pack`. This explains why the owner saw the older Stage-2/SEO UI despite 3I.39/3I.40 launcher markers: construction stopped part-way through the wrapper chain.
+
+Hotfix:
+- source commit `aa37dcf916dfab71409738f7087a171daffe4a0a`,
+- regression commit `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`,
+- rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`,
+- modern picker now suppresses only the obsolete 3I.35 Listbox action row; 3I.35 data/business methods remain and 3I.39 stays the final visible Stage-2 authority,
+- no DB/schema/media/secret/Production change.
+
+Verification is not yet complete: owner must ff-only pull the current branch, run the targeted 3I.35/3I.40 tests and foreground-open the same Product Workspace. Production remains blocked.
 
 ### Phase50 / Store extension through 0040
 Migration:
