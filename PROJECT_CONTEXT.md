@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,14 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-069
+
+Owner Local exact `3f43260...` evidence is now: canonical repo/branch verified, fresh Catalog SQLite backup with SHA256 `5A6DB948ADACA81014DEDFA7FF117A0C4AF26364936575ACB15D21D632D4C321`, compile PASS, 60/60 focused tests PASS and foreground 8.9.8 launch PASS. The real UI still failed because a previously captured deferred Wizard refresh repainted the final footer, Stage ownership controls were split, scoped AI counted global defects, multiple Product AI jobs overlapped, and AvalAI remained an automatic fallback despite OpenRouter being active.
+
+Executable hotfix `136011971dea907ac777b3e66190dd27982a0c38` now makes the footer/persist path authoritative even under late callbacks, restores complete Stage-1/5 visible ownership/persistence, makes single-stage AI Scope-aware, serializes Product AI jobs, and makes Product AI OpenRouter-only with optional same-Provider `openrouter/free` fallback.
+
+Rollback: `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`. No schema/Host/Production/media/secret-value change. Owner Local regression and foreground QA are next.
 
 ## Current owner checkpoint — ERR-49-068
 
