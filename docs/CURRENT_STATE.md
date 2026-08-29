@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-070 AUTOMATED LOCAL 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION ROLLBACK-FIX ON GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,24 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Windows blocker/fix — ERR-49-071
+
+Owner Local on exact `d4da99744659d06ebe5c04fd69532cd0e03db3e8` passed compile, the exact ERR-49-070 regressions, OpenRouter-only 4/4 and the full 67/67 Windows stage contract, then foreground-launched the real 8.9.8 source. Visual acceptance still failed: Stage 1 stayed red despite filled title/category, the rejected type/dimensions/use-case panel appeared there, the generic missing count inflated to 46 because pending confirmations were counted as missing data, and the bottom control was still the legacy Next instead of one explicit Stage confirmation action. The runtime trace also proved the title-only AI button could start Product 286 while Product 63 AI was still active.
+
+ERR-49-071 is a targeted rollback of those bad UX decisions while preserving Stage-2 commerce and OpenRouter-only AI:
+- Stage 1 is back to Persian title + site category; type/dimensions/use-case remain in Stage 2;
+- the ERR-49-069 additive Stage-1/Stage-5 panels are no longer mounted;
+- explicit `سایر محصولات / external-other` is a valid selected category;
+- real data defects are separated from `pending_finalization`;
+- `✅` means explicitly confirmed, `◌` means complete but waiting for confirmation;
+- a dedicated independent footer button `✅ ثبت و تأیید مرحله →` persists, validates, confirms and advances;
+- the legacy Next widget is hidden instead of repeatedly repainted;
+- the visible title-only AI callback is rebound to the guarded OpenRouter Stage-1 runner.
+
+Rollback: `backup/pre-err49-071-stage-confirm-rollback-20260829` → `d4da99744659d06ebe5c04fd69532cd0e03db3e8`.
+
+Production/Host/Django migration/media/secret/Stage-2 commerce remain untouched. New owner Local regression + foreground QA is mandatory.
 
 ## Current Local gate/fix — ERR-49-070
 
