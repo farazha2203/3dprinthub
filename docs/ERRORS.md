@@ -694,6 +694,32 @@ Observed UI/runtime:
 
 **Prevention:** a visual acceptance gate must test the exact operator meaning of icons/actions, not just data persistence. A green Stage check is an explicit business-state transition and must not be inferred from field population. Pending approval and missing data are separate domains. Final-composition controls that must survive old callbacks should own independent widgets rather than repeatedly mutating legacy widgets.
 
+
+### ERR-49-072 — new Stage-2 regression fixture used an incomplete clean Catalog schema
+**Date:** 2026-08-29  
+**Environment:** owner Local Windows, exact branch/head `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`, ERR-49-071 gate.
+
+**Owner evidence:** canonical repo/branch/head PASS; fresh real Catalog SQLite backup created at `D:\projects\3dprinthub-backups\err49-071-20260829-193034\catalog-before-err49-071-qa.sqlite3` with SHA256 `0FA06AF7884F005A8820A420DBDC6C42B883E836A554F9C315E1D559854362F0`; changed-source compile PASS. The exact 7-test ERR-49-071 set stopped on one deterministic error before OpenRouter/full-suite/foreground launch:
+`sqlite3.OperationalError: no such column: price_min`
+inside `test_commerce_stage_persists_visible_product_type_and_dimensions`.
+
+**Root Cause:** the new test reused the minimal `Database` bootstrap plus Profile/Ledger schema only. That fixture did not initialize the two real ProductWorkspace commerce schema layers:
+- `epic49_desktop_schema.ensure_epic49_desktop_schema()` owns `price_min / price_max`;
+- `phase49_3f_workspace.ensure_schema()` owns `pricing_strategy`.
+The real ProductWorkspace initializes those schemas before Stage-2 editing, so this was a regression-fixture composition error, not evidence that the owner's existing Catalog database lost commerce columns.
+
+**Failed condition:** do not rerun the same ERR-49-071 command on `34c65bc...`; its fixture is known incomplete.
+
+**Correct Fix:** make the Stage-finalization test helper initialize the same Epic49 desktop + 3F pricing schemas as real ProductWorkspace construction before Profile/Ledger schemas. No runtime application source, Product data, Django schema/migration, Host or Production behavior is changed.
+
+**Source/test fix:** `1307f4c438de184a930041d365976c2ce018bff8`.
+
+**Rollback:** `backup/pre-err49-072-commerce-test-schema-20260829` → `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`.
+
+**Verification status:** GitHub updated; no current-head GitHub Actions run is attached. Owner must ff-only pull the new docs-final head, rerun the changed exact regression gate, then OpenRouter/full Windows suite, and foreground launch only if all pass. Production untouched.
+
+**Prevention:** any clean temporary Catalog DB test that exercises a mature Workspace layer must initialize the same schema composition that the runtime initializes; do not assume the minimal `Database._init()` contains every additive Epic49/3F column.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
