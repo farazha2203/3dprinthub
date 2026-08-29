@@ -1,6 +1,6 @@
 # DATABASE — 3DPrintHub
 
-Updated: 2026-08-27
+Updated: 2026-08-29
 
 ## Production
 - Engine: MySQL
@@ -115,6 +115,21 @@ Runtime snapshot:
 - immutable Profile/part/package/shipping snapshot PASS.
 
 This is **SQLite CI evidence**, not Production MySQL evidence.
+
+## Phase49.3I.41 Filament Library dependency
+
+Phase49.3I.41 adds **no new migration**.
+
+Its new authenticated Filament Bridge endpoint reads/writes the existing Store `MaterialColorOption` fields introduced by:
+- `store.0039_phase50_filament_offer_pricing`,
+- `store.0040_phase50_filament_offer_operations`.
+
+Therefore:
+- Local Django verification must confirm the intended Local SQLite DB and actual 0039/0040 state before running Bridge tests;
+- Production cannot expose the new endpoint safely until the Host read-only audit proves the real pending chain and a fresh MySQL backup is created;
+- the last verified Production state remains only through `store.0035`; do not claim 0036..0040 applied without terminal evidence.
+
+No historical Order/Product data rewrite is part of Phase49.3I.41.
 
 ## Production schema-change gate
 1. Verify Host root, branch, HEAD and clean worktree.
