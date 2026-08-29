@@ -9,6 +9,7 @@ from app.phase49_3i40_commerce_precision import (
     apply_product_fixed_prices,
     color_preview_hex,
     filament_rate_calculation,
+    focus_saved_filament,
     merge_offer_scope,
     readiness_display,
 )
@@ -38,6 +39,51 @@ class _Dialog:
 
     def event(self, *args, **kwargs):
         self.events.append((args, kwargs))
+
+
+class _Var:
+    def __init__(self):
+        self.value = ""
+
+    def set(self, value):
+        self.value = str(value)
+
+    def get(self):
+        return self.value
+
+
+class _Tree:
+    def __init__(self):
+        self.selected = []
+        self.focused = ""
+        self.seen = ""
+
+    def selection(self):
+        return tuple(self.selected)
+
+    def selection_remove(self, items):
+        self.selected = [item for item in self.selected if item not in set(items)]
+
+    def selection_set(self, iid):
+        self.selected = [str(iid)]
+
+    def focus(self, iid):
+        self.focused = str(iid)
+
+    def see(self, iid):
+        self.seen = str(iid)
+
+
+class _FocusWorkspace:
+    def __init__(self, saved):
+        self.saved = dict(saved)
+        self._phase49_3i39_company_var = _Var()
+        self._phase49_3i39_material_var = _Var()
+        self._phase49_3i39_offer_tree = _Tree()
+        self._phase49_3i39_working_offer_rows = []
+
+    def _phase49_3i39_refresh_offer_filter(self):
+        self._phase49_3i39_working_offer_rows = [dict(self.saved)]
 
 
 class Phase493I40CommercePrecisionTests(unittest.TestCase):
@@ -105,6 +151,22 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertIn("نرخ نهایی مصرف", source)
         self.assertIn("ذخیره Filament جهانی", source)
         self.assertNotIn('text="ذخیره Offer جهانی"', source)
+
+    def test_saved_filament_switches_filter_and_is_selected_in_list(self):
+        saved = offer(
+            "eSUN",
+            "PETG",
+            "شفاف",
+            manufacturer="eSUN",
+            sale_price_per_roll=4_200_000,
+        )
+        workspace = _FocusWorkspace(saved)
+        self.assertTrue(focus_saved_filament(workspace, saved))
+        self.assertEqual(workspace._phase49_3i39_company_var.get(), "eSUN")
+        self.assertEqual(workspace._phase49_3i39_material_var.get(), "PETG")
+        self.assertEqual(workspace._phase49_3i39_offer_tree.selection(), ("0",))
+        self.assertEqual(workspace._phase49_3i39_offer_tree.focused, "0")
+        self.assertEqual(workspace._phase49_3i39_offer_tree.seen, "0")
 
     def test_color_preview_uses_hex_then_name_fallback(self):
         self.assertEqual(color_preview_hex({"color": "صورتی", "hex": "#ABCDEF"}), "#ABCDEF")
