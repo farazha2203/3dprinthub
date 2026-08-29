@@ -577,6 +577,7 @@ def install_workspace(workspace_class) -> None:
         return
     original_init = workspace_class.__init__
     original_reload = workspace_class.reload
+    original_save = workspace_class.save
 
     def __init__(self, app, product_id):
         original_init(self, app, product_id)
@@ -656,6 +657,26 @@ def install_workspace(workspace_class) -> None:
             except Exception:
                 pass
         return result
+
+    def save(self, silent=False):
+        ok = original_save(self, silent=True)
+        if not ok:
+            return False
+        var = getattr(self, "use_case_class_var", None)
+        if var is not None:
+            try:
+                self.db.update_product(
+                    int(self.product_id),
+                    {"use_case_class": str(var.get() or "").strip()},
+                )
+                self.row = self.db.product(int(self.product_id))
+            except Exception as exc:
+                if not silent:
+                    messagebox.showerror("ذخیره اطلاعات پایه", str(exc), parent=self)
+                return False
+        if not silent:
+            self.footer_status.set("تمام تغییرات Workspace ذخیره شد")
+        return True
 
     def add_stage_ai_buttons(self):
         panel = getattr(self, "_phase49_3i36_lock_panel", None)
@@ -922,6 +943,7 @@ def install_workspace(workspace_class) -> None:
 
     workspace_class.__init__ = __init__
     workspace_class.reload = reload
+    workspace_class.save = save
     workspace_class._phase49_3i39_add_quick_identity_panel = add_quick_identity_panel
     workspace_class._phase49_3i39_refresh_quick_identity = refresh_quick_identity
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
