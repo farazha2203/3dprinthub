@@ -147,14 +147,13 @@ def evaluate_readiness(row) -> dict:
         "images": [
             ("تصویر اصلی", bool(primary_image)),
             ("حداقل یک تصویر انتخاب‌شده", bool(selected_images)),
+            ("Alt تصویر", bool(alts)),
         ],
         "content": [
-            ("عنوان فارسی", bool(title)),
             ("توضیح فارسی", bool(short_desc or description)),
             ("SEO Title فارسی", bool(seo_title) or seo_manual_approved),
             ("SEO Description فارسی", bool(seo_description) or seo_manual_approved),
             ("عبارت‌های هدف SEO", len(keywords) >= 3 or seo_manual_approved),
-            ("Alt تصویر", bool(alts) or seo_manual_approved),
         ],
         "specs": [
             ("لینک منبع", bool(source_url)),
