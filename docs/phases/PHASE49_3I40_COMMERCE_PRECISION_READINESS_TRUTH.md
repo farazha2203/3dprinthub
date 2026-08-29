@@ -5,7 +5,26 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE CI PASS / ERR-49-070 OWNER 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+Status: `ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 LIVE FILAMENT RATE+FINAL PRICE GITHUB / OWNER LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION UNTOUCHED`
+
+## ERR-49-074 visible Filament pricing result and terminology
+
+Owner acceptance after ERR-49-073 established a healthy Stage workflow: exact image regressions 2/2, OpenRouter-only 4/4 and full Windows 73/73 all passed; foreground image Metadata refresh cleared and the Product became ready for publication locally.
+
+The final Stage-2 usability contract now additionally requires:
+- user-visible entity name is `Filament`; `Offer` remains an internal compatibility/domain identifier only;
+- global Filament editor continuously shows the final roll basis and exact Toman/gram rate;
+- the basis is the larger explicit sale-roll amount vs USD price × explicitly entered FX, divided by roll weight; no FX is guessed;
+- the Stage-2 pricing card continuously shows the final fixed/formula/range amount;
+- formula total remains material + print-hour + supervision-hour + preheat + assembly, with shipping separately stated;
+- fixed mode reports exact Product-specific Filament prices; formula mode reports the current min/max across registered Filaments × valid production rows;
+- the detailed popup preview remains available, but it is no longer the only place where the final result is visible.
+
+Implementation: `9540558468cc75bf0248547e7440f3647eeb4cd3`, `0c795bc0b7084b2e175f47f34533aa596d90fb03`, `267dc565b25ca74f3971334b7ad37d5c919a98ac`; tests `109aaea748e7750bb22295aedf94de34ce617d88`, `4efc5a8350a3e9fbb7ade41f1098bc9cb9c80a7c`; layout `e4c1f3345bf9416bde11b6b6c7c7d31f6cdfd09c`.
+
+Rollback: `backup/pre-err49-074-filament-rate-final-display-20260829` → `954c0516661e6c70145d7f6f395b4e92ceeb40bd`.
+
+No Catalog schema, Django migration, crawler, image, AI-provider, Host or Production change. Once Local visual QA passes, Phase50 Web/Store receive/sync is the next boundary.
 
 ## ERR-49-073 image derived-state refresh after Stage confirmation
 
