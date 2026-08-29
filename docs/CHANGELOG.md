@@ -1,6 +1,17 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — ERR-49-067 Locked-stage Test Fixture Alignment
+- owner Local pulled `9f3b765...`, created checksum-verified Catalog SQLite backup, and passed Python compile;
+- focused gate ran 43 tests with one deterministic error before foreground launch;
+- failing test was the locked Quick/Content immutability regression, but its mocked `seo_description_fa` contained Latin `AI`;
+- ERR-49-066 intentionally requires Persian-only SEO title/description, so runtime validation correctly rejected the stale mock before lock behavior was exercised;
+- runtime checker remains strict; only the fixture wording was changed to fully Persian placeholders at `38cb415bc12d7ec08943809fd14f3478b3ddac1b`;
+- rollback `backup/pre-err49-067-seven-stage-test-fixture-20260829` → `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`;
+- Production untouched; owner Local rerun pending.
+
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 Readiness Ownership / Checker Alignment (ERR-49-066)
 - owner Local retest of `c679c66...` passed 12 targeted tests but real Product 63 still remained red after persisted AI content;
 - audit proved the final repair loop classified 5 Content defects as AI-fixable, accepted a fallback response, then changed 0 fields and stalled;
