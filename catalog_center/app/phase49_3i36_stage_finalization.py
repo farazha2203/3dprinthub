@@ -393,6 +393,22 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
             "lead_time_min_days": max(0, number("lead_min_var", _row_value(row, "lead_time_min_days", 1))),
             "lead_time_max_days": max(0, number("lead_max_var", _row_value(row, "lead_time_max_days", 3))),
         })
+        try:
+            from .product_studio import PRODUCT_TYPE_CODES
+            product_label = str(_get_var(workspace, "product_type_var") or "").strip()
+            if product_label:
+                values["product_type"] = PRODUCT_TYPE_CODES.get(
+                    product_label,
+                    str(_row_value(row, "product_type", "ready_product")),
+                )
+        except Exception:
+            pass
+        if hasattr(workspace, "dimensions_var"):
+            values["dimensions"] = str(
+                _get_var(workspace, "dimensions_var", _row_value(row, "dimensions", ""))
+                or ""
+            ).strip()
+
         strategy = str(_get_var(workspace, "pricing_strategy_var") or "").strip()
         if strategy in {"fixed", "range", "dynamic"}:
             values["pricing_strategy"] = strategy
