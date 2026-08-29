@@ -6,10 +6,24 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION BLOCKED`
+Status: `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — Phase49.3I.41
+
+Windows + local Site acceptance now covers the real inventory workflow:
+- main Filament Library groups inventory by type and remembers reusable manufacturer/brand/material values;
+- Product Stage 2 is a one-click grouped checklist with a separate selected-Filaments box;
+- no Ctrl/Shift selection is part of the final operator contract;
+- Product fixed prices survive checklist/library refresh;
+- local Filament Save and Product assignment attempt Site Bridge sync;
+- Site stores the same exact Material + Brand + Color entity with weight, stock, rates, preheat, image and color metadata.
+
+No new migration is introduced, but the new Site contract depends on existing `store.0039`/`0040`. Local migration state must be verified before tests; Production remains blocked until Host read-only audit and backup.
+
+If Local visual + Bridge tests pass, this phase becomes the approved deployment candidate.
 
 ## Immediate owner gate — ERR-49-075
 
