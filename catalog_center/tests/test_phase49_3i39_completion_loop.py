@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.phase49_3i39_completion_loop import (
+    _refresh_workspace_after_ai,
     defect_snapshot,
     repair_until_stable,
 )
@@ -124,6 +125,36 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("readiness_before", stages)
         self.assertIn("repair_pass_result", stages)
         self.assertIn("readiness_after", stages)
+
+    def test_post_ai_refresh_rehydrates_db_and_leaves_final_readiness_as_last_painter(self):
+        calls = []
+
+        class Workspace:
+            product_id = 63
+
+            def __init__(self):
+                self.db = _DB({"id": 63, "title_fa": "گکو انعطاف‌پذیر"})
+                self.row = None
+
+            def reload(self):
+                calls.append("reload")
+
+            def _phase49_3i36_refresh_locks(self):
+                calls.append("locks")
+
+            def _phase49_3b_refresh_wizard(self):
+                calls.append("wizard")
+
+            def _phase49_refresh_readiness(self):
+                calls.append("readiness")
+
+        workspace = Workspace()
+        _refresh_workspace_after_ai(workspace, reload_first=True)
+
+        self.assertEqual(workspace.row["title_fa"], "گکو انعطاف‌پذیر")
+        self.assertEqual(calls[0], "reload")
+        self.assertEqual(calls[1:4], ["locks", "wizard", "readiness"])
+        self.assertEqual(calls[-1], "readiness")
 
     def test_operator_only_defects_do_not_spend_an_ai_request(self):
         snapshot = _snapshot([], {
