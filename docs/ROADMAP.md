@@ -6,10 +6,29 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-069
+
+The previous exact Local gate is now authoritative evidence: `3f43260...` compiled, 60/60 focused regressions passed and the canonical 8.9.8 foreground source launched, yet the real UI still failed. The next gate therefore tests the **final visible composition**, not another abstract helper-only fix.
+
+GitHub executable hotfix `136011971dea907ac777b3e66190dd27982a0c38` restores one ownership/persistence contract across all seven stages. Current focus:
+- Stage 1 visibly contains title/category/type/dimensions/use-case and confirm persists before readiness;
+- Stage 2 remains the professional Offer → pricing → production rows → Profile authority;
+- Stage 3 keeps selected-image/Alt/Metadata authority;
+- Stage 4 keeps Persian content/SEO/tags/hashtags/keywords/sales text;
+- Stage 5 visibly contains source/designer/license/technical facts and stage-specific persistence;
+- Stage 6 remains Slider/Hero;
+- Stage 7 remains approval/publish targets.
+
+Product AI is now OpenRouter-only. The exact saved OpenRouter model is Primary; optional fallback is only `openrouter/free` on the same Provider/key. AvalAI/Google/OpenAI are excluded from Product-AI candidate construction. Stage-specific AI judges only the selected Stage and a process-level guard prevents overlapping Product AI jobs.
+
+Rollback: `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`.
+
+Next: clean Local ff-only pull → fresh backup → compile → focused seven-stage/OpenRouter tests → foreground Product 63 → verify fixed footer survives idle/refresh → confirm Stage 1 advances to Stage 2 → verify Stage-1/5 restored controls → run Product AI and confirm diagnostics contain only `provider=openrouter` → start another Product AI while first is active and verify it is blocked. Production remains blocked.
 
 ## Immediate owner gate — ERR-49-068
 
