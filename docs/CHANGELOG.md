@@ -1,5 +1,18 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — ERR-49-074 live Filament rate/final-price display restored
+- owner ERR-49-073 gate on exact `954c051...`: Catalog backup + SHA256 PASS, compile PASS, exact image regressions 2/2 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 73/73 PASS, foreground launch/visual acceptance PASS;
+- image Metadata issue is accepted fixed and Product reached ready-for-publication state locally;
+- restored always-visible Stage-2 final amount for fixed, formula and range pricing;
+- formula summary reuses the authoritative material + print + supervision + preheat + assembly calculation and shows min/max across valid Filament × production-row combinations;
+- global Filament editor now shows live final roll basis and exact Toman/gram rate from sale-roll vs USD × explicitly entered FX;
+- changed operator-facing `Offer` terminology to `Filament` while deliberately retaining internal `offer_*` compatibility identifiers;
+- added regression tests for formula/fixed result math, final-rate basis and visible Filament labels;
+- enlarged Filament editor for the new calculation surface;
+- rollback `backup/pre-err49-074-filament-rate-final-display-20260829` → `954c0516661e6c70145d7f6f395b4e92ceeb40bd`;
+- no DB/migration/Host/Production change; Local retest pending, then website receive/sync is next.
+
+
 ## 2026-08-29 — ERR-49-073 image Metadata refresh through confirmed Stage lock
 - owner exact `6d5897e...`: ERR-49-071/072 exact 7/7 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 71/71 PASS, foreground launch PASS;
 - explicit Stage confirmation now works outside Images; Stage-2 price/Profile intentionally left incomplete for this QA;
