@@ -6,10 +6,16 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-070
+
+The ERR-49-069 Local rerun reached the intended 67-test Windows gate and stopped before launch on two real source gaps: clean Catalog SQLite did not create `technical_summary_fa`, and 3I.39 referenced Stage-5 panel builders that did not exist. Both are now fixed on GitHub together with the visible Persian license persistence bridge and regressions.
+
+Next: ff-only pull the documentation-final head, rerun the same compile/OpenRouter-only/67-test gate, and launch only if all tests pass. Then foreground-verify Stage 1 confirmation, Stage 5 complete controls, and OpenRouter-only Product AI. Production remains blocked.
 
 ## Immediate owner gate — ERR-49-069
 
