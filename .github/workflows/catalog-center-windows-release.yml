@@ -13,6 +13,10 @@ on:
       - catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py
       - catalog_center/app/phase49_3i39_professional_commerce.py
       - catalog_center/app/phase49_3i39_completion_loop.py
+      - catalog_center/app/phase49_3i40_commerce_precision.py
+      - catalog_center/tests/test_phase49_3i40_commerce_precision.py
+      - catalog_center/tests/test_phase49_3i39_professional_commerce.py
+      - catalog_center/tests/test_phase49_3i39_completion_loop.py
       - catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py
       - catalog_center/tests/test_phase49_3i37_seven_stage_ai.py
       - catalog_center/app/phase49_readiness_wizard.py
@@ -102,6 +106,7 @@ jobs:
             tests.test_phase49_3i38_crawl_ledger_stage_ai `
             tests.test_phase49_3i39_professional_commerce `
             tests.test_phase49_3i39_completion_loop `
+            tests.test_phase49_3i40_commerce_precision `
             tests.test_phase49_3i35_operator_workflow `
             tests.test_phase49_3i34_profile_matrix `
             tests.test_phase49_3i33_operator_workflow `
@@ -138,44 +143,13 @@ jobs:
           $launch = Get-Content "$env:RUNNER_TEMP\catalog-launch.txt" -Raw
           foreach ($marker in @(
             'EPIC49_3I29_PRODUCTS_PAGE_PAGED_48=ENABLED',
-            'EPIC49_3I29_DEFERRED_GLOBAL_REFRESH=ENABLED',
             'EPIC49_3I31_SMART_LINK_AI=ENABLED',
-            'EPIC49_3I31_BATCH_SELECTED_PRODUCTS_AI=ENABLED',
-            'EPIC49_3I31_AI_TITLE_TEXT_ONLY=ENABLED',
-            'EPIC49_3I31_AI_SELECTED_IMAGE_SEO=ENABLED',
             'EPIC49_3I33_CONSOLIDATED_PRODUCT_AI=ENABLED',
-            'EPIC49_3I33_SCREENSHOT_VISION_AI=ENABLED',
-            'EPIC49_3I33_OPERATOR_MATERIAL_COLOR_ONLY=ENABLED',
-            'EPIC49_3I33_EXPLICIT_PRODUCTS_REFRESH=ENABLED',
-            'EPIC49_3I33_SINGLE_CARD_UPDATE=ENABLED',
-            'EPIC49_3I33_IMAGE_FILE_METADATA=ENABLED',
-            'EPIC49_3I33_RUNTIME_TELEMETRY=ENABLED',
             'EPIC49_3I34_PROFILE_MATRIX=ENABLED',
-            'EPIC49_3I34_PROFILE_CLONE=ENABLED',
-            'EPIC49_3I34_SIZE_WEIGHT_DEPENDENCY=ENABLED',
-            'EPIC49_3I34_PROFILE_PRICE_AUTHORITY=ENABLED',
-            'EPIC49_3I34_DESKTOP_STORE_SYNC=ENABLED',
             'EPIC49_3I35_OPERATOR_LEDGER=ENABLED',
-            'EPIC49_3I35_BRAND_AWARE_FILAMENT_OFFERS=ENABLED',
-            'EPIC49_3I35_RESILIENT_AI_RETRY_FAILOVER=ENABLED',
-            'EPIC49_3I35_MANUAL_SEO_SOURCE_REVIEW=ENABLED',
-            'EPIC49_3I35_LOCAL_PROFILE_SNAPSHOT_AUTHORITY=ENABLED',
             'EPIC49_3I36_SEVEN_STAGE_FINALIZATION=ENABLED',
-            'EPIC49_3I36_AI_UNLOCKED_STAGE_ONLY=ENABLED',
-            'EPIC49_3I36_LOCKED_PROFILE_COMMERCE_GUARD=ENABLED',
-            'EPIC49_3I36_AI_STATE_NO_NETWORK_HYDRATION=ENABLED',
-            'EPIC49_3I36_SEMANTIC_TITLE_GUARD=ENABLED',
             'EPIC49_3I37_SEVEN_STAGE_AI_ORCHESTRATOR=ENABLED',
-            'EPIC49_3I37_PERSISTED_SOURCE_MODE=ENABLED',
-            'EPIC49_3I37_SCREENSHOT_SELECTED_FOR_SITE=ENABLED',
-            'EPIC49_3I37_STAGE_BY_STAGE_APPLY=ENABLED',
-            'EPIC49_3I37_SEO_LANGUAGE_GUARD=ENABLED',
             'EPIC49_3I38_PERMANENT_CRAWL_LEDGER=ENABLED',
-            'EPIC49_3I38_REJECT_PURGE_TOMBSTONE=ENABLED',
-            'EPIC49_3I38_CONTINUATION_CURSOR=ENABLED',
-            'EPIC49_3I38_DIRECT_LINK_PRE_ACQUISITION_GUARD=ENABLED',
-            'EPIC49_3I38_STAGE_SCOPED_AI=ENABLED',
-            'EPIC49_3I38_BULK_STAGE4_SAME_ENGINE=ENABLED',
             'EPIC49_3I39_PROFESSIONAL_STAGE2=ENABLED',
             'EPIC49_3I39_OFFER_MANUFACTURER_MATERIAL_COLOR=ENABLED',
             'EPIC49_3I39_OFFER_PREHEAT_PRICING=ENABLED',
@@ -183,6 +157,11 @@ jobs:
             'EPIC49_3I39_READINESS_REPAIR_LOOP=ENABLED',
             'EPIC49_3I39_AI_DIALOG_BEFORE_AFTER=ENABLED',
             'EPIC49_3I39_TOP_VIEWPORT_SCREENSHOT=ENABLED',
+            'EPIC49_3I40_MULTI_BRAND_FILTER_SELECTION=ENABLED',
+            'EPIC49_3I40_PRODUCT_OFFER_FIXED_PRICE=ENABLED',
+            'EPIC49_3I40_COLOR_PREVIEW=ENABLED',
+            'EPIC49_3I40_READINESS_DATA_VS_FINALIZATION=ENABLED',
+            'EPIC49_3I40_AI_PROGRESS_TRUTH=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($launch -notmatch [regex]::Escape($marker)) { throw "Missing launcher marker: $marker" }
@@ -257,15 +236,13 @@ jobs:
 
           Release gates passed on windows-latest:
           - compileall
-          - current Phase49.3I regression suite including 3I.29 performance, 3I.31 smart/batch AI, 3I.32 source URL preservation, 3I.33 consolidated operator workflow, 3I.34 Product Profile Matrix, 3I.35 operator-ledger/resilient-AI , 3I.36 seven-stage finalization and 3I.37 stage AI/source/screenshot contracts, 3I.38 crawl ledger/stage scope and 3I.39 professional Stage-2/readiness-repair contracts
+          - current Phase49.3I regression suite through 3I.40 commerce precision
           - final launcher composition verify
           - PyInstaller one-file/windowed build
           - frozen runtime self verification
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.7 adds a professional Stage-2 workflow (manufacturer → filament → color Offer, stock/rates/preheat, fixed/formula pricing, common production rows, profile identity/dimensions only), readiness-driven AI repair with before/after defect accounting, and top-viewport Product screenshots while preserving the mature acquisition/crawl/file pipeline.
-
-          External source websites are intentionally not release-gating CI dependencies because third-party anti-bot behavior and runner IP policy are outside the application contract. A final live-source employee acceptance smoke remains required before source acquisition is marked fully accepted.
+          8.9.8 keeps the mature acquisition/file/image path and refines professional Stage 2: cross-filter multi-brand Offer selections remain additive, global filament facts are separated from per-Product Offer fixed prices, Catalog color preview is visible, readiness data defects are separated from operator finalization, and the AI completion dialog reaches 100% only when AI-fixable defects are zero.
           "@
           gh release create $tag $exe $manifestPath $shaFile --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "3DPrintHub Catalog Center v$env:CATALOG_VERSION" --notes $notes
