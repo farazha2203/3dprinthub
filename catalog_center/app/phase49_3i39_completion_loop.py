@@ -648,6 +648,137 @@ def install_workspace(workspace_class) -> None:
             except Exception:
                 pass
 
+    def add_specs_contract_panel(self):
+        if getattr(self, "_phase49_3i39_specs_contract_panel", None) is not None:
+            return
+
+        from .epic49_product_studio import LICENSE_CODE_TO_LABEL, LICENSE_LABEL_TO_CODE
+
+        panel = ttk.LabelFrame(
+            self.specs_tab,
+            text="منبع و مجوز کامل",
+            padding=8,
+            style="Card.TLabelframe",
+        )
+        panel.pack(fill="x", pady=(8, 0))
+        panel.columnconfigure(1, weight=1)
+        panel.columnconfigure(3, weight=1)
+
+        ttk.Label(panel, text="نام منبع / طراح").grid(
+            row=0, column=0, sticky="e", padx=4, pady=4
+        )
+        ttk.Entry(panel, textvariable=self.source_name_var).grid(
+            row=0, column=1, sticky="ew", padx=4, pady=4
+        )
+
+        self._phase49_3i39_spec_license_label_var = tk.StringVar(
+            value=LICENSE_CODE_TO_LABEL.get(
+                str(self.license_var.get() or "review"),
+                "نیازمند بررسی",
+            )
+        )
+        ttk.Label(panel, text="مجوز تجاری").grid(
+            row=0, column=2, sticky="e", padx=4, pady=4
+        )
+        ttk.Combobox(
+            panel,
+            textvariable=self._phase49_3i39_spec_license_label_var,
+            values=list(LICENSE_LABEL_TO_CODE),
+            state="readonly",
+            width=24,
+        ).grid(row=0, column=3, sticky="ew", padx=4, pady=4)
+
+        ttk.Label(panel, text="خلاصه فنی فارسی").grid(
+            row=1, column=0, sticky="ne", padx=4, pady=4
+        )
+        self._phase49_3i39_spec_summary = tk.Text(
+            panel,
+            height=4,
+            wrap="word",
+            undo=True,
+        )
+        self._phase49_3i39_spec_summary.grid(
+            row=1, column=1, sticky="nsew", padx=4, pady=4
+        )
+
+        ttk.Label(panel, text="ویژگی‌های فنی JSON").grid(
+            row=1, column=2, sticky="ne", padx=4, pady=4
+        )
+        self._phase49_3i39_spec_features = tk.Text(
+            panel,
+            height=4,
+            wrap="word",
+            undo=True,
+        )
+        self._phase49_3i39_spec_features.grid(
+            row=1, column=3, sticky="nsew", padx=4, pady=4
+        )
+
+        ttk.Label(
+            panel,
+            text="URL منبع در بالای همین مرحله است؛ این بخش مالک طراح، مجوز و اطلاعات فنی قابل انتشار است.",
+            style="SubHeader.TLabel",
+        ).grid(row=2, column=0, columnspan=4, sticky="e", padx=4, pady=(2, 0))
+
+        self._phase49_3i39_specs_contract_panel = panel
+        self._phase49_3i39_refresh_specs_contract()
+
+    def refresh_specs_contract(self):
+        from .epic49_product_studio import LICENSE_CODE_TO_LABEL
+
+        row = self.db.product(int(self.product_id))
+        if row is None:
+            return
+
+        try:
+            self.source_name_var.set(
+                str(
+                    _row_value(row, "source_name", "")
+                    or _row_value(row, "author_name", "")
+                    or ""
+                )
+            )
+        except Exception:
+            pass
+
+        license_label_var = getattr(
+            self, "_phase49_3i39_spec_license_label_var", None
+        )
+        if license_label_var is not None:
+            try:
+                license_label_var.set(
+                    LICENSE_CODE_TO_LABEL.get(
+                        str(_row_value(row, "commercial_status", "review") or "review"),
+                        "نیازمند بررسی",
+                    )
+                )
+            except Exception:
+                pass
+
+        summary = getattr(self, "_phase49_3i39_spec_summary", None)
+        if summary is not None:
+            try:
+                self._text_set(
+                    summary,
+                    str(_row_value(row, "technical_summary_fa", "") or ""),
+                )
+            except Exception:
+                pass
+
+        features = getattr(self, "_phase49_3i39_spec_features", None)
+        if features is not None:
+            try:
+                raw = _row_value(row, "technical_features_json", "{}") or "{}"
+                parsed = json.loads(raw) if isinstance(raw, str) else raw
+                if not isinstance(parsed, dict):
+                    parsed = {}
+                self._text_set(
+                    features,
+                    json.dumps(parsed, ensure_ascii=False, indent=2),
+                )
+            except Exception:
+                self._text_set(features, "{}")
+
     def reload(self):
         result = original_reload(self)
         if hasattr(self, "_phase49_3i39_quick_identity_panel"):
