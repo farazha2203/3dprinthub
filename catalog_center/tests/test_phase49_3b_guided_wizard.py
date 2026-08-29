@@ -74,6 +74,12 @@ class Phase493BGuidedWizardTests(unittest.TestCase):
         refresh_end = text.index("\n    def _phase49_3b_go_prev", refresh_start)
         refresh = text[refresh_start:refresh_end]
         self.assertIn("_phase49_3i39_sync_footer_actions", refresh)
+        title_start = text.index("    def translate_title_only(self):")
+        title_end = text.index("\n    def _phase49_3b_load_media", title_start)
+        title_block = text[title_start:title_end]
+        self.assertIn('_phase49_3i39_run_stage_ai', title_block)
+        self.assertIn('return final_runner("quick")', title_block)
+        self.assertIn("lambda message=error_text", title_block)
 
     def test_launcher_verifies_phase49_3b_runtime_markers(self):
         root = Path(__file__).resolve().parents[1]
