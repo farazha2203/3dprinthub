@@ -583,6 +583,7 @@ def install_workspace(workspace_class) -> None:
         original_init(self, app, product_id)
         self._phase49_3i39_add_stage_ai_buttons()
         self._phase49_3i39_add_quick_identity_panel()
+        self._phase49_3i39_add_specs_contract_panel()
         self._phase49_3i39_rebind_legacy_complete_buttons()
         self._phase49_3i39_add_fixed_footer_actions()
         self._phase49_3i39_bind_footer_refresh()
@@ -651,6 +652,8 @@ def install_workspace(workspace_class) -> None:
         result = original_reload(self)
         if hasattr(self, "_phase49_3i39_quick_identity_panel"):
             self._phase49_3i39_refresh_quick_identity()
+        if hasattr(self, "_phase49_3i39_specs_contract_panel"):
+            self._phase49_3i39_refresh_specs_contract()
         if hasattr(self, "_phase49_3b_next"):
             try:
                 self._phase49_3i39_sync_footer_actions()
@@ -659,20 +662,49 @@ def install_workspace(workspace_class) -> None:
         return result
 
     def save(self, silent=False):
+        from .epic49_product_studio import LICENSE_LABEL_TO_CODE
+
+        spec_label_var = getattr(self, "_phase49_3i39_spec_license_label_var", None)
+        if spec_label_var is not None:
+            label = str(spec_label_var.get() or "")
+            code = LICENSE_LABEL_TO_CODE.get(label, self.license_var.get() or "review")
+            self.license_var.set(code)
+            publish_var = getattr(self, "publish_license_label_var", None)
+            if publish_var is not None:
+                publish_var.set(label)
+
         ok = original_save(self, silent=True)
         if not ok:
             return False
+
+        values = {}
         var = getattr(self, "use_case_class_var", None)
         if var is not None:
+            values["use_case_class"] = str(var.get() or "").strip()
+
+        summary = getattr(self, "_phase49_3i39_spec_summary", None)
+        if summary is not None:
+            values["technical_summary_fa"] = self._text_get(summary)
+
+        features = getattr(self, "_phase49_3i39_spec_features", None)
+        if features is not None:
             try:
-                self.db.update_product(
-                    int(self.product_id),
-                    {"use_case_class": str(var.get() or "").strip()},
-                )
+                parsed = json.loads(self._text_get(features) or "{}")
+                if not isinstance(parsed, dict):
+                    raise ValueError("ویژگی‌های فنی باید JSON Object باشد.")
+                values["technical_features_json"] = json.dumps(parsed, ensure_ascii=False)
+            except Exception as exc:
+                if not silent:
+                    messagebox.showerror("ذخیره مشخصات فنی", str(exc), parent=self)
+                return False
+
+        if values:
+            try:
+                self.db.update_product(int(self.product_id), values)
                 self.row = self.db.product(int(self.product_id))
             except Exception as exc:
                 if not silent:
-                    messagebox.showerror("ذخیره اطلاعات پایه", str(exc), parent=self)
+                    messagebox.showerror("ذخیره Workspace", str(exc), parent=self)
                 return False
         if not silent:
             self.footer_status.set("تمام تغییرات Workspace ذخیره شد")
@@ -946,6 +978,8 @@ def install_workspace(workspace_class) -> None:
     workspace_class.save = save
     workspace_class._phase49_3i39_add_quick_identity_panel = add_quick_identity_panel
     workspace_class._phase49_3i39_refresh_quick_identity = refresh_quick_identity
+    workspace_class._phase49_3i39_add_specs_contract_panel = add_specs_contract_panel
+    workspace_class._phase49_3i39_refresh_specs_contract = refresh_specs_contract
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
     workspace_class._phase49_3i39_add_fixed_footer_actions = add_fixed_footer_actions
     workspace_class._phase49_3i39_sync_footer_actions = sync_footer_actions
