@@ -292,6 +292,8 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
             self.assertIn(token, ownership)
         for token in ("منبع و مجوز کامل", "نام منبع / طراح", "مجوز تجاری", "خلاصه فنی فارسی", "ویژگی‌های فنی JSON"):
             self.assertIn(token, quick)
+        self.assertIn("def add_specs_contract_panel(self):", quick)
+        self.assertIn("def refresh_specs_contract(self):", quick)
         for token in ("homepage_slider_title_fa", "homepage_slider_image_url"):
             self.assertIn(token, slider)
         for token in ("approved_for_sale", "publish_as_product", "publish_as_portfolio"):
