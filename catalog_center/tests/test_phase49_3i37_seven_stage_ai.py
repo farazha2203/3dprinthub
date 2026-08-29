@@ -301,6 +301,52 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_locked_image_stage_can_refresh_only_derived_metadata_after_content_change(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_dir = root / "product"
+                product_id = self._product(
+                    db,
+                    product_dir,
+                    title_fa="گکوی مفصلی",
+                    short_description_fa="توضیح اولیه",
+                    description_fa="توضیح کامل اولیه",
+                )
+                image_dir = product_dir / "images"
+                image_dir.mkdir(parents=True, exist_ok=True)
+                image_path = image_dir / "selected.png"
+                Image.new("RGB", (320, 240), "white").save(image_path)
+                url = "local://selected.png"
+                db.update_product(product_id, {
+                    "images_json": json.dumps([url], ensure_ascii=False),
+                    "selected_images_json": json.dumps([url], ensure_ascii=False),
+                    "primary_image_url": url,
+                    "image_alt_texts_json": json.dumps(["نمای گکوی مفصلی"], ensure_ascii=False),
+                    "seo_title_fa": "گکوی مفصلی",
+                    "seo_description_fa": "مدل سه‌بعدی گکوی مفصلی.",
+                })
+                image_pipeline.finalize_selected_images(db, product_id)
+                self.assertEqual(image_pipeline.image_metadata_missing(db.product(product_id)), [])
+
+                db.update_product(product_id, {
+                    LOCK_COLUMN: json.dumps({"images": {"locked": True}}, ensure_ascii=False)
+                })
+                db.update_product(product_id, {
+                    "seo_title_fa": "گکوی مفصلی انعطاف‌پذیر",
+                    "seo_description_fa": "مدل سه‌بعدی گکوی مفصلی انعطاف‌پذیر.",
+                })
+                self.assertTrue(image_pipeline.image_metadata_missing(db.product(product_id)))
+
+                image_pipeline.finalize_selected_images(db, product_id)
+                refreshed = db.product(product_id)
+                self.assertEqual(image_pipeline.image_metadata_missing(refreshed), [])
+                self.assertIn('"images"', refreshed[LOCK_COLUMN])
+                self.assertIn('"locked": true', refreshed[LOCK_COLUMN].lower())
+            finally:
+                db.close()
+
     def test_screenshot_preserves_existing_primary_and_image_lock_fails_closed(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
