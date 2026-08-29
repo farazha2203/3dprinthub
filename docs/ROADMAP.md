@@ -6,10 +6,22 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 PACKAGED BASELINE PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Owner SEO/readiness hotfix gate — ERR-49-065
+
+The professional 3I.39/3I.40 UI is now visible after ERR-49-064. Owner QA then proved AI writes can complete while some red SEO/readiness widgets remain stale. The fix establishes one post-AI persisted-state reconciliation and final readiness painter.
+
+Current hotfix:
+- source `b9eb9d74b0c0c0be49ca8d04a4333750e68e93f4`,
+- regression `375961a1621c43f168b7c3fd76523c6d3c9c9a26`,
+- rollback `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`,
+- no schema/DB/Host/Production change.
+
+Immediate gate: owner Local ff-only pull → 3I.39/3I.40 targeted tests → foreground same-Product AI completion → verify persisted SEO fields immediately clear matching data defects and UI shows either complete/pending-finalization or true remaining operator-only defects.
 
 ## Owner visual-QA hotfix gate — ERR-49-064
 
