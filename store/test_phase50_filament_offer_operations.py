@@ -106,8 +106,8 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(breakdown["supervision_cost"], 50000)
         self.assertEqual(breakdown["preheat_cost"], 720000)
         self.assertEqual(breakdown["hourly_rate"], 150000)
-        self.assertEqual(breakdown["preheat_hours"], "24.00")
-        self.assertEqual(breakdown["preheat_temperature_c"], "70.00")
+        self.assertEqual(Decimal(breakdown["preheat_hours"]), Decimal("24"))
+        self.assertEqual(Decimal(breakdown["preheat_temperature_c"]), Decimal("70"))
         self.assertGreaterEqual(breakdown["estimated_cost"], 1_170_000)
         self.assertEqual(color.current_stock_grams, Decimal("3000"))
         self.assertTrue(variant.color_stock_sufficient)
@@ -207,11 +207,11 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(meta["filament_brand_name"], "eSUN")
         self.assertEqual(meta["color_hex"], "#FF66AA")
         self.assertEqual(meta["filament_image_url"], "https://example.com/esun-pink.webp")
-        self.assertEqual(meta["current_stock_grams"], "3000")
+        self.assertEqual(Decimal(meta["current_stock_grams"]), Decimal("3000"))
         self.assertTrue(meta["color_stock_sufficient"])
         self.assertTrue(meta["orderable"])
         self.assertEqual(meta["offer_print_hourly_rate"], 160000)
-        self.assertEqual(meta["preheat_hours"], "2.00")
+        self.assertEqual(Decimal(meta["preheat_hours"]), Decimal("2"))
 
     def test_storefront_selector_has_manufacturer_before_material_and_color_visuals(self):
         root = Path(__file__).resolve().parents[1]
