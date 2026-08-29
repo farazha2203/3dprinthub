@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner foreground checkpoint — ERR-49-071
+
+روی `d4da997...` همه Gateهای اتوماتیک این بخش، شامل 67/67 تست، PASS شدند ولی QA واقعی UI شکست خورد؛ بنابراین مشکل نه Checkout بود و نه اجرای نسخه قدیمی. علت نهایی در Composition بود: `ثبت نهایی` به‌عنوان نقص داده شمرده می‌شد، تیک از Data Ready می‌آمد نه تأیید واقعی، `سایر محصولات` اشتباهاً ناقص تلقی می‌شد، پنل نامربوط نوع/ابعاد/کاربری به Stage 1 منتقل شده بود و Buttonهای قدیمی هنوز Callback مستقل داشتند.
+
+ERR-49-071 پنل اضافه Stage 1/5 را Mount نمی‌کند، Stage 1 را به عنوان/گروه برمی‌گرداند، نقص داده را از انتظار تأیید جدا می‌کند، تیک سبز را فقط بعد از `✅ ثبت و تأیید مرحله` می‌دهد و Button مستقل پایین صفحه را مرجع نهایی می‌کند. Title-only AI نیز به Guard سراسری OpenRouter وصل شده است. Production دست نخورده است.
 
 ### Owner Local gate checkpoint — ERR-49-070
 
