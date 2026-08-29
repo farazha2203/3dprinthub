@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
@@ -39,6 +39,16 @@ Catalog Center:
 Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
+
+## Current Local gate/fix — ERR-49-070
+
+Owner Local on `382a34fa6e876dc7098c8152c98c7cb076d508e8` passed compile and 4/4 OpenRouter-only tests. The full 67-test Windows contract then stopped before launch with exactly two deterministic defects: clean temporary Catalog DB lacked `technical_summary_fa`, and the Stage-5 builder methods referenced by 3I.39 had no implementation bodies.
+
+GitHub now adds the clean schema field, implements the visible `منبع و مجوز کامل` panel inside Stage 5, hydrates designer/license/technical summary/features from SQLite, and persists the Persian license selector through the Stage-5 finalize path. Regressions cover clean schema and actual builder presence.
+
+Rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`.
+
+No Host/Production/Django schema/Stage-2 Offer/Profile/media/secret change. Owner Local rerun is next.
 
 ## Current Windows blocker/fix — ERR-49-069
 
