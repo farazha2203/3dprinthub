@@ -5,7 +5,14 @@ import unittest
 from pathlib import Path
 
 from app.db import Database
-from app.phase49_3b_guided_wizard import HERO_COLUMNS, STAGE_ORDER, STAGE_LABELS, ensure_schema
+from app.phase49_3b_guided_wizard import (
+    HERO_COLUMNS,
+    STAGE_ORDER,
+    STAGE_LABELS,
+    _stage_data_missing,
+    _stage_data_ready,
+    ensure_schema,
+)
 
 
 class Phase493BGuidedWizardTests(unittest.TestCase):
@@ -13,6 +20,16 @@ class Phase493BGuidedWizardTests(unittest.TestCase):
         self.assertEqual(STAGE_ORDER, ("quick", "commerce", "images", "content", "specs", "slider", "publish"))
         self.assertEqual(STAGE_LABELS["slider"], "۶. اسلایدر صفحه اصلی")
         self.assertEqual(STAGE_LABELS["publish"], "۷. بررسی و انتشار")
+
+    def test_visual_progress_uses_data_ready_not_finalization_lock(self):
+        stage = {
+            "ready": False,
+            "data_ready": True,
+            "missing": ["تأیید نهایی اپراتور (ثبت مرحله)"],
+            "missing_data": [],
+        }
+        self.assertTrue(_stage_data_ready(stage))
+        self.assertEqual(_stage_data_missing(stage), [])
 
     def test_hero_media_columns_upgrade_existing_windows_sqlite_additively(self):
         with tempfile.TemporaryDirectory() as tmp:
