@@ -11,6 +11,8 @@
 **Backend:** Django / Python
 
 ### Owner foreground checkpoint — ERR-49-071
+Checkpoint اجرایی کد/Regression: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. برای این Head هنوز GitHub Actions متصل ثبت نشده و Gate بعدی، تست کامل Local و سپس Foreground QA است.
+
 
 روی `d4da997...` همه Gateهای اتوماتیک این بخش، شامل 67/67 تست، PASS شدند ولی QA واقعی UI شکست خورد؛ بنابراین مشکل نه Checkout بود و نه اجرای نسخه قدیمی. علت نهایی در Composition بود: `ثبت نهایی` به‌عنوان نقص داده شمرده می‌شد، تیک از Data Ready می‌آمد نه تأیید واقعی، `سایر محصولات` اشتباهاً ناقص تلقی می‌شد، پنل نامربوط نوع/ابعاد/کاربری به Stage 1 منتقل شده بود و Buttonهای قدیمی هنوز Callback مستقل داشتند.
 
