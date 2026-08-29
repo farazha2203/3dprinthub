@@ -61,6 +61,20 @@ class Phase493BGuidedWizardTests(unittest.TestCase):
         ):
             self.assertIn(token, text)
 
+    def test_guided_next_cannot_reintroduce_read_before_save_deadlock(self):
+        root = Path(__file__).resolve().parents[1]
+        text = (root / "app" / "phase49_3b_guided_wizard.py").read_text(encoding="utf-8")
+        start = text.index("    def _phase49_3b_go_next(self):")
+        end = text.index("\n    def _preview_image_path", start)
+        block = text[start:end]
+        self.assertIn("_phase49_3i39_confirm_current_stage", block)
+        self.assertIn("self.save(silent=True)", block)
+        self.assertLess(block.index("self.save(silent=True)"), block.index("state = getattr"))
+        refresh_start = text.index("    def _phase49_3b_refresh_wizard(self):")
+        refresh_end = text.index("\n    def _phase49_3b_go_prev", refresh_start)
+        refresh = text[refresh_start:refresh_end]
+        self.assertIn("_phase49_3i39_sync_footer_actions", refresh)
+
     def test_launcher_verifies_phase49_3b_runtime_markers(self):
         root = Path(__file__).resolve().parents[1]
         launch = (root / "launch.py").read_text(encoding="utf-8")
