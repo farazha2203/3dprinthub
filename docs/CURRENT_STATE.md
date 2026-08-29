@@ -1,70 +1,62 @@
 # CURRENT PROJECT STATE
 
-Updated: 2026-08-27  
+Updated: 2026-08-29  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Track: `Phase49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
-Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Track: `Phase49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
+Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Exact code/runtime candidate
 
-The current runtime-changing commit verified by all current Windows Catalog gates is:
+Current packaged/runtime candidate:
 
-`c904193a7f0af9aad80365834ec3f0b856e77dc9`
+`55139b909f214f33994d76bc1e6fdfd028b5d6c7`
 
 Catalog Center:
-- version `8.9.6`,
-- build `2026.08.27.8`,
-- Phase49.3I.31–38 targeted run `33077213590` PASS with 84 tests,
-- Single Active AI run `33077239617` PASS,
-- Windows portable workflow `33077239660` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.6`,
-- artifact ID `9648474905`,
-- EXE size `65,520,499` bytes,
-- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
-- artifact ZIP digest `sha256:13ae8582be09b71f90e607c2230075d875b7445f8a46b6462a9241edf9d52563`,
-- browser smoke PASS,
-- portable self verify PASS,
-- source URL preservation gate PASS,
+- version `8.9.8`,
+- build `2026.08.29.2`,
+- Phase49.3I.31–40 targeted run `33247729316` PASS,
+- Single Active AI run `33247815007` PASS,
+- Windows Portable run `33247815027` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.8`,
+- artifact ID `9713426658`,
+- artifact digest `sha256:776eebb4daa1039119721697988508558991c6c4ccd6a2b1cca8b50b6f3b57a2`,
+- EXE SHA256 `2be8be49e05575cb20ea12f061d006935df070ec9abb0f87e4f00e4151d5f02a`,
+- browser/self-verify/source-URL/launcher/regression gates PASS,
 - Production touched = NO.
 
-### Phase49.3I.38 behavior verified in CI
-- mature Browser/Parser/image/file receive pipeline is preserved; 3I.38 wraps its boundaries rather than replacing it,
-- permanent crawled/received ledger keeps known Product identities across scans,
-- previously `collected`/terminal Product links are skipped instead of being requeued,
-- same Listing uses a persisted deeper-scroll continuation cursor,
-- 100 known Products + discovery of 1..200 produces exactly the next 100 pending Products,
-- operator can `رد دائمی + حذف فایل‌ها و عکس‌های محلی`; Product source identity remains as `rejected` tombstone,
-- physical deletion is allowed only below the canonical Catalog `collected/` root,
-- Direct Link rejects terminal identities before browser/HTTP/image/file acquisition,
-- explicit restore is required before a rejected Product may be received again,
-- one mother AI engine remains authoritative with Link / Saved-Crawled Data / Screenshot inputs,
-- selected-Product Bulk Content/SEO calls that same engine with `target_stages={"content"}`,
-- Product workspace can clean/complete one selected unlocked Stage only,
-- Stage 4 cleanup cannot write Quick/Profile/Source/Slider or any other out-of-scope stage,
-- image-only scoped AI makes no provider request when image SEO is already complete.
+### Phase49.3I.40 behavior verified in CI
+- Stage 2 order is manufacturer → material/filament → color → Product Offer registration → pricing → production rows → Profile identity/dimensions,
+- selected Offers from other manufacturers/filters are preserved when the current filter is registered,
+- global filament stock/rates/preheat facts are separate from Product-specific fixed price per exact Offer,
+- color preview uses image/explicit HEX/name fallback,
+- Readiness separates real data defects from complete-but-not-finalized stages,
+- AI terminal 100% is blocked unless final `ai_fixable_count == 0`,
+- AI source authority remains Link / Saved-Crawled Data / Screenshot only,
+- mature Crawl/Direct Link/parser/image/file acquisition remains the authority.
 
 Canonical active phase doc:
-`docs/phases/PHASE49_3I38_CRAWL_LEDGER_STAGE_AI.md`.
+`docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
-Store/Phase50 runtime was verified at commit:
-`d519a360e65b79db4b62af206b95f63c3539bc12`
+### Phase50 / Store extension through 0040
+Migration:
+`store.0040_phase50_filament_offer_operations`.
 
-Later runtime commit `2622818...` contains no conflicting Store schema change after that verified Store state.
+Adds exact Offer operation facts:
+- print hourly rate,
+- supervision hourly rate,
+- preheat hours/temperature/hourly cost,
+- optional filament image URL.
 
-Phase50 workflow:
-- run `33059883188` PASS,
-- Python compile PASS,
-- Storefront JavaScript syntax PASS,
-- dependent Profile behavior PASS,
-- Django check PASS with known warning debt only,
-- `makemigrations --check --dry-run` PASS,
-- migration plan PASS,
-- clean CI SQLite migration through `store.0039` PASS,
-- 16 Variant/Profile/Checkout regressions PASS,
-- brand-aware filament rate/API test PASS,
-- immutable support-weight/filament-brand/manufacturer checkout snapshot PASS.
+Verification:
+- first 0040 run `33246706102` exposed only Decimal string-format assertions; migration plan/apply and no-drift gates had passed,
+- corrected tests at `b59c93cf37dcb66d3e97f61d2669df6e1d1644a4`,
+- Phase50 Variant2/Profile Matrix run `33246843145` PASS,
+- full CI SQLite migration through `0040` PASS,
+- 21 Store/Profile/Checkout/Offer regressions PASS.
+
+Production migration state is unchanged from the last terminal verification: only `0034` and `0035` are claimed applied. `0036..0040` require fresh Host read-only verification before any Production write.
 
 ## Owner Local automated acceptance — PASS
 
