@@ -6,15 +6,11 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from .ai_providers import AIProviderClient
-from .phase49_3i17_single_active_ai_runtime import (
-    ALLOWED_PROVIDERS,
-    active_ai_config,
-)
+from .phase49_3i17_single_active_ai_runtime import active_ai_config
 from .phase49_3i21_observable_ai_link_refresh import ObservableJobDialog
 from .phase49_3i24_runtime_observability import redact
 from .phase49_3i33_ai_core import OperationTelemetry, run_ai_mode
 from .phase49_3i33_operator_workflow import AI_MODE_BY_LABEL, AI_MODES
-from .secure_secrets import get_provider_key
 
 PHASE = "49.3I.35"
 
@@ -46,57 +42,36 @@ def _provider_key_compatible(provider: str, key: str) -> bool:
 
 
 def configured_ai_candidates(app, *, require_key=True) -> list[tuple[str, str, str, str]]:
-    """Return explicit mother-settings candidates.
+    """Return Product-AI routes allowed by the owner: OpenRouter only.
 
-    The primary provider/model stays authoritative. Fallback is enabled only by
-    the mother AI settings and never scans arbitrary providers/models.
+    The exact operator-saved OpenRouter model is primary. If resilience is
+    enabled, the only fallback is OpenRouter free-router with the same key.
+    AvalAI, Google and OpenAI are never Product-AI fallbacks.
     """
-    primary_provider, primary_key, primary_model = active_ai_config(app, require_key=require_key)
+    primary_provider, primary_key, primary_model = active_ai_config(
+        app, require_key=require_key
+    )
+    if primary_provider != "openrouter":
+        raise RuntimeError(
+            "هوش مصنوعی محصول فقط با OpenRouter اجرا می‌شود. "
+            "در تنظیمات مادر Provider فعال را OpenRouter انتخاب و ذخیره کن."
+        )
     if require_key and not _provider_key_compatible(primary_provider, primary_key):
         raise RuntimeError(
-            f"API Key ذخیره‌شده با Provider «{primary_provider}» سازگار نیست؛ "
-            "کلید همان Provider را در تنظیمات مادر ثبت کن."
+            "API Key ذخیره‌شده با OpenRouter سازگار نیست؛ "
+            "کلید OpenRouter را در تنظیمات امن ثبت کن."
         )
-    output = [(primary_provider, primary_key, primary_model, "primary")]
-    if not _bool_setting(app, "ai_fallback_enabled", True):
-        return output
 
-    raw_order = str(
-        app.db.setting("ai_fallback_order", "openrouter,avalai,google,openai")
-        or "openrouter,avalai,google,openai"
-    )
-    order = []
-    for token in raw_order.split(","):
-        provider = token.strip().lower()
-        if provider in ALLOWED_PROVIDERS and provider not in order:
-            order.append(provider)
-
-    use_openrouter_free = _bool_setting(app, "ai_fallback_openrouter_free", True)
-    for provider in order:
-        if provider == primary_provider:
-            continue
-        key = get_provider_key(provider)
-        if require_key and (not key or not _provider_key_compatible(provider, key)):
-            continue
-        if provider == "openrouter" and use_openrouter_free:
-            model = "openrouter/free"
-            source = "fallback-free"
-        else:
-            # A model saved for the primary Provider must never be reused
-            # under a different fallback Provider. Fallbacks need their own
-            # explicit provider-specific model.
-            model = str(
-                app.db.setting(f"ai_model_{provider}", "")
-                or ""
-            ).strip()
-            source = "fallback"
-            if not model:
-                continue
-        output.append((provider, key, model, source))
-        if len(output) >= 3:
-            break
+    output = [("openrouter", primary_key, primary_model, "primary")]
+    if (
+        _bool_setting(app, "ai_fallback_enabled", True)
+        and _bool_setting(app, "ai_fallback_openrouter_free", True)
+        and str(primary_model or "").strip() != "openrouter/free"
+    ):
+        output.append(
+            ("openrouter", primary_key, "openrouter/free", "openrouter-free-router")
+        )
     return output
-
 
 def _set_progress(self, percent: float, message: str = ""):
     value = min(100.0, max(0.0, float(percent)))
@@ -233,7 +208,7 @@ def run_resilient_ai(
         if provider_index < len(candidates):
             dialog.event(
                 "fallback",
-                f"محصول #{product_id}: Provider بعدی امتحان می‌شود",
+                f"محصول #{product_id}: مسیر جایگزین OpenRouter امتحان می‌شود",
                 {"next_index": provider_index + 1, "providers": len(candidates)},
             )
 
@@ -258,7 +233,7 @@ def install_app(app_class) -> None:
             return
         panel = ttk.LabelFrame(
             self.settings_tab,
-            text="پایداری AI گروهی — تنظیمات مادر",
+            text="پایداری AI محصول — فقط OpenRouter",
             padding=10,
             style="Card.TLabelframe",
         )
@@ -273,24 +248,24 @@ def install_app(app_class) -> None:
             value=int(_bool_setting(self, "ai_fallback_openrouter_free", True))
         )
         self._phase49_3i35_order_var = tk.StringVar(
-            value=str(self.db.setting("ai_fallback_order", "openrouter,avalai,google,openai"))
+            value="openrouter"
         )
-        ttk.Label(panel, text="تلاش برای هر Provider").grid(row=0, column=0, sticky="w", padx=4, pady=4)
+        ttk.Label(panel, text="تلاش برای هر مسیر OpenRouter").grid(row=0, column=0, sticky="w", padx=4, pady=4)
         ttk.Combobox(
             panel, textvariable=self._phase49_3i35_retry_var,
             values=["1", "2", "3"], state="readonly", width=6,
         ).grid(row=0, column=1, sticky="w", padx=4)
         ttk.Checkbutton(
-            panel, text="Fallback فعال باشد",
+            panel, text="Fallback داخل خود OpenRouter فعال باشد",
             variable=self._phase49_3i35_fallback_var,
         ).grid(row=1, column=0, columnspan=2, sticky="w", padx=4, pady=4)
         ttk.Checkbutton(
             panel,
-            text="برای OpenRouter جایگزین از openrouter/free استفاده شود",
+            text="اگر مدل اصلی شکست خورد، openrouter/free امتحان شود",
             variable=self._phase49_3i35_free_var,
         ).grid(row=2, column=0, columnspan=2, sticky="w", padx=4, pady=4)
-        ttk.Label(panel, text="ترتیب Providerهای جایگزین").grid(row=3, column=0, sticky="w", padx=4, pady=4)
-        ttk.Entry(panel, textvariable=self._phase49_3i35_order_var).grid(row=3, column=1, sticky="ew", padx=4)
+        ttk.Label(panel, text="Provider مجاز برای Product AI").grid(row=3, column=0, sticky="w", padx=4, pady=4)
+        ttk.Label(panel, text="OpenRouter (اجباری)", style="SubHeader.TLabel").grid(row=3, column=1, sticky="w", padx=4)
         ttk.Button(
             panel,
             text="ذخیره تنظیمات پایداری AI",
@@ -300,8 +275,9 @@ def install_app(app_class) -> None:
         ttk.Label(
             panel,
             text=(
-                "Primary همان Provider/Model مادر است. جایگزین‌ها فقط از کلیدهای امن و مدل‌های ذخیره‌شده مادر "
-                "استفاده می‌کنند؛ مدل تصادفی اسکن نمی‌شود. openrouter/free یک Router رایگان رسمی در Provider Hub همین برنامه است."
+                "Product AI فقط از OpenRouter استفاده می‌کند. مدل ذخیره‌شده مادر Primary است؛ "
+                "در صورت فعال‌بودن Fallback فقط openrouter/free با همان کلید OpenRouter امتحان می‌شود. "
+                "AvalAI / Google / OpenAI در این مسیر استفاده نمی‌شوند و هیچ مدل تصادفی اسکن نمی‌شود."
             ),
             style="SubHeader.TLabel",
             wraplength=1050,
@@ -311,18 +287,12 @@ def install_app(app_class) -> None:
 
     def save_settings(self):
         attempts = min(3, max(1, int(self._phase49_3i35_retry_var.get() or 3)))
-        order = []
-        for token in self._phase49_3i35_order_var.get().split(","):
-            provider = token.strip().lower()
-            if provider in ALLOWED_PROVIDERS and provider not in order:
-                order.append(provider)
-        if not order:
-            order = ["openrouter", "avalai", "google", "openai"]
         self.db.set_setting("ai_retry_attempts", str(attempts))
         self.db.set_setting("ai_fallback_enabled", "1" if self._phase49_3i35_fallback_var.get() else "0")
         self.db.set_setting("ai_fallback_openrouter_free", "1" if self._phase49_3i35_free_var.get() else "0")
-        self.db.set_setting("ai_fallback_order", ",".join(order))
-        self.status.set("تنظیمات پایداری AI در تنظیمات مادر ذخیره شد؛ API Key در SQLite ذخیره نشد")
+        self.db.set_setting("ai_fallback_order", "openrouter")
+        self._phase49_3i35_order_var.set("openrouter")
+        self.status.set("پایداری Product AI ذخیره شد: فقط OpenRouter؛ API Key در SQLite ذخیره نشد")
         return True
 
     def bulk_run(self):
@@ -353,7 +323,7 @@ def install_app(app_class) -> None:
         dialog = ObservableJobDialog(self, f"{AI_MODES[mode]} — {len(ids)} محصول")
         dialog.event(
             "queue",
-            f"{len(ids)} محصول در صف • {len(candidates)} Provider قابل امتحان • Retry={retry_attempts(self)}",
+            f"{len(ids)} محصول در صف • {len(candidates)} مسیر OpenRouter • Retry={retry_attempts(self)}",
             {"providers": [item[0] for item in candidates]},
         )
         span = OperationTelemetry(f"bulk-ai-resilient-{mode}")
