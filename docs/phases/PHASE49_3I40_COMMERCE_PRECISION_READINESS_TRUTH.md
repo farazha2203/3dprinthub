@@ -7,6 +7,20 @@ Catalog Center: `8.9.8` / build `2026.08.29.2`
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
 Status: `BASELINE CI PASS / ERR-49-070 OWNER 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
 
+## ERR-49-073 image derived-state refresh after Stage confirmation
+
+Owner foreground QA after 71/71 Windows regression PASS narrowed the remaining issue to Images. Images can be confirmed, but its SEO signature includes later Content/SEO/Source facts. After those later stages change, deterministic SEO files may be rebuilt while the Stage lock blocks the corresponding `image_metadata_json` signature update, leaving the UI with false `بروزرسانی Metadata` defects.
+
+Final contract:
+- image selection/primary/manual Alt choices remain lock-protected operator inputs;
+- deterministic finalizer output is derived state and may refresh through a strict whitelist even while Images is confirmed;
+- first Stage-3 confirmation runs deterministic finalization before readiness/lock;
+- re-confirming an already-confirmed Images Stage refreshes current derived Metadata without unlocking it;
+- manual Metadata override still requires explicit `اصلاح مرحله`;
+- no AI call is required for this refresh.
+
+Rollback: `backup/pre-err49-073-image-confirm-metadata-refresh-20260829` → `6d5897ecefc427c940c690daabc311f85cc6e044`.
+
 ## ERR-49-072 clean-test schema composition
 
 The first owner rerun of ERR-49-071 stopped before foreground launch because the newly added Stage-2 persistence regression created a minimal temporary Catalog DB without the additive pricing schemas used by real ProductWorkspace construction.
