@@ -82,9 +82,11 @@ def configured_ai_candidates(app, *, require_key=True) -> list[tuple[str, str, s
             model = "openrouter/free"
             source = "fallback-free"
         else:
+            # A model saved for the primary Provider must never be reused
+            # under a different fallback Provider. Fallbacks need their own
+            # explicit provider-specific model.
             model = str(
                 app.db.setting(f"ai_model_{provider}", "")
-                or app.db.setting("ai_model", "")
                 or ""
             ).strip()
             source = "fallback"
