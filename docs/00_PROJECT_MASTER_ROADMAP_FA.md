@@ -7,8 +7,14 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 BASELINE PACKAGED PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Owner visual-QA hotfix checkpoint — ERR-49-064
+
+Canonical foreground 8.9.8 execution proved the correct source was running but ProductWorkspace stopped inside the older 3I.35 material action wrapper before 3I.39/3I.40 could render. The modern material/color picker is grid-managed; the obsolete 3I.35 action row used pack in the same parent.
+
+Hotfix: `aa37dcf916dfab71409738f7087a171daffe4a0a` + regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`; rollback `backup/pre-err49-064-stage2-geometry-20260829` → `c62df9dd1bbfee4cfa915beed6f9523efaa4937f`. Owner Local retest is required before Production work.
 
 ## Current verified checkpoint — 2026-08-29
 
