@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-066 CODE HOTFIX GITHUB / ERR-49-067 FIXTURE CORRECTED / OWNER LOCAL RERUN NEXT / PRODUCTION UNTOUCHED`
 
 ## Requested delta
 
@@ -122,6 +122,21 @@ Adds to `MaterialColorOption`:
 - `filament_image_url`.
 
 The Store selector and Variant metadata keep exact manufacturer/material/color identity, stock, preheat and visual facts.
+
+## Local regression fixture correction — ERR-49-067
+
+Owner Local evidence after pulling `9f3b765...`:
+- canonical branch/head verified,
+- fresh Catalog SQLite backup + checksum created,
+- Python compile PASS,
+- focused suite: 43 tests, exactly 1 error,
+- foreground launch correctly blocked by the gate.
+
+The failing lock/immutability test used an invalid mock AI SEO description containing Latin `AI`. Since this phase now deliberately keeps SEO title/description Persian-only, validation correctly failed before lock behavior was reached. Runtime rules remain unchanged; the fixture alone was aligned at `38cb415bc12d7ec08943809fd14f3478b3ddac1b`.
+
+Rollback: `backup/pre-err49-067-seven-stage-test-fixture-20260829` → `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
+
+Owner must rerun the same focused gate on the current docs-final head before foreground Product 63 acceptance.
 
 ## Readiness ownership correction — ERR-49-066
 
