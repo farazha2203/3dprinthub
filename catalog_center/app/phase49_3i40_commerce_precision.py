@@ -132,7 +132,9 @@ def focus_saved_filament(workspace, saved: dict) -> bool:
     rows = list(getattr(workspace, "_phase49_3i39_working_offer_rows", []) or [])
     if tree is None:
         return False
-    tree.selection_remove(tree.selection())
+    current_selection = tree.selection()
+    if current_selection:
+        tree.selection_remove(*current_selection)
     for index, item in enumerate(rows):
         if offer_key(item) != target_key:
             continue
