@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-071 IMPLEMENTED / ERR-49-072 TEST-FIXTURE SCHEMA FIX GITHUB / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY GITHUB / OWNER LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-074
+
+Owner exact `954c051...` passed the ERR-49-073 Local gate: backup/checksum, compile, 2/2 exact image regressions, 4/4 OpenRouter-only, 73/73 full Windows stage suite and foreground QA. Image Metadata refresh is accepted fixed and the Product reached ready-for-publication state locally.
+
+Current GitHub delta restores the missing continuously visible Stage-2 final price/rate and changes operator-facing `Offer` wording to `Filament`. Internal `offer_*` compatibility identifiers stay unchanged. No schema/migration/Host/Production change. Rollback: `backup/pre-err49-074-filament-rate-final-display-20260829` → `954c0516661e6c70145d7f6f395b4e92ceeb40bd`. Local retest is next; then website receive/sync.
 
 ## Current owner checkpoint — ERR-49-073
 
