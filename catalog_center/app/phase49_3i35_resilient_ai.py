@@ -32,6 +32,19 @@ def retry_attempts(app) -> int:
     return min(3, max(1, value))
 
 
+def _provider_key_compatible(provider: str, key: str) -> bool:
+    """Reject only positively identifiable cross-provider key mistakes."""
+    provider = str(provider or "").strip().lower()
+    value = str(key or "").strip()
+    if not value:
+        return False
+    # OpenRouter keys have a distinctive prefix. Never send one to OpenAI,
+    # AvalAI or Google merely because a stale credential exists for that slot.
+    if value.startswith("sk-or-v1-"):
+        return provider == "openrouter"
+    return True
+
+
 def configured_ai_candidates(app, *, require_key=True) -> list[tuple[str, str, str, str]]:
     """Return explicit mother-settings candidates.
 
@@ -39,6 +52,11 @@ def configured_ai_candidates(app, *, require_key=True) -> list[tuple[str, str, s
     the mother AI settings and never scans arbitrary providers/models.
     """
     primary_provider, primary_key, primary_model = active_ai_config(app, require_key=require_key)
+    if require_key and not _provider_key_compatible(primary_provider, primary_key):
+        raise RuntimeError(
+            f"API Key ذخیره‌شده با Provider «{primary_provider}» سازگار نیست؛ "
+            "کلید همان Provider را در تنظیمات مادر ثبت کن."
+        )
     output = [(primary_provider, primary_key, primary_model, "primary")]
     if not _bool_setting(app, "ai_fallback_enabled", True):
         return output
@@ -58,7 +76,7 @@ def configured_ai_candidates(app, *, require_key=True) -> list[tuple[str, str, s
         if provider == primary_provider:
             continue
         key = get_provider_key(provider)
-        if require_key and not key:
+        if require_key and (not key or not _provider_key_compatible(provider, key)):
             continue
         if provider == "openrouter" and use_openrouter_free:
             model = "openrouter/free"
