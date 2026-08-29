@@ -617,6 +617,34 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** final visible composition must be tested against deferred callbacks, not only class method aliases. Every Stage must have a single ownership table that matches visible controls, stage-specific persistence and readiness. Stage-scoped AI must judge only its Scope. Product-AI Provider policy is explicit and must not silently cross providers.
 
 
+
+### ERR-49-070 — clean Stage-5 schema/panel gap exposed by owner Local gate
+**Date:** 2026-08-29
+
+Owner Local on `382a34fa6e876dc7098c8152c98c7cb076d508e8` passed compile and the 4 OpenRouter-only tests, then the 67-test Windows contract stopped before launch with:
+- `sqlite3.OperationalError: no such column: technical_summary_fa` on a clean temporary Catalog DB;
+- missing Stage-5 visible contract text. Source review confirmed `add_specs_contract_panel` and `refresh_specs_contract` were referenced/assigned but not implemented.
+
+Root cause:
+1. `technical_summary_fa` became Stage-5 authority without being added to the canonical clean Catalog schema.
+2. ERR-49-069 wired Stage-5 builder names without their function bodies.
+3. Stage-specific finalization needed to translate the visible Persian license label to the stored license code.
+
+Fix:
+- add `technical_summary_fa` to Catalog self-schema;
+- implement `منبع و مجوز کامل` in `specs_tab` with source/designer, Persian license selector, technical summary, and technical-features JSON;
+- hydrate those controls from SQLite;
+- persist the Persian license selector through `LICENSE_LABEL_TO_CODE`;
+- extend regressions for clean schema and builder presence.
+
+Git: `0da7ffead4401a6080226de1dbfc229176973af9`, `b84c33605fd22b32a3602707b84367f1ad431b04`, `db5948c23f8a7b55898e9aa42f4b4b6e587caf67`, `d0ddbc61820bca2b0222f1773de7cafd0c26cafa`, `1b2ed24dd67729855dda3714700f570f28c5619f`.
+
+Rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`.
+
+Verification: GitHub updated; owner Local rerun pending. Production untouched.
+
+Prevention: a new Stage-owned field must land together in clean schema, upgrade path, visible control, stage persistence and regression coverage.
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
