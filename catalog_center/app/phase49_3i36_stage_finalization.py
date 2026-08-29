@@ -360,6 +360,8 @@ def persist_stage_from_ui(workspace, stage: str) -> None:
             "title_fa": title,
             "local_category_slug": category_slug,
             "product_type": PRODUCT_TYPE_CODES.get(product_label, str(_row_value(row, "product_type", "ready_product"))),
+            "dimensions": str(_get_var(workspace, "dimensions_var", _row_value(row, "dimensions", "")) or "").strip(),
+            "use_case_class": str(_get_var(workspace, "use_case_class_var", _row_value(row, "use_case_class", "")) or "").strip(),
         })
 
     elif stage == "commerce":
