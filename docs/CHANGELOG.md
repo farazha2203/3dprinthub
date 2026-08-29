@@ -1,5 +1,19 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — ERR-49-071 explicit Stage confirmation + historical layout recovery
+- owner exact `d4da997...`: backup PASS, compile PASS, exact regressions PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 67/67 PASS, foreground launch PASS, **visual acceptance FAIL**;
+- removed mounting of the rejected Stage-1 type/dimensions/use-case panel and returned those existing controls to Stage 2;
+- stopped mounting the ERR-49-070 additive Stage-5 panel so the historical source/license surface remains visible authority;
+- accepts deliberate `external-other / سایر محصولات` as a real category;
+- separates `missing_data` from `pending_finalization` so confirmation does not inflate Product defect counts;
+- green Stage tick now means explicitly confirmed; complete-but-unconfirmed is `◌`;
+- added independent `✅ ثبت و تأیید مرحله →` footer action and permanently hides the repaint-prone legacy Next widget;
+- confirmation persists current Stage before validation, writes its lock, refreshes and advances;
+- actual visible title-only AI button now routes through the same Stage-1 runtime guard/OpenRouter-only engine;
+- rollback `backup/pre-err49-071-stage-confirm-rollback-20260829` → `d4da99744659d06ebe5c04fd69532cd0e03db3e8`;
+- Production untouched; owner Local retest pending.
+
+
 
 ## 2026-08-29 — ERR-49-070 Stage-5 clean-schema and visible-panel recovery
 - owner ERR-49-069 Local gate: compile PASS, OpenRouter-only 4/4 PASS, 67-test Windows contract stopped before launch with one schema error and one missing-visible-contract failure;
