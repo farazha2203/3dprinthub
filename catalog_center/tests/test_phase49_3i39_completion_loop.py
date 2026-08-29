@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from app.phase49_3i39_completion_loop import (
     _refresh_workspace_after_ai,
+    confirm_current_stage,
     defect_snapshot,
     repair_until_stable,
 )
@@ -156,6 +157,33 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertEqual(calls[1:4], ["locks", "wizard", "readiness"])
         self.assertEqual(calls[-1], "readiness")
 
+    def test_visible_confirm_finalizes_current_stage_before_advancing(self):
+        calls = []
+
+        class Workspace:
+            def _phase49_3b_current_key(self, default="quick"):
+                return "quick"
+
+            def _phase49_3i36_finalize_stage(self, stage):
+                calls.append(("finalize", stage))
+                return True
+
+            def _phase49_3b_refresh_wizard(self):
+                calls.append(("refresh", None))
+
+            def select_section(self, stage):
+                calls.append(("select", stage))
+
+        self.assertTrue(confirm_current_stage(Workspace()))
+        self.assertEqual(
+            calls,
+            [
+                ("finalize", "quick"),
+                ("refresh", None),
+                ("select", "commerce"),
+            ],
+        )
+
     def test_operator_only_defects_do_not_spend_an_ai_request(self):
         snapshot = _snapshot([], {
             "commerce": ["حداقل یک پروفایل فروش ثبت‌شده"],
@@ -189,6 +217,9 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("workspace_class._phase49_3e_run_all_ai = run_all", source)
         self.assertIn("workspace_class._phase49_3i31_smart_ai = run_link_all", source)
         self.assertIn("workspace_class._phase49_3c_stage_ai = run_current_stage", source)
+        self.assertIn("✅ تأیید و مرحله بعد →", source)
+        self.assertIn("✨ پرکردن ناقص‌ها با AI", source)
+        self.assertIn("lambda message=error_text", source)
 
 
 if __name__ == "__main__":
