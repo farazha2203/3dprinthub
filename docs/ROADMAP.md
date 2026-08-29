@@ -6,10 +6,21 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / ERR-49-071+072 LOCAL PASS / ERR-49-073 IMAGE METADATA REFRESH FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 / ERR-49-073 OWNER LOCAL PASS 73/73 + FOREGROUND ACCEPTED / ERR-49-074 FILAMENT FINAL-RATE DISPLAY FIX GITHUB / LOCAL RETEST NEXT / SITE RECEIVE NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-074
+
+ERR-49-073 is now owner-accepted locally: focused 2/2, OpenRouter-only 4/4, full Windows 73/73 and foreground QA passed, including the image Metadata refresh. Before moving to the website receive path, verify the additive Stage-2 UI delta:
+1. visible actions say `Filament` rather than `Offer`;
+2. global Filament edit shows the live final roll basis and Toman/gram rate;
+3. Stage-2 pricing always shows the final fixed/formula/range amount or exact missing prerequisite;
+4. formula result remains material + print + supervision + preheat + assembly with shipping separate;
+5. no image/readiness/AI/Stage confirmation regression.
+
+After Local PASS, proceed to the Web/Store receive/sync audit for manufacturer → Filament → color + profile/pricing data. Production deployment remains blocked until the website receiver, Local Django migration state and Host read-only audit are verified.
 
 ## Immediate owner gate — ERR-49-073
 
