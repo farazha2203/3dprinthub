@@ -295,7 +295,9 @@ def add_available_material_color(
                hex_code, color_type, secondary_hex, tertiary_hex,
                roll_weight_grams, stock_roll_count, purchase_price_per_roll,
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
-               is_active, sort_order
+               print_hourly_rate, supervision_hourly_rate,
+               preheat_hours, preheat_temperature_c, preheat_hourly_rate,
+               filament_image_url, is_active, sort_order
         FROM available_filament_offers
         WHERE material_name=? AND brand_name=? AND color_name=?
         """,
