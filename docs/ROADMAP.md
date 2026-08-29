@@ -11,6 +11,14 @@ Status: `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLIC
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
+## Immediate rerun gate — ERR-49-072
+
+The first ERR-49-071 Local run correctly stopped before foreground launch on a **new test fixture**, not the real Catalog DB. The fixture did not initialize the additive Epic49 desktop pricing columns before exercising Stage-2 confirmation.
+
+GitHub test fix: `1307f4c438de184a930041d365976c2ce018bff8`.
+
+Next gate is changed-condition rerun only: ff-only pull current head → compile changed sources → run the same 7 exact ERR-49-071 regressions → OpenRouter-only 4 tests → full Windows stage suite → foreground only if all pass. Do not repeat the old `34c65bc...` command unchanged. Production remains blocked.
+
 ## Immediate owner gate — ERR-49-071
 
 Executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head Actions run is attached. The next owner gate must compile, run the focused readiness/finalization tests, then the full Windows stage suite, and only on PASS foreground-launch the real Product Workspace.
