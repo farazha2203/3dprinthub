@@ -18,6 +18,7 @@ from app.phase49_3i36_stage_finalization import (
     field_stage,
     filter_ai_updates,
     install_database,
+    persist_stage_from_ui,
     stage_locks,
     hydrate_ai_state,
 )
@@ -71,6 +72,32 @@ class Phase493I36StageFinalizationTests(unittest.TestCase):
             STAGE_ORDER,
             ("quick", "commerce", "images", "content", "specs", "slider", "publish"),
         )
+
+    def test_quick_stage_persists_all_owned_identity_fields(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db, product_id = self._db(Path(temporary) / "catalog.sqlite3")
+            try:
+                workspace = SimpleNamespace(
+                    db=db,
+                    product_id=product_id,
+                    app=SimpleNamespace(
+                        category_label_to_slug={"دکور و لوازم خانه": "home-decor"}
+                    ),
+                    content_title_fa=_Var("درخت کریسمس اسپیرال"),
+                    title_fa=_Var(""),
+                    category_var=_Var("دکور و لوازم خانه"),
+                    product_type_var=_Var("محصول آماده"),
+                    dimensions_var=_Var("20 × 20 × 30 cm"),
+                    use_case_class_var=_Var("دکوراسیون"),
+                )
+                persist_stage_from_ui(workspace, "quick")
+                row = db.product(product_id)
+                self.assertEqual(row["local_category_slug"], "home-decor")
+                self.assertEqual(row["product_type"], "ready_product")
+                self.assertEqual(row["dimensions"], "20 × 20 × 30 cm")
+                self.assertEqual(row["use_case_class"], "دکوراسیون")
+            finally:
+                db.close()
 
     def test_locked_stage_blocks_database_overwrite_but_other_stage_can_change(self):
         with tempfile.TemporaryDirectory() as temporary:
