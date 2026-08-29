@@ -505,6 +505,8 @@ def install_workspace(workspace_class) -> None:
         self._phase49_3i39_add_stage_ai_buttons()
         self._phase49_3i39_rebind_legacy_complete_buttons()
         self._phase49_3i39_add_fixed_footer_actions()
+        self._phase49_3i39_bind_footer_refresh()
+        self._phase49_3i39_sync_footer_actions()
 
     def add_stage_ai_buttons(self):
         panel = getattr(self, "_phase49_3i36_lock_panel", None)
@@ -525,6 +527,35 @@ def install_workspace(workspace_class) -> None:
         except Exception:
             pass
 
+    def sync_footer_actions(self):
+        next_button = getattr(self, "_phase49_3b_next", None)
+        if next_button is None:
+            return
+        try:
+            next_button.configure(
+                text="✅ تأیید و مرحله بعد →",
+                command=self._phase49_3i39_confirm_current_stage,
+                state="normal",
+                style="Success.TButton",
+            )
+        except Exception:
+            pass
+
+    def bind_footer_refresh(self):
+        if getattr(self, "_phase49_3i39_footer_refresh_wrapped", False):
+            return
+        original_refresh = getattr(self, "_phase49_3b_refresh_wizard", None)
+        if not callable(original_refresh):
+            return
+
+        def refresh(*args, **kwargs):
+            result = original_refresh(*args, **kwargs)
+            self._phase49_3i39_sync_footer_actions()
+            return result
+
+        self._phase49_3b_refresh_wizard = refresh
+        self._phase49_3i39_footer_refresh_wrapped = True
+
     def add_fixed_footer_actions(self):
         next_button = getattr(self, "_phase49_3b_next", None)
         if next_button is None:
@@ -534,14 +565,7 @@ def install_workspace(workspace_class) -> None:
         except Exception:
             return
 
-        try:
-            next_button.configure(
-                text="✅ تأیید و مرحله بعد →",
-                command=self._phase49_3i39_confirm_current_stage,
-                style="Success.TButton",
-            )
-        except Exception:
-            pass
+        self._phase49_3i39_sync_footer_actions()
 
         if getattr(self, "_phase49_3i39_footer_ai", None) is None:
             button = ttk.Button(
@@ -730,6 +754,8 @@ def install_workspace(workspace_class) -> None:
     workspace_class.__init__ = __init__
     workspace_class._phase49_3i39_add_stage_ai_buttons = add_stage_ai_buttons
     workspace_class._phase49_3i39_add_fixed_footer_actions = add_fixed_footer_actions
+    workspace_class._phase49_3i39_sync_footer_actions = sync_footer_actions
+    workspace_class._phase49_3i39_bind_footer_refresh = bind_footer_refresh
     workspace_class._phase49_3i39_rebind_legacy_complete_buttons = rebind_legacy_complete_buttons
     workspace_class._phase49_3i39_confirm_current_stage = confirm_current_stage
     workspace_class._phase49_3i39_unlock_current_stage = unlock_current_stage
