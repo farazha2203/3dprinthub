@@ -1,3 +1,23 @@
+# PROJECT ERROR KNOWLEDGE BASE
+
+### ERR-50-017 — Store 0040 CI froze Decimal string presentation instead of numeric value
+**Date:** 2026-08-29  
+**Environment:** GitHub Actions `Phase50 Variant2 + Profile Matrix CI`, migration `store.0040_phase50_filament_offer_operations`.
+
+**Symptoms:** compile, Storefront JavaScript, Django check, `makemigrations --check --dry-run`, migration plan and full CI SQLite migration all passed, but the regression step had two failures:
+- `preheat_hours`: expected string `24.00`, runtime serialization returned `24`,
+- `current_stock_grams`: expected string `3000`, runtime serialization returned `3000.0000`.
+
+**Root Cause:** tests asserted a presentation-specific Decimal string even though the business/API contract is the numeric value. Equivalent Decimal values can have different textual scales.
+
+**Failed Attempt:** do not rerun workflow `33246706102` unchanged; the deterministic assertions would fail again.
+
+**Correct Fix:** compare the Decimal facts numerically rather than freezing insignificant trailing-zero formatting.
+
+**Verification:** fix commit `b59c93cf37dcb66d3e97f61d2669df6e1d1644a4`; Phase50 workflow `33246843145` PASS, including full migration through 0040 and 21 Store/Profile/Checkout/Offer regressions.
+
+**Prevention:** only assert exact decimal string formatting when formatting itself is an explicit public contract. For numeric commerce facts, normalize/compare numerically.
+
 # ERROR KNOWLEDGE BASE
 
 Search this file before troubleshooting. Never repeat a failed action unchanged. Detailed incident transcripts remain in Git history; this file keeps the current operational root-cause/fix/prevention knowledge.
