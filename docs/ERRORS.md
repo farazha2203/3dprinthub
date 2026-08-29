@@ -1,5 +1,32 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+### ERR-49-074 — final Stage-2 price/rate calculation disappeared from the visible operator surface
+**Date:** 2026-08-29  
+**Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after owner acceptance of ERR-49-073.
+
+**Owner evidence before change:** exact ERR-49-073 regressions 2/2 PASS, OpenRouter-only 4/4 PASS, full Windows stage regression 73/73 PASS, foreground launch PASS. The image Metadata refresh issue cleared and the owner reported the Product ready for publication. Remaining Stage-2 usability regression: the mature calculation logic still existed, but the always-visible final amount/rate result had been removed from the final 3I.39/3I.40 composition. The visible buttons also still said `Offer`, while the operator terminology requested is `Filament`.
+
+**Root Cause:** Phase49.3I.39 retained `formula_price_breakdown()` and a popup preview, and 3I.40 retained the exact global filament-rate facts, but the final visible Stage-2 card no longer exposed the computed final amount continuously. User-facing labels inherited internal historical `offer_*` naming.
+
+**Correct Fix:**
+- restore an always-visible final price summary for fixed, formula and range modes;
+- formula summary uses the existing exact material + print + supervision + preheat + assembly calculation across registered Filaments and valid production rows;
+- global Filament editor now shows the live final roll basis and exact Toman/gram rate from explicit sale price versus USD × explicit FX; no FX is invented;
+- visible buttons/dialogs/readiness say `Filament`, not `Offer`;
+- retain internal `offer_*` function/schema/API identifiers for backward compatibility; no storage/schema rename;
+- enlarge the Filament editor so the added calculation panel and action buttons remain visible.
+
+**Code:** `9540558468cc75bf0248547e7440f3647eeb4cd3`, `0c795bc0b7084b2e175f47f34533aa596d90fb03`, `267dc565b25ca74f3971334b7ad37d5c919a98ac`, regressions `109aaea748e7750bb22295aedf94de34ce617d88` + `4efc5a8350a3e9fbb7ade41f1098bc9cb9c80a7c`, layout `e4c1f3345bf9416bde11b6b6c7c7d31f6cdfd09c`.
+
+**Rollback:** `backup/pre-err49-074-filament-rate-final-display-20260829` → `954c0516661e6c70145d7f6f395b4e92ceeb40bd`.
+
+**Must not touch:** Catalog DB schema, Product identity, image/SEO finalization, OpenRouter AI contract, crawler/acquisition, Django migrations, Production.
+
+**Verification status:** GitHub code/regressions updated. Owner Local focused/full/foreground retest is required before starting the website receive/deploy batch.
+
+**Prevention:** final UI composition tests must assert not only that pricing math exists, but that the operator can continuously see the authoritative result and the requested domain terminology.
+
+
 ### ERR-50-017 — Store 0040 CI froze Decimal string presentation instead of numeric value
 **Date:** 2026-08-29  
 **Environment:** GitHub Actions `Phase50 Variant2 + Profile Matrix CI`, migration `store.0040_phase50_filament_offer_operations`.
