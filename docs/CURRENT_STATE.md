@@ -40,6 +40,16 @@ Canonical active phase doc:
 `docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
 
+## Current Local gate/fix — ERR-49-072
+
+Owner Local pulled exact `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`, verified the canonical branch, created a fresh checksum-backed Catalog SQLite backup, and passed compile. The new 7-test ERR-49-071 regression set then stopped on one fixture error before OpenRouter/full-suite/foreground launch: the clean temporary DB used by the new Stage-2 persistence test lacked `price_min`.
+
+This is a test-fixture composition defect. Real ProductWorkspace initializes `epic49_desktop_schema` (price_min/price_max) and `phase49_3f_workspace` (pricing_strategy) before Stage-2 editing; the test helper initialized only minimal Database + Profile/Ledger schemas.
+
+Fix `1307f4c438de184a930041d365976c2ce018bff8` makes the fixture follow the real runtime schema order. Rollback: `backup/pre-err49-072-commerce-test-schema-20260829` → `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`.
+
+No runtime application source, Product data, Django schema/migration, Host or Production change. Owner Local rerun is next.
+
 ## Current Windows blocker/fix — ERR-49-071
 
 ERR-49-071 executable code/regression head: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head GitHub Actions run is attached; owner Local compile/regression/foreground verification is the next gate. Stage-2 confirmation now also persists its historically visible Product type and dimensions before the Stage lock is written.
