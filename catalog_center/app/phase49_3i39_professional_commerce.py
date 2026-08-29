@@ -25,7 +25,7 @@ from .phase49_3i36_stage_finalization import is_stage_locked
 PHASE = "49.3I.39"
 
 PRICING_LABELS = {
-    "fixed": "قیمت قطعی برای هر Offer",
+    "fixed": "قیمت قطعی برای هر Filament",
     "dynamic": "قیمت فرمولی",
     "range": "بازه قیمت (فعلاً اختیاری)",
 }
@@ -88,7 +88,7 @@ def offer_display(item: dict) -> str:
     brand = str(item.get("brand") or item.get("brand_name") or "").strip()
     material = str(item.get("material") or item.get("material_name") or "").strip()
     color = str(item.get("color") or item.get("color_name") or "").strip()
-    return "-".join(part for part in (brand, material, color) if part) or "Offer بدون نام"
+    return "-".join(part for part in (brand, material, color) if part) or "Filament بدون نام"
 
 
 def offer_stock_grams(item: dict) -> float:
@@ -133,6 +133,64 @@ def formula_price_breakdown(
         "preheat_cost": money(preheat_cost),
         "assembly_fee": _integer(assembly_fee, 0),
         "total": money(total),
+    }
+
+
+def pricing_summary_range(
+    offers: list[dict],
+    production_rows: list[dict],
+    mode: str,
+    *,
+    support_multiplier=1,
+    assembly_fee=0,
+    price_min=0,
+    price_max=0,
+) -> dict[str, int]:
+    """Return the exact visible final-price range without mutating Product data."""
+    normalized_offers = normalize_material_color_options(offers or [])
+    rows = [
+        normalize_production_row(item)
+        for item in (production_rows or [])
+        if isinstance(item, dict) and _number(item.get("weight_grams"), 0) > 0
+    ]
+    mode = str(mode or "dynamic")
+    totals: list[int] = []
+    incomplete = 0
+
+    if mode == "fixed":
+        for item in normalized_offers:
+            value = _integer(item.get("fixed_product_price"), 0)
+            if value > 0:
+                totals.append(value)
+            else:
+                incomplete += 1
+    elif mode == "range":
+        low = _integer(price_min, 0)
+        high = _integer(price_max, low)
+        if low > 0:
+            totals.append(low)
+        if high > 0 and high != low:
+            totals.append(high)
+    else:
+        for item in normalized_offers:
+            for production in rows:
+                total = _integer(
+                    formula_price_breakdown(
+                        item,
+                        production,
+                        support_multiplier=support_multiplier,
+                        assembly_fee=assembly_fee,
+                    ).get("total"),
+                    0,
+                )
+                if total > 0:
+                    totals.append(total)
+
+    return {
+        "min": min(totals) if totals else 0,
+        "max": max(totals) if totals else 0,
+        "count": len(totals),
+        "incomplete": incomplete,
     }
 
 
@@ -314,18 +372,18 @@ def install_workspace(workspace_class) -> None:
         offer_actions.grid(row=2, column=0, sticky="ew", pady=(6, 0))
         ttk.Button(
             offer_actions,
-            text="＋ تعریف Offer جدید",
+            text="＋ تعریف Filament جدید",
             command=lambda: self._phase49_3i39_open_offer_editor(None),
             style="Primary.TButton",
         ).pack(side="right", padx=3)
         ttk.Button(
             offer_actions,
-            text="✏ ویرایش Offer انتخابی",
+            text="✏ ویرایش Filament انتخابی",
             command=self._phase49_3i39_edit_selected_offer,
         ).pack(side="right", padx=3)
         ttk.Button(
             offer_actions,
-            text="✓ ثبت Offerهای انتخابی روی محصول",
+            text="✓ ثبت Filamentهای انتخابی روی محصول",
             command=self._phase49_3i39_commit_selected_offers,
             style="Success.TButton",
         ).pack(side="right", padx=3)
@@ -356,12 +414,24 @@ def install_workspace(workspace_class) -> None:
         pricing_box.bind("<<ComboboxSelected>>", lambda _e: self._phase49_3i39_pricing_changed())
         ttk.Button(
             pricing,
-            text="🧮 پیش‌نمایش قیمت Offerها",
+            text="🧮 پیش‌نمایش قیمت Filamentها",
             command=self._phase49_3i39_preview_prices,
             style="Success.TButton",
         ).pack(side="right", padx=8)
         self._phase49_3i39_pricing_hint = tk.StringVar()
         ttk.Label(pricing, textvariable=self._phase49_3i39_pricing_hint, style="SubHeader.TLabel").pack(side="left", padx=5)
+
+        summary = ttk.Frame(pricing)
+        summary.pack(side="bottom", fill="x", pady=(7, 0))
+        ttk.Separator(summary, orient="horizontal").pack(fill="x", pady=(0, 5))
+        self._phase49_3i39_price_summary_var = tk.StringVar(
+            value="مبلغ نهایی: برای محاسبه، Filament و وزن/زمان چاپ را ثبت کن."
+        )
+        ttk.Label(
+            summary,
+            textvariable=self._phase49_3i39_price_summary_var,
+            style="SubHeader.TLabel",
+        ).pack(anchor="e")
 
         # 3) Common production rows
         production = ttk.LabelFrame(
@@ -537,7 +607,7 @@ def install_workspace(workspace_class) -> None:
     def open_offer_editor(self, offer=None):
         source = dict(offer or {})
         top = tk.Toplevel(self)
-        top.title("Offer فیلامنت — سازنده / متریال / رنگ / نرخ / موجودی / پیش‌گرم")
+        top.title("Filament — سازنده / متریال / رنگ / نرخ / موجودی / پیش‌گرم")
         top.geometry("760x720")
         top.transient(self)
         top.grab_set()
@@ -584,7 +654,7 @@ def install_workspace(workspace_class) -> None:
             ("preheat_hours", "ساعت پیش‌گرم"),
             ("preheat_temp", "دمای پیش‌گرم °C"),
             ("preheat_hourly", "هزینه ساعتی پیش‌گرم"),
-            ("fixed_product", "قیمت قطعی همین محصول برای این Offer"),
+            ("fixed_product", "قیمت قطعی همین محصول برای این Filament"),
         )
         for index, (key, label) in enumerate(fields):
             ttk.Label(body, text=label).grid(row=index, column=0, sticky="w", padx=4, pady=4)
@@ -600,7 +670,7 @@ def install_workspace(workspace_class) -> None:
             if not manufacturer:
                 manufacturer = brand
             if not material or not color or not brand:
-                messagebox.showwarning("Offer", "برند/شرکت، متریال و رنگ الزامی هستند.", parent=top)
+                messagebox.showwarning("Filament", "برند/شرکت، متریال و رنگ الزامی هستند.", parent=top)
                 return
             roll_weight = max(1, _integer(vars_["roll_weight"].get(), 1000))
             stock_kg = max(0.0, float(_number(vars_["stock_kg"].get(), 0)))
@@ -627,7 +697,7 @@ def install_workspace(workspace_class) -> None:
                     filament_image_url=vars_["image"].get().strip(),
                 )
             except Exception as exc:
-                messagebox.showerror("Offer", str(exc), parent=top)
+                messagebox.showerror("Filament", str(exc), parent=top)
                 return
 
             normalized = normalize_material_color_options([{
@@ -647,17 +717,17 @@ def install_workspace(workspace_class) -> None:
                             break
             top.destroy()
             self._phase49_3i39_refresh_offer_filter()
-            self.footer_status.set(f"Offer «{offer_display(normalized[0] if normalized else saved)}» ذخیره شد.")
+            self.footer_status.set(f"Filament «{offer_display(normalized[0] if normalized else saved)}» ذخیره شد.")
 
         actions = ttk.Frame(body)
         actions.grid(row=len(fields), column=0, columnspan=2, sticky="e", pady=(10, 0))
         ttk.Button(actions, text="انصراف", command=top.destroy).pack(side="right", padx=3)
-        ttk.Button(actions, text="ذخیره Offer", command=save_offer, style="Success.TButton").pack(side="right", padx=3)
+        ttk.Button(actions, text="ذخیره Filament", command=save_offer, style="Success.TButton").pack(side="right", padx=3)
 
     def edit_selected_offer(self):
         selected = self._phase49_3i39_offer_tree.selection()
         if len(selected) != 1:
-            messagebox.showinfo("Offer", "برای ویرایش دقیقاً یک Offer را انتخاب کن.", parent=self)
+            messagebox.showinfo("Filament", "برای ویرایش دقیقاً یک Filament را انتخاب کن.", parent=self)
             return
         try:
             offer = self._phase49_3i39_working_offer_rows[int(selected[0])]
@@ -667,11 +737,11 @@ def install_workspace(workspace_class) -> None:
 
     def commit_selected_offers(self):
         if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
-            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Offer ابتدا «اصلاح» را بزن.")
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Filament ابتدا «اصلاح» را بزن.")
             return False
         selected = selected_inventory_offers(self)
         if not selected:
-            messagebox.showwarning("Offer", "حداقل یک Offer را انتخاب کن.", parent=self)
+            messagebox.showwarning("Filament", "حداقل یک Filament را انتخاب کن.", parent=self)
             return False
 
         # Preserve any Product-specific fixed prices already stored.
@@ -686,7 +756,7 @@ def install_workspace(workspace_class) -> None:
 
     def persist_selected_offers(self, propagate_profiles=True):
         if is_stage_locked(self.db.product(int(self.product_id)), "commerce"):
-            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Offer ابتدا «اصلاح» را بزن.")
+            self.footer_status.set("مرحله ۲ نهایی است؛ برای تغییر Filament ابتدا «اصلاح» را بزن.")
             return False
         offers = normalize_material_color_options(self._phase49_3i39_selected_product_offers)
         materials = list(dict.fromkeys(item["material"] for item in offers if item.get("material")))
@@ -719,7 +789,8 @@ def install_workspace(workspace_class) -> None:
             persist_ledger(self)
         self.row = self.db.product(int(self.product_id))
         refresh_offer_filter(self)
-        self.footer_status.set(f"{len(offers)} Offer روی محصول ثبت شد • برند/رنگ/نرخ/موجودی حفظ شد")
+        refresh_price_summary(self)
+        self.footer_status.set(f"{len(offers)} Filament روی محصول ثبت شد • برند/رنگ/نرخ/موجودی حفظ شد")
         return True
 
     def pricing_changed(self):
@@ -727,11 +798,86 @@ def install_workspace(workspace_class) -> None:
         if hasattr(self, "pricing_strategy_var"):
             self.pricing_strategy_var.set(mode)
         hint = {
-            "fixed": "برای هر Offer در «ویرایش Offer» قیمت قطعی همین محصول را وارد کن.",
+            "fixed": "برای هر Filament در «ویرایش Filament» قیمت قطعی همین محصول را وارد کن.",
             "dynamic": "قیمت = متریال + ساعت چاپ + نظارت + پیش‌گرم + اسمبلی.",
             "range": "فعلاً اختیاری؛ حداقل/حداکثر قدیمی حفظ می‌شود.",
         }[mode]
         self._phase49_3i39_pricing_hint.set(hint)
+        refresh_price_summary(self)
+
+    def refresh_price_summary(self):
+        label = getattr(self, "_phase49_3i39_price_summary_var", None)
+        if label is None:
+            return
+        offers = normalize_material_color_options(
+            getattr(self, "_phase49_3i39_selected_product_offers", []) or []
+        )
+        rows = production_values(self)
+        mode = PRICING_BY_LABEL.get(
+            self._phase49_3i39_pricing_label_var.get(), "dynamic"
+        )
+        support_multiplier = getattr(
+            getattr(self, "support_cost_multiplier_var", None),
+            "get",
+            lambda: 1,
+        )()
+        assembly_fee = getattr(
+            getattr(self, "assembly_fee_var", None),
+            "get",
+            lambda: 0,
+        )()
+        price_min = getattr(
+            getattr(self, "price_min_var", None),
+            "get",
+            lambda: 0,
+        )()
+        price_max = getattr(
+            getattr(self, "price_max_var", None),
+            "get",
+            lambda: price_min,
+        )()
+        result = pricing_summary_range(
+            offers,
+            rows,
+            mode,
+            support_multiplier=support_multiplier,
+            assembly_fee=assembly_fee,
+            price_min=price_min,
+            price_max=price_max,
+        )
+
+        if mode == "fixed":
+            if not offers:
+                label.set("مبلغ نهایی قطعی: ابتدا Filamentها را روی محصول ثبت کن.")
+                return
+            if result["count"] <= 0:
+                label.set("مبلغ نهایی قطعی: برای Filamentهای انتخابی هنوز قیمت ثبت نشده.")
+                return
+            prefix = "مبلغ نهایی قطعی"
+        elif mode == "range":
+            if result["count"] <= 0:
+                label.set("مبلغ نهایی بازه: حداقل/حداکثر هنوز ثبت نشده.")
+                return
+            prefix = "مبلغ نهایی بازه"
+        else:
+            if not offers:
+                label.set("مبلغ نهایی محاسباتی: ابتدا Filamentها را روی محصول ثبت کن.")
+                return
+            if not rows:
+                label.set("مبلغ نهایی محاسباتی: حداقل یک وزن/زمان چاپ وارد کن.")
+                return
+            if result["count"] <= 0:
+                label.set("مبلغ نهایی محاسباتی: نرخ‌های Filament هنوز صفر/ناقص هستند.")
+                return
+            prefix = "مبلغ نهایی محاسباتی"
+
+        low = int(result["min"])
+        high = int(result["max"])
+        amount = f"{low:,} تومان" if low == high else f"{low:,} تا {high:,} تومان"
+        suffix = f" • {result['count']} ترکیب"
+        if result["incomplete"]:
+            suffix += f" • {result['incomplete']} Filament بدون قیمت قطعی"
+        label.set(f"{prefix}: {amount}{suffix} • ارسال جداگانه")
 
     def add_production_row(self, values=None):
         values = normalize_production_row(values or {})
@@ -815,6 +961,7 @@ def install_workspace(workspace_class) -> None:
                         var.set(str(value))
                     except Exception:
                         pass
+        refresh_price_summary(self)
 
     def current_profile_snapshot(self, key="", name=None):
         rows = production_values(self)
@@ -822,12 +969,12 @@ def install_workspace(workspace_class) -> None:
             raise ValueError("حداقل یک ردیف وزن/زمان چاپ معتبر در بخش بالا لازم است.")
         offers = normalize_material_color_options(self._phase49_3i39_selected_product_offers)
         if not offers:
-            raise ValueError("ابتدا Offerهای فیلامنت را انتخاب و روی محصول ثبت کن.")
+            raise ValueError("ابتدا Filamentها را انتخاب و روی محصول ثبت کن.")
         strategy = PRICING_BY_LABEL.get(self._phase49_3i39_pricing_label_var.get(), "dynamic")
         if strategy == "fixed":
             missing = [offer_display(item) for item in offers if _integer(item.get("fixed_product_price"), 0) <= 0]
             if missing:
-                raise ValueError("برای حالت قیمت قطعی، قیمت این Offerها خالی است: " + "، ".join(missing[:5]))
+                raise ValueError("برای حالت قیمت قطعی، قیمت این Filamentها خالی است: " + "، ".join(missing[:5]))
         return normalize_ledger_profile({
             "key": key or f"ledger-{uuid4().hex[:12]}",
             "name": name if name is not None else self._phase49_3i35_profile_name_var.get(),
@@ -992,11 +1139,11 @@ def install_workspace(workspace_class) -> None:
         offers = normalize_material_color_options(self._phase49_3i39_selected_product_offers)
         rows = production_values(self)
         if not offers or not rows:
-            messagebox.showinfo("قیمت", "ابتدا Offerها و حداقل یک وزن/زمان چاپ را ثبت کن.", parent=self)
+            messagebox.showinfo("قیمت", "ابتدا Filamentها و حداقل یک وزن/زمان چاپ را ثبت کن.", parent=self)
             return
         mode = PRICING_BY_LABEL.get(self._phase49_3i39_pricing_label_var.get(), "dynamic")
         win = tk.Toplevel(self)
-        win.title("پیش‌نمایش قیمت بر اساس Offer واقعی")
+        win.title("پیش‌نمایش قیمت بر اساس Filament واقعی")
         win.geometry("1180x560")
         win.transient(self)
         tree = ttk.Treeview(
@@ -1005,7 +1152,7 @@ def install_workspace(workspace_class) -> None:
             show="headings",
         )
         for key, label, width in (
-            ("offer", "Offer", 240), ("row", "وزن/زمان", 130),
+            ("offer", "Filament", 240), ("row", "وزن/زمان", 130),
             ("material", "متریال", 110), ("print", "چاپ", 100),
             ("supervision", "نظارت", 100), ("preheat", "پیش‌گرم", 100),
             ("total", "قیمت", 120), ("stock", "موجودی", 100),
@@ -1074,6 +1221,7 @@ def install_workspace(workspace_class) -> None:
             set_production_values(self, [seed])
         refresh_offer_filter(self)
         refresh_profile_tree(self)
+        refresh_price_summary(self)
 
     def reload(self):
         result = original_reload(self)
@@ -1096,7 +1244,7 @@ def install_workspace(workspace_class) -> None:
         )
         self.row = self.db.product(int(self.product_id))
         if not silent:
-            self.footer_status.set("مرحله ۲ حرفه‌ای ذخیره شد؛ Offer/قیمت/Profile روی مسیر واحد هستند.")
+            self.footer_status.set("مرحله ۲ حرفه‌ای ذخیره شد؛ Filament/قیمت/Profile روی مسیر واحد هستند.")
         return True
 
     workspace_class.__init__ = __init__
@@ -1112,6 +1260,7 @@ def install_workspace(workspace_class) -> None:
     workspace_class._phase49_3i39_commit_selected_offers = commit_selected_offers
     workspace_class._phase49_3i39_persist_selected_offers = persist_selected_offers
     workspace_class._phase49_3i39_pricing_changed = pricing_changed
+    workspace_class._phase49_3i39_refresh_price_summary = refresh_price_summary
     workspace_class._phase49_3i39_add_production_row = add_production_row
     workspace_class._phase49_3i39_remove_production_row = remove_production_row
     workspace_class._phase49_3i39_production_values = production_values
