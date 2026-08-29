@@ -13,7 +13,7 @@ Older detailed request history remains available in Git history. This file keeps
 
 
 ## REQ-50-028 — Professional Stage-2 Offer flow, Profile snapshot and truthful AI completion
-Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / GITHUB CI + WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / BASELINE CI+PORTABLE PASS / ERR-49-064 HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Stage 2 order is manufacturer/company → filament/material → color → register Offer → professional pricing → production rows → Profile identity/dimensions,
@@ -43,6 +43,8 @@ Verification:
 - Windows Portable `33247815027` PASS on `55139b909f214f33994d76bc1e6fdfd028b5d6c7`,
 - Store/0040 `33246843145` PASS,
 - Production untouched.
+- Owner foreground QA on 2026-08-29 exposed `ERR-49-064`: the obsolete 3I.35 Listbox action row mixed `pack` into the modern grid-managed material/color card and aborted ProductWorkspace before 3I.39/3I.40 visible UI construction.
+- Hotfix source `aa37dcf916dfab71409738f7087a171daffe4a0a` + regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`; owner Local retest remains required.
 
 ## REQ-50-001 — Complete business finance/accounting system
 Status: `REQUESTED / PHASE50 ACTIVE`
