@@ -13,7 +13,7 @@ Older detailed request history remains available in Git history. This file keeps
 
 
 ## REQ-50-028 — Professional Stage-2 Offer flow, Profile snapshot and truthful AI completion
-Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / BASELINE CI+PORTABLE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `IMPLEMENTED 49.3I.40 + STORE 0040 / BASELINE CI+PORTABLE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 Acceptance:
 - Stage 2 order is manufacturer/company → filament/material → color → register Offer → professional pricing → production rows → Profile identity/dimensions,
@@ -46,7 +46,10 @@ Verification:
 - Owner foreground QA on 2026-08-29 exposed `ERR-49-064`: the obsolete 3I.35 Listbox action row mixed `pack` into the modern grid-managed material/color card and aborted ProductWorkspace before 3I.39/3I.40 visible UI construction.
 - Follow-up owner QA exposed `ERR-49-065`: AI-persisted SEO fields must immediately reconcile the visible readiness/help widgets; fixed by DB rehydration + final post-AI readiness repaint without auto-finalizing operator stages.
 - Owner retest exposed `ERR-49-066`: each displayed defect must have exactly one Stage owner, AI-fixable defects must map to an actual write path, Stage UI must turn complete from persisted `data_ready` without requiring finalization, and all mature full-AI actions must route through the same final checker/repair engine.
-- ERR-49-067 confirms the acceptance contract: SEO Title/Description remain Persian-only; test fixtures must comply with that validator unless explicitly testing rejection. The runtime rule must not be weakened to accommodate stale mocks.
+- ERR-49-067 fixture correction remains valid, but its interim all-Latin SEO prohibition was superseded by real Product 63 evidence: exact source identity tokens may remain beside Persian SEO text; unrelated Latin still fails.
+- ERR-49-068 restores the owner-requested visible Windows flow: the current Stage must always expose `✅ تأیید و مرحله بعد` plus AI fill/edit controls; manual values are persisted before readiness is checked, and success advances to the next Stage.
+- A visible legacy AI button must execute the same final 3I.39 engine as the new controls; class-method rebinding alone is not sufficient for Tk Buttons created earlier.
+- Provider fallback must never reuse a key or model that belongs to another Provider.
 - Hotfix source `aa37dcf916dfab71409738f7087a171daffe4a0a` + regression `9a3ebd43b22a50ac1447b90cae159dcffb1ed451`; owner Local retest remains required.
 
 ## REQ-50-001 — Complete business finance/accounting system
