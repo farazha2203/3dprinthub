@@ -146,6 +146,28 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         self.assertEqual(candidates[1][0], "avalai")
         self.assertNotIn("openai", [item[0] for item in candidates])
 
+    def test_fallback_does_not_reuse_primary_model_for_another_provider(self):
+        app = SimpleNamespace(db=_SettingsDB({
+            "ai_fallback_enabled": "1",
+            "ai_fallback_openrouter_free": "0",
+            "ai_fallback_order": "openai",
+            "ai_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+            "ai_model_openai": "",
+        }))
+        with patch.object(
+            resilient_ai,
+            "active_ai_config",
+            return_value=("openrouter", "sk-or-v1-primary", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+        ), patch.object(
+            resilient_ai,
+            "get_provider_key",
+            return_value="sk-proj-valid-openai-shape",
+        ):
+            candidates = resilient_ai.configured_ai_candidates(app)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0][0], "openrouter")
+
     def test_retry_exhaustion_falls_through_to_next_provider(self):
         app = SimpleNamespace(db=_SettingsDB({"ai_retry_attempts": "3"}))
         dialog = _Dialog()
