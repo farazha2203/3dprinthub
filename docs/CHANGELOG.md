@@ -1,6 +1,20 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — Catalog Center 8.9.8 Readiness Ownership / Checker Alignment (ERR-49-066)
+- owner Local retest of `c679c66...` passed 12 targeted tests but real Product 63 still remained red after persisted AI content;
+- audit proved the final repair loop classified 5 Content defects as AI-fixable, accepted a fallback response, then changed 0 fields and stalled;
+- removed duplicate readiness ownership: Persian title is Quick-only; selected-image Alt is Images-only; Content owns descriptions/SEO/search text;
+- added persisted source-identity-aware Persian validation for title/description while keeping SEO and keyword/tag/hashtag text Persian-only;
+- made `_field_needs_fill()` use the same semantic rules as the readiness checker, including invalid non-empty lists;
+- changed guided-wizard red stars/icons/Next gating to use `data_ready/missing_data`, keeping explicit operator finalization separate;
+- rebound mature full-AI/link/current-stage aliases to final 3I.39 seven-stage repair authority;
+- added focused regressions for stage ownership, source identity, checker/repair agreement, data-ready navigation and final AI entrypoint authority;
+- rollback `backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`;
+- no DB/schema/media/secret/Host/Production change; owner Local regression/foreground retest pending.
+
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 SEO Readiness Reconciliation Hotfix (ERR-49-065)
 - owner QA confirmed the new professional Stage-2 / seven-stage workspace renders after ERR-49-064;
 - seven-stage AI persisted Persian/SEO fields but some red readiness/help widgets remained stale after completion;
