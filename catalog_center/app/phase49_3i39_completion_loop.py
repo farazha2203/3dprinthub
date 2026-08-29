@@ -664,6 +664,18 @@ def install_workspace(workspace_class) -> None:
     def save(self, silent=False):
         from .epic49_product_studio import LICENSE_LABEL_TO_CODE
 
+        parsed_features = None
+        features = getattr(self, "_phase49_3i39_spec_features", None)
+        if features is not None:
+            try:
+                parsed_features = json.loads(self._text_get(features) or "{}")
+                if not isinstance(parsed_features, dict):
+                    raise ValueError("ویژگی‌های فنی باید JSON Object باشد.")
+            except Exception as exc:
+                if not silent:
+                    messagebox.showerror("ذخیره مشخصات فنی", str(exc), parent=self)
+                return False
+
         spec_label_var = getattr(self, "_phase49_3i39_spec_license_label_var", None)
         if spec_label_var is not None:
             label = str(spec_label_var.get() or "")
@@ -672,6 +684,14 @@ def install_workspace(workspace_class) -> None:
             publish_var = getattr(self, "publish_license_label_var", None)
             if publish_var is not None:
                 publish_var.set(label)
+
+        # Keep the older compatibility editor synchronized so the layered save
+        # chain cannot overwrite the Stage-5 authoritative copy with stale JSON.
+        if parsed_features is not None and hasattr(self, "technical_features_text"):
+            self._text_set(
+                self.technical_features_text,
+                json.dumps(parsed_features, ensure_ascii=False, indent=2),
+            )
 
         ok = original_save(self, silent=True)
         if not ok:
@@ -686,17 +706,10 @@ def install_workspace(workspace_class) -> None:
         if summary is not None:
             values["technical_summary_fa"] = self._text_get(summary)
 
-        features = getattr(self, "_phase49_3i39_spec_features", None)
-        if features is not None:
-            try:
-                parsed = json.loads(self._text_get(features) or "{}")
-                if not isinstance(parsed, dict):
-                    raise ValueError("ویژگی‌های فنی باید JSON Object باشد.")
-                values["technical_features_json"] = json.dumps(parsed, ensure_ascii=False)
-            except Exception as exc:
-                if not silent:
-                    messagebox.showerror("ذخیره مشخصات فنی", str(exc), parent=self)
-                return False
+        if parsed_features is not None:
+            values["technical_features_json"] = json.dumps(
+                parsed_features, ensure_ascii=False
+            )
 
         if values:
             try:
