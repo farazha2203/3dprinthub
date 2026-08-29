@@ -84,6 +84,11 @@ if not getattr(_phase49_3i_product_list_module, "_phase49_3i12_composition_bridg
         )
         _install_phase49_3i38_database(Database)
         _install_phase49_3i38_app(app_class)
+        # 49.3I.39 finalizes professional Stage-2 semantics and replaces
+        # one-pass completion with readiness-driven repair without touching
+        # acquisition/download internals.
+        from .phase49_3i39_completion_loop import install_app as _install_phase49_3i39_app
+        _install_phase49_3i39_app(app_class)
 
     _phase49_3i_product_list_module.install = _phase49_3i12_product_list_install
     _phase49_3i_product_list_module._phase49_3i12_composition_bridge = True
@@ -266,3 +271,7 @@ def install(workspace_class) -> None:
     _install_phase49_3i37_workspace(workspace_class)
     from .phase49_3i38_crawl_ledger_stage_ai import install_workspace as _install_phase49_3i38_workspace
     _install_phase49_3i38_workspace(workspace_class)
+    from .phase49_3i39_professional_commerce import install_workspace as _install_phase49_3i39_commerce
+    _install_phase49_3i39_commerce(workspace_class)
+    from .phase49_3i39_completion_loop import install_workspace as _install_phase49_3i39_completion
+    _install_phase49_3i39_completion(workspace_class)
