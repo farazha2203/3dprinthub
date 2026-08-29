@@ -6,10 +6,28 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
+Status: `8.9.8 BASELINE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — ERR-49-066
+
+The real Product 63 trace proved the remaining blocker is semantic, not merely repaint timing: checker, field-stage ownership, repair eligibility and guided-wizard completion were not using one contract.
+
+Current GitHub delta now enforces:
+- Quick exclusively owns Persian title readiness,
+- Images exclusively owns selected-image Alt readiness,
+- Content owns Persian descriptions + SEO + keyword/tag/hashtag quality,
+- true source identity may coexist with Persian title/description but arbitrary Latin fails,
+- SEO/list fields remain Persian-only,
+- AI-fixable means the selected Stage has an actual write path,
+- visual progress uses data completeness; explicit `ثبت` remains finalization only,
+- all mature single-product AI entry points converge on 3I.39.
+
+Rollback: `backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`.
+
+Next: owner Local pull current docs-final head → focused 3C/3B/3I37/3I39/3I40 tests → foreground Product 63 → verify Stage 1 turns ✅ as soon as its real fields are valid, and Stage 4 defects actually decrease after AI writes. Production remains blocked.
 
 ## Owner SEO/readiness hotfix gate — ERR-49-065
 
