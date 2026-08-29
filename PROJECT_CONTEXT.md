@@ -6,7 +6,7 @@ Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 BASELINE PASS / ERR-49-070 STAGE-5 SCHEMA + PANEL HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
+Status: `8.9.8 / ERR-49-070 67/67 LOCAL PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,12 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — ERR-49-071
+
+Owner exact `d4da997...` achieved compile PASS, exact ERR-49-070 PASS, OpenRouter-only 4/4 PASS and 67/67 Windows stage PASS, but foreground visual QA still failed. The real cause is now isolated to final operator semantics/composition: confirmation was mixed into missing-data counts, green icons followed data fill instead of explicit approval, a deliberate `سایر محصولات` category was rejected, bad Stage-1 relocation UI was mounted, and the legacy Next/title-only Tk callbacks survived final composition.
+
+Current GitHub delta restores historical stage layout, separates data defects from confirmation, creates an independent permanent `✅ ثبت و تأیید مرحله →` action and rebinds title-only AI into the global OpenRouter runtime guard. Rollback: `backup/pre-err49-071-stage-confirm-rollback-20260829` → `d4da99744659d06ebe5c04fd69532cd0e03db3e8`. Production untouched.
 
 ## Current owner checkpoint — ERR-49-070
 
