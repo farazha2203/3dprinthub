@@ -36,6 +36,21 @@ def variant_commerce_options_view(request):
         price_contract = getattr(variant, "price_breakdown", {})
         price = price_contract() if callable(price_contract) else (price_contract or {})
         color_option = getattr(variant, "color", None)
+        inventory_ok = (
+            not bool(getattr(variant, "track_inventory", False))
+            or bool(getattr(variant, "allow_backorder", False))
+            or max(
+                0,
+                int(getattr(variant, "stock_quantity", 0) or 0)
+                - int(getattr(variant, "reserved_quantity", 0) or 0),
+            ) > 0
+        )
+        color_stock_ok = bool(getattr(variant, "color_stock_sufficient", True))
+        orderable = (
+            str(getattr(variant, "stock_status", "") or "") != "out_of_stock"
+            and inventory_ok
+            and color_stock_ok
+        )
         payload[str(variant.pk)] = {
             "product_id": product.pk,
             "profile_name": str(getattr(variant, "sales_profile_name", "") or ""),
@@ -53,6 +68,18 @@ def variant_commerce_options_view(request):
             "color": str(getattr(variant, "color", "") or ""),
             "filament_brand_name": str(getattr(color_option, "brand_name", "") or ""),
             "filament_manufacturer_name": str(getattr(color_option, "manufacturer_name", "") or ""),
+            "color_hex": str(getattr(color_option, "hex_code", "") or ""),
+            "color_secondary_hex": str(getattr(color_option, "secondary_hex", "") or ""),
+            "color_tertiary_hex": str(getattr(color_option, "tertiary_hex", "") or ""),
+            "filament_image_url": str(getattr(color_option, "filament_image_url", "") or ""),
+            "current_stock_grams": str(getattr(color_option, "current_stock_grams", 0) or 0),
+            "offer_print_hourly_rate": int(getattr(color_option, "print_hourly_rate", 0) or 0),
+            "offer_supervision_hourly_rate": int(getattr(color_option, "supervision_hourly_rate", 0) or 0),
+            "preheat_hours": str(getattr(color_option, "preheat_hours", 0) or 0),
+            "preheat_temperature_c": str(getattr(color_option, "preheat_temperature_c", 0) or 0),
+            "preheat_hourly_rate": int(getattr(color_option, "preheat_hourly_rate", 0) or 0),
+            "color_stock_sufficient": color_stock_ok,
+            "orderable": orderable,
             "material_weight_grams": str(getattr(variant, "material_weight_grams", 0) or 0),
             "support_weight_grams": str(getattr(variant, "support_weight_grams", 0) or 0),
             "final_weight_grams": str(getattr(variant, "final_weight_grams", 0) or 0),
