@@ -48,6 +48,49 @@ class Epic49OperatorDatabaseTests(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_filament_upsert_returns_complete_operational_facts_immediately(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            db = Database(Path(temporary) / "catalog.sqlite3")
+            try:
+                ensure_epic49_desktop_schema(db)
+                saved = add_available_material_color(
+                    db,
+                    "PETG",
+                    "شفاف",
+                    "#D9D9D9",
+                    brand_name="eSUN",
+                    manufacturer_name="eSUN",
+                    roll_weight_grams=1000,
+                    stock_roll_count=2.5,
+                    purchase_price_per_roll=3_100_000,
+                    sale_price_per_roll=4_200_000,
+                    usd_price_per_roll=18,
+                    usd_fx_rate_toman=220_000,
+                    print_hourly_rate=160_000,
+                    supervision_hourly_rate=50_000,
+                    preheat_hours=8,
+                    preheat_temperature_c=45,
+                    preheat_hourly_rate=30_000,
+                    filament_image_url="https://example.com/petg-clear.webp",
+                )
+                self.assertEqual(saved["print_hourly_rate"], 160_000)
+                self.assertEqual(saved["supervision_hourly_rate"], 50_000)
+                self.assertEqual(saved["preheat_hours"], 8)
+                self.assertEqual(saved["preheat_temperature_c"], 45)
+                self.assertEqual(saved["preheat_hourly_rate"], 30_000)
+                self.assertEqual(saved["filament_image_url"], "https://example.com/petg-clear.webp")
+                listed = next(
+                    item for item in list_available_material_colors(db)
+                    if item["material_name"] == "PETG"
+                    and item["brand_name"] == "eSUN"
+                    and item["color_name"] == "شفاف"
+                )
+                self.assertEqual(saved["sale_price_per_roll"], listed["sale_price_per_roll"])
+                self.assertEqual(saved["print_hourly_rate"], listed["print_hourly_rate"])
+                self.assertEqual(saved["preheat_hourly_rate"], listed["preheat_hourly_rate"])
+            finally:
+                db.close()
+
     def test_material_color_selection_is_normalized_and_deduplicated(self):
         raw = json.dumps([
             {"material": "PLA", "color": "صورتی", "hex": "#ff69b4"},
