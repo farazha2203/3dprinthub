@@ -445,9 +445,12 @@ def install_readiness(readiness_module) -> None:
             except Exception:
                 return ""
         source_title = str(value("source_title") or "").strip()
-        missing = []
+        owned_missing = {"quick": [], "content": [], "images": []}
+
+        if not has_persian_editorial_text_for_source(value("title_fa"), source_title):
+            owned_missing["quick"].append("عنوان فارسی")
+
         for key, label, allow_source_identity in (
-            ("title_fa", "عنوان فارسی", True),
             ("short_description_fa", "توضیح کوتاه فارسی", True),
             ("description_fa", "توضیح کامل فارسی", True),
             ("use_description", "توضیحات کاربرد محصول", True),
@@ -461,14 +464,16 @@ def install_readiness(readiness_module) -> None:
                 else has_persian_editorial_text(current)
             )
             if not valid:
-                missing.append(label)
+                owned_missing["content"].append(label)
+
         for key, label in (("keywords_json", "کلمات کلیدی فارسی"), ("tags_fa_json", "تگ‌های فارسی"), ("hashtags_fa_json", "هشتگ‌های فارسی")):
             try:
                 values = json.loads(value(key) or "[]")
             except Exception:
                 values = []
             if not isinstance(values, list) or not values or any(not has_persian_editorial_text(x) for x in values):
-                missing.append(label)
+                owned_missing["content"].append(label)
+
         try:
             selected = json.loads(value("selected_images_json") or "[]")
             alts = json.loads(value("image_alt_texts_json") or "[]")
@@ -476,23 +481,30 @@ def install_readiness(readiness_module) -> None:
             selected, alts = [], []
         required_alt_count = min(len(selected), 10) if isinstance(selected, list) else 0
         usable_alts = list(alts) if isinstance(alts, list) else []
-        if required_alt_count and (
-            len(usable_alts) < required_alt_count
-            or any(
-                not has_persian_editorial_text_for_source(item, source_title)
-                for item in usable_alts[:required_alt_count]
-            )
-        ):
-            missing.append("Alt فارسی همه تصاویر انتخاب‌شده")
-        if missing:
-            content = state.setdefault("stages", {}).setdefault("content", {"label": "۴. محتوا و SEO", "missing": []})
-            content["missing"] = _unique([*content.get("missing", []), *missing])
-            content["ready"] = not content["missing"]
+        if required_alt_count and len(usable_alts) < required_alt_count:
+            owned_missing["images"].append("Alt فارسی همه تصاویر انتخاب‌شده")
+
+        labels = {
+            "quick": "۱. اطلاعات پایه",
+            "images": "۳. تصاویر",
+            "content": "۴. محتوا و SEO",
+        }
+        changed = False
+        stages = state.setdefault("stages", {})
+        for stage_key, extra_missing in owned_missing.items():
+            if not extra_missing:
+                continue
+            stage = stages.setdefault(stage_key, {"label": labels[stage_key], "missing": []})
+            stage["missing"] = _unique([*stage.get("missing", []), *extra_missing])
+            stage["ready"] = not stage["missing"]
+            changed = True
+
+        if changed:
             state["missing"] = []
-            for key, stage in state.get("stages", {}).items():
+            for key, stage in stages.items():
                 for item in stage.get("missing") or []:
                     state["missing"].append(f"{stage.get('label', key)}: {item}")
-            state["production_ready"] = all(bool(stage.get("ready")) for stage in state.get("stages", {}).values())
+            state["production_ready"] = all(bool(stage.get("ready")) for stage in stages.values())
         return state
     readiness_module.evaluate_readiness = evaluate
     readiness_module._phase49_3c_persian_readiness_installed = True
