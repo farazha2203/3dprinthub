@@ -1,5 +1,18 @@
 # PROJECT CHANGELOG
 
+## 2026-08-29 — ERR-49-075 Filament list refresh + authoritative price preview
+- owner screenshots showed a newly saved Filament not appearing under the retained filter and a price preview row with zero material/print/supervision/preheat/total despite valid inventory rate;
+- fixed the post-upsert return SELECT so immediately saved Filament objects include hourly/preheat/image operational fields;
+- selected-Filament edit now delegates through the final 3I.40 editor rather than the stale 3I.39 closure;
+- saving a Filament switches manufacturer/material filters to that exact Filament and selects/focuses it in the list;
+- pricing resolver refreshes Product Filament snapshots from current global inventory without losing Product-specific fixed price;
+- a currently selected unregistered Filament can be priced as a clearly marked draft before explicit Product registration;
+- range mode no longer falls into formula component preview; it displays the stored range and directs the operator to formula mode when component calculation is wanted;
+- added DB return-contract, pricing-context, editor-delegation and saved-row visibility regressions;
+- rollback `backup/pre-err49-075-filament-refresh-pricing-preview-20260829` → `d66c68f36d1fd3e4143d461bccd999046c4baaf7`;
+- Production untouched; quick Local QA next, then website receive/sync.
+
+
 ## 2026-08-29 — ERR-49-074 live Filament rate/final-price display restored
 - owner ERR-49-073 gate on exact `954c051...`: Catalog backup + SHA256 PASS, compile PASS, exact image regressions 2/2 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 73/73 PASS, foreground launch/visual acceptance PASS;
 - image Metadata issue is accepted fixed and Product reached ready-for-publication state locally;
