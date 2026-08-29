@@ -222,6 +222,9 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         self.assertIn("پیشنهاد AI برای موارد ناقص", source)
         self.assertIn("انجام وظایف ناقص AI", source)
         self.assertIn("root = self", source)
+        self.assertIn("_phase49_3i39_bind_footer_refresh", source)
+        self.assertIn("_phase49_3i39_sync_footer_actions", source)
+        self.assertIn('state="normal"', source)
         self.assertIn("lambda message=error_text", source)
 
 
