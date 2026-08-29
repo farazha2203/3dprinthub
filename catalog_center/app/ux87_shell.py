@@ -13,6 +13,7 @@ from .version import APP_VERSION, BUILD_ID
 NAV_ITEMS = [
     ("dashboard", "داشبورد", "dashboard"),
     ("products", "محصولات", "products"),
+    ("filaments", "فیلامنت‌ها", "products"),
     ("discover", "دریافت و کشف", "discover"),
     ("publish", "صف انتشار", "publish"),
     ("published", "منتشرشده‌ها", "published"),
@@ -76,6 +77,7 @@ def build_app_class(BaseApp):
             self.main_notebook.pack(fill="both", expand=True)
             self.dashboard_tab = ttk.Frame(self.main_notebook, padding=14)
             self.products_tab = ttk.Frame(self.main_notebook, padding=10)
+            self.filaments_tab = ttk.Frame(self.main_notebook, padding=10)
             self.scan_tab = ttk.Frame(self.main_notebook, padding=10)
             self.upload_tab = ttk.Frame(self.main_notebook, padding=10)
             self.published_tab = ttk.Frame(self.main_notebook, padding=10)
@@ -86,6 +88,7 @@ def build_app_class(BaseApp):
             self.settings_tab = ttk.Frame(self.main_notebook, padding=14)
             page_defs = [
                 ("dashboard", self.dashboard_tab), ("products", self.products_tab),
+                ("filaments", self.filaments_tab),
                 ("discover", self.scan_tab), ("publish", self.upload_tab),
                 ("published", self.published_tab), ("blocked", self.blocked_tab),
                 ("logs", self.runs_tab), ("ai", self.ai_tab),
@@ -121,6 +124,7 @@ def build_app_class(BaseApp):
             self._build_ux87_dashboard()
             super()._products_ui()
             self._modernize_products_page()
+            self._build_phase49_3i41_filament_library()
             super()._scan_ui()
             super()._upload_ui()
             super()._published_ui()
@@ -198,7 +202,7 @@ def build_app_class(BaseApp):
 
             quick = ttk.LabelFrame(self.dashboard_tab, text="شروع سریع", padding=14, style="Card.TLabelframe")
             quick.pack(fill="x", pady=14)
-            for label, page in (("مدیریت محصولات", "products"), ("دریافت محصول", "discover"), ("صف انتشار", "publish"), ("هوش مصنوعی", "ai"), ("اتصال سایت", "connection")):
+            for label, page in (("مدیریت محصولات", "products"), ("کتابخانه فیلامنت", "filaments"), ("دریافت محصول", "discover"), ("صف انتشار", "publish"), ("هوش مصنوعی", "ai"), ("اتصال سایت", "connection")):
                 ttk.Button(quick, text=label, command=lambda p=page: self.show_ux87_page(p), style="Primary.TButton").pack(side="left", padx=4)
 
             info = ttk.LabelFrame(self.dashboard_tab, text="قرارداد نسخه 8.7", padding=14, style="Card.TLabelframe")
@@ -380,6 +384,10 @@ def build_app_class(BaseApp):
                 )
             if key == "dashboard":
                 self._refresh_ux87_dashboard()
+            elif key == "filaments":
+                refresher = getattr(self, "_phase49_3i41_refresh_library", None)
+                if callable(refresher):
+                    refresher()
             self._refresh_ux87_status()
 
         def _refresh_ux87_dashboard(self):
