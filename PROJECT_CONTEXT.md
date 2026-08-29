@@ -1,12 +1,12 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
-Updated: 2026-08-27  
+Updated: 2026-08-29  
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Subphase: `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
-Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
+Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -38,54 +38,61 @@ Latest verified rollback backup:
 Last verified Phase50 migration state:
 - applied: `store.0034_phase50_variant2_commerce`,
 - applied: `store.0035_phase50_sales_profiles`,
-- not claimed applied: `0036`, `0037`, `0038`, `0039`.
+- not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
 ## Approved Windows runtime candidate
-Application runtime snapshot:
-`c904193a7f0af9aad80365834ec3f0b856e77dc9`.
+
+Runtime/package snapshot:
+`55139b909f214f33994d76bc1e6fdfd028b5d6c7`.
 
 Catalog Center:
-- version `8.9.6`,
-- build `2026.08.27.8`,
-- targeted 31–38 run `33077213590` PASS with 84 tests,
-- Single Active AI run `33077239617` PASS,
-- Windows portable run `33077239660` PASS,
-- artifact `3DPrintHub-CatalogCenter-v8.9.6`,
-- artifact ID `9648474905`,
-- EXE SHA256 `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`,
-- artifact ZIP digest `sha256:13ae8582be09b71f90e607c2230075d875b7445f8a46b6462a9241edf9d52563`.
+- version `8.9.8`,
+- build `2026.08.29.2`,
+- targeted 31–40 run `33247729316` PASS,
+- Single Active AI run `33247815007` PASS,
+- Windows Portable run `33247815027` PASS,
+- artifact `3DPrintHub-CatalogCenter-v8.9.8`,
+- artifact ID `9713426658`,
+- artifact digest `sha256:776eebb4daa1039119721697988508558991c6c4ccd6a2b1cca8b50b6f3b57a2`,
+- EXE SHA256 `2be8be49e05575cb20ea12f061d006935df070ec9abb0f87e4f00e4151d5f02a`.
 
-3I.38 preserves 3I.35–3I.37 and adds:
-- permanent crawled/received Product identity ledger,
-- persisted deeper Listing crawl cursor without replacing the mature discoverer,
-- reject + safe local-file/image purge while retaining source URL/external-ID tombstone,
-- Direct Link terminal identity check before browser/HTTP/image/file acquisition,
-- explicit restore as the only path to receive a rejected identity again,
-- one Product AI engine with Link / Saved-Crawled Data / Screenshot inputs,
-- same engine for selected-Product Bulk Stage-4 SEO,
-- explicit single-stage cleanup/completion with out-of-scope Stage immutability,
-- no Provider request for image-only work when image SEO is already complete.
+3I.40 preserves 3I.38 acquisition behavior and adds:
+- manufacturer → material → color Product Offer flow,
+- filter-scoped registration that preserves other manufacturers,
+- global filament stock/rates/preheat separated from Product-specific fixed price,
+- exact Offer formula pricing and color image/HEX preview,
+- production rows as weight/print-time/support authority,
+- Profile identity/size/dimensions snapshot registration,
+- readiness data defects separated from pending finalization,
+- final 100% only when AI-fixable defects are zero,
+- AI inputs remain Link / Saved-Crawled Data / Screenshot.
 
-Canonical phase document:
-`docs/phases/PHASE49_3I38_CRAWL_LEDGER_STAGE_AI.md`.
+Canonical phase:
+`docs/phases/PHASE49_3I40_COMMERCE_PRECISION_READINESS_TRUTH.md`.
 
 ## Approved Web/Store candidate
-Phase50.A.2E extends 2B–2D with:
-- migration `store.0039_phase50_filament_offer_pricing`,
-- brand/manufacturer/roll/pricing/FX MaterialColorOption facts,
-- ProductVariant support weight,
-- immutable StoreOrderItem support weight + filament brand/manufacturer,
-- brand-distinct Storefront material selection,
-- formula pricing from effective brand/color sale rate,
-- spool-first then roll-snapshot stock availability.
+
+Phase50.A.2E now extends through:
+`store.0040_phase50_filament_offer_operations`.
+
+0040 adds:
+- print hourly rate,
+- supervision hourly rate,
+- preheat hours/temperature/hourly cost,
+- filament image URL.
 
 Verification:
-- Phase50 run `33059883188` PASS,
-- no migration drift,
-- clean CI SQLite migration through `0039`,
-- 16 Variant/Profile/Checkout tests PASS.
+- initial `33246706102` failure was Decimal string-scale assertion only; migration plan/apply/no-drift passed,
+- numeric assertion fix `b59c93cf37dcb66d3e97f61d2669df6e1d1644a4`,
+- Phase50 run `33246843145` PASS,
+- full CI SQLite migration through 0040 PASS,
+- 21 Variant/Profile/Checkout/Offer regressions PASS.
+
+Local owner DB state still requires fresh verification; previous Local evidence had 0039 applied. Before 0040 Local write: verify effective SQLite path, create checksum-verified backup, inspect plan, then apply/test.
+
+Production remains untouched; only 0034/0035 are claimed applied from the last terminal audit.
 
 ## Owner Local automated acceptance
 - owner Local root `D:\\projects\\3DPrintHub` verified exact repository/branch and clean worktree,
