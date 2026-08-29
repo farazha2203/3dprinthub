@@ -1,9 +1,9 @@
 # Phase50 — Finance, Commerce & Admin Command Center
 
-Updated: 2026-08-27  
+Updated: 2026-08-29  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Status: `GITHUB CI TESTED / WINDOWS 8.9.3 PROFILE WORKSPACE HOTFIX PASS / OWNER FOREGROUND PRODUCT WORKSPACE QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
+Status: `GITHUB CI TESTED THROUGH STORE 0040 / WINDOWS 8.9.8 PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
 
 Current verified Production application commit:
 `c283864290f9c989a9fcdf24ee8eef519560e917`.
@@ -12,7 +12,38 @@ Last verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
 - `store.0034_phase50_variant2_commerce` applied,
 - `store.0035_phase50_sales_profiles` applied,
 - `store.0036_phase50_checkout_snapshot` pending at last verify,
-- `0037`, `0038` and `0039` were created after that verify and are not claimed applied.
+- `0037`, `0038`, `0039` and `0040` were created after that verify and are not claimed applied.
+
+## 50.A.2E extension — Filament Offer operations / migration 0040
+
+Migration:
+`store.0040_phase50_filament_offer_operations`.
+
+Adds exact manufacturer/material/color Offer operation facts:
+- `print_hourly_rate`,
+- `supervision_hourly_rate`,
+- `preheat_hours`,
+- `preheat_temperature_c`,
+- `preheat_hourly_rate`,
+- `filament_image_url`.
+
+Commerce contract:
+- same material/color from different manufacturers remains a distinct Offer,
+- stock remains part of orderability,
+- optional preheat contributes only when configured,
+- fixed Product price remains Product/Offer-specific and does not mutate global filament inventory/rate facts,
+- Store selector keeps manufacturer → material → color identity and exposes swatch/image/stock/preheat facts,
+- no implicit FX or material identity is invented.
+
+Verification:
+- initial 0040 workflow `33246706102` reached successful no-drift/migration-plan/migration-apply gates but two regression assertions froze insignificant Decimal string scale,
+- corrected numeric assertions at `b59c93cf37dcb66d3e97f61d2669df6e1d1644a4`,
+- workflow `33246843145` PASS: compile, JS, selector behavior, Django check, no drift, plan, full CI SQLite migration through 0040 and 21 regressions.
+
+Production:
+- last terminal-verified Production still has only `0034` and `0035` claimed applied,
+- `0036 → 0037 → 0038 → 0039 → 0040` is only a possible pending chain and must be freshly verified read-only on MySQL before any write,
+- owner Local 0040 backup/apply/regression + 3I.40 visual QA is required before Host work.
 
 ## Preserved foundation
 - Product/Catalog/Bridge/Hero public media is Product-owned; imported Catalog working-media remains private.
