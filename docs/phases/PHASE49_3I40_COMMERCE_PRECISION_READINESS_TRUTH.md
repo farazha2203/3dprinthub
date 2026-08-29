@@ -5,7 +5,24 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-068 WINDOWS STAGE-CONFIRM HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-069 STAGE-CONTRACT + OPENROUTER-ONLY HOTFIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
+
+## ERR-49-069 final Windows interaction contract
+
+Owner foreground evidence on `3f43260...` passed compile + 60/60 focused tests but still reproduced a final-composition failure. The phase therefore adds these acceptance rules without changing Stage-2 commerce authority:
+
+- every late/previously-captured guided-Wizard refresh must finish by restoring the final `✅ تأیید و مرحله بعد →` action;
+- Stage confirmation persists the current Stage before checking readiness, finalizes only when that persisted state passes, then advances;
+- Stage 1 visibly owns Product type, dimensions and use-case/class in addition to title/category;
+- Stage 5 visibly owns source/designer, commercial license, technical summary and technical-features JSON;
+- stage-specific persistence covers the restored Stage-1/5 controls;
+- stage-scoped AI counts only defects in its requested Scope; whole-product AI retains global defect truth;
+- only one Product AI job may be active in the application process;
+- Product AI uses OpenRouter only. Primary is the exact saved OpenRouter model; optional resilience is `openrouter/free` on the same Provider/key. AvalAI, Google and OpenAI are excluded from Product-AI fallback;
+- the existing Link / Saved-Crawled Data / Screenshot source contract is unchanged;
+- Stage 2 Offer/Profile/pricing, acquisition and Store transport contracts remain unchanged.
+
+Executable-code hotfix head: `136011971dea907ac777b3e66190dd27982a0c38`. Rollback: `backup/pre-err49-069-stage-contract-openrouter-only-20260829` → `3f43260db669b458a682f594b5d50eb5221b9ef3`. Owner Local retest is pending; Production untouched.
 
 ## Requested delta
 
@@ -89,7 +106,7 @@ Stage rail separates:
 - complete data waiting for operator finalization,
 - operator-finalized/locked stages.
 
-The 3I.40 completion proxy suppresses internal cosmetic 100% events. Final 100% is emitted only when the final readiness snapshot proves `ai_fixable_count == 0`.
+The 3I.40 completion proxy suppresses internal cosmetic 100% events. Whole-product Final 100% requires global `ai_fixable_count == 0`; a deliberately stage-scoped run may complete at 100% when `scoped_ai_fixable_count == 0` even if unrelated Stages still contain defects.
 
 If AI-fixable defects remain after bounded passes/retry/fallback:
 - progress stops below 100 (94% contract),
