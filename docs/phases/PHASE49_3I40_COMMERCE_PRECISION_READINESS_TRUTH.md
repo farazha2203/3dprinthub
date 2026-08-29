@@ -5,7 +5,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Catalog Center: `8.9.8` / build `2026.08.29.2`  
 Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`  
-Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-064 UI RECOVERED / ERR-49-065 SEO REFRESH HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION UNTOUCHED`
+Status: `BASELINE GITHUB CI + WINDOWS PORTABLE PASS / ERR-49-066 READINESS OWNERSHIP HOTFIX GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION UNTOUCHED`
 
 ## Requested delta
 
@@ -122,6 +122,28 @@ Adds to `MaterialColorOption`:
 - `filament_image_url`.
 
 The Store selector and Variant metadata keep exact manufacturer/material/color identity, stock, preheat and visual facts.
+
+## Readiness ownership correction — ERR-49-066
+
+Owner foreground evidence after ERR-49-065 proved that repaint synchronization alone was insufficient. The data had been persisted, but the contract still allowed one defect to be classified in a Stage that could not write its owning field, and the guided wizard treated operator finalization as data incompleteness.
+
+Final readiness contract is now:
+1. every required persisted field has one Stage owner,
+2. `title_fa` belongs to Quick,
+3. selected-image Alt belongs to Images,
+4. descriptions/SEO/search phrases belong to Content,
+5. a defect is AI-fixable only when the scoped AI path can write the same owning field,
+6. title/description may preserve only exact source-identity Latin tokens; SEO/search fields stay Persian-only,
+7. `data_ready` controls visible completion/navigation,
+8. `locked/finalized` controls operator approval only,
+9. mature visible AI buttons converge on the same 3I.39 seven-stage repair authority.
+
+This preserves the requested rule that a correctly entered Stage 1 becomes visibly complete immediately without requiring operator finalization, while `ثبت` remains available to freeze the Stage.
+
+Rollback:
+`backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`.
+
+No commerce/Profile/Offer ownership, acquisition, schema, Host or Production boundary changed. Owner Local regression + foreground Product 63 verification remains mandatory.
 
 ## Owner SEO/readiness follow-up — ERR-49-065
 
