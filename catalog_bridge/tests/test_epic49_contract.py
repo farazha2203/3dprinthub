@@ -39,6 +39,8 @@ class Epic49BridgeContractTests(SimpleTestCase):
         self.assertEqual(reverse("catalog_bridge:products"), "/api/catalog-bridge/v1/products/")
         self.assertEqual(reverse("catalog_bridge:product_detail", kwargs={"product_id": 7}), "/api/catalog-bridge/v1/products/7/")
         self.assertEqual(reverse("catalog_bridge:product_sync", kwargs={"product_id": 7}), "/api/catalog-bridge/v1/products/7/sync/")
+        self.assertEqual(reverse("catalog_bridge:filaments"), "/api/catalog-bridge/v1/filaments/")
+        self.assertEqual(reverse("catalog_bridge:filament_sync"), "/api/catalog-bridge/v1/filaments/sync/")
         self.assertEqual(reverse("catalog_bridge:hero_slides"), "/api/catalog-bridge/v1/hero-slides/")
         self.assertEqual(reverse("catalog_bridge:hero_slide_detail", kwargs={"slide_id": 9}), "/api/catalog-bridge/v1/hero-slides/9/")
         self.assertEqual(reverse("catalog_bridge:hero_slide_sync", kwargs={"slide_id": 9}), "/api/catalog-bridge/v1/hero-slides/9/sync/")
