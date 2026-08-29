@@ -1,6 +1,21 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — Catalog Center 8.9.8 Windows Stage Confirmation Recovery (ERR-49-068)
+- owner rerun on `0191a07...`: exact prior failure PASS, focused 43-test set PASS, canonical foreground launch PASS;
+- real Product 63 still exposed a Windows workflow deadlock: manually filled Stage 1 had no practical visible confirm path and the mature Next flow read persisted readiness before saving current widget values;
+- historical comparison confirmed the old 3B footer Next/AI flow and later 3I.36 separate stage-finalization rail had become disconnected in the final visible composition;
+- restored fixed footer `✅ تأیید و مرحله بعد →`, `✨ پرکردن ناقص‌ها با AI`, and `✏ اصلاح مرحله`;
+- confirm now uses stage-specific persist/finalize before advancing and is reasserted after Wizard refreshes;
+- rebound actual already-created legacy Tk AI buttons across the whole Workspace to final 3I.39 callbacks;
+- exact source identity tokens may remain inside otherwise-Persian SEO/title/description; arbitrary Latin remains invalid;
+- prevented an OpenRouter-shaped key from being sent to another Provider and stopped fallback Providers from inheriting the primary Provider model;
+- fixed deferred exception callback by freezing redacted error text before scheduling;
+- rollback `backup/pre-err49-068-windows-stage-confirm-20260829` → `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`;
+- Production/Host/Django schema untouched; owner Local focused test + foreground Product 63 QA pending.
+
+
+
 ## 2026-08-29 — ERR-49-067 Locked-stage Test Fixture Alignment
 - owner Local pulled `9f3b765...`, created checksum-verified Catalog SQLite backup, and passed Python compile;
 - focused gate ran 43 tests with one deterministic error before foreground launch;
