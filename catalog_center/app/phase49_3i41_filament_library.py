@@ -21,6 +21,7 @@ from .phase49_3i39_professional_commerce import (
     _number,
     offer_company,
     offer_display,
+    merge_global_offer,
     offer_key,
     offer_stock_grams,
 )
@@ -807,10 +808,17 @@ def install_workspace(workspace_class) -> None:
 
     def selected_draft_offers(self):
         inventory = getattr(self, "_phase49_3i41_inventory", None) or _active_inventory(self.db)
-        return [
-            item for item in inventory
-            if offer_key(item) in getattr(self, "_phase49_3i41_draft_keys", set())
-        ]
+        existing = {
+            offer_key(item): item
+            for item in getattr(self, "_phase49_3i39_selected_product_offers", []) or []
+        }
+        output = []
+        for item in inventory:
+            key = offer_key(item)
+            if key not in getattr(self, "_phase49_3i41_draft_keys", set()):
+                continue
+            output.append(merge_global_offer(existing[key], item) if key in existing else item)
+        return normalize_material_color_options(output)
 
     def commit_checklist(self):
         if not getattr(self, "_phase49_3i41_draft_keys", set()):
