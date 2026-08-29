@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+from decimal import Decimal, InvalidOperation
 from functools import wraps
 
 from django.db import transaction
@@ -11,7 +13,8 @@ from django.views.decorators.http import require_GET, require_POST
 
 from store.epic49_catalog_profile import ProductCatalogProfile, _unique_public_slug, SLIDER_EFFECT_CODES
 from store.models import ImportedPrintAssetImage, Product
-from website.models import HomepageHeroSlide
+from store.phase39_models import MaterialColorOption
+from website.models import HomepageHeroSlide, Material
 
 from .views import _authorized, _unauthorized
 
@@ -209,6 +212,196 @@ def serialize_slide(slide) -> dict:
         "images": _image_rows(asset),
         "updated_at": slide.updated_at.isoformat() if slide.updated_at else "",
     }
+
+
+
+def _decimal(value, default="0") -> Decimal:
+    try:
+        return Decimal(str(value if value not in (None, "") else default))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal(str(default))
+
+
+def _filament_code(material_id: int, brand: str, color: str) -> str:
+    digest = hashlib.sha1(
+        f"{int(material_id)}|{str(brand or '').strip().casefold()}|{str(color or '').strip().casefold()}".encode("utf-8")
+    ).hexdigest()[:14]
+    return f"desktop-{int(material_id)}-{digest}"[:120]
+
+
+def serialize_filament(option) -> dict:
+    stock_grams = getattr(option, "current_stock_grams", None)
+    if stock_grams is None:
+        stock_grams = (
+            _decimal(getattr(option, "stock_roll_count_snapshot", 0))
+            * _decimal(getattr(option, "roll_weight_grams", 0))
+        )
+    effective_rate = getattr(option, "effective_sale_price_per_gram", None)
+    if effective_rate is None:
+        roll_weight = _decimal(getattr(option, "roll_weight_grams", 0))
+        sale_roll = _decimal(getattr(option, "sale_price_per_roll", 0))
+        effective_rate = (sale_roll / roll_weight) if roll_weight > 0 and sale_roll > 0 else Decimal("0")
+    return {
+        "id": int(option.pk),
+        "material": str(option.material.name or ""),
+        "material_id": int(option.material_id),
+        "brand": str(getattr(option, "brand_name", "") or ""),
+        "manufacturer": str(getattr(option, "manufacturer_name", "") or ""),
+        "color": str(option.name or ""),
+        "code": str(option.code or ""),
+        "hex": str(option.hex_code or ""),
+        "color_type": str(option.color_type or "solid"),
+        "secondary_hex": str(option.secondary_hex or ""),
+        "tertiary_hex": str(option.tertiary_hex or ""),
+        "roll_weight_grams": str(getattr(option, "roll_weight_grams", 1000) or 1000),
+        "stock_roll_count": str(getattr(option, "stock_roll_count_snapshot", 0) or 0),
+        "current_stock_grams": str(stock_grams or 0),
+        "purchase_price_per_roll": int(getattr(option, "purchase_price_per_roll", 0) or 0),
+        "sale_price_per_roll": int(getattr(option, "sale_price_per_roll", 0) or 0),
+        "usd_price_per_roll": str(getattr(option, "usd_price_per_roll", 0) or 0),
+        "usd_fx_rate_toman": str(getattr(option, "usd_fx_rate_toman", 0) or 0),
+        "print_hourly_rate": int(getattr(option, "print_hourly_rate", 0) or 0),
+        "supervision_hourly_rate": int(getattr(option, "supervision_hourly_rate", 0) or 0),
+        "preheat_hours": str(getattr(option, "preheat_hours", 0) or 0),
+        "preheat_temperature_c": str(getattr(option, "preheat_temperature_c", 0) or 0),
+        "preheat_hourly_rate": int(getattr(option, "preheat_hourly_rate", 0) or 0),
+        "filament_image_url": str(getattr(option, "filament_image_url", "") or ""),
+        "effective_sale_price_per_gram": str(effective_rate or 0),
+        "is_active": bool(option.is_active),
+    }
+
+
+@require_GET
+@_auth
+def filaments_view(request):
+    queryset = MaterialColorOption.objects.select_related("material").order_by(
+        "material__name", "brand_name", "name", "id"
+    )
+    q = str(request.GET.get("q") or "").strip()
+    material_name = str(request.GET.get("material") or "").strip()
+    active = str(request.GET.get("active") or "1").strip().lower()
+    if active not in {"0", "false", "all"}:
+        queryset = queryset.filter(is_active=True)
+    if material_name:
+        queryset = queryset.filter(material__name__iexact=material_name)
+    if q:
+        from django.db.models import Q
+        queryset = queryset.filter(
+            Q(material__name__icontains=q)
+            | Q(name__icontains=q)
+            | Q(brand_name__icontains=q)
+            | Q(manufacturer_name__icontains=q)
+        )
+    items = [serialize_filament(item) for item in queryset[:500]]
+    return JsonResponse({
+        "status": "ok",
+        "items": items,
+        "count": len(items),
+        "contract": "phase49-filament-library-v1",
+    })
+
+
+@csrf_exempt
+@require_POST
+@_auth
+def filament_sync_view(request):
+    payload, error = _json_body(request)
+    if error:
+        return error
+    data = payload.get("filament") if isinstance(payload.get("filament"), dict) else payload
+
+    material_name = str(data.get("material") or data.get("material_name") or "").strip()[:100]
+    color = str(data.get("color") or data.get("color_name") or "").strip()[:100]
+    brand = str(data.get("brand") or data.get("brand_name") or "").strip()[:120]
+    manufacturer = str(
+        data.get("manufacturer") or data.get("manufacturer_name") or brand
+    ).strip()[:160]
+    if not brand:
+        brand = manufacturer
+    if not manufacturer:
+        manufacturer = brand
+    if not material_name or not color or not brand:
+        return JsonResponse(
+            {
+                "status": "invalid_request",
+                "detail": "material, brand/manufacturer and color are required",
+            },
+            status=400,
+        )
+
+    roll_weight = max(Decimal("1"), _decimal(data.get("roll_weight_grams"), "1000"))
+    stock_roll_count = max(Decimal("0"), _decimal(
+        data.get("stock_roll_count", data.get("stock_roll_count_snapshot", 0)),
+        "0",
+    ))
+
+    with transaction.atomic():
+        material = Material.objects.filter(name__iexact=material_name).order_by("id").first()
+        if material is None:
+            material = Material.objects.create(
+                name=material_name,
+                main_usage="تعریف‌شده از کتابخانه Filament در Catalog Center",
+                sample_parts="محصولات 3DPrintHub",
+                is_active=True,
+            )
+        elif not material.is_active:
+            Material.objects.filter(pk=material.pk).update(is_active=True)
+            material.is_active = True
+
+        option = MaterialColorOption.objects.filter(
+            material=material,
+            name__iexact=color,
+            brand_name__iexact=brand,
+        ).order_by("id").first()
+
+        values = {
+            "brand_name": brand,
+            "manufacturer_name": manufacturer,
+            "hex_code": str(data.get("hex") or data.get("hex_code") or "").strip()[:20],
+            "color_type": str(data.get("color_type") or "solid").strip()[:20] or "solid",
+            "secondary_hex": str(data.get("secondary_hex") or "").strip()[:20],
+            "tertiary_hex": str(data.get("tertiary_hex") or "").strip()[:20],
+            "roll_weight_grams": roll_weight,
+            "stock_roll_count_snapshot": stock_roll_count,
+            "purchase_price_per_roll": max(0, _as_int(data.get("purchase_price_per_roll"), 0)),
+            "sale_price_per_roll": max(0, _as_int(data.get("sale_price_per_roll"), 0)),
+            "usd_price_per_roll": max(Decimal("0"), _decimal(data.get("usd_price_per_roll"), "0")),
+            "usd_fx_rate_toman": max(Decimal("0"), _decimal(data.get("usd_fx_rate_toman"), "0")),
+            "print_hourly_rate": max(0, _as_int(data.get("print_hourly_rate"), 0)),
+            "supervision_hourly_rate": max(0, _as_int(data.get("supervision_hourly_rate"), 0)),
+            "preheat_hours": max(Decimal("0"), _decimal(data.get("preheat_hours"), "0")),
+            "preheat_temperature_c": max(Decimal("0"), _decimal(data.get("preheat_temperature_c"), "0")),
+            "preheat_hourly_rate": max(0, _as_int(data.get("preheat_hourly_rate"), 0)),
+            "filament_image_url": str(data.get("filament_image_url") or "").strip()[:500],
+            "is_active": bool(data.get("is_active", True)),
+        }
+
+        if option is None:
+            code = _filament_code(material.pk, brand, color)
+            candidate = code
+            suffix = 1
+            while MaterialColorOption.objects.filter(material=material, code=candidate).exists():
+                suffix += 1
+                candidate = f"{code[:110]}-{suffix}"
+            option = MaterialColorOption.objects.create(
+                material=material,
+                name=color,
+                code=candidate,
+                **values,
+            )
+            created = True
+        else:
+            for key, value in values.items():
+                setattr(option, key, value)
+            option.save()
+            created = False
+
+    return JsonResponse({
+        "status": "ok",
+        "created": created,
+        "filament": serialize_filament(option),
+        "contract": "phase49-filament-library-v1",
+    })
 
 
 def _conflict(entity: str, expected: int, current: int, current_payload: dict):
