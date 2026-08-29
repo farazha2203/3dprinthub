@@ -104,12 +104,29 @@ def ensure_epic49_desktop_schema(db) -> None:
             sale_price_per_roll INTEGER NOT NULL DEFAULT 0,
             usd_price_per_roll REAL NOT NULL DEFAULT 0,
             usd_fx_rate_toman REAL NOT NULL DEFAULT 0,
+            print_hourly_rate INTEGER NOT NULL DEFAULT 0,
+            supervision_hourly_rate INTEGER NOT NULL DEFAULT 0,
+            preheat_hours REAL NOT NULL DEFAULT 0,
+            preheat_temperature_c REAL NOT NULL DEFAULT 0,
+            preheat_hourly_rate INTEGER NOT NULL DEFAULT 0,
+            filament_image_url TEXT NOT NULL DEFAULT '',
             is_active INTEGER NOT NULL DEFAULT 1,
             sort_order INTEGER NOT NULL DEFAULT 100,
             UNIQUE(material_name, brand_name, color_name)
         )
         """
     )
+    offer_columns = _table_columns(db, "available_filament_offers")
+    for name, ddl in {
+        "print_hourly_rate": "INTEGER NOT NULL DEFAULT 0",
+        "supervision_hourly_rate": "INTEGER NOT NULL DEFAULT 0",
+        "preheat_hours": "REAL NOT NULL DEFAULT 0",
+        "preheat_temperature_c": "REAL NOT NULL DEFAULT 0",
+        "preheat_hourly_rate": "INTEGER NOT NULL DEFAULT 0",
+        "filament_image_url": "TEXT NOT NULL DEFAULT ''",
+    }.items():
+        if name not in offer_columns:
+            db.conn.execute(f"ALTER TABLE available_filament_offers ADD COLUMN {name} {ddl}")
     # One-time additive compatibility import. The mature color table is retained;
     # new engineering data lives in the brand-aware offer table.
     db.conn.execute(
@@ -167,7 +184,9 @@ def list_available_material_colors(db) -> list[dict]:
                hex_code, color_type, secondary_hex, tertiary_hex,
                roll_weight_grams, stock_roll_count, purchase_price_per_roll,
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
-               is_active, sort_order
+               print_hourly_rate, supervision_hourly_rate,
+               preheat_hours, preheat_temperature_c, preheat_hourly_rate,
+               filament_image_url, is_active, sort_order
         FROM available_filament_offers
         WHERE is_active=1
         ORDER BY material_name COLLATE NOCASE, brand_name COLLATE NOCASE,
@@ -199,6 +218,12 @@ def add_available_material_color(
     sale_price_per_roll: int = 0,
     usd_price_per_roll: float = 0,
     usd_fx_rate_toman: float = 0,
+    print_hourly_rate: int = 0,
+    supervision_hourly_rate: int = 0,
+    preheat_hours: float = 0,
+    preheat_temperature_c: float = 0,
+    preheat_hourly_rate: int = 0,
+    filament_image_url: str = "",
 ) -> dict:
     ensure_epic49_desktop_schema(db)
     material = str(material_name or "").strip()
@@ -219,14 +244,22 @@ def add_available_material_color(
     sale = max(0, int(float(sale_price_per_roll or 0)))
     usd = max(0.0, float(usd_price_per_roll or 0))
     fx = max(0.0, float(usd_fx_rate_toman or 0))
+    print_hourly = max(0, int(float(print_hourly_rate or 0)))
+    supervision_hourly = max(0, int(float(supervision_hourly_rate or 0)))
+    preheat_h = max(0.0, float(preheat_hours or 0))
+    preheat_temp = max(0.0, float(preheat_temperature_c or 0))
+    preheat_rate = max(0, int(float(preheat_hourly_rate or 0)))
+    image_url = str(filament_image_url or "").strip()
     db.conn.execute(
         """
         INSERT INTO available_filament_offers(
             material_name,brand_name,manufacturer_name,color_name,hex_code,color_type,
             secondary_hex,tertiary_hex,roll_weight_grams,stock_roll_count,
             purchase_price_per_roll,sale_price_per_roll,usd_price_per_roll,
-            usd_fx_rate_toman,is_active
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            usd_fx_rate_toman,print_hourly_rate,supervision_hourly_rate,
+            preheat_hours,preheat_temperature_c,preheat_hourly_rate,
+            filament_image_url,is_active
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ON CONFLICT(material_name,brand_name,color_name) DO UPDATE SET
             manufacturer_name=excluded.manufacturer_name,
             hex_code=excluded.hex_code,
@@ -239,12 +272,20 @@ def add_available_material_color(
             sale_price_per_roll=excluded.sale_price_per_roll,
             usd_price_per_roll=excluded.usd_price_per_roll,
             usd_fx_rate_toman=excluded.usd_fx_rate_toman,
+            print_hourly_rate=excluded.print_hourly_rate,
+            supervision_hourly_rate=excluded.supervision_hourly_rate,
+            preheat_hours=excluded.preheat_hours,
+            preheat_temperature_c=excluded.preheat_temperature_c,
+            preheat_hourly_rate=excluded.preheat_hourly_rate,
+            filament_image_url=excluded.filament_image_url,
             is_active=1
         """,
         (
             material, brand, manufacturer, color, hex_value, kind,
             str(secondary_hex or "").strip(), str(tertiary_hex or "").strip(),
             roll_weight, stock_rolls, purchase, sale, usd, fx,
+            print_hourly, supervision_hourly, preheat_h, preheat_temp,
+            preheat_rate, image_url,
         ),
     )
     db.conn.commit()
@@ -363,5 +404,12 @@ def normalize_material_color_options(value) -> list[dict]:
             "sale_price_per_roll": max(0, int(float(item.get("sale_price_per_roll") or 0))),
             "usd_price_per_roll": max(0.0, float(item.get("usd_price_per_roll") or 0)),
             "usd_fx_rate_toman": max(0.0, float(item.get("usd_fx_rate_toman") or 0)),
+            "print_hourly_rate": max(0, int(float(item.get("print_hourly_rate") or 0))),
+            "supervision_hourly_rate": max(0, int(float(item.get("supervision_hourly_rate") or 0))),
+            "preheat_hours": max(0.0, float(item.get("preheat_hours") or 0)),
+            "preheat_temperature_c": max(0.0, float(item.get("preheat_temperature_c") or 0)),
+            "preheat_hourly_rate": max(0, int(float(item.get("preheat_hourly_rate") or 0))),
+            "filament_image_url": str(item.get("filament_image_url") or item.get("image_url") or "").strip(),
+            "fixed_product_price": max(0, int(float(item.get("fixed_product_price") or 0))),
         })
     return output
