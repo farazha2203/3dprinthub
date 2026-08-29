@@ -8,6 +8,8 @@ Runtime/packaged candidate: `55139b909f214f33994d76bc1e6fdfd028b5d6c7`
 Status: `BASELINE CI PASS / ERR-49-070 OWNER 67/67 PASS BUT VISUAL FAIL / ERR-49-071 EXPLICIT STAGE CONFIRMATION FIX GITHUB / OWNER LOCAL RETEST NEXT / PRODUCTION UNTOUCHED`
 
 ## ERR-49-071 operator-confirmation truth and targeted UX rollback
+Executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation persists the historically visible Product type and dimensions before locking. No current-head Actions run is attached; owner Local foreground acceptance is pending.
+
 
 Owner foreground acceptance on `d4da997...` invalidated the previous visual contract despite 67/67 automated PASS. Final phase truth is now:
 - field population and operator confirmation are distinct;
