@@ -117,6 +117,17 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertNotIn("commerce", result["pending_finalization"])
         self.assertIn("quick", result["pending_finalization"])
 
+    def test_visual_tick_is_reserved_for_confirmed_stage(self):
+        root = Path(__file__).resolve().parents[1]
+        source = (
+            root / "app" / "phase49_3i40_commerce_precision.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            'icon = "✅" if locked and data_ready else ("◌" if data_ready else "❌")',
+            source,
+        )
+        self.assertIn("منتظر ثبت و تأیید", source)
+
     def test_completion_truth_uses_scope_remaining_when_stage_ai_is_targeted(self):
         root = Path(__file__).resolve().parents[1]
         source = (root / "app" / "phase49_3i40_commerce_precision.py").read_text(encoding="utf-8")
