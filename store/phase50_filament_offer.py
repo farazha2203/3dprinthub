@@ -81,6 +81,54 @@ def install_model_fields() -> None:
                 verbose_name="نرخ دلار ثبت‌شده برای این رول",
             ),
         ),
+        (
+            "print_hourly_rate",
+            models.PositiveBigIntegerField(
+                default=0,
+                verbose_name="نرخ ساعت چاپ این Offer",
+            ),
+        ),
+        (
+            "supervision_hourly_rate",
+            models.PositiveBigIntegerField(
+                default=0,
+                verbose_name="نرخ ساعت نظارت این Offer",
+            ),
+        ),
+        (
+            "preheat_hours",
+            models.DecimalField(
+                max_digits=8,
+                decimal_places=2,
+                default=0,
+                verbose_name="مدت پیش‌گرم فیلامنت (ساعت)",
+            ),
+        ),
+        (
+            "preheat_temperature_c",
+            models.DecimalField(
+                max_digits=7,
+                decimal_places=2,
+                default=0,
+                verbose_name="دمای پیش‌گرم فیلامنت (°C)",
+            ),
+        ),
+        (
+            "preheat_hourly_rate",
+            models.PositiveBigIntegerField(
+                default=0,
+                verbose_name="هزینه ساعتی پیش‌گرم",
+            ),
+        ),
+        (
+            "filament_image_url",
+            models.URLField(
+                max_length=500,
+                blank=True,
+                default="",
+                verbose_name="تصویر فیلامنت",
+            ),
+        ),
     ):
         _contribute(MaterialColorOption, name, field)
 
