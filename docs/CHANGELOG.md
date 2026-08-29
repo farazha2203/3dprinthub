@@ -1,6 +1,18 @@
 # PROJECT CHANGELOG
 
 
+## 2026-08-29 — ERR-49-070 Stage-5 clean-schema and visible-panel recovery
+- owner ERR-49-069 Local gate: compile PASS, OpenRouter-only 4/4 PASS, 67-test Windows contract stopped before launch with one schema error and one missing-visible-contract failure;
+- added `technical_summary_fa` to canonical Catalog SQLite self-schema;
+- implemented Stage-5 `منبع و مجوز کامل` panel for source/designer, Persian license, technical summary and technical-features JSON;
+- added persisted-state refresh for those controls;
+- Stage-5 finalization now maps the visible Persian license label to the stored code;
+- extended regressions for clean schema and real Stage-5 builder definitions;
+- rollback: `backup/pre-err49-070-stage5-schema-panel-20260829` -> `382a34fa6e876dc7098c8152c98c7cb076d508e8`;
+- Production untouched; owner Local rerun pending.
+
+
+
 ## 2026-08-29 — Catalog Center 8.9.8 Stage Contract + OpenRouter-only Recovery (ERR-49-069)
 - owner exact Local `3f43260...` gate: backup/checksum PASS, compile PASS, 60/60 focused tests PASS, canonical foreground launch PASS;
 - real Product 63/295 UI still reproduced late footer repaint, Stage ownership drift, out-of-scope AI defect counting, overlapping Product AI jobs and AvalAI fallback;
