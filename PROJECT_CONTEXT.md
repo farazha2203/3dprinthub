@@ -42,6 +42,10 @@ Last verified Phase50 migration state:
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
+## Current owner checkpoint — ERR-49-072
+
+Owner Local `34c65bc...` passed repo verification, backup and compile, then the new exact ERR-49-071 suite stopped on a test-only clean-schema omission: `price_min` was absent because the fixture did not initialize the real Epic49 desktop + 3F pricing schema layers. Fix `1307f4c438de184a930041d365976c2ce018bff8` aligns the fixture with ProductWorkspace construction. Production untouched; Local rerun is next.
+
 ## Current owner checkpoint — ERR-49-071
 ERR-49-071 executable code/regression checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. No current-head Actions run is attached; Local compile/regression/foreground acceptance is next.
 
