@@ -17,6 +17,7 @@ from .phase49_3i36_stage_finalization import STAGE_LABELS, STAGE_ORDER, is_stage
 from .phase49_3i39_professional_commerce import (
     _integer,
     _number,
+    offer_company,
     offer_display,
     offer_key,
     offer_stock_grams,
@@ -111,6 +112,39 @@ def filament_rate_calculation(item: dict) -> dict[str, float | str]:
         })),
         "basis": basis,
     }
+
+
+def focus_saved_filament(workspace, saved: dict) -> bool:
+    """Switch filters to the saved Filament and select its visible inventory row."""
+    company = offer_company(saved)
+    material = str(saved.get("material") or saved.get("material_name") or "").strip()
+    if company:
+        workspace._phase49_3i39_company_var.set(company)
+    if material:
+        workspace._phase49_3i39_material_var.set(material)
+    workspace._phase49_3i39_refresh_offer_filter()
+
+    target = normalize_material_color_options([saved])
+    if not target:
+        return False
+    target_key = offer_key(target[0])
+    tree = getattr(workspace, "_phase49_3i39_offer_tree", None)
+    rows = list(getattr(workspace, "_phase49_3i39_working_offer_rows", []) or [])
+    if tree is None:
+        return False
+    tree.selection_remove(tree.selection())
+    for index, item in enumerate(rows):
+        if offer_key(item) != target_key:
+            continue
+        iid = str(index)
+        tree.selection_set(iid)
+        tree.focus(iid)
+        try:
+            tree.see(iid)
+        except Exception:
+            pass
+        return True
+    return False
 
 
 def readiness_display(state: dict, row) -> dict:
@@ -334,12 +368,13 @@ def _global_offer_editor(workspace, offer=None):
             messagebox.showerror("Filament", str(exc), parent=top)
             return
         top.destroy()
-        workspace._phase49_3i39_refresh_offer_filter()
+        focused = focus_saved_filament(workspace, saved)
         refresher = getattr(workspace, "_phase49_3i39_refresh_price_summary", None)
         if callable(refresher):
             refresher()
         workspace.footer_status.set(
-            f"Filament جهانی «{offer_display(saved)}» ذخیره شد؛ قیمت قطعی این محصول دست‌نخورده است."
+            f"Filament «{offer_display(saved)}» ذخیره شد و در لیست انتخاب شد"
+            + ("؛ برای افزودن به همین محصول «ثبت Filamentهای انتخابی» را بزن." if focused else "؛ لیست را Refresh کن.")
         )
 
     actions = ttk.Frame(body)
