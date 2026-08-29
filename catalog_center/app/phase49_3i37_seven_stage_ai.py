@@ -9,6 +9,10 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from . import phase49_3c_image_pipeline as image_pipeline
+from .phase49_3c_persian_content import (
+    has_persian_editorial_text,
+    has_persian_editorial_text_for_source,
+)
 from .phase49_diagnostics import audit_event
 from .phase49_3i18_operator_editing import ai_updates
 from .phase49_3i21_observable_ai_link_refresh import ObservableJobDialog
@@ -138,7 +142,9 @@ def validate_editorial_pack(source_title: str, pack: dict) -> dict:
         # free-floating Latin prose is rejected because it was observed in the
         # owner log as language contamination (for example Indonesian fragments).
         foreign = _foreign_latin_words(value, source_title)
-        if foreign and key in {"title_fa", "seo_title_fa", "seo_description_fa"}:
+        if key in {"seo_title_fa", "seo_description_fa"} and re.search(r"[A-Za-z]", value):
+            raise RuntimeError(f"خروجی AI برای {key} باید SEO فارسی باشد و متن لاتین نداشته باشد.")
+        if foreign and key == "title_fa":
             raise RuntimeError(
                 f"خروجی AI برای {key} متن لاتین نامرتبط دارد: {', '.join(foreign[:4])}"
             )
@@ -150,27 +156,41 @@ def validate_editorial_pack(source_title: str, pack: dict) -> dict:
 
 def _field_needs_fill(row, key: str, source_title: str) -> bool:
     value = row_value(row, key, "")
+    text = str(value or "").strip()
+
     if key == "title_fa":
         try:
-            title_quality_guard(source_title, str(value or ""))
-            return False
+            title_quality_guard(source_title, text)
         except Exception:
             return True
+        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text_for_source(text, source_title)
+
     if key == "seo_title_fa":
-        if not str(value or "").strip():
+        if not text:
             return True
         try:
-            title_quality_guard(source_title, str(value or ""))
-            return False
+            title_quality_guard(source_title, text)
         except Exception:
             return True
-    if key in {"short_description_fa", "description_fa", "seo_description_fa"}:
-        text = str(value or "").strip()
+        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text(text)
+
+    if key in {"short_description_fa", "description_fa", "use_description"}:
+        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text_for_source(text, source_title)
+
+    if key == "seo_description_fa":
+        return bool(CYRILLIC_RE.search(text)) or not has_persian_editorial_text(text)
+
+    if key in {"keywords_json", "tags_fa_json", "hashtags_fa_json"}:
+        values = _json_list(value)
         return (
-            not text
-            or not _has_persian(text)
-            or bool(CYRILLIC_RE.search(text))
+            not values
+            or any(
+                bool(CYRILLIC_RE.search(str(item or "")))
+                or not has_persian_editorial_text(item)
+                for item in values
+            )
         )
+
     return repair_allowed(row, key)
 
 
