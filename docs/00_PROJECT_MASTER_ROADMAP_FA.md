@@ -7,8 +7,16 @@
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
 **Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 / ERR-49-073 ACCEPTED / ERR-49-075 FILAMENT LIST+PRICE FIX GITHUB / QUICK LOCAL RETEST NEXT / THEN SITE RECEIVE / PRODUCTION BLOCKED`  
+**Status:** `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Phase49.3I.41 — کتابخانه مرکزی Filament و انتخاب گروهی
+
+انتخاب Ctrl/Shift برای موجودی واقعی Filament حذف شد. Filamentها یک‌بار در کتابخانه اصلی برنامه تعریف می‌شوند، بر اساس PLA/PETG/… گروه‌بندی می‌شوند و در هر Product با چک‌لیست تک‌کلیک انتخاب می‌شوند. یک باکس مستقل تمام انتخاب‌های همان Product را نشان می‌دهد.
+
+شرکت، برند و نوع Filament از مقادیر قبلی قابل انتخاب/استفاده مجدد هستند. نرخ‌ها، وزن رول، موجودی، پیش‌گرم، تصویر و اطلاعات رنگ با Bridge به Site همگام می‌شوند. قیمت قطعی خاص Product از Master Filament جدا می‌ماند.
+
+Migration جدیدی ساخته نشده؛ Site به `store.0039/0040` موجود وابسته است. Production تا Verify واقعی Host و Backup مسدود است.
 
 ### Owner final Stage-2 checkpoint — ERR-49-075
 
