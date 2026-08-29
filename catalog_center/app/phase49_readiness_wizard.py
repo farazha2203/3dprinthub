@@ -136,8 +136,10 @@ def evaluate_readiness(row) -> dict:
     stage_checks = {
         "quick": [
             ("عنوان فارسی", bool(title)),
-            ("گروه سایت", bool(category and category != "external-other")),
-            ("نوع محصول", bool(product_type)),
+            # "سایر محصولات" / external-other is a real operator category, not
+            # an empty placeholder. Stage 1 owns only the fields actually shown
+            # in the Base Information page.
+            ("گروه سایت", bool(category)),
         ],
         "commerce": [
             ("قیمت یا حالت سفارش", has_price),
@@ -352,9 +354,17 @@ def install(workspace_class) -> None:
             self._phase49_readiness_summary.set("✅ محصول آماده انتشار روی سایت اصلی است")
             self._phase49_readiness_missing.set("همه Gateهای اجباری سبز هستند.")
         else:
-            count = len(state["missing"])
-            first = state["missing"][:3]
-            self._phase49_readiness_summary.set(f"❌ آماده Production نیست • {count} مورد ناقص")
+            count = len(state.get("missing") or [])
+            pending = list(state.get("pending_finalization") or [])
+            first = list(state.get("missing") or [])[:3]
+            if pending:
+                self._phase49_readiness_summary.set(
+                    f"نقص داده: {count} • منتظر ثبت و تأیید: {len(pending)}"
+                )
+                if not first:
+                    first = ["اطلاعات کامل است؛ مرحله جاری را «ثبت و تأیید» کن."]
+            else:
+                self._phase49_readiness_summary.set(f"❌ آماده Production نیست • {count} مورد ناقص")
             self._phase49_readiness_missing.set("\n".join(first) + ("\n…" if count > 3 else ""))
         first_incomplete = next((key for key, stage in state["stages"].items() if not stage["ready"]), None)
         if first_incomplete:
