@@ -8,6 +8,15 @@ Older detailed request history remains available in Git history. This file keeps
 
 The Stage-2 confirmation regression must use the same additive Catalog schemas as the real ProductWorkspace. Test-only schema setup may not be mistaken for a Product/runtime defect. After the fixture fix, rerun the full ERR-49-071 acceptance path before judging the visible Stage workflow.
 
+## ERR-49-073 Images acceptance request
+
+- Stage 3 must not require the operator to manually fight Metadata refresh after later Content/Source stages change.
+- `ثبت و تأیید مرحله` on Images must finalize current SEO/Metadata and then confirm the Stage.
+- If Images is already confirmed, pressing the same button may refresh deterministic Metadata without unlocking operator-approved selection.
+- A confirmed image Stage remains protected from arbitrary AI/operator edits; manual Metadata overrides require `اصلاح مرحله`.
+- Stale Metadata warnings must clear after successful deterministic rebuild.
+- Do not change Stage-2 pricing/Profile/Offer behavior as part of this fix.
+
 ## ERR-49-071 owner acceptance request
 Executable checkpoint: `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation must persist the visible Product type/dimensions before it is marked confirmed.
 
