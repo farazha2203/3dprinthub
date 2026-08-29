@@ -451,9 +451,50 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 **Rollback anchor:** `backup/pre-err49-065-seo-post-ai-refresh-20260829` → `3edda5ffe98d8c37dd66e3e7fc0d6eab3ec6c554`.
 
-**Verification status:** GitHub source + regression committed. No workflow run was attached to the regression commit at documentation time. Owner Local targeted tests + foreground retest remain mandatory. Production untouched.
+**Verification status:** Owner Local pulled `c679c66d8c6554ff14e5705b7eb3aada24495990`; the 3I.39/3I.40 targeted set passed 12/12 and foreground 8.9.8 launched correctly. The visible bug nevertheless persisted. The repaint fix is retained, but it was insufficient because a deeper checker/stage-ownership mismatch remained; see ERR-49-066. Production untouched.
 
-**Prevention:** after background AI writes, do not assume one generic reload synchronizes every wrapped readiness surface. Rehydrate from persisted state and define one final painter for the visible readiness contract.
+**Prevention:** after background AI writes, do not assume one generic reload synchronizes every wrapped readiness surface. Rehydrate from persisted state and define one final painter for the visible readiness contract; then verify the checker and fixer use the same stage/field semantics.
+
+
+### ERR-49-066 — Readiness checker, stage ownership and AI repair disagreed
+**Date:** 2026-08-29  
+**Environment:** owner foreground Local QA on `c679c66d8c6554ff14e5705b7eb3aada24495990`, Catalog Center 8.9.8 / Phase49.3I.40.
+
+**Owner evidence:** Local fast-forward and 12 targeted tests passed, then the real Product 63 run proved the remaining defect. The first visible full-AI action still executed the older 3I.31 path and persisted title/content/SEO/image fields. The later 3I.39 readiness loop reported `7` data defects / `5` AI-fixable defects, scoped only Stage 4, accepted a fallback AvalAI response, then reported `0` defects fixed and stalled with the same `5` AI-fixable defects.
+
+**Root Causes:**
+1. `title_fa` was checked in both Quick and Content even though final field ownership assigns it to Quick.
+2. image Alt was checked in Content even though final field ownership assigns it to Images.
+3. the persisted Persian readiness checker rejected every Latin character, while the title/description AI path legitimately permits the true source identity (for example `Flexi Gecko`) beside Persian text.
+4. non-empty but invalid keyword/tag/hashtag lists were reported by readiness but `_field_needs_fill()` treated them as complete because it only used blank-value repair logic.
+5. the guided wizard painted/navigation-gated on `ready` (operator-finalized) instead of `data_ready` (actual data completeness), so Stage 1 could remain X/★ even with all required values present.
+6. some visible mature AI buttons still resolved to the older 3I.31/3E execution path rather than the final 3I.39 checker/repair authority.
+
+**Correct Fix:**
+- one authoritative readiness owner per field: title → Quick, Alt → Images, SEO/content fields → Content;
+- persisted title/description may contain only Latin tokens that are actual tokens of `source_title`; SEO title/description and SEO keyword/tag/hashtag lists remain Persian-only;
+- `_field_needs_fill()` now uses the same semantic checks as readiness, including non-empty invalid lists;
+- guided-wizard red stars, Next gating and stage icons use `data_ready/missing_data` when available; operator `ثبت` remains a separate finalization lock;
+- final 3I.39 installation rebinds mature full-AI/link/current-stage entry points to the same seven-stage repair engine.
+
+**Touched surfaces:** `phase49_readiness_wizard.py`, `phase49_3c_persian_content.py`, `phase49_3b_guided_wizard.py`, `phase49_3i37_seven_stage_ai.py`, `phase49_3i39_completion_loop.py`, plus focused regressions.
+
+**Must not touch:** Product Offer/Profile/pricing ownership, crawler/parser/download, source URL guard, Provider secrets/configuration, image binaries, Django schema/migrations, Host and Production.
+
+**Git changes:**
+- checker/source-identity alignment `3b4ad0c8741f794ee5c338e5ddba8971bf9c3487`,
+- single field/stage ownership `2fff3f7edfecb2d6a0acc6c3d52c14817b177e82`,
+- Persian defect ownership `046191ac562ecce878dfab263f4f6255d5f12bcf`,
+- data-ready guided wizard `11dfefdbb02a6281c1b6a6721cbf254785e2e216`,
+- checker/fixer agreement `39fcd2f9e335a57d76079f6f18ebaad3ac406f97`,
+- final AI entrypoint authority `b9ef5f1f6d887520c1613f09cbcf947fc1058e12`,
+- regressions `5a14318e52244fd0b9de8de15daafe03e204c5fb`, `b5f1a9d50435c04fc382e4783355f23e64987823`, `7c047c834163235455e24a58eb43c134b4ccecc0`, `8bb6e1f7b30039f709b627d3a5aaa7691ec004c3`, `7874dd2d63a8a8e51bd5d9f72668332e9d7c7861`.
+
+**Rollback anchor:** `backup/pre-err49-066-readiness-checker-alignment-20260829` → `c679c66d8c6554ff14e5705b7eb3aada24495990`.
+
+**Verification status:** GitHub source/regressions updated. No GitHub Actions run is attached yet to the current code head; owner Local targeted regression + foreground Product 63 retest is required before acceptance. Production untouched.
+
+**Prevention:** a readiness defect must map to exactly one owning Stage and to at least one executable repair path when labeled AI-fixable. UI completion indicators must distinguish persisted data completeness from operator finalization.
 
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
