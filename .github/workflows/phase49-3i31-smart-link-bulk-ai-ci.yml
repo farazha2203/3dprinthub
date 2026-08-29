@@ -1,4 +1,4 @@
-name: Phase49.3I.31-38 Stage Finalization + Operator Ledger CI
+name: Phase49.3I.31-39 Stage Finalization + Operator Ledger CI
 
 on:
   push:
@@ -8,6 +8,11 @@ on:
       - "catalog_center/app/phase49_3i36_stage_finalization.py"
       - "catalog_center/app/phase49_3i37_seven_stage_ai.py"
       - "catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py"
+      - "catalog_center/app/phase49_3i39_professional_commerce.py"
+      - "catalog_center/app/phase49_3i39_completion_loop.py"
+      - "catalog_center/tests/test_phase49_3i39_professional_commerce.py"
+      - "catalog_center/tests/test_phase49_3i39_completion_loop.py"
+      - "catalog_center/app/epic49_desktop_schema.py"
       - "catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py"
       - "catalog_center/app/main.py"
       - "catalog_center/tests/test_phase49_3i37_seven_stage_ai.py"
@@ -44,7 +49,7 @@ permissions:
   contents: read
 
 jobs:
-  phase49-3i31-38:
+  phase49-3i31-39:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -78,6 +83,8 @@ jobs:
             catalog_center/app/phase49_3i36_stage_finalization.py \
             catalog_center/app/phase49_3i37_seven_stage_ai.py \
             catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py \
+            catalog_center/app/phase49_3i39_professional_commerce.py \
+            catalog_center/app/phase49_3i39_completion_loop.py \
             catalog_center/app/phase49_3i35_operator_ledger.py \
             catalog_center/app/phase49_3i35_resilient_ai.py \
             catalog_center/app/phase49_3i35_readiness_review.py \
@@ -91,6 +98,8 @@ jobs:
             catalog_center/tests/test_phase49_3i36_stage_finalization.py \
             catalog_center/tests/test_phase49_3i37_seven_stage_ai.py \
             catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py \
+            catalog_center/tests/test_phase49_3i39_professional_commerce.py \
+            catalog_center/tests/test_phase49_3i39_completion_loop.py \
             catalog_center/tests/test_phase49_3i35_operator_workflow.py \
             catalog_center/tests/test_phase49_3i34_profile_matrix.py \
             catalog_center/tests/test_phase49_3i33_operator_workflow.py \
@@ -104,6 +113,8 @@ jobs:
             tests.test_phase49_3i36_stage_finalization \
             tests.test_phase49_3i37_seven_stage_ai \
             tests.test_phase49_3i38_crawl_ledger_stage_ai \
+            tests.test_phase49_3i39_professional_commerce \
+            tests.test_phase49_3i39_completion_loop \
             tests.test_phase49_3i35_operator_workflow \
             tests.test_phase49_3i34_profile_matrix \
             tests.test_phase49_3i33_operator_workflow \
@@ -125,6 +136,8 @@ jobs:
           phase36 = Path("catalog_center/app/phase49_3i36_stage_finalization.py").read_text(encoding="utf-8")
           phase37 = Path("catalog_center/app/phase49_3i37_seven_stage_ai.py").read_text(encoding="utf-8")
           phase38 = Path("catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py").read_text(encoding="utf-8")
+          phase39_commerce = Path("catalog_center/app/phase49_3i39_professional_commerce.py").read_text(encoding="utf-8")
+          phase39_completion = Path("catalog_center/app/phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
           phase35_ledger = Path("catalog_center/app/phase49_3i35_operator_ledger.py").read_text(encoding="utf-8")
           phase35_ai = Path("catalog_center/app/phase49_3i35_resilient_ai.py").read_text(encoding="utf-8")
           phase35_review = Path("catalog_center/app/phase49_3i35_readiness_review.py").read_text(encoding="utf-8")
@@ -171,6 +184,14 @@ jobs:
           assert 'next_scroll_rounds' in phase38
           assert 'run_resilient_orchestrator' in phase38
           assert 'target_stages={"content"}' in phase38
+          assert '_install_phase49_3i39_commerce(workspace_class)' in pricing
+          assert '_install_phase49_3i39_completion(workspace_class)' in pricing
+          assert 'formula_price_breakdown' in phase39_commerce
+          assert 'validate_profile_identity' in phase39_commerce
+          assert 'repair_until_stable' in phase39_completion
+          assert 'readiness_before' in phase39_completion
+          assert 'readiness_after' in phase39_completion
+          assert 'target_stages={"content"}' in phase39_completion
           assert 'sales_profile_ledger_json' in phase35_ledger
           assert 'configured_ai_candidates' in phase35_ai
           assert 'seo_manual_approved' in phase35_review
@@ -198,6 +219,10 @@ jobs:
           print("PHASE49_3I38_CRAWL_CONTINUATION=DEEPER_SCROLL_CURSOR")
           print("PHASE49_3I38_REJECT_PURGE=SAFE_COLLECTED_ROOT_ONLY")
           print("PHASE49_3I38_STAGE4_AI=SAME_ENGINE_SCOPED_CONTENT")
+          print("PHASE49_3I39_STAGE2=MANUFACTURER_MATERIAL_COLOR_OFFER")
+          print("PHASE49_3I39_PROFILE=IDENTITY_DIMENSIONS_ONLY")
+          print("PHASE49_3I39_AI=READINESS_REPAIR_LOOP")
+          print("PHASE49_3I39_DIALOG=BEFORE_AFTER_FIXED_REMAINING")
           PY
 
       - name: Django safety
