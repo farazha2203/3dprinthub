@@ -1,17 +1,52 @@
 # PROJECT ROADMAP
 
-Updated: 2026-08-27  
+Updated: 2026-08-29  
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.38 — Permanent Crawl Ledger + Reject/Purge + Stage-scoped AI / Catalog Center 8.9.6`  
-Status: `8.9.6 GITHUB + WINDOWS PORTABLE PASS / OWNER LOCAL VISUAL 3I.38 QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
+Status: `8.9.8 GITHUB + WINDOWS PORTABLE PASS / STORE 0040 CI PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
-## Phase49 Windows track — current target 49.3I.38
+## Phase49 Windows track — current target 49.3I.40
+
+Current acceptance target:
+- Catalog Center `8.9.8` / build `2026.08.29.2`,
+- runtime/package candidate `55139b909f214f33994d76bc1e6fdfd028b5d6c7`,
+- targeted 31–40 CI `33247729316` PASS,
+- Single Active AI `33247815007` PASS,
+- Windows Portable `33247815027` PASS,
+- Store 0040/Variant/Profile run `33246843145` PASS,
+- Production untouched.
+
+3I.40 acceptance:
+- manufacturer → filament/material → color → register Offer,
+- registering another filter/manufacturer preserves previously selected Offers,
+- global filament inventory/rates/preheat are not Product fixed-price authority,
+- fixed price is Product-specific per exact Offer,
+- formula pricing consumes exact Offer operation facts,
+- production rows own weight/print time/support,
+- Profile registration owns identity/size/actual dimensions and snapshots the upstream state,
+- same material/color across manufacturers remains distinct,
+- color image/HEX/name fallback is visible,
+- readiness distinguishes data defects from operator finalization,
+- AI never reports 100% while AI-fixable defects remain,
+- AI inputs remain Link / Saved-Crawled Data / Screenshot,
+- mature acquisition/crawl/file/image path remains unchanged.
+
+Store extension:
+- `store.0040_phase50_filament_offer_operations` adds Offer hourly print/supervision, preheat and filament-image facts,
+- CI migration/no-drift/full-regression PASS,
+- Local SQLite 0040 backup/apply/test is the next DB gate,
+- Production `0036..0040` remain blocked until owner Local QA + fresh Host read-only audit + backup.
+
+Exact next step:
+`GitHub → owner Local ff-only pull → verify/backup SQLite → apply 0040 locally → Store regressions → 31–40 Local gate → foreground 8.9.8 visual QA`.
+
+## Phase49 Windows track — preserved foundation through 49.3I.38
 Preserved foundations:
 - 48-card paged Product Explorer,
 - no global Product refresh on each Product Save/AI action,
