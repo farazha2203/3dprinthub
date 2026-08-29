@@ -628,6 +628,13 @@ def local_dir_for_product(app, row):
     return data_root / "collected" / str(row_value(row, "source_code", "source")) / str(row_value(row, "external_id", "product"))
 
 
+def source_screenshot_viewport_height(width: int, height: int) -> int:
+    """Return the top editorial viewport height without altering crawler captures."""
+    width = max(1, int(width or 1))
+    height = max(1, int(height or 1))
+    return min(height, max(720, int(width * 0.58)))
+
+
 def capture_source_screenshot(app, product_id: int) -> Path:
     row = app.db.product(product_id)
     source_url = str(row_value(row, "source_url", "") or "").strip()
@@ -650,7 +657,7 @@ def capture_source_screenshot(app, product_id: int) -> Path:
     try:
         from PIL import Image
         with Image.open(target) as image:
-            viewport_height = min(image.height, max(720, int(image.width * 0.58)))
+            viewport_height = source_screenshot_viewport_height(image.width, image.height)
             if image.height > viewport_height:
                 cropped = image.crop((0, 0, image.width, viewport_height))
                 cropped.save(target, format="PNG", optimize=True)
