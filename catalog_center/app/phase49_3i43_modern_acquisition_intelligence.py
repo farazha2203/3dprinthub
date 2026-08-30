@@ -1067,25 +1067,55 @@ def _endpoint_score(packet: dict[str, Any]) -> float:
     return min(100.0, score)
 
 
-def record_endpoint_hints(db, source_code: str, source_url: str, snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+def record_endpoint_hints(
+    db,
+    source_code: str,
+    source_url: str,
+    snapshot: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Persist endpoint identity and response shape, never raw observed JSON bodies."""
     ensure_schema(db)
     output: list[dict[str, Any]] = []
-    for packet in snapshot.get("network_json") or []:
-        if not isinstance(packet, dict):
+
+    capture = snapshot.get("capture_summary") if isinstance(snapshot, dict) else None
+    packets: list[dict[str, Any]] = []
+    if isinstance(capture, dict):
+        for item in capture.get("endpoint_hints") or []:
+            if isinstance(item, dict):
+                packets.append(dict(item))
+
+    # Compatibility for older persisted snapshots and tests. Raw payloads are
+    # summarized immediately and are never written into source_endpoint_hints.
+    if not packets:
+        for raw in snapshot.get("network_json") or []:
+            if not isinstance(raw, dict):
+                continue
+            summary = summarize_packet(source_url, raw)
+            if summary is not None:
+                packets.append(summary)
+
+    for packet in packets[:40]:
+        clean_url = sanitize_public_url(str(packet.get("url") or ""))
+        if not clean_url or not public_same_site(source_url, clean_url):
             continue
-        raw_url = str(packet.get("url") or "")
-        if not raw_url.startswith(("http://", "https://")) or not _same_site(source_url, raw_url):
-            continue
-        content_type = str(packet.get("content_type") or "").lower()
-        resource_type = str(packet.get("resource_type") or "").lower()
-        if "json" not in content_type and resource_type not in {"xhr", "fetch"}:
-            continue
-        clean_url = sanitize_endpoint_url(raw_url)
-        if not clean_url:
-            continue
+
         method = str(packet.get("method") or "GET").upper()[:12]
         status = int(packet.get("status") or 0)
-        score = _endpoint_score(packet)
+        content_type = str(packet.get("content_type") or "").lower()[:120]
+        resource_type = str(packet.get("resource_type") or "").lower()[:40]
+        response_schema = [
+            str(item)[:300]
+            for item in (packet.get("response_schema") or [])
+            if str(item or "").strip()
+        ][:120]
+        shape_hash = str(packet.get("shape_hash") or "")[:64]
+        body_bytes = max(0, int(packet.get("body_bytes") or 0))
+        score = _endpoint_score({
+            "content_type": content_type,
+            "resource_type": resource_type,
+            "status": status,
+            "method": method,
+        })
         normalized = _safe_normalized_url(clean_url)
         now = utc_now()
         db.conn.execute(
@@ -1093,8 +1123,8 @@ def record_endpoint_hints(db, source_code: str, source_url: str, snapshot: dict[
             INSERT INTO source_endpoint_hints(
                 source_code,normalized_endpoint_url,endpoint_url,http_method,content_type,
                 discovered_from,trust_score,success_count,failure_count,last_status_code,
-                first_seen_at,last_seen_at
-            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+                first_seen_at,last_seen_at,response_schema_json,shape_hash,body_bytes,observed_count
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
             ON CONFLICT(source_code,normalized_endpoint_url,http_method) DO UPDATE SET
                 endpoint_url=excluded.endpoint_url,
                 content_type=excluded.content_type,
@@ -1103,25 +1133,47 @@ def record_endpoint_hints(db, source_code: str, source_url: str, snapshot: dict[
                 success_count=source_endpoint_hints.success_count + excluded.success_count,
                 failure_count=source_endpoint_hints.failure_count + excluded.failure_count,
                 last_status_code=excluded.last_status_code,
-                last_seen_at=excluded.last_seen_at
+                last_seen_at=excluded.last_seen_at,
+                response_schema_json=CASE
+                    WHEN excluded.response_schema_json<>'[]' THEN excluded.response_schema_json
+                    ELSE source_endpoint_hints.response_schema_json
+                END,
+                shape_hash=CASE
+                    WHEN excluded.shape_hash<>'' THEN excluded.shape_hash
+                    ELSE source_endpoint_hints.shape_hash
+                END,
+                body_bytes=MAX(source_endpoint_hints.body_bytes, excluded.body_bytes),
+                observed_count=source_endpoint_hints.observed_count + 1
             """,
             (
-                str(source_code or ""), normalized, clean_url, method, content_type,
-                "playwright-network-observed", score,
+                str(source_code or ""),
+                normalized,
+                clean_url,
+                method,
+                content_type,
+                "playwright-public-shape-observed",
+                score,
                 1 if 200 <= status < 400 else 0,
                 1 if status >= 400 else 0,
-                status, now, now,
+                status,
+                now,
+                now,
+                json.dumps(response_schema, ensure_ascii=False),
+                shape_hash,
+                body_bytes,
             ),
         )
-        output.append(
-            {
-                "url": clean_url,
-                "method": method,
-                "content_type": content_type,
-                "status": status,
-                "trust_score": score,
-            }
-        )
+        output.append({
+            "url": clean_url,
+            "method": method,
+            "content_type": content_type,
+            "status": status,
+            "trust_score": score,
+            "response_schema": response_schema,
+            "shape_hash": shape_hash,
+            "body_bytes": body_bytes,
+        })
+
     db.conn.commit()
     if source_code and output:
         db.conn.execute(
@@ -1170,17 +1222,21 @@ def build_provenance(result: dict[str, Any], endpoint_hints: list[dict[str, Any]
         snapshot = json.loads(result.get("source_snapshot_json") or "{}")
     except Exception:
         snapshot = {}
+    capture = snapshot.get("capture_summary") if isinstance(snapshot, dict) else {}
+    if not isinstance(capture, dict):
+        capture = {}
     return {
         "phase": PHASE,
         "acquisition_method": "playwright-rich-network-observed",
         "quality_score": acquisition_quality(result),
         "source_url": str(result.get("source_url") or ""),
         "snapshot_signals": {
-            "json_ld_count": len(snapshot.get("json_ld") or []),
-            "embedded_json_count": len(snapshot.get("embedded_json") or []),
-            "network_json_count": len(snapshot.get("network_json") or []),
-            "breadcrumb_count": len(snapshot.get("breadcrumbs") or []),
-            "spec_row_count": len(snapshot.get("spec_rows") or []),
+            "json_ld_count": int(capture.get("json_ld_count") or 0),
+            "embedded_json_count": int(capture.get("embedded_json_count") or 0),
+            "network_json_count": int(capture.get("network_json_count") or len(endpoint_hints)),
+            "breadcrumb_count": int(capture.get("breadcrumb_count") or 0),
+            "spec_row_count": int(capture.get("spec_row_count") or 0),
+            "raw_network_payload_persisted": bool(capture.get("raw_network_payload_persisted", False)),
         },
         "endpoint_hints": endpoint_hints[:40],
         "policy": {
@@ -1188,6 +1244,7 @@ def build_provenance(result: dict[str, Any], endpoint_hints: list[dict[str, Any]
             "captcha_bypass": False,
             "authentication_bypass": False,
             "proxy_evasion": False,
+            "raw_network_payload_persisted": False,
         },
         "recorded_at": utc_now(),
     }
