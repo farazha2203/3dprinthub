@@ -123,7 +123,19 @@
     "robots_txt_and_retry_after_guard",
     "bounded_sitemap_discovery",
     "public_json_endpoint_provenance",
-    "acquisition_quality_and_attempt_telemetry"
+    "acquisition_quality_and_attempt_telemetry",
+    "adaptive_per_host_acquisition_throttle",
+    "bounded_transient_http_retry",
+    "stale_cache_only_on_transient_failure",
+    "http_date_retry_after_support",
+    "gzip_sitemap_discovery",
+    "direct_sitemap_loc_only",
+    "default_sitemap_probe",
+    "condition_driven_playwright_readiness",
+    "public_endpoint_schema_only_provenance",
+    "raw_network_payload_persistence_disabled",
+    "source_capability_observation",
+    "adaptive_host_latency_telemetry"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -224,7 +236,8 @@
     "app/phase49_3i40_commerce_precision.py",
     "tests/test_phase49_3i40_commerce_precision.py",
     "app/phase49_3i43_modern_acquisition_intelligence.py",
-    "tests/test_phase49_3i43_modern_acquisition_intelligence.py"
+    "tests/test_phase49_3i43_modern_acquisition_intelligence.py",
+    "app/public_web_capture.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
