@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .models import FilamentTableModel, ProductTableModel
+from .models import FilamentFilterProxyModel, FilamentTableModel, ProductTableModel
 from .widgets import MetricCard, StageStepper, WizardFooter
 
 
@@ -103,8 +103,6 @@ class DashboardPage(QWidget):
 
 
 class ProductsPage(QWidget):
-    productRequested = Signal = None
-
     def __init__(self, db, open_product: Callable[[int], None], parent=None) -> None:
         super().__init__(parent)
         self.db = db
@@ -184,10 +182,8 @@ class FilamentsPage(QWidget):
         root.addLayout(bar)
 
         self.model = FilamentTableModel(db)
-        self.proxy = QSortFilterProxyModel(self)
+        self.proxy = FilamentFilterProxyModel(self)
         self.proxy.setSourceModel(self.model)
-        self.proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.proxy.setFilterKeyColumn(-1)
 
         self.table = QTableView()
         self.table.setModel(self.proxy)
@@ -216,8 +212,8 @@ class FilamentsPage(QWidget):
     def _apply_filters(self) -> None:
         query = self.search.text().strip()
         material = self.material.currentText().strip()
-        tokens = [token for token in (material if material != "همه متریال‌ها" else "", query) if token]
-        self.proxy.setFilterFixedString(" ".join(tokens))
+        self.proxy.set_material(material if material != "همه متریال‌ها" else "")
+        self.proxy.set_query(query)
 
     def refresh(self) -> None:
         self.model.refresh()
