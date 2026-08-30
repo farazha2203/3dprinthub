@@ -999,16 +999,58 @@ async def discover_conditional_http(
     policy = await robots_policy(client, listing_url)
     if policy.known and not policy.allowed:
         record_attempt(
-            client.db, source_code, listing_url, "robots-gate",
-            outcome="denied", error="robots.txt denies this URL",
+            client.db,
+            source_code,
+            listing_url,
+            "robots-gate",
+            outcome="denied",
+            error="robots.txt denies this URL",
         )
         raise RobotsDeniedError(f"robots.txt denies acquisition for {listing_url}")
 
-    fetched = await client.fetch_text(
-        listing_url,
-        method_label="conditional-http-links",
-        fresh_seconds=30,
+    parsed = urlsplit(listing_url)
+    rootish = (parsed.path or "/") in {"", "/"} and not parsed.query
+    sitemapish = (
+        "sitemap" in (parsed.path or "").lower()
+        or (parsed.path or "").lower().endswith((".xml", ".xml.gz"))
     )
+
+    if sitemapish:
+        return await discover_sitemap_candidates(
+            client,
+            [listing_url],
+            source_code=source_code,
+            model_pattern=model_pattern,
+            requested=requested,
+        )
+
+    try:
+        fetched = await client.fetch_text(
+            listing_url,
+            method_label="conditional-http-links",
+            fresh_seconds=30,
+        )
+    except (RateLimitedError, AccessDeniedError):
+        raise
+    except Exception:
+        if rootish:
+            origin = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
+            sitemap_urls = list(policy.sitemaps) or [
+                origin + "/sitemap.xml",
+                origin + "/sitemap_index.xml",
+                origin + "/sitemap-index.xml",
+            ]
+            result = await discover_sitemap_candidates(
+                client,
+                sitemap_urls,
+                source_code=source_code,
+                model_pattern=model_pattern,
+                requested=requested,
+            )
+            if result:
+                return result
+        raise
+
     pairs = _extract_links_from_html(fetched.text, model_pattern)
     rows = [
         {"href": url, "text": f"Model {external_id}" if external_id else "", "image": ""}
@@ -1023,23 +1065,13 @@ async def discover_conditional_http(
             requested,
         )
 
-    parsed = urlsplit(listing_url)
-    rootish = (parsed.path or "/") in {"", "/"} and not parsed.query
-    sitemapish = "sitemap" in (parsed.path or "").lower() or (parsed.path or "").lower().endswith(".xml")
-    sitemap_urls: list[str] = []
-    if sitemapish:
-        sitemap_urls.append(listing_url)
-    elif rootish:
-        sitemap_urls.extend(policy.sitemaps)
-        if not sitemap_urls:
-            origin = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
-            sitemap_urls.extend([
-                origin + "/sitemap.xml",
-                origin + "/sitemap_index.xml",
-                origin + "/sitemap-index.xml",
-            ])
-
-    if sitemap_urls:
+    if rootish:
+        origin = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
+        sitemap_urls = list(policy.sitemaps) or [
+            origin + "/sitemap.xml",
+            origin + "/sitemap_index.xml",
+            origin + "/sitemap-index.xml",
+        ]
         return await discover_sitemap_candidates(
             client,
             sitemap_urls,
