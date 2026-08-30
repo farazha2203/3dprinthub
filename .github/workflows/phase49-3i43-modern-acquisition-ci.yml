@@ -1,4 +1,4 @@
-name: Phase49.3I.43 Modern Acquisition Intelligence CI
+name: Phase49.3I.43-45 Modern Acquisition Intelligence CI
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
       - "catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py"
+      - "catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py"
       - "catalog_center/app/page_extractor.py"
       - "catalog_center/app/public_web_capture.py"
       - "catalog_center/app/db.py"
@@ -14,6 +15,7 @@ on:
       - "catalog_center/requirements.txt"
       - "catalog_center/launch.py"
       - "catalog_center/tests/test_phase49_3i43_modern_acquisition_intelligence.py"
+      - "catalog_center/tests/test_phase49_3i45_incremental_discovery_intelligence.py"
       - "catalog_center/tests/test_epic49_phase49_3i16_resilient_acquisition.py"
       - "catalog_center/tests/test_phase49_3i38_crawl_ledger_stage_ai.py"
       - ".github/workflows/phase49-3i43-modern-acquisition-ci.yml"
@@ -52,18 +54,22 @@ jobs:
         run: |
           python -m compileall -q `
             catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py `
+            catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py `
             catalog_center/app/page_extractor.py `
             catalog_center/app/public_web_capture.py `
             catalog_center/app/db.py `
             catalog_center/launch.py `
-            catalog_center/tests/test_phase49_3i43_modern_acquisition_intelligence.py
+            catalog_center/tests/test_phase49_3i43_modern_acquisition_intelligence.py `
+            catalog_center/tests/test_phase49_3i45_incremental_discovery_intelligence.py
           if ($LASTEXITCODE -ne 0) { throw 'Phase49.3I.43 compile failed' }
 
       - name: Modern acquisition tests
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -m unittest -v tests.test_phase49_3i43_modern_acquisition_intelligence
+          python -m unittest -v `
+            tests.test_phase49_3i43_modern_acquisition_intelligence `
+            tests.test_phase49_3i45_incremental_discovery_intelligence
           if ($LASTEXITCODE -ne 0) { throw 'Phase49.3I.43 tests failed' }
 
       - name: Mature acquisition regressions
@@ -96,6 +102,9 @@ jobs:
             'EPIC49_3I44_CONDITION_DRIVEN_BROWSER_READINESS=ENABLED',
             'EPIC49_3I44_ENDPOINT_SCHEMA_ONLY=ENABLED',
             'EPIC49_3I44_GZIP_SITEMAP_DISCOVERY=ENABLED',
+            'EPIC49_3I45_SITEMAP_LASTMOD_PRIORITY=ENABLED',
+            'EPIC49_3I45_DISCOVERY_OBSERVATION_LEDGER=ENABLED',
+            'EPIC49_3I45_CUSTOM_SITEMAP_MODEL_HEURISTIC=ENABLED',
             'ACTIVE_RELEASE_VERIFIED=OK'
           )) {
             if ($text -notmatch [regex]::Escape($marker)) {
@@ -107,6 +116,6 @@ jobs:
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -c "import json; c=json.load(open('config.example.json', encoding='utf-8')); a=c['acquisition']; assert a['obey_robots_txt'] is True; assert a['honor_retry_after'] is True; assert a['adaptive_host_throttle'] is True; assert a['transient_http_attempts'] == 3; assert a['stale_cache_on_transient_error'] is True; assert a['default_sitemap_probe'] is True; assert a['endpoint_schema_only'] is True; assert a['persist_raw_network_payloads'] is False; assert a['captcha_bypass'] is False; assert a['authentication_bypass'] is False; assert a['proxy_evasion'] is False; print('ACQUISITION_POLICY_GUARD=PASS')"
+          python -c "import json; c=json.load(open('config.example.json', encoding='utf-8')); a=c['acquisition']; assert a['obey_robots_txt'] is True; assert a['honor_retry_after'] is True; assert a['adaptive_host_throttle'] is True; assert a['transient_http_attempts'] == 3; assert a['stale_cache_on_transient_error'] is True; assert a['default_sitemap_probe'] is True; assert a['endpoint_schema_only'] is True; assert a['persist_raw_network_payloads'] is False; assert a['captcha_bypass'] is False; assert a['authentication_bypass'] is False; assert a['proxy_evasion'] is False; assert a['incremental_sitemap_lastmod'] is True; assert a['persist_discovery_observations'] is True; assert a['prefer_unseen_products'] is True; print('ACQUISITION_POLICY_GUARD=PASS')"
           if ($LASTEXITCODE -ne 0) { throw 'Acquisition policy guard failed' }
-          Write-Host "PHASE49_3I43_3I44_MODERN_ACQUISITION_CI=PASS"
+          Write-Host "PHASE49_3I43_3I45_MODERN_ACQUISITION_CI=PASS"
