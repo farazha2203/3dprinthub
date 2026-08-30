@@ -17,6 +17,7 @@ from app.phase49_3i43_modern_acquisition_intelligence import (
     acquisition_quality,
     build_provenance,
     discover_conditional_http,
+    discover_sitemap_candidates,
     ensure_schema,
     record_endpoint_hints,
     robots_policy,
@@ -63,6 +64,22 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("ETag", '"search-v1"')
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if self.path == "/sitemap.xml":
+            base = f"http://127.0.0.1:{self.server.server_port}"
+            body = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                f'<url><loc>{base}/models/303-gamma</loc></url>'
+                f'<url><loc>{base}/models/404-delta</loc></url>'
+                '</urlset>'
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/xml")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -221,6 +238,32 @@ class Phase493I43ModernAcquisitionTests(unittest.TestCase):
 
         with self.assertRaises(RobotsDeniedError):
             asyncio.run(run_denied())
+
+    def test_sitemap_intelligence_extracts_product_urls_without_browser(self):
+        pattern = (
+            self.base.replace(".", r"\\.")
+            + r"/models/(?P<external_id>\\d+)[^\\s\\\"'<>]*"
+        )
+
+        async def run():
+            async with ModernHttpClient(self.db, "test") as client:
+                return await discover_sitemap_candidates(
+                    client,
+                    [self.base + "/sitemap.xml"],
+                    source_code="test",
+                    model_pattern=pattern,
+                    requested=10,
+                )
+
+        rows = asyncio.run(run())
+        self.assertEqual([row["external_id"] for row in rows], ["303", "404"])
+        attempts = list(
+            self.db.conn.execute(
+                "SELECT method,outcome FROM acquisition_attempts WHERE method='sitemap'"
+            )
+        )
+        self.assertTrue(attempts)
+        self.assertEqual(attempts[-1]["outcome"], "success")
 
     def test_retry_after_sets_source_cooldown_and_does_not_silently_retry(self):
         async def run():
