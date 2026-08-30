@@ -1,5 +1,24 @@
 # OWNER REQUESTS
 
+## REQ-49-077 — Modern comprehensive wizard desktop application from purchased Qt references
+Status: `IN_PROGRESS / FOUNDATION WINDOWS CI TESTED / OWNER LOCAL PREVIEW NEXT`
+
+Requested:
+- study and apply the two purchased PyQt5 GUI references;
+- upgrade the desktop application architecture, interaction patterns and visual quality;
+- provide strong wizard flows, complete menus, explicit routes and predictable actions;
+- add reusable patterns that reduce ad-hoc UI errors and blocking behavior;
+- keep the application comprehensive rather than hiding capability behind ambiguous controls.
+
+Implementation direction:
+- source concepts are applied through current PySide6/Qt6;
+- legacy mature business logic is reused rather than rewritten;
+- parallel Qt preview first, cutover only after side-by-side acceptance;
+- full migration is split into 42A–42E and cannot be called complete at foundation stage.
+
+References summarized in `docs/references/PYTHON_QT_GUI_REFERENCE_NOTES.md`.
+
+
 ## REQ-49-076 — Central reusable Filament library and clear multi-select
 Status: `IMPLEMENTED / GITHUB_UPDATED / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
 
