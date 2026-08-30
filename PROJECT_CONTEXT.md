@@ -42,6 +42,16 @@ Last verified Phase50 migration state:
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
 
+## Current owner checkpoint — Phase49.3I.42
+
+A parallel PySide6/Qt6 desktop presentation layer now exists and is Windows-CI tested. It applies the purchased PyQt5 reference patterns—QMainWindow, signals/actions, Model/View, QStackedWidget wizard, QSplitter, QSS, QSettings and thread-pool workers—without replacing the mature Tk business runtime.
+
+Dedicated Qt run `33299745502` PASS. Legacy launcher remains the default and passes its verify gate. No Production/Host/DB migration change.
+
+Next owner gate: Local Qt preview, side by side with legacy 8.9.8. Then 42B ports the complete editable Product Wizard.
+
+Active phase: `docs/phases/PHASE49_3I42_QT6_DESKTOP_MODERNIZATION.md`.
+
 ## Current owner checkpoint — Phase49.3I.41
 
 The final Stage-2 UX now separates global Filament master data from Product assignment. Main Catalog Center owns a reusable grouped Filament Library; each Product owns a one-click checklist and a separate selected-Filament pane. Save/update/deactivate is synchronized through the existing authenticated Site Bridge into the canonical Store MaterialColorOption entity.
