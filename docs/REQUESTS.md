@@ -1,5 +1,32 @@
 # OWNER REQUESTS
 
+## REQ-49-078 — Apply new GUI/FastAPI/web-scraping books to the application and acquisition stack
+Status: `IN_PROGRESS / ACQUISITION DELTA WINDOWS CI TESTED / OWNER LOCAL QA NEXT`
+
+Requested:
+- deeply review the newly supplied books;
+- update development methods and commands using current best practices;
+- improve speed, stability, quality and maintainability;
+- improve web discovery/crawling/data extraction;
+- update database structures where useful;
+- keep a strong, comprehensive, wizard-driven desktop application.
+
+Applied now:
+- knowledge index for GUI/FastAPI/scraping;
+- current official-doc verification for version-sensitive techniques;
+- Phase49.3I.45 incremental Sitemap intelligence;
+- Catalog discovery metadata ledger;
+- freshness/unseen prioritization;
+- preserved public/respectful acquisition policy.
+
+Not interpreted as permission to:
+- replace Django Production with FastAPI without an explicit architecture gate;
+- bypass CAPTCHA/authentication/access controls;
+- use proxy evasion;
+- stress-test third-party websites;
+- deploy before Local acceptance.
+
+
 ## REQ-49-077 — Modern comprehensive wizard desktop application from purchased Qt references
 Status: `IN_PROGRESS / FOUNDATION WINDOWS CI TESTED / OWNER LOCAL PREVIEW NEXT`
 
