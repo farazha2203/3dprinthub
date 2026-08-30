@@ -241,8 +241,8 @@ class Phase493I43ModernAcquisitionTests(unittest.TestCase):
 
     def test_sitemap_intelligence_extracts_product_urls_without_browser(self):
         pattern = (
-            self.base.replace(".", r"\\.")
-            + r"/models/(?P<external_id>\\d+)[^\\s\\\"'<>]*"
+            self.base.replace(".", r"\.")
+            + r"/models/(?P<external_id>\d+)[^\s\"'<>]*"
         )
 
         async def run():
