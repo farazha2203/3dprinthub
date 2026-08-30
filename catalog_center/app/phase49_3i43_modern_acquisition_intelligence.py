@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
-from protego import Protego
-
 from .db import normalize_url, utc_now
 from .phase49_3i_discovery_review import candidates_from_dom_rows
 
@@ -486,6 +484,8 @@ class ModernHttpClient:
 
 
 async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPolicy:
+    from protego import Protego
+
     parsed = urlsplit(target_url)
     robots_url = urlunsplit((parsed.scheme, parsed.netloc, "/robots.txt", "", ""))
     try:
