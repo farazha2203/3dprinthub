@@ -2,12 +2,26 @@
 
 Updated: 2026-08-30
 
-## Catalog Center local database — Phase49.3I.45
+## Catalog Center local database — Phase49.3I.43–45
 
 Canonical owner Local Catalog SQLite:
 `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
 
-Phase49.3I.45 adds one runtime-created additive table:
+Phase49.3I.43/44 adds runtime-created additive acquisition metadata:
+- `acquisition_http_cache` — conditional HTTP cache metadata/body cache for bounded permitted text/XML/JSON representations;
+- `acquisition_attempts` — request outcome, latency, bytes and cache telemetry;
+- `source_endpoint_hints` — sanitized same-site public endpoint identity plus bounded response schema/shape hash, not raw XHR/fetch payloads;
+- `source_capabilities` — robots/Sitemap/structured-data capability observations;
+- `acquisition_host_state` — per-source/host latency EWMA, adaptive delay and request/error counters.
+
+It also adds local Catalog Product provenance fields:
+- `source_provenance_json`;
+- `acquisition_method`;
+- `acquisition_quality`;
+- `source_last_http_status`;
+- `source_last_fetch_ms`.
+
+Phase49.3I.45 adds one further runtime-created additive table:
 `acquisition_discovery_observations`.
 
 Purpose:
