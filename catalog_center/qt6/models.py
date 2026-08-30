@@ -2,14 +2,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt
 
 from app.epic49_desktop_schema import (
+    effective_filament_offer_price_per_gram,
     list_available_material_colors,
     normalize_material_color_options,
 )
-from app.phase49_3i39_professional_commerce import offer_stock_grams
-from app.phase49_3i40_commerce_precision import filament_rate_calculation
+
+
+def filament_stock_grams(row: dict[str, Any]) -> float:
+    try:
+        return max(0.0, float(row.get("stock_roll_count") or 0)) * max(
+            1.0, float(row.get("roll_weight_grams") or 1000)
+        )
+    except Exception:
+        return 0.0
 
 
 class ProductTableModel(QAbstractTableModel):
@@ -119,7 +127,7 @@ class FilamentTableModel(QAbstractTableModel):
             return row
         if role != Qt.ItemDataRole.DisplayRole:
             return None
-        rate = filament_rate_calculation(row)
+        rate_per_gram = effective_filament_offer_price_per_gram(row)
         hours = float(row.get("preheat_hours") or 0)
         temp = float(row.get("preheat_temperature_c") or 0)
         preheat = "—" if hours <= 0 else f"{hours:g}h / {temp:g}°C"
@@ -129,9 +137,9 @@ class FilamentTableModel(QAbstractTableModel):
             row.get("brand") or "—",
             row.get("color") or "—",
             f"{float(row.get('roll_weight_grams') or 0):g} g",
-            f"{offer_stock_grams(row) / 1000:g}",
+            f"{filament_stock_grams(row) / 1000:g}",
             f"{int(float(row.get('sale_price_per_roll') or 0)):,}",
-            f"{float(rate['rate_per_gram']):,.0f}",
+            f"{float(rate_per_gram):,.0f}",
             preheat,
         )
         return str(values[index.column()])
@@ -141,3 +149,39 @@ class FilamentTableModel(QAbstractTableModel):
             {str(row.get("material") or "").strip() for row in self.rows if row.get("material")},
             key=str.casefold,
         )
+
+
+class FilamentFilterProxyModel(QSortFilterProxyModel):
+    """Filter by material plus a free-text query across all displayed columns."""
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.material = ""
+        self.query = ""
+        self.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
+    def set_material(self, value: str) -> None:
+        self.material = str(value or "").strip().casefold()
+        self.invalidateFilter()
+
+    def set_query(self, value: str) -> None:
+        self.query = str(value or "").strip().casefold()
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:  # noqa: N802
+        source = self.sourceModel()
+        if source is None or not hasattr(source, "rows"):
+            return True
+        try:
+            row = source.rows[source_row]
+        except Exception:
+            return False
+        if self.material and str(row.get("material") or "").strip().casefold() != self.material:
+            return False
+        if not self.query:
+            return True
+        haystack = " ".join(
+            str(row.get(key) or "")
+            for key in ("material", "manufacturer", "brand", "color")
+        ).casefold()
+        return all(token in haystack for token in self.query.split() if token)
