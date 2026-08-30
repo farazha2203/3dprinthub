@@ -7,6 +7,7 @@ on:
     paths:
       - "catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py"
       - "catalog_center/app/page_extractor.py"
+      - "catalog_center/app/db.py"
       - "catalog_center/app/version.py"
       - "catalog_center/config.example.json"
       - "catalog_center/requirements.txt"
