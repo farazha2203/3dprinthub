@@ -30,8 +30,9 @@ class Database:
     def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
         self.path = path
-        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self.conn = sqlite3.connect(path, check_same_thread=False, timeout=15.0)
         self.conn.row_factory = sqlite3.Row
+        self.conn.execute("PRAGMA busy_timeout=5000")
         self._init()
 
     def _init(self):
@@ -529,8 +530,18 @@ class Database:
         row=self.conn.execute("SELECT value FROM settings WHERE key=?",(key,)).fetchone()
         return row["value"] if row else default
 
+    def optimize(self):
+        """Ask SQLite to apply lightweight planner/statistics maintenance."""
+        try:
+            self.conn.execute("PRAGMA optimize")
+            self.conn.commit()
+        except sqlite3.DatabaseError:
+            return False
+        return True
+
     def close(self):
         try:
+            self.optimize()
             self.conn.commit()
         finally:
             self.conn.close()
