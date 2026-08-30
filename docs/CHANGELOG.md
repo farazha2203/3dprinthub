@@ -1,5 +1,23 @@
 # PROJECT CHANGELOG
 
+## 2026-08-30 — Phase49.3I.45 Incremental Discovery Intelligence
+- reviewed the new owner-supplied GUI, FastAPI and web-scraping references and added a permanent engineering index;
+- reconciled version-sensitive recommendations against current official Qt for Python, FastAPI, HTTPX, Playwright, Scrapy, RFC 9309 and Sitemaps documentation;
+- preserved Django Production and the mature 3I.43/44 acquisition runtime instead of introducing a second web backend/crawler framework;
+- added `acquisition_discovery_observations` to Catalog SQLite for metadata-only URL discovery history;
+- added direct-child Sitemap XML parsing with `lastmod`, `changefreq`, and `priority`;
+- newest nested Sitemaps are processed first inside the existing bounded document budget;
+- unseen Catalog Products rank before already-known Products;
+- custom sources without an exact regex can discover bounded model-like paths from Sitemaps;
+- nested image/video extension `loc` entries are not treated as Product URLs;
+- build advanced to `2026.08.30.3` while version stays `8.9.9`;
+- dedicated Windows acquisition run `33313008595` PASS;
+- Single Active AI run `33313008558` PASS;
+- source checkpoint `846cb63038a79cfe450f5a60aa66e531cf6fe0de`;
+- rollback `backup/pre-phase49-3i45-book-driven-discovery-intelligence-20260830` → `3616bf222f394b769cb2e3198164d735fca5267b`;
+- no Host, Production MySQL, Django migration, media, secret or access-control change.
+
+
 ## 2026-08-30 — Phase49.3I.42 Qt 6 Desktop Modernization foundation
 - reviewed two owner-purchased PyQt5 GUI references and added a project-specific architecture/UX knowledge index;
 - selected current PySide6/Qt6 for the new presentation layer while preserving the mature Tk runtime;
