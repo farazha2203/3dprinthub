@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_VERSION = "8.9.8"
+EXPECTED_VERSION = "8.9.9"
 ROOT = Path(__file__).resolve().parent
 
 
@@ -73,6 +73,10 @@ def main() -> int:
     from app.phase49_3i41_filament_library import (
         install_app as install_phase49_3i41_app,
         install_workspace as install_phase49_3i41_workspace,
+    )
+    from app import phase49_3i15_bulk_discovery_images as phase49_3i15_bulk_module
+    from app.phase49_3i43_modern_acquisition_intelligence import (
+        install_runtime as install_phase49_3i43_runtime,
     )
     from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
     from app.phase49_3i_product_list import install as install_phase49_3i_product_list
@@ -273,7 +277,7 @@ def main() -> int:
     print("EPIC49_3I40_AI_PROGRESS_TRUTH=ENABLED", flush=True)
     print("EPIC49_3I41_FILAMENT_LIBRARY=ENABLED", flush=True)
     print("EPIC49_3I41_GROUPED_FILAMENT_CHECKLIST=ENABLED", flush=True)
-    print("EPIC49_3I41_FILAMENT_SITE_SYNC=ENABLED", flush=True)
+    print("EPIC49_3I41_FILAMENT_SITE_SYNC=ENABLED", flush=True)\n    print("EPIC49_3I43_MODERN_ACQUISITION_INTELLIGENCE=ENABLED", flush=True)\n    print("EPIC49_3I43_CONDITIONAL_HTTP_CACHE=ENABLED", flush=True)\n    print("EPIC49_3I43_ROBOTS_RETRY_AFTER_GUARD=ENABLED", flush=True)\n    print("EPIC49_3I43_PUBLIC_JSON_ENDPOINT_PROVENANCE=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -316,6 +320,11 @@ def main() -> int:
     install_phase49_3i_discovery_review(App87)
     install_phase49_3i_product_list(App87)
     app = App87()
+    install_phase49_3i43_runtime(
+        app,
+        bulk_module=phase49_3i15_bulk_module,
+        app_module=app_module,
+    )
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
     audit_event(
