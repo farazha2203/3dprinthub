@@ -879,6 +879,9 @@ async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPoli
         )
         client.db.conn.commit()
 
+    if delay is not None:
+        client.set_robots_delay(target_url, float(delay))
+
     return RobotsPolicy(
         known=known,
         allowed=allowed,
@@ -944,12 +947,13 @@ async def discover_sitemap_candidates(
         except Exception:
             continue
 
-        locations = [
-            str(node.text or "").strip()
-            for node in root.iter()
-            if str(node.tag).lower().endswith("loc") and str(node.text or "").strip()
-        ]
         root_name = str(root.tag).lower()
+        locations = [
+            str(child.text or "").strip()
+            for item in list(root)
+            for child in list(item)
+            if str(child.tag).lower().endswith("loc") and str(child.text or "").strip()
+        ]
         if root_name.endswith("sitemapindex"):
             for candidate in locations:
                 if candidate.startswith(("http://", "https://")) and (
@@ -1000,9 +1004,6 @@ async def discover_conditional_http(
         )
         raise RobotsDeniedError(f"robots.txt denies acquisition for {listing_url}")
 
-    if policy.crawl_delay and policy.crawl_delay > 0:
-        await asyncio.sleep(min(60.0, float(policy.crawl_delay)))
-
     fetched = await client.fetch_text(
         listing_url,
         method_label="conditional-http-links",
@@ -1030,6 +1031,13 @@ async def discover_conditional_http(
         sitemap_urls.append(listing_url)
     elif rootish:
         sitemap_urls.extend(policy.sitemaps)
+        if not sitemap_urls:
+            origin = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
+            sitemap_urls.extend([
+                origin + "/sitemap.xml",
+                origin + "/sitemap_index.xml",
+                origin + "/sitemap-index.xml",
+            ])
 
     if sitemap_urls:
         return await discover_sitemap_candidates(
