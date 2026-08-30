@@ -11,6 +11,32 @@ Status: `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
 
+## Immediate owner gate — Phase49.3I.42 Qt6 foundation
+
+Phase49.3I.42 is the controlled migration from Tkinter presentation to a modern Qt6/PySide6 desktop application.
+
+42A foundation is GitHub + Windows CI tested:
+- stable QMainWindow shell;
+- permanent routes;
+- QStackedWidget seven-stage Wizard;
+- Model/View Product and Filament collections;
+- centralized actions/shortcuts;
+- command palette;
+- QSS light/dark themes;
+- QSettings UI state;
+- QThreadPool worker contract;
+- legacy launcher verification preserved.
+
+Owner Local side-by-side preview is next. Do not replace `catalog_center/launch.py` yet.
+
+After visual acceptance:
+- 42B: complete editable Product Wizard adapters,
+- 42C: AI/crawl/publish workers + progress/cancel,
+- 42D: resources/dialogs/accessibility/high-DPI/RTL polish,
+- 42E: packaging comparison + signed-off cutover.
+
+Production remains blocked from this UI migration until complete Local acceptance and a separate deployment gate.
+
 ## Immediate owner gate — Phase49.3I.41
 
 Windows + local Site acceptance now covers the real inventory workflow:
