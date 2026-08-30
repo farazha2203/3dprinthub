@@ -1,11 +1,15 @@
 # PROJECT PATHS AND ENVIRONMENTS
 
-Last Verified: 2026-08-27 from Repository + prior owner Production verification. Re-verify actual Local/Host state again before operations.
+Last Verified: 2026-08-30 from Repository + prior owner Production verification. Re-verify actual Local/Host state again before operations.
 
 ## LOCAL / WINDOWS
 OS: Windows / PowerShell
 Project Root: `D:\projects\3DPrintHub`
 Catalog Center Source: `D:\projects\3DPrintHub\catalog_center`
+Mature Tk Launcher: `D:\projects\3DPrintHub\catalog_center\launch.py`
+Parallel Qt6 Preview Launcher: `D:\projects\3DPrintHub\catalog_center\qt_launch.py`
+Qt6 Presentation Package: `D:\projects\3DPrintHub\catalog_center\qt6`
+Qt6 Preview Requirements: `D:\projects\3DPrintHub\catalog_center\requirements-qt6.txt`
 Venv: `D:\projects\3DPrintHub\.venv`
 Django DB: `D:\projects\3DPrintHub\db.sqlite3`
 Persistent Catalog Root: `D:\projects\3dprinthub-catalog-manager`
