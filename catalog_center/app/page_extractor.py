@@ -4,12 +4,14 @@ import asyncio
 import hashlib
 import json
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.parse import urljoin, urlsplit
 
 from PIL import Image
+
+from .public_web_capture import build_public_capture_summary, same_site
 
 MODEL_EXTENSIONS = {
     ".stl", ".3mf", ".obj", ".step", ".stp", ".iges", ".igs", ".dxf", ".zip", ".rar", ".7z"
@@ -261,6 +263,7 @@ class ExtractedPage:
     file_links: list[str]
     specs: dict[str, Any]
     body_text: str
+    capture_summary: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -655,6 +658,85 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
     )
 
 
+async def _wait_for_page_stability(
+    page,
+    *,
+    timeout_ms: int = 5000,
+    stable_samples: int = 2,
+    include_load_state: bool = True,
+) -> None:
+    """Wait for measurable document stability instead of a fixed blind sleep.
+
+    Playwright already auto-waits for actions. For generic acquisition pages we
+    additionally observe document size/text/image counts because there is no
+    site-specific locator that is valid across all supported sources.
+    """
+    if include_load_state:
+        try:
+            await page.wait_for_load_state("load", timeout=min(2500, max(250, int(timeout_ms))))
+        except Exception:
+            pass
+
+    deadline = asyncio.get_running_loop().time() + (max(250, int(timeout_ms)) / 1000.0)
+    last_state = None
+    stable = 0
+    while asyncio.get_running_loop().time() < deadline:
+        try:
+            state = tuple(await page.evaluate(
+                """() => [
+                    document.readyState || '',
+                    document.documentElement ? document.documentElement.scrollHeight : 0,
+                    document.body ? (document.body.innerText || '').length : 0,
+                    document.images ? document.images.length : 0
+                ]"""
+            ))
+        except Exception:
+            return
+        if state == last_state and state and state[0] in {"interactive", "complete"}:
+            stable += 1
+            if stable >= max(1, int(stable_samples)):
+                return
+        else:
+            stable = 0
+            last_state = state
+        await page.wait_for_timeout(180)
+
+
+async def _scroll_lazy_content(page, *, max_rounds: int = 4) -> None:
+    """Trigger bounded lazy loading and stop as soon as page growth settles."""
+    previous = None
+    for _ in range(max(1, int(max_rounds))):
+        try:
+            await page.evaluate("() => window.scrollTo(0, document.documentElement.scrollHeight)")
+            await _wait_for_page_stability(
+                page,
+                timeout_ms=1500,
+                stable_samples=2,
+                include_load_state=False,
+            )
+            state = tuple(await page.evaluate(
+                """() => [
+                    document.documentElement ? document.documentElement.scrollHeight : 0,
+                    document.images ? document.images.length : 0
+                ]"""
+            ))
+        except Exception:
+            break
+        if state == previous:
+            break
+        previous = state
+    try:
+        await page.evaluate("() => window.scrollTo(0, 0)")
+        await _wait_for_page_stability(
+            page,
+            timeout_ms=700,
+            stable_samples=1,
+            include_load_state=False,
+        )
+    except Exception:
+        pass
+
+
 class RichPageExtractor:
     def __init__(self, profile_dir: Path, *, headed: bool = True):
         self.profile_dir = profile_dir
@@ -686,13 +768,24 @@ class RichPageExtractor:
             try:
                 page = context.pages[0] if context.pages else await context.new_page()
                 network_json: list[dict[str, Any]] = []
+                network_tasks: set[asyncio.Task] = set()
+
                 async def capture_json(response):
                     try:
                         if len(network_json) >= 80 or response.status >= 400:
                             return
-                        ctype = (response.headers.get("content-type") or "").lower()
-                        if "json" not in ctype:
+                        if not same_site(url, response.url):
                             return
+                        ctype = (response.headers.get("content-type") or "").lower()
+                        resource_type = str(response.request.resource_type or "").lower()
+                        if "json" not in ctype and resource_type not in {"xhr", "fetch"}:
+                            return
+                        content_length = response.headers.get("content-length") or ""
+                        try:
+                            if content_length and int(content_length) > 2_000_000:
+                                return
+                        except Exception:
+                            pass
                         raw = await response.body()
                         if not raw or len(raw) > 2_000_000:
                             return
@@ -701,27 +794,31 @@ class RichPageExtractor:
                             "url": response.url,
                             "status": int(response.status or 0),
                             "method": str(response.request.method or "GET"),
-                            "resource_type": str(response.request.resource_type or ""),
+                            "resource_type": resource_type,
                             "content_type": ctype.split(";", 1)[0],
+                            "body_bytes": len(raw),
                             "data": data,
                         })
                     except Exception:
                         return
-                page.on("response", lambda r: __import__("asyncio").create_task(capture_json(r)))
+
+                def schedule_capture(response):
+                    task = asyncio.create_task(capture_json(response))
+                    network_tasks.add(task)
+                    task.add_done_callback(network_tasks.discard)
+
+                page.on("response", schedule_capture)
                 response = await page.goto(url, wait_until="domcontentloaded", timeout=90_000)
                 if response and response.status in (403, 429):
                     raise RuntimeError(f"HTTP {response.status}")
-                await page.wait_for_timeout(2500)
-                previous = 0
-                for _ in range(4):
-                    height = await page.evaluate("() => document.documentElement.scrollHeight")
-                    await page.evaluate("() => window.scrollTo(0, document.documentElement.scrollHeight)")
-                    await page.wait_for_timeout(900)
-                    if height == previous:
-                        break
-                    previous = height
-                await page.evaluate("() => window.scrollTo(0, 0)")
-                await page.wait_for_timeout(400)
+
+                await _wait_for_page_stability(page, timeout_ms=5000)
+                await _scroll_lazy_content(page, max_rounds=4)
+
+                if network_tasks:
+                    _done, pending = await asyncio.wait(tuple(network_tasks), timeout=2.0)
+                    for task in pending:
+                        task.cancel()
                 snapshot = await page.evaluate(
                     """() => {
                         const metas = {};
@@ -773,7 +870,16 @@ class RichPageExtractor:
                 snapshot["network_json"] = network_json
                 snapshot["source_url"] = url
                 snapshot["http_status"] = int(response.status) if response else 0
+                capture_summary = build_public_capture_summary(
+                    url,
+                    network_json,
+                    json_ld_count=len(snapshot.get("json_ld") or []),
+                    embedded_json_count=len(snapshot.get("embedded_json") or []),
+                    breadcrumb_count=len(snapshot.get("breadcrumbs") or []),
+                    spec_row_count=len(snapshot.get("spec_rows") or []),
+                )
                 extracted = parse_page_snapshot(snapshot)
+                extracted.capture_summary = capture_summary
                 (output_dir / "page_extract.json").write_text(
                     json.dumps(extracted.as_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
                 )
