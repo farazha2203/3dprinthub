@@ -353,12 +353,25 @@ def record_attempt(
     db.conn.commit()
 
 
-def _retry_after_seconds(value: str) -> int:
+def _retry_after_seconds(value: str, *, now_epoch: float | None = None) -> int:
+    """Parse RFC Retry-After delta-seconds or HTTP-date, bounded to one day."""
     value = str(value or "").strip()
     if not value:
         return 0
     try:
         return max(0, min(86400, int(float(value))))
+    except Exception:
+        pass
+    try:
+        target = parsedate_to_datetime(value)
+        if target.tzinfo is None:
+            target = target.replace(tzinfo=dt.timezone.utc)
+        now = dt.datetime.fromtimestamp(
+            float(time.time() if now_epoch is None else now_epoch),
+            tz=dt.timezone.utc,
+        )
+        seconds = int((target.astimezone(dt.timezone.utc) - now).total_seconds())
+        return max(0, min(86400, seconds))
     except Exception:
         return 0
 
