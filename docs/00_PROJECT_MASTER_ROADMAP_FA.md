@@ -10,6 +10,14 @@
 **Status:** `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
 
+### Phase49.3I.42 — مهاجرت کنترل‌شده Catalog Center به Qt 6
+
+دو مرجع خریداری‌شده PyQt5 به‌صورت ساختاری بررسی شدند و اصول کاربردی آن‌ها برای 3DPrintHub مستند شد. به‌جای قفل‌کردن بازنویسی جدید روی Qt5، لایه رابط جدید با PySide6/Qt6 توسعه می‌شود.
+
+Foundation فعلی شامل QMainWindow، منوی دائم، مسیرهای صریح، QStackedWidget Wizard هفت‌مرحله‌ای، Model/View برای Product/Filament، Action Registry، Command Palette، QSplitter، QSS، QSettings و QThreadPool است.
+
+این لایه فعلاً Preview موازی است؛ `launch.py` بالغ حذف یا جایگزین نشده. Windows CI `33299745502` PASS است. مرحله بعد Local Visual QA و سپس تکمیل فرم‌های واقعی Wizard در 42B است.
+
 ### Phase49.3I.41 — کتابخانه مرکزی Filament و انتخاب گروهی
 
 انتخاب Ctrl/Shift برای موجودی واقعی Filament حذف شد. Filamentها یک‌بار در کتابخانه اصلی برنامه تعریف می‌شوند، بر اساس PLA/PETG/… گروه‌بندی می‌شوند و در هر Product با چک‌لیست تک‌کلیک انتخاب می‌شوند. یک باکس مستقل تمام انتخاب‌های همان Product را نشان می‌دهد.
