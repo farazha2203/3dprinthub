@@ -1,12 +1,12 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
-Updated: 2026-08-29  
+Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Subphase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Subphase: `49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9`  
+Status: `8.9.9 BUILD 2026.08.30.3 / PHASE49.3I.45 WINDOWS CI PASS / OWNER LOCAL ACQUISITION QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -41,6 +41,33 @@ Last verified Phase50 migration state:
 - not claimed applied: `0036`, `0037`, `0038`, `0039`, `0040`.
 
 Production remains on the stable baseline. Never infer that later migrations were applied from GitHub/CI.
+
+## Current owner checkpoint — Phase49.3I.45
+
+Latest executable/source checkpoint:
+`846cb63038a79cfe450f5a60aa66e531cf6fe0de`.
+
+The newly supplied GUI/FastAPI/web-scraping references were reviewed. Current official documentation was used to reject outdated framework-specific advice where appropriate.
+
+3I.45 extends the already-tested 3I.43/44 acquisition layer with:
+- incremental Sitemap metadata;
+- newest Sitemap prioritization;
+- unseen Product prioritization;
+- persistent discovery observation history;
+- generic custom-source model-path Sitemap discovery.
+
+Windows CI `33313008595` PASS; Single Active AI `33313008558` PASS.
+
+No Production/Host/Django migration change. New Catalog table is local additive metadata only.
+
+Rollback:
+`backup/pre-phase49-3i45-book-driven-discovery-intelligence-20260830` →
+`3616bf222f394b769cb2e3198164d735fca5267b`.
+
+Active phase:
+`docs/phases/PHASE49_3I45_INCREMENTAL_DISCOVERY_INTELLIGENCE.md`.
+
+Next: owner Local backup/regression/foreground acquisition QA.
 
 ## Current owner checkpoint — Phase49.3I.42
 
