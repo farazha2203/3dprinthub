@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.8 — Commerce Precision + Truthful AI Completion",
-  "version": "8.9.8",
+  "name": "3DPrintHub Catalog Center v8.9.9 — Modern Acquisition Intelligence + Commerce Precision",
+  "version": "8.9.9",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -117,7 +117,13 @@
     "product_specific_offer_fixed_price",
     "catalog_filament_color_preview",
     "readiness_data_defect_vs_finalization_separation",
-    "ai_completion_100_only_when_fixable_zero"
+    "ai_completion_100_only_when_fixable_zero",
+    "modern_public_acquisition_http_first",
+    "conditional_http_etag_last_modified_cache",
+    "robots_txt_and_retry_after_guard",
+    "bounded_sitemap_discovery",
+    "public_json_endpoint_provenance",
+    "acquisition_quality_and_attempt_telemetry"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -216,7 +222,9 @@
     "tests/test_phase49_3i39_professional_commerce.py",
     "tests/test_phase49_3i39_completion_loop.py",
     "app/phase49_3i40_commerce_precision.py",
-    "tests/test_phase49_3i40_commerce_precision.py"
+    "tests/test_phase49_3i40_commerce_precision.py",
+    "app/phase49_3i43_modern_acquisition_intelligence.py",
+    "tests/test_phase49_3i43_modern_acquisition_intelligence.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
