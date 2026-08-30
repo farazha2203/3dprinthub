@@ -6,9 +6,17 @@
 **Branch توسعه:** `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 **Current Epic:** `Phase50 — Finance, Commerce & Admin Command Center`  
 **Current Web Subphase:** `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-**Parallel Windows Subphase:** `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-**Status:** `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`  
+**Parallel Windows Subphase:** `49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9`  
+**Status:** `8.9.9 BUILD 2026.08.30.3 / PHASE49.3I.45 WINDOWS CI PASS / OWNER LOCAL ACQUISITION QA NEXT / PRODUCTION BLOCKED`  
 **Backend:** Django / Python
+
+### Phase49.3I.45 — هوشمندی کشف افزایشی و Sitemap
+
+مجموعه جدید کتاب‌های GUI، FastAPI و Web Scraping با مستندات رسمی روز تطبیق داده شد. نتیجه روی لایه بالغ Acquisition سوار شده و Django Production تغییر نکرده است.
+
+3I.45 یک Ledger متادیتای کشف به Catalog SQLite اضافه می‌کند و از lastmod/changefreq/priority در Sitemap برای اولویت‌دهی استفاده می‌کند. Sitemapهای جدیدتر در بودجه محدود اسناد زودتر بررسی می‌شوند و Productهای دیده‌نشده قبل از Productهای موجود قرار می‌گیرند.
+
+Windows CI `33313008595` PASS و Single Active AI `33313008558` PASS است. Production دست نخورده و Gate بعدی Local backup/regression/foreground acquisition QA است.
 
 ### Phase49.3I.42 — مهاجرت کنترل‌شده Catalog Center به Qt 6
 
