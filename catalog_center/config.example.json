@@ -274,6 +274,9 @@
     "stale_cache_on_transient_error": true,
     "default_sitemap_probe": true,
     "endpoint_schema_only": true,
-    "persist_raw_network_payloads": false
+    "persist_raw_network_payloads": false,
+    "incremental_sitemap_lastmod": true,
+    "persist_discovery_observations": true,
+    "prefer_unseen_products": true
   }
 }
