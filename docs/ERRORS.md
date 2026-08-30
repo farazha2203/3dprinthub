@@ -1,5 +1,22 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+### ERR-49-077 — Qt6 workflow referenced runner context before a runner/job existed
+**Date:** 2026-08-30  
+**Environment:** new Phase49.3I.42 GitHub Actions workflow.
+
+**Symptom:** run `33299686593` failed immediately and contained zero jobs.
+
+**Root Cause:** `runner.temp` was referenced in job-level `env`. The runner context is not available at that workflow evaluation boundary, so GitHub rejected the job before execution.
+
+**Failed condition:** do not rerun the same workflow definition unchanged.
+
+**Correct Fix:** keep only static `QT_QPA_PLATFORM=offscreen` in job env and resolve `CATALOG_DATA_ROOT` inside the Windows PowerShell step using `$env:RUNNER_TEMP` after the runner is created.
+
+**Verification:** corrected run `33299745502` PASS across dependency install, compile, Qt tests, 3I.41 regression, offscreen launcher, legacy launcher guard and no-Tk source guard.
+
+**Prevention:** GitHub contexts with runner lifecycle scope must be resolved at step runtime unless documentation explicitly permits their use at the earlier evaluation boundary.
+
+
 ### ERR-49-076 — Stage-2 multi-Filament selection was technically possible but operationally ambiguous
 **Date:** 2026-08-29  
 **Environment:** Catalog Center 8.9.8 / Stage 2 after ERR-49-075.
