@@ -20,7 +20,8 @@ Catalog Center:
 - Single Active AI run `33313008558` PASS;
 - Production touched = NO;
 - Host touched = NO;
-- Django migrations changed = NO.
+- Django migrations changed = NO;
+- ERR-49-078 robots unreachable/rate-limit fail-closed fix `11379ca343c64c251e9c34dd907dffa5f7529e12` is included in the CI-tested checkpoint.
 
 3I.45 adds one additive Catalog SQLite metadata table:
 `acquisition_discovery_observations`.

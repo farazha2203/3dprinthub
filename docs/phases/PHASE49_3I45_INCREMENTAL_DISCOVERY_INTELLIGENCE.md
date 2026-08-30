@@ -142,6 +142,18 @@ It verified on Windows / Python 3.12:
 Single Active AI workflow on the same code head:
 `33313008558` — PASS.
 
+## ERR-49-078 — robots policy state correction
+
+During source review, a standards/safety gap was found in the 3I.43 robots gate: generic robots fetch failures were treated as unavailable and therefore allowed. Commit `11379ca343c64c251e9c34dd907dffa5f7529e12` separates the states.
+
+Project policy now is:
+- genuine robots 4xx unavailable: non-blocking;
+- 429 rate-limit: fail closed;
+- 5xx/network/transport unreachable: fail closed;
+- unexpected robots fetch/parse failure: conservative fail closed.
+
+The corrected behavior is covered by the 3I.43 test suite and is included in Windows acquisition run `33313008595` PASS.
+
 ## Book / current-doc mapping
 
 Permanent engineering index:

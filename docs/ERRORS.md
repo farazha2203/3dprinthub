@@ -1,5 +1,29 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+### ERR-49-078 — robots.txt unreachable policy was incorrectly treated as unavailable
+**Date:** 2026-08-30  
+**Environment:** Catalog Center 8.9.9 / Phase49.3I.43–45 public acquisition.
+
+**Symptom/Risk:** the pre-fix `robots_policy()` generic exception path returned `allowed=True`. A robots 5xx/network failure could therefore be treated the same as a genuine robots 4xx-unavailable resource and allow acquisition while policy was temporarily unreachable.
+
+**Root Cause:** robots resource states were collapsed into one catch-all branch instead of distinguishing unavailable, unreachable and rate-limited outcomes.
+
+**Correct Fix:** commit `11379ca343c64c251e9c34dd907dffa5f7529e12` makes the robots gate explicit:
+- genuine robots 4xx unavailable → `known=False`, `allowed=True`, status `unavailable`;
+- HTTP 429 → `known=True`, `allowed=False`, status `rate_limited`;
+- transient 5xx/network/transport failure → `known=True`, `allowed=False`, status `unreachable`;
+- unexpected robots fetch/parse failure → conservative fail-closed `unreachable`.
+
+Existing conditional-cache, Retry-After/cooldown and robots pacing behavior remain intact.
+
+**Regression:** `tests/test_phase49_3i43_modern_acquisition_intelligence.py` now covers unreachable fail-closed, 4xx unavailable/non-blocking and 429 fail-closed states.
+
+**Verification:** dedicated Windows workflow `33313008595` PASS on `846cb63038a79cfe450f5a60aa66e531cf6fe0de`, which contains this fix, plus all 3I.43/3I.45 modern acquisition tests and mature 3I.16/3I.38 acquisition regressions.
+
+**Rollback:** `backup/pre-err49-078-rfc9309-robots-failclosed-20260830` → `3616bf222f394b769cb2e3198164d735fca5267b`.
+
+**Prevention:** acquisition policy code must model unavailable, unreachable, rate-limited and explicitly denied states separately. A temporary network/server failure must never silently become permission.
+
 ### ERR-49-077 — Qt6 workflow referenced runner context before a runner/job existed
 **Date:** 2026-08-30  
 **Environment:** new Phase49.3I.42 GitHub Actions workflow.

@@ -15,6 +15,7 @@
 - Single Active AI run `33313008558` PASS;
 - source checkpoint `846cb63038a79cfe450f5a60aa66e531cf6fe0de`;
 - rollback `backup/pre-phase49-3i45-book-driven-discovery-intelligence-20260830` → `3616bf222f394b769cb2e3198164d735fca5267b`;
+- ERR-49-078 fixed robots policy classification: 4xx-unavailable stays non-blocking, while 429/5xx/network-unreachable fail closed; Windows acquisition CI `33313008595` PASS includes the fix;
 - no Host, Production MySQL, Django migration, media, secret or access-control change.
 
 
