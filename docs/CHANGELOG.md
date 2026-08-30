@@ -1,5 +1,21 @@
 # PROJECT CHANGELOG
 
+## 2026-08-30 — Phase49.3I.42B1 Qt Kernel + first Legacy parity adapters
+- owner accepted the Qt6 shell/menu direction but correctly rejected the missing legacy capability parity;
+- added a long-lived `ApplicationKernel` and `CoreRegistry`;
+- registered one Product, Image, Filament, Acquisition, Publish and AI core per process;
+- established one shared AI engine boundary for future Qt callers;
+- restored folder-style Product presentation in Qt with local-only thumbnails and a detail image preview;
+- added the first real editable Wizard adapter for Stage-1 title/category with mature Stage-lock protection and explicit unlock;
+- added real local Product image presentation in Stage 3;
+- preserved legacy `launch.py`, mature SQLite and all existing business/domain implementations;
+- code checkpoint `0b826dccabcb3d98d5f5b4cca6543d7547ff8773`;
+- Qt6 Windows CI `33319343447` PASS;
+- Single Active AI CI `33319343464` PASS;
+- rollback `backup/pre-phase49-3i42b-qt-core-parity-20260830` → `3d32c2510ee0fee2c5929e35acc79c32bdb05acb`;
+- Production/Host/Django migrations untouched.
+
+
 ## 2026-08-30 — Phase49.3I.45 Incremental Discovery Intelligence
 - reviewed the new owner-supplied GUI, FastAPI and web-scraping references and added a permanent engineering index;
 - reconciled version-sensitive recommendations against current official Qt for Python, FastAPI, HTTPX, Playwright, Scrapy, RFC 9309 and Sitemaps documentation;

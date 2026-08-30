@@ -1,5 +1,28 @@
 # PROJECT ROADMAP
 
+## Qt migration update — 2026-08-30
+
+Phase49.3I.42B is now IN PROGRESS.
+
+42B1 is GitHub/Windows-CI tested at `0b826dccabcb3d98d5f5b4cca6543d7547ff8773`:
+- Application Kernel/Core Registry;
+- shared Product/Image/Filament/Acquisition/Publish/AI cores;
+- folder-like Product gallery with local thumbnails;
+- Product detail preview;
+- first real Stage-1 edit/unlock adapter;
+- local image gallery in Stage 3;
+- legacy launcher preserved.
+
+Next migration order:
+1. 42B2 — complete Stage-2 Filament/brand/color/pricing/production/Profile workflow with existing lock/history authority;
+2. 42B3 — complete Image selection/main-image/metadata/editor parity;
+3. 42B4 — Content/SEO, Source/License/Specs, Slider, Readiness/Publish parity;
+4. 42C — bind the single AICore and acquisition/publish operations to the mature runtimes via QThreadPool progress/cancel adapters;
+5. 42D/42E — design/accessibility polish, packaging and cutover only after side-by-side owner acceptance.
+
+No Production deployment is allowed during 42B.
+
+
 Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  

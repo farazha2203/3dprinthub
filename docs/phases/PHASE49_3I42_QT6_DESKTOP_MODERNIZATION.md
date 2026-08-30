@@ -3,7 +3,7 @@
 Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Status: `IN_PROGRESS / FOUNDATION GITHUB+CI TESTED / LEGACY RUNTIME PRESERVED / OWNER LOCAL PREVIEW NEXT / PRODUCTION NOT TOUCHED`
+Status: `IN_PROGRESS / 42A OWNER VISUAL DIRECTION ACCEPTED / 42B1 GITHUB+WINDOWS CI TESTED / LEGACY RUNTIME PRESERVED / OWNER LOCAL PARITY QA NEXT / PRODUCTION NOT TOUCHED`
 
 ## Goal
 
@@ -96,7 +96,7 @@ A seven-stage QStackedWidget wizard shell maps the existing owner workflow:
 
 A stable StageStepper + previous/next footer makes the route explicit and predictable.
 
-42A reads real selected Product facts. Editing/confirmation authority remains in the legacy Workspace until 42B adapters are implemented and tested.
+42A reads real selected Product facts. Owner accepted the visual shell direction in Local preview. 42B1 now provides the first real edit/image parity adapters; editing authority for the remaining Stages stays in the mature Workspace until each adapter is migrated and tested.
 
 ### Responsive long-running work contract
 `qt6/workers.py` provides QThreadPool + QRunnable + Signal-based result/error/progress/finished transport.
@@ -114,7 +114,43 @@ Qt Filament list uses the global Phase49.3I.41 library and Model/View filtering 
 
 It does not create a parallel Filament database.
 
-## 42B — Full Product Wizard adapters — NEXT
+## 42B — Full Product Wizard adapters — IN PROGRESS
+
+### 42B1 — Application Kernel + first Legacy parity adapters — CI TESTED
+
+Owner Local preview confirmed the shell/menu/navigation direction is good and identified the correct next requirement: functional parity with the mature Catalog Center.
+
+Implemented:
+- one `ApplicationKernel` composition root;
+- one reusable object per core capability through `CoreRegistry`;
+- ProductCore, ImageCore, FilamentCore, AcquisitionCore, PublishCore and one process-wide AICore;
+- Qt pages consume these Core objects instead of creating page-specific engines;
+- Product Explorer gains an icon/card gallery backed by local persisted Product images;
+- Product detail preview and direct edit/Wizard route;
+- Stage 1 is a real editor for title/category;
+- finalized Quick Stage blocks writes until the operator explicitly selects `اصلاح مرحله`;
+- Stage 3 renders actual local Product images;
+- no network image fetch is introduced by Product gallery display;
+- no mature Tk domain contract is removed.
+
+Verification:
+- code `0b826dccabcb3d98d5f5b4cca6543d7547ff8773`;
+- Qt6 CI `33319343447` PASS;
+- Single Active AI `33319343464` PASS.
+
+42B1 is not full parity. Stage 2–7 editing, AI/Crawl operations and final cutover remain open.
+
+### 42B2 — Next exact implementation target
+
+Move the complete mature Stage-2 operator workflow behind the kernel:
+- manufacturer/brand/material/color selection;
+- global reusable Filament inventory;
+- Product-specific fixed pricing;
+- formula/range pricing;
+- production rows;
+- Profile create/edit/clone/delete;
+- existing lock/history/finalization semantics;
+- no duplicate pricing or Filament authority.
 
 Port the complete operator forms to Qt widgets while calling the same mature persistence/domain functions:
 - Stage 1 identity/category,

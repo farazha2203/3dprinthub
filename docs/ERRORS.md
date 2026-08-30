@@ -1,5 +1,26 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-079 — Qt Local preview gate used an obsolete ExpectedHead
+Status: `FIXED / PREVENTION RULE ADDED`
+
+Observed:
+- owner Local checkout started clean on the canonical branch at `92a3f4df...`;
+- `git fetch` + `git pull --ff-only` correctly advanced Local to live GitHub `3d32c251...`;
+- the old 42A runbook still expected historical `fde58f38...`;
+- the guard stopped with `UNEXPECTED HEAD - STOP` before backup/install/compile/Qt launch.
+
+Root cause:
+the runbook pinned a previously valid 42A documentation HEAD while the same canonical branch had legitimately advanced through 3I.43–45.
+
+Resolution:
+- do not rerun the stale command;
+- verify the live remote branch SHA first;
+- only then use the current approved GitHub HEAD in the guarded Local pull/test command.
+
+Prevention:
+every Local/Host runbook that pins a commit must compare its expected SHA to the live GitHub branch before write/install/migration/test steps. A mismatch is a stale-runbook stop, not an application failure.
+
+
 ### ERR-49-078 — robots.txt unreachable policy was incorrectly treated as unavailable
 **Date:** 2026-08-30  
 **Environment:** Catalog Center 8.9.9 / Phase49.3I.43–45 public acquisition.

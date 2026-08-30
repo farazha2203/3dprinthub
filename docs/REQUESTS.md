@@ -1,5 +1,29 @@
 # OWNER REQUESTS
 
+## REQ-49-079 — Full Legacy capability parity on Qt6 through an object-oriented application kernel
+Status: `IN_PROGRESS / 42B1 GITHUB+WINDOWS CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
+
+Owner acceptance/feedback:
+- Qt6 shell, menus and overall presentation direction are accepted;
+- the text-only Qt Product list and read-only Wizard are not sufficient;
+- all mature Catalog Center capabilities must be migrated rather than discarded;
+- Products must again have folder/card-style image presentation and direct edit flow;
+- every major subsystem must expose one reusable object-oriented Core/Engine owned by the application kernel;
+- AI in particular must have one shared engine object used by every caller, not separate per-screen AI implementations;
+- current mature Stage workflows, locks, history, image pipeline, Filament/pricing/Profile logic, crawl/discovery and publish contracts must be wrapped/reused rather than rewritten in parallel.
+
+42B1 implementation:
+- ApplicationKernel/CoreRegistry;
+- Product/Image/Filament/Acquisition/Publish/AI cores;
+- Qt Product gallery + local image preview;
+- real Stage-1 title/category edit + explicit unlock;
+- Stage-3 local image gallery;
+- Qt CI `33319343447` PASS;
+- Single Active AI `33319343464` PASS.
+
+Next acceptance target is 42B2 Stage-2 full operator parity.
+
+
 ## REQ-49-078 — Apply new GUI/FastAPI/web-scraping books to the application and acquisition stack
 Status: `IN_PROGRESS / ACQUISITION DELTA WINDOWS CI TESTED / OWNER LOCAL QA NEXT`
 
