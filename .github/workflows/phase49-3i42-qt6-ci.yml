@@ -1,0 +1,112 @@
+name: Phase49.3I.42 Qt6 Desktop Foundation CI
+
+on:
+  push:
+    branches:
+      - agent/phase49-3i18-operator-bulk-ai-rebuild
+    paths:
+      - "catalog_center/qt6/**"
+      - "catalog_center/qt_launch.py"
+      - "catalog_center/requirements-qt6.txt"
+      - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
+      - "catalog_center/tests/test_phase49_3i41_filament_library.py"
+      - ".github/workflows/phase49-3i42-qt6-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qt6-foundation-windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      QT_QPA_PLATFORM: offscreen
+      CATALOG_DATA_ROOT: ${{ runner.temp }}\catalog-center-data
+
+    steps:
+      - name: Checkout exact GitHub snapshot
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            catalog_center/requirements.txt
+            catalog_center/requirements-qt6.txt
+
+      - name: Install Qt6 preview dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r catalog_center/requirements-qt6.txt
+          python -c "import PySide6; print('PYSIDE6_VERSION=' + PySide6.__version__)"
+
+      - name: Compile Qt6 and touched mature contracts
+        shell: pwsh
+        run: |
+          python -m compileall -q `
+            catalog_center/qt6 `
+            catalog_center/qt_launch.py `
+            catalog_center/app/epic49_desktop_schema.py `
+            catalog_center/app/db.py `
+            catalog_center/tests/test_phase49_3i42_qt6_foundation.py
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 compileall failed' }
+
+      - name: Qt6 foundation tests
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i42_qt6_foundation
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 foundation tests failed' }
+
+      - name: Existing Filament Library regression
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i41_filament_library
+          if ($LASTEXITCODE -ne 0) { throw 'Phase49.3I.41 regression failed' }
+
+      - name: Qt6 offscreen structural launch
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python qt_launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP\qt6-verify.txt"
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
+          $text = Get-Content "$env:RUNNER_TEMP\qt6-verify.txt" -Raw
+          foreach ($marker in @(
+            'QT_UI_CONTRACT=phase49-3i42-qt6-foundation-v1',
+            'QT6_MAIN_WINDOW=ENABLED',
+            'QT6_MODEL_VIEW=ENABLED',
+            'QT6_WIZARD_7_STAGE=ENABLED',
+            'QT6_COMMAND_PALETTE=ENABLED',
+            'QT6_QTHREADPOOL=ENABLED',
+            'QT6_FOUNDATION_VERIFY=OK'
+          )) {
+            if ($text -notmatch [regex]::Escape($marker)) {
+              throw "Missing Qt6 marker: $marker"
+            }
+          }
+
+      - name: Legacy launcher remains untouched
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP\legacy-verify.txt"
+          if ($LASTEXITCODE -ne 0) { throw 'Legacy launcher verify failed' }
+          $legacy = Get-Content "$env:RUNNER_TEMP\legacy-verify.txt" -Raw
+          if ($legacy -notmatch 'ACTIVE_RELEASE_VERIFIED=OK') {
+            throw 'Legacy release verification marker missing'
+          }
+
+      - name: Final source guard
+        shell: pwsh
+        run: |
+          if (Select-String -Path "catalog_center\qt6\*.py" -Pattern "import tkinter|from tkinter" -Quiet) {
+            throw "Qt6 presentation package must not import Tkinter"
+          }
+          Write-Host "PHASE49_3I42_QT6_FOUNDATION_CI=PASS"
