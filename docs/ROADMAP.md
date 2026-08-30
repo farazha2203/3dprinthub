@@ -1,15 +1,38 @@
 # PROJECT ROADMAP
 
-Updated: 2026-08-29  
+Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.40 — Commerce Precision + Offer Ownership + Readiness Truth / Catalog Center 8.9.8`  
-Status: `8.9.8 / PHASE49.3I.41 CENTRAL FILAMENT LIBRARY+SITE SYNC GITHUB / OWNER LOCAL TEST NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9`  
+Status: `8.9.9 BUILD 2026.08.30.3 / PHASE49.3I.45 WINDOWS CI PASS / OWNER LOCAL ACQUISITION QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`
+
+## Immediate owner gate — Phase49.3I.45 incremental discovery
+
+GitHub executable/source checkpoint:
+`846cb63038a79cfe450f5a60aa66e531cf6fe0de`.
+
+Windows evidence:
+- 3I.43–45 Modern Acquisition `33313008595` PASS;
+- Single Active AI `33313008558` PASS.
+
+Owner Local gate:
+1. close Catalog Center;
+2. verify `D:\projects\3DPrintHub`, exact branch and clean worktree;
+3. ff-only pull current GitHub head;
+4. checksum-backup `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`;
+5. run 3I.43 + 3I.45 tests and mature 3I.16/3I.38 acquisition regressions;
+6. run launcher `--verify-only`;
+7. foreground-test one known Sitemap/listing source;
+8. confirm new/unseen Product discovery is prioritized;
+9. confirm known Products are not duplicated;
+10. inspect acquisition attempts/host state for respectful pacing.
+
+No Host/Production work until this Local gate is accepted.
 
 ## Immediate owner gate — Phase49.3I.42 Qt6 foundation
 
