@@ -401,7 +401,7 @@ class ModernHttpClient:
             max_keepalive_connections=6,
             keepalive_expiry=30.0,
         )
-        transport = httpx.AsyncHTTPTransport(retries=1)
+        transport = httpx.AsyncHTTPTransport(retries=1, limits=limits)
         self.client = httpx.AsyncClient(
             timeout=timeout,
             limits=limits,
