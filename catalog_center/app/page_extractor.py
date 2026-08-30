@@ -697,7 +697,14 @@ class RichPageExtractor:
                         if not raw or len(raw) > 2_000_000:
                             return
                         data = json.loads(raw.decode("utf-8", errors="replace"))
-                        network_json.append({"url": response.url, "data": data})
+                        network_json.append({
+                            "url": response.url,
+                            "status": int(response.status or 0),
+                            "method": str(response.request.method or "GET"),
+                            "resource_type": str(response.request.resource_type or ""),
+                            "content_type": ctype.split(";", 1)[0],
+                            "data": data,
+                        })
                     except Exception:
                         return
                 page.on("response", lambda r: __import__("asyncio").create_task(capture_json(r)))
@@ -765,6 +772,7 @@ class RichPageExtractor:
                 )
                 snapshot["network_json"] = network_json
                 snapshot["source_url"] = url
+                snapshot["http_status"] = int(response.status) if response else 0
                 extracted = parse_page_snapshot(snapshot)
                 (output_dir / "page_extract.json").write_text(
                     json.dumps(extracted.as_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
