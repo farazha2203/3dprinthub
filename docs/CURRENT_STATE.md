@@ -4,8 +4,8 @@ Updated: 2026-08-29
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
-Parallel Windows Track: `Phase49.3I.41 — Central Filament Library + Grouped Product Checklist + Site Sync / Catalog Center 8.9.8`  
-Status: `8.9.8 / PHASE49.3I.41 IMPLEMENTED+GITHUB_UPDATED / OWNER LOCAL TEST NEXT / SITE BRIDGE CODE READY / PRODUCTION NOT DEPLOYED`
+Parallel Windows Track: `Phase49.3I.42 — Qt 6 Desktop Modernization (parallel preview) / legacy Catalog Center 8.9.8 preserved`  
+Status: `PHASE49.3I.42 FOUNDATION GITHUB+WINDOWS CI TESTED / OWNER LOCAL QT PREVIEW NEXT / LEGACY 8.9.8 PRESERVED / PRODUCTION NOT TOUCHED`
 
 ## Exact code/runtime candidate
 
@@ -37,8 +37,35 @@ Catalog Center:
 - mature Crawl/Direct Link/parser/image/file acquisition remains the authority.
 
 Canonical active phase doc:
-`docs/phases/PHASE49_3I41_FILAMENT_LIBRARY_SITE_SYNC.md`.
+`docs/phases/PHASE49_3I42_QT6_DESKTOP_MODERNIZATION.md`.
 
+
+## Current active delta — Phase49.3I.42 Qt 6 desktop modernization
+
+Two owner-purchased PyQt5 references were reviewed and converted into a project-specific GUI engineering index at `docs/references/PYTHON_QT_GUI_REFERENCE_NOTES.md`.
+
+The new presentation target is current Qt for Python / PySide6, not a new Qt5 lock-in. A parallel Qt6 shell now exists without replacing the mature Tk launcher:
+- `catalog_center/qt_launch.py`;
+- `catalog_center/qt6/`;
+- `catalog_center/requirements-qt6.txt` pinned to PySide6 6.11.2;
+- QMainWindow + permanent navigation + QStackedWidget routing;
+- centralized QAction registry and Ctrl+K command palette;
+- menus/toolbars/statusbar;
+- Model/View Product + Filament tables and proxy filtering;
+- seven-stage Product Wizard shell;
+- QSplitter, QSettings, RTL, light/dark QSS;
+- QThreadPool/QRunnable Signal worker contract;
+- no Tkinter imports inside the Qt presentation package.
+
+Dedicated Windows CI run `33299745502` PASS: install, compile, Qt tests, Phase49.3I.41 regression, offscreen structural launch, legacy launcher verify and no-Tk guard. Existing Single Active AI CI `33299745499` also PASS.
+
+The first workflow definition failed before creating a job (`33299686593`) because `runner.temp` was referenced at job-level evaluation; it was fixed by resolving the path inside the Windows step. The failed condition was not repeated unchanged.
+
+No Django/Catalog migration, Host, Production, secrets, media or default launcher change.
+
+Rollback: `backup/pre-phase49-3i42-qt6-desktop-foundation-20260830` → `753539b0d76ccf0d185e35add458925628812a44`.
+
+Next exact task: owner Local side-by-side Qt preview; after acceptance implement 42B full editable Product Wizard adapters while keeping the same mature Catalog/AI/Crawl/Bridge/Pricing contracts.
 
 ## Current active delta — Phase49.3I.41 central Filament library
 
