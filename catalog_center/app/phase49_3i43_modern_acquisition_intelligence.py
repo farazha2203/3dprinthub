@@ -530,8 +530,8 @@ class ModernHttpClient:
             data = gzip.decompress(data)
             if len(data) > max(1, int(max_bytes)):
                 raise RuntimeError(f"Decompressed response is larger than {max_bytes} bytes")
-            if urlsplit(str(url or "")).path.lower().endswith((".xml.gz", ".xml.gzip")):
-                normalized_type = "application/xml"
+        if urlsplit(str(url or "")).path.lower().endswith((".xml.gz", ".xml.gzip")):
+            normalized_type = "application/xml"
         return data, normalized_type
 
     async def fetch_text(
@@ -1175,16 +1175,32 @@ def record_endpoint_hints(
         })
 
     db.conn.commit()
-    if source_code and output:
+    if source_code:
+        capture = snapshot.get("capture_summary") if isinstance(snapshot, dict) else {}
+        if not isinstance(capture, dict):
+            capture = {}
+        supports_jsonld = 1 if int(capture.get("json_ld_count") or 0) > 0 else 0
+        supports_embedded = 1 if int(capture.get("embedded_json_count") or 0) > 0 else 0
+        supports_public = 1 if output else 0
         db.conn.execute(
             """
-            INSERT INTO source_capabilities(source_code,supports_public_json,last_probe_at)
-            VALUES(?,1,?)
+            INSERT INTO source_capabilities(
+                source_code,supports_jsonld,supports_embedded_json,
+                supports_public_json,last_probe_at
+            ) VALUES(?,?,?,?,?)
             ON CONFLICT(source_code) DO UPDATE SET
-                supports_public_json=1,
+                supports_jsonld=MAX(source_capabilities.supports_jsonld, excluded.supports_jsonld),
+                supports_embedded_json=MAX(source_capabilities.supports_embedded_json, excluded.supports_embedded_json),
+                supports_public_json=MAX(source_capabilities.supports_public_json, excluded.supports_public_json),
                 last_probe_at=excluded.last_probe_at
             """,
-            (str(source_code), utc_now()),
+            (
+                str(source_code),
+                supports_jsonld,
+                supports_embedded,
+                supports_public,
+                utc_now(),
+            ),
         )
         db.conn.commit()
     return output
