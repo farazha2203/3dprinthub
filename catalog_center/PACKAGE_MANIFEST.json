@@ -1,5 +1,5 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.9 — Modern Acquisition Intelligence + Commerce Precision",
+  "name": "3DPrintHub Catalog Center v8.9.9 — Incremental Discovery Intelligence + Modern Acquisition",
   "version": "8.9.9",
   "phase": 49,
   "release_kind": "portable-single-file",
@@ -135,7 +135,12 @@
     "public_endpoint_schema_only_provenance",
     "raw_network_payload_persistence_disabled",
     "source_capability_observation",
-    "adaptive_host_latency_telemetry"
+    "adaptive_host_latency_telemetry",
+    "sitemap_lastmod_freshness_priority",
+    "persistent_discovery_observation_ledger",
+    "unseen_product_first_discovery_order",
+    "custom_source_sitemap_model_heuristic",
+    "direct_sitemap_metadata_only_no_nested_media_loc"
   ],
   "files": [
     "BUILD_EXE.ps1",
@@ -237,7 +242,9 @@
     "tests/test_phase49_3i40_commerce_precision.py",
     "app/phase49_3i43_modern_acquisition_intelligence.py",
     "tests/test_phase49_3i43_modern_acquisition_intelligence.py",
-    "app/public_web_capture.py"
+    "app/public_web_capture.py",
+    "app/phase49_3i45_incremental_discovery_intelligence.py",
+    "tests/test_phase49_3i45_incremental_discovery_intelligence.py"
   ],
   "secret_audit": "NO_RUNTIME_SECRET_EMBEDDED_IN_EXE_OR_GIT",
   "persistent_data_profile": "%LOCALAPPDATA%\\3DPrintHub\\CatalogCenter",
