@@ -1,6 +1,45 @@
 # DATABASE — 3DPrintHub
 
-Updated: 2026-08-29
+Updated: 2026-08-30
+
+## Catalog Center local database — Phase49.3I.45
+
+Canonical owner Local Catalog SQLite:
+`D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+
+Phase49.3I.45 adds one runtime-created additive table:
+`acquisition_discovery_observations`.
+
+Purpose:
+- source URL discovery metadata;
+- source/Sitemap provenance;
+- Sitemap `lastmod`;
+- `changefreq`;
+- Sitemap priority;
+- first/last seen timestamps;
+- seen count.
+
+It does **not** contain:
+- raw HTML;
+- raw XHR/fetch JSON;
+- cookies;
+- credentials/tokens;
+- Product editorial text;
+- Django Store rows.
+
+Creation uses `CREATE TABLE IF NOT EXISTS` from the Catalog runtime and is covered by Windows CI. This is not a Django migration and does not touch Production MySQL.
+
+Before first owner Local execution of the new build:
+1. close Catalog Center;
+2. verify the exact Catalog SQLite path;
+3. copy it to a fresh timestamped backup;
+4. record SHA256;
+5. only then run the 3I.45 runtime/tests.
+
+Rollback code anchor:
+`3616bf222f394b769cb2e3198164d735fca5267b`.
+Rollback branch:
+`backup/pre-phase49-3i45-book-driven-discovery-intelligence-20260830`.
 
 ## Production
 - Engine: MySQL
