@@ -75,8 +75,12 @@ def main() -> int:
         install_workspace as install_phase49_3i41_workspace,
     )
     from app import phase49_3i15_bulk_discovery_images as phase49_3i15_bulk_module
+    from app import phase49_3i43_modern_acquisition_intelligence as phase49_3i43_acquisition_module
     from app.phase49_3i43_modern_acquisition_intelligence import (
         install_runtime as install_phase49_3i43_runtime,
+    )
+    from app.phase49_3i45_incremental_discovery_intelligence import (
+        install_runtime as install_phase49_3i45_runtime,
     )
     from app.phase49_3i_discovery_review import install_app as install_phase49_3i_discovery_review
     from app.phase49_3i_product_list import install as install_phase49_3i_product_list
@@ -288,6 +292,9 @@ def main() -> int:
     print("EPIC49_3I44_CONDITION_DRIVEN_BROWSER_READINESS=ENABLED", flush=True)
     print("EPIC49_3I44_ENDPOINT_SCHEMA_ONLY=ENABLED", flush=True)
     print("EPIC49_3I44_GZIP_SITEMAP_DISCOVERY=ENABLED", flush=True)
+    print("EPIC49_3I45_SITEMAP_LASTMOD_PRIORITY=ENABLED", flush=True)
+    print("EPIC49_3I45_DISCOVERY_OBSERVATION_LEDGER=ENABLED", flush=True)
+    print("EPIC49_3I45_CUSTOM_SITEMAP_MODEL_HEURISTIC=ENABLED", flush=True)
     print("AI_PROFILE_MIGRATION=PRESERVED", flush=True)
     print("HOST_PROFILE_MIGRATION=PRESERVED", flush=True)
 
@@ -334,6 +341,10 @@ def main() -> int:
         app,
         bulk_module=phase49_3i15_bulk_module,
         app_module=app_module,
+    )
+    install_phase49_3i45_runtime(
+        app,
+        acquisition_module=phase49_3i43_acquisition_module,
     )
     configure_diagnostics(app.db, getattr(app, "logger", None))
     install_diagnostic_identity(app.db)
