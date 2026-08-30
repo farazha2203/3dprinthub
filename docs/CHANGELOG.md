@@ -1,5 +1,22 @@
 # PROJECT CHANGELOG
 
+## 2026-08-30 — Phase49.3I.42 Qt 6 Desktop Modernization foundation
+- reviewed two owner-purchased PyQt5 GUI references and added a project-specific architecture/UX knowledge index;
+- selected current PySide6/Qt6 for the new presentation layer while preserving the mature Tk runtime;
+- added isolated `catalog_center/qt6` presentation package and `qt_launch.py` preview launcher;
+- added permanent sidebar routing, QMainWindow, QStackedWidget, seven-stage Product Wizard shell, QSplitter, menu, toolbar, status bar and QSettings persistence;
+- added centralized QAction registry and Ctrl+K command palette;
+- added Product/Filament Model/View tables and Filament proxy filtering;
+- added light/dark QSS themes and RTL application direction;
+- added QThreadPool/QRunnable signal worker contract for responsive long-running operations;
+- pinned preview runtime to PySide6 6.11.2 in a separate requirements file;
+- added Windows offscreen Qt6 CI and legacy-launcher regression protection;
+- initial CI run `33299686593` failed before job creation due invalid `runner.temp` evaluation scope; fixed without repeating the same condition;
+- corrected Qt6 run `33299745502` PASS; existing Single Active AI run `33299745499` PASS;
+- no DB migration, Host, Production, default launcher, media or secret changes;
+- rollback `backup/pre-phase49-3i42-qt6-desktop-foundation-20260830` → `753539b0d76ccf0d185e35add458925628812a44`.
+
+
 ## 2026-08-29 — Phase49.3I.41 Central Filament Library + grouped Product checklist + Site sync
 - replaced the ambiguous Ctrl/Shift Stage-2 Filament selection surface with a grouped one-click checklist;
 - added a dedicated Product selection pane showing all currently checked Filaments;
