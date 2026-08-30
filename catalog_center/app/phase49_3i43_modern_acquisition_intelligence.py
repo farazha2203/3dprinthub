@@ -377,21 +377,35 @@ def _retry_after_seconds(value: str, *, now_epoch: float | None = None) -> int:
 
 
 class ModernHttpClient:
-    """Pooled, bounded, conditional HTTP client for public web acquisition."""
+    """Pooled, bounded, cache-aware HTTP client for respectful public acquisition.
+
+    The client keeps one AsyncClient per acquisition operation, applies
+    per-host pacing, uses conditional requests, retries only transient failures,
+    and never silently retries authorization, robots, or rate-limit denials.
+    """
 
     def __init__(self, db, source_code: str = "") -> None:
         self.db = db
         self.source_code = str(source_code or "")
         self.client = None
+        self._host_locks: dict[str, asyncio.Lock] = {}
+        self._last_started: dict[str, float] = {}
+        self._robots_min_delay: dict[str, float] = {}
 
     async def __aenter__(self):
         import httpx
 
         timeout = httpx.Timeout(connect=10.0, read=30.0, write=20.0, pool=10.0)
-        limits = httpx.Limits(max_connections=12, max_keepalive_connections=6, keepalive_expiry=30.0)
+        limits = httpx.Limits(
+            max_connections=12,
+            max_keepalive_connections=6,
+            keepalive_expiry=30.0,
+        )
+        transport = httpx.AsyncHTTPTransport(retries=1)
         self.client = httpx.AsyncClient(
             timeout=timeout,
             limits=limits,
+            transport=transport,
             follow_redirects=True,
             headers={
                 "User-Agent": USER_AGENT,
@@ -406,6 +420,120 @@ class ModernHttpClient:
             await self.client.aclose()
             self.client = None
 
+    def set_robots_delay(self, target_url: str, delay_seconds: float | None) -> None:
+        host = (urlsplit(str(target_url or "")).hostname or "").lower()
+        if not host or delay_seconds is None:
+            return
+        delay = max(0.0, min(HOST_MAX_DELAY_SECONDS, float(delay_seconds or 0)))
+        previous = float(self._robots_min_delay.get(host) or 0)
+        self._robots_min_delay[host] = max(previous, delay)
+
+    def _host_row(self, hostname: str):
+        return self.db.conn.execute(
+            """
+            SELECT * FROM acquisition_host_state
+            WHERE source_code=? AND hostname=?
+            """,
+            (self.source_code, hostname),
+        ).fetchone()
+
+    async def _pace_host(self, url: str) -> tuple[str, float]:
+        hostname = (urlsplit(str(url or "")).hostname or "").lower()
+        if not hostname:
+            return "", time.time()
+
+        lock = self._host_locks.setdefault(hostname, asyncio.Lock())
+        async with lock:
+            row = self._host_row(hostname)
+            adaptive = float(row["delay_seconds"] or 0) if row is not None else 0.0
+            robots_min = float(self._robots_min_delay.get(hostname) or 0)
+            delay = max(adaptive, robots_min)
+
+            now = time.time()
+            persisted_last = float(row["last_request_epoch"] or 0) if row is not None else 0.0
+            local_last = float(self._last_started.get(hostname) or 0)
+            last = max(persisted_last, local_last)
+            remaining = (last + delay) - now
+            if remaining > 0:
+                await asyncio.sleep(min(HOST_MAX_DELAY_SECONDS, remaining))
+            started_epoch = time.time()
+            self._last_started[hostname] = started_epoch
+            return hostname, started_epoch
+
+    def _observe_host(
+        self,
+        hostname: str,
+        *,
+        started_epoch: float,
+        status_code: int,
+        elapsed_ms: int,
+        success: bool,
+    ) -> None:
+        if not hostname:
+            return
+        row = self._host_row(hostname)
+        previous_latency = float(row["latency_ewma_ms"] or 0) if row is not None else 0.0
+        previous_delay = float(row["delay_seconds"] or 0) if row is not None else 0.0
+        latency = max(1.0, float(elapsed_ms or 1))
+        latency_ewma = latency if previous_latency <= 0 else (previous_latency * 0.75 + latency * 0.25)
+
+        latency_target = max(
+            HOST_MIN_DELAY_SECONDS,
+            min(HOST_MAX_DELAY_SECONDS, (latency_ewma / 1000.0) / HOST_TARGET_CONCURRENCY),
+        )
+        if success and 200 <= int(status_code or 0) < 400:
+            delay = latency_target if previous_delay <= 0 else (previous_delay * 0.65 + latency_target * 0.35)
+        else:
+            delay = max(
+                previous_delay,
+                min(HOST_MAX_DELAY_SECONDS, max(HOST_MIN_DELAY_SECONDS, latency_target * 1.5)),
+            )
+
+        now = utc_now()
+        self.db.conn.execute(
+            """
+            INSERT INTO acquisition_host_state(
+                source_code,hostname,request_count,success_count,error_count,
+                latency_ewma_ms,delay_seconds,last_status_code,last_request_epoch,updated_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(source_code,hostname) DO UPDATE SET
+                request_count=acquisition_host_state.request_count + 1,
+                success_count=acquisition_host_state.success_count + excluded.success_count,
+                error_count=acquisition_host_state.error_count + excluded.error_count,
+                latency_ewma_ms=excluded.latency_ewma_ms,
+                delay_seconds=excluded.delay_seconds,
+                last_status_code=excluded.last_status_code,
+                last_request_epoch=excluded.last_request_epoch,
+                updated_at=excluded.updated_at
+            """,
+            (
+                self.source_code,
+                hostname,
+                1,
+                1 if success else 0,
+                0 if success else 1,
+                latency_ewma,
+                delay,
+                int(status_code or 0),
+                float(started_epoch or time.time()),
+                now,
+            ),
+        )
+        self.db.conn.commit()
+
+    @staticmethod
+    def _decode_wire_body(raw: bytes, url: str, content_type: str, max_bytes: int) -> tuple[bytes, str]:
+        data = raw
+        normalized_type = str(content_type or "").lower()
+        is_gzip_file = data.startswith(b"\x1f\x8b") or urlsplit(str(url or "")).path.lower().endswith(".gz")
+        if is_gzip_file and data.startswith(b"\x1f\x8b"):
+            data = gzip.decompress(data)
+            if len(data) > max(1, int(max_bytes)):
+                raise RuntimeError(f"Decompressed response is larger than {max_bytes} bytes")
+            if urlsplit(str(url or "")).path.lower().endswith((".xml.gz", ".xml.gzip")):
+                normalized_type = "application/xml"
+        return data, normalized_type
+
     async def fetch_text(
         self,
         url: str,
@@ -417,6 +545,8 @@ class ModernHttpClient:
     ) -> FetchResult:
         if self.client is None:
             raise RuntimeError("ModernHttpClient must be used as an async context manager")
+
+        import httpx
 
         cache = _cache_row(self.db, url) if use_cache else None
         if cache is not None and int(fresh_seconds or 0) > 0:
@@ -436,8 +566,12 @@ class ModernHttpClient:
                     last_modified=str(cache["last_modified"] or ""),
                 )
                 record_attempt(
-                    self.db, self.source_code, url, method_label,
-                    status_code=result.status_code, cache_hit=True,
+                    self.db,
+                    self.source_code,
+                    url,
+                    method_label,
+                    status_code=result.status_code,
+                    cache_hit=True,
                     outcome="fresh_cache_hit",
                 )
                 return result
@@ -449,99 +583,236 @@ class ModernHttpClient:
             if str(cache["last_modified"] or ""):
                 headers["If-Modified-Since"] = str(cache["last_modified"])
 
-        started = time.perf_counter()
-        status_code = 0
-        received = 0
-        try:
-            async with self.client.stream("GET", url, headers=headers) as response:
-                status_code = int(response.status_code)
-                elapsed_ms = int((time.perf_counter() - started) * 1000)
+        last_exc: Exception | None = None
+        transient_failure = False
 
-                if status_code == 304 and cache is not None:
-                    text = _cached_text(cache)
-                    if text:
-                        result = FetchResult(
-                            url=url,
-                            final_url=str(cache["final_url"] or url),
-                            status_code=int(cache["status_code"] or 200),
-                            content_type=str(cache["content_type"] or ""),
-                            text=text,
-                            elapsed_ms=elapsed_ms,
-                            bytes_received=0,
-                            cache_hit=True,
-                            etag=str(cache["etag"] or ""),
-                            last_modified=str(cache["last_modified"] or ""),
-                        )
-                        record_attempt(
-                            self.db, self.source_code, url, method_label,
-                            status_code=304, elapsed_ms=elapsed_ms, cache_hit=True,
-                            outcome="not_modified_cache_hit",
-                        )
-                        return result
+        for attempt in range(1, MAX_HTTP_ATTEMPTS + 1):
+            hostname, started_epoch = await self._pace_host(url)
+            started = time.perf_counter()
+            status_code = 0
+            received = 0
+            try:
+                async with self.client.stream("GET", url, headers=headers) as response:
+                    status_code = int(response.status_code)
+                    elapsed_ms = int((time.perf_counter() - started) * 1000)
 
-                if status_code == 429:
-                    retry_after = _retry_after_seconds(response.headers.get("retry-after", ""))
-                    if self.source_code and retry_after:
-                        try:
-                            self.db.update_source_runtime(
-                                self.source_code,
-                                cooldown_until=int(time.time()) + retry_after,
-                                last_error=f"HTTP 429 retry-after={retry_after}s",
+                    if status_code == 304 and cache is not None:
+                        text = _cached_text(cache)
+                        if text:
+                            self._observe_host(
+                                hostname,
+                                started_epoch=started_epoch,
+                                status_code=304,
+                                elapsed_ms=elapsed_ms,
+                                success=True,
                             )
-                        except Exception:
-                            pass
-                    raise RateLimitedError(f"HTTP 429 for {url}", retry_after)
+                            result = FetchResult(
+                                url=url,
+                                final_url=str(cache["final_url"] or url),
+                                status_code=int(cache["status_code"] or 200),
+                                content_type=str(cache["content_type"] or ""),
+                                text=text,
+                                elapsed_ms=elapsed_ms,
+                                bytes_received=0,
+                                cache_hit=True,
+                                etag=str(cache["etag"] or ""),
+                                last_modified=str(cache["last_modified"] or ""),
+                            )
+                            record_attempt(
+                                self.db,
+                                self.source_code,
+                                url,
+                                method_label,
+                                status_code=304,
+                                elapsed_ms=elapsed_ms,
+                                cache_hit=True,
+                                outcome="not_modified_cache_hit",
+                            )
+                            return result
 
-                if status_code in {401, 403}:
-                    raise AccessDeniedError(f"HTTP {status_code} for {url}")
+                    if status_code == 429:
+                        retry_after = _retry_after_seconds(response.headers.get("retry-after", ""))
+                        if self.source_code and retry_after:
+                            try:
+                                self.db.update_source_runtime(
+                                    self.source_code,
+                                    cooldown_until=int(time.time()) + retry_after,
+                                    last_error=f"HTTP 429 retry-after={retry_after}s",
+                                )
+                            except Exception:
+                                pass
+                        raise RateLimitedError(f"HTTP 429 for {url}", retry_after)
 
-                response.raise_for_status()
-                chunks: list[bytes] = []
-                async for chunk in response.aiter_bytes():
-                    received += len(chunk)
-                    if received > max(1, int(max_bytes)):
-                        raise RuntimeError(f"Response is larger than {max_bytes} bytes")
-                    chunks.append(chunk)
-                raw = b"".join(chunks)
-                content_type = (response.headers.get("content-type") or "").split(";", 1)[0].lower()
-                encoding = response.encoding or "utf-8"
-                text = raw.decode(encoding, "replace")
+                    if status_code in {401, 403}:
+                        raise AccessDeniedError(f"HTTP {status_code} for {url}")
+
+                    if status_code in TRANSIENT_STATUS_CODES:
+                        retry_after = _retry_after_seconds(response.headers.get("retry-after", ""))
+                        raise TransientHttpError(
+                            status_code,
+                            f"Transient HTTP {status_code} for {url}",
+                            retry_after,
+                        )
+
+                    response.raise_for_status()
+                    chunks: list[bytes] = []
+                    async for chunk in response.aiter_bytes():
+                        received += len(chunk)
+                        if received > max(1, int(max_bytes)):
+                            raise RuntimeError(f"Response is larger than {max_bytes} bytes")
+                        chunks.append(chunk)
+
+                    raw = b"".join(chunks)
+                    content_type = (response.headers.get("content-type") or "").split(";", 1)[0].lower()
+                    raw, content_type = self._decode_wire_body(raw, str(response.url), content_type, max_bytes)
+                    encoding = response.encoding or "utf-8"
+                    text = raw.decode(encoding, "replace")
+                    result = FetchResult(
+                        url=url,
+                        final_url=str(response.url),
+                        status_code=status_code,
+                        content_type=content_type,
+                        text=text,
+                        elapsed_ms=elapsed_ms,
+                        bytes_received=len(raw),
+                        cache_hit=False,
+                        etag=str(response.headers.get("etag") or ""),
+                        last_modified=str(response.headers.get("last-modified") or ""),
+                    )
+                    if use_cache and content_type.startswith(
+                        ("text/", "application/json", "application/xml", "application/xhtml")
+                    ):
+                        _store_cache(self.db, result, raw)
+                    self._observe_host(
+                        hostname,
+                        started_epoch=started_epoch,
+                        status_code=status_code,
+                        elapsed_ms=elapsed_ms,
+                        success=True,
+                    )
+                    record_attempt(
+                        self.db,
+                        self.source_code,
+                        url,
+                        method_label,
+                        status_code=status_code,
+                        elapsed_ms=elapsed_ms,
+                        bytes_received=len(raw),
+                        outcome="success",
+                    )
+                    return result
+
+            except (RateLimitedError, AccessDeniedError) as exc:
+                elapsed_ms = int((time.perf_counter() - started) * 1000)
+                self._observe_host(
+                    hostname,
+                    started_epoch=started_epoch,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    success=False,
+                )
+                record_attempt(
+                    self.db,
+                    self.source_code,
+                    url,
+                    method_label,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    bytes_received=received,
+                    outcome="access_limited",
+                    error=str(exc),
+                )
+                raise
+
+            except (TransientHttpError, httpx.TransportError) as exc:
+                transient_failure = True
+                elapsed_ms = int((time.perf_counter() - started) * 1000)
+                last_exc = exc
+                self._observe_host(
+                    hostname,
+                    started_epoch=started_epoch,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    success=False,
+                )
+                can_retry = attempt < MAX_HTTP_ATTEMPTS
+                retry_after = int(getattr(exc, "retry_after_seconds", 0) or 0)
+                if retry_after > HOST_MAX_DELAY_SECONDS:
+                    can_retry = False
+                record_attempt(
+                    self.db,
+                    self.source_code,
+                    url,
+                    method_label,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    bytes_received=received,
+                    outcome="transient_retry" if can_retry else "transient_exhausted",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+                if not can_retry:
+                    break
+                delay = float(retry_after) if retry_after else min(
+                    HOST_MAX_DELAY_SECONDS,
+                    0.35 * (2 ** (attempt - 1)),
+                )
+                if delay > 0:
+                    await asyncio.sleep(delay)
+                continue
+
+            except Exception as exc:
+                elapsed_ms = int((time.perf_counter() - started) * 1000)
+                last_exc = exc
+                self._observe_host(
+                    hostname,
+                    started_epoch=started_epoch,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    success=False,
+                )
+                record_attempt(
+                    self.db,
+                    self.source_code,
+                    url,
+                    method_label,
+                    status_code=status_code,
+                    elapsed_ms=elapsed_ms,
+                    bytes_received=received,
+                    outcome="failed",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+                break
+
+        if transient_failure and cache is not None:
+            cached = _cached_text(cache)
+            if cached:
                 result = FetchResult(
                     url=url,
-                    final_url=str(response.url),
-                    status_code=status_code,
-                    content_type=content_type,
-                    text=text,
-                    elapsed_ms=elapsed_ms,
-                    bytes_received=len(raw),
-                    cache_hit=False,
-                    etag=str(response.headers.get("etag") or ""),
-                    last_modified=str(response.headers.get("last-modified") or ""),
+                    final_url=str(cache["final_url"] or url),
+                    status_code=int(cache["status_code"] or 200),
+                    content_type=str(cache["content_type"] or ""),
+                    text=cached,
+                    elapsed_ms=0,
+                    bytes_received=0,
+                    cache_hit=True,
+                    etag=str(cache["etag"] or ""),
+                    last_modified=str(cache["last_modified"] or ""),
                 )
-                if use_cache and content_type.startswith(("text/", "application/json", "application/xml", "application/xhtml")):
-                    _store_cache(self.db, result, raw)
                 record_attempt(
-                    self.db, self.source_code, url, method_label,
-                    status_code=status_code, elapsed_ms=elapsed_ms,
-                    bytes_received=len(raw), outcome="success",
+                    self.db,
+                    self.source_code,
+                    url,
+                    method_label,
+                    status_code=result.status_code,
+                    cache_hit=True,
+                    outcome="stale_cache_fallback",
+                    error=f"{type(last_exc).__name__}: {last_exc}" if last_exc else "",
                 )
                 return result
-        except (RateLimitedError, AccessDeniedError) as exc:
-            elapsed_ms = int((time.perf_counter() - started) * 1000)
-            record_attempt(
-                self.db, self.source_code, url, method_label,
-                status_code=status_code, elapsed_ms=elapsed_ms,
-                bytes_received=received, outcome="access_limited", error=str(exc),
-            )
-            raise
-        except Exception as exc:
-            elapsed_ms = int((time.perf_counter() - started) * 1000)
-            record_attempt(
-                self.db, self.source_code, url, method_label,
-                status_code=status_code, elapsed_ms=elapsed_ms,
-                bytes_received=received, outcome="failed", error=f"{type(exc).__name__}: {exc}",
-            )
-            raise
+
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError(f"Acquisition failed without a result for {url}")
 
 
 async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPolicy:
