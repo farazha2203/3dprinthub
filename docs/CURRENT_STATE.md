@@ -1,11 +1,40 @@
 # CURRENT PROJECT STATE
 
-Updated: 2026-08-29  
+Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
-Parallel Windows Track: `Phase49.3I.42 — Qt 6 Desktop Modernization (parallel preview) / legacy Catalog Center 8.9.8 preserved`  
-Status: `PHASE49.3I.42 FOUNDATION GITHUB+WINDOWS CI TESTED / OWNER LOCAL QT PREVIEW NEXT / LEGACY 8.9.8 PRESERVED / PRODUCTION NOT TOUCHED`
+Parallel Windows Track: `Phase49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9; Qt 6 3I.42 remains parallel preview`  
+Status: `PHASE49.3I.45 GITHUB+WINDOWS CI TESTED / OWNER LOCAL ACQUISITION QA NEXT / CATALOG 8.9.9 BUILD 2026.08.30.3 / PRODUCTION NOT TOUCHED`
+
+## Current source checkpoint — Phase49.3I.45
+
+Executable/source checkpoint tested by the dedicated Windows acquisition CI:
+
+`846cb63038a79cfe450f5a60aa66e531cf6fe0de`
+
+Catalog Center:
+- version `8.9.9`;
+- build `2026.08.30.3`;
+- Phase49.3I.43–45 Modern Acquisition run `33313008595` PASS;
+- Single Active AI run `33313008558` PASS;
+- Production touched = NO;
+- Host touched = NO;
+- Django migrations changed = NO.
+
+3I.45 adds one additive Catalog SQLite metadata table:
+`acquisition_discovery_observations`.
+
+It records URL discovery provenance and Sitemap freshness metadata only; no raw HTML/XHR/session payload is stored.
+
+Rollback:
+`backup/pre-phase49-3i45-book-driven-discovery-intelligence-20260830` →
+`3616bf222f394b769cb2e3198164d735fca5267b`.
+
+Canonical active phase doc:
+`docs/phases/PHASE49_3I45_INCREMENTAL_DISCOVERY_INTELLIGENCE.md`.
+
+Exact next gate: owner Local ff-only pull + checksum backup of Catalog SQLite + 3I.43/45 regressions + one foreground real-source acquisition QA. Production remains blocked.
 
 ## Exact code/runtime candidate
 
@@ -37,8 +66,30 @@ Catalog Center:
 - mature Crawl/Direct Link/parser/image/file acquisition remains the authority.
 
 Canonical active phase doc:
-`docs/phases/PHASE49_3I42_QT6_DESKTOP_MODERNIZATION.md`.
+`docs/phases/PHASE49_3I45_INCREMENTAL_DISCOVERY_INTELLIGENCE.md`.
 
+
+## Current active delta — Phase49.3I.45 incremental discovery intelligence
+
+The latest owner-supplied GUI/FastAPI/web-scraping references were reviewed and reconciled with current official Qt for Python, FastAPI, HTTPX, Playwright, Scrapy, RFC 9309 and Sitemap documentation.
+
+Permanent knowledge index:
+`docs/references/PYTHON_GUI_FASTAPI_WEB_ACQUISITION_2026.md`.
+
+Implemented:
+- structural Sitemap XML parsing;
+- direct Product `loc` only;
+- `lastmod`, `changefreq`, `priority` metadata;
+- nested Sitemap freshness order inside a bounded document budget;
+- unseen Catalog Products before already-known Products;
+- persistent discovery observation ledger with first/last seen and seen count;
+- custom-source model-path heuristic when no exact model regex exists;
+- no CAPTCHA/auth/proxy bypass;
+- no raw browser network payload persistence.
+
+3I.43/44 pooled HTTP/cache/robots/retry/pacing/browser fallback remains the transport authority. Django Production remains unchanged.
+
+Dedicated Windows CI `33313008595` PASS and Single Active AI `33313008558` PASS on executable source checkpoint `846cb63038a79cfe450f5a60aa66e531cf6fe0de`.
 
 ## Current active delta — Phase49.3I.42 Qt 6 desktop modernization
 
