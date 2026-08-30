@@ -14,9 +14,11 @@ from urllib.parse import parse_qs, urlsplit
 from app.db import Database
 from app.public_web_capture import build_public_capture_summary
 from app.phase49_3i43_modern_acquisition_intelligence import (
+    AccessDeniedError,
     ModernHttpClient,
     RateLimitedError,
     RobotsDeniedError,
+    TransientHttpError,
     _retry_after_seconds,
     acquisition_quality,
     build_provenance,
@@ -277,6 +279,58 @@ class Phase493I43ModernAcquisitionTests(unittest.TestCase):
         ).fetchone()
         self.assertIsNotNone(row)
         self.assertIn(row["robots_status"], {"allowed", "denied"})
+
+    def test_robots_unreachable_fails_closed_without_cached_policy(self):
+        async def run():
+            async with ModernHttpClient(self.db, "test") as client:
+                async def fail_fetch(*_args, **_kwargs):
+                    raise TransientHttpError(503, "robots server unavailable")
+
+                client.fetch_text = fail_fetch
+                return await robots_policy(client, self.base + "/search")
+
+        policy = asyncio.run(run())
+        self.assertTrue(policy.known)
+        self.assertFalse(policy.allowed)
+        self.assertEqual(policy.detail, "robots server unavailable")
+        row = self.db.conn.execute(
+            "SELECT robots_status FROM source_capabilities WHERE source_code='test'"
+        ).fetchone()
+        self.assertEqual(row["robots_status"], "unreachable")
+
+    def test_robots_4xx_unavailable_does_not_invent_a_disallow(self):
+        async def run():
+            async with ModernHttpClient(self.db, "test") as client:
+                async def fail_fetch(*_args, **_kwargs):
+                    raise AccessDeniedError("HTTP 403 for robots.txt")
+
+                client.fetch_text = fail_fetch
+                return await robots_policy(client, self.base + "/search")
+
+        policy = asyncio.run(run())
+        self.assertFalse(policy.known)
+        self.assertTrue(policy.allowed)
+        row = self.db.conn.execute(
+            "SELECT robots_status FROM source_capabilities WHERE source_code='test'"
+        ).fetchone()
+        self.assertEqual(row["robots_status"], "unavailable")
+
+    def test_robots_rate_limit_fails_closed_instead_of_bypassing_policy(self):
+        async def run():
+            async with ModernHttpClient(self.db, "test") as client:
+                async def fail_fetch(*_args, **_kwargs):
+                    raise RateLimitedError("HTTP 429 for robots.txt", 120)
+
+                client.fetch_text = fail_fetch
+                return await robots_policy(client, self.base + "/search")
+
+        policy = asyncio.run(run())
+        self.assertTrue(policy.known)
+        self.assertFalse(policy.allowed)
+        row = self.db.conn.execute(
+            "SELECT robots_status FROM source_capabilities WHERE source_code='test'"
+        ).fetchone()
+        self.assertEqual(row["robots_status"], "rate_limited")
 
     def test_discovery_uses_fast_public_http_and_honors_robots_gate(self):
         pattern = (

@@ -816,6 +816,7 @@ class ModernHttpClient:
 
 
 async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPolicy:
+    import httpx
     from protego import Protego
 
     parsed = urlsplit(target_url)
@@ -840,18 +841,61 @@ async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPoli
         known = True
         detail = f"http={fetched.status_code}"
     except AccessDeniedError as exc:
+        # RFC 9309 section 2.3.1.3: a 4xx robots.txt response means the
+        # robots resource is unavailable, so public resources may be fetched.
         allowed = True
         delay = None
         sitemaps = ()
         status = "unavailable"
         known = False
         detail = str(exc)
-    except Exception as exc:
-        allowed = True
+    except RateLimitedError as exc:
+        # A temporary robots rate limit is not permission to crawl around it.
+        # Fail closed and let the persisted source cooldown govern the retry.
+        allowed = False
         delay = None
         sitemaps = ()
-        status = "unavailable"
-        known = False
+        status = "rate_limited"
+        known = True
+        detail = str(exc)
+    except TransientHttpError as exc:
+        # RFC 9309 section 2.3.1.4: if robots.txt is unreachable because of
+        # server/network failure and no usable cached copy exists, assume
+        # complete disallow until the policy can be fetched again.
+        allowed = False
+        delay = None
+        sitemaps = ()
+        status = "unreachable"
+        known = True
+        detail = str(exc)
+    except httpx.HTTPStatusError as exc:
+        status_code = int(getattr(exc.response, "status_code", 0) or 0)
+        if 400 <= status_code < 500 and status_code != 429:
+            allowed = True
+            known = False
+            status = "unavailable"
+        else:
+            allowed = False
+            known = True
+            status = "unreachable"
+        delay = None
+        sitemaps = ()
+        detail = f"HTTP {status_code}: {exc}"
+    except httpx.TransportError as exc:
+        allowed = False
+        delay = None
+        sitemaps = ()
+        status = "unreachable"
+        known = True
+        detail = f"{type(exc).__name__}: {exc}"
+    except Exception as exc:
+        # Unexpected robots parsing/fetch failures are treated conservatively
+        # rather than silently bypassing the robots gate.
+        allowed = False
+        delay = None
+        sitemaps = ()
+        status = "unreachable"
+        known = True
         detail = f"{type(exc).__name__}: {exc}"
 
     source_code = client.source_code
