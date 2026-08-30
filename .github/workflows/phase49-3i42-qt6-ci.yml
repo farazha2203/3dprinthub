@@ -22,7 +22,6 @@ jobs:
     timeout-minutes: 35
     env:
       QT_QPA_PLATFORM: offscreen
-      CATALOG_DATA_ROOT: ${{ runner.temp }}\catalog-center-data
 
     steps:
       - name: Checkout exact GitHub snapshot
@@ -75,6 +74,7 @@ jobs:
         shell: pwsh
         working-directory: catalog_center
         run: |
+          $env:CATALOG_DATA_ROOT = Join-Path $env:RUNNER_TEMP "catalog-center-data"
           python qt_launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP\qt6-verify.txt"
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
           $text = Get-Content "$env:RUNNER_TEMP\qt6-verify.txt" -Raw
