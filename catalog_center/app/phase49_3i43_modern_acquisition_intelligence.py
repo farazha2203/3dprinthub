@@ -1,17 +1,26 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
+import gzip
 import hashlib
 import json
 import re
 import time
 import zlib
+from email.utils import parsedate_to_datetime
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from .db import normalize_url, utc_now
+from .public_web_capture import (
+    build_public_capture_summary,
+    same_site as public_same_site,
+    sanitize_public_url,
+    summarize_packet,
+)
 from .phase49_3i_discovery_review import candidates_from_dom_rows
 
 
@@ -20,6 +29,11 @@ USER_AGENT = "3DPrintHub-CatalogCenter/8.9.9"
 CACHE_BODY_LIMIT = 6_000_000
 TEXT_RESPONSE_LIMIT = 12_000_000
 ROBOTS_LIMIT = 1_000_000
+MAX_HTTP_ATTEMPTS = 3
+TRANSIENT_STATUS_CODES = {408, 425, 500, 502, 503, 504}
+HOST_MIN_DELAY_SECONDS = 0.15
+HOST_MAX_DELAY_SECONDS = 8.0
+HOST_TARGET_CONCURRENCY = 1.0
 
 SENSITIVE_QUERY_KEYS = {
     "access_token", "api_key", "apikey", "auth", "authorization", "credential",
@@ -46,6 +60,13 @@ class RateLimitedError(RuntimeError):
 
 class AccessDeniedError(PermissionError):
     pass
+
+
+class TransientHttpError(RuntimeError):
+    def __init__(self, status_code: int, message: str, retry_after_seconds: int = 0) -> None:
+        super().__init__(message)
+        self.status_code = int(status_code or 0)
+        self.retry_after_seconds = max(0, int(retry_after_seconds or 0))
 
 
 @dataclass(frozen=True)
