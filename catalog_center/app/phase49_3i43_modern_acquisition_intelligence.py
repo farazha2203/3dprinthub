@@ -164,6 +164,22 @@ def ensure_schema(db) -> None:
             last_probe_at TEXT NOT NULL DEFAULT ''
         );
 
+        CREATE TABLE IF NOT EXISTS acquisition_host_state(
+            source_code TEXT NOT NULL DEFAULT '',
+            hostname TEXT NOT NULL,
+            request_count INTEGER NOT NULL DEFAULT 0,
+            success_count INTEGER NOT NULL DEFAULT 0,
+            error_count INTEGER NOT NULL DEFAULT 0,
+            latency_ewma_ms REAL NOT NULL DEFAULT 0,
+            delay_seconds REAL NOT NULL DEFAULT 0,
+            last_status_code INTEGER NOT NULL DEFAULT 0,
+            last_request_epoch REAL NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(source_code, hostname)
+        );
+        CREATE INDEX IF NOT EXISTS ix_acquisition_host_updated
+        ON acquisition_host_state(updated_at DESC);
+
         CREATE INDEX IF NOT EXISTS ix_discovered_source_status_updated
         ON discovered_urls(source_code, status, updated_at DESC);
         CREATE INDEX IF NOT EXISTS ix_scan_runs_source_started
@@ -174,6 +190,17 @@ def ensure_schema(db) -> None:
         ON products(is_blocked, upload_ready, needs_update, workflow_status, updated_at DESC);
         """
     )
+
+    endpoint_columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(source_endpoint_hints)")}
+    endpoint_additions = {
+        "response_schema_json": "TEXT NOT NULL DEFAULT '[]'",
+        "shape_hash": "TEXT NOT NULL DEFAULT ''",
+        "body_bytes": "INTEGER NOT NULL DEFAULT 0",
+        "observed_count": "INTEGER NOT NULL DEFAULT 0",
+    }
+    for name, ddl in endpoint_additions.items():
+        if name not in endpoint_columns:
+            db.conn.execute(f"ALTER TABLE source_endpoint_hints ADD COLUMN {name} {ddl}")
 
     columns = {row["name"] for row in db.conn.execute("PRAGMA table_info(products)")}
     additions = {
