@@ -6,6 +6,7 @@ import json
 import re
 import time
 import zlib
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
@@ -353,11 +354,35 @@ class ModernHttpClient:
         method_label: str = "conditional-http",
         max_bytes: int = TEXT_RESPONSE_LIMIT,
         use_cache: bool = True,
+        fresh_seconds: int = 0,
     ) -> FetchResult:
         if self.client is None:
             raise RuntimeError("ModernHttpClient must be used as an async context manager")
 
         cache = _cache_row(self.db, url) if use_cache else None
+        if cache is not None and int(fresh_seconds or 0) > 0:
+            age = max(0, int(time.time()) - int(cache["fetched_epoch"] or 0))
+            cached = _cached_text(cache)
+            if cached and age <= int(fresh_seconds):
+                result = FetchResult(
+                    url=url,
+                    final_url=str(cache["final_url"] or url),
+                    status_code=int(cache["status_code"] or 200),
+                    content_type=str(cache["content_type"] or ""),
+                    text=cached,
+                    elapsed_ms=0,
+                    bytes_received=0,
+                    cache_hit=True,
+                    etag=str(cache["etag"] or ""),
+                    last_modified=str(cache["last_modified"] or ""),
+                )
+                record_attempt(
+                    self.db, self.source_code, url, method_label,
+                    status_code=result.status_code, cache_hit=True,
+                    outcome="fresh_cache_hit",
+                )
+                return result
+
         headers: dict[str, str] = {}
         if cache is not None:
             if str(cache["etag"] or ""):
@@ -469,10 +494,15 @@ async def robots_policy(client: ModernHttpClient, target_url: str) -> RobotsPoli
             method_label="robots",
             max_bytes=ROBOTS_LIMIT,
             use_cache=True,
+            fresh_seconds=21600,
         )
         parser = Protego.parse(fetched.text)
         allowed = bool(parser.can_fetch(target_url, USER_AGENT))
         delay = parser.crawl_delay(USER_AGENT)
+        request_rate = parser.request_rate(USER_AGENT)
+        if request_rate is not None and getattr(request_rate, "requests", 0):
+            rate_delay = float(getattr(request_rate, "seconds", 0) or 0) / float(request_rate.requests)
+            delay = max(float(delay or 0), rate_delay)
         sitemaps = tuple(str(item) for item in parser.sitemaps)
         status = "allowed" if allowed else "denied"
         known = True
@@ -548,6 +578,80 @@ def _extract_links_from_html(html: str, pattern: str) -> list[tuple[str, str]]:
     return output
 
 
+async def discover_sitemap_candidates(
+    client: ModernHttpClient,
+    sitemap_urls: list[str] | tuple[str, ...],
+    *,
+    source_code: str,
+    model_pattern: str,
+    requested: int,
+    max_documents: int = 12,
+) -> list[dict]:
+    """Read public XML sitemap/urlset documents with bounded same-site recursion."""
+    queue = [str(item) for item in sitemap_urls if str(item).startswith(("http://", "https://"))]
+    seen_docs: set[str] = set()
+    rows: list[dict[str, str]] = []
+    requested = max(1, int(requested))
+    first_url = queue[0] if queue else ""
+
+    while queue and len(seen_docs) < max(1, int(max_documents)) and len(rows) < requested:
+        sitemap_url = queue.pop(0)
+        normalized_doc = _safe_normalized_url(sitemap_url)
+        if normalized_doc in seen_docs:
+            continue
+        seen_docs.add(normalized_doc)
+        try:
+            fetched = await client.fetch_text(
+                sitemap_url,
+                method_label="sitemap",
+                max_bytes=TEXT_RESPONSE_LIMIT,
+                use_cache=True,
+                fresh_seconds=3600,
+            )
+            root = ET.fromstring(fetched.text)
+        except Exception:
+            continue
+
+        locations = [
+            str(node.text or "").strip()
+            for node in root.iter()
+            if str(node.tag).lower().endswith("loc") and str(node.text or "").strip()
+        ]
+        root_name = str(root.tag).lower()
+        if root_name.endswith("sitemapindex"):
+            for candidate in locations:
+                if candidate.startswith(("http://", "https://")) and (
+                    not first_url or _same_site(first_url, candidate)
+                ):
+                    queue.append(candidate)
+            continue
+
+        for candidate in locations:
+            if not candidate.startswith(("http://", "https://")):
+                continue
+            pairs = _extract_links_from_html(candidate, model_pattern)
+            if not pairs:
+                continue
+            external_id, normalized_url = pairs[0]
+            rows.append({
+                "href": normalized_url,
+                "text": f"Model {external_id}" if external_id else "",
+                "image": "",
+            })
+            if len(rows) >= requested:
+                break
+
+    if not rows:
+        return []
+    return candidates_from_dom_rows(
+        rows,
+        model_pattern,
+        first_url or "",
+        source_code,
+        requested,
+    )
+
+
 async def discover_conditional_http(
     client: ModernHttpClient,
     listing_url: str,
@@ -564,21 +668,46 @@ async def discover_conditional_http(
         )
         raise RobotsDeniedError(f"robots.txt denies acquisition for {listing_url}")
 
-    fetched = await client.fetch_text(listing_url, method_label="conditional-http-links")
+    if policy.crawl_delay and policy.crawl_delay > 0:
+        await asyncio.sleep(min(60.0, float(policy.crawl_delay)))
+
+    fetched = await client.fetch_text(
+        listing_url,
+        method_label="conditional-http-links",
+        fresh_seconds=30,
+    )
     pairs = _extract_links_from_html(fetched.text, model_pattern)
     rows = [
         {"href": url, "text": f"Model {external_id}" if external_id else "", "image": ""}
         for external_id, url in pairs[: max(1, int(requested))]
     ]
-    if not rows:
-        return []
-    return candidates_from_dom_rows(
-        rows,
-        model_pattern,
-        fetched.final_url or listing_url,
-        source_code,
-        requested,
-    )
+    if rows:
+        return candidates_from_dom_rows(
+            rows,
+            model_pattern,
+            fetched.final_url or listing_url,
+            source_code,
+            requested,
+        )
+
+    parsed = urlsplit(listing_url)
+    rootish = (parsed.path or "/") in {"", "/"} and not parsed.query
+    sitemapish = "sitemap" in (parsed.path or "").lower() or (parsed.path or "").lower().endswith(".xml")
+    sitemap_urls: list[str] = []
+    if sitemapish:
+        sitemap_urls.append(listing_url)
+    elif rootish:
+        sitemap_urls.extend(policy.sitemaps)
+
+    if sitemap_urls:
+        return await discover_sitemap_candidates(
+            client,
+            sitemap_urls,
+            source_code=source_code,
+            model_pattern=model_pattern,
+            requested=requested,
+        )
+    return []
 
 
 def _endpoint_score(packet: dict[str, Any]) -> float:
