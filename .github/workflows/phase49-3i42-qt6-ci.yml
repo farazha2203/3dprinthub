@@ -1,4 +1,4 @@
-name: Phase49.3I.42 Qt6 Desktop Foundation CI
+name: Phase49.3I.42-42B Qt6 Desktop CI
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - "catalog_center/qt_launch.py"
       - "catalog_center/requirements-qt6.txt"
       - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
+      - "catalog_center/tests/test_phase49_3i42b_core_parity.py"
       - "catalog_center/tests/test_phase49_3i41_filament_library.py"
       - ".github/workflows/phase49-3i42-qt6-ci.yml"
   workflow_dispatch:
@@ -48,20 +49,15 @@ jobs:
       - name: Compile Qt6 and touched mature contracts
         shell: pwsh
         run: |
-          python -m compileall -q `
-            catalog_center/qt6 `
-            catalog_center/qt_launch.py `
-            catalog_center/app/epic49_desktop_schema.py `
-            catalog_center/app/db.py `
-            catalog_center/tests/test_phase49_3i42_qt6_foundation.py
+          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 compileall failed' }
 
-      - name: Qt6 foundation tests
+      - name: Qt6 foundation and 42B core parity tests
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -m unittest -v tests.test_phase49_3i42_qt6_foundation
-          if ($LASTEXITCODE -ne 0) { throw 'Qt6 foundation tests failed' }
+          python -m unittest -v tests.test_phase49_3i42_qt6_foundation tests.test_phase49_3i42b_core_parity
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 foundation/core parity tests failed' }
 
       - name: Existing Filament Library regression
         shell: pwsh
@@ -75,17 +71,22 @@ jobs:
         working-directory: catalog_center
         run: |
           $env:CATALOG_DATA_ROOT = Join-Path $env:RUNNER_TEMP "catalog-center-data"
-          python qt_launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP\qt6-verify.txt"
+          python qt_launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP/qt6-verify.txt"
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
-          $text = Get-Content "$env:RUNNER_TEMP\qt6-verify.txt" -Raw
+          $text = Get-Content "$env:RUNNER_TEMP/qt6-verify.txt" -Raw
           foreach ($marker in @(
-            'QT_UI_CONTRACT=phase49-3i42-qt6-foundation-v1',
+            'QT_UI_CONTRACT=phase49-3i42b1-qt-core-parity-v1',
             'QT6_MAIN_WINDOW=ENABLED',
             'QT6_MODEL_VIEW=ENABLED',
             'QT6_WIZARD_7_STAGE=ENABLED',
             'QT6_COMMAND_PALETTE=ENABLED',
             'QT6_QTHREADPOOL=ENABLED',
-            'QT6_FOUNDATION_VERIFY=OK'
+            'QT6_APPLICATION_KERNEL=ENABLED',
+            'QT6_PRODUCT_GALLERY=ENABLED',
+            'QT6_STAGE1_EDIT_ADAPTER=ENABLED',
+            'QT6_STAGE3_LOCAL_IMAGES=ENABLED',
+            'QT6_SINGLE_AI_CORE=ENABLED',
+            'QT6_42B1_CORE_PARITY_VERIFY=OK'
           )) {
             if ($text -notmatch [regex]::Escape($marker)) {
               throw "Missing Qt6 marker: $marker"
@@ -96,9 +97,9 @@ jobs:
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP\legacy-verify.txt"
+          python launch.py --verify-only | Tee-Object -FilePath "$env:RUNNER_TEMP/legacy-verify.txt"
           if ($LASTEXITCODE -ne 0) { throw 'Legacy launcher verify failed' }
-          $legacy = Get-Content "$env:RUNNER_TEMP\legacy-verify.txt" -Raw
+          $legacy = Get-Content "$env:RUNNER_TEMP/legacy-verify.txt" -Raw
           if ($legacy -notmatch 'ACTIVE_RELEASE_VERIFIED=OK') {
             throw 'Legacy release verification marker missing'
           }
@@ -106,7 +107,7 @@ jobs:
       - name: Final source guard
         shell: pwsh
         run: |
-          if (Select-String -Path "catalog_center\qt6\*.py" -Pattern "import tkinter|from tkinter" -Quiet) {
+          if (Select-String -Path "catalog_center/qt6/*.py" -Pattern "import tkinter|from tkinter" -Quiet) {
             throw "Qt6 presentation package must not import Tkinter"
           }
-          Write-Host "PHASE49_3I42_QT6_FOUNDATION_CI=PASS"
+          Write-Host "PHASE49_3I42B_QT6_CORE_PARITY_CI=PASS"

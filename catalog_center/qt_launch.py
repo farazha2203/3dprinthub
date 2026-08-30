@@ -14,11 +14,12 @@ def _build_runtime():
     from app.db import Database
     from app.epic49_desktop_schema import ensure_epic49_desktop_schema
     from app.runtime_paths import data_root
+    from qt6.kernel import build_kernel
 
     db_path = data_root() / "catalog.sqlite3"
     db = Database(db_path)
     ensure_epic49_desktop_schema(db)
-    return db
+    return build_kernel(db)
 
 
 def main(argv=None) -> int:
@@ -42,31 +43,43 @@ def main(argv=None) -> int:
     app.setApplicationName("CatalogCenterQt6")
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-    db = _build_runtime()
+    kernel = _build_runtime()
     try:
-        window = MainWindow(db)
+        window = MainWindow(kernel)
         apply_theme(app, window._current_theme)
         contract = window.structural_contract()
+
         print(f"QT_UI_CONTRACT={QT_UI_CONTRACT}", flush=True)
         print("QT6_MAIN_WINDOW=ENABLED", flush=True)
         print("QT6_MODEL_VIEW=ENABLED", flush=True)
         print("QT6_WIZARD_7_STAGE=ENABLED", flush=True)
         print("QT6_COMMAND_PALETTE=ENABLED", flush=True)
         print("QT6_QTHREADPOOL=ENABLED", flush=True)
+        print("QT6_APPLICATION_KERNEL=ENABLED", flush=True)
+        print("QT6_PRODUCT_GALLERY=ENABLED", flush=True)
+        print("QT6_STAGE1_EDIT_ADAPTER=ENABLED", flush=True)
+        print("QT6_STAGE3_LOCAL_IMAGES=ENABLED", flush=True)
+        print("QT6_SINGLE_AI_CORE=ENABLED", flush=True)
         print(f"QT6_ROUTES={len(contract['routes'])}", flush=True)
         print(f"QT6_ACTIONS={contract['action_count']}", flush=True)
+        print(f"QT6_CORES={len(contract['core_names'])}", flush=True)
+
         if args.verify_only:
             if contract["wizard_stages"] != 7:
                 raise RuntimeError("Qt6 wizard stage contract mismatch")
             if contract["stack_count"] != len(contract["routes"]):
                 raise RuntimeError("Qt6 route/stack contract mismatch")
+            if not contract["ai_single_engine"]:
+                raise RuntimeError("Qt6 AI core contract mismatch")
             print("QT6_FOUNDATION_VERIFY=OK", flush=True)
+            print("QT6_42B1_CORE_PARITY_VERIFY=OK", flush=True)
             window.close()
             return 0
+
         window.show()
         return app.exec()
     finally:
-        db.close()
+        kernel.db.close()
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ from PySide6.QtCore import QByteArray, QSettings, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
-    QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from .actions import ActionRegistry, ActionSpec
 from .command_palette import CommandPalette
+from .kernel import ApplicationKernel, build_kernel
 from .pages import (
     DashboardPage,
     FilamentsPage,
@@ -42,14 +42,20 @@ NAV_ITEMS = (
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, db, parent=None) -> None:
+    def __init__(self, runtime, parent=None) -> None:
         super().__init__(parent)
-        self.db = db
+        self.kernel = (
+            runtime
+            if isinstance(runtime, ApplicationKernel)
+            else build_kernel(runtime)
+        )
+        self.db = self.kernel.db
         self.settings = QSettings("3DPrintHub", "CatalogCenterQt6")
         self.task_pool = TaskPool()
         self._route_to_index: dict[str, int] = {}
         self._route_to_nav_row: dict[str, int] = {}
         self._current_theme = str(self.settings.value("theme", "light"))
+
         self._build_window()
         self._build_actions()
         self._build_menu_and_toolbar()
@@ -71,12 +77,15 @@ class MainWindow(QMainWindow):
         sidebar.setObjectName("Sidebar")
         sidebar.setMinimumWidth(220)
         sidebar.setMaximumWidth(320)
+
         side_layout = QVBoxLayout(sidebar)
         side_layout.setContentsMargins(14, 18, 14, 14)
+
         brand = QLabel("3DPrintHub")
         brand.setObjectName("BrandTitle")
         subtitle = QLabel("Catalog Center • Qt 6")
         subtitle.setObjectName("BrandSubtitle")
+
         side_layout.addWidget(brand)
         side_layout.addWidget(subtitle)
 
@@ -90,7 +99,11 @@ class MainWindow(QMainWindow):
         self.nav.currentRowChanged.connect(self._navigate_from_sidebar)
         side_layout.addWidget(self.nav, 1)
 
-        version_hint = QLabel("Preview معماری جدید\nLegacy runtime حفظ شده")
+        version_hint = QLabel(
+            "Qt6 Migration\n"
+            "Application Kernel فعال\n"
+            "Legacy runtime حفظ شده"
+        )
         version_hint.setObjectName("BrandSubtitle")
         version_hint.setWordWrap(True)
         side_layout.addWidget(version_hint)
@@ -98,15 +111,26 @@ class MainWindow(QMainWindow):
         content_host = QWidget()
         content_layout = QVBoxLayout(content_host)
         content_layout.setContentsMargins(18, 16, 18, 16)
+
         self.stack = QStackedWidget()
         content_layout.addWidget(self.stack)
 
         self.dashboard_page = DashboardPage(self.db, self.navigate)
-        self.products_page = ProductsPage(self.db, self.open_product)
-        self.wizard_page = ProductWizardPage(self.db)
+        self.products_page = ProductsPage(
+            self.db,
+            self.open_product,
+            kernel=self.kernel,
+        )
+        self.wizard_page = ProductWizardPage(
+            self.db,
+            kernel=self.kernel,
+        )
         self.filaments_page = FilamentsPage(self.db)
         self.operations_page = OperationsPage(self.db)
-        self.settings_page = SettingsPage(self.db)
+        self.settings_page = SettingsPage(
+            self.db,
+            kernel=self.kernel,
+        )
 
         for key, page in (
             ("dashboard", self.dashboard_page),
@@ -126,42 +150,87 @@ class MainWindow(QMainWindow):
 
         self.status_message = QLabel("آماده")
         self.statusBar().addWidget(self.status_message, 1)
+
         self.status_db = QLabel(f"DB: {self.db.path.name}")
         self.statusBar().addPermanentWidget(self.status_db)
 
     def _build_actions(self) -> None:
         self.actions = ActionRegistry(self)
-        self.actions.register(ActionSpec(
-            "refresh", "بروزرسانی", "F5",
-            "بروزرسانی صفحه فعلی و داده‌های Model/View", toolbar=True,
-        ), self.refresh_current_page)
-        self.actions.register(ActionSpec(
-            "dashboard", "داشبورد", "Ctrl+1", "رفتن به داشبورد",
-        ), lambda: self.navigate("dashboard"))
-        self.actions.register(ActionSpec(
-            "products", "محصولات", "Ctrl+2", "رفتن به فهرست محصولات",
-        ), lambda: self.navigate("products"))
-        self.actions.register(ActionSpec(
-            "wizard", "ویزارد محصول", "Ctrl+3", "رفتن به ویزارد محصول", toolbar=True,
-        ), lambda: self.navigate("wizard"))
-        self.actions.register(ActionSpec(
-            "filaments", "فیلامنت‌ها", "Ctrl+4", "رفتن به کتابخانه Filament", toolbar=True,
-        ), lambda: self.navigate("filaments"))
-        self.actions.register(ActionSpec(
-            "operations", "عملیات", "Ctrl+5", "رفتن به مرکز عملیات",
-        ), lambda: self.navigate("operations"))
-        self.actions.register(ActionSpec(
-            "palette", "فرمان سریع", "Ctrl+K", "جستجوی فرمان‌های برنامه", toolbar=True,
-        ), self.show_command_palette)
-        self.actions.register(ActionSpec(
-            "theme", "تغییر پوسته", "Ctrl+Shift+T", "تغییر بین پوسته روشن و تیره",
-        ), self.toggle_theme)
-        self.actions.register(ActionSpec(
-            "about", "درباره نسخه Qt 6", "", "اطلاعات معماری رابط جدید",
-        ), self.show_about)
-        self.actions.register(ActionSpec(
-            "exit", "خروج", "Ctrl+Q", "خروج از برنامه",
-        ), self.close)
+
+        self.actions.register(
+            ActionSpec(
+                "refresh",
+                "بروزرسانی",
+                "F5",
+                "بروزرسانی صفحه فعلی و داده‌های Model/View",
+                toolbar=True,
+            ),
+            self.refresh_current_page,
+        )
+        self.actions.register(
+            ActionSpec("dashboard", "داشبورد", "Ctrl+1", "رفتن به داشبورد"),
+            lambda: self.navigate("dashboard"),
+        )
+        self.actions.register(
+            ActionSpec("products", "محصولات", "Ctrl+2", "رفتن به فهرست محصولات"),
+            lambda: self.navigate("products"),
+        )
+        self.actions.register(
+            ActionSpec(
+                "wizard",
+                "ویزارد محصول",
+                "Ctrl+3",
+                "رفتن به ویزارد محصول",
+                toolbar=True,
+            ),
+            lambda: self.navigate("wizard"),
+        )
+        self.actions.register(
+            ActionSpec(
+                "filaments",
+                "فیلامنت‌ها",
+                "Ctrl+4",
+                "رفتن به کتابخانه Filament",
+                toolbar=True,
+            ),
+            lambda: self.navigate("filaments"),
+        )
+        self.actions.register(
+            ActionSpec("operations", "عملیات", "Ctrl+5", "رفتن به مرکز عملیات"),
+            lambda: self.navigate("operations"),
+        )
+        self.actions.register(
+            ActionSpec(
+                "palette",
+                "فرمان سریع",
+                "Ctrl+K",
+                "جستجوی فرمان‌های برنامه",
+                toolbar=True,
+            ),
+            self.show_command_palette,
+        )
+        self.actions.register(
+            ActionSpec(
+                "theme",
+                "تغییر پوسته",
+                "Ctrl+Shift+T",
+                "تغییر بین پوسته روشن و تیره",
+            ),
+            self.toggle_theme,
+        )
+        self.actions.register(
+            ActionSpec(
+                "about",
+                "درباره نسخه Qt 6",
+                "",
+                "اطلاعات معماری رابط جدید",
+            ),
+            self.show_about,
+        )
+        self.actions.register(
+            ActionSpec("exit", "خروج", "Ctrl+Q", "خروج از برنامه"),
+            self.close,
+        )
 
     def _build_menu_and_toolbar(self) -> None:
         file_menu = self.menuBar().addMenu("فایل")
@@ -170,7 +239,13 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.actions.action("exit"))
 
         navigate_menu = self.menuBar().addMenu("مسیرها")
-        for key in ("dashboard", "products", "wizard", "filaments", "operations"):
+        for key in (
+            "dashboard",
+            "products",
+            "wizard",
+            "filaments",
+            "operations",
+        ):
             navigate_menu.addAction(self.actions.action(key))
 
         view_menu = self.menuBar().addMenu("نمایش")
@@ -189,20 +264,26 @@ class MainWindow(QMainWindow):
 
     def _navigate_from_sidebar(self, row: int) -> None:
         if 0 <= row < self.nav.count():
-            key = str(self.nav.item(row).data(Qt.ItemDataRole.UserRole))
+            key = str(
+                self.nav.item(row).data(Qt.ItemDataRole.UserRole)
+            )
             self.navigate(key, update_sidebar=False)
 
     def navigate(self, key: str, *, update_sidebar: bool = True) -> None:
         key = key if key in self._route_to_index else "dashboard"
         self.stack.setCurrentIndex(self._route_to_index[key])
+
         if update_sidebar:
             target_row = self._route_to_nav_row.get(key, 0)
             if self.nav.currentRow() != target_row:
                 self.nav.blockSignals(True)
                 self.nav.setCurrentRow(target_row)
                 self.nav.blockSignals(False)
+
         self.settings.setValue("route", key)
-        self.status_message.setText(f"مسیر: {dict(NAV_ITEMS).get(key, key)}")
+        self.status_message.setText(
+            f"مسیر: {dict(NAV_ITEMS).get(key, key)}"
+        )
         self.refresh_current_page()
 
     def current_route(self) -> str:
@@ -217,35 +298,43 @@ class MainWindow(QMainWindow):
         refresh = getattr(page, "refresh", None)
         if callable(refresh):
             refresh()
+
         self.status_message.setText(
-            f"{dict(NAV_ITEMS).get(self.current_route(), self.current_route())} بروزرسانی شد"
+            f"{dict(NAV_ITEMS).get(self.current_route(), self.current_route())} "
+            "بروزرسانی شد"
         )
 
     def open_product(self, product_id: int) -> None:
         self.wizard_page.load_product(int(product_id))
         self.navigate("wizard")
-        self.status_message.setText(f"محصول #{int(product_id)} در ویزارد باز شد")
+        self.status_message.setText(
+            f"محصول #{int(product_id)} در ویزارد باز شد"
+        )
 
     def show_command_palette(self) -> None:
         dialog = CommandPalette(self.actions, self)
         dialog.exec()
 
     def toggle_theme(self) -> None:
-        self._current_theme = "dark" if self._current_theme == "light" else "light"
+        self._current_theme = (
+            "dark" if self._current_theme == "light" else "light"
+        )
         apply_theme(QApplication.instance(), self._current_theme)
         self.settings.setValue("theme", self._current_theme)
         self.status_message.setText(
-            "پوسته تیره فعال شد" if self._current_theme == "dark" else "پوسته روشن فعال شد"
+            "پوسته تیره فعال شد"
+            if self._current_theme == "dark"
+            else "پوسته روشن فعال شد"
         )
 
     def show_about(self) -> None:
         QMessageBox.information(
             self,
             "3DPrintHub Catalog Center — Qt 6",
-            "Phase49.3I.42\n\n"
-            "رابط جدید با QMainWindow، Action Registry، Model/View، "
-            "QStackedWidget Wizard، QSplitter، QSS، QSettings و QThreadPool.\n\n"
-            "این Preview هنوز launch.py بالغ Tk را جایگزین نکرده است.",
+            "Phase49.3I.42B1\n\n"
+            "Qt6 Shell + Application Kernel + Core Registry + "
+            "Product Gallery/Preview + Stage-1 real edit adapter.\n\n"
+            "Legacy launch.py تا پایان مهاجرت کامل و Acceptance حفظ می‌شود.",
         )
 
     def _restore_ui_state(self) -> None:
@@ -255,6 +344,7 @@ class MainWindow(QMainWindow):
         geometry = self.settings.value("geometry")
         if isinstance(geometry, QByteArray):
             self.restoreGeometry(geometry)
+
         splitter_state = self.settings.value("splitter")
         if isinstance(splitter_state, QByteArray):
             self.main_splitter.restoreState(splitter_state)
@@ -267,6 +357,7 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     def structural_contract(self) -> dict[str, object]:
+        kernel_contract = self.kernel.contract()
         return {
             "routes": tuple(self._route_to_index),
             "nav_count": self.nav.count(),
@@ -275,4 +366,6 @@ class MainWindow(QMainWindow):
             "action_count": len(list(self.actions.items())),
             "threadpool_max": self.task_pool.max_threads,
             "theme": self._current_theme,
+            "core_names": kernel_contract["cores"],
+            "ai_single_engine": kernel_contract["ai_single_engine"],
         }
