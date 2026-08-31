@@ -385,6 +385,150 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertIn("فارسی", text)
         self.assertIn("JSON", text)
 
+    def _image_product(self) -> int:
+        local_dir = Path(self.temp.name) / "image-product"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        image_path = image_dir / "source.jpg"
+        Image.new("RGB", (800, 600), "white").save(
+            image_path,
+            format="JPEG",
+        )
+        image_url = "https://example.com/media/lamp.jpg"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": image_url,
+                            "local_file": str(image_path),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        self.db.upsert_product(
+            {
+                "source_code": "makerworld",
+                "external_id": "ERR49-083-IMG",
+                "source_url": "https://makerworld.com/en/models/err49-083-image-test",
+                "source_title": "Twisted Table Lamp",
+                "title_fa": "چراغ رومیزی پیچ‌خورده",
+                "local_category_slug": "home-decor",
+                "workflow_status": "review",
+                "local_dir": str(local_dir),
+                "images_json": json.dumps([image_url]),
+                "selected_images_json": json.dumps([image_url]),
+                "primary_image_url": image_url,
+                "image_alt_texts_json": json.dumps([""]),
+            }
+        )
+        return int(
+            next(
+                row["id"]
+                for row in self.kernel.products.list()
+                if row["external_id"] == "ERR49-083-IMG"
+            )
+        )
+
+    def test_image_status_lists_exact_metadata_defects_and_counts(self):
+        product_id = self._image_product()
+        image_status = next(
+            item
+            for item in self.kernel.stages.statuses(product_id)
+            if item["stage"] == "images"
+        )
+        self.assertGreater(image_status["missing_count"], 0)
+        self.assertGreater(image_status["ai_fixable_count"], 0)
+        self.assertTrue(
+            any(
+                "نام SEO تصویر 1" in item
+                for item in image_status["missing"]
+            )
+        )
+
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(product_id)
+            text_value = window.wizard_page.stepper.list.item(2).text()
+            self.assertIn("مورد", text_value)
+            self.assertIn("نام SEO تصویر 1", text_value)
+            self.assertIn("AI/خودکار", text_value)
+        finally:
+            window.close()
+
+    def test_image_finalizer_repairs_local_seo_without_live_source_http(self):
+        product_id = self._image_product()
+        with patch(
+            "app.crawler.public_http",
+            side_effect=AssertionError(
+                "image SEO repair must not fetch Product page"
+            ),
+        ):
+            result = self.kernel.images.finalize(product_id)
+
+        self.assertEqual(result["kept"], 1)
+        row = dict(self.db.product(product_id))
+        metadata = json.loads(row["image_metadata_json"])
+        self.assertEqual(len(metadata), 1)
+        self.assertTrue(metadata[0]["seo_filename"].endswith(".webp"))
+        self.assertTrue(metadata[0]["metadata_ready"])
+        self.assertTrue(metadata[0]["alt_text"])
+        self.assertTrue(
+            Path(metadata[0]["final_local_file"]).is_file()
+        )
+        image_status = next(
+            item
+            for item in self.kernel.stages.statuses(product_id)
+            if item["stage"] == "images"
+        )
+        self.assertEqual(image_status["ai_fixable_count"], 0)
+
+    def test_ai_current_on_images_routes_to_local_repair_not_provider(self):
+        product_id = self._image_product()
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(product_id)
+            wizard = window.wizard_page
+            wizard.stepper.set_stage(2)
+            with patch.object(
+                wizard,
+                "_run_image_smart_repair",
+            ) as local_repair, patch.object(
+                self.kernel.providers,
+                "estimate_product_ai",
+                side_effect=AssertionError(
+                    "image-only repair must not quote/provider-call"
+                ),
+            ):
+                wizard._run_ai(current_only=True)
+            local_repair.assert_called_once_with()
+        finally:
+            window.close()
+
+    def test_ai_done_never_claims_green_success_with_ai_defects_remaining(self):
+        product_id = self._image_product()
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(product_id)
+            wizard = window.wizard_page
+            wizard._ai_done(
+                {
+                    "product_id": product_id,
+                    "target_stages": ["content"],
+                    "changed_fields": [],
+                }
+            )
+            self.assertIn("⚠️", wizard.ai_status.text())
+            self.assertIn(
+                "قابل تکمیل هوشمند",
+                wizard.ai_status.text(),
+            )
+        finally:
+            window.close()
+
     def test_operations_restores_explicit_add_product_modes(self):
         page = OperationsPage(
             self.db,
