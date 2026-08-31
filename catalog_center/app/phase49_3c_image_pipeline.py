@@ -540,6 +540,21 @@ def finalize_selected_images(db, product_id: int) -> dict:
         items = regenerated
 
     alts = [item["alt_text"] for item in items]
+
+    # The finalizer can synthesize Alt text from the approved Product title.
+    # image_alt_texts_json participates in the SEO signature, so a signature
+    # computed before persisting those synthesized Alt values becomes stale
+    # immediately after a successful finalize. Recompute against the exact
+    # derived state that will be persisted.
+    signature_row = dict(row)
+    signature_row["image_alt_texts_json"] = json.dumps(
+        alts,
+        ensure_ascii=False,
+    )
+    final_signature = image_seo_signature(signature_row)
+    for item in items:
+        item["seo_signature"] = final_signature
+
     manifest = {
         "schema": "phase49.3c-image-seo-v1",
         "product_id": int(product_id),
