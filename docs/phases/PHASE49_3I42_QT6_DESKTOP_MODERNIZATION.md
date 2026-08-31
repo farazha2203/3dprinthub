@@ -1,9 +1,9 @@
 # Phase49.3I.42 — Qt 6 Desktop Modernization
 
-Updated: 2026-08-30  
+Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Status: `IN_PROGRESS / 42A OWNER VISUAL DIRECTION ACCEPTED / 42B1 GITHUB+WINDOWS CI TESTED / LEGACY RUNTIME PRESERVED / OWNER LOCAL PARITY QA NEXT / PRODUCTION NOT TOUCHED`
+Status: `IN_PROGRESS / 42B2 REQUESTED PRODUCT+SETTINGS PARITY GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / 42C ACQUISITION CONTROLS OPEN / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
 
 ## Goal
 
@@ -140,35 +140,33 @@ Verification:
 
 42B1 is not full parity. Stage 2–7 editing, AI/Crawl operations and final cutover remain open.
 
-### 42B2 — Next exact implementation target
+## 42B2 — Requested Product/Settings Legacy Parity — WINDOWS CI TESTED
 
-Move the complete mature Stage-2 operator workflow behind the kernel:
-- manufacturer/brand/material/color selection;
-- global reusable Filament inventory;
-- Product-specific fixed pricing;
-- formula/range pricing;
-- production rows;
-- Profile create/edit/clone/delete;
-- existing lock/history/finalization semantics;
-- no duplicate pricing or Filament authority.
+Source checkpoint:
+`c3b0105eaa6c6141eb6d6d8463a96d547101564c`
 
-Port the complete operator forms to Qt widgets while calling the same mature persistence/domain functions:
-- Stage 1 identity/category,
-- Stage 2 grouped Filament checklist + Product-fixed pricing + Profile editor,
-- image gallery/metadata,
-- content/SEO forms,
-- source/license/specification review,
-- slider/media controls,
-- readiness/publish confirmation.
+Qt now exposes the requested mature Product workflow without a parallel business engine:
+- Product gallery + sortable table with Persian title, original/source title and descriptions;
+- site category QComboBox + custom categories;
+- full reusable Filament create/edit/deactivate and inventory/rate/preheat facts;
+- Profile Matrix with one size/dimensions identity, multiple weight/support/time rows and many Filament/color/price options;
+- image dimensions, file size and SEO metadata;
+- full Content/SEO;
+- Source/License/Specs;
+- full homepage slider controls;
+- red/pending/green readiness state plus save/finalize/unlock;
+- AI Link/Saved Data/Screenshot actions through one process-wide AICore;
+- Provider Hub: AvalAI/OpenRouter/Google Gemini/OpenAI, secure key, model search/list, test and exact default Provider/Model;
+- FTP/Bridge settings and connection tests.
 
-Requirements:
-- editable QComboBox for reusable master values,
-- QSpinBox/QDoubleSpinBox for numeric values,
-- QCheckBox/tri-state where hierarchical selection is needed,
-- QSplitter for resizeable dense work areas,
-- dedicated dialogs for focused edit/create operations,
-- field validation before save,
-- per-stage dirty state and explicit save/finalize state.
+The AI runtime still obeys the mature Single Active AI contract: exact saved Provider/Model/key, no hidden cross-provider fallback and no separate page AI engines.
+
+Verification:
+- `33369749205` — Phase49.3I.42B2 Full Qt6 Legacy Parity CI — PASS;
+- `33369749123` — Phase49.3I.17 Single Active AI CI — PASS.
+
+Boundary:
+42B2 covers the Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings request. Qt Operations is still read-only; live Scan/Crawl/Direct-Link/Acquisition controls remain Phase42C. Default launcher remains legacy until owner Local foreground acceptance and later 42E cutover.
 
 ## 42C — Operations / AI / Acquisition
 

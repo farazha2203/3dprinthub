@@ -1,44 +1,51 @@
 # CURRENT PROJECT STATE
 
-Updated: 2026-08-30  
+Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
-Parallel Windows Track: `Phase49.3I.42B1 — Qt Application Kernel + first Legacy parity adapters; Phase49.3I.45 acquisition remains CI-tested`  
-Status: `PHASE49.3I.42B1 GITHUB+WINDOWS CI TESTED / OWNER LOCAL QT PARITY QA NEXT / 3I.45 ACQUISITION PRESERVED / PRODUCTION NOT TOUCHED`
+Parallel Windows Track: `Phase49.3I.42B2 — requested Product/Filament/Profile/Image/SEO/Slider/AI/Settings parity; Phase49.3I.45 acquisition remains CI-tested`  
+Status: `PHASE49.3I.42B2 GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / 42C ACQUISITION CONTROLS OPEN / PRODUCTION NOT TOUCHED`
 
-## Current Windows Qt checkpoint — Phase49.3I.42B1
+## Current Windows Qt checkpoint — Phase49.3I.42B2
 
-Owner Local preview accepted the Qt6 shell/menu/navigation direction and exposed the expected migration gap: the new shell did not yet contain the mature legacy Product gallery/editing workflows.
+Requested Product/Settings parity is implemented on the shared Qt kernel without replacing mature Catalog/AI/Filament/Profile/Stage authorities.
 
-Source checkpoint:
-`0b826dccabcb3d98d5f5b4cca6543d7547ff8773`
+Executable/source checkpoint:
+`c3b0105eaa6c6141eb6d6d8463a96d547101564c`
 
-Implemented without replacing mature business logic:
-- `ApplicationKernel` + `CoreRegistry` as the single Qt composition root;
-- one long-lived core object per capability: Product, Images, Filament, Acquisition, Publish and AI;
-- one process-level `AICore` boundary for all future Qt callers; no per-page AI engine is allowed;
-- Product Explorer gallery mode using Qt Model/View and existing local Catalog image resolution, plus the table view;
-- Product detail image preview and direct Product → Wizard edit route;
-- Stage 1 real title/category editing through ProductCore;
-- existing Stage lock is respected; explicit quick-stage unlock is required before editing a finalized Stage 1;
-- Stage 3 now renders real local Product images instead of a text-only image summary;
-- Settings reports active application cores;
-- legacy `launch.py` remains available and unchanged as the mature fallback.
+Implemented:
+- Product gallery + sortable table with Persian title, original/source title and description;
+- site category QComboBox plus custom category persistence;
+- reusable Filament CRUD with manufacturer/brand/material/color/multicolor, stock, roll/rate, hourly and preheat facts;
+- Profile Matrix with one size/profile × multiple production rows (part weight + support weight + print time) × many Filaments/colors/prices;
+- Product-specific fixed Filament pricing plus dynamic/range pricing contracts;
+- image selection/primary preview with pixel dimensions, file size and SEO metadata visibility;
+- complete Persian Content/SEO editor;
+- Source/author/license/commercial status/specification editor;
+- complete Product-local homepage slider controls;
+- seven-stage readiness truth: red cross = missing, pending marker = data-ready/unconfirmed, green check = finalized;
+- one process-wide object-oriented `AICore`, reusing exact saved Provider/Model/key and mature Link/Saved Data/Screenshot source modes;
+- Provider Hub for AvalAI/OpenRouter/Google Gemini/OpenAI with secure key, live model list/search, connection test and default Provider/Model;
+- Site Connection settings for FTP + authenticated Bridge with Credential Store secrets;
+- legacy `launch.py` preserved and verified healthy.
 
 Verification:
-- Qt6 42A+42B1 Windows CI run `33319343447` PASS;
-- Single Active AI run `33319343464` PASS;
+- Phase49.3I.42B2 Windows run `33369749205` PASS end-to-end;
+- dedicated Single Active AI run `33369749123` PASS;
+- Qt foundation/full-parity tests, 3I.41 Filament, 3I.34/35/36/37/39 mature regressions, Single Active AI regression, Qt offscreen launcher, legacy launcher and no-Tk guard all PASS;
 - Production touched = NO;
 - Host touched = NO;
 - Django migration changed = NO.
 
+Boundary:
+owner-requested Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings parity is implemented and CI-tested. Phase42C live Scan/Crawl/Acquisition controls are still not migrated into Qt; current Qt Operations remains read-only. Qt is therefore not yet the default launcher and cannot be marked ACCEPTED before owner Local foreground QA.
+
 Rollback:
-`backup/pre-phase49-3i42b-qt-core-parity-20260830` →
-`3d32c2510ee0fee2c5929e35acc79c32bdb05acb`.
+`backup/pre-phase49-3i42b2-full-legacy-parity-20260830` → `6260f94cee531124446cf1b3e19ce0d95554d594`.
 
 Exact next task:
-owner Local ff-only pull + Catalog SQLite checksum backup + 42B1 tests/preview. After acceptance, implement 42B2 by moving the complete mature Stage-2 Filament/pricing/Profile operator flow behind the same Qt kernel instead of duplicating it.
+owner Local clean ff-only pull + verified Catalog SQLite checksum backup + full 42B2 regression/verify + foreground Qt QA. After acceptance continue 42C acquisition controls, then 42E packaging/default-launcher cutover. Production remains blocked.
 
 ## Current source checkpoint — Phase49.3I.45
 
