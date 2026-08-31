@@ -260,8 +260,10 @@ async def _discover_listing(
         if _stopped(should_stop):
             break
         pending = len(
-            db.pending_urls(
+            _pending_for_listing(
+                db,
                 source_code,
+                listing_url,
                 requested,
                 include_failed=False,
             )
