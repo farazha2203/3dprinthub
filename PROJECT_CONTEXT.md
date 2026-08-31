@@ -1,5 +1,16 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
+## Continuation checkpoint — 2026-08-31 / ERR-49-082
+
+Code checkpoint `0421bccff040ced53513625af95d05e0c8c27a9a` fixes the owner-observed OpenRouter model-selection failure: media/music and tools-only coding models can no longer masquerade as Product Structured models. OpenRouter Product calls now require strict JSON Schema + compatible endpoints, and Product execution requires a verified saved model capability profile.
+
+CI: `33399095190` Qt/Crawl/AI PASS; `33399095198` Single Active AI PASS; `33399095224` Windows Portable PASS.
+
+Rollback: `backup/pre-err49-082-openrouter-product-model-gate-20260831` → `26761c81d04bbd74dc2c978b08e77f3250b0518b`.
+
+Next: owner Local canonical gate, reload OpenRouter catalogue, select Product-safe Text + JSON✓ model, retest Product #309 Link/Data. Production/Host untouched.
+
+
 ## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C3
 
 Current code checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
