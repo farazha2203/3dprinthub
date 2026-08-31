@@ -26,6 +26,7 @@ from app.phase49_3i43_modern_acquisition_intelligence import (
     TransientHttpError,
     discover_conditional_http,
     ensure_schema as ensure_modern_schema,
+    robots_policy,
 )
 from app.phase49_3i45_incremental_discovery_intelligence import (
     discover_sitemap_candidates_incremental,
@@ -95,6 +96,23 @@ def _pending_for_listing(
 
 def _source_dict(row) -> dict[str, Any]:
     return dict(row) if row is not None else {}
+
+
+async def _browser_robots_gate(
+    db,
+    source_code: str,
+    target_url: str,
+) -> float:
+    """Apply the same RFC9309/429 fail-closed contract before Browser work."""
+
+    async with ModernHttpClient(db, str(source_code or "")) as client:
+        policy = await robots_policy(client, target_url)
+    if policy.known and not policy.allowed:
+        raise RobotsDeniedError(
+            f"robots.txt does not permit browser acquisition for {target_url}: "
+            f"{policy.detail or 'denied'}"
+        )
+    return max(0.0, float(policy.crawl_delay or 0.0))
 
 
 def _product_identity(source_cfg: dict[str, Any], url: str) -> tuple[str, str]:
@@ -253,6 +271,14 @@ async def _discover_listing(
             }
 
     # Classic fallback / explicit legacy mode.
+    # Browser work never bypasses robots policy merely because the operator
+    # selected the historical Search-Link workflow.
+    browser_crawl_delay = await _browser_robots_gate(
+        db,
+        source_code,
+        listing_url,
+    )
+
     # 3I.38 remembers the prior listing depth so each rerun keeps moving
     # forward instead of restarting from the same first screen.
     stagnant = 0
@@ -286,6 +312,8 @@ async def _discover_listing(
             f"{label} — عمق {scroll_rounds} / جدید {new_count}",
         )
 
+        if browser_crawl_delay > 0:
+            await asyncio.sleep(min(30.0, browser_crawl_delay))
         result = await discover_classic(
             listing_url,
             model_pattern=model_pattern,
@@ -363,6 +391,14 @@ async def _collect_one(
 
     source_code = str(source_cfg.get("code") or "")
     profile_dir = data_root() / "browser_profiles" / "qt42c-rich"
+
+    product_crawl_delay = await _browser_robots_gate(
+        db,
+        source_code,
+        url,
+    )
+    if product_crawl_delay > 0:
+        await asyncio.sleep(min(30.0, product_crawl_delay))
 
     result = await extract_direct_link(
         url,
