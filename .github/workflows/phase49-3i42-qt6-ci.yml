@@ -1,4 +1,4 @@
-name: Phase49.3I.42C Qt6 Full Parity + Acquisition CI
+name: Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI
 
 on:
   push:
@@ -12,6 +12,9 @@ on:
       - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
       - "catalog_center/tests/test_phase49_3i42b_core_parity.py"
       - "catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py"
+      - "catalog_center/tests/test_phase49_3i42c3_ai_crawl_parity.py"
+      - "catalog_center/app/ai_model_catalog.py"
+      - "catalog_center/app/ai_providers.py"
       - "catalog_center/tests/test_phase49_3i41_filament_library.py"
       - "catalog_center/app/classic_methods.py"
       - "catalog_center/app/page_extractor.py"
@@ -85,7 +88,7 @@ jobs:
       - name: Compile Qt6 and touched mature contracts
         shell: pwsh
         run: |
-          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/app/classic_methods.py catalog_center/app/page_extractor.py catalog_center/app/phase49_3i16_resilient_acquisition.py catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py
+          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/app/classic_methods.py catalog_center/app/page_extractor.py catalog_center/app/phase49_3i16_resilient_acquisition.py catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py catalog_center/tests/test_phase49_3i42c3_ai_crawl_parity.py catalog_center/app/ai_model_catalog.py catalog_center/app/ai_providers.py
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity compileall failed' }
 
       - name: Qt6 foundation and full parity tests
@@ -101,6 +104,13 @@ jobs:
         run: |
           python -m unittest -v tests.test_phase49_3i42c_acquisition_runtime
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 acquisition strategy tests failed' }
+
+      - name: Qt6 AI model cost diagnostics and crawl parity
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i42c3_ai_crawl_parity
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 AI/crawl parity tests failed' }
 
       - name: Mature acquisition regressions
         shell: pwsh
@@ -139,7 +149,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
           $text = Get-Content "$env:RUNNER_TEMP/qt6-verify.txt" -Raw
           foreach ($marker in @(
-            'QT_UI_CONTRACT=phase49-3i42b2-full-legacy-parity-v1',
+            'QT_UI_CONTRACT=phase49-3i42c3-ai-crawl-parity-v1',
             'QT6_MAIN_WINDOW=ENABLED',
             'QT6_PRODUCT_GALLERY_SORT=ENABLED',
             'QT6_FILAMENT_CRUD=ENABLED',
@@ -153,6 +163,12 @@ jobs:
             'QT6_AI_PROVIDER_HUB=ENABLED',
             'QT6_SITE_CONNECTION_SETTINGS=ENABLED',
             'QT6_SINGLE_AI_CORE=ENABLED',
+            'QT6_PRODUCT_ACQUISITION_ROUTE=ENABLED',
+            'QT6_LEGACY_CRAWL_CONTROLS=ENABLED',
+            'QT6_AI_MODEL_RANKING_COST=ENABLED',
+            'QT6_AI_STRUCTURED_PROBE=ENABLED',
+            'QT6_AI_COST_CONFIRM=ENABLED',
+            'QT6_DIAGNOSTIC_DIALOG=ENABLED',
             'QT6_42B2_FULL_PARITY_VERIFY=OK'
           )) {
             if ($text -notmatch [regex]::Escape($marker)) {
@@ -179,3 +195,4 @@ jobs:
           }
           Write-Host "PHASE49_3I42B2_FULL_LEGACY_PARITY_CI=PASS"
           Write-Host "PHASE49_3I42C_FULL_ACQUISITION_CI=PASS"
+          Write-Host "PHASE49_3I42C3_AI_CRAWL_PARITY_CI=PASS"
