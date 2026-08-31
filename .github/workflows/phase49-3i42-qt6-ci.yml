@@ -70,7 +70,7 @@ jobs:
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -m unittest -v tests.test_phase49_3i34_profile_matrix tests.test_phase49_3i35_operator_ledger tests.test_phase49_3i36_stage_finalization tests.test_phase49_3i37_seven_stage_ai tests.test_phase49_3i39_professional_commerce
+          python -m unittest -v tests.test_phase49_3i34_profile_matrix tests.test_phase49_3i35_operator_workflow tests.test_phase49_3i36_stage_finalization tests.test_phase49_3i37_seven_stage_ai tests.test_phase49_3i39_professional_commerce
           if ($LASTEXITCODE -ne 0) { throw 'Mature Profile/Stage regression failed' }
 
       - name: Single Active AI regression
