@@ -1,5 +1,16 @@
 # PROJECT ROADMAP
 
+## 2026-08-31 — ERR-49-082 OpenRouter Product-model compatibility gate
+Status: `GITHUB_UPDATED / QT_CI_PASS / SINGLE_AI_PASS / PORTABLE_PASS / OWNER_LOCAL_RETEST_NEXT`.
+
+The 42C3 foreground QA proved that “API connected” was insufficient: a music model and a tools-only coding model could still be selected for Product work. The runtime now requires Product-relevant text output plus native Structured JSON capability, uses strict OpenRouter JSON Schema + compatible endpoint routing, and blocks stale/unverified active models before estimate/execute.
+
+Code checkpoint: `0421bccff040ced53513625af95d05e0c8c27a9a`.
+Evidence: `33399095190`, `33399095198`, `33399095224` PASS.
+
+Next: owner Local gate + reload live OpenRouter catalogue + choose a Product-safe Text/JSON✓ model + Product #309 Link/Data retest. 42D/42E remain blocked until this foreground retest passes.
+
+
 ## 2026-08-31 — Phase49.3I.42C3 gate
 Status: `GITHUB_UPDATED / WINDOWS_CI_PASS / OWNER_LOCAL_QA_NEXT`.
 
