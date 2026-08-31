@@ -48,6 +48,51 @@ def _stopped(should_stop: ShouldStop) -> bool:
     return bool(callable(should_stop) and should_stop())
 
 
+def _same_listing(left: str, right: str) -> bool:
+    try:
+        return normalize_url(str(left or "")) == normalize_url(str(right or ""))
+    except Exception:
+        return str(left or "").strip() == str(right or "").strip()
+
+
+def _pending_for_listing(
+    db,
+    source_code: str,
+    listing_url: str,
+    limit: int,
+    *,
+    include_failed: bool = False,
+):
+    """Return only queue rows owned by the operator's current Search/Listing URL.
+
+    The mature discovered_urls table is global per Source. Without this scope,
+    an old pending URL from another Search could consume the requested batch or
+    make discovery stop early. We filter in Python so tracking/query parameter
+    normalization follows the same canonical URL contract as Product identity.
+    """
+
+    statuses = ("new", "failed") if include_failed else ("new",)
+    placeholders = ",".join("?" for _ in statuses)
+    rows = list(
+        db.conn.execute(
+            f"""
+            SELECT *
+            FROM discovered_urls
+            WHERE source_code=?
+              AND status IN ({placeholders})
+            ORDER BY CASE status WHEN 'new' THEN 0 ELSE 1 END, id
+            """,
+            (str(source_code or ""), *statuses),
+        )
+    )
+    output = [
+        row
+        for row in rows
+        if _same_listing(str(row["discovered_from"] or ""), listing_url)
+    ]
+    return output[: max(1, int(limit))]
+
+
 def _source_dict(row) -> dict[str, Any]:
     return dict(row) if row is not None else {}
 
@@ -187,15 +232,17 @@ async def _discover_listing(
                 source_code,
                 external_id,
                 url,
-                str(candidate.get("discovered_from") or listing_url),
+                listing_url,
             ):
                 new_count += 1
             else:
                 duplicate_count += 1
 
         if len(
-            db.pending_urls(
+            _pending_for_listing(
+                db,
                 source_code,
+                listing_url,
                 requested,
                 include_failed=False,
             )
@@ -469,8 +516,10 @@ async def run_batch_async(
         discovered += int(discovery["new"])
         duplicates += int(discovery["duplicates"])
 
-        rows = db.pending_urls(
+        rows = _pending_for_listing(
+            db,
             source_code,
+            listing_url,
             requested,
             include_failed=bool(include_failed),
         )
