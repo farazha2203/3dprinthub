@@ -540,6 +540,16 @@ class OperationsPage(QWidget):
         self.mode.addItem("دریافت گروهی از Search / Listing", "listing")
         self.mode.addItem("دریافت مستقیم یک Product", "single")
 
+        self.strategy = QComboBox()
+        self.strategy.addItem(
+            "هوشمند پیشنهادی — HTTP/Sitemap + Browser",
+            "hybrid",
+        )
+        self.strategy.addItem(
+            "کلاسیک قدیمی — Search Link + Browser ادامه‌دار",
+            "classic",
+        )
+
         self.url = QLineEdit()
         self.url.setPlaceholderText(
             "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
@@ -565,13 +575,15 @@ class OperationsPage(QWidget):
         grid.addWidget(self.source, 0, 1)
         grid.addWidget(QLabel("نوع دریافت"), 0, 2)
         grid.addWidget(self.mode, 0, 3)
-        grid.addWidget(QLabel("لینک"), 1, 0)
-        grid.addWidget(self.url, 1, 1, 1, 3)
-        grid.addWidget(QLabel("تعداد Product"), 2, 0)
-        grid.addWidget(self.requested, 2, 1)
-        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 2, 2)
-        grid.addWidget(self.image_limit, 2, 3)
-        grid.addWidget(self.retry_failed, 3, 0, 1, 2)
+        grid.addWidget(QLabel("روش Crawl"), 1, 0)
+        grid.addWidget(self.strategy, 1, 1)
+        grid.addWidget(QLabel("لینک"), 2, 0)
+        grid.addWidget(self.url, 2, 1, 1, 3)
+        grid.addWidget(QLabel("تعداد Product"), 3, 0)
+        grid.addWidget(self.requested, 3, 1)
+        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 3, 2)
+        grid.addWidget(self.image_limit, 3, 3)
+        grid.addWidget(self.retry_failed, 4, 0, 1, 2)
 
         actions = QHBoxLayout()
         actions.addWidget(self.start_btn)
@@ -579,7 +591,7 @@ class OperationsPage(QWidget):
         actions.addWidget(self.reset_failed_btn)
         actions.addWidget(self.refresh_btn)
         actions.addStretch(1)
-        grid.addLayout(actions, 4, 0, 1, 4)
+        grid.addLayout(actions, 5, 0, 1, 4)
         root.addWidget(controls)
 
         self.progress = QProgressBar()
@@ -619,6 +631,7 @@ class OperationsPage(QWidget):
         batch = str(self.mode.currentData() or "listing") == "listing"
         self.requested.setEnabled(batch)
         self.retry_failed.setEnabled(batch)
+        self.strategy.setEnabled(batch)
         self.url.setPlaceholderText(
             "Search / Listing URL — اجرای بعدی همان لینک، محصولات جدید بعدی را پیدا می‌کند"
             if batch
@@ -655,6 +668,7 @@ class OperationsPage(QWidget):
         requested = self.requested.value()
         image_limit = self.image_limit.value()
         include_failed = self.retry_failed.isChecked()
+        strategy = str(self.strategy.currentData() or "hybrid")
 
         def job(progress):
             if mode == "single":
@@ -670,6 +684,7 @@ class OperationsPage(QWidget):
                 requested=requested,
                 image_limit=image_limit,
                 include_failed=include_failed,
+                strategy=strategy,
                 progress=progress,
             )
 
@@ -755,8 +770,10 @@ class OperationsPage(QWidget):
                 for key, value in sorted(queue.items())
             ],
             "",
-            "نکته: هویت‌های collected/rejected/blocked دوباره Crawl نمی‌شوند؛ "
-            "بنابراین تکرار Search URL برای Batch بعدی طراحی شده است.",
+            "روش هوشمند: HTTP/Sitemap را اول امتحان می‌کند و فقط در صورت نیاز "
+            "به Browser می‌رود. روش کلاسیک همان Search-Link قدیمی است و با "
+            "crawl_listing_state هر بار عمیق‌تر ادامه می‌دهد.",
+            "هویت‌های collected/rejected/blocked دوباره Crawl نمی‌شوند.",
             "",
             "۱۲ Run آخر:",
         ]
