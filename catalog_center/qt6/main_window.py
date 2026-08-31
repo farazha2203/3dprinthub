@@ -37,7 +37,7 @@ NAV_ITEMS = (
     ("products", "محصولات"),
     ("wizard", "ویزارد محصول"),
     ("filaments", "فیلامنت‌ها"),
-    ("operations", "عملیات"),
+    ("operations", "افزودن محصولات / Crawl"),
     ("settings", "تنظیمات"),
 )
 
@@ -120,6 +120,7 @@ class MainWindow(QMainWindow):
             self.db,
             self.open_product,
             kernel=self.kernel,
+            navigate=self.navigate,
         )
         self.wizard_page = ProductWizardPage(
             self.db,
