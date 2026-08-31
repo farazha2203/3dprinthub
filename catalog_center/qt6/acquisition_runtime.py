@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from app.classic_methods import discover_classic
+from app.db import normalize_url
 from app.page_extractor import extract_direct_link
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3h_image_limits import normalize_image_limit
@@ -366,7 +367,29 @@ async def _collect_one(
         "acquisition_method": "qt42c-rich-page-extractor",
     }
 
-    product_id = int(db.upsert_product(payload) or 0)
+    # Database.upsert_product() is intentionally a write boundary and does not
+    # return the inserted/updated id for normal rows. Resolve the authoritative
+    # identity after the upsert instead of guessing from the method return.
+    db.upsert_product(payload)
+    normalized = normalize_url(payload["source_url"])
+    product_row = db.conn.execute(
+        """
+        SELECT id
+        FROM products
+        WHERE source_code=?
+          AND ((external_id<>'' AND external_id=?) OR normalized_url=?)
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (source_code, external_id, normalized),
+    ).fetchone()
+    if product_row is None:
+        raise RuntimeError(
+            "Product acquisition upsert completed but authoritative Catalog identity "
+            "could not be resolved."
+        )
+    product_id = int(product_row["id"])
+
     remember_ledger(
         db,
         source_code,
