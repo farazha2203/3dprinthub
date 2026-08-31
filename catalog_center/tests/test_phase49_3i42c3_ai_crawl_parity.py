@@ -503,6 +503,13 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             if item["stage"] == "images"
         )
         self.assertEqual(image_status["ai_fixable_count"], 0)
+        self.assertFalse(
+            any(
+                "بروزرسانی Metadata تصویر" in item
+                for item in image_status["missing"]
+            ),
+            image_status["missing"],
+        )
 
     def test_ai_current_on_images_routes_to_local_repair_not_provider(self):
         product_id = self._image_product()
