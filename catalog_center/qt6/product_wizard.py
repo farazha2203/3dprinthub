@@ -194,7 +194,7 @@ class ProductWizardPage(QWidget):
         splitter.setChildrenCollapsible(False)
 
         self.stepper = StageStepper(STAGE_NAMES)
-        self.stepper.setMinimumWidth(285)
+        self.stepper.setMinimumWidth(340)
         splitter.addWidget(self.stepper)
 
         workspace = QWidget()
@@ -1455,6 +1455,10 @@ class ProductWizardPage(QWidget):
             )
             return
 
+        if current_only and code == "images":
+            self._run_image_smart_repair()
+            return
+
         request = {
             "product_id": int(self.product_id),
             "mode": mode,
@@ -1491,6 +1495,121 @@ class ProductWizardPage(QWidget):
             self._ai_quote_finished
         )
         self.task_pool.start(worker)
+
+    def _run_image_smart_repair(self) -> None:
+        """Repair image SEO from persisted Product/local files without page fetch.
+
+        Image SEO filenames and embedded metadata are deterministic derived
+        state. They must not depend on a live MakerWorld/Product HTTP request.
+        """
+        if self.product_id is None:
+            return
+
+        product_id = int(self.product_id)
+        status = next(
+            (
+                item
+                for item in self.kernel.stages.statuses(product_id)
+                if item.get("stage") == "images"
+            ),
+            {},
+        )
+        if not bool(status.get("finalized")):
+            if not self._save_stage3_safely():
+                return
+
+        self.ai_current.setEnabled(False)
+        self.ai_all.setEnabled(False)
+        self.ai_cost_hint.setText(
+            "هزینه این مرحله: صفر • SEO/Alt/نام فایل SEO/Metadata "
+            "از دیتای ذخیره‌شده و فایل‌های محلی ساخته می‌شود."
+        )
+        self.ai_status.setText(
+            "تکمیل هوشمند محلی تصاویر…"
+        )
+
+        def job(progress):
+            before = next(
+                (
+                    item
+                    for item in self.kernel.stages.statuses(
+                        product_id
+                    )
+                    if item.get("stage") == "images"
+                ),
+                {},
+            )
+            progress(
+                20,
+                "بررسی Alt، نام SEO و Metadata تصاویر",
+            )
+            finalized = self.kernel.images.finalize(product_id)
+            progress(
+                85,
+                "بازبینی نقص‌های تصویر بعد از نهایی‌سازی",
+            )
+            after = next(
+                (
+                    item
+                    for item in self.kernel.stages.statuses(
+                        product_id
+                    )
+                    if item.get("stage") == "images"
+                ),
+                {},
+            )
+            progress(100, "تصاویر بازبینی شدند")
+            return {
+                "product_id": product_id,
+                "local_image_repair": True,
+                "target_stages": ["images"],
+                "changed_fields": [
+                    "image_alt_texts_json",
+                    "image_metadata_json",
+                    "selected_images_json",
+                    "primary_image_url",
+                ],
+                "before_missing": list(
+                    before.get("missing") or []
+                ),
+                "after_missing": list(
+                    after.get("missing") or []
+                ),
+                "image_finalize": dict(finalized or {}),
+            }
+
+        worker = Worker(job)
+        self._ai_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.ai_status.setText(
+                f"{value}% — {message}"
+            )
+        )
+        worker.signals.result.connect(self._ai_done)
+        worker.signals.error.connect(
+            self._image_smart_error
+        )
+        worker.signals.finished.connect(
+            self._ai_finished
+        )
+        self.task_pool.start(worker)
+
+    def _image_smart_error(self, detail: str) -> None:
+        self.ai_status.setText(
+            "❌ تکمیل SEO تصاویر ناموفق"
+        )
+        show_diagnostic_error(
+            self,
+            "خطای تکمیل هوشمند تصاویر",
+            detail,
+            context={
+                "product_id": self.product_id,
+                "provider": "local-deterministic",
+                "model": "image-seo-finalizer",
+                "source_mode": "saved/local-files",
+                "stage": "images",
+            },
+        )
 
     def _ai_quote_ready(self, quote) -> None:
         self._pending_ai_quote = dict(quote or {})
@@ -1615,19 +1734,102 @@ class ProductWizardPage(QWidget):
                 f"{value}% — {message}"
             )
         )
-        worker.signals.result.connect(
-            lambda _result: self._ai_done()
-        )
+        worker.signals.result.connect(self._ai_done)
         worker.signals.error.connect(self._ai_error)
         worker.signals.finished.connect(
             self._ai_finished
         )
         self.task_pool.start(worker)
 
-    def _ai_done(self) -> None:
-        self.ai_status.setText("✅ AI تمام شد")
+    def _ai_done(self, result=None) -> None:
+        result = dict(result or {})
+        result_product_id = int(
+            result.get("product_id")
+            or self.product_id
+            or 0
+        )
+        if (
+            self.product_id is not None
+            and result_product_id
+            and int(self.product_id) != result_product_id
+        ):
+            self.ai_status.setText(
+                "نتیجه برای محصول دیگری بود؛ نمایش فعلی تغییر نکرد."
+            )
+            return
+
         if self.product_id is not None:
             self.load_product(self.product_id)
+
+        statuses = (
+            self.kernel.stages.statuses(self.product_id)
+            if self.product_id is not None
+            else []
+        )
+        target_stages = {
+            str(value or "")
+            for value in (
+                result.get("target_stages")
+                or STAGE_CODES
+            )
+            if str(value or "")
+        }
+        relevant = [
+            item
+            for item in statuses
+            if str(item.get("stage") or "") in target_stages
+        ]
+        remaining_ai = sum(
+            int(item.get("ai_fixable_count") or 0)
+            for item in relevant
+        )
+        remaining_operator = sum(
+            int(item.get("operator_count") or 0)
+            for item in relevant
+        )
+        changed = len(
+            {
+                str(value or "")
+                for value in (
+                    result.get("changed_fields") or []
+                )
+                if str(value or "")
+            }
+        )
+
+        if remaining_ai:
+            self.ai_status.setText(
+                f"⚠️ اجرا شد • {changed} تغییر • "
+                f"{remaining_ai} مورد قابل تکمیل هوشمند هنوز باقی است"
+            )
+            return
+
+        if result.get("local_image_repair"):
+            finalized = dict(
+                result.get("image_finalize") or {}
+            )
+            kept = int(finalized.get("kept") or 0)
+            if remaining_operator:
+                self.ai_status.setText(
+                    f"✅ SEO تصاویر تکمیل شد • {kept} تصویر • "
+                    f"{remaining_operator} مورد دستی باقی است"
+                )
+            else:
+                self.ai_status.setText(
+                    f"✅ SEO/Alt/نام SEO/Metadata تصاویر تکمیل شد • "
+                    f"{kept} تصویر"
+                )
+            return
+
+        if remaining_operator:
+            self.ai_status.setText(
+                f"✅ بخش هوشمند تکمیل شد • {changed} تغییر • "
+                f"{remaining_operator} مورد اپراتوری/واقعی باقی است"
+            )
+        else:
+            self.ai_status.setText(
+                f"✅ AI تکمیل شد • {changed} فیلد تغییر کرد"
+            )
 
     def _ai_error(self, detail: str) -> None:
         self.ai_status.setText("❌ AI خطا")
