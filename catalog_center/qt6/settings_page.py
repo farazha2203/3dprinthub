@@ -292,9 +292,11 @@ class SettingsPage(QWidget):
         key = self.api_key.text().strip()
 
         def done(result) -> None:
+            model_name = str(result.get("model") or model or "—")
+            request_id = str(result.get("request_id") or "")
+            suffix = f" • Request {request_id[:18]}" if request_id else ""
             self.ai_status.setText(
-                f"✅ اتصال {provider} موفق — "
-                f"{result.get('models_count', result.get('connected', 'OK'))}"
+                f"✅ اتصال {provider} موفق — {model_name}{suffix}"
             )
 
         self._start_worker(
