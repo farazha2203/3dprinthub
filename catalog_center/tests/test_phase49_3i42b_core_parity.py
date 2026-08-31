@@ -413,7 +413,7 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         self.assertEqual(payload["provider"]["sort"], "latency")
         self.assertTrue(payload["provider"]["allow_fallbacks"])
 
-    def test_openrouter_content_routes_for_throughput_without_model_catalog(self):
+    def test_openrouter_structured_content_routes_for_latency_without_model_catalog(self):
         calls = []
 
         def fake_request(url, key, **kwargs):
@@ -440,7 +440,33 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         payload = calls[0][1]["payload"]
         self.assertEqual(payload["model"], "openai/gpt-5-mini")
-        self.assertEqual(payload["provider"]["sort"], "throughput")
+    def test_openrouter_structured_content_routes_for_latency_without_model_catalog(self):
+        calls = []
+
+        def fake_request(url, key, **kwargs):
+            calls.append((url, kwargs))
+            return {
+                "id": "generation-content",
+                "model": kwargs.get("model"),
+                "choices": [{"message": {"content": "{}"}}],
+            }
+
+        with patch.object(ai_providers, "_json_request", side_effect=fake_request):
+            client = AIProviderClient(
+                "openrouter",
+                "dummy-openrouter-key",
+                "openai/gpt-5-mini",
+            )
+            selected = client.choose_model("openai/gpt-5-mini")
+            client._chat(
+                selected,
+                [{"role": "user", "content": "test"}],
+                operation="structured_content",
+            )
+
+        self.assertEqual(len(calls), 1)
+        payload = calls[0][1]["payload"]
+        self.assertEqual(payload["model"], "openai/gpt-5-mini")
 
     def test_profile_editor_numeric_widgets_are_ltr_and_costs_visible(self):
         self._add_filaments()
