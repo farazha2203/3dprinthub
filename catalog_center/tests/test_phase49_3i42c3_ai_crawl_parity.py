@@ -1,0 +1,235 @@
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from PySide6.QtWidgets import QApplication
+
+from app.ai_model_catalog import (
+    estimate_request_cost,
+    format_model_label,
+    rank_models,
+)
+from app.db import Database
+from qt6.kernel import build_kernel
+from qt6.main_window import MainWindow
+from qt6.pages import OperationsPage
+from qt6.settings_page import SettingsPage
+
+
+class _FakeClient:
+    def __init__(self):
+        self.structured_calls = []
+        self.model_catalog_calls = 0
+
+    def test_connection(self, model=""):
+        return {
+            "model": model,
+            "sample": "آماده",
+            "request_id": "req-test",
+            "usage": {},
+        }
+
+    def structured_response(
+        self,
+        *,
+        instructions,
+        input_content,
+        schema,
+        schema_name,
+        preferred_model="",
+    ):
+        self.structured_calls.append(preferred_model)
+        return {
+            "title_fa": "پایه چراغ رومیزی",
+            "seo_title_fa": "پایه چراغ رومیزی چاپ سه بعدی",
+            "keywords": ["پایه چراغ", "چاپ سه بعدی"],
+        }, preferred_model
+
+    def list_model_info(self):
+        self.model_catalog_calls += 1
+        raise AssertionError(
+            "Provider connection test must not perform a hidden model scan"
+        )
+
+
+class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.db = Database(Path(self.temp.name) / "catalog.sqlite3")
+        self.kernel = build_kernel(self.db)
+
+    def tearDown(self):
+        self.db.close()
+        self.temp.cleanup()
+
+    def test_model_ranking_puts_persian_free_structured_ahead(self):
+        ranked = rank_models([
+            {
+                "id": "vendor/unknown-expensive",
+                "pricing": {
+                    "prompt": "0.00001",
+                    "completion": "0.00002",
+                },
+                "supported_parameters": [],
+            },
+            {
+                "id": "qwen/example:free",
+                "pricing": {
+                    "prompt": "0",
+                    "completion": "0",
+                },
+                "supported_parameters": ["response_format"],
+            },
+            {
+                "id": "gemma/example",
+                "pricing": {
+                    "prompt": "0.00000005",
+                    "completion": "0.0000001",
+                },
+                "supported_parameters": ["response_format"],
+            },
+        ])
+        self.assertEqual(
+            ranked[0]["id"],
+            "qwen/example:free",
+        )
+        label = format_model_label(ranked[0])
+        self.assertIn("رایگان", label)
+        self.assertIn("فارسی", label)
+        self.assertIn("JSON", label)
+
+    def test_cost_estimate_uses_provider_per_token_pricing(self):
+        estimate = estimate_request_cost(
+            {
+                "id": "qwen/example",
+                "pricing": {
+                    "prompt": "0.00000008",
+                    "completion": "0.00000018",
+                },
+            },
+            input_tokens=1000,
+            output_tokens=500,
+        )
+        self.assertTrue(estimate["known"])
+        self.assertAlmostEqual(
+            estimate["usd"],
+            0.00017,
+            places=8,
+        )
+
+    def test_simple_provider_test_never_hides_model_catalog_scan(self):
+        fake = _FakeClient()
+        with patch.object(
+            self.kernel.providers,
+            "_client",
+            return_value=fake,
+        ):
+            result = self.kernel.providers.test(
+                "openrouter",
+                "qwen/exact-model:free",
+                key_override="test-key",
+                structured=False,
+            )
+        self.assertEqual(
+            result["model"],
+            "qwen/exact-model:free",
+        )
+        self.assertEqual(fake.model_catalog_calls, 0)
+        self.assertEqual(fake.structured_calls, [])
+
+    def test_structured_probe_keeps_exact_selected_model(self):
+        fake = _FakeClient()
+        with patch.object(
+            self.kernel.providers,
+            "_client",
+            return_value=fake,
+        ):
+            result = self.kernel.providers.test(
+                "openrouter",
+                "qwen/exact-model:free",
+                key_override="test-key",
+                structured=True,
+            )
+        self.assertTrue(result["structured_ok"])
+        self.assertEqual(
+            fake.structured_calls,
+            ["qwen/exact-model:free"],
+        )
+        self.assertEqual(fake.model_catalog_calls, 0)
+
+    def test_settings_model_filter_shows_free_persian_pricing(self):
+        page = SettingsPage(
+            self.db,
+            kernel=self.kernel,
+        )
+        page._model_info = rank_models([
+            {
+                "id": "qwen/example:free",
+                "name": "Qwen Example",
+                "pricing": {
+                    "prompt": "0",
+                    "completion": "0",
+                },
+                "supported_parameters": ["response_format"],
+            }
+        ])
+        page._render_models()
+        self.assertEqual(page.model.count(), 1)
+        text = page.model.itemText(0)
+        self.assertIn("رایگان", text)
+        self.assertIn("فارسی", text)
+        self.assertIn("JSON", text)
+
+    def test_operations_restores_explicit_add_product_modes(self):
+        page = OperationsPage(
+            self.db,
+            kernel=self.kernel,
+        )
+        values = {
+            str(page.mode.itemData(index) or "")
+            for index in range(page.mode.count())
+        }
+        self.assertEqual(
+            values,
+            {
+                "automatic",
+                "search",
+                "category",
+                "site_crawl",
+                "single",
+            },
+        )
+        self.assertTrue(hasattr(page, "query"))
+        self.assertTrue(
+            hasattr(page, "download_images")
+        )
+        self.assertTrue(
+            hasattr(page, "default_url_btn")
+        )
+        self.assertTrue(hasattr(page, "direct_btn"))
+
+    def test_main_window_names_acquisition_route_explicitly(self):
+        window = MainWindow(self.kernel)
+        labels = [
+            window.nav.item(index).text()
+            for index in range(window.nav.count())
+        ]
+        self.assertIn(
+            "افزودن محصولات / Crawl",
+            labels,
+        )
+        self.assertIsNotNone(
+            window.products_page.navigate
+        )
+        window.close()
+
+
+if __name__ == "__main__":
+    unittest.main()
