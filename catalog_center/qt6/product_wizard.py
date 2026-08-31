@@ -29,12 +29,14 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
+from .image_gallery import ImageSeoDialog, ProductImageGrid
 from .parity_dialogs import ProfileEditorDialog
 from .widgets import StageStepper, WizardFooter
 from .workers import TaskPool, Worker
@@ -131,8 +133,7 @@ class ProductWizardPage(QWidget):
         self.product_id: int | None = None
         self.task_pool = TaskPool()
         self._ai_worker: Worker | None = None
-        self._image_radios: list[tuple[QRadioButton, dict[str, Any]]] = []
-        self._image_checks: list[tuple[QCheckBox, dict[str, Any], QTableWidgetItem]] = []
+        self._image_worker: Worker | None = None
 
         root = QVBoxLayout(self)
 
@@ -196,6 +197,14 @@ class ProductWizardPage(QWidget):
         self._build_stage5()
         self._build_stage6()
         self._build_stage7()
+
+        self.image_grid.sliderChanged.connect(self._sync_slider_from_image_grid)
+        self.image_slider_enabled.toggled.connect(
+            lambda checked: self.slider_enabled.setChecked(bool(checked))
+        )
+        self.slider_enabled.toggled.connect(
+            lambda checked: self.image_slider_enabled.setChecked(bool(checked))
+        )
 
         action_row = QFrame()
         action_row.setObjectName("Card")
@@ -319,88 +328,155 @@ class ProductWizardPage(QWidget):
 
     def _build_stage3(self) -> None:
         page, layout = _frame(
-            "۳. تصاویر",
-            "تصویر، انتخاب/اصلی، ابعاد پیکسلی، حجم فایل و Metadata/SEO در همان صفحه دیده می‌شوند.",
+            "۳. تصاویر محصول",
+            "گالری تصویری چهارستونه مانند نسخه بالغ قبلی؛ انتخاب/حذف گروهی، تصویر اصلی، "
+            "تصویر اسلایدر، اندازه/حجم، SEO تکی/گروهی و بازیابی تصاویر در همین مرحله.",
         )
 
-        self.image_preview = QLabel("تصویری انتخاب نشده")
-        self.image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_preview.setMinimumHeight(210)
-        layout.addWidget(self.image_preview)
+        control = QFrame()
+        control.setObjectName("Card")
+        actions = QHBoxLayout(control)
 
-        self.image_table = QTableWidget(0, 9)
-        self.image_table.setHorizontalHeaderLabels(
-            (
-                "انتخاب",
-                "اصلی",
-                "فایل",
-                "ابعاد px",
-                "حجم",
-                "Alt",
-                "SEO Title",
-                "نام SEO",
-                "Caption",
-            )
+        select_all = QPushButton("انتخاب همه")
+        clear_all = QPushButton("لغو انتخاب همه")
+        edit_seo = QPushButton("ویرایش SEO انتخاب‌شده‌ها")
+        apply_seo = QPushButton("اعمال SEO فارسی محصول")
+        delete_selected = QPushButton("حذف انتخاب‌شده‌ها")
+        screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
+        recover = QPushButton("بازیابی تصاویر از صفحه محصول")
+        recover.setProperty("primary", True)
+
+        self.image_recover_limit = QSpinBox()
+        self.image_recover_limit.setRange(1, 30)
+        self.image_recover_limit.setValue(5)
+        self.image_recover_limit.setSuffix(" عکس")
+
+        select_all.clicked.connect(
+            lambda: self.image_grid.set_all_selected(True)
         )
-        self.image_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.image_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.image_table.horizontalHeader().setStretchLastSection(True)
-        self.image_table.currentCellChanged.connect(lambda *_args: self._refresh_image_preview())
-        layout.addWidget(self.image_table, 1)
+        clear_all.clicked.connect(
+            lambda: self.image_grid.set_all_selected(False)
+        )
+        edit_seo.clicked.connect(self._edit_selected_image_seo)
+        apply_seo.clicked.connect(self._apply_product_image_seo)
+        delete_selected.clicked.connect(self._delete_selected_images)
+        screenshot.clicked.connect(self._capture_product_screenshot)
+        recover.clicked.connect(self._recover_product_images)
 
-        image_actions = QHBoxLayout()
-        rebuild = QPushButton("بازسازی Metadata / SEO تصاویر")
-        rebuild.clicked.connect(self._rebuild_image_metadata)
-        image_actions.addWidget(rebuild)
-        image_actions.addStretch(1)
-        layout.addLayout(image_actions)
+        for widget in (
+            select_all,
+            clear_all,
+            edit_seo,
+            apply_seo,
+            delete_selected,
+            screenshot,
+        ):
+            actions.addWidget(widget)
+        actions.addStretch(1)
+        actions.addWidget(QLabel("تعداد عکس"))
+        actions.addWidget(self.image_recover_limit)
+        actions.addWidget(recover)
+        layout.addWidget(control)
+
+        slider_box = QFrame()
+        slider_box.setObjectName("Card")
+        slider_layout = QHBoxLayout(slider_box)
+        self.image_slider_enabled = QCheckBox(
+            "این محصول در اسلایدر صفحه اول نمایش داده شود"
+        )
+        slider_hint = QLabel(
+            "دایره «اسلایدر» روی کارت، عکس اسلایدر را تعیین می‌کند؛ "
+            "دایره «اصلی» عکس اصلی Product است."
+        )
+        slider_hint.setObjectName("Muted")
+        slider_hint.setWordWrap(True)
+        slider_layout.addWidget(self.image_slider_enabled)
+        slider_layout.addWidget(slider_hint, 1)
+        layout.addWidget(slider_box)
+
+        self.image_task_status = QLabel("آماده")
+        self.image_task_status.setObjectName("Muted")
+        layout.addWidget(self.image_task_status)
+
+        self.image_grid = ProductImageGrid(columns=4)
+        self.image_grid.deleteRequested.connect(self._delete_single_image)
+        self.image_grid.seoRequested.connect(
+            lambda url: self._edit_image_seo([url])
+        )
+        layout.addWidget(self.image_grid, 1)
+
         self.stack.addWidget(page)
 
     def _build_stage4(self) -> None:
         page, layout = _frame(
             "۴. محتوا و SEO",
-            "متن اصلی منبع برای مقایسه باقی می‌ماند؛ خروجی فارسی و همه فیلدهای SEO قابل ویرایش‌اند.",
+            "اطلاعات اصلی/انگلیسی منبع جدا از SEO فارسی فروشگاه ایران نمایش داده می‌شود؛ "
+            "دیتای منبع فقط مرجع است و خروجی فارسی قابل ویرایش.",
         )
-        form_host = QWidget()
-        form = QFormLayout(form_host)
 
+        tabs = QTabWidget()
+
+        source_host = QWidget()
+        source_form = QFormLayout(source_host)
+        self.content_source_title = QLineEdit()
+        self.content_source_title.setReadOnly(True)
+        self.source_category = QLineEdit()
+        self.source_category.setReadOnly(True)
+        self.source_tags = QPlainTextEdit()
+        self.source_tags.setReadOnly(True)
+        self.source_tags.setMaximumHeight(110)
         self.source_description = QPlainTextEdit()
         self.source_description.setReadOnly(True)
-        self.source_description.setMaximumHeight(120)
+        self.source_description.setMinimumHeight(220)
+        self.source_content_specs = QPlainTextEdit()
+        self.source_content_specs.setReadOnly(True)
+        self.source_content_specs.setMinimumHeight(150)
+
+        source_form.addRow("عنوان اصلی / انگلیسی", self.content_source_title)
+        source_form.addRow("دسته اصلی منبع", self.source_category)
+        source_form.addRow("Tag / Keyword اصلی منبع", self.source_tags)
+        source_form.addRow("توضیحات اصلی منبع", self.source_description)
+        source_form.addRow("مشخصات خام منبع", self.source_content_specs)
+        tabs.addTab(_scroll(source_host), "اصل محصول / Source")
+
+        fa_host = QWidget()
+        form = QFormLayout(fa_host)
         self.short_description_fa = QTextEdit()
-        self.short_description_fa.setMaximumHeight(100)
+        self.short_description_fa.setMaximumHeight(110)
         self.description_fa = QTextEdit()
-        self.description_fa.setMinimumHeight(170)
+        self.description_fa.setMinimumHeight(210)
         self.use_description = QTextEdit()
-        self.use_description.setMaximumHeight(100)
+        self.use_description.setMaximumHeight(110)
         self.seo_title_fa = QLineEdit()
         self.seo_description_fa = QTextEdit()
-        self.seo_description_fa.setMaximumHeight(100)
+        self.seo_description_fa.setMaximumHeight(110)
         self.categories_fa = QPlainTextEdit()
-        self.categories_fa.setMaximumHeight(80)
+        self.categories_fa.setMaximumHeight(90)
         self.tags_fa = QPlainTextEdit()
-        self.tags_fa.setMaximumHeight(80)
+        self.tags_fa.setMaximumHeight(90)
         self.hashtags_fa = QPlainTextEdit()
-        self.hashtags_fa.setMaximumHeight(80)
+        self.hashtags_fa.setMaximumHeight(90)
         self.keywords_fa = QPlainTextEdit()
-        self.keywords_fa.setMaximumHeight(80)
+        self.keywords_fa.setMaximumHeight(90)
         self.sales_bullets = QPlainTextEdit()
-        self.sales_bullets.setMaximumHeight(110)
+        self.sales_bullets.setMaximumHeight(120)
         self.social_caption = QTextEdit()
-        self.social_caption.setMaximumHeight(110)
-        form.addRow("توضیح اصلی / انگلیسی منبع", self.source_description)
+        self.social_caption.setMaximumHeight(120)
+
         form.addRow("توضیح کوتاه فارسی", self.short_description_fa)
         form.addRow("توضیح کامل فارسی", self.description_fa)
         form.addRow("کاربرد فارسی", self.use_description)
-        form.addRow("SEO Title فارسی", self.seo_title_fa)
-        form.addRow("SEO Description فارسی", self.seo_description_fa)
+        form.addRow("SEO Title فارسی / ایران", self.seo_title_fa)
+        form.addRow("SEO Description فارسی / ایران", self.seo_description_fa)
         form.addRow("دسته‌های فارسی - هر خط یکی", self.categories_fa)
-        form.addRow("Tagها - هر خط یکی", self.tags_fa)
+        form.addRow("Tagهای فارسی - هر خط یکی", self.tags_fa)
         form.addRow("Hashtagها - هر خط یکی", self.hashtags_fa)
-        form.addRow("Keywordها - هر خط یکی", self.keywords_fa)
+        form.addRow("Keywordهای هدف ایران - هر خط یکی", self.keywords_fa)
         form.addRow("Bullet فروش - هر خط یکی", self.sales_bullets)
-        form.addRow("Social Caption", self.social_caption)
-        layout.addWidget(_scroll(form_host), 1)
+        form.addRow("Social Caption فارسی", self.social_caption)
+        tabs.addTab(_scroll(fa_host), "SEO و محتوای فارسی / ایران")
+
+        layout.addWidget(tabs, 1)
         self.stack.addWidget(page)
 
     def _build_stage5(self) -> None:
@@ -603,50 +679,34 @@ class ProductWizardPage(QWidget):
         self._reload_profiles()
 
     def _load_stage3(self, row: dict[str, Any]) -> None:
-        self._image_radios.clear()
-        self._image_checks.clear()
         items = self.kernel.images.local_items(int(row["id"]))
-        self.image_table.setRowCount(len(items))
-        radio_group = QButtonGroup(self.image_table)
-        radio_group.setExclusive(True)
-
-        for r, item in enumerate(items):
-            selected = QCheckBox()
-            selected.setChecked(bool(item.get("selected")))
-            self.image_table.setCellWidget(r, 0, selected)
-
-            primary = QRadioButton()
-            primary.setChecked(bool(item.get("primary")))
-            radio_group.addButton(primary)
-            self.image_table.setCellWidget(r, 1, primary)
-
-            filename = QTableWidgetItem(str(item.get("filename") or ""))
-            filename.setData(Qt.ItemDataRole.UserRole, item)
-            self.image_table.setItem(r, 2, filename)
-            self.image_table.setItem(
-                r, 3, QTableWidgetItem(f"{item.get('width') or 0} × {item.get('height') or 0}")
-            )
-            self.image_table.setItem(r, 4, QTableWidgetItem(_human_bytes(int(item.get("bytes") or 0))))
-
-            alt_item = QTableWidgetItem(str(item.get("alt_text") or ""))
-            self.image_table.setItem(r, 5, alt_item)
-
-            for c, key in ((6, "seo_title"), (7, "planned_filename"), (8, "caption")):
-                cell = QTableWidgetItem(str(item.get(key) or ""))
-                cell.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                self.image_table.setItem(r, c, cell)
-
-            self._image_radios.append((primary, item))
-            self._image_checks.append((selected, item, alt_item))
-
-        if items:
-            self.image_table.setCurrentCell(0, 2)
-        else:
-            self.image_preview.clear()
-            self.image_preview.setText("تصویر محلی قابل نمایش وجود ندارد")
+        self.image_grid.set_items(items)
+        self.image_slider_enabled.blockSignals(True)
+        self.image_slider_enabled.setChecked(
+            bool(int(row.get("homepage_slider_enabled") or 0))
+        )
+        self.image_slider_enabled.blockSignals(False)
+        missing = sum(1 for item in items if not item.get("downloaded"))
+        self.image_task_status.setText(
+            f"{len(items)} تصویر • {missing} فایل محلی مفقود/دریافت‌نشده"
+        )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
-        self.source_description.setPlainText(str(row.get("source_description") or ""))
+        self.content_source_title.setText(str(row.get("source_title") or ""))
+        self.source_category.setText(str(row.get("source_category") or ""))
+        self.source_tags.setPlainText(
+            "\n".join(str(item) for item in _json_list(row.get("tags_json")))
+        )
+        self.source_description.setPlainText(
+            str(row.get("source_description") or "")
+        )
+        self.source_content_specs.setPlainText(
+            json.dumps(
+                _json_dict(row.get("source_specs_json")),
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         self.short_description_fa.setPlainText(str(row.get("short_description_fa") or ""))
         self.description_fa.setPlainText(str(row.get("description_fa") or ""))
         self.use_description.setPlainText(str(row.get("use_description") or ""))
@@ -692,6 +752,12 @@ class ProductWizardPage(QWidget):
             if item.get("url")
         ]
         current_image = str(row.get("homepage_slider_image_url") or "")
+        if hasattr(self, "image_slider_enabled"):
+            self.image_slider_enabled.blockSignals(True)
+            self.image_slider_enabled.setChecked(
+                bool(int(row.get("homepage_slider_enabled") or 0))
+            )
+            self.image_slider_enabled.blockSignals(False)
         self.slider_image.clear()
         self.slider_image.addItems(image_urls)
         self.slider_image.setEditText(current_image)
@@ -783,31 +849,44 @@ class ProductWizardPage(QWidget):
         )
 
     def _save_stage3(self) -> None:
-        selected: list[str] = []
-        alts: list[str] = []
-        for checkbox, item, alt_item in self._image_checks:
-            if checkbox.isChecked():
-                selected.append(str(item.get("url") or ""))
-                alts.append(str(alt_item.text() or "").strip())
-
-        primary = ""
-        for radio, item in self._image_radios:
-            if radio.isChecked():
-                primary = str(item.get("url") or "")
-                break
-
+        selected = self.image_grid.selected_urls()
+        primary = self.image_grid.primary_url()
         if primary and primary not in selected:
             selected.insert(0, primary)
-            alts.insert(0, "")
+
+        alts: list[str] = []
+        for url in selected:
+            item = self.image_grid.item_for_url(url) or {}
+            alts.append(str(item.get("alt_text") or "").strip())
 
         self.kernel.stages.update(
             self.product_id,
             "images",
             {
-                "selected_images_json": json.dumps(selected, ensure_ascii=False),
+                "selected_images_json": json.dumps(
+                    selected,
+                    ensure_ascii=False,
+                ),
                 "primary_image_url": primary,
-                "image_alt_texts_json": json.dumps(alts, ensure_ascii=False),
+                "image_alt_texts_json": json.dumps(
+                    alts,
+                    ensure_ascii=False,
+                ),
             },
+        )
+
+        # Slider ownership stays in the Slider stage even though the visual
+        # choice is conveniently exposed on image cards.
+        self.kernel.stages.update(
+            self.product_id,
+            "slider",
+            {
+                "homepage_slider_enabled": (
+                    1 if self.image_slider_enabled.isChecked() else 0
+                ),
+                "homepage_slider_image_url": self.image_grid.slider_url(),
+            },
+            event_type="qt_image_slider_choice",
         )
 
     def _save_stage4(self) -> None:
@@ -1107,26 +1186,209 @@ class ProductWizardPage(QWidget):
         self._reload_profiles()
         self._refresh_stage_statuses()
 
-    def _refresh_image_preview(self) -> None:
-        row = self.image_table.currentRow()
-        if row < 0:
+    def _sync_slider_from_image_grid(self, url: str) -> None:
+        if hasattr(self, "slider_image"):
+            self.slider_image.setEditText(str(url or ""))
+
+    def _delete_single_image(self, url: str) -> None:
+        if self.product_id is None or not url:
             return
-        item = self.image_table.item(row, 2)
-        data = dict(item.data(Qt.ItemDataRole.UserRole) or {}) if item else {}
-        path = str(data.get("path") or "")
-        pixmap = QPixmap(path)
-        if pixmap.isNull():
-            self.image_preview.clear()
-            self.image_preview.setText("خواندن تصویر ناموفق بود")
+        if QMessageBox.question(
+            self,
+            "حذف تصویر",
+            "این تصویر از Product حذف شود؟ فایل محلی برای Recovery پاک نمی‌شود.",
+        ) != QMessageBox.StandardButton.Yes:
             return
-        self.image_preview.setPixmap(
-            pixmap.scaled(
-                650,
-                300,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+        try:
+            self.kernel.images.remove_urls(
+                self.product_id,
+                [url],
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "حذف تصویر", str(exc))
+            return
+        self.load_product(self.product_id)
+
+    def _delete_selected_images(self) -> None:
+        if self.product_id is None:
+            return
+        urls = self.image_grid.selected_urls()
+        if not urls:
+            QMessageBox.warning(
+                self,
+                "حذف گروهی",
+                "حداقل یک تصویر را انتخاب کن.",
+            )
+            return
+        if QMessageBox.question(
+            self,
+            "حذف گروهی تصاویر",
+            f"{len(urls)} تصویر از Product حذف شوند؟ فایل‌های محلی برای Recovery پاک نمی‌شوند.",
+        ) != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.kernel.images.remove_urls(
+                self.product_id,
+                urls,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "حذف گروهی", str(exc))
+            return
+        self.load_product(self.product_id)
+
+    def _edit_selected_image_seo(self) -> None:
+        urls = self.image_grid.selected_urls()
+        if not urls:
+            QMessageBox.warning(
+                self,
+                "SEO تصاویر",
+                "حداقل یک تصویر را انتخاب کن.",
+            )
+            return
+        self._edit_image_seo(urls)
+
+    def _edit_image_seo(self, urls: list[str]) -> None:
+        if self.product_id is None:
+            return
+        items = [
+            self.image_grid.item_for_url(url)
+            for url in urls
+        ]
+        items = [item for item in items if item]
+        if not items:
+            return
+        dialog = ImageSeoDialog(items, parent=self)
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+        try:
+            self.kernel.images.update_metadata(
+                self.product_id,
+                urls,
+                dialog.values(),
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "SEO تصاویر", str(exc))
+            return
+        self.load_product(self.product_id)
+
+    def _apply_product_image_seo(self) -> None:
+        if self.product_id is None:
+            return
+        urls = self.image_grid.selected_urls()
+        if not urls:
+            QMessageBox.warning(
+                self,
+                "SEO تصاویر",
+                "برای اعمال SEO فارسی، حداقل یک تصویر را انتخاب کن.",
+            )
+            return
+        row = self.kernel.products.get(self.product_id) or {}
+        title = (
+            str(row.get("seo_title_fa") or "").strip()
+            or str(row.get("title_fa") or "").strip()
+            or str(row.get("source_title") or "").strip()
+        )
+        caption = (
+            str(row.get("short_description_fa") or "").strip()
+            or str(row.get("seo_description_fa") or "").strip()
+        )
+        keywords: list[str] = []
+        for field in ("keywords_json", "tags_fa_json", "hashtags_fa_json"):
+            for item in _json_list(row.get(field)):
+                value = str(item or "").strip().lstrip("#")
+                if value and value not in keywords:
+                    keywords.append(value)
+
+        try:
+            for index, url in enumerate(urls, 1):
+                self.kernel.images.update_metadata(
+                    self.product_id,
+                    [url],
+                    {
+                        "alt_text": f"{title} - تصویر {index}"[:220],
+                        "title": title[:220],
+                        "caption": caption[:500],
+                        "keywords": keywords[:16],
+                    },
+                )
+        except Exception as exc:
+            QMessageBox.warning(self, "SEO تصاویر", str(exc))
+            return
+        self.load_product(self.product_id)
+
+    def _start_image_task(self, label: str, fn) -> None:
+        if self._image_worker is not None:
+            QMessageBox.information(
+                self,
+                "تصاویر",
+                "یک عملیات تصویر در حال اجرا است.",
+            )
+            return
+        self.image_task_status.setText(label)
+
+        def job(progress):
+            return fn(progress)
+
+        worker = Worker(job)
+        self._image_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.image_task_status.setText(
+                f"{value}% — {message}"
             )
         )
+        worker.signals.result.connect(
+            lambda _result: self._image_task_done()
+        )
+        worker.signals.error.connect(self._image_task_error)
+        worker.signals.finished.connect(self._image_task_finished)
+        self.task_pool.start(worker)
+
+    def _recover_product_images(self) -> None:
+        if self.product_id is None:
+            return
+        limit = self.image_recover_limit.value()
+        self._start_image_task(
+            "بازیابی تصاویر…",
+            lambda progress: self.kernel.acquisition.recover_product_images(
+                self.product_id,
+                image_limit=limit,
+                progress=progress,
+            ),
+        )
+
+    def _capture_product_screenshot(self) -> None:
+        if self.product_id is None:
+            return
+
+        def task(progress):
+            progress(10, "باز کردن صفحه محصول…")
+            path = self.kernel.images.capture_source_screenshot(
+                self.product_id
+            )
+            progress(100, "اسکرین‌شات ذخیره شد")
+            return path
+
+        self._start_image_task(
+            "دریافت اسکرین‌شات…",
+            task,
+        )
+
+    def _image_task_done(self) -> None:
+        self.image_task_status.setText("✅ عملیات تصویر تمام شد")
+        if self.product_id is not None:
+            self.load_product(self.product_id)
+
+    def _image_task_error(self, detail: str) -> None:
+        self.image_task_status.setText("❌ عملیات تصویر ناموفق")
+        message = (
+            str(detail or "").splitlines()[-1]
+            if detail
+            else "خطای ناشناخته"
+        )
+        QMessageBox.warning(self, "تصاویر", message)
+
+    def _image_task_finished(self) -> None:
+        self._image_worker = None
 
     def _rebuild_image_metadata(self) -> None:
         if self.product_id is None:
@@ -1147,6 +1409,7 @@ class ProductWizardPage(QWidget):
         except Exception as exc:
             QMessageBox.warning(self, "تصاویر", str(exc))
             return False
+
 
     # ------------------------------------------------------------------
     # AI + status
