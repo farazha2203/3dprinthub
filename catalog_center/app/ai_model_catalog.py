@@ -72,6 +72,11 @@ _PERSIAN_FREE_PREFERRED = {
     "qwen/qwen3-30b-a3b:free": 88,
 }
 
+_NON_DETERMINISTIC_ROUTER_IDS = {
+    "openrouter/auto",
+    "openrouter/free",
+}
+
 
 def _number(value: Any) -> float | None:
     try:
@@ -267,10 +272,14 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         else float("inf")
     )
 
+    non_deterministic_router = (
+        model_id in _NON_DETERMINISTIC_ROUTER_IDS
+    )
     product_ready = bool(
         product_text_capable
         and native_structured
         and not code_specialized
+        and not non_deterministic_router
     )
 
     preferred_free_score = int(
@@ -295,6 +304,7 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
             "product_text_capable": product_text_capable,
             "product_ready": product_ready,
             "code_specialized": code_specialized,
+            "non_deterministic_router": non_deterministic_router,
             "persian_free_preferred_score": preferred_free_score,
             "persian_free_preferred": bool(preferred_free_score),
             "input_modalities": sorted(input_modalities),
@@ -364,6 +374,8 @@ def format_model_label(item: dict[str, Any]) -> str:
         badges.append("JSON✓")
     elif model.get("tool_structured_only"):
         badges.append("⚠️ Tools-only")
+    if model.get("non_deterministic_router"):
+        badges.append("⚠️ Router متغیر")
     if model.get("code_specialized"):
         badges.append("⚠️ تخصص کدنویسی")
     if not model.get("product_text_capable"):
@@ -423,6 +435,14 @@ def product_model_compatibility(
             f"{model_id} خروجی متنی مناسب Product ندارد؛ "
             "مدل‌های Music/Audio/Video/Image/Embedding/Rerank "
             "برای تولید محتوای محصول قابل استفاده نیستند.",
+        )
+
+    if model.get("non_deterministic_router"):
+        return (
+            False,
+            f"{model_id} یک Router متغیر است و مدل زیرین را ثابت نگه نمی‌دارد. "
+            "برای Product فارسی/SEO یک Model دقیق از فهرست زنده انتخاب کن "
+            "تا کیفیت و Structured JSON قابل تکرار باشد.",
         )
 
     if model.get("code_specialized"):
