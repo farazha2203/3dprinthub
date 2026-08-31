@@ -1,11 +1,33 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
+## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C
+
+Qt acquisition code checkpoint: `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+Qt Operations now has live Classic + Hybrid acquisition. Classic preserves the old owner workflow: give one Search/Listing URL, persist crawl state, skip terminal identities and continue deeper on later runs. Hybrid uses the mature 3I.43–45 robots-aware pooled HTTP/Sitemap/cache/freshness/unseen path and falls back to Playwright only when needed. Direct single-Product rich receive and bounded image receive are also active.
+
+The code checkpoint passed Windows Qt/full-parity, portable and Single Active AI checks. Owner Local on exact `3f7038b...` passed repo/live-head, checksum-backed Catalog SQLite backup and dependency verification. It stopped before tests because the pasted multi-line Playwright `python -c` probe was corrupted by PowerShell/native quoting (ERR-49-081), not because of crawler/Chromium failure.
+
+Canonical owner runner is now:
+`RUN_PHASE49_3I42C_LOCAL_GATE.ps1`.
+
+Gate implementation:
+- `71c55010bc900e8d3c1afd7cea71441193db68eb`;
+- CI stdin/syntax guard `e6980fcfb2bdc72846e007e9d935290225dcb39e`.
+
+Rollback:
+`backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` →
+`3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+Next exact task: ff-only pull final GitHub head, run the repository-owned gate with `-LaunchApp`, then bounded 5-Product Classic twice on one Search URL and one 5-Product Hybrid run. Production/Host untouched.
+
+
 ## Continuation checkpoint — 2026-08-31 / Phase49.3I.42B2
 
 Executable Qt source checkpoint: `c3b0105eaa6c6141eb6d6d8463a96d547101564c`.
 Windows full-parity CI `33369749205` PASS; Single Active AI `33369749123` PASS.
 
-Qt now has requested Product/Filament/Profile/Image/SEO/Source/Slider/AI Provider/Connection parity. One shared ApplicationKernel/AICore owns the Qt composition. Legacy launcher is still the default fallback. Phase42C live Scan/Crawl/Acquisition controls remain open; owner Local foreground QA is mandatory before any cutover. Production/Host untouched.
+Qt now has requested Product/Filament/Profile/Image/SEO/Source/Slider/AI Provider/Connection parity. One shared ApplicationKernel/AICore owns the Qt composition. This 42B2 checkpoint is superseded for Operations by Phase42C, where live Classic/Hybrid acquisition controls are now implemented. Legacy launcher is still the default fallback; owner Local foreground QA is mandatory before cutover. Production/Host untouched.
 
 
 ## Active continuation checkpoint — 2026-08-30
@@ -18,8 +40,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Subphase: `49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9`  
-Status: `8.9.9 BUILD 2026.08.30.3 / PHASE49.3I.45 WINDOWS CI PASS / OWNER LOCAL ACQUISITION QA NEXT / PRODUCTION NOT DEPLOYED`
+Parallel Windows Subphase: `49.3I.42C — Qt6 Acquisition Controls + 49.3I.45 Incremental Discovery Intelligence`  
+Status: `QT42C CLASSIC+HYBRID CODE WINDOWS CI PASS / ERR-49-081 LOCAL GATE FIXED / OWNER FOREGROUND QA NEXT / PRODUCTION NOT DEPLOYED`
 
 ## Operating rule
 GitHub is permanent source of truth.
@@ -88,7 +110,7 @@ A parallel PySide6/Qt6 desktop presentation layer now exists and is Windows-CI t
 
 Dedicated Qt run `33299745502` PASS. Legacy launcher remains the default and passes its verify gate. No Production/Host/DB migration change.
 
-Next owner gate: Local Qt preview, side by side with legacy 8.9.8. Then 42B ports the complete editable Product Wizard.
+Next owner gate: run the repository-owned Phase49.3I.42C Local gate, then bounded Classic/Hybrid real-source QA. Legacy remains available side by side until 42E cutover.
 
 Active phase: `docs/phases/PHASE49_3I42_QT6_DESKTOP_MODERNIZATION.md`.
 

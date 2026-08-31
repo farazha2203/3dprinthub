@@ -1,5 +1,33 @@
 # OWNER REQUESTS
 
+## REQ-49-080 — Preserve the old Search-Link crawler and expose a stronger acquisition engine in Qt
+Status: **IMPLEMENTED + WINDOWS_CI_TESTED / OWNER_LOCAL_FOREGROUND_QA_NEXT**
+
+Requested:
+- keep the mature old workflow where the operator gives a main Search/Listing link and later runs continue farther from that same link;
+- do not lose the old browser crawler while modernizing the application;
+- add a stronger/faster method when available;
+- move crawling/scraping/data receive into the new Qt application with visible controls;
+- apply useful techniques from the supplied scraping/GUI/FastAPI references without breaking the proven database/business contracts.
+
+Delivered:
+- `Classic` strategy preserves Search-Link + browser continuation and permanent terminal-identity skip;
+- `Hybrid` strategy prefers robots-aware pooled HTTP/Sitemap + incremental freshness/unseen discovery and only falls back to Playwright when structured/static acquisition is insufficient;
+- single Product direct receive and batch Listing receive;
+- rich Product facts: source title/description, author, license, category/tags/specs/snapshot and bounded selected images;
+- Product count + image count controls;
+- start/progress/safe-stop/reset-failed/recent-run UI;
+- Qt worker execution rather than blocking the event loop;
+- the same Catalog SQLite, crawl ledger, 3I.43–45 transport/intelligence and source-specific fallbacks remain authoritative.
+
+Code checkpoint: `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+The first owner Local gate reached the Playwright smoke only after repo/backup/dependency guards passed; its failure was ERR-49-081 PowerShell probe quoting, not a crawler failure. A repository-owned corrected Local gate is now available.
+
+Safety:
+public/respectful acquisition only; robots and Retry-After remain enforced; no CAPTCHA/auth bypass, proxy evasion or live-site stress benchmark; Production/Host/Django migrations untouched.
+
+
 ## REQ-49-079 — Restore mature Catalog Center capabilities in the Qt application
 Status: **IMPLEMENTED + WINDOWS_CI_TESTED / OWNER_LOCAL_QA_NEXT**
 
@@ -50,7 +78,7 @@ Next acceptance target is 42B2 Stage-2 full operator parity.
 
 
 ## REQ-49-078 — Apply new GUI/FastAPI/web-scraping books to the application and acquisition stack
-Status: `IN_PROGRESS / ACQUISITION DELTA WINDOWS CI TESTED / OWNER LOCAL QA NEXT`
+Status: `IMPLEMENTED THROUGH 3I.45 + QT42C / WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT`
 
 Requested:
 - deeply review the newly supplied books;
@@ -66,7 +94,9 @@ Applied now:
 - Phase49.3I.45 incremental Sitemap intelligence;
 - Catalog discovery metadata ledger;
 - freshness/unseen prioritization;
-- preserved public/respectful acquisition policy.
+- preserved public/respectful acquisition policy;
+- Qt42C Classic old Search-Link continuation + stronger Hybrid structured-first acquisition;
+- rich Product receive, visible progress/safe stop, bounded image count and persistent continuation/queue state.
 
 Not interpreted as permission to:
 - replace Django Production with FastAPI without an explicit architecture gate;

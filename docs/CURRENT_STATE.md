@@ -4,8 +4,56 @@ Updated: 2026-08-31
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
-Parallel Windows Track: `Phase49.3I.42B2 — requested Product/Filament/Profile/Image/SEO/Slider/AI/Settings parity; Phase49.3I.45 acquisition remains CI-tested`  
-Status: `PHASE49.3I.42B2 GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / 42C ACQUISITION CONTROLS OPEN / PRODUCTION NOT TOUCHED`
+Parallel Windows Track: `Phase49.3I.42C — Qt6 Classic + Hybrid Acquisition Controls over Phase49.3I.43–45 intelligence; 42B2 parity retained`  
+Status: `PHASE49.3I.42C CODE WINDOWS-CI TESTED / ERR-49-081 LOCAL GATE FIX ON GITHUB / OWNER FOREGROUND QA NEXT / PRODUCTION NOT TOUCHED`
+
+## Current Windows Qt acquisition checkpoint — Phase49.3I.42C
+
+Executable acquisition checkpoint:
+`3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+Operational Local-gate commits:
+- `71c55010bc900e8d3c1afd7cea71441193db68eb` — repository-owned guarded Local runner;
+- `e6980fcfb2bdc72846e007e9d935290225dcb39e` — Windows CI syntax + Python-stdin guard.
+
+Implemented in Qt Operations:
+- active Source selector;
+- Listing/Search batch mode and direct single-Product mode;
+- explicit Strategy selector:
+  - `classic` = preserved old Search-Link + browser continuation path;
+  - `hybrid` = structured-first HTTP/Sitemap intelligence with browser fallback only when needed;
+- requested Product count and per-Product image cap;
+- retry-failed option;
+- start, safe-stop, failed-queue reset and refresh controls;
+- worker-thread progress/status without blocking the Qt event loop;
+- permanent queue/run history;
+- rich Product receive into the existing Catalog authority.
+
+Classic mode deliberately preserves the owner's mature behavior: the same Search/Listing URL is persisted in crawl state and later runs deepen browser discovery while terminal identities are skipped. The regression proves the first pass can collect `1001/1002` and the next pass over the same URL advances to `1003/1004`.
+
+Hybrid mode reuses 3I.43–45:
+`robots → pooled conditional HTTP → Sitemap/freshness/unseen ranking → structured HTML/JSON-LD/embedded data → DOM → Playwright fallback → mature source-specific fallback`.
+
+Rich Product extraction persists source title/description, author, license, source category/tags/specs, source snapshot and selected image facts while respecting the requested image cap.
+
+Verification already completed on the 42C code checkpoint:
+- Qt/full-parity Windows job on `3f7038b...` PASS;
+- Windows portable job on `3f7038b...` PASS;
+- Single Active AI job on `3f7038b...` PASS;
+- classic continuation, hybrid browser-avoidance, rich receive, listing-scoped queue and classic robots-denial regressions are present.
+
+Owner Local evidence on exact `3f7038b...`:
+- repository/branch/live HEAD guard PASS;
+- checksum-backed Catalog SQLite backup PASS;
+- Python/dependency verification PASS;
+- Local gate stopped before compile/tests only because of ERR-49-081 runbook quoting, not application code.
+
+Rollback:
+`backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` →
+`3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+Exact next task:
+pull the final GitHub head ff-only, run `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -LaunchApp`, then do bounded foreground QA: Classic with 5 Products twice on the same Search URL, then Hybrid with 5 Products. Production/Host/Django migrations remain untouched.
 
 ## Current Windows Qt checkpoint — Phase49.3I.42B2
 
@@ -39,13 +87,13 @@ Verification:
 - Django migration changed = NO.
 
 Boundary:
-owner-requested Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings parity is implemented and CI-tested. Phase42C live Scan/Crawl/Acquisition controls are still not migrated into Qt; current Qt Operations remains read-only. Qt is therefore not yet the default launcher and cannot be marked ACCEPTED before owner Local foreground QA.
+owner-requested Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings parity remains implemented and CI-tested. Phase42C live acquisition controls are now migrated into Qt Operations through the shared ApplicationKernel/AcquisitionCore. Qt is still not the default launcher and cannot be marked ACCEPTED before owner Local foreground QA.
 
 Rollback:
 `backup/pre-phase49-3i42b2-full-legacy-parity-20260830` → `6260f94cee531124446cf1b3e19ce0d95554d594`.
 
 Exact next task:
-owner Local clean ff-only pull + verified Catalog SQLite checksum backup + full 42B2 regression/verify + foreground Qt QA. After acceptance continue 42C acquisition controls, then 42E packaging/default-launcher cutover. Production remains blocked.
+owner Local clean ff-only pull + repository-owned 42C gate + bounded Classic/Hybrid foreground acquisition QA. After acceptance continue 42D polish and 42E packaging/default-launcher cutover. Production remains blocked.
 
 ## Current source checkpoint — Phase49.3I.45
 
@@ -157,7 +205,7 @@ No Django/Catalog migration, Host, Production, secrets, media or default launche
 
 Rollback: `backup/pre-phase49-3i42-qt6-desktop-foundation-20260830` → `753539b0d76ccf0d185e35add458925628812a44`.
 
-Next exact task: owner Local side-by-side Qt preview; after acceptance implement 42B full editable Product Wizard adapters while keeping the same mature Catalog/AI/Crawl/Bridge/Pricing contracts.
+Next exact task: owner Local 42C Classic/Hybrid acquisition QA through the repository-owned gate; keep the mature Catalog/AI/Crawl/Bridge/Pricing contracts and legacy launcher until cutover.
 
 ## Current active delta — Phase49.3I.41 central Filament library
 

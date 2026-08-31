@@ -1,3 +1,17 @@
+## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition controls + ERR-49-081 Local gate hardening
+
+- migrated live acquisition controls into Qt Operations over the existing ApplicationKernel/AcquisitionCore;
+- preserved the old `Classic` Search-Link + browser continuation behavior rather than replacing it;
+- added explicit `Hybrid` strategy using the mature 3I.43–45 robots/pooling/cache/Sitemap/freshness/unseen intelligence before browser fallback;
+- added direct single-Product and Listing batch receive, requested Product count, per-Product image cap, retry-failed, safe stop, queue reset, progress and recent-run status;
+- rich Product receive persists source title/description, author, license, category/tags/specs/snapshot and bounded selected images into the existing Catalog authority;
+- classic continuation, hybrid browser avoidance, rich receive, listing-scoped pending queue and robots denial have dedicated regressions;
+- 42C code checkpoint `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8` passed the Windows Qt/full-parity, portable and Single Active AI checks;
+- owner Local then passed repo guard, checksum DB backup and dependency verification but the pasted Playwright probe failed because multi-line Python was sent through Windows `python -c` quoting;
+- added repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` at `71c55010bc900e8d3c1afd7cea71441193db68eb`, using Python stdin and installing Chromium only for a real missing-browser error;
+- added Windows CI syntax + PowerShell→Python stdin regression guard at `e6980fcfb2bdc72846e007e9d935290225dcb39e`;
+- Production, Host, Django migrations and default launcher remain untouched.
+
 ## 2026-08-31 — Phase49.3I.42B2 requested Product/Settings parity
 
 - Added shared Qt parity cores for categories, stage state, commerce/Profile, Filament, AI providers and Site connection.

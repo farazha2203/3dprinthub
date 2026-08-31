@@ -1,5 +1,30 @@
 # PROJECT ROADMAP
 
+## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition checkpoint
+
+Status: **CODE WINDOWS_CI_TESTED / REPOSITORY LOCAL GATE FIXED / OWNER_FOREGROUND_QA_NEXT**.
+
+Delivered:
+- old Search/Listing Link browser continuation remains available as `Classic`;
+- stronger `Hybrid` path uses 3I.43–45 HTTP/Sitemap/cache/robots/freshness/unseen intelligence and browser fallback;
+- direct single Product + Listing batch receive;
+- rich source facts + bounded images;
+- start/progress/safe-stop/reset/recent-run controls in Qt Operations;
+- permanent duplicate/terminal identity avoidance.
+
+Code checkpoint: `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+Rollback: `backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` → the same checkpoint.
+
+Owner Local has already passed repository, DB-backup and dependency guards. ERR-49-081 was isolated to the old pasted Playwright verification command; the canonical runner is now `RUN_PHASE49_3I42C_LOCAL_GATE.ps1`.
+
+Remaining before Qt cutover:
+1. run the corrected Local gate and bounded Classic/Hybrid foreground QA;
+2. 42D final UX/accessibility/high-DPI/RTL polish;
+3. 42E reproducible package + side-by-side owner acceptance + default launcher switch.
+
+Production/Host/Django migrations remain untouched.
+
+
 ## 2026-08-31 — Phase49.3I.42B2 Qt requested-parity checkpoint
 
 Status: **GITHUB_UPDATED + WINDOWS_CI_TESTED / OWNER_LOCAL_QA_NEXT**.
@@ -10,7 +35,7 @@ Verification: Qt Windows CI `33369749205` PASS and dedicated Single Active AI `3
 
 Remaining before Qt cutover:
 1. owner Local backup/regression/foreground acceptance;
-2. Phase42C live Scan/Crawl/Acquisition controls (Qt Operations is still read-only);
+2. Phase42C corrected owner Local gate + bounded foreground Classic/Hybrid acquisition acceptance;
 3. Phase42D final UX/accessibility polish;
 4. Phase42E reproducible package + side-by-side acceptance + default launcher switch.
 
@@ -45,8 +70,8 @@ Repository: `farazha2203/3dprinthub`
 Active Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Current Web Epic: `Phase50 — Finance, Commerce & Admin Command Center`  
 Current Web Phase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Parallel Windows Phase: `49.3I.45 — Incremental Discovery Intelligence / Catalog Center 8.9.9`  
-Status: `8.9.9 BUILD 2026.08.30.3 / PHASE49.3I.45 WINDOWS CI PASS / OWNER LOCAL ACQUISITION QA NEXT / PRODUCTION BLOCKED`
+Parallel Windows Phase: `49.3I.42C Qt6 Acquisition Controls + 49.3I.45 Incremental Discovery Intelligence`  
+Status: `QT42C CLASSIC+HYBRID CODE WINDOWS CI PASS / OWNER LOCAL FOREGROUND QA NEXT / PRODUCTION BLOCKED`
 
 ## Permanent delivery order
 `READ DOCS → VERIFY STATE → CHECK ERRORS → IMPLEMENT ON GITHUB → CI/LOCAL TEST → OWNER QA → HOST READ-ONLY VERIFY → BACKUP → DEPLOY FROM GITHUB → VERIFY PRODUCTION → DOCUMENT`

@@ -1,5 +1,38 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-081 — Windows Playwright smoke probe was corrupted at the PowerShell/native `python -c` boundary
+Status: `FIXED IN REPOSITORY / OWNER LOCAL RERUN NEXT`
+
+Observed:
+- owner Local was clean on the canonical branch and correctly advanced to `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`;
+- Catalog SQLite backup completed and source/backup SHA256 both matched `F0C1341C764074423A2214F0DFF80EEB9E1248DA69F5FE9470D1FDDA0B1A5422`;
+- Python 3.12.10, PySide6 6.11.2, HTTPX 0.28.1, Protego and Playwright imports were healthy;
+- the gate then stopped at the Playwright smoke marker with `NameError: name 'OK' is not defined`, and the retry produced the same class of error for `OK_AFTER_INSTALL`.
+
+Root cause:
+the Local runbook passed a multi-line Python here-string through the native-process `python -c` argument boundary. Windows PowerShell/native quoting transformed the quoted marker before Python evaluated it. The gate incorrectly classified this probe-code failure as a missing Chromium runtime and attempted an unnecessary browser install.
+
+This was not evidence of a Qt acquisition/runtime defect. The Python traceback reached the marker line after `p.chromium.launch(headless=True)`, so the first browser launch itself had already succeeded.
+
+Correct fix:
+- repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` now sends multi-line Python through stdin: `$Script | & $Py -`;
+- Chromium installation is attempted only when the actual Playwright error explicitly reports a missing executable / `playwright install`;
+- other probe failures stop without a blind reinstall;
+- the Qt Windows workflow now parses the Local gate with PowerShell's parser and regression-tests the exact PowerShell → Python stdin boundary.
+
+Implementation:
+- `71c55010bc900e8d3c1afd7cea71441193db68eb` — resilient owner Local gate;
+- `e6980fcfb2bdc72846e007e9d935290225dcb39e` — CI syntax/stdin guard;
+- Single Active AI run `33386654622` PASS;
+- Phase49.3I.42C workflow run `33386654632` was started for the corrected gate/CI boundary.
+
+Prevention:
+- do not send multi-line Python containing nested quoting through `python -c` in Windows Local gates;
+- use stdin or a repository script for multi-line Python;
+- only install Playwright browsers when the failure is actually a missing-browser failure;
+- a probe/quoting error must never be relabeled as a dependency error;
+- do not repeat the failed inline command unchanged.
+
 ## ERR-49-080 — Qt42B2 rollout CI exposed generated-source and guessed-test-name defects
 Status: `FIXED / FINAL WINDOWS CI PASS`
 

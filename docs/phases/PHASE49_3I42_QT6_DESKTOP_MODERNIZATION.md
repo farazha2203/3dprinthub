@@ -3,7 +3,7 @@
 Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Status: `IN_PROGRESS / 42B2 REQUESTED PRODUCT+SETTINGS PARITY GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / 42C ACQUISITION CONTROLS OPEN / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
+Status: `IN_PROGRESS / 42C CLASSIC+HYBRID ACQUISITION GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
 
 ## Goal
 
@@ -166,18 +166,103 @@ Verification:
 - `33369749123` — Phase49.3I.17 Single Active AI CI — PASS.
 
 Boundary:
-42B2 covers the Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings request. Qt Operations is still read-only; live Scan/Crawl/Direct-Link/Acquisition controls remain Phase42C. Default launcher remains legacy until owner Local foreground acceptance and later 42E cutover.
+42B2 covers the Product/Edit/Filament/Profile/Image/SEO/Slider/AI/Settings request. Phase42C now adds live Classic/Hybrid Listing and Direct-Product acquisition controls to Qt Operations over the same mature acquisition authorities. Default launcher remains legacy until owner Local foreground acceptance and later 42E cutover.
 
-## 42C — Operations / AI / Acquisition
+## 42C — Operations / AI / Acquisition — WINDOWS CI TESTED / OWNER LOCAL QA NEXT
 
-Move user-facing long tasks to Qt workers with:
-- visible progress,
-- cancellation where underlying contract supports it,
-- start/end/error status,
-- no GUI access from worker thread,
-- single-active-AI guard preserved,
-- no provider/secret contract rewrite,
-- crawl/parser/image/file acquisition authority preserved.
+Executable acquisition checkpoint:
+`3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+### Live Qt Operations controls
+- Source selector from the mature Catalog source registry;
+- Listing/Search batch versus direct single-Product mode;
+- Strategy selector:
+  - `hybrid`: HTTP/Sitemap/structured-first with Browser fallback;
+  - `classic`: preserved old Search-Link + Browser continuation;
+- requested Product count;
+- per-Product high-quality image cap;
+- retry-Failed;
+- Start;
+- Safe Stop;
+- reset Failed queue;
+- refresh queue/run state;
+- progress bar + status + recent run summary.
+
+All long-running acquisition is dispatched through the Qt worker contract. UI widgets are not manipulated from the worker thread.
+
+### Classic strategy — preserved mature owner workflow
+The old workflow was not removed.
+
+The same Search/Listing URL remains the durable continuation identity. The browser discoverer starts with the persisted depth/cursor and later runs deepen discovery. Products already in terminal states are not re-crawled.
+
+Regression coverage proves:
+- first run on one Search URL can stage `1001/1002`;
+- after those identities become collected, the second run over that exact Search URL deepens and stages `1003/1004`;
+- Classic never calls the modern HTTP discovery path;
+- Classic Browser discovery is still protected by the browser robots gate.
+
+### Hybrid strategy — stronger normal default
+Hybrid composes the supplied-book/current-doc acquisition lessons into the existing runtime rather than introducing a second crawler framework:
+
+`robots → pooled/conditional HTTP → Sitemap → incremental freshness/unseen ranking → JSON-LD/embedded/DOM facts → Playwright fallback → mature source adapter`.
+
+If modern discovery already produces enough candidates, Browser listing discovery does not run.
+
+3I.43–45 remains authoritative for:
+- HTTPX pooling/limits/timeouts;
+- ETag/Last-Modified cache;
+- bounded transient retry;
+- Retry-After/cooldown;
+- adaptive host pacing;
+- fail-closed robots unreachable/rate-limit policy;
+- gzip/structured Sitemap;
+- `lastmod` freshness and unseen prioritization;
+- public endpoint-shape provenance without raw payload persistence.
+
+### Rich Product receive
+Direct/scheduled Product collection reuses the rich page extractor and persists source facts into the existing Catalog:
+- original/source title;
+- source short/full description;
+- author/designer;
+- license name/URL;
+- source category/categories;
+- tags;
+- specs;
+- source snapshot;
+- source counters/dates when available;
+- selected/primary images capped by the operator image limit.
+
+No second Product database or parallel business model is introduced.
+
+### Verification
+On the 42C code checkpoint:
+- Qt/full-parity Windows check PASS;
+- Windows portable check PASS;
+- Single Active AI check PASS;
+- dedicated `tests.test_phase49_3i42c_acquisition_runtime` covers Classic continuation, Hybrid browser avoidance, rich receive, Listing-scoped queue, invalid strategy and robots denial.
+
+### ERR-49-081 Local gate correction
+Owner Local reached Playwright verification only after repo/live-head, Catalog backup and dependency guards passed. The pasted multi-line `python -c` probe then failed because Windows PowerShell/native quoting corrupted the Python marker.
+
+The canonical gate is now repository-owned:
+`RUN_PHASE49_3I42C_LOCAL_GATE.ps1`.
+
+It sends multi-line Python through stdin and only installs Chromium for an explicit missing-browser error.
+
+Implementation:
+- Local gate: `71c55010bc900e8d3c1afd7cea71441193db68eb`;
+- CI gate boundary: `e6980fcfb2bdc72846e007e9d935290225dcb39e`;
+- rollback: `backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` → `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
+
+### Owner acceptance
+Run the corrected Local gate and then keep live QA bounded:
+1. Classic / one real Search URL / 5 Products / 5 images;
+2. exact same Search URL again — must skip terminal identities and advance;
+3. Hybrid / 5 Products — structured discovery should stay primary and Browser should be fallback only;
+4. verify received source title/author/license/category/tags/specs/images;
+5. verify Safe Stop, failed reset, progress and run summary.
+
+No live-site stress benchmark is a release gate.
 
 ## 42D — Design system / resources / accessibility
 
