@@ -5,4 +5,4 @@ The Qt layer consumes them through a long-lived application kernel instead of
 creating page-specific business engines.
 """
 
-QT_UI_CONTRACT = "phase49-3i42b2-full-legacy-parity-v1"
+QT_UI_CONTRACT = "phase49-3i42c3-ai-crawl-parity-v1"
