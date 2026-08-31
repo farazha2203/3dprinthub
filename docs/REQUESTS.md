@@ -1,5 +1,27 @@
 # OWNER REQUESTS
 
+## REQ-49-042C3 — Restore Add Product/Crawl legacy workflow and production-grade AI Provider diagnostics
+Status: `IMPLEMENTED / GITHUB CI PASS / OWNER LOCAL FOREGROUND QA NEXT`.
+
+Acceptance now implemented:
+- visible Add Product/Crawl route with Automatic, Search/Listing, Category URL, Site Crawl and Direct Product modes;
+- Classic repeated-Search continuation preserved alongside Hybrid structured-first acquisition;
+- Product/image limits, source/query/start URL, retry/reset/progress and rich Product receive;
+- live model list including free models, internal Persian suitability label, structured capability hint and Provider price metadata;
+- filters for recommended, all, free, Persian and Structured/JSON models;
+- real Persian structured Product probe keeps the exact selected Provider/Model;
+- stage/all-content AI execution shows estimated cost before approval;
+- AI/Crawl failures surface diagnostic dialogs with copyable details;
+- no hidden model scan inside simple connection test;
+- one shared Single Active AI authority remains intact.
+
+Evidence:
+- source checkpoint `ba3d1358d91aa78719f618630c290abf97ee8427`;
+- Qt/Crawl/AI run `33394215803` PASS;
+- Single Active AI run `33394215742` PASS;
+- Production/Host/Django migration untouched.
+
+
 ## REQ-49-080 — Preserve the old Search-Link crawler and expose a stronger acquisition engine in Qt
 Status: **IMPLEMENTED + WINDOWS_CI_TESTED / OWNER_LOCAL_FOREGROUND_QA_NEXT**
 
