@@ -5,16 +5,20 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QComboBox
+from PySide6.QtWidgets import QApplication, QComboBox, QDoubleSpinBox, QSpinBox
 
+from app import ai_providers
+from app.ai_providers import AIProviderClient
 from app.db import Database
 from app.phase49_3i36_stage_finalization import LOCK_COLUMN
 from qt6.kernel import AICore, build_kernel
 from qt6.main_window import MainWindow
+from qt6.parity_dialogs import FIXED_PRICE_COLUMN, ProfileEditorDialog
 from qt6.product_explorer import ProductGalleryModel
 
 
@@ -61,6 +65,9 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
             "sale_price_per_roll": 4_000_000,
             "print_hourly_rate": 35_000,
             "supervision_hourly_rate": 15_000,
+            "preheat_hours": 2,
+            "preheat_temperature_c": 55,
+            "preheat_hourly_rate": 9_000,
         })
         petg = self.kernel.filaments.save({
             "manufacturer": "eSUN",
@@ -186,6 +193,10 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         self.assertEqual(int(edited["id"]), int(saved["id"]))
         self.assertEqual(float(edited["stock_roll_count"]), 4.0)
         self.assertEqual(int(edited["sale_price_per_roll"]), 4_200_000)
+        self.assertEqual(int(edited["print_hourly_rate"]), 35_000)
+        self.assertEqual(int(edited["supervision_hourly_rate"]), 15_000)
+        self.assertEqual(float(edited["preheat_hours"]), 2.0)
+        self.assertEqual(int(edited["preheat_hourly_rate"]), 9_000)
 
         self.kernel.filaments.deactivate(int(edited["id"]))
         active_ids = {int(item["id"]) for item in self.kernel.filaments.list()}
@@ -325,6 +336,99 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
             self.assertEqual(settings.ftp_host.text(), "ftp.3dprinthub.ir")
         finally:
             window.close()
+
+    def test_openrouter_selected_model_test_is_one_fast_request(self):
+        calls = []
+
+        def fake_request(url, key, **kwargs):
+            calls.append((url, kwargs))
+            return {
+                "id": "generation-test",
+                "model": kwargs.get("model"),
+                "choices": [{"message": {"content": "آماده"}}],
+            }
+
+        with patch.object(ai_providers, "_json_request", side_effect=fake_request):
+            client = AIProviderClient(
+                "openrouter",
+                "dummy-openrouter-key",
+                "openai/gpt-5-mini",
+            )
+            result = client.test_connection()
+
+        self.assertEqual(result["model"], "openai/gpt-5-mini")
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0][0].endswith("/chat/completions"))
+        payload = calls[0][1]["payload"]
+        self.assertEqual(payload["provider"]["sort"], "latency")
+        self.assertTrue(payload["provider"]["allow_fallbacks"])
+
+    def test_openrouter_content_routes_for_throughput_without_model_catalog(self):
+        calls = []
+
+        def fake_request(url, key, **kwargs):
+            calls.append((url, kwargs))
+            return {
+                "id": "generation-content",
+                "model": kwargs.get("model"),
+                "choices": [{"message": {"content": "{}"}}],
+            }
+
+        with patch.object(ai_providers, "_json_request", side_effect=fake_request):
+            client = AIProviderClient(
+                "openrouter",
+                "dummy-openrouter-key",
+                "openai/gpt-5-mini",
+            )
+            selected = client.choose_model("openai/gpt-5-mini")
+            client._chat(
+                selected,
+                [{"role": "user", "content": "test"}],
+                operation="structured_content",
+            )
+
+        self.assertEqual(len(calls), 1)
+        payload = calls[0][1]["payload"]
+        self.assertEqual(payload["model"], "openai/gpt-5-mini")
+        self.assertEqual(payload["provider"]["sort"], "throughput")
+
+    def test_profile_editor_numeric_widgets_are_ltr_and_costs_visible(self):
+        self._add_filaments()
+        dialog = ProfileEditorDialog(
+            self.kernel.filaments.list(),
+            filament_core=self.kernel.filaments,
+        )
+        try:
+            self.assertEqual(
+                dialog.length.layoutDirection(),
+                Qt.LayoutDirection.LeftToRight,
+            )
+            self.assertGreaterEqual(dialog.length.minimumWidth(), 150)
+            self.assertIsInstance(
+                dialog.production.cellWidget(0, 0),
+                QDoubleSpinBox,
+            )
+            self.assertIsInstance(
+                dialog.production.cellWidget(0, 2),
+                QSpinBox,
+            )
+            headers = [
+                dialog.filament_table.horizontalHeaderItem(i).text()
+                for i in range(dialog.filament_table.columnCount())
+            ]
+            for expected in (
+                "فروش رول",
+                "چاپ/ساعت",
+                "نظارت/ساعت",
+                "پیش‌گرم h",
+                "پیش‌گرم/ساعت",
+                "قیمت قطعی محصول",
+            ):
+                self.assertIn(expected, headers)
+            self.assertEqual(FIXED_PRICE_COLUMN, 13)
+            self.assertTrue(dialog.edit_filament_btn.isEnabled())
+        finally:
+            dialog.close()
 
     def test_main_window_reports_full_parity_contract(self):
         window = MainWindow(self.kernel)
