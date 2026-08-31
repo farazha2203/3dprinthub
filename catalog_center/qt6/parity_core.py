@@ -371,24 +371,21 @@ class StageCore:
             )
 
             if stage == "images" and row is not None:
+                # The legacy readiness layer has one coarse "Alt تصویر" flag.
+                # Qt needs exact per-image SEO truth, so always remove that coarse
+                # proxy and replace it with the deterministic metadata audit below.
+                # Primary/selection remain factual operator requirements.
+                missing = [
+                    item
+                    for item in missing
+                    if item != "Alt تصویر"
+                ]
                 detailed_image_missing = _unique_missing(
                     image_pipeline.image_metadata_missing(row)
                 )
-                if detailed_image_missing:
-                    # Replace the coarse baseline Alt flag with exact per-image
-                    # defects so the operator sees what AI/local repair can fix.
-                    if any(
-                        item.startswith("Alt تصویر")
-                        for item in detailed_image_missing
-                    ):
-                        missing = [
-                            item
-                            for item in missing
-                            if item != "Alt تصویر"
-                        ]
-                    missing = _unique_missing(
-                        [*missing, *detailed_image_missing]
-                    )
+                missing = _unique_missing(
+                    [*missing, *detailed_image_missing]
+                )
 
             ai_missing, operator_missing = _classify_stage_missing(
                 stage,
