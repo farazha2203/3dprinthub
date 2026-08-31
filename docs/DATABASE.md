@@ -1,5 +1,23 @@
 # DATABASE — 3DPrintHub
 
+## 2026-08-31 — Qt 42B2 Catalog SQLite composition
+
+Phase49.3I.42B2 adds **no Django migration** and does not alter Production MySQL.
+
+The Qt kernel composes the already-mature additive Catalog SQLite schemas before presenting editors, including:
+- Epic49 desktop Product commerce/Filament fields and `available_filament_offers`;
+- pricing/Profile Matrix fields;
+- `sales_profile_ledger_json`, `sales_profiles_json`, stage lock/manual approval fields;
+- image metadata fields;
+- guided/Product-local homepage slider fields.
+
+First owner Local foreground run must use the verified persistent Catalog DB
+`D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
+and create a checksum-verified backup before Qt initializes against that real database.
+
+CI uses isolated temporary SQLite only. Production MySQL remains unchanged.
+
+
 Updated: 2026-08-30
 
 ## Catalog Center local database — Phase49.3I.43–45

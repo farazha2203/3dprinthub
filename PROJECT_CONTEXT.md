@@ -1,5 +1,13 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
+## Continuation checkpoint — 2026-08-31 / Phase49.3I.42B2
+
+Executable Qt source checkpoint: `c3b0105eaa6c6141eb6d6d8463a96d547101564c`.
+Windows full-parity CI `33369749205` PASS; Single Active AI `33369749123` PASS.
+
+Qt now has requested Product/Filament/Profile/Image/SEO/Source/Slider/AI Provider/Connection parity. One shared ApplicationKernel/AICore owns the Qt composition. Legacy launcher is still the default fallback. Phase42C live Scan/Crawl/Acquisition controls remain open; owner Local foreground QA is mandatory before any cutover. Production/Host untouched.
+
+
 ## Active continuation checkpoint — 2026-08-30
 
 Windows Qt modernization is now at Phase49.3I.42B1. Source checkpoint `0b826dccabcb3d98d5f5b4cca6543d7547ff8773` adds the object-oriented ApplicationKernel/CoreRegistry, Product gallery/local image parity and the first real Stage-1 edit adapter. Qt CI `33319343447` and Single Active AI `33319343464` are PASS. Production remains untouched. Next exact task is owner Local 42B1 QA, then 42B2 complete Stage-2 Filament/pricing/Profile parity.
