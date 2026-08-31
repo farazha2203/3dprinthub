@@ -10,7 +10,14 @@ on:
       - "catalog_center/requirements-qt6.txt"
       - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
       - "catalog_center/tests/test_phase49_3i42b_core_parity.py"
+      - "catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py"
       - "catalog_center/tests/test_phase49_3i41_filament_library.py"
+      - "catalog_center/app/classic_methods.py"
+      - "catalog_center/app/page_extractor.py"
+      - "catalog_center/app/phase49_3i16_resilient_acquisition.py"
+      - "catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py"
+      - "catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py"
+      - "catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py"
       - ".github/workflows/phase49-3i42-qt6-ci.yml"
   workflow_dispatch:
 
@@ -49,7 +56,7 @@ jobs:
       - name: Compile Qt6 and touched mature contracts
         shell: pwsh
         run: |
-          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py
+          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/app/classic_methods.py catalog_center/app/page_extractor.py catalog_center/app/phase49_3i16_resilient_acquisition.py catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity compileall failed' }
 
       - name: Qt6 foundation and full parity tests
@@ -58,6 +65,20 @@ jobs:
         run: |
           python -m unittest -v tests.test_phase49_3i42_qt6_foundation tests.test_phase49_3i42b_core_parity
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity tests failed' }
+
+      - name: Qt6 acquisition strategy and continuation tests
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i42c_acquisition_runtime
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 acquisition strategy tests failed' }
+
+      - name: Mature acquisition regressions
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_epic49_phase49_3i16_resilient_acquisition tests.test_phase49_3i38_crawl_ledger_stage_ai tests.test_phase49_3i43_modern_acquisition_intelligence tests.test_phase49_3i45_incremental_discovery_intelligence
+          if ($LASTEXITCODE -ne 0) { throw 'Mature acquisition regression failed' }
 
       - name: Mature Filament Library regression
         shell: pwsh
