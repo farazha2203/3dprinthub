@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from dataclasses import dataclass
 from typing import Any
-from urllib import error, parse, request
+from urllib import parse
+
+import httpx
 
 try:
     from .phase49_diagnostics import ai_request_event
@@ -26,6 +29,34 @@ PROVIDERS = {
     "avalai": ProviderSpec("avalai", "AvalAI", "https://api.avalai.ir/v1", True),
     "openrouter": ProviderSpec("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", True),
 }
+
+_HTTP_CLIENT = None
+_HTTP_CLIENT_LOCK = threading.Lock()
+
+
+def _pooled_http_client() -> httpx.Client:
+    """Return one keep-alive pool for AI traffic; auth stays per request."""
+    global _HTTP_CLIENT
+    with _HTTP_CLIENT_LOCK:
+        if _HTTP_CLIENT is None or _HTTP_CLIENT.is_closed:
+            limits = httpx.Limits(
+                max_connections=20,
+                max_keepalive_connections=10,
+                keepalive_expiry=60.0,
+            )
+            transport = httpx.HTTPTransport(retries=1, limits=limits)
+            _HTTP_CLIENT = httpx.Client(
+                transport=transport,
+                limits=limits,
+                follow_redirects=True,
+                timeout=httpx.Timeout(
+                    connect=8.0,
+                    read=120.0,
+                    write=30.0,
+                    pool=8.0,
+                ),
+            )
+        return _HTTP_CLIENT
 
 
 def _extract_request_id(headers) -> str:
@@ -69,61 +100,85 @@ def _json_request(
         "Authorization": f"Bearer {key.strip()}",
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "User-Agent": "3DPrintHub-Catalog-Intelligence/8.7.1",
+        "User-Agent": "3DPrintHub-Catalog-Intelligence/8.9.9",
     }
     if provider == "openrouter":
         headers["HTTP-Referer"] = "https://3dprinthub.ir"
-        headers["X-OpenRouter-Title"] = "3DPrintHub Catalog Center"
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8") if payload is not None else None
-    req = request.Request(url, data=body, headers=headers, method=method)
+        headers["X-Title"] = "3DPrintHub Catalog Center"
+
+    body = (
+        json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        if payload is not None
+        else None
+    )
     started = time.perf_counter()
     try:
-        with request.urlopen(req, timeout=timeout) as response:
-            raw = response.read().decode("utf-8", errors="replace")
-            data = json.loads(raw) if raw.strip() else {}
-            request_id = _extract_request_id(response.headers)
-            usage, cost_usd = _usage_cost(data)
+        response = _pooled_http_client().request(
+            method,
+            url,
+            headers=headers,
+            content=body,
+            timeout=httpx.Timeout(
+                connect=min(8.0, float(timeout)),
+                read=float(timeout),
+                write=min(30.0, float(timeout)),
+                pool=min(8.0, float(timeout)),
+            ),
+        )
+        raw = response.text
+        request_id = _extract_request_id(response.headers)
+        if response.status_code >= 400:
             ai_request_event(
                 provider=provider,
-                model=model or str(data.get("model") or ""),
+                model=model,
                 operation=operation or method.lower(),
                 endpoint=url,
                 request_id=request_id,
-                http_status=getattr(response, "status", 200),
-                status="ok",
+                http_status=int(response.status_code),
+                status="error",
                 duration_ms=int((time.perf_counter() - started) * 1000),
-                usage=usage,
-                cost_usd=cost_usd,
-                cost_source="provider_response" if cost_usd is not None else "",
                 product_id=product_id,
-                request_summary={"method": method, "payload_keys": sorted((payload or {}).keys())},
-                response_summary={
-                    "id": data.get("id"),
-                    "model": data.get("model"),
-                    "usage": usage,
+                request_summary={
+                    "method": method,
+                    "payload_keys": sorted((payload or {}).keys()),
                 },
+                error_text=raw,
             )
-            if request_id and isinstance(data, dict):
-                data.setdefault("_request_id", request_id)
-            return data
-    except error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        request_id = _extract_request_id(exc.headers)
+            raise RuntimeError(
+                f"AI HTTP {response.status_code}: {raw[:1600]}"
+            )
+
+        data = response.json() if raw.strip() else {}
+        usage, cost_usd = _usage_cost(data)
         ai_request_event(
             provider=provider,
-            model=model,
+            model=model or str(data.get("model") or ""),
             operation=operation or method.lower(),
             endpoint=url,
             request_id=request_id,
-            http_status=exc.code,
-            status="error",
+            http_status=int(response.status_code),
+            status="ok",
             duration_ms=int((time.perf_counter() - started) * 1000),
+            usage=usage,
+            cost_usd=cost_usd,
+            cost_source="provider_response" if cost_usd is not None else "",
             product_id=product_id,
-            request_summary={"method": method, "payload_keys": sorted((payload or {}).keys())},
-            error_text=detail,
+            request_summary={
+                "method": method,
+                "payload_keys": sorted((payload or {}).keys()),
+            },
+            response_summary={
+                "id": data.get("id"),
+                "model": data.get("model"),
+                "usage": usage,
+            },
         )
-        raise RuntimeError(f"AI HTTP {exc.code}: {detail[:1600]}") from exc
-    except error.URLError as exc:
+        if request_id and isinstance(data, dict):
+            data.setdefault("_request_id", request_id)
+        return data
+    except RuntimeError:
+        raise
+    except httpx.RequestError as exc:
         ai_request_event(
             provider=provider,
             model=model,
@@ -183,11 +238,10 @@ class AIProviderClient:
             raise RuntimeError(f"{self.spec.label} API key is not configured.")
 
     def list_model_info(self) -> list[dict[str, Any]]:
-        suffix = "?sort=pricing-low-to-high" if self.provider == "openrouter" else ""
         data = _json_request(
-            f"{self.spec.base_url}/models{suffix}",
+            f"{self.spec.base_url}/models",
             self.api_key,
-            timeout=45,
+            timeout=20,
             provider=self.provider,
             operation="list_models",
             product_id=self.product_id,
@@ -222,12 +276,17 @@ class AIProviderClient:
     def list_models(self) -> list[str]:
         return [item["id"] for item in self.list_model_info()]
 
-    def choose_model(self, preferred: str = "") -> str:
-        info = self.list_model_info()
-        models = [item["id"] for item in info]
+    def choose_model(
+        self,
+        preferred: str = "",
+        *,
+        model_info: list[dict[str, Any]] | None = None,
+    ) -> str:
         preferred = (preferred or self.model or "").strip()
-        if preferred and preferred in models:
+        if preferred:
             return preferred
+        info = model_info if model_info is not None else self.list_model_info()
+        models = [item["id"] for item in info]
         if self.provider == "openrouter":
             if "openrouter/free" in models:
                 return "openrouter/free"
@@ -247,6 +306,11 @@ class AIProviderClient:
 
     def _chat(self, model: str, messages: list[dict[str, Any]], *, response_format: dict[str, Any] | None = None, operation: str = "chat") -> dict[str, Any]:
         payload: dict[str, Any] = {"model": model, "messages": messages}
+        if self.provider == "openrouter":
+            payload["provider"] = {
+                "sort": "latency" if operation == "connection_test" else "throughput",
+                "allow_fallbacks": True,
+            }
         if response_format is not None:
             payload["response_format"] = response_format
         return _json_request(
@@ -262,8 +326,14 @@ class AIProviderClient:
         )
 
     def test_connection(self, preferred: str = "") -> dict[str, Any]:
-        info = self.list_model_info()
-        model = self.choose_model(preferred)
+        requested = (preferred or self.model or "").strip()
+        info: list[dict[str, Any]] = []
+        if requested:
+            model = requested
+        else:
+            info = self.list_model_info()
+            model = self.choose_model(model_info=info)
+
         if self.spec.chat_first:
             data = self._chat(
                 model,
@@ -271,13 +341,17 @@ class AIProviderClient:
                 operation="connection_test",
             )
         else:
-            payload = {"model": model, "input": "Return only the Persian word: آماده", "max_output_tokens": 20}
+            payload = {
+                "model": model,
+                "input": "Return only the Persian word: آماده",
+                "max_output_tokens": 20,
+            }
             data = _json_request(
                 f"{self.spec.base_url}/responses",
                 self.api_key,
                 payload=payload,
                 method="POST",
-                timeout=90,
+                timeout=60,
                 provider=self.provider,
                 model=model,
                 operation="connection_test",
@@ -285,15 +359,19 @@ class AIProviderClient:
             )
         text = response_output_text(data)
         if not text:
-            raise RuntimeError(f"{self.spec.label} connected, but the live response test returned no text.")
+            raise RuntimeError(
+                f"{self.spec.label} connected, but the live response test returned no text."
+            )
         selected_info = next((item for item in info if item["id"] == model), {})
+        inferred_free = model.endswith(":free") or model == "openrouter/free"
         return {
             "provider": self.provider,
             "provider_label": self.spec.label,
             "model": model,
             "models_count": len(info),
+            "model_catalog_checked": bool(info),
             "sample": text[:120],
-            "free": bool(selected_info.get("free")),
+            "free": bool(selected_info.get("free")) or inferred_free,
             "pricing": selected_info.get("pricing") or {},
             "request_id": data.get("_request_id") or data.get("id") or "",
             "usage": data.get("usage") or {},
