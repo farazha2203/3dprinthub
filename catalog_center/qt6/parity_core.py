@@ -11,6 +11,13 @@ from typing import Any
 from app import phase49_3c_image_pipeline as image_pipeline
 from app import phase49_readiness_wizard as readiness_module
 from app.ai_providers import AIProviderClient, PROVIDERS
+from app.ai_model_catalog import (
+    contains_persian,
+    enrich_model_info,
+    estimate_request_cost,
+    estimate_text_tokens,
+    rank_models,
+)
 from app.epic49_desktop_schema import (
     add_available_material_color,
     deactivate_available_material_color,
@@ -698,6 +705,7 @@ class ProviderCore:
 
     def __init__(self, db) -> None:
         self.db = db
+        self._model_cache: dict[str, list[dict[str, Any]]] = {}
         install_google_provider()
 
     def providers(self) -> list[dict[str, str]]:
@@ -756,15 +764,238 @@ class ProviderCore:
         return AIProviderClient(provider, key, str(model or "").strip())
 
     def models(self, provider: str, *, key_override: str = "") -> list[dict[str, Any]]:
+        provider = str(provider or "").strip().lower()
         client = self._client(provider, key_override=key_override)
-        return list(client.list_model_info())
+        info = rank_models(list(client.list_model_info()))
+        self._model_cache[provider] = info
+        return list(info)
 
-    def test(self, provider: str, model: str = "", *, key_override: str = "") -> dict[str, Any]:
-        client = self._client(provider, model=model, key_override=key_override)
-        result = dict(client.test_connection())
+    def cached_models(self, provider: str) -> list[dict[str, Any]]:
+        return list(
+            self._model_cache.get(
+                str(provider or "").strip().lower(),
+                [],
+            )
+        )
+
+    def model_info(
+        self,
+        provider: str,
+        model: str,
+        *,
+        refresh: bool = False,
+        key_override: str = "",
+    ) -> dict[str, Any]:
+        provider = str(provider or "").strip().lower()
+        model = str(model or "").strip()
+        info = self.cached_models(provider)
+        if refresh or not info:
+            info = self.models(provider, key_override=key_override)
+        return next(
+            (
+                dict(item)
+                for item in info
+                if str(item.get("id") or "") == model
+            ),
+            enrich_model_info({"id": model, "name": model}),
+        )
+
+    def test(
+        self,
+        provider: str,
+        model: str = "",
+        *,
+        key_override: str = "",
+        structured: bool = False,
+    ) -> dict[str, Any]:
+        client = self._client(
+            provider,
+            model=model,
+            key_override=key_override,
+        )
+        result = dict(client.test_connection(model))
         result["provider"] = provider
-        result["model"] = model
+        result["model"] = str(result.get("model") or model)
+
+        if structured:
+            schema = {
+                "type": "object",
+                "properties": {
+                    "title_fa": {"type": "string"},
+                    "seo_title_fa": {"type": "string"},
+                    "keywords": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["title_fa", "seo_title_fa", "keywords"],
+                "additionalProperties": False,
+            }
+            probe, probe_model = client.structured_response(
+                instructions=(
+                    "این یک تست واقعی سازگاری Product برای 3DPrintHub است. "
+                    "فقط JSON معتبر برگردان. title_fa و seo_title_fa باید "
+                    "فارسی طبیعی باشند و keywords باید آرایه‌ای از "
+                    "کلیدواژه‌های فارسی باشد."
+                ),
+                input_content=[
+                    {
+                        "type": "input_text",
+                        "text": (
+                            "محصول نمونه: پایه چراغ رومیزی چاپ سه‌بعدی. "
+                            "یک عنوان فارسی کوتاه و SEO فارسی تولید کن."
+                        ),
+                    }
+                ],
+                schema=schema,
+                schema_name="qt_provider_product_probe",
+                preferred_model=model,
+            )
+            if not contains_persian(
+                probe.get("title_fa")
+            ) or not contains_persian(
+                probe.get("seo_title_fa")
+            ):
+                raise RuntimeError(
+                    "تست واقعی Product وصل شد اما مدل خروجی فارسی "
+                    "معتبر تولید نکرد."
+                )
+            result["structured_ok"] = True
+            result["structured_model"] = probe_model
+            result["structured_sample"] = str(
+                probe.get("title_fa") or ""
+            )[:160]
+
+        try:
+            selected = self.model_info(
+                provider,
+                str(result.get("model") or model),
+                refresh=False,
+                key_override=key_override,
+            )
+        except Exception:
+            selected = enrich_model_info(
+                {"id": str(result.get("model") or model)}
+            )
+        result["model_info"] = selected
         return result
+
+    def estimate_product_ai(
+        self,
+        product_id: int,
+        mode: str,
+        *,
+        target_stage: str | None = None,
+    ) -> dict[str, Any]:
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError(
+                "محصول برای محاسبه هزینه پیدا نشد."
+            )
+
+        active = self.active()
+        provider = str(
+            active.get("provider") or ""
+        ).strip().lower()
+        model = str(active.get("model") or "").strip()
+        if not provider or not model:
+            raise RuntimeError(
+                "Provider/Model فعال برای AI تنظیم نشده است."
+            )
+
+        data = _row_dict(row)
+        source_text = "\n".join(
+            str(data.get(key) or "")
+            for key in (
+                "source_title",
+                "source_short_description",
+                "source_description",
+                "source_specs_json",
+                "tags_json",
+                "author_name",
+                "license_name",
+            )
+        )
+        base_tokens = estimate_text_tokens(source_text)
+
+        if target_stage:
+            input_tokens = max(900, base_tokens + 850)
+            output_tokens = 850
+            scope_label = STAGE_LABELS.get(
+                str(target_stage),
+                str(target_stage),
+            )
+        else:
+            input_tokens = max(1400, base_tokens + 1400)
+            output_tokens = 2400
+            scope_label = "همه مراحل محتوایی باز"
+
+        pricing_error = ""
+        try:
+            model_info = self.model_info(
+                provider,
+                model,
+                refresh=not bool(
+                    self.cached_models(provider)
+                ),
+            )
+        except Exception as exc:
+            pricing_error = str(exc)
+            model_info = enrich_model_info(
+                {"id": model, "name": model}
+            )
+
+        estimate = estimate_request_cost(
+            model_info,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
+        try:
+            rate = float(
+                str(
+                    self.db.setting(
+                        "ai_usd_to_toman",
+                        "0",
+                    )
+                    or "0"
+                ).replace(",", "")
+            )
+        except Exception:
+            rate = 0.0
+
+        usd = estimate.get("usd")
+        return {
+            "provider": provider,
+            "model": model,
+            "mode": str(mode or "data"),
+            "target_stage": str(target_stage or ""),
+            "scope_label": scope_label,
+            "persian_label": str(
+                model_info.get("persian_label")
+                or "نامشخص"
+            ),
+            "free": bool(estimate.get("free")),
+            "cost_known": bool(estimate.get("known")),
+            "estimated_usd": usd,
+            "estimated_toman": (
+                float(usd) * rate
+                if usd is not None and rate > 0
+                else 0.0
+            ),
+            "input_tokens": int(input_tokens),
+            "output_tokens": int(output_tokens),
+            "pricing": dict(
+                model_info.get("pricing") or {}
+            ),
+            "price_per_million": dict(
+                model_info.get(
+                    "price_per_million"
+                )
+                or {}
+            ),
+            "pricing_error": pricing_error,
+        }
 
     def execute_product_ai(
         self,
