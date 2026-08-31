@@ -1,5 +1,22 @@
 # OWNER REQUESTS
 
+## REQ-49-084 — Product AI must survive blocked Link acquisition and prove generated data was actually applied
+Status: `IMPLEMENTED / GITHUB WINDOWS CI+PORTABLE PASS / OWNER LOCAL FOREGROUND RETEST NEXT`.
+
+Acceptance:
+- a MakerWorld 403 in Link mode must not make every OpenRouter model appear broken;
+- the failed direct HTTP request must not be repeated unchanged;
+- if the Product already has valid crawled/saved source facts, AI continues with those facts and visibly states that Link fell back to saved data;
+- if no usable saved facts exist, stop with a clear source-data error instead of a Provider/model error;
+- Stage AI does not call source/Provider when the scoped stage is locked or has no AI-owned work;
+- AI never says a field changed merely because `update_product` was called; persisted SQLite values are re-read and verified;
+- operator-owned Filament/material/color/price/stock/publish choices remain untouched;
+- variable `openrouter/auto*` routers, including `openrouter/auto-beta`, cannot be Product defaults;
+- exact Product-safe models remain usable.
+
+Evidence: code `0c67fa30493d100b99ec37314586e0491ecbcda5`; runs `33409112402`, `33409112322`, `33409112381`, `33409112367` PASS.
+Production/Host remain untouched.
+
 ## REQ-49-082 — Product-safe OpenRouter model selection and strict Structured output
 Status: `IMPLEMENTED / GITHUB CI PASS / OWNER LOCAL RETEST NEXT`.
 

@@ -1,5 +1,51 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-084 — Product AI Link mode failed on MakerWorld 403 before Provider execution and apply success was not persistence-verified
+**Date:** 2026-08-31  
+**Environment:** owner Local Windows Qt6 / Product #309 / Stage 1 `quick`.
+
+**Observed owner evidence:**
+- `provider=openrouter, model=openrouter/auto-beta, source_mode=link, stage=quick` failed at `crawler.public_http` with HTTP 403;
+- exact `openai/gpt-oss-20b` failed at the identical stack location;
+- the trace never reached `generate_translation_pack` / the OpenRouter request boundary;
+- prior runs could receive AI output yet fail to produce the expected visible Product change.
+
+**Root cause:**
+1. Qt Product AI called `orchestrate_once` directly. Link mode resolved the source with `live_source_for_ai`, which used the direct public HTTP path and had no saved-data fallback for an explicit upstream 403/429.
+2. The same blocked request could therefore make every AI model appear broken even though the Provider had not been called.
+3. `changed_fields` was extended immediately after calling `db.update_product`; there was no post-write re-read proving the requested values persisted.
+4. the previous variable-router gate matched exact `openrouter/auto` but did not catch the observed `openrouter/auto-beta` variant.
+5. scoped locked/no-work stages could enter source acquisition before proving an AI request was actually needed.
+
+**Correct fix:**
+- Link remains live-first;
+- catch only explicit `BlockedError` for blocked/rate-limited public HTTP and do not repeat that failed request unchanged;
+- on that condition, use already persisted, sanitized Product/Crawl facts when they contain a valid source title;
+- if persisted facts are insufficient, fail with an explicit source-data message and preserve the original block as the cause;
+- expose requested vs effective source mode and show the fallback in Qt;
+- run scope/no-work checks before live HTTP/Provider work;
+- re-read SQLite after each AI stage update and compare every requested field before reporting it as changed;
+- fail loudly when persistence cannot be verified;
+- classify all `openrouter/auto*` IDs, including `openrouter/auto-beta`, as variable routers.
+
+**Regression coverage added:**
+- Link 403 → saved Product data fallback → Stage-1 Persian title actually persists;
+- locked scoped Stage 1 performs no source fetch and no Provider generation call;
+- a simulated no-op DB update raises instead of claiming success;
+- both `openrouter/auto` and `openrouter/auto-beta` fail the Product default compatibility gate.
+
+**Verification on exact code checkpoint `0c67fa30493d100b99ec37314586e0491ecbcda5`:**
+- `33409112402` — Qt6 Crawl + AI Runtime CI — PASS;
+- `33409112322` — Single Active AI CI — PASS;
+- `33409112381` — Stage Finalization + Commerce Precision CI — PASS;
+- `33409112367` — Windows Portable build/self-verify/artifact upload — PASS.
+
+**Rollback:** `backup/pre-err49-084-ai-link-fallback-apply-verify-20260831` → `4802f8ba0ca7920f6ee047ebd4ffb57e45025d0a`.
+
+**Safety:** no Django/Catalog migration, no Host/Production write, no secret change, no source/media bulk rewrite, no CAPTCHA/auth/proxy bypass.
+
+**Prevention rule:** a source acquisition failure must never be presented as an AI-model failure. Link-mode AI must distinguish requested source from effective evidence source, must not retry a known blocked request unchanged, and must never report a field as applied until the persisted database value has been re-read and verified.
+
 ## ERR-49-082 — OpenRouter Product AI accepted media/tools-only models and could fall back to unconstrained text
 **Date:** 2026-08-31  
 **Environment:** owner Local Windows Qt6 foreground QA after Phase49.3I.42C3.

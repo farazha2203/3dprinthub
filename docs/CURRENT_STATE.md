@@ -1,5 +1,47 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-08-31 / ERR-49-084 Product AI Link 403 fallback + verified apply
+
+Owner Local foreground evidence on Product #309 proved two separate failures were being conflated:
+
+- both `openrouter/auto-beta` and exact `openai/gpt-oss-20b` failed before any Provider call at `resolve_source → live_source_for_ai → crawler.public_http → HTTP 403`;
+- previous AI runs could report attempted changed fields without re-reading the Catalog database to prove those values actually persisted.
+
+Current tested code checkpoint:
+`0c67fa30493d100b99ec37314586e0491ecbcda5`.
+
+Implemented:
+- Link source remains live-first, but an explicit `BlockedError` / 403/429 is not retried unchanged;
+- after that exact blocked condition, Product AI falls back to already persisted Crawl/Product facts when a valid saved source title exists;
+- requested source mode and effective source mode are tracked separately, and Qt reports that saved data was used because Link was blocked;
+- if Link is blocked and saved Product facts are insufficient, execution fails with an explicit source-data error instead of blaming the AI model;
+- scoped locked/no-work stages return before live HTTP or Provider execution;
+- every normal AI stage DB write is re-read and field-by-field verified before it is reported in `changed_fields`;
+- if a write did not persist, execution fails with explicit `اعمال/ذخیره دیتابیس تأیید نشد`;
+- `openrouter/auto-beta` and all future `openrouter/auto*` variants are classified as variable routers and rejected as deterministic Product defaults.
+
+Verification on the exact code checkpoint:
+- `33409112402` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS;
+- `33409112322` — Phase49.3I.17 Single Active AI CI — PASS;
+- `33409112381` — Phase49.3I.31-40 Stage Finalization + Commerce Precision CI — PASS;
+- `33409112367` — Catalog Center Windows Portable Release — PASS; build/self-verify/artifact upload succeeded and the conditional GitHub Release publication step was skipped.
+
+Safety:
+- Catalog/Django migration changed = NO;
+- Product/media bulk rewrite = NO;
+- secrets changed = NO;
+- Host/Production touched = NO;
+- default launcher changed = NO;
+- rollback = `backup/pre-err49-084-ai-link-fallback-apply-verify-20260831` → `4802f8ba0ca7920f6ee047ebd4ffb57e45025d0a`.
+
+Current branch:
+`agent/phase49-3i18-operator-bulk-ai-rebuild`.
+
+Production still runs its previously approved release. ERR-49-084 is a Windows Catalog Center hotfix and is not deployed.
+
+Exact next step:
+owner Local clean ff-only pull of the final documentation HEAD, run `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -LaunchApp`, then on Product #309 choose an exact Product-safe OpenRouter model (not any `openrouter/auto*`) and run Stage 1 `AI همین مرحله` in Link mode. Expected: no terminal MakerWorld 403; when direct Link is blocked the UI states that saved Product data was used, the Persian title is actually persisted, and failed persistence can no longer be reported as success.
+
 ## Continuation checkpoint — 2026-08-31 / ERR-49-082 OpenRouter Product Model Gate
 
 Owner Local QA exposed a real model-selection/Structured-output defect after 42C3. The connection itself was healthy; inappropriate OpenRouter models were being accepted for Product work.

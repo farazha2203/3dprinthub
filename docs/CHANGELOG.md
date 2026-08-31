@@ -1,3 +1,17 @@
+## 2026-08-31 — ERR-49-084 Product AI Link fallback + verified persistence
+- isolated Product #309 MakerWorld 403 to the pre-Provider Link source fetch; changing OpenRouter models could not affect this failure;
+- Link mode now falls back once to already persisted Product/Crawl evidence on explicit 403/429 instead of repeating the same blocked HTTP request;
+- saved-data fallback remains grounded in existing source title/description/spec/category/author/license/metrics and does not invent operator-owned material/color/price/stock facts;
+- added requested/effective source truth and a Qt status note when Link falls back to saved data;
+- added pre-source scope guard so locked/no-work stages do not fetch the source or call a Provider;
+- AI stage writes are now re-read and field-by-field verified before `changed_fields` can report success;
+- all `openrouter/auto*` variable-router IDs, including `openrouter/auto-beta`, are rejected as deterministic Product defaults;
+- regressions cover 403 fallback + real Stage-1 persistence, no-call locked scope, no-op DB write failure, and auto-beta rejection;
+- code checkpoint `0c67fa30493d100b99ec37314586e0491ecbcda5`;
+- CI `33409112402`, `33409112322`, `33409112381`, portable `33409112367` PASS;
+- rollback `backup/pre-err49-084-ai-link-fallback-apply-verify-20260831`;
+- no migration, Host, Production, secret or default-launcher change.
+
 ## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition controls + ERR-49-081 Local gate hardening
 
 ## 2026-08-31 — ERR-49-082 OpenRouter Product Model Gate

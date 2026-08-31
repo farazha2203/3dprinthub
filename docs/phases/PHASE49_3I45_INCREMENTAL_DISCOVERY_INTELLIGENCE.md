@@ -5,6 +5,20 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Status: `GITHUB_IMPLEMENTED + WINDOWS CI TESTED / OWNER LOCAL TEST NEXT / PRODUCTION NOT TOUCHED`
 
+## 2026-08-31 compatibility checkpoint — ERR-49-084
+
+The Qt Product-AI Link source path exposed a compatibility gap above the 3I.43–45 acquisition layer: direct AI source refresh could still use the older public HTTP helper and fail on MakerWorld 403 before any Provider call.
+
+Hotfix code checkpoint `0c67fa30493d100b99ec37314586e0491ecbcda5`:
+- Link AI remains live-first but falls back to persisted Product/Crawl evidence on explicit 403/429 without repeating the blocked request;
+- 3I.43–45 robots/cache/Sitemap/browser acquisition implementation itself is unchanged;
+- no bypass behavior was introduced;
+- post-AI SQLite writes are now persistence-verified;
+- variable `openrouter/auto*` models are not deterministic Product defaults.
+
+Verification: `33409112402`, `33409112322`, `33409112381`, `33409112367` PASS.
+Owner Local Product #309 foreground retest remains the next gate; Production remains untouched.
+
 ## Goal
 
 Apply the newly supplied GUI, FastAPI and web-acquisition references to the existing 3DPrintHub architecture without rewriting healthy subsystems.

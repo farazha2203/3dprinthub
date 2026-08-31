@@ -1,5 +1,16 @@
 # PROJECT ROADMAP
 
+## 2026-08-31 — ERR-49-084 Product AI Link 403 fallback + truthful DB apply
+Status: `GITHUB_CODE_UPDATED / 42C3 PASS / SINGLE_AI PASS / STAGE PASS / PORTABLE PASS / OWNER_LOCAL_FOREGROUND_RETEST_NEXT / PRODUCTION UNTOUCHED`.
+
+Product #309 proved that two different OpenRouter models died at the same pre-Provider source boundary because Link mode always called the direct public HTTP fetch and MakerWorld returned 403. Link is now live-first with one bounded fallback to already persisted Product/Crawl facts on explicit 403/429, without repeating the failed request. AI writes are re-read from SQLite and verified before they can be reported as applied, and all `openrouter/auto*` variants are rejected as deterministic Product defaults.
+
+Code checkpoint: `0c67fa30493d100b99ec37314586e0491ecbcda5`.
+Evidence: `33409112402`, `33409112322`, `33409112381`, `33409112367` PASS.
+Rollback: `backup/pre-err49-084-ai-link-fallback-apply-verify-20260831` → `4802f8ba0ca7920f6ee047ebd4ffb57e45025d0a`.
+
+Next: owner Local canonical gate + Product #309 Stage-1 Link retest with an exact Product-safe model. 42D/42E and every Production action remain blocked until this foreground behavior is accepted.
+
 ## 2026-08-31 — ERR-49-082 OpenRouter Product-model compatibility gate
 Status: `GITHUB_UPDATED / QT_CI_PASS / SINGLE_AI_PASS / PORTABLE_PASS / OWNER_LOCAL_RETEST_NEXT`.
 
