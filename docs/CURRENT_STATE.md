@@ -1,11 +1,42 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C3 Add Product + AI Crawl parity
+
+Source/code checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
+
+Requested legacy parity now present in Qt:
+- explicit main route `افزودن محصولات / Crawl`;
+- Add Product modes: Automatic, Search/Listing, Category URL, Site Crawl and Direct Product;
+- preserved Classic Search-Link + browser continuation and stronger Hybrid structured-first discovery;
+- source/query/start-URL, Product limit, per-Product image limit, image-download option, retry/reset/progress/run history;
+- rich Product receive into the existing Catalog authority;
+- one shared `AICore` / exact saved Provider+Model+secure key; no page-specific AI engine;
+- live Provider model catalogue with free/Persian/Structured filters, provider pricing display and internal Persian suitability ranking;
+- estimated per-run AI cost confirmation before stage/all-content execution;
+- real Persian + structured Product JSON probe instead of connection-only success;
+- diagnostic dialogs with Provider/Model/Product/Stage/Source context and copyable detailed error text.
+
+Verification on exact code HEAD:
+- `33394215803` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS;
+- `33394215742` — Phase49.3I.17 Single Active AI CI — PASS.
+
+Safety:
+- Django migration changed = NO;
+- Production/Host touched = NO;
+- default launcher changed = NO;
+- Catalog authority remains the existing SQLite/database contracts;
+- no CAPTCHA/auth/proxy bypass added.
+
+Exact next task:
+owner Local clean ff-only pull of the final documentation HEAD, run `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -LaunchApp`, then bounded foreground QA for Add Product/Crawl and OpenRouter structured Product execution. Do not deploy before owner Local acceptance.
+
+
 Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
-Parallel Windows Track: `Phase49.3I.42C — Qt6 Classic + Hybrid Acquisition Controls over Phase49.3I.43–45 intelligence; 42B2 parity retained`  
-Status: `PHASE49.3I.42C WINDOWS CI PASS INCLUDING LOCAL-GATE STDIN GUARD / OWNER LOCAL FOREGROUND QA NEXT / PRODUCTION NOT TOUCHED`
+Parallel Windows Track: `Phase49.3I.42C3 — Qt6 Add Product/Crawl parity + AI Provider diagnostics over 42C/3I.43–45`  
+Status: `PHASE49.3I.42C3 WINDOWS CI PASS / SINGLE ACTIVE AI PASS / OWNER LOCAL FOREGROUND QA NEXT / PRODUCTION NOT TOUCHED`
 
 ## Current Windows Qt acquisition checkpoint — Phase49.3I.42C
 
