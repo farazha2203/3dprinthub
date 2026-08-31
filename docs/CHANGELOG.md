@@ -1,5 +1,17 @@
 ## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition controls + ERR-49-081 Local gate hardening
 
+## 2026-08-31 — Phase49.3I.42C3 Add Product + OpenRouter/Crawl parity
+
+- Restored the visible Add Product/Crawl workflow in Qt with Automatic, Search/Listing, Category URL, Site Crawl and Direct Product modes.
+- Preserved Classic browser continuation and Hybrid structured-first acquisition over the mature 3I.43–45 engine.
+- Added live AI model catalogue enrichment: free flag, internal Persian ranking, Structured/JSON hints and Provider pricing.
+- Added model filters, per-run AI cost estimation/confirmation and a real Persian structured Product probe.
+- Added diagnostic dialogs for AI/Crawl errors with execution context and detailed copyable text.
+- Extended the repository-owned Local gate and Qt CI markers/tests.
+- Verification: `33394215803` PASS; Single Active AI `33394215742` PASS on code checkpoint `ba3d1358d91aa78719f618630c290abf97ee8427`.
+- No Django migration, Production, Host, default-launcher or media change.
+
+
 - migrated live acquisition controls into Qt Operations over the existing ApplicationKernel/AcquisitionCore;
 - preserved the old `Classic` Search-Link + browser continuation behavior rather than replacing it;
 - added explicit `Hybrid` strategy using the mature 3I.43–45 robots/pooling/cache/Sitemap/freshness/unseen intelligence before browser fallback;
