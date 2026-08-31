@@ -598,6 +598,7 @@ class AcquisitionCore:
         requested: int = 100,
         image_limit: int = 5,
         include_failed: bool = False,
+        strategy: str = "hybrid",
         progress=None,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_batch
@@ -610,6 +611,7 @@ class AcquisitionCore:
             requested=requested,
             image_limit=image_limit,
             include_failed=include_failed,
+            strategy=strategy,
             progress=progress,
             should_stop=self.should_stop,
         )
