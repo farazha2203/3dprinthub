@@ -1,5 +1,18 @@
 ## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition controls + ERR-49-081 Local gate hardening
 
+## 2026-08-31 — ERR-49-082 OpenRouter Product Model Gate
+- Added output-modality and product-purpose filtering to the live AI model catalogue.
+- Separated native Structured JSON support from Tools/Tool Calling.
+- Excluded media/music/audio/image/embedding/rerank and coding-specialist models from Product recommendations.
+- Changed OpenRouter Product Structured requests to strict JSON Schema with `require_parameters=true`.
+- Removed OpenRouter prompt-only JSON compatibility fallback for Product Structured work.
+- Added persisted non-secret verified model capability profile and Product AI preflight.
+- Improved Settings badges/details for JSON✓, Tools-only, coding-specialist and non-text models.
+- Added regressions reproducing the Lyria and North Mini Code failures.
+- Final verification on `0421bccff040ced53513625af95d05e0c8c27a9a`: Qt/Crawl/AI `33399095190` PASS; Single Active AI `33399095198` PASS; Portable `33399095224` PASS.
+- Production/Host/Django migrations/default launcher untouched.
+
+
 ## 2026-08-31 — Phase49.3I.42C3 Add Product + OpenRouter/Crawl parity
 
 - Restored the visible Add Product/Crawl workflow in Qt with Automatic, Search/Listing, Category URL, Site Crawl and Direct Product modes.
