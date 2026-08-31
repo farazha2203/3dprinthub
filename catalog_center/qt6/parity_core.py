@@ -323,6 +323,8 @@ def _classify_stage_missing(
             "Creator",
             "مفقود",
             "دریافت‌نشده",
+            "تأیید نهایی اپراتور",
+            "ثبت مرحله",
         )
         operator = [
             item
