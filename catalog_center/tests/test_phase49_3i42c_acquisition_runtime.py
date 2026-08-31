@@ -86,6 +86,11 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
         with (
             patch.object(
                 acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(return_value=0.0),
+            ),
+            patch.object(
+                acquisition_runtime,
                 "discover_classic",
                 side_effect=fake_classic,
             ),
@@ -257,10 +262,17 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             ],
         }
 
-        with patch.object(
-            acquisition_runtime,
-            "extract_direct_link",
-            new=AsyncMock(return_value=rich),
+        with (
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(return_value=0.0),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "extract_direct_link",
+                new=AsyncMock(return_value=rich),
+            ),
         ):
             result = asyncio.run(
                 acquisition_runtime._collect_one(
@@ -298,6 +310,38 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             row["acquisition_method"],
             "qt42c-rich-page-extractor",
         )
+
+    def test_classic_mode_never_bypasses_browser_robots_denial(self):
+        listing = "https://makerworld.com/en/search/models?keyword=blocked"
+
+        with (
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(
+                    side_effect=acquisition_runtime.RobotsDeniedError(
+                        "robots denied"
+                    )
+                ),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "discover_classic",
+                new=AsyncMock(return_value={"links": []}),
+            ) as browser,
+        ):
+            with self.assertRaises(acquisition_runtime.RobotsDeniedError):
+                asyncio.run(
+                    acquisition_runtime._discover_listing(
+                        self.db,
+                        self._source(),
+                        listing,
+                        2,
+                        strategy="classic",
+                    )
+                )
+
+        browser.assert_not_awaited()
 
     def test_pending_queue_is_scoped_to_the_active_search_url(self):
         listing_a = "https://makerworld.com/en/search/models?keyword=lamp"
