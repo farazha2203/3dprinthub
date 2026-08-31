@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 
+from .diagnostics import show_diagnostic_error
 from .models import (
     SORT_ROLE,
     FilamentFilterProxyModel,
@@ -92,7 +93,7 @@ class DashboardPage(QWidget):
             ("محصولات", "products"),
             ("ویزارد محصول", "wizard"),
             ("Filamentها", "filaments"),
-            ("عملیات", "operations"),
+            ("افزودن محصولات / Crawl", "operations"),
             ("تنظیمات", "settings"),
         ):
             button = QPushButton(label)
@@ -130,6 +131,7 @@ class ProductsPage(QWidget):
         parent=None,
         *,
         kernel=None,
+        navigate: Callable[[str], None] | None = None,
     ) -> None:
         super().__init__(parent)
         if kernel is None:
@@ -137,6 +139,7 @@ class ProductsPage(QWidget):
         self.db = db
         self.kernel = kernel
         self.open_product = open_product
+        self.navigate = navigate
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
@@ -155,6 +158,13 @@ class ProductsPage(QWidget):
         self.sort_combo.addItem("وضعیت", "status")
         refresh_btn = QPushButton("بروزرسانی")
         refresh_btn.clicked.connect(self.refresh)
+        crawl_btn = QPushButton("➕ افزودن محصول / Crawl")
+        crawl_btn.setProperty("success", True)
+        crawl_btn.clicked.connect(
+            lambda: self.navigate("operations")
+            if self.navigate
+            else None
+        )
         edit_btn = QPushButton("ویرایش محصول")
         edit_btn.setProperty("primary", True)
         edit_btn.clicked.connect(self._open_selected)
@@ -163,6 +173,7 @@ class ProductsPage(QWidget):
         bar.addWidget(QLabel("مرتب‌سازی گالری"))
         bar.addWidget(self.sort_combo)
         bar.addWidget(refresh_btn)
+        bar.addWidget(crawl_btn)
         bar.addWidget(edit_btn)
         root.addLayout(bar)
 
@@ -539,8 +550,20 @@ class OperationsPage(QWidget):
 
         self.source = QComboBox()
         self.mode = QComboBox()
-        self.mode.addItem("دریافت گروهی از Search / Listing", "listing")
-        self.mode.addItem("دریافت مستقیم یک Product", "single")
+        self.mode.addItem(
+            "Automatic — Listing پیش‌فرض Source",
+            "automatic",
+        )
+        self.mode.addItem("Search / Listing", "search")
+        self.mode.addItem("Category URL", "category")
+        self.mode.addItem(
+            "Site Crawl از لینک شروع",
+            "site_crawl",
+        )
+        self.mode.addItem(
+            "دریافت مستقیم یک Product",
+            "single",
+        )
 
         self.strategy = QComboBox()
         self.strategy.addItem(
@@ -556,6 +579,24 @@ class OperationsPage(QWidget):
         self.url.setPlaceholderText(
             "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
         )
+        self.query = QLineEdit()
+        self.query.setPlaceholderText(
+            "مثال: cake stand — برای Automatic/Search"
+        )
+        self.source_hint = QLabel("")
+        self.source_hint.setObjectName("Muted")
+        self.source_hint.setWordWrap(True)
+
+        self.download_images = QCheckBox(
+            "ذخیره تصاویر عمومی باکیفیت"
+        )
+        self.download_images.setChecked(True)
+        self.domain_policy = QLabel(
+            "خزش عمومی و robots-aware است؛ دورزدن Login/CAPTCHA/"
+            "محدودیت دسترسی انجام نمی‌شود."
+        )
+        self.domain_policy.setObjectName("Muted")
+        self.domain_policy.setWordWrap(True)
 
         self.requested = QSpinBox()
         self.requested.setRange(1, 100)
@@ -570,7 +611,16 @@ class OperationsPage(QWidget):
         self.start_btn.setProperty("primary", True)
         self.stop_btn = QPushButton("توقف امن")
         self.stop_btn.setEnabled(False)
-        self.reset_failed_btn = QPushButton("بازگرداندن Failedها به صف")
+        self.reset_failed_btn = QPushButton(
+            "بازگرداندن Failedها به صف"
+        )
+        self.queue_btn = QPushButton("نمایش وضعیت صف")
+        self.default_url_btn = QPushButton(
+            "لینک Search پیش‌فرض Source"
+        )
+        self.direct_btn = QPushButton(
+            "دریافت هوشمند از لینک Product"
+        )
         self.refresh_btn = QPushButton("بروزرسانی وضعیت")
 
         grid.addWidget(QLabel("سایت مادر / Source"), 0, 0)
@@ -579,21 +629,39 @@ class OperationsPage(QWidget):
         grid.addWidget(self.mode, 0, 3)
         grid.addWidget(QLabel("روش Crawl"), 1, 0)
         grid.addWidget(self.strategy, 1, 1)
-        grid.addWidget(QLabel("لینک"), 2, 0)
+        grid.addWidget(QLabel("لینک گروه/محصول"), 2, 0)
         grid.addWidget(self.url, 2, 1, 1, 3)
-        grid.addWidget(QLabel("تعداد Product"), 3, 0)
-        grid.addWidget(self.requested, 3, 1)
-        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 3, 2)
-        grid.addWidget(self.image_limit, 3, 3)
-        grid.addWidget(self.retry_failed, 4, 0, 1, 2)
+        grid.addWidget(QLabel("عبارت جستجو"), 3, 0)
+        grid.addWidget(self.query, 3, 1, 1, 3)
+        grid.addWidget(QLabel("تعداد Product"), 4, 0)
+        grid.addWidget(self.requested, 4, 1)
+        grid.addWidget(
+            QLabel("عکس باکیفیت برای هر Product"),
+            4,
+            2,
+        )
+        grid.addWidget(self.image_limit, 4, 3)
+        grid.addWidget(self.retry_failed, 5, 0, 1, 2)
+        grid.addWidget(
+            self.download_images,
+            5,
+            2,
+            1,
+            2,
+        )
+        grid.addWidget(self.source_hint, 6, 0, 1, 4)
+        grid.addWidget(self.domain_policy, 7, 0, 1, 4)
 
         actions = QHBoxLayout()
         actions.addWidget(self.start_btn)
         actions.addWidget(self.stop_btn)
         actions.addWidget(self.reset_failed_btn)
+        actions.addWidget(self.queue_btn)
+        actions.addWidget(self.default_url_btn)
+        actions.addWidget(self.direct_btn)
         actions.addWidget(self.refresh_btn)
         actions.addStretch(1)
-        grid.addLayout(actions, 5, 0, 1, 4)
+        grid.addLayout(actions, 8, 0, 1, 4)
         root.addWidget(controls)
 
         self.progress = QProgressBar()
@@ -608,10 +676,24 @@ class OperationsPage(QWidget):
         self.summary.setReadOnly(True)
         root.addWidget(self.summary, 1)
 
-        self.mode.currentIndexChanged.connect(self._mode_changed)
+        self.mode.currentIndexChanged.connect(
+            self._mode_changed
+        )
+        self.source.currentIndexChanged.connect(
+            self._source_changed
+        )
         self.start_btn.clicked.connect(self._start)
         self.stop_btn.clicked.connect(self._stop)
-        self.reset_failed_btn.clicked.connect(self._reset_failed)
+        self.reset_failed_btn.clicked.connect(
+            self._reset_failed
+        )
+        self.queue_btn.clicked.connect(self.refresh)
+        self.default_url_btn.clicked.connect(
+            self._fill_default_url
+        )
+        self.direct_btn.clicked.connect(
+            self._direct_from_url
+        )
         self.refresh_btn.clicked.connect(self.refresh)
         self._reload_sources()
         self._mode_changed()
@@ -629,16 +711,66 @@ class OperationsPage(QWidget):
         if index >= 0:
             self.source.setCurrentIndex(index)
 
+    def _source_changed(self) -> None:
+        source_code = str(
+            self.source.currentData() or ""
+        )
+        details = self.kernel.acquisition.source_details(
+            source_code
+        )
+        default = self.kernel.acquisition.default_listing_url(
+            source_code,
+            query=self.query.text().strip(),
+        )
+        self.source_hint.setText(
+            f"Source: {details.get('name') or source_code or '—'} • "
+            f"Listing پیش‌فرض: {default or 'ثبت نشده'}"
+        )
+
+    def _fill_default_url(self) -> None:
+        source_code = str(
+            self.source.currentData() or ""
+        )
+        value = self.kernel.acquisition.default_listing_url(
+            source_code,
+            query=self.query.text().strip(),
+        )
+        if not value:
+            QMessageBox.warning(
+                self,
+                "Source",
+                "Listing پیش‌فرض برای این Source پیدا نشد.",
+            )
+            return
+        self.url.setText(value)
+
+    def _direct_from_url(self) -> None:
+        index = self.mode.findData("single")
+        if index >= 0:
+            self.mode.setCurrentIndex(index)
+        self._start()
+
     def _mode_changed(self) -> None:
-        batch = str(self.mode.currentData() or "listing") == "listing"
+        mode = str(
+            self.mode.currentData() or "automatic"
+        )
+        batch = mode != "single"
         self.requested.setEnabled(batch)
         self.retry_failed.setEnabled(batch)
         self.strategy.setEnabled(batch)
+        self.query.setEnabled(
+            mode in {"automatic", "search"}
+        )
+        self.default_url_btn.setEnabled(batch)
         self.url.setPlaceholderText(
-            "Search / Listing URL — اجرای بعدی همان لینک، محصولات جدید بعدی را پیدا می‌کند"
+            (
+                "لینک اختیاری؛ اگر خالی باشد Automatic/Search "
+                "از Listing پیش‌فرض Source استفاده می‌کند"
+            )
             if batch
             else "لینک مستقیم صفحه Product"
         )
+        self._source_changed()
 
     def _start(self) -> None:
         if self._worker is not None:
@@ -649,9 +781,14 @@ class OperationsPage(QWidget):
             )
             return
 
-        source_code = str(self.source.currentData() or "").strip()
+        source_code = str(
+            self.source.currentData() or ""
+        ).strip()
         url = self.url.text().strip()
-        mode = str(self.mode.currentData() or "listing")
+        mode = str(
+            self.mode.currentData() or "automatic"
+        )
+        query = self.query.text().strip()
         if not source_code:
             QMessageBox.warning(
                 self,
@@ -659,7 +796,31 @@ class OperationsPage(QWidget):
                 "یک Source فعال انتخاب کن.",
             )
             return
-        if not url.startswith(("http://", "https://")):
+        if mode == "single":
+            resolved_url = url
+        else:
+            try:
+                resolved_url = (
+                    self.kernel.acquisition.resolve_listing_url(
+                        source_code,
+                        operator_mode=mode,
+                        explicit_url=url,
+                        query=query,
+                    )
+                )
+            except Exception as exc:
+                QMessageBox.warning(
+                    self,
+                    "دریافت اطلاعات",
+                    str(exc),
+                )
+                return
+            if resolved_url != url:
+                self.url.setText(resolved_url)
+
+        if not resolved_url.startswith(
+            ("http://", "https://")
+        ):
             QMessageBox.warning(
                 self,
                 "دریافت اطلاعات",
@@ -676,17 +837,24 @@ class OperationsPage(QWidget):
             if mode == "single":
                 return self.kernel.acquisition.run_single(
                     source_code=source_code,
-                    product_url=url,
+                    product_url=resolved_url,
                     image_limit=image_limit,
+                    download_images=(
+                        self.download_images.isChecked()
+                    ),
                     progress=progress,
                 )
             return self.kernel.acquisition.run_batch(
                 source_code=source_code,
-                listing_url=url,
+                listing_url=resolved_url,
                 requested=requested,
                 image_limit=image_limit,
                 include_failed=include_failed,
                 strategy=strategy,
+                operator_mode=mode,
+                download_images=(
+                    self.download_images.isChecked()
+                ),
                 progress=progress,
             )
 
@@ -732,12 +900,23 @@ class OperationsPage(QWidget):
 
     def _error(self, detail: str) -> None:
         self.status.setText("❌ دریافت ناموفق")
-        message = (
-            str(detail or "").splitlines()[-1]
-            if detail
-            else "خطای ناشناخته"
+        show_diagnostic_error(
+            self,
+            "خطای دریافت / Crawl",
+            detail,
+            context={
+                "source": str(
+                    self.source.currentData() or ""
+                ),
+                "mode": str(
+                    self.mode.currentData() or ""
+                ),
+                "strategy": str(
+                    self.strategy.currentData() or ""
+                ),
+                "url": self.url.text().strip(),
+            },
         )
-        QMessageBox.warning(self, "دریافت اطلاعات", message)
         self.refresh()
 
     def _finished(self) -> None:
@@ -788,4 +967,5 @@ class OperationsPage(QWidget):
                 f"failed={row.get('failed_count')}"
             )
         self.summary.setPlainText("\n".join(lines))
+        self._source_changed()
 
