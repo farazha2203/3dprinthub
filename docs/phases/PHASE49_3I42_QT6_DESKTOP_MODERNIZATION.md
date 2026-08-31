@@ -1,9 +1,40 @@
 # Phase49.3I.42 — Qt 6 Desktop Modernization
 
+## 42C3 — Add Product/Crawl + AI Provider runtime parity — WINDOWS CI PASS / OWNER LOCAL QA NEXT
+
+Source checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
+
+This delta closes the operator-visible gaps identified after 42C:
+- the main navigation explicitly exposes `افزودن محصولات / Crawl`;
+- the mature Add Product intent is represented as Automatic, Search/Listing, Category URL, Site Crawl and Direct Product;
+- Classic and Hybrid remain separate strategies rather than replacing the old reliable flow;
+- the AI Provider Hub now exposes live free models, Persian suitability, Structured/JSON hints and price metadata;
+- model ranking favors Persian suitability first, then free/structured/quality/cost within an explicit internal 3DPrintHub ranking;
+- a real Persian structured Product request is used to validate the selected Provider/Model;
+- estimated AI cost is shown before stage or all-content execution;
+- diagnostic dialogs expose useful context and detailed errors instead of a silent/ambiguous failure.
+
+CI:
+- `33394215803` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS;
+- `33394215742` — Phase49.3I.17 Single Active AI CI — PASS.
+
+Owner Local acceptance still required before 42D/42E:
+1. Add Product/Crawl page opens and all five modes are visible;
+2. Classic: same real Search URL twice, 5 Products/5 images, second run skips terminal identities and advances;
+3. Hybrid: 5 Products, structured/HTTP/Sitemap first and browser only as fallback;
+4. Direct Product: rich title/category/tags/specs/license/author/images persist;
+5. OpenRouter: load live models; confirm free/Persian/Structured filters and price labels;
+6. run real Persian+JSON test on the exact selected model;
+7. run Product stage/all-content AI and verify cost confirmation;
+8. force one invalid/timeout/provider error and verify the diagnostic dialog contains context + detailed text.
+
+Production remains out of scope until this foreground QA passes.
+
+
 Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Status: `IN_PROGRESS / 42C CLASSIC+HYBRID ACQUISITION GITHUB+WINDOWS CI TESTED / OWNER LOCAL FOREGROUND QA NEXT / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
+Status: `IN_PROGRESS / 42C3 ADD PRODUCT+Crawl+AI PROVIDER WINDOWS CI PASS / OWNER LOCAL FOREGROUND QA NEXT / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
 
 ## Goal
 
