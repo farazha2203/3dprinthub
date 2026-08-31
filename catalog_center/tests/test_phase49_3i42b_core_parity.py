@@ -11,6 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QComboBox, QDoubleSpinBox, QSpinBox
+from PIL import Image
 
 from app import ai_providers
 from app.ai_providers import AIProviderClient
@@ -272,17 +273,66 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         finally:
             window.close()
 
-    def test_image_stage_exposes_dimensions_size_and_seo_metadata_columns(self):
+    def test_image_stage_uses_four_column_cards_with_size_and_seo_facts(self):
+        product_id = self._product_id()
+        local_dir = Path(self.temporary.name) / "product-images"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        image_path = image_dir / "source.jpg"
+        Image.new("RGB", (640, 480), "white").save(image_path, format="JPEG")
+
+        image_url = "https://example.com/media/product-1.jpg"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": image_url,
+                            "local_file": str(image_path),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        self.db.update_product(
+            product_id,
+            {
+                "local_dir": str(local_dir),
+                "images_json": json.dumps([image_url]),
+                "selected_images_json": json.dumps([image_url]),
+                "primary_image_url": image_url,
+                "image_alt_texts_json": json.dumps(["استند کیک سه‌بعدی"]),
+            },
+        )
+
         window = MainWindow(self.kernel)
         try:
-            window.open_product(self._product_id())
-            table = window.wizard_page.image_table
-            headers = [
-                table.horizontalHeaderItem(i).text()
-                for i in range(table.columnCount())
+            window.open_product(product_id)
+            wizard = window.wizard_page
+            grid = wizard.image_grid
+            self.assertEqual(grid.columns, 4)
+            self.assertEqual(len(grid.cards), 1)
+
+            item = grid.cards[0].item
+            self.assertEqual(item["width"], 640)
+            self.assertEqual(item["height"], 480)
+            self.assertGreater(item["bytes"], 0)
+            self.assertEqual(item["alt_text"], "استند کیک سه‌بعدی")
+            self.assertIn("640×480 px", grid.cards[0].facts.text())
+            self.assertTrue(wizard.image_slider_enabled.isEnabled())
+        finally:
+            window.close()
+
+    def test_product_ai_exposes_only_link_and_saved_data_modes(self):
+        window = MainWindow(self.kernel)
+        try:
+            modes = [
+                str(window.wizard_page.ai_source.itemData(index))
+                for index in range(window.wizard_page.ai_source.count())
             ]
-            for expected in ("ابعاد px", "حجم", "Alt", "SEO Title", "نام SEO", "Caption"):
-                self.assertIn(expected, headers)
+            self.assertEqual(modes, ["link", "data"])
         finally:
             window.close()
 
