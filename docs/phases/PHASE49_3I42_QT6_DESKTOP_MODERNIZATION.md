@@ -1,5 +1,41 @@
 # Phase49.3I.42 — Qt 6 Desktop Modernization
 
+## 42C4 / ERR-49-082 — Product-safe OpenRouter model gate — WINDOWS CI PASS / OWNER LOCAL RETEST NEXT
+
+Owner Local QA produced three decisive cases:
+- `google/lyria-3-clip-preview` returned timed Persian lyrics to a Product JSON test;
+- `cohere/north-mini-code:free` returned incomplete Product SEO;
+- the same code model returned generic Product identity in another Stage.
+
+These are model/contract failures, not transport failures. Existing validators correctly prevented bad Product data from being persisted.
+
+The Qt/AI runtime now:
+- classifies live model input/output modalities;
+- separates response-format/JSON-schema support from Tools-only support;
+- rejects non-text media and coding-specialist models for Product content;
+- uses strict OpenRouter JSON Schema + `require_parameters`;
+- does not degrade OpenRouter Product Structured work into prompt-only JSON;
+- persists a verified non-secret model capability snapshot when the operator saves an OpenRouter default;
+- requires the verified Product model before cost estimation or Product execution;
+- displays explicit Product suitability and Structured capability in Settings.
+
+Final code checkpoint: `0421bccff040ced53513625af95d05e0c8c27a9a`.
+Verification: `33399095190` PASS, `33399095198` PASS, `33399095224` PASS.
+Rollback: `backup/pre-err49-082-openrouter-product-model-gate-20260831` → `26761c81d04bbd74dc2c978b08e77f3250b0518b`.
+
+Owner acceptance:
+1. pull final docs HEAD and run canonical Local gate;
+2. Settings → OpenRouter → reload live models;
+3. use Product/Persian or Structured/JSON filter;
+4. choose Text + JSON✓ and not coding/media;
+5. real Persian+JSON probe PASS;
+6. save default;
+7. Product #309: Link AI and Saved Data AI both preserve exact source identity and return non-empty SEO title;
+8. verify incompatible model selection is blocked before Product execution.
+
+No Production/Host deploy before acceptance.
+
+
 ## 42C3 — Add Product/Crawl + AI Provider runtime parity — WINDOWS CI PASS / OWNER LOCAL QA NEXT
 
 Source checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
@@ -34,7 +70,7 @@ Production remains out of scope until this foreground QA passes.
 Updated: 2026-08-31  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Status: `IN_PROGRESS / 42C3 ADD PRODUCT+Crawl+AI PROVIDER WINDOWS CI PASS / OWNER LOCAL FOREGROUND QA NEXT / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
+Status: `IN_PROGRESS / ERR-49-082 PRODUCT-SAFE OPENROUTER WINDOWS CI+PORTABLE PASS / OWNER LOCAL RETEST NEXT / LEGACY DEFAULT PRESERVED / PRODUCTION NOT TOUCHED`
 
 ## Goal
 
