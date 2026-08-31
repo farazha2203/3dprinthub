@@ -6,6 +6,7 @@ from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QFrame,
     QGridLayout,
@@ -16,7 +17,9 @@ from PySide6.QtWidgets import (
     QListView,
     QMessageBox,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
+    QSpinBox,
     QSplitter,
     QTabWidget,
     QTableView,
@@ -35,6 +38,7 @@ from .product_explorer import ProductGalleryModel
 from .product_wizard import ProductWizardPage
 from .settings_page import SettingsPage
 from .widgets import MetricCard
+from .workers import TaskPool, Worker
 
 
 def _title_block(title: str, subtitle: str) -> QWidget:
@@ -509,35 +513,260 @@ class FilamentsPage(QWidget):
 
 
 class OperationsPage(QWidget):
-    def __init__(self, db, parent=None) -> None:
+    """Active Qt acquisition surface over mature 3I.38/43/45 collectors."""
+
+    def __init__(self, db, parent=None, *, kernel=None) -> None:
         super().__init__(parent)
+        if kernel is None:
+            raise RuntimeError("OperationsPage requires ApplicationKernel")
         self.db = db
+        self.kernel = kernel
+        self.pool = TaskPool()
+        self._worker: Worker | None = None
+
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
-            "مرکز عملیات",
-            "صف‌ها و Runها؛ انتقال کامل Crawl/Acquire عملیات زنده در 42C روی QThreadPool ادامه دارد.",
+            "دریافت اطلاعات از سایت‌های مادر",
+            "Search/Listing URL بده، تعداد Product و تعداد عکس هر Product را تعیین کن. "
+            "Ledger دائمی محصولات قبلی را رد می‌کند؛ اجرای بعدی همان URL به بخش بعدی می‌رود.",
         ))
+
+        controls = QFrame()
+        controls.setObjectName("Card")
+        grid = QGridLayout(controls)
+
+        self.source = QComboBox()
+        self.mode = QComboBox()
+        self.mode.addItem("دریافت گروهی از Search / Listing", "listing")
+        self.mode.addItem("دریافت مستقیم یک Product", "single")
+
+        self.url = QLineEdit()
+        self.url.setPlaceholderText(
+            "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
+        )
+
+        self.requested = QSpinBox()
+        self.requested.setRange(1, 100)
+        self.requested.setValue(100)
+
+        self.image_limit = QSpinBox()
+        self.image_limit.setRange(1, 30)
+        self.image_limit.setValue(5)
+
+        self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
+        self.start_btn = QPushButton("شروع دریافت")
+        self.start_btn.setProperty("primary", True)
+        self.stop_btn = QPushButton("توقف امن")
+        self.stop_btn.setEnabled(False)
+        self.reset_failed_btn = QPushButton("بازگرداندن Failedها به صف")
+        self.refresh_btn = QPushButton("بروزرسانی وضعیت")
+
+        grid.addWidget(QLabel("سایت مادر / Source"), 0, 0)
+        grid.addWidget(self.source, 0, 1)
+        grid.addWidget(QLabel("نوع دریافت"), 0, 2)
+        grid.addWidget(self.mode, 0, 3)
+        grid.addWidget(QLabel("لینک"), 1, 0)
+        grid.addWidget(self.url, 1, 1, 1, 3)
+        grid.addWidget(QLabel("تعداد Product"), 2, 0)
+        grid.addWidget(self.requested, 2, 1)
+        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 2, 2)
+        grid.addWidget(self.image_limit, 2, 3)
+        grid.addWidget(self.retry_failed, 3, 0, 1, 2)
+
+        actions = QHBoxLayout()
+        actions.addWidget(self.start_btn)
+        actions.addWidget(self.stop_btn)
+        actions.addWidget(self.reset_failed_btn)
+        actions.addWidget(self.refresh_btn)
+        actions.addStretch(1)
+        grid.addLayout(actions, 4, 0, 1, 4)
+        root.addWidget(controls)
+
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 100)
+        self.progress.setValue(0)
+        self.status = QLabel("آماده")
+        self.status.setObjectName("Muted")
+        root.addWidget(self.progress)
+        root.addWidget(self.status)
 
         self.summary = QPlainTextEdit()
         self.summary.setReadOnly(True)
         root.addWidget(self.summary, 1)
 
-        refresh = QPushButton("بروزرسانی وضعیت")
-        refresh.clicked.connect(self.refresh)
-        root.addWidget(refresh)
+        self.mode.currentIndexChanged.connect(self._mode_changed)
+        self.start_btn.clicked.connect(self._start)
+        self.stop_btn.clicked.connect(self._stop)
+        self.reset_failed_btn.clicked.connect(self._reset_failed)
+        self.refresh_btn.clicked.connect(self.refresh)
+        self._reload_sources()
+        self._mode_changed()
+        self.refresh()
+
+    def _reload_sources(self) -> None:
+        current = str(self.source.currentData() or "")
+        self.source.clear()
+        for row in self.kernel.acquisition.sources():
+            self.source.addItem(
+                str(row.get("name") or row.get("code") or ""),
+                str(row.get("code") or ""),
+            )
+        index = self.source.findData(current)
+        if index >= 0:
+            self.source.setCurrentIndex(index)
+
+    def _mode_changed(self) -> None:
+        batch = str(self.mode.currentData() or "listing") == "listing"
+        self.requested.setEnabled(batch)
+        self.retry_failed.setEnabled(batch)
+        self.url.setPlaceholderText(
+            "Search / Listing URL — اجرای بعدی همان لینک، محصولات جدید بعدی را پیدا می‌کند"
+            if batch
+            else "لینک مستقیم صفحه Product"
+        )
+
+    def _start(self) -> None:
+        if self._worker is not None:
+            QMessageBox.information(
+                self,
+                "دریافت اطلاعات",
+                "یک عملیات دریافت در حال اجرا است.",
+            )
+            return
+
+        source_code = str(self.source.currentData() or "").strip()
+        url = self.url.text().strip()
+        mode = str(self.mode.currentData() or "listing")
+        if not source_code:
+            QMessageBox.warning(
+                self,
+                "دریافت اطلاعات",
+                "یک Source فعال انتخاب کن.",
+            )
+            return
+        if not url.startswith(("http://", "https://")):
+            QMessageBox.warning(
+                self,
+                "دریافت اطلاعات",
+                "لینک معتبر http/https وارد کن.",
+            )
+            return
+
+        requested = self.requested.value()
+        image_limit = self.image_limit.value()
+        include_failed = self.retry_failed.isChecked()
+
+        def job(progress):
+            if mode == "single":
+                return self.kernel.acquisition.run_single(
+                    source_code=source_code,
+                    product_url=url,
+                    image_limit=image_limit,
+                    progress=progress,
+                )
+            return self.kernel.acquisition.run_batch(
+                source_code=source_code,
+                listing_url=url,
+                requested=requested,
+                image_limit=image_limit,
+                include_failed=include_failed,
+                progress=progress,
+            )
+
+        worker = Worker(job)
+        self._worker = worker
+        self.start_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.progress.setValue(0)
+        self.status.setText("شروع دریافت…")
+
+        worker.signals.progress.connect(self._progress)
+        worker.signals.result.connect(self._done)
+        worker.signals.error.connect(self._error)
+        worker.signals.finished.connect(self._finished)
+        self.pool.start(worker)
+
+    def _progress(self, value: int, message: str) -> None:
+        self.progress.setValue(int(value))
+        self.status.setText(str(message or ""))
+
+    def _stop(self) -> None:
+        self.kernel.acquisition.request_stop()
+        self.stop_btn.setEnabled(False)
+        self.status.setText(
+            "درخواست توقف ثبت شد؛ عملیات جاری به مرز امن بعدی می‌رسد."
+        )
+
+    def _done(self, result) -> None:
+        data = dict(result or {})
+        self.progress.setValue(100)
+        if data.get("already_collected"):
+            self.status.setText(
+                f"این Product قبلاً دریافت شده — ID {data.get('product_id') or '—'}"
+            )
+        else:
+            self.status.setText(
+                "✅ پایان دریافت — "
+                f"Collected={data.get('collected', 1)} • "
+                f"Failed={data.get('failed', 0)} • "
+                f"New={data.get('discovered', 0)}"
+            )
+        self.refresh()
+
+    def _error(self, detail: str) -> None:
+        self.status.setText("❌ دریافت ناموفق")
+        message = (
+            str(detail or "").splitlines()[-1]
+            if detail
+            else "خطای ناشناخته"
+        )
+        QMessageBox.warning(self, "دریافت اطلاعات", message)
+        self.refresh()
+
+    def _finished(self) -> None:
+        self._worker = None
+        self.start_btn.setEnabled(True)
+        self.stop_btn.setEnabled(False)
+
+    def _reset_failed(self) -> None:
+        source_code = str(self.source.currentData() or "")
+        try:
+            count = self.kernel.acquisition.reset_failed(source_code)
+        except Exception as exc:
+            QMessageBox.warning(
+                self,
+                "صف دریافت",
+                str(exc),
+            )
+            return
+        self.status.setText(f"{count} مورد Failed دوباره وارد صف شد.")
         self.refresh()
 
     def refresh(self) -> None:
-        queue = self.db.queue_counts()
-        runs = self.db.runs(limit=10)
-        lines = ["صف کشف/دریافت:"]
-        for key, value in sorted(queue.items()):
-            lines.append(f"- {key}: {value}")
-        lines.append("")
-        lines.append("۱۰ Run آخر:")
+        self._reload_sources()
+        source_code = str(self.source.currentData() or "")
+        queue = self.kernel.acquisition.queue_counts(source_code)
+        runs = self.kernel.acquisition.recent_runs(limit=12)
+
+        lines = [
+            "صف Source فعلی:",
+            *[
+                f"- {key}: {value}"
+                for key, value in sorted(queue.items())
+            ],
+            "",
+            "نکته: هویت‌های collected/rejected/blocked دوباره Crawl نمی‌شوند؛ "
+            "بنابراین تکرار Search URL برای Batch بعدی طراحی شده است.",
+            "",
+            "۱۲ Run آخر:",
+        ]
         for row in runs:
             lines.append(
-                f"- #{row['id']} {row['source_code']} / "
-                f"{row['mode']} / {row['status']} / {row['started_at']}"
+                f"- #{row.get('id')} {row.get('source_code')} / "
+                f"{row.get('mode')} / {row.get('status')} / "
+                f"requested={row.get('requested_limit')} / "
+                f"collected={row.get('collected_count')} / "
+                f"failed={row.get('failed_count')}"
             )
         self.summary.setPlainText("\n".join(lines))
+
