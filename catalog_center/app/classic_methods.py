@@ -257,6 +257,7 @@ async def collect_classic_exact(
     headed: bool = False,
     capture_network: bool = False,
     download_images: bool = False,
+    image_limit: int = 60,
 ) -> dict:
     from playwright.async_api import async_playwright
 
@@ -357,7 +358,13 @@ async def collect_classic_exact(
         final_url = page.url
         dom_image_urls = await _dom_image_urls(page)
         downloaded_images = (
-            await _download_context_images(context, dom_image_urls, output_dir, final_url)
+            await _download_context_images(
+                context,
+                dom_image_urls,
+                output_dir,
+                final_url,
+                limit=max(1, min(60, int(image_limit or 60))),
+            )
             if download_images else []
         )
         next_data_count = await page.locator(
