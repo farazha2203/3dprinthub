@@ -274,6 +274,75 @@ class CategoryCore:
         return label
 
 
+def _unique_missing(values: list[str]) -> list[str]:
+    output: list[str] = []
+    seen: set[str] = set()
+    for raw in values or []:
+        text = str(raw or "").strip()
+        key = text.casefold()
+        if not text or key in seen:
+            continue
+        seen.add(key)
+        output.append(text)
+    return output
+
+
+def _classify_stage_missing(
+    stage: str,
+    missing: list[str],
+) -> tuple[list[str], list[str]]:
+    """Split factual defects into AI/local-fixable vs operator-owned work.
+
+    This classification is presentation/runtime guidance only. Field ownership
+    and the existing lock/readiness authorities remain unchanged.
+    """
+    stage = str(stage or "")
+    missing = _unique_missing(list(missing or []))
+
+    if stage in {"commerce", "publish", "specs"}:
+        return [], missing
+
+    if stage == "content":
+        return missing, []
+
+    if stage == "quick":
+        ai = [
+            item
+            for item in missing
+            if "عنوان" in item
+        ]
+        operator = [item for item in missing if item not in ai]
+        return ai, operator
+
+    if stage == "images":
+        operator_tokens = (
+            "تصویر اصلی",
+            "حداقل یک تصویر",
+            "انتخاب",
+            "فایل محلی",
+            "مفقود",
+            "دریافت‌نشده",
+        )
+        operator = [
+            item
+            for item in missing
+            if any(token in item for token in operator_tokens)
+        ]
+        ai = [item for item in missing if item not in operator]
+        return ai, operator
+
+    if stage == "slider":
+        operator = [
+            item
+            for item in missing
+            if "عکس" in item or "تصویر" in item
+        ]
+        ai = [item for item in missing if item not in operator]
+        return ai, operator
+
+    return [], missing
+
+
 class StageCore:
     """Readiness/finalization authority shared by every Qt Wizard stage."""
 
@@ -287,12 +356,48 @@ class StageCore:
 
     def statuses(self, product_id: int) -> list[dict[str, Any]]:
         state = self.state(product_id)
+        row = self.db.product(int(product_id))
         output: list[dict[str, Any]] = []
         stages = state.get("stages") or {}
         for stage in STAGE_ORDER:
             current = dict(stages.get(stage) or {})
-            data_ready = bool(current.get("data_ready"))
-            finalized = bool(current.get("finalized") or current.get("locked"))
+            missing = _unique_missing(
+                list(
+                    current.get("missing_data")
+                    or current.get("missing")
+                    or []
+                )
+            )
+
+            if stage == "images" and row is not None:
+                detailed_image_missing = _unique_missing(
+                    image_pipeline.image_metadata_missing(row)
+                )
+                if detailed_image_missing:
+                    # Replace the coarse baseline Alt flag with exact per-image
+                    # defects so the operator sees what AI/local repair can fix.
+                    if any(
+                        item.startswith("Alt تصویر")
+                        for item in detailed_image_missing
+                    ):
+                        missing = [
+                            item
+                            for item in missing
+                            if item != "Alt تصویر"
+                        ]
+                    missing = _unique_missing(
+                        [*missing, *detailed_image_missing]
+                    )
+
+            ai_missing, operator_missing = _classify_stage_missing(
+                stage,
+                missing,
+            )
+            data_ready = bool(current.get("data_ready")) and not missing
+            finalized = bool(
+                current.get("finalized")
+                or current.get("locked")
+            )
             if finalized and data_ready:
                 icon = "✅"
                 status = "finalized"
@@ -302,15 +407,23 @@ class StageCore:
             else:
                 icon = "❌"
                 status = "missing"
-            output.append({
-                "stage": stage,
-                "label": STAGE_LABELS.get(stage, stage),
-                "icon": icon,
-                "status": status,
-                "data_ready": data_ready,
-                "finalized": finalized,
-                "missing": list(current.get("missing_data") or current.get("missing") or []),
-            })
+
+            output.append(
+                {
+                    "stage": stage,
+                    "label": STAGE_LABELS.get(stage, stage),
+                    "icon": icon,
+                    "status": status,
+                    "data_ready": data_ready,
+                    "finalized": finalized,
+                    "missing": missing,
+                    "missing_count": len(missing),
+                    "ai_fixable_missing": ai_missing,
+                    "operator_missing": operator_missing,
+                    "ai_fixable_count": len(ai_missing),
+                    "operator_count": len(operator_missing),
+                }
+            )
         return output
 
     def update(
