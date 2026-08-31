@@ -9,6 +9,7 @@ from typing import Any, Callable
 
 from app.classic_methods import discover_classic
 from app.page_extractor import extract_direct_link
+from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3h_image_limits import normalize_image_limit
 from app.phase49_3i38_crawl_ledger_stage_ai import (
     next_scroll_rounds,
@@ -302,6 +303,13 @@ async def _collect_one(
     We intentionally reuse that mature authority instead of maintaining a
     second weaker parser in Qt.
     """
+
+    # Product acquisition writes mature Epic49 Catalog fields such as
+    # download_image_limit and slider/profile columns. Fresh/test Catalog DBs
+    # must receive the same additive desktop schema before any upsert.
+    ensure_epic49_desktop_schema(db)
+    ensure_modern_schema(db)
+    ensure_incremental_schema(db)
 
     source_code = str(source_cfg.get("code") or "")
     profile_dir = data_root() / "browser_profiles" / "qt42c-rich"
