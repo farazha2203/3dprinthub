@@ -81,11 +81,11 @@ class SettingsPage(QWidget):
         self.provider.currentIndexChanged.connect(self._provider_changed)
 
         self.model_filter = QComboBox()
-        self.model_filter.addItem("پیشنهادی برای فارسی", "recommended")
-        self.model_filter.addItem("همه مدل‌ها", "all")
-        self.model_filter.addItem("فقط رایگان", "free")
+        self.model_filter.addItem("پیشنهادی Product + فارسی", "recommended")
+        self.model_filter.addItem("همه مدل‌های متنی Product", "all")
+        self.model_filter.addItem("فقط رایگانِ متنی", "free")
         self.model_filter.addItem("فارسی عالی/خوب", "persian")
-        self.model_filter.addItem("Structured / JSON", "structured")
+        self.model_filter.addItem("Structured / JSON واقعی", "structured")
 
         self.model = QComboBox()
         self.model.setEditable(True)
@@ -294,16 +294,34 @@ class SettingsPage(QWidget):
             ]
             self._render_models()
             free_count = sum(
-                1 for item in self._model_info if item.get("free")
+                1
+                for item in self._model_info
+                if item.get("free")
+                and item.get("product_text_capable")
             )
             fa_count = sum(
                 1
                 for item in self._model_info
-                if int(item.get("persian_score") or 0) >= 4
+                if item.get("product_text_capable")
+                and int(item.get("persian_score") or 0) >= 4
+            )
+            ready_count = sum(
+                1
+                for item in self._model_info
+                if item.get("product_ready")
+                and int(item.get("persian_score") or 0) >= 4
+            )
+            blocked_count = sum(
+                1
+                for item in self._model_info
+                if not item.get("product_text_capable")
             )
             self.ai_status.setText(
-                f"✅ {len(self._model_info)} مدل • "
-                f"{free_count} رایگان • {fa_count} مناسب فارسی"
+                f"✅ {len(self._model_info)} مدل زنده • "
+                f"{ready_count} پیشنهادی Product • "
+                f"{free_count} رایگان متنی • "
+                f"{fa_count} مناسب فارسی • "
+                f"{blocked_count} مدل غیرمتنی حذف‌شده از فیلترهای Product"
             )
 
         self._start_worker(
@@ -362,16 +380,40 @@ class SettingsPage(QWidget):
 
         context = item.get("context_length") or "—"
         structured = (
-            "بله"
-            if int(item.get("structured_score") or 0) > 0
-            else "نامشخص/خیر"
+            "JSON Schema/response_format ✓"
+            if item.get("native_structured")
+            else (
+                "Tools-only؛ برای Product کافی نیست"
+                if item.get("tool_structured_only")
+                else "خیر/تأییدنشده"
+            )
+        )
+        product_fit = (
+            "مناسب Product"
+            if item.get("product_ready")
+            else (
+                "مدل تخصصی کدنویسی"
+                if item.get("code_specialized")
+                else (
+                    "غیرمتنی/Media"
+                    if not item.get("product_text_capable")
+                    else "برای Structured Product توصیه نمی‌شود"
+                )
+            )
+        )
+        modalities = (
+            "/".join(item.get("output_modalities") or [])
+            or "نامشخص"
         )
         self.model_detail.setText(
             f"فارسی: {item.get('persian_label') or 'نامشخص'} "
             f"(رتبه داخلی 3DPrintHub) • "
             f"{pricing_summary_text(item)} • "
-            f"Context: {context} • Structured: {structured}. "
-            "برای اطمینان از کار واقعی Product، تست فارسی + JSON را بزن."
+            f"Context: {context} • "
+            f"Structured: {structured} • "
+            f"خروجی: {modalities} • "
+            f"وضعیت: {product_fit}. "
+            "فقط مدل‌های Text + JSON✓ را برای AI محصول فعال کن."
         )
 
     def _selected_model_id(self) -> str:
