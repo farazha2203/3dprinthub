@@ -61,6 +61,17 @@ _CODE_SPECIALIST_HINTS = (
     "terminal tasks",
 )
 
+# Live catalog presence/capability is still mandatory. These are only a
+# current Persian/free preference boost when the exact model is actually
+# returned by OpenRouter and passes Product text + Structured checks.
+_PERSIAN_FREE_PREFERRED = {
+    "qwen/qwen3-32b:free": 100,
+    "google/gemma-4-31b-it:free": 96,
+    "openai/gpt-oss-20b:free": 94,
+    "google/gemma-4-26b-a4b-it:free": 90,
+    "qwen/qwen3-30b-a3b:free": 88,
+}
+
 
 def _number(value: Any) -> float | None:
     try:
@@ -262,6 +273,10 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         and not code_specialized
     )
 
+    preferred_free_score = int(
+        _PERSIAN_FREE_PREFERRED.get(model_id, 0)
+    )
+
     output.update(
         {
             "id": model_id,
@@ -280,6 +295,8 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
             "product_text_capable": product_text_capable,
             "product_ready": product_ready,
             "code_specialized": code_specialized,
+            "persian_free_preferred_score": preferred_free_score,
+            "persian_free_preferred": bool(preferred_free_score),
             "input_modalities": sorted(input_modalities),
             "output_modalities": sorted(output_modalities),
             "_avg_cost": avg_cost,
@@ -296,6 +313,7 @@ def model_sort_key(item: dict[str, Any]) -> tuple:
         -int(model.get("persian_score") or 0),
         0 if model.get("native_structured") else 1,
         0 if model.get("free") else 1,
+        -int(model.get("persian_free_preferred_score") or 0),
         1 if model.get("code_specialized") else 0,
         -int(model.get("quality_score") or 0),
         float(model.get("_avg_cost") or float("inf")),
@@ -333,6 +351,11 @@ def format_model_label(item: dict[str, Any]) -> str:
     badges = []
     if model.get("free"):
         badges.append("🆓 رایگان")
+    if (
+        model.get("persian_free_preferred")
+        and model.get("product_ready")
+    ):
+        badges.append("⭐ فارسی پیشنهادی")
     if int(model.get("persian_score") or 0) >= 4:
         badges.append(f"🇮🇷 فارسی {model.get('persian_label')}")
     elif int(model.get("persian_score") or 0) >= 2:
@@ -361,6 +384,12 @@ def model_matches_filter(item: dict[str, Any], filter_code: str) -> bool:
         return bool(
             model.get("free")
             and model.get("product_text_capable")
+        )
+    if code == "persian_free":
+        return bool(
+            model.get("free")
+            and model.get("product_ready")
+            and int(model.get("persian_score") or 0) >= 4
         )
     if code == "persian":
         return bool(
