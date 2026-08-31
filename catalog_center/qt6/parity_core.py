@@ -866,17 +866,20 @@ class ProviderCore:
                 probe.get("title_fa") or ""
             )[:160]
 
-        try:
-            selected = self.model_info(
-                provider,
-                str(result.get("model") or model),
-                refresh=False,
-                key_override=key_override,
-            )
-        except Exception:
-            selected = enrich_model_info(
-                {"id": str(result.get("model") or model)}
-            )
+        result_model = str(
+            result.get("model") or model
+        )
+        cached = self.cached_models(provider)
+        selected = next(
+            (
+                dict(item)
+                for item in cached
+                if str(item.get("id") or "") == result_model
+            ),
+            enrich_model_info(
+                {"id": result_model, "name": result_model}
+            ),
+        )
         result["model_info"] = selected
         return result
 
