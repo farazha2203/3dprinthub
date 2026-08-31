@@ -299,6 +299,45 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             "qt42c-rich-page-extractor",
         )
 
+    def test_pending_queue_is_scoped_to_the_active_search_url(self):
+        listing_a = "https://makerworld.com/en/search/models?keyword=lamp"
+        listing_b = "https://makerworld.com/en/search/models?keyword=gear"
+
+        self.db.add_discovered(
+            "makerworld",
+            "4101",
+            self._model(4101)[1],
+            listing_a,
+        )
+        self.db.add_discovered(
+            "makerworld",
+            "4201",
+            self._model(4201)[1],
+            listing_b,
+        )
+
+        rows_a = acquisition_runtime._pending_for_listing(
+            self.db,
+            "makerworld",
+            listing_a,
+            10,
+        )
+        rows_b = acquisition_runtime._pending_for_listing(
+            self.db,
+            "makerworld",
+            listing_b,
+            10,
+        )
+
+        self.assertEqual(
+            [str(row["external_id"]) for row in rows_a],
+            ["4101"],
+        )
+        self.assertEqual(
+            [str(row["external_id"]) for row in rows_b],
+            ["4201"],
+        )
+
     def test_invalid_discovery_strategy_is_rejected_before_crawl(self):
         with self.assertRaisesRegex(ValueError, "strategy"):
             asyncio.run(
