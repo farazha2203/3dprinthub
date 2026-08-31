@@ -16,6 +16,7 @@ from app.ai_model_catalog import (
     enrich_model_info,
     estimate_request_cost,
     estimate_text_tokens,
+    product_model_compatibility,
     rank_models,
 )
 from app.epic49_desktop_schema import (
@@ -740,6 +741,32 @@ class ProviderCore:
             raise ValueError("Model معتبر انتخاب نشده است.")
         if model.startswith("models/"):
             model = model.split("models/", 1)[1]
+
+        if provider == "openrouter":
+            selected = next(
+                (
+                    dict(item)
+                    for item in self.cached_models(provider)
+                    if str(item.get("id") or "") == model
+                ),
+                None,
+            )
+            if selected is None:
+                raise ValueError(
+                    "برای انتخاب Model پیش‌فرض OpenRouter ابتدا «دریافت مدل‌ها» "
+                    "را بزن تا قابلیت Text/Structured آن از Catalog زنده تأیید شود."
+                )
+            ok, reason = product_model_compatibility(
+                selected,
+                require_structured=True,
+            )
+            if not ok:
+                raise ValueError(reason)
+            self.db.set_setting(
+                f"ai_model_profile_{provider}",
+                json.dumps(selected, ensure_ascii=False, default=str),
+            )
+
         self.db.set_setting("ai_provider", provider)
         self.db.set_setting(f"ai_model_{provider}", model)
         self.db.set_setting("ai_model", model)
@@ -778,6 +805,32 @@ class ProviderCore:
             )
         )
 
+    def _saved_model_profile(
+        self,
+        provider: str,
+        model: str,
+    ) -> dict[str, Any] | None:
+        provider = str(provider or "").strip().lower()
+        model = str(model or "").strip()
+        raw = str(
+            self.db.setting(
+                f"ai_model_profile_{provider}",
+                "",
+            )
+            or ""
+        ).strip()
+        if not raw:
+            return None
+        try:
+            payload = json.loads(raw)
+        except Exception:
+            return None
+        if not isinstance(payload, dict):
+            return None
+        if str(payload.get("id") or "") != model:
+            return None
+        return enrich_model_info(payload)
+
     def model_info(
         self,
         provider: str,
@@ -789,16 +842,64 @@ class ProviderCore:
         provider = str(provider or "").strip().lower()
         model = str(model or "").strip()
         info = self.cached_models(provider)
-        if refresh or not info:
+        if refresh:
             info = self.models(provider, key_override=key_override)
-        return next(
+
+        selected = next(
             (
                 dict(item)
                 for item in info
                 if str(item.get("id") or "") == model
             ),
-            enrich_model_info({"id": model, "name": model}),
+            None,
         )
+        if selected is not None:
+            return enrich_model_info(selected)
+
+        saved = self._saved_model_profile(provider, model)
+        if saved is not None:
+            return saved
+
+        return enrich_model_info({"id": model, "name": model})
+
+    def require_product_model(
+        self,
+        provider: str,
+        model: str,
+        *,
+        refresh_if_unknown: bool = False,
+        key_override: str = "",
+    ) -> dict[str, Any]:
+        provider = str(provider or "").strip().lower()
+        model = str(model or "").strip()
+        info = self.model_info(
+            provider,
+            model,
+            refresh=bool(refresh_if_unknown),
+            key_override=key_override,
+        )
+
+        if provider != "openrouter":
+            return info
+
+        if (
+            not self.cached_models(provider)
+            and self._saved_model_profile(provider, model) is None
+            and not refresh_if_unknown
+        ):
+            raise RuntimeError(
+                "قابلیت Model فعال OpenRouter در این نسخه تأیید نشده است. "
+                "به تنظیمات برو، «دریافت مدل‌ها» را بزن و یک مدل Text + JSON✓ "
+                "را دوباره ذخیره کن."
+            )
+
+        ok, reason = product_model_compatibility(
+            info,
+            require_structured=True,
+        )
+        if not ok:
+            raise RuntimeError(reason)
+        return info
 
     def test(
         self,
@@ -808,6 +909,18 @@ class ProviderCore:
         key_override: str = "",
         structured: bool = False,
     ) -> dict[str, Any]:
+        provider = str(provider or "").strip().lower()
+        model = str(model or "").strip()
+        if structured and provider == "openrouter":
+            self.require_product_model(
+                provider,
+                model,
+                refresh_if_unknown=not bool(
+                    self.cached_models(provider)
+                ),
+                key_override=key_override,
+            )
+
         client = self._client(
             provider,
             model=model,
@@ -936,14 +1049,21 @@ class ProviderCore:
 
         pricing_error = ""
         try:
-            model_info = self.model_info(
-                provider,
-                model,
-                refresh=not bool(
-                    self.cached_models(provider)
-                ),
-            )
+            if provider == "openrouter":
+                model_info = self.require_product_model(
+                    provider,
+                    model,
+                    refresh_if_unknown=False,
+                )
+            else:
+                model_info = self.model_info(
+                    provider,
+                    model,
+                    refresh=False,
+                )
         except Exception as exc:
+            if provider == "openrouter":
+                raise
             pricing_error = str(exc)
             model_info = enrich_model_info(
                 {"id": model, "name": model}
@@ -1010,6 +1130,12 @@ class ProviderCore:
     ) -> dict[str, Any]:
         proxy = SimpleNamespace(db=self.db, DATA=data_root())
         provider, key, model = active_ai_config(proxy, require_key=True)
+        if provider == "openrouter":
+            self.require_product_model(
+                provider,
+                model,
+                refresh_if_unknown=False,
+            )
         stages = {target_stage} if target_stage else None
         return orchestrate_once(
             proxy,
