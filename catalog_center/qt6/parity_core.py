@@ -790,9 +790,16 @@ class ProviderCore:
         )
 
     def source_modes(self) -> list[dict[str, str]]:
+        # Qt Product AI intentionally exposes exactly the two operator-approved
+        # source modes. Screenshot capture remains a separate Image-stage action.
+        labels = {
+            "link": "تکمیل با لینک محصول",
+            "data": "تکمیل با دیتای دریافتی",
+        }
         return [
-            {"code": code, "label": label}
-            for code, label in AI_SOURCE_MODES.items()
+            {"code": code, "label": labels[code]}
+            for code in ("link", "data")
+            if code in AI_SOURCE_MODES
         ]
 
 
