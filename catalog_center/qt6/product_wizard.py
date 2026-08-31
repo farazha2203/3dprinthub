@@ -843,7 +843,7 @@ class ProductWizardPage(QWidget):
         except Exception:
             raise ValueError("ویژگی‌های فنی باید JSON Object معتبر باشد.")
 
-        self.kernel.stages.update
+        self.kernel.stages.update(
             self.product_id,
             "specs",
             {
