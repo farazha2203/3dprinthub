@@ -81,6 +81,7 @@ class SettingsPage(QWidget):
         self.provider.currentIndexChanged.connect(self._provider_changed)
 
         self.model_filter = QComboBox()
+        self.model_filter.addItem("⭐ رایگان + فارسی + JSON", "persian_free")
         self.model_filter.addItem("پیشنهادی Product + فارسی", "recommended")
         self.model_filter.addItem("همه مدل‌های متنی Product", "all")
         self.model_filter.addItem("فقط رایگانِ متنی", "free")
@@ -311,6 +312,11 @@ class SettingsPage(QWidget):
                 if item.get("product_ready")
                 and int(item.get("persian_score") or 0) >= 4
             )
+            free_fa_ready = sum(
+                1
+                for item in self._model_info
+                if model_matches_filter(item, "persian_free")
+            )
             blocked_count = sum(
                 1
                 for item in self._model_info
@@ -318,6 +324,7 @@ class SettingsPage(QWidget):
             )
             self.ai_status.setText(
                 f"✅ {len(self._model_info)} مدل زنده • "
+                f"{free_fa_ready} رایگان+فارسی+JSON • "
                 f"{ready_count} پیشنهادی Product • "
                 f"{free_count} رایگان متنی • "
                 f"{fa_count} مناسب فارسی • "
@@ -388,6 +395,12 @@ class SettingsPage(QWidget):
                 else "خیر/تأییدنشده"
             )
         )
+        preferred = (
+            "⭐ اولویت فارسی رایگان • "
+            if item.get("persian_free_preferred")
+            and item.get("product_ready")
+            else ""
+        )
         product_fit = (
             "مناسب Product"
             if item.get("product_ready")
@@ -412,6 +425,7 @@ class SettingsPage(QWidget):
             f"Context: {context} • "
             f"Structured: {structured} • "
             f"خروجی: {modalities} • "
+            f"{preferred}"
             f"وضعیت: {product_fit}. "
             "فقط مدل‌های Text + JSON✓ را برای AI محصول فعال کن."
         )
