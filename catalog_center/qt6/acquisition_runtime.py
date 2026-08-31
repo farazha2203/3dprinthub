@@ -367,6 +367,7 @@ async def _collect_one(
     url: str,
     image_limit: int,
     local_dir: Path,
+    download_images: bool = True,
 ) -> dict[str, Any]:
     """Collect one Product with the richest existing project extractor.
 
@@ -405,7 +406,7 @@ async def _collect_one(
         local_dir,
         profile_dir,
         headed=False,
-        download_images=True,
+        download_images=bool(download_images),
         image_limit=image_limit,
     )
 
@@ -508,6 +509,8 @@ async def run_batch_async(
     image_limit: int = 5,
     include_failed: bool = False,
     strategy: str = "hybrid",
+    operator_mode: str = "search",
+    download_images: bool = True,
     progress: Progress = None,
     should_stop: ShouldStop = None,
 ) -> dict[str, Any]:
@@ -527,10 +530,23 @@ async def run_batch_async(
     strategy = str(strategy or "hybrid").strip().lower()
     if strategy not in {"hybrid", "classic"}:
         raise ValueError("روش Crawl نامعتبر است.")
+    operator_mode = str(
+        operator_mode or "search"
+    ).strip().lower()
+    if operator_mode not in {
+        "automatic",
+        "search",
+        "category",
+        "site_crawl",
+        "listing",
+    }:
+        raise ValueError(
+            "نوع دریافت گروهی نامعتبر است."
+        )
 
     run_id = db.create_run(
         source_code,
-        "qt_listing",
+        f"qt_{operator_mode}",
         (
             "hybrid-http-sitemap-browser+rich-product"
             if strategy == "hybrid"
@@ -607,6 +623,7 @@ async def run_batch_async(
                     url=url,
                     image_limit=image_limit,
                     local_dir=local_dir,
+                    download_images=bool(download_images),
                 )
                 db.mark_url(int(row["id"]), "collected")
                 collected += 1
@@ -681,6 +698,7 @@ async def run_single_async(
     source_code: str,
     product_url: str,
     image_limit: int = 5,
+    download_images: bool = True,
     progress: Progress = None,
 ) -> dict[str, Any]:
     source_row = db.source(source_code)
@@ -713,6 +731,7 @@ async def run_single_async(
         url=url,
         image_limit=image_limit,
         local_dir=local_dir,
+        download_images=bool(download_images),
     )
     _emit(progress, 100, "محصول و تصاویر دریافت شد.")
     return result
