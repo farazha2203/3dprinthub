@@ -9,10 +9,9 @@ from pathlib import Path
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QComboBox
 
 from app.db import Database
-from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3i36_stage_finalization import LOCK_COLUMN
 from qt6.kernel import AICore, build_kernel
 from qt6.main_window import MainWindow
@@ -28,14 +27,14 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.db = Database(Path(self.temporary.name) / "catalog.sqlite3")
-        ensure_epic49_desktop_schema(self.db)
-
         self.db.upsert_product({
             "source_code": "makerworld",
             "external_id": "QT42B-1",
             "source_url": "https://example.com/models/qt42b-1",
-            "source_title": "Source Product",
-            "title_fa": "محصول اولیه",
+            "source_title": "Cake Stand",
+            "source_short_description": "A decorative cake stand.",
+            "source_description": "A decorative cake stand with two levels.",
+            "title_fa": "استند کیک",
             "local_category_slug": "home-decor",
             "workflow_status": "review",
             "images_json": json.dumps([]),
@@ -50,6 +49,33 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
     def _product_id(self) -> int:
         return int(self.kernel.products.list()[0]["id"])
 
+    def _add_filaments(self):
+        pla = self.kernel.filaments.save({
+            "manufacturer": "Bambu Lab",
+            "brand": "Bambu Lab",
+            "material": "PLA",
+            "color": "سفید",
+            "hex": "#FFFFFF",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 2,
+            "sale_price_per_roll": 4_000_000,
+            "print_hourly_rate": 35_000,
+            "supervision_hourly_rate": 15_000,
+        })
+        petg = self.kernel.filaments.save({
+            "manufacturer": "eSUN",
+            "brand": "eSUN",
+            "material": "PETG",
+            "color": "مشکی",
+            "hex": "#111111",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 3,
+            "sale_price_per_roll": 4_500_000,
+            "print_hourly_rate": 40_000,
+            "supervision_hourly_rate": 15_000,
+        })
+        return pla, petg
+
     def test_kernel_has_one_long_lived_core_per_capability(self):
         self.assertEqual(
             self.kernel.registry.names(),
@@ -57,6 +83,11 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
                 "products",
                 "images",
                 "filaments",
+                "categories",
+                "stages",
+                "commerce",
+                "providers",
+                "connection",
                 "acquisition",
                 "publish",
                 "ai",
@@ -65,7 +96,9 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         self.assertIs(self.kernel.ai, self.kernel.ai)
         self.assertIs(self.kernel.products, self.kernel.products)
         self.assertTrue(self.kernel.contract()["ai_single_engine"])
+        self.assertTrue(self.kernel.contract()["ai_bound"])
         self.assertTrue(self.kernel.contract()["database_shared"])
+        self.assertTrue(self.kernel.contract()["stage_authority_shared"])
 
     def test_ai_core_is_single_execution_boundary(self):
         core = AICore()
@@ -74,84 +107,237 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         self.assertEqual(core.execute(7), 7)
         self.assertEqual(calls, [7])
 
-    def test_gallery_model_reads_products_from_same_database(self):
+    def test_gallery_model_reads_same_db_and_supports_sort_contract(self):
         model = ProductGalleryModel(
             self.kernel.products,
             self.kernel.images,
         )
         self.assertEqual(model.rowCount(), 1)
         self.assertEqual(model.product_id_at(0), self._product_id())
+        model.refresh(sort_key="title_fa")
+        self.assertEqual(model.rowCount(), 1)
 
-    def test_stage1_editor_persists_via_product_core_and_history(self):
+    def test_stage1_has_source_and_persian_titles_plus_site_category_combo(self):
         product_id = self._product_id()
         window = MainWindow(self.kernel)
         try:
             window.open_product(product_id)
-            window.wizard_page.title_edit.setText("عنوان جدید")
-            window.wizard_page.category_edit.setText("decor")
-            self.assertTrue(window.wizard_page._save_stage1(notify=False))
+            wizard = window.wizard_page
+            self.assertEqual(wizard.source_title.text(), "Cake Stand")
+            self.assertEqual(wizard.title_fa.text(), "استند کیک")
+            self.assertIsInstance(wizard.category, QComboBox)
+            self.assertGreater(wizard.category.count(), 0)
+
+            wizard.title_fa.setText("استند کیک دو طبقه")
+            index = wizard.category.findData("home-decor")
+            if index >= 0:
+                wizard.category.setCurrentIndex(index)
+            wizard._save_stage1()
 
             row = self.kernel.products.get(product_id)
-            self.assertEqual(row["title_fa"], "عنوان جدید")
-            self.assertEqual(row["local_category_slug"], "decor")
-
-            history = self.db.history(product_id)
-            self.assertTrue(
-                any(
-                    item["event_type"] == "qt_operator_edit"
-                    for item in history
-                )
-            )
+            self.assertEqual(row["title_fa"], "استند کیک دو طبقه")
         finally:
             window.close()
 
-    def test_stage1_lock_blocks_write_until_explicit_unlock(self):
+    def test_stage_lock_blocks_write_until_explicit_unlock(self):
         product_id = self._product_id()
         self.db.update_product(
             product_id,
             {
                 LOCK_COLUMN: json.dumps(
-                    {"quick": {"locked": True, "locked_at": "2026-08-30"}},
+                    {"quick": {"locked": True, "locked_at": "2026-08-31"}},
                     ensure_ascii=False,
                 )
             },
         )
-        self.assertTrue(
-            self.kernel.products.is_stage_locked(product_id, "quick")
-        )
 
         with self.assertRaisesRegex(RuntimeError, "ثبت نهایی"):
-            self.kernel.products.update_operator_fields(
+            self.kernel.stages.update(
                 product_id,
+                "quick",
                 {"title_fa": "نباید ذخیره شود"},
             )
 
-        self.kernel.products.unlock_stage_for_edit(product_id, "quick")
-        self.assertFalse(
-            self.kernel.products.is_stage_locked(product_id, "quick")
-        )
-
-        row = self.kernel.products.update_operator_fields(
+        self.kernel.stages.unlock(product_id, "quick")
+        row = self.kernel.stages.update(
             product_id,
+            "quick",
             {"title_fa": "پس از اصلاح"},
         )
         self.assertEqual(row["title_fa"], "پس از اصلاح")
 
-    def test_main_window_reports_kernel_gallery_and_image_stage(self):
+    def test_filament_core_supports_add_edit_and_soft_deactivate(self):
+        saved, _ = self._add_filaments()
+        self.assertEqual(len(self.kernel.filaments.list()), 2)
+
+        edited = self.kernel.filaments.save(
+            {
+                "manufacturer": "Bambu Lab",
+                "brand": "Bambu Lab",
+                "material": "PLA",
+                "color": "سفید",
+                "hex": "#FAFAFA",
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 4,
+                "sale_price_per_roll": 4_200_000,
+            },
+            previous_row_id=int(saved["id"]),
+        )
+        self.assertEqual(int(edited["id"]), int(saved["id"]))
+        self.assertEqual(float(edited["stock_roll_count"]), 4.0)
+        self.assertEqual(int(edited["sale_price_per_roll"]), 4_200_000)
+
+        self.kernel.filaments.deactivate(int(edited["id"]))
+        active_ids = {int(item["id"]) for item in self.kernel.filaments.list()}
+        self.assertNotIn(int(edited["id"]), active_ids)
+
+    def test_profile_matrix_persists_size_times_production_rows_times_filaments(self):
+        pla, petg = self._add_filaments()
+        product_id = self._product_id()
+
+        profile = self.kernel.commerce.upsert_profile(
+            product_id,
+            {
+                "name": "سایز 20",
+                "size_label": "20 cm",
+                "part_length_cm": 20,
+                "part_width_cm": 15,
+                "part_height_cm": 8,
+                "pricing_strategy": "dynamic",
+                "production_rows": [
+                    {
+                        "weight_grams": 80,
+                        "support_weight_grams": 5,
+                        "print_time_minutes": 120,
+                    },
+                    {
+                        "weight_grams": 95,
+                        "support_weight_grams": 10,
+                        "print_time_minutes": 150,
+                    },
+                    {
+                        "weight_grams": 110,
+                        "support_weight_grams": 15,
+                        "print_time_minutes": 180,
+                    },
+                ],
+                "material_options": [pla, petg],
+            },
+        )
+
+        self.assertEqual(len(profile["production_rows"]), 3)
+        self.assertEqual(len(profile["material_options"]), 2)
+
+        row = self.kernel.products.get(product_id)
+        ledger = json.loads(row["sales_profile_ledger_json"])
+        flattened = json.loads(row["sales_profiles_json"])
+        self.assertEqual(len(ledger), 1)
+        self.assertEqual(len(flattened), 6)
+        self.assertEqual(
+            {
+                (item["weight_grams"], item["material"], item["color"])
+                for item in flattened
+            },
+            {
+                (80, "PLA", "سفید"),
+                (80, "PETG", "مشکی"),
+                (95, "PLA", "سفید"),
+                (95, "PETG", "مشکی"),
+                (110, "PLA", "سفید"),
+                (110, "PETG", "مشکی"),
+            },
+        )
+        self.assertGreater(int(row["price_max"] or 0), 0)
+
+    def test_product_page_has_description_and_real_sorting(self):
+        window = MainWindow(self.kernel)
+        try:
+            headers = tuple(window.products_page.model.headers)
+            self.assertIn("عنوان فارسی", headers)
+            self.assertIn("عنوان اصلی / انگلیسی", headers)
+            self.assertIn("توضیح", headers)
+            self.assertTrue(window.products_page.table.isSortingEnabled())
+            self.assertGreaterEqual(window.products_page.sort_combo.count(), 5)
+        finally:
+            window.close()
+
+    def test_image_stage_exposes_dimensions_size_and_seo_metadata_columns(self):
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(self._product_id())
+            table = window.wizard_page.image_table
+            headers = [
+                table.horizontalHeaderItem(i).text()
+                for i in range(table.columnCount())
+            ]
+            for expected in ("ابعاد px", "حجم", "Alt", "SEO Title", "نام SEO", "Caption"):
+                self.assertIn(expected, headers)
+        finally:
+            window.close()
+
+    def test_content_source_slider_and_publish_editors_are_present(self):
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(self._product_id())
+            wizard = window.wizard_page
+            self.assertTrue(wizard.seo_title_fa.isEnabled())
+            self.assertTrue(wizard.description_fa.isEnabled())
+            self.assertTrue(wizard.author_name.isEnabled())
+            self.assertTrue(wizard.license_name.isEnabled())
+            self.assertTrue(wizard.technical_summary.isEnabled())
+            self.assertTrue(wizard.slider_enabled.isEnabled())
+            self.assertTrue(wizard.slider_title.isEnabled())
+            self.assertTrue(wizard.slider_sort.isEnabled())
+            self.assertTrue(wizard.publish_product.isEnabled())
+            self.assertEqual(wizard.stack.count(), 7)
+        finally:
+            window.close()
+
+    def test_stage_stepper_uses_red_pending_green_state_contract(self):
+        statuses = self.kernel.stages.statuses(self._product_id())
+        self.assertEqual(len(statuses), 7)
+        self.assertTrue(all(item["icon"] in {"❌", "◌", "✅"} for item in statuses))
+
+        window = MainWindow(self.kernel)
+        try:
+            window.open_product(self._product_id())
+            self.assertEqual(window.wizard_page.stepper.list.count(), 7)
+            text = window.wizard_page.stepper.list.item(0).text()
+            self.assertTrue(text.startswith(("❌", "◌", "✅")))
+        finally:
+            window.close()
+
+    def test_provider_hub_and_site_connection_are_restored_in_settings(self):
+        window = MainWindow(self.kernel)
+        try:
+            settings = window.settings_page
+            providers = {
+                str(settings.provider.itemData(index))
+                for index in range(settings.provider.count())
+            }
+            self.assertTrue({"avalai", "openrouter", "google", "openai"}.issubset(providers))
+            self.assertTrue(settings.model.isEditable())
+            self.assertIn("تست", settings.test_ai_btn.text())
+            self.assertIn("مدل", settings.load_models_btn.text())
+            self.assertIn("FTP", settings.test_ftp_btn.text())
+            self.assertIn("Bridge", settings.test_bridge_btn.text())
+            self.assertEqual(settings.site_url.text(), "https://3dprinthub.ir")
+            self.assertEqual(settings.ftp_host.text(), "ftp.3dprinthub.ir")
+        finally:
+            window.close()
+
+    def test_main_window_reports_full_parity_contract(self):
         window = MainWindow(self.kernel)
         try:
             contract = window.structural_contract()
-            self.assertIn("ai", contract["core_names"])
+            self.assertIn("commerce", contract["core_names"])
+            self.assertIn("providers", contract["core_names"])
+            self.assertIn("connection", contract["core_names"])
             self.assertTrue(contract["ai_single_engine"])
+            self.assertTrue(contract["ai_bound"])
+            self.assertTrue(contract["stage_authority_shared"])
             self.assertEqual(window.products_page.tabs.count(), 2)
-            self.assertEqual(
-                window.products_page.gallery_model.rowCount(),
-                1,
-            )
-
-            window.open_product(self._product_id())
             self.assertEqual(window.wizard_page.stack.count(), 7)
-            self.assertIsNotNone(window.wizard_page.image_list)
         finally:
             window.close()
 

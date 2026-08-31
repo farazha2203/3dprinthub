@@ -64,9 +64,9 @@ class MainWindow(QMainWindow):
         self.refresh_current_page()
 
     def _build_window(self) -> None:
-        self.setWindowTitle("3DPrintHub Catalog Center — Qt 6 Preview")
-        self.resize(1500, 900)
-        self.setMinimumSize(1180, 720)
+        self.setWindowTitle("3DPrintHub Catalog Center — Qt 6")
+        self.resize(1580, 940)
+        self.setMinimumSize(1220, 760)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setObjectName("MainSplitter")
@@ -85,7 +85,6 @@ class MainWindow(QMainWindow):
         brand.setObjectName("BrandTitle")
         subtitle = QLabel("Catalog Center • Qt 6")
         subtitle.setObjectName("BrandSubtitle")
-
         side_layout.addWidget(brand)
         side_layout.addWidget(subtitle)
 
@@ -100,9 +99,9 @@ class MainWindow(QMainWindow):
         side_layout.addWidget(self.nav, 1)
 
         version_hint = QLabel(
-            "Qt6 Migration\n"
+            "Qt6 Legacy Parity\n"
             "Application Kernel فعال\n"
-            "Legacy runtime حفظ شده"
+            "Legacy launcher حفظ شده"
         )
         version_hint.setObjectName("BrandSubtitle")
         version_hint.setWordWrap(True)
@@ -125,7 +124,10 @@ class MainWindow(QMainWindow):
             self.db,
             kernel=self.kernel,
         )
-        self.filaments_page = FilamentsPage(self.db)
+        self.filaments_page = FilamentsPage(
+            self.db,
+            kernel=self.kernel,
+        )
         self.operations_page = OperationsPage(self.db)
         self.settings_page = SettingsPage(
             self.db,
@@ -172,7 +174,7 @@ class MainWindow(QMainWindow):
             lambda: self.navigate("dashboard"),
         )
         self.actions.register(
-            ActionSpec("products", "محصولات", "Ctrl+2", "رفتن به فهرست محصولات"),
+            ActionSpec("products", "محصولات", "Ctrl+2", "رفتن به محصولات"),
             lambda: self.navigate("products"),
         )
         self.actions.register(
@@ -180,7 +182,7 @@ class MainWindow(QMainWindow):
                 "wizard",
                 "ویزارد محصول",
                 "Ctrl+3",
-                "رفتن به ویزارد محصول",
+                "رفتن به ویرایش هفت‌مرحله‌ای محصول",
                 toolbar=True,
             ),
             lambda: self.navigate("wizard"),
@@ -198,6 +200,16 @@ class MainWindow(QMainWindow):
         self.actions.register(
             ActionSpec("operations", "عملیات", "Ctrl+5", "رفتن به مرکز عملیات"),
             lambda: self.navigate("operations"),
+        )
+        self.actions.register(
+            ActionSpec(
+                "settings",
+                "تنظیمات",
+                "Ctrl+6",
+                "تنظیم Provider AI و اتصال سایت",
+                toolbar=True,
+            ),
+            lambda: self.navigate("settings"),
         )
         self.actions.register(
             ActionSpec(
@@ -245,6 +257,7 @@ class MainWindow(QMainWindow):
             "wizard",
             "filaments",
             "operations",
+            "settings",
         ):
             navigate_menu.addAction(self.actions.action(key))
 
@@ -257,7 +270,7 @@ class MainWindow(QMainWindow):
 
         toolbar = QToolBar("دسترسی سریع", self)
         toolbar.setMovable(False)
-        for key in ("refresh", "wizard", "filaments", "palette"):
+        for key in ("refresh", "wizard", "filaments", "settings", "palette"):
             toolbar.addAction(self.actions.action(key))
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
         self.toolbar = toolbar
@@ -331,10 +344,11 @@ class MainWindow(QMainWindow):
         QMessageBox.information(
             self,
             "3DPrintHub Catalog Center — Qt 6",
-            "Phase49.3I.42B1\n\n"
-            "Qt6 Shell + Application Kernel + Core Registry + "
-            "Product Gallery/Preview + Stage-1 real edit adapter.\n\n"
-            "Legacy launch.py تا پایان مهاجرت کامل و Acceptance حفظ می‌شود.",
+            "Phase49.3I.42B2-B4 Candidate\n\n"
+            "Qt6 Shell + shared Application Kernel + Filament CRUD + "
+            "Profile Matrix + Images/SEO/Source/Slider editors + "
+            "AI Provider Hub + Site Connection.\n\n"
+            "Legacy launch.py تا پایان Acceptance و Cutover حفظ می‌شود.",
         )
 
     def _restore_ui_state(self) -> None:
@@ -368,4 +382,6 @@ class MainWindow(QMainWindow):
             "theme": self._current_theme,
             "core_names": kernel_contract["cores"],
             "ai_single_engine": kernel_contract["ai_single_engine"],
+            "ai_bound": kernel_contract["ai_bound"],
+            "stage_authority_shared": kernel_contract["stage_authority_shared"],
         }

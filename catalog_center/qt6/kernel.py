@@ -2,17 +2,26 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from pathlib import Path
 from threading import Lock
 from typing import Any, Callable, TypeVar
 
 from app import phase49_3c_image_pipeline as image_pipeline
-from app.epic49_desktop_schema import list_available_material_colors
 from app.phase49_3i36_stage_finalization import (
     LOCK_COLUMN,
-    ensure_schema as ensure_stage_lock_schema,
     filter_locked_updates,
     is_stage_locked,
     stage_locks,
+)
+
+from .parity_core import (
+    CategoryCore,
+    CommerceCore,
+    ConnectionCore,
+    FilamentParityCore,
+    ProviderCore,
+    StageCore,
+    ensure_qt_parity_schema,
 )
 
 T = TypeVar("T")
@@ -73,14 +82,10 @@ class ProductCore:
         return bool(row is not None and is_stage_locked(row, stage))
 
     def unlock_stage_for_edit(self, product_id: int, stage: str) -> dict[str, Any]:
-        """Open an operator stage for editing without touching business fields.
-
-        Phase42B1 exposes this only for the quick/identity stage. Later stages
-        keep their mature finalization-specific reset behavior until migrated.
-        """
+        """Compatibility helper retained for 42B1 callers."""
         stage = str(stage or "")
         if stage != "quick":
-            raise RuntimeError("بازکردن این مرحله هنوز از Adapter بالغ همان مرحله انجام می‌شود.")
+            raise RuntimeError("برای این مرحله از StageCore مشترک استفاده کن.")
         before_row = self.db.product(int(product_id))
         if before_row is None:
             raise RuntimeError(f"Product {product_id} not found")
@@ -100,7 +105,7 @@ class ProductCore:
                 "qt_stage_unlocked",
                 before,
                 after,
-                "Phase49.3I.42B quick stage opened for edit",
+                "Phase49.3I.42 quick stage opened for edit",
             )
         except Exception:
             pass
@@ -142,7 +147,7 @@ class ProductCore:
                 "qt_operator_edit",
                 before,
                 after,
-                "Phase49.3I.42B Qt operator edit",
+                "Phase49.3I.42 Qt operator edit",
             )
         except Exception:
             pass
@@ -156,19 +161,14 @@ class ImageCore:
         self.db = db
 
     @staticmethod
-    def _json_list(value: Any) -> list[str]:
+    def _json_list(value: Any) -> list:
         if isinstance(value, list):
-            parsed = value
-        else:
-            try:
-                parsed = json.loads(value or "[]")
-            except Exception:
-                parsed = []
-        return [
-            str(item or "").strip()
-            for item in parsed
-            if str(item or "").strip()
-        ]
+            return list(value)
+        try:
+            parsed = json.loads(value or "[]")
+        except Exception:
+            return []
+        return list(parsed) if isinstance(parsed, list) else []
 
     def urls(self, row: dict[str, Any] | Any) -> list[str]:
         data = dict(row) if not isinstance(row, dict) else row
@@ -177,8 +177,12 @@ class ImageCore:
         if primary:
             output.append(primary)
         for field in ("selected_images_json", "images_json"):
-            for url in self._json_list(data.get(field)):
-                if url not in output:
+            for raw in self._json_list(data.get(field)):
+                if isinstance(raw, dict):
+                    url = str(raw.get("url") or raw.get("source_url") or "").strip()
+                else:
+                    url = str(raw or "").strip()
+                if url and url not in output:
                     output.append(url)
         return output
 
@@ -196,36 +200,95 @@ class ImageCore:
                 return path
         return ""
 
-    def local_items(self, product_id: int) -> list[dict[str, str]]:
+    def local_items(self, product_id: int) -> list[dict[str, Any]]:
         row = self.db.product(int(product_id))
         if row is None:
             return []
         data = dict(row)
+
         primary = str(data.get("primary_image_url") or "").strip()
-        selected = set(self._json_list(data.get("selected_images_json")))
-        output: list[dict[str, str]] = []
-        for url in self.urls(data):
+        selected_urls = []
+        for raw in self._json_list(data.get("selected_images_json")):
+            if isinstance(raw, dict):
+                url = str(raw.get("url") or raw.get("source_url") or "").strip()
+            else:
+                url = str(raw or "").strip()
+            if url:
+                selected_urls.append(url)
+        selected = set(selected_urls)
+
+        alts = [
+            str(item or "").strip()
+            for item in self._json_list(data.get("image_alt_texts_json"))
+        ]
+        raw_meta = self._json_list(data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
+        metadata: list[dict[str, Any]] = [
+            dict(item) for item in raw_meta if isinstance(item, dict)
+        ]
+
+        output: list[dict[str, Any]] = []
+        for index, url in enumerate(self.urls(data)):
             path = self.local_path_for_url(data, url)
             if not path:
                 continue
+
+            file_path = Path(path)
+            width = 0
+            height = 0
+            image_format = ""
+            try:
+                from PIL import Image
+
+                with Image.open(file_path) as image:
+                    width = int(image.width)
+                    height = int(image.height)
+                    image_format = str(image.format or "")
+            except Exception:
+                pass
+
+            meta = next(
+                (
+                    item
+                    for item in metadata
+                    if str(item.get("source_url") or item.get("url") or "") == url
+                ),
+                {},
+            )
+            alt = ""
+            if url in selected:
+                try:
+                    alt = alts[selected_urls.index(url)]
+                except Exception:
+                    alt = ""
+            if not alt:
+                alt = str(meta.get("alt_text") or "")
+
+            try:
+                file_bytes = int(file_path.stat().st_size)
+            except Exception:
+                file_bytes = 0
+
             output.append({
                 "url": url,
-                "path": path,
-                "primary": "1" if url == primary else "0",
-                "selected": "1" if url in selected else "0",
+                "path": str(file_path),
+                "filename": file_path.name,
+                "primary": url == primary,
+                "selected": url in selected,
+                "width": width,
+                "height": height,
+                "format": image_format,
+                "bytes": file_bytes,
+                "alt_text": alt,
+                "seo_title": str(meta.get("title") or ""),
+                "caption": str(meta.get("caption") or ""),
+                "keywords": list(meta.get("keywords") or []) if isinstance(meta.get("keywords"), list) else [],
+                "planned_filename": str(meta.get("planned_filename") or meta.get("seo_filename") or ""),
+                "metadata": meta,
             })
         return output
 
-
-class FilamentCore:
-    def __init__(self, db) -> None:
-        self.db = db
-
-    def list(self) -> list[dict[str, Any]]:
-        return [
-            dict(row)
-            for row in list_available_material_colors(self.db)
-        ]
+    def finalize(self, product_id: int) -> dict[str, Any]:
+        return dict(image_pipeline.finalize_selected_images(self.db, int(product_id)) or {})
 
 
 class AcquisitionCore:
@@ -265,9 +328,7 @@ class AICore:
 
     def execute(self, *args, **kwargs):
         if self._executor is None:
-            raise RuntimeError(
-                "هسته AI ثبت شده ولی Adapter رابط Qt به Runtime بالغ هنوز فعال نشده است."
-            )
+            raise RuntimeError("هسته AI هنوز به Runtime بالغ متصل نشده است.")
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("یک عملیات هوش مصنوعی در حال اجرا است.")
         try:
@@ -290,8 +351,28 @@ class ApplicationKernel:
         return self.registry.require("images", ImageCore)  # type: ignore[return-value]
 
     @property
-    def filaments(self) -> FilamentCore:
-        return self.registry.require("filaments", FilamentCore)  # type: ignore[return-value]
+    def filaments(self) -> FilamentParityCore:
+        return self.registry.require("filaments", FilamentParityCore)  # type: ignore[return-value]
+
+    @property
+    def categories(self) -> CategoryCore:
+        return self.registry.require("categories", CategoryCore)  # type: ignore[return-value]
+
+    @property
+    def stages(self) -> StageCore:
+        return self.registry.require("stages", StageCore)  # type: ignore[return-value]
+
+    @property
+    def commerce(self) -> CommerceCore:
+        return self.registry.require("commerce", CommerceCore)  # type: ignore[return-value]
+
+    @property
+    def providers(self) -> ProviderCore:
+        return self.registry.require("providers", ProviderCore)  # type: ignore[return-value]
+
+    @property
+    def connection(self) -> ConnectionCore:
+        return self.registry.require("connection", ConnectionCore)  # type: ignore[return-value]
 
     @property
     def acquisition(self) -> AcquisitionCore:
@@ -309,17 +390,31 @@ class ApplicationKernel:
         return {
             "cores": self.registry.names(),
             "ai_single_engine": True,
+            "ai_bound": self.ai.available,
             "database_shared": True,
+            "stage_authority_shared": True,
         }
 
 
 def build_kernel(db) -> ApplicationKernel:
-    ensure_stage_lock_schema(db)
+    ensure_qt_parity_schema(db)
+
     registry = CoreRegistry()
+    stages = StageCore(db)
+    providers = ProviderCore(db)
+    ai = AICore()
+    ai.bind_executor(providers.execute_product_ai)
+
     registry.register("products", ProductCore(db))
     registry.register("images", ImageCore(db))
-    registry.register("filaments", FilamentCore(db))
+    registry.register("filaments", FilamentParityCore(db))
+    registry.register("categories", CategoryCore(db))
+    registry.register("stages", stages)
+    registry.register("commerce", CommerceCore(db, stages))
+    registry.register("providers", providers)
+    registry.register("connection", ConnectionCore(db))
     registry.register("acquisition", AcquisitionCore(db))
     registry.register("publish", PublishCore(db))
-    registry.register("ai", AICore())
+    registry.register("ai", ai)
+
     return ApplicationKernel(db=db, registry=registry)

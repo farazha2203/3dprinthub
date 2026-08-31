@@ -12,13 +12,11 @@ if str(ROOT) not in sys.path:
 
 def _build_runtime():
     from app.db import Database
-    from app.epic49_desktop_schema import ensure_epic49_desktop_schema
     from app.runtime_paths import data_root
     from qt6.kernel import build_kernel
 
     db_path = data_root() / "catalog.sqlite3"
     db = Database(db_path)
-    ensure_epic49_desktop_schema(db)
     return build_kernel(db)
 
 
@@ -56,9 +54,17 @@ def main(argv=None) -> int:
         print("QT6_COMMAND_PALETTE=ENABLED", flush=True)
         print("QT6_QTHREADPOOL=ENABLED", flush=True)
         print("QT6_APPLICATION_KERNEL=ENABLED", flush=True)
-        print("QT6_PRODUCT_GALLERY=ENABLED", flush=True)
-        print("QT6_STAGE1_EDIT_ADAPTER=ENABLED", flush=True)
-        print("QT6_STAGE3_LOCAL_IMAGES=ENABLED", flush=True)
+        print("QT6_PRODUCT_GALLERY_SORT=ENABLED", flush=True)
+        print("QT6_FILAMENT_CRUD=ENABLED", flush=True)
+        print("QT6_PROFILE_MATRIX=ENABLED", flush=True)
+        print("QT6_IMAGE_DIMENSION_SIZE_SEO=ENABLED", flush=True)
+        print("QT6_CONTENT_SEO_EDITOR=ENABLED", flush=True)
+        print("QT6_SOURCE_LICENSE_SPECS=ENABLED", flush=True)
+        print("QT6_HOMEPAGE_SLIDER_EDITOR=ENABLED", flush=True)
+        print("QT6_STAGE_TRISTATE=ENABLED", flush=True)
+        print("QT6_AI_SOURCE_MODES=ENABLED", flush=True)
+        print("QT6_AI_PROVIDER_HUB=ENABLED", flush=True)
+        print("QT6_SITE_CONNECTION_SETTINGS=ENABLED", flush=True)
         print("QT6_SINGLE_AI_CORE=ENABLED", flush=True)
         print(f"QT6_ROUTES={len(contract['routes'])}", flush=True)
         print(f"QT6_ACTIONS={contract['action_count']}", flush=True)
@@ -69,10 +75,14 @@ def main(argv=None) -> int:
                 raise RuntimeError("Qt6 wizard stage contract mismatch")
             if contract["stack_count"] != len(contract["routes"]):
                 raise RuntimeError("Qt6 route/stack contract mismatch")
-            if not contract["ai_single_engine"]:
+            if not contract["ai_single_engine"] or not contract["ai_bound"]:
                 raise RuntimeError("Qt6 AI core contract mismatch")
+            if not contract["stage_authority_shared"]:
+                raise RuntimeError("Qt6 stage authority contract mismatch")
+            if len(contract["core_names"]) < 11:
+                raise RuntimeError("Qt6 full parity core registry incomplete")
             print("QT6_FOUNDATION_VERIFY=OK", flush=True)
-            print("QT6_42B1_CORE_PARITY_VERIFY=OK", flush=True)
+            print("QT6_42B2_FULL_PARITY_VERIFY=OK", flush=True)
             window.close()
             return 0
 

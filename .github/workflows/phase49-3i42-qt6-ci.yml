@@ -1,4 +1,4 @@
-name: Phase49.3I.42-42B Qt6 Desktop CI
+name: Phase49.3I.42B2 Full Qt6 Legacy Parity CI
 
 on:
   push:
@@ -18,9 +18,9 @@ permissions:
   contents: read
 
 jobs:
-  qt6-foundation-windows:
+  qt6-full-parity-windows:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     env:
       QT_QPA_PLATFORM: offscreen
 
@@ -49,22 +49,36 @@ jobs:
       - name: Compile Qt6 and touched mature contracts
         shell: pwsh
         run: |
-          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py
-          if ($LASTEXITCODE -ne 0) { throw 'Qt6 compileall failed' }
+          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity compileall failed' }
 
-      - name: Qt6 foundation and 42B core parity tests
+      - name: Qt6 foundation and full parity tests
         shell: pwsh
         working-directory: catalog_center
         run: |
           python -m unittest -v tests.test_phase49_3i42_qt6_foundation tests.test_phase49_3i42b_core_parity
-          if ($LASTEXITCODE -ne 0) { throw 'Qt6 foundation/core parity tests failed' }
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity tests failed' }
 
-      - name: Existing Filament Library regression
+      - name: Mature Filament Library regression
         shell: pwsh
         working-directory: catalog_center
         run: |
           python -m unittest -v tests.test_phase49_3i41_filament_library
           if ($LASTEXITCODE -ne 0) { throw 'Phase49.3I.41 regression failed' }
+
+      - name: Mature Profile Commerce and Stage regressions
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i34_profile_matrix tests.test_phase49_3i35_operator_ledger tests.test_phase49_3i36_stage_finalization tests.test_phase49_3i37_seven_stage_ai tests.test_phase49_3i39_professional_commerce
+          if ($LASTEXITCODE -ne 0) { throw 'Mature Profile/Stage regression failed' }
+
+      - name: Single Active AI regression
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i17_single_active_ai_runtime
+          if ($LASTEXITCODE -ne 0) { throw 'Single Active AI regression failed' }
 
       - name: Qt6 offscreen structural launch
         shell: pwsh
@@ -75,25 +89,28 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
           $text = Get-Content "$env:RUNNER_TEMP/qt6-verify.txt" -Raw
           foreach ($marker in @(
-            'QT_UI_CONTRACT=phase49-3i42b1-qt-core-parity-v1',
+            'QT_UI_CONTRACT=phase49-3i42b2-full-legacy-parity-v1',
             'QT6_MAIN_WINDOW=ENABLED',
-            'QT6_MODEL_VIEW=ENABLED',
-            'QT6_WIZARD_7_STAGE=ENABLED',
-            'QT6_COMMAND_PALETTE=ENABLED',
-            'QT6_QTHREADPOOL=ENABLED',
-            'QT6_APPLICATION_KERNEL=ENABLED',
-            'QT6_PRODUCT_GALLERY=ENABLED',
-            'QT6_STAGE1_EDIT_ADAPTER=ENABLED',
-            'QT6_STAGE3_LOCAL_IMAGES=ENABLED',
+            'QT6_PRODUCT_GALLERY_SORT=ENABLED',
+            'QT6_FILAMENT_CRUD=ENABLED',
+            'QT6_PROFILE_MATRIX=ENABLED',
+            'QT6_IMAGE_DIMENSION_SIZE_SEO=ENABLED',
+            'QT6_CONTENT_SEO_EDITOR=ENABLED',
+            'QT6_SOURCE_LICENSE_SPECS=ENABLED',
+            'QT6_HOMEPAGE_SLIDER_EDITOR=ENABLED',
+            'QT6_STAGE_TRISTATE=ENABLED',
+            'QT6_AI_SOURCE_MODES=ENABLED',
+            'QT6_AI_PROVIDER_HUB=ENABLED',
+            'QT6_SITE_CONNECTION_SETTINGS=ENABLED',
             'QT6_SINGLE_AI_CORE=ENABLED',
-            'QT6_42B1_CORE_PARITY_VERIFY=OK'
+            'QT6_42B2_FULL_PARITY_VERIFY=OK'
           )) {
             if ($text -notmatch [regex]::Escape($marker)) {
               throw "Missing Qt6 marker: $marker"
             }
           }
 
-      - name: Legacy launcher remains untouched
+      - name: Legacy launcher remains healthy
         shell: pwsh
         working-directory: catalog_center
         run: |
@@ -104,10 +121,10 @@ jobs:
             throw 'Legacy release verification marker missing'
           }
 
-      - name: Final source guard
+      - name: Final source guards
         shell: pwsh
         run: |
           if (Select-String -Path "catalog_center/qt6/*.py" -Pattern "import tkinter|from tkinter" -Quiet) {
             throw "Qt6 presentation package must not import Tkinter"
           }
-          Write-Host "PHASE49_3I42B_QT6_CORE_PARITY_CI=PASS"
+          Write-Host "PHASE49_3I42B2_FULL_LEGACY_PARITY_CI=PASS"
