@@ -1,5 +1,17 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
+## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C3
+
+Current code checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
+Qt Add Product/Crawl legacy parity plus AI Provider model ranking, pricing, structured Product probe, cost confirmation and diagnostic dialogs are implemented.
+
+Windows evidence:
+- `33394215803` Qt6 Crawl + AI Runtime CI PASS;
+- `33394215742` Single Active AI CI PASS.
+
+Next exact task is owner Local ff-only pull + repository-owned 42C gate + bounded foreground QA. Production/Host/Django migrations remain untouched.
+
+
 ## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C
 
 Qt acquisition code checkpoint: `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
