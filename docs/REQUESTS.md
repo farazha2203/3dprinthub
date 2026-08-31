@@ -1,5 +1,24 @@
 # OWNER REQUESTS
 
+## REQ-49-082 — Product-safe OpenRouter model selection and strict Structured output
+Status: `IMPLEMENTED / GITHUB CI PASS / OWNER LOCAL RETEST NEXT`.
+
+Acceptance:
+- “connected” must not imply Product suitability;
+- Product AI only accepts text-capable OpenRouter models with verified native Structured JSON support;
+- media/music/audio/video/image/embedding/rerank/moderation models are not shown in Product-oriented filters;
+- Tools-only models do not receive JSON✓;
+- coding-specialist models are rejected for Product Persian translation/SEO;
+- OpenRouter Product Structured calls use strict JSON Schema and require compatible endpoints;
+- no prompt-only JSON fallback is allowed for OpenRouter Product work;
+- selected model identity remains exact and no hidden cross-model fallback is introduced;
+- live free/Persian/cost information remains visible;
+- active model capability is stored as non-secret metadata so ordinary Product execution does not need a hidden model scan;
+- existing fail-closed Product title/SEO validation remains authoritative.
+
+Evidence: code `0421bccff040ced53513625af95d05e0c8c27a9a`; runs `33399095190`, `33399095198`, `33399095224` PASS.
+
+
 ## REQ-49-042C3 — Restore Add Product/Crawl legacy workflow and production-grade AI Provider diagnostics
 Status: `IMPLEMENTED / GITHUB CI PASS / OWNER LOCAL FOREGROUND QA NEXT`.
 
