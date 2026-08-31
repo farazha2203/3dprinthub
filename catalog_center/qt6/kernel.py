@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
+from types import SimpleNamespace
 from typing import Any, Callable, TypeVar
 
 from app import phase49_3c_image_pipeline as image_pipeline
@@ -155,7 +156,7 @@ class ProductCore:
 
 
 class ImageCore:
-    """Single image resolver shared by Product cards and the image stage."""
+    """Single image authority shared by Product cards, image grid and slider."""
 
     def __init__(self, db) -> None:
         self.db = db
@@ -179,14 +180,22 @@ class ImageCore:
         for field in ("selected_images_json", "images_json"):
             for raw in self._json_list(data.get(field)):
                 if isinstance(raw, dict):
-                    url = str(raw.get("url") or raw.get("source_url") or "").strip()
+                    url = str(
+                        raw.get("url")
+                        or raw.get("source_url")
+                        or ""
+                    ).strip()
                 else:
                     url = str(raw or "").strip()
                 if url and url not in output:
                     output.append(url)
         return output
 
-    def local_path_for_url(self, row: dict[str, Any] | Any, url: str) -> str:
+    def local_path_for_url(
+        self,
+        row: dict[str, Any] | Any,
+        url: str,
+    ) -> str:
         data = dict(row) if not isinstance(row, dict) else row
         path = image_pipeline.strict_source_local_image(data, url)
         if not path:
@@ -207,10 +216,17 @@ class ImageCore:
         data = dict(row)
 
         primary = str(data.get("primary_image_url") or "").strip()
-        selected_urls = []
+        slider_image = str(
+            data.get("homepage_slider_image_url") or ""
+        ).strip()
+        selected_urls: list[str] = []
         for raw in self._json_list(data.get("selected_images_json")):
             if isinstance(raw, dict):
-                url = str(raw.get("url") or raw.get("source_url") or "").strip()
+                url = str(
+                    raw.get("url")
+                    or raw.get("source_url")
+                    or ""
+                ).strip()
             else:
                 url = str(raw or "").strip()
             if url:
@@ -219,38 +235,49 @@ class ImageCore:
 
         alts = [
             str(item or "").strip()
-            for item in self._json_list(data.get("image_alt_texts_json"))
+            for item in self._json_list(
+                data.get("image_alt_texts_json")
+            )
         ]
-        raw_meta = self._json_list(data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
-        metadata: list[dict[str, Any]] = [
-            dict(item) for item in raw_meta if isinstance(item, dict)
+        raw_meta = self._json_list(
+            data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+        )
+        metadata = [
+            dict(item)
+            for item in raw_meta
+            if isinstance(item, dict)
         ]
 
         output: list[dict[str, Any]] = []
-        for index, url in enumerate(self.urls(data)):
+        for index, url in enumerate(self.urls(data), 1):
             path = self.local_path_for_url(data, url)
-            if not path:
-                continue
-
-            file_path = Path(path)
-            width = 0
-            height = 0
+            file_path = Path(path) if path else None
+            width = height = file_bytes = 0
             image_format = ""
-            try:
-                from PIL import Image
+            if file_path is not None and file_path.is_file():
+                try:
+                    from PIL import Image
 
-                with Image.open(file_path) as image:
-                    width = int(image.width)
-                    height = int(image.height)
-                    image_format = str(image.format or "")
-            except Exception:
-                pass
+                    with Image.open(file_path) as image:
+                        width = int(image.width)
+                        height = int(image.height)
+                        image_format = str(image.format or "")
+                except Exception:
+                    pass
+                try:
+                    file_bytes = int(file_path.stat().st_size)
+                except Exception:
+                    pass
 
             meta = next(
                 (
                     item
                     for item in metadata
-                    if str(item.get("source_url") or item.get("url") or "") == url
+                    if str(
+                        item.get("source_url")
+                        or item.get("url")
+                        or ""
+                    ) == url
                 ),
                 {},
             )
@@ -263,43 +290,365 @@ class ImageCore:
             if not alt:
                 alt = str(meta.get("alt_text") or "")
 
-            try:
-                file_bytes = int(file_path.stat().st_size)
-            except Exception:
-                file_bytes = 0
-
-            output.append({
-                "url": url,
-                "path": str(file_path),
-                "filename": file_path.name,
-                "primary": url == primary,
-                "selected": url in selected,
-                "width": width,
-                "height": height,
-                "format": image_format,
-                "bytes": file_bytes,
-                "alt_text": alt,
-                "seo_title": str(meta.get("title") or ""),
-                "caption": str(meta.get("caption") or ""),
-                "keywords": list(meta.get("keywords") or []) if isinstance(meta.get("keywords"), list) else [],
-                "planned_filename": str(meta.get("planned_filename") or meta.get("seo_filename") or ""),
-                "metadata": meta,
-            })
+            output.append(
+                {
+                    "slot": index,
+                    "url": url,
+                    "path": str(file_path or ""),
+                    "filename": (
+                        file_path.name
+                        if file_path is not None
+                        else str(meta.get("original_filename") or "")
+                    ),
+                    "downloaded": bool(
+                        file_path is not None
+                        and file_path.is_file()
+                    ),
+                    "primary": url == primary,
+                    "slider": url == slider_image,
+                    "selected": url in selected,
+                    "width": width,
+                    "height": height,
+                    "format": image_format,
+                    "bytes": file_bytes,
+                    "alt_text": alt,
+                    "seo_title": str(meta.get("title") or ""),
+                    "caption": str(meta.get("caption") or ""),
+                    "keywords": (
+                        list(meta.get("keywords") or [])
+                        if isinstance(meta.get("keywords"), list)
+                        else []
+                    ),
+                    "planned_filename": str(
+                        meta.get("seo_filename")
+                        or meta.get("planned_filename")
+                        or ""
+                    ),
+                    "metadata": meta,
+                }
+            )
         return output
 
+    def _assert_images_editable(self, product_id: int):
+        row = self.db.product(int(product_id))
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        if is_stage_locked(row, "images"):
+            raise RuntimeError(
+                "مرحله تصاویر ثبت نهایی شده است؛ ابتدا «اصلاح مرحله» را بزن."
+            )
+        return row
+
+    def remove_urls(
+        self,
+        product_id: int,
+        urls: list[str],
+    ) -> dict[str, Any]:
+        row = self._assert_images_editable(product_id)
+        data = dict(row)
+        remove = {
+            str(value or "").strip()
+            for value in urls or []
+            if str(value or "").strip()
+        }
+        all_urls = [
+            url
+            for url in self.urls(data)
+            if url not in remove
+        ]
+
+        old_selected = [
+            str(item or "").strip()
+            for item in self._json_list(
+                data.get("selected_images_json")
+            )
+            if str(item or "").strip()
+        ]
+        old_alts = [
+            str(item or "").strip()
+            for item in self._json_list(
+                data.get("image_alt_texts_json")
+            )
+        ]
+        alt_map = {
+            url: (
+                old_alts[index]
+                if index < len(old_alts)
+                else ""
+            )
+            for index, url in enumerate(old_selected)
+        }
+        selected = [
+            url
+            for url in old_selected
+            if url not in remove
+        ]
+        primary = str(data.get("primary_image_url") or "")
+        if primary in remove:
+            primary = selected[0] if selected else (
+                all_urls[0] if all_urls else ""
+            )
+
+        metadata = [
+            item
+            for item in self._json_list(
+                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+            )
+            if (
+                isinstance(item, dict)
+                and str(item.get("source_url") or "") not in remove
+            )
+        ]
+        values = {
+            "images_json": json.dumps(
+                all_urls,
+                ensure_ascii=False,
+            ),
+            "selected_images_json": json.dumps(
+                selected,
+                ensure_ascii=False,
+            ),
+            "primary_image_url": primary,
+            "image_alt_texts_json": json.dumps(
+                [alt_map.get(url, "") for url in selected],
+                ensure_ascii=False,
+            ),
+            image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(
+                metadata,
+                ensure_ascii=False,
+            ),
+        }
+        self.db.update_product(int(product_id), values)
+        return dict(self.db.product(int(product_id)))
+
+    @staticmethod
+    def _safe_seo_filename(value: str) -> str:
+        raw = str(value or "").strip().replace("\\", "-").replace("/", "-")
+        raw = raw.strip(". ")
+        if not raw:
+            return ""
+        if not raw.lower().endswith(".webp"):
+            raw += ".webp"
+        return raw[:180]
+
+    def update_metadata(
+        self,
+        product_id: int,
+        urls: list[str],
+        values: dict[str, Any],
+    ) -> dict[str, Any]:
+        row = self._assert_images_editable(product_id)
+        data = dict(row)
+        targets = {
+            str(url or "").strip()
+            for url in urls or []
+            if str(url or "").strip()
+        }
+        if not targets:
+            raise ValueError("حداقل یک تصویر انتخاب کن.")
+
+        existing = [
+            dict(item)
+            for item in self._json_list(
+                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+            )
+            if isinstance(item, dict)
+        ]
+        by_url = {
+            str(item.get("source_url") or ""): item
+            for item in existing
+            if item.get("source_url")
+        }
+
+        allowed = {
+            "alt_text",
+            "title",
+            "caption",
+            "keywords",
+            "seo_filename",
+        }
+        for url in targets:
+            item = by_url.get(url)
+            if item is None:
+                item = {"source_url": url}
+                existing.append(item)
+                by_url[url] = item
+            changed: set[str] = set(
+                item.get("_operator_override_fields") or []
+            )
+            for key, value in dict(values or {}).items():
+                if key not in allowed or value is None:
+                    continue
+                if key == "keywords":
+                    if isinstance(value, str):
+                        value = [
+                            token.strip().lstrip("#")
+                            for token in value.replace(",", "\n").splitlines()
+                            if token.strip()
+                        ]
+                    value = [
+                        str(token or "").strip().lstrip("#")[:80]
+                        for token in (value or [])
+                        if str(token or "").strip()
+                    ][:16]
+                elif key == "seo_filename":
+                    value = self._safe_seo_filename(str(value or ""))
+                else:
+                    value = str(value or "").strip()
+                item[key] = value
+                changed.add(key)
+            if changed:
+                item["_operator_override_fields"] = sorted(changed)
+
+        selected = [
+            str(item or "").strip()
+            for item in self._json_list(
+                data.get("selected_images_json")
+            )
+            if str(item or "").strip()
+        ]
+        alt_map = {
+            url: str(
+                by_url.get(url, {}).get("alt_text") or ""
+            )
+            for url in selected
+        }
+        self.db.update_product(
+            int(product_id),
+            {
+                image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(
+                    existing,
+                    ensure_ascii=False,
+                ),
+                "image_alt_texts_json": json.dumps(
+                    [alt_map.get(url, "") for url in selected],
+                    ensure_ascii=False,
+                ),
+            },
+        )
+        return dict(self.db.product(int(product_id)))
+
+    def capture_source_screenshot(self, product_id: int) -> str:
+        self._assert_images_editable(product_id)
+        from app.phase49_3i33_ai_core import capture_source_screenshot
+
+        proxy = SimpleNamespace(
+            db=self.db,
+            DATA=Path(self.db.path).parent,
+        )
+        return str(
+            capture_source_screenshot(
+                proxy,
+                int(product_id),
+            )
+        )
+
     def finalize(self, product_id: int) -> dict[str, Any]:
-        return dict(image_pipeline.finalize_selected_images(self.db, int(product_id)) or {})
+        return dict(
+            image_pipeline.finalize_selected_images(
+                self.db,
+                int(product_id),
+            )
+            or {}
+        )
 
 
 class AcquisitionCore:
+    """Qt adapter over mature discovery/collection modules."""
+
     def __init__(self, db) -> None:
         self.db = db
+        self._stop_requested = False
 
-    def queue_counts(self) -> dict[str, int]:
-        return dict(self.db.queue_counts())
+    def sources(self) -> list[dict[str, Any]]:
+        return [
+            dict(row)
+            for row in self.db.sources()
+            if int(row["enabled"] or 0)
+        ]
+
+    def queue_counts(self, source_code: str = "") -> dict[str, int]:
+        return dict(self.db.queue_counts(str(source_code or "")))
 
     def recent_runs(self, limit: int = 20) -> list[dict[str, Any]]:
-        return [dict(row) for row in self.db.runs(limit=int(limit))]
+        return [
+            dict(row)
+            for row in self.db.runs(limit=int(limit))
+        ]
+
+    def request_stop(self) -> None:
+        self._stop_requested = True
+
+    def reset_stop(self) -> None:
+        self._stop_requested = False
+
+    def should_stop(self) -> bool:
+        return bool(self._stop_requested)
+
+    def reset_failed(self, source_code: str = "") -> int:
+        return int(
+            self.db.reset_failed_urls(str(source_code or ""))
+        )
+
+    def run_batch(
+        self,
+        *,
+        source_code: str,
+        listing_url: str,
+        requested: int = 100,
+        image_limit: int = 5,
+        include_failed: bool = False,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import run_batch
+
+        self.reset_stop()
+        return run_batch(
+            self.db,
+            source_code=source_code,
+            listing_url=listing_url,
+            requested=requested,
+            image_limit=image_limit,
+            include_failed=include_failed,
+            progress=progress,
+            should_stop=self.should_stop,
+        )
+
+    def run_single(
+        self,
+        *,
+        source_code: str,
+        product_url: str,
+        image_limit: int = 5,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import run_single
+
+        self.reset_stop()
+        return run_single(
+            self.db,
+            source_code=source_code,
+            product_url=product_url,
+            image_limit=image_limit,
+            progress=progress,
+        )
+
+    def recover_product_images(
+        self,
+        product_id: int,
+        *,
+        image_limit: int = 10,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import recover_product_images
+
+        self.reset_stop()
+        return recover_product_images(
+            self.db,
+            int(product_id),
+            image_limit=image_limit,
+            progress=progress,
+        )
 
 
 class PublishCore:
