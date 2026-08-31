@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from PIL import Image
 from PySide6.QtWidgets import QApplication
 
 from app.ai_model_catalog import (
@@ -108,6 +109,56 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertIn("رایگان", label)
         self.assertIn("فارسی", label)
         self.assertIn("JSON", label)
+
+    def test_live_free_persian_json_filter_prefers_known_strong_models(self):
+        ranked = rank_models([
+            {
+                "id": "openai/gpt-oss-20b:free",
+                "pricing": {"prompt": "0", "completion": "0"},
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text"],
+                    "output_modalities": ["text"],
+                },
+            },
+            {
+                "id": "qwen/qwen3-32b:free",
+                "description": "Multilingual model across 100+ languages.",
+                "pricing": {"prompt": "0", "completion": "0"},
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text"],
+                    "output_modalities": ["text"],
+                },
+            },
+            {
+                "id": "google/gemma-4-31b-it:free",
+                "description": "Multilingual support across 140+ languages.",
+                "pricing": {"prompt": "0", "completion": "0"},
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text", "image"],
+                    "output_modalities": ["text"],
+                },
+            },
+        ])
+        filtered = [
+            item
+            for item in ranked
+            if model_matches_filter(item, "persian_free")
+        ]
+        self.assertEqual(len(filtered), 3)
+        self.assertEqual(
+            filtered[0]["id"],
+            "qwen/qwen3-32b:free",
+        )
+        self.assertTrue(
+            filtered[0]["persian_free_preferred"]
+        )
+        self.assertIn(
+            "فارسی پیشنهادی",
+            format_model_label(filtered[0]),
+        )
 
     def test_cost_estimate_uses_provider_per_token_pricing(self):
         estimate = estimate_request_cost(
@@ -311,6 +362,10 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         page = SettingsPage(
             self.db,
             kernel=self.kernel,
+        )
+        self.assertGreaterEqual(
+            page.model_filter.findData("persian_free"),
+            0,
         )
         page._model_info = rank_models([
             {
