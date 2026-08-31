@@ -1,5 +1,30 @@
 # OWNER REQUESTS
 
+## REQ-49-079 — Restore mature Catalog Center capabilities in the Qt application
+Status: **IMPLEMENTED + WINDOWS_CI_TESTED / OWNER_LOCAL_QA_NEXT**
+
+Requested:
+- Filament add/edit;
+- Product descriptions and sorting;
+- image size/dimensions/SEO metadata;
+- Persian + source/English titles;
+- site category dropdown;
+- red/pending/green stage readiness;
+- Profile builder for multiple production weights/times/support × many Filaments/colors/prices per size;
+- full Content/SEO;
+- Source/License/Specs;
+- homepage slider controls;
+- mature Product AI source-mode actions;
+- AI Provider/Model/key/test/default settings including AvalAI and Gemini;
+- Site connection settings.
+
+Result:
+all requested surfaces above are implemented on the Qt shared-kernel path and pass Windows CI `33369749205` at code checkpoint `c3b0105eaa6c6141eb6d6d8463a96d547101564c`. Dedicated Single Active AI `33369749123` also passes.
+
+Still separate:
+Phase42C live Scan/Crawl/Acquisition controls and Phase42E packaging/default-launcher cutover remain open. Production is untouched.
+
+
 ## REQ-49-079 — Full Legacy capability parity on Qt6 through an object-oriented application kernel
 Status: `IN_PROGRESS / 42B1 GITHUB+WINDOWS CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
 

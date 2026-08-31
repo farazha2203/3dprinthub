@@ -1,5 +1,22 @@
 # PROJECT ROADMAP
 
+## 2026-08-31 — Phase49.3I.42B2 Qt requested-parity checkpoint
+
+Status: **GITHUB_UPDATED + WINDOWS_CI_TESTED / OWNER_LOCAL_QA_NEXT**.
+
+Delivered on `c3b0105eaa6c6141eb6d6d8463a96d547101564c`: Product description/sort, Persian+source titles, site category selector, Filament add/edit/deactivate, full Profile Matrix, image dimensions/size/SEO metadata, full Content/SEO, Source/License/Specs, homepage slider controls, tri-state stage readiness, mature AI source-mode actions, Provider Hub/default AI settings and Site FTP/Bridge settings.
+
+Verification: Qt Windows CI `33369749205` PASS and dedicated Single Active AI `33369749123` PASS.
+
+Remaining before Qt cutover:
+1. owner Local backup/regression/foreground acceptance;
+2. Phase42C live Scan/Crawl/Acquisition controls (Qt Operations is still read-only);
+3. Phase42D final UX/accessibility polish;
+4. Phase42E reproducible package + side-by-side acceptance + default launcher switch.
+
+Production/Host/Django migrations remain untouched.
+
+
 ## Qt migration update — 2026-08-30
 
 Phase49.3I.42B is now IN PROGRESS.
