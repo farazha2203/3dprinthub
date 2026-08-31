@@ -158,7 +158,9 @@ $required = @(
     "catalog_center\app\classic_methods.py",
     "catalog_center\app\phase49_3i43_modern_acquisition_intelligence.py",
     "catalog_center\app\phase49_3i45_incremental_discovery_intelligence.py",
-    "catalog_center\tests\test_phase49_3i42c_acquisition_runtime.py"
+    "catalog_center\tests\test_phase49_3i42c_acquisition_runtime.py",
+    "catalog_center\tests\test_phase49_3i42c3_ai_crawl_parity.py",
+    "catalog_center\app\ai_model_catalog.py"
 )
 foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $Root $relative))) {
@@ -236,7 +238,9 @@ Run-Native -File $Py -Arguments @(
     (Join-Path $Catalog "app\phase49_3i38_crawl_ledger_stage_ai.py"),
     (Join-Path $Catalog "app\phase49_3i43_modern_acquisition_intelligence.py"),
     (Join-Path $Catalog "app\phase49_3i45_incremental_discovery_intelligence.py"),
-    (Join-Path $Catalog "tests\test_phase49_3i42c_acquisition_runtime.py")
+    (Join-Path $Catalog "tests\test_phase49_3i42c_acquisition_runtime.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i42c3_ai_crawl_parity.py"),
+    (Join-Path $Catalog "app\ai_model_catalog.py")
 )
 
 Step "07. QT42C + ACQUISITION REGRESSIONS"
@@ -246,7 +250,8 @@ try {
         "-m", "unittest", "-v",
         "tests.test_phase49_3i42_qt6_foundation",
         "tests.test_phase49_3i42b_core_parity",
-        "tests.test_phase49_3i42c_acquisition_runtime"
+        "tests.test_phase49_3i42c_acquisition_runtime",
+        "tests.test_phase49_3i42c3_ai_crawl_parity"
     )
 
     Run-Native -File $Py -Arguments @(
@@ -285,6 +290,12 @@ try {
         foreach ($marker in @(
             "QT6_MAIN_WINDOW=ENABLED",
             "QT6_SINGLE_AI_CORE=ENABLED",
+            "QT6_PRODUCT_ACQUISITION_ROUTE=ENABLED",
+            "QT6_LEGACY_CRAWL_CONTROLS=ENABLED",
+            "QT6_AI_MODEL_RANKING_COST=ENABLED",
+            "QT6_AI_STRUCTURED_PROBE=ENABLED",
+            "QT6_AI_COST_CONFIRM=ENABLED",
+            "QT6_DIAGNOSTIC_DIALOG=ENABLED",
             "QT6_42B2_FULL_PARITY_VERIFY=OK"
         )) {
             if ($QtVerify -notmatch [regex]::Escape($marker)) {
