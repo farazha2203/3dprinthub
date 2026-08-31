@@ -1,3 +1,20 @@
+## 2026-08-31 — Phase49.3I.42B2 requested Product/Settings parity
+
+- Added shared Qt parity cores for categories, stage state, commerce/Profile, Filament, AI providers and Site connection.
+- Added Filament create/edit/deactivate with mature inventory/rate/preheat fields.
+- Added Product list description + real sorting and Persian/source title visibility.
+- Added Profile Matrix: size/dimensions × multiple weight/support/time rows × many Filaments/colors/prices.
+- Added image dimensions/file-size/Alt/SEO metadata view.
+- Added full Content/SEO, Source/License/Specs, homepage slider and readiness/publish editors.
+- Added red/pending/green stage truth and explicit save/finalize/unlock.
+- Added one process-wide AICore wired to mature Link/Saved Data/Screenshot and exact saved Provider/Model/key.
+- Added AvalAI/OpenRouter/Google Gemini/OpenAI Provider Hub with searchable model list/test/default selection.
+- Added FTP/Bridge settings/test with secrets retained in Credential Store.
+- Windows Qt run `33369749205` PASS; Single Active AI `33369749123` PASS.
+- Code checkpoint: `c3b0105eaa6c6141eb6d6d8463a96d547101564c`.
+- No Django migration, Host or Production change.
+- Qt live Scan/Crawl/Acquisition controls remain Phase42C; legacy launcher remains default.
+
 # PROJECT CHANGELOG
 
 ## 2026-08-30 — Phase49.3I.42B1 Qt Kernel + first Legacy parity adapters

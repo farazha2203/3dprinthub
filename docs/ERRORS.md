@@ -1,5 +1,39 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-080 — Qt42B2 rollout CI exposed generated-source and guessed-test-name defects
+Status: `FIXED / FINAL WINDOWS CI PASS`
+
+Observed:
+1. run `33369083134` stopped at compile because `qt6/__init__.py` contained literal escaped-newline text and the Stage-5 saver missed an opening call parenthesis;
+2. run `33369290159` then reached mature regressions but referenced nonexistent `tests.test_phase49_3i35_operator_ledger`;
+3. run `33369521548` passed compile/Qt/Filament/Profile/Stage regressions but referenced nonexistent `tests.test_phase49_3i17_single_active_ai_runtime`.
+
+Root cause:
+- one generated source blob serialized newlines incorrectly and one generated call site lost punctuation;
+- the aggregate Qt workflow guessed two unittest module names instead of verifying the real Repository test names / canonical Single Active AI workflow.
+
+Failed conditions were not repeated unchanged.
+
+Correct fixes:
+- `74e95a943d3324f3d00b4e61bd9a265efcca4e3f`: fixed real newlines and Stage-5 call syntax;
+- `d433395cabc8ed488431f3b873adc337acb7d6b6`: switched to existing `tests.test_phase49_3i35_operator_workflow`;
+- `c3b0105eaa6c6141eb6d6d8463a96d547101564c`: switched to canonical `tests.test_epic49_phase49_3i17_single_active_ai_runtime`.
+
+Verification:
+- final Windows Qt run `33369749205` PASS with every job step successful;
+- dedicated Single Active AI run `33369749123` PASS;
+- compile, Qt parity, mature Filament/Profile/Stage/AI regressions, Qt launcher, legacy launcher and source guards all passed.
+
+Rollback anchors:
+- `backup/pre-phase49-3i42b2-full-legacy-parity-20260830` → `6260f94cee531124446cf1b3e19ce0d95554d594`;
+- `backup/pre-err49-080-qt42b2-compile-hotfix-20260831` → `fc4edfd3ccab089ac242e84f291dd6454b85d7d7`.
+
+Prevention:
+- generated source blobs must compile before functional tests;
+- workflow test module names must be verified from the actual Repository tree or canonical workflow, never inferred;
+- a failed CI command is not rerun until its root condition changes.
+
+
 ## ERR-49-079 — Qt Local preview gate used an obsolete ExpectedHead
 Status: `FIXED / PREVENTION RULE ADDED`
 
