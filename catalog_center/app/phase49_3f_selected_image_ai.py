@@ -170,12 +170,16 @@ def install_image_pipeline_override(image_pipeline) -> None:
             ),
             {},
         )
-        allowed = set(existing.get("_ai_override_fields") or [])
-        for field in AI_OVERRIDE_FIELDS:
+        ai_allowed = set(existing.get("_ai_override_fields") or [])
+        operator_allowed = set(existing.get("_operator_override_fields") or [])
+        allowed = ai_allowed | operator_allowed
+        for field in (*AI_OVERRIDE_FIELDS, "seo_filename"):
             if field in allowed and existing.get(field) not in (None, "", []):
                 base[field] = existing[field]
-        if allowed:
-            base["_ai_override_fields"] = sorted(allowed)
+        if ai_allowed:
+            base["_ai_override_fields"] = sorted(ai_allowed)
+        if operator_allowed:
+            base["_operator_override_fields"] = sorted(operator_allowed)
         return base
 
     def finalize_selected_images(db, product_id: int):
