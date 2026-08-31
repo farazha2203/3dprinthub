@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,8 +11,11 @@ from PySide6.QtWidgets import QApplication
 from app.ai_model_catalog import (
     estimate_request_cost,
     format_model_label,
+    model_matches_filter,
+    product_model_compatibility,
     rank_models,
 )
+from app.ai_providers import AIProviderClient
 from app.db import Database
 from qt6.kernel import build_kernel
 from qt6.main_window import MainWindow
@@ -146,6 +150,20 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
 
     def test_structured_probe_keeps_exact_selected_model(self):
         fake = _FakeClient()
+        self.kernel.providers._model_cache["openrouter"] = rank_models([
+            {
+                "id": "qwen/exact-model:free",
+                "pricing": {
+                    "prompt": "0",
+                    "completion": "0",
+                },
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text"],
+                    "output_modalities": ["text"],
+                },
+            }
+        ])
         with patch.object(
             self.kernel.providers,
             "_client",
@@ -163,6 +181,131 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             ["qwen/exact-model:free"],
         )
         self.assertEqual(fake.model_catalog_calls, 0)
+
+
+    def test_media_generation_model_is_excluded_from_product_filters(self):
+        item = rank_models([
+            {
+                "id": "google/lyria-3-clip-preview",
+                "name": "Lyria 3 Clip Preview",
+                "description": "Music generation model for audio clips.",
+                "pricing": {"request": "0.04"},
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text", "image"],
+                    "output_modalities": ["audio"],
+                },
+            }
+        ])[0]
+        ok, reason = product_model_compatibility(item)
+        self.assertFalse(ok)
+        self.assertIn("خروجی متنی", reason)
+        self.assertFalse(model_matches_filter(item, "all"))
+        self.assertFalse(model_matches_filter(item, "recommended"))
+
+    def test_tools_only_code_model_is_not_product_structured_candidate(self):
+        item = rank_models([
+            {
+                "id": "cohere/north-mini-code:free",
+                "name": "North Mini Code",
+                "description": (
+                    "Agentic coding model optimized for software engineering "
+                    "and terminal tasks."
+                ),
+                "pricing": {
+                    "prompt": "0",
+                    "completion": "0",
+                },
+                "supported_parameters": ["tools", "tool_choice"],
+                "architecture": {
+                    "input_modalities": ["text"],
+                    "output_modalities": ["text"],
+                },
+            }
+        ])[0]
+        ok, reason = product_model_compatibility(item)
+        self.assertFalse(ok)
+        self.assertTrue(
+            "کدنویسی" in reason
+            or "response_format" in reason
+        )
+        self.assertFalse(model_matches_filter(item, "structured"))
+        self.assertFalse(model_matches_filter(item, "recommended"))
+
+    def test_openrouter_structured_request_uses_json_schema_and_require_parameters(self):
+        captured = {}
+
+        def fake_request(url, api_key, **kwargs):
+            payload = dict(kwargs.get("payload") or {})
+            captured.update(payload)
+            return {
+                "id": "req-structured",
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "title_fa": "پایه چراغ رومیزی",
+                                    "seo_title_fa": "پایه چراغ رومیزی چاپ سه بعدی",
+                                    "keywords": ["پایه چراغ", "چاپ سه بعدی"],
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ],
+            }
+
+        client = AIProviderClient(
+            "openrouter",
+            "test-key",
+            "qwen/example",
+        )
+        schema = {
+            "type": "object",
+            "properties": {
+                "title_fa": {"type": "string"},
+                "seo_title_fa": {"type": "string"},
+                "keywords": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+            "required": ["title_fa", "seo_title_fa", "keywords"],
+            "additionalProperties": False,
+        }
+        with patch(
+            "app.ai_providers._json_request",
+            side_effect=fake_request,
+        ):
+            result, selected = client.structured_response(
+                instructions="Return Persian Product JSON.",
+                input_content=[
+                    {
+                        "type": "input_text",
+                        "text": "پایه چراغ رومیزی",
+                    }
+                ],
+                schema=schema,
+                schema_name="product_probe",
+                preferred_model="qwen/example",
+            )
+
+        self.assertEqual(selected, "qwen/example")
+        self.assertEqual(
+            captured["response_format"]["type"],
+            "json_schema",
+        )
+        self.assertTrue(
+            captured["response_format"]["json_schema"]["strict"]
+        )
+        self.assertTrue(
+            captured["provider"]["require_parameters"]
+        )
+        self.assertEqual(
+            result["title_fa"],
+            "پایه چراغ رومیزی",
+        )
 
     def test_settings_model_filter_shows_free_persian_pricing(self):
         page = SettingsPage(
