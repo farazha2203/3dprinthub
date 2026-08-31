@@ -77,7 +77,7 @@ jobs:
         shell: pwsh
         working-directory: catalog_center
         run: |
-          python -m unittest -v tests.test_phase49_3i17_single_active_ai_runtime
+          python -m unittest -v tests.test_epic49_phase49_3i17_single_active_ai_runtime
           if ($LASTEXITCODE -ne 0) { throw 'Single Active AI regression failed' }
 
       - name: Qt6 offscreen structural launch
