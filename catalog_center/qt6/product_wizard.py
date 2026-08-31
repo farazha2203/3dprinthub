@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
 from .image_gallery import ImageSeoDialog, ProductImageGrid
 from .parity_dialogs import ProfileEditorDialog
@@ -347,7 +348,7 @@ class ProductWizardPage(QWidget):
         recover.setProperty("primary", True)
 
         self.image_recover_limit = QSpinBox()
-        self.image_recover_limit.setRange(1, 30)
+        self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
         self.image_recover_limit.setValue(5)
         self.image_recover_limit.setSuffix(" عکس")
 
