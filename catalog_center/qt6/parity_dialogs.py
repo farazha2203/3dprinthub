@@ -34,6 +34,9 @@ FIXED_PRICE_COLUMN = 13
 
 def _configure_numeric(widget, *, width: int = 150):
     widget.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+    widget.setButtonSymbols(
+        widget.ButtonSymbols.NoButtons
+    )
     widget.setAlignment(
         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
     )
