@@ -235,22 +235,24 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
 
 
     def test_variable_openrouter_router_is_not_product_default(self):
-        item = rank_models([
-            {
-                "id": "openrouter/auto",
-                "pricing": {"prompt": "0", "completion": "0"},
-                "supported_parameters": ["response_format"],
-                "architecture": {
-                    "input_modalities": ["text"],
-                    "output_modalities": ["text"],
-                },
-            }
-        ])[0]
-        ok, reason = product_model_compatibility(item)
-        self.assertFalse(ok)
-        self.assertIn("Router متغیر", reason)
-        self.assertFalse(model_matches_filter(item, "recommended"))
-        self.assertFalse(model_matches_filter(item, "persian_free"))
+        for model_id in ("openrouter/auto", "openrouter/auto-beta"):
+            with self.subTest(model_id=model_id):
+                item = rank_models([
+                    {
+                        "id": model_id,
+                        "pricing": {"prompt": "0", "completion": "0"},
+                        "supported_parameters": ["response_format"],
+                        "architecture": {
+                            "input_modalities": ["text"],
+                            "output_modalities": ["text"],
+                        },
+                    }
+                ])[0]
+                ok, reason = product_model_compatibility(item)
+                self.assertFalse(ok)
+                self.assertIn("Router متغیر", reason)
+                self.assertFalse(model_matches_filter(item, "recommended"))
+                self.assertFalse(model_matches_filter(item, "persian_free"))
 
     def test_media_generation_model_is_excluded_from_product_filters(self):
         item = rank_models([

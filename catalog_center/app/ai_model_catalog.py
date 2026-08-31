@@ -272,8 +272,10 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         else float("inf")
     )
 
-    non_deterministic_router = (
-        model_id in _NON_DETERMINISTIC_ROUTER_IDS
+    folded_model_id = model_id.casefold()
+    non_deterministic_router = bool(
+        folded_model_id in _NON_DETERMINISTIC_ROUTER_IDS
+        or folded_model_id.startswith("openrouter/auto")
     )
     product_ready = bool(
         product_text_capable

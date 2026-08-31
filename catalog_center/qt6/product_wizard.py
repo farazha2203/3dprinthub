@@ -1796,11 +1796,16 @@ class ProductWizardPage(QWidget):
                 if str(value or "")
             }
         )
+        source_note = (
+            " • لینک 403/429 بود؛ دیتای ذخیره‌شده استفاده شد"
+            if result.get("source_fallback")
+            else ""
+        )
 
         if remaining_ai:
             self.ai_status.setText(
                 f"⚠️ اجرا شد • {changed} تغییر • "
-                f"{remaining_ai} مورد قابل تکمیل هوشمند هنوز باقی است"
+                f"{remaining_ai} مورد قابل تکمیل هوشمند هنوز باقی است{source_note}"
             )
             return
 
@@ -1824,11 +1829,11 @@ class ProductWizardPage(QWidget):
         if remaining_operator:
             self.ai_status.setText(
                 f"✅ بخش هوشمند تکمیل شد • {changed} تغییر • "
-                f"{remaining_operator} مورد اپراتوری/واقعی باقی است"
+                f"{remaining_operator} مورد اپراتوری/واقعی باقی است{source_note}"
             )
         else:
             self.ai_status.setText(
-                f"✅ AI تکمیل شد • {changed} فیلد تغییر کرد"
+                f"✅ AI تکمیل شد • {changed} فیلد تغییر کرد{source_note}"
             )
 
     def _ai_error(self, detail: str) -> None:

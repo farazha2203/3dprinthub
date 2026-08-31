@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from PIL import Image
 
+from app.crawler import BlockedError
 from app.db import Database
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app import phase49_3c_image_pipeline as image_pipeline
@@ -207,6 +208,174 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                 self.assertEqual(int(row["price_max"]), 300000)
                 self.assertNotIn("sales_profile_ledger_json", result["changed_fields"])
                 self.assertNotIn("price_min", result["changed_fields"])
+            finally:
+                db.close()
+
+    def test_link_403_falls_back_to_saved_data_and_persists_quick_title(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_id = self._product(
+                    db,
+                    root / "product",
+                    source_description="A spiral Christmas tree model.",
+                )
+                app = SimpleNamespace(db=db)
+                pack = {
+                    "title_fa": "درخت کریسمس اسپیرال",
+                    "short_description_fa": "مدل سه‌بعدی درخت کریسمس اسپیرال برای دکور.",
+                    "description_fa": "درخت کریسمس اسپیرال یک مدل تزئینی مناسب چاپ سه‌بعدی است.",
+                    "use_description_fa": "برای دکور کریسمس مناسب است.",
+                    "categories_fa": ["دکور"],
+                    "specs_fa": [],
+                    "tags_fa": ["کریسمس"],
+                    "hashtags_fa": ["درخت_کریسمس"],
+                    "target_keywords_fa": ["درخت کریسمس اسپیرال"],
+                    "sales_bullets": ["طراحی اسپیرال"],
+                    "image_alt_texts": [],
+                    "seo_title_fa": "درخت کریسمس اسپیرال چاپ سه‌بعدی",
+                    "seo_description_fa": "مدل درخت کریسمس اسپیرال برای چاپ سه‌بعدی و دکور.",
+                    "social_caption_fa": "درخت کریسمس اسپیرال برای دکور.",
+                    "homepage_slider_seo": {},
+                    "material_recommendations": [],
+                    "suggested_category_slug": "",
+                }
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.live_source_for_ai",
+                    side_effect=BlockedError("HTTP Error 403: Forbidden"),
+                ), patch(
+                    "app.phase49_3i37_seven_stage_ai.generate_translation_pack",
+                    return_value=pack,
+                ) as generator:
+                    result = orchestrate_once(
+                        app,
+                        product_id,
+                        "link",
+                        "openrouter",
+                        "key",
+                        "openai/gpt-oss-20b",
+                        None,
+                        target_stages={"quick"},
+                        refresh_existing=True,
+                    )
+
+                generator.assert_called_once()
+                row = db.product(product_id)
+                self.assertEqual(row["title_fa"], "درخت کریسمس اسپیرال")
+                self.assertEqual(result["source_effective_mode"], "data")
+                self.assertTrue(result["source_fallback"])
+                self.assertIn("title_fa", result["changed_fields"])
+            finally:
+                db.close()
+
+    def test_scoped_locked_stage_does_not_fetch_source_or_call_provider(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_id = self._product(
+                    db,
+                    root / "product",
+                    title_fa="عنوان نهایی اپراتور",
+                )
+                db.update_product(
+                    product_id,
+                    {
+                        LOCK_COLUMN: json.dumps(
+                            {"quick": {"locked": True}},
+                            ensure_ascii=False,
+                        )
+                    },
+                )
+                app = SimpleNamespace(db=db)
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.resolve_source"
+                ) as resolver, patch(
+                    "app.phase49_3i37_seven_stage_ai.generate_translation_pack"
+                ) as generator:
+                    result = orchestrate_once(
+                        app,
+                        product_id,
+                        "link",
+                        "openrouter",
+                        "key",
+                        "openai/gpt-oss-20b",
+                        None,
+                        target_stages={"quick"},
+                        refresh_existing=True,
+                    )
+
+                resolver.assert_not_called()
+                generator.assert_not_called()
+                self.assertTrue(result["no_ai_needed"])
+                self.assertEqual(
+                    db.product(product_id)["title_fa"],
+                    "عنوان نهایی اپراتور",
+                )
+            finally:
+                db.close()
+
+    def test_orchestrator_never_claims_apply_when_db_write_did_not_persist(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            db = self._db(root / "catalog.sqlite3")
+            try:
+                product_id = self._product(db, root / "product")
+                app = SimpleNamespace(db=db)
+                source = {
+                    "source_url": "https://makerworld.com/en/models/1936731-twistmas-tree",
+                    "source_title": "Twistmas Tree",
+                    "source_description": "Verified saved Product facts.",
+                    "raw_source_description": "A spiral Christmas tree model.",
+                    "facts": {},
+                    "evidence": {},
+                }
+                pack = {
+                    "title_fa": "درخت کریسمس اسپیرال",
+                    "short_description_fa": "مدل سه‌بعدی درخت کریسمس اسپیرال برای دکور.",
+                    "description_fa": "درخت کریسمس اسپیرال یک مدل تزئینی مناسب چاپ سه‌بعدی است.",
+                    "use_description_fa": "برای دکور کریسمس مناسب است.",
+                    "categories_fa": [],
+                    "specs_fa": [],
+                    "tags_fa": [],
+                    "hashtags_fa": [],
+                    "target_keywords_fa": [],
+                    "sales_bullets": [],
+                    "image_alt_texts": [],
+                    "seo_title_fa": "درخت کریسمس اسپیرال چاپ سه‌بعدی",
+                    "seo_description_fa": "مدل درخت کریسمس اسپیرال برای چاپ سه‌بعدی و دکور.",
+                    "social_caption_fa": "",
+                    "homepage_slider_seo": {},
+                    "material_recommendations": [],
+                    "suggested_category_slug": "",
+                }
+                with patch(
+                    "app.phase49_3i37_seven_stage_ai.resolve_source",
+                    return_value=source,
+                ), patch(
+                    "app.phase49_3i37_seven_stage_ai.generate_translation_pack",
+                    return_value=pack,
+                ), patch.object(
+                    db,
+                    "update_product",
+                    return_value=None,
+                ):
+                    with self.assertRaisesRegex(
+                        RuntimeError,
+                        "اعمال/ذخیره دیتابیس تأیید نشد",
+                    ):
+                        orchestrate_once(
+                            app,
+                            product_id,
+                            "data",
+                            "openrouter",
+                            "key",
+                            "openai/gpt-oss-20b",
+                            None,
+                            target_stages={"quick"},
+                            refresh_existing=True,
+                        )
             finally:
                 db.close()
 

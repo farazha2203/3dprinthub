@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from . import phase49_3c_image_pipeline as image_pipeline
+from .crawler import BlockedError
 from .phase49_3c_persian_content import (
     has_persian_editorial_text,
     has_persian_editorial_text_for_source,
@@ -197,25 +198,59 @@ def _field_needs_fill(row, key: str, source_title: str) -> bool:
     return repair_allowed(row, key)
 
 
+def _saved_source_payload(row) -> dict:
+    saved = saved_source_for_ai(row)
+    if not str(saved.get("source_title") or "").strip():
+        raise RuntimeError("دیتای ذخیره‌شده عنوان منبع معتبر ندارد.")
+    source_url = str(row_value(row, "source_url", "") or "").strip()
+    return {
+        "source_url": source_url,
+        "source_title": str(saved["source_title"]).strip(),
+        "source_description": structured_ai_text(source_url, saved, saved),
+        "raw_source_description": str(saved.get("source_description") or "").strip(),
+        "facts": saved,
+        "evidence": saved,
+    }
+
+
 def resolve_source(app, row, mode: str, provider: str, key: str, model: str) -> dict:
     mode = str(mode or "").strip().lower()
     if mode == "link":
-        return live_source_for_ai(app, row)
+        try:
+            source = dict(live_source_for_ai(app, row))
+            source["_requested_mode"] = "link"
+            source["_effective_mode"] = "link"
+            source["_fallback_reason"] = ""
+            return source
+        except BlockedError as exc:
+            # Do not blindly repeat the same blocked HTTP request. Product facts
+            # were already collected by the acquisition layer, so a Link-mode AI
+            # run may safely fall back to that persisted evidence instead of
+            # pretending the Provider/model failed.
+            try:
+                source = _saved_source_payload(row)
+            except Exception as saved_exc:
+                raise RuntimeError(
+                    "لینک منبع با 403/429 مسدود است و دیتای ذخیره‌شده کافی "
+                    "برای ادامه AI وجود ندارد. ابتدا Crawl/دریافت محصول را تکمیل "
+                    "کن یا منبع AI را روی «دیتای دریافتی» بگذار."
+                ) from exc
+            source["_requested_mode"] = "link"
+            source["_effective_mode"] = "data"
+            source["_fallback_reason"] = f"live_source_blocked: {redact(exc)}"
+            return source
     if mode == "data":
-        saved = saved_source_for_ai(row)
-        if not str(saved.get("source_title") or "").strip():
-            raise RuntimeError("دیتای ذخیره‌شده عنوان منبع معتبر ندارد.")
-        source_url = str(row_value(row, "source_url", "") or "").strip()
-        return {
-            "source_url": source_url,
-            "source_title": str(saved["source_title"]).strip(),
-            "source_description": structured_ai_text(source_url, saved, saved),
-            "raw_source_description": str(saved.get("source_description") or "").strip(),
-            "facts": saved,
-            "evidence": saved,
-        }
+        source = _saved_source_payload(row)
+        source["_requested_mode"] = "data"
+        source["_effective_mode"] = "data"
+        source["_fallback_reason"] = ""
+        return source
     if mode == "screenshot":
-        return source_from_screenshot(app, row, provider, key, model)
+        source = dict(source_from_screenshot(app, row, provider, key, model))
+        source["_requested_mode"] = "screenshot"
+        source["_effective_mode"] = "screenshot"
+        source["_fallback_reason"] = ""
+        return source
     raise RuntimeError(f"منبع AI نامعتبر است: {mode}")
 
 
@@ -279,6 +314,56 @@ def _stage_candidate_updates(
     }
 
 
+def _stored_value_matches(actual, expected) -> bool:
+    if actual == expected:
+        return True
+    if isinstance(expected, bool):
+        try:
+            return bool(int(actual)) is expected
+        except Exception:
+            return bool(actual) is expected
+    if isinstance(expected, (int, float)) and not isinstance(expected, bool):
+        try:
+            return float(actual) == float(expected)
+        except Exception:
+            return False
+    if isinstance(expected, (dict, list)):
+        try:
+            parsed = json.loads(actual) if isinstance(actual, str) else actual
+        except Exception:
+            return False
+        return parsed == expected
+    left = "" if actual is None else str(actual)
+    right = "" if expected is None else str(expected)
+    return left == right
+
+
+def _persist_verified_updates(db, product_id: int, updates: dict) -> list[str]:
+    updates = dict(updates or {})
+    if not updates:
+        return []
+    db.update_product(int(product_id), updates)
+    refreshed = db.product(int(product_id))
+    if refreshed is None:
+        raise RuntimeError("AI پاسخ معتبر داد اما Product بعد از ذخیره در دیتابیس پیدا نشد.")
+
+    failed = []
+    for field, expected in updates.items():
+        try:
+            actual = refreshed[field]
+        except Exception:
+            actual = None
+        if not _stored_value_matches(actual, expected):
+            failed.append(str(field))
+
+    if failed:
+        raise RuntimeError(
+            "AI پاسخ معتبر داد اما اعمال/ذخیره دیتابیس تأیید نشد: "
+            + "، ".join(sorted(failed))
+        )
+    return sorted(updates)
+
+
 def _readiness(app, product_id: int):
     from . import phase49_readiness_wizard as readiness
     row = app.db.product(int(product_id))
@@ -318,9 +403,39 @@ def orchestrate_once(
         else None
     )
 
+    required, reason = _scope_requires_ai(
+        app,
+        product_id,
+        scoped_stages,
+        bool(refresh_existing),
+    )
+    if not required:
+        _emit(dialog, "no_ai_needed", f"✅ AI لازم نیست: {reason}")
+        _progress(dialog, 92, "بدون درخواست HTTP/AI")
+        return _no_ai_needed_result(
+            app,
+            product_id,
+            str(mode or "data"),
+            scoped_stages,
+            reason,
+        )
+
     _progress(dialog, 5, "خواندن منبع انتخاب‌شده")
     _emit(dialog, "source", f"منبع AI: {AI_SOURCE_MODES.get(mode, mode)}")
     source = resolve_source(app, row, mode, provider, key, model)
+    effective_mode = str(source.get("_effective_mode") or mode or "data").strip().lower()
+    fallback_reason = str(source.get("_fallback_reason") or "").strip()
+    if effective_mode != str(mode or "").strip().lower():
+        _emit(
+            dialog,
+            "source_fallback",
+            "⚠️ دریافت مستقیم لینک مسدود بود؛ AI با دیتای ذخیره‌شده همان Product ادامه می‌دهد.",
+            {
+                "requested_mode": str(mode or ""),
+                "effective_mode": effective_mode,
+                "reason": fallback_reason,
+            },
+        )
     source_title = str(source.get("source_title") or row_value(row, "source_title", "") or "").strip()
     if not source_title:
         raise RuntimeError("هویت/عنوان منبع برای AI خالی است.")
@@ -352,11 +467,14 @@ def orchestrate_once(
         {k: v for k, v in dict(pack or {}).items() if not str(k).startswith("_")},
     )
     pack = validate_editorial_pack(source_title, pack)
-    full = _full_ai_updates(app, row, pack, source, mode)
+    full = _full_ai_updates(app, row, pack, source, effective_mode)
 
     result = {
         "product_id": product_id,
         "mode": mode,
+        "source_effective_mode": effective_mode,
+        "source_fallback": effective_mode != str(mode or "").strip().lower(),
+        "source_fallback_reason": fallback_reason,
         "provider": provider,
         "model": str(pack.get("_ai_model") or model),
         "title_fa": str(pack.get("title_fa") or ""),
@@ -433,8 +551,12 @@ def orchestrate_once(
                 updates = {k: v for k, v in updates.items() if k == "image_alt_texts_json"}
 
         if updates:
-            app.db.update_product(product_id, updates)
-            result["changed_fields"].extend(sorted(updates))
+            persisted_fields = _persist_verified_updates(
+                app.db,
+                product_id,
+                updates,
+            )
+            result["changed_fields"].extend(persisted_fields)
             audit_event(
                 "ai", "stage_apply", product_id=product_id, source_file=__file__,
                 message=f"{stage}: {len(updates)} fields",
