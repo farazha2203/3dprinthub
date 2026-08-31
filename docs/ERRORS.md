@@ -1,7 +1,7 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
 ## ERR-49-081 — Windows Playwright smoke probe was corrupted at the PowerShell/native `python -c` boundary
-Status: `FIXED IN REPOSITORY / OWNER LOCAL RERUN NEXT`
+Status: `FIXED IN REPOSITORY / WINDOWS CI PASS / OWNER LOCAL RERUN NEXT`
 
 Observed:
 - owner Local was clean on the canonical branch and correctly advanced to `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`;
@@ -24,7 +24,7 @@ Implementation:
 - `71c55010bc900e8d3c1afd7cea71441193db68eb` — resilient owner Local gate;
 - `e6980fcfb2bdc72846e007e9d935290225dcb39e` — CI syntax/stdin guard;
 - Single Active AI run `33386654622` PASS;
-- Phase49.3I.42C workflow run `33386654632` was started for the corrected gate/CI boundary.
+- Phase49.3I.42C workflow run `33386654632` PASS, including PowerShell parser validation, the exact PowerShell → Python stdin regression boundary, Qt/acquisition regressions and launcher guards.
 
 Prevention:
 - do not send multi-line Python containing nested quoting through `python -c` in Windows Local gates;

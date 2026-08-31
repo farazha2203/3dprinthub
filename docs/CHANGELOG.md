@@ -9,7 +9,7 @@
 - 42C code checkpoint `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8` passed the Windows Qt/full-parity, portable and Single Active AI checks;
 - owner Local then passed repo guard, checksum DB backup and dependency verification but the pasted Playwright probe failed because multi-line Python was sent through Windows `python -c` quoting;
 - added repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` at `71c55010bc900e8d3c1afd7cea71441193db68eb`, using Python stdin and installing Chromium only for a real missing-browser error;
-- added Windows CI syntax + PowerShell→Python stdin regression guard at `e6980fcfb2bdc72846e007e9d935290225dcb39e`;
+- added Windows CI syntax + PowerShell→Python stdin regression guard at `e6980fcfb2bdc72846e007e9d935290225dcb39e`; Phase49.3I.42C run `33386654632` PASS;
 - Production, Host, Django migrations and default launcher remain untouched.
 
 ## 2026-08-31 — Phase49.3I.42B2 requested Product/Settings parity

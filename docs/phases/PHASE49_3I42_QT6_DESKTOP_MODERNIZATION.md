@@ -251,7 +251,7 @@ It sends multi-line Python through stdin and only installs Chromium for an expli
 
 Implementation:
 - Local gate: `71c55010bc900e8d3c1afd7cea71441193db68eb`;
-- CI gate boundary: `e6980fcfb2bdc72846e007e9d935290225dcb39e`;
+- CI gate boundary: `e6980fcfb2bdc72846e007e9d935290225dcb39e`; run `33386654632` PASS;
 - rollback: `backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` → `3f7038b52723aa2b70cd12d4c1a617c50d0ad4d8`.
 
 ### Owner acceptance

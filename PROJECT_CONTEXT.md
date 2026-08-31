@@ -13,7 +13,7 @@ Canonical owner runner is now:
 
 Gate implementation:
 - `71c55010bc900e8d3c1afd7cea71441193db68eb`;
-- CI stdin/syntax guard `e6980fcfb2bdc72846e007e9d935290225dcb39e`.
+- CI stdin/syntax guard `e6980fcfb2bdc72846e007e9d935290225dcb39e`; Phase49.3I.42C Windows run `33386654632` PASS.
 
 Rollback:
 `backup/pre-phase49-3i42c2-pagination-crawl-intelligence-20260831` →
