@@ -7,8 +7,8 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from app.classic_methods import collect_classic_exact, discover_classic
-from app.crawler import parse_product
+from app.classic_methods import discover_classic
+from app.page_extractor import extract_direct_link
 from app.phase49_3h_image_limits import normalize_image_limit
 from app.phase49_3i38_crawl_ledger_stage_ai import (
     next_scroll_rounds,
@@ -118,9 +118,25 @@ async def _discover_listing(
     listing_url: str,
     requested: int,
     *,
+    strategy: str = "hybrid",
     progress: Progress = None,
     should_stop: ShouldStop = None,
 ) -> dict[str, int]:
+    """Discover Product identities from one Search/Listing URL.
+
+    hybrid:
+        Modern conditional HTTP / Sitemap first, then the mature Browser
+        listing explorer if more unseen identities are still needed.
+
+    classic:
+        Preserve the older owner-approved workflow: feed one Search/Listing
+        link and keep scrolling progressively deeper on subsequent runs.
+    """
+
+    strategy = str(strategy or "hybrid").strip().lower()
+    if strategy not in {"hybrid", "classic"}:
+        raise ValueError("Discovery strategy must be hybrid or classic")
+
     source_code = str(source_cfg.get("code") or "").strip()
     model_pattern = str(source_cfg.get("model_url_pattern") or "").strip()
     new_count = 0
@@ -129,62 +145,81 @@ async def _discover_listing(
     ensure_modern_schema(db)
     ensure_incremental_schema(db)
 
-    # Install the incremental Sitemap planner into the mature modern discovery
-    # module without changing any access-control policy.
     from app import phase49_3i43_modern_acquisition_intelligence as modern
     modern.discover_sitemap_candidates = discover_sitemap_candidates_incremental
 
-    _emit(progress, 4, "کشف سریع از HTTP/Sitemap…")
-    modern_candidates: list[dict[str, Any]] = []
-    try:
-        async with ModernHttpClient(db, source_code) as client:
-            modern_candidates = await discover_conditional_http(
-                client,
-                listing_url,
-                source_code=source_code,
-                model_pattern=model_pattern,
-                requested=requested,
+    if strategy == "hybrid":
+        _emit(progress, 4, "کشف هوشمند از HTTP / Sitemap…")
+        modern_candidates: list[dict[str, Any]] = []
+        try:
+            async with ModernHttpClient(db, source_code) as client:
+                modern_candidates = await discover_conditional_http(
+                    client,
+                    listing_url,
+                    source_code=source_code,
+                    model_pattern=model_pattern,
+                    requested=requested,
+                )
+        except (RobotsDeniedError, RateLimitedError, AccessDeniedError):
+            raise
+        except TransientHttpError:
+            modern_candidates = []
+        except Exception:
+            modern_candidates = []
+
+        for candidate in modern_candidates:
+            if _stopped(should_stop):
+                break
+            external_id = str(candidate.get("external_id") or "").strip()
+            url = str(
+                candidate.get("source_url")
+                or candidate.get("href")
+                or ""
+            ).strip()
+            if not external_id or not url:
+                continue
+            if terminal_identity_state(db, source_code, external_id, url):
+                duplicate_count += 1
+                continue
+            if db.add_discovered(
+                source_code,
+                external_id,
+                url,
+                str(candidate.get("discovered_from") or listing_url),
+            ):
+                new_count += 1
+            else:
+                duplicate_count += 1
+
+        if len(
+            db.pending_urls(
+                source_code,
+                requested,
+                include_failed=False,
             )
-    except (RobotsDeniedError, RateLimitedError, AccessDeniedError):
-        raise
-    except TransientHttpError:
-        modern_candidates = []
-    except Exception:
-        modern_candidates = []
+        ) >= requested:
+            return {
+                "new": new_count,
+                "duplicates": duplicate_count,
+            }
 
-    for candidate in modern_candidates:
-        if _stopped(should_stop):
-            break
-        external_id = str(candidate.get("external_id") or "").strip()
-        url = str(candidate.get("source_url") or candidate.get("href") or "").strip()
-        if not external_id or not url:
-            continue
-        if terminal_identity_state(db, source_code, external_id, url):
-            duplicate_count += 1
-            continue
-        if db.add_discovered(
-            source_code,
-            external_id,
-            url,
-            str(candidate.get("discovered_from") or listing_url),
-        ):
-            new_count += 1
-        else:
-            duplicate_count += 1
-
-    if len(db.pending_urls(source_code, requested, include_failed=False)) >= requested:
-        return {"new": new_count, "duplicates": duplicate_count}
-
-    # Dynamic listings such as MakerWorld may need the mature browser explorer.
-    # Continue deeper than the previous run instead of rediscovering the same
-    # first cards, preserving the 3I.38 permanent ledger behavior.
+    # Classic fallback / explicit legacy mode.
+    # 3I.38 remembers the prior listing depth so each rerun keeps moving
+    # forward instead of restarting from the same first screen.
     stagnant = 0
     for round_no in range(1, 9):
         if _stopped(should_stop):
             break
-        pending = len(db.pending_urls(source_code, requested, include_failed=False))
+        pending = len(
+            db.pending_urls(
+                source_code,
+                requested,
+                include_failed=False,
+            )
+        )
         if pending >= requested:
             break
+
         scroll_rounds = next_scroll_rounds(
             db,
             source_code,
@@ -193,11 +228,13 @@ async def _discover_listing(
             step=8,
             maximum=96,
         )
+        label = "کشف کلاسیک" if strategy == "classic" else "Fallback Browser"
         _emit(
             progress,
             min(22, 6 + round_no * 2),
-            f"کشف Browser — عمق {scroll_rounds} / مورد جدید {new_count}",
+            f"{label} — عمق {scroll_rounds} / جدید {new_count}",
         )
+
         result = await discover_classic(
             listing_url,
             model_pattern=model_pattern,
@@ -206,14 +243,25 @@ async def _discover_listing(
         )
         new_this_round = 0
         for external_id, url in result.get("links") or []:
-            if terminal_identity_state(db, source_code, external_id, url):
+            if terminal_identity_state(
+                db,
+                source_code,
+                external_id,
+                url,
+            ):
                 duplicate_count += 1
                 continue
-            if db.add_discovered(source_code, external_id, url, listing_url):
+            if db.add_discovered(
+                source_code,
+                external_id,
+                url,
+                listing_url,
+            ):
                 new_count += 1
                 new_this_round += 1
             else:
                 duplicate_count += 1
+
         record_listing_progress(
             db,
             source_code,
@@ -222,14 +270,14 @@ async def _discover_listing(
             found_count=len(result.get("links") or []),
             new_count=new_this_round,
         )
-        if new_this_round <= 0:
-            stagnant += 1
-        else:
-            stagnant = 0
+        stagnant = stagnant + 1 if new_this_round <= 0 else 0
         if stagnant >= 2:
             break
 
-    return {"new": new_count, "duplicates": duplicate_count}
+    return {
+        "new": new_count,
+        "duplicates": duplicate_count,
+    }
 
 
 async def _collect_one(
@@ -241,41 +289,75 @@ async def _collect_one(
     image_limit: int,
     local_dir: Path,
 ) -> dict[str, Any]:
+    """Collect one Product with the richest existing project extractor.
+
+    The RichPageExtractor already combines:
+    - rendered DOM;
+    - JSON-LD;
+    - embedded Next/Nuxt JSON;
+    - bounded same-site XHR/fetch JSON;
+    - breadcrumbs/spec tables;
+    - scored high-quality Product images.
+
+    We intentionally reuse that mature authority instead of maintaining a
+    second weaker parser in Qt.
+    """
+
     source_code = str(source_cfg.get("code") or "")
-    result = await collect_classic_exact(
+    profile_dir = data_root() / "browser_profiles" / "qt42c-rich"
+
+    result = await extract_direct_link(
         url,
         local_dir,
+        profile_dir,
         headed=False,
-        capture_network=True,
         download_images=True,
         image_limit=image_limit,
     )
-    html = Path(result["html_path"]).read_text(
-        encoding="utf-8",
-        errors="replace",
-    )
-    parsed = parse_product(
-        html,
-        str(result.get("final_url") or url),
-        str(result.get("title") or ""),
-        list(result.get("dom_image_urls") or []),
-    )
-    images = _cap_product_images(parsed, image_limit)
-    _write_local_mapping(
-        local_dir,
-        list(result.get("dom_image_urls") or []),
-        list(result.get("downloaded_images") or []),
-    )
+
+    try:
+        all_images = json.loads(result.get("images_json") or "[]")
+    except Exception:
+        all_images = []
+    try:
+        selected_images = json.loads(
+            result.get("selected_images_json") or "[]"
+        )
+    except Exception:
+        selected_images = []
+
+    # Operator requested N Product images, not N downloaded files plus dozens
+    # of unresolved remote placeholders. Keep the complete evidence inside
+    # source_snapshot_json while Product image state stays bounded and usable.
+    ordered: list[str] = []
+    for raw in [*(selected_images or []), *(all_images or [])]:
+        value = str(raw or "").strip()
+        if value and value not in ordered:
+            ordered.append(value)
+        if len(ordered) >= image_limit:
+            break
 
     defaults = _source_defaults(source_cfg, image_limit)
     payload: dict[str, Any] = {
         **defaults,
+        **{
+            key: value
+            for key, value in dict(result or {}).items()
+            if key != "downloaded_image_files"
+        },
+        # Discovery identity stays authoritative even if a redirected page is
+        # recognized by the generic extractor under a slightly different code.
         "source_code": source_code,
         "external_id": external_id,
-        "source_url": str(result.get("final_url") or url),
+        "source_url": str(result.get("source_url") or url),
         "local_dir": str(local_dir),
-        **parsed,
+        "images_json": json.dumps(ordered, ensure_ascii=False),
+        "selected_images_json": json.dumps(ordered, ensure_ascii=False),
+        "primary_image_url": ordered[0] if ordered else "",
+        "download_image_limit": image_limit,
+        "acquisition_method": "qt42c-rich-page-extractor",
     }
+
     product_id = int(db.upsert_product(payload) or 0)
     remember_ledger(
         db,
@@ -286,12 +368,18 @@ async def _collect_one(
         discovered_from=url,
         force=False,
     )
+
+    saved_files = [
+        str(path)
+        for path in result.get("downloaded_image_files") or []
+        if str(path or "").strip()
+    ]
     return {
         "product_id": product_id,
-        "source_title": str(parsed.get("source_title") or ""),
-        "images_found": len(images),
-        "images_saved": len(result.get("downloaded_images") or []),
-        "screenshot_path": str(result.get("screenshot_path") or ""),
+        "source_title": str(result.get("source_title") or ""),
+        "images_found": len(ordered),
+        "images_saved": min(len(saved_files), image_limit),
+        "acquisition_method": "qt42c-rich-page-extractor",
     }
 
 
@@ -303,6 +391,7 @@ async def run_batch_async(
     requested: int = 100,
     image_limit: int = 5,
     include_failed: bool = False,
+    strategy: str = "hybrid",
     progress: Progress = None,
     should_stop: ShouldStop = None,
 ) -> dict[str, Any]:
@@ -319,10 +408,18 @@ async def run_batch_async(
     if not int(source_cfg.get("enabled") or 0):
         raise RuntimeError("Source انتخاب‌شده غیرفعال است.")
 
+    strategy = str(strategy or "hybrid").strip().lower()
+    if strategy not in {"hybrid", "classic"}:
+        raise ValueError("روش Crawl نامعتبر است.")
+
     run_id = db.create_run(
         source_code,
         "qt_listing",
-        "modern+classic-product-page",
+        (
+            "hybrid-http-sitemap-browser+rich-product"
+            if strategy == "hybrid"
+            else "classic-search-link+rich-product"
+        ),
         requested,
     )
     discovered = collected = duplicates = failed = 0
@@ -334,6 +431,7 @@ async def run_batch_async(
             source_cfg,
             listing_url,
             requested,
+            strategy=strategy,
             progress=progress,
             should_stop=should_stop,
         )
