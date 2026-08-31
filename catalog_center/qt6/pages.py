@@ -27,6 +27,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
+
 from .models import (
     SORT_ROLE,
     FilamentFilterProxyModel,
@@ -560,7 +562,7 @@ class OperationsPage(QWidget):
         self.requested.setValue(100)
 
         self.image_limit = QSpinBox()
-        self.image_limit.setRange(1, 30)
+        self.image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
         self.image_limit.setValue(5)
 
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
