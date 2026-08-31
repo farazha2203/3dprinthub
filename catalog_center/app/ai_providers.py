@@ -267,6 +267,10 @@ class AIProviderClient:
                 "pricing": pricing,
                 "supported_parameters": list(item.get("supported_parameters") or []),
                 "context_length": item.get("context_length"),
+                "description": str(item.get("description") or ""),
+                "architecture": item.get("architecture") if isinstance(item.get("architecture"), dict) else {},
+                "top_provider": item.get("top_provider") if isinstance(item.get("top_provider"), dict) else {},
+                "created": item.get("created"),
                 "free": bool(free),
             })
         if self.provider == "openrouter" and not any(x["id"] == "openrouter/free" for x in output):
