@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -35,8 +35,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.ai_model_catalog import format_cost_quote
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
+from .diagnostics import show_diagnostic_error
 from .image_gallery import ImageSeoDialog, ProductImageGrid
 from .parity_dialogs import ProfileEditorDialog
 from .widgets import StageStepper, WizardFooter
@@ -134,6 +136,9 @@ class ProductWizardPage(QWidget):
         self.product_id: int | None = None
         self.task_pool = TaskPool()
         self._ai_worker: Worker | None = None
+        self._ai_quote_worker: Worker | None = None
+        self._pending_ai_request: dict[str, Any] | None = None
+        self._pending_ai_quote: dict[str, Any] | None = None
         self._image_worker: Worker | None = None
 
         root = QVBoxLayout(self)
@@ -171,10 +176,16 @@ class ProductWizardPage(QWidget):
         self.ai_all = QPushButton("AI همه مراحل محتوایی")
         self.ai_status = QLabel("آماده")
         self.ai_status.setObjectName("Muted")
+        self.ai_cost_hint = QLabel(
+            "قبل از ارسال، Provider/Model و هزینه تقریبی نمایش داده و تأیید می‌شود."
+        )
+        self.ai_cost_hint.setObjectName("Muted")
+        self.ai_cost_hint.setWordWrap(True)
         ai_layout.addWidget(self.ai_source)
         ai_layout.addWidget(self.ai_current)
         ai_layout.addWidget(self.ai_all)
         ai_layout.addWidget(self.ai_status, 1)
+        ai_layout.addWidget(self.ai_cost_hint, 2)
         self.ai_current.clicked.connect(lambda: self._run_ai(current_only=True))
         self.ai_all.clicked.connect(lambda: self._run_ai(current_only=False))
         root.addWidget(ai_box)
@@ -1417,10 +1428,21 @@ class ProductWizardPage(QWidget):
     # ------------------------------------------------------------------
     def _run_ai(self, *, current_only: bool) -> None:
         if self.product_id is None:
-            QMessageBox.warning(self, "هوش مصنوعی", "ابتدا محصول را انتخاب کن.")
+            QMessageBox.warning(
+                self,
+                "هوش مصنوعی",
+                "ابتدا محصول را انتخاب کن.",
+            )
             return
-        if self._ai_worker is not None:
-            QMessageBox.information(self, "هوش مصنوعی", "یک عملیات AI در حال اجرا است.")
+        if (
+            self._ai_worker is not None
+            or self._ai_quote_worker is not None
+        ):
+            QMessageBox.information(
+                self,
+                "هوش مصنوعی",
+                "یک عملیات AI در حال اجرا است.",
+            )
             return
 
         mode = str(self.ai_source.currentData() or "data")
@@ -1433,14 +1455,150 @@ class ProductWizardPage(QWidget):
             )
             return
 
-        product_id = self.product_id
-        target = code if current_only else None
+        request = {
+            "product_id": int(self.product_id),
+            "mode": mode,
+            "target_stage": code if current_only else None,
+        }
+        self._pending_ai_request = request
+        self._pending_ai_quote = None
         self.ai_current.setEnabled(False)
         self.ai_all.setEnabled(False)
-        self.ai_status.setText("AI در حال کار…")
+        self.ai_status.setText(
+            "محاسبه هزینه و سازگاری Model…"
+        )
+
+        def quote_job(progress):
+            progress(10, "خواندن Provider/Model فعال")
+            quote = self.kernel.providers.estimate_product_ai(
+                request["product_id"],
+                request["mode"],
+                target_stage=request["target_stage"],
+            )
+            progress(100, "برآورد آماده")
+            return quote
+
+        worker = Worker(quote_job)
+        self._ai_quote_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.ai_status.setText(
+                f"{value}% — {message}"
+            )
+        )
+        worker.signals.result.connect(self._ai_quote_ready)
+        worker.signals.error.connect(self._ai_quote_error)
+        worker.signals.finished.connect(
+            self._ai_quote_finished
+        )
+        self.task_pool.start(worker)
+
+    def _ai_quote_ready(self, quote) -> None:
+        self._pending_ai_quote = dict(quote or {})
+
+    def _ai_quote_error(self, detail: str) -> None:
+        self._pending_ai_quote = None
+        self.ai_status.setText("❌ برآورد AI ناموفق")
+        active = self.kernel.providers.active()
+        show_diagnostic_error(
+            self,
+            "پیش‌بررسی هوش مصنوعی",
+            detail,
+            context={
+                "product_id": self.product_id,
+                "provider": active.get("provider"),
+                "model": active.get("model"),
+                "source_mode": str(
+                    self.ai_source.currentData() or ""
+                ),
+            },
+        )
+
+    def _ai_quote_finished(self) -> None:
+        self._ai_quote_worker = None
+        request = self._pending_ai_request
+        quote = self._pending_ai_quote
+        self._pending_ai_request = None
+        self._pending_ai_quote = None
+
+        if not request or not quote:
+            self.ai_current.setEnabled(True)
+            self.ai_all.setEnabled(True)
+            return
+
+        if self.product_id != request["product_id"]:
+            self.ai_status.setText(
+                "محصول عوض شده؛ AI اجرا نشد."
+            )
+            self.ai_current.setEnabled(True)
+            self.ai_all.setEnabled(True)
+            return
+
+        quote_text = format_cost_quote(quote)
+        if quote.get("free"):
+            cost_short = "رایگان"
+        elif quote.get("cost_known"):
+            cost_short = "$" + (
+                f"{float(quote.get('estimated_usd') or 0):.6f}"
+            )
+        else:
+            cost_short = "نامشخص"
+        self.ai_cost_hint.setText(
+            f"هزینه آخرین برآورد: {cost_short}"
+        )
+
+        answer = QMessageBox.question(
+            self,
+            "تأیید هزینه و اجرای هوش مصنوعی",
+            quote_text + "\n\nاجرا شود؟",
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+            ),
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            self.ai_status.setText(
+                "اجرای AI توسط اپراتور لغو شد."
+            )
+            self.ai_current.setEnabled(True)
+            self.ai_all.setEnabled(True)
+            return
+
+        active_now = self.kernel.providers.active()
+        if (
+            str(active_now.get("provider") or "")
+            != str(quote.get("provider") or "")
+            or str(active_now.get("model") or "")
+            != str(quote.get("model") or "")
+        ):
+            self.ai_status.setText(
+                "Provider/Model بعد از برآورد تغییر کرده؛ "
+                "دوباره AI را بزن."
+            )
+            self.ai_current.setEnabled(True)
+            self.ai_all.setEnabled(True)
+            return
+
+        QTimer.singleShot(
+            0,
+            lambda req=dict(request): self._start_ai_execution(
+                req
+            ),
+        )
+
+    def _start_ai_execution(
+        self,
+        request: dict[str, Any],
+    ) -> None:
+        product_id = int(request["product_id"])
+        mode = str(request["mode"])
+        target = request.get("target_stage")
+        self.ai_status.setText(
+            "AI در حال ارسال/دریافت Product…"
+        )
 
         def job(progress):
-            progress(10, "شروع AI")
+            progress(10, "شروع درخواست Product")
             result = self.kernel.ai.execute(
                 product_id,
                 mode,
@@ -1453,11 +1611,17 @@ class ProductWizardPage(QWidget):
         worker = Worker(job)
         self._ai_worker = worker
         worker.signals.progress.connect(
-            lambda value, message: self.ai_status.setText(f"{value}% — {message}")
+            lambda value, message: self.ai_status.setText(
+                f"{value}% — {message}"
+            )
         )
-        worker.signals.result.connect(lambda _result: self._ai_done())
+        worker.signals.result.connect(
+            lambda _result: self._ai_done()
+        )
         worker.signals.error.connect(self._ai_error)
-        worker.signals.finished.connect(self._ai_finished)
+        worker.signals.finished.connect(
+            self._ai_finished
+        )
         self.task_pool.start(worker)
 
     def _ai_done(self) -> None:
@@ -1467,8 +1631,23 @@ class ProductWizardPage(QWidget):
 
     def _ai_error(self, detail: str) -> None:
         self.ai_status.setText("❌ AI خطا")
-        message = str(detail or "").splitlines()[-1] if detail else "خطای ناشناخته"
-        QMessageBox.warning(self, "هوش مصنوعی", message)
+        active = self.kernel.providers.active()
+        show_diagnostic_error(
+            self,
+            "خطای هوش مصنوعی Product",
+            detail,
+            context={
+                "product_id": self.product_id,
+                "provider": active.get("provider"),
+                "model": active.get("model"),
+                "source_mode": str(
+                    self.ai_source.currentData() or ""
+                ),
+                "stage": STAGE_CODES[
+                    self.stack.currentIndex()
+                ],
+            },
+        )
 
     def _ai_finished(self) -> None:
         self.ai_current.setEnabled(True)
