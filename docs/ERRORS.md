@@ -1,5 +1,58 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-082 — OpenRouter Product AI accepted media/tools-only models and could fall back to unconstrained text
+**Date:** 2026-08-31  
+**Environment:** owner Local Windows Qt6 foreground QA after Phase49.3I.42C3.
+
+**Observed owner evidence:**
+1. Provider test used `google/lyria-3-clip-preview` and the Structured Product JSON path received timed Persian song lyrics instead of a JSON object, ending in `JSONDecodeError`.
+2. Product #309 with `cohere/north-mini-code:free`, source mode `link`, failed because `SEO Title فارسی` returned empty.
+3. Product #309 with the same model, source mode `data`, failed because the Persian title was generic/invalid and did not preserve source identity.
+
+The existing downstream content validators behaved correctly: they rejected empty SEO and generic Product identity before bad content could be saved.
+
+**Root cause:**
+- model suitability ranking did not use live output modality/product-purpose metadata;
+- `tools` / `tool_choice` were incorrectly treated as equivalent to native `response_format` / Structured JSON support;
+- a music/media model could therefore appear usable for Product text work;
+- a tools-only coding model could receive an overly strong Product/JSON badge;
+- OpenRouter Structured calls used a weaker `json_object` request and could fall back to prompt-only JSON when a model rejected `response_format`, allowing unconstrained prose/song/code output;
+- active Product AI did not require a previously verified live OpenRouter model capability profile before execution.
+
+**Correct fix:**
+- classify live model input/output modalities and exclude non-text media/embedding/rerank/moderation models from Product filters;
+- separate native Structured JSON support from tool-calling support;
+- mark coding-specialist models as unsuitable for Persian Product SEO/content;
+- Product recommendation/sort now prioritizes text-capable + native Structured + Persian quality, then free/cost;
+- OpenRouter Structured Product calls use strict `json_schema` and `provider.require_parameters=true`;
+- OpenRouter no longer falls back to prompt-only JSON when the required Structured contract is unsupported;
+- Structured Product calls use latency-first routing while ordinary bulk/content paths retain their existing routing intent;
+- saving an OpenRouter Product model requires a live loaded model catalogue entry and stores a non-secret capability snapshot;
+- Product AI estimate/execute preflight rejects stale/unverified/incompatible OpenRouter models before the mature orchestrator runs;
+- settings UI now distinguishes `JSON✓`, Tools-only, coding-specialist and non-text models, and Product filters hide non-text models.
+
+**Regression coverage:**
+- Lyria/music model is rejected as non-text Product model;
+- `cohere/north-mini-code:free` is rejected as tools-only/code-specialized Product Structured candidate;
+- OpenRouter Structured request carries strict JSON Schema + `require_parameters`;
+- exact selected model remains preserved;
+- simple connection test still performs no hidden model-catalog scan;
+- mature Qt/Crawl/Filament/Profile/Stage/Single-AI/legacy launcher regressions remain green.
+
+**Intermediate failed condition:** run `33398832365` failed only because an older 42B2 regression still expected Structured Product routing to use `throughput`. The runtime condition had intentionally changed to latency-first. The stale test was corrected rather than rerunning the same failing expectation unchanged.
+
+**Final verified code checkpoint:** `0421bccff040ced53513625af95d05e0c8c27a9a`.
+- `33399095190` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS;
+- `33399095198` — Phase49.3I.17 Single Active AI CI — PASS;
+- `33399095224` — Catalog Center Windows Portable Release — PASS.
+
+**Rollback:** `backup/pre-err49-082-openrouter-product-model-gate-20260831` → `26761c81d04bbd74dc2c978b08e77f3250b0518b`.
+
+**Safety:** no Django migration, no Catalog schema migration, no Product/media rewrite, no secret persistence, no Host/Production change, and no default launcher cutover.
+
+**Prevention rule:** a Provider connection success is not a Product-model acceptance test. Product AI must require a text-capable model with verified native Structured JSON support and a real Persian Product probe; tool calling, free pricing or generic multilingual capability alone must never imply Product suitability.
+
+
 ## ERR-49-081 — Windows Playwright smoke probe was corrupted at the PowerShell/native `python -c` boundary
 Status: `FIXED IN REPOSITORY / WINDOWS CI PASS / OWNER LOCAL RERUN NEXT`
 
