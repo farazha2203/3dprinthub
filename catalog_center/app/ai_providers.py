@@ -308,13 +308,30 @@ class AIProviderClient:
             return models[0]
         raise RuntimeError(f"No accessible models were returned by {self.spec.label}.")
 
-    def _chat(self, model: str, messages: list[dict[str, Any]], *, response_format: dict[str, Any] | None = None, operation: str = "chat") -> dict[str, Any]:
+    def _chat(
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        *,
+        response_format: dict[str, Any] | None = None,
+        operation: str = "chat",
+        require_parameters: bool = False,
+    ) -> dict[str, Any]:
         payload: dict[str, Any] = {"model": model, "messages": messages}
         if self.provider == "openrouter":
-            payload["provider"] = {
-                "sort": "latency" if operation == "connection_test" else "throughput",
+            latency_first = operation in {
+                "connection_test",
+                "structured_content",
+                "structured_content_compat",
+                "screenshot_fact_extract",
+            }
+            provider_options: dict[str, Any] = {
+                "sort": "latency" if latency_first else "throughput",
                 "allow_fallbacks": True,
             }
+            if require_parameters or response_format is not None:
+                provider_options["require_parameters"] = True
+            payload["provider"] = provider_options
         if response_format is not None:
             payload["response_format"] = response_format
         return _json_request(
@@ -475,16 +492,85 @@ class AIProviderClient:
         else:
             user_payload = json.dumps(input_content, ensure_ascii=False)
             messages = [
-                {"role": "system", "content": instructions + " Return exactly one valid JSON object matching the requested schema. Do not use Markdown fences."},
+                {
+                    "role": "system",
+                    "content": (
+                        instructions
+                        + " Return exactly one valid JSON object matching the requested schema. "
+                        "Do not use Markdown fences."
+                    ),
+                },
                 {"role": "user", "content": user_payload},
             ]
-            try:
-                data = self._chat(model, messages, response_format={"type": "json_object"}, operation="structured_content")
-            except RuntimeError as exc:
-                # OpenAI-compatible gateways and some free OpenRouter models can reject response_format.
-                if not any(token in str(exc).lower() for token in ("400", "invalid_request", "unsupported", "response_format", "parameter")):
+            if self.provider == "openrouter":
+                response_format = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": schema_name,
+                        "strict": True,
+                        "schema": schema,
+                    },
+                }
+                try:
+                    data = self._chat(
+                        model,
+                        messages,
+                        response_format=response_format,
+                        operation="structured_content",
+                        require_parameters=True,
+                    )
+                except RuntimeError as exc:
+                    message = str(exc)
+                    folded = message.casefold()
+                    if any(
+                        token in folded
+                        for token in (
+                            "response_format",
+                            "json_schema",
+                            "unsupported",
+                            "no endpoints found",
+                            "require_parameters",
+                            "parameter",
+                            "400",
+                        )
+                    ):
+                        raise RuntimeError(
+                            f"{self.spec.label} model {model} is not compatible with "
+                            "the required Product Structured JSON contract. "
+                            "Choose a text model that explicitly supports response_format / "
+                            "JSON Schema in the model catalogue."
+                        ) from exc
                     raise
-                data = self._chat(model, messages, response_format=None, operation="structured_content_compat")
+            else:
+                try:
+                    data = self._chat(
+                        model,
+                        messages,
+                        response_format={"type": "json_object"},
+                        operation="structured_content",
+                    )
+                except RuntimeError as exc:
+                    # AvalAI/other OpenAI-compatible gateways can expose models
+                    # that reject response_format. Keep the mature compatibility
+                    # fallback outside OpenRouter, where the model catalogue gives
+                    # us an explicit structured-output capability signal.
+                    if not any(
+                        token in str(exc).lower()
+                        for token in (
+                            "400",
+                            "invalid_request",
+                            "unsupported",
+                            "response_format",
+                            "parameter",
+                        )
+                    ):
+                        raise
+                    data = self._chat(
+                        model,
+                        messages,
+                        response_format=None,
+                        operation="structured_content_compat",
+                    )
             text = response_output_text(data)
         if not text:
             raise RuntimeError(f"{self.spec.label} returned no output text.")
@@ -492,7 +578,10 @@ class AIProviderClient:
         try:
             result = json.loads(text)
         except json.JSONDecodeError as exc:
-            raise RuntimeError(f"{self.spec.label} returned invalid JSON: {text[:700]}") from exc
+            raise RuntimeError(
+                f"{self.spec.label} model {model} returned invalid JSON for a "
+                f"Structured Product request: {text[:700]}"
+            ) from exc
         if not isinstance(result, dict):
             raise RuntimeError(f"{self.spec.label} returned JSON, but the root value is not an object.")
         return result, model
