@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import QByteArray, QSettings, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QAbstractSpinBox,
     QApplication,
     QLabel,
     QListWidget,
@@ -128,11 +129,16 @@ class MainWindow(QMainWindow):
             self.db,
             kernel=self.kernel,
         )
-        self.operations_page = OperationsPage(self.db)
+        self.operations_page = OperationsPage(
+            self.db,
+            kernel=self.kernel,
+        )
         self.settings_page = SettingsPage(
             self.db,
             kernel=self.kernel,
         )
+
+        self._normalize_numeric_controls()
 
         for key, page in (
             ("dashboard", self.dashboard_page),
@@ -155,6 +161,26 @@ class MainWindow(QMainWindow):
 
         self.status_db = QLabel(f"DB: {self.db.path.name}")
         self.statusBar().addPermanentWidget(self.status_db)
+
+    def _normalize_numeric_controls(self) -> None:
+        """Keep numeric editors readable in an RTL application.
+
+        Qt/Windows otherwise places spin buttons over localized digits. Numeric
+        input remains keyboard/mouse-wheel editable; broken +/- chrome is hidden.
+        """
+        for widget in self.findChildren(QAbstractSpinBox):
+            widget.setButtonSymbols(
+                QAbstractSpinBox.ButtonSymbols.NoButtons
+            )
+            widget.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+            try:
+                widget.lineEdit().setAlignment(
+                    Qt.AlignmentFlag.AlignRight
+                    | Qt.AlignmentFlag.AlignVCenter
+                )
+            except Exception:
+                pass
+            widget.setMinimumWidth(max(100, widget.minimumWidth()))
 
     def _build_actions(self) -> None:
         self.actions = ActionRegistry(self)
