@@ -1013,7 +1013,11 @@ class ProductWizardPage(QWidget):
     def _new_profile(self) -> None:
         if self.product_id is None:
             return
-        dialog = ProfileEditorDialog(self.kernel.filaments.list(), parent=self)
+        dialog = ProfileEditorDialog(
+            self.kernel.filaments.list(),
+            parent=self,
+            filament_core=self.kernel.filaments,
+        )
         if dialog.exec() == dialog.DialogCode.Accepted:
             try:
                 self.kernel.commerce.upsert_profile(self.product_id, dialog.values())
@@ -1030,7 +1034,12 @@ class ProductWizardPage(QWidget):
         if not profile:
             QMessageBox.warning(self, "پروفایل", "یک پروفایل را انتخاب کن.")
             return
-        dialog = ProfileEditorDialog(self.kernel.filaments.list(), profile=profile, parent=self)
+        dialog = ProfileEditorDialog(
+            self.kernel.filaments.list(),
+            profile=profile,
+            parent=self,
+            filament_core=self.kernel.filaments,
+        )
         if dialog.exec() == dialog.DialogCode.Accepted:
             try:
                 self.kernel.commerce.upsert_profile(
@@ -1061,6 +1070,7 @@ class ProductWizardPage(QWidget):
             self.kernel.filaments.list(),
             profile=draft,
             parent=self,
+            filament_core=self.kernel.filaments,
         )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
