@@ -1,5 +1,12 @@
 # PROJECT ROADMAP
 
+## 2026-08-31 — Phase49.3I.42C3 gate
+Status: `GITHUB_UPDATED / WINDOWS_CI_PASS / OWNER_LOCAL_QA_NEXT`.
+
+Qt Add Product/Crawl parity and AI Provider diagnostics/cost controls are now on source checkpoint `ba3d1358d91aa78719f618630c290abf97ee8427`.
+Required next acceptance is Local foreground verification of Classic continuation, Hybrid acquisition, direct Product receive, live OpenRouter model catalogue/free+Persian filters, structured Product JSON test, cost confirmation and diagnostic error dialogs. 42D design polish and 42E launcher/package cutover remain blocked until this Local gate is accepted.
+
+
 ## 2026-08-31 — Phase49.3I.42C Classic + Hybrid acquisition checkpoint
 
 Status: **CODE WINDOWS_CI_TESTED / REPOSITORY LOCAL GATE FIXED / OWNER_FOREGROUND_QA_NEXT**.
