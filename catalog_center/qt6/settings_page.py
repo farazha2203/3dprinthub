@@ -4,6 +4,7 @@ from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QFrame,
@@ -19,6 +20,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.ai_model_catalog import (
+    enrich_model_info,
+    format_model_label,
+    model_matches_filter,
+    pricing_summary_text,
+)
+
+from .diagnostics import show_diagnostic_error
 from .workers import TaskPool, Worker
 
 
@@ -71,12 +80,30 @@ class SettingsPage(QWidget):
             self.provider.addItem(item["label"], item["code"])
         self.provider.currentIndexChanged.connect(self._provider_changed)
 
+        self.model_filter = QComboBox()
+        self.model_filter.addItem("پیشنهادی برای فارسی", "recommended")
+        self.model_filter.addItem("همه مدل‌ها", "all")
+        self.model_filter.addItem("فقط رایگان", "free")
+        self.model_filter.addItem("فارسی عالی/خوب", "persian")
+        self.model_filter.addItem("Structured / JSON", "structured")
+
         self.model = QComboBox()
         self.model.setEditable(True)
         self.model.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.model.setMinimumContentsLength(44)
         self.model.completer().setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.model.completer().setFilterMode(Qt.MatchFlag.MatchContains)
+
+        self.model_detail = QLabel(
+            "مدل‌ها از API زنده Provider دریافت و با رتبه داخلی فارسی + قیمت مرتب می‌شوند."
+        )
+        self.model_detail.setObjectName("Muted")
+        self.model_detail.setWordWrap(True)
+
+        self.usd_to_toman = QLineEdit()
+        self.usd_to_toman.setPlaceholderText(
+            "اختیاری؛ برای نمایش هزینه تقریبی به تومان"
+        )
 
         self.api_key = QLineEdit()
         self.api_key.setEchoMode(QLineEdit.EchoMode.Password)
@@ -90,7 +117,10 @@ class SettingsPage(QWidget):
         self.ai_status.setObjectName("Muted")
 
         form.addRow("Provider", self.provider)
+        form.addRow("فیلتر Model", self.model_filter)
         form.addRow("Model قابل جستجو", self.model)
+        form.addRow("جزئیات Model", self.model_detail)
+        form.addRow("نرخ دلار (تومان)", self.usd_to_toman)
         form.addRow("API Key جدید", self.api_key)
         form.addRow("منبع کلید امن", self.key_source)
         form.addRow("Provider/Model فعال", self.ai_active)
@@ -103,8 +133,11 @@ class SettingsPage(QWidget):
         self.save_ai_btn.setProperty("primary", True)
         self.clear_ai_key_btn = QPushButton("حذف کلید امن Provider")
         self.load_models_btn.clicked.connect(self._load_models)
+        self.test_ai_btn.setText("🧪 تست واقعی فارسی + JSON")
         self.test_ai_btn.clicked.connect(self._test_ai)
         self.save_ai_btn.clicked.connect(self._save_ai)
+        self.model_filter.currentIndexChanged.connect(self._render_models)
+        self.model.currentIndexChanged.connect(self._model_changed)
         self.clear_ai_key_btn.clicked.connect(self._clear_ai_key)
         actions.addWidget(self.load_models_btn)
         actions.addWidget(self.test_ai_btn)
@@ -171,6 +204,9 @@ class SettingsPage(QWidget):
             if index >= 0:
                 self.provider.setCurrentIndex(index)
         self.model.setEditText(active.get("model") or "")
+        self.usd_to_toman.setText(
+            str(self.db.setting("ai_usd_to_toman", "") or "")
+        )
         self._refresh_provider_status()
 
         values = self.kernel.connection.values()
@@ -233,8 +269,16 @@ class SettingsPage(QWidget):
 
     def _worker_error(self, label: QLabel, detail: str) -> None:
         label.setText("❌ خطا")
-        message = str(detail or "").splitlines()[-1] if detail else "خطای ناشناخته"
-        QMessageBox.warning(self, "3DPrintHub", message)
+        show_diagnostic_error(
+            self,
+            "هوش مصنوعی / Provider",
+            detail,
+            context={
+                "provider": str(self.provider.currentData() or ""),
+                "model": self._selected_model_id(),
+                "operation": "provider-settings",
+            },
+        )
 
     def _worker_finished(self) -> None:
         self._worker = None
@@ -244,37 +288,90 @@ class SettingsPage(QWidget):
         key = self.api_key.text().strip()
 
         def done(result) -> None:
-            self._model_info = list(result or [])
-            current = self.model.currentText().strip()
-            self.model.clear()
-            for item in self._model_info:
-                model_id = str(item.get("id") or item.get("name") or "").strip()
-                if not model_id:
-                    continue
-                name = str(item.get("name") or "").strip()
-                label = model_id if not name or name == model_id else f"{name} — {model_id}"
-                self.model.addItem(label, model_id)
-            if current:
-                match = next(
-                    (
-                        index
-                        for index in range(self.model.count())
-                        if str(self.model.itemData(index) or "") == current
-                        or str(self.model.itemText(index)).endswith(f"— {current}")
-                    ),
-                    -1,
-                )
-                if match >= 0:
-                    self.model.setCurrentIndex(match)
-                else:
-                    self.model.setEditText(current)
-            self.ai_status.setText(f"✅ {self.model.count()} مدل دریافت شد")
+            self._model_info = [
+                enrich_model_info(item)
+                for item in list(result or [])
+            ]
+            self._render_models()
+            free_count = sum(
+                1 for item in self._model_info if item.get("free")
+            )
+            fa_count = sum(
+                1
+                for item in self._model_info
+                if int(item.get("persian_score") or 0) >= 4
+            )
+            self.ai_status.setText(
+                f"✅ {len(self._model_info)} مدل • "
+                f"{free_count} رایگان • {fa_count} مناسب فارسی"
+            )
 
         self._start_worker(
             lambda: self.kernel.providers.models(provider, key_override=key),
             status_label=self.ai_status,
             start_text="دریافت مدل‌ها…",
             done=done,
+        )
+
+    def _render_models(self) -> None:
+        current = self._selected_model_id()
+        filter_code = str(
+            self.model_filter.currentData() or "all"
+        )
+        visible = [
+            item
+            for item in self._model_info
+            if model_matches_filter(item, filter_code)
+        ]
+
+        self.model.blockSignals(True)
+        self.model.clear()
+        for item in visible:
+            model_id = str(item.get("id") or "").strip()
+            if model_id:
+                self.model.addItem(
+                    format_model_label(item),
+                    model_id,
+                )
+
+        match = self.model.findData(current) if current else -1
+        if match >= 0:
+            self.model.setCurrentIndex(match)
+        elif self.model.count() > 0:
+            self.model.setCurrentIndex(0)
+        elif current:
+            self.model.setEditText(current)
+        self.model.blockSignals(False)
+        self._model_changed()
+
+    def _model_changed(self) -> None:
+        model_id = self._selected_model_id()
+        item = next(
+            (
+                enrich_model_info(candidate)
+                for candidate in self._model_info
+                if str(candidate.get("id") or "") == model_id
+            ),
+            enrich_model_info(
+                {"id": model_id, "name": model_id}
+            ),
+        )
+        if not model_id:
+            self.model_detail.setText("مدلی انتخاب نشده است.")
+            return
+
+        context = item.get("context_length") or "—"
+        structured = (
+            "بله"
+            if int(item.get("structured_score") or 0) > 0
+            else "نامشخص/خیر"
+        )
+        self.model_detail.setText(
+            f"فارسی: {item.get('persian_label') or 'نامشخص'} "
+            f"(رتبه داخلی 3DPrintHub) • "
+            f"{pricing_summary_text(item)} • "
+            f"Context: {context} • Structured: {structured}. "
+            "برای اطمینان از کار واقعی Product، تست فارسی + JSON را بزن."
         )
 
     def _selected_model_id(self) -> str:
@@ -292,11 +389,31 @@ class SettingsPage(QWidget):
         key = self.api_key.text().strip()
 
         def done(result) -> None:
-            model_name = str(result.get("model") or model or "—")
+            model_name = str(
+                result.get("model") or model or "—"
+            )
             request_id = str(result.get("request_id") or "")
-            suffix = f" • Request {request_id[:18]}" if request_id else ""
+            suffix = (
+                f" • Request {request_id[:18]}"
+                if request_id
+                else ""
+            )
+            sample = str(
+                result.get("structured_sample")
+                or result.get("sample")
+                or ""
+            )
             self.ai_status.setText(
-                f"✅ اتصال {provider} موفق — {model_name}{suffix}"
+                f"✅ اتصال + Product JSON فارسی موفق — "
+                f"{model_name}{suffix}"
+            )
+            QMessageBox.information(
+                self,
+                "تست واقعی هوش مصنوعی",
+                "Provider و Model فقط وصل نیستند؛ "
+                "درخواست Structured Product نیز PASS شد.\n\n"
+                f"Model: {model_name}\n"
+                f"نمونه: {sample[:180] or '—'}",
             )
 
         self._start_worker(
@@ -304,6 +421,7 @@ class SettingsPage(QWidget):
                 provider,
                 model,
                 key_override=key,
+                structured=True,
             ),
             status_label=self.ai_status,
             start_text="تست Provider…",
@@ -315,6 +433,21 @@ class SettingsPage(QWidget):
         model = self._selected_model_id()
         key = self.api_key.text().strip()
         try:
+            rate_text = (
+                self.usd_to_toman.text()
+                .replace(",", "")
+                .strip()
+            )
+            if rate_text:
+                rate = float(rate_text)
+                if rate <= 0:
+                    raise ValueError(
+                        "نرخ دلار باید بزرگ‌تر از صفر باشد."
+                    )
+                self.db.set_setting(
+                    "ai_usd_to_toman",
+                    str(rate),
+                )
             if key:
                 self.kernel.providers.save_key(provider, key)
             active = self.kernel.providers.save_default(provider, model)
