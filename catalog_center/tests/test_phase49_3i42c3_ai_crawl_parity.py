@@ -502,7 +502,11 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             for item in self.kernel.stages.statuses(product_id)
             if item["stage"] == "images"
         )
-        self.assertEqual(image_status["ai_fixable_count"], 0)
+        self.assertEqual(
+            image_status["ai_fixable_count"],
+            0,
+            image_status["missing"],
+        )
         self.assertFalse(
             any(
                 "بروزرسانی Metadata تصویر" in item
