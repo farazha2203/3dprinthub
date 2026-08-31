@@ -6,6 +6,7 @@ from pathlib import Path
 from threading import Lock
 from types import SimpleNamespace
 from typing import Any, Callable, TypeVar
+from urllib.parse import quote_plus
 
 from app import phase49_3c_image_pipeline as image_pipeline
 from app.phase49_3i36_stage_finalization import (
@@ -567,6 +568,66 @@ class AcquisitionCore:
             if int(row["enabled"] or 0)
         ]
 
+    def source_details(self, source_code: str) -> dict[str, Any]:
+        row = self.db.source(str(source_code or ""))
+        return dict(row) if row is not None else {}
+
+    def default_listing_url(
+        self,
+        source_code: str,
+        query: str = "",
+    ) -> str:
+        row = self.db.source(str(source_code or ""))
+        if row is None:
+            return ""
+        data = dict(row)
+        try:
+            urls = json.loads(
+                data.get("listing_urls_json") or "[]"
+            )
+        except Exception:
+            urls = []
+        if not isinstance(urls, list) or not urls:
+            return ""
+        template = str(urls[0] or "").strip()
+        if not template:
+            return ""
+        try:
+            return template.format(
+                query=quote_plus(
+                    str(query or "3d print")
+                ),
+                page=1,
+            )
+        except Exception:
+            return template
+
+    def resolve_listing_url(
+        self,
+        source_code: str,
+        *,
+        operator_mode: str,
+        explicit_url: str = "",
+        query: str = "",
+    ) -> str:
+        explicit = str(explicit_url or "").strip()
+        if explicit:
+            return explicit
+        mode = str(operator_mode or "search")
+        if mode in {"category", "site_crawl"}:
+            raise ValueError(
+                "برای Category/Site Crawl لینک شروع را وارد کن."
+            )
+        default = self.default_listing_url(
+            source_code,
+            query=query,
+        )
+        if not default:
+            raise ValueError(
+                "برای این Source لینک Listing پیش‌فرض ثبت نشده است."
+            )
+        return default
+
     def queue_counts(self, source_code: str = "") -> dict[str, int]:
         return dict(self.db.queue_counts(str(source_code or "")))
 
@@ -599,6 +660,8 @@ class AcquisitionCore:
         image_limit: int = 5,
         include_failed: bool = False,
         strategy: str = "hybrid",
+        operator_mode: str = "search",
+        download_images: bool = True,
         progress=None,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_batch
@@ -612,6 +675,8 @@ class AcquisitionCore:
             image_limit=image_limit,
             include_failed=include_failed,
             strategy=strategy,
+            operator_mode=operator_mode,
+            download_images=bool(download_images),
             progress=progress,
             should_stop=self.should_stop,
         )
@@ -622,6 +687,7 @@ class AcquisitionCore:
         source_code: str,
         product_url: str,
         image_limit: int = 5,
+        download_images: bool = True,
         progress=None,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_single
@@ -632,6 +698,7 @@ class AcquisitionCore:
             source_code=source_code,
             product_url=product_url,
             image_limit=image_limit,
+            download_images=bool(download_images),
             progress=progress,
         )
 
