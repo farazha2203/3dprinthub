@@ -1,5 +1,33 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-08-31 / ERR-49-082 OpenRouter Product Model Gate
+
+Owner Local QA exposed a real model-selection/Structured-output defect after 42C3. The connection itself was healthy; inappropriate OpenRouter models were being accepted for Product work.
+
+Final code checkpoint:
+`0421bccff040ced53513625af95d05e0c8c27a9a`.
+
+Fixed:
+- media/audio/music/image/embedding/rerank models are excluded from Product model filters;
+- Tools-only is no longer treated as Structured JSON;
+- coding-specialist models are not recommended/accepted for Product Persian SEO/content;
+- OpenRouter Product calls require strict JSON Schema + compatible endpoint parameters;
+- prompt-only JSON fallback is disabled for OpenRouter Product Structured calls;
+- verified model capability profile is persisted without secrets and required before Product AI estimate/execute;
+- settings labels clearly expose Product-safe / JSON✓ / Tools-only / coding / non-text status.
+
+Verification:
+- Qt/Crawl/AI `33399095190` PASS;
+- Single Active AI `33399095198` PASS;
+- Windows Portable `33399095224` PASS.
+
+Rollback:
+`backup/pre-err49-082-openrouter-product-model-gate-20260831` → `26761c81d04bbd74dc2c978b08e77f3250b0518b`.
+
+Exact next task:
+owner Local clean ff-only pull of the final documentation HEAD, run the canonical 42C Local gate, then in Settings reload OpenRouter models, choose a Product-safe Text + JSON✓ model, run the Persian+JSON probe, save it, and re-run Product #309 Link/Data AI. Production remains untouched.
+
+
 ## Continuation checkpoint — 2026-08-31 / Phase49.3I.42C3 Add Product + AI Crawl parity
 
 Source/code checkpoint: `ba3d1358d91aa78719f618630c290abf97ee8427`.
@@ -36,7 +64,7 @@ Repository: `farazha2203/3dprinthub`
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
 Primary Web/Commerce Release: `Phase50.A.2E + Phase49.3I.41 Bridge Extension — Central Filament Library Sync`  
 Parallel Windows Track: `Phase49.3I.42C3 — Qt6 Add Product/Crawl parity + AI Provider diagnostics over 42C/3I.43–45`  
-Status: `PHASE49.3I.42C3 WINDOWS CI PASS / SINGLE ACTIVE AI PASS / OWNER LOCAL FOREGROUND QA NEXT / PRODUCTION NOT TOUCHED`
+Status: `ERR-49-082 OPENROUTER PRODUCT MODEL GATE WINDOWS CI+PORTABLE PASS / OWNER LOCAL RETEST NEXT / PRODUCTION NOT TOUCHED`
 
 ## Current Windows Qt acquisition checkpoint — Phase49.3I.42C
 
