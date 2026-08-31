@@ -1,4 +1,4 @@
-name: Phase49.3I.42B2 Full Qt6 Legacy Parity CI
+name: Phase49.3I.42C Qt6 Full Parity + Acquisition CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - "catalog_center/qt6/**"
       - "catalog_center/qt_launch.py"
       - "catalog_center/requirements-qt6.txt"
+      - "RUN_PHASE49_3I42C_LOCAL_GATE.ps1"
       - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
       - "catalog_center/tests/test_phase49_3i42b_core_parity.py"
       - "catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py"
@@ -45,6 +46,34 @@ jobs:
           cache-dependency-path: |
             catalog_center/requirements.txt
             catalog_center/requirements-qt6.txt
+
+      - name: Validate owner Local gate and PowerShell Python stdin
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "RUN_PHASE49_3I42C_LOCAL_GATE.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Host $_.Message }
+            throw "Phase49.3I.42C Local gate PowerShell syntax failed"
+          }
+
+          $probe = @'
+          print("PYTHON_STDIN_PROBE=OK")
+          '@
+          $output = $probe | python -
+          if ($LASTEXITCODE -ne 0) {
+            throw "PowerShell -> Python stdin probe failed"
+          }
+          $probeText = ($output | Out-String)
+          if ($probeText -notmatch "PYTHON_STDIN_PROBE=OK") {
+            throw "PowerShell -> Python stdin marker missing"
+          }
+          Write-Host "PHASE49_3I42C_POWERSHELL_STDIN_GUARD=PASS"
 
       - name: Install Qt6 preview dependencies
         shell: pwsh
@@ -149,3 +178,4 @@ jobs:
             throw "Qt6 presentation package must not import Tkinter"
           }
           Write-Host "PHASE49_3I42B2_FULL_LEGACY_PARITY_CI=PASS"
+          Write-Host "PHASE49_3I42C_FULL_ACQUISITION_CI=PASS"
