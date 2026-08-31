@@ -469,7 +469,17 @@ class FilamentParityCore:
         return [dict(row) for row in list_available_material_colors(self.db)]
 
     def save(self, values: dict[str, Any], *, previous_row_id: int | None = None) -> dict[str, Any]:
-        data = dict(values or {})
+        base: dict[str, Any] = {}
+        if previous_row_id:
+            base = next(
+                (
+                    dict(item)
+                    for item in self.list()
+                    if int(item.get("id") or 0) == int(previous_row_id)
+                ),
+                {},
+            )
+        data = {**base, **dict(values or {})}
         saved = add_available_material_color(
             self.db,
             data.get("material") or data.get("material_name") or "",
