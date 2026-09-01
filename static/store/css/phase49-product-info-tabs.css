@@ -1,0 +1,89 @@
+/* Phase49.3I.47 — Product information workspace.
+   Progressive enhancement: without JavaScript every section remains visible. */
+
+.phase49-product-info {
+  margin-top: 2.25rem;
+}
+
+.phase49-product-info__tabs {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  margin-bottom: 1rem;
+  padding: .45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 35px rgba(15,23,42,.06);
+}
+
+.phase49-product-info__tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  border: 1px solid #dbe2ea;
+  border-radius: .8rem;
+  background: #fff;
+  color: #334155;
+  padding: .65rem 1rem;
+  font-weight: 900;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color .16s ease, background-color .16s ease,
+              color .16s ease, box-shadow .16s ease;
+}
+
+.phase49-product-info__tab:hover {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.phase49-product-info__tab[aria-selected="true"] {
+  border-color: var(--store-gold, #ff9800);
+  background: var(--store-gold, #ff9800);
+  color: #111827;
+  box-shadow: 0 0 0 3px rgba(255,152,0,.14);
+}
+
+.phase49-product-info__tab:focus-visible {
+  outline: 3px solid rgba(249,115,22,.32);
+  outline-offset: 2px;
+}
+
+.phase49-product-info.is-enhanced .phase49-product-info__panel[hidden] {
+  display: none !important;
+}
+
+.phase49-product-info__panel {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .phase493f-product-panel {
+    position: sticky;
+    top: 7.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .phase49-product-info {
+    margin-top: 1.5rem;
+  }
+
+  .phase49-product-info__tabs {
+    margin-inline: -.25rem;
+    border-radius: .8rem;
+  }
+
+  .phase49-product-info__tab {
+    padding-inline: .85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase49-product-info__tab {
+    transition: none;
+  }
+}
