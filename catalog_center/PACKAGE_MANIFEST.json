@@ -1,6 +1,6 @@
 {
-  "name": "3DPrintHub Catalog Center v8.9.9 — Incremental Discovery Intelligence + Modern Acquisition",
-  "version": "8.9.9",
+  "name": "3DPrintHub Catalog Center v8.9.10 — Qt6 AI/Crawl/Image Parity + Incremental Discovery Intelligence",
+  "version": "8.9.10",
   "phase": 49,
   "release_kind": "portable-single-file",
   "features": [
@@ -90,7 +90,7 @@
     "seven_stage_missing_only_ai_orchestrator",
     "persisted_ai_source_mode_link_data_screenshot",
     "stage_by_stage_ai_apply_and_recheck",
-    "image_ai_seo_only_no_binary_rename_ownership",
+    "image_ai_seo_and_final_webp_filename_parity",
     "source_screenshot_selected_for_site",
     "screenshot_source_page_upstream_metadata",
     "seo_multilingual_contamination_guard",
@@ -140,7 +140,14 @@
     "persistent_discovery_observation_ledger",
     "unseen_product_first_discovery_order",
     "custom_source_sitemap_model_heuristic",
-    "direct_sitemap_metadata_only_no_nested_media_loc"
+    "direct_sitemap_metadata_only_no_nested_media_loc",
+    "openrouter_json_mode_local_schema_validation",
+    "bounded_openrouter_tls_connect_retry",
+    "semantic_driftbloom_lamp_translation_guard",
+    "qt6_persistent_crawl_inventory_browser",
+    "qt6_bulk_product_archive_reject_restore",
+    "qt6_product_lifecycle_status_border_and_seo_badge",
+    "qt6_slider_direct_numeric_input_ux"
   ],
   "files": [
     "BUILD_EXE.ps1",

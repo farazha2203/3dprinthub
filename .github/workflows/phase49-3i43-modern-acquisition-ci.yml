@@ -91,7 +91,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Launcher verify failed' }
           $text = Get-Content "$env:RUNNER_TEMP\phase49-3i43-launch.txt" -Raw
           foreach ($marker in @(
-            'ACTIVE_VERSION=8.9.9',
+            'ACTIVE_VERSION=8.9.10',
             'EPIC49_3I43_MODERN_ACQUISITION_INTELLIGENCE=ENABLED',
             'EPIC49_3I43_CONDITIONAL_HTTP_CACHE=ENABLED',
             'EPIC49_3I43_ROBOTS_RETRY_AFTER_GUARD=ENABLED',
