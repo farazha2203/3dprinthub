@@ -99,17 +99,47 @@ class MaterialColorOptionAdmin(admin.ModelAdmin):
     search_fields = ["name", "code", "material__name"]
     list_editable = ["is_active"]
     fieldsets = (
-        ("متریال و رنگ", {
-            "fields": ("material", "name", "code", "color_type", "is_active", "sort_order")
-        }),
-        ("نمایش رنگ", {
-            "fields": ("hex_code", "secondary_hex", "tertiary_hex"),
-            "description": "برای رنگ ساده فقط HEX اصلی کافی است. برای دو‌رنگ/چندرنگ/گرادیانی HEX دوم و سوم را هم وارد کنید.",
-        }),
-        ("قیمت و موجودی", {
-            "fields": ("sale_price_per_gram_override", "low_stock_threshold_grams")
-        }),
+        (
+            "هویت رنگ و متریال",
+            {
+                "fields": (
+                    "material",
+                    "name",
+                    "code",
+                    "color_type",
+                    "is_active",
+                    "sort_order",
+                )
+            },
+        ),
+        (
+            "نمایش رنگ",
+            {
+                "fields": ("hex_code", "secondary_hex", "tertiary_hex"),
+                "description": (
+                    "برای رنگ ساده فقط HEX اصلی کافی است. برای دو‌رنگ/"
+                    "چندرنگ/گرادیانی HEX دوم و سوم را هم وارد کنید."
+                ),
+            },
+        ),
+        (
+            "قیمت و هشدار موجودی",
+            {
+                "fields": (
+                    "sale_price_per_gram_override",
+                    "low_stock_threshold_grams",
+                ),
+                "description": (
+                    "قیمت این تب Override همین رنگ است؛ در صورت خالی بودن، "
+                    "نرخ متریال مادر استفاده می‌شود."
+                ),
+            },
+        ),
     )
+
+    class Media:
+        css = {"all": ("admin/phase49-admin-tabs.css",)}
+        js = ("admin/phase49-admin-tabs.js",)
 
     @admin.display(description="رنگ")
     def color_chip(self, obj):
