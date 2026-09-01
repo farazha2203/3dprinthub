@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -303,9 +304,13 @@ class ProfileEditorDialog(QDialog):
         self.filaments = [dict(item) for item in filament_rows]
         self.original = normalize_ledger_profile(profile or {}, 1)
         self.setWindowTitle("پروفایل تولید و قیمت")
-        self.resize(1120, 820)
+        self.resize(1240, 860)
+        self.setMinimumSize(980, 700)
 
         root = QVBoxLayout(self)
+        self.profile_tabs = QTabWidget()
+        self.profile_tabs.setDocumentMode(False)
+        root.addWidget(self.profile_tabs, 1)
 
         identity = QGroupBox("هویت سایز / پروفایل")
         form = QGridLayout(identity)
@@ -343,7 +348,7 @@ class ProfileEditorDialog(QDialog):
             col = (index % 2) * 2
             form.addWidget(QLabel(label), row, col)
             form.addWidget(widget, row, col + 1)
-        root.addWidget(identity)
+        self.profile_tabs.addTab(identity, "پروفایل و روش قیمت")
 
         production_group = QGroupBox("وزن‌های تولید همین سایز")
         production_layout = QVBoxLayout(production_group)
@@ -372,7 +377,8 @@ class ProfileEditorDialog(QDialog):
         production_actions.addWidget(remove_row)
         production_actions.addStretch(1)
         production_layout.addLayout(production_actions)
-        root.addWidget(production_group)
+        self.production.setMinimumHeight(430)
+        self.profile_tabs.addTab(production_group, "وزن و زمان تولید")
 
         filament_group = QGroupBox("فیلامنت‌های قابل چاپ با این سایز")
         filament_layout = QVBoxLayout(filament_group)
@@ -431,7 +437,11 @@ class ProfileEditorDialog(QDialog):
         filament_actions.addWidget(self.edit_filament_btn)
         filament_actions.addStretch(1)
         filament_layout.addLayout(filament_actions)
-        root.addWidget(filament_group, 1)
+        self.filament_table.setMinimumHeight(470)
+        self.profile_tabs.addTab(
+            filament_group,
+            "فیلامنت، رنگ و قیمت قطعی",
+        )
 
         self.summary_label = QLabel()
         self.summary_label.setWordWrap(True)
