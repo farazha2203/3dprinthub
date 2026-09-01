@@ -9,6 +9,11 @@ from typing import Any, Callable, TypeVar
 from urllib.parse import quote_plus
 
 from app import phase49_3c_image_pipeline as image_pipeline
+from app.db import utc_now
+from app.phase49_3i38_crawl_ledger_stage_ai import (
+    reject_and_purge_product,
+    restore_rejected_identity,
+)
 from app.phase49_3i36_stage_finalization import (
     LOCK_COLUMN,
     filter_locked_updates,
@@ -202,14 +207,20 @@ class ProductCore:
         return count
 
     def remove_many(self, product_ids: list[int]) -> int:
+        """Reject Products while retaining only URL/title/one small thumbnail."""
         count = 0
+        app = SimpleNamespace(
+            db=self.db,
+            DATA=Path(self.db.path).resolve().parent,
+        )
         for product_id in sorted({int(value) for value in product_ids or []}):
             before = self.db.product(product_id)
             if before is None:
                 continue
-            self.db.block_product(
+            reject_and_purge_product(
+                app,
                 product_id,
-                "Qt bulk remove/reject — reversible tombstone",
+                "Qt owner reject — keep lightweight tombstone only",
             )
             after = self.db.product(product_id)
             if after is not None and int(after["is_blocked"] or 0):
@@ -223,6 +234,8 @@ class ProductCore:
             if row is None:
                 continue
             if int(row["is_blocked"] or 0):
+                if str(row["source_state"] or "") == "rejected":
+                    restore_rejected_identity(self.db, product_id)
                 self.db.restore_product(product_id)
                 count += 1
             elif str(row["workflow_status"] or "") == "archived":
@@ -334,7 +347,16 @@ class ImageCore:
         return output
 
     def preferred_local_path(self, row: dict[str, Any] | Any) -> str:
-        for url in self.urls(row):
+        data = dict(row) if not isinstance(row, dict) else row
+        rejected = str(data.get("rejected_thumbnail_path") or "").strip()
+        if rejected:
+            try:
+                rejected_path = Path(rejected)
+                if rejected_path.is_file():
+                    return str(rejected_path)
+            except Exception:
+                pass
+        for url in self.urls(data):
             path = self.local_path_for_url(row, url)
             if path:
                 return path
@@ -342,10 +364,63 @@ class ImageCore:
         return legacy[0] if legacy else ""
 
     def image_count(self, row: dict[str, Any] | Any) -> int:
-        urls = self.urls(row)
+        data = dict(row) if not isinstance(row, dict) else row
+        urls = self.urls(data)
         if urls:
             return len(urls)
-        return len(self._legacy_local_candidates(row))
+        rejected = str(data.get("rejected_thumbnail_path") or "").strip()
+        if rejected and Path(rejected).is_file():
+            return 1
+        return len(self._legacy_local_candidates(data))
+
+    def renumber(self, product_id: int) -> dict[str, Any]:
+        """Rebuild final SEO files as -01/-02/... and remove stale derivatives."""
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        data = dict(row)
+        local_dir = Path(str(data.get("local_dir") or "")).resolve()
+        if not str(data.get("local_dir") or "").strip() or not local_dir.is_dir():
+            raise RuntimeError("پوشه محلی محصول پیدا نشد.")
+
+        seo_dir = (local_dir / "seo_images").resolve()
+        before = {
+            str(Path(str(item.get("final_local_file") or "")).resolve())
+            for item in self._json_list(data.get("image_metadata_json"))
+            if isinstance(item, dict) and str(item.get("final_local_file") or "").strip()
+        }
+        result = dict(image_pipeline.finalize_selected_images(self.db, product_id) or {})
+        refreshed = dict(self.db.product(product_id) or {})
+        after = {
+            str(Path(str(item.get("final_local_file") or "")).resolve())
+            for item in self._json_list(refreshed.get("image_metadata_json"))
+            if isinstance(item, dict) and str(item.get("final_local_file") or "").strip()
+        }
+
+        removed = 0
+        if seo_dir.is_dir():
+            candidates = set(before)
+            for item in seo_dir.iterdir():
+                if item.is_file() and item.suffix.lower() == ".webp":
+                    candidates.add(str(item.resolve()))
+            for raw in candidates:
+                path = Path(raw)
+                try:
+                    resolved = path.resolve()
+                except Exception:
+                    continue
+                if str(resolved) in after:
+                    continue
+                if resolved.parent != seo_dir:
+                    continue
+                try:
+                    resolved.unlink(missing_ok=True)
+                    removed += 1
+                except Exception:
+                    continue
+        result["stale_seo_files_removed"] = removed
+        return result
 
     def local_items(self, product_id: int) -> list[dict[str, Any]]:
         row = self.db.product(int(product_id))
@@ -1360,10 +1435,35 @@ class ApplicationKernel:
         try:
             payload["auto_finalize"] = self.stages.auto_finalize_ready(
                 product_id,
-                {"quick", "commerce", "images", "content", "slider"},
+                {"quick", "commerce", "images", "content", "specs", "slider"},
             )
         except Exception as exc:
             payload["auto_finalize_error"] = str(exc)
+
+        try:
+            active = self.providers.active()
+            source_mode = str(
+                payload.get("effective_source_mode")
+                or payload.get("requested_source_mode")
+                or payload.get("_bulk_source_mode")
+                or payload.get("source_mode")
+                or ""
+            )
+            self.db.update_product(
+                product_id,
+                {
+                    "ai_completed_once": 1,
+                    "ai_completed_at": utc_now(),
+                    "ai_completed_source_mode": source_mode,
+                    "ai_completed_provider": str(active.get("provider") or ""),
+                    "ai_completed_model": str(active.get("model") or ""),
+                    "source_license_owner_approved": 1,
+                },
+            )
+            payload["ai_completed_once"] = True
+            payload["ai_completed_source_mode"] = source_mode
+        except Exception as exc:
+            payload["ai_completion_marker_error"] = str(exc)
 
         payload["target_stages"] = list(
             dict.fromkeys(
@@ -1373,6 +1473,7 @@ class ApplicationKernel:
                     "commerce",
                     "images",
                     "content",
+                    "specs",
                     "slider",
                 ]
             )
@@ -1422,10 +1523,12 @@ class ApplicationKernel:
                 })
                 continue
             try:
+                result_payload = dict(item.get("result") or {})
+                result_payload["_bulk_source_mode"] = str(mode or "data")
                 completed.append(
                     self.postprocess_full_product_ai(
                         product_id,
-                        dict(item.get("result") or {}),
+                        result_payload,
                     )
                 )
             except Exception as exc:
