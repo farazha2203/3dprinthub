@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## 2026-09-01 — Phase49.3I.46 / ERR-49-086 Catalog lazy loading + acquisition parity
+
+### Added
+- incremental Product Gallery loading in 50-Product pages;
+- incremental Product Table/Detail loading in 20-Product pages;
+- incremental persistent Crawl inventory loading in 100-row pages;
+- bounded Product/Crawl count/page APIs and planner indexes;
+- restored Classic Isolated, Classic Exact, Network Capture, Chrome Attached 9222, Saved HTML, Browser DOM and Public HTTP acquisition choices;
+- Chrome profile, 9222 launcher, multi-source harvest, public model-file option and source-refresh operations in Qt;
+- source refresh history while preserving operator-owned editorial/pricing decisions.
+
+### Changed
+- Qt Product list surfaces use lightweight list projections rather than full Product payload reads;
+- Product search/filter/sort is pushed to the database page boundary;
+- Crawl page identity resolution is bounded to the displayed page;
+- Gallery uses Qt batched layout plus `fetchMore` rather than eager full-list layout.
+
+### Verification
+- code `a659155da4a4a41e01e926b2ac1263a1756c24e6`;
+- Qt Full Parity `33500317538` PASS;
+- Windows Portable `33500317554` PASS;
+- Single Active AI `33500317788` PASS.
+
+### Safety
+No Django migration, no Production/Host change, no destructive Catalog rewrite. Rollback: `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901`.
+
+
 ## 2026-09-01 — Catalog Center 8.9.10 / ERR-49-085
 
 ### Added
