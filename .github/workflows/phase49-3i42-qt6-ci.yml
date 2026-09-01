@@ -7,6 +7,10 @@ on:
     paths:
       - "catalog_center/qt6/**"
       - "catalog_center/qt_launch.py"
+      - "catalog_center/launch.py"
+      - "catalog_center/app/version.py"
+      - "catalog_center/PACKAGE_MANIFEST.json"
+      - "catalog_center/config.example.json"
       - "catalog_center/requirements-qt6.txt"
       - "RUN_PHASE49_3I42C_LOCAL_GATE.ps1"
       - "catalog_center/tests/test_phase49_3i42_qt6_foundation.py"
@@ -23,6 +27,9 @@ on:
       - "catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py"
       - "catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py"
       - ".github/workflows/phase49-3i42-qt6-ci.yml"
+      # Release/version contract files are intentionally in this trigger set.
+      # ERR-49-085 exposed that a version bump could otherwise skip this full
+      # Qt parity gate while changing the manifest/launcher contract it tests.
   workflow_dispatch:
 
 permissions:
