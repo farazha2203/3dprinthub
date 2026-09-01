@@ -86,7 +86,17 @@ def variant_commerce_options_view(request):
             "color_secondary_hex": str(getattr(color_option, "secondary_hex", "") or ""),
             "color_tertiary_hex": str(getattr(color_option, "tertiary_hex", "") or ""),
             "color_type": str(getattr(color_option, "color_type", "solid") or "solid"),
+            "color_type_label": (
+                str(color_option.get_color_type_display())
+                if color_option is not None and hasattr(color_option, "get_color_type_display")
+                else ""
+            ),
             "color_finish": str(getattr(color_option, "color_finish", "matte") or "matte"),
+            "color_finish_label": (
+                str(color_option.get_color_finish_display())
+                if color_option is not None and hasattr(color_option, "get_color_finish_display")
+                else ""
+            ),
             "color_palette_hexes": list(getattr(color_option, "palette_hexes", None) or [])[:7],
             "filament_image_url": _filament_image_url(color_option),
             "filament_roll_weight_grams": str(getattr(color_option, "roll_weight_grams", 0) or 0),
