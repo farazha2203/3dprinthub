@@ -191,7 +191,52 @@ def _resolve_color(material, item: dict):
     if not name:
         return None
     brand = str(item.get("brand") or item.get("brand_name") or "").strip()[:120]
-    manufacturer = str(item.get("manufacturer") or item.get("manufacturer_name") or "").strip()[:160]
+    legacy_manufacturer = str(
+        item.get("manufacturer") or item.get("manufacturer_name") or ""
+    ).strip()[:160]
+    if not brand:
+        brand = legacy_manufacturer[:120]
+    manufacturer = brand
+
+    raw_palette = item.get("palette_hexes")
+    if not isinstance(raw_palette, list):
+        try:
+            raw_palette = json.loads(str(item.get("palette_hex_json") or "[]"))
+        except Exception:
+            raw_palette = []
+    candidates = [
+        *(raw_palette if isinstance(raw_palette, list) else []),
+        item.get("hex") or item.get("hex_code") or "",
+        item.get("secondary_hex") or "",
+        item.get("tertiary_hex") or "",
+    ]
+    palette = []
+    seen_hex = set()
+    for raw in candidates:
+        value = str(raw or "").strip().upper()
+        if not re.fullmatch(r"#[0-9A-F]{6}", value):
+            continue
+        if value.casefold() in seen_hex:
+            continue
+        seen_hex.add(value.casefold())
+        palette.append(value)
+        if len(palette) >= 7:
+            break
+
+    color_type = str(item.get("color_type") or "solid").strip().lower()
+    valid_color_types = {
+        code for code, _label in MaterialColorOption.COLOR_TYPE_CHOICES
+    }
+    if color_type not in valid_color_types:
+        color_type = "solid"
+    color_finish = str(item.get("color_finish") or "matte").strip().lower()
+    valid_finishes = {
+        code
+        for code, _label in MaterialColorOption._meta.get_field("color_finish").choices
+    }
+    if color_finish not in valid_finishes:
+        color_finish = "matte"
+
     obj = MaterialColorOption.objects.filter(
         material=material,
         name__iexact=name,
@@ -201,6 +246,12 @@ def _resolve_color(material, item: dict):
     defaults = {
         "brand_name": brand,
         "manufacturer_name": manufacturer,
+        "hex_code": palette[0] if palette else "",
+        "secondary_hex": palette[1] if len(palette) > 1 else "",
+        "tertiary_hex": palette[2] if len(palette) > 2 else "",
+        "color_type": color_type,
+        "color_finish": color_finish,
+        "palette_hexes": palette,
         "roll_weight_grams": _number(item, "roll_weight_grams", 1000),
         "stock_roll_count_snapshot": _number(item, "stock_roll_count", 0),
         "purchase_price_per_roll": _integer(item, "purchase_price_per_roll", 0),
