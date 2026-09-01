@@ -812,6 +812,11 @@ class FilamentParityCore:
         digest = hashlib.sha1(identity.encode("utf-8")).hexdigest()[:16]
         target = target_root / f"filament-{digest}.webp"
         try:
+            if source.resolve() == target.resolve() and target.is_file():
+                return str(target)
+        except Exception:
+            pass
+        try:
             with Image.open(source) as image:
                 image.load()
                 image.thumbnail((640, 640), Image.Resampling.LANCZOS)
