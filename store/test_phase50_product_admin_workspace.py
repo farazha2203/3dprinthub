@@ -156,9 +156,10 @@ class Phase50ProductAdminWorkspaceTests(SimpleTestCase):
         self.assertEqual(
             tuple(title for title, _options in colors.fieldsets),
             (
-                "هویت رنگ و متریال",
-                "نمایش رنگ",
-                "قیمت و هشدار موجودی",
+                "هویت Filament",
+                "رنگ، Finish و تصویر",
+                "موجودی و قیمت رول",
+                "هزینه‌های تولید و پیش‌گرم",
             ),
         )
         color_fields = {
@@ -166,5 +167,23 @@ class Phase50ProductAdminWorkspaceTests(SimpleTestCase):
             for _title, options in colors.fieldsets
             for field in options.get("fields", ())
         }
-        self.assertIn("sale_price_per_gram_override", color_fields)
-        self.assertIn("low_stock_threshold_grams", color_fields)
+        for name in (
+            "brand_name",
+            "color_type",
+            "color_finish",
+            "palette_hexes",
+            "filament_image",
+            "roll_weight_grams",
+            "stock_roll_count_snapshot",
+            "purchase_price_per_roll",
+            "sale_price_per_roll",
+            "low_stock_threshold_grams",
+            "print_hourly_rate",
+            "supervision_hourly_rate",
+            "preheat_hours",
+        ):
+            self.assertIn(name, color_fields)
+        self.assertNotIn("manufacturer_name", color_fields)
+        self.assertNotIn("sale_price_per_gram_override", color_fields)
+        self.assertIn("effective_price", colors.readonly_fields)
+        self.assertIn("filament_preview", colors.readonly_fields)
