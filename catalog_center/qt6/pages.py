@@ -1652,15 +1652,98 @@ class OperationsPage(QWidget):
         self.status.setText(f"{count} مورد Failed دوباره وارد صف شد.")
         self.refresh()
 
+    def _queue_product_row(self, row: dict) -> dict:
+        return {
+            "id": row.get("product_id"),
+            "title_fa": row.get("product_title_fa") or "",
+            "source_title": row.get("product_source_title") or "",
+            "short_description_fa": row.get("product_short_description_fa") or "",
+            "description_fa": row.get("product_description_fa") or "",
+            "source_short_description": (
+                row.get("product_source_short_description") or ""
+            ),
+            "source_description": row.get("product_source_description") or "",
+            "primary_image_url": row.get("product_primary_image_url") or "",
+            "local_dir": row.get("product_local_dir") or "",
+            "selected_images_json": (
+                row.get("product_selected_images_json") or "[]"
+            ),
+            "images_json": row.get("product_images_json") or "[]",
+            "image_metadata_json": (
+                row.get("product_image_metadata_json") or "[]"
+            ),
+        }
+
+    def _queue_description(self, row: dict) -> str:
+        product = self._queue_product_row(row)
+        value = (
+            product.get("short_description_fa")
+            or product.get("source_short_description")
+            or product.get("description_fa")
+            or product.get("source_description")
+            or ""
+        )
+        return " ".join(str(value).split())
+
+    def _queue_image_count(self, row: dict) -> int:
+        if not row.get("product_id"):
+            return 0
+        return self.kernel.images.image_count(
+            self._queue_product_row(row)
+        )
+
+    def _queue_icon(self, row: dict) -> QIcon:
+        if not row.get("product_id"):
+            return QIcon.fromTheme("image-x-generic")
+        path = self.kernel.images.preferred_local_path(
+            self._queue_product_row(row)
+        )
+        return QIcon(path) if path else QIcon.fromTheme("image-x-generic")
+
+    def _show_queue_inventory(self) -> None:
+        self.workspace_tabs.setCurrentIndex(0)
+        self.refresh()
+
+    def _queue_view_changed(self) -> None:
+        selected = self._selected_queue_ids()
+        target = (
+            0
+            if str(self.queue_view_mode.currentData() or "icons") == "icons"
+            else 1
+        )
+        self.queue_views.setCurrentIndex(target)
+        if selected:
+            if target == 0:
+                for index in range(self.queue_gallery.count()):
+                    item = self.queue_gallery.item(index)
+                    item.setSelected(
+                        int(item.data(Qt.ItemDataRole.UserRole) or 0)
+                        in selected
+                    )
+            else:
+                for row_index in range(self.queue_table.rowCount()):
+                    item = self.queue_table.item(row_index, 1)
+                    if item is not None:
+                        self.queue_table.selectRow(row_index) if (
+                            int(item.data(Qt.ItemDataRole.UserRole) or 0)
+                            in selected
+                        ) else None
+
     def _selected_queue_ids(self) -> list[int]:
-        values = []
-        for index in self.queue_table.selectionModel().selectedRows():
-            item = self.queue_table.item(index.row(), 0)
-            if item is None:
-                continue
-            value = item.data(Qt.ItemDataRole.UserRole)
-            if value is not None:
-                values.append(int(value))
+        values: list[int] = []
+        if hasattr(self, "queue_views") and self.queue_views.currentIndex() == 0:
+            for item in self.queue_gallery.selectedItems():
+                value = item.data(Qt.ItemDataRole.UserRole)
+                if value is not None:
+                    values.append(int(value))
+        else:
+            for index in self.queue_table.selectionModel().selectedRows():
+                item = self.queue_table.item(index.row(), 1)
+                if item is None:
+                    continue
+                value = item.data(Qt.ItemDataRole.UserRole)
+                if value is not None:
+                    values.append(int(value))
         return sorted(set(values))
 
     def _populate_queue(self, reset: bool = True) -> None:
@@ -1675,6 +1758,7 @@ class OperationsPage(QWidget):
             )
             self._queue_rows_by_id = {}
             self.queue_table.setRowCount(0)
+            self.queue_gallery.clear()
 
         if self._queue_offset >= self._queue_total:
             self._update_queue_loaded_label()
@@ -1693,52 +1777,109 @@ class OperationsPage(QWidget):
 
         start_row = self.queue_table.rowCount()
         self.queue_table.setUpdatesEnabled(False)
+        self.queue_gallery.setUpdatesEnabled(False)
         try:
             self.queue_table.setRowCount(start_row + len(rows))
             for relative_index, row in enumerate(rows):
+                row = dict(row)
                 row_index = start_row + relative_index
                 queue_id = int(row.get("id") or 0)
                 if queue_id:
-                    self._queue_rows_by_id[queue_id] = dict(row)
+                    self._queue_rows_by_id[queue_id] = row
+
                 title = (
                     row.get("product_title_fa")
                     or row.get("product_source_title")
-                    or ""
+                    or row.get("external_id")
+                    or "بدون عنوان دریافت‌شده"
                 )
+                description = self._queue_description(row)
+                short_description = description
+                if len(short_description) > 95:
+                    short_description = short_description[:92].rstrip() + "…"
+                image_count = self._queue_image_count(row)
+                icon = self._queue_icon(row)
+                status = str(row.get("status") or "")
+                source = str(row.get("source_code") or "")
+
+                gallery_item = QListWidgetItem()
+                gallery_item.setData(Qt.ItemDataRole.UserRole, queue_id)
+                gallery_item.setIcon(icon)
+                gallery_lines = [
+                    str(title),
+                    f"🖼 {image_count} • {source} • {status}",
+                ]
+                if short_description:
+                    gallery_lines.append(short_description)
+                gallery_item.setText("\n".join(gallery_lines))
+                gallery_item.setToolTip(
+                    (
+                        f"Queue #{queue_id}\n"
+                        f"Product #{row.get('product_id') or '—'}\n"
+                        f"Source: {source}\n"
+                        f"Status: {status}\n"
+                        f"Images: {image_count}\n\n"
+                        f"{description[:800]}\n\n"
+                        f"{row.get('url') or row.get('normalized_url') or ''}"
+                    )
+                )
+                self.queue_gallery.addItem(gallery_item)
+
                 url_or_error = str(
                     row.get("last_error")
                     or row.get("url")
                     or row.get("normalized_url")
                     or ""
                 )
+                image_item = QTableWidgetItem()
+                image_item.setIcon(icon)
+                image_item.setToolTip(
+                    f"{image_count} تصویر محلی/ثبت‌شده"
+                )
+                image_item.setData(Qt.ItemDataRole.UserRole, queue_id)
+                self.queue_table.setItem(row_index, 0, image_item)
+
                 values = [
                     str(queue_id),
-                    str(row.get("source_code") or ""),
-                    str(row.get("status") or ""),
+                    source,
+                    status,
                     str(row.get("product_id") or ""),
                     str(title or ""),
+                    short_description,
+                    str(image_count),
                     str(row.get("external_id") or ""),
                     str(row.get("attempts") or 0),
                     url_or_error,
                 ]
-                for column, value in enumerate(values):
+                for offset, value in enumerate(values, start=1):
                     item = QTableWidgetItem(value)
-                    if column == 0:
+                    if offset == 1:
                         item.setData(
                             Qt.ItemDataRole.UserRole,
                             queue_id,
                         )
-                    self.queue_table.setItem(row_index, column, item)
+                    if offset == 6 and description:
+                        item.setToolTip(description[:1200])
+                    if offset == 10:
+                        item.setToolTip(url_or_error)
+                    self.queue_table.setItem(row_index, offset, item)
+                self.queue_table.setRowHeight(row_index, 64)
         finally:
             self.queue_table.setUpdatesEnabled(True)
+            self.queue_gallery.setUpdatesEnabled(True)
         self._queue_offset += len(rows)
         self._update_queue_loaded_label()
 
     def _fetch_queue_if_needed(self) -> None:
         if self._queue_offset >= self._queue_total:
             return
-        bar = self.queue_table.verticalScrollBar()
-        if bar.maximum() <= 0 or bar.value() >= max(0, bar.maximum() - 12):
+        if self.queue_views.currentIndex() == 0:
+            bar = self.queue_gallery.verticalScrollBar()
+            threshold = 180
+        else:
+            bar = self.queue_table.verticalScrollBar()
+            threshold = 12
+        if bar.maximum() <= 0 or bar.value() >= max(0, bar.maximum() - threshold):
             self._populate_queue(reset=False)
 
     def _update_queue_loaded_label(self) -> None:
