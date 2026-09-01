@@ -1,5 +1,28 @@
 # DATABASE — 3DPrintHub
 
+## 2026-09-01 — Catalog SQLite paging/index stabilization (Phase49.3I.46)
+
+Environment: Windows Catalog Center local persistent SQLite only.  
+Canonical persistent DB path remains: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+
+Additive, non-destructive Catalog indexes introduced for Qt paging/query planning:
+- `ix_products_active_workflow` on Product block/workflow/id ordering;
+- `ix_products_source_updated` on source/update/id ordering;
+- `ix_discovered_source_status_id`;
+- `ix_discovered_status_id`;
+- `ix_discovered_source_status_from_id` for Listing-scoped pending queue continuation.
+
+Query boundary changes:
+- Qt Product list uses bounded `COUNT + LIMIT/OFFSET` lightweight projection;
+- Crawl inventory uses bounded `COUNT + LIMIT/OFFSET` then resolves Product identities for only the current page;
+- mature full Product reads remain available where the Product editor/business logic needs the complete row.
+
+No Django migration was created. No Production MySQL schema/data was changed. No destructive Catalog table rewrite was performed.
+
+Verification code checkpoint: `a659155da4a4a41e01e926b2ac1263a1756c24e6`; Windows Qt CI `33500317538` PASS.
+Owner Local gate must back up the real Catalog SQLite before acceptance testing.
+
+
 ## 2026-08-31 — Qt 42B2 Catalog SQLite composition
 
 Phase49.3I.42B2 adds **no Django migration** and does not alter Production MySQL.
