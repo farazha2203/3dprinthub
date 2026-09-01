@@ -319,8 +319,93 @@ def _safe_product_local_dir(app, row) -> Path | None:
     return resolved
 
 
+def _rejected_history_snapshot(row, thumbnail_path: str = "") -> dict:
+    """Keep only the lightweight rejection evidence requested by the owner."""
+    return {
+        key: _row_value(row, key, "")
+        for key in (
+            "id",
+            "source_code",
+            "source_name",
+            "external_id",
+            "source_url",
+            "normalized_url",
+            "source_title",
+            "title_fa",
+            "blocked_at",
+            "blocked_reason",
+            "source_state",
+            "workflow_status",
+        )
+    } | {"rejected_thumbnail_path": str(thumbnail_path or "")}
+
+
+def _capture_rejected_thumbnail(app, row, product_id: int) -> str:
+    """Persist one small preview outside collected/ before the heavy purge."""
+    target_root = Path(app.DATA).resolve() / "rejected_thumbnails"
+    target_root.mkdir(parents=True, exist_ok=True)
+    target = target_root / f"rejected-{int(product_id)}.webp"
+
+    candidates: list[str] = []
+    primary = str(_row_value(row, "primary_image_url", "") or "").strip()
+    if primary:
+        candidates.append(primary)
+    for field in ("selected_images_json", "images_json"):
+        try:
+            values = json.loads(str(_row_value(row, field, "[]") or "[]"))
+        except Exception:
+            values = []
+        for value in values if isinstance(values, list) else []:
+            text = str(value or "").strip()
+            if text and text not in candidates:
+                candidates.append(text)
+
+    source_path = ""
+    try:
+        from .phase49_3c_image_pipeline import strict_local_image
+        for url in candidates:
+            source_path = strict_local_image(row, url)
+            if source_path:
+                break
+    except Exception:
+        source_path = ""
+
+    if not source_path:
+        local_dir = _safe_product_local_dir(app, row)
+        if local_dir is not None:
+            for folder in (local_dir / "seo_images", local_dir / "images"):
+                if not folder.is_dir():
+                    continue
+                match = next(
+                    (
+                        item
+                        for item in sorted(folder.iterdir())
+                        if item.is_file()
+                        and item.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
+                    ),
+                    None,
+                )
+                if match is not None:
+                    source_path = str(match)
+                    break
+
+    if not source_path:
+        return ""
+    try:
+        from PIL import Image
+        with Image.open(source_path) as image:
+            image.load()
+            image.thumbnail((360, 360), Image.Resampling.LANCZOS)
+            if image.mode not in {"RGB", "RGBA"}:
+                image = image.convert("RGBA" if "transparency" in image.info else "RGB")
+            image.save(target, "WEBP", quality=82, method=6)
+    except Exception:
+        return ""
+    return str(target)
+
+
 def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
-    """Terminal operator rejection: purge local acquisition files, keep source tombstone."""
+    """Terminal rejection: keep URL/title/one thumbnail, purge heavy data/files."""
     product_id = int(product_id)
     db = app.db
     ensure_schema(db)
@@ -335,6 +420,11 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         raise RuntimeError("هویت منبع محصول ناقص است؛ حذف دائمی انجام نشد.")
 
     target = _safe_product_local_dir(app, before)
+    rejected_thumbnail = _capture_rejected_thumbnail(
+        app,
+        before,
+        product_id,
+    )
     remember_ledger(
         db,
         source_code,
@@ -353,11 +443,12 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
     values = {
         "is_blocked": 1,
         "blocked_at": utc_now(),
-        "blocked_reason": ("رد دائمی + حذف فایل‌های محلی" + (f": {reason}" if reason else ""))[:1000],
+        "blocked_reason": ("رد دائمی + حذف داده/فایل سنگین" + (f": {reason}" if reason else ""))[:1000],
         "source_state": "rejected",
         "workflow_status": "blocked",
         "upload_ready": 0,
         "needs_update": 0,
+        "approved_for_sale": 0,
         "publish_as_product": 0,
         "publish_as_portfolio": 0,
         "images_json": "[]",
@@ -368,7 +459,62 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         "local_dir": "",
         "source_page_screenshot_path": "",
         "image_metadata_json": "[]",
+        "rejected_thumbnail_path": rejected_thumbnail,
+        "ai_completed_once": 0,
+        "ai_completed_at": "",
+        "ai_completed_source_mode": "",
+        "ai_completed_provider": "",
+        "ai_completed_model": "",
+        "final_price": 0,
+        "suggested_price": 0,
+        "price_min": 0,
+        "price_max": 0,
+        "price_is_final": 0,
+        "material_price_per_gram": 0,
     }
+    for key in (
+        "source_short_description",
+        "source_description",
+        "short_description_fa",
+        "description_fa",
+        "use_description",
+        "seo_title_fa",
+        "seo_description_fa",
+        "technical_summary_fa",
+        "custom_notes",
+        "last_sync_conflict",
+    ):
+        if key in columns:
+            values[key] = ""
+    for key in (
+        "source_tags_json",
+        "tags_json",
+        "categories_fa_json",
+        "tags_fa_json",
+        "hashtags_fa_json",
+        "keywords_json",
+        "sales_bullets_json",
+        "materials_json",
+        "colors_json",
+        "material_options_json",
+        "color_options_json",
+        "material_color_options_json",
+        "sales_profiles_json",
+        "sales_profile_ledger_json",
+        "source_print_profiles_json",
+    ):
+        if key in columns:
+            values[key] = "[]"
+    for key in (
+        "source_specs_json",
+        "specs_fa_json",
+        "technical_features_json",
+        "content_pack_json",
+        "source_snapshot_json",
+    ):
+        if key in columns:
+            values[key] = "{}"
+
     values = {key: value for key, value in values.items() if key in columns}
     values["updated_at"] = utc_now()
     db.conn.execute(
@@ -387,9 +533,10 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         db.save_history(
             product_id,
             "rejected_purged",
-            dict(before),
-            dict(after) if after is not None else {},
-            f"Local acquisition purged={deleted}; reason={reason}",
+            _rejected_history_snapshot(before, rejected_thumbnail),
+            _rejected_history_snapshot(after, rejected_thumbnail)
+            if after is not None else {},
+            f"Heavy Catalog/local acquisition purged={deleted}; reason={reason}",
         )
     except Exception:
         pass
@@ -413,6 +560,7 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         "external_id": external_id,
         "local_dir": str(target) if target is not None else "",
         "deleted": bool(deleted),
+        "thumbnail_path": rejected_thumbnail,
         "ledger_status": "rejected",
     }
 
