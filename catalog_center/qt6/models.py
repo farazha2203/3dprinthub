@@ -37,6 +37,9 @@ def _summary(row: dict[str, Any]) -> str:
 
 
 class ProductTableModel(QAbstractTableModel):
+    """Incremental Product table: 20 rows first, then fetch-on-scroll."""
+
+    PAGE_SIZE = 20
     headers = (
         "ID",
         "عنوان فارسی",
@@ -47,27 +50,101 @@ class ProductTableModel(QAbstractTableModel):
         "انتشار",
         "خطا",
     )
+    SORT_COLUMNS = {
+        0: "id",
+        1: "title_fa",
+        2: "source_title",
+        4: "source_name",
+        5: "workflow_status",
+        6: "server_id",
+        7: "product_sync_error",
+    }
 
     def __init__(self, db) -> None:
         super().__init__()
         self.db = db
         self.rows: list[dict[str, Any]] = []
+        self._search = ""
+        self._filter_name = "all"
+        self._sort_column = 0
+        self._sort_order = Qt.SortOrder.DescendingOrder
+        self.total_count = 0
         self.refresh()
+
+    @property
+    def loaded_count(self) -> int:
+        return len(self.rows)
+
+    def _sort_request(self) -> tuple[str, bool]:
+        column = self.SORT_COLUMNS.get(self._sort_column, "id")
+        return (
+            f"column:{column}",
+            self._sort_order == Qt.SortOrder.DescendingOrder,
+        )
 
     def refresh(
         self,
-        search: str = "",
-        filter_name: str = "all",
+        search: str | None = None,
+        filter_name: str | None = None,
     ) -> None:
+        if search is not None:
+            self._search = str(search or "")
+        if filter_name is not None:
+            self._filter_name = str(filter_name or "all")
+        sort_key, descending = self._sort_request()
         self.beginResetModel()
+        self.total_count = int(
+            self.db.product_count(
+                filter_name=self._filter_name,
+                search=self._search,
+            )
+        )
         self.rows = [
             dict(row)
-            for row in self.db.products(
-                filter_name=str(filter_name or "all"),
-                search=search,
+            for row in self.db.product_page(
+                filter_name=self._filter_name,
+                search=self._search,
+                sort_key=sort_key,
+                descending=descending,
+                limit=self.PAGE_SIZE,
+                offset=0,
             )
         ]
         self.endResetModel()
+
+    def canFetchMore(self, parent=QModelIndex()) -> bool:  # noqa: N802
+        return not parent.isValid() and len(self.rows) < self.total_count
+
+    def fetchMore(self, parent=QModelIndex()) -> None:  # noqa: N802
+        if parent.isValid() or not self.canFetchMore(parent):
+            return
+        sort_key, descending = self._sort_request()
+        page = [
+            dict(row)
+            for row in self.db.product_page(
+                filter_name=self._filter_name,
+                search=self._search,
+                sort_key=sort_key,
+                descending=descending,
+                limit=self.PAGE_SIZE,
+                offset=len(self.rows),
+            )
+        ]
+        if not page:
+            self.total_count = len(self.rows)
+            return
+        first = len(self.rows)
+        last = first + len(page) - 1
+        self.beginInsertRows(QModelIndex(), first, last)
+        self.rows.extend(page)
+        self.endInsertRows()
+
+    def sort(self, column: int, order=Qt.SortOrder.AscendingOrder) -> None:  # noqa: N802
+        if not (0 <= int(column) < len(self.headers)):
+            return
+        self._sort_column = int(column)
+        self._sort_order = order
+        self.refresh()
 
     def rowCount(self, parent=QModelIndex()) -> int:  # noqa: N802
         return 0 if parent.isValid() else len(self.rows)
