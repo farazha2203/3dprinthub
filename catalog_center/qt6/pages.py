@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTabWidget,
     QTableView,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -37,7 +39,12 @@ from .models import (
     ProductTableModel,
 )
 from .parity_dialogs import FilamentEditorDialog
-from .product_explorer import ProductGalleryModel
+from .product_explorer import (
+    ProductGalleryModel,
+    ProductStatusDelegate,
+    product_lifecycle_status,
+    product_seo_ready,
+)
 from .product_wizard import ProductWizardPage
 from .settings_page import SettingsPage
 from .widgets import MetricCard
@@ -156,6 +163,16 @@ class ProductsPage(QWidget):
         self.sort_combo.addItem("عنوان فارسی", "title_fa")
         self.sort_combo.addItem("عنوان اصلی", "source_title")
         self.sort_combo.addItem("وضعیت", "status")
+
+        self.filter_combo = QComboBox()
+        self.filter_combo.addItem("فعال‌ها", "all")
+        self.filter_combo.addItem("جدید", "new")
+        self.filter_combo.addItem("درحال انجام", "work_queue")
+        self.filter_combo.addItem("ارسال/منتشرشده", "published")
+        self.filter_combo.addItem("خطادار", "error")
+        self.filter_combo.addItem("آرشیو", "archived")
+        self.filter_combo.addItem("رد/حذف‌شده", "blocked")
+
         refresh_btn = QPushButton("بروزرسانی")
         refresh_btn.clicked.connect(self.refresh)
         crawl_btn = QPushButton("➕ افزودن محصول / Crawl")
@@ -170,12 +187,27 @@ class ProductsPage(QWidget):
         edit_btn.clicked.connect(self._open_selected)
 
         bar.addWidget(self.search, 1)
+        bar.addWidget(QLabel("نمایش"))
+        bar.addWidget(self.filter_combo)
         bar.addWidget(QLabel("مرتب‌سازی گالری"))
         bar.addWidget(self.sort_combo)
         bar.addWidget(refresh_btn)
         bar.addWidget(crawl_btn)
         bar.addWidget(edit_btn)
         root.addLayout(bar)
+
+        bulk_bar = QHBoxLayout()
+        self.archive_btn = QPushButton("آرشیو انتخاب‌شده‌ها")
+        self.remove_btn = QPushButton("حذف از محصولات / رد")
+        self.restore_btn = QPushButton("بازیابی انتخاب‌شده‌ها")
+        self.archive_btn.clicked.connect(self._archive_selected)
+        self.remove_btn.clicked.connect(self._remove_selected)
+        self.restore_btn.clicked.connect(self._restore_selected)
+        bulk_bar.addWidget(self.archive_btn)
+        bulk_bar.addWidget(self.remove_btn)
+        bulk_bar.addWidget(self.restore_btn)
+        bulk_bar.addStretch(1)
+        root.addLayout(bulk_bar)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setChildrenCollapsible(False)
@@ -189,6 +221,7 @@ class ProductsPage(QWidget):
         )
         self.gallery = QListView()
         self.gallery.setModel(self.gallery_model)
+        self.gallery.setItemDelegate(ProductStatusDelegate(self.gallery))
         self.gallery.setViewMode(QListView.ViewMode.IconMode)
         self.gallery.setResizeMode(QListView.ResizeMode.Adjust)
         self.gallery.setMovement(QListView.Movement.Static)
@@ -198,7 +231,7 @@ class ProductsPage(QWidget):
         self.gallery.setIconSize(QSize(225, 165))
         self.gallery.setGridSize(QSize(285, 245))
         self.gallery.setSpacing(8)
-        self.gallery.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.gallery.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.gallery.doubleClicked.connect(lambda _index: self._open_selected())
         self.gallery.selectionModel().selectionChanged.connect(
             lambda *_args: self._refresh_detail()
@@ -217,7 +250,7 @@ class ProductsPage(QWidget):
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(0, Qt.SortOrder.DescendingOrder)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
@@ -281,13 +314,20 @@ class ProductsPage(QWidget):
 
         self.search.textChanged.connect(self._apply_search)
         self.sort_combo.currentIndexChanged.connect(self._apply_gallery_sort)
+        self.filter_combo.currentIndexChanged.connect(self._apply_product_filter)
         self.refresh()
+
+    def _current_product_filter(self) -> str:
+        return str(
+            self.filter_combo.currentData() or "all"
+        ) if hasattr(self, "filter_combo") else "all"
 
     def _apply_search(self, value: str) -> None:
         self.proxy.setFilterFixedString(value)
         self.gallery_model.refresh(
             value,
             str(self.sort_combo.currentData() or "newest"),
+            self._current_product_filter(),
         )
         self._refresh_detail()
 
@@ -295,31 +335,97 @@ class ProductsPage(QWidget):
         self.gallery_model.refresh(
             self.search.text().strip(),
             str(self.sort_combo.currentData() or "newest"),
+            self._current_product_filter(),
         )
 
+    def _apply_product_filter(self) -> None:
+        self.refresh()
+
     def refresh(self) -> None:
-        self.model.refresh()
+        filter_name = self._current_product_filter()
+        self.model.refresh(filter_name=filter_name)
+        self.proxy.setFilterFixedString(
+            self.search.text().strip() if hasattr(self, "search") else ""
+        )
         self.gallery_model.refresh(
             self.search.text().strip() if hasattr(self, "search") else "",
             str(self.sort_combo.currentData() or "newest")
             if hasattr(self, "sort_combo")
             else "newest",
+            filter_name,
         )
         self._refresh_detail()
 
-    def _selected_product_id(self) -> int | None:
+    def _selected_product_ids(self) -> list[int]:
+        values: list[int] = []
         if self.tabs.currentIndex() == 0:
-            indexes = self.gallery.selectedIndexes()
-            return (
-                self.gallery_model.product_id_at(indexes[0].row())
-                if indexes
-                else None
-            )
-        selection = self.table.selectionModel().selectedRows()
-        if not selection:
-            return None
-        source_index = self.proxy.mapToSource(selection[0])
-        return self.model.product_id_at(source_index.row())
+            for index in self.gallery.selectedIndexes():
+                product_id = self.gallery_model.product_id_at(index.row())
+                if product_id is not None:
+                    values.append(int(product_id))
+        else:
+            for index in self.table.selectionModel().selectedRows():
+                source_index = self.proxy.mapToSource(index)
+                product_id = self.model.product_id_at(source_index.row())
+                if product_id is not None:
+                    values.append(int(product_id))
+        return sorted(set(values))
+
+    def _selected_product_id(self) -> int | None:
+        values = self._selected_product_ids()
+        return values[0] if values else None
+
+    def _archive_selected(self) -> None:
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(self, "محصولات", "حداقل یک محصول را انتخاب کن.")
+            return
+        count = self.kernel.products.archive_many(product_ids)
+        self.refresh()
+        QMessageBox.information(
+            self,
+            "آرشیو",
+            f"{count} محصول به آرشیو محلی منتقل شد.",
+        )
+
+    def _remove_selected(self) -> None:
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(self, "محصولات", "حداقل یک محصول را انتخاب کن.")
+            return
+        answer = QMessageBox.question(
+            self,
+            "حذف از محصولات / رد",
+            (
+                f"{len(product_ids)} محصول از لیست فعال رد شود؟\n\n"
+                "این عملیات Hard Delete نیست؛ رکورد به‌صورت Tombstone قابل‌بازیابی "
+                "نگه داشته می‌شود و Crawler همان هویت را دوباره وارد نمی‌کند."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        count = self.kernel.products.remove_many(product_ids)
+        self.refresh()
+        QMessageBox.information(
+            self,
+            "رد/حذف",
+            f"{count} محصول به وضعیت رد/حذف قابل‌بازیابی رفت.",
+        )
+
+    def _restore_selected(self) -> None:
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(self, "محصولات", "حداقل یک محصول را انتخاب کن.")
+            return
+        count = self.kernel.products.restore_many(product_ids)
+        self.refresh()
+        QMessageBox.information(
+            self,
+            "بازیابی",
+            f"{count} محصول بازیابی شد.",
+        )
 
     def _refresh_detail(self) -> None:
         product_id = self._selected_product_id()
@@ -349,9 +455,20 @@ class ProductsPage(QWidget):
                 or ""
             )
         )
+        lifecycle = product_lifecycle_status(row)
+        seo_text = "نهایی ✅" if product_seo_ready(row) else "ناقص/درحال تکمیل ⚠️"
+        lifecycle_text = {
+            "new": "جدید",
+            "working": "درحال انجام",
+            "published": "ارسال/منتشرشده",
+            "rejected": "رد/حذف‌شده",
+            "archived": "آرشیو",
+        }.get(lifecycle, lifecycle)
         self.detail_meta.setText(
             f"منبع: {row.get('source_name') or row.get('source_code') or '—'}\n"
-            f"وضعیت: {row.get('workflow_status') or '—'}\n"
+            f"وضعیت DB: {row.get('workflow_status') or '—'}\n"
+            f"چرخه: {lifecycle_text}\n"
+            f"SEO: {seo_text}\n"
             f"دسته: {self.kernel.categories.label_for_slug(row.get('local_category_slug') or '')}\n"
             f"Server ID: {row.get('server_id') or '—'}"
         )
@@ -674,7 +791,63 @@ class OperationsPage(QWidget):
 
         self.summary = QPlainTextEdit()
         self.summary.setReadOnly(True)
-        root.addWidget(self.summary, 1)
+        self.summary.setMaximumHeight(190)
+        root.addWidget(self.summary)
+
+        queue_card = QFrame()
+        queue_card.setObjectName("Card")
+        queue_layout = QVBoxLayout(queue_card)
+        queue_header = QHBoxLayout()
+        queue_header.addWidget(QLabel("موجودی دائمی Crawl / همه رکوردهای دیتابیس"))
+        self.queue_filter = QComboBox()
+        self.queue_filter.addItem("همه", "all")
+        self.queue_filter.addItem("جدید", "new")
+        self.queue_filter.addItem("Failed", "failed")
+        self.queue_filter.addItem("دریافت‌شده", "collected")
+        self.queue_filter.addItem("ردشده", "rejected")
+        self.queue_collect_btn = QPushButton("افزودن انتخاب‌شده‌ها به محصولات")
+        self.queue_collect_btn.setProperty("primary", True)
+        self.queue_reject_btn = QPushButton("رد/حذف از صف")
+        self.queue_restore_btn = QPushButton("بازگرداندن به صف")
+        queue_header.addWidget(QLabel("فیلتر"))
+        queue_header.addWidget(self.queue_filter)
+        queue_header.addWidget(self.queue_collect_btn)
+        queue_header.addWidget(self.queue_reject_btn)
+        queue_header.addWidget(self.queue_restore_btn)
+        queue_header.addStretch(1)
+        queue_layout.addLayout(queue_header)
+
+        self.queue_table = QTableWidget(0, 8)
+        self.queue_table.setHorizontalHeaderLabels([
+            "ID صف",
+            "Source",
+            "وضعیت",
+            "Product ID",
+            "عنوان",
+            "External ID",
+            "Attempts",
+            "URL / خطا",
+        ])
+        self.queue_table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.queue_table.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection
+        )
+        self.queue_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.queue_table.verticalHeader().setVisible(False)
+        self.queue_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.queue_table.horizontalHeader().setSectionResizeMode(
+            7,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        queue_layout.addWidget(self.queue_table, 1)
+        root.addWidget(queue_card, 1)
+        self._queue_rows_by_id: dict[int, dict] = {}
 
         self.mode.currentIndexChanged.connect(
             self._mode_changed
@@ -695,6 +868,10 @@ class OperationsPage(QWidget):
             self._direct_from_url
         )
         self.refresh_btn.clicked.connect(self.refresh)
+        self.queue_filter.currentIndexChanged.connect(self._populate_queue)
+        self.queue_collect_btn.clicked.connect(self._collect_selected_queue)
+        self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
+        self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
         self._reload_sources()
         self._mode_changed()
         self.refresh()
@@ -922,6 +1099,8 @@ class OperationsPage(QWidget):
     def _finished(self) -> None:
         self._worker = None
         self.start_btn.setEnabled(True)
+        if hasattr(self, "queue_collect_btn"):
+            self.queue_collect_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
 
     def _reset_failed(self) -> None:
@@ -937,6 +1116,193 @@ class OperationsPage(QWidget):
             return
         self.status.setText(f"{count} مورد Failed دوباره وارد صف شد.")
         self.refresh()
+
+    def _selected_queue_ids(self) -> list[int]:
+        values = []
+        for index in self.queue_table.selectionModel().selectedRows():
+            item = self.queue_table.item(index.row(), 0)
+            if item is None:
+                continue
+            value = item.data(Qt.ItemDataRole.UserRole)
+            if value is not None:
+                values.append(int(value))
+        return sorted(set(values))
+
+    def _populate_queue(self) -> None:
+        rows = self.kernel.acquisition.queue_items("", limit=20000)
+        self._queue_rows_by_id = {
+            int(row.get("id") or 0): dict(row)
+            for row in rows
+            if int(row.get("id") or 0)
+        }
+        filter_name = str(
+            self.queue_filter.currentData() or "all"
+        ) if hasattr(self, "queue_filter") else "all"
+        visible = [
+            row
+            for row in rows
+            if filter_name == "all"
+            or str(row.get("status") or "") == filter_name
+        ]
+        self.queue_table.setRowCount(len(visible))
+        for row_index, row in enumerate(visible):
+            queue_id = int(row.get("id") or 0)
+            title = (
+                row.get("product_title_fa")
+                or row.get("product_source_title")
+                or ""
+            )
+            url_or_error = str(
+                row.get("last_error")
+                or row.get("url")
+                or row.get("normalized_url")
+                or ""
+            )
+            values = [
+                str(queue_id),
+                str(row.get("source_code") or ""),
+                str(row.get("status") or ""),
+                str(row.get("product_id") or ""),
+                str(title or ""),
+                str(row.get("external_id") or ""),
+                str(row.get("attempts") or 0),
+                url_or_error,
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column == 0:
+                    item.setData(
+                        Qt.ItemDataRole.UserRole,
+                        queue_id,
+                    )
+                self.queue_table.setItem(row_index, column, item)
+
+    def _reject_selected_queue(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(self, "صف Crawl", "حداقل یک رکورد را انتخاب کن.")
+            return
+        count = self.kernel.acquisition.reject_queue_items(ids)
+        self.status.setText(f"{count} رکورد Crawl به وضعیت rejected رفت.")
+        self.refresh()
+
+    def _restore_selected_queue(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(self, "صف Crawl", "حداقل یک رکورد را انتخاب کن.")
+            return
+        count = self.kernel.acquisition.restore_queue_items(ids)
+        self.status.setText(f"{count} رکورد دوباره در صف new قرار گرفت.")
+        self.refresh()
+
+    def _collect_selected_queue(self) -> None:
+        if self._worker is not None:
+            QMessageBox.information(
+                self,
+                "صف Crawl",
+                "یک عملیات دریافت در حال اجرا است.",
+            )
+            return
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(self, "صف Crawl", "حداقل یک رکورد را انتخاب کن.")
+            return
+        rows = [
+            self._queue_rows_by_id[row_id]
+            for row_id in ids
+            if row_id in self._queue_rows_by_id
+        ]
+        if not rows:
+            return
+
+        image_limit = self.image_limit.value()
+        download_images = self.download_images.isChecked()
+
+        def job(progress):
+            collected = 0
+            failed = 0
+            already = 0
+            errors = []
+            total = max(1, len(rows))
+            for index, row in enumerate(rows, 1):
+                queue_id = int(row.get("id") or 0)
+                status = str(row.get("status") or "")
+                if status == "collected" and row.get("product_id"):
+                    already += 1
+                    progress(
+                        int(index / total * 100),
+                        f"#{queue_id}: قبلاً داخل محصولات است.",
+                    )
+                    continue
+                if status == "rejected":
+                    self.kernel.acquisition.restore_queue_items([queue_id])
+                source_code = str(row.get("source_code") or "").strip()
+                product_url = str(
+                    row.get("url")
+                    or row.get("normalized_url")
+                    or ""
+                ).strip()
+                if not source_code or not product_url.startswith(("http://", "https://")):
+                    failed += 1
+                    self.kernel.acquisition.mark_queue_failed(
+                        [queue_id],
+                        "Queue item has no valid public Product URL/source.",
+                    )
+                    continue
+
+                base = int((index - 1) / total * 100)
+                span = max(1, int(100 / total))
+
+                def child_progress(value, message):
+                    mapped = min(
+                        99,
+                        base + int(max(0, min(100, int(value))) / 100 * span),
+                    )
+                    progress(mapped, f"#{queue_id}: {message}")
+
+                try:
+                    result = self.kernel.acquisition.run_single(
+                        source_code=source_code,
+                        product_url=product_url,
+                        image_limit=image_limit,
+                        download_images=download_images,
+                        progress=child_progress,
+                    )
+                    self.kernel.acquisition.mark_queue_collected([queue_id])
+                    if result.get("already_collected"):
+                        already += 1
+                    else:
+                        collected += int(result.get("collected", 1) or 1)
+                except Exception as exc:
+                    failed += 1
+                    errors.append(f"#{queue_id}: {exc}")
+                    self.kernel.acquisition.mark_queue_failed(
+                        [queue_id],
+                        str(exc),
+                    )
+                progress(int(index / total * 100), f"پردازش {index}/{total}")
+            return {
+                "collected": collected,
+                "failed": failed,
+                "already_collected_count": already,
+                "discovered": 0,
+                "errors": errors[-10:],
+            }
+
+        worker = Worker(job)
+        self._worker = worker
+        self.start_btn.setEnabled(False)
+        self.queue_collect_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.progress.setValue(0)
+        self.status.setText(
+            f"شروع دریافت {len(rows)} رکورد انتخاب‌شده از موجودی دائمی Crawl…"
+        )
+        worker.signals.progress.connect(self._progress)
+        worker.signals.result.connect(self._done)
+        worker.signals.error.connect(self._error)
+        worker.signals.finished.connect(self._finished)
+        self.pool.start(worker)
 
     def refresh(self) -> None:
         self._reload_sources()
@@ -967,5 +1333,6 @@ class OperationsPage(QWidget):
                 f"failed={row.get('failed_count')}"
             )
         self.summary.setPlainText("\n".join(lines))
+        self._populate_queue()
         self._source_changed()
 

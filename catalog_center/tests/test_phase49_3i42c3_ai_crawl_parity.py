@@ -698,6 +698,94 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         )
         self.assertTrue(hasattr(page, "direct_btn"))
 
+    def test_archive_is_reversible_and_hidden_from_active_products(self):
+        product_id = self._image_product()
+        self.assertEqual(
+            self.kernel.products.archive_many([product_id]),
+            1,
+        )
+        self.assertEqual(
+            self.db.product(product_id)["workflow_status"],
+            "archived",
+        )
+        self.assertNotIn(
+            product_id,
+            [
+                int(row["id"])
+                for row in self.kernel.products.list(filter_name="all")
+            ],
+        )
+        self.assertIn(
+            product_id,
+            [
+                int(row["id"])
+                for row in self.kernel.products.list(filter_name="archived")
+            ],
+        )
+        self.assertEqual(
+            self.kernel.products.restore_many([product_id]),
+            1,
+        )
+        self.assertIn(
+            product_id,
+            [
+                int(row["id"])
+                for row in self.kernel.products.list(filter_name="all")
+            ],
+        )
+
+    def test_persistent_discovery_browser_reject_and_restore_are_reversible(self):
+        url = "https://makerworld.com/en/models/queue-err49-085"
+        self.assertTrue(
+            self.db.add_discovered(
+                "makerworld",
+                "QUEUE-ERR49-085",
+                url,
+                "test",
+            )
+        )
+        row = next(
+            item
+            for item in self.kernel.acquisition.queue_items("", limit=100)
+            if item.get("external_id") == "QUEUE-ERR49-085"
+        )
+        queue_id = int(row["id"])
+        self.assertEqual(
+            self.kernel.acquisition.reject_queue_items([queue_id]),
+            1,
+        )
+        rejected = next(
+            item
+            for item in self.kernel.acquisition.queue_items("", limit=100)
+            if int(item["id"]) == queue_id
+        )
+        self.assertEqual(rejected["status"], "rejected")
+        self.assertEqual(
+            self.kernel.acquisition.restore_queue_items([queue_id]),
+            1,
+        )
+        restored = next(
+            item
+            for item in self.kernel.acquisition.queue_items("", limit=100)
+            if int(item["id"]) == queue_id
+        )
+        self.assertEqual(restored["status"], "new")
+
+    def test_operations_page_shows_persistent_discovery_inventory(self):
+        self.db.add_discovered(
+            "makerworld",
+            "QUEUE-UI-ERR49-085",
+            "https://makerworld.com/en/models/queue-ui-err49-085",
+            "test-ui",
+        )
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page.refresh()
+            self.assertGreaterEqual(page.queue_table.rowCount(), 1)
+            self.assertTrue(hasattr(page, "queue_collect_btn"))
+        finally:
+            page.close()
+
     def test_main_window_names_acquisition_route_explicitly(self):
         window = MainWindow(self.kernel)
         labels = [

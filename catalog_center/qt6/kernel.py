@@ -710,6 +710,24 @@ class AcquisitionCore:
             )
         )
 
+    def mark_queue_collected(self, row_ids: list[int]) -> int:
+        return int(
+            self.db.set_discovered_status(
+                row_ids,
+                "collected",
+                "",
+            )
+        )
+
+    def mark_queue_failed(self, row_ids: list[int], error: str) -> int:
+        return int(
+            self.db.set_discovered_status(
+                row_ids,
+                "failed",
+                str(error or ""),
+            )
+        )
+
     def queue_counts(self, source_code: str = "") -> dict[str, int]:
         return dict(self.db.queue_counts(str(source_code or "")))
 
