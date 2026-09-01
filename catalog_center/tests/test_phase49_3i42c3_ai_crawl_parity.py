@@ -18,6 +18,7 @@ from app.ai_model_catalog import (
 )
 from app.ai_providers import AIProviderClient, remember_model_capability
 from app.db import Database
+from app.phase49_3i36_stage_finalization import LOCK_COLUMN
 from qt6.image_gallery import ProductImageGrid
 from qt6.kernel import build_kernel
 from qt6.main_window import MainWindow
@@ -388,7 +389,7 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         )
         self.assertIn("quick", result["finalized"])
         row = self.db.product(product_id)
-        locks = json.loads(row["stage_locks_json"])
+        locks = json.loads(row[LOCK_COLUMN])
         self.assertIn("quick", locks)
         self.assertNotIn("specs", locks)
         self.assertNotIn("publish", locks)
