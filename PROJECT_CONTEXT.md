@@ -1,3 +1,27 @@
+# Current continuation — 2026-09-01 / Phase49.3I.47 + ERR-49-088
+
+Repository authority: `farazha2203/3dprinthub`  
+Active development branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact Windows-CI-tested source: `36a710953276aae99fa668f477ad5569f8dc23ba`  
+Owner Local gate: `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` / `49.3I.47.2`  
+Production: NOT TOUCHED.
+
+Current owner gate:
+- rerun 3I.47 Local acceptance after ff-only pulling the final documentation head;
+- verify Product lifecycle workspaces, local thumbnails, sequential multi-select AI, all-image SEO numbering/metadata, Acquisition gallery/details workspaces and Profile/Pricing tabs;
+- no Host/Production work before explicit owner acceptance.
+
+Windows runner incident:
+- ERR-49-088 fixed one non-ASCII line that broke Windows PowerShell 5.1 parsing;
+- CI now enforces ASCII bytes + Windows PowerShell 5.1 parsing;
+- Qt full parity run `33511403943` PASS; Single Active AI `33511403901` PASS.
+
+Design authority:
+- `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md` is the current source-grounded standard for Storefront/Admin/Catalog Center IA, Persian typography, layout, effects, accessibility, SEO, performance and optional 3D presentation;
+- current Django architecture remains authoritative.
+
+---
+
 # PROJECT_CONTEXT — 3DPrintHub
 
 ## Continuation checkpoint — 2026-09-01 / ERR-49-086 / Phase49.3I.46
