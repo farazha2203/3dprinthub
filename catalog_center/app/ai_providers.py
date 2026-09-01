@@ -32,6 +32,58 @@ PROVIDERS = {
 
 _HTTP_CLIENT = None
 _HTTP_CLIENT_LOCK = threading.Lock()
+_OPENROUTER_MODEL_CAPABILITIES: dict[str, dict[str, bool]] = {}
+_OPENROUTER_CAPABILITY_LOCK = threading.Lock()
+
+
+def remember_model_capability(item: dict[str, Any]) -> None:
+    """Remember non-secret OpenRouter response-format capability facts."""
+    model_id = str((item or {}).get("id") or "").strip()
+    if not model_id:
+        return
+    supported = {
+        str(value or "").strip().lower()
+        for value in ((item or {}).get("supported_parameters") or [])
+        if str(value or "").strip()
+    }
+    strict = bool(
+        (item or {}).get("strict_json_schema")
+        or supported.intersection({"structured_outputs", "json_schema"})
+    )
+    json_mode = bool(
+        strict
+        or (item or {}).get("json_mode")
+        or "response_format" in supported
+    )
+    with _OPENROUTER_CAPABILITY_LOCK:
+        _OPENROUTER_MODEL_CAPABILITIES[model_id] = {
+            "strict_json_schema": strict,
+            "json_mode": json_mode,
+        }
+
+
+def _openrouter_structured_mode(model: str) -> str:
+    with _OPENROUTER_CAPABILITY_LOCK:
+        info = dict(_OPENROUTER_MODEL_CAPABILITIES.get(str(model or "").strip()) or {})
+    if not info:
+        return "strict"
+    if info.get("strict_json_schema"):
+        return "strict"
+    if info.get("json_mode"):
+        return "json"
+    return "none"
+
+
+def _reset_pooled_http_client() -> None:
+    global _HTTP_CLIENT
+    with _HTTP_CLIENT_LOCK:
+        current = _HTTP_CLIENT
+        _HTTP_CLIENT = None
+        if current is not None:
+            try:
+                current.close()
+            except Exception:
+                pass
 
 
 def _pooled_http_client() -> httpx.Client:
@@ -104,7 +156,7 @@ def _json_request(
     }
     if provider == "openrouter":
         headers["HTTP-Referer"] = "https://3dprinthub.ir"
-        headers["X-Title"] = "3DPrintHub Catalog Center"
+        headers["X-OpenRouter-Title"] = "3DPrintHub Catalog Center"
 
     body = (
         json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -112,73 +164,51 @@ def _json_request(
         else None
     )
     started = time.perf_counter()
-    try:
-        response = _pooled_http_client().request(
-            method,
-            url,
-            headers=headers,
-            content=body,
-            timeout=httpx.Timeout(
-                connect=min(8.0, float(timeout)),
-                read=float(timeout),
-                write=min(30.0, float(timeout)),
-                pool=min(8.0, float(timeout)),
-            ),
-        )
-        raw = response.text
-        request_id = _extract_request_id(response.headers)
-        if response.status_code >= 400:
+    connect_timeout = min(
+        20.0 if provider == "openrouter" else 10.0,
+        float(timeout),
+    )
+    response = None
+    last_connect_error: httpx.RequestError | None = None
+
+    for attempt in range(1, 3):
+        try:
+            response = _pooled_http_client().request(
+                method,
+                url,
+                headers=headers,
+                content=body,
+                timeout=httpx.Timeout(
+                    connect=connect_timeout,
+                    read=float(timeout),
+                    write=min(30.0, float(timeout)),
+                    pool=min(10.0, float(timeout)),
+                ),
+            )
+            break
+        except (httpx.ConnectTimeout, httpx.ConnectError) as exc:
+            last_connect_error = exc
+            if attempt >= 2:
+                break
+            _reset_pooled_http_client()
+            time.sleep(0.65)
+        except httpx.RequestError as exc:
             ai_request_event(
                 provider=provider,
                 model=model,
                 operation=operation or method.lower(),
                 endpoint=url,
-                request_id=request_id,
-                http_status=int(response.status_code),
                 status="error",
                 duration_ms=int((time.perf_counter() - started) * 1000),
                 product_id=product_id,
-                request_summary={
-                    "method": method,
-                    "payload_keys": sorted((payload or {}).keys()),
-                },
-                error_text=raw,
+                error_text=str(exc),
             )
-            raise RuntimeError(
-                f"AI HTTP {response.status_code}: {raw[:1600]}"
-            )
+            raise RuntimeError(f"AI connection error: {exc}") from exc
 
-        data = response.json() if raw.strip() else {}
-        usage, cost_usd = _usage_cost(data)
-        ai_request_event(
-            provider=provider,
-            model=model or str(data.get("model") or ""),
-            operation=operation or method.lower(),
-            endpoint=url,
-            request_id=request_id,
-            http_status=int(response.status_code),
-            status="ok",
-            duration_ms=int((time.perf_counter() - started) * 1000),
-            usage=usage,
-            cost_usd=cost_usd,
-            cost_source="provider_response" if cost_usd is not None else "",
-            product_id=product_id,
-            request_summary={
-                "method": method,
-                "payload_keys": sorted((payload or {}).keys()),
-            },
-            response_summary={
-                "id": data.get("id"),
-                "model": data.get("model"),
-                "usage": usage,
-            },
+    if response is None:
+        exc = last_connect_error or httpx.ConnectError(
+            "connection failed before an HTTP response"
         )
-        if request_id and isinstance(data, dict):
-            data.setdefault("_request_id", request_id)
-        return data
-    except RuntimeError:
-        raise
-    except httpx.RequestError as exc:
         ai_request_event(
             provider=provider,
             model=model,
@@ -188,8 +218,68 @@ def _json_request(
             duration_ms=int((time.perf_counter() - started) * 1000),
             product_id=product_id,
             error_text=str(exc),
+            request_summary={"method": method, "connect_attempts": 2},
         )
-        raise RuntimeError(f"AI connection error: {exc}") from exc
+        raise RuntimeError(
+            "AI connection timeout/error after 2 bounded TLS/connect attempts: "
+            f"{exc}"
+        ) from exc
+
+    raw = response.text
+    request_id = _extract_request_id(response.headers)
+    if response.status_code >= 400:
+        ai_request_event(
+            provider=provider,
+            model=model,
+            operation=operation or method.lower(),
+            endpoint=url,
+            request_id=request_id,
+            http_status=int(response.status_code),
+            status="error",
+            duration_ms=int((time.perf_counter() - started) * 1000),
+            product_id=product_id,
+            request_summary={
+                "method": method,
+                "payload_keys": sorted((payload or {}).keys()),
+            },
+            error_text=raw,
+        )
+        raise RuntimeError(f"AI HTTP {response.status_code}: {raw[:1600]}")
+
+    try:
+        data = response.json() if raw.strip() else {}
+    except Exception as exc:
+        raise RuntimeError(
+            f"AI HTTP {response.status_code} returned invalid JSON: {raw[:800]}"
+        ) from exc
+
+    usage, cost_usd = _usage_cost(data)
+    ai_request_event(
+        provider=provider,
+        model=model or str(data.get("model") or ""),
+        operation=operation or method.lower(),
+        endpoint=url,
+        request_id=request_id,
+        http_status=int(response.status_code),
+        status="ok",
+        duration_ms=int((time.perf_counter() - started) * 1000),
+        usage=usage,
+        cost_usd=cost_usd,
+        cost_source="provider_response" if cost_usd is not None else "",
+        product_id=product_id,
+        request_summary={
+            "method": method,
+            "payload_keys": sorted((payload or {}).keys()),
+        },
+        response_summary={
+            "id": data.get("id"),
+            "model": data.get("model"),
+            "usage": usage,
+        },
+    )
+    if request_id and isinstance(data, dict):
+        data.setdefault("_request_id", request_id)
+    return data
 
 
 def response_output_text(data: dict[str, Any]) -> str:
@@ -227,6 +317,88 @@ def _strip_json_fence(text: str) -> str:
     return value
 
 
+def _schema_type_matches(value: Any, expected: str) -> bool:
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "null":
+        return value is None
+    return True
+
+
+def _validate_schema_value(value: Any, schema: dict[str, Any], path: str = "$") -> None:
+    if not isinstance(schema, dict):
+        return
+    if "anyOf" in schema:
+        for branch in schema.get("anyOf") or []:
+            try:
+                _validate_schema_value(value, branch, path)
+                return
+            except RuntimeError:
+                pass
+        raise RuntimeError(f"Structured JSON schema mismatch at {path}: anyOf failed")
+    if "oneOf" in schema:
+        matched = 0
+        for branch in schema.get("oneOf") or []:
+            try:
+                _validate_schema_value(value, branch, path)
+                matched += 1
+            except RuntimeError:
+                pass
+        if matched != 1:
+            raise RuntimeError(f"Structured JSON schema mismatch at {path}: oneOf failed")
+        return
+
+    expected = schema.get("type")
+    expected_types = [expected] if isinstance(expected, str) else list(expected or [])
+    if expected_types and not any(
+        _schema_type_matches(value, str(item))
+        for item in expected_types
+    ):
+        raise RuntimeError(
+            f"Structured JSON schema mismatch at {path}: "
+            f"expected {expected_types}, got {type(value).__name__}"
+        )
+
+    if "enum" in schema and value not in (schema.get("enum") or []):
+        raise RuntimeError(f"Structured JSON schema mismatch at {path}: enum")
+
+    if isinstance(value, dict):
+        properties = schema.get("properties") or {}
+        required = schema.get("required") or []
+        missing = [key for key in required if key not in value]
+        if missing:
+            raise RuntimeError(
+                f"Structured JSON schema mismatch at {path}: "
+                f"missing {', '.join(str(x) for x in missing)}"
+            )
+        if schema.get("additionalProperties") is False:
+            extra = [key for key in value if key not in properties]
+            if extra:
+                raise RuntimeError(
+                    f"Structured JSON schema mismatch at {path}: "
+                    f"unexpected {', '.join(str(x) for x in extra)}"
+                )
+        for key, child in properties.items():
+            if key in value:
+                _validate_schema_value(value[key], child, f"{path}.{key}")
+
+    if isinstance(value, list):
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                _validate_schema_value(item, item_schema, f"{path}[{index}]")
+
+
 class AIProviderClient:
     def __init__(self, provider: str, api_key: str, model: str = "", product_id: int | None = None):
         self.provider = provider if provider in PROVIDERS else "openai"
@@ -261,7 +433,7 @@ class AIProviderClient:
                     except Exception:
                         pass
                 free = free or (numeric and max(numeric) == 0)
-            output.append({
+            model_info = {
                 "id": model_id,
                 "name": str(item.get("name") or model_id),
                 "pricing": pricing,
@@ -272,7 +444,10 @@ class AIProviderClient:
                 "top_provider": item.get("top_provider") if isinstance(item.get("top_provider"), dict) else {},
                 "created": item.get("created"),
                 "free": bool(free),
-            })
+            }
+            output.append(model_info)
+            if self.provider == "openrouter":
+                remember_model_capability(model_info)
         if self.provider == "openrouter" and not any(x["id"] == "openrouter/free" for x in output):
             output.insert(0, {"id": "openrouter/free", "name": "OpenRouter Free Models Router", "pricing": {"prompt": "0", "completion": "0"}, "supported_parameters": [], "context_length": None, "free": True})
         return output
@@ -503,25 +678,35 @@ class AIProviderClient:
                 {"role": "user", "content": user_payload},
             ]
             if self.provider == "openrouter":
-                response_format = {
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": schema_name,
-                        "strict": True,
-                        "schema": schema,
-                    },
-                }
+                structured_mode = _openrouter_structured_mode(model)
+                if structured_mode == "none":
+                    raise RuntimeError(
+                        f"{self.spec.label} model {model} does not expose "
+                        "response_format JSON capability for Product work."
+                    )
+                if structured_mode == "strict":
+                    response_format = {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": schema_name,
+                            "strict": True,
+                            "schema": schema,
+                        },
+                    }
+                    operation = "structured_content"
+                else:
+                    response_format = {"type": "json_object"}
+                    operation = "structured_content_json_mode"
                 try:
                     data = self._chat(
                         model,
                         messages,
                         response_format=response_format,
-                        operation="structured_content",
+                        operation=operation,
                         require_parameters=True,
                     )
                 except RuntimeError as exc:
-                    message = str(exc)
-                    folded = message.casefold()
+                    folded = str(exc).casefold()
                     if any(
                         token in folded
                         for token in (
@@ -532,13 +717,18 @@ class AIProviderClient:
                             "require_parameters",
                             "parameter",
                             "400",
+                            "404",
                         )
                     ):
+                        capability = (
+                            "strict JSON Schema"
+                            if structured_mode == "strict"
+                            else "JSON response_format"
+                        )
                         raise RuntimeError(
-                            f"{self.spec.label} model {model} is not compatible with "
-                            "the required Product Structured JSON contract. "
-                            "Choose a text model that explicitly supports response_format / "
-                            "JSON Schema in the model catalogue."
+                            f"{self.spec.label} model {model} has no currently "
+                            f"routable endpoint for {capability}. Reload the live "
+                            "model list or choose another Product-capable endpoint/model."
                         ) from exc
                     raise
             else:
@@ -584,4 +774,5 @@ class AIProviderClient:
             ) from exc
         if not isinstance(result, dict):
             raise RuntimeError(f"{self.spec.label} returned JSON, but the root value is not an object.")
+        _validate_schema_value(result, schema)
         return result, model

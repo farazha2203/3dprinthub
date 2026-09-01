@@ -478,6 +478,17 @@ def finalize_selected_images(db, product_id: int) -> dict:
         raise RuntimeError("پوشه محلی محصول مشخص نیست.")
     seo_dir = local_dir / "seo_images"
 
+    existing_metadata = [
+        dict(item)
+        for item in _json_list(_row_value(row, IMAGE_METADATA_COLUMN, "[]"))
+        if isinstance(item, dict)
+    ]
+    existing_by_url = {
+        str(item.get("source_url") or ""): item
+        for item in existing_metadata
+        if str(item.get("source_url") or "")
+    }
+
     kept_urls: list[str] = []
     items: list[dict] = []
     seen_sha: set[str] = set()
@@ -500,6 +511,27 @@ def finalize_selected_images(db, product_id: int) -> dict:
             seen_visual.append(visual)
         index = len(items) + 1
         metadata = build_image_metadata(row, source_url, source, index, db)
+        previous = existing_by_url.get(source_url) or {}
+        override_fields = {
+            str(key)
+            for key in (previous.get("_operator_override_fields") or [])
+            if str(key)
+        }
+        for key in (
+            "alt_text",
+            "title",
+            "caption",
+            "keywords",
+            "seo_filename",
+        ):
+            if key in override_fields and key in previous:
+                metadata[key] = previous[key]
+        if override_fields:
+            metadata["_operator_override_fields"] = sorted(override_fields)
+        seo_name = str(metadata.get("seo_filename") or "").strip()
+        if not seo_name.lower().endswith(".webp"):
+            seo_name = f"{Path(seo_name).stem or planned_seo_filename(row, index).rsplit('.', 1)[0]}.webp"
+        metadata["seo_filename"] = seo_name
         target = seo_dir / metadata["seo_filename"]
         _write_webp_with_metadata(source, target, metadata)
         metadata["final_local_file"] = str(target)

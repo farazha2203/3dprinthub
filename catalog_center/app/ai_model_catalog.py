@@ -21,10 +21,12 @@ _FAMILY_RULES = (
     (("phi",), 3, 78, "احتمالی"),
 )
 
-_NATIVE_STRUCTURED_HINTS = {
-    "response_format",
+_STRICT_SCHEMA_HINTS = {
     "structured_outputs",
     "json_schema",
+}
+_JSON_MODE_HINTS = {
+    "response_format",
 }
 
 _TOOL_STRUCTURED_HINTS = {
@@ -219,8 +221,11 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         for value in (output.get("supported_parameters") or [])
         if str(value or "").strip()
     }
-    native_structured_score = len(
-        supported & _NATIVE_STRUCTURED_HINTS
+    strict_structured_score = len(
+        supported & _STRICT_SCHEMA_HINTS
+    )
+    json_mode_score = len(
+        supported & _JSON_MODE_HINTS
     )
     tool_structured_score = len(
         supported & _TOOL_STRUCTURED_HINTS
@@ -254,10 +259,13 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         token in identity_text
         for token in _CODE_SPECIALIST_HINTS
     )
-    native_structured = native_structured_score > 0
+    strict_json_schema = strict_structured_score > 0
+    json_mode = bool(strict_json_schema or json_mode_score > 0)
+    structured_json = json_mode
+    native_structured = strict_json_schema
     tool_structured_only = (
         tool_structured_score > 0
-        and not native_structured
+        and not structured_json
     )
 
     persian = persian_profile(
@@ -279,7 +287,7 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
     )
     product_ready = bool(
         product_text_capable
-        and native_structured
+        and structured_json
         and not code_specialized
         and not non_deterministic_router
     )
@@ -300,8 +308,11 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
             "persian_label": str(persian["label"]),
             "persian_rank_source": str(persian["source"]),
             "quality_score": int(persian["quality"]),
-            "structured_score": int(native_structured_score),
+            "structured_score": int(strict_structured_score * 2 + json_mode_score),
             "native_structured": native_structured,
+            "strict_json_schema": strict_json_schema,
+            "json_mode": json_mode,
+            "structured_json": structured_json,
             "tool_structured_only": tool_structured_only,
             "product_text_capable": product_text_capable,
             "product_ready": product_ready,
@@ -323,7 +334,8 @@ def model_sort_key(item: dict[str, Any]) -> tuple:
         0 if model.get("product_ready") else 1,
         0 if model.get("product_text_capable") else 1,
         -int(model.get("persian_score") or 0),
-        0 if model.get("native_structured") else 1,
+        0 if model.get("strict_json_schema") else 1,
+        0 if model.get("structured_json") else 1,
         0 if model.get("free") else 1,
         -int(model.get("persian_free_preferred_score") or 0),
         1 if model.get("code_specialized") else 0,
@@ -372,8 +384,10 @@ def format_model_label(item: dict[str, Any]) -> str:
         badges.append(f"🇮🇷 فارسی {model.get('persian_label')}")
     elif int(model.get("persian_score") or 0) >= 2:
         badges.append(f"FA {model.get('persian_label')}")
-    if model.get("native_structured"):
-        badges.append("JSON✓")
+    if model.get("strict_json_schema"):
+        badges.append("Schema✓")
+    elif model.get("json_mode"):
+        badges.append("JSON mode✓")
     elif model.get("tool_structured_only"):
         badges.append("⚠️ Tools-only")
     if model.get("non_deterministic_router"):
@@ -413,7 +427,7 @@ def model_matches_filter(item: dict[str, Any], filter_code: str) -> bool:
     if code == "structured":
         return bool(
             model.get("product_text_capable")
-            and model.get("native_structured")
+            and model.get("structured_json")
         )
     if code == "recommended":
         return bool(
@@ -454,7 +468,7 @@ def product_model_compatibility(
             "برای ترجمه، SEO و محتوای فارسی Product انتخاب مطمئنی نیست.",
         )
 
-    if require_structured and not model.get("native_structured"):
+    if require_structured and not model.get("structured_json"):
         if model.get("tool_structured_only"):
             return (
                 False,

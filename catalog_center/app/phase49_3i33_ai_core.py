@@ -49,6 +49,10 @@ BLOCKED_FACT_TOKENS = ("material", "filament", "colour", "color")
 COMMON_TRANSLATIONS = {
     "christmas tree": ("درخت", "کریسمس"),
     "night light": ("چراغ",),
+    "table lamp": ("چراغ", "رومیزی"),
+    "desk lamp": ("چراغ", "رومیزی", "میزکار"),
+    "ambient": ("محیط", "فضا", "ملایم"),
+    "organic": ("ارگانیک", "طبیعی"),
     "lamp": ("چراغ",),
     "stand": ("پایه",),
     "holder": ("نگهدار", "پایه"),
@@ -69,6 +73,14 @@ COMMON_TRANSLATIONS = {
     "toy": ("اسباب", "بازی"),
     "flexi": ("انعطاف", "مفصل"),
 }
+
+REQUIRED_TRANSLATION_GROUPS = {
+    "table lamp": (("چراغ",), ("رومیزی", "میز")),
+    "desk lamp": (("چراغ",), ("رومیزی", "میزکار", "میز")),
+    "ambient": (("محیط", "فضا", "ملایم"),),
+    "organic": (("ارگانیک", "طبیعی"),),
+}
+
 
 SCREENSHOT_FACT_SCHEMA = {
     "type": "object",
@@ -390,6 +402,7 @@ def _ai_instructions() -> str:
         "ترجمه باید فارسی طبیعی و معنایی باشد؛ آوانویسی واژه‌های عمومی انگلیسی با حروف فارسی ممنوع است. "
         "برای نمونه stand=پایه، holder=نگهدارنده، Christmas tree=درخت کریسمس و flexi=انعطاف‌پذیر. "
         "Twistmas Tree یک بازی واژه برای Christmas Tree پیچ‌خورده/اسپیرال است؛ آن را «درخت کریسمس اسپیرال» یا ترجمه معنایی هم‌ارز بنویس، نه «تویست‌ماس تری». "
+        "در عنوان‌هایی مانند Driftbloom Table Lamp Organic Ambient Desk Lamp، Driftbloom نام خاص/مدل است و باید Driftbloom یا آوانویسی واضح آن حفظ شود، اما Table Lamp/Desk Lamp=چراغ رومیزی، Organic=ارگانیک/طبیعی و Ambient=نور محیطی/فضاساز باید معنایی ترجمه شوند؛ واژه‌های ساختگی و بی‌معنی ممنوع‌اند. "
         "نام خاص یا برند را فقط وقتی ترجمه معنایی هویت را خراب می‌کند حفظ کن. "
         "source_title هویت قطعی محصول و source_description تنها منبع واقعیت است. "
         "وزن، زمان چاپ، لایک/ذخیره/دانلود/چاپ/Boost و تنظیمات layer/wall/infill/plate را فقط وقتی در منبع صریح‌اند در متن و مشخصات فنی منعکس کن. "
@@ -420,6 +433,13 @@ def title_quality_guard(source_title: str, title_fa: str) -> None:
         if english in source and not any(token in fa for token in tokens):
             raise RuntimeError(
                 f"ترجمه AI برای «{english}» معنایی نیست و احتمال آوانویسی/فینگلیش وجود دارد؛ هیچ تغییری ذخیره نشد."
+            )
+    for english, groups in REQUIRED_TRANSLATION_GROUPS.items():
+        if english not in source:
+            continue
+        if any(not any(token in fa for token in group) for group in groups):
+            raise RuntimeError(
+                f"ترجمه AI برای «{english}» مؤلفه‌های معنایی اصلی را از دست داده است؛ هیچ تغییری ذخیره نشد."
             )
 
 
