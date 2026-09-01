@@ -18,6 +18,7 @@ on:
       - store/phase50_commerce_policy.py
       - store/phase50_profile_matrix.py
       - store/phase50_filament_offer.py
+      - store/phase39_models.py
       - store/phase49_3f_pricing.py
       - store/models.py
       - store/phase50_sales_profiles.py
@@ -88,6 +89,7 @@ jobs:
             store/phase50_sales_profiles.py \
             store/phase50_profile_matrix.py \
             store/phase50_filament_offer.py \
+            store/phase39_models.py \
             store/phase49_3f_pricing.py \
             store/phase50_commerce_policy.py \
             store/phase50_sales_profile_admin.py \

@@ -14,6 +14,8 @@ on:
       - catalog_center/app/phase49_3i39_professional_commerce.py
       - catalog_center/app/phase49_3i39_completion_loop.py
       - catalog_center/app/phase49_3i40_commerce_precision.py
+      - catalog_center/app/epic49_desktop_schema.py
+      - catalog_center/app/epic49_site_sync.py
       - catalog_center/tests/test_phase49_3i40_commerce_precision.py
       - catalog_center/tests/test_phase49_3i39_professional_commerce.py
       - catalog_center/tests/test_phase49_3i39_completion_loop.py

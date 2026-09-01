@@ -9,6 +9,14 @@ on:
       - store/admin.py
       - store/admin_seo.py
       - store/phase39_admin.py
+      - store/phase39_models.py
+      - store/phase50_profile_matrix.py
+      - store/phase50_variant_views.py
+      - store/test_phase50_profile_matrix.py
+      - store/test_phase50_filament_offer_operations.py
+      - catalog_bridge/unified_views.py
+      - templates/store/product_detail.html
+      - static/store/js/phase50-profile-selector.js
       - website/admin.py
       - store/phase50_product_admin_workspace.py
       - store/test_phase50_product_admin_workspace.py
@@ -61,12 +69,18 @@ jobs:
             store/admin.py \
             store/admin_seo.py \
             store/phase39_admin.py \
+            store/phase39_models.py \
+            store/phase50_profile_matrix.py \
+            store/phase50_variant_views.py \
+            catalog_bridge/unified_views.py \
             website/admin.py \
             store/phase50_product_admin_workspace.py \
             store/phase50_filament_offer.py \
             store/migrations/0041_phase50_filament_visual_identity.py \
             store/test_phase50_product_admin_workspace.py \
             store/test_phase50_admin_http_regression.py \
+            store/test_phase50_profile_matrix.py \
+            store/test_phase50_filament_offer_operations.py \
             website/templatetags/admin_console.py
 
       - name: Validate Admin console JavaScript
@@ -89,6 +103,8 @@ jobs:
           python manage.py test \
             store.test_phase50_product_admin_workspace \
             store.test_phase50_admin_http_regression \
+            store.test_phase50_profile_matrix \
+            store.test_phase50_filament_offer_operations \
             -v 2
 
       - name: Gate marker
