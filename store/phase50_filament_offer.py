@@ -144,7 +144,7 @@ def install_model_fields() -> None:
                 max_length=500,
                 blank=True,
                 default="",
-                verbose_name="تصویر فیلامنت خارجی / سازگاری",
+                verbose_name="تصویر فیلامنت",
             ),
         ),
         (
@@ -179,7 +179,9 @@ def install_model_fields() -> None:
     # contributes Phase50 fields at AppConfig.ready() rather than rewriting the
     # mature phase39_models module, mirror the migration state at runtime too.
     MaterialColorOption.COLOR_TYPE_CHOICES = COLOR_BEHAVIOR_CHOICES
-    MaterialColorOption._meta.get_field("color_type").choices = COLOR_BEHAVIOR_CHOICES
+    color_type_field = MaterialColorOption._meta.get_field("color_type")
+    color_type_field.choices = COLOR_BEHAVIOR_CHOICES
+    color_type_field.verbose_name = "رفتار رنگ"
 
     _contribute(
         ProductVariant,
