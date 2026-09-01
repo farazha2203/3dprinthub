@@ -173,6 +173,16 @@ class ProductGalleryModel(QAbstractListModel):
         if role == Qt.ItemDataRole.DisplayRole:
             title = row.get("title_fa") or row.get("source_title") or "بدون عنوان"
             source = row.get("source_title") or ""
+            summary = (
+                row.get("short_description_fa")
+                or row.get("source_short_description")
+                or row.get("description_fa")
+                or row.get("source_description")
+                or ""
+            )
+            summary = " ".join(str(summary).split())
+            if len(summary) > 74:
+                summary = summary[:71].rstrip() + "…"
             lifecycle = product_lifecycle_status(row)
             status_icon = {
                 "new": "🔵",
@@ -182,9 +192,19 @@ class ProductGalleryModel(QAbstractListModel):
                 "archived": "⚫",
             }.get(lifecycle, "🟠")
             seo = "SEO✓" if product_seo_ready(row) else "SEO…"
+            image_count = self.images.image_count(row)
+            lines = [
+                f"{status_icon} {seo} • 🖼 {image_count} • #{row.get('id', '')}",
+                str(title),
+            ]
             if source and source != title:
-                return f"{status_icon} {seo}  #{row.get('id', '')}  {title}\n{source}"
-            return f"{status_icon} {seo}  #{row.get('id', '')}  {title}"
+                source_text = str(source)
+                if len(source_text) > 54:
+                    source_text = source_text[:51].rstrip() + "…"
+                lines.append(source_text)
+            if summary:
+                lines.append(summary)
+            return "\n".join(lines)
         if role == Qt.ItemDataRole.ToolTipRole:
             summary = (
                 row.get("short_description_fa")
@@ -196,11 +216,12 @@ class ProductGalleryModel(QAbstractListModel):
                 f"منبع: {row.get('source_name') or row.get('source_code') or '—'}\n"
                 f"وضعیت: {row.get('workflow_status') or '—'}\n"
                 f"چرخه: {product_lifecycle_status(row)}\n"
+                f"تعداد تصاویر: {self.images.image_count(row)}\n"
                 f"SEO: {'نهایی' if product_seo_ready(row) else 'ناقص/درحال تکمیل'}\n"
                 f"{str(summary)[:500]}"
             )
         if role == Qt.ItemDataRole.SizeHintRole:
-            return QSize(215, 205)
+            return QSize(235, 250)
         if role == Qt.ItemDataRole.DecorationRole:
             return self._icon_for_row(row)
         return None
