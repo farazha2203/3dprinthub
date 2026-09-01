@@ -83,21 +83,18 @@ def apply_product_fixed_prices(offers: list[dict], prices: dict[tuple[str, str, 
 
 
 def filament_rate_calculation(item: dict) -> dict[str, float | str]:
-    """Return the explicit final roll basis + per-gram rate; never invent FX."""
+    """Owner authority: sale roll / roll weight; USD stays diagnostic only."""
     roll_weight = max(1.0, float(_number(item.get("roll_weight_grams"), 1000)))
     sale_roll = max(0.0, float(_number(item.get("sale_price_per_roll"), 0)))
     usd_roll = max(0.0, float(_number(item.get("usd_price_per_roll"), 0)))
     fx = max(0.0, float(_number(item.get("usd_fx_rate_toman"), 0)))
     usd_toman = usd_roll * fx if usd_roll > 0 and fx > 0 else 0.0
-    final_roll = max(sale_roll, usd_toman)
-    if final_roll <= 0:
-        basis = "نرخ فروش/دلار هنوز کامل نیست"
-    elif usd_toman > sale_roll:
-        basis = "دلار × نرخ ثبت‌شده"
-    elif sale_roll > usd_toman:
-        basis = "قیمت فروش هر رول"
-    else:
-        basis = "فروش رول = دلار × نرخ"
+    final_roll = sale_roll
+    basis = (
+        "قیمت فروش هر رول"
+        if sale_roll > 0
+        else "قیمت فروش هر رول ثبت نشده"
+    )
     return {
         "roll_weight_grams": roll_weight,
         "sale_roll_toman": sale_roll,
@@ -107,8 +104,6 @@ def filament_rate_calculation(item: dict) -> dict[str, float | str]:
             **dict(item or {}),
             "roll_weight_grams": roll_weight,
             "sale_price_per_roll": sale_roll,
-            "usd_price_per_roll": usd_roll,
-            "usd_fx_rate_toman": fx,
         })),
         "basis": basis,
     }
