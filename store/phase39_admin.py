@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from django.contrib import admin
 from django.db.models import Sum
 from django.utils.html import format_html
@@ -92,46 +94,80 @@ if pricing_admin:
 @admin.register(MaterialColorOption)
 class MaterialColorOptionAdmin(admin.ModelAdmin):
     list_display = [
-        "material", "color_chip", "name", "color_type", "effective_price",
+        "material", "brand_name", "color_chip", "name", "color_type",
+        "color_finish", "sale_price_per_roll", "effective_price",
         "current_stock", "current_roll_count", "is_active",
     ]
-    list_filter = ["material", "color_type", "is_active"]
-    search_fields = ["name", "code", "material__name"]
+    list_filter = ["material", "color_type", "color_finish", "is_active"]
+    search_fields = ["name", "code", "material__name", "brand_name"]
     list_editable = ["is_active"]
+    readonly_fields = ["effective_price", "current_stock", "filament_preview"]
     fieldsets = (
         (
-            "هویت رنگ و متریال",
+            "هویت Filament",
             {
                 "fields": (
                     "material",
+                    "brand_name",
                     "name",
                     "code",
-                    "color_type",
                     "is_active",
                     "sort_order",
-                )
-            },
-        ),
-        (
-            "نمایش رنگ",
-            {
-                "fields": ("hex_code", "secondary_hex", "tertiary_hex"),
+                ),
                 "description": (
-                    "برای رنگ ساده فقط HEX اصلی کافی است. برای دو‌رنگ/"
-                    "چندرنگ/گرادیانی HEX دوم و سوم را هم وارد کنید."
+                    "Brand مرجع هویت Filament است. Manufacturer قدیمی فقط برای "
+                    "سازگاری Snapshotهای قبلی در دیتابیس باقی می‌ماند."
                 ),
             },
         ),
         (
-            "قیمت و هشدار موجودی",
+            "رنگ، Finish و تصویر",
             {
                 "fields": (
-                    "sale_price_per_gram_override",
+                    "color_type",
+                    "color_finish",
+                    "palette_hexes",
+                    "hex_code",
+                    "secondary_hex",
+                    "tertiary_hex",
+                    "filament_image",
+                    "filament_image_url",
+                    "filament_preview",
+                ),
+                "description": (
+                    "رفتار رنگ (تک/دو/چند/گرادیانی/تغییررنگ) مستقل از Finish "
+                    "(مات/براق/متالیک/شفاف/Silk) است. palette_hexes مرجع جدید "
+                    "نمایش سایت است و سه HEX قدیمی فقط سازگاری را حفظ می‌کنند."
+                ),
+            },
+        ),
+        (
+            "موجودی و قیمت رول",
+            {
+                "fields": (
+                    "roll_weight_grams",
+                    "stock_roll_count_snapshot",
+                    "purchase_price_per_roll",
+                    "sale_price_per_roll",
+                    "effective_price",
+                    "current_stock",
                     "low_stock_threshold_grams",
                 ),
                 "description": (
-                    "قیمت این تب Override همین رنگ است؛ در صورت خالی بودن، "
-                    "نرخ متریال مادر استفاده می‌شود."
+                    "قیمت هر گرم فقط به‌صورت خودکار از «قیمت فروش رول ÷ وزن رول» "
+                    "محاسبه می‌شود. Override قدیمی قیمت هر گرم دیگر مرجع فروش نیست."
+                ),
+            },
+        ),
+        (
+            "هزینه‌های تولید و پیش‌گرم",
+            {
+                "fields": (
+                    "print_hourly_rate",
+                    "supervision_hourly_rate",
+                    "preheat_hours",
+                    "preheat_temperature_c",
+                    "preheat_hourly_rate",
                 ),
             },
         ),
@@ -143,7 +179,13 @@ class MaterialColorOptionAdmin(admin.ModelAdmin):
 
     @admin.display(description="رنگ")
     def color_chip(self, obj):
-        colors = [x for x in [obj.hex_code, obj.secondary_hex, obj.tertiary_hex] if x]
+        palette = list(getattr(obj, "palette_hexes", None) or [])
+        colors = [
+            str(value).strip().upper()
+            for value in [*palette, obj.hex_code, obj.secondary_hex, obj.tertiary_hex]
+            if re.fullmatch(r"#[0-9A-Fa-f]{6}", str(value or "").strip())
+        ]
+        colors = list(dict.fromkeys(colors))[:7]
         if not colors:
             colors = ["#e5e7eb"]
         if len(colors) == 1:
@@ -162,13 +204,32 @@ class MaterialColorOptionAdmin(admin.ModelAdmin):
             background,
         )
 
-    @admin.display(description="قیمت هر گرم")
+    @admin.display(description="قیمت خودکار هر گرم")
     def effective_price(self, obj):
         return obj.effective_sale_price_per_gram
 
     @admin.display(description="موجودی گرم")
     def current_stock(self, obj):
         return obj.current_stock_grams
+
+    @admin.display(description="پیش‌نمایش Filament")
+    def filament_preview(self, obj):
+        url = ""
+        try:
+            if getattr(obj, "filament_image", None):
+                url = str(obj.filament_image.url or "")
+        except Exception:
+            url = ""
+        if not url:
+            url = str(getattr(obj, "filament_image_url", "") or "")
+        if not url:
+            return "تصویری ثبت نشده"
+        return format_html(
+            '<img src="{}" alt="{}" style="max-width:220px;max-height:180px;'
+            'object-fit:contain;border:1px solid #d1d5db;border-radius:12px;padding:6px;background:#fff">',
+            url,
+            obj.name,
+        )
 
 
 @admin.register(AccessoryComponent)
