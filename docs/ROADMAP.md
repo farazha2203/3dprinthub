@@ -1,5 +1,31 @@
 # ROADMAP
 
+## 2026-09-01 — Phase49.3I.46 Catalog Core Stabilization / lazy Product + Crawl loading
+
+Status: `GITHUB_UPDATED + WINDOWS_CI_PASS + PORTABLE_PASS / OWNER_LOCAL_QA_NEXT / PRODUCTION_NOT_DEPLOYED`.
+
+Implemented first stabilization slice:
+- Product Gallery: 50-row SQL page + Qt `canFetchMore/fetchMore`;
+- Product Table/Detail: 20-row SQL page + incremental fetch;
+- Crawl inventory: 100-row page + incremental scroll;
+- lightweight Product list projection instead of Qt list `SELECT *`;
+- SQL-backed search/sort/filter boundary;
+- Listing-scoped Crawl queue index and bounded identity resolution;
+- restored mature pre-Qt acquisition methods and operator actions through `AcquisitionCore`, without Tk dependency;
+- Source Refresh preserves operator-owned Persian/editorial/pricing state and records history.
+
+Code checkpoint: `a659155da4a4a41e01e926b2ac1263a1756c24e6`.  
+CI: `33500317538`, `33500317554`, `33500317788` PASS.  
+Rollback: `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901`.
+
+Next:
+1. owner Local canonical gate + real Catalog SQLite visual/performance QA;
+2. verify old discovered/product records are all still visible through paging;
+3. continue Phase49.3I.46 with connection/write serialization, bulk discovery persistence, DB auditor and slow-query/health diagnostics;
+4. then 42D UI/accessibility polish;
+5. no Production/Host work before Local acceptance.
+
+
 ## 2026-09-01 — ERR-49-085 / Catalog Center 8.9.10 acceptance gate
 
 Current Windows track: `Phase49.3I.42C3 + 3I.43–45`.
