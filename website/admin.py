@@ -120,6 +120,10 @@ class SiteSettingAdmin(admin.ModelAdmin):
         ("SEO", {"fields": ("meta_title", "meta_description")}),
     )
 
+    class Media:
+        css = {"all": ("admin/phase49-admin-tabs.css",)}
+        js = ("admin/phase49-admin-tabs.js",)
+
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == "telegram_operator_bot_token" and formfield is not None:
@@ -417,6 +421,10 @@ class QuoteAdmin(admin.ModelAdmin):
             "fields": ("customer_note", "admin_note")
         }),
     )
+
+    class Media:
+        css = {"all": ("admin/phase49-admin-tabs.css",)}
+        js = ("admin/phase49-admin-tabs.js",)
 
     def material_cost_display(self, obj):
         return f"{obj.material_cost:,} تومان"
