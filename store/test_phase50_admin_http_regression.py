@@ -101,6 +101,8 @@ class Phase50AdminHttpRegressionTests(TestCase):
             "همگام‌سازی ویندوز",
         ):
             self.assertContains(response, title)
+        self.assertContains(response, "admin/phase49-admin-tabs.css")
+        self.assertContains(response, "admin/phase49-admin-tabs.js")
 
     def test_representative_admin_pages_render_under_velzon_shell(self):
         for name in (
