@@ -1526,9 +1526,12 @@ class ProductWizardPage(QWidget):
                 "اصلاح کامل محتوایی با AI",
                 "این اجرا برای اصلاح ترجمه و SEO، مراحل محتوایی نهایی‌شده "
                 "(عنوان/محتوا/اسلایدر) را دوباره برای بازبینی باز می‌کند.\n\n"
-                "قیمت، Profile، Filament، مجوز/وضعیت تجاری و انتشار دست‌نخورده "
-                "می‌مانند. تصاویر فقط با Finalizer محلی WebP/SEO بازسازی می‌شوند.\n\n"
-                "ادامه داده شود؟",
+                "داده‌های فنی قابل اثبات Source (دسته، زمان چاپ، وزن، ابعاد و "
+                "Filamentهای موجود در کتابخانه) بدون حدس به محصول/Profile اول "
+                "افزوده می‌شوند. قیمت فقط از تنظیمات واقعی Filament محاسبه می‌شود.\n\n"
+                "مجوز/وضعیت تجاری و انتشار همچنان اپراتوری می‌مانند. تصاویر با "
+                "Finalizer محلی WebP/SEO بازسازی می‌شوند و هر مرحله واقعاً کامل "
+                "به‌صورت خودکار سبز می‌شود.\n\nادامه داده شود؟",
                 (
                     QMessageBox.StandardButton.Yes
                     | QMessageBox.StandardButton.No
@@ -1809,12 +1812,16 @@ class ProductWizardPage(QWidget):
 
         def job(progress):
             progress(10, "شروع درخواست Product")
-            result = self.kernel.ai.execute(
-                product_id,
-                mode,
-                target_stage=target,
-                refresh_existing=True,
+            result = dict(
+                self.kernel.ai.execute(
+                    product_id,
+                    mode,
+                    target_stage=target,
+                    refresh_existing=True,
+                )
+                or {}
             )
+            result["_qt_full_content_run"] = target is None
             progress(100, "تمام")
             return result
 
@@ -1849,26 +1856,99 @@ class ProductWizardPage(QWidget):
             )
             return
 
-        if self.product_id is not None:
-            self.load_product(self.product_id)
+        full_content_run = bool(
+            result.pop("_qt_full_content_run", False)
+        )
 
-        if (
-            self.product_id is not None
-            and not result.get("local_image_repair")
-            and not result.get("target_stage")
-        ):
+        if self.product_id is not None and full_content_run:
+            product_id = int(self.product_id)
+
             try:
-                row = self.kernel.products.get(self.product_id) or {}
-                if self.kernel.images.urls(row):
-                    self.kernel.images.finalize(self.product_id)
-                    self.load_product(self.product_id)
+                row = self.kernel.products.get(product_id) or {}
+                if not str(row.get("local_category_slug") or "").strip():
+                    inferred = self.kernel.categories.infer_slug(
+                        str(row.get("source_category") or ""),
+                        str(row.get("source_title") or ""),
+                        str(row.get("source_description") or ""),
+                    )
+                    if inferred:
+                        self.kernel.stages.update(
+                            product_id,
+                            "quick",
+                            {"local_category_slug": inferred},
+                            event_type="qt_source_category_inferred",
+                        )
+                        result["source_category_inferred"] = inferred
+                        result.setdefault("changed_fields", [])
+                        result["changed_fields"] = list(
+                            result["changed_fields"]
+                        ) + ["local_category_slug"]
+            except Exception as exc:
+                result["source_category_infer_error"] = str(exc)
+
+            try:
+                bootstrap = self.kernel.commerce.bootstrap_from_source(
+                    product_id,
+                    self.kernel.filaments.list(),
+                )
+                result["source_profile_bootstrap"] = bootstrap
+                if bootstrap.get("changed"):
                     result.setdefault("changed_fields", [])
-                    result["changed_fields"] = list(result["changed_fields"]) + [
+                    result["changed_fields"] = list(
+                        result["changed_fields"]
+                    ) + [
+                        "sales_profile_ledger_json",
+                        "sales_profiles_json",
+                        "material_color_options_json",
+                    ]
+            except Exception as exc:
+                result["source_profile_bootstrap_error"] = str(exc)
+
+            try:
+                row = self.kernel.products.get(product_id) or {}
+                if self.kernel.images.urls(row):
+                    self.kernel.images.finalize(product_id)
+                    result.setdefault("changed_fields", [])
+                    result["changed_fields"] = list(
+                        result["changed_fields"]
+                    ) + [
                         "image_alt_texts_json",
                         "image_metadata_json",
                     ]
-            except Exception:
-                pass
+            except Exception as exc:
+                result["image_finalize_error"] = str(exc)
+
+            try:
+                result["auto_finalize"] = (
+                    self.kernel.stages.auto_finalize_ready(
+                        product_id,
+                        {
+                            "quick",
+                            "commerce",
+                            "images",
+                            "content",
+                            "slider",
+                        },
+                    )
+                )
+            except Exception as exc:
+                result["auto_finalize_error"] = str(exc)
+
+            result["target_stages"] = list(
+                dict.fromkeys(
+                    [
+                        *list(result.get("target_stages") or []),
+                        "quick",
+                        "commerce",
+                        "images",
+                        "content",
+                        "slider",
+                    ]
+                )
+            )
+
+        if self.product_id is not None:
+            self.load_product(self.product_id)
 
         statuses = (
             self.kernel.stages.statuses(self.product_id)

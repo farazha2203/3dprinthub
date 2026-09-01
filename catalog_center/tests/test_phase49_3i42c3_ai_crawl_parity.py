@@ -206,6 +206,175 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertFalse(model_matches_filter(item, "structured"))
         self.assertIn("Batch-only", format_model_label(item))
 
+    def test_source_category_inference_uses_only_valid_local_taxonomy(self):
+        self.assertEqual(
+            self.kernel.categories.infer_slug(
+                "Home Decor",
+                "Driftbloom Table Lamp",
+                "",
+            ),
+            "home-decor",
+        )
+        self.assertEqual(
+            self.kernel.categories.infer_slug(
+                "Lighting",
+                "Organic Ambient Table Lamp",
+                "",
+            ),
+            "home-decor",
+        )
+        self.assertEqual(
+            self.kernel.categories.infer_slug(
+                "Unknown Category",
+                "Completely Unclassified Object",
+                "",
+            ),
+            "",
+        )
+
+    def test_source_profile_bootstrap_maps_all_existing_matching_filaments_without_price_invention(self):
+        self.kernel.filaments.save({
+            "material": "PLA",
+            "brand": "Brand A",
+            "manufacturer": "Maker A",
+            "color": "White",
+            "sale_price_per_roll": 0,
+            "print_hourly_rate": 0,
+        })
+        self.kernel.filaments.save({
+            "material": "PLA",
+            "brand": "Brand A2",
+            "manufacturer": "Maker A2",
+            "color": "Black",
+            "sale_price_per_roll": 0,
+            "print_hourly_rate": 0,
+        })
+        self.kernel.filaments.save({
+            "material": "PETG",
+            "brand": "Brand B",
+            "manufacturer": "Maker B",
+            "color": "Clear",
+            "sale_price_per_roll": 0,
+            "print_hourly_rate": 0,
+        })
+        self.kernel.filaments.save({
+            "material": "ABS",
+            "brand": "Brand C",
+            "manufacturer": "Maker C",
+            "color": "Gray",
+            "sale_price_per_roll": 0,
+            "print_hourly_rate": 0,
+        })
+        self.db.upsert_product({
+            "source_code": "makerworld",
+            "external_id": "ERR49-086-PROFILE",
+            "source_url": "https://makerworld.com/en/models/err49-086",
+            "source_title": "Organic Table Lamp",
+            "source_description": "Recommended materials: PLA or PETG.",
+            "source_specs_json": json.dumps({
+                "Dimensions": "120 x 80 x 200 mm",
+            }),
+            "source_print_profiles_json": json.dumps([
+                {
+                    "name": "0.20mm Standard",
+                    "print_minutes": 245,
+                }
+            ]),
+            "estimated_weight_grams": 137,
+            "estimated_print_minutes": 245,
+            "product_type": "ready_product",
+            "workflow_status": "review",
+        })
+        product_id = int(next(
+            row["id"]
+            for row in self.kernel.products.list()
+            if row["external_id"] == "ERR49-086-PROFILE"
+        ))
+
+        result = self.kernel.commerce.bootstrap_from_source(
+            product_id,
+            self.kernel.filaments.list(),
+        )
+        self.assertTrue(result["changed"])
+        self.assertEqual(result["matched_offer_count"], 3)
+
+        profiles = self.kernel.commerce.profiles(product_id)
+        self.assertEqual(len(profiles), 1)
+        first = profiles[0]
+        self.assertEqual(
+            {item["material"] for item in first["material_options"]},
+            {"PLA", "PETG"},
+        )
+        self.assertEqual(len(first["material_options"]), 3)
+        self.assertEqual(
+            first["production_rows"][0]["weight_grams"],
+            137,
+        )
+        self.assertEqual(
+            first["production_rows"][0]["print_time_minutes"],
+            245,
+        )
+        self.assertEqual(first["part_length_cm"], 12)
+        self.assertEqual(first["part_width_cm"], 8)
+        self.assertEqual(first["part_height_cm"], 20)
+        self.assertEqual(first["price_min"], 0)
+        self.assertEqual(first["price_max"], 0)
+
+        product = dict(self.db.product(product_id))
+        self.assertEqual(int(product.get("price_min") or 0), 0)
+        self.assertEqual(int(product.get("price_max") or 0), 0)
+
+    def test_source_profile_bootstrap_refuses_to_invent_print_time(self):
+        self.db.upsert_product({
+            "source_code": "makerworld",
+            "external_id": "ERR49-086-NO-TIME",
+            "source_url": "https://makerworld.com/en/models/err49-086-no-time",
+            "source_title": "Lamp",
+            "source_description": "PLA",
+            "estimated_weight_grams": 100,
+            "estimated_print_minutes": 0,
+            "source_print_profiles_json": "[]",
+            "workflow_status": "review",
+        })
+        product_id = int(next(
+            row["id"]
+            for row in self.kernel.products.list()
+            if row["external_id"] == "ERR49-086-NO-TIME"
+        ))
+        result = self.kernel.commerce.bootstrap_from_source(
+            product_id,
+            self.kernel.filaments.list(),
+        )
+        self.assertFalse(result["changed"])
+        self.assertEqual(result["reason"], "source_print_time_missing")
+        self.assertEqual(self.kernel.commerce.profiles(product_id), [])
+
+    def test_auto_finalize_ready_never_auto_approves_specs_or_publish(self):
+        self.db.upsert_product({
+            "source_code": "makerworld",
+            "external_id": "ERR49-086-AUTO-FINALIZE",
+            "source_url": "https://makerworld.com/en/models/err49-086-finalize",
+            "source_title": "Table Lamp",
+            "title_fa": "چراغ رومیزی",
+            "local_category_slug": "home-decor",
+            "workflow_status": "review",
+        })
+        product_id = int(next(
+            row["id"]
+            for row in self.kernel.products.list()
+            if row["external_id"] == "ERR49-086-AUTO-FINALIZE"
+        ))
+        result = self.kernel.stages.auto_finalize_ready(
+            product_id,
+            {"quick", "specs", "publish"},
+        )
+        self.assertIn("quick", result["finalized"])
+        row = self.db.product(product_id)
+        locks = json.loads(row["stage_locks_json"])
+        self.assertIn("quick", locks)
+        self.assertNotIn("specs", locks)
+        self.assertNotIn("publish", locks)
+
     def test_cost_estimate_uses_provider_per_token_pricing(self):
         estimate = estimate_request_cost(
             {

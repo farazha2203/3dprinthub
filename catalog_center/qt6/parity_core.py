@@ -273,6 +273,91 @@ class CategoryCore:
                 return item["slug"]
         return label
 
+    def infer_slug(
+        self,
+        source_category: str,
+        source_title: str = "",
+        source_description: str = "",
+    ) -> str:
+        """Return only a validated local category backed by source text.
+
+        Exact source-category/slug matches win. The small alias table is an
+        explicit project taxonomy bridge, not an AI guess. Ambiguous ties or
+        unknown concepts return an empty string so the operator keeps control.
+        """
+        categories = self.list()
+        valid = {str(item["slug"]): dict(item) for item in categories}
+        if not valid:
+            return ""
+
+        def fold(value: str) -> str:
+            return re.sub(
+                r"[^a-z0-9]+",
+                "-",
+                str(value or "").casefold(),
+            ).strip("-")
+
+        source_category_text = str(source_category or "").strip()
+        source_category_folded = fold(source_category_text)
+        for item in categories:
+            slug = str(item.get("slug") or "")
+            if (
+                source_category_text.casefold()
+                == str(item.get("name") or "").casefold()
+                or source_category_folded == fold(slug)
+                or source_category_folded == fold(item.get("name") or "")
+            ):
+                return slug
+
+        aliases: dict[str, tuple[str, ...]] = {
+            "home-decor": (
+                "lamp", "light", "lighting", "vase", "decor", "decoration",
+                "home decor", "household",
+            ),
+            "organizers": ("organizer", "organiser", "storage organizer"),
+            "plant-pots": ("plant pot", "flower pot", "planter"),
+            "toys-games": ("toy", "game", "puzzle"),
+            "figurines": ("figurine", "statue", "sculpture"),
+            "gears": ("gear", "cog", "gearbox"),
+            "automotive": ("automotive", "car part", "vehicle part"),
+            "mounts-brackets": ("mount", "bracket", "holder"),
+            "adapters-couplers": ("adapter", "adaptor", "coupler"),
+            "cosplay": ("cosplay", "helmet", "mask", "wearable"),
+            "electronics-cases": ("electronics case", "enclosure", "pcb case"),
+            "tools-jigs": ("jig", "fixture", "tool"),
+            "robotics": ("robot", "robotics"),
+            "education": ("education", "educational", "science model"),
+        }
+
+        category_text = f" {source_category_text.casefold()} "
+        title_text = f" {str(source_title or '').casefold()} "
+        description_text = f" {str(source_description or '').casefold()} "
+        scores: dict[str, int] = {}
+        for slug, phrases in aliases.items():
+            if slug not in valid:
+                continue
+            score = 0
+            for phrase in phrases:
+                token = str(phrase or "").casefold().strip()
+                if not token:
+                    continue
+                pattern = rf"(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])"
+                if re.search(pattern, category_text):
+                    score += 5
+                if re.search(pattern, title_text):
+                    score += 2
+                if re.search(pattern, description_text):
+                    score += 1
+            if score:
+                scores[slug] = score
+
+        if not scores:
+            return ""
+        ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
+        if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
+            return ""
+        return ranked[0][0]
+
 
 def _unique_missing(values: list[str]) -> list[str]:
     output: list[str] = []
@@ -548,7 +633,14 @@ class StageCore:
             "opened_stages": opened,
         }
 
-    def finalize(self, product_id: int, stage: str) -> dict[str, Any]:
+    def finalize(
+        self,
+        product_id: int,
+        stage: str,
+        *,
+        manual_approval: bool = True,
+        event_type: str = "qt_stage_finalized",
+    ) -> dict[str, Any]:
         stage = str(stage or "")
         if stage not in STAGE_ORDER:
             raise ValueError(f"Unknown stage: {stage}")
@@ -590,9 +682,17 @@ class StageCore:
             LOCK_COLUMN: json.dumps(locks, ensure_ascii=False)
         }
         columns = _columns(self.db)
-        if stage == "content" and "seo_manual_approved" in columns:
+        if (
+            manual_approval
+            and stage == "content"
+            and "seo_manual_approved" in columns
+        ):
             values["seo_manual_approved"] = 1
-        if stage == "specs" and "source_review_manual_approved" in columns:
+        if (
+            manual_approval
+            and stage == "specs"
+            and "source_review_manual_approved" in columns
+        ):
             values["source_review_manual_approved"] = 1
         self.db.update_product(int(product_id), values)
 
@@ -607,14 +707,62 @@ class StageCore:
         try:
             self.db.save_history(
                 int(product_id),
-                "qt_stage_finalized",
+                event_type,
                 before,
                 after,
-                f"Qt finalized stage={stage}",
+                f"Qt finalized stage={stage} manual={int(bool(manual_approval))}",
             )
         except Exception:
             pass
         return self.state(product_id)
+
+    def auto_finalize_ready(
+        self,
+        product_id: int,
+        stages: set[str] | None = None,
+    ) -> dict[str, Any]:
+        """Turn only objectively complete, safe stages green.
+
+        Source/license review and Publish are never auto-approved. The method
+        reuses the existing readiness contract; it cannot make an incomplete
+        stage green merely because an AI request finished.
+        """
+        product_id = int(product_id)
+        safe = {"quick", "commerce", "images", "content", "slider"}
+        requested = (
+            set(safe)
+            if stages is None
+            else safe & {str(stage or "") for stage in stages}
+        )
+        finalized: list[str] = []
+        skipped: dict[str, str] = {}
+
+        for item in self.statuses(product_id):
+            stage = str(item.get("stage") or "")
+            if stage not in requested:
+                continue
+            if bool(item.get("finalized")):
+                skipped[stage] = "already_finalized"
+                continue
+            if not bool(item.get("data_ready")) or item.get("missing"):
+                skipped[stage] = "not_ready"
+                continue
+            try:
+                self.finalize(
+                    product_id,
+                    stage,
+                    manual_approval=False,
+                    event_type="qt_stage_auto_finalized",
+                )
+                finalized.append(stage)
+            except Exception as exc:
+                skipped[stage] = str(exc)
+
+        return {
+            "product_id": product_id,
+            "finalized": finalized,
+            "skipped": skipped,
+        }
 
 
 class FilamentParityCore:
@@ -843,6 +991,291 @@ class CommerceCore:
     @staticmethod
     def normalize_offers(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return normalize_material_color_options(rows or [])
+
+    @staticmethod
+    def _source_dimensions_cm(data: dict[str, Any]) -> tuple[float, float, float] | None:
+        """Read dimensions only from explicitly dimension-labelled source facts."""
+        try:
+            specs = json.loads(str(data.get("source_specs_json") or "{}"))
+        except Exception:
+            return None
+
+        candidates: list[Any] = []
+
+        def walk(node: Any) -> None:
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    key_text = str(key or "").casefold()
+                    if (
+                        any(
+                            token in key_text
+                            for token in (
+                                "dimension",
+                                "dimensions",
+                                "model size",
+                                "object size",
+                                "part size",
+                                "ابعاد",
+                            )
+                        )
+                        and not any(
+                            token in key_text
+                            for token in (
+                                "build",
+                                "printer",
+                                "bed",
+                                "plate",
+                                "machine",
+                            )
+                        )
+                    ):
+                        candidates.append(value)
+                    if isinstance(value, (dict, list)):
+                        walk(value)
+            elif isinstance(node, list):
+                for value in node:
+                    walk(value)
+
+        walk(specs)
+        pattern = re.compile(
+            r"(\d+(?:\.\d+)?)\s*[x×*]\s*"
+            r"(\d+(?:\.\d+)?)\s*[x×*]\s*"
+            r"(\d+(?:\.\d+)?)\s*(mm|cm)\b",
+            re.I,
+        )
+        for value in candidates:
+            match = pattern.search(str(value or ""))
+            if not match:
+                continue
+            factor = 0.1 if match.group(4).casefold() == "mm" else 1.0
+            result = tuple(
+                round(float(match.group(index)) * factor, 3)
+                for index in (1, 2, 3)
+            )
+            if all(0 < number < 10000 for number in result):
+                return result
+        return None
+
+    @staticmethod
+    def _source_materials(
+        data: dict[str, Any],
+        filament_rows: list[dict[str, Any]],
+    ) -> set[str]:
+        source_text = "\n".join(
+            str(data.get(key) or "")
+            for key in (
+                "source_description",
+                "source_short_description",
+                "source_specs_json",
+                "source_tags_json",
+                "tags_json",
+                "source_category",
+                "source_print_profiles_json",
+            )
+        ).casefold()
+        matched: set[str] = set()
+
+        material_names = sorted(
+            {
+                str(
+                    row.get("material")
+                    or row.get("material_name")
+                    or ""
+                ).strip()
+                for row in (filament_rows or [])
+                if str(
+                    row.get("material")
+                    or row.get("material_name")
+                    or ""
+                ).strip()
+            },
+            key=len,
+            reverse=True,
+        )
+        for material in material_names:
+            parts = [
+                re.escape(part)
+                for part in re.split(r"[\s_-]+", material.casefold())
+                if part
+            ]
+            if not parts:
+                continue
+            expression = r"[\s_-]*".join(parts)
+            # Do not treat PLA inside PLA-CF/PLA+ as an exact PLA fact.
+            pattern = rf"(?<![a-z0-9+_-]){expression}(?![a-z0-9+_-])"
+            if re.search(pattern, source_text, re.I):
+                matched.add(material.casefold())
+        return matched
+
+    def bootstrap_from_source(
+        self,
+        product_id: int,
+        filament_rows: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Populate Profile 1 only from persisted source facts + real library offers.
+
+        This never invents price, color, brand, dimensions, weight or time.
+        All existing Filament Library offers for source-declared materials are
+        added; actual pricing remains the operator/library authority.
+        """
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        if is_stage_locked(row, "commerce"):
+            return {
+                "changed": False,
+                "reason": "commerce_locked",
+                "matched_offer_count": 0,
+            }
+
+        data = _row_dict(row)
+        matched_materials = self._source_materials(data, filament_rows)
+        matched_offers = normalize_material_color_options(
+            [
+                item
+                for item in (filament_rows or [])
+                if str(
+                    item.get("material")
+                    or item.get("material_name")
+                    or ""
+                ).strip().casefold() in matched_materials
+            ]
+        )
+
+        source_profiles = _json_list(
+            data.get("source_print_profiles_json", "[]")
+        )
+        source_profile = next(
+            (
+                dict(item)
+                for item in source_profiles
+                if isinstance(item, dict)
+            ),
+            {},
+        )
+        weight = max(
+            0.0,
+            _number(data.get("estimated_weight_grams"), 0),
+        )
+        minutes = max(
+            0,
+            _integer(
+                data.get("estimated_print_minutes")
+                or source_profile.get("print_minutes"),
+                0,
+            ),
+        )
+        dimensions = self._source_dimensions_cm(data)
+
+        current = self.profiles(product_id)
+        changed = False
+
+        if not current:
+            # The profile ledger requires a real print duration. Refuse to
+            # create a fake 60-minute placeholder when the source has no time.
+            if minutes <= 0:
+                return {
+                    "changed": False,
+                    "reason": "source_print_time_missing",
+                    "materials": sorted(matched_materials),
+                    "matched_offer_count": len(matched_offers),
+                    "weight_grams": weight or None,
+                    "print_time_minutes": None,
+                    "dimensions_cm": list(dimensions) if dimensions else [],
+                }
+
+            profile_name = str(source_profile.get("name") or "").strip()
+            profile: dict[str, Any] = {
+                "name": profile_name or "پروفایل منبع 1",
+                "size_label": profile_name,
+                "production_rows": [
+                    {
+                        "weight_grams": weight,
+                        "print_time_minutes": minutes,
+                        "support_weight_grams": 0,
+                    }
+                ],
+                "material_options": matched_offers,
+                "pricing_strategy": "dynamic",
+                "price_min": 0,
+                "price_max": 0,
+            }
+            if dimensions:
+                profile.update(
+                    {
+                        "part_length_cm": dimensions[0],
+                        "part_width_cm": dimensions[1],
+                        "part_height_cm": dimensions[2],
+                    }
+                )
+            self.save_profiles(product_id, [profile])
+            changed = True
+        else:
+            profiles = [deepcopy(item) for item in current]
+            first = profiles[0]
+            existing_offers = normalize_material_color_options(
+                first.get("material_options") or []
+            )
+            offer_keys = {
+                (
+                    str(item.get("material") or "").casefold(),
+                    str(item.get("brand") or "").casefold(),
+                    str(item.get("manufacturer") or "").casefold(),
+                    str(item.get("color") or "").casefold(),
+                )
+                for item in existing_offers
+            }
+            for offer in matched_offers:
+                key = (
+                    str(offer.get("material") or "").casefold(),
+                    str(offer.get("brand") or "").casefold(),
+                    str(offer.get("manufacturer") or "").casefold(),
+                    str(offer.get("color") or "").casefold(),
+                )
+                if key not in offer_keys:
+                    existing_offers.append(offer)
+                    offer_keys.add(key)
+                    changed = True
+            first["material_options"] = existing_offers
+
+            production = [
+                normalize_production_row(item)
+                for item in (first.get("production_rows") or [])
+                if isinstance(item, dict)
+            ]
+            if production and weight > 0 and _number(
+                production[0].get("weight_grams"),
+                0,
+            ) <= 0:
+                production[0]["weight_grams"] = weight
+                changed = True
+            first["production_rows"] = production
+
+            if dimensions and not any(
+                _number(first.get(key), 0) > 0
+                for key in (
+                    "part_length_cm",
+                    "part_width_cm",
+                    "part_height_cm",
+                )
+            ):
+                first["part_length_cm"] = dimensions[0]
+                first["part_width_cm"] = dimensions[1]
+                first["part_height_cm"] = dimensions[2]
+                changed = True
+
+            if changed:
+                self.save_profiles(product_id, profiles)
+
+        return {
+            "changed": bool(changed),
+            "materials": sorted(matched_materials),
+            "matched_offer_count": len(matched_offers),
+            "weight_grams": weight or None,
+            "print_time_minutes": minutes or None,
+            "dimensions_cm": list(dimensions) if dimensions else [],
+        }
 
 
 class ProviderCore:
