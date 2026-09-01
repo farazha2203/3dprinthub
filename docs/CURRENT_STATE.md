@@ -1,5 +1,66 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-09-01 / ERR-49-086 Phase49.3I.46 Catalog lazy loading + legacy acquisition parity
+
+Status: `IMPLEMENTED + WINDOWS CI TESTED + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Executable code checkpoint: `a659155da4a4a41e01e926b2ac1263a1756c24e6`  
+Rollback branch: `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901`
+
+Owner-requested delta implemented:
+- Product Gallery no longer eagerly reads the entire Catalog; initial page is 50 Products, matching the requested 5-column × 10-row operating window, and additional pages load incrementally while scrolling;
+- Product Table/Detail view starts with 20 Products and fetches later pages on demand;
+- persistent Crawl inventory starts with 100 rows and appends the next page on scroll;
+- Qt Product list queries now read bounded, lightweight list columns instead of `SELECT *` across every Product;
+- Product search is SQL-backed and debounced instead of filtering only an already-loaded giant in-memory list;
+- Crawl inventory paging avoids the historical full-table `OR` join and resolves only the identities in the current page;
+- additive SQLite planner indexes were added for Product lifecycle/source paging and Listing-scoped Crawl queue continuation;
+- the mature pre-Qt acquisition capabilities were restored through the headless Qt/Core boundary, not by calling Tkinter.
+
+Restored acquisition parity:
+- Rich current collector;
+- Classic Isolated;
+- Classic Exact;
+- Network Capture;
+- Chrome Attached on local CDP/9222;
+- Saved HTML import;
+- Browser DOM compatibility;
+- Public HTTP compatibility;
+- requested Product count up to 500;
+- image download, optional public direct model-file download, same-domain file restriction, retry Failed, Safe Stop;
+- persistent Chrome profile for normal manual login/consent;
+- launch dedicated Chrome 9222 profile;
+- multi-source harvest;
+- source-owned Product refresh that updates source facts while preserving operator Persian title/description, price and other editorial/business decisions and writes `source_refresh` history.
+
+Windows verification on exact code checkpoint:
+- `33500317538` — Qt6 Full Parity Windows — PASS;
+- `33500317554` — Windows Portable Release — PASS;
+- `33500317788` — Phase49.3I.17 Single Active AI — PASS;
+- dedicated paging regression proves Gallery 50 → remainder, Table 20 → later pages and Crawl 100 → remainder;
+- acquisition regressions prove Saved HTML import, legacy method routing and source refresh preservation;
+- mature 3I.38/43/45 Acquisition, Filament, Profile/Commerce/Stages, Single Active AI, Qt offscreen launch and Legacy launcher all PASS.
+
+Database/safety:
+- Django migration changed = NO;
+- Production MySQL changed = NO;
+- Catalog data destructive migration = NO;
+- Catalog SQLite receives additive indexes only;
+- Host/Production source changed = NO;
+- default launcher cutover = NO;
+- secrets/auth bypass = NO.
+
+Exact next task:
+1. owner Local Windows must verify correct repo/branch/clean worktree/live remote head;
+2. ff-only pull the final documentation head;
+3. run repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` with the exact expected head and launch;
+4. visually verify Product Gallery incremental loading, Table incremental loading, Crawl inventory incremental loading and the restored acquisition controls on the real Catalog SQLite;
+5. only after Local acceptance continue the remaining 49.3I.46 stabilization work (connection/write serialization, bulk DB writes, DB auditor/slow-query health) and then 42D polish;
+6. Production remains blocked.
+
+
 ## Continuation checkpoint — 2026-09-01 / ERR-49-085 Qt Product AI, Crawl inventory, Image SEO parity + Catalog Center 8.9.10
 
 Status: `IMPLEMENTED + WINDOWS CI TESTED + PORTABLE BUILT / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
