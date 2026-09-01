@@ -101,3 +101,25 @@ Rules:
 - verify RTL/LTR, responsive behavior, keyboard/focus, contrast and loading/empty/error/success states;
 - use real operational data, not placeholder status;
 - source PDFs/books must not be committed; only derivative project knowledge is stored.
+
+## Shared Web Engineering Library
+
+Before meaningful work involving React/Next.js frontend architecture, rendering/SEO,
+Three.js/R3F/3D, Storybook/design-system implementation, AI-enabled web UI,
+Django ORM/performance, PowerShell automation or web-application security, read:
+
+- `docs/library/engineering/WEB_ENGINEERING_LIBRARY_2026-09-01_FA.md`
+- the relevant project/runtime/version docs
+- for visual work also `docs/library/ui-ux/UI_UX_LIBRARY_INDEX_FA.md`
+
+Mandatory rules:
+- actual repository/runtime/lockfile/database/host state and current official docs outrank book examples;
+- do not install or copy a library/API pattern blindly from a book;
+- measure React rendering/performance before memoization or architecture changes;
+- verify the actual Next.js version/rendering model before using version-specific APIs;
+- Three.js/WebGL requires a value + performance + SEO + accessibility admission gate and a lightweight fallback;
+- AI output must have provider boundaries, schema validation, limits/timeouts, privacy rules and safe failure behavior;
+- Django ORM optimization requires query/SQL/EXPLAIN evidence and DB compatibility;
+- production security decisions must follow current OWASP/framework/vendor guidance;
+- copyrighted source PDFs are never committed; only derivative notes and public companion links are stored.
+
