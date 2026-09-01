@@ -145,7 +145,6 @@
                         data-quality="{{ variant.quality.name }}"
                         data-color="{% if variant.color %}{{ variant.color.name }}{% endif %}"
                         data-filament-brand="{% if variant.color %}{{ variant.color.brand_name }}{% endif %}"
-                        data-filament-manufacturer="{% if variant.color %}{{ variant.color.manufacturer_name }}{% endif %}"
                         {% if variant.color and variant.material.track_filament_inventory and not variant.color_stock_sufficient %}disabled data-unavailable="1"{% endif %}
                         data-material-cost="{{ price.material_cost|default:0 }}"
                         data-machine-cost="{{ price.machine_cost|default:0 }}"
