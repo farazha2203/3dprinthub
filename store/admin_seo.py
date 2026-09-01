@@ -5,8 +5,16 @@ SEO_FIELDS=("seo_focus_keyword","meta_title","meta_description","canonical_url",
 class SEOAdminMixin:
     _phase4_seo=True
     class Media:
-        css={"all":("admin/seo-admin.css",)}
-        js=("admin/seo-admin.js",)
+        css={
+            "all":(
+                "admin/seo-admin.css",
+                "admin/phase49-admin-tabs.css",
+            )
+        }
+        js=(
+            "admin/seo-admin.js",
+            "admin/phase49-admin-tabs.js",
+        )
     @admin.display(description="وضعیت سئو")
     def seo_status(self,obj):
         score=0
@@ -37,5 +45,92 @@ def _register_enhanced(model, fieldsets):
     admin.site.register(model,cls)
 
 _register_enhanced(Category,(("اطلاعات دسته",{"fields":("parent","section","name","slug","description","image","sort_order","is_active")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)})))
-_register_enhanced(Product,(("اطلاعات محصول",{"fields":("category","title","slug","sku","short_description","description","main_image","model_file","dimensions","technical_notes","installation_guide","brand_name","mpn","gtin","schema_enabled","is_featured","is_active","published_at")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)}), ("آمار",{"fields":("view_count","created_at","updated_at")})))
+_register_enhanced(
+    Product,
+    (
+        (
+            "محتوا و هویت",
+            {
+                "fields": (
+                    "category",
+                    "title",
+                    "title_en",
+                    "slug",
+                    "sku",
+                    "short_description",
+                    "short_description_en",
+                    "description",
+                    "description_en",
+                )
+            },
+        ),
+        (
+            "فروش و قیمت",
+            {
+                "fields": (
+                    "order_mode",
+                    "fixed_price",
+                    "price_is_final",
+                    "price_note",
+                    "fixed_delivery_days",
+                    "consultation_required",
+                    "is_featured",
+                    "is_active",
+                    "published_at",
+                ),
+                "description": (
+                    "Authority قیمت تنوع‌ها و رنگ/متریال در Inlineهای مربوط باقی می‌ماند؛ "
+                    "این تب فقط سیاست فروش و قیمت ثابت Product را مدیریت می‌کند."
+                ),
+            },
+        ),
+        (
+            "تصویر، فایل و اطلاعات فنی",
+            {
+                "fields": (
+                    "main_image",
+                    "model_file",
+                    "dimensions",
+                    "technical_notes",
+                    "installation_guide",
+                )
+            },
+        ),
+        (
+            "منبع و کاتالوگ",
+            {
+                "fields": (
+                    "source_name",
+                    "source_external_id",
+                    "source_url",
+                    "editorial_source_url",
+                    "source_attribution",
+                    "material_selection_intro",
+                    "hashtags",
+                )
+            },
+        ),
+        (
+            "برند و نمایش عمومی",
+            {
+                "fields": (
+                    "brand_name",
+                    "mpn",
+                    "gtin",
+                    "schema_enabled",
+                    "show_public_order_count",
+                    "customer_gallery_enabled",
+                )
+            },
+        ),
+        (
+            "سئو و شبکه‌های اجتماعی",
+            {"fields": SEO_FIELDS + ("seo_preview",)},
+        ),
+        (
+            "آمار",
+            {"fields": ("view_count", "created_at", "updated_at")},
+        ),
+    ),
+)
 _register_enhanced(ServicePage,(("اطلاعات خدمت",{"fields":("service_type","title","slug","short_description","content","hero_image","sort_order","is_active")}), ("سئو و شبکه‌های اجتماعی",{"fields":SEO_FIELDS+("seo_preview",)}), ("زمان‌ها",{"fields":("created_at","updated_at")})))
