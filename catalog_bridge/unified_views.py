@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
 import json
+import re
 from decimal import Decimal, InvalidOperation
 from functools import wraps
+from io import BytesIO
 
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from PIL import Image
 
 from store.epic49_catalog_profile import ProductCatalogProfile, _unique_public_slug, SLIDER_EFFECT_CODES
 from store.models import ImportedPrintAssetImage, Product
@@ -20,6 +26,9 @@ from .views import _authorized, _unauthorized
 
 
 MAX_JSON_BODY = 256 * 1024
+MAX_FILAMENT_SYNC_BODY = 3 * 1024 * 1024
+MAX_FILAMENT_IMAGE_BYTES = 2 * 1024 * 1024
+HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
 def _auth(view):
@@ -31,10 +40,10 @@ def _auth(view):
     return wrapped
 
 
-def _json_body(request):
-    if int(request.headers.get("Content-Length") or 0) > MAX_JSON_BODY:
+def _json_body(request, *, max_bytes=MAX_JSON_BODY):
+    if int(request.headers.get("Content-Length") or 0) > int(max_bytes):
         return None, JsonResponse({"status": "invalid_request", "detail": "Request body is too large."}, status=413)
-    if len(request.body or b"") > MAX_JSON_BODY:
+    if len(request.body or b"") > int(max_bytes):
         return None, JsonResponse({"status": "invalid_request", "detail": "Request body is too large."}, status=413)
     try:
         payload = json.loads((request.body or b"{}").decode("utf-8"))
@@ -229,6 +238,61 @@ def _filament_code(material_id: int, brand: str, color: str) -> str:
     return f"desktop-{int(material_id)}-{digest}"[:120]
 
 
+def _normalize_filament_palette(data) -> list[str]:
+    raw = data.get("palette_hexes")
+    if not isinstance(raw, list):
+        raw = []
+    candidates = [
+        *raw,
+        data.get("hex") or data.get("hex_code") or "",
+        data.get("secondary_hex") or "",
+        data.get("tertiary_hex") or "",
+    ]
+    output = []
+    seen = set()
+    for item in candidates:
+        value = str(item or "").strip().upper()
+        if not value:
+            continue
+        if not value.startswith("#"):
+            value = "#" + value
+        if not HEX_RE.match(value):
+            continue
+        key = value.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(value)
+        if len(output) >= 7:
+            break
+    return output
+
+
+def _filament_image_payload(data):
+    encoded = str(data.get("filament_image_base64") or "").strip()
+    if not encoded:
+        return None
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError("filament_image_base64 is invalid") from exc
+    if not raw or len(raw) > MAX_FILAMENT_IMAGE_BYTES:
+        raise ValueError("filament image exceeds the 2 MB decoded limit")
+
+    try:
+        with Image.open(BytesIO(raw)) as image:
+            image.verify()
+            fmt = str(image.format or "").upper()
+    except Exception as exc:
+        raise ValueError("filament image is not a valid raster image") from exc
+
+    extensions = {"WEBP": "webp", "PNG": "png", "JPEG": "jpg"}
+    if fmt not in extensions:
+        raise ValueError("filament image must be WEBP, PNG or JPEG")
+    digest = hashlib.sha256(raw).hexdigest()[:20]
+    return raw, f"filament-{digest}.{extensions[fmt]}"
+
+
 def serialize_filament(option) -> dict:
     stock_grams = getattr(option, "current_stock_grams", None)
     if stock_grams is None:
@@ -236,21 +300,35 @@ def serialize_filament(option) -> dict:
             _decimal(getattr(option, "stock_roll_count_snapshot", 0))
             * _decimal(getattr(option, "roll_weight_grams", 0))
         )
-    effective_rate = getattr(option, "effective_sale_price_per_gram", None)
-    if effective_rate is None:
-        roll_weight = _decimal(getattr(option, "roll_weight_grams", 0))
-        sale_roll = _decimal(getattr(option, "sale_price_per_roll", 0))
-        effective_rate = (sale_roll / roll_weight) if roll_weight > 0 and sale_roll > 0 else Decimal("0")
+    roll_weight = _decimal(getattr(option, "roll_weight_grams", 0))
+    sale_roll = _decimal(getattr(option, "sale_price_per_roll", 0))
+    effective_rate = (
+        sale_roll / roll_weight
+        if roll_weight > 0 and sale_roll > 0
+        else Decimal("0")
+    )
+    brand = str(getattr(option, "brand_name", "") or "").strip()
+    palette = list(getattr(option, "palette_hexes", None) or [])
+    if not palette:
+        palette = _normalize_filament_palette({
+            "hex": getattr(option, "hex_code", ""),
+            "secondary_hex": getattr(option, "secondary_hex", ""),
+            "tertiary_hex": getattr(option, "tertiary_hex", ""),
+        })
+    server_image = _file_url(getattr(option, "filament_image", None))
+    external_image = str(getattr(option, "filament_image_url", "") or "").strip()
     return {
         "id": int(option.pk),
         "material": str(option.material.name or ""),
         "material_id": int(option.material_id),
-        "brand": str(getattr(option, "brand_name", "") or ""),
-        "manufacturer": str(getattr(option, "manufacturer_name", "") or ""),
+        "brand": brand,
+        "manufacturer": brand,
         "color": str(option.name or ""),
         "code": str(option.code or ""),
         "hex": str(option.hex_code or ""),
         "color_type": str(option.color_type or "solid"),
+        "color_finish": str(getattr(option, "color_finish", "matte") or "matte"),
+        "palette_hexes": palette[:7],
         "secondary_hex": str(option.secondary_hex or ""),
         "tertiary_hex": str(option.tertiary_hex or ""),
         "roll_weight_grams": str(getattr(option, "roll_weight_grams", 1000) or 1000),
@@ -265,8 +343,9 @@ def serialize_filament(option) -> dict:
         "preheat_hours": str(getattr(option, "preheat_hours", 0) or 0),
         "preheat_temperature_c": str(getattr(option, "preheat_temperature_c", 0) or 0),
         "preheat_hourly_rate": int(getattr(option, "preheat_hourly_rate", 0) or 0),
-        "filament_image_url": str(getattr(option, "filament_image_url", "") or ""),
-        "effective_sale_price_per_gram": str(effective_rate or 0),
+        "filament_image_url": server_image or external_image,
+        "filament_image_server_url": server_image,
+        "effective_sale_price_per_gram": str(effective_rate),
         "is_active": bool(option.is_active),
     }
 
@@ -297,7 +376,7 @@ def filaments_view(request):
         "status": "ok",
         "items": items,
         "count": len(items),
-        "contract": "phase49-filament-library-v1",
+        "contract": "phase49-filament-library-v2",
     })
 
 
@@ -305,7 +384,7 @@ def filaments_view(request):
 @require_POST
 @_auth
 def filament_sync_view(request):
-    payload, error = _json_body(request)
+    payload, error = _json_body(request, max_bytes=MAX_FILAMENT_SYNC_BODY)
     if error:
         return error
     data = payload.get("filament") if isinstance(payload.get("filament"), dict) else payload
@@ -313,18 +392,17 @@ def filament_sync_view(request):
     material_name = str(data.get("material") or data.get("material_name") or "").strip()[:100]
     color = str(data.get("color") or data.get("color_name") or "").strip()[:100]
     brand = str(data.get("brand") or data.get("brand_name") or "").strip()[:120]
-    manufacturer = str(
-        data.get("manufacturer") or data.get("manufacturer_name") or brand
+    legacy_manufacturer = str(
+        data.get("manufacturer") or data.get("manufacturer_name") or ""
     ).strip()[:160]
     if not brand:
-        brand = manufacturer
-    if not manufacturer:
-        manufacturer = brand
+        brand = legacy_manufacturer[:120]
+    manufacturer = brand
     if not material_name or not color or not brand:
         return JsonResponse(
             {
                 "status": "invalid_request",
-                "detail": "material, brand/manufacturer and color are required",
+                "detail": "material, brand and color are required",
             },
             status=400,
         )
@@ -334,6 +412,14 @@ def filament_sync_view(request):
         data.get("stock_roll_count", data.get("stock_roll_count_snapshot", 0)),
         "0",
     ))
+    palette = _normalize_filament_palette(data)
+    try:
+        image_payload = _filament_image_payload(data)
+    except ValueError as exc:
+        return JsonResponse(
+            {"status": "invalid_request", "detail": str(exc)},
+            status=400,
+        )
 
     with transaction.atomic():
         material = Material.objects.filter(name__iexact=material_name).order_by("id").first()
@@ -358,14 +444,23 @@ def filament_sync_view(request):
         valid_color_types = {code for code, _label in MaterialColorOption.COLOR_TYPE_CHOICES}
         if color_type not in valid_color_types:
             color_type = "solid"
+        color_finish = str(data.get("color_finish") or "matte").strip().lower()
+        valid_finishes = {
+            code
+            for code, _label in MaterialColorOption._meta.get_field("color_finish").choices
+        }
+        if color_finish not in valid_finishes:
+            color_finish = "matte"
 
         values = {
             "brand_name": brand,
             "manufacturer_name": manufacturer,
-            "hex_code": str(data.get("hex") or data.get("hex_code") or "").strip()[:20],
+            "hex_code": palette[0] if palette else "",
             "color_type": color_type,
-            "secondary_hex": str(data.get("secondary_hex") or "").strip()[:20],
-            "tertiary_hex": str(data.get("tertiary_hex") or "").strip()[:20],
+            "color_finish": color_finish,
+            "palette_hexes": palette,
+            "secondary_hex": palette[1] if len(palette) > 1 else "",
+            "tertiary_hex": palette[2] if len(palette) > 2 else "",
             "roll_weight_grams": roll_weight,
             "stock_roll_count_snapshot": stock_roll_count,
             "purchase_price_per_roll": max(0, _as_int(data.get("purchase_price_per_roll"), 0)),
@@ -398,14 +493,22 @@ def filament_sync_view(request):
         else:
             for key, value in values.items():
                 setattr(option, key, value)
-            option.save()
             created = False
+
+        if image_payload is not None:
+            raw_image, image_name = image_payload
+            option.filament_image.save(
+                image_name,
+                ContentFile(raw_image),
+                save=False,
+            )
+        option.save()
 
     return JsonResponse({
         "status": "ok",
         "created": created,
         "filament": serialize_filament(option),
-        "contract": "phase49-filament-library-v1",
+        "contract": "phase49-filament-library-v2",
     })
 
 
