@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt
+from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -206,7 +206,10 @@ class ProductsPage(QWidget):
         bulk_bar.addWidget(self.archive_btn)
         bulk_bar.addWidget(self.remove_btn)
         bulk_bar.addWidget(self.restore_btn)
+        self.loaded_label = QLabel("")
+        self.loaded_label.setObjectName("Muted")
         bulk_bar.addStretch(1)
+        bulk_bar.addWidget(self.loaded_label)
         root.addLayout(bulk_bar)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -228,9 +231,11 @@ class ProductsPage(QWidget):
         self.gallery.setWrapping(True)
         self.gallery.setWordWrap(True)
         self.gallery.setUniformItemSizes(True)
-        self.gallery.setIconSize(QSize(225, 165))
-        self.gallery.setGridSize(QSize(285, 245))
-        self.gallery.setSpacing(8)
+        self.gallery.setLayoutMode(QListView.LayoutMode.Batched)
+        self.gallery.setBatchSize(10)
+        self.gallery.setIconSize(QSize(180, 132))
+        self.gallery.setGridSize(QSize(215, 205))
+        self.gallery.setSpacing(6)
         self.gallery.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.gallery.doubleClicked.connect(lambda _index: self._open_selected())
         self.gallery.selectionModel().selectionChanged.connect(
@@ -238,14 +243,9 @@ class ProductsPage(QWidget):
         )
 
         self.model = ProductTableModel(db)
-        self.proxy = QSortFilterProxyModel(self)
-        self.proxy.setSourceModel(self.model)
-        self.proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.proxy.setFilterKeyColumn(-1)
-        self.proxy.setSortRole(SORT_ROLE)
 
         self.table = QTableView()
-        self.table.setModel(self.proxy)
+        self.table.setModel(self.model)
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(0, Qt.SortOrder.DescendingOrder)
@@ -265,7 +265,17 @@ class ProductsPage(QWidget):
 
         self.tabs.addTab(self.gallery, "گالری")
         self.tabs.addTab(self.table, "جدول قابل مرتب‌سازی")
-        self.tabs.currentChanged.connect(lambda _index: self._refresh_detail())
+        self.tabs.currentChanged.connect(lambda _index: self._tab_changed())
+        self.gallery.verticalScrollBar().valueChanged.connect(
+            lambda _value: self._fetch_gallery_if_needed()
+        )
+        self.table.verticalScrollBar().valueChanged.connect(
+            lambda _value: self._fetch_table_if_needed()
+        )
+        self.gallery_model.rowsInserted.connect(lambda *_args: self._update_loaded_label())
+        self.gallery_model.modelReset.connect(self._update_loaded_label)
+        self.model.rowsInserted.connect(lambda *_args: self._update_loaded_label())
+        self.model.modelReset.connect(self._update_loaded_label)
         splitter.addWidget(self.tabs)
 
         detail = QFrame()
@@ -312,7 +322,15 @@ class ProductsPage(QWidget):
         splitter.setStretchFactor(1, 0)
         root.addWidget(splitter, 1)
 
-        self.search.textChanged.connect(self._apply_search)
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(220)
+        self._search_timer.timeout.connect(
+            lambda: self._apply_search(self.search.text())
+        )
+        self.search.textChanged.connect(
+            lambda _value: self._search_timer.start()
+        )
         self.sort_combo.currentIndexChanged.connect(self._apply_gallery_sort)
         self.filter_combo.currentIndexChanged.connect(self._apply_product_filter)
         self.refresh()
@@ -323,12 +341,15 @@ class ProductsPage(QWidget):
         ) if hasattr(self, "filter_combo") else "all"
 
     def _apply_search(self, value: str) -> None:
-        self.proxy.setFilterFixedString(value)
+        value = str(value or "").strip()
+        filter_name = self._current_product_filter()
+        self.model.refresh(search=value, filter_name=filter_name)
         self.gallery_model.refresh(
             value,
             str(self.sort_combo.currentData() or "newest"),
-            self._current_product_filter(),
+            filter_name,
         )
+        self._update_loaded_label()
         self._refresh_detail()
 
     def _apply_gallery_sort(self) -> None:
@@ -337,23 +358,50 @@ class ProductsPage(QWidget):
             str(self.sort_combo.currentData() or "newest"),
             self._current_product_filter(),
         )
+        self._update_loaded_label()
 
     def _apply_product_filter(self) -> None:
         self.refresh()
 
+    def _tab_changed(self) -> None:
+        self._refresh_detail()
+        self._update_loaded_label()
+
+    def _fetch_gallery_if_needed(self) -> None:
+        bar = self.gallery.verticalScrollBar()
+        if bar.maximum() <= 0 or bar.value() >= max(0, bar.maximum() - 180):
+            if self.gallery_model.canFetchMore():
+                self.gallery_model.fetchMore()
+                self._update_loaded_label()
+
+    def _fetch_table_if_needed(self) -> None:
+        bar = self.table.verticalScrollBar()
+        if bar.maximum() <= 0 or bar.value() >= max(0, bar.maximum() - 12):
+            if self.model.canFetchMore():
+                self.model.fetchMore()
+                self._update_loaded_label()
+
+    def _update_loaded_label(self) -> None:
+        if not hasattr(self, "loaded_label"):
+            return
+        self.loaded_label.setText(
+            f"گالری {self.gallery_model.loaded_count:,} از {self.gallery_model.total_count:,}"
+            f"  •  جدول {self.model.loaded_count:,} از {self.model.total_count:,}"
+            "  •  اسکرول برای ادامه"
+        )
+
     def refresh(self) -> None:
         filter_name = self._current_product_filter()
-        self.model.refresh(filter_name=filter_name)
-        self.proxy.setFilterFixedString(
-            self.search.text().strip() if hasattr(self, "search") else ""
-        )
+        search = self.search.text().strip() if hasattr(self, "search") else ""
+        self.model.refresh(search=search, filter_name=filter_name)
         self.gallery_model.refresh(
-            self.search.text().strip() if hasattr(self, "search") else "",
+            search,
             str(self.sort_combo.currentData() or "newest")
             if hasattr(self, "sort_combo")
             else "newest",
             filter_name,
         )
+        self._update_loaded_label()
         self._refresh_detail()
 
     def _selected_product_ids(self) -> list[int]:
@@ -365,8 +413,7 @@ class ProductsPage(QWidget):
                     values.append(int(product_id))
         else:
             for index in self.table.selectionModel().selectedRows():
-                source_index = self.proxy.mapToSource(index)
-                product_id = self.model.product_id_at(source_index.row())
+                product_id = self.model.product_id_at(index.row())
                 if product_id is not None:
                     values.append(int(product_id))
         return sorted(set(values))
@@ -814,7 +861,10 @@ class OperationsPage(QWidget):
         queue_header.addWidget(self.queue_collect_btn)
         queue_header.addWidget(self.queue_reject_btn)
         queue_header.addWidget(self.queue_restore_btn)
+        self.queue_loaded_label = QLabel("")
+        self.queue_loaded_label.setObjectName("Muted")
         queue_header.addStretch(1)
+        queue_header.addWidget(self.queue_loaded_label)
         queue_layout.addLayout(queue_header)
 
         self.queue_table = QTableWidget(0, 8)
@@ -848,6 +898,12 @@ class OperationsPage(QWidget):
         queue_layout.addWidget(self.queue_table, 1)
         root.addWidget(queue_card, 1)
         self._queue_rows_by_id: dict[int, dict] = {}
+        self._queue_page_size = 100
+        self._queue_offset = 0
+        self._queue_total = 0
+        self.queue_table.verticalScrollBar().valueChanged.connect(
+            lambda _value: self._fetch_queue_if_needed()
+        )
 
         self.mode.currentIndexChanged.connect(
             self._mode_changed
@@ -868,7 +924,9 @@ class OperationsPage(QWidget):
             self._direct_from_url
         )
         self.refresh_btn.clicked.connect(self.refresh)
-        self.queue_filter.currentIndexChanged.connect(self._populate_queue)
+        self.queue_filter.currentIndexChanged.connect(
+            lambda _index: self._populate_queue(reset=True)
+        )
         self.queue_collect_btn.clicked.connect(self._collect_selected_queue)
         self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
@@ -1128,54 +1186,89 @@ class OperationsPage(QWidget):
                 values.append(int(value))
         return sorted(set(values))
 
-    def _populate_queue(self) -> None:
-        rows = self.kernel.acquisition.queue_items("", limit=20000)
-        self._queue_rows_by_id = {
-            int(row.get("id") or 0): dict(row)
-            for row in rows
-            if int(row.get("id") or 0)
-        }
+    def _populate_queue(self, reset: bool = True) -> None:
         filter_name = str(
             self.queue_filter.currentData() or "all"
         ) if hasattr(self, "queue_filter") else "all"
-        visible = [
-            row
-            for row in rows
-            if filter_name == "all"
-            or str(row.get("status") or "") == filter_name
-        ]
-        self.queue_table.setRowCount(len(visible))
-        for row_index, row in enumerate(visible):
-            queue_id = int(row.get("id") or 0)
-            title = (
-                row.get("product_title_fa")
-                or row.get("product_source_title")
-                or ""
+        if reset:
+            self._queue_offset = 0
+            self._queue_total = self.kernel.acquisition.queue_count(
+                "",
+                filter_name,
             )
-            url_or_error = str(
-                row.get("last_error")
-                or row.get("url")
-                or row.get("normalized_url")
-                or ""
+            self._queue_rows_by_id = {}
+            self.queue_table.setRowCount(0)
+
+        if self._queue_offset >= self._queue_total:
+            self._update_queue_loaded_label()
+            return
+
+        rows = self.kernel.acquisition.queue_page(
+            "",
+            filter_name,
+            limit=self._queue_page_size,
+            offset=self._queue_offset,
+        )
+        if not rows:
+            self._queue_total = self._queue_offset
+            self._update_queue_loaded_label()
+            return
+
+        start_row = self.queue_table.rowCount()
+        self.queue_table.setUpdatesEnabled(False)
+        try:
+            self.queue_table.setRowCount(start_row + len(rows))
+            for relative_index, row in enumerate(rows):
+                row_index = start_row + relative_index
+                queue_id = int(row.get("id") or 0)
+                if queue_id:
+                    self._queue_rows_by_id[queue_id] = dict(row)
+                title = (
+                    row.get("product_title_fa")
+                    or row.get("product_source_title")
+                    or ""
+                )
+                url_or_error = str(
+                    row.get("last_error")
+                    or row.get("url")
+                    or row.get("normalized_url")
+                    or ""
+                )
+                values = [
+                    str(queue_id),
+                    str(row.get("source_code") or ""),
+                    str(row.get("status") or ""),
+                    str(row.get("product_id") or ""),
+                    str(title or ""),
+                    str(row.get("external_id") or ""),
+                    str(row.get("attempts") or 0),
+                    url_or_error,
+                ]
+                for column, value in enumerate(values):
+                    item = QTableWidgetItem(value)
+                    if column == 0:
+                        item.setData(
+                            Qt.ItemDataRole.UserRole,
+                            queue_id,
+                        )
+                    self.queue_table.setItem(row_index, column, item)
+        finally:
+            self.queue_table.setUpdatesEnabled(True)
+        self._queue_offset += len(rows)
+        self._update_queue_loaded_label()
+
+    def _fetch_queue_if_needed(self) -> None:
+        if self._queue_offset >= self._queue_total:
+            return
+        bar = self.queue_table.verticalScrollBar()
+        if bar.maximum() <= 0 or bar.value() >= max(0, bar.maximum() - 12):
+            self._populate_queue(reset=False)
+
+    def _update_queue_loaded_label(self) -> None:
+        if hasattr(self, "queue_loaded_label"):
+            self.queue_loaded_label.setText(
+                f"نمایش {self._queue_offset:,} از {self._queue_total:,} • اسکرول برای ادامه"
             )
-            values = [
-                str(queue_id),
-                str(row.get("source_code") or ""),
-                str(row.get("status") or ""),
-                str(row.get("product_id") or ""),
-                str(title or ""),
-                str(row.get("external_id") or ""),
-                str(row.get("attempts") or 0),
-                url_or_error,
-            ]
-            for column, value in enumerate(values):
-                item = QTableWidgetItem(value)
-                if column == 0:
-                    item.setData(
-                        Qt.ItemDataRole.UserRole,
-                        queue_id,
-                    )
-                self.queue_table.setItem(row_index, column, item)
 
     def _reject_selected_queue(self) -> None:
         ids = self._selected_queue_ids()
@@ -1333,6 +1426,6 @@ class OperationsPage(QWidget):
                 f"failed={row.get('failed_count')}"
             )
         self.summary.setPlainText("\n".join(lines))
-        self._populate_queue()
+        self._populate_queue(reset=True)
         self._source_changed()
 
