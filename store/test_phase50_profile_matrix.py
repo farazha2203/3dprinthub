@@ -256,7 +256,7 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(variant.color.brand_name, "Bambu Lab")
         self.assertEqual(variant.color.manufacturer_name, "Bambu Lab")
         self.assertEqual(variant.color.sale_price_per_roll, 3_600_000)
-        self.assertEqual(variant.color.effective_sale_price_per_gram, Decimal("3900"))
+        self.assertEqual(variant.color.effective_sale_price_per_gram, Decimal("3600"))
 
         response = self.client.get(
             reverse("store:variant_commerce_options"),
