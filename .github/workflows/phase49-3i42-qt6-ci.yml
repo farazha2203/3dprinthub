@@ -149,7 +149,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 verify-only launch failed' }
           $text = Get-Content "$env:RUNNER_TEMP/qt6-verify.txt" -Raw
           foreach ($marker in @(
-            'QT_UI_CONTRACT=phase49-3i42c3-ai-crawl-parity-v1',
+            'QT_UI_CONTRACT=phase49-3i42c3-ai-crawl-parity-v2',
             'QT6_MAIN_WINDOW=ENABLED',
             'QT6_PRODUCT_GALLERY_SORT=ENABLED',
             'QT6_FILAMENT_CRUD=ENABLED',
@@ -169,6 +169,13 @@ jobs:
             'QT6_AI_STRUCTURED_PROBE=ENABLED',
             'QT6_AI_COST_CONFIRM=ENABLED',
             'QT6_DIAGNOSTIC_DIALOG=ENABLED',
+            'QT6_OPENROUTER_JSON_MODE=ENABLED',
+            'QT6_SEMANTIC_TRANSLATION_GUARD=ENABLED',
+            'QT6_IMAGE_FINAL_WEBP_PARITY=ENABLED',
+            'QT6_PERSISTENT_CRAWL_INVENTORY=ENABLED',
+            'QT6_PRODUCT_LIFECYCLE_BULK_ACTIONS=ENABLED',
+            'QT6_PRODUCT_STATUS_BORDER_SEO=ENABLED',
+            'QT6_SLIDER_DIRECT_INPUT_UX=ENABLED',
             'QT6_42B2_FULL_PARITY_VERIFY=OK'
           )) {
             if ($text -notmatch [regex]::Escape($marker)) {

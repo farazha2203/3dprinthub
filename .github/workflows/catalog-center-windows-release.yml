@@ -243,6 +243,6 @@ jobs:
           - frozen Playwright/browser launch smoke
           - SHA256 verification
 
-          8.9.8 keeps the mature acquisition/file/image path and refines professional Stage 2: cross-filter multi-brand Offer selections remain additive, global filament facts are separated from per-Product Offer fixed prices, Catalog color preview is visible, readiness data defects are separated from operator finalization, and the AI completion dialog reaches 100% only when AI-fixable defects are zero.
+          8.9.10 keeps the mature acquisition/file/image path and restores Qt operational parity after ERR-49-085: OpenRouter JSON-mode models are locally schema-validated, semantic Persian title guards reject nonsense translations, final SEO WebP files are shown and rebuilt after metadata edits, persistent Crawl inventory is visible with reversible queue actions, Product cards expose lifecycle/SEO status with bulk archive/reject/restore, and Slider numeric inputs are direct-entry friendly.
           "@
           gh release create $tag $exe $manifestPath $shaFile --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "3DPrintHub Catalog Center v$env:CATALOG_VERSION" --notes $notes

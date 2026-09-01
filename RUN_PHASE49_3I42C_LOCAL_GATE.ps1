@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.42C.1"
+$RunnerVersion = "49.3I.42C.2"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -296,6 +296,13 @@ try {
             "QT6_AI_STRUCTURED_PROBE=ENABLED",
             "QT6_AI_COST_CONFIRM=ENABLED",
             "QT6_DIAGNOSTIC_DIALOG=ENABLED",
+            "QT6_OPENROUTER_JSON_MODE=ENABLED",
+            "QT6_SEMANTIC_TRANSLATION_GUARD=ENABLED",
+            "QT6_IMAGE_FINAL_WEBP_PARITY=ENABLED",
+            "QT6_PERSISTENT_CRAWL_INVENTORY=ENABLED",
+            "QT6_PRODUCT_LIFECYCLE_BULK_ACTIONS=ENABLED",
+            "QT6_PRODUCT_STATUS_BORDER_SEO=ENABLED",
+            "QT6_SLIDER_DIRECT_INPUT_UX=ENABLED",
             "QT6_42B2_FULL_PARITY_VERIFY=OK"
         )) {
             if ($QtVerify -notmatch [regex]::Escape($marker)) {

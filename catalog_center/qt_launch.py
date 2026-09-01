@@ -72,6 +72,13 @@ def main(argv=None) -> int:
         print("QT6_AI_STRUCTURED_PROBE=ENABLED", flush=True)
         print("QT6_AI_COST_CONFIRM=ENABLED", flush=True)
         print("QT6_DIAGNOSTIC_DIALOG=ENABLED", flush=True)
+        print("QT6_OPENROUTER_JSON_MODE=ENABLED", flush=True)
+        print("QT6_SEMANTIC_TRANSLATION_GUARD=ENABLED", flush=True)
+        print("QT6_IMAGE_FINAL_WEBP_PARITY=ENABLED", flush=True)
+        print("QT6_PERSISTENT_CRAWL_INVENTORY=ENABLED", flush=True)
+        print("QT6_PRODUCT_LIFECYCLE_BULK_ACTIONS=ENABLED", flush=True)
+        print("QT6_PRODUCT_STATUS_BORDER_SEO=ENABLED", flush=True)
+        print("QT6_SLIDER_DIRECT_INPUT_UX=ENABLED", flush=True)
         print(f"QT6_ROUTES={len(contract['routes'])}", flush=True)
         print(f"QT6_ACTIONS={contract['action_count']}", flush=True)
         print(f"QT6_CORES={len(contract['core_names'])}", flush=True)
@@ -87,6 +94,12 @@ def main(argv=None) -> int:
                 raise RuntimeError("Qt6 stage authority contract mismatch")
             if len(contract["core_names"]) < 11:
                 raise RuntimeError("Qt6 full parity core registry incomplete")
+            if not hasattr(kernel.acquisition, "queue_items"):
+                raise RuntimeError("Qt6 persistent Crawl inventory core missing")
+            if not hasattr(kernel.products, "archive_many"):
+                raise RuntimeError("Qt6 Product lifecycle bulk core missing")
+            if not hasattr(kernel.products, "remove_many"):
+                raise RuntimeError("Qt6 Product reject/tombstone core missing")
             print("QT6_FOUNDATION_VERIFY=OK", flush=True)
             print("QT6_42B2_FULL_PARITY_VERIFY=OK", flush=True)
             window.close()
