@@ -19,7 +19,7 @@
         size: "سایز / ابعاد",
         weight: "وزن",
         build: "مدل ساخت",
-        manufacturer: "سازنده / برند فیلامنت",
+        brand: "برند فیلامنت",
         material: "فیلامنت / متریال",
         color: "رنگ فیلامنت",
         quality: "کیفیت چاپ",
@@ -56,11 +56,20 @@
             material: clean(meta.material || option.dataset.material),
             color: clean(meta.color || option.dataset.color),
             filamentBrand: clean(meta.filament_brand_name || option.dataset.filamentBrand || ""),
-            filamentManufacturer: clean(meta.filament_manufacturer_name || option.dataset.filamentManufacturer || ""),
             colorHex: clean(meta.color_hex || ""),
             colorSecondaryHex: clean(meta.color_secondary_hex || ""),
             colorTertiaryHex: clean(meta.color_tertiary_hex || ""),
+            colorType: clean(meta.color_type || "solid"),
+            colorTypeLabel: clean(meta.color_type_label || ""),
+            colorFinish: clean(meta.color_finish || "matte"),
+            colorFinishLabel: clean(meta.color_finish_label || ""),
+            colorPalette: Array.isArray(meta.color_palette_hexes)
+                ? meta.color_palette_hexes.map(clean).filter((value) => /^#[0-9a-f]{6}$/i.test(value)).slice(0, 7)
+                : [],
             filamentImage: clean(meta.filament_image_url || ""),
+            filamentRollWeight: Number(meta.filament_roll_weight_grams || 0),
+            filamentSalePricePerRoll: Number(meta.filament_sale_price_per_roll || 0),
+            filamentSalePricePerGram: Number(meta.filament_sale_price_per_gram || 0),
             currentStockGrams: Number(meta.current_stock_grams || 0),
             orderable: meta.orderable !== false,
             preheatHours: Number(meta.preheat_hours || 0),
@@ -88,8 +97,8 @@
         if (dim === "size") return variant.size;
         if (dim === "weight") return String(variant.finalWeight || variant.materialWeight || 0);
         if (dim === "build") return variant.build;
-        if (dim === "manufacturer") return variant.filamentManufacturer || variant.filamentBrand || "بدون برند";
-        if (dim === "material") return variant.filamentBrand ? `${variant.material}::${variant.filamentBrand}` : variant.material;
+        if (dim === "brand") return variant.filamentBrand || "بدون برند";
+        if (dim === "material") return variant.material;
         if (dim === "color") return variant.color;
         if (dim === "quality") return variant.quality;
         return "";
@@ -103,9 +112,12 @@
             return value ? `${formatNumber(value)} گرم` : "وزن ثبت‌نشده";
         }
         if (dim === "build") return variant.buildLabel || variant.build || "استاندارد";
-        if (dim === "manufacturer") return variant.filamentManufacturer || variant.filamentBrand || "بدون برند";
-        if (dim === "material") return variant.filamentBrand ? `${variant.filamentBrand} — ${variant.material || "متریال"}` : (variant.material || "بدون متریال");
-        if (dim === "color") return variant.color || "بدون رنگ";
+        if (dim === "brand") return variant.filamentBrand || "بدون برند";
+        if (dim === "material") return variant.material || "بدون متریال";
+        if (dim === "color") {
+            const finish = variant.colorFinishLabel || variant.colorFinish || "";
+            return `${variant.color || "بدون رنگ"}${finish ? ` — ${finish}` : ""}`;
+        }
         if (dim === "quality") return variant.quality || "استاندارد";
         return "";
     }
@@ -126,7 +138,7 @@
 
     function buildDimensions(mode, variants) {
         const dimensions = [...(MODE_DIMENSIONS[mode] || MODE_DIMENSIONS.size_build)];
-        ["weight", "manufacturer", "material", "color", "quality"].forEach((dim) => {
+        ["weight", "brand", "material", "color", "quality"].forEach((dim) => {
             if (dimensions.includes(dim)) return;
             if (uniqueOptions(variants, dim).length > 1) dimensions.push(dim);
         });
@@ -202,7 +214,7 @@
             <div class="store-profile-selector__head">
                 <div>
                     <h3>${escapeHtml(selectorLabel)}</h3>
-                    <p>پروفایل/سایز را انتخاب کنید؛ سپس سازنده، فیلامنت و رنگ موجود را مشخص کنید. قیمت فقط پس از کامل‌شدن مسیر انتخاب نمایش داده می‌شود.</p>
+                    <p>پروفایل/سایز را انتخاب کنید؛ سپس برند، فیلامنت و رنگ/Finish موجود را مشخص کنید. قیمت فقط پس از کامل‌شدن مسیر انتخاب نمایش داده می‌شود.</p>
                 </div>
                 <span class="store-profile-selector__badge">پروفایل فروش</span>
             </div>
@@ -285,9 +297,13 @@
                 ["سایز", variant.size || "—"],
                 ["مدل ساخت", variant.buildLabel || variant.build || "استاندارد"],
                 ["متریال", variant.material || "—"],
-                ...(variant.filamentManufacturer ? [["سازنده فیلامنت", variant.filamentManufacturer]] : []),
                 ...(variant.filamentBrand ? [["برند فیلامنت", variant.filamentBrand]] : []),
                 ["رنگ", variant.color || "—"],
+                ...(variant.colorTypeLabel ? [["رفتار رنگ", variant.colorTypeLabel]] : []),
+                ...(variant.colorFinishLabel ? [["Finish", variant.colorFinishLabel]] : []),
+                ...(variant.filamentRollWeight ? [["وزن رول", `${formatNumber(variant.filamentRollWeight)} گرم`]] : []),
+                ...(variant.filamentSalePricePerRoll ? [["قیمت فروش رول", formatToman(variant.filamentSalePricePerRoll)]] : []),
+                ...(variant.filamentSalePricePerGram ? [["قیمت خودکار هر گرم", `${formatToman(variant.filamentSalePricePerGram)}/گرم`]] : []),
                 ["موجودی فیلامنت", variant.currentStockGrams ? `${formatNumber(variant.currentStockGrams)} گرم` : "ناموجود"],
                 ...(variant.preheatHours ? [["پیش‌گرم", `${formatNumber(variant.preheatHours)} ساعت${variant.preheatTemperature ? ` در ${formatNumber(variant.preheatTemperature)}°C` : ""}`]] : []),
                 ["کیفیت چاپ", variant.quality || "—"],
@@ -331,11 +347,31 @@
                             image.src = visual.filamentImage;
                             image.alt = "";
                             button.appendChild(image);
-                        } else if (visual.colorHex) {
-                            const swatch = document.createElement("span");
-                            swatch.className = "store-profile-color-swatch";
-                            swatch.style.background = visual.colorHex;
-                            button.appendChild(swatch);
+                        } else {
+                            const palette = (
+                                visual.colorPalette && visual.colorPalette.length
+                                    ? visual.colorPalette
+                                    : [visual.colorHex, visual.colorSecondaryHex, visual.colorTertiaryHex]
+                                        .filter((value) => /^#[0-9a-f]{6}$/i.test(value))
+                            );
+                            if (palette.length) {
+                                const swatch = document.createElement("span");
+                                swatch.className = "store-profile-color-swatch";
+                                if (palette.length === 1) {
+                                    swatch.style.background = palette[0];
+                                } else {
+                                    const step = 100 / palette.length;
+                                    const pieces = palette.map((color, index) => {
+                                        const start = Math.round(index * step);
+                                        const end = index === palette.length - 1
+                                            ? 100
+                                            : Math.round((index + 1) * step);
+                                        return `${color} ${start}% ${end}%`;
+                                    });
+                                    swatch.style.background = `linear-gradient(135deg, ${pieces.join(", ")})`;
+                                }
+                                button.appendChild(swatch);
+                            }
                         }
                     }
                     const text = document.createElement("span");
@@ -386,8 +422,8 @@
             || variants[0];
         syncStateToVariant(initial);
         // Preserve profile/size defaults but require explicit downstream choice
-        // whenever there is more than one real manufacturer/material/color.
-        ["manufacturer", "material", "color"].forEach((dim) => {
+        // whenever there is more than one real brand/material/color.
+        ["brand", "material", "color"].forEach((dim) => {
             if (dimensions.includes(dim) && uniqueOptions(variants, dim).length > 1) delete state[dim];
         });
         autoFillSingletons();
