@@ -34,8 +34,10 @@ on:
       - templates/store/product_detail.html
       - static/store/js/store.js
       - static/store/js/phase50-profile-selector.js
+      - static/store/js/phase49-product-info-tabs.js
       - static/store/css/store.css
       - static/store/css/phase50-profile-selector.css
+      - static/store/css/phase49-product-info-tabs.css
       - .github/workflows/phase50-variant2-gallery-ci.yml
   workflow_dispatch:
 
@@ -99,6 +101,7 @@ jobs:
         run: |
           node --check static/store/js/store.js
           node --check static/store/js/phase50-profile-selector.js
+          node --check static/store/js/phase49-product-info-tabs.js
 
       - name: Profile selector dependency behavior
         run: |
