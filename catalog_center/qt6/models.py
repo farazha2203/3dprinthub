@@ -198,12 +198,13 @@ class ProductTableModel(QAbstractTableModel):
 class FilamentTableModel(QAbstractTableModel):
     headers = (
         "متریال",
-        "شرکت",
         "برند",
-        "رنگ",
+        "رنگ / Finish",
+        "رفتار رنگ",
         "وزن رول",
         "موجودی kg",
-        "فروش رول",
+        "قیمت خرید رول",
+        "قیمت فروش رول",
         "تومان/گرم",
         "پیش‌گرم",
     )
@@ -226,9 +227,9 @@ class FilamentTableModel(QAbstractTableModel):
         items.sort(
             key=lambda item: (
                 str(item.get("material") or "").casefold(),
-                str(item.get("manufacturer") or "").casefold(),
                 str(item.get("brand") or "").casefold(),
                 str(item.get("color") or "").casefold(),
+                str(item.get("color_finish") or "").casefold(),
             )
         )
         self.beginResetModel()
@@ -253,13 +254,17 @@ class FilamentTableModel(QAbstractTableModel):
         hours = float(row.get("preheat_hours") or 0)
         temp = float(row.get("preheat_temperature_c") or 0)
         preheat = "—" if hours <= 0 else f"{hours:g}h / {temp:g}°C"
+        color_label = str(row.get("color") or "—")
+        finish = str(row.get("color_finish") or "matte")
+        behavior = str(row.get("color_type") or "solid")
         return (
             row.get("material") or "—",
-            row.get("manufacturer") or "—",
             row.get("brand") or "—",
-            row.get("color") or "—",
+            f"{color_label} / {finish}",
+            behavior,
             f"{float(row.get('roll_weight_grams') or 0):g} g",
             f"{filament_stock_grams(row) / 1000:g}",
+            f"{int(float(row.get('purchase_price_per_roll') or 0)):,}",
             f"{int(float(row.get('sale_price_per_roll') or 0)):,}",
             f"{float(rate_per_gram):,.0f}",
             preheat,
@@ -273,14 +278,15 @@ class FilamentTableModel(QAbstractTableModel):
             return row
         values = self._values(row)
         if role == SORT_ROLE:
-            if index.column() in {4, 5, 6, 7}:
+            if index.column() in {4, 5, 6, 7, 8}:
                 numeric = (
                     float(row.get("roll_weight_grams") or 0),
                     filament_stock_grams(row) / 1000,
+                    float(row.get("purchase_price_per_roll") or 0),
                     float(row.get("sale_price_per_roll") or 0),
                     float(effective_filament_offer_price_per_gram(row)),
                 )
-                return numeric[{4: 0, 5: 1, 6: 2, 7: 3}[index.column()]]
+                return numeric[{4: 0, 5: 1, 6: 2, 7: 3, 8: 4}[index.column()]]
             return values[index.column()]
         if role != Qt.ItemDataRole.DisplayRole:
             return None
@@ -303,7 +309,7 @@ class FilamentTableModel(QAbstractTableModel):
 
 
 class FilamentFilterProxyModel(QSortFilterProxyModel):
-    """Filter by material plus free text across material/manufacturer/brand/color."""
+    """Filter by material plus free text across brand/color/finish."""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -334,6 +340,12 @@ class FilamentFilterProxyModel(QSortFilterProxyModel):
             return True
         haystack = " ".join(
             str(row.get(key) or "")
-            for key in ("material", "manufacturer", "brand", "color")
+            for key in (
+                "material",
+                "brand",
+                "color",
+                "color_type",
+                "color_finish",
+            )
         ).casefold()
         return all(token in haystack for token in self.query.split() if token)
