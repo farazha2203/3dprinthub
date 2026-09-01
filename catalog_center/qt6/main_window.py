@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.version import APP_TITLE, APP_VERSION, BUILD_ID
+
 from .actions import ActionRegistry, ActionSpec
 from .command_palette import CommandPalette
 from .kernel import ApplicationKernel, build_kernel
@@ -65,7 +67,7 @@ class MainWindow(QMainWindow):
         self.refresh_current_page()
 
     def _build_window(self) -> None:
-        self.setWindowTitle("3DPrintHub Catalog Center — Qt 6")
+        self.setWindowTitle(f"{APP_TITLE} — Qt 6")
         self.resize(1580, 940)
         self.setMinimumSize(1220, 760)
 
@@ -84,7 +86,7 @@ class MainWindow(QMainWindow):
 
         brand = QLabel("3DPrintHub")
         brand.setObjectName("BrandTitle")
-        subtitle = QLabel("Catalog Center • Qt 6")
+        subtitle = QLabel(f"Catalog Center v{APP_VERSION} • Qt 6")
         subtitle.setObjectName("BrandSubtitle")
         side_layout.addWidget(brand)
         side_layout.addWidget(subtitle)
@@ -100,9 +102,9 @@ class MainWindow(QMainWindow):
         side_layout.addWidget(self.nav, 1)
 
         version_hint = QLabel(
-            "Qt6 Legacy Parity\n"
-            "Application Kernel فعال\n"
-            "Legacy launcher حفظ شده"
+            f"Version {APP_VERSION}\n"
+            f"Build {BUILD_ID}\n"
+            "Phase49.3I.48 • Kernel فعال"
         )
         version_hint.setObjectName("BrandSubtitle")
         version_hint.setWordWrap(True)
@@ -370,11 +372,12 @@ class MainWindow(QMainWindow):
     def show_about(self) -> None:
         QMessageBox.information(
             self,
-            "3DPrintHub Catalog Center — Qt 6",
-            "Phase49.3I.42B2-B4 Candidate\n\n"
-            "Qt6 Shell + shared Application Kernel + Filament CRUD + "
-            "Profile Matrix + Images/SEO/Source/Slider editors + "
-            "AI Provider Hub + Site Connection.\n\n"
+            f"{APP_TITLE} — Qt 6",
+            f"Version: {APP_VERSION}\nBuild: {BUILD_ID}\n"
+            "Phase: 49.3I.48\n\n"
+            "Qt6 Shell + shared Application Kernel + Product lifecycle + "
+            "Filament palette/inventory + multi-image SEO + Bulk AI + "
+            "Site Bridge foundation.\n\n"
             "Legacy launch.py تا پایان Acceptance و Cutover حفظ می‌شود.",
         )
 
