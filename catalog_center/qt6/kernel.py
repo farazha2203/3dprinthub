@@ -75,6 +75,36 @@ class ProductCore:
             for row in self.db.products(filter_name=filter_name, search=search)
         ]
 
+    def count(self, *, search: str = "", filter_name: str = "all") -> int:
+        return int(
+            self.db.product_count(
+                filter_name=filter_name,
+                search=search,
+            )
+        )
+
+    def list_page(
+        self,
+        *,
+        search: str = "",
+        filter_name: str = "all",
+        sort_key: str = "priority",
+        descending: bool | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        return [
+            dict(row)
+            for row in self.db.product_page(
+                filter_name=filter_name,
+                search=search,
+                sort_key=sort_key,
+                descending=descending,
+                limit=limit,
+                offset=offset,
+            )
+        ]
+
     def get(self, product_id: int) -> dict[str, Any] | None:
         row = self.db.product(int(product_id))
         return dict(row) if row is not None else None
@@ -689,6 +719,36 @@ class AcquisitionCore:
             for row in self.db.discovered_items(
                 str(source_code or ""),
                 limit=int(limit),
+            )
+        ]
+
+    def queue_count(
+        self,
+        source_code: str = "",
+        status: str = "all",
+    ) -> int:
+        return int(
+            self.db.discovered_count(
+                str(source_code or ""),
+                str(status or "all"),
+            )
+        )
+
+    def queue_page(
+        self,
+        source_code: str = "",
+        status: str = "all",
+        *,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        return [
+            dict(row)
+            for row in self.db.discovered_items_page(
+                str(source_code or ""),
+                str(status or "all"),
+                limit=int(limit),
+                offset=int(offset),
             )
         ]
 
