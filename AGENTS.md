@@ -101,3 +101,20 @@ Rules:
 - verify RTL/LTR, responsive behavior, keyboard/focus, contrast and loading/empty/error/success states;
 - use real operational data, not placeholder status;
 - source PDFs/books must not be committed; only derivative project knowledge is stored.
+
+
+## Shared Engineering Reference Library — mandatory
+
+Before meaningful work involving React, Next.js, frontend architecture/performance/testing, Three.js/WebGL, Django ORM, web/API security, AI-enhanced web applications or PowerShell automation, read:
+
+- `docs/library/engineering/ENGINEERING_REFERENCE_LIBRARY_FA.md`
+
+For visual design, color palette, typography, grid/composition, sliders/motion, forms and design-system work, also read the existing `docs/library/ui-ux/` documents.
+
+Rules:
+- original copyrighted PDFs/books remain in the user's ChatGPT File Library and must not be committed;
+- use the exact File Library lookup filename recorded in the engineering library when the source is needed;
+- verified repository/runtime/host state and current official docs always outrank book examples;
+- older Next.js/security/PowerShell recipes are conceptual until verified against the actual project version;
+- 3D is MEASURE_FIRST and must not damage accessibility, SEO/crawlability or performance;
+- patterns from the shared library must be adapted and Local-tested before project adoption.
