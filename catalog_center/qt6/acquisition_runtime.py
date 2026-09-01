@@ -7,8 +7,14 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from app.classic_methods import discover_classic
-from app.db import normalize_url
+from app.classic_methods import (
+    collect_attached_chrome,
+    collect_classic_exact,
+    discover_classic,
+    import_saved_html,
+)
+from app.crawler import BrowserSession, download_public_file, parse_product
+from app.db import normalize_url, utc_now
 from app.page_extractor import extract_direct_link
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3h_image_limits import normalize_image_limit
@@ -34,6 +40,14 @@ from app.phase49_3i45_incremental_discovery_intelligence import (
 )
 from app.phase49_3i_discovery_review import _source_defaults
 from app.runtime_paths import data_root
+from app.v8_features import (
+    diff_summary,
+    merge_refetch,
+    product_diff,
+    product_fingerprint,
+    source_payload_hash,
+)
+from app.workflow import should_mark_needs_update
 
 
 Progress = Callable[[int, str], None] | None
@@ -64,34 +78,58 @@ def _pending_for_listing(
     *,
     include_failed: bool = False,
 ):
-    """Return only queue rows owned by the operator's current Search/Listing URL.
+    """Return a bounded queue page owned by the current Listing URL.
 
-    The mature discovered_urls table is global per Source. Without this scope,
-    an old pending URL from another Search could consume the requested batch or
-    make discovery stop early. We filter in Python so tracking/query parameter
-    normalization follows the same canonical URL contract as Product identity.
+    New Qt runs persist the exact discovered_from value, so the fast indexed
+    equality path normally answers the request. A bounded compatibility scan is
+    retained for older rows whose tracking/query normalization differs.
     """
-
     statuses = ("new", "failed") if include_failed else ("new",)
     placeholders = ",".join("?" for _ in statuses)
-    rows = list(
+    bounded_limit = max(1, int(limit or 1))
+    exact = list(
         db.conn.execute(
             f"""
             SELECT *
             FROM discovered_urls
             WHERE source_code=?
               AND status IN ({placeholders})
+              AND discovered_from=?
             ORDER BY CASE status WHEN 'new' THEN 0 ELSE 1 END, id
+            LIMIT ?
             """,
-            (str(source_code or ""), *statuses),
+            (str(source_code or ""), *statuses, str(listing_url or ""), bounded_limit),
         )
     )
-    output = [
-        row
-        for row in rows
-        if _same_listing(str(row["discovered_from"] or ""), listing_url)
-    ]
-    return output[: max(1, int(limit))]
+    if len(exact) >= bounded_limit:
+        return exact[:bounded_limit]
+
+    seen = {int(row["id"]) for row in exact}
+    compatibility_limit = max(200, min(5000, bounded_limit * 12))
+    fallback = list(
+        db.conn.execute(
+            f"""
+            SELECT *
+            FROM discovered_urls
+            WHERE source_code=?
+              AND status IN ({placeholders})
+              AND discovered_from<>?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (str(source_code or ""), *statuses, str(listing_url or ""), compatibility_limit),
+        )
+    )
+    output = list(exact)
+    for row in fallback:
+        if int(row["id"]) in seen:
+            continue
+        if not _same_listing(str(row["discovered_from"] or ""), listing_url):
+            continue
+        output.append(row)
+        if len(output) >= bounded_limit:
+            break
+    return output[:bounded_limit]
 
 
 def _source_dict(row) -> dict[str, Any]:
@@ -359,6 +397,63 @@ async def _discover_listing(
     }
 
 
+def _iter_public_file_urls(payload: dict[str, Any]) -> list[str]:
+    output: list[str] = []
+    for field in ("selected_file_links_json", "file_links_json"):
+        try:
+            raw = json.loads(payload.get(field) or "[]")
+        except Exception:
+            raw = []
+        for item in raw if isinstance(raw, list) else []:
+            if isinstance(item, dict):
+                value = str(item.get("url") or item.get("href") or "").strip()
+            else:
+                value = str(item or "").strip()
+            if value.startswith(("http://", "https://")) and value not in output:
+                output.append(value)
+    return output
+
+
+def _download_public_model_files(
+    payload: dict[str, Any],
+    local_dir: Path,
+    *,
+    referer: str,
+    same_domain_only: bool = True,
+    limit: int = 12,
+) -> list[str]:
+    from urllib.parse import unquote, urlsplit
+
+    saved: list[str] = []
+    referer_host = urlsplit(str(referer or "")).netloc.lower()
+    target_dir = Path(local_dir) / "files"
+    for index, url in enumerate(_iter_public_file_urls(payload)[: max(1, int(limit))], 1):
+        parsed = urlsplit(url)
+        if same_domain_only and referer_host and parsed.netloc.lower() != referer_host:
+            continue
+        raw_name = unquote(Path(parsed.path).name) or f"file-{index:02d}.bin"
+        safe_name = re.sub(r"[^A-Za-z0-9._-]+", "-", raw_name).strip(".-")
+        if not safe_name:
+            safe_name = f"file-{index:02d}.bin"
+        target = target_dir / f"{index:02d}-{safe_name[:140]}"
+        try:
+            saved.append(
+                str(
+                    download_public_file(
+                        url,
+                        target,
+                        max_bytes=120_000_000,
+                        referer=referer,
+                    )
+                )
+            )
+        except Exception:
+            # Optional public file download must never invalidate an otherwise
+            # healthy Product acquisition. The source file links stay persisted.
+            continue
+    return saved
+
+
 async def _collect_one(
     db,
     source_cfg: dict[str, Any],
@@ -368,6 +463,8 @@ async def _collect_one(
     image_limit: int,
     local_dir: Path,
     download_images: bool = True,
+    download_files: bool = False,
+    same_domain_only: bool = True,
 ) -> dict[str, Any]:
     """Collect one Product with the richest existing project extractor.
 
@@ -456,6 +553,16 @@ async def _collect_one(
     # Database.upsert_product() is intentionally a write boundary and does not
     # return the inserted/updated id for normal rows. Resolve the authoritative
     # identity after the upsert instead of guessing from the method return.
+    downloaded_model_files = (
+        _download_public_model_files(
+            payload,
+            local_dir,
+            referer=payload["source_url"],
+            same_domain_only=bool(same_domain_only),
+        )
+        if download_files
+        else []
+    )
     db.upsert_product(payload)
     normalized = normalize_url(payload["source_url"])
     product_row = db.conn.execute(
@@ -496,7 +603,150 @@ async def _collect_one(
         "source_title": str(result.get("source_title") or ""),
         "images_found": len(ordered),
         "images_saved": min(len(saved_files), image_limit),
+        "files_saved": len(downloaded_model_files),
         "acquisition_method": "qt42c-rich-page-extractor",
+    }
+
+
+async def _collect_one_legacy(
+    db,
+    source_cfg: dict[str, Any],
+    *,
+    external_id: str,
+    url: str,
+    image_limit: int,
+    local_dir: Path,
+    collection_method: str,
+    download_images: bool = True,
+    download_files: bool = False,
+    same_domain_only: bool = True,
+    saved_html_path: str = "",
+) -> dict[str, Any]:
+    """Headless adapter for the proven pre-Qt acquisition methods.
+
+    The old Tk surface is not called. It used collect_classic_exact for
+    classic_isolated/classic_exact/browser_dom/public_http, optionally enabled
+    network capture, supported attached Chrome, and imported saved HTML. We
+    preserve those semantics while persisting through the modern Catalog DB.
+    """
+    ensure_epic49_desktop_schema(db)
+    ensure_modern_schema(db)
+    ensure_incremental_schema(db)
+    source_code = str(source_cfg.get("code") or "")
+    method = str(collection_method or "classic_exact").strip().lower()
+    aliases = {
+        "classic_isolated": "classic_exact",
+        "browser_dom": "classic_exact",
+        "public_http": "classic_exact",
+    }
+    method = aliases.get(method, method)
+    if method not in {"classic_exact", "network_capture", "chrome_attached", "saved_html"}:
+        raise ValueError(f"روش Legacy ناشناخته است: {collection_method}")
+
+    local_dir.mkdir(parents=True, exist_ok=True)
+    if method == "saved_html":
+        html_path = Path(str(saved_html_path or ""))
+        if not html_path.is_file():
+            raise ValueError("برای Saved HTML یک فایل HTML معتبر انتخاب کن.")
+        result = import_saved_html(html_path, url, local_dir)
+    else:
+        crawl_delay = await _browser_robots_gate(db, source_code, url)
+        if crawl_delay > 0:
+            await asyncio.sleep(min(30.0, crawl_delay))
+        if method == "chrome_attached":
+            result = await collect_attached_chrome(
+                url,
+                local_dir,
+                capture_network=True,
+                download_images=bool(download_images),
+            )
+        else:
+            result = await collect_classic_exact(
+                url,
+                local_dir,
+                headed=False,
+                capture_network=(method == "network_capture"),
+                download_images=bool(download_images),
+                image_limit=image_limit,
+            )
+
+    html = Path(result["html_path"]).read_text(encoding="utf-8", errors="replace")
+    parsed = parse_product(
+        html,
+        str(result.get("final_url") or url),
+        str(result.get("title") or ""),
+        list(result.get("dom_image_urls") or []),
+    )
+    images = _cap_product_images(parsed, image_limit)
+    parsed["selected_images_json"] = json.dumps(images, ensure_ascii=False)
+    parsed["selected_file_links_json"] = parsed.get("file_links_json") or "[]"
+    downloaded_images = [
+        str(value)
+        for value in (result.get("downloaded_images") or [])
+        if str(value or "").strip()
+    ]
+    if downloaded_images:
+        _write_local_mapping(
+            local_dir,
+            list(result.get("dom_image_urls") or images),
+            downloaded_images,
+        )
+
+    payload = {
+        **_source_defaults(source_cfg, image_limit),
+        **parsed,
+        "source_code": source_code,
+        "external_id": external_id,
+        "source_url": str(result.get("final_url") or url),
+        "local_dir": str(local_dir),
+        "download_image_limit": image_limit,
+        "source_snapshot_json": json.dumps(
+            {"legacy_manifest": {k: v for k, v in dict(result).items() if k not in {"html_path"}}},
+            ensure_ascii=False,
+            default=str,
+        ),
+        "acquisition_method": f"qt46-legacy-{method}",
+    }
+    downloaded_model_files = (
+        _download_public_model_files(
+            payload,
+            local_dir,
+            referer=payload["source_url"],
+            same_domain_only=bool(same_domain_only),
+        )
+        if download_files
+        else []
+    )
+    db.upsert_product(payload)
+    normalized = normalize_url(payload["source_url"])
+    product_row = db.conn.execute(
+        """
+        SELECT id FROM products
+        WHERE source_code=?
+          AND ((external_id<>'' AND external_id=?) OR normalized_url=?)
+        ORDER BY id DESC LIMIT 1
+        """,
+        (source_code, external_id, normalized),
+    ).fetchone()
+    if product_row is None:
+        raise RuntimeError("Legacy acquisition completed but Product identity was not persisted.")
+    product_id = int(product_row["id"])
+    remember_ledger(
+        db,
+        source_code,
+        external_id,
+        payload["source_url"],
+        status="collected",
+        discovered_from=("saved_html" if method == "saved_html" else url),
+        force=False,
+    )
+    return {
+        "product_id": product_id,
+        "source_title": str(parsed.get("source_title") or ""),
+        "images_found": len(images),
+        "images_saved": min(len(downloaded_images), image_limit),
+        "files_saved": len(downloaded_model_files),
+        "acquisition_method": f"qt46-legacy-{method}",
     }
 
 
@@ -511,10 +761,13 @@ async def run_batch_async(
     strategy: str = "hybrid",
     operator_mode: str = "search",
     download_images: bool = True,
+    download_files: bool = False,
+    same_domain_only: bool = True,
+    collection_method: str = "rich",
     progress: Progress = None,
     should_stop: ShouldStop = None,
 ) -> dict[str, Any]:
-    requested = max(1, min(100, int(requested or 1)))
+    requested = max(1, min(500, int(requested or 1)))
     image_limit = normalize_image_limit(image_limit)
     listing_url = str(listing_url or "").strip()
     if not listing_url.startswith(("http://", "https://")):
@@ -530,6 +783,13 @@ async def run_batch_async(
     strategy = str(strategy or "hybrid").strip().lower()
     if strategy not in {"hybrid", "classic"}:
         raise ValueError("روش Crawl نامعتبر است.")
+    collection_method = str(collection_method or "rich").strip().lower()
+    allowed_collection = {
+        "rich", "classic_isolated", "classic_exact", "network_capture",
+        "chrome_attached", "browser_dom", "public_http",
+    }
+    if collection_method not in allowed_collection:
+        raise ValueError("روش دریافت Product نامعتبر است.")
     operator_mode = str(
         operator_mode or "search"
     ).strip().lower()
@@ -548,9 +808,7 @@ async def run_batch_async(
         source_code,
         f"qt_{operator_mode}",
         (
-            "hybrid-http-sitemap-browser+rich-product"
-            if strategy == "hybrid"
-            else "classic-search-link+rich-product"
+            f"{strategy}-discovery+{collection_method}-product"
         ),
         requested,
     )
@@ -616,15 +874,31 @@ async def run_batch_async(
                 f"دریافت صفحه محصول {index}/{total} — {url}",
             )
             try:
-                result = await _collect_one(
-                    db,
-                    source_cfg,
-                    external_id=external_id,
-                    url=url,
-                    image_limit=image_limit,
-                    local_dir=local_dir,
-                    download_images=bool(download_images),
-                )
+                if collection_method == "rich":
+                    result = await _collect_one(
+                        db,
+                        source_cfg,
+                        external_id=external_id,
+                        url=url,
+                        image_limit=image_limit,
+                        local_dir=local_dir,
+                        download_images=bool(download_images),
+                        download_files=bool(download_files),
+                        same_domain_only=bool(same_domain_only),
+                    )
+                else:
+                    result = await _collect_one_legacy(
+                        db,
+                        source_cfg,
+                        external_id=external_id,
+                        url=url,
+                        image_limit=image_limit,
+                        local_dir=local_dir,
+                        collection_method=collection_method,
+                        download_images=bool(download_images),
+                        download_files=bool(download_files),
+                        same_domain_only=bool(same_domain_only),
+                    )
                 db.mark_url(int(row["id"]), "collected")
                 collected += 1
                 _emit(
@@ -688,6 +962,130 @@ async def run_batch_async(
         raise
 
 
+async def refresh_source_products_async(
+    db,
+    *,
+    source_code: str,
+    limit: int = 20,
+    image_limit: int = 10,
+    download_images: bool = True,
+    progress: Progress = None,
+    should_stop: ShouldStop = None,
+) -> dict[str, Any]:
+    """Refetch source-owned Products while preserving operator decisions."""
+    source_row = db.source(str(source_code or ""))
+    if source_row is None:
+        raise ValueError("Source انتخاب‌شده پیدا نشد.")
+    source_cfg = _source_dict(source_row)
+    rows = db.product_page(
+        filter_name="all",
+        source_code=source_code,
+        sort_key="newest",
+        limit=max(1, min(500, int(limit or 20))),
+        offset=0,
+    )
+    changed = unchanged = failed = 0
+    total = len(rows)
+    for index, lite in enumerate(rows, 1):
+        if _stopped(should_stop):
+            break
+        row = db.product(int(lite["id"]))
+        if row is None:
+            continue
+        try:
+            url = str(row["source_url"] or "")
+            external_id = str(row["external_id"] or row["id"])
+            _emit(
+                progress,
+                int((index - 1) / max(1, total) * 95),
+                f"بروزرسانی {index}/{total} — {url}",
+            )
+            delay = await _browser_robots_gate(db, source_code, url)
+            if delay > 0:
+                await asyncio.sleep(min(30.0, delay))
+            output = data_root() / "collected" / source_code / f"{external_id}_refresh_latest"
+            result = await extract_direct_link(
+                url,
+                output,
+                data_root() / "browser_profiles" / source_code,
+                headed=False,
+                download_images=bool(download_images),
+                image_limit=normalize_image_limit(image_limit),
+            )
+            try:
+                images = json.loads(result.get("images_json") or "[]")
+            except Exception:
+                images = []
+            images = [str(value) for value in images[: normalize_image_limit(image_limit)]]
+            fresh = {
+                **_source_defaults(source_cfg, normalize_image_limit(image_limit)),
+                **{k: v for k, v in dict(result).items() if k != "downloaded_image_files"},
+                "source_code": source_code,
+                "external_id": external_id,
+                "source_url": str(result.get("source_url") or url),
+                "local_dir": str(output),
+                "images_json": json.dumps(images, ensure_ascii=False),
+                "selected_images_json": json.dumps(images, ensure_ascii=False),
+                "primary_image_url": images[0] if images else "",
+                "last_refetched_at": utc_now(),
+                "source_state": "active",
+            }
+            fresh["fingerprint"] = product_fingerprint(
+                source_code,
+                external_id,
+                fresh["source_url"],
+            )
+            fresh["source_hash"] = source_payload_hash(fresh)
+            fresh["needs_update"] = (
+                1
+                if should_mark_needs_update(row, fresh["source_hash"])
+                else int(row["needs_update"] or 0)
+            )
+            fresh["content_status"] = (
+                "stale"
+                if fresh["needs_update"]
+                else str(row["content_status"] or "pending")
+            )
+            diff = product_diff(dict(row), fresh)
+            if not diff:
+                unchanged += 1
+                continue
+            before = dict(row)
+            merged = merge_refetch(row, fresh)
+            allowed = set(row.keys()) - {"id", "created_at", "updated_at"}
+            db.update_product(
+                int(row["id"]),
+                {key: value for key, value in merged.items() if key in allowed},
+            )
+            db.save_history(
+                int(row["id"]),
+                "source_refresh",
+                before,
+                dict(db.product(int(row["id"]))),
+                diff_summary(diff),
+            )
+            changed += 1
+        except Exception:
+            failed += 1
+            continue
+    _emit(
+        progress,
+        100,
+        f"بروزرسانی Source تمام شد — changed={changed}, unchanged={unchanged}, failed={failed}",
+    )
+    return {
+        "source_code": source_code,
+        "changed": changed,
+        "unchanged": unchanged,
+        "failed": failed,
+        "stopped": _stopped(should_stop),
+    }
+
+
+def refresh_source_products(db, **kwargs) -> dict[str, Any]:
+    return asyncio.run(refresh_source_products_async(db, **kwargs))
+
+
 def run_batch(db, **kwargs) -> dict[str, Any]:
     return asyncio.run(run_batch_async(db, **kwargs))
 
@@ -699,6 +1097,10 @@ async def run_single_async(
     product_url: str,
     image_limit: int = 5,
     download_images: bool = True,
+    download_files: bool = False,
+    same_domain_only: bool = True,
+    collection_method: str = "rich",
+    saved_html_path: str = "",
     progress: Progress = None,
 ) -> dict[str, Any]:
     source_row = db.source(source_code)
@@ -724,15 +1126,33 @@ async def run_single_async(
 
     _emit(progress, 5, "دریافت مستقیم صفحه محصول…")
     local_dir = data_root() / "collected" / source_code / external_id
-    result = await _collect_one(
-        db,
-        source_cfg,
-        external_id=external_id,
-        url=url,
-        image_limit=image_limit,
-        local_dir=local_dir,
-        download_images=bool(download_images),
-    )
+    method = str(collection_method or "rich").strip().lower()
+    if method == "rich":
+        result = await _collect_one(
+            db,
+            source_cfg,
+            external_id=external_id,
+            url=url,
+            image_limit=image_limit,
+            local_dir=local_dir,
+            download_images=bool(download_images),
+            download_files=bool(download_files),
+            same_domain_only=bool(same_domain_only),
+        )
+    else:
+        result = await _collect_one_legacy(
+            db,
+            source_cfg,
+            external_id=external_id,
+            url=url,
+            image_limit=image_limit,
+            local_dir=local_dir,
+            collection_method=method,
+            download_images=bool(download_images),
+            download_files=bool(download_files),
+            same_domain_only=bool(same_domain_only),
+            saved_html_path=saved_html_path,
+        )
     _emit(progress, 100, "محصول و تصاویر دریافت شد.")
     return result
 
