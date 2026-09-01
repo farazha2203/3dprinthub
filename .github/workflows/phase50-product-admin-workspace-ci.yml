@@ -17,6 +17,8 @@ on:
       - store/phase50_sales_profiles.py
       - store/phase50_variant_admin.py
       - store/phase50_variant2.py
+      - store/phase50_filament_offer.py
+      - store/migrations/0041_phase50_filament_visual_identity.py
       - store/epic49_catalog_admin.py
       - website/templatetags/admin_console.py
       - templates/admin/**
@@ -61,6 +63,8 @@ jobs:
             store/phase39_admin.py \
             website/admin.py \
             store/phase50_product_admin_workspace.py \
+            store/phase50_filament_offer.py \
+            store/migrations/0041_phase50_filament_visual_identity.py \
             store/test_phase50_product_admin_workspace.py \
             store/test_phase50_admin_http_regression.py \
             website/templatetags/admin_console.py
@@ -90,4 +94,5 @@ jobs:
       - name: Gate marker
         run: |
           echo "PHASE50_PRODUCT_ADMIN_WORKSPACE_CI=PASS"
+          echo "PHASE50_FILAMENT_ADMIN_0041_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
