@@ -169,7 +169,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("filament_image_base64", response.content.decode("utf-8"))
 
-        def test_sale_price_per_gram_uses_only_roll_sale_divided_by_roll_weight(self):
+    def test_sale_price_per_gram_uses_only_roll_sale_divided_by_roll_weight(self):
         color = MaterialColorOption.objects.create(
             material=self.material,
             name="قیمت مرجع",
@@ -187,7 +187,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             Decimal("4000"),
         )
 
-        def test_formula_uses_exact_color_offer_hourly_supervision_preheat_and_purchase_rate(self):
+    def test_formula_uses_exact_color_offer_hourly_supervision_preheat_and_purchase_rate(self):
         color = MaterialColorOption.objects.create(
             material=self.material,
             name="سفید",
