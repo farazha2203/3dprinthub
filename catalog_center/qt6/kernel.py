@@ -280,12 +280,72 @@ class ImageCore:
             path = image_pipeline.strict_source_local_image(data, url)
         return str(path or "")
 
+    def _legacy_local_candidates(
+        self,
+        row: dict[str, Any] | Any,
+    ) -> list[str]:
+        """Read-only fallback for mature Products whose URL mapping predates Qt.
+
+        The fallback never rewrites Product/image metadata. It is confined to
+        the Product's own local_dir and prefers finalized SEO WebP files before
+        the original image cache.
+        """
+        data = dict(row) if not isinstance(row, dict) else row
+        raw_root = str(data.get("local_dir") or "").strip()
+        if not raw_root:
+            return []
+        try:
+            local_dir = Path(raw_root).resolve()
+        except Exception:
+            return []
+        if not local_dir.is_dir():
+            return []
+
+        allowed = {
+            ".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif",
+            ".bmp", ".tif", ".tiff",
+        }
+        output: list[str] = []
+        for candidate_root in (
+            local_dir / "seo_images",
+            local_dir / "images",
+        ):
+            if not candidate_root.is_dir():
+                continue
+            try:
+                children = sorted(
+                    candidate_root.iterdir(),
+                    key=lambda item: item.name.casefold(),
+                )
+            except Exception:
+                continue
+            for candidate in children:
+                if not candidate.is_file() or candidate.suffix.lower() not in allowed:
+                    continue
+                try:
+                    resolved = candidate.resolve()
+                except Exception:
+                    continue
+                if resolved != local_dir and local_dir not in resolved.parents:
+                    continue
+                value = str(resolved)
+                if value not in output:
+                    output.append(value)
+        return output
+
     def preferred_local_path(self, row: dict[str, Any] | Any) -> str:
         for url in self.urls(row):
             path = self.local_path_for_url(row, url)
             if path:
                 return path
-        return ""
+        legacy = self._legacy_local_candidates(row)
+        return legacy[0] if legacy else ""
+
+    def image_count(self, row: dict[str, Any] | Any) -> int:
+        urls = self.urls(row)
+        if urls:
+            return len(urls)
+        return len(self._legacy_local_candidates(row))
 
     def local_items(self, product_id: int) -> list[dict[str, Any]]:
         row = self.db.product(int(product_id))
@@ -1127,6 +1187,60 @@ class AICore:
         finally:
             self._lock.release()
 
+    def execute_many(
+        self,
+        requests: list[dict[str, Any]],
+        *,
+        progress=None,
+    ) -> list[dict[str, Any]]:
+        """Run a Product batch sequentially under the one mother AI lock."""
+        if self._executor is None:
+            raise RuntimeError("هسته AI هنوز به Runtime بالغ متصل نشده است.")
+        if not self._lock.acquire(blocking=False):
+            raise RuntimeError("یک عملیات هوش مصنوعی در حال اجرا است.")
+        try:
+            output: list[dict[str, Any]] = []
+            total = max(1, len(requests or []))
+            for index, request in enumerate(requests or [], 1):
+                product_id = int(request.get("product_id") or 0)
+                if progress:
+                    progress(
+                        int((index - 1) / total * 100),
+                        f"AI محصول {index}/{total} • #{product_id}",
+                    )
+                try:
+                    result = dict(
+                        self._executor(
+                            product_id,
+                            str(request.get("mode") or "data"),
+                            target_stage=request.get("target_stage"),
+                            refresh_existing=bool(
+                                request.get("refresh_existing", True)
+                            ),
+                        )
+                        or {}
+                    )
+                    result.setdefault("product_id", product_id)
+                    output.append({
+                        "ok": True,
+                        "product_id": product_id,
+                        "result": result,
+                    })
+                except Exception as exc:
+                    output.append({
+                        "ok": False,
+                        "product_id": product_id,
+                        "error": str(exc),
+                    })
+                if progress:
+                    progress(
+                        int(index / total * 100),
+                        f"AI محصول {index}/{total} تمام شد",
+                    )
+            return output
+        finally:
+            self._lock.release()
+
 
 @dataclass(slots=True)
 class ApplicationKernel:
@@ -1176,6 +1290,159 @@ class ApplicationKernel:
     @property
     def ai(self) -> AICore:
         return self.registry.require("ai", AICore)  # type: ignore[return-value]
+
+    def postprocess_full_product_ai(
+        self,
+        product_id: int,
+        result: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Apply the same deterministic post-AI completion used by one Product."""
+        product_id = int(product_id)
+        payload = dict(result or {})
+        payload.setdefault("product_id", product_id)
+
+        try:
+            row = self.products.get(product_id) or {}
+            if not str(row.get("local_category_slug") or "").strip():
+                inferred = self.categories.infer_slug(
+                    str(row.get("source_category") or ""),
+                    str(row.get("source_title") or ""),
+                    str(row.get("source_description") or ""),
+                )
+                if inferred:
+                    self.stages.update(
+                        product_id,
+                        "quick",
+                        {"local_category_slug": inferred},
+                        event_type="qt_source_category_inferred",
+                    )
+                    payload["source_category_inferred"] = inferred
+                    payload.setdefault("changed_fields", [])
+                    payload["changed_fields"] = list(
+                        payload["changed_fields"]
+                    ) + ["local_category_slug"]
+        except Exception as exc:
+            payload["source_category_infer_error"] = str(exc)
+
+        try:
+            bootstrap = self.commerce.bootstrap_from_source(
+                product_id,
+                self.filaments.list(),
+            )
+            payload["source_profile_bootstrap"] = bootstrap
+            if bootstrap.get("changed"):
+                payload.setdefault("changed_fields", [])
+                payload["changed_fields"] = list(
+                    payload["changed_fields"]
+                ) + [
+                    "sales_profile_ledger_json",
+                    "sales_profiles_json",
+                    "material_color_options_json",
+                ]
+        except Exception as exc:
+            payload["source_profile_bootstrap_error"] = str(exc)
+
+        try:
+            row = self.products.get(product_id) or {}
+            if self.images.urls(row):
+                finalized = self.images.finalize(product_id)
+                payload["image_finalize"] = dict(finalized or {})
+                payload.setdefault("changed_fields", [])
+                payload["changed_fields"] = list(
+                    payload["changed_fields"]
+                ) + [
+                    "image_alt_texts_json",
+                    "image_metadata_json",
+                ]
+        except Exception as exc:
+            payload["image_finalize_error"] = str(exc)
+
+        try:
+            payload["auto_finalize"] = self.stages.auto_finalize_ready(
+                product_id,
+                {"quick", "commerce", "images", "content", "slider"},
+            )
+        except Exception as exc:
+            payload["auto_finalize_error"] = str(exc)
+
+        payload["target_stages"] = list(
+            dict.fromkeys(
+                [
+                    *list(payload.get("target_stages") or []),
+                    "quick",
+                    "commerce",
+                    "images",
+                    "content",
+                    "slider",
+                ]
+            )
+        )
+        return payload
+
+    def complete_products_with_ai(
+        self,
+        product_ids: list[int],
+        mode: str = "data",
+        *,
+        progress=None,
+    ) -> dict[str, Any]:
+        """Sequential multi-Product full completion through the single AI core."""
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        prepared: list[int] = []
+        failures: list[dict[str, Any]] = []
+        for product_id in ids:
+            try:
+                self.stages.prepare_ai_content_repair(product_id)
+                prepared.append(product_id)
+            except Exception as exc:
+                failures.append({
+                    "product_id": product_id,
+                    "error": str(exc),
+                    "phase": "prepare",
+                })
+
+        requests = [
+            {
+                "product_id": product_id,
+                "mode": str(mode or "data"),
+                "target_stage": None,
+                "refresh_existing": True,
+            }
+            for product_id in prepared
+        ]
+        ai_results = self.ai.execute_many(requests, progress=progress)
+        completed: list[dict[str, Any]] = []
+        for item in ai_results:
+            product_id = int(item.get("product_id") or 0)
+            if not item.get("ok"):
+                failures.append({
+                    "product_id": product_id,
+                    "error": str(item.get("error") or "AI failed"),
+                    "phase": "ai",
+                })
+                continue
+            try:
+                completed.append(
+                    self.postprocess_full_product_ai(
+                        product_id,
+                        dict(item.get("result") or {}),
+                    )
+                )
+            except Exception as exc:
+                failures.append({
+                    "product_id": product_id,
+                    "error": str(exc),
+                    "phase": "postprocess",
+                })
+
+        return {
+            "requested": len(ids),
+            "prepared": len(prepared),
+            "completed": len(completed),
+            "failed": len(failures),
+            "results": completed,
+            "failures": failures,
+        }
 
     def contract(self) -> dict[str, Any]:
         return {
