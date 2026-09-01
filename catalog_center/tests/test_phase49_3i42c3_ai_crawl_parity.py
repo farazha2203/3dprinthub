@@ -360,7 +360,7 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertEqual(result["reason"], "source_print_time_missing")
         self.assertEqual(self.kernel.commerce.profiles(product_id), [])
 
-    def test_auto_finalize_ready_never_auto_approves_specs_or_publish(self):
+    def test_auto_finalize_ready_accepts_owner_approved_specs_but_never_publish(self):
         self.db.upsert_product({
             "source_code": "makerworld",
             "external_id": "ERR49-086-AUTO-FINALIZE",
@@ -380,18 +380,26 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             for item in self.kernel.stages.statuses(product_id)
             if item["stage"] == "quick"
         )
+        specs_status = next(
+            item
+            for item in self.kernel.stages.statuses(product_id)
+            if item["stage"] == "specs"
+        )
         self.assertTrue(quick_status["data_ready"], quick_status)
         self.assertEqual(quick_status["missing"], [], quick_status)
+        self.assertTrue(specs_status["data_ready"], specs_status)
 
         result = self.kernel.stages.auto_finalize_ready(
             product_id,
             {"quick", "specs", "publish"},
         )
         self.assertIn("quick", result["finalized"])
+        self.assertIn("specs", result["finalized"])
+        self.assertNotIn("publish", result["finalized"])
         row = self.db.product(product_id)
         locks = json.loads(row[LOCK_COLUMN])
         self.assertIn("quick", locks)
-        self.assertNotIn("specs", locks)
+        self.assertIn("specs", locks)
         self.assertNotIn("publish", locks)
 
     def test_cost_estimate_uses_provider_per_token_pricing(self):
