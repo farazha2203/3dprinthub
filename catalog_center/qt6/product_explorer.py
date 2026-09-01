@@ -88,15 +88,10 @@ class ProductStatusDelegate(QStyledItemDelegate):
 
 
 class ProductGalleryModel(QAbstractListModel):
-    """Folder-like Product Model/View backed by ProductCore and ImageCore."""
+    """Incremental Product gallery backed by bounded SQL pages."""
 
-    SORTS = {
-        "newest": lambda row: (-int(row.get("id") or 0),),
-        "oldest": lambda row: (int(row.get("id") or 0),),
-        "title_fa": lambda row: (str(row.get("title_fa") or "").casefold(), int(row.get("id") or 0)),
-        "source_title": lambda row: (str(row.get("source_title") or "").casefold(), int(row.get("id") or 0)),
-        "status": lambda row: (str(row.get("workflow_status") or "").casefold(), -int(row.get("id") or 0)),
-    }
+    PAGE_SIZE = 50
+    SORTS = {"newest", "oldest", "title_fa", "source_title", "status"}
 
     def __init__(self, product_core, image_core, parent=None) -> None:
         super().__init__(parent)
@@ -107,7 +102,12 @@ class ProductGalleryModel(QAbstractListModel):
         self._search = ""
         self._sort = "newest"
         self._filter_name = "all"
+        self.total_count = 0
         self.refresh()
+
+    @property
+    def loaded_count(self) -> int:
+        return len(self.rows)
 
     def refresh(
         self,
@@ -122,14 +122,41 @@ class ProductGalleryModel(QAbstractListModel):
         if filter_name is not None:
             self._filter_name = str(filter_name or "all")
         self.beginResetModel()
-        rows = self.products.list(
+        self.total_count = self.products.count(
             filter_name=self._filter_name,
             search=self._search,
         )
-        rows.sort(key=self.SORTS.get(self._sort, self.SORTS["newest"]))
-        self.rows = rows
+        self.rows = self.products.list_page(
+            filter_name=self._filter_name,
+            search=self._search,
+            sort_key=self._sort,
+            limit=self.PAGE_SIZE,
+            offset=0,
+        )
         self._icons.clear()
         self.endResetModel()
+
+    def canFetchMore(self, parent=QModelIndex()) -> bool:  # noqa: N802
+        return not parent.isValid() and len(self.rows) < self.total_count
+
+    def fetchMore(self, parent=QModelIndex()) -> None:  # noqa: N802
+        if parent.isValid() or not self.canFetchMore(parent):
+            return
+        page = self.products.list_page(
+            filter_name=self._filter_name,
+            search=self._search,
+            sort_key=self._sort,
+            limit=self.PAGE_SIZE,
+            offset=len(self.rows),
+        )
+        if not page:
+            self.total_count = len(self.rows)
+            return
+        first = len(self.rows)
+        last = first + len(page) - 1
+        self.beginInsertRows(QModelIndex(), first, last)
+        self.rows.extend(page)
+        self.endInsertRows()
 
     def rowCount(self, parent=QModelIndex()) -> int:  # noqa: N802
         return 0 if parent.isValid() else len(self.rows)
@@ -173,7 +200,7 @@ class ProductGalleryModel(QAbstractListModel):
                 f"{str(summary)[:500]}"
             )
         if role == Qt.ItemDataRole.SizeHintRole:
-            return QSize(285, 245)
+            return QSize(215, 205)
         if role == Qt.ItemDataRole.DecorationRole:
             return self._icon_for_row(row)
         return None
@@ -196,7 +223,7 @@ class ProductGalleryModel(QAbstractListModel):
         original = reader.size()
         if original.isValid():
             original.scale(
-                QSize(225, 165),
+                QSize(180, 132),
                 Qt.AspectRatioMode.KeepAspectRatio,
             )
             reader.setScaledSize(original)
@@ -215,3 +242,4 @@ class ProductGalleryModel(QAbstractListModel):
             except Exception:
                 return None
         return None
+
