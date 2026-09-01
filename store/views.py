@@ -1,3 +1,5 @@
+import re
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, F, Min, Q
@@ -25,6 +27,83 @@ SORT_MAP = {
     "cheapest": ("min_price", "-published_at"),
     "expensive": ("-min_price", "-published_at"),
 }
+
+
+HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+def _filament_visual_options(variants):
+    """Return deduplicated, server-rendered Filament visual facts for Product UI."""
+    output = []
+    seen = set()
+    for variant in variants:
+        color = getattr(variant, "color", None)
+        if color is None or getattr(color, "pk", None) in seen:
+            continue
+        seen.add(color.pk)
+
+        palette = list(getattr(color, "palette_hexes", None) or [])
+        palette.extend(
+            [
+                getattr(color, "hex_code", ""),
+                getattr(color, "secondary_hex", ""),
+                getattr(color, "tertiary_hex", ""),
+            ]
+        )
+        normalized = []
+        normalized_seen = set()
+        for raw in palette:
+            value = str(raw or "").strip().upper()
+            if not HEX_COLOR_RE.fullmatch(value):
+                continue
+            key = value.casefold()
+            if key in normalized_seen:
+                continue
+            normalized_seen.add(key)
+            normalized.append(value)
+            if len(normalized) >= 7:
+                break
+
+        image_url = ""
+        try:
+            if getattr(color, "filament_image", None):
+                image_url = str(color.filament_image.url or "")
+        except Exception:
+            image_url = ""
+        if not image_url:
+            image_url = str(getattr(color, "filament_image_url", "") or "").strip()
+
+        behavior_choices = dict(getattr(color, "COLOR_TYPE_CHOICES", []) or [])
+        finish_field = color._meta.get_field("color_finish")
+        finish_choices = dict(finish_field.choices or [])
+        roll_weight = getattr(color, "roll_weight_grams", 0) or 0
+        sale_roll = int(getattr(color, "sale_price_per_roll", 0) or 0)
+        rate = getattr(color, "effective_sale_price_per_gram", 0) or 0
+
+        output.append(
+            {
+                "id": int(color.pk),
+                "material": str(getattr(variant.material, "name", "") or ""),
+                "brand": str(getattr(color, "brand_name", "") or ""),
+                "color": str(getattr(color, "name", "") or ""),
+                "behavior": str(getattr(color, "color_type", "solid") or "solid"),
+                "behavior_label": behavior_choices.get(
+                    str(getattr(color, "color_type", "solid") or "solid"),
+                    str(getattr(color, "color_type", "solid") or "solid"),
+                ),
+                "finish": str(getattr(color, "color_finish", "matte") or "matte"),
+                "finish_label": finish_choices.get(
+                    str(getattr(color, "color_finish", "matte") or "matte"),
+                    str(getattr(color, "color_finish", "matte") or "matte"),
+                ),
+                "palette": normalized,
+                "image_url": image_url,
+                "roll_weight_grams": roll_weight,
+                "sale_price_per_roll": sale_roll,
+                "sale_price_per_gram": rate,
+            }
+        )
+    return output
 
 
 def _product_queryset():
@@ -95,9 +174,12 @@ def product_detail_view(request, slug):
     product = get_object_or_404(_product_queryset(), slug=slug)
     Product.objects.filter(pk=product.pk).update(view_count=F("view_count") + 1)
 
-    variants = product.variants.filter(is_active=True).select_related("material", "quality", "color").order_by(
-        "quality__sort_order", "material__sort_order"
+    variants = list(
+        product.variants.filter(is_active=True)
+        .select_related("material", "quality", "color")
+        .order_by("quality__sort_order", "material__sort_order")
     )
+    filament_visual_options = _filament_visual_options(variants)
     comments = product.comments.filter(is_approved=True).select_related("user")
     reviews = product.reviews.filter(is_approved=True).select_related("user")
     is_liked = request.user.is_authenticated and ProductLike.objects.filter(product=product, user=request.user).exists()
@@ -105,6 +187,7 @@ def product_detail_view(request, slug):
     context = {
         "product": product,
         "variants": variants,
+        "filament_visual_options": filament_visual_options,
         "comments": comments,
         "reviews": reviews,
         "comment_form": ProductCommentForm(),
