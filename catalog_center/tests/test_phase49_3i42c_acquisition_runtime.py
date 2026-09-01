@@ -394,6 +394,196 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
                 )
             )
 
+    def test_saved_html_legacy_collection_persists_without_network(self):
+        html_file = Path(self.temporary.name) / "saved-product.html"
+        html_file.write_text(
+            """
+            <html>
+              <head>
+                <title>Legacy Saved Lamp</title>
+                <meta property="og:title" content="Legacy Saved Lamp">
+                <meta property="og:description" content="Saved HTML product">
+                <meta property="og:image" content="https://cdn.example.com/lamp.jpg">
+              </head>
+              <body></body>
+            </html>
+            """,
+            encoding="utf-8",
+        )
+        url = self._model(5101)[1]
+        local_dir = Path(self.temporary.name) / "saved-html-import"
+
+        result = asyncio.run(
+            acquisition_runtime._collect_one_legacy(
+                self.db,
+                self._source(),
+                external_id="5101",
+                url=url,
+                image_limit=5,
+                local_dir=local_dir,
+                collection_method="saved_html",
+                saved_html_path=str(html_file),
+                download_images=False,
+            )
+        )
+
+        row = dict(self.db.product(int(result["product_id"])))
+        self.assertEqual(row["source_title"], "Legacy Saved Lamp")
+        self.assertEqual(
+            row["acquisition_method"],
+            "qt46-legacy-saved_html",
+        )
+        self.assertEqual(
+            json.loads(row["images_json"]),
+            ["https://cdn.example.com/lamp.jpg"],
+        )
+
+    def test_run_single_routes_exact_legacy_method_without_rich_extractor(self):
+        url = self._model(5201)[1]
+        legacy_result = {
+            "product_id": 77,
+            "source_title": "Legacy Exact",
+            "images_found": 2,
+            "images_saved": 2,
+            "files_saved": 0,
+            "acquisition_method": "qt46-legacy-classic_exact",
+        }
+
+        with (
+            patch.object(
+                acquisition_runtime,
+                "_collect_one_legacy",
+                new=AsyncMock(return_value=legacy_result),
+            ) as legacy,
+            patch.object(
+                acquisition_runtime,
+                "_collect_one",
+                new=AsyncMock(
+                    side_effect=AssertionError(
+                        "rich collector must not run for classic_exact"
+                    )
+                ),
+            ) as rich,
+        ):
+            result = asyncio.run(
+                acquisition_runtime.run_single_async(
+                    self.db,
+                    source_code="makerworld",
+                    product_url=url,
+                    image_limit=4,
+                    collection_method="classic_exact",
+                    download_images=True,
+                    download_files=True,
+                    same_domain_only=True,
+                )
+            )
+
+        self.assertEqual(result["product_id"], 77)
+        legacy.assert_awaited_once()
+        rich.assert_not_awaited()
+        self.assertEqual(
+            legacy.await_args.kwargs["collection_method"],
+            "classic_exact",
+        )
+        self.assertTrue(legacy.await_args.kwargs["download_files"])
+
+    def test_source_refresh_preserves_operator_fields_and_updates_source_facts(self):
+        self.db.upsert_product(
+            {
+                "source_code": "makerworld",
+                "external_id": "5301",
+                "source_url": self._model(5301)[1],
+                "source_title": "Old Source Title",
+                "title_fa": "عنوان فارسی دستی",
+                "description_fa": "توضیح فارسی دستی",
+                "final_price": 987654,
+                "price_is_final": 1,
+                "workflow_status": "review",
+            }
+        )
+        product = next(
+            row
+            for row in self.db.products("all")
+            if str(row["external_id"]) == "5301"
+        )
+        product_id = int(product["id"])
+        fresh = {
+            "source_code": "makerworld",
+            "external_id": "5301",
+            "source_url": self._model(5301)[1],
+            "normalized_url": self._model(5301)[1],
+            "source_title": "New Source Title",
+            "source_short_description": "New summary",
+            "source_description": "New source description",
+            "author_name": "New Designer",
+            "license_name": "Public Domain",
+            "license_url": "",
+            "source_category": "Lighting",
+            "source_categories_json": "[]",
+            "tags_json": json.dumps(["lamp"], ensure_ascii=False),
+            "images_json": json.dumps(
+                ["https://cdn.example.com/new-lamp.jpg"],
+                ensure_ascii=False,
+            ),
+            "selected_images_json": json.dumps(
+                ["https://cdn.example.com/new-lamp.jpg"],
+                ensure_ascii=False,
+            ),
+            "primary_image_url": "https://cdn.example.com/new-lamp.jpg",
+            "file_links_json": "[]",
+            "selected_file_links_json": "[]",
+            "source_specs_json": "{}",
+            "source_snapshot_json": "{}",
+            "source_price": 0,
+            "source_currency": "",
+            "estimated_weight_grams": 90,
+            "estimated_print_minutes": 120,
+            "source_rating": 4.8,
+            "source_rating_count": 10,
+            "source_like_count": 5,
+            "source_download_count": 3,
+            "source_view_count": 50,
+            "source_published_at": "2026-08-01",
+            "source_updated_at": "2026-09-01",
+            "local_dir": str(Path(self.temporary.name) / "refresh"),
+            "downloaded_image_files": [],
+        }
+
+        with (
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(return_value=0.0),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "extract_direct_link",
+                new=AsyncMock(return_value=fresh),
+            ),
+        ):
+            result = asyncio.run(
+                acquisition_runtime.refresh_source_products_async(
+                    self.db,
+                    source_code="makerworld",
+                    limit=20,
+                    image_limit=5,
+                    download_images=True,
+                )
+            )
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(result["changed"], 1)
+        self.assertEqual(row["source_title"], "New Source Title")
+        self.assertEqual(row["author_name"], "New Designer")
+        self.assertEqual(row["title_fa"], "عنوان فارسی دستی")
+        self.assertEqual(row["description_fa"], "توضیح فارسی دستی")
+        self.assertEqual(int(row["final_price"]), 987654)
+        self.assertEqual(int(row["price_is_final"]), 1)
+        history = self.db.history(product_id, limit=10)
+        self.assertTrue(
+            any(str(item["event_type"]) == "source_refresh" for item in history)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
