@@ -1,5 +1,38 @@
 # Phase49.3I.42 — Qt 6 Desktop Modernization
 
+## 42C5 / Phase49.3I.46 — Bounded Product/Crawl paging + pre-Qt acquisition parity — WINDOWS CI PASS / OWNER LOCAL QA NEXT
+
+Requested UX/performance contract:
+- Gallery initial working set = 50 Products (target visual density ~5 columns × 10 rows);
+- Table/Detail initial working set = 20 Products;
+- persistent Crawl inventory initial working set = 100 rows;
+- scrolling requests later pages through the database boundary;
+- search/sort/filter must operate on the Catalog, not only an in-memory first page.
+
+Implementation:
+- `ProductTableModel` and `ProductGalleryModel` now implement Qt `canFetchMore/fetchMore`;
+- Gallery also uses Qt batched layout;
+- `Database.product_count/product_page` and `AcquisitionCore.queue_count/queue_page` provide bounded reads;
+- Product list projection intentionally omits heavyweight snapshot/content payloads while retaining fields needed for lifecycle, SEO and local thumbnails;
+- Crawl pages no longer need the historical whole-ledger OR join;
+- additive planner indexes support Product lifecycle/source and Crawl source/status/listing access;
+- old full-row Product access remains for mature business/runtime callers.
+
+Pre-Qt acquisition parity restored through headless Core/runtime:
+`rich`, `classic_isolated`, `classic_exact`, `network_capture`, `chrome_attached`, `saved_html`, `browser_dom`, `public_http`; Product limit up to 500; image/public-file controls; same-domain file policy; manual persistent Chrome profile; Chrome CDP 9222; multi-source harvest; Source Refresh preserving operator decisions.
+
+Code checkpoint: `a659155da4a4a41e01e926b2ac1263a1756c24e6`.
+Verification:
+- Qt6 Full Parity Windows `33500317538` PASS;
+- Windows Portable `33500317554` PASS;
+- Phase49.3I.17 `33500317788` PASS.
+Rollback: `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901`.
+
+No Django migration, Production change, Host change, default-launcher cutover or secret change.
+
+Owner Local acceptance must now prove the same behavior against the real persistent Catalog SQLite before the remaining stabilization slice or 42D work is accepted.
+
+
 ## 42C4 / ERR-49-082 — Product-safe OpenRouter model gate — WINDOWS CI PASS / OWNER LOCAL RETEST NEXT
 
 Owner Local QA produced three decisive cases:
