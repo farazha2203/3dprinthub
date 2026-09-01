@@ -61,6 +61,30 @@ jobs:
             catalog_center/requirements.txt
             catalog_center/requirements-qt6.txt
 
+      - name: Validate owner Local gate on Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $path = (Resolve-Path "RUN_PHASE49_3I42C_LOCAL_GATE.ps1").Path
+          $bytes = [System.IO.File]::ReadAllBytes($path)
+          $nonAscii = @($bytes | Where-Object { $_ -gt 127 })
+          if ($nonAscii.Count -gt 0) {
+            throw "Owner Local gate must remain ASCII-only per ERR-49-016"
+          }
+
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            $path,
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Host $_.Message }
+            throw "Owner Local gate failed Windows PowerShell 5.1 parser validation"
+          }
+
+          Write-Host "PHASE49_3I47_PS51_ASCII_PARSER_GUARD=PASS"
+
       - name: Validate owner Local gate and PowerShell Python stdin
         shell: pwsh
         run: |
