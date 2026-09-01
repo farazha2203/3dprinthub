@@ -909,28 +909,73 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             self.db,
             kernel=self.kernel,
         )
-        values = {
-            str(page.mode.itemData(index) or "")
-            for index in range(page.mode.count())
-        }
-        self.assertEqual(
-            values,
-            {
-                "automatic",
-                "search",
-                "category",
-                "site_crawl",
+        try:
+            values = {
+                str(page.mode.itemData(index) or "")
+                for index in range(page.mode.count())
+            }
+            self.assertEqual(
+                values,
+                {
+                    "automatic",
+                    "search",
+                    "category",
+                    "site_crawl",
+                    "single",
+                },
+            )
+            methods = {
+                str(page.collection_method.itemData(index) or "")
+                for index in range(page.collection_method.count())
+            }
+            self.assertEqual(
+                methods,
+                {
+                    "rich",
+                    "classic_isolated",
+                    "classic_exact",
+                    "network_capture",
+                    "chrome_attached",
+                    "saved_html",
+                    "browser_dom",
+                    "public_http",
+                },
+            )
+            self.assertEqual(page.requested.maximum(), 500)
+            for attribute in (
+                "query",
+                "download_images",
+                "download_files",
+                "same_domain",
+                "saved_html_path",
+                "saved_html_browse",
+                "default_url_btn",
+                "direct_btn",
+                "login_profile_btn",
+                "debug_chrome_btn",
+                "harvest_btn",
+                "source_refresh_btn",
+            ):
+                self.assertTrue(hasattr(page, attribute), attribute)
+
+            saved_index = page.collection_method.findData("saved_html")
+            page.collection_method.setCurrentIndex(saved_index)
+            QApplication.processEvents()
+            self.assertEqual(
+                str(page.mode.currentData() or ""),
                 "single",
-            },
-        )
-        self.assertTrue(hasattr(page, "query"))
-        self.assertTrue(
-            hasattr(page, "download_images")
-        )
-        self.assertTrue(
-            hasattr(page, "default_url_btn")
-        )
-        self.assertTrue(hasattr(page, "direct_btn"))
+            )
+            self.assertTrue(page.saved_html_path.isEnabled())
+
+            exact_index = page.collection_method.findData("classic_exact")
+            page.collection_method.setCurrentIndex(exact_index)
+            QApplication.processEvents()
+            self.assertEqual(
+                str(page.strategy.currentData() or ""),
+                "classic",
+            )
+        finally:
+            page.close()
 
     def test_archive_is_reversible_and_hidden_from_active_products(self):
         product_id = self._image_product()
