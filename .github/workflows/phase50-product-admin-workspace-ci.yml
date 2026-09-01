@@ -6,7 +6,10 @@ on:
       - agent/phase49-3i18-operator-bulk-ai-rebuild
     paths:
       - store/apps.py
+      - store/admin.py
+      - store/admin_seo.py
       - store/phase39_admin.py
+      - website/admin.py
       - store/phase50_product_admin_workspace.py
       - store/test_phase50_product_admin_workspace.py
       - store/test_phase50_admin_http_regression.py
@@ -14,7 +17,6 @@ on:
       - store/phase50_sales_profiles.py
       - store/phase50_variant_admin.py
       - store/phase50_variant2.py
-      - store/admin_seo.py
       - store/epic49_catalog_admin.py
       - website/templatetags/admin_console.py
       - templates/admin/**
@@ -54,7 +56,10 @@ jobs:
         run: |
           python -m py_compile \
             store/apps.py \
+            store/admin.py \
+            store/admin_seo.py \
             store/phase39_admin.py \
+            website/admin.py \
             store/phase50_product_admin_workspace.py \
             store/test_phase50_product_admin_workspace.py \
             store/test_phase50_admin_http_regression.py \
@@ -64,6 +69,7 @@ jobs:
         run: |
           node --check static/admin/master-django.js
           node --check static/admin/phase50-admin-console-v2.js
+          node --check static/admin/phase49-admin-tabs.js
 
       - name: Django system check
         run: python manage.py check
