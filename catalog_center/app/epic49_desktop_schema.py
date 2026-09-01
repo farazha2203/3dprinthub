@@ -29,9 +29,25 @@ PRODUCT_COLUMNS = {
     "server_slider_revision": "INTEGER NOT NULL DEFAULT 0",
     "server_updated_at": "TEXT NOT NULL DEFAULT ''",
     "last_sync_conflict": "TEXT NOT NULL DEFAULT ''",
+    # Phase49.3I.48 owner workflow state. These are additive Catalog-local
+    # facts; they do not change the Production Django schema.
+    "rejected_thumbnail_path": "TEXT NOT NULL DEFAULT ''",
+    "ai_completed_once": "INTEGER NOT NULL DEFAULT 0",
+    "ai_completed_at": "TEXT NOT NULL DEFAULT ''",
+    "ai_completed_source_mode": "TEXT NOT NULL DEFAULT ''",
+    "ai_completed_provider": "TEXT NOT NULL DEFAULT ''",
+    "ai_completed_model": "TEXT NOT NULL DEFAULT ''",
+    # Explicit global owner policy: source/license review is allowed for every
+    # Product. We preserve source license text/status separately instead of
+    # inventing a license name.
+    "source_license_owner_approved": "INTEGER NOT NULL DEFAULT 1",
 }
 
 
+# Historical COLOR_TYPES is kept for backward compatibility with the mature
+# Tk/editor payloads. Phase49.3I.48 separates *color behaviour* from *finish*
+# so the Store can render one/two/multi/gradient/color-shift independently
+# from matte/glossy/metallic/transparent/silk appearance.
 COLOR_TYPES = (
     ("solid", "ساده"),
     ("transparent", "شفاف / شیشه‌ای"),
@@ -41,8 +57,80 @@ COLOR_TYPES = (
     ("dual", "دو رنگ"),
     ("multicolor", "چند رنگ"),
     ("gradient", "گرادیانی"),
+    ("color_shift", "تغییررنگ / Color Shift"),
 )
 COLOR_TYPE_CODES = {code for code, _label in COLOR_TYPES}
+
+COLOR_BEHAVIORS = (
+    ("solid", "تک‌رنگ"),
+    ("dual", "دو‌رنگ"),
+    ("multicolor", "چندرنگ"),
+    ("gradient", "گرادیانی"),
+    ("color_shift", "تغییررنگ"),
+)
+COLOR_BEHAVIOR_CODES = {code for code, _label in COLOR_BEHAVIORS}
+
+COLOR_FINISHES = (
+    ("matte", "مات"),
+    ("glossy", "براق"),
+    ("metallic", "متالیک"),
+    ("transparent_matte", "شیشه‌ای مات"),
+    ("transparent_glossy", "شیشه‌ای براق"),
+    ("silk", "Silk / ابریشمی"),
+)
+COLOR_FINISH_CODES = {code for code, _label in COLOR_FINISHES}
+
+_LEGACY_VISUAL_MAP = {
+    "transparent": ("solid", "transparent_glossy"),
+    "translucent": ("solid", "transparent_matte"),
+    "metallic": ("solid", "metallic"),
+    "silk": ("solid", "silk"),
+    "triple": ("multicolor", "glossy"),
+}
+
+
+def normalize_color_visual(
+    color_type: str,
+    color_finish: str = "",
+) -> tuple[str, str]:
+    raw_type = str(color_type or "solid").strip().lower()
+    raw_finish = str(color_finish or "").strip().lower()
+    if raw_type in _LEGACY_VISUAL_MAP:
+        behavior, legacy_finish = _LEGACY_VISUAL_MAP[raw_type]
+        return behavior, raw_finish if raw_finish in COLOR_FINISH_CODES else legacy_finish
+    behavior = raw_type if raw_type in COLOR_BEHAVIOR_CODES else "solid"
+    finish = raw_finish if raw_finish in COLOR_FINISH_CODES else "matte"
+    return behavior, finish
+
+
+def normalize_palette_hexes(value, *fallbacks: str) -> list[str]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value or "[]")
+        except Exception:
+            parsed = []
+    else:
+        parsed = value
+    items = list(parsed) if isinstance(parsed, list) else []
+    items.extend(fallbacks)
+    output: list[str] = []
+    seen: set[str] = set()
+    for raw in items:
+        text = str(raw or "").strip().upper()
+        if not text:
+            continue
+        if not text.startswith("#"):
+            text = "#" + text
+        if len(text) not in {4, 7}:
+            continue
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(text)
+        if len(output) >= 7:
+            break
+    return output
 
 
 DEFAULT_MATERIALS = [
@@ -110,6 +198,9 @@ def ensure_epic49_desktop_schema(db) -> None:
             preheat_temperature_c REAL NOT NULL DEFAULT 0,
             preheat_hourly_rate INTEGER NOT NULL DEFAULT 0,
             filament_image_url TEXT NOT NULL DEFAULT '',
+            filament_image_path TEXT NOT NULL DEFAULT '',
+            color_finish TEXT NOT NULL DEFAULT 'matte',
+            palette_hex_json TEXT NOT NULL DEFAULT '[]',
             is_active INTEGER NOT NULL DEFAULT 1,
             sort_order INTEGER NOT NULL DEFAULT 100,
             UNIQUE(material_name, brand_name, color_name)
@@ -124,6 +215,9 @@ def ensure_epic49_desktop_schema(db) -> None:
         "preheat_temperature_c": "REAL NOT NULL DEFAULT 0",
         "preheat_hourly_rate": "INTEGER NOT NULL DEFAULT 0",
         "filament_image_url": "TEXT NOT NULL DEFAULT ''",
+        "filament_image_path": "TEXT NOT NULL DEFAULT ''",
+        "color_finish": "TEXT NOT NULL DEFAULT 'matte'",
+        "palette_hex_json": "TEXT NOT NULL DEFAULT '[]'",
     }.items():
         if name not in offer_columns:
             db.conn.execute(f"ALTER TABLE available_filament_offers ADD COLUMN {name} {ddl}")
@@ -144,7 +238,7 @@ def ensure_epic49_desktop_schema(db) -> None:
 
 
 def effective_filament_offer_price_per_gram(item: dict) -> float:
-    """Return the highest explicit sale basis without inventing FX."""
+    """Owner pricing rule: sale price per roll divided by roll weight."""
     try:
         roll = max(1.0, float(item.get("roll_weight_grams") or 1000))
     except Exception:
@@ -153,12 +247,7 @@ def effective_filament_offer_price_per_gram(item: dict) -> float:
         sale_roll = max(0.0, float(item.get("sale_price_per_roll") or 0))
     except Exception:
         sale_roll = 0.0
-    try:
-        usd_roll = max(0.0, float(item.get("usd_price_per_roll") or 0))
-        fx = max(0.0, float(item.get("usd_fx_rate_toman") or 0))
-    except Exception:
-        usd_roll = fx = 0.0
-    return max(sale_roll / roll, (usd_roll * fx) / roll if usd_roll and fx else 0.0)
+    return (sale_roll / roll) if sale_roll > 0 else 0.0
 
 
 def install(app_module) -> None:
@@ -186,7 +275,8 @@ def list_available_material_colors(db) -> list[dict]:
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
                print_hourly_rate, supervision_hourly_rate,
                preheat_hours, preheat_temperature_c, preheat_hourly_rate,
-               filament_image_url, is_active, sort_order
+               filament_image_url, filament_image_path, color_finish,
+               palette_hex_json, is_active, sort_order
         FROM available_filament_offers
         WHERE is_active=1
         ORDER BY material_name COLLATE NOCASE, brand_name COLLATE NOCASE,
@@ -224,6 +314,9 @@ def add_available_material_color(
     preheat_temperature_c: float = 0,
     preheat_hourly_rate: int = 0,
     filament_image_url: str = "",
+    filament_image_path: str = "",
+    color_finish: str = "matte",
+    palette_hexes=None,
 ) -> dict:
     ensure_epic49_desktop_schema(db)
     material = str(material_name or "").strip()
@@ -231,9 +324,17 @@ def add_available_material_color(
     manufacturer = str(manufacturer_name or "").strip()
     color = str(color_name or "").strip()
     hex_value = str(hex_code or "").strip()
-    kind = str(color_type or "solid").strip().lower()
-    if kind not in COLOR_TYPE_CODES:
-        kind = "solid"
+    kind, finish = normalize_color_visual(color_type, color_finish)
+    palette = normalize_palette_hexes(
+        palette_hexes,
+        hex_value,
+        secondary_hex,
+        tertiary_hex,
+    )
+    if palette:
+        hex_value = palette[0]
+    secondary_hex = palette[1] if len(palette) > 1 else ""
+    tertiary_hex = palette[2] if len(palette) > 2 else ""
     if not material:
         raise ValueError("نام متریال خالی است")
     if not color:
@@ -250,6 +351,7 @@ def add_available_material_color(
     preheat_temp = max(0.0, float(preheat_temperature_c or 0))
     preheat_rate = max(0, int(float(preheat_hourly_rate or 0)))
     image_url = str(filament_image_url or "").strip()
+    image_path = str(filament_image_path or "").strip()
     db.conn.execute(
         """
         INSERT INTO available_filament_offers(
@@ -258,8 +360,8 @@ def add_available_material_color(
             purchase_price_per_roll,sale_price_per_roll,usd_price_per_roll,
             usd_fx_rate_toman,print_hourly_rate,supervision_hourly_rate,
             preheat_hours,preheat_temperature_c,preheat_hourly_rate,
-            filament_image_url,is_active
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            filament_image_url,filament_image_path,color_finish,palette_hex_json,is_active
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ON CONFLICT(material_name,brand_name,color_name) DO UPDATE SET
             manufacturer_name=excluded.manufacturer_name,
             hex_code=excluded.hex_code,
@@ -278,6 +380,9 @@ def add_available_material_color(
             preheat_temperature_c=excluded.preheat_temperature_c,
             preheat_hourly_rate=excluded.preheat_hourly_rate,
             filament_image_url=excluded.filament_image_url,
+            filament_image_path=excluded.filament_image_path,
+            color_finish=excluded.color_finish,
+            palette_hex_json=excluded.palette_hex_json,
             is_active=1
         """,
         (
@@ -285,7 +390,8 @@ def add_available_material_color(
             str(secondary_hex or "").strip(), str(tertiary_hex or "").strip(),
             roll_weight, stock_rolls, purchase, sale, usd, fx,
             print_hourly, supervision_hourly, preheat_h, preheat_temp,
-            preheat_rate, image_url,
+            preheat_rate, image_url, image_path, finish,
+            json.dumps(palette, ensure_ascii=False),
         ),
     )
     db.conn.commit()
@@ -297,7 +403,8 @@ def add_available_material_color(
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
                print_hourly_rate, supervision_hourly_rate,
                preheat_hours, preheat_temperature_c, preheat_hourly_rate,
-               filament_image_url, is_active, sort_order
+               filament_image_url, filament_image_path, color_finish,
+               palette_hex_json, is_active, sort_order
         FROM available_filament_offers
         WHERE material_name=? AND brand_name=? AND color_name=?
         """,
@@ -349,19 +456,28 @@ def normalize_color_options(value) -> list[dict]:
         name = str(item.get("name") or item.get("color") or item.get("color_name") or "").strip()
         if not name:
             continue
-        kind = str(item.get("color_type") or item.get("type") or "solid").strip().lower()
-        if kind not in COLOR_TYPE_CODES:
-            kind = "solid"
-        key = (name.casefold(), kind)
+        kind, finish = normalize_color_visual(
+            item.get("color_type") or item.get("type") or "solid",
+            item.get("color_finish") or item.get("finish") or "",
+        )
+        palette = normalize_palette_hexes(
+            item.get("palette_hexes") or item.get("palette_hex_json") or [],
+            item.get("hex") or item.get("hex_code") or "",
+            item.get("secondary_hex") or item.get("hex2") or "",
+            item.get("tertiary_hex") or item.get("hex3") or "",
+        )
+        key = (name.casefold(), kind, finish)
         if key in seen:
             continue
         seen.add(key)
         output.append({
             "name": name,
-            "hex": str(item.get("hex") or item.get("hex_code") or "").strip(),
+            "hex": palette[0] if palette else "",
             "color_type": kind,
-            "secondary_hex": str(item.get("secondary_hex") or item.get("hex2") or "").strip(),
-            "tertiary_hex": str(item.get("tertiary_hex") or item.get("hex3") or "").strip(),
+            "color_finish": finish,
+            "palette_hexes": palette,
+            "secondary_hex": palette[1] if len(palette) > 1 else "",
+            "tertiary_hex": palette[2] if len(palette) > 2 else "",
         })
     return output
 
@@ -383,23 +499,34 @@ def normalize_material_color_options(value) -> list[dict]:
         color = str(item.get("color") or item.get("color_name") or "").strip()
         if not material or not color:
             continue
-        kind = str(item.get("color_type") or item.get("type") or "solid").strip().lower()
-        if kind not in COLOR_TYPE_CODES:
-            kind = "solid"
+        kind, finish = normalize_color_visual(
+            item.get("color_type") or item.get("type") or "solid",
+            item.get("color_finish") or item.get("finish") or "",
+        )
+        palette = normalize_palette_hexes(
+            item.get("palette_hexes") or item.get("palette_hex_json") or [],
+            item.get("hex") or item.get("hex_code") or "",
+            item.get("secondary_hex") or item.get("hex2") or "",
+            item.get("tertiary_hex") or item.get("hex3") or "",
+        )
         brand = str(item.get("brand") or item.get("brand_name") or "").strip()
-        key = (material.casefold(), brand.casefold(), color.casefold(), kind)
+        key = (material.casefold(), brand.casefold(), color.casefold(), kind, finish)
         if key in seen:
             continue
         seen.add(key)
         output.append({
             "material": material,
             "brand": brand,
-            "manufacturer": str(item.get("manufacturer") or item.get("manufacturer_name") or "").strip(),
+            # Manufacturer is a hidden compatibility alias. Owner-facing UI
+            # uses Brand as the single authority.
+            "manufacturer": brand,
             "color": color,
-            "hex": str(item.get("hex") or item.get("hex_code") or "").strip(),
+            "hex": palette[0] if palette else "",
             "color_type": kind,
-            "secondary_hex": str(item.get("secondary_hex") or item.get("hex2") or "").strip(),
-            "tertiary_hex": str(item.get("tertiary_hex") or item.get("hex3") or "").strip(),
+            "color_finish": finish,
+            "palette_hexes": palette,
+            "secondary_hex": palette[1] if len(palette) > 1 else "",
+            "tertiary_hex": palette[2] if len(palette) > 2 else "",
             "roll_weight_grams": max(1, int(float(item.get("roll_weight_grams") or 1000))),
             "stock_roll_count": max(0.0, float(item.get("stock_roll_count") or 0)),
             "purchase_price_per_roll": max(0, int(float(item.get("purchase_price_per_roll") or 0))),
@@ -412,6 +539,7 @@ def normalize_material_color_options(value) -> list[dict]:
             "preheat_temperature_c": max(0.0, float(item.get("preheat_temperature_c") or 0)),
             "preheat_hourly_rate": max(0, int(float(item.get("preheat_hourly_rate") or 0))),
             "filament_image_url": str(item.get("filament_image_url") or item.get("image_url") or "").strip(),
+            "filament_image_path": str(item.get("filament_image_path") or "").strip(),
             "fixed_product_price": max(0, int(float(item.get("fixed_product_price") or 0))),
         })
     return output
