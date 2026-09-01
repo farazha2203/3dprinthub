@@ -230,6 +230,13 @@ class Database:
             ,"is_blocked": "INTEGER NOT NULL DEFAULT 0"
             ,"blocked_at": "TEXT NOT NULL DEFAULT ''"
             ,"blocked_reason": "TEXT NOT NULL DEFAULT ''"
+            ,"rejected_thumbnail_path": "TEXT NOT NULL DEFAULT ''"
+            ,"ai_completed_once": "INTEGER NOT NULL DEFAULT 0"
+            ,"ai_completed_at": "TEXT NOT NULL DEFAULT ''"
+            ,"ai_completed_source_mode": "TEXT NOT NULL DEFAULT ''"
+            ,"ai_completed_provider": "TEXT NOT NULL DEFAULT ''"
+            ,"ai_completed_model": "TEXT NOT NULL DEFAULT ''"
+            ,"source_license_owner_approved": "INTEGER NOT NULL DEFAULT 1"
         }
         changed = False
         for name, ddl in additions.items():
@@ -675,7 +682,13 @@ class Database:
             "source_name", "workflow_status", "upload_ready", "primary_image_url",
             "local_dir", "selected_images_json", "images_json", "image_metadata_json",
             "seo_title_fa", "seo_description_fa", "needs_update", "server_id",
-            "server_status", "product_sync_error", "is_blocked", "created_at", "updated_at",
+            "server_status", "product_sync_error", "is_blocked",
+            "blocked_at", "blocked_reason", "source_state",
+            "rejected_thumbnail_path",
+            "ai_completed_once", "ai_completed_at",
+            "ai_completed_source_mode", "ai_completed_provider", "ai_completed_model",
+            "source_license_owner_approved",
+            "created_at", "updated_at",
         ]
         existing = {
             str(row["name"])
@@ -776,7 +789,10 @@ class Database:
         SELECT * FROM products
         WHERE upload_ready=1
           AND is_blocked=0
-          AND commercial_status IN ('allowed','owned','public_domain')
+          AND (
+            commercial_status IN ('allowed','owned','public_domain')
+            OR source_license_owner_approved=1
+          )
           AND (publish_as_product=1 OR publish_as_portfolio=1)
           AND (publish_as_product=0 OR approved_for_sale=1)
         ORDER BY id
