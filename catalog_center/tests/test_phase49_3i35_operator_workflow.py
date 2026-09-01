@@ -88,7 +88,7 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         row = flatten_ledger_profiles([profile])[0]
         self.assertEqual(row["fixed_price"], 850_000)
 
-    def test_filament_preview_uses_higher_explicit_sale_basis_without_guessing_fx(self):
+    def test_filament_preview_uses_sale_roll_rate_even_when_usd_snapshot_is_higher(self):
         offer = {
             "roll_weight_grams": 1000,
             "sale_price_per_roll": 3_600_000,
@@ -96,7 +96,7 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
             "usd_fx_rate_toman": 130_000,
         }
         production = {"weight_grams": 100, "support_weight_grams": 20}
-        self.assertEqual(offer_price_preview(offer, production), 468_000)
+        self.assertEqual(offer_price_preview(offer, production), 432_000)
 
         no_fx = dict(offer)
         no_fx["usd_fx_rate_toman"] = 0
