@@ -1,5 +1,88 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-088 — Phase49.3I.47 owner Local gate broke on Windows PowerShell 5.1 because a non-ASCII QA label violated the established ASCII-only runner contract
+**Date:** 2026-09-01  
+**Environment:** owner Local Windows PowerShell 5.1 / canonical branch / exact head `946b8594f0ee001bd9833973e23eb47803c98bac`.
+
+**Observed owner evidence:**
+- the owner cleanly fast-forwarded from `ecfd9260...` to `946b8594...`;
+- repository, branch and remote-head guards all passed;
+- execution stopped before the 3I.47 tests with `ParserError` / `TerminatorExpectedAtEndOfString` at `RUN_PHASE49_3I42C_LOCAL_GATE.ps1:376`;
+- the affected line was a manual-QA `Write-Host` string containing Persian text;
+- the prior 3I.46 Local gate had already passed on the same machine and had created a checksum-matching Catalog SQLite backup.
+
+**Root cause:**
+- `ERR-49-016` already established that Windows runner scripts must remain ASCII-only because Windows PowerShell 5.1 does not use UTF-8 as its default script/text boundary;
+- Phase49.3I.47 introduced exactly one non-ASCII Persian line into an otherwise ASCII runner;
+- the Qt workflow parsed the runner under `pwsh` (PowerShell Core), whose UTF-8 behavior did not reproduce the owner's Windows PowerShell 5.1 parser path;
+- therefore CI had a coverage gap even though the project already had the correct prevention rule.
+
+**Failed condition was not repeated unchanged.**
+The stale command against `946b8594...` was not rerun. The runner and CI boundary were changed first.
+
+**Correct fix:**
+- replace the Persian QA label with an ASCII-only equivalent without changing the QA meaning;
+- enforce an exact raw-byte ASCII check for the owner Local runner;
+- parse the runner under real `shell: powershell` / Windows PowerShell 5.1 before the existing `pwsh` parser/stdin regression;
+- retain the existing PowerShell→Python stdin boundary from ERR-49-081;
+- bump the runner identity to `49.3I.47.2` so owner evidence can distinguish the repaired gate from the broken `49.3I.47.1`.
+
+**Implementation:**
+- `1a4a8add5fa8afbdf87ce9bada389be3d0199e11` — runner restored to ASCII-only;
+- `d71e3a8be012ed0e2759c99d0c37a0a01c7428d8` — Windows PowerShell 5.1 ASCII/parser CI guard;
+- `36a710953276aae99fa668f477ad5569f8dc23ba` — repaired runner versioned as `49.3I.47.2`.
+
+**Verification:**
+- exact source checkpoint `36a710953276aae99fa668f477ad5569f8dc23ba`;
+- `33511403943` — `qt6-full-parity-windows` — PASS;
+- the explicit `Validate owner Local gate on Windows PowerShell 5.1` step PASS;
+- existing `pwsh` parser/stdin step PASS;
+- Qt foundation, acquisition, AI/Crawl, bounded paging, 3I.47 workspace/image/bulk-AI, mature acquisition, Filament, Profile/Commerce/Stages, Single Active AI, offscreen launch, legacy launcher and final source guards all PASS;
+- `33511403901` — Phase49.3I.17 Single Active AI — PASS.
+
+**Rollback:** `backup/pre-err49-088-ps51-runner-ascii-20260901` → pre-hotfix 3I.47 branch state.
+
+**Safety:** no Django migration, no Catalog data rewrite, no Host/Production source change, no Production DB write, no secret change.
+
+**Prevention rule:** every owner-facing `.ps1` that must run on Windows PowerShell 5.1 remains ASCII-only unless the project explicitly changes the runtime contract. CI must validate the actual owner shell, not only `pwsh`.
+
+---
+
+## ERR-49-087 — Phase49.3I.46 stabilized Catalog paging/acquisition but owner workflow presentation parity was still incomplete
+**Date:** 2026-09-01  
+**Environment:** owner Local/visual QA request after Phase49.3I.46.
+
+**Observed owner requirements/regressions:**
+- Add Product / Crawl controls consumed too much vertical space and hid the inventory;
+- the inventory lacked a usable Windows-like image/details presentation with Product thumbnail, title, description and image count;
+- Product management needed explicit Active / Sent-Published / Archived / Rejected-Deleted workspaces;
+- old Products with usable local media could still appear without thumbnails;
+- multi-select Products needed the same full-content AI completion used by a single Product;
+- image finalization had to apply the same semantic SEO identity to every selected Product image while producing distinct ordered filenames;
+- Profile/Pricing nested-scroll layout clipped production rows;
+- Admin/Storefront information architecture needed the same task-oriented hierarchy without changing business authority.
+
+**Root cause:**
+Phase49.3I.46 correctly fixed bounded data loading and restored acquisition Core parity, but presentation/workflow parity was intentionally not the same task. The healthy data/acquisition Core therefore existed underneath a still-dense operator layout.
+
+**Correct fix — Phase49.3I.47:**
+- task-oriented tabs/workspaces instead of one tall acquisition control wall;
+- gallery/details inventory views with Product facts and local-thumbnail fallback;
+- lifecycle Product workspaces;
+- sequential multi-select full-content AI through the existing shared `AICore`;
+- all selected Product images receive consistent semantic SEO metadata and unique numbered final WebP names (`-01`, `-02`, `-03`, ...);
+- Profile/Pricing split into full-height task tabs;
+- Admin/Storefront task-oriented tabs added as presentation architecture only; pricing/business authority remains unchanged.
+
+**Verification:** dedicated `test_phase49_3i47_qt_workspace_image_bulk_ai.py`, Phase50 Product Admin workspace regression and Storefront Product tabs regression passed in GitHub CI. The same 3I.47 Qt regression is also included in the full Windows parity run `33511403943`.
+
+**Safety:** no Production deploy, no Host write, no Django migration introduced by this presentation slice.
+
+**Prevention rule:** performance/core stabilization and operator information architecture are separate acceptance contracts. Do not declare presentation parity from backend/Core availability alone.
+
+---
+
+
 ## ERR-49-085 — Qt Product AI JSON-mode/TLS, semantic translation, final SEO WebP and hidden Crawl/Product lifecycle parity
 **Date:** 2026-09-01  
 **Environment:** owner Local Windows Qt6 screenshots/traces + GitHub Windows CI.
