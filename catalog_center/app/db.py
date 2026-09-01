@@ -239,6 +239,21 @@ class Database:
         if changed:
             self.conn.commit()
 
+        # Phase49.3I.46: additive planner indexes for paged Qt Product/Crawl views.
+        # They are created only after all additive Product columns exist, so old
+        # Catalog SQLite files upgrade safely without a destructive migration.
+        self.conn.executescript("""
+        CREATE INDEX IF NOT EXISTS ix_products_active_workflow
+        ON products(is_blocked, workflow_status, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_products_source_updated
+        ON products(source_code, updated_at DESC, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_discovered_source_status_id
+        ON discovered_urls(source_code, status, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_discovered_status_id
+        ON discovered_urls(status, id DESC);
+        """)
+        self.conn.commit()
+
     def upsert_source(self, row: dict):
         self.conn.execute("""
         INSERT INTO sources(
@@ -389,6 +404,124 @@ class Database:
             args,
         ))
 
+    def discovered_count(self, source_code="", status="all"):
+        clauses, args = [], []
+        if source_code:
+            clauses.append("source_code=?")
+            args.append(str(source_code))
+        normalized_status = str(status or "all").strip().lower()
+        if normalized_status and normalized_status != "all":
+            clauses.append("status=?")
+            args.append(normalized_status)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        row = self.conn.execute(
+            f"SELECT COUNT(*) AS total FROM discovered_urls{where}",
+            args,
+        ).fetchone()
+        return int(row["total"] or 0) if row else 0
+
+    def discovered_items_page(
+        self,
+        source_code="",
+        status="all",
+        *,
+        limit=100,
+        offset=0,
+    ):
+        """Return one bounded Crawl-inventory page without the historical OR JOIN.
+
+        The inventory row page is read first, then Product identities are resolved
+        in small indexed batches. This keeps a large discovered_urls ledger from
+        forcing SQLite to evaluate an OR join across the complete Product table.
+        """
+        clauses, args = [], []
+        if source_code:
+            clauses.append("source_code=?")
+            args.append(str(source_code))
+        normalized_status = str(status or "all").strip().lower()
+        if normalized_status and normalized_status != "all":
+            clauses.append("status=?")
+            args.append(normalized_status)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        page_limit = max(1, min(int(limit or 100), 500))
+        page_offset = max(0, int(offset or 0))
+        rows = list(self.conn.execute(
+            f"""
+            SELECT *
+            FROM discovered_urls
+            {where}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (*args, page_limit, page_offset),
+        ))
+        if not rows:
+            return []
+
+        by_external = {}
+        by_url = {}
+        sources = sorted({str(row["source_code"] or "") for row in rows})
+        for code in sources:
+            external_ids = sorted({
+                str(row["external_id"] or "")
+                for row in rows
+                if str(row["source_code"] or "") == code
+                and str(row["external_id"] or "")
+            })
+            normalized_urls = sorted({
+                str(row["normalized_url"] or "")
+                for row in rows
+                if str(row["source_code"] or "") == code
+                and str(row["normalized_url"] or "")
+            })
+            if external_ids:
+                placeholders = ",".join("?" for _ in external_ids)
+                product_rows = self.conn.execute(
+                    f"""
+                    SELECT id, source_code, external_id, normalized_url,
+                           title_fa, source_title, workflow_status, is_blocked
+                    FROM products
+                    WHERE source_code=? AND external_id IN ({placeholders})
+                    """,
+                    (code, *external_ids),
+                )
+                for product in product_rows:
+                    by_external[(code, str(product["external_id"] or ""))] = product
+            if normalized_urls:
+                placeholders = ",".join("?" for _ in normalized_urls)
+                product_rows = self.conn.execute(
+                    f"""
+                    SELECT id, source_code, external_id, normalized_url,
+                           title_fa, source_title, workflow_status, is_blocked
+                    FROM products
+                    WHERE source_code=? AND normalized_url IN ({placeholders})
+                    """,
+                    (code, *normalized_urls),
+                )
+                for product in product_rows:
+                    by_url[(code, str(product["normalized_url"] or ""))] = product
+
+        output = []
+        for row in rows:
+            item = dict(row)
+            code = str(row["source_code"] or "")
+            external_id = str(row["external_id"] or "")
+            normalized_url = str(row["normalized_url"] or "")
+            product = (
+                by_external.get((code, external_id))
+                if external_id
+                else None
+            ) or by_url.get((code, normalized_url))
+            item.update({
+                "product_id": int(product["id"]) if product else None,
+                "product_title_fa": str(product["title_fa"] or "") if product else "",
+                "product_source_title": str(product["source_title"] or "") if product else "",
+                "product_workflow_status": str(product["workflow_status"] or "") if product else "",
+                "product_is_blocked": int(product["is_blocked"] or 0) if product else 0,
+            })
+            output.append(item)
+        return output
+
     def set_discovered_status(self, row_ids, status, error=""):
         ids = sorted({
             int(value)
@@ -459,42 +592,118 @@ class Database:
                 raise
         self.conn.commit()
 
-    def products(self, filter_name="all", source_code="", search=""):
+    def _product_filter_parts(self, filter_name="all", source_code="", search=""):
         clauses, args = [], []
         clauses.append("is_blocked=1" if filter_name == "blocked" else "is_blocked=0")
         if filter_name not in {"blocked", "archived"}:
             clauses.append("workflow_status<>'archived'")
         if source_code:
-            clauses.append("source_code=?"); args.append(source_code)
+            clauses.append("source_code=?")
+            args.append(source_code)
         if search:
-            q=f"%{search.strip()}%"
-            clauses.append("(source_title LIKE ? OR title_fa LIKE ? OR external_id LIKE ? OR source_url LIKE ?)")
-            args += [q,q,q,q]
+            q = f"%{search.strip()}%"
+            clauses.append(
+                "(source_title LIKE ? OR title_fa LIKE ? OR external_id LIKE ? OR source_url LIKE ?)"
+            )
+            args += [q, q, q, q]
         filters = {
-            "untranslated":"(title_fa='' OR description_fa='')",
-            "unapproved":"approved_for_sale=0",
-            "not_priced":"price_is_final=0",
-            "ready":"approved_for_sale=1 AND publish_as_product=1 AND title_fa<>'' AND needs_update=0",
-            "portfolio":"publish_as_portfolio=1",
-            "reference":"reference_only=1",
-            "upload_queue":"upload_ready=1",
-            "review":"workflow_status='review'",
-            "work_queue":"(server_id='' OR needs_update=1 OR upload_ready=1 OR workflow_status<>'uploaded')",
-            "published":"(server_id<>'' AND workflow_status='uploaded' AND needs_update=0 AND server_status IN ('created','updated','review_required'))",
-            "needs_update":"needs_update=1",
-            "without_images":"(images_json='[]' OR images_json='' OR images_json IS NULL)",
-            "without_content":"(title_fa='' OR description_fa='' OR content_status<>'ready')",
-            "error":"(server_status='failed' OR product_sync_error<>'')",
-            "new":"(server_id='' AND workflow_status='review')",
-            "archived":"workflow_status='archived'",
-            "blocked":"is_blocked=1",
+            "untranslated": "(title_fa='' OR description_fa='')",
+            "unapproved": "approved_for_sale=0",
+            "not_priced": "price_is_final=0",
+            "ready": "approved_for_sale=1 AND publish_as_product=1 AND title_fa<>'' AND needs_update=0",
+            "portfolio": "publish_as_portfolio=1",
+            "reference": "reference_only=1",
+            "upload_queue": "upload_ready=1",
+            "review": "workflow_status='review'",
+            "work_queue": "(server_id='' OR needs_update=1 OR upload_ready=1 OR workflow_status<>'uploaded')",
+            "published": "(server_id<>'' AND workflow_status='uploaded' AND needs_update=0 AND server_status IN ('created','updated','review_required'))",
+            "needs_update": "needs_update=1",
+            "without_images": "(images_json='[]' OR images_json='' OR images_json IS NULL)",
+            "without_content": "(title_fa='' OR description_fa='' OR content_status<>'ready')",
+            "error": "(server_status='failed' OR product_sync_error<>'')",
+            "new": "(server_id='' AND workflow_status='review')",
+            "archived": "workflow_status='archived'",
+            "blocked": "is_blocked=1",
         }
         if filter_name in filters:
             clauses.append(filters[filter_name])
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        return where, args
+
+    def _product_list_columns(self):
+        preferred = [
+            "id", "source_code", "external_id", "source_url", "normalized_url",
+            "source_title", "source_short_description", "source_description",
+            "title_fa", "short_description_fa", "description_fa",
+            "source_name", "workflow_status", "upload_ready", "primary_image_url",
+            "local_dir", "selected_images_json", "images_json", "image_metadata_json",
+            "seo_title_fa", "seo_description_fa", "needs_update", "server_id",
+            "server_status", "product_sync_error", "is_blocked", "created_at", "updated_at",
+        ]
+        existing = {
+            str(row["name"])
+            for row in self.conn.execute("PRAGMA table_info(products)")
+        }
+        return [name for name in preferred if name in existing]
+
+    def product_count(self, filter_name="all", source_code="", search=""):
+        where, args = self._product_filter_parts(filter_name, source_code, search)
+        row = self.conn.execute(
+            f"SELECT COUNT(*) AS total FROM products{where}",
+            args,
+        ).fetchone()
+        return int(row["total"] or 0) if row else 0
+
+    def product_page(
+        self,
+        filter_name="all",
+        source_code="",
+        search="",
+        *,
+        sort_key="priority",
+        descending=None,
+        limit=50,
+        offset=0,
+    ):
+        where, args = self._product_filter_parts(filter_name, source_code, search)
+        sort_key = str(sort_key or "priority")
+        orders = {
+            "priority": "needs_update DESC, upload_ready DESC, CASE WHEN server_id='' THEN 0 ELSE 1 END, updated_at DESC, id DESC",
+            "newest": "id DESC",
+            "oldest": "id ASC",
+            "title_fa": "CASE WHEN title_fa='' THEN 1 ELSE 0 END, title_fa COLLATE NOCASE ASC, id DESC",
+            "source_title": "CASE WHEN source_title='' THEN 1 ELSE 0 END, source_title COLLATE NOCASE ASC, id DESC",
+            "status": "workflow_status COLLATE NOCASE ASC, id DESC",
+        }
+        if sort_key.startswith("column:"):
+            column = sort_key.split(":", 1)[1]
+            allowed = {
+                "id", "title_fa", "source_title", "source_name",
+                "workflow_status", "server_id", "product_sync_error",
+            }
+            if column not in allowed:
+                column = "id"
+            direction = "DESC" if descending is not False else "ASC"
+            order = f"{column} COLLATE NOCASE {direction}, id DESC" if column != "id" else f"id {direction}"
+        else:
+            order = orders.get(sort_key, orders["priority"])
+        columns = self._product_list_columns()
+        column_sql = ", ".join(columns) if columns else "id"
+        page_limit = max(1, min(int(limit or 50), 500))
+        page_offset = max(0, int(offset or 0))
+        return list(self.conn.execute(
+            f"SELECT {column_sql} FROM products{where} ORDER BY {order} LIMIT ? OFFSET ?",
+            (*args, page_limit, page_offset),
+        ))
+
+    def products(self, filter_name="all", source_code="", search=""):
+        # Mature compatibility path: full Product rows remain available to old
+        # Tk/worker code. Qt list/gallery surfaces use product_page() instead.
+        where, args = self._product_filter_parts(filter_name, source_code, search)
         order = "ORDER BY needs_update DESC, upload_ready DESC, CASE WHEN server_id='' THEN 0 ELSE 1 END, updated_at DESC, id DESC"
         return list(self.conn.execute(
-            f"SELECT * FROM products{where} {order}", args
+            f"SELECT * FROM products{where} {order}",
+            args,
         ))
 
     def status_counts(self):
