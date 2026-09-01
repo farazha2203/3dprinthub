@@ -1861,90 +1861,9 @@ class ProductWizardPage(QWidget):
         )
 
         if self.product_id is not None and full_content_run:
-            product_id = int(self.product_id)
-
-            try:
-                row = self.kernel.products.get(product_id) or {}
-                if not str(row.get("local_category_slug") or "").strip():
-                    inferred = self.kernel.categories.infer_slug(
-                        str(row.get("source_category") or ""),
-                        str(row.get("source_title") or ""),
-                        str(row.get("source_description") or ""),
-                    )
-                    if inferred:
-                        self.kernel.stages.update(
-                            product_id,
-                            "quick",
-                            {"local_category_slug": inferred},
-                            event_type="qt_source_category_inferred",
-                        )
-                        result["source_category_inferred"] = inferred
-                        result.setdefault("changed_fields", [])
-                        result["changed_fields"] = list(
-                            result["changed_fields"]
-                        ) + ["local_category_slug"]
-            except Exception as exc:
-                result["source_category_infer_error"] = str(exc)
-
-            try:
-                bootstrap = self.kernel.commerce.bootstrap_from_source(
-                    product_id,
-                    self.kernel.filaments.list(),
-                )
-                result["source_profile_bootstrap"] = bootstrap
-                if bootstrap.get("changed"):
-                    result.setdefault("changed_fields", [])
-                    result["changed_fields"] = list(
-                        result["changed_fields"]
-                    ) + [
-                        "sales_profile_ledger_json",
-                        "sales_profiles_json",
-                        "material_color_options_json",
-                    ]
-            except Exception as exc:
-                result["source_profile_bootstrap_error"] = str(exc)
-
-            try:
-                row = self.kernel.products.get(product_id) or {}
-                if self.kernel.images.urls(row):
-                    self.kernel.images.finalize(product_id)
-                    result.setdefault("changed_fields", [])
-                    result["changed_fields"] = list(
-                        result["changed_fields"]
-                    ) + [
-                        "image_alt_texts_json",
-                        "image_metadata_json",
-                    ]
-            except Exception as exc:
-                result["image_finalize_error"] = str(exc)
-
-            try:
-                result["auto_finalize"] = (
-                    self.kernel.stages.auto_finalize_ready(
-                        product_id,
-                        {
-                            "quick",
-                            "commerce",
-                            "images",
-                            "content",
-                            "slider",
-                        },
-                    )
-                )
-            except Exception as exc:
-                result["auto_finalize_error"] = str(exc)
-
-            result["target_stages"] = list(
-                dict.fromkeys(
-                    [
-                        *list(result.get("target_stages") or []),
-                        "quick",
-                        "commerce",
-                        "images",
-                        "content",
-                        "slider",
-                    ]
-                )
+            result = self.kernel.postprocess_full_product_ai(
+                int(self.product_id),
+                result,
             )
 
         if self.product_id is not None:
