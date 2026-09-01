@@ -357,6 +357,57 @@ class Database:
             )
         return {row["status"]: int(row["total"]) for row in rows}
 
+    def discovered_items(self, source_code="", limit=5000):
+        clauses, args = [], []
+        if source_code:
+            clauses.append("d.source_code=?")
+            args.append(str(source_code))
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        args.append(max(1, min(int(limit), 20000)))
+        return list(self.conn.execute(
+            f"""
+            SELECT
+              d.*,
+              p.id AS product_id,
+              p.title_fa AS product_title_fa,
+              p.source_title AS product_source_title,
+              p.workflow_status AS product_workflow_status,
+              p.is_blocked AS product_is_blocked
+            FROM discovered_urls d
+            LEFT JOIN products p
+              ON p.source_code=d.source_code
+             AND (
+               (d.external_id<>'' AND p.external_id=d.external_id)
+               OR
+               (d.normalized_url<>'' AND p.normalized_url=d.normalized_url)
+             )
+            {where}
+            ORDER BY d.id DESC
+            LIMIT ?
+            """,
+            args,
+        ))
+
+    def set_discovered_status(self, row_ids, status, error=""):
+        ids = sorted({
+            int(value)
+            for value in (row_ids or [])
+            if str(value or "").strip()
+        })
+        if not ids:
+            return 0
+        placeholders = ",".join("?" for _ in ids)
+        cursor = self.conn.execute(
+            f"""
+            UPDATE discovered_urls
+            SET status=?, last_error=?, updated_at=?
+            WHERE id IN ({placeholders})
+            """,
+            (str(status), str(error or "")[:4000], utc_now(), *ids),
+        )
+        self.conn.commit()
+        return int(cursor.rowcount or 0)
+
     def mark_url(self, row_id, status, error=""):
         self.conn.execute("""
         UPDATE discovered_urls SET status=?,attempts=attempts+1,last_error=?,updated_at=?
@@ -410,6 +461,8 @@ class Database:
     def products(self, filter_name="all", source_code="", search=""):
         clauses, args = [], []
         clauses.append("is_blocked=1" if filter_name == "blocked" else "is_blocked=0")
+        if filter_name not in {"blocked", "archived"}:
+            clauses.append("workflow_status<>'archived'")
         if source_code:
             clauses.append("source_code=?"); args.append(source_code)
         if search:
@@ -432,6 +485,7 @@ class Database:
             "without_content":"(title_fa='' OR description_fa='' OR content_status<>'ready')",
             "error":"(server_status='failed' OR product_sync_error<>'')",
             "new":"(server_id='' AND workflow_status='review')",
+            "archived":"workflow_status='archived'",
             "blocked":"is_blocked=1",
         }
         if filter_name in filters:
@@ -488,6 +542,42 @@ class Database:
           AND is_blocked=0
         ORDER BY updated_at DESC, id DESC
         """))
+
+    def archive_product(self, product_id: int, reason: str = "") -> None:
+        before = self.product(product_id)
+        if before is None or int(before["is_blocked"] or 0):
+            return
+        self.update_product(product_id, {
+            "workflow_status": "archived",
+            "upload_ready": 0,
+            "needs_update": 0,
+        })
+        self.save_history(
+            product_id,
+            "archived",
+            dict(before),
+            dict(self.product(product_id)),
+            str(reason or "Archived from Qt Products"),
+        )
+
+    def restore_archived_product(self, product_id: int) -> None:
+        before = self.product(product_id)
+        if before is None:
+            return
+        if str(before["workflow_status"] or "") != "archived":
+            return
+        restored_status = "uploaded" if str(before["server_id"] or "") else "review"
+        self.update_product(product_id, {
+            "workflow_status": restored_status,
+            "upload_ready": 0,
+        })
+        self.save_history(
+            product_id,
+            "archive_restored",
+            dict(before),
+            dict(self.product(product_id)),
+            "Restored from local archive",
+        )
 
     def block_product(self, product_id: int, reason: str = "") -> None:
         before = self.product(product_id)

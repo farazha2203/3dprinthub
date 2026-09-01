@@ -54,9 +54,19 @@ class ProductTableModel(QAbstractTableModel):
         self.rows: list[dict[str, Any]] = []
         self.refresh()
 
-    def refresh(self, search: str = "") -> None:
+    def refresh(
+        self,
+        search: str = "",
+        filter_name: str = "all",
+    ) -> None:
         self.beginResetModel()
-        self.rows = [dict(row) for row in self.db.products(search=search)]
+        self.rows = [
+            dict(row)
+            for row in self.db.products(
+                filter_name=str(filter_name or "all"),
+                search=search,
+            )
+        ]
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()) -> int:  # noqa: N802

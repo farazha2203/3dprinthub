@@ -156,6 +156,51 @@ class ProductCore:
         return after
 
 
+    def archive_many(self, product_ids: list[int]) -> int:
+        count = 0
+        for product_id in sorted({int(value) for value in product_ids or []}):
+            before = self.db.product(product_id)
+            if before is None:
+                continue
+            self.db.archive_product(
+                product_id,
+                "Qt bulk archive",
+            )
+            after = self.db.product(product_id)
+            if after is not None and str(after["workflow_status"] or "") == "archived":
+                count += 1
+        return count
+
+    def remove_many(self, product_ids: list[int]) -> int:
+        count = 0
+        for product_id in sorted({int(value) for value in product_ids or []}):
+            before = self.db.product(product_id)
+            if before is None:
+                continue
+            self.db.block_product(
+                product_id,
+                "Qt bulk remove/reject — reversible tombstone",
+            )
+            after = self.db.product(product_id)
+            if after is not None and int(after["is_blocked"] or 0):
+                count += 1
+        return count
+
+    def restore_many(self, product_ids: list[int]) -> int:
+        count = 0
+        for product_id in sorted({int(value) for value in product_ids or []}):
+            row = self.db.product(product_id)
+            if row is None:
+                continue
+            if int(row["is_blocked"] or 0):
+                self.db.restore_product(product_id)
+                count += 1
+            elif str(row["workflow_status"] or "") == "archived":
+                self.db.restore_archived_product(product_id)
+                count += 1
+        return count
+
+
 class ImageCore:
     """Single image authority shared by Product cards, image grid and slider."""
 
@@ -633,6 +678,37 @@ class AcquisitionCore:
                 "برای این Source لینک Listing پیش‌فرض ثبت نشده است."
             )
         return default
+
+    def queue_items(
+        self,
+        source_code: str = "",
+        limit: int = 5000,
+    ) -> list[dict[str, Any]]:
+        return [
+            dict(row)
+            for row in self.db.discovered_items(
+                str(source_code or ""),
+                limit=int(limit),
+            )
+        ]
+
+    def reject_queue_items(self, row_ids: list[int]) -> int:
+        return int(
+            self.db.set_discovered_status(
+                row_ids,
+                "rejected",
+                "operator rejected from Qt queue browser",
+            )
+        )
+
+    def restore_queue_items(self, row_ids: list[int]) -> int:
+        return int(
+            self.db.set_discovered_status(
+                row_ids,
+                "new",
+                "",
+            )
+        )
 
     def queue_counts(self, source_code: str = "") -> dict[str, int]:
         return dict(self.db.queue_counts(str(source_code or "")))
