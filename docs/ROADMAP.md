@@ -1,5 +1,43 @@
 # ROADMAP
 
+## 2026-09-01 — Phase49.3I.47 owner rerun + professional commerce design-system track
+
+Status: `PS5.1 GATE FIXED + EXACT WINDOWS CI PASS / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`.
+
+Immediate accepted source checkpoint:
+- `36a710953276aae99fa668f477ad5569f8dc23ba`;
+- runner `49.3I.47.2`;
+- `33511403943` Qt6 Full Parity Windows PASS;
+- `33511403901` Single Active AI PASS;
+- explicit Windows PowerShell 5.1 ASCII/parser guard PASS.
+
+Owner acceptance still required:
+- lifecycle Product tabs and local thumbnail fallback;
+- sequential multi-select full-content AI;
+- every image final SEO metadata + numbered WebP identity;
+- Acquisition workspaces with gallery/details views;
+- Profile/Pricing full-height tabs.
+
+Professional commerce architecture is now registered in:
+`docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`.
+
+Source-guided next design slices after owner acceptance:
+1. Persian typography/font-runtime and packaging audit; solve the Qt/system-font experience without committing licensed font binaries;
+2. shared visual tokens/components and accessibility states for Catalog Center;
+3. Admin design-system consolidation;
+4. Storefront IA for discovery → technical fit → price/quote → trust → variant/custom order → CTA;
+5. Product-detail technical/trust hierarchy and responsive intermediate-width QA;
+6. performance-safe optional 3D preview only where it materially improves product evaluation;
+7. SEO/accessibility/performance regression gates;
+8. remaining Catalog stability work: worker/read connection discipline, serialized/batched writes, bulk discovery persistence, slow-query/health auditing and resume/soak testing.
+
+Guardrails:
+- Django remains authoritative; book examples do not imply framework migration;
+- no visual phase may change pricing/business authority implicitly;
+- critical SEO/Product text remains server-rendered/crawlable;
+- no Production deployment before owner Local approval and the normal Host read-only audit/backup/deploy chain.
+
+
 Updated: 2026-09-01
 
 ## Current Windows/Desktop track — Phase49.3I.47
@@ -55,7 +93,7 @@ Storefront on `f4beec484f060063d00de4a5753a135a020cfea1`:
 ## Next engineering slice after owner acceptance
 - remaining Catalog stability work: worker/read connection discipline, serialized/batched writes, bulk discovery persistence, query auditor/slow-query health and resume/soak testing;
 - Phase42D visual/accessibility polish based on real owner QA;
-- re-ingest `webdesign1.zip` when the attachment is readable, register source-supported typography/layout/effects/SEO principles, then apply only grounded refinements;
+- owner File Library constituent design books have now been reviewed directly; apply grounded refinements through `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`;
 - only later evaluate 42E default-launcher/package cutover.
 
 ## Web / Admin track
