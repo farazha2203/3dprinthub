@@ -1,5 +1,71 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-09-01 / ERR-49-088 PS5.1 Local gate repair + professional commerce design standard
+
+Status: `SOURCE TESTED ON WINDOWS CI / OWNER LOCAL 3I.47 RERUN NEXT / PRODUCTION NOT TOUCHED`
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested source checkpoint: `36a710953276aae99fa668f477ad5569f8dc23ba`  
+Owner Local runner: `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` version `49.3I.47.2`  
+Rollback: `backup/pre-err49-088-ps51-runner-ascii-20260901`
+
+Owner evidence:
+- the earlier 3I.46 Local gate completed successfully and produced checksum-identical Catalog SQLite source/backup SHA256 `041CAE222B2784F8CC36B266341A33220B16194E16F29397440F001DBD89E988`;
+- backup: `D:\projects\3dprinthub-backups\phase49-3i42c-20260901-145303\catalog-before-qt42c-qa.sqlite3`;
+- the first 3I.47 attempt stopped before tests because Windows PowerShell 5.1 could not parse one newly introduced non-ASCII QA string;
+- this was a runner encoding regression, not a Product/Crawl/AI/database failure.
+
+ERR-49-088 resolution:
+- runner is ASCII-only again;
+- CI now raw-byte checks the runner and parses it under Windows PowerShell 5.1 before the existing `pwsh` parser/stdin gate;
+- exact source checkpoint `36a710...`:
+  - `33511403943` Qt6 Full Parity Windows — PASS;
+  - `33511403901` Single Active AI — PASS;
+  - 3I.47 Product lifecycle / local thumbnail / bulk AI / all-image SEO / Acquisition workspace / Profile-Pricing regressions PASS.
+
+Professional commerce design sources:
+- the uploaded `webdesign1.zip` binary itself was not exposed as a readable archive mount in this execution environment, so no ZIP-extraction claim is made;
+- constituent owner File Library books were read directly, including Practical UI 2nd Edition, Lean UX, UI/UX Web Design Simply Explained, 100 Things Every Designer Needs to Know About People, Designing Brand Identity, 3D Web Development with Three.js and Next, and NextJS Cookbook;
+- source-grounded rules are registered in `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`;
+- this does NOT authorize a Next.js/React rewrite. Current Django architecture remains authoritative.
+
+Design direction now canonical:
+- information architecture and customer task flow before decoration;
+- one reusable design system across Storefront/Admin/Catalog Center;
+- disciplined Persian typography scale and readable dense-operator typography;
+- progressive disclosure/tabs instead of control walls and nested scroll traps;
+- restrained specialist/industrial trust presentation rather than decorative neon;
+- Product pages prioritize identity, media, technical fit, price/quote state, production facts and one primary CTA;
+- no color-only status communication;
+- optional 3D is lazy/progressive and may never block LCP, core content or purchase controls;
+- SEO metadata/structured data must match visible server-rendered content.
+
+Non-blocking warnings observed in the older Local gate:
+- Qt offscreen `QFontDatabase` reports no PySide6 bundled font directory; this is not the parser failure and is queued for the typography/packaging audit;
+- `QSortFilterProxyModel.invalidateFilter()` deprecation is technical debt;
+- Pillow `Image.getdata()` deprecation is known technical debt;
+- pip upgrade notice is informational.
+
+Database/Host/Production:
+- Django migration changed = NO;
+- Production MySQL changed = NO;
+- Host/Production source changed = NO;
+- Catalog destructive migration = NO;
+- Production remains on last verified application commit `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- only `store.0034` and `store.0035` remain last verified applied Production migrations; later migration state is not assumed.
+
+Exact next task:
+1. owner closes Catalog Center;
+2. verify correct Local repo/branch/clean worktree and live remote head;
+3. ff-only pull the final documentation head;
+4. run `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -ExpectedHead <final-doc-head> -LaunchApp`;
+5. confirm output reports runner `49.3I.47.2`;
+6. perform foreground 3I.47 QA on Product lifecycle tabs, old/local thumbnails, sequential multi-select AI, all-image SEO numbering/metadata, Acquisition gallery/details workspaces and Profile/Pricing tabs;
+7. if QA passes, continue typography/font packaging + 42D visual/accessibility polish under `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`;
+8. Production remains blocked until explicit owner Local acceptance.
+
+
 Updated: 2026-09-01
 
 ## Current active checkpoint — Phase49.3I.47
@@ -101,7 +167,7 @@ Last verified Production DB evidence still confirms only `store.0034` and `store
 1. Owner closes Catalog Center.
 2. On `D:\projects\3DPrintHub`, verify correct repository, active branch, clean worktree and live GitHub head.
 3. Pull only by ff-only to the final documentation head.
-4. Run repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -ExpectedHead <final-head> -LaunchApp`; the runner is version `49.3I.47.1` and creates a checksum-verified Catalog SQLite backup before QA.
+4. Run repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -ExpectedHead <final-head> -LaunchApp`; the runner is version `49.3I.47.2` and creates a checksum-verified Catalog SQLite backup before QA.
 5. Foreground QA on real Catalog data:
    - four Product lifecycle tabs;
    - old/local Product thumbnails + title/description/image count;
