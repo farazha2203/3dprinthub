@@ -1,0 +1,108 @@
+/* Phase49.3I.47 — task-first tabbed Django admin workspaces.
+   No business fields are hidden from the operator: they are progressively
+   disclosed as named, keyboard-accessible panels. */
+
+.phase49-admin-tabs {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  margin: 0 0 1rem;
+  padding: .4rem;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: .85rem;
+  background: color-mix(in srgb, var(--body-bg, #fff) 94%, currentColor 6%);
+}
+
+.phase49-admin-tabs__tab {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: .7rem;
+  background: transparent;
+  color: inherit;
+  min-block-size: 42px;
+  padding: .55rem .9rem;
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease,
+              box-shadow .15s ease, transform .15s ease;
+}
+
+.phase49-admin-tabs__tab:hover {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+.phase49-admin-tabs__tab[aria-selected="true"] {
+  background: var(--primary, #0d6efd);
+  border-color: var(--primary, #0d6efd);
+  color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #0d6efd) 24%, transparent);
+}
+
+.phase49-admin-tabs__tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary, #0d6efd) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.phase49-admin-tab-panel {
+  margin-block: 0 1rem !important;
+  min-inline-size: 0;
+}
+
+.phase49-admin-tabs-ready .phase49-admin-tab-panel[hidden] {
+  display: none !important;
+}
+
+.phase49-admin-tab-panel.module,
+.phase49-admin-tab-panel.inline-group {
+  border-radius: .85rem;
+  overflow: visible;
+}
+
+.phase49-admin-tab-panel .form-row {
+  padding-block: .75rem;
+}
+
+.phase49-admin-tab-panel .help,
+.phase49-admin-tab-panel .helptext {
+  line-height: 1.65;
+}
+
+.phase49-admin-tab-panel textarea {
+  line-height: 1.75;
+}
+
+.phase49-admin-tab-panel .tabular.inline-related table {
+  min-inline-size: 760px;
+}
+
+.phase49-admin-tab-panel .tabular.inline-related {
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .phase49-admin-tabs {
+    margin-inline: -.25rem;
+    border-radius: .65rem;
+  }
+
+  .phase49-admin-tabs__tab {
+    min-block-size: 44px;
+    padding-inline: .8rem;
+  }
+
+  .phase49-admin-tab-panel .form-row {
+    padding-block: .65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase49-admin-tabs__tab {
+    transition: none;
+  }
+}
