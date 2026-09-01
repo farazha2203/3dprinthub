@@ -8,14 +8,11 @@ from django.utils import timezone
 
 class MaterialColorOption(models.Model):
     COLOR_TYPE_CHOICES = [
-        ("solid", "ساده"),
-        ("transparent", "شفاف / شیشه‌ای"),
-        ("translucent", "نیمه‌شفاف"),
-        ("metallic", "متالیک"),
-        ("silk", "Silk / ابریشمی"),
-        ("dual", "دو رنگ"),
-        ("multicolor", "چند رنگ"),
+        ("solid", "تک‌رنگ"),
+        ("dual", "دو‌رنگ"),
+        ("multicolor", "چندرنگ"),
         ("gradient", "گرادیانی"),
+        ("color_shift", "تغییررنگ / Color Shift"),
     ]
 
     material = models.ForeignKey(
@@ -29,7 +26,7 @@ class MaterialColorOption(models.Model):
         choices=COLOR_TYPE_CHOICES,
         default="solid",
         db_index=True,
-        verbose_name="نوع رنگ",
+        verbose_name="رفتار رنگ",
     )
     secondary_hex = models.CharField(max_length=20, blank=True, verbose_name="HEX دوم")
     tertiary_hex = models.CharField(max_length=20, blank=True, verbose_name="HEX سوم")
