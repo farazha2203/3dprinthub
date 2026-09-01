@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-09-01 — ERR-49-088 Windows PowerShell 5.1 owner-gate repair
+- fixed the Phase49.3I.47 Local runner ParserError caused by one non-ASCII Persian QA label violating the existing ASCII-only runner rule;
+- runner is now `49.3I.47.2`;
+- CI now rejects any non-ASCII byte and parses the owner gate under Windows PowerShell 5.1 before the existing `pwsh` parser/stdin regression;
+- exact source `36a710953276aae99fa668f477ad5569f8dc23ba`: Qt full parity run `33511403943` PASS and Single Active AI run `33511403901` PASS;
+- Production/Host/DB migrations untouched.
+
+## 2026-09-01 — Professional specialist-commerce design architecture
+- reviewed owner File Library constituent references for UX/IA, typography, design systems, brand identity, 3D UI and SEO/performance;
+- added `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`;
+- established IA-first, progressive-disclosure, restrained specialist trust, Persian typography, accessible state, server-rendered SEO and optional/lazy 3D principles;
+- book framework examples do not replace the current Django architecture.
+
+
 ## 2026-09-01 — Phase49.3I.46 / ERR-49-086 Catalog lazy loading + acquisition parity
 
 ### Added
