@@ -501,7 +501,7 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
                 "قیمت قطعی محصول",
             ):
                 self.assertIn(expected, headers)
-            self.assertEqual(FIXED_PRICE_COLUMN, 13)
+            self.assertEqual(FIXED_PRICE_COLUMN, 12)
             self.assertTrue(dialog.edit_filament_btn.isEnabled())
         finally:
             dialog.close()
