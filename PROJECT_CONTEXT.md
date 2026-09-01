@@ -1,5 +1,23 @@
 # PROJECT_CONTEXT — 3DPrintHub
 
+## Continuation checkpoint — 2026-09-01 / ERR-49-086 / Phase49.3I.46
+
+Executable code checkpoint `a659155da4a4a41e01e926b2ac1263a1756c24e6` introduces real bounded Product/Crawl reads and restores the mature pre-Qt acquisition operator surface through the Qt Core boundary.
+
+Current paging contract:
+- Product Gallery 50 at a time;
+- Product Table/Detail 20 at a time;
+- Crawl inventory 100 at a time;
+- more rows load incrementally on scroll;
+- Product list SQL uses lightweight list columns instead of full Product payloads.
+
+Restored acquisition choices/actions include Classic Isolated/Exact, Network Capture, Chrome Attached 9222, Saved HTML, Browser DOM/Public HTTP compatibility, normal manual Chrome profile, multi-source harvest, optional public file download and Source Refresh that preserves Persian/editorial/pricing decisions.
+
+Windows evidence: `33500317538`, `33500317554`, `33500317788` PASS.
+Rollback: `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901`.
+Production/Host/Django migrations untouched. Owner Local real-Catalog acceptance is next.
+
+
 ## Continuation checkpoint — 2026-08-31 / ERR-49-082
 
 Code checkpoint `0421bccff040ced53513625af95d05e0c8c27a9a` fixes the owner-observed OpenRouter model-selection failure: media/music and tools-only coding models can no longer masquerade as Product Structured models. OpenRouter Product calls now require strict JSON Schema + compatible endpoints, and Product execution requires a verified saved model capability profile.
