@@ -374,6 +374,13 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             for row in self.kernel.products.list()
             if row["external_id"] == "ERR49-086-AUTO-FINALIZE"
         ))
+        quick_status = next(
+            item
+            for item in self.kernel.stages.statuses(product_id)
+            if item["stage"] == "quick"
+        )
+        self.assertTrue(quick_status["data_ready"], quick_status)
+
         result = self.kernel.stages.auto_finalize_ready(
             product_id,
             {"quick", "specs", "publish"},

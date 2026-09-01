@@ -478,7 +478,13 @@ class StageCore:
                 stage,
                 missing,
             )
-            data_ready = bool(current.get("data_ready")) and not missing
+            readiness_value = current.get("data_ready")
+            if readiness_value is None:
+                # Legacy/base readiness evaluates this same fact as "ready".
+                # Normalize at the Qt adapter boundary instead of requiring
+                # every upstream readiness implementation to rename its key.
+                readiness_value = current.get("ready")
+            data_ready = bool(readiness_value) and not missing
             finalized = bool(
                 current.get("finalized")
                 or current.get("locked")
@@ -663,7 +669,10 @@ class StageCore:
         if stage == "content":
             allowed, missing = content_manual_minimum(row)
         else:
-            allowed = bool(current.get("data_ready"))
+            readiness_value = current.get("data_ready")
+            if readiness_value is None:
+                readiness_value = current.get("ready")
+            allowed = bool(readiness_value)
             missing = list(current.get("missing_data") or current.get("missing") or [])
 
         if not allowed:
