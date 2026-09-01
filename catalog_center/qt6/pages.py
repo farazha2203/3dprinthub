@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
@@ -739,6 +740,40 @@ class OperationsPage(QWidget):
             "classic",
         )
 
+        self.collection_method = QComboBox()
+        self.collection_method.addItem(
+            "Rich فعلی — DOM + JSON-LD + Embedded JSON + XHR",
+            "rich",
+        )
+        self.collection_method.addItem(
+            "Classic Isolated — روش قدیمی پایدار",
+            "classic_isolated",
+        )
+        self.collection_method.addItem(
+            "Classic Exact — HTML/DOM + Screenshot",
+            "classic_exact",
+        )
+        self.collection_method.addItem(
+            "Network Capture — XHR/Fetch JSON",
+            "network_capture",
+        )
+        self.collection_method.addItem(
+            "Chrome متصل 9222 — نشست مرورگر باز",
+            "chrome_attached",
+        )
+        self.collection_method.addItem(
+            "Saved HTML — فایل ذخیره‌شده",
+            "saved_html",
+        )
+        self.collection_method.addItem(
+            "Browser DOM — سازگاری نسخه قدیمی",
+            "browser_dom",
+        )
+        self.collection_method.addItem(
+            "Public HTTP — سازگاری نسخه قدیمی",
+            "public_http",
+        )
+
         self.url = QLineEdit()
         self.url.setPlaceholderText(
             "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
@@ -755,6 +790,22 @@ class OperationsPage(QWidget):
             "ذخیره تصاویر عمومی باکیفیت"
         )
         self.download_images.setChecked(True)
+        self.download_files = QCheckBox(
+            "دانلود فایل مستقیم عمومی مدل"
+        )
+        self.download_files.setChecked(False)
+        self.same_domain = QCheckBox(
+            "دانلود/خزش فایل فقط در همان دامنه"
+        )
+        self.same_domain.setChecked(True)
+
+        self.saved_html_path = QLineEdit()
+        self.saved_html_path.setPlaceholderText(
+            "برای روش Saved HTML فایل .html/.htm را انتخاب کن"
+        )
+        self.saved_html_browse = QPushButton("انتخاب HTML…")
+        self.saved_html_browse.clicked.connect(self._browse_saved_html)
+
         self.domain_policy = QLabel(
             "خزش عمومی و robots-aware است؛ دورزدن Login/CAPTCHA/"
             "محدودیت دسترسی انجام نمی‌شود."
@@ -763,7 +814,7 @@ class OperationsPage(QWidget):
         self.domain_policy.setWordWrap(True)
 
         self.requested = QSpinBox()
-        self.requested.setRange(1, 100)
+        self.requested.setRange(1, 500)
         self.requested.setValue(100)
 
         self.image_limit = QSpinBox()
@@ -785,18 +836,28 @@ class OperationsPage(QWidget):
         self.direct_btn = QPushButton(
             "دریافت هوشمند از لینک Product"
         )
+        self.login_profile_btn = QPushButton("Chrome پروفایل / ورود دستی")
+        self.debug_chrome_btn = QPushButton("Chrome متصل 9222")
+        self.harvest_btn = QPushButton("🔎 کشف جدیدها از همه Sourceها")
+        self.harvest_btn.setProperty("success", True)
+        self.source_refresh_btn = QPushButton("♻ بروزرسانی محصولات Source")
         self.refresh_btn = QPushButton("بروزرسانی وضعیت")
 
         grid.addWidget(QLabel("سایت مادر / Source"), 0, 0)
         grid.addWidget(self.source, 0, 1)
         grid.addWidget(QLabel("نوع دریافت"), 0, 2)
         grid.addWidget(self.mode, 0, 3)
-        grid.addWidget(QLabel("روش Crawl"), 1, 0)
+
+        grid.addWidget(QLabel("روش کشف"), 1, 0)
         grid.addWidget(self.strategy, 1, 1)
+        grid.addWidget(QLabel("روش دریافت Product"), 1, 2)
+        grid.addWidget(self.collection_method, 1, 3)
+
         grid.addWidget(QLabel("لینک گروه/محصول"), 2, 0)
         grid.addWidget(self.url, 2, 1, 1, 3)
         grid.addWidget(QLabel("عبارت جستجو"), 3, 0)
         grid.addWidget(self.query, 3, 1, 1, 3)
+
         grid.addWidget(QLabel("تعداد Product"), 4, 0)
         grid.addWidget(self.requested, 4, 1)
         grid.addWidget(
@@ -805,16 +866,18 @@ class OperationsPage(QWidget):
             2,
         )
         grid.addWidget(self.image_limit, 4, 3)
-        grid.addWidget(self.retry_failed, 5, 0, 1, 2)
-        grid.addWidget(
-            self.download_images,
-            5,
-            2,
-            1,
-            2,
-        )
-        grid.addWidget(self.source_hint, 6, 0, 1, 4)
-        grid.addWidget(self.domain_policy, 7, 0, 1, 4)
+
+        grid.addWidget(self.retry_failed, 5, 0)
+        grid.addWidget(self.download_images, 5, 1)
+        grid.addWidget(self.download_files, 5, 2)
+        grid.addWidget(self.same_domain, 5, 3)
+
+        grid.addWidget(QLabel("Saved HTML"), 6, 0)
+        grid.addWidget(self.saved_html_path, 6, 1, 1, 2)
+        grid.addWidget(self.saved_html_browse, 6, 3)
+
+        grid.addWidget(self.source_hint, 7, 0, 1, 4)
+        grid.addWidget(self.domain_policy, 8, 0, 1, 4)
 
         actions = QHBoxLayout()
         actions.addWidget(self.start_btn)
@@ -825,7 +888,15 @@ class OperationsPage(QWidget):
         actions.addWidget(self.direct_btn)
         actions.addWidget(self.refresh_btn)
         actions.addStretch(1)
-        grid.addLayout(actions, 8, 0, 1, 4)
+        grid.addLayout(actions, 9, 0, 1, 4)
+
+        legacy_actions = QHBoxLayout()
+        legacy_actions.addWidget(self.login_profile_btn)
+        legacy_actions.addWidget(self.debug_chrome_btn)
+        legacy_actions.addWidget(self.harvest_btn)
+        legacy_actions.addWidget(self.source_refresh_btn)
+        legacy_actions.addStretch(1)
+        grid.addLayout(legacy_actions, 10, 0, 1, 4)
         root.addWidget(controls)
 
         self.progress = QProgressBar()
@@ -908,6 +979,9 @@ class OperationsPage(QWidget):
         self.mode.currentIndexChanged.connect(
             self._mode_changed
         )
+        self.collection_method.currentIndexChanged.connect(
+            self._method_changed
+        )
         self.source.currentIndexChanged.connect(
             self._source_changed
         )
@@ -923,6 +997,10 @@ class OperationsPage(QWidget):
         self.direct_btn.clicked.connect(
             self._direct_from_url
         )
+        self.login_profile_btn.clicked.connect(self._setup_login_profile)
+        self.debug_chrome_btn.clicked.connect(self._launch_debug_chrome)
+        self.harvest_btn.clicked.connect(self._portfolio_harvest)
+        self.source_refresh_btn.clicked.connect(self._refresh_source_products)
         self.refresh_btn.clicked.connect(self.refresh)
         self.queue_filter.currentIndexChanged.connect(
             lambda _index: self._populate_queue(reset=True)
@@ -932,6 +1010,7 @@ class OperationsPage(QWidget):
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
         self._reload_sources()
         self._mode_changed()
+        self._method_changed()
         self.refresh()
 
     def _reload_sources(self) -> None:
@@ -979,20 +1058,51 @@ class OperationsPage(QWidget):
             return
         self.url.setText(value)
 
+    def _browse_saved_html(self) -> None:
+        path, _selected = QFileDialog.getOpenFileName(
+            self,
+            "فایل HTML ذخیره‌شده",
+            "",
+            "HTML (*.html *.htm);;All files (*.*)",
+        )
+        if path:
+            self.saved_html_path.setText(path)
+
     def _direct_from_url(self) -> None:
         index = self.mode.findData("single")
         if index >= 0:
             self.mode.setCurrentIndex(index)
+        rich_index = self.collection_method.findData("rich")
+        if rich_index >= 0:
+            self.collection_method.setCurrentIndex(rich_index)
         self._start()
+
+    def _method_changed(self) -> None:
+        method = str(self.collection_method.currentData() or "rich")
+        saved = method == "saved_html"
+        self.saved_html_path.setEnabled(saved)
+        self.saved_html_browse.setEnabled(saved)
+        if saved:
+            single_index = self.mode.findData("single")
+            if single_index >= 0:
+                self.mode.setCurrentIndex(single_index)
+        if method != "rich":
+            classic_index = self.strategy.findData("classic")
+            if classic_index >= 0:
+                self.strategy.setCurrentIndex(classic_index)
+        self._mode_changed()
 
     def _mode_changed(self) -> None:
         mode = str(
             self.mode.currentData() or "automatic"
         )
+        method = str(
+            self.collection_method.currentData() or "rich"
+        ) if hasattr(self, "collection_method") else "rich"
         batch = mode != "single"
         self.requested.setEnabled(batch)
         self.retry_failed.setEnabled(batch)
-        self.strategy.setEnabled(batch)
+        self.strategy.setEnabled(batch and method == "rich")
         self.query.setEnabled(
             mode in {"automatic", "search"}
         )
@@ -1066,7 +1176,22 @@ class OperationsPage(QWidget):
         requested = self.requested.value()
         image_limit = self.image_limit.value()
         include_failed = self.retry_failed.isChecked()
-        strategy = str(self.strategy.currentData() or "hybrid")
+        collection_method = str(
+            self.collection_method.currentData() or "rich"
+        )
+        strategy = (
+            str(self.strategy.currentData() or "hybrid")
+            if collection_method == "rich"
+            else "classic"
+        )
+        saved_html_path = self.saved_html_path.text().strip()
+        if collection_method == "saved_html" and not saved_html_path:
+            QMessageBox.warning(
+                self,
+                "Saved HTML",
+                "فایل HTML ذخیره‌شده را انتخاب کن.",
+            )
+            return
 
         def job(progress):
             if mode == "single":
@@ -1074,9 +1199,11 @@ class OperationsPage(QWidget):
                     source_code=source_code,
                     product_url=resolved_url,
                     image_limit=image_limit,
-                    download_images=(
-                        self.download_images.isChecked()
-                    ),
+                    collection_method=collection_method,
+                    saved_html_path=saved_html_path,
+                    download_images=self.download_images.isChecked(),
+                    download_files=self.download_files.isChecked(),
+                    same_domain_only=self.same_domain.isChecked(),
                     progress=progress,
                 )
             return self.kernel.acquisition.run_batch(
@@ -1087,9 +1214,10 @@ class OperationsPage(QWidget):
                 include_failed=include_failed,
                 strategy=strategy,
                 operator_mode=mode,
-                download_images=(
-                    self.download_images.isChecked()
-                ),
+                collection_method=collection_method,
+                download_images=self.download_images.isChecked(),
+                download_files=self.download_files.isChecked(),
+                same_domain_only=self.same_domain.isChecked(),
                 progress=progress,
             )
 
@@ -1106,6 +1234,111 @@ class OperationsPage(QWidget):
         worker.signals.finished.connect(self._finished)
         self.pool.start(worker)
 
+    def _start_auxiliary_job(self, label: str, fn) -> None:
+        if self._worker is not None:
+            QMessageBox.information(
+                self,
+                label,
+                "یک عملیات دریافت در حال اجرا است.",
+            )
+            return
+        worker = Worker(fn)
+        self._worker = worker
+        self.start_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.progress.setValue(0)
+        self.status.setText(f"{label}…")
+        worker.signals.progress.connect(self._progress)
+        worker.signals.result.connect(self._done)
+        worker.signals.error.connect(self._error)
+        worker.signals.finished.connect(self._finished)
+        self.pool.start(worker)
+
+    def _setup_login_profile(self) -> None:
+        source_code = str(self.source.currentData() or "").strip()
+        seed = self.url.text().strip()
+        if not source_code:
+            QMessageBox.warning(self, "Chrome پروفایل", "یک Source انتخاب کن.")
+            return
+
+        def job(_progress):
+            return self.kernel.acquisition.setup_login_profile(
+                source_code=source_code,
+                seed_url=seed,
+            )
+
+        self._start_auxiliary_job("Chrome پروفایل / ورود دستی", job)
+
+    def _launch_debug_chrome(self) -> None:
+        try:
+            result = self.kernel.acquisition.launch_debug_chrome(
+                seed_url=self.url.text().strip(),
+            )
+        except Exception as exc:
+            show_diagnostic_error(
+                self,
+                "Chrome متصل 9222",
+                f"{type(exc).__name__}: {exc}",
+                context={"operation": "launch-debug-chrome"},
+            )
+            return
+        self.status.setText(
+            f"Chrome متصل باز شد — PID={result.get('pid')} • "
+            f"CDP={result.get('cdp_url')}"
+        )
+
+    def _portfolio_harvest(self) -> None:
+        requested = self.requested.value()
+        image_limit = self.image_limit.value()
+
+        def job(progress):
+            return self.kernel.acquisition.portfolio_harvest(
+                requested_per_source=requested,
+                image_limit=image_limit,
+                download_images=self.download_images.isChecked(),
+                download_files=self.download_files.isChecked(),
+                same_domain_only=self.same_domain.isChecked(),
+                progress=progress,
+            )
+
+        self._start_auxiliary_job("کشف جدیدها از همه Sourceها", job)
+
+    def _refresh_source_products(self) -> None:
+        source_code = str(self.source.currentData() or "").strip()
+        if not source_code:
+            QMessageBox.warning(
+                self,
+                "بروزرسانی Source",
+                "یک Source فعال انتخاب کن.",
+            )
+            return
+        limit = self.requested.value()
+        image_limit = self.image_limit.value()
+        answer = QMessageBox.question(
+            self,
+            "بروزرسانی محصولات Source",
+            (
+                f"حداکثر {limit} محصول از {source_code} دوباره از منبع خوانده شوند؟\n"
+                "تصمیم‌های ویرایشی، عنوان فارسی، قیمت و وضعیت‌های اپراتور حفظ می‌شوند."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def job(progress):
+            result = self.kernel.acquisition.refresh_source_products(
+                source_code=source_code,
+                limit=limit,
+                image_limit=image_limit,
+                download_images=self.download_images.isChecked(),
+                progress=progress,
+            )
+            return {"operation": "source_refresh", **dict(result or {})}
+
+        self._start_auxiliary_job("بروزرسانی محصولات Source", job)
+
     def _progress(self, value: int, message: str) -> None:
         self.progress.setValue(int(value))
         self.status.setText(str(message or ""))
@@ -1120,7 +1353,26 @@ class OperationsPage(QWidget):
     def _done(self, result) -> None:
         data = dict(result or {})
         self.progress.setValue(100)
-        if data.get("already_collected"):
+        operation = str(data.get("operation") or "")
+        if operation == "portfolio_harvest":
+            self.status.setText(
+                "✅ کشف چندمنبعی تمام شد — "
+                f"Collected={data.get('collected', 0)} • "
+                f"Failed={data.get('failed', 0)} • "
+                f"New={data.get('discovered', 0)}"
+            )
+        elif operation == "source_refresh":
+            self.status.setText(
+                "✅ بروزرسانی Source تمام شد — "
+                f"Changed={data.get('changed', 0)} • "
+                f"Unchanged={data.get('unchanged', 0)} • "
+                f"Failed={data.get('failed', 0)}"
+            )
+        elif operation == "login_profile":
+            self.status.setText(
+                "✅ Chrome پروفایل بسته شد و نشست مرورگر حفظ شد."
+            )
+        elif data.get("already_collected"):
             self.status.setText(
                 f"این Product قبلاً دریافت شده — ID {data.get('product_id') or '—'}"
             )
@@ -1129,7 +1381,8 @@ class OperationsPage(QWidget):
                 "✅ پایان دریافت — "
                 f"Collected={data.get('collected', 1)} • "
                 f"Failed={data.get('failed', 0)} • "
-                f"New={data.get('discovered', 0)}"
+                f"New={data.get('discovered', 0)} • "
+                f"Files={data.get('files_saved', 0)}"
             )
         self.refresh()
 
@@ -1148,6 +1401,9 @@ class OperationsPage(QWidget):
                 ),
                 "strategy": str(
                     self.strategy.currentData() or ""
+                ),
+                "collection_method": str(
+                    self.collection_method.currentData() or ""
                 ),
                 "url": self.url.text().strip(),
             },
