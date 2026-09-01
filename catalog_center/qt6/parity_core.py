@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
+
+from PIL import Image
 from typing import Any
 
 from app import phase49_3c_image_pipeline as image_pipeline
@@ -102,6 +105,7 @@ SPEC_FIELDS = (
     "license_name",
     "license_url",
     "commercial_status",
+    "source_license_owner_approved",
     "technical_summary_fa",
     "technical_features_json",
     "source_specs_json",
@@ -613,7 +617,7 @@ class StageCore:
             raise RuntimeError("محصول پیدا نشد.")
         locks = stage_locks(row)
         opened = []
-        for stage in ("quick", "content", "slider"):
+        for stage in ("quick", "content", "specs", "slider"):
             if stage in locks:
                 locks.pop(stage, None)
                 opened.append(stage)
@@ -735,14 +739,14 @@ class StageCore:
         product_id: int,
         stages: set[str] | None = None,
     ) -> dict[str, Any]:
-        """Turn only objectively complete, safe stages green.
+        """Turn objectively complete owner-approved stages green.
 
-        Source/license review and Publish are never auto-approved. The method
-        reuses the existing readiness contract; it cannot make an incomplete
-        stage green merely because an AI request finished.
+        Phase49.3I.48 makes Source/License safe for automatic finalization
+        because the owner explicitly approved that stage globally. Publish is
+        still never auto-approved.
         """
         product_id = int(product_id)
-        safe = {"quick", "commerce", "images", "content", "slider"}
+        safe = {"quick", "commerce", "images", "content", "specs", "slider"}
         requested = (
             set(safe)
             if stages is None
@@ -791,6 +795,33 @@ class FilamentParityCore:
     def list(self) -> list[dict[str, Any]]:
         return [dict(row) for row in list_available_material_colors(self.db)]
 
+    def _materialize_image(self, data: dict[str, Any]) -> str:
+        raw = str(data.get("filament_image_path") or "").strip()
+        if not raw:
+            return ""
+        source = Path(raw).expanduser()
+        if not source.is_file():
+            return raw if str(data.get("_existing_image_path") or "") == raw else ""
+
+        target_root = Path(self.db.path).resolve().parent / "filament_images"
+        target_root.mkdir(parents=True, exist_ok=True)
+        identity = "|".join(
+            str(data.get(key) or "").strip().casefold()
+            for key in ("material", "brand", "color")
+        )
+        digest = hashlib.sha1(identity.encode("utf-8")).hexdigest()[:16]
+        target = target_root / f"filament-{digest}.webp"
+        try:
+            with Image.open(source) as image:
+                image.load()
+                image.thumbnail((640, 640), Image.Resampling.LANCZOS)
+                if image.mode not in {"RGB", "RGBA"}:
+                    image = image.convert("RGBA" if "transparency" in image.info else "RGB")
+                image.save(target, "WEBP", quality=88, method=6)
+        except Exception as exc:
+            raise ValueError(f"تصویر فیلامنت معتبر نیست: {exc}") from exc
+        return str(target)
+
     def save(self, values: dict[str, Any], *, previous_row_id: int | None = None) -> dict[str, Any]:
         base: dict[str, Any] = {}
         if previous_row_id:
@@ -803,6 +834,11 @@ class FilamentParityCore:
                 {},
             )
         data = {**base, **dict(values or {})}
+        brand = str(data.get("brand") or data.get("brand_name") or "").strip()
+        data["brand"] = brand
+        data["manufacturer"] = brand
+        data["_existing_image_path"] = str(base.get("filament_image_path") or "")
+        image_path = self._materialize_image(data)
         saved = add_available_material_color(
             self.db,
             data.get("material") or data.get("material_name") or "",
@@ -811,8 +847,8 @@ class FilamentParityCore:
             data.get("color_type") or "solid",
             data.get("secondary_hex") or "",
             data.get("tertiary_hex") or "",
-            brand_name=data.get("brand") or data.get("brand_name") or "",
-            manufacturer_name=data.get("manufacturer") or data.get("manufacturer_name") or "",
+            brand_name=brand,
+            manufacturer_name=brand,
             roll_weight_grams=_integer(data.get("roll_weight_grams"), 1000),
             stock_roll_count=max(0.0, _number(data.get("stock_roll_count"), 0)),
             purchase_price_per_roll=max(0, _integer(data.get("purchase_price_per_roll"), 0)),
@@ -825,6 +861,9 @@ class FilamentParityCore:
             preheat_temperature_c=max(0.0, _number(data.get("preheat_temperature_c"), 0)),
             preheat_hourly_rate=max(0, _integer(data.get("preheat_hourly_rate"), 0)),
             filament_image_url=str(data.get("filament_image_url") or "").strip(),
+            filament_image_path=image_path,
+            color_finish=str(data.get("color_finish") or "matte").strip(),
+            palette_hexes=data.get("palette_hexes") or data.get("palette_hex_json") or [],
         )
         if previous_row_id and int(previous_row_id) != int(saved.get("id") or 0):
             deactivate_available_material_color(self.db, int(previous_row_id))
