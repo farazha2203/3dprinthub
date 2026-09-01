@@ -373,7 +373,7 @@ Write-Host "HOST_TOUCHED=NO" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Foreground QA:" -ForegroundColor Cyan
 Write-Host "1) Products: verify lifecycle tabs (active/published/archive/deleted), old local thumbnails, image count and description on cards."
-Write-Host "2) Select TWO disposable Products and run 'AI تکمیل همه موارد انتخاب‌شده' in Saved Data mode; verify sequential progress and both Products refresh."
+Write-Host "2) Select TWO disposable Products and run the bulk full-content AI action in Saved Data mode; verify sequential progress and both Products refresh."
 Write-Host "3) On one Product with 3+ images run full image/content completion; verify SEO WebPs are numbered -01/-02/-03 and all image SEO metadata is consistent."
 Write-Host "4) Add Product/Crawl: default Inventory tab must show Products immediately; switch Large Icons <-> Details and verify title/description/image count."
 Write-Host "5) Profile/Pricing editor: verify Profile, Production Weight/Time and Filament/Fixed Price are separate full-height tabs with all rows visible."
