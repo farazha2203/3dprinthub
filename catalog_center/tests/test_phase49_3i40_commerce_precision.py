@@ -120,16 +120,17 @@ class Phase493I40CommercePrecisionTests(unittest.TestCase):
         self.assertEqual(updated[0]["sale_price_per_roll"], 3_600_000)
         self.assertNotIn("fixed_product_price", global_offer)
 
-    def test_filament_rate_calculation_shows_final_roll_basis_and_per_gram_rate(self):
+    def test_filament_rate_calculation_uses_sale_roll_divided_by_roll_weight_only(self):
         result = filament_rate_calculation({
             "roll_weight_grams": 1000,
             "sale_price_per_roll": 3_000_000,
             "usd_price_per_roll": 40,
             "usd_fx_rate_toman": 100_000,
         })
-        self.assertEqual(result["final_roll_toman"], 4_000_000)
-        self.assertEqual(result["rate_per_gram"], 4_000)
-        self.assertEqual(result["basis"], "دلار × نرخ ثبت‌شده")
+        self.assertEqual(result["final_roll_toman"], 3_000_000)
+        self.assertEqual(result["rate_per_gram"], 3_000)
+        self.assertEqual(result["basis"], "قیمت فروش هر رول")
+        self.assertEqual(result["usd_roll_toman"], 4_000_000)
 
         no_fx = filament_rate_calculation({
             "roll_weight_grams": 1000,
