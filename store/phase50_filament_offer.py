@@ -8,6 +8,24 @@ from .models import ProductVariant, StoreOrderItem
 from .phase39_models import MaterialColorOption
 
 
+COLOR_BEHAVIOR_CHOICES = [
+    ("solid", "تک‌رنگ"),
+    ("dual", "دو‌رنگ"),
+    ("multicolor", "چندرنگ"),
+    ("gradient", "گرادیانی"),
+    ("color_shift", "تغییررنگ / Color Shift"),
+]
+
+COLOR_FINISH_CHOICES = [
+    ("matte", "مات"),
+    ("glossy", "براق"),
+    ("metallic", "متالیک"),
+    ("transparent_matte", "شیشه‌ای مات"),
+    ("transparent_glossy", "شیشه‌ای براق"),
+    ("silk", "Silk / ابریشمی"),
+]
+
+
 def _has_field(model, name: str) -> bool:
     return any(field.name == name for field in model._meta.get_fields())
 
@@ -126,11 +144,42 @@ def install_model_fields() -> None:
                 max_length=500,
                 blank=True,
                 default="",
+                verbose_name="تصویر فیلامنت خارجی / سازگاری",
+            ),
+        ),
+        (
+            "color_finish",
+            models.CharField(
+                max_length=32,
+                choices=COLOR_FINISH_CHOICES,
+                default="matte",
+                verbose_name="نوع سطح / Finish",
+            ),
+        ),
+        (
+            "palette_hexes",
+            models.JSONField(
+                blank=True,
+                default=list,
+                verbose_name="پالت رنگ فیلامنت",
+            ),
+        ),
+        (
+            "filament_image",
+            models.ImageField(
+                blank=True,
+                upload_to="store/filaments/%Y/%m/",
                 verbose_name="تصویر فیلامنت",
             ),
         ),
     ):
         _contribute(MaterialColorOption, name, field)
+
+    # Migration 0041 changes the persisted field choices. Because this project
+    # contributes Phase50 fields at AppConfig.ready() rather than rewriting the
+    # mature phase39_models module, mirror the migration state at runtime too.
+    MaterialColorOption.COLOR_TYPE_CHOICES = COLOR_BEHAVIOR_CHOICES
+    MaterialColorOption._meta.get_field("color_type").choices = COLOR_BEHAVIOR_CHOICES
 
     _contribute(
         ProductVariant,
@@ -205,30 +254,9 @@ def _current_roll_count(option):
 
 
 def _effective_sale_price_per_gram(option):
+    """Owner authority: sale price per roll / roll weight, with no hidden fallback."""
     roll_weight = Decimal(getattr(option, "roll_weight_grams", 0) or 0)
-    candidates = []
-
-    override = getattr(option, "sale_price_per_gram_override", None)
-    if override is not None and Decimal(override or 0) > 0:
-        candidates.append(Decimal(override))
-
-    if roll_weight > 0:
-        sale_roll = Decimal(getattr(option, "sale_price_per_roll", 0) or 0)
-        if sale_roll > 0:
-            candidates.append(sale_roll / roll_weight)
-
-        usd_roll = Decimal(getattr(option, "usd_price_per_roll", 0) or 0)
-        fx = Decimal(getattr(option, "usd_fx_rate_toman", 0) or 0)
-        if usd_roll > 0 and fx > 0:
-            candidates.append((usd_roll * fx) / roll_weight)
-
-    material_rate = Decimal(
-        getattr(option.material, "effective_sale_price_per_gram", 0)
-        or getattr(option.material, "sale_price_per_gram", 0)
-        or getattr(option.material, "price_per_gram", 0)
-        or 0
-    )
-    if material_rate > 0:
-        candidates.append(material_rate)
-
-    return max(candidates) if candidates else Decimal("0")
+    sale_roll = Decimal(getattr(option, "sale_price_per_roll", 0) or 0)
+    if roll_weight <= 0 or sale_roll <= 0:
+        return Decimal("0")
+    return sale_roll / roll_weight
