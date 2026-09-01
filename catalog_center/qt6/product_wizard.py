@@ -364,6 +364,7 @@ class ProductWizardPage(QWidget):
         edit_seo = QPushButton("ویرایش SEO انتخاب‌شده‌ها")
         apply_seo = QPushButton("اعمال SEO فارسی محصول")
         delete_selected = QPushButton("حذف انتخاب‌شده‌ها")
+        renumber_images = QPushButton("اصلاح شماره عکس‌ها")
         screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
         recover = QPushButton("بازیابی تصاویر از صفحه محصول")
         recover.setProperty("primary", True)
@@ -382,6 +383,7 @@ class ProductWizardPage(QWidget):
         edit_seo.clicked.connect(self._edit_selected_image_seo)
         apply_seo.clicked.connect(self._apply_product_image_seo)
         delete_selected.clicked.connect(self._delete_selected_images)
+        renumber_images.clicked.connect(self._renumber_images)
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
@@ -391,6 +393,7 @@ class ProductWizardPage(QWidget):
             edit_seo,
             apply_seo,
             delete_selected,
+            renumber_images,
             screenshot,
         ):
             actions.addWidget(widget)
@@ -408,7 +411,8 @@ class ProductWizardPage(QWidget):
         )
         slider_hint = QLabel(
             "دایره «اسلایدر» روی کارت، عکس اسلایدر را تعیین می‌کند؛ "
-            "دایره «اصلی» عکس اصلی Product است."
+            "دایره «اصلی» عکس اصلی Product است. انتخاب Stage 3 فقط Draft "
+            "اسلایدر را عوض می‌کند و ثبت نهایی در Stage 6 انجام می‌شود."
         )
         slider_hint.setObjectName("Muted")
         slider_hint.setWordWrap(True)
@@ -539,7 +543,15 @@ class ProductWizardPage(QWidget):
         form.addRow("طراح / Author", self.author_name)
         form.addRow("نام مجوز", self.license_name)
         form.addRow("URL مجوز", self.license_url)
-        form.addRow("وضعیت استفاده تجاری", self.commercial_status)
+        form.addRow("وضعیت ثبت‌شده منبع", self.commercial_status)
+        self.owner_license_policy = QLabel(
+            "✅ سیاست مالک 3DPrintHub: منبع/مجوز برای همه محصولات مجاز است."
+        )
+        self.owner_license_policy.setWordWrap(True)
+        self.owner_license_policy.setStyleSheet(
+            "font-weight:700; color:#047857; padding:8px;"
+        )
+        form.addRow("مجوز انتشار", self.owner_license_policy)
         form.addRow("خلاصه فنی فارسی", self.technical_summary)
         form.addRow("مشخصات فارسی JSON", self.specs_fa)
         form.addRow("ویژگی‌های فنی JSON", self.technical_features)
@@ -932,19 +944,10 @@ class ProductWizardPage(QWidget):
             },
         )
 
-        # Slider ownership stays in the Slider stage even though the visual
-        # choice is conveniently exposed on image cards.
-        self.kernel.stages.update(
-            self.product_id,
-            "slider",
-            {
-                "homepage_slider_enabled": (
-                    1 if self.image_slider_enabled.isChecked() else 0
-                ),
-                "homepage_slider_image_url": self.image_grid.slider_url(),
-            },
-            event_type="qt_image_slider_choice",
-        )
+        # Do not cross-write the Slider stage while autosaving image selection.
+        # A finalized Slider stage may be locked; the old cross-stage write was
+        # the exact owner-reported homepage_slider_enabled/image_url error.
+        # The image-grid choice is kept in the live UI and persisted by Stage 6.
 
     def _save_stage4(self) -> None:
         self.kernel.stages.update(
@@ -987,6 +990,7 @@ class ProductWizardPage(QWidget):
                 "license_name": self.license_name.text().strip(),
                 "license_url": self.license_url.text().strip(),
                 "commercial_status": str(self.commercial_status.currentData() or "review"),
+                "source_license_owner_approved": 1,
                 "technical_summary_fa": self.technical_summary.toPlainText().strip(),
                 "specs_fa_json": json.dumps(specs, ensure_ascii=False),
                 "technical_features_json": json.dumps(features, ensure_ascii=False),
@@ -1261,6 +1265,9 @@ class ProductWizardPage(QWidget):
                 self.product_id,
                 [url],
             )
+            row = self.kernel.products.get(self.product_id) or {}
+            if self.kernel.images.urls(row):
+                self.kernel.images.renumber(self.product_id)
         except Exception as exc:
             QMessageBox.warning(self, "حذف تصویر", str(exc))
             return
@@ -1288,10 +1295,30 @@ class ProductWizardPage(QWidget):
                 self.product_id,
                 urls,
             )
+            row = self.kernel.products.get(self.product_id) or {}
+            if self.kernel.images.urls(row):
+                self.kernel.images.renumber(self.product_id)
         except Exception as exc:
             QMessageBox.warning(self, "حذف گروهی", str(exc))
             return
         self.load_product(self.product_id)
+
+    def _renumber_images(self) -> None:
+        if self.product_id is None:
+            return
+        try:
+            result = self.kernel.images.renumber(self.product_id)
+        except Exception as exc:
+            QMessageBox.warning(self, "اصلاح شماره عکس‌ها", str(exc))
+            return
+        removed = int(result.get("stale_seo_files_removed") or 0)
+        self.load_product(self.product_id)
+        QMessageBox.information(
+            self,
+            "اصلاح شماره عکس‌ها",
+            "فایل‌های SEO از -01 دوباره مرتب شدند."
+            + (f"\n{removed} فایل SEO قدیمی حذف شد." if removed else ""),
+        )
 
     def _edit_selected_image_seo(self) -> None:
         urls = self.image_grid.selected_urls()
@@ -1357,17 +1384,19 @@ class ProductWizardPage(QWidget):
                     keywords.append(value)
 
         try:
-            for index, url in enumerate(urls, 1):
-                self.kernel.images.update_metadata(
-                    self.product_id,
-                    [url],
-                    {
-                        "alt_text": f"{title} - تصویر {index}"[:220],
-                        "title": title[:220],
-                        "caption": caption[:500],
-                        "keywords": keywords[:16],
-                    },
-                )
+            # One Product = one semantic image SEO identity. Only physical
+            # filenames differ by the deterministic -01/-02/... suffix.
+            self.kernel.images.update_metadata(
+                self.product_id,
+                urls,
+                {
+                    "alt_text": title[:220],
+                    "title": title[:220],
+                    "caption": caption[:500],
+                    "keywords": keywords[:16],
+                },
+            )
+            self.kernel.images.renumber(self.product_id)
         except Exception as exc:
             QMessageBox.warning(self, "SEO تصاویر", str(exc))
             return
@@ -1529,8 +1558,9 @@ class ProductWizardPage(QWidget):
                 "داده‌های فنی قابل اثبات Source (دسته، زمان چاپ، وزن، ابعاد و "
                 "Filamentهای موجود در کتابخانه) بدون حدس به محصول/Profile اول "
                 "افزوده می‌شوند. قیمت فقط از تنظیمات واقعی Filament محاسبه می‌شود.\n\n"
-                "مجوز/وضعیت تجاری و انتشار همچنان اپراتوری می‌مانند. تصاویر با "
-                "Finalizer محلی WebP/SEO بازسازی می‌شوند و هر مرحله واقعاً کامل "
+                "منبع/مجوز طبق سیاست سراسری مالک مجاز و سبز می‌شود؛ انتشار نهایی "
+                "همچنان اپراتوری می‌ماند. تصاویر با Finalizer محلی WebP/SEO "
+                "بازسازی می‌شوند و هر مرحله واقعاً کامل "
                 "به‌صورت خودکار سبز می‌شود.\n\nادامه داده شود؟",
                 (
                     QMessageBox.StandardButton.Yes
