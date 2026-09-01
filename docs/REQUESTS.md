@@ -1,5 +1,20 @@
 # PROJECT REQUESTS
 
+## REQ-49-085 — Fast progressive Product/Crawl loading + full pre-Qt acquisition controls
+Date: 2026-09-01  
+Status: `IMPLEMENTED + WINDOWS CI PASS / OWNER LOCAL QA NEXT`
+
+Owner requires:
+- Product Gallery to open quickly with roughly 5 columns × 10 rows, then load more while scrolling;
+- Windows-style detail/table view to load about 20 rows first and append later rows;
+- Crawl inventory to progressively expose all records actually present in SQLite rather than hiding or dropping old collected items;
+- new Qt acquisition page to retain the working options/actions from the versions before the visual rewrite;
+- database access to become genuinely lighter/faster rather than loading all data and merely hiding it;
+- bulk/selection/archive/reject/restore behavior to keep working with the paged UI.
+
+Implemented at code checkpoint `a659155da4a4a41e01e926b2ac1263a1756c24e6`; Windows runs `33500317538`, `33500317554`, `33500317788` PASS. Production untouched.
+
+
 ## REQ-50-028 — Qt Product AI semantic repair, final SEO WebP, persistent Crawl inventory and lifecycle UX
 Status: `IMPLEMENTED / WINDOWS CI + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
