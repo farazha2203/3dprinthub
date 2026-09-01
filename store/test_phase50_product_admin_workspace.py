@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.test import SimpleTestCase
 
-from store.models import Product, ProductImage, ProductVariant
+from store.models import PricingSetting, Product, ProductImage, ProductVariant
+from store.phase39_models import MaterialColorOption
+from website.models import Quote, SiteSetting
 from store.phase50_product_admin_workspace import SECTION_TITLES
 
 
@@ -99,3 +101,70 @@ class Phase50ProductAdminWorkspaceTests(SimpleTestCase):
         self.assertIn("minimum_price", self.product_admin.list_display)
         self.assertIn("price_is_final", self.product_admin.list_display)
         self.assertIn("seo_preview", self.product_admin.readonly_fields)
+
+    def test_tabbed_change_form_media_is_shared_across_business_admins(self):
+        for model in (
+            Product,
+            PricingSetting,
+            MaterialColorOption,
+            SiteSetting,
+            Quote,
+        ):
+            with self.subTest(model=model.__name__):
+                registered = admin.site._registry[model]
+                media = registered.media
+                css = {
+                    value
+                    for values in media._css.values()
+                    for value in values
+                }
+                js = set(media._js)
+                self.assertIn("admin/phase49-admin-tabs.css", css)
+                self.assertIn("admin/phase49-admin-tabs.js", js)
+
+    def test_pricing_and_color_admins_use_task_focused_fieldsets(self):
+        pricing = admin.site._registry[PricingSetting]
+        self.assertEqual(
+            tuple(title for title, _options in pricing.fieldsets),
+            (
+                "زمان و نرخ تولید",
+                "دستمزد و حاشیه سود",
+                "حداقل سفارش و بسته‌بندی",
+                "مالیات",
+                "وضعیت",
+            ),
+        )
+        pricing_fields = {
+            field
+            for _title, options in pricing.fieldsets
+            for field in options.get("fields", ())
+        }
+        self.assertTrue(
+            {
+                "default_hourly_rate",
+                "assembly_hourly_rate",
+                "default_labor_percent",
+                "default_margin_percent",
+                "minimum_order_amount",
+                "packaging_fee",
+                "vat_enabled",
+                "tax_percent",
+            }.issubset(pricing_fields)
+        )
+
+        colors = admin.site._registry[MaterialColorOption]
+        self.assertEqual(
+            tuple(title for title, _options in colors.fieldsets),
+            (
+                "هویت رنگ و متریال",
+                "نمایش رنگ",
+                "قیمت و هشدار موجودی",
+            ),
+        )
+        color_fields = {
+            field
+            for _title, options in colors.fieldsets
+            for field in options.get("fields", ())
+        }
+        self.assertIn("sale_price_per_gram_override", color_fields)
+        self.assertIn("low_stock_threshold_grams", color_fields)
