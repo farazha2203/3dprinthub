@@ -251,6 +251,8 @@ class Database:
         ON discovered_urls(source_code, status, id DESC);
         CREATE INDEX IF NOT EXISTS ix_discovered_status_id
         ON discovered_urls(status, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_discovered_source_status_from_id
+        ON discovered_urls(source_code, status, discovered_from, id);
         """)
         self.conn.commit()
 
