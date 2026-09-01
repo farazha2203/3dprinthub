@@ -10,7 +10,7 @@ from typing import Any
 
 from app import phase49_3c_image_pipeline as image_pipeline
 from app import phase49_readiness_wizard as readiness_module
-from app.ai_providers import AIProviderClient, PROVIDERS
+from app.ai_providers import AIProviderClient, PROVIDERS, remember_model_capability
 from app.ai_model_catalog import (
     contains_persian,
     enrich_model_info,
@@ -512,6 +512,42 @@ class StageCore:
             pass
         return after
 
+    def prepare_ai_content_repair(self, product_id: int) -> dict[str, Any]:
+        """Open only AI/content-owned finalized stages for explicit full repair."""
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        locks = stage_locks(row)
+        opened = []
+        for stage in ("quick", "content", "slider"):
+            if stage in locks:
+                locks.pop(stage, None)
+                opened.append(stage)
+        before = _row_dict(row)
+        if opened:
+            values: dict[str, Any] = {
+                LOCK_COLUMN: json.dumps(locks, ensure_ascii=False),
+            }
+            if "seo_manual_approved" in _columns(self.db):
+                values["seo_manual_approved"] = 0
+            self.db.update_product(product_id, values)
+            after = _row_dict(self.db.product(product_id))
+            try:
+                self.db.save_history(
+                    product_id,
+                    "qt_ai_content_repair_open",
+                    before,
+                    after,
+                    "Explicit full-content AI repair opened: " + ", ".join(opened),
+                )
+            except Exception:
+                pass
+        return {
+            "product_id": product_id,
+            "opened_stages": opened,
+        }
+
     def finalize(self, product_id: int, stage: str) -> dict[str, Any]:
         stage = str(stage or "")
         if stage not in STAGE_ORDER:
@@ -1012,6 +1048,7 @@ class ProviderCore:
         )
         if not ok:
             raise RuntimeError(reason)
+        remember_model_capability(info)
         return info
 
     def test(

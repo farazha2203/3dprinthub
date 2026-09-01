@@ -198,9 +198,11 @@ class ImageCore:
         url: str,
     ) -> str:
         data = dict(row) if not isinstance(row, dict) else row
-        path = image_pipeline.strict_source_local_image(data, url)
+        # Final SEO WebP is the operator/site-facing image. Source/cache is only
+        # a fallback when finalization has not happened yet.
+        path = image_pipeline.strict_local_image(data, url)
         if not path:
-            path = image_pipeline.strict_local_image(data, url)
+            path = image_pipeline.strict_source_local_image(data, url)
         return str(path or "")
 
     def preferred_local_path(self, row: dict[str, Any] | Any) -> str:
@@ -526,6 +528,10 @@ class ImageCore:
                     ensure_ascii=False,
                 ),
             },
+        )
+        image_pipeline.finalize_selected_images(
+            self.db,
+            int(product_id),
         )
         return dict(self.db.product(int(product_id)))
 

@@ -16,7 +16,7 @@ from app.ai_model_catalog import (
     product_model_compatibility,
     rank_models,
 )
-from app.ai_providers import AIProviderClient
+from app.ai_providers import AIProviderClient, remember_model_capability
 from app.db import Database
 from qt6.kernel import build_kernel
 from qt6.main_window import MainWindow
@@ -377,6 +377,116 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             result["title_fa"],
             "پایه چراغ رومیزی",
         )
+
+    def test_openrouter_json_mode_only_model_uses_json_object_and_local_schema(self):
+        captured = {}
+
+        def fake_request(url, api_key, **kwargs):
+            captured.update(dict(kwargs.get("payload") or {}))
+            return {
+                "id": "req-json-mode",
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "title_fa": "چراغ رومیزی ارگانیک",
+                            "seo_title_fa": "چراغ رومیزی ارگانیک چاپ سه بعدی",
+                            "keywords": ["چراغ رومیزی", "چاپ سه بعدی"],
+                        }, ensure_ascii=False)
+                    }
+                }],
+            }
+
+        model = "google/gemma-4-31b-it:free"
+        remember_model_capability({
+            "id": model,
+            "supported_parameters": ["response_format", "tools"],
+            "json_mode": True,
+            "strict_json_schema": False,
+        })
+        schema = {
+            "type": "object",
+            "properties": {
+                "title_fa": {"type": "string"},
+                "seo_title_fa": {"type": "string"},
+                "keywords": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["title_fa", "seo_title_fa", "keywords"],
+            "additionalProperties": False,
+        }
+        client = AIProviderClient("openrouter", "test-key", model)
+        with patch("app.ai_providers._json_request", side_effect=fake_request):
+            result, selected = client.structured_response(
+                instructions="Return Product JSON.",
+                input_content=[{"type": "input_text", "text": "lamp"}],
+                schema=schema,
+                schema_name="json_mode_probe",
+                preferred_model=model,
+            )
+        self.assertEqual(selected, model)
+        self.assertEqual(captured["response_format"]["type"], "json_object")
+        self.assertTrue(captured["provider"]["require_parameters"])
+        self.assertEqual(result["title_fa"], "چراغ رومیزی ارگانیک")
+
+    def test_openrouter_json_mode_local_schema_rejects_wrong_shape(self):
+        model = "google/gemma-4-31b-it:free"
+        remember_model_capability({
+            "id": model,
+            "supported_parameters": ["response_format"],
+            "json_mode": True,
+            "strict_json_schema": False,
+        })
+        schema = {
+            "type": "object",
+            "properties": {"title_fa": {"type": "string"}},
+            "required": ["title_fa"],
+            "additionalProperties": False,
+        }
+        client = AIProviderClient("openrouter", "test-key", model)
+        with patch(
+            "app.ai_providers._json_request",
+            return_value={
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "title_fa": "چراغ رومیزی",
+                            "unexpected": "bad",
+                        }, ensure_ascii=False)
+                    }
+                }]
+            },
+        ):
+            with self.assertRaisesRegex(RuntimeError, "schema mismatch"):
+                client.structured_response(
+                    instructions="Return Product JSON.",
+                    input_content=[{"type": "input_text", "text": "lamp"}],
+                    schema=schema,
+                    schema_name="json_mode_bad",
+                    preferred_model=model,
+                )
+
+    def test_response_format_only_model_is_product_ready_json_mode_not_schema(self):
+        item = rank_models([{
+            "id": "google/gemma-4-31b-it:free",
+            "pricing": {"prompt": "0", "completion": "0"},
+            "supported_parameters": ["response_format", "tools"],
+            "architecture": {
+                "input_modalities": ["text", "image"],
+                "output_modalities": ["text"],
+            },
+        }])[0]
+        self.assertTrue(item["product_ready"])
+        self.assertTrue(item["json_mode"])
+        self.assertFalse(item["strict_json_schema"])
+        self.assertIn("JSON mode", format_model_label(item))
+
+    def test_qt_image_core_prefers_final_seo_webp_after_finalize(self):
+        product_id = self._image_product()
+        self.kernel.images.finalize(product_id)
+        items = self.kernel.images.local_items(product_id)
+        self.assertTrue(items)
+        self.assertTrue(items[0]["path"].lower().endswith(".webp"))
+        self.assertTrue(items[0]["filename"].lower().endswith(".webp"))
+        self.assertTrue(items[0]["planned_filename"].lower().endswith(".webp"))
 
     def test_settings_model_filter_shows_free_persian_pricing(self):
         page = SettingsPage(

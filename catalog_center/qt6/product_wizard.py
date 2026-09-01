@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QScrollArea,
+    QAbstractSpinBox,
     QSpinBox,
     QSplitter,
     QStackedWidget,
@@ -558,10 +559,15 @@ class ProductWizardPage(QWidget):
         self.slider_transition.addItems(["fade", "slide", "zoom", "none"])
         self.slider_transition_ms = QSpinBox()
         self.slider_transition_ms.setRange(0, 60_000)
+        self.slider_transition_ms.setSingleStep(100)
+        self.slider_transition_ms.setSuffix(" ms")
         self.slider_display_ms = QSpinBox()
         self.slider_display_ms.setRange(500, 300_000)
+        self.slider_display_ms.setSingleStep(500)
+        self.slider_display_ms.setSuffix(" ms")
         self.slider_sort = QSpinBox()
         self.slider_sort.setRange(-100_000, 100_000)
+        self.slider_sort.setSingleStep(1)
 
         self.slider_presentation = QComboBox()
         self.slider_presentation.addItems(["product_fit", "cover", "contain"])
@@ -589,6 +595,36 @@ class ProductWizardPage(QWidget):
         self.slider_mobile_w.setRange(10, 100)
         self.slider_mobile_h = QDoubleSpinBox()
         self.slider_mobile_h.setRange(10, 100)
+
+        for control in (
+            self.slider_transition_ms,
+            self.slider_display_ms,
+            self.slider_sort,
+            self.slider_scale,
+            self.slider_x,
+            self.slider_y,
+            self.slider_blur,
+            self.slider_desktop_w,
+            self.slider_desktop_h,
+            self.slider_mobile_w,
+            self.slider_mobile_h,
+        ):
+            control.setButtonSymbols(
+                QAbstractSpinBox.ButtonSymbols.NoButtons
+            )
+        for control in (
+            self.slider_scale,
+            self.slider_x,
+            self.slider_y,
+            self.slider_desktop_w,
+            self.slider_desktop_h,
+            self.slider_mobile_w,
+            self.slider_mobile_h,
+        ):
+            control.setSuffix(" %")
+            control.setSingleStep(5)
+        self.slider_blur.setSuffix(" px")
+        self.slider_blur.setSingleStep(2)
 
         form.addRow(self.slider_enabled)
         form.addRow("عنوان اسلایدر", self.slider_title)
@@ -1459,6 +1495,36 @@ class ProductWizardPage(QWidget):
             self._run_image_smart_repair()
             return
 
+        if not current_only:
+            answer = QMessageBox.question(
+                self,
+                "اصلاح کامل محتوایی با AI",
+                "این اجرا برای اصلاح ترجمه و SEO، مراحل محتوایی نهایی‌شده "
+                "(عنوان/محتوا/اسلایدر) را دوباره برای بازبینی باز می‌کند.\n\n"
+                "قیمت، Profile، Filament، مجوز/وضعیت تجاری و انتشار دست‌نخورده "
+                "می‌مانند. تصاویر فقط با Finalizer محلی WebP/SEO بازسازی می‌شوند.\n\n"
+                "ادامه داده شود؟",
+                (
+                    QMessageBox.StandardButton.Yes
+                    | QMessageBox.StandardButton.No
+                ),
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+            try:
+                self.kernel.stages.prepare_ai_content_repair(
+                    int(self.product_id)
+                )
+            except Exception as exc:
+                QMessageBox.warning(
+                    self,
+                    "اصلاح کامل محتوایی",
+                    str(exc),
+                )
+                return
+            self.load_product(int(self.product_id))
+
         request = {
             "product_id": int(self.product_id),
             "mode": mode,
@@ -1760,6 +1826,24 @@ class ProductWizardPage(QWidget):
 
         if self.product_id is not None:
             self.load_product(self.product_id)
+
+        if (
+            self.product_id is not None
+            and not result.get("local_image_repair")
+            and not result.get("target_stage")
+        ):
+            try:
+                row = self.kernel.products.get(self.product_id) or {}
+                if self.kernel.images.urls(row):
+                    self.kernel.images.finalize(self.product_id)
+                    self.load_product(self.product_id)
+                    result.setdefault("changed_fields", [])
+                    result["changed_fields"] = list(result["changed_fields"]) + [
+                        "image_alt_texts_json",
+                        "image_metadata_json",
+                    ]
+            except Exception:
+                pass
 
         statuses = (
             self.kernel.stages.statuses(self.product_id)

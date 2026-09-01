@@ -140,6 +140,20 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             validate_editorial_pack("Flexi Gecko", noisy)
 
+    def test_driftbloom_lamp_translation_guard_rejects_nonsense_and_accepts_semantic_title(self):
+        from app.phase49_3i33_ai_core import title_quality_guard
+
+        source = "Driftbloom Table Lamp Organic Ambient Desk Lamp"
+        with self.assertRaises(RuntimeError):
+            title_quality_guard(
+                source,
+                "لیمی دوختنی دریفتوبلم، لامپ میزی دکور کلاسیک",
+            )
+        title_quality_guard(
+            source,
+            "چراغ رومیزی ارگانیک Driftbloom با نور محیطی",
+        )
+
     def test_orchestrator_fills_missing_editorial_stages_without_touching_profile_commerce(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
