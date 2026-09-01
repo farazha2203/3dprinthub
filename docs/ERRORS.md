@@ -1133,6 +1133,39 @@ The real ProductWorkspace initializes those schemas before Stage-2 editing, so t
 
 **Prevention:** distinguish immutable operator choices from deterministic derived artifacts. A Stage lock may block editing the approved inputs, but must not prevent the system from refreshing derived fingerprints/files when downstream authoritative metadata changes.
 
+### ERR-49-086 — eager Product/Crawl reads and missing pre-Qt acquisition parity made the new Qt surface slower/incomplete on real Catalog data
+**Date:** 2026-09-01  
+**Environment:** Qt Catalog Center branch `agent/phase49-3i18-operator-bulk-ai-rebuild`.
+
+**Owner evidence / symptom:**
+- Product/Crawl screens were expected to become faster than the old UI but still loaded large result sets eagerly;
+- Product Gallery/Table did not provide the requested 5×10 / 20-row progressive loading behavior;
+- persistent Crawl inventory could render thousands of rows at once;
+- the new Qt acquisition screen did not expose several working controls/methods present before the Qt visual rewrite.
+
+**Root cause:**
+1. `ProductTableModel.refresh()` and `ProductGalleryModel.refresh()` were backed by full Product result sets.
+2. Qt list surfaces paid for heavy Product JSON/text columns that cards/tables did not need.
+3. Crawl inventory used a large one-shot query and broad Product identity join.
+4. acquisition modernization preserved Classic/Hybrid internals but did not restore the full operator-facing method/action parity from the mature pre-Qt UI.
+5. Listing continuation filtering needed an indexed `discovered_from` boundary for large ledgers.
+
+**Correct fix:**
+- add Product count/page APIs with lightweight list columns;
+- use Qt `canFetchMore/fetchMore`: Gallery 50, Table 20;
+- page Crawl inventory at 100 rows and resolve Product identities only for the current page;
+- add planner indexes for lifecycle/source/status/listing access;
+- expose mature old acquisition methods through headless `AcquisitionCore/acquisition_runtime`, never through Tk calls;
+- preserve operator-owned Product edits during Source Refresh and record `source_refresh` history;
+- retain compatibility full-row Product APIs for mature non-Qt callers.
+
+**Verification:** exact code `a659155da4a4a41e01e926b2ac1263a1756c24e6`; runs `33500317538`, `33500317554`, `33500317788` PASS. Dedicated Windows tests cover 50/20/100 paging, Saved HTML, exact legacy routing, Source Refresh preservation and existing mature acquisition regressions.
+
+**Rollback:** `backup/pre-phase49-3i46-catalog-lazy-acquisition-parity-20260901` → pre-change code checkpoint `e093bf8897aea06480fb62c05aa015d819cebf12`.
+
+**Prevention:** list/view surfaces must request bounded DTO-style database pages; do not emulate lazy loading after a full SQL read. Any presentation migration must inventory working operator capabilities in the previous accepted runtime and preserve them through headless Core boundaries.
+
+
 ## OPEN / SEPARATE ITEMS
 ### ERR-OPEN-001 — Local `/api/v1/catalog/sitemap/` returns 404
 Outside current release gate. Public SEO sitemap is `/sitemap.xml`; verify internal route/client contract before adding duplicate endpoint.
