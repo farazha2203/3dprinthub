@@ -223,9 +223,9 @@ class ProductsPage(QWidget):
         self.bulk_ai_source = QComboBox()
         for item in self.kernel.providers.source_modes():
             self.bulk_ai_source.addItem(item["label"], item["code"])
-        data_index = self.bulk_ai_source.findData("data")
-        if data_index >= 0:
-            self.bulk_ai_source.setCurrentIndex(data_index)
+        link_index = self.bulk_ai_source.findData("link")
+        if link_index >= 0:
+            self.bulk_ai_source.setCurrentIndex(link_index)
         self.bulk_ai_btn = QPushButton("✨ AI تکمیل همه موارد انتخاب‌شده")
         self.bulk_ai_btn.setProperty("success", True)
         self.bulk_ai_status = QLabel("")
@@ -274,7 +274,7 @@ class ProductsPage(QWidget):
         self.gallery.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.gallery.doubleClicked.connect(lambda _index: self._open_selected())
         self.gallery.selectionModel().selectionChanged.connect(
-            lambda *_args: self._refresh_detail()
+            lambda *_args: self._selection_changed()
         )
 
         self.model = ProductTableModel(db)
@@ -295,7 +295,7 @@ class ProductsPage(QWidget):
         )
         self.table.doubleClicked.connect(lambda _index: self._open_selected())
         self.table.selectionModel().selectionChanged.connect(
-            lambda *_args: self._refresh_detail()
+            lambda *_args: self._selection_changed()
         )
 
         self.tabs.addTab(self.gallery, "گالری")
@@ -340,6 +340,17 @@ class ProductsPage(QWidget):
         self.detail_meta.setObjectName("Muted")
         self.detail_meta.setWordWrap(True)
 
+        selected_title = QLabel("محصولات انتخاب‌شده برای عملیات گروهی")
+        selected_title.setStyleSheet("font-weight:700;")
+        self.selected_products = QListWidget()
+        self.selected_products.setMaximumHeight(180)
+        self.selected_products.setSelectionMode(
+            QAbstractItemView.SelectionMode.NoSelection
+        )
+        self.selected_products.setToolTip(
+            "این لیست دقیقاً همان Productهایی است که عملیات گروهی روی آن‌ها اجرا می‌شود."
+        )
+
         detail_edit = QPushButton("ویرایش کامل محصول")
         detail_edit.setProperty("primary", True)
         detail_edit.clicked.connect(self._open_selected)
@@ -349,6 +360,8 @@ class ProductsPage(QWidget):
         detail_layout.addWidget(self.detail_source_title)
         detail_layout.addWidget(self.detail_description)
         detail_layout.addWidget(self.detail_meta)
+        detail_layout.addWidget(selected_title)
+        detail_layout.addWidget(self.selected_products)
         detail_layout.addStretch(1)
         detail_layout.addWidget(detail_edit)
 
@@ -386,7 +399,7 @@ class ProductsPage(QWidget):
             filter_name,
         )
         self._update_loaded_label()
-        self._refresh_detail()
+        self._selection_changed()
 
     def _apply_gallery_sort(self) -> None:
         self.gallery_model.refresh(
@@ -426,8 +439,35 @@ class ProductsPage(QWidget):
         self._filter_combo_changed()
 
     def _tab_changed(self) -> None:
-        self._refresh_detail()
+        self._selection_changed()
         self._update_loaded_label()
+
+    def _selection_changed(self) -> None:
+        self._refresh_selected_products()
+        self._refresh_detail()
+
+    def _refresh_selected_products(self) -> None:
+        if not hasattr(self, "selected_products"):
+            return
+        ids = self._selected_product_ids()
+        self.selected_products.clear()
+        for product_id in ids:
+            row = self.kernel.products.get(product_id) or {}
+            title = (
+                str(row.get("title_fa") or "").strip()
+                or str(row.get("source_title") or "").strip()
+                or f"Product #{product_id}"
+            )
+            if bool(int(row.get("ai_completed_once") or 0)):
+                marker = "🤖 AI تکمیل شده"
+                source = str(row.get("ai_completed_source_mode") or "").strip()
+                if source:
+                    marker += f" • {source}"
+            else:
+                marker = "○ AI اجرا نشده"
+            item = QListWidgetItem(f"{title}\n{marker}")
+            item.setData(Qt.ItemDataRole.UserRole, int(product_id))
+            self.selected_products.addItem(item)
 
     def _fetch_gallery_if_needed(self) -> None:
         bar = self.gallery.verticalScrollBar()
@@ -506,9 +546,12 @@ class ProductsPage(QWidget):
             self,
             "حذف از محصولات / رد",
             (
-                f"{len(product_ids)} محصول از لیست فعال رد شود؟\n\n"
-                "این عملیات Hard Delete نیست؛ رکورد به‌صورت Tombstone قابل‌بازیابی "
-                "نگه داشته می‌شود و Crawler همان هویت را دوباره وارد نمی‌کند."
+                f"{len(product_ids)} محصول رد شود؟\n\n"
+                "لینک، عنوان، منبع، علت/زمان رد و فقط یک Thumbnail کوچک نگه داشته "
+                "می‌شود. محتوای سنگین، قیمت‌ها، تصاویر کامل و پوشه دریافت‌شده پاک "
+                "می‌شوند و Crawler همان هویت را دوباره وارد نمی‌کند.\n\n"
+                "بازیابی بعدی یعنی آزادکردن هویت برای دریافت مجدد؛ دیتای سنگین قبلی "
+                "برنمی‌گردد."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -553,7 +596,7 @@ class ProductsPage(QWidget):
             )
             return
 
-        mode = str(self.bulk_ai_source.currentData() or "data")
+        mode = str(self.bulk_ai_source.currentData() or "link")
         active = self.kernel.providers.active()
         quotes = []
         try:
@@ -662,7 +705,7 @@ class ProductsPage(QWidget):
             context={
                 "provider": active.get("provider"),
                 "model": active.get("model"),
-                "source_mode": str(self.bulk_ai_source.currentData() or "data"),
+                "source_mode": str(self.bulk_ai_source.currentData() or "link"),
                 "product_count": len(self._selected_product_ids()),
             },
         )
@@ -711,14 +754,30 @@ class ProductsPage(QWidget):
             "rejected": "رد/حذف‌شده",
             "archived": "آرشیو",
         }.get(lifecycle, lifecycle)
+        ai_text = "اجرا نشده"
+        if bool(int(row.get("ai_completed_once") or 0)):
+            ai_text = (
+                f"تکمیل شده ✅ • {row.get('ai_completed_source_mode') or '—'}"
+                f" • {row.get('ai_completed_provider') or '—'}"
+                f" / {row.get('ai_completed_model') or '—'}"
+            )
+        rejected_lines = ""
+        if lifecycle == "rejected":
+            rejected_lines = (
+                f"\nلینک نگهداری‌شده: {row.get('source_url') or '—'}"
+                f"\nعلت رد: {row.get('blocked_reason') or '—'}"
+                f"\nزمان رد: {row.get('blocked_at') or '—'}"
+            )
         self.detail_meta.setText(
             f"منبع: {row.get('source_name') or row.get('source_code') or '—'}\n"
             f"وضعیت DB: {row.get('workflow_status') or '—'}\n"
             f"چرخه: {lifecycle_text}\n"
             f"تعداد تصاویر: {self.kernel.images.image_count(row)}\n"
             f"SEO: {seo_text}\n"
+            f"AI: {ai_text}\n"
             f"دسته: {self.kernel.categories.label_for_slug(row.get('local_category_slug') or '')}\n"
             f"Server ID: {row.get('server_id') or '—'}"
+            + rejected_lines
         )
 
         path = self.kernel.images.preferred_local_path(row)
@@ -759,14 +818,14 @@ class FilamentsPage(QWidget):
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
             "کتابخانه Filament",
-            "افزودن/ویرایش/غیرفعال‌سازی با همان موجودی مرکزی و نرخ‌های نهایی Phase49.3I.41.",
+            "برند، پالت رنگ/Finish، تصویر رول، موجودی وزنی و قیمت فروش رول؛ تومان/گرم کاملاً خودکار محاسبه می‌شود.",
         ))
 
         bar = QHBoxLayout()
         self.material = QComboBox()
         self.material.addItem("همه متریال‌ها")
         self.search = QLineEdit()
-        self.search.setPlaceholderText("شرکت، برند، رنگ، متریال…")
+        self.search.setPlaceholderText("برند، رنگ، Finish یا متریال…")
 
         add_btn = QPushButton("فیلامنت جدید")
         add_btn.setProperty("primary", True)
@@ -800,10 +859,14 @@ class FilamentsPage(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.table.horizontalHeader().setStretchLastSection(True)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setMinimumSectionSize(85)
+        header.setStretchLastSection(False)
+        for column, width in enumerate(
+            (130, 155, 220, 120, 105, 115, 135, 135, 115, 120)
+        ):
+            header.resizeSection(column, width)
         self.table.doubleClicked.connect(lambda _index: self._edit_filament())
         root.addWidget(self.table, 1)
 
@@ -1793,6 +1856,8 @@ class OperationsPage(QWidget):
                     or row.get("external_id")
                     or "بدون عنوان دریافت‌شده"
                 )
+                if not row.get("product_id"):
+                    title = f"{title} — کاندیدای کشف‌شده؛ هنوز دریافت نشده"
                 description = self._queue_description(row)
                 short_description = description
                 if len(short_description) > 95:
@@ -1807,7 +1872,11 @@ class OperationsPage(QWidget):
                 gallery_item.setIcon(icon)
                 gallery_lines = [
                     str(title),
-                    f"🖼 {image_count} • {source} • {status}",
+                    (
+                        f"🖼 {image_count} • {source} • {status}"
+                        if row.get("product_id")
+                        else f"🔗 {source} • {status} • برای عکس/متن ابتدا دریافت شود"
+                    ),
                 ]
                 if short_description:
                     gallery_lines.append(short_description)
