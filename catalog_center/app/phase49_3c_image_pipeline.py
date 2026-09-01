@@ -290,8 +290,16 @@ def _copyright_holder(row) -> tuple[str, str]:
 
 
 def _safe_alt(row, index: int, alts: list[str]) -> str:
-    if index - 1 < len(alts):
-        candidate = str(alts[index - 1] or "").strip()
+    """Return one canonical Product alt for every non-overridden image.
+
+    The operator asked for Product-level image SEO parity: all normal images of
+    one Product share the same semantic Alt/Title/Caption/Keywords while their
+    physical filenames stay unique through an explicit numeric suffix. A
+    per-image manual metadata override is still preserved later by the
+    finalizer.
+    """
+    for raw in alts:
+        candidate = str(raw or "").strip()
         if candidate:
             return candidate[:220]
     title = (
@@ -299,7 +307,21 @@ def _safe_alt(row, index: int, alts: list[str]) -> str:
         or str(_row_value(row, "source_title", "") or "").strip()
         or "محصول چاپ سه‌بعدی"
     )
-    return f"{title} - نمای {index}"[:220]
+    return title[:220]
+
+
+def _indexed_seo_filename(value: str, index: int, *, fallback: str) -> str:
+    """Normalize a requested SEO filename to a unique numbered WebP name.
+
+    Historical multi-image metadata could contain the same operator filename
+    for every selected image. Writing all of those to the same target path
+    caused each image to overwrite the previous one. The filename intent is
+    treated as a base and every final image receives -01, -02, ... .
+    """
+    raw = Path(str(value or fallback or "product.webp")).name
+    stem = Path(raw).stem.strip(". -") or Path(str(fallback or "product.webp")).stem
+    stem = re.sub(r"-\d{1,4}$", "", stem).strip(". -") or "product"
+    return f"{stem[:150]}-{max(1, int(index)):02d}.webp"
 
 
 def image_seo_signature(row) -> str:
@@ -528,10 +550,11 @@ def finalize_selected_images(db, product_id: int) -> dict:
                 metadata[key] = previous[key]
         if override_fields:
             metadata["_operator_override_fields"] = sorted(override_fields)
-        seo_name = str(metadata.get("seo_filename") or "").strip()
-        if not seo_name.lower().endswith(".webp"):
-            seo_name = f"{Path(seo_name).stem or planned_seo_filename(row, index).rsplit('.', 1)[0]}.webp"
-        metadata["seo_filename"] = seo_name
+        metadata["seo_filename"] = _indexed_seo_filename(
+            str(metadata.get("seo_filename") or ""),
+            index,
+            fallback=planned_seo_filename(row, index),
+        )
         target = seo_dir / metadata["seo_filename"]
         _write_webp_with_metadata(source, target, metadata)
         metadata["final_local_file"] = str(target)
@@ -563,7 +586,11 @@ def finalize_selected_images(db, product_id: int) -> dict:
             if not source.is_file():
                 source = old
             item = dict(item)
-            item["seo_filename"] = planned_seo_filename(row, index)
+            item["seo_filename"] = _indexed_seo_filename(
+                str(item.get("seo_filename") or ""),
+                index,
+                fallback=planned_seo_filename(row, index),
+            )
             target = seo_dir / item["seo_filename"]
             _write_webp_with_metadata(source, target, item)
             item["final_local_file"] = str(target)
