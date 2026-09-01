@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -16,12 +16,15 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListView,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QSpinBox,
     QSplitter,
+    QStackedWidget,
     QTabBar,
     QTabWidget,
     QTableView,
@@ -901,10 +904,118 @@ class OperationsPage(QWidget):
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
-            "دریافت اطلاعات از سایت‌های مادر",
-            "Search/Listing URL بده، تعداد Product و تعداد عکس هر Product را تعیین کن. "
-            "Ledger دائمی محصولات قبلی را رد می‌کند؛ اجرای بعدی همان URL به بخش بعدی می‌رود.",
+            "دریافت و مدیریت محصولات سایت‌های مادر",
+            "موجودی دائمی، دریافت جدید و History از هم جدا هستند تا هیچ کنترل بزرگی "
+            "فضای مشاهده محصولات را نگیرد.",
         ))
+
+        self.workspace_tabs = QTabWidget()
+        self.workspace_tabs.setDocumentMode(False)
+        root.addWidget(self.workspace_tabs, 1)
+
+        # --------------------------------------------------------------
+        # Tab 1: persistent inventory — the default operator workspace.
+        # --------------------------------------------------------------
+        inventory_page = QWidget()
+        inventory_layout = QVBoxLayout(inventory_page)
+
+        queue_card = QFrame()
+        queue_card.setObjectName("Card")
+        queue_layout = QVBoxLayout(queue_card)
+
+        queue_header = QHBoxLayout()
+        queue_header.addWidget(QLabel("موجودی دائمی Crawl / همه رکوردهای دیتابیس"))
+        self.queue_filter = QComboBox()
+        self.queue_filter.addItem("همه", "all")
+        self.queue_filter.addItem("جدید", "new")
+        self.queue_filter.addItem("Failed", "failed")
+        self.queue_filter.addItem("دریافت‌شده", "collected")
+        self.queue_filter.addItem("ردشده", "rejected")
+
+        self.queue_view_mode = QComboBox()
+        self.queue_view_mode.addItem("آیکون‌های بزرگ", "icons")
+        self.queue_view_mode.addItem("جزئیات", "details")
+
+        self.queue_collect_btn = QPushButton("افزودن انتخاب‌شده‌ها به محصولات")
+        self.queue_collect_btn.setProperty("primary", True)
+        self.queue_reject_btn = QPushButton("رد/حذف از صف")
+        self.queue_restore_btn = QPushButton("بازگرداندن به صف")
+        self.queue_loaded_label = QLabel("")
+        self.queue_loaded_label.setObjectName("Muted")
+
+        queue_header.addWidget(QLabel("فیلتر"))
+        queue_header.addWidget(self.queue_filter)
+        queue_header.addWidget(QLabel("نوع نمایش"))
+        queue_header.addWidget(self.queue_view_mode)
+        queue_header.addWidget(self.queue_collect_btn)
+        queue_header.addWidget(self.queue_reject_btn)
+        queue_header.addWidget(self.queue_restore_btn)
+        queue_header.addStretch(1)
+        queue_header.addWidget(self.queue_loaded_label)
+        queue_layout.addLayout(queue_header)
+
+        self.queue_views = QStackedWidget()
+
+        self.queue_gallery = QListWidget()
+        self.queue_gallery.setViewMode(QListWidget.ViewMode.IconMode)
+        self.queue_gallery.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.queue_gallery.setMovement(QListWidget.Movement.Static)
+        self.queue_gallery.setWrapping(True)
+        self.queue_gallery.setWordWrap(True)
+        self.queue_gallery.setIconSize(QSize(170, 118))
+        self.queue_gallery.setGridSize(QSize(230, 235))
+        self.queue_gallery.setSpacing(7)
+        self.queue_gallery.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection
+        )
+
+        self.queue_table = QTableWidget(0, 11)
+        self.queue_table.setHorizontalHeaderLabels([
+            "تصویر",
+            "ID صف",
+            "Source",
+            "وضعیت",
+            "Product ID",
+            "عنوان",
+            "توضیح",
+            "عکس",
+            "External ID",
+            "Attempts",
+            "URL / خطا",
+        ])
+        self.queue_table.setIconSize(QSize(70, 52))
+        self.queue_table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.queue_table.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection
+        )
+        self.queue_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.queue_table.verticalHeader().setVisible(False)
+        self.queue_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.queue_table.horizontalHeader().setSectionResizeMode(
+            6,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        self.queue_table.horizontalHeader().setSectionResizeMode(
+            10,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        self.queue_views.addWidget(self.queue_gallery)
+        self.queue_views.addWidget(self.queue_table)
+        queue_layout.addWidget(self.queue_views, 1)
+        inventory_layout.addWidget(queue_card, 1)
+
+        # --------------------------------------------------------------
+        # Tab 2: receive / crawl controls.
+        # --------------------------------------------------------------
+        receive_page = QWidget()
+        receive_layout = QVBoxLayout(receive_page)
 
         controls = QFrame()
         controls.setObjectName("Card")
@@ -912,20 +1023,11 @@ class OperationsPage(QWidget):
 
         self.source = QComboBox()
         self.mode = QComboBox()
-        self.mode.addItem(
-            "Automatic — Listing پیش‌فرض Source",
-            "automatic",
-        )
+        self.mode.addItem("Automatic — Listing پیش‌فرض Source", "automatic")
         self.mode.addItem("Search / Listing", "search")
         self.mode.addItem("Category URL", "category")
-        self.mode.addItem(
-            "Site Crawl از لینک شروع",
-            "site_crawl",
-        )
-        self.mode.addItem(
-            "دریافت مستقیم یک Product",
-            "single",
-        )
+        self.mode.addItem("Site Crawl از لینک شروع", "site_crawl")
+        self.mode.addItem("دریافت مستقیم یک Product", "single")
 
         self.strategy = QComboBox()
         self.strategy.addItem(
@@ -938,62 +1040,33 @@ class OperationsPage(QWidget):
         )
 
         self.collection_method = QComboBox()
-        self.collection_method.addItem(
-            "Rich فعلی — DOM + JSON-LD + Embedded JSON + XHR",
-            "rich",
-        )
-        self.collection_method.addItem(
-            "Classic Isolated — روش قدیمی پایدار",
-            "classic_isolated",
-        )
-        self.collection_method.addItem(
-            "Classic Exact — HTML/DOM + Screenshot",
-            "classic_exact",
-        )
-        self.collection_method.addItem(
-            "Network Capture — XHR/Fetch JSON",
-            "network_capture",
-        )
-        self.collection_method.addItem(
-            "Chrome متصل 9222 — نشست مرورگر باز",
-            "chrome_attached",
-        )
-        self.collection_method.addItem(
-            "Saved HTML — فایل ذخیره‌شده",
-            "saved_html",
-        )
-        self.collection_method.addItem(
-            "Browser DOM — سازگاری نسخه قدیمی",
-            "browser_dom",
-        )
-        self.collection_method.addItem(
-            "Public HTTP — سازگاری نسخه قدیمی",
-            "public_http",
-        )
+        for label, code in (
+            ("Rich فعلی — DOM + JSON-LD + Embedded JSON + XHR", "rich"),
+            ("Classic Isolated — روش قدیمی پایدار", "classic_isolated"),
+            ("Classic Exact — HTML/DOM + Screenshot", "classic_exact"),
+            ("Network Capture — XHR/Fetch JSON", "network_capture"),
+            ("Chrome متصل 9222 — نشست مرورگر باز", "chrome_attached"),
+            ("Saved HTML — فایل ذخیره‌شده", "saved_html"),
+            ("Browser DOM — سازگاری نسخه قدیمی", "browser_dom"),
+            ("Public HTTP — سازگاری نسخه قدیمی", "public_http"),
+        ):
+            self.collection_method.addItem(label, code)
 
         self.url = QLineEdit()
         self.url.setPlaceholderText(
             "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
         )
         self.query = QLineEdit()
-        self.query.setPlaceholderText(
-            "مثال: cake stand — برای Automatic/Search"
-        )
+        self.query.setPlaceholderText("مثال: cake stand — برای Automatic/Search")
         self.source_hint = QLabel("")
         self.source_hint.setObjectName("Muted")
         self.source_hint.setWordWrap(True)
 
-        self.download_images = QCheckBox(
-            "ذخیره تصاویر عمومی باکیفیت"
-        )
+        self.download_images = QCheckBox("ذخیره تصاویر عمومی باکیفیت")
         self.download_images.setChecked(True)
-        self.download_files = QCheckBox(
-            "دانلود فایل مستقیم عمومی مدل"
-        )
+        self.download_files = QCheckBox("دانلود فایل مستقیم عمومی مدل")
         self.download_files.setChecked(False)
-        self.same_domain = QCheckBox(
-            "دانلود/خزش فایل فقط در همان دامنه"
-        )
+        self.same_domain = QCheckBox("دانلود/خزش فایل فقط در همان دامنه")
         self.same_domain.setChecked(True)
 
         self.saved_html_path = QLineEdit()
@@ -1013,26 +1086,19 @@ class OperationsPage(QWidget):
         self.requested = QSpinBox()
         self.requested.setRange(1, 500)
         self.requested.setValue(100)
-
         self.image_limit = QSpinBox()
         self.image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
         self.image_limit.setValue(5)
-
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
+
         self.start_btn = QPushButton("شروع دریافت")
         self.start_btn.setProperty("primary", True)
         self.stop_btn = QPushButton("توقف امن")
         self.stop_btn.setEnabled(False)
-        self.reset_failed_btn = QPushButton(
-            "بازگرداندن Failedها به صف"
-        )
-        self.queue_btn = QPushButton("نمایش وضعیت صف")
-        self.default_url_btn = QPushButton(
-            "لینک Search پیش‌فرض Source"
-        )
-        self.direct_btn = QPushButton(
-            "دریافت هوشمند از لینک Product"
-        )
+        self.reset_failed_btn = QPushButton("بازگرداندن Failedها به صف")
+        self.queue_btn = QPushButton("رفتن به موجودی محصولات")
+        self.default_url_btn = QPushButton("لینک Search پیش‌فرض Source")
+        self.direct_btn = QPushButton("دریافت هوشمند از لینک Product")
         self.login_profile_btn = QPushButton("Chrome پروفایل / ورود دستی")
         self.debug_chrome_btn = QPushButton("Chrome متصل 9222")
         self.harvest_btn = QPushButton("🔎 کشف جدیدها از همه Sourceها")
@@ -1044,156 +1110,112 @@ class OperationsPage(QWidget):
         grid.addWidget(self.source, 0, 1)
         grid.addWidget(QLabel("نوع دریافت"), 0, 2)
         grid.addWidget(self.mode, 0, 3)
-
         grid.addWidget(QLabel("روش کشف"), 1, 0)
         grid.addWidget(self.strategy, 1, 1)
         grid.addWidget(QLabel("روش دریافت Product"), 1, 2)
         grid.addWidget(self.collection_method, 1, 3)
-
         grid.addWidget(QLabel("لینک گروه/محصول"), 2, 0)
         grid.addWidget(self.url, 2, 1, 1, 3)
         grid.addWidget(QLabel("عبارت جستجو"), 3, 0)
         grid.addWidget(self.query, 3, 1, 1, 3)
-
         grid.addWidget(QLabel("تعداد Product"), 4, 0)
         grid.addWidget(self.requested, 4, 1)
-        grid.addWidget(
-            QLabel("عکس باکیفیت برای هر Product"),
-            4,
-            2,
-        )
+        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 4, 2)
         grid.addWidget(self.image_limit, 4, 3)
-
         grid.addWidget(self.retry_failed, 5, 0)
         grid.addWidget(self.download_images, 5, 1)
         grid.addWidget(self.download_files, 5, 2)
         grid.addWidget(self.same_domain, 5, 3)
-
         grid.addWidget(QLabel("Saved HTML"), 6, 0)
         grid.addWidget(self.saved_html_path, 6, 1, 1, 2)
         grid.addWidget(self.saved_html_browse, 6, 3)
-
         grid.addWidget(self.source_hint, 7, 0, 1, 4)
         grid.addWidget(self.domain_policy, 8, 0, 1, 4)
 
-        actions = QHBoxLayout()
-        actions.addWidget(self.start_btn)
-        actions.addWidget(self.stop_btn)
-        actions.addWidget(self.reset_failed_btn)
-        actions.addWidget(self.queue_btn)
-        actions.addWidget(self.default_url_btn)
-        actions.addWidget(self.direct_btn)
-        actions.addWidget(self.refresh_btn)
-        actions.addStretch(1)
-        grid.addLayout(actions, 9, 0, 1, 4)
+        primary_actions = QHBoxLayout()
+        for button in (
+            self.start_btn,
+            self.stop_btn,
+            self.direct_btn,
+            self.default_url_btn,
+            self.queue_btn,
+            self.refresh_btn,
+        ):
+            primary_actions.addWidget(button)
+        primary_actions.addStretch(1)
+        grid.addLayout(primary_actions, 9, 0, 1, 4)
 
-        legacy_actions = QHBoxLayout()
-        legacy_actions.addWidget(self.login_profile_btn)
-        legacy_actions.addWidget(self.debug_chrome_btn)
-        legacy_actions.addWidget(self.harvest_btn)
-        legacy_actions.addWidget(self.source_refresh_btn)
-        legacy_actions.addStretch(1)
-        grid.addLayout(legacy_actions, 10, 0, 1, 4)
-        root.addWidget(controls)
+        receive_layout.addWidget(controls)
+
+        tools_card = QFrame()
+        tools_card.setObjectName("Card")
+        tools_layout = QHBoxLayout(tools_card)
+        tools_layout.addWidget(QLabel("ابزارهای Source / مرورگر"))
+        for button in (
+            self.login_profile_btn,
+            self.debug_chrome_btn,
+            self.harvest_btn,
+            self.source_refresh_btn,
+            self.reset_failed_btn,
+        ):
+            tools_layout.addWidget(button)
+        tools_layout.addStretch(1)
+        receive_layout.addWidget(tools_card)
 
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.status = QLabel("آماده")
         self.status.setObjectName("Muted")
-        root.addWidget(self.progress)
-        root.addWidget(self.status)
+        receive_layout.addWidget(self.progress)
+        receive_layout.addWidget(self.status)
+        receive_layout.addStretch(1)
 
+        # --------------------------------------------------------------
+        # Tab 3: run history / diagnostics.
+        # --------------------------------------------------------------
+        report_page = QWidget()
+        report_layout = QVBoxLayout(report_page)
+        report_header = QHBoxLayout()
+        report_header.addWidget(QLabel("وضعیت Source، صف و Runهای اخیر"))
+        report_refresh = QPushButton("بروزرسانی گزارش")
+        report_refresh.clicked.connect(self.refresh)
+        report_header.addStretch(1)
+        report_header.addWidget(report_refresh)
+        report_layout.addLayout(report_header)
         self.summary = QPlainTextEdit()
         self.summary.setReadOnly(True)
-        self.summary.setMaximumHeight(190)
-        root.addWidget(self.summary)
+        report_layout.addWidget(self.summary, 1)
 
-        queue_card = QFrame()
-        queue_card.setObjectName("Card")
-        queue_layout = QVBoxLayout(queue_card)
-        queue_header = QHBoxLayout()
-        queue_header.addWidget(QLabel("موجودی دائمی Crawl / همه رکوردهای دیتابیس"))
-        self.queue_filter = QComboBox()
-        self.queue_filter.addItem("همه", "all")
-        self.queue_filter.addItem("جدید", "new")
-        self.queue_filter.addItem("Failed", "failed")
-        self.queue_filter.addItem("دریافت‌شده", "collected")
-        self.queue_filter.addItem("ردشده", "rejected")
-        self.queue_collect_btn = QPushButton("افزودن انتخاب‌شده‌ها به محصولات")
-        self.queue_collect_btn.setProperty("primary", True)
-        self.queue_reject_btn = QPushButton("رد/حذف از صف")
-        self.queue_restore_btn = QPushButton("بازگرداندن به صف")
-        queue_header.addWidget(QLabel("فیلتر"))
-        queue_header.addWidget(self.queue_filter)
-        queue_header.addWidget(self.queue_collect_btn)
-        queue_header.addWidget(self.queue_reject_btn)
-        queue_header.addWidget(self.queue_restore_btn)
-        self.queue_loaded_label = QLabel("")
-        self.queue_loaded_label.setObjectName("Muted")
-        queue_header.addStretch(1)
-        queue_header.addWidget(self.queue_loaded_label)
-        queue_layout.addLayout(queue_header)
+        self.workspace_tabs.addTab(inventory_page, "موجودی محصولات")
+        self.workspace_tabs.addTab(receive_page, "دریافت جدید")
+        self.workspace_tabs.addTab(report_page, "گزارش و History")
+        self.workspace_tabs.setCurrentIndex(0)
 
-        self.queue_table = QTableWidget(0, 8)
-        self.queue_table.setHorizontalHeaderLabels([
-            "ID صف",
-            "Source",
-            "وضعیت",
-            "Product ID",
-            "عنوان",
-            "External ID",
-            "Attempts",
-            "URL / خطا",
-        ])
-        self.queue_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self.queue_table.setSelectionMode(
-            QAbstractItemView.SelectionMode.ExtendedSelection
-        )
-        self.queue_table.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
-        self.queue_table.verticalHeader().setVisible(False)
-        self.queue_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.queue_table.horizontalHeader().setSectionResizeMode(
-            7,
-            QHeaderView.ResizeMode.Stretch,
-        )
-        queue_layout.addWidget(self.queue_table, 1)
-        root.addWidget(queue_card, 1)
         self._queue_rows_by_id: dict[int, dict] = {}
         self._queue_page_size = 100
         self._queue_offset = 0
         self._queue_total = 0
+
+        self.queue_gallery.verticalScrollBar().valueChanged.connect(
+            lambda _value: self._fetch_queue_if_needed()
+        )
         self.queue_table.verticalScrollBar().valueChanged.connect(
             lambda _value: self._fetch_queue_if_needed()
         )
+        self.queue_view_mode.currentIndexChanged.connect(
+            self._queue_view_changed
+        )
 
-        self.mode.currentIndexChanged.connect(
-            self._mode_changed
-        )
-        self.collection_method.currentIndexChanged.connect(
-            self._method_changed
-        )
-        self.source.currentIndexChanged.connect(
-            self._source_changed
-        )
+        self.mode.currentIndexChanged.connect(self._mode_changed)
+        self.collection_method.currentIndexChanged.connect(self._method_changed)
+        self.source.currentIndexChanged.connect(self._source_changed)
         self.start_btn.clicked.connect(self._start)
         self.stop_btn.clicked.connect(self._stop)
-        self.reset_failed_btn.clicked.connect(
-            self._reset_failed
-        )
-        self.queue_btn.clicked.connect(self.refresh)
-        self.default_url_btn.clicked.connect(
-            self._fill_default_url
-        )
-        self.direct_btn.clicked.connect(
-            self._direct_from_url
-        )
+        self.reset_failed_btn.clicked.connect(self._reset_failed)
+        self.queue_btn.clicked.connect(self._show_queue_inventory)
+        self.default_url_btn.clicked.connect(self._fill_default_url)
+        self.direct_btn.clicked.connect(self._direct_from_url)
         self.login_profile_btn.clicked.connect(self._setup_login_profile)
         self.debug_chrome_btn.clicked.connect(self._launch_debug_chrome)
         self.harvest_btn.clicked.connect(self._portfolio_harvest)
@@ -1205,9 +1227,11 @@ class OperationsPage(QWidget):
         self.queue_collect_btn.clicked.connect(self._collect_selected_queue)
         self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
+
         self._reload_sources()
         self._mode_changed()
         self._method_changed()
+        self._queue_view_changed()
         self.refresh()
 
     def _reload_sources(self) -> None:
