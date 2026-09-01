@@ -59,7 +59,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             }
         )
 
-    def test_runtime_0040_offer_fields_exist(self):
+    def test_runtime_0041_filament_visual_fields_exist(self):
         for name in (
             "print_hourly_rate",
             "supervision_hourly_rate",
@@ -67,10 +67,31 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             "preheat_temperature_c",
             "preheat_hourly_rate",
             "filament_image_url",
+            "color_finish",
+            "palette_hexes",
+            "filament_image",
         ):
             self.assertIsNotNone(MaterialColorOption._meta.get_field(name))
 
-    def test_formula_uses_exact_color_offer_hourly_supervision_preheat_and_purchase_rate(self):
+    def test_sale_price_per_gram_uses_only_roll_sale_divided_by_roll_weight(self):
+        color = MaterialColorOption.objects.create(
+            material=self.material,
+            name="قیمت مرجع",
+            code="owner-roll-price",
+            brand_name="Owner Brand",
+            manufacturer_name="Old Manufacturer",
+            roll_weight_grams=Decimal("750"),
+            sale_price_per_roll=3_000_000,
+            usd_price_per_roll=Decimal("999"),
+            usd_fx_rate_toman=Decimal("999999"),
+            sale_price_per_gram_override=Decimal("999999"),
+        )
+        self.assertEqual(
+            color.effective_sale_price_per_gram,
+            Decimal("4000"),
+        )
+
+        def test_formula_uses_exact_color_offer_hourly_supervision_preheat_and_purchase_rate(self):
         color = MaterialColorOption.objects.create(
             material=self.material,
             name="سفید",
@@ -185,6 +206,8 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             preheat_temperature_c=Decimal("65"),
             preheat_hourly_rate=25_000,
             filament_image_url="https://example.com/esun-pink.webp",
+            color_finish="glossy",
+            palette_hexes=["#FF66AA", "#FFFFFF"],
         )
         variant = ProductVariant.objects.create(
             product=self.product,
@@ -206,6 +229,10 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(meta["filament_manufacturer_name"], "eSUN")
         self.assertEqual(meta["filament_brand_name"], "eSUN")
         self.assertEqual(meta["color_hex"], "#FF66AA")
+        self.assertEqual(meta["color_finish"], "glossy")
+        self.assertEqual(meta["color_palette_hexes"], ["#FF66AA", "#FFFFFF"])
+        self.assertEqual(meta["filament_sale_price_per_roll"], 4_000_000)
+        self.assertEqual(Decimal(meta["filament_sale_price_per_gram"]), Decimal("4000"))
         self.assertEqual(meta["filament_image_url"], "https://example.com/esun-pink.webp")
         self.assertEqual(Decimal(meta["current_stock_grams"]), Decimal("3000"))
         self.assertTrue(meta["color_stock_sufficient"])
@@ -213,15 +240,21 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(meta["offer_print_hourly_rate"], 160000)
         self.assertEqual(Decimal(meta["preheat_hours"]), Decimal("2"))
 
-    def test_storefront_selector_has_manufacturer_before_material_and_color_visuals(self):
+    def test_storefront_selector_is_brand_first_with_palette_and_finish_visuals(self):
         root = Path(__file__).resolve().parents[1]
         js = (root / "static" / "store" / "js" / "phase50-profile-selector.js").read_text(encoding="utf-8")
         css = (root / "static" / "store" / "css" / "phase50-profile-selector.css").read_text(encoding="utf-8")
-        self.assertIn('"manufacturer", "material", "color", "quality"', js)
-        self.assertIn('manufacturer: "سازنده / برند فیلامنت"', js)
-        self.assertIn("filamentImage", js)
-        self.assertIn("colorHex", js)
+        template = (root / "templates" / "store" / "product_detail.html").read_text(encoding="utf-8")
+        self.assertIn('"brand", "material", "color", "quality"', js)
+        self.assertIn('brand: "برند فیلامنت"', js)
+        self.assertNotIn('manufacturer: "سازنده / برند فیلامنت"', js)
+        self.assertIn("colorPalette", js)
+        self.assertIn("colorFinishLabel", js)
+        self.assertIn("filamentSalePricePerGram", js)
+        self.assertIn("linear-gradient(135deg", js)
         self.assertIn("button.disabled", js)
         self.assertIn("selectionComplete", js)
         self.assertIn(".store-profile-color-swatch", css)
         self.assertIn(".store-profile-color-image", css)
+        self.assertIn("filament_visual_options", template)
+        self.assertIn("قیمت خودکار هر گرم", template)
