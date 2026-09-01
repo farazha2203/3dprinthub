@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QColorDialog,
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QDoubleSpinBox,
     QFormLayout,
     QGridLayout,
@@ -26,11 +30,16 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from app.epic49_desktop_schema import effective_filament_offer_price_per_gram
+from app.epic49_desktop_schema import (
+    COLOR_BEHAVIORS,
+    COLOR_FINISHES,
+    effective_filament_offer_price_per_gram,
+    normalize_palette_hexes,
+)
 from app.phase49_3i35_operator_ledger import normalize_ledger_profile
 
 
-FIXED_PRICE_COLUMN = 13
+FIXED_PRICE_COLUMN = 12
 
 
 def _configure_numeric(widget, *, width: int = 150):
@@ -74,11 +83,13 @@ def _float_spin(
 
 
 def _offer_key(item: dict[str, Any]) -> tuple[str, str, str, str]:
+    # Brand is the owner-facing identity authority. Manufacturer remains only
+    # a hidden compatibility alias on old records/server snapshots.
     return (
         str(item.get("material") or item.get("material_name") or "").strip().casefold(),
         str(item.get("brand") or item.get("brand_name") or "").strip().casefold(),
-        str(item.get("manufacturer") or item.get("manufacturer_name") or "").strip().casefold(),
         str(item.get("color") or item.get("color_name") or "").strip().casefold(),
+        str(item.get("color_type") or "solid").strip().casefold(),
     )
 
 
@@ -89,73 +100,111 @@ def _readonly_item(value: Any) -> QTableWidgetItem:
 
 
 class FilamentEditorDialog(QDialog):
-    """Full global Filament inventory/rate editor."""
+    """Professional global Filament inventory / color / pricing editor."""
+
+    PRESETS = (
+        ("انتخاب پالت آماده…", []),
+        ("صورتی پاستیلی", ["#F7C9D9"]),
+        ("آبی پاستیلی", ["#BDD7F2"]),
+        ("سبز پاستیلی", ["#C7E7D2"]),
+        ("کرم / Ivory", ["#F2E8CF"]),
+        ("سفید", ["#F7F7F7"]),
+        ("مشکی", ["#161616"]),
+        ("قرمز + آبی", ["#D92D20", "#2563EB"]),
+        ("هفت‌رنگ", ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#06B6D4", "#3B82F6", "#A855F7"]),
+    )
 
     def __init__(self, row: dict[str, Any] | None = None, parent=None) -> None:
         super().__init__(parent)
         self.row = dict(row or {})
-        self.setWindowTitle("ویرایش فیلامنت")
-        self.resize(920, 760)
+        self._palette: list[str] = []
+        self._image_path = str(self.row.get("filament_image_path") or "").strip()
+        self.setWindowTitle("فیلامنت — هویت، رنگ، موجودی و قیمت")
+        self.resize(980, 820)
+        self.setMinimumSize(860, 700)
 
         root = QVBoxLayout(self)
+        self.tabs = QTabWidget()
+        root.addWidget(self.tabs, 1)
 
-        identity = QGroupBox("هویت فیلامنت")
-        identity_form = QFormLayout(identity)
-        self.manufacturer = QLineEdit()
+        identity = QGroupBox("هویت و نمایش رنگ")
+        form = QFormLayout(identity)
         self.brand = QLineEdit()
         self.material = QLineEdit()
         self.color = QLineEdit()
+
         self.color_type = QComboBox()
-        self.color_type.addItem("تک‌رنگ", "solid")
-        self.color_type.addItem("دو‌رنگ", "dual")
-        self.color_type.addItem("سه‌رنگ", "triple")
-        self.hex_code = QLineEdit()
-        self.secondary_hex = QLineEdit()
-        self.tertiary_hex = QLineEdit()
-        self.image_url = QLineEdit()
+        for code, label in COLOR_BEHAVIORS:
+            self.color_type.addItem(label, code)
 
-        identity_form.addRow("شرکت / Manufacturer", self.manufacturer)
-        identity_form.addRow("برند", self.brand)
-        identity_form.addRow("متریال", self.material)
-        identity_form.addRow("رنگ", self.color)
-        identity_form.addRow("نوع رنگ", self.color_type)
-        identity_form.addRow("HEX اصلی", self.hex_code)
-        identity_form.addRow("HEX دوم", self.secondary_hex)
-        identity_form.addRow("HEX سوم", self.tertiary_hex)
-        identity_form.addRow("تصویر فیلامنت", self.image_url)
-        root.addWidget(identity)
+        self.color_finish = QComboBox()
+        for code, label in COLOR_FINISHES:
+            self.color_finish.addItem(label, code)
 
-        inventory = QGroupBox("موجودی، خرید/فروش و هزینه‌های تولید")
+        self.preset = QComboBox()
+        for label, values in self.PRESETS:
+            self.preset.addItem(label, list(values))
+        self.preset.currentIndexChanged.connect(self._preset_changed)
+
+        palette_host = QWidget()
+        palette_layout = QHBoxLayout(palette_host)
+        palette_layout.setContentsMargins(0, 0, 0, 0)
+        self.palette_buttons: list[QPushButton] = []
+        for index in range(7):
+            button = QPushButton(f"رنگ {index + 1}")
+            button.setMinimumWidth(82)
+            button.clicked.connect(
+                lambda _checked=False, slot=index: self._pick_color(slot)
+            )
+            self.palette_buttons.append(button)
+            palette_layout.addWidget(button)
+        palette_layout.addStretch(1)
+
+        form.addRow("برند", self.brand)
+        form.addRow("متریال", self.material)
+        form.addRow("نام رنگ", self.color)
+        form.addRow("رفتار رنگ", self.color_type)
+        form.addRow("نوع سطح / Finish", self.color_finish)
+        form.addRow("پالت آماده", self.preset)
+        form.addRow("رنگ‌های سایت (حداکثر ۷)", palette_host)
+        self.tabs.addTab(identity, "هویت و رنگ")
+
+        inventory = QGroupBox("موجودی و قیمت رول")
         grid = QGridLayout(inventory)
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(3, 1)
 
         self.roll_weight = _float_spin(100_000, decimals=1, step=50)
-        self.stock_rolls = _float_spin(100_000, decimals=3, step=0.25)
+        self.stock_weight = _float_spin(100_000_000, decimals=3, step=100)
+        self.stock_unit = QComboBox()
+        self.stock_unit.addItem("گرم", "g")
+        self.stock_unit.addItem("کیلوگرم", "kg")
+        stock_box = QWidget()
+        stock_layout = QHBoxLayout(stock_box)
+        stock_layout.setContentsMargins(0, 0, 0, 0)
+        stock_layout.addWidget(self.stock_weight, 1)
+        stock_layout.addWidget(self.stock_unit)
+
         self.purchase_roll = _money_spin()
         self.sale_roll = _money_spin()
-        self.usd_roll = _float_spin(1_000_000, decimals=2, step=1)
-        self.usd_fx = _float_spin(10_000_000, decimals=2, step=100)
         self.print_hourly = _money_spin()
         self.supervision_hourly = _money_spin()
         self.preheat_hours = _float_spin(240, decimals=2, step=0.25)
         self.preheat_temp = _float_spin(500, decimals=1, step=5)
         self.preheat_hourly = _money_spin()
 
-        labels = [
-            ("وزن رول (g)", self.roll_weight),
-            ("موجودی (تعداد رول)", self.stock_rolls),
+        rows = (
+            ("وزن هر رول (گرم)", self.roll_weight),
+            ("موجودی", stock_box),
             ("قیمت خرید رول (تومان)", self.purchase_roll),
             ("قیمت فروش رول (تومان)", self.sale_roll),
-            ("قیمت دلاری رول", self.usd_roll),
-            ("نرخ دلار صریح (تومان)", self.usd_fx),
             ("هزینه ساعتی چاپ", self.print_hourly),
             ("هزینه ساعتی نظارت", self.supervision_hourly),
-            ("ساعت پیش‌گرم", self.preheat_hours),
+            ("مدت پیش‌گرم (ساعت)", self.preheat_hours),
             ("دمای پیش‌گرم °C", self.preheat_temp),
             ("هزینه ساعتی پیش‌گرم", self.preheat_hourly),
-        ]
-        for index, (label, widget) in enumerate(labels):
+        )
+        for index, (label, widget) in enumerate(rows):
             row_index = index // 2
             col = (index % 2) * 2
             grid.addWidget(QLabel(label), row_index, col)
@@ -164,23 +213,52 @@ class FilamentEditorDialog(QDialog):
         self.rate_label = QLabel()
         self.rate_label.setWordWrap(True)
         self.rate_label.setStyleSheet(
-            "font-size: 14px; font-weight: 700; padding: 8px;"
+            "font-size:14px;font-weight:700;padding:10px;"
         )
-        grid.addWidget(self.rate_label, 6, 0, 1, 4)
-        root.addWidget(inventory)
+        grid.addWidget(self.rate_label, 5, 0, 1, 4)
+        self.tabs.addTab(inventory, "موجودی و قیمت")
+
+        image_group = QGroupBox("تصویر فیلامنت")
+        image_layout = QVBoxLayout(image_group)
+        image_hint = QLabel(
+            "یک عکس واقعی از رول/رنگ انتخاب کن. برنامه نسخه WebP سبک را در "
+            "دیتای دائمی Catalog نگه می‌دارد؛ فایل اصلی جابه‌جا نمی‌شود."
+        )
+        image_hint.setWordWrap(True)
+        image_hint.setObjectName("Muted")
+        image_layout.addWidget(image_hint)
+
+        self.image_preview = QLabel("تصویری انتخاب نشده است")
+        self.image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_preview.setMinimumHeight(300)
+        self.image_preview.setStyleSheet(
+            "border:1px solid #cbd5e1;border-radius:10px;padding:12px;"
+        )
+        image_layout.addWidget(self.image_preview, 1)
+
+        image_actions = QHBoxLayout()
+        choose_image = QPushButton("بارگذاری / انتخاب عکس فیلامنت")
+        clear_image = QPushButton("حذف انتخاب عکس")
+        choose_image.setProperty("primary", True)
+        choose_image.clicked.connect(self._choose_image)
+        clear_image.clicked.connect(self._clear_image)
+        image_actions.addWidget(choose_image)
+        image_actions.addWidget(clear_image)
+        image_actions.addStretch(1)
+        image_layout.addLayout(image_actions)
+        self.tabs.addTab(image_group, "تصویر فیلامنت")
 
         for widget in (
             self.roll_weight,
-            self.stock_rolls,
+            self.stock_weight,
             self.sale_roll,
-            self.usd_roll,
-            self.usd_fx,
             self.print_hourly,
             self.supervision_hourly,
             self.preheat_hours,
             self.preheat_hourly,
         ):
             widget.valueChanged.connect(self._refresh_rate)
+        self.stock_unit.currentIndexChanged.connect(self._refresh_rate)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
@@ -195,91 +273,193 @@ class FilamentEditorDialog(QDialog):
         root.addWidget(buttons)
 
         self._load()
+        self._refresh_palette_buttons()
+        self._refresh_image_preview()
         self._refresh_rate()
 
     def _load(self) -> None:
         row = self.row
-        self.manufacturer.setText(
-            str(row.get("manufacturer") or row.get("manufacturer_name") or "")
+        self.brand.setText(
+            str(
+                row.get("brand")
+                or row.get("brand_name")
+                or row.get("manufacturer")
+                or row.get("manufacturer_name")
+                or ""
+            )
         )
-        self.brand.setText(str(row.get("brand") or row.get("brand_name") or ""))
         self.material.setText(
             str(row.get("material") or row.get("material_name") or "")
         )
         self.color.setText(str(row.get("color") or row.get("color_name") or ""))
+
         code = str(row.get("color_type") or "solid")
         index = self.color_type.findData(code)
         self.color_type.setCurrentIndex(index if index >= 0 else 0)
-        self.hex_code.setText(str(row.get("hex") or row.get("hex_code") or ""))
-        self.secondary_hex.setText(str(row.get("secondary_hex") or ""))
-        self.tertiary_hex.setText(str(row.get("tertiary_hex") or ""))
-        self.image_url.setText(str(row.get("filament_image_url") or ""))
 
-        self.roll_weight.setValue(float(row.get("roll_weight_grams") or 1000))
-        self.stock_rolls.setValue(float(row.get("stock_roll_count") or 0))
+        finish = str(row.get("color_finish") or "matte")
+        index = self.color_finish.findData(finish)
+        self.color_finish.setCurrentIndex(index if index >= 0 else 0)
+
+        self._palette = normalize_palette_hexes(
+            row.get("palette_hexes") or row.get("palette_hex_json") or [],
+            row.get("hex") or row.get("hex_code") or "",
+            row.get("secondary_hex") or "",
+            row.get("tertiary_hex") or "",
+        )
+
+        weight = float(row.get("roll_weight_grams") or 1000)
+        self.roll_weight.setValue(weight)
+        stock_grams = float(row.get("stock_roll_count") or 0) * weight
+        if stock_grams >= 1000:
+            self.stock_unit.setCurrentIndex(self.stock_unit.findData("kg"))
+            self.stock_weight.setValue(stock_grams / 1000)
+        else:
+            self.stock_unit.setCurrentIndex(self.stock_unit.findData("g"))
+            self.stock_weight.setValue(stock_grams)
+
         self.purchase_roll.setValue(
             int(float(row.get("purchase_price_per_roll") or 0))
         )
         self.sale_roll.setValue(int(float(row.get("sale_price_per_roll") or 0)))
-        self.usd_roll.setValue(float(row.get("usd_price_per_roll") or 0))
-        self.usd_fx.setValue(float(row.get("usd_fx_rate_toman") or 0))
         self.print_hourly.setValue(int(float(row.get("print_hourly_rate") or 0)))
         self.supervision_hourly.setValue(
             int(float(row.get("supervision_hourly_rate") or 0))
         )
         self.preheat_hours.setValue(float(row.get("preheat_hours") or 0))
-        self.preheat_temp.setValue(
-            float(row.get("preheat_temperature_c") or 0)
-        )
+        self.preheat_temp.setValue(float(row.get("preheat_temperature_c") or 0))
         self.preheat_hourly.setValue(
             int(float(row.get("preheat_hourly_rate") or 0))
         )
 
+    def _preset_changed(self, index: int) -> None:
+        values = self.preset.itemData(index)
+        if isinstance(values, list) and values:
+            self._palette = normalize_palette_hexes(values)
+            self._refresh_palette_buttons()
+
+    def _pick_color(self, slot: int) -> None:
+        initial = (
+            self._palette[slot]
+            if 0 <= slot < len(self._palette)
+            else "#FFFFFF"
+        )
+        chosen = QColorDialog.getColor(
+            QColor(initial),
+            self,
+            f"انتخاب رنگ {slot + 1}",
+        )
+        if not chosen.isValid():
+            return
+        while len(self._palette) <= slot:
+            self._palette.append("")
+        self._palette[slot] = chosen.name().upper()
+        self._palette = normalize_palette_hexes(self._palette)
+        self._refresh_palette_buttons()
+
+    def _refresh_palette_buttons(self) -> None:
+        for index, button in enumerate(self.palette_buttons):
+            value = self._palette[index] if index < len(self._palette) else ""
+            button.setText(value or f"رنگ {index + 1}")
+            if value:
+                color = QColor(value)
+                text = "#111827" if color.lightness() > 150 else "#FFFFFF"
+                button.setStyleSheet(
+                    f"background:{value};color:{text};font-weight:700;"
+                )
+            else:
+                button.setStyleSheet("")
+
+    def _choose_image(self) -> None:
+        path, _selected = QFileDialog.getOpenFileName(
+            self,
+            "انتخاب تصویر فیلامنت",
+            str(Path(self._image_path).parent)
+            if self._image_path
+            else "",
+            "Images (*.jpg *.jpeg *.png *.webp *.bmp *.tif *.tiff);;All files (*.*)",
+        )
+        if path:
+            self._image_path = path
+            self._refresh_image_preview()
+
+    def _clear_image(self) -> None:
+        self._image_path = ""
+        self._refresh_image_preview()
+
+    def _refresh_image_preview(self) -> None:
+        self.image_preview.clear()
+        if not self._image_path or not Path(self._image_path).is_file():
+            self.image_preview.setText("تصویری انتخاب نشده است")
+            return
+        pixmap = QPixmap(self._image_path)
+        if pixmap.isNull():
+            self.image_preview.setText("خواندن تصویر ناموفق بود")
+            return
+        self.image_preview.setPixmap(
+            pixmap.scaled(
+                520,
+                320,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def _stock_grams(self) -> float:
+        value = max(0.0, float(self.stock_weight.value()))
+        return value * 1000 if self.stock_unit.currentData() == "kg" else value
+
     def _refresh_rate(self) -> None:
-        weight = max(1.0, self.roll_weight.value())
-        sale = float(self.sale_roll.value())
-        if (
-            sale <= 0
-            and self.usd_roll.value() > 0
-            and self.usd_fx.value() > 0
-        ):
-            sale = self.usd_roll.value() * self.usd_fx.value()
+        weight = max(1.0, float(self.roll_weight.value()))
+        sale = max(0.0, float(self.sale_roll.value()))
         rate = sale / weight if sale > 0 else 0
-        stock_kg = self.stock_rolls.value() * weight / 1000
+        stock_grams = self._stock_grams()
         self.rate_label.setText(
-            f"نرخ مؤثر: {rate:,.0f} تومان/گرم   •   موجودی وزنی: {stock_kg:,.3f} kg"
-            f"   •   چاپ: {self.print_hourly.value():,}/ساعت"
-            f"   •   نظارت: {self.supervision_hourly.value():,}/ساعت"
-            f"   •   پیش‌گرم: {self.preheat_hours.value():g}h × "
-            f"{self.preheat_hourly.value():,}"
+            f"قیمت خودکار هر گرم: {rate:,.0f} تومان"
+            f"   •   موجودی: {stock_grams:,.0f} g / {stock_grams / 1000:,.3f} kg"
+            f"   •   معادل رول: {stock_grams / weight:,.3f}"
         )
 
     def _accept(self) -> None:
+        if not self.brand.text().strip():
+            QMessageBox.warning(self, "فیلامنت", "برند الزامی است.")
+            return
         if not self.material.text().strip():
             QMessageBox.warning(self, "فیلامنت", "نام متریال الزامی است.")
             return
         if not self.color.text().strip():
             QMessageBox.warning(self, "فیلامنت", "نام رنگ الزامی است.")
             return
+        if not self._palette:
+            QMessageBox.warning(
+                self,
+                "فیلامنت",
+                "حداقل یک رنگ از پالت انتخاب کن.",
+            )
+            return
         self.accept()
 
     def values(self) -> dict[str, Any]:
+        brand = self.brand.text().strip()
+        roll_weight = max(1.0, float(self.roll_weight.value()))
+        stock_grams = self._stock_grams()
+        palette = normalize_palette_hexes(self._palette)
         return {
-            "manufacturer": self.manufacturer.text().strip(),
-            "brand": self.brand.text().strip(),
+            "manufacturer": brand,
+            "brand": brand,
             "material": self.material.text().strip(),
             "color": self.color.text().strip(),
             "color_type": self.color_type.currentData(),
-            "hex": self.hex_code.text().strip(),
-            "secondary_hex": self.secondary_hex.text().strip(),
-            "tertiary_hex": self.tertiary_hex.text().strip(),
-            "filament_image_url": self.image_url.text().strip(),
-            "roll_weight_grams": self.roll_weight.value(),
-            "stock_roll_count": self.stock_rolls.value(),
+            "color_finish": self.color_finish.currentData(),
+            "palette_hexes": palette,
+            "hex": palette[0] if palette else "",
+            "secondary_hex": palette[1] if len(palette) > 1 else "",
+            "tertiary_hex": palette[2] if len(palette) > 2 else "",
+            "filament_image_path": self._image_path,
+            "roll_weight_grams": roll_weight,
+            "stock_roll_count": stock_grams / roll_weight,
             "purchase_price_per_roll": self.purchase_roll.value(),
             "sale_price_per_roll": self.sale_roll.value(),
-            "usd_price_per_roll": self.usd_roll.value(),
-            "usd_fx_rate_toman": self.usd_fx.value(),
             "print_hourly_rate": self.print_hourly.value(),
             "supervision_hourly_rate": self.supervision_hourly.value(),
             "preheat_hours": self.preheat_hours.value(),
@@ -390,15 +570,14 @@ class ProfileEditorDialog(QDialog):
         hint.setObjectName("Muted")
         filament_layout.addWidget(hint)
 
-        self.filament_table = QTableWidget(0, 14)
+        self.filament_table = QTableWidget(0, 13)
         self.filament_table.setHorizontalHeaderLabels(
             (
                 "انتخاب",
                 "متریال",
-                "شرکت",
                 "برند",
                 "رنگ",
-                "موجودی رول",
+                "موجودی kg",
                 "فروش رول",
                 "تومان/گرم",
                 "چاپ/ساعت",
@@ -420,8 +599,13 @@ class ProfileEditorDialog(QDialog):
         )
         self.filament_table.verticalHeader().setDefaultSectionSize(42)
         header = self.filament_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setStretchLastSection(True)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setMinimumSectionSize(80)
+        header.setStretchLastSection(False)
+        for column, width in enumerate(
+            (72, 130, 150, 190, 105, 130, 115, 115, 115, 95, 105, 120, 165)
+        ):
+            header.resizeSection(column, width)
         self.filament_table.cellDoubleClicked.connect(
             self._filament_double_clicked
         )
@@ -528,14 +712,19 @@ class ProfileEditorDialog(QDialog):
             check.setData(Qt.ItemDataRole.UserRole, deepcopy(offer))
             self.filament_table.setItem(row_index, 0, check)
 
+            stock_kg = (
+                float(offer.get("stock_roll_count") or 0)
+                * float(offer.get("roll_weight_grams") or 0)
+                / 1000
+            )
             values = (
                 offer.get("material") or offer.get("material_name") or "—",
-                offer.get("manufacturer")
-                or offer.get("manufacturer_name")
-                or "—",
                 offer.get("brand") or offer.get("brand_name") or "—",
-                offer.get("color") or offer.get("color_name") or "—",
-                f"{float(offer.get('stock_roll_count') or 0):g}",
+                (
+                    f"{offer.get('color') or offer.get('color_name') or '—'}"
+                    f" / {offer.get('color_finish') or 'matte'}"
+                ),
+                f"{stock_kg:g}",
                 f"{int(float(offer.get('sale_price_per_roll') or 0)):,}",
                 f"{effective_filament_offer_price_per_gram(offer):,.0f}",
                 f"{int(float(offer.get('print_hourly_rate') or 0)):,}",
