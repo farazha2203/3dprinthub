@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import base64
 import json
+import tempfile
 from decimal import Decimal
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
 
-from django.test import TestCase
+from django.test import RequestFactory, TestCase, override_settings
+from PIL import Image
+
+from catalog_bridge.unified_views import filament_sync_view
 from django.urls import reverse
 
 from website.models import Material
@@ -17,6 +23,17 @@ from .phase50_profile_matrix import sync_desktop_profile_matrix
 
 class Phase50FilamentOfferOperationsTests(TestCase):
     def setUp(self):
+        self.bridge_token = "phase50-filament-visual-test-token-1234567890"
+        self._media = tempfile.TemporaryDirectory()
+        self._override = override_settings(
+            MEDIA_ROOT=self._media.name,
+            CATALOG_BRIDGE_TOKEN=self.bridge_token,
+        )
+        self._override.enable()
+        self.addCleanup(self._override.disable)
+        self.addCleanup(self._media.cleanup)
+        self.factory = RequestFactory()
+
         self.material = Material.objects.create(
             name="PLA OFFER OPS",
             price_per_kg=1_000_000,
@@ -73,7 +90,86 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         ):
             self.assertIsNotNone(MaterialColorOption._meta.get_field(name))
 
-    def test_sale_price_per_gram_uses_only_roll_sale_divided_by_roll_weight(self):
+    def _webp_base64(self) -> str:
+        buffer = BytesIO()
+        Image.new("RGB", (40, 40), (241, 93, 156)).save(buffer, "WEBP")
+        return base64.b64encode(buffer.getvalue()).decode("ascii")
+
+    def test_bridge_sync_persists_brand_palette_finish_and_server_image(self):
+        request = self.factory.post(
+            "/api/catalog-bridge/v1/filaments/sync/",
+            data=json.dumps(
+                {
+                    "operator": "desktop-test",
+                    "filament": {
+                        "material": self.material.name,
+                        "brand": "Bambu Lab",
+                        "manufacturer": "Ignored Old Company",
+                        "color": "Pink Dual",
+                        "color_type": "dual",
+                        "color_finish": "glossy",
+                        "palette_hexes": ["#F15D9C", "#7C3AED"],
+                        "roll_weight_grams": 750,
+                        "stock_roll_count": 2.5,
+                        "purchase_price_per_roll": 2_100_000,
+                        "sale_price_per_roll": 3_000_000,
+                        "filament_image_base64": self._webp_base64(),
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.bridge_token}",
+        )
+        response = filament_sync_view(request)
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = json.loads(response.content.decode("utf-8"))
+        self.assertEqual(payload["contract"], "phase49-filament-library-v2")
+
+        color = MaterialColorOption.objects.get(
+            material=self.material,
+            name="Pink Dual",
+            brand_name="Bambu Lab",
+        )
+        self.assertEqual(color.manufacturer_name, "Bambu Lab")
+        self.assertEqual(color.color_type, "dual")
+        self.assertEqual(color.color_finish, "glossy")
+        self.assertEqual(color.palette_hexes, ["#F15D9C", "#7C3AED"])
+        self.assertEqual(color.hex_code, "#F15D9C")
+        self.assertEqual(color.secondary_hex, "#7C3AED")
+        self.assertTrue(color.filament_image.name)
+        self.assertTrue(Path(color.filament_image.path).is_file())
+        self.assertEqual(color.effective_sale_price_per_gram, Decimal("4000"))
+
+        serialized = payload["filament"]
+        self.assertEqual(serialized["brand"], "Bambu Lab")
+        self.assertEqual(serialized["manufacturer"], "Bambu Lab")
+        self.assertEqual(serialized["color_finish"], "glossy")
+        self.assertEqual(serialized["palette_hexes"], ["#F15D9C", "#7C3AED"])
+        self.assertEqual(Decimal(serialized["effective_sale_price_per_gram"]), Decimal("4000"))
+        self.assertTrue(serialized["filament_image_server_url"])
+
+    def test_bridge_rejects_invalid_filament_image_payload(self):
+        request = self.factory.post(
+            "/api/catalog-bridge/v1/filaments/sync/",
+            data=json.dumps(
+                {
+                    "filament": {
+                        "material": self.material.name,
+                        "brand": "Bambu Lab",
+                        "color": "Broken",
+                        "filament_image_base64": "not-valid-base64!!!",
+                    }
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.bridge_token}",
+        )
+        response = filament_sync_view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("filament_image_base64", response.content.decode("utf-8"))
+
+        def test_sale_price_per_gram_uses_only_roll_sale_divided_by_roll_weight(self):
         color = MaterialColorOption.objects.create(
             material=self.material,
             name="قیمت مرجع",
