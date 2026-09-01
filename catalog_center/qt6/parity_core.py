@@ -449,13 +449,15 @@ class StageCore:
         stages = state.get("stages") or {}
         for stage in STAGE_ORDER:
             current = dict(stages.get(stage) or {})
-            missing = _unique_missing(
-                list(
-                    current.get("missing_data")
-                    or current.get("missing")
-                    or []
-                )
-            )
+            # missing_data is the factual defect list. An empty list is
+            # meaningful and must not fall through to presentation-only
+            # current["missing"], which may contain the operator-confirmation
+            # sentinel added for manual UI flows.
+            if "missing_data" in current:
+                raw_missing = current.get("missing_data") or []
+            else:
+                raw_missing = current.get("missing") or []
+            missing = _unique_missing(list(raw_missing))
 
             if stage == "images" and row is not None:
                 # The legacy readiness layer has one coarse "Alt تصویر" flag.
@@ -673,7 +675,10 @@ class StageCore:
             if readiness_value is None:
                 readiness_value = current.get("ready")
             allowed = bool(readiness_value)
-            missing = list(current.get("missing_data") or current.get("missing") or [])
+            if "missing_data" in current:
+                missing = list(current.get("missing_data") or [])
+            else:
+                missing = list(current.get("missing") or [])
 
         if not allowed:
             raise RuntimeError(

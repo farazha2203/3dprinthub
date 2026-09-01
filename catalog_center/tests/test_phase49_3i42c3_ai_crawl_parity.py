@@ -380,6 +380,7 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             if item["stage"] == "quick"
         )
         self.assertTrue(quick_status["data_ready"], quick_status)
+        self.assertEqual(quick_status["missing"], [], quick_status)
 
         result = self.kernel.stages.auto_finalize_ready(
             product_id,
