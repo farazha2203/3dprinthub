@@ -189,3 +189,37 @@ Before 3I.47 is marked LOCAL_TESTED/ACCEPTED on real data:
 ## Exact next task after Local acceptance
 
 If owner Local QA passes, record the exact Local head and foreground evidence, then continue the remaining Catalog stabilization/42D visual refinement. If any behavior fails, patch only the failed contract with a focused regression; do not rewrite the healthy acquisition, AI, pricing or persistence cores.
+
+## Owner Local acceptance incident — ERR-49-088
+
+The first owner attempt on final 3I.47 documentation head `946b8594f0ee001bd9833973e23eb47803c98bac` stopped before functional tests.
+
+Evidence:
+- repo/branch/remote guards passed;
+- ff-only pull succeeded;
+- the prior 3I.46 gate on the same machine had already passed with a checksum-verified Catalog SQLite backup;
+- Windows PowerShell 5.1 raised `ParserError / TerminatorExpectedAtEndOfString` at the single Persian manual-QA `Write-Host` line in the runner.
+
+This was not treated as a Product/Crawl/AI/database failure.
+
+Resolution:
+- owner runner restored to ASCII-only;
+- exact Windows PowerShell 5.1 raw-byte + parser guard added to CI;
+- existing PowerShell Core parser/stdin guard retained;
+- runner version advanced to `49.3I.47.2`;
+- exact tested source checkpoint: `36a710953276aae99fa668f477ad5569f8dc23ba`;
+- `33511403943` Qt6 Full Parity Windows PASS;
+- `33511403901` Single Active AI PASS;
+- rollback: `backup/pre-err49-088-ps51-runner-ascii-20260901`.
+
+The next owner attempt must pull the final docs head and confirm `Runner = 49.3I.47.2` before foreground QA.
+
+## Professional commerce design standard
+
+Owner-supplied File Library references were reviewed directly and the durable implementation standard is:
+`docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`.
+
+3I.47 task tabs are treated as the first structural application of that standard. Subsequent 42D work should refine typography, spacing, hierarchy, accessible state and responsive behavior without rewriting healthy acquisition/AI/pricing/persistence cores.
+
+The current Qt offscreen missing bundled-font-directory warning is non-blocking for ERR-49-088, but it is explicitly queued for the Persian typography/runtime packaging audit. Licensed font binaries remain outside Git.
+
