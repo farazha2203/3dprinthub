@@ -9,6 +9,10 @@ on:
       - store/phase50_variant2.py
       - store/phase50_variant_admin.py
       - store/phase50_variant_views.py
+      - store/views.py
+      - catalog_bridge/unified_views.py
+      - catalog_bridge/urls.py
+      - catalog_center/app/epic49_site_sync.py
       - store/phase34b_publishing.py
       - store/phase50_sales_profile_admin.py
       - store/phase50_commerce_policy.py
@@ -26,6 +30,7 @@ on:
       - store/migrations/0038_phase50_profile_matrix.py
       - store/migrations/0039_phase50_filament_offer_pricing.py
       - store/migrations/0040_phase50_filament_offer_operations.py
+      - store/migrations/0041_phase50_filament_visual_identity.py
       - store/test_phase50_filament_offer_operations.py
       - store/test_phase50_variant2_gallery.py
       - store/test_phase50_checkout_snapshot.py
@@ -76,6 +81,10 @@ jobs:
             store/phase50_variant2.py \
             store/phase50_variant_admin.py \
             store/phase50_variant_views.py \
+            store/views.py \
+            catalog_bridge/unified_views.py \
+            catalog_bridge/urls.py \
+            catalog_center/app/epic49_site_sync.py \
             store/phase50_sales_profiles.py \
             store/phase50_profile_matrix.py \
             store/phase50_filament_offer.py \
@@ -92,6 +101,7 @@ jobs:
             store/migrations/0038_phase50_profile_matrix.py \
             store/migrations/0039_phase50_filament_offer_pricing.py \
             store/migrations/0040_phase50_filament_offer_operations.py \
+            store/migrations/0041_phase50_filament_visual_identity.py \
             store/test_phase50_variant2_gallery.py \
             store/test_phase50_filament_offer_operations.py \
             store/test_phase50_checkout_snapshot.py \
@@ -155,6 +165,8 @@ jobs:
           echo "PHASE50_PROFILE_MATRIX_CI=PASS"
           echo "PHASE50_FILAMENT_OFFER_0039_CI=PASS"
           echo "PHASE50_FILAMENT_OFFER_0040_OPERATIONS_CI=PASS"
-          echo "PHASE50_FILAMENT_SELECTOR_MANUFACTURER_COLOR_CI=PASS"
+          echo "PHASE50_FILAMENT_VISUAL_0041_CI=PASS"
+          echo "PHASE50_FILAMENT_SELECTOR_BRAND_PALETTE_FINISH_CI=PASS"
+          echo "PHASE50_FILAMENT_BRIDGE_MEDIA_SYNC_CI=PASS"
           echo "PHASE50_CHECKOUT_FILAMENT_SNAPSHOT_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
