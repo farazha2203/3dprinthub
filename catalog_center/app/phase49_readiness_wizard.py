@@ -131,7 +131,18 @@ def evaluate_readiness(row) -> dict:
 
     approved = bool(int(_value(row, "approved_for_sale", 0) or 0))
     publish_product = bool(int(_value(row, "publish_as_product", 0) or 0)) or product_type == "portfolio"
-    license_ok = commercial_license_allows_publish(str(_value(row, "commercial_status", "review") or "review"))
+    owner_license_approved = bool(
+        int(_value(row, "source_license_owner_approved", 1) or 0)
+    )
+    # Owner policy (2026-09-01): Stage 5 is globally approved for every
+    # Catalog Product. Source/license text remains evidence and is never
+    # fabricated; this flag is the explicit business approval authority.
+    license_ok = (
+        owner_license_approved
+        or commercial_license_allows_publish(
+            str(_value(row, "commercial_status", "review") or "review")
+        )
+    )
 
     stage_checks = {
         "quick": [
@@ -158,8 +169,7 @@ def evaluate_readiness(row) -> dict:
             ("عبارت‌های هدف SEO", len(keywords) >= 3 or seo_manual_approved),
         ],
         "specs": [
-            ("لینک منبع", bool(source_url)),
-            ("مجوز تجاری مجاز", license_ok),
+            ("تأیید سراسری مالک برای منبع/مجوز", owner_license_approved),
         ],
         "publish": [
             ("تأیید برای فروش", approved or product_type == "portfolio"),
@@ -190,6 +200,7 @@ def evaluate_readiness(row) -> dict:
         "slider_enabled": slider_enabled,
         "seo_manual_approved": seo_manual_approved,
         "source_review_manual_approved": source_review_manual_approved,
+        "source_license_owner_approved": owner_license_approved,
         "license_ok": license_ok,
     }
 
