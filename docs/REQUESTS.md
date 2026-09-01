@@ -1,3 +1,23 @@
+## 2026-09-01 — Professional specialist store + owner Local 3I.47 failure
+
+Owner requirements:
+- 3DPrintHub must present as a professional specialist 3D-printing store, not a generic template;
+- use the owner's `webdesign1` / File Library design references for architecture, Persian typography, layout, spacing, effects, responsive behavior and SEO;
+- prioritize sales confidence, technical product evaluation, material/size/production clarity and a strong custom-order path;
+- keep Product/Admin/Catalog management task-oriented, tabbed and readable rather than long scroll/control walls;
+- use 3D only when it improves product understanding and never at the cost of initial performance;
+- preserve current Django/business/pricing authority; framework-specific book examples are reference patterns, not migration instructions.
+
+Owner Local evidence:
+- Phase49.3I.47 pull to `946b8594...` was clean;
+- Local gate then stopped before tests with Windows PowerShell 5.1 `ParserError` on one non-ASCII runner label;
+- requested outcome is a corrected, tested GitHub runner before rerunning Local acceptance.
+
+Repository response:
+- ERR-49-088 ASCII/PS5.1 runner repair implemented and Windows CI tested;
+- professional source-grounded design standard registered in `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`;
+- Production remains blocked pending owner Local acceptance.
+
 # PROJECT REQUESTS
 
 ## REQ-49-085 — Fast progressive Product/Crawl loading + full pre-Qt acquisition controls
