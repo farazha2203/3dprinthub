@@ -139,3 +139,51 @@
 - PDF/ebookهای کاربر در Git commit نشوند.
 - فقط summary، derived rules، public source-code links، publisher/official docs links و project-specific adoption notes ذخیره شوند.
 - کد repositoryهای همراه کتاب فقط به‌عنوان reference بررسی شود؛ قبل از reuse license، dependency، security و version compatibility بررسی شود.
+
+
+## 2026-09-01 — React / Next.js / Three.js expansion
+
+سه منبع Frontend جدید به مجموعه مهندسی اضافه و مرور شدند:
+
+### 8) React in Depth — Morten Barklund — Manning, 2024
+
+**File Library:** `React_in_Depth_-_Morten_Barklund.pdf`
+
+**سرفصل‌های کلیدی:** React ecosystem؛ Provider/Composite/Summary component patterns؛ rendering و memoization؛ dependency arrays؛ ESLint/Prettier/React DevTools؛ TypeScript؛ CSS files/modules/styled-components؛ Context/Immer/Redux Toolkit/Zustand/XState؛ TanStack Query و reactive caching؛ unit testing؛ Next.js/Remix؛ Storybook و ساخت UI library.
+
+**قواعد استخراج‌شده:** component contract و composition قبل از global state؛ profiler-first performance؛ server state از UI state جدا؛ test رفتار به‌جای متن/markup شکننده؛ reusable components باید stateهای loading/empty/error/focus/disabled را پوشش دهند.
+
+### 9) 3D Web Development with Three.js and Next.js — Andrei Tazetdinov — BPB, 2025
+
+**File Library:** `3D_Web_Development_with_Threejs_and_Next_-_Andrei_Tazetdinov.pdf`
+
+**سرفصل‌های کلیدی:** Three.js/WebGL fundamentals؛ geometry/material؛ light/shadow؛ camera/perspective؛ texture؛ user input؛ animation/particles؛ Next.js integration؛ state؛ performance؛ Storybook design system؛ hosting/auth/data/realtime topics.
+
+**قواعد استخراج‌شده:** 3D فقط برای حل مسئله/نمایش واقعی؛ progressive enhancement؛ critical content خارج canvas؛ lazy-load؛ mobile GPU/CPU/network measurement؛ reduced-motion/static fallback؛ حفظ CWV و crawlability.
+
+### 10) Modern Web Applications with Next.JS — Shubham Jain / Mathew Dony Chittezhath — 2023
+
+**File Library:** `Modern_Web_Applications_with_NextJS_-_Shubham_Jain.pdf`
+
+**سرفصل‌های کلیدی:** React؛ Next.js fundamentals؛ App Router/server-client components در نسل Next.js 13؛ optimization؛ metadata/image/caching/code splitting/bundle size؛ routing/Link؛ state؛ REST/GraphQL؛ databases؛ SSR/CSR؛ auth؛ CRUD؛ deployment architecture.
+
+**قاعده نسخه:** این کتاب برای مفهوم مفید است، اما syntax مربوط به Next.js 13 نباید روی پروژه‌های جدیدتر blind-copy شود. نسخه واقعی Repository + current official Next.js docs مرجع اجرایی است.
+
+## Exact ChatGPT File Library lookup keys — current 10-book engineering batch
+
+1. `React_in_Depth_-_Morten_Barklund.pdf`
+2. `Build_AI-Enhanced_Web_Apps_-_Theo_Despoudis.pdf`
+3. `3D_Web_Development_with_Threejs_and_Next_-_Andrei_Tazetdinov.pdf`
+4. `Modern_Web_Applications_with_NextJS_-_Shubham_Jain.pdf`
+5. `Mastering_Django_ORM_-_Afsal_MS.pdf`
+6. `Grokking_Web_Application_Security_-_Malcolm_McDonald.pdf`
+7. `Internet_and_Web_Application_Security_3rd_Edition_-_Mike_Harwood.pdf`
+8. `Web_Application_security_-_Bryan_Sullivan.pdf`
+9. `PowerShell_7_for_IT_Pros_-_Thomas_Lee.pdf`
+10. `Mastering_PowerShell_74_and_Beyond_-_Patrick_Radcliffe.pdf`
+
+Canonical expanded indexes/playbooks live in `farazha2203/asal/shared/engineering/`. Destination repository rules and current runtime remain authoritative.
+
+### Pending archive
+
+`webdesign1.zip` was received as a design/frontend archive, but its internal files were not directly readable/indexed in the active review environment. It is intentionally **PENDING_ARCHIVE_REVIEW**; no internal title/count is guessed.
