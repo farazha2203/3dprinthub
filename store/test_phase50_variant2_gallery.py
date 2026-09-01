@@ -92,3 +92,50 @@ class Phase50Variant2GalleryContractTests(SimpleTestCase):
 
         self.assertIn("store/css/phase50-profile-selector.css", base)
         self.assertIn("store/js/phase50-profile-selector.js", base)
+
+    def test_product_detail_progressively_enhances_information_tabs_without_replacing_seo(self):
+        root = Path(__file__).resolve().parents[1]
+        template = (
+            root / "templates" / "store" / "product_detail.html"
+        ).read_text(encoding="utf-8")
+        css = (
+            root / "static" / "store" / "css" / "phase49-product-info-tabs.css"
+        ).read_text(encoding="utf-8")
+        js = (
+            root / "static" / "store" / "js" / "phase49-product-info-tabs.js"
+        ).read_text(encoding="utf-8")
+
+        for marker in (
+            "data-product-info-tabs",
+            'data-product-info-tab="overview"',
+            'data-product-info-tab="faq"',
+            'data-product-info-tab="reviews"',
+            'data-product-info-panel="overview"',
+            'data-product-info-panel="faq"',
+            'data-product-info-panel="reviews"',
+            "store/css/phase49-product-info-tabs.css",
+            "store/js/phase49-product-info-tabs.js",
+            "product_schema_json",
+            "product_faq_schema_json",
+            "{% block canonical %}",
+            "{% block robots %}",
+        ):
+            self.assertIn(marker, template)
+
+        for marker in (
+            ".phase49-product-info__tabs",
+            ".phase49-product-info__tab[aria-selected",
+            ".phase49-product-info.is-enhanced",
+            "prefers-reduced-motion",
+        ):
+            self.assertIn(marker, css)
+
+        for marker in (
+            "initProductInfoTabs",
+            'root.classList.add("is-enhanced")',
+            "aria-selected",
+            "ArrowLeft",
+            "ArrowRight",
+            "history.replaceState",
+        ):
+            self.assertIn(marker, js)
