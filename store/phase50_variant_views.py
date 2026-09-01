@@ -6,6 +6,18 @@ from django.views.decorators.http import require_GET
 from .models import ProductVariant
 
 
+def _filament_image_url(color_option) -> str:
+    if color_option is None:
+        return ""
+    try:
+        image = getattr(color_option, "filament_image", None)
+        if image:
+            return str(image.url or "")
+    except Exception:
+        pass
+    return str(getattr(color_option, "filament_image_url", "") or "")
+
+
 @require_GET
 def variant_commerce_options_view(request):
     raw_ids = str(request.GET.get("ids") or "")
@@ -67,11 +79,19 @@ def variant_commerce_options_view(request):
             "material": str(getattr(variant, "material", "") or ""),
             "color": str(getattr(variant, "color", "") or ""),
             "filament_brand_name": str(getattr(color_option, "brand_name", "") or ""),
-            "filament_manufacturer_name": str(getattr(color_option, "manufacturer_name", "") or ""),
+            # Brand is the public identity authority. Keep the manufacturer key
+            # as a compatibility alias for older selector clients.
+            "filament_manufacturer_name": str(getattr(color_option, "brand_name", "") or ""),
             "color_hex": str(getattr(color_option, "hex_code", "") or ""),
             "color_secondary_hex": str(getattr(color_option, "secondary_hex", "") or ""),
             "color_tertiary_hex": str(getattr(color_option, "tertiary_hex", "") or ""),
-            "filament_image_url": str(getattr(color_option, "filament_image_url", "") or ""),
+            "color_type": str(getattr(color_option, "color_type", "solid") or "solid"),
+            "color_finish": str(getattr(color_option, "color_finish", "matte") or "matte"),
+            "color_palette_hexes": list(getattr(color_option, "palette_hexes", None) or [])[:7],
+            "filament_image_url": _filament_image_url(color_option),
+            "filament_roll_weight_grams": str(getattr(color_option, "roll_weight_grams", 0) or 0),
+            "filament_sale_price_per_roll": int(getattr(color_option, "sale_price_per_roll", 0) or 0),
+            "filament_sale_price_per_gram": str(getattr(color_option, "effective_sale_price_per_gram", 0) or 0),
             "current_stock_grams": str(getattr(color_option, "current_stock_grams", 0) or 0),
             "offer_print_hourly_rate": int(getattr(color_option, "print_hourly_rate", 0) or 0),
             "offer_supervision_hourly_rate": int(getattr(color_option, "supervision_hourly_rate", 0) or 0),
