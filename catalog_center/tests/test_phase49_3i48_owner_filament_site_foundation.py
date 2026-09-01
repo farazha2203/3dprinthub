@@ -111,7 +111,7 @@ class Phase493I48OwnerFilamentSiteFoundationTests(unittest.TestCase):
             if item["stage"] == "specs"
         )
         self.assertTrue(specs_after["finalized"])
-        self.assertEqual(specs_after["status"], "complete")
+        self.assertEqual(specs_after["status"], "finalized")
 
     def test_reject_keeps_link_title_and_one_thumbnail_but_purges_heavy_state(self):
         local_dir = self.root / "collected" / "makerworld" / "3148002"
@@ -196,10 +196,17 @@ class Phase493I48OwnerFilamentSiteFoundationTests(unittest.TestCase):
         self.assertEqual(image_path.suffix.lower(), ".webp")
 
         listed = self.kernel.filaments.list()
-        item = next(row for row in listed if row["color"] == "Pink Dual")
-        self.assertEqual(item["manufacturer"], "Bambu Lab")
-        self.assertEqual(item["brand"], "Bambu Lab")
-        self.assertEqual(item["palette_hexes"], ["#F15D9C", "#7C3AED"])
+        item = next(
+            row for row in listed
+            if row["color_name"] == "Pink Dual"
+            and row["brand_name"] == "Bambu Lab"
+        )
+        self.assertEqual(item["manufacturer_name"], "Bambu Lab")
+        self.assertEqual(item["brand_name"], "Bambu Lab")
+        self.assertEqual(
+            json.loads(item["palette_hex_json"]),
+            ["#F15D9C", "#7C3AED"],
+        )
         self.assertEqual(float(item["effective_sale_price_per_gram"]), 4000.0)
 
     def test_stage3_save_does_not_cross_write_locked_slider_stage(self):
