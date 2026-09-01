@@ -1,5 +1,71 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-085 — Qt Product AI JSON-mode/TLS, semantic translation, final SEO WebP and hidden Crawl/Product lifecycle parity
+**Date:** 2026-09-01  
+**Environment:** owner Local Windows Qt6 screenshots/traces + GitHub Windows CI.
+
+**Observed owner evidence:**
+1. `openai/gpt-oss-20b` could terminate at `httpx.ConnectTimeout / _ssl.c:993 handshake operation timed out` before an HTTP response.
+2. `google/gemma-4-31b-it:free` returned OpenRouter 404 `No endpoints found that can handle the requested parameters` because the Product path forced strict JSON Schema routing.
+3. `Driftbloom Table Lamp Organic Ambient Desk Lamp` was rendered as a nonsensical Persian title.
+4. `AI همه مراحل محتوایی` could leave finalized bad translation/SEO untouched.
+5. Image SEO fields could look correct in the dialog while the visible/physical file still used an old downloaded JPG/PNG name.
+6. Stage 6 numeric controls exposed awkward spinner buttons.
+7. Product cards did not make lifecycle/SEO state obvious and lacked requested bulk lifecycle actions.
+8. Existing persistent Crawl records were present in SQLite but not exposed as a manageable inventory.
+
+**Root cause:**
+- OpenRouter model capability classification treated generic `response_format` as if it guaranteed strict JSON Schema;
+- transient connect/TLS failure had no bounded stale-pool reset/retry boundary;
+- semantic title guard was too shallow for compound Product identity/meaning;
+- full-content AI respected finalization locks even when the operator explicitly requested repair;
+- Qt image presentation preferred source/cache media before mature finalized SEO media and metadata save did not re-run the binary finalizer;
+- Qt Product/Crawl pages did not expose mature persistent ledger/lifecycle state;
+- release bump initially changed `app/version.py` without all independent manifest/config/launcher/workflow version contracts;
+- Qt CI path filters did not guarantee a full-parity rerun when those release-contract files changed.
+
+**Correct fix:**
+- distinguish strict Schema vs JSON mode; use provider JSON-object mode where supported, then enforce the exact schema locally;
+- keep `provider.require_parameters=true`, exact model identity and Product safety gate;
+- bounded two-attempt connect/TLS retry with pooled-client reset only after connect-class failure;
+- semantic guard for Table/Desk Lamp, Organic and Ambient while preserving proper-name identity;
+- explicit full-content repair reopens only `quick/content/slider`;
+- prefer/rebuild final SEO WebP and preserve operator image metadata overrides;
+- add persistent Crawl inventory + Product lifecycle/SEO surfaces with reversible bulk actions;
+- hide Slider spin buttons and keep direct typed values/units;
+- align all 8.9.10 version contracts;
+- include release/version contract files in the Qt full-parity workflow trigger.
+
+**Intermediate failed condition — not repeated unchanged:**
+Runs `33488612681`, `33488612733`, `33488612771` and Qt run `33488612672` failed on stale 8.9.9 release contracts. Functional ERR-49-085 Qt tests themselves were already passing. The stale manifest/config/launcher/workflow contracts were corrected before new CI was accepted.
+
+**Implementation checkpoints:**
+- `2bfefffa96adf1451e754a8f6ab35cd9ef9e0b7c` — OpenRouter JSON mode/TLS + semantic translation;
+- `202e018c26e49d90734b87709ff2e7104473b3d3` — visible Qt content repair/final SEO WebP/Slider UX;
+- `1aefbcfd43e2f88fcef46f1925f27c0bf7075f52` — lifecycle + persistent Crawl cores;
+- `235712d7530ae26ae9e3af74a7bd0a8dedd06ff9` — visible Crawl inventory + bulk Product lifecycle UI;
+- `0a3660c00d2483fa219e5e7121c7f0e06fa8fab0` — 8.9.10 release bump;
+- `205ceff6b7033e2fcd6f03c25dc8a81720ae067d` — complete 8.9.10 version-contract alignment;
+- `12284a255d27451b9160eeb48bc289f4f34fdc16` — Qt full-parity trigger prevention for release-contract changes.
+
+**Final verification:**
+- `33488996741` Single Active AI — PASS;
+- `33488996767` Modern Acquisition — PASS;
+- `33488996802` Portable Release — PASS;
+- `33489296415` latest Single Active AI — PASS;
+- `33489296349` latest Qt6 Crawl + AI Runtime full parity — PASS.
+
+**Release artifact:** `3DPrintHub-CatalogCenter-v8.9.10`, ID `9793033040`, digest `sha256:68099747e151677fa355dcc4f0dad7d290a5f35ce8ad3ad5ff739dfba88e5533`.
+
+**Rollback:**
+- `backup/pre-err49-085-openrouter-jsonmode-image-qt-parity-20260901` → `f1c4fe58c04510d1721e3af2b3366925893fe1dc`;
+- `backup/pre-err49-085-8-9-10-release-20260901` → `235712d7530ae26ae9e3af74a7bd0a8dedd06ff9`.
+
+**Safety:** no Django migration, no Production MySQL write, no Host/Production source change, no secret change, no hard Product delete, no CAPTCHA/auth/proxy bypass.
+
+**Prevention rule:** provider capability, release-version contracts and user-visible lifecycle/media state are separate contracts. Never infer strict Schema from generic JSON-mode support; never report/display final SEO media from a source cache when a finalized artifact exists; and every release bump must be validated simultaneously by manifest/config/launcher + the full Qt regression trigger set.
+
+
 ## ERR-49-084 — Product AI Link mode failed on MakerWorld 403 before Provider execution and apply success was not persistence-verified
 **Date:** 2026-08-31  
 **Environment:** owner Local Windows Qt6 / Product #309 / Stage 1 `quick`.

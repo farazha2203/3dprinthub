@@ -1,4 +1,32 @@
-# PROJECT ROADMAP
+# ROADMAP
+
+## 2026-09-01 — ERR-49-085 / Catalog Center 8.9.10 acceptance gate
+
+Current Windows track: `Phase49.3I.42C3 + 3I.43–45`.
+
+Completed in GitHub + Windows CI:
+- OpenRouter strict-Schema vs JSON-mode capability handling with local Product-schema validation;
+- bounded TLS/connect retry;
+- semantic Persian title repair guard;
+- deliberate full-content AI repair of AI-owned finalized stages;
+- visible/final SEO WebP parity;
+- persistent Crawl inventory browser;
+- Product lifecycle/SEO card status;
+- bulk archive / reversible reject / restore;
+- direct-entry Slider numeric UX;
+- 8.9.10 version/manifest/launcher/CI contract alignment;
+- Windows portable artifact `3DPrintHub-CatalogCenter-v8.9.10`.
+
+Acceptance status:
+`GITHUB_UPDATED + WINDOWS_CI_PASS + PORTABLE_BUILT / OWNER_LOCAL_TEST_NEXT / PRODUCTION_NOT_DEPLOYED`.
+
+Next:
+1. Local clean ff-only pull + repository Local gate with checksum-backed Catalog SQLite backup.
+2. Foreground QA on Product #309 and one real Crawl inventory sample.
+3. If Local passes, continue 42D visual/polish cleanup.
+4. Only after owner acceptance evaluate 42E default-launcher/packaging cutover.
+5. Production remains unchanged; any later Host work must begin read-only and follow backup/migration rules.
+
 
 ## 2026-08-31 — ERR-49-084 Product AI Link 403 fallback + truthful DB apply
 Status: `GITHUB_CODE_UPDATED / 42C3 PASS / SINGLE_AI PASS / STAGE PASS / PORTABLE PASS / OWNER_LOCAL_FOREGROUND_RETEST_NEXT / PRODUCTION UNTOUCHED`.

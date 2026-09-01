@@ -1,4 +1,28 @@
-# OWNER REQUESTS
+# PROJECT REQUESTS
+
+## REQ-50-028 — Qt Product AI semantic repair, final SEO WebP, persistent Crawl inventory and lifecycle UX
+Status: `IMPLEMENTED / WINDOWS CI + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Acceptance:
+- OpenRouter exact selected models may use either verified strict Schema or verified JSON mode; JSON-mode Product output must still satisfy the exact local schema;
+- transient TLS/connect failure receives only bounded retry with no infinite loop or silent model switch;
+- obvious semantic translation failures are rejected before persistence;
+- `AI همه مراحل محتوایی` can deliberately repair previously finalized AI-owned content without changing operator-owned price/Profile/Filament/license/publish state;
+- final selected images use physical SEO WebP filenames and metadata, not just database-only SEO labels;
+- Product list visibly distinguishes lifecycle and SEO readiness;
+- Products support multi-select archive, reversible reject and restore;
+- all existing persistent Crawl identities are visible from Qt and support selected add/reject/restore;
+- rejected Product/Crawl identities remain durable so routine crawling does not silently re-add them;
+- Stage 6 numeric inputs are easy to type directly;
+- all version/manifest/launcher contracts agree on 8.9.10;
+- Windows Qt, Single Active AI, modern acquisition and portable build gates pass before owner Local QA.
+
+Verification:
+`33488996741`, `33488996767`, `33488996802`, `33489296415`, `33489296349` PASS.
+
+Remaining acceptance:
+owner Local foreground QA on the final documentation HEAD. Production remains untouched.
+
 
 ## REQ-49-084 — Product AI must survive blocked Link acquisition and prove generated data was actually applied
 Status: `IMPLEMENTED / GITHUB WINDOWS CI+PORTABLE PASS / OWNER LOCAL FOREGROUND RETEST NEXT`.

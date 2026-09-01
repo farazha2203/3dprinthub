@@ -1,5 +1,30 @@
 # Phase49.3I.45 — Incremental Discovery Intelligence
 
+## 2026-09-01 compatibility checkpoint — ERR-49-085 / Catalog Center 8.9.10
+
+The acquisition core remains 3I.43–45. ERR-49-085 extends the Qt operator surface and Product-AI boundary without replacing that transport architecture.
+
+Approved runtime/package checkpoint: `205ceff6b7033e2fcd6f03c25dc8a81720ae067d`.  
+Qt full-parity CI-contract checkpoint: `12284a255d27451b9160eeb48bc289f4f34fdc16`.
+
+Compatibility changes:
+- OpenRouter strict Schema and JSON mode are distinct; JSON mode is locally Product-schema validated;
+- bounded TLS/connect retry does not alter robots/cache/Sitemap/browser policy;
+- persistent `discovered_urls` inventory is now visible and manageable from Qt;
+- collected/rejected/failed/new identities remain the mature database authority;
+- Product reject remains a durable reversible tombstone;
+- final SEO WebP is the operator/site-facing image authority;
+- no raw browser payload, auth bypass, CAPTCHA bypass or proxy-evasion behavior was added.
+
+Verification:
+- modern acquisition `33488996767` PASS;
+- latest Qt full parity `33489296349` PASS;
+- latest Single Active AI `33489296415` PASS;
+- Portable 8.9.10 `33488996802` PASS.
+
+Production/Host/Django migrations remain untouched. Owner Local foreground QA is the next gate.
+
+
 Updated: 2026-08-30  
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  

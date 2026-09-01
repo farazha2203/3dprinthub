@@ -1,5 +1,75 @@
 # CURRENT PROJECT STATE
 
+## Continuation checkpoint — 2026-09-01 / ERR-49-085 Qt Product AI, Crawl inventory, Image SEO parity + Catalog Center 8.9.10
+
+Status: `IMPLEMENTED + WINDOWS CI TESTED + PORTABLE BUILT / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Approved runtime/package code checkpoint: `205ceff6b7033e2fcd6f03c25dc8a81720ae067d`  
+Final Qt full-parity CI-contract checkpoint: `12284a255d27451b9160eeb48bc289f4f34fdc16`  
+Catalog Center version/build: `8.9.10 / 2026.09.01.1`
+
+Owner evidence addressed in this checkpoint:
+- OpenRouter `openai/gpt-oss-20b` could fail at TLS handshake before an HTTP response;
+- `google/gemma-4-31b-it:free` was incorrectly forced through strict JSON Schema although its live capability is JSON response-format without strict schema enforcement;
+- Product title `Driftbloom Table Lamp Organic Ambient Desk Lamp` produced a semantically broken Persian title;
+- `AI همه مراحل محتوایی` did not reopen finalized AI-owned stages for deliberate repair;
+- Qt showed source/cache JPG/PNG names even when mature image finalization owned an SEO WebP;
+- image SEO dialog changes updated database metadata without rebuilding the physical SEO WebP;
+- Stage 6 numeric spin controls were awkward for direct entry;
+- Products lacked clear lifecycle/SEO state and bulk archive/reject/restore;
+- persisted Crawl inventory existed in SQLite but was not visible/manageable from the Qt page.
+
+Implemented:
+- OpenRouter capability split into strict Schema vs JSON mode; JSON-mode output is locally validated against the exact Product schema;
+- bounded OpenRouter connect/TLS retry resets a failed pooled connection and never loops indefinitely;
+- semantic Persian guard requires the core meaning of Table/Desk Lamp, Organic and Ambient while preserving Product proper names;
+- full-content AI explicitly reopens only `quick/content/slider`; Profile, Filament, price, source/license approval and publish remain operator-owned;
+- Qt now prefers final SEO WebP, and image SEO save/final content repair re-run deterministic image finalization;
+- Stage 6 numeric inputs are direct-entry oriented with explicit units;
+- Product cards expose lifecycle + SEO readiness with colored borders;
+- Product gallery/table support multi-select archive, reversible reject/tombstone and restore;
+- Qt Crawl page exposes persistent `discovered_urls` inventory with all/new/failed/collected/rejected filters and reversible add/reject/restore actions;
+- release/version contracts were aligned across app version, manifest, example config, launchers and CI;
+- Qt full-parity CI now triggers on version/manifest/config/legacy-launcher changes to prevent stale release contracts.
+
+Intermediate CI failure was not repeated unchanged:
+- first 8.9.10 runs failed because `PACKAGE_MANIFEST.json`, `config.example.json`, legacy `launch.py` and one workflow still declared 8.9.9;
+- root condition was corrected in `205ceff6b7033e2fcd6f03c25dc8a81720ae067d`;
+- trigger prevention was added in `12284a255d27451b9160eeb48bc289f4f34fdc16`.
+
+Final verification:
+- `33488996741` — Phase49.3I.17 Single Active AI CI — PASS;
+- `33488996767` — Phase49.3I.43-45 Modern Acquisition Intelligence CI — PASS;
+- `33488996802` — Catalog Center Windows Portable Release — PASS;
+- `33489296415` — Single Active AI CI on latest Qt-trigger checkpoint — PASS;
+- `33489296349` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS.
+
+Portable artifact produced by GitHub:
+- name: `3DPrintHub-CatalogCenter-v8.9.10`;
+- artifact ID: `9793033040`;
+- artifact digest: `sha256:68099747e151677fa355dcc4f0dad7d290a5f35ce8ad3ad5ff739dfba88e5533`;
+- artifact source commit: `205ceff6b7033e2fcd6f03c25dc8a81720ae067d`.
+
+Safety / must-not-touch:
+- Django migration changed = NO;
+- Production MySQL changed = NO;
+- Host/Production source changed = NO;
+- secret persistence changed = NO;
+- no CAPTCHA/auth/proxy bypass;
+- no hard Product delete was introduced;
+- Product reject remains a reversible tombstone;
+- Production/default-launcher cutover remains blocked pending owner Local foreground acceptance.
+
+Rollback:
+- `backup/pre-err49-085-openrouter-jsonmode-image-qt-parity-20260901` → `f1c4fe58c04510d1721e3af2b3366925893fe1dc`;
+- `backup/pre-err49-085-8-9-10-release-20260901` → `235712d7530ae26ae9e3af74a7bd0a8dedd06ff9`.
+
+Exact next task:
+owner Local clean ff-only pull of the final documentation HEAD, run the repository-owned `RUN_PHASE49_3I42C_LOCAL_GATE.ps1 -LaunchApp`, then bounded foreground QA on Product #309: exact OpenRouter model probe, full-content semantic repair, physical SEO WebP filename/metadata, Stage 6 direct numeric entry, Product lifecycle/SEO cards and persistent Crawl inventory bulk actions. Production remains blocked until this Local acceptance passes.
+
+
 ## Continuation checkpoint — 2026-08-31 / ERR-49-084 Product AI Link 403 fallback + verified apply
 
 Owner Local foreground evidence on Product #309 proved two separate failures were being conflated:

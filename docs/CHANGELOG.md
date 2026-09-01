@@ -1,3 +1,42 @@
+# CHANGELOG
+
+## 2026-09-01 — Catalog Center 8.9.10 / ERR-49-085
+
+### Added
+- OpenRouter JSON-mode Product support with exact local JSON-schema validation.
+- Persistent Qt Crawl inventory browser over existing `discovered_urls`.
+- Product lifecycle + SEO readiness badges/borders.
+- Bulk Product archive, reversible reject/tombstone and restore.
+- Bulk Crawl queue add/reject/restore.
+- Explicit Qt release markers for OpenRouter, semantic translation, final SEO WebP, Crawl inventory, Product lifecycle and Slider UX.
+
+### Fixed
+- bounded TLS/connect retry for transient OpenRouter handshake/connect failures;
+- false equivalence between `response_format` and strict JSON Schema;
+- semantically broken Persian lamp/Product titles such as the owner-reported Driftbloom example;
+- `AI همه مراحل محتوایی` not reopening AI-owned finalized stages for explicit repair;
+- Qt showing source/cache JPG/PNG instead of final SEO WebP;
+- image SEO metadata edits not rebuilding the actual WebP/SEO filename;
+- Stage 6 spin-arrow-heavy numeric input;
+- hidden persistent Crawl records and unclear Product state;
+- stale 8.9.9 release/version contracts after the 8.9.10 bump;
+- Qt CI path filter now includes version/manifest/config/legacy-launcher contract changes.
+
+### Verification
+- runtime/package checkpoint `205ceff6b7033e2fcd6f03c25dc8a81720ae067d`;
+- Qt CI-contract checkpoint `12284a255d27451b9160eeb48bc289f4f34fdc16`;
+- Single Active AI `33488996741` PASS;
+- Modern Acquisition `33488996767` PASS;
+- Portable Release `33488996802` PASS;
+- latest Single Active AI `33489296415` PASS;
+- latest Qt full parity `33489296349` PASS.
+
+### Artifact
+`3DPrintHub-CatalogCenter-v8.9.10` — artifact ID `9793033040` — digest `sha256:68099747e151677fa355dcc4f0dad7d290a5f35ce8ad3ad5ff739dfba88e5533`.
+
+Production/Host/Django migrations were not changed.
+
+
 ## 2026-08-31 — ERR-49-084 Product AI Link fallback + verified persistence
 - isolated Product #309 MakerWorld 403 to the pre-Provider Link source fetch; changing OpenRouter models could not affect this failure;
 - Link mode now falls back once to already persisted Product/Crawl evidence on explicit 403/429 instead of repeating the same blocked HTTP request;
