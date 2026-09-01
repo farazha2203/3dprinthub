@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import json
 import ssl
 from dataclasses import dataclass
+from pathlib import Path
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 from urllib.parse import urlencode
@@ -85,12 +87,26 @@ def list_filaments(settings: SiteConnection, query: str = "", material: str = ""
 
 
 def sync_filament(settings: SiteConnection, filament: dict, *, operator="desktop") -> dict:
+    payload = dict(filament or {})
+    image_path = str(payload.pop("filament_image_path", "") or "").strip()
+    if image_path:
+        source = Path(image_path).expanduser()
+        if source.is_file():
+            raw = source.read_bytes()
+            if len(raw) > 2 * 1024 * 1024:
+                raise ValueError(
+                    "Filament image is larger than the 2 MB Bridge limit"
+                )
+            payload["filament_image_base64"] = base64.b64encode(raw).decode("ascii")
+            payload["filament_image_name"] = source.name[:180]
+        else:
+            raise ValueError("Filament image path does not exist")
     return _request(
         settings,
         "filaments/sync/",
         {
             "operator": str(operator or "desktop")[:120],
-            "filament": dict(filament or {}),
+            "filament": payload,
         },
         timeout=max(30, settings.timeout),
     )
