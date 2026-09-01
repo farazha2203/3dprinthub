@@ -93,6 +93,45 @@
             {% if product.compatibilities.all %}<div class="store-compatibility mt-5"><div class="font-black mb-3">سازگاری محصول</div><div class="flex flex-wrap gap-2">{% for item in product.compatibilities.all %}<span class="rounded-full bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 text-sm">{{ item }}</span>{% endfor %}</div></div>{% endif %}
             {% if material_options and not variants %}<div class="phase39-material-guide"><h3>انتخاب متریال مناسب</h3>{% if product.material_selection_intro %}<p>{{ product.material_selection_intro }}</p>{% endif %}<div class="phase39-material-grid">{% for option in material_options %}<article class="phase39-material-card phase39-material-{{ option.recommendation }}"><strong>{{ option.material.name }}</strong><span>{{ option.get_recommendation_display }} • امتیاز {{ option.suitability_score }}/100</span><p>{{ option.customer_note|default:option.reason }}</p></article>{% endfor %}</div></div>{% endif %}
 
+            {% if filament_visual_options %}
+            <section class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4" aria-labelledby="filament-visual-heading">
+                <div class="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h2 id="filament-visual-heading" class="font-black text-lg">رنگ و Filament قابل سفارش</h2>
+                        <p class="mt-1 text-xs text-slate-500">Brand، Finish و پالت واقعی ثبت‌شده؛ قیمت هر گرم از قیمت فروش رول ÷ وزن رول محاسبه می‌شود.</p>
+                    </div>
+                </div>
+                <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
+                    {% for filament in filament_visual_options %}
+                    <article class="rounded-2xl border border-slate-200 bg-white p-3">
+                        <div class="flex gap-3 items-start">
+                            {% if filament.image_url %}
+                            <img src="{{ filament.image_url }}" alt="{{ filament.brand }} {{ filament.color }} {{ filament.material }}" loading="lazy" width="88" height="88" class="w-20 h-20 rounded-xl border border-slate-200 object-contain bg-white">
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <div class="font-black text-slate-900">{{ filament.brand|default:"بدون برند" }}</div>
+                                <div class="text-sm text-slate-700 mt-1">{{ filament.material }} • {{ filament.color }}</div>
+                                <div class="text-xs text-slate-500 mt-1">{{ filament.behavior_label }} • {{ filament.finish_label }}</div>
+                                {% if filament.palette %}
+                                <div class="flex flex-wrap gap-1.5 mt-2" aria-label="پالت رنگ {{ filament.color }}">
+                                    {% for hex in filament.palette %}
+                                    <span class="inline-block w-6 h-6 rounded-full border border-slate-300 shadow-sm" style="background-color:{{ hex }}" title="{{ hex }}"><span class="sr-only">{{ hex }}</span></span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <dl class="grid grid-cols-2 gap-2 mt-3 text-xs">
+                            <div class="rounded-xl bg-slate-50 p-2"><dt class="text-slate-500">وزن رول</dt><dd class="font-bold mt-1">{{ filament.roll_weight_grams|floatformat:0 }} g</dd></div>
+                            <div class="rounded-xl bg-slate-50 p-2"><dt class="text-slate-500">فروش رول</dt><dd class="font-bold mt-1">{{ filament.sale_price_per_roll|intcomma }} تومان</dd></div>
+                            <div class="col-span-2 rounded-xl bg-emerald-50 border border-emerald-100 p-2"><dt class="text-emerald-700">قیمت خودکار هر گرم</dt><dd class="font-black text-emerald-800 mt-1">{{ filament.sale_price_per_gram|floatformat:0 }} تومان/گرم</dd></div>
+                        </dl>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             {% if variants %}
             <div class="mt-6">
                 <div class="store-profile-price-authority mb-3"><strong>قیمت و مشخصات بر اساس پروفایل انتخابی</strong><span>ابتدا سایز را انتخاب کنید؛ سپس فقط وزن‌ها و گزینه‌های معتبر همان سایز نمایش داده می‌شوند.</span></div>
