@@ -168,6 +168,7 @@ class Database:
             "selected_images_json": "TEXT NOT NULL DEFAULT '[]'",
             "selected_file_links_json": "TEXT NOT NULL DEFAULT '[]'",
             "source_specs_json": "TEXT NOT NULL DEFAULT '{}'",
+            "source_print_profiles_json": "TEXT NOT NULL DEFAULT '[]'",
             "source_price": "REAL",
             "source_currency": "TEXT NOT NULL DEFAULT ''",
             "workflow_status": "TEXT NOT NULL DEFAULT 'review'",

@@ -744,7 +744,11 @@ class StageCore:
             if bool(item.get("finalized")):
                 skipped[stage] = "already_finalized"
                 continue
-            if not bool(item.get("data_ready")) or item.get("missing"):
+            # statuses() already derives factual data_ready from missing_data.
+            # A non-finalized ready stage can still carry the presentation-only
+            # "تأیید نهایی اپراتور" sentinel in its legacy missing list. Do not
+            # let that UI sentinel block the explicit full-AI auto-finalize flow.
+            if not bool(item.get("data_ready")):
                 skipped[stage] = "not_ready"
                 continue
             try:

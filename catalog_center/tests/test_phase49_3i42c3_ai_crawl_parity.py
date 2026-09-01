@@ -75,6 +75,16 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.db.close()
         self.temp.cleanup()
 
+    def test_clean_catalog_schema_has_source_print_profiles_contract(self):
+        columns = {
+            row["name"]
+            for row in self.db.conn.execute(
+                "PRAGMA table_info(products)"
+            ).fetchall()
+        }
+        self.assertIn("source_print_profiles_json", columns)
+
+
     def test_model_ranking_puts_persian_free_structured_ahead(self):
         ranked = rank_models([
             {
