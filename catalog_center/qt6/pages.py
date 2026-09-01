@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
+    QTabBar,
     QTabWidget,
     QTableView,
     QTableWidget,
@@ -148,12 +149,27 @@ class ProductsPage(QWidget):
         self.kernel = kernel
         self.open_product = open_product
         self.navigate = navigate
+        self.ai_pool = TaskPool()
+        self._bulk_ai_worker: Worker | None = None
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
             "محصولات",
-            "گالری تصویری + جدول قابل Sort با عنوان فارسی/اصلی، توضیح و ورود مستقیم به ویرایش.",
+            "گالری تصویری + جدول قابل Sort با تصویر، تعداد عکس، توضیح و چرخه کامل محصول.",
         ))
+
+        self.lifecycle_tabs = QTabBar()
+        self.lifecycle_tabs.setExpanding(False)
+        self.lifecycle_tabs.setDocumentMode(False)
+        for label, code in (
+            ("محصولات فعال", "all"),
+            ("ارسال / منتشرشده", "published"),
+            ("آرشیو شده", "archived"),
+            ("حذف / رد شده", "blocked"),
+        ):
+            index = self.lifecycle_tabs.addTab(label)
+            self.lifecycle_tabs.setTabData(index, code)
+        root.addWidget(self.lifecycle_tabs)
 
         bar = QHBoxLayout()
         self.search = QLineEdit()
@@ -201,15 +217,30 @@ class ProductsPage(QWidget):
         self.archive_btn = QPushButton("آرشیو انتخاب‌شده‌ها")
         self.remove_btn = QPushButton("حذف از محصولات / رد")
         self.restore_btn = QPushButton("بازیابی انتخاب‌شده‌ها")
+        self.bulk_ai_source = QComboBox()
+        for item in self.kernel.providers.source_modes():
+            self.bulk_ai_source.addItem(item["label"], item["code"])
+        data_index = self.bulk_ai_source.findData("data")
+        if data_index >= 0:
+            self.bulk_ai_source.setCurrentIndex(data_index)
+        self.bulk_ai_btn = QPushButton("✨ AI تکمیل همه موارد انتخاب‌شده")
+        self.bulk_ai_btn.setProperty("success", True)
+        self.bulk_ai_status = QLabel("")
+        self.bulk_ai_status.setObjectName("Muted")
         self.archive_btn.clicked.connect(self._archive_selected)
         self.remove_btn.clicked.connect(self._remove_selected)
         self.restore_btn.clicked.connect(self._restore_selected)
+        self.bulk_ai_btn.clicked.connect(self._bulk_ai_selected)
         bulk_bar.addWidget(self.archive_btn)
         bulk_bar.addWidget(self.remove_btn)
         bulk_bar.addWidget(self.restore_btn)
+        bulk_bar.addSpacing(12)
+        bulk_bar.addWidget(QLabel("منبع AI"))
+        bulk_bar.addWidget(self.bulk_ai_source)
+        bulk_bar.addWidget(self.bulk_ai_btn)
+        bulk_bar.addWidget(self.bulk_ai_status, 1)
         self.loaded_label = QLabel("")
         self.loaded_label.setObjectName("Muted")
-        bulk_bar.addStretch(1)
         bulk_bar.addWidget(self.loaded_label)
         root.addLayout(bulk_bar)
 
@@ -234,8 +265,8 @@ class ProductsPage(QWidget):
         self.gallery.setUniformItemSizes(True)
         self.gallery.setLayoutMode(QListView.LayoutMode.Batched)
         self.gallery.setBatchSize(10)
-        self.gallery.setIconSize(QSize(180, 132))
-        self.gallery.setGridSize(QSize(215, 205))
+        self.gallery.setIconSize(QSize(190, 125))
+        self.gallery.setGridSize(QSize(235, 250))
         self.gallery.setSpacing(6)
         self.gallery.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.gallery.doubleClicked.connect(lambda _index: self._open_selected())
@@ -333,7 +364,8 @@ class ProductsPage(QWidget):
             lambda _value: self._search_timer.start()
         )
         self.sort_combo.currentIndexChanged.connect(self._apply_gallery_sort)
-        self.filter_combo.currentIndexChanged.connect(self._apply_product_filter)
+        self.filter_combo.currentIndexChanged.connect(self._filter_combo_changed)
+        self.lifecycle_tabs.currentChanged.connect(self._lifecycle_changed)
         self.refresh()
 
     def _current_product_filter(self) -> str:
@@ -361,8 +393,34 @@ class ProductsPage(QWidget):
         )
         self._update_loaded_label()
 
-    def _apply_product_filter(self) -> None:
+    def _filter_combo_changed(self) -> None:
+        filter_name = self._current_product_filter()
+        lifecycle_map = {
+            "published": "published",
+            "archived": "archived",
+            "blocked": "blocked",
+        }
+        target = lifecycle_map.get(filter_name, "all")
+        for index in range(self.lifecycle_tabs.count()):
+            if str(self.lifecycle_tabs.tabData(index) or "") == target:
+                if self.lifecycle_tabs.currentIndex() != index:
+                    self.lifecycle_tabs.blockSignals(True)
+                    self.lifecycle_tabs.setCurrentIndex(index)
+                    self.lifecycle_tabs.blockSignals(False)
+                break
         self.refresh()
+
+    def _lifecycle_changed(self, index: int) -> None:
+        target = str(self.lifecycle_tabs.tabData(index) or "all")
+        combo_index = self.filter_combo.findData(target)
+        if combo_index >= 0 and self.filter_combo.currentIndex() != combo_index:
+            self.filter_combo.blockSignals(True)
+            self.filter_combo.setCurrentIndex(combo_index)
+            self.filter_combo.blockSignals(False)
+        self.refresh()
+
+    def _apply_product_filter(self) -> None:
+        self._filter_combo_changed()
 
     def _tab_changed(self) -> None:
         self._refresh_detail()
@@ -475,6 +533,144 @@ class ProductsPage(QWidget):
             f"{count} محصول بازیابی شد.",
         )
 
+    def _bulk_ai_selected(self) -> None:
+        if self._bulk_ai_worker is not None:
+            QMessageBox.information(
+                self,
+                "AI گروهی",
+                "یک عملیات AI گروهی در حال اجرا است.",
+            )
+            return
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(
+                self,
+                "AI گروهی",
+                "حداقل یک محصول را از گالری یا جدول انتخاب کن.",
+            )
+            return
+
+        mode = str(self.bulk_ai_source.currentData() or "data")
+        active = self.kernel.providers.active()
+        quotes = []
+        try:
+            for product_id in product_ids:
+                quotes.append(
+                    self.kernel.providers.estimate_product_ai(
+                        product_id,
+                        mode,
+                        target_stage=None,
+                    )
+                )
+        except Exception as exc:
+            QMessageBox.warning(self, "پیش‌بررسی AI گروهی", str(exc))
+            return
+
+        all_free = bool(quotes) and all(bool(item.get("free")) for item in quotes)
+        all_known = bool(quotes) and all(bool(item.get("cost_known")) for item in quotes)
+        if all_free:
+            cost_text = "رایگان"
+        elif all_known:
+            usd = sum(float(item.get("estimated_usd") or 0) for item in quotes)
+            toman = sum(float(item.get("estimated_toman") or 0) for item in quotes)
+            cost_text = f"${usd:.6f}"
+            if toman > 0:
+                cost_text += f" • حدود {toman:,.0f} تومان"
+        else:
+            cost_text = "هزینه دقیق همه درخواست‌ها در Provider مشخص نیست"
+
+        answer = QMessageBox.question(
+            self,
+            "تأیید AI گروهی",
+            (
+                f"تعداد محصولات: {len(product_ids)}\n"
+                f"Provider: {active.get('provider') or '—'}\n"
+                f"Model: {active.get('model') or '—'}\n"
+                f"منبع: {self.bulk_ai_source.currentText()}\n"
+                f"برآورد کل: {cost_text}\n\n"
+                "همان «AI همه مراحل محتوایی» به‌صورت ترتیبی و با یک هسته "
+                "واحد روی همه انتخاب‌ها اجرا شود؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        self.bulk_ai_btn.setEnabled(False)
+        self.archive_btn.setEnabled(False)
+        self.remove_btn.setEnabled(False)
+        self.restore_btn.setEnabled(False)
+        self.bulk_ai_status.setText(
+            f"شروع AI گروهی برای {len(product_ids)} محصول…"
+        )
+
+        def job(progress):
+            return self.kernel.complete_products_with_ai(
+                product_ids,
+                mode,
+                progress=progress,
+            )
+
+        worker = Worker(job)
+        self._bulk_ai_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.bulk_ai_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._bulk_ai_done)
+        worker.signals.error.connect(self._bulk_ai_error)
+        worker.signals.finished.connect(self._bulk_ai_finished)
+        self.ai_pool.start(worker)
+
+    def _bulk_ai_done(self, result=None) -> None:
+        data = dict(result or {})
+        completed = int(data.get("completed") or 0)
+        failed = int(data.get("failed") or 0)
+        self.bulk_ai_status.setText(
+            f"✅ {completed} تکمیل • {failed} خطا"
+        )
+        self.refresh()
+        failures = list(data.get("failures") or [])
+        detail = ""
+        if failures:
+            detail = "\n\n" + "\n".join(
+                f"#{item.get('product_id')}: {item.get('error')}"
+                for item in failures[:8]
+            )
+        QMessageBox.information(
+            self,
+            "AI گروهی",
+            (
+                f"{completed} محصول با همان موتور واحد Product AI پردازش شد.\n"
+                f"{failed} مورد ناموفق بود."
+                + detail
+            ),
+        )
+
+    def _bulk_ai_error(self, detail: str) -> None:
+        self.bulk_ai_status.setText("❌ AI گروهی ناموفق")
+        active = self.kernel.providers.active()
+        show_diagnostic_error(
+            self,
+            "خطای AI گروهی محصولات",
+            detail,
+            context={
+                "provider": active.get("provider"),
+                "model": active.get("model"),
+                "source_mode": str(self.bulk_ai_source.currentData() or "data"),
+                "product_count": len(self._selected_product_ids()),
+            },
+        )
+
+    def _bulk_ai_finished(self) -> None:
+        self._bulk_ai_worker = None
+        self.bulk_ai_btn.setEnabled(True)
+        self.archive_btn.setEnabled(True)
+        self.remove_btn.setEnabled(True)
+        self.restore_btn.setEnabled(True)
+
     def _refresh_detail(self) -> None:
         product_id = self._selected_product_id()
         if product_id is None:
@@ -516,6 +712,7 @@ class ProductsPage(QWidget):
             f"منبع: {row.get('source_name') or row.get('source_code') or '—'}\n"
             f"وضعیت DB: {row.get('workflow_status') or '—'}\n"
             f"چرخه: {lifecycle_text}\n"
+            f"تعداد تصاویر: {self.kernel.images.image_count(row)}\n"
             f"SEO: {seo_text}\n"
             f"دسته: {self.kernel.categories.label_for_slug(row.get('local_category_slug') or '')}\n"
             f"Server ID: {row.get('server_id') or '—'}"
