@@ -821,7 +821,10 @@ class AcquisitionCore:
         include_failed: bool = False,
         strategy: str = "hybrid",
         operator_mode: str = "search",
+        collection_method: str = "rich",
         download_images: bool = True,
+        download_files: bool = False,
+        same_domain_only: bool = True,
         progress=None,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_batch
@@ -836,7 +839,10 @@ class AcquisitionCore:
             include_failed=include_failed,
             strategy=strategy,
             operator_mode=operator_mode,
+            collection_method=collection_method,
             download_images=bool(download_images),
+            download_files=bool(download_files),
+            same_domain_only=bool(same_domain_only),
             progress=progress,
             should_stop=self.should_stop,
         )
@@ -847,7 +853,11 @@ class AcquisitionCore:
         source_code: str,
         product_url: str,
         image_limit: int = 5,
+        collection_method: str = "rich",
+        saved_html_path: str = "",
         download_images: bool = True,
+        download_files: bool = False,
+        same_domain_only: bool = True,
         progress=None,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_single
@@ -858,9 +868,212 @@ class AcquisitionCore:
             source_code=source_code,
             product_url=product_url,
             image_limit=image_limit,
+            collection_method=collection_method,
+            saved_html_path=saved_html_path,
             download_images=bool(download_images),
+            download_files=bool(download_files),
+            same_domain_only=bool(same_domain_only),
             progress=progress,
         )
+
+    def refresh_source_products(
+        self,
+        *,
+        source_code: str,
+        limit: int = 20,
+        image_limit: int = 10,
+        download_images: bool = True,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import refresh_source_products
+
+        self.reset_stop()
+        return refresh_source_products(
+            self.db,
+            source_code=str(source_code or ""),
+            limit=max(1, min(500, int(limit or 20))),
+            image_limit=image_limit,
+            download_images=bool(download_images),
+            progress=progress,
+            should_stop=self.should_stop,
+        )
+
+    def setup_login_profile(
+        self,
+        *,
+        source_code: str,
+        seed_url: str = "",
+    ) -> dict[str, Any]:
+        """Open the mature persistent browser profile for manual login/consent.
+
+        This is intentionally a user-driven headed browser. It does not solve or
+        bypass login/CAPTCHA; it only persists the operator's normal browser state.
+        """
+        import asyncio
+
+        from app.crawler import BrowserSession
+        from app.runtime_paths import data_root
+
+        code = str(source_code or "").strip()
+        if not code:
+            raise ValueError("یک Source فعال انتخاب کن.")
+        seed = str(seed_url or "").strip() or self.default_listing_url(code)
+        if not seed:
+            seed = "https://www.google.com"
+        profile = data_root() / "browser_profiles" / code
+
+        async def open_profile() -> dict[str, Any]:
+            async with BrowserSession(
+                profile,
+                headed=True,
+                min_delay=0,
+                max_delay=0,
+            ) as session:
+                await session.page.goto(
+                    seed,
+                    wait_until="domcontentloaded",
+                    timeout=90_000,
+                )
+                while session.context.pages:
+                    await asyncio.sleep(0.8)
+            return {
+                "operation": "login_profile",
+                "source_code": code,
+                "profile_dir": str(profile),
+                "seed_url": seed,
+            }
+
+        return asyncio.run(open_profile())
+
+    def launch_debug_chrome(
+        self,
+        *,
+        seed_url: str = "",
+    ) -> dict[str, Any]:
+        """Launch a dedicated Chrome profile exposing CDP on localhost:9222."""
+        import os
+        import subprocess
+        from pathlib import Path
+
+        from app.runtime_paths import data_root
+
+        candidates = [
+            Path(os.environ.get("PROGRAMFILES", ""))
+            / "Google"
+            / "Chrome"
+            / "Application"
+            / "chrome.exe",
+            Path(os.environ.get("PROGRAMFILES(X86)", ""))
+            / "Google"
+            / "Chrome"
+            / "Application"
+            / "chrome.exe",
+            Path(os.environ.get("LOCALAPPDATA", ""))
+            / "Google"
+            / "Chrome"
+            / "Application"
+            / "chrome.exe",
+        ]
+        chrome = next((item for item in candidates if item.is_file()), None)
+        if chrome is None:
+            raise RuntimeError("Google Chrome روی این Windows پیدا نشد.")
+        profile = data_root() / "attached_chrome_profile"
+        profile.mkdir(parents=True, exist_ok=True)
+        target = str(seed_url or "").strip() or "https://makerworld.com/en"
+        process = subprocess.Popen(
+            [
+                str(chrome),
+                "--remote-debugging-port=9222",
+                f"--user-data-dir={profile}",
+                target,
+            ]
+        )
+        return {
+            "operation": "debug_chrome",
+            "pid": int(process.pid),
+            "chrome": str(chrome),
+            "profile_dir": str(profile),
+            "seed_url": target,
+            "cdp_url": "http://127.0.0.1:9222",
+        }
+
+    def portfolio_harvest(
+        self,
+        *,
+        requested_per_source: int = 20,
+        image_limit: int = 5,
+        download_images: bool = True,
+        download_files: bool = False,
+        same_domain_only: bool = True,
+        progress=None,
+    ) -> dict[str, Any]:
+        """Run the old multi-source discovery idea through the current runtime."""
+        from .acquisition_runtime import run_batch
+
+        self.reset_stop()
+        sources = self.sources()
+        requested = max(1, min(500, int(requested_per_source or 20)))
+        results: list[dict[str, Any]] = []
+        total_sources = max(1, len(sources))
+
+        for index, source in enumerate(sources, 1):
+            if self.should_stop():
+                break
+            code = str(source.get("code") or "")
+            listing = self.default_listing_url(code, query="3d print")
+            if not listing:
+                results.append({
+                    "source_code": code,
+                    "skipped": True,
+                    "reason": "no default listing",
+                })
+                continue
+            if callable(progress):
+                progress(
+                    int((index - 1) / total_sources * 95),
+                    f"کشف چندمنبعی {index}/{total_sources}: {code}",
+                )
+            try:
+                result = run_batch(
+                    self.db,
+                    source_code=code,
+                    listing_url=listing,
+                    requested=requested,
+                    image_limit=image_limit,
+                    include_failed=False,
+                    strategy="classic",
+                    operator_mode="automatic",
+                    collection_method="classic_isolated",
+                    download_images=bool(download_images),
+                    download_files=bool(download_files),
+                    same_domain_only=bool(same_domain_only),
+                    progress=None,
+                    should_stop=self.should_stop,
+                )
+                results.append({"source_code": code, **dict(result or {})})
+            except Exception as exc:
+                results.append({
+                    "source_code": code,
+                    "failed": 1,
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
+
+        summary = {
+            "operation": "portfolio_harvest",
+            "sources": results,
+            "discovered": sum(int(row.get("discovered") or 0) for row in results),
+            "collected": sum(int(row.get("collected") or 0) for row in results),
+            "duplicates": sum(int(row.get("duplicates") or 0) for row in results),
+            "failed": sum(int(row.get("failed") or 0) for row in results),
+            "stopped": self.should_stop(),
+        }
+        if callable(progress):
+            progress(
+                100,
+                "کشف چندمنبعی تمام شد — "
+                f"collected={summary['collected']} failed={summary['failed']}",
+            )
+        return summary
 
     def recover_product_images(
         self,
