@@ -212,6 +212,15 @@ class ProductWizardPage(QWidget):
         self._build_stage7()
 
         self.image_grid.sliderChanged.connect(self._sync_slider_from_image_grid)
+        self._image_selection_save_timer = QTimer(self)
+        self._image_selection_save_timer.setSingleShot(True)
+        self._image_selection_save_timer.setInterval(120)
+        self._image_selection_save_timer.timeout.connect(
+            self._persist_image_selection
+        )
+        self.image_grid.selectionChanged.connect(
+            self._queue_image_selection_save
+        )
         self.image_slider_enabled.toggled.connect(
             lambda checked: self.slider_enabled.setChecked(bool(checked))
         )
@@ -1457,6 +1466,22 @@ class ProductWizardPage(QWidget):
         except Exception as exc:
             QMessageBox.warning(self, "تصاویر", str(exc))
             return False
+
+    def _queue_image_selection_save(self) -> None:
+        if self.product_id is None:
+            return
+        self._image_selection_save_timer.start()
+
+    def _persist_image_selection(self) -> None:
+        if self.product_id is None:
+            return
+        if not self._save_stage3_safely():
+            return
+        selected_count = len(self.image_grid.selected_urls())
+        self.image_task_status.setText(
+            f"✅ انتخاب {selected_count} تصویر ذخیره شد"
+        )
+        self._refresh_stage_statuses()
 
 
     # ------------------------------------------------------------------

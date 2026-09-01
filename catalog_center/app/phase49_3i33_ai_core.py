@@ -448,17 +448,37 @@ def generate_translation_pack(provider: str, key: str, model: str, source_title:
     payload = {"source_title": str(source_title or "").strip(), "source_description": str(source_description or "").strip()}
     if not payload["source_title"]:
         raise RuntimeError("عنوان منبع برای ترجمه/SEO خالی است.")
-    result, selected_model = client.structured_response(
-        instructions=_ai_instructions(),
-        input_content=[{"type": "input_text", "text": json.dumps(payload, ensure_ascii=False)}],
-        schema=CONTENT_SCHEMA,
-        schema_name="catalog_content_pack_3i33",
-        preferred_model=model,
-    )
-    result["material_recommendations"] = []
-    result["suggested_category_slug"] = ""
-    validate_content_pack(result, payload["source_title"])
-    title_quality_guard(payload["source_title"], result.get("title_fa") or "")
+
+    def request_pack(instructions: str):
+        result, selected_model = client.structured_response(
+            instructions=instructions,
+            input_content=[{"type": "input_text", "text": json.dumps(payload, ensure_ascii=False)}],
+            schema=CONTENT_SCHEMA,
+            schema_name="catalog_content_pack_3i33",
+            preferred_model=model,
+        )
+        result["material_recommendations"] = []
+        result["suggested_category_slug"] = ""
+        validate_content_pack(result, payload["source_title"])
+        return result, selected_model
+
+    result, selected_model = request_pack(_ai_instructions())
+    try:
+        title_quality_guard(payload["source_title"], result.get("title_fa") or "")
+    except RuntimeError as semantic_error:
+        repair_instructions = (
+            _ai_instructions()
+            + "\n\nبازنویسی اجباری عنوان: خروجی قبلی رد شد چون "
+            + str(semantic_error)
+            + " عنوان را دقیقاً یک بار دیگر و معنایی بساز؛ نام خاص را حفظ کن "
+              "و تمام مؤلفه‌های معنایی source_title را در فارسی روشن نگه دار."
+        )
+        repaired, repaired_model = request_pack(repair_instructions)
+        title_quality_guard(payload["source_title"], repaired.get("title_fa") or "")
+        result = repaired
+        selected_model = repaired_model
+        result["_semantic_repair_retry"] = True
+
     result["_ai_provider"] = provider
     result["_ai_model"] = selected_model
     return result

@@ -285,11 +285,17 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
         folded_model_id in _NON_DETERMINISTIC_ROUTER_IDS
         or folded_model_id.startswith("openrouter/auto")
     )
+    batch_only = bool(
+        folded_model_id.endswith(":batch")
+        or "only available through the batch api" in description.casefold()
+        or "batch api only" in description.casefold()
+    )
     product_ready = bool(
         product_text_capable
         and structured_json
         and not code_specialized
         and not non_deterministic_router
+        and not batch_only
     )
 
     preferred_free_score = int(
@@ -318,6 +324,7 @@ def enrich_model_info(item: dict[str, Any]) -> dict[str, Any]:
             "product_ready": product_ready,
             "code_specialized": code_specialized,
             "non_deterministic_router": non_deterministic_router,
+            "batch_only": batch_only,
             "persian_free_preferred_score": preferred_free_score,
             "persian_free_preferred": bool(preferred_free_score),
             "input_modalities": sorted(input_modalities),
@@ -338,6 +345,7 @@ def model_sort_key(item: dict[str, Any]) -> tuple:
         0 if model.get("structured_json") else 1,
         0 if model.get("free") else 1,
         -int(model.get("persian_free_preferred_score") or 0),
+        1 if model.get("batch_only") else 0,
         1 if model.get("code_specialized") else 0,
         -int(model.get("quality_score") or 0),
         float(model.get("_avg_cost") or float("inf")),
@@ -392,6 +400,8 @@ def format_model_label(item: dict[str, Any]) -> str:
         badges.append("⚠️ Tools-only")
     if model.get("non_deterministic_router"):
         badges.append("⚠️ Router متغیر")
+    if model.get("batch_only"):
+        badges.append("⛔ Batch-only")
     if model.get("code_specialized"):
         badges.append("⚠️ تخصص کدنویسی")
     if not model.get("product_text_capable"):
@@ -408,6 +418,8 @@ def format_model_label(item: dict[str, Any]) -> str:
 def model_matches_filter(item: dict[str, Any], filter_code: str) -> bool:
     model = enrich_model_info(item)
     code = str(filter_code or "all")
+    if model.get("batch_only"):
+        return False
     if code == "free":
         return bool(
             model.get("free")
@@ -459,6 +471,14 @@ def product_model_compatibility(
             f"{model_id} یک Router متغیر است و مدل زیرین را ثابت نگه نمی‌دارد. "
             "برای Product فارسی/SEO یک Model دقیق از فهرست زنده انتخاب کن "
             "تا کیفیت و Structured JSON قابل تکرار باشد.",
+        )
+
+    if model.get("batch_only"):
+        return (
+            False,
+            f"{model_id} فقط از Batch API قابل اجرا است و برای تست/اجرای "
+            "همزمان Product روی chat/completions معتبر نیست. یک مدل عادی "
+            "Text + JSON انتخاب کن.",
         )
 
     if model.get("code_specialized"):

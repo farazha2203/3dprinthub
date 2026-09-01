@@ -18,6 +18,7 @@ from app.ai_model_catalog import (
 )
 from app.ai_providers import AIProviderClient, remember_model_capability
 from app.db import Database
+from qt6.image_gallery import ProductImageGrid
 from qt6.kernel import build_kernel
 from qt6.main_window import MainWindow
 from qt6.pages import OperationsPage
@@ -159,6 +160,51 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             "فارسی پیشنهادی",
             format_model_label(filtered[0]),
         )
+
+    def test_image_selection_signal_consumes_checkbox_bool_and_emits_zero_arg(self):
+        grid = ProductImageGrid(columns=4)
+        try:
+            grid.set_items([
+                {
+                    "url": "https://example.com/a.jpg",
+                    "downloaded": True,
+                    "selected": False,
+                }
+            ])
+            calls = []
+            grid.selectionChanged.connect(lambda: calls.append("changed"))
+            grid.cards[0].selected.setChecked(True)
+            QApplication.processEvents()
+            self.assertEqual(calls, ["changed"])
+            self.assertEqual(
+                grid.selected_urls(),
+                ["https://example.com/a.jpg"],
+            )
+        finally:
+            grid.deleteLater()
+
+    def test_batch_only_openrouter_model_is_not_product_candidate(self):
+        item = rank_models([
+            {
+                "id": "openai/gpt-5-nano:batch",
+                "name": "GPT-5 Nano Batch",
+                "description": "This model is only available through the Batch API.",
+                "pricing": {"prompt": "0.1", "completion": "0.2"},
+                "supported_parameters": ["response_format"],
+                "architecture": {
+                    "input_modalities": ["text"],
+                    "output_modalities": ["text"],
+                },
+            }
+        ])[0]
+        self.assertTrue(item["batch_only"])
+        self.assertFalse(item["product_ready"])
+        ok, reason = product_model_compatibility(item)
+        self.assertFalse(ok)
+        self.assertIn("Batch API", reason)
+        self.assertFalse(model_matches_filter(item, "all"))
+        self.assertFalse(model_matches_filter(item, "structured"))
+        self.assertIn("Batch-only", format_model_label(item))
 
     def test_cost_estimate_uses_provider_per_token_pricing(self):
         estimate = estimate_request_cost(

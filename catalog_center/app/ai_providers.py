@@ -476,7 +476,14 @@ class AIProviderClient:
         for candidate in priorities:
             if candidate in models:
                 return candidate
-        textish = [m for m in models if not any(t in m.lower() for t in ("image", "audio", "embedding", "tts", "whisper", "moderation"))]
+        textish = [
+            m for m in models
+            if not str(m).casefold().endswith(":batch")
+            and not any(
+                t in m.lower()
+                for t in ("image", "audio", "embedding", "tts", "whisper", "moderation")
+            )
+        ]
         if textish:
             return textish[0]
         if models:

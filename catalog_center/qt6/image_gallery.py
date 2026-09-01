@@ -124,7 +124,11 @@ class ImageCard(QFrame):
         actions.addStretch(1)
         root.addLayout(actions)
 
-        self.selected.toggled.connect(self.selectionChanged.emit)
+        # QCheckBox.toggled emits bool, while the gallery contract is a
+        # zero-argument semantic notification. Consume the Qt payload here.
+        self.selected.toggled.connect(
+            lambda _checked=False: self.selectionChanged.emit()
+        )
         self.primary.toggled.connect(
             lambda checked: (
                 self.primaryChanged.emit(str(self.item.get("url") or ""))
