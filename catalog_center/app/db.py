@@ -481,7 +481,11 @@ class Database:
                 product_rows = self.conn.execute(
                     f"""
                     SELECT id, source_code, external_id, normalized_url,
-                           title_fa, source_title, workflow_status, is_blocked
+                           title_fa, source_title, workflow_status, is_blocked,
+                           source_short_description, source_description,
+                           short_description_fa, description_fa,
+                           primary_image_url, local_dir,
+                           selected_images_json, images_json, image_metadata_json
                     FROM products
                     WHERE source_code=? AND external_id IN ({placeholders})
                     """,
@@ -494,7 +498,11 @@ class Database:
                 product_rows = self.conn.execute(
                     f"""
                     SELECT id, source_code, external_id, normalized_url,
-                           title_fa, source_title, workflow_status, is_blocked
+                           title_fa, source_title, workflow_status, is_blocked,
+                           source_short_description, source_description,
+                           short_description_fa, description_fa,
+                           primary_image_url, local_dir,
+                           selected_images_json, images_json, image_metadata_json
                     FROM products
                     WHERE source_code=? AND normalized_url IN ({placeholders})
                     """,
@@ -520,6 +528,33 @@ class Database:
                 "product_source_title": str(product["source_title"] or "") if product else "",
                 "product_workflow_status": str(product["workflow_status"] or "") if product else "",
                 "product_is_blocked": int(product["is_blocked"] or 0) if product else 0,
+                "product_source_short_description": (
+                    str(product["source_short_description"] or "") if product else ""
+                ),
+                "product_source_description": (
+                    str(product["source_description"] or "") if product else ""
+                ),
+                "product_short_description_fa": (
+                    str(product["short_description_fa"] or "") if product else ""
+                ),
+                "product_description_fa": (
+                    str(product["description_fa"] or "") if product else ""
+                ),
+                "product_primary_image_url": (
+                    str(product["primary_image_url"] or "") if product else ""
+                ),
+                "product_local_dir": (
+                    str(product["local_dir"] or "") if product else ""
+                ),
+                "product_selected_images_json": (
+                    str(product["selected_images_json"] or "[]") if product else "[]"
+                ),
+                "product_images_json": (
+                    str(product["images_json"] or "[]") if product else "[]"
+                ),
+                "product_image_metadata_json": (
+                    str(product["image_metadata_json"] or "[]") if product else "[]"
+                ),
             })
             output.append(item)
         return output
