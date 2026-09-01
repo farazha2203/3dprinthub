@@ -76,6 +76,50 @@ class PricingSettingAdmin(admin.ModelAdmin):
         "tax_percent",
         "updated_at",
     ]
+    readonly_fields = ["updated_at"]
+    fieldsets = (
+        (
+            "زمان و نرخ تولید",
+            {
+                "fields": (
+                    "default_hourly_rate",
+                    "minimum_billable_minutes",
+                    "billing_increment_minutes",
+                    "assembly_hourly_rate",
+                )
+            },
+        ),
+        (
+            "دستمزد و حاشیه سود",
+            {
+                "fields": (
+                    "default_labor_percent",
+                    "default_margin_percent",
+                )
+            },
+        ),
+        (
+            "حداقل سفارش و بسته‌بندی",
+            {
+                "fields": (
+                    "minimum_order_amount",
+                    "packaging_fee",
+                )
+            },
+        ),
+        (
+            "مالیات",
+            {"fields": ("vat_enabled", "tax_percent")},
+        ),
+        (
+            "وضعیت",
+            {"fields": ("updated_at",)},
+        ),
+    )
+
+    class Media:
+        css = {"all": ("admin/phase49-admin-tabs.css",)}
+        js = ("admin/phase49-admin-tabs.js",)
 
     def has_add_permission(self, request):
         return not PricingSetting.objects.exists()
