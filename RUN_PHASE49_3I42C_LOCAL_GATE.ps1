@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.42C.2"
+$RunnerVersion = "49.3I.47.1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -24,7 +24,7 @@ function Step([string]$Title) {
 
 function Fail([string]$Message) {
     Write-Host ""
-    Write-Host "PHASE49.3I.42C LOCAL GATE FAILED" -ForegroundColor Red
+    Write-Host "PHASE49.3I.47 LOCAL GATE FAILED" -ForegroundColor Red
     Write-Host $Message -ForegroundColor Red
     throw $Message
 }
@@ -82,7 +82,7 @@ function Invoke-PythonStdin {
     }
 }
 
-Step "00. PHASE49.3I.42C QT6 ACQUISITION LOCAL GATE"
+Step "00. PHASE49.3I.47 QT6 PRODUCT / ACQUISITION LOCAL GATE"
 Write-Host "Runner     = $RunnerVersion"
 Write-Host "Project    = $Root"
 Write-Host "Catalog    = $Catalog"
@@ -158,16 +158,23 @@ $required = @(
     "catalog_center\app\classic_methods.py",
     "catalog_center\app\phase49_3i43_modern_acquisition_intelligence.py",
     "catalog_center\app\phase49_3i45_incremental_discovery_intelligence.py",
+    "catalog_center\app\phase49_3c_image_pipeline.py",
     "catalog_center\tests\test_phase49_3i42c_acquisition_runtime.py",
     "catalog_center\tests\test_phase49_3i42c3_ai_crawl_parity.py",
-    "catalog_center\app\ai_model_catalog.py"
+    "catalog_center\tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py",
+    "catalog_center\app\ai_model_catalog.py",
+    "templates\store\product_detail.html",
+    "static\admin\phase49-admin-tabs.css",
+    "static\admin\phase49-admin-tabs.js",
+    "static\store\css\phase49-product-info-tabs.css",
+    "static\store\js\phase49-product-info-tabs.js"
 )
 foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $Root $relative))) {
         Fail "Required file missing: $relative"
     }
 }
-Write-Host "PHASE49_3I42C_REQUIRED_FILES=OK" -ForegroundColor Green
+Write-Host "PHASE49_3I47_REQUIRED_FILES=OK" -ForegroundColor Green
 
 Step "03. CHECKSUM BACKUP CATALOG SQLITE"
 New-Item -ItemType Directory -Force -Path $BackupRoot | Out-Null
@@ -238,8 +245,10 @@ Run-Native -File $Py -Arguments @(
     (Join-Path $Catalog "app\phase49_3i38_crawl_ledger_stage_ai.py"),
     (Join-Path $Catalog "app\phase49_3i43_modern_acquisition_intelligence.py"),
     (Join-Path $Catalog "app\phase49_3i45_incremental_discovery_intelligence.py"),
+    (Join-Path $Catalog "app\phase49_3c_image_pipeline.py"),
     (Join-Path $Catalog "tests\test_phase49_3i42c_acquisition_runtime.py"),
     (Join-Path $Catalog "tests\test_phase49_3i42c3_ai_crawl_parity.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py"),
     (Join-Path $Catalog "app\ai_model_catalog.py")
 )
 
@@ -251,7 +260,8 @@ try {
         "tests.test_phase49_3i42_qt6_foundation",
         "tests.test_phase49_3i42b_core_parity",
         "tests.test_phase49_3i42c_acquisition_runtime",
-        "tests.test_phase49_3i42c3_ai_crawl_parity"
+        "tests.test_phase49_3i42c3_ai_crawl_parity",
+        "tests.test_phase49_3i47_qt_workspace_image_bulk_ai"
     )
 
     Run-Native -File $Py -Arguments @(
@@ -350,8 +360,8 @@ if ($FinalDirty.Count -gt 0) {
     Fail "TESTS CHANGED WORKTREE"
 }
 
-Step "10. PHASE49.3I.42C AUTOMATED LOCAL GATE PASSED"
-Write-Host "PHASE49_3I42C_LOCAL_GATE=PASS" -ForegroundColor Green
+Step "10. PHASE49.3I.47 AUTOMATED LOCAL GATE PASSED"
+Write-Host "PHASE49_3I47_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "HEAD=$FinalHead" -ForegroundColor Green
 Write-Host "CLASSIC_SEARCH_CONTINUATION=ENABLED" -ForegroundColor Green
 Write-Host "HYBRID_HTTP_SITEMAP_BROWSER=ENABLED" -ForegroundColor Green
@@ -362,12 +372,13 @@ Write-Host "HOST_TOUCHED=NO" -ForegroundColor Yellow
 
 Write-Host ""
 Write-Host "Foreground QA:" -ForegroundColor Cyan
-Write-Host "1) Operations -> acquisition: choose Classic, one real Search/Listing URL, 5 Products, 5 images."
-Write-Host "2) Run the exact same Search URL again; terminal identities must be skipped and continuation must advance."
-Write-Host "3) Run Hybrid on a small real listing; HTTP/Sitemap should stay primary and Browser only fall back when needed."
-Write-Host "4) Confirm title/source title/author/license/category/tags/specs and selected images on received Products."
-Write-Host "5) Confirm Stop Safe, failed-queue reset, progress and recent-run summary."
-Write-Host "6) Do not use a live-site stress benchmark. Keep the foreground QA bounded."
+Write-Host "1) Products: verify lifecycle tabs (active/published/archive/deleted), old local thumbnails, image count and description on cards."
+Write-Host "2) Select TWO disposable Products and run 'AI تکمیل همه موارد انتخاب‌شده' in Saved Data mode; verify sequential progress and both Products refresh."
+Write-Host "3) On one Product with 3+ images run full image/content completion; verify SEO WebPs are numbered -01/-02/-03 and all image SEO metadata is consistent."
+Write-Host "4) Add Product/Crawl: default Inventory tab must show Products immediately; switch Large Icons <-> Details and verify title/description/image count."
+Write-Host "5) Profile/Pricing editor: verify Profile, Production Weight/Time and Filament/Fixed Price are separate full-height tabs with all rows visible."
+Write-Host "6) Receive tab: bounded Classic/Hybrid smoke only (5 Products / 5 images); Safe Stop and Failed reset must remain healthy."
+Write-Host "7) Do not stress the live source. Production and Host remain out of scope."
 
 if ($LaunchApp) {
     Step "11. START QT6 CATALOG CENTER"
