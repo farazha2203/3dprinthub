@@ -1,3 +1,19 @@
+## 2026-09-02 — Phase49.3I.52E Crawl preview + historical refetch image parity
+
+Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- include mature `<id>_refresh_latest`, `<id>_refetch_*`, and `<id>_bulk_refetch_*` image folders in read-only Crawl image resolution;
+- preserve exact Product/local_dir authority and do not move media;
+- recover MakerWorld lazy listing thumbnails from srcset, picture source, data-src/data-original/data-lazy-src and CSS background-image;
+- allow same Search rerun to backfill candidate Preview without duplicating Crawl identity;
+- keep local image counts factual: only real local files produce `N عکس دارد`;
+- expose `Phase49.3I.52E` in Qt shell.
+
+Evidence: runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Qt `33632062812` PASS; Single Active AI `33632062877` PASS; Portable `33632062880` PASS; 223 portable regressions; artifact `9847317893`; SHA256 `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`.
+
+Next: owner Local sync/gate, then permanent inventory + same-search Preview backfill foreground QA. Production remains blocked.
+
 ## 2026-09-02 — Phase49.3I.52D legacy image-path parity + numeric control repair
 
 Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
