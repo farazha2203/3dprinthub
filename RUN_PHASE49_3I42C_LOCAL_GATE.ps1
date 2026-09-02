@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.47.2"
+$RunnerVersion = "49.3I.50.1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -24,7 +24,7 @@ function Step([string]$Title) {
 
 function Fail([string]$Message) {
     Write-Host ""
-    Write-Host "PHASE49.3I.47 LOCAL GATE FAILED" -ForegroundColor Red
+    Write-Host "PHASE49.3I.50 LOCAL GATE FAILED" -ForegroundColor Red
     Write-Host $Message -ForegroundColor Red
     throw $Message
 }
@@ -82,7 +82,7 @@ function Invoke-PythonStdin {
     }
 }
 
-Step "00. PHASE49.3I.47 QT6 PRODUCT / ACQUISITION LOCAL GATE"
+Step "00. PHASE49.3I.50 QT6 PRODUCT / ACQUISITION LOCAL GATE"
 Write-Host "Runner     = $RunnerVersion"
 Write-Host "Project    = $Root"
 Write-Host "Catalog    = $Catalog"
@@ -376,7 +376,7 @@ if ($FinalDirty.Count -gt 0) {
 
 Step "10. PHASE49.3I.49 AUTOMATED LOCAL GATE PASSED"
 Write-Host "PHASE49_3I47_LOCAL_GATE=PASS" -ForegroundColor Green
-Write-Host "PHASE49_3I49_LOCAL_GATE=PASS" -ForegroundColor Green
+Write-Host "PHASE49_3I50_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "HEAD=$FinalHead" -ForegroundColor Green
 Write-Host "CLASSIC_SEARCH_CONTINUATION=ENABLED" -ForegroundColor Green
 Write-Host "HYBRID_HTTP_SITEMAP_BROWSER=ENABLED" -ForegroundColor Green
