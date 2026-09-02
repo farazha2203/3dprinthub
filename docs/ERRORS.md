@@ -1,3 +1,36 @@
+## ERR-49-097 — 3I.52C Qt regression was added to Portable release gate without the Qt runtime dependency
+**Date:** 2026-09-02  
+**Environment:** GitHub Actions `Catalog Center Windows Portable Release`, run `33624135587`.
+
+**Observed evidence:**  
+The new 3I.52C regression was intentionally added to the portable release regression gate. The job installed only `catalog_center/requirements.txt`, then failed while importing `test_phase49_3i52c_crawl_review_recovery` with `ModuleNotFoundError: No module named 'PySide6'`. Compile had already passed; packaging did not start.
+
+**Root cause:**  
+The release regression set crossed the Qt test boundary but its dependency install step still described the older non-Qt portable environment. The dedicated Qt workflow already installed `requirements-qt6.txt`; the portable regression workflow did not.
+
+**Failed condition was not repeated unchanged.**  
+The workflow dependency boundary was changed before rerun.
+
+**Correct fix:**  
+- cache both `catalog_center/requirements.txt` and `catalog_center/requirements-qt6.txt`;
+- install `catalog_center/requirements-qt6.txt` in the portable regression environment so the explicit Qt regression can import the same PySide6 runtime used by the dedicated Qt gate;
+- do not weaken or remove the new 3I.52C regression.
+
+**Implementation:** `b43880a763d00bfda52dc29c4bf080cb428b1230`.
+
+**Verification:**  
+- `33625043651` — Windows Portable — PASS;
+- release regression gate: 215 tests PASS;
+- EXE self-verify PASS;
+- browser smoke PASS;
+- artifact id `9844568575`;
+- EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`.
+
+**Prevention:**  
+Whenever a shared release regression gate imports a framework-specific test suite, that job must install the dependency contract required by that suite. Do not solve dependency drift by deleting the regression that exposed it.
+
+---
+
 ## ERR-49-096 — New 3I.52B Site-pull regression missed one import and the isolated test crossed the real Bridge settings boundary
 **Date:** 2026-09-02  
 **Environment:** GitHub Windows Qt CI during Phase49.3I.52B.
