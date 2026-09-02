@@ -167,7 +167,15 @@ class ProductTableModel(QAbstractTableModel):
             _summary(row),
             row.get("source_name") or row.get("source_code") or "—",
             row.get("workflow_status") or "—",
-            "بله" if row.get("server_id") else "خیر",
+            (
+                "منتشرشده"
+                if (
+                    str(row.get("server_id") or "").strip()
+                    and str(row.get("workflow_status") or "").strip().lower() == "uploaded"
+                    and not int(row.get("needs_update") or 0)
+                )
+                else ("آماده انتشار" if int(row.get("upload_ready") or 0) else "—")
+            ),
             row.get("product_sync_error") or "",
         )
 
