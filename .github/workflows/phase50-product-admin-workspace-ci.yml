@@ -24,6 +24,7 @@ on:
       - catalog_center/app/phase49_3i49_site_publish.py
       - scripts/host/phase49_3i53_production_readonly_audit.sh
       - scripts/host/phase49_3i53_production_deploy.sh
+      - scripts/host/phase49_3i53_mysql_backup.py
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
@@ -90,6 +91,7 @@ jobs:
       - name: Compile touched Python surfaces
         run: |
           python -m py_compile \
+            scripts/host/phase49_3i53_mysql_backup.py \
             store/apps.py \
             store/admin.py \
             store/admin_seo.py \
@@ -149,6 +151,8 @@ jobs:
           grep -F 'PREDEPLOY_BACKUP_VERIFIED=YES' scripts/host/phase49_3i53_production_deploy.sh
           grep -F 'git merge --ff-only "$FETCHED"' scripts/host/phase49_3i53_production_deploy.sh
           grep -F 'PHASE49_3I53C_PRODUCTION_DEPLOY=PASS' scripts/host/phase49_3i53_production_deploy.sh
+          grep -F 'phase49_3i53_mysql_backup.py' scripts/host/phase49_3i53_production_deploy.sh
+          python scripts/host/phase49_3i53_mysql_backup.py --self-test
 
       - name: Django system check
         run: python manage.py check

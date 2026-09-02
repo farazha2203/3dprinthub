@@ -186,75 +186,10 @@ if [ -d "imports/desktop_catalog/pending" ]; then
 fi
 
 printf '%s\n' "===== MYSQL BACKUP ====="
-PHASE49_BACKUP_ROOT="$BACKUP_ROOT" "$PY" - "$EXPECTED_DB" <<'PY'
-import gzip
-import os
-import shutil
-import subprocess
-import sys
-from pathlib import Path
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-import django
-django.setup()
-from django.db import connection
-
-expected_db = sys.argv[1]
-cfg = connection.settings_dict
-if connection.vendor != "mysql":
-    raise SystemExit("DEPLOY_FAIL=backup_database_vendor_not_mysql")
-if str(cfg.get("NAME") or "") != expected_db:
-    raise SystemExit("DEPLOY_FAIL=backup_database_name_mismatch")
-
-binary = shutil.which("mysqldump")
-if not binary:
-    raise SystemExit("DEPLOY_FAIL=mysqldump_missing")
-
-root = Path(os.environ["PHASE49_BACKUP_ROOT"])
-outfile = root / "database-before-3i53.sql.gz"
-
-cmd = [
-    binary,
-    "--single-transaction",
-    "--quick",
-    "--routines",
-    "--triggers",
-    "--no-tablespaces",
-    "--default-character-set=utf8mb4",
-    "-h", str(cfg.get("HOST") or "localhost"),
-    "-P", str(cfg.get("PORT") or "3306"),
-    "-u", str(cfg.get("USER") or ""),
-    str(cfg.get("NAME") or ""),
-]
-
-env = os.environ.copy()
-env["MYSQL_PWD"] = str(cfg.get("PASSWORD") or "")
-
-with gzip.open(outfile, "wb", compresslevel=6) as target:
-    proc = subprocess.run(
-        cmd,
-        stdout=target,
-        stderr=subprocess.PIPE,
-        env=env,
-        check=False,
-    )
-
-if proc.returncode:
-    try:
-        outfile.unlink()
-    except FileNotFoundError:
-        pass
-    raise SystemExit(
-        "DEPLOY_FAIL=mysqldump_failed:"
-        + proc.stderr.decode("utf-8", errors="replace")[-1200:]
-    )
-
-size = outfile.stat().st_size
-print("DATABASE_BACKUP=" + str(outfile))
-print("DATABASE_BACKUP_SIZE=" + str(size))
-if size < 1024:
-    raise SystemExit("DEPLOY_FAIL=database_backup_too_small")
-PY
+git show "$FETCHED:scripts/host/phase49_3i53_mysql_backup.py" > "$BACKUP_ROOT/phase49_3i53_mysql_backup.py"
+chmod 700 "$BACKUP_ROOT/phase49_3i53_mysql_backup.py"
+PHASE49_BACKUP_ROOT="$BACKUP_ROOT" "$PY" \
+    "$BACKUP_ROOT/phase49_3i53_mysql_backup.py" "$EXPECTED_DB"
 
 gzip -t "$BACKUP_ROOT/database-before-3i53.sql.gz"
 sha256sum "$BACKUP_ROOT/database-before-3i53.sql.gz" > "$BACKUP_ROOT/database.sha256"
