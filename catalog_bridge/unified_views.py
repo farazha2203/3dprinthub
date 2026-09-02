@@ -262,6 +262,15 @@ def _filament_code(material_id: int, brand: str, color: str) -> str:
     return f"desktop-{int(material_id)}-{digest}"[:120]
 
 
+def _normalize_filament_hex(value) -> str:
+    text = str(value or "").strip().upper()
+    if not text:
+        return ""
+    if not text.startswith("#"):
+        text = "#" + text
+    return text if HEX_RE.match(text) else ""
+
+
 def _normalize_filament_palette(data) -> list[str]:
     raw = data.get("palette_hexes")
     if not isinstance(raw, list):
@@ -447,6 +456,11 @@ def filament_sync_view(request):
         "0",
     ))
     palette = _normalize_filament_palette(data)
+    primary_hex = _normalize_filament_hex(
+        data.get("hex") or data.get("hex_code") or ""
+    )
+    secondary_hex = _normalize_filament_hex(data.get("secondary_hex") or "")
+    tertiary_hex = _normalize_filament_hex(data.get("tertiary_hex") or "")
     try:
         image_payload = _filament_image_payload(data)
     except ValueError as exc:
@@ -520,12 +534,18 @@ def filament_sync_view(request):
             "brand_name": brand,
             "manufacturer_name": manufacturer,
             "description": filament_description,
-            "hex_code": palette[0] if palette else "",
+            "hex_code": primary_hex or (palette[0] if palette else ""),
             "color_type": color_type,
             "color_finish": color_finish,
             "palette_hexes": palette,
-            "secondary_hex": palette[1] if len(palette) > 1 else "",
-            "tertiary_hex": palette[2] if len(palette) > 2 else "",
+            "secondary_hex": (
+                secondary_hex
+                or (palette[1] if len(palette) > 1 else "")
+            ),
+            "tertiary_hex": (
+                tertiary_hex
+                or (palette[2] if len(palette) > 2 else "")
+            ),
             "roll_weight_grams": roll_weight,
             "stock_roll_count_snapshot": stock_roll_count,
             "purchase_price_per_roll": max(0, _as_int(data.get("purchase_price_per_roll"), 0)),
