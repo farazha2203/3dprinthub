@@ -1,3 +1,74 @@
+## 2026-09-02 — Phase49.3I.52E Crawl preview recovery + mature refetch-folder image parity
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested runtime: `016e84ab98d2e5577633833cbc87cb96824dbbf0`  
+Rollback: `backup/pre-phase49-3i52e-preview-legacy-variants-20260902` → `ef82abe775f88f6326c345b4e17c797471acbc27`.  
+Catalog Center: `8.9.10` / build `2026.09.02.1`; Qt shell marker: `Phase49.3I.52E`.
+
+### Owner QA evidence and clarified behavior
+The owner screenshots show two different image states inside permanent Crawl inventory:
+- rows such as external ids `2786975` and `2533481` already expose 5 local images;
+- many recent rows are still `new` and show no Preview;
+- several old/failed rows also have no visible image even though mature refetch flows may have written files to sibling refetch folders.
+
+A `new` Crawl row is only discovered identity until full Product receive runs. It can still show a lightweight listing Preview, but that Preview depends on the listing DOM exposing a usable public image URL. Full local image count must only be claimed when real files exist.
+
+### Additional root causes verified from mature source
+The retained Tk runtime uses additional historical Product image folders:
+- `<external_id>_refresh_latest`;
+- `<external_id>_refetch_<timestamp>`;
+- `<external_id>_bulk_refetch_<timestamp>`.
+
+3I.52D only covered the exact `<external_id>` folder, so unlinked Crawl rows could still miss images stored in those mature sibling folders.
+
+MakerWorld listing thumbnails can also be lazy-loaded through `srcset`, `picture/source srcset`, `data-src`, `data-original`, `data-lazy-src`, or CSS background-image. The Preview parser previously relied mainly on currentSrc/src/data-src and could therefore persist an empty candidate thumbnail even though the card was visibly imaged in the browser.
+
+### Implemented
+- read-only identity image lookup now includes exact Product folder plus mature `_refresh_latest`, `_refetch_*`, and `_bulk_refetch_*` siblings;
+- newest refetch variants are evaluated first after exact/local_dir authority;
+- no media file is moved, renamed, deleted or rewritten;
+- queue selected-row Product lookup is source-code case-insensitive too;
+- listing Preview extraction now preserves multiple lazy-image attributes and chooses a real HTTP image rather than stopping on data/blob placeholders;
+- `srcset` selects the largest/right-most HTTP candidate;
+- picture source and CSS background-image are supported;
+- duplicate searches safely upsert the candidate Preview, so rerunning the same Search can backfill Preview images without duplicating Crawl identities;
+- Qt shell marker is `Phase49.3I.52E`.
+
+### Verification
+- `33632062812` — Qt full parity PASS;
+- dedicated 3I.52C/52D/52E suite: 15 tests PASS;
+- explicit PASS: mature refetch variant folders without Product linkage;
+- explicit PASS: lazy/srcset thumbnail recovery;
+- explicit PASS: current `Phase49.3I.52E` shell marker;
+- `33632062877` — Single Active AI PASS;
+- `33632062880` — Windows Portable PASS;
+- Portable release regression: 223 tests PASS;
+- artifact id `9847317893`;
+- EXE SHA256 `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`;
+- EXE self-verify and browser smoke PASS.
+
+### Error handled during implementation
+A temporary edit to the raw JavaScript Preview string omitted its closing triple quote. The condition was corrected immediately before CI, not rerun unchanged. Final compile/full parity/portable all PASS. Recorded as ERR-49-099.
+
+### Safety
+- no Django migration;
+- no Catalog migration;
+- no DB repair required for display;
+- no destructive media operation;
+- Host/Production source and Production MySQL untouched.
+
+### Exact next task
+1. owner closes current `Phase49.3I.52C` app;
+2. clean ff-only Local sync to current GitHub branch;
+3. run canonical Local gate and relaunch; sidebar must report `Phase49.3I.52E`;
+4. reopen permanent Crawl inventory and verify old refetch-backed rows now show their local thumbnail/count;
+5. rerun the same bounded MakerWorld Search once so previously empty recent candidate Preview rows are backfilled from the improved lazy-image parser;
+6. verify recent `new` rows show Preview when listing exposes one, while only actually downloaded rows show `N عکس دارد`;
+7. if any exact external id still has no image after those two checks, inspect its DB identity + all matching on-disk folders read-only before any further code change.
+
 ## 2026-09-02 — Phase49.3I.52D Legacy downloaded-image path parity + Crawl numeric layout repair
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
