@@ -1,3 +1,19 @@
+## Current Windows checkpoint — Phase49.3I.52D / 2026-09-02
+
+Owner QA exposed a compatibility bug rather than a missing download: Qt Crawl review could ignore already-downloaded mature images when the ledger row was not yet linked to a Product id.
+
+Verified mature storage authority:
+- Catalog SQLite/data root: `D:\projects\3dprinthub-catalog-manager`;
+- downloaded images: `collected\<source>\<external_id>\images`;
+- finalized SEO images: `seo_images`;
+- retained old installed application root: `D:\projects\3dprinthub_catalog_center`.
+
+3I.52D restores read-only path parity, handles legacy source-code casing, shows actual local image counts/icons for unlinked Crawl rows, and repairs the RTL numeric spinbox overlap in the receive form.
+
+Exact runtime `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`; Qt `33628825851` PASS; Single Active AI `33628825772` PASS; Portable `33628825715` PASS with 221 regressions. Rollback: `backup/pre-phase49-3i52d-legacy-image-path-layout-20260902` → `28b51d2f95b272d3bf6311fb02f55a7a4fa808e4`.
+
+Production/Host/MySQL remain untouched. Owner Local visual acceptance is next.
+
 ## Current Windows checkpoint — Phase49.3I.52C / 2026-09-02
 
 Catalog Center `8.9.10` build `2026.09.02.1` now restores the owner-requested visual Crawl review flow on top of the mature acquisition/runtime instead of replacing it.
