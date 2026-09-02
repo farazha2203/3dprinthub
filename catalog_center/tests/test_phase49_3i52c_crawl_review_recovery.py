@@ -149,6 +149,86 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_queue_reuses_mature_collected_folder_without_product_link(self):
+        listing = "https://makerworld.com/en/search/models?keyword=legacy-folder"
+        external_id = "520005"
+        candidate = self._candidate(
+            external_id,
+            listing,
+            title="Legacy Folder Product",
+        )
+        upsert_candidate(self.db, candidate)
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            candidate["source_url"],
+            listing,
+        )
+
+        images_dir = (
+            Path(self.db.path).resolve().parent
+            / "collected"
+            / "makerworld"
+            / external_id
+            / "images"
+        )
+        images_dir.mkdir(parents=True, exist_ok=True)
+        for name in ("legacy-one.jpg", "legacy-two.jpg"):
+            Image.new("RGB", (480, 320), "white").save(
+                images_dir / name,
+                format="JPEG",
+            )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page._populate_queue(reset=True)
+            self.assertEqual(page.queue_gallery.count(), 1)
+            card = page.queue_gallery.item(0)
+            self.assertIn("2 عکس دارد", card.text())
+            self.assertFalse(card.icon().isNull())
+
+            row = next(iter(page._queue_rows_by_id.values()))
+            self.assertIsNone(row.get("product_id"))
+            self.assertEqual(page._queue_image_count(row), 2)
+        finally:
+            page.close()
+
+    def test_queue_resolves_legacy_product_source_code_case_insensitively(self):
+        listing = "https://makerworld.com/en/search/models?keyword=legacy-case"
+        external_id = "520006"
+        product_id = self._create_product(external_id)
+        self.db.conn.execute(
+            "UPDATE products SET source_code=? WHERE id=?",
+            ("MakerWorld", product_id),
+        )
+        self.db.conn.commit()
+        url = f"https://makerworld.com/en/models/{external_id}-preview-test"
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            url,
+            listing,
+        )
+
+        rows = self.db.discovered_items_page(limit=10, offset=0)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["product_id"], product_id)
+
+    def test_receive_numeric_spinboxes_are_ltr_and_not_cramped(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            for spin in (page.requested, page.image_limit):
+                self.assertEqual(
+                    spin.layoutDirection(),
+                    Qt.LayoutDirection.LeftToRight,
+                )
+                self.assertGreaterEqual(spin.minimumWidth(), 112)
+                self.assertTrue(
+                    spin.alignment() & Qt.AlignmentFlag.AlignCenter
+                )
+        finally:
+            page.close()
+
     def test_current_search_gallery_is_visual_scoped_and_click_toggle_multiselect(self):
         listing = "https://makerworld.com/en/search/models?keyword=japandi"
         for external_id in ("520010", "520011"):
