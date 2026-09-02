@@ -1,3 +1,25 @@
+## REQ-49-090 — Show already-downloaded Crawl images and repair overlapped numeric inputs
+Date: 2026-09-02  
+Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- in Add Products / Crawl, show images that were already downloaded by the previous Catalog Center instead of reporting no Preview;
+- reuse the previous program's real storage path rather than download the same images again;
+- show `N عکس دارد` below each item;
+- fix the overlapping requested-count and per-Product image-count numeric controls.
+
+Acceptance implemented:
+- verified mature image storage under `D:\projects\3dprinthub-catalog-manager\collected\<source>\<external_id>\images`;
+- Qt reads mature local images directly even when the Crawl row is not linked to a Product id;
+- `seo_images` is preferred when available;
+- legacy source-code casing no longer hides matching Product rows;
+- real local image count is visible in Crawl cards/table and single-item live review;
+- no image re-download or destructive data move is needed;
+- numeric spinboxes are LTR, centered, width-bounded and safely padded from arrow buttons.
+
+Verification:
+`a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`; Qt `33628825851` PASS; Single Active AI `33628825772` PASS; Portable `33628825715` PASS with 221 release tests.
+
 ## REQ-49-089 — Restore visual Crawl review, multi-select transfer and safe Product image/data recovery
 Date: 2026-09-02  
 Status: `GITHUB_UPDATED + WINDOWS CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
