@@ -1,3 +1,58 @@
+## 3I.53 — Site Product receiver readiness + Production read-only audit
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / SITE CI PASS / WINDOWS QT PASS / PORTABLE PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT TOUCHED`.
+
+The owner moved the immediate priority from Windows Crawl repair to getting the Site/Host ready for real Catalog Center Product publishing.
+
+### Receiver contract
+New authenticated endpoint:
+`/api/catalog-bridge/v1/publish-readiness/`.
+
+It reports:
+- Bridge token configured state without exposing the token;
+- exact required migration rows for Store 0036..0042 and Website 0024;
+- required receiver table/column evidence;
+- pending-import and public-media storage accessibility;
+- active Material and PrintQuality prerequisites required by the mature importer;
+- explicit blockers and `ready=true/false`.
+
+Desktop `publish_many()` asks this endpoint before FTP. If the receiver is blocked or unavailable, no batch upload starts.
+
+### Mature path preserved
+After readiness PASS the existing path remains:
+Ready Product → Batch 8.5 packaging → FTP → authenticated Bridge import → canonical Product/Profile/Variant reconciliation → Store visibility → public Product/image HTTP verification → strict ACK → Local Published state.
+
+No duplicate Product database, alternate importer or hidden publishing bypass was added.
+
+### Production audit
+Repository runner:
+`scripts/host/phase49_3i53_production_readonly_audit.sh`.
+
+The audit is intentionally read-only with respect to Source/DB/runtime. It verifies real Host repository/HEAD/worktree, live GitHub target, Python/Django, effective MySQL vendor/name, Django check/migration drift/plan, migration recorder, storage paths, token configured state, Product-import prerequisites, relevant schema, disk/inodes and mysqldump availability. It performs no merge/migrate/collectstatic/restart.
+
+### Database
+3I.53 itself adds no migration. Production still requires audit of the previously existing chain:
+`store.0036 → 0037 → 0038 → 0039 → 0040 → 0041`, `website.0024`, then `store.0042`.
+
+0037, 0041 and 0042 contain bounded data migrations in addition to additive schema work; fresh verified MySQL backup is mandatory before applying them.
+
+### Verification
+- Site/Product Admin `33652584032` PASS;
+- Variant/Profile `33652583964` PASS;
+- Host-audit contract `33652996666` PASS;
+- final Qt `33653229142` PASS;
+- final Single Active AI `33653229219` PASS;
+- final Portable `33653229400` PASS, 235 regressions;
+- artifact `9855771656`;
+- EXE SHA256 `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`;
+- final code checkpoint `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`.
+
+ERR-49-104 records the one intermediate Windows compatibility/test failure and its correction. Production remains untouched.
+
+### Next
+Run the exact read-only Host audit from the GitHub target without changing working source. Review actual migration/schema/storage/backup evidence. Only then prepare a fresh rollback set and controlled Production deployment.
+
 ## 3I.52G — Adaptive Product acquisition failover + observable Crawl recovery
 
 Date: 2026-09-02  

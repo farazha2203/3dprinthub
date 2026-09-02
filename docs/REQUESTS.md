@@ -1,3 +1,24 @@
+## REQ-49-093 — Make the Site/Host ready to receive Products from Catalog Center
+Date: 2026-09-02  
+Status: `IMPLEMENTED + CI PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- move focus from the now-usable Windows Crawl/Product repair to the Site and Host;
+- make the website receiver reliable enough that selected ready Products can be sent from Catalog Center;
+- do not upload a Product into a Host that is missing migrations/schema/storage/prerequisites;
+- keep the mature Batch/FTP/Bridge/public-verification workflow rather than inventing a second publishing system.
+
+Acceptance implemented:
+- authenticated live receiver-readiness endpoint;
+- Desktop checks receiver before any FTP;
+- exact blockers include migration/schema/storage/token/prerequisite state;
+- Bridge connectivity remains separately visible;
+- repository-owned Host read-only audit verifies real Production before deploy;
+- current pending migration chain is explicitly known but not assumed applied;
+- no Production change before fresh audit/backups.
+
+Evidence: Site `33652584032`, Variant/Profile `33652583964`, Host-audit contract `33652996666`, Qt `33653229142`, Single Active AI `33653229219`, Portable `33653229400` PASS. Final code checkpoint `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`.
+
 ## REQ-49-086 — Adaptive Product recovery + visible acquisition diagnostics
 Date: 2026-09-02  
 Status: `IMPLEMENTED + WINDOWS CI/PORTABLE PASS / OWNER LOCAL REAL-SOURCE QA NEXT`.

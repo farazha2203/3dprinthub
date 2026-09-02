@@ -1,3 +1,23 @@
+### ERR-49-104 — Bridge-only Windows fixture crossed the new Site readiness boundary
+**Date:** 2026-09-02  
+**Environment:** first Phase49.3I.53 Windows Qt run `33652583946` on code `bca8aceee9b08935e82aea36f82d3f331e079d83`.
+
+**Symptom:** 3I.51 finalization parity failed in `test_bridge_only_settings_and_test_do_not_require_ftp_credentials`. The fixture mocked mature Bridge health only; `ConnectionCore.test_bridge()` now also queried the new publish-readiness endpoint, so the test unintentionally made a live request to the currently older Production Site and received HTTP 404.
+
+**Root cause:** the new readiness check was intentionally added to the Bridge operator test, but the historical fixture did not isolate that second network boundary. Runtime also needed a clean compatibility state for the valid transition period where Bridge health exists but the new readiness endpoint has not yet been deployed.
+
+**Failed condition:** the same failed workflow was not blindly rerun.
+
+**Correct fix:**
+- keep `publish_many()` fail-closed: a missing/failed readiness endpoint still blocks Product upload before FTP;
+- make the Settings Bridge-health test catch readiness-request failure and report `ready=false` / endpoint unavailable while preserving the successful Bridge-health result;
+- update the isolated Windows test to mock both Bridge health and readiness;
+- add a regression proving Bridge health survives an old Site 404 while publishing remains blocked.
+
+**Verification:** final code `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`; Qt `33653229142` PASS; Portable `33653229400` PASS; Single Active AI `33653229219` PASS.
+
+**Prevention:** connection health and business-operation readiness are separate contracts. Transitional compatibility may report a missing capability, but a mutating operation must continue to fail closed until that capability is proven.
+
 ### ERR-49-103 — 52G drifted mature legacy acquisition identity and Source Refresh history
 **Date:** 2026-09-02
 

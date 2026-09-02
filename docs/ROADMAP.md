@@ -1,3 +1,20 @@
+## 2026-09-02 — Phase49.3I.53 Site publish receiver + Host deployment gate
+
+Status: `IMPLEMENTED + SITE/WINDOWS CI PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- added authenticated receiver-readiness endpoint for Desktop Product publish;
+- checks required Store/Website migration state, schema, token presence, pending/media storage and Product-import prerequisites;
+- Desktop publish fails closed before FTP when the live Site receiver is not ready;
+- Bridge health and publish readiness are separate operator states;
+- old Site without the new endpoint is shown as Bridge-connected but publish-blocked;
+- added repository-owned Production read-only audit with no source/DB/runtime mutation;
+- reviewed the pending Production migration chain 0036..0042 + website.0024; no new 3I.53 migration.
+
+Evidence: Site `33652584032` PASS; Variant/Profile `33652583964` PASS; Host-audit contract `33652996666` PASS; final Qt `33653229142` PASS; final Single Active AI `33653229219` PASS; final Portable `33653229400` PASS with 235 regressions; artifact `9855771656`; EXE SHA256 `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`.
+
+Next: read-only Production audit, then fresh verified backups, then controlled ff-only deploy/migration/collectstatic/restart/receiver+Product verification. Production remains untouched until audit evidence is reviewed.
+
 ## 2026-09-02 — Phase49.3I.52G adaptive Product recovery
 
 Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

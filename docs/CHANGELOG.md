@@ -1,3 +1,17 @@
+## 2026-09-02 — Phase49.3I.53
+- added authenticated Site publish-readiness endpoint;
+- readiness checks required migration rows, required receiver schema, pending/media storage, Bridge token configuration and active Material/PrintQuality prerequisites;
+- Desktop bulk Product publish checks readiness before FTP/package/import;
+- Settings now distinguishes Bridge connectivity from receiver publish readiness;
+- missing readiness endpoint on an older Site is reported as blocked receiver rather than broken Bridge;
+- added Production read-only audit script under `scripts/host/`;
+- audit checks repository/HEAD/worktree/runtime/MySQL/migrations/storage/prerequisites/disk/backup tooling and performs no deploy/migration/restart;
+- no new Django migration;
+- Site `33652584032`, Variant/Profile `33652583964`, audit contract `33652996666`, final Qt `33653229142`, Single Active AI `33653229219`, Portable `33653229400` PASS;
+- Portable regression 235 PASS; artifact `9855771656`; SHA256 `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`;
+- ERR-49-104 fixed the pre-deploy Bridge-only test/compatibility regression;
+- Production/Host/MySQL not changed.
+
 ## 2026-09-02 — Phase49.3I.52G
 - added persistent redacted acquisition JSONL under the Catalog data root;
 - added `پوشه لاگ Crawl` and recent method/quality/image diagnostics to Qt History/Report;

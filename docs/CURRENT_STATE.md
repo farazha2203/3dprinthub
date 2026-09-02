@@ -1,3 +1,56 @@
+## 2026-09-02 — Phase49.3I.53 Site publish receiver readiness + Host audit gate
+
+Status: `GITHUB_UPDATED / SITE CI PASS / WINDOWS QT PASS / PORTABLE PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact final code checkpoint: `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`  
+Pre-phase rollback: `backup/pre-phase49-3i53-site-publish-readiness-20260902` → `088379adb6e17d589c3e18a1a296a39ef7cf6aba`.  
+Last verified Production application: `c283864290f9c989a9fcdf24ee8eef519560e917`.
+
+### Requested delta
+With Windows Product/Crawl recovery usable enough for the moment, move the active work to Site/Host so Catalog Center can publish Products safely to the real website.
+
+### Implemented
+- authenticated Bridge endpoint `/api/catalog-bridge/v1/publish-readiness/`;
+- receiver readiness checks the live Django migration recorder, required schema columns, Bridge-token presence, pending import storage, media storage and active Material/PrintQuality prerequisites;
+- Desktop bulk publish calls receiver readiness before revision guard, package build or FTP; blocked Host state cannot receive a batch;
+- Settings Bridge test now reports Bridge health separately from receiver publish readiness;
+- pre-deploy compatibility: if an older Site has Bridge health but no readiness endpoint yet, Settings reports receiver blocked instead of treating Bridge itself as disconnected;
+- mature publish path after readiness remains unchanged: Ready Product → Batch v8.5 → FTP → authenticated Bridge import → canonical Product/Profile/Variant → public Store/media verification → ACK;
+- no second Product database and no bypass around publish visibility/commerce gates;
+- repository-owned Production read-only audit added at `scripts/host/phase49_3i53_production_readonly_audit.sh`;
+- audit verifies exact root/repository/current HEAD/live GitHub target, clean worktree, Python/Django, MySQL vendor/name, Django check, migration drift/plan, effective storage paths, Bridge-token configured state without printing the secret, active Material/PrintQuality counts, schema evidence, disk/inodes and mysqldump availability;
+- audit explicitly performs no fetch/merge/migrate/collectstatic/restart.
+
+### Database truth
+No new migration was introduced by 3I.53. Production is still last-verified only through Store `0035`; the receiver needs the already-reviewed chain `store.0036..0042` plus `website.0024` before readiness can become true. These migrations include additive fields/tables plus existing controlled data migrations in 0037/0041/0042, so a fresh verified MySQL backup remains mandatory before apply.
+
+### Verification
+- Site/Product Admin `33652584032` PASS, including new receiver endpoint tests and full migration apply in isolated CI;
+- Variant/Profile Matrix `33652583964` PASS;
+- audit-script syntax/contract + Site suite `33652996666` PASS;
+- final Single Active AI `33653229219` PASS;
+- final Qt/full parity `33653229142` PASS;
+- final Windows Portable `33653229400` PASS;
+- Portable regression: 235 tests PASS;
+- artifact `9855771656`;
+- EXE SHA256 `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`.
+
+### Error resolved
+ERR-49-104: the first 3I.53 Qt run correctly exposed that the historical Bridge-only fixture mocked Bridge health but not the newly added readiness request, causing a real 404. Runtime was hardened so old Site health remains distinguishable from missing readiness, and the fixture now mocks both intentional calls. Final Qt/Portable gates PASS.
+
+### Safety
+- Production source: untouched;
+- Production MySQL: untouched;
+- migrations on Host: not run;
+- media/import storage: not modified;
+- no secret printed or committed;
+- no deploy will start until fresh Host read-only evidence is reviewed.
+
+### Exact next task
+Run the repository-owned read-only Host audit against the exact live GitHub target. Review actual Production HEAD, branch, worktree, MySQL DB, `showmigrations`, `migrate --plan`, storage, prerequisites, disk and mysqldump. Only after that evidence is clean: create fresh source/environment/MySQL backups, verify checksums/non-empty dump, then perform an ff-only GitHub deploy and only the audited migration chain.
+
 ## 2026-09-02 — Phase49.3I.52G adaptive acquisition recovery
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
