@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListView,
@@ -43,7 +44,7 @@ from .models import (
     FilamentTableModel,
     ProductTableModel,
 )
-from .parity_dialogs import FilamentEditorDialog
+from .parity_dialogs import ColorPresetDialog, FilamentEditorDialog
 from .product_explorer import (
     ProductGalleryModel,
     ProductStatusDelegate,
@@ -1058,8 +1059,18 @@ class FilamentsPage(QWidget):
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
             "کتابخانه Filament",
-            "برند، پالت رنگ/Finish، تصویر رول، موجودی وزنی و قیمت فروش رول؛ تومان/گرم کاملاً خودکار محاسبه می‌شود.",
+            "سه فضای مستقل برای فیلامنت‌ها، برندها و رنگ‌ها؛ رنگ/برند یک‌بار ساخته می‌شود و در ویرایش فیلامنت تخصیص می‌گیرد.",
         ))
+
+        self.workspace_tabs = QTabWidget()
+        self.workspace_tabs.setDocumentMode(False)
+        root.addWidget(self.workspace_tabs, 1)
+
+        # --------------------------------------------------------------
+        # Filament inventory / pricing
+        # --------------------------------------------------------------
+        filament_page = QWidget()
+        filament_layout = QVBoxLayout(filament_page)
 
         bar = QHBoxLayout()
         self.material = QComboBox()
@@ -1085,7 +1096,7 @@ class FilamentsPage(QWidget):
         bar.addWidget(edit_btn)
         bar.addWidget(deactivate_btn)
         bar.addWidget(refresh_btn)
-        root.addLayout(bar)
+        filament_layout.addLayout(bar)
 
         self.model = FilamentTableModel(db)
         self.proxy = FilamentFilterProxyModel(self)
@@ -1098,21 +1109,99 @@ class FilamentsPage(QWidget):
         self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        header.setMinimumSectionSize(85)
+        header.setMinimumSectionSize(90)
         header.setStretchLastSection(False)
         for column, width in enumerate(
-            (130, 155, 220, 120, 105, 115, 135, 135, 115, 120)
+            (145, 185, 245, 130, 120, 125, 145, 145, 130, 145)
         ):
             header.resizeSection(column, width)
         self.table.doubleClicked.connect(lambda _index: self._edit_filament())
-        root.addWidget(self.table, 1)
+        filament_layout.addWidget(self.table, 1)
+        self.workspace_tabs.addTab(filament_page, "فیلامنت‌ها")
+
+        # --------------------------------------------------------------
+        # Brand registry
+        # --------------------------------------------------------------
+        brand_page = QWidget()
+        brand_layout = QVBoxLayout(brand_page)
+        brand_hint = QLabel(
+            "برند شرکت/سازنده یک مرجع واحد است. برند را اینجا ثبت کن؛ سپس در فیلامنت جدید یا ویرایش فیلامنت انتخابش کن."
+        )
+        brand_hint.setWordWrap(True)
+        brand_hint.setObjectName("Muted")
+        brand_layout.addWidget(brand_hint)
+
+        brand_actions = QHBoxLayout()
+        add_brand = QPushButton("➕ افزودن برند")
+        add_brand.setProperty("primary", True)
+        delete_brand = QPushButton("حذف برند بدون مصرف")
+        add_brand.clicked.connect(self._add_brand)
+        delete_brand.clicked.connect(self._delete_brand)
+        brand_actions.addWidget(add_brand)
+        brand_actions.addWidget(delete_brand)
+        brand_actions.addStretch(1)
+        brand_layout.addLayout(brand_actions)
+
+        self.brand_list = QListWidget()
+        self.brand_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        brand_layout.addWidget(self.brand_list, 1)
+        self.workspace_tabs.addTab(brand_page, "برندها")
+
+        # --------------------------------------------------------------
+        # Reusable color / palette registry
+        # --------------------------------------------------------------
+        color_page = QWidget()
+        color_layout = QVBoxLayout(color_page)
+        color_hint = QLabel(
+            "رنگ سایت را با Color Picker ویندوز بساز: تک‌رنگ، دو/چندرنگ، Gradient یا Color Shift و Finish مستقل. "
+            "هر پالت حداکثر ۷ رنگ دارد و بعد در فیلامنت تخصیص داده می‌شود."
+        )
+        color_hint.setWordWrap(True)
+        color_hint.setObjectName("Muted")
+        color_layout.addWidget(color_hint)
+
+        color_actions = QHBoxLayout()
+        add_color = QPushButton("➕ رنگ جدید")
+        add_color.setProperty("primary", True)
+        edit_color = QPushButton("ویرایش رنگ")
+        delete_color = QPushButton("حذف Preset سفارشی")
+        add_color.clicked.connect(self._add_color)
+        edit_color.clicked.connect(self._edit_color)
+        delete_color.clicked.connect(self._delete_color)
+        color_actions.addWidget(add_color)
+        color_actions.addWidget(edit_color)
+        color_actions.addWidget(delete_color)
+        color_actions.addStretch(1)
+        color_layout.addLayout(color_actions)
+
+        self.color_table = QTableWidget(0, 4)
+        self.color_table.setHorizontalHeaderLabels(
+            ["نام رنگ", "رفتار", "Finish", "پالت HEX"]
+        )
+        self.color_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.color_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.color_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.color_table.verticalHeader().setVisible(False)
+        self.color_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Interactive
+        )
+        self.color_table.horizontalHeader().resizeSection(0, 220)
+        self.color_table.horizontalHeader().resizeSection(1, 150)
+        self.color_table.horizontalHeader().resizeSection(2, 150)
+        self.color_table.horizontalHeader().setSectionResizeMode(
+            3, QHeaderView.ResizeMode.Stretch
+        )
+        self.color_table.doubleClicked.connect(lambda _index: self._edit_color())
+        color_layout.addWidget(self.color_table, 1)
+        self.workspace_tabs.addTab(color_page, "رنگ‌ها")
 
         self.search.textChanged.connect(self._apply_filters)
         self.material.currentTextChanged.connect(self._apply_filters)
-        self._reload_materials()
+        self.refresh()
 
     def _reload_materials(self) -> None:
         current = self.material.currentText()
@@ -1140,7 +1229,10 @@ class FilamentsPage(QWidget):
         return self.model.row_at(source_index.row())
 
     def _add_filament(self) -> None:
-        dialog = FilamentEditorDialog(parent=self)
+        dialog = FilamentEditorDialog(
+            parent=self,
+            filament_core=self.kernel.filaments,
+        )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
         try:
@@ -1155,7 +1247,11 @@ class FilamentsPage(QWidget):
         if not row:
             QMessageBox.warning(self, "فیلامنت", "یک فیلامنت را انتخاب کن.")
             return
-        dialog = FilamentEditorDialog(row, parent=self)
+        dialog = FilamentEditorDialog(
+            row,
+            parent=self,
+            filament_core=self.kernel.filaments,
+        )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
         try:
@@ -1187,10 +1283,119 @@ class FilamentsPage(QWidget):
             return
         self.refresh()
 
+    def _reload_brands(self) -> None:
+        selected = self.brand_list.currentItem().text() if self.brand_list.currentItem() else ""
+        self.brand_list.clear()
+        self.brand_list.addItems(self.kernel.filaments.brands())
+        matches = self.brand_list.findItems(selected, Qt.MatchFlag.MatchExactly)
+        if matches:
+            self.brand_list.setCurrentItem(matches[0])
+
+    def _add_brand(self) -> None:
+        value, ok = QInputDialog.getText(self, "برند جدید", "نام برند")
+        if not ok:
+            return
+        try:
+            self.kernel.filaments.add_brand(value)
+        except Exception as exc:
+            QMessageBox.warning(self, "برند", str(exc))
+            return
+        self._reload_brands()
+
+    def _delete_brand(self) -> None:
+        item = self.brand_list.currentItem()
+        if item is None:
+            QMessageBox.warning(self, "برند", "یک برند را انتخاب کن.")
+            return
+        name = item.text().strip()
+        if QMessageBox.question(
+            self,
+            "حذف برند",
+            f"برند «{name}» از کتابخانه ثبت‌شده حذف شود؟\nبرندِ در حال استفاده روی فیلامنت حذف نمی‌شود.",
+        ) != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.kernel.filaments.delete_brand(name)
+        except Exception as exc:
+            QMessageBox.warning(self, "برند", str(exc))
+            return
+        self._reload_brands()
+
+    def _reload_colors(self) -> None:
+        presets = self.kernel.filaments.color_presets()
+        self.color_table.setRowCount(len(presets))
+        for row_index, preset in enumerate(presets):
+            values = [
+                str(preset.get("name") or ""),
+                str(preset.get("color_type") or "solid"),
+                str(preset.get("color_finish") or "matte"),
+                "  →  ".join(str(value) for value in preset.get("palette_hexes") or []),
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, dict(preset))
+                self.color_table.setItem(row_index, column, item)
+            self.color_table.setRowHeight(row_index, 42)
+
+    def _selected_color_preset(self) -> dict | None:
+        row = self.color_table.currentRow()
+        if row < 0:
+            return None
+        item = self.color_table.item(row, 0)
+        value = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return dict(value) if isinstance(value, dict) else None
+
+    def _add_color(self) -> None:
+        dialog = ColorPresetDialog(parent=self)
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+        try:
+            self.kernel.filaments.save_color_preset(dialog.values())
+        except Exception as exc:
+            QMessageBox.warning(self, "رنگ", str(exc))
+            return
+        self._reload_colors()
+
+    def _edit_color(self) -> None:
+        preset = self._selected_color_preset()
+        if not preset:
+            QMessageBox.warning(self, "رنگ", "یک رنگ را انتخاب کن.")
+            return
+        dialog = ColorPresetDialog(preset, parent=self)
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+        try:
+            self.kernel.filaments.save_color_preset(
+                dialog.values(),
+                previous_name=str(preset.get("name") or ""),
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "رنگ", str(exc))
+            return
+        self._reload_colors()
+
+    def _delete_color(self) -> None:
+        preset = self._selected_color_preset()
+        if not preset:
+            QMessageBox.warning(self, "رنگ", "یک رنگ را انتخاب کن.")
+            return
+        name = str(preset.get("name") or "")
+        if QMessageBox.question(
+            self,
+            "حذف Preset رنگ",
+            f"Preset سفارشی «{name}» حذف شود؟\nفیلامنت‌های قبلی دست‌نخورده می‌مانند.",
+        ) != QMessageBox.StandardButton.Yes:
+            return
+        self.kernel.filaments.delete_color_preset(name)
+        self._reload_colors()
+
     def refresh(self) -> None:
         self.model.refresh()
         self._reload_materials()
         self._apply_filters()
+        self._reload_brands()
+        self._reload_colors()
 
 
 class OperationsPage(QWidget):
