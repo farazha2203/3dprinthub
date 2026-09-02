@@ -545,6 +545,9 @@ def normalize_material_color_options(value) -> list[dict]:
             "preheat_hourly_rate": max(0, int(float(item.get("preheat_hourly_rate") or 0))),
             "filament_image_url": str(item.get("filament_image_url") or item.get("image_url") or "").strip(),
             "filament_image_path": str(item.get("filament_image_path") or "").strip(),
+            "description": str(
+                item.get("description") or item.get("filament_description") or ""
+            ).strip(),
             "fixed_product_price": max(0, int(float(item.get("fixed_product_price") or 0))),
         })
     return output

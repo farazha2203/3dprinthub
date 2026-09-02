@@ -193,6 +193,52 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_filament_table_model_preserves_optional_description_for_edit_and_site_sync(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Description Brand")
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "Description Color",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#123456"],
+            }
+        )
+        self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Description Brand",
+                "color": "Description Color",
+                "description": "توضیحی که نباید هنگام Edit از بین برود",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#123456"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 2_000_000,
+            }
+        )
+        page = FilamentsPage(self.db, kernel=self.kernel)
+        try:
+            self.assertEqual(len(page.model.rows), 1)
+            self.assertEqual(
+                page.model.rows[0]["description"],
+                "توضیحی که نباید هنگام Edit از بین برود",
+            )
+            dialog = FilamentEditorDialog(
+                page.model.rows[0],
+                parent=None,
+                filament_core=self.kernel.filaments,
+            )
+            try:
+                self.assertEqual(
+                    dialog.filament_description.toPlainText(),
+                    "توضیحی که نباید هنگام Edit از بین برود",
+                )
+            finally:
+                dialog.close()
+        finally:
+            page.close()
+
     def test_registry_renames_propagate_to_assigned_filaments_without_stale_identity(self):
         self.kernel.filaments.save_material("PLA", "ماده اولیه", 1_200_000)
         self.kernel.filaments.save_brand("Old Brand", "برند قدیمی")
