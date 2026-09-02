@@ -324,6 +324,9 @@ try {
             "QT6_PRODUCT_LIFECYCLE_BULK_ACTIONS=ENABLED",
             "QT6_PRODUCT_STATUS_BORDER_SEO=ENABLED",
             "QT6_SLIDER_DIRECT_INPUT_UX=ENABLED",
+            "QT6_SEARCH_LINK_REVIEW_AI=ENABLED",
+            "QT6_FILAMENT_BRAND_COLOR_REGISTRY=ENABLED",
+            "QT6_PUBLISHED_REPUBLISH_UPDATE=ENABLED",
             "QT6_42B2_FULL_PARITY_VERIFY=OK"
         )) {
             if ($QtVerify -notmatch [regex]::Escape($marker)) {
