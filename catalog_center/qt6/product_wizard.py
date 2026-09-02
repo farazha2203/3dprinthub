@@ -375,8 +375,12 @@ class ProductWizardPage(QWidget):
         delete_selected.setProperty("danger", True)
         renumber_images = QPushButton("اصلاح شماره عکس‌ها")
         screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
-        recover = QPushButton("دریافت مجدد تصاویر از لینک محصول")
+        recover = QPushButton("دریافت داده و عکس بیشتر از لینک محصول")
         recover.setProperty("primary", True)
+        recover.setToolTip(
+            "صفحه اصلی Product را دوباره می‌خواند، داده‌های Source و عکس‌ها را "
+            "بازیابی می‌کند و تصمیم‌های اپراتور مثل قیمت/Profile/Filament/SEO/انتشار را حفظ می‌کند."
+        )
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
@@ -1451,7 +1455,7 @@ class ProductWizardPage(QWidget):
             return
         limit = self.image_recover_limit.value()
         self._start_image_task(
-            "بازیابی تصاویر…",
+            "بازیابی امن داده و تصاویر از لینک محصول…",
             lambda progress: self.kernel.acquisition.recover_product_images(
                 self.product_id,
                 image_limit=limit,

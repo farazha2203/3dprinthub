@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.db import utc_now
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 
 from .diagnostics import show_diagnostic_error
@@ -1886,14 +1887,26 @@ class FilamentsPage(QWidget):
 class OperationsPage(QWidget):
     """Active Qt acquisition surface over mature 3I.38/43/45 collectors."""
 
-    def __init__(self, db, parent=None, *, kernel=None) -> None:
+    def __init__(
+        self,
+        db,
+        parent=None,
+        *,
+        kernel=None,
+        navigate: Callable[[str], None] | None = None,
+    ) -> None:
         super().__init__(parent)
         if kernel is None:
             raise RuntimeError("OperationsPage requires ApplicationKernel")
         self.db = db
         self.kernel = kernel
+        self.navigate = navigate
         self.pool = TaskPool()
         self._worker: Worker | None = None
+        self._active_listing_url = ""
+        self._active_source_code = ""
+        self._active_run_started_at = ""
+        self._live_product_progress: dict[str, str] = {}
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
@@ -1929,28 +1942,46 @@ class OperationsPage(QWidget):
         self.queue_view_mode.addItem("آیکون‌های بزرگ", "icons")
         self.queue_view_mode.addItem("جزئیات", "details")
 
-        self.queue_open_btn = QPushButton("🌐 مشاهده صفحه محصول")
-        self.queue_collect_btn = QPushButton("افزودن انتخاب‌شده‌ها به محصولات")
+        self.queue_open_btn = QPushButton("🌐 باز کردن منبع")
+        self.queue_open_btn.setToolTip("صفحه اصلی Product انتخاب‌شده را در مرورگر باز می‌کند.")
+        self.queue_collect_btn = QPushButton("افزودن به محصولات")
+        self.queue_collect_btn.setToolTip(
+            "همه رکوردهای انتخاب‌شده را دریافت/تطبیق می‌دهد و سپس صفحه محصولات را باز می‌کند."
+        )
         self.queue_collect_btn.setProperty("primary", True)
-        self.queue_collect_ai_btn = QPushButton("✨ دریافت + ترجمه/SEO با AI")
+        self.queue_collect_ai_btn = QPushButton("✨ افزودن + AI")
+        self.queue_collect_ai_btn.setToolTip(
+            "انتخاب‌شده‌ها را دریافت می‌کند و سپس ترجمه/SEO را با هسته واحد AI اجرا می‌کند."
+        )
         self.queue_collect_ai_btn.setProperty("success", True)
-        self.queue_reject_btn = QPushButton("رد/حذف از صف")
-        self.queue_restore_btn = QPushButton("بازگرداندن به صف")
+        self.queue_reject_btn = QPushButton("رد / حذف")
+        self.queue_restore_btn = QPushButton("بازیابی")
+        self.queue_select_all_btn = QPushButton("انتخاب همه")
+        self.queue_clear_selection_btn = QPushButton("لغو انتخاب")
+        self.queue_selected_label = QLabel("0 انتخاب‌شده")
+        self.queue_selected_label.setObjectName("Muted")
         self.queue_loaded_label = QLabel("")
         self.queue_loaded_label.setObjectName("Muted")
 
         queue_header.addWidget(QLabel("فیلتر"))
         queue_header.addWidget(self.queue_filter)
-        queue_header.addWidget(QLabel("نوع نمایش"))
+        queue_header.addWidget(QLabel("نمایش"))
         queue_header.addWidget(self.queue_view_mode)
         queue_header.addWidget(self.queue_open_btn)
-        queue_header.addWidget(self.queue_collect_btn)
-        queue_header.addWidget(self.queue_collect_ai_btn)
-        queue_header.addWidget(self.queue_reject_btn)
-        queue_header.addWidget(self.queue_restore_btn)
         queue_header.addStretch(1)
         queue_header.addWidget(self.queue_loaded_label)
         queue_layout.addLayout(queue_header)
+
+        queue_actions = QHBoxLayout()
+        queue_actions.addWidget(self.queue_select_all_btn)
+        queue_actions.addWidget(self.queue_clear_selection_btn)
+        queue_actions.addWidget(self.queue_collect_btn)
+        queue_actions.addWidget(self.queue_collect_ai_btn)
+        queue_actions.addWidget(self.queue_reject_btn)
+        queue_actions.addWidget(self.queue_restore_btn)
+        queue_actions.addStretch(1)
+        queue_actions.addWidget(self.queue_selected_label)
+        queue_layout.addLayout(queue_actions)
 
         self.queue_views = QStackedWidget()
 
@@ -1964,7 +1995,7 @@ class OperationsPage(QWidget):
         self.queue_gallery.setGridSize(QSize(230, 235))
         self.queue_gallery.setSpacing(7)
         self.queue_gallery.setSelectionMode(
-            QAbstractItemView.SelectionMode.ExtendedSelection
+            QAbstractItemView.SelectionMode.MultiSelection
         )
 
         self.queue_table = QTableWidget(0, 14)
@@ -1989,7 +2020,7 @@ class OperationsPage(QWidget):
             QAbstractItemView.SelectionBehavior.SelectRows
         )
         self.queue_table.setSelectionMode(
-            QAbstractItemView.SelectionMode.ExtendedSelection
+            QAbstractItemView.SelectionMode.MultiSelection
         )
         self.queue_table.setEditTriggers(
             QAbstractItemView.EditTrigger.NoEditTriggers
@@ -2142,13 +2173,20 @@ class OperationsPage(QWidget):
             self.start_btn,
             self.stop_btn,
             self.direct_btn,
-            self.default_url_btn,
-            self.queue_btn,
-            self.refresh_btn,
         ):
             primary_actions.addWidget(button)
         primary_actions.addStretch(1)
         grid.addLayout(primary_actions, 9, 0, 1, 4)
+
+        secondary_actions = QHBoxLayout()
+        for button in (
+            self.default_url_btn,
+            self.queue_btn,
+            self.refresh_btn,
+        ):
+            secondary_actions.addWidget(button)
+        secondary_actions.addStretch(1)
+        grid.addLayout(secondary_actions, 10, 0, 1, 4)
 
         receive_layout.addWidget(controls)
 
@@ -2179,14 +2217,42 @@ class OperationsPage(QWidget):
         live_card.setObjectName("Card")
         live_layout = QVBoxLayout(live_card)
         live_header = QHBoxLayout()
-        live_header.addWidget(QLabel("نتایج زنده کشف / دریافت"))
+        live_header.addWidget(QLabel("محصولات همین جستجو — Preview → دریافت کامل"))
         self.live_discovery_label = QLabel("هنوز Run شروع نشده است.")
         self.live_discovery_label.setObjectName("Muted")
         live_header.addStretch(1)
         live_header.addWidget(self.live_discovery_label)
         live_layout.addLayout(live_header)
+
+        live_actions = QHBoxLayout()
+        self.live_select_all_btn = QPushButton("انتخاب همه")
+        self.live_clear_selection_btn = QPushButton("لغو انتخاب")
+        self.live_add_btn = QPushButton("افزودن انتخابی به محصولات")
+        self.live_add_btn.setProperty("primary", True)
+        self.live_reject_btn = QPushButton("رد / حذف انتخابی")
+        self.live_selected_label = QLabel("0 انتخاب‌شده")
+        self.live_selected_label.setObjectName("Muted")
+        live_actions.addWidget(self.live_select_all_btn)
+        live_actions.addWidget(self.live_clear_selection_btn)
+        live_actions.addWidget(self.live_add_btn)
+        live_actions.addWidget(self.live_reject_btn)
+        live_actions.addStretch(1)
+        live_actions.addWidget(self.live_selected_label)
+        live_layout.addLayout(live_actions)
+
         self.live_results = QListWidget()
-        self.live_results.setMinimumHeight(210)
+        self.live_results.setViewMode(QListWidget.ViewMode.IconMode)
+        self.live_results.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.live_results.setMovement(QListWidget.Movement.Static)
+        self.live_results.setWrapping(True)
+        self.live_results.setWordWrap(True)
+        self.live_results.setIconSize(QSize(170, 118))
+        self.live_results.setGridSize(QSize(235, 235))
+        self.live_results.setSpacing(8)
+        self.live_results.setSelectionMode(
+            QAbstractItemView.SelectionMode.MultiSelection
+        )
+        self.live_results.setMinimumHeight(330)
         live_layout.addWidget(self.live_results)
         receive_layout.addWidget(live_card, 1)
         receive_layout.addStretch(1)
@@ -2216,6 +2282,10 @@ class OperationsPage(QWidget):
         self._queue_page_size = 100
         self._queue_offset = 0
         self._queue_total = 0
+        self._live_refresh_timer = QTimer(self)
+        self._live_refresh_timer.setSingleShot(True)
+        self._live_refresh_timer.setInterval(160)
+        self._live_refresh_timer.timeout.connect(self._refresh_live_discovery)
 
         self.queue_gallery.verticalScrollBar().valueChanged.connect(
             lambda _value: self._fetch_queue_if_needed()
@@ -2226,6 +2296,14 @@ class OperationsPage(QWidget):
         self.queue_view_mode.currentIndexChanged.connect(
             self._queue_view_changed
         )
+        self.queue_gallery.itemSelectionChanged.connect(
+            self._update_queue_selection_label
+        )
+        self.queue_table.itemSelectionChanged.connect(
+            self._update_queue_selection_label
+        )
+        self.queue_select_all_btn.clicked.connect(self._select_all_queue)
+        self.queue_clear_selection_btn.clicked.connect(self._clear_queue_selection)
 
         self.mode.currentIndexChanged.connect(self._mode_changed)
         self.url.editingFinished.connect(self._sync_source_from_url)
@@ -2258,6 +2336,16 @@ class OperationsPage(QWidget):
         )
         self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
+        self.live_results.itemSelectionChanged.connect(
+            self._update_live_selection_label
+        )
+        self.live_results.itemDoubleClicked.connect(
+            lambda _item: self._open_selected_live_source()
+        )
+        self.live_select_all_btn.clicked.connect(self.live_results.selectAll)
+        self.live_clear_selection_btn.clicked.connect(self.live_results.clearSelection)
+        self.live_add_btn.clicked.connect(self._collect_selected_live)
+        self.live_reject_btn.clicked.connect(self._reject_selected_live)
 
         self._reload_sources()
         self._mode_changed()
@@ -2309,37 +2397,117 @@ class OperationsPage(QWidget):
     def _refresh_live_discovery(self) -> None:
         if not hasattr(self, "live_results"):
             return
-        source_code = str(self.source.currentData() or "")
-        rows = self.kernel.acquisition.queue_page(
+        source_code = str(
+            self._active_source_code
+            or self.source.currentData()
+            or ""
+        )
+        listing_url = str(self._active_listing_url or "")
+        if not source_code or not listing_url:
+            if self._worker is None:
+                self.live_discovery_label.setText(
+                    "هر جستجوی جدید این قسمت را پاک می‌کند و فقط محصولات همان لینک را نشان می‌دهد."
+                )
+            return
+
+        rows = self.kernel.acquisition.current_review_items(
             source_code,
-            "all",
-            limit=12,
-            offset=0,
+            listing_url,
+            since=self._active_run_started_at,
+            limit=max(20, int(self.requested.value())),
         )
+        selected_external = {
+            str(item.data(Qt.ItemDataRole.UserRole + 2) or "")
+            for item in self.live_results.selectedItems()
+        }
+
+        self.live_results.setUpdatesEnabled(False)
         self.live_results.clear()
-        for row in rows:
-            status = str(row.get("status") or "new")
-            title = (
-                row.get("product_title_fa")
-                or row.get("product_source_title")
-                or row.get("external_id")
-                or row.get("url")
-                or "کاندیدا"
-            )
-            image_count = self._queue_image_count(row) if row.get("product_id") else 0
-            suffix = (
-                f"{image_count} عکس"
-                if row.get("product_id")
-                else "کشف شده؛ جزئیات/عکس در صف دریافت"
-            )
-            self.live_results.addItem(f"{title}  •  {status}  •  {suffix}")
-        counts = self.kernel.acquisition.queue_counts(source_code)
+        imported = failed = waiting = 0
+        try:
+            for raw in rows:
+                row = dict(raw)
+                external_id = str(row.get("external_id") or "")
+                queue_id = int(row.get("queue_id") or 0)
+                product_id = int(row.get("product_id") or 0)
+                status = str(
+                    row.get("status")
+                    or row.get("candidate_status")
+                    or "review"
+                )
+                if product_id:
+                    imported += 1
+                elif status in {"failed", "rejected", "blocked"}:
+                    failed += 1
+                else:
+                    waiting += 1
+
+                title = (
+                    row.get("product_title_fa")
+                    or row.get("product_source_title")
+                    or row.get("candidate_title")
+                    or external_id
+                    or "کاندیدا"
+                )
+                icon = self._queue_icon(row)
+                image_count = (
+                    self._queue_image_count(row)
+                    if product_id
+                    else 0
+                )
+                preview_path = self.kernel.acquisition.candidate_preview_path(
+                    source_code,
+                    external_id,
+                )
+                if product_id:
+                    image_text = f"{image_count} عکس دارد"
+                elif preview_path:
+                    image_text = "Preview: 1 عکس • دریافت کامل در صف"
+                else:
+                    image_text = "Preview بدون تصویر • دریافت کامل در صف"
+
+                progress_text = self._live_product_progress.get(
+                    external_id,
+                    "",
+                )
+                lines = [
+                    str(title),
+                    f"{source_code} • {status}",
+                    image_text,
+                ]
+                if progress_text:
+                    lines.append(progress_text)
+                item = QListWidgetItem("\n".join(lines))
+                item.setIcon(icon)
+                item.setData(Qt.ItemDataRole.UserRole, queue_id)
+                item.setData(Qt.ItemDataRole.UserRole + 1, product_id)
+                item.setData(Qt.ItemDataRole.UserRole + 2, external_id)
+                item.setData(
+                    Qt.ItemDataRole.UserRole + 3,
+                    str(row.get("url") or ""),
+                )
+                item.setToolTip(
+                    f"External ID: {external_id}\n"
+                    f"Queue: {queue_id or '—'}\n"
+                    f"Product: {product_id or '—'}\n"
+                    f"Status: {status}\n"
+                    f"{row.get('url') or ''}"
+                )
+                self.live_results.addItem(item)
+                if external_id in selected_external:
+                    item.setSelected(True)
+        finally:
+            self.live_results.setUpdatesEnabled(True)
+
         self.live_discovery_label.setText(
-            " • ".join(
-                f"{key}={value}"
-                for key, value in sorted(counts.items())
-            ) or "صف خالی است"
+            f"همین جستجو: {len(rows)} • دریافت‌شده: {imported} • "
+            f"در انتظار: {waiting} • خطا/رد: {failed}"
         )
+        self._update_live_selection_label()
+
+    def _schedule_live_refresh(self) -> None:
+        if hasattr(self, "_live_refresh_timer"):
+            self._live_refresh_timer.start()
 
     def _fill_default_url(self) -> None:
         source_code = str(
@@ -2473,6 +2641,23 @@ class OperationsPage(QWidget):
                 "لینک معتبر http/https وارد کن.",
             )
             return
+
+        if mode != "single":
+            self._active_listing_url = str(resolved_url)
+            self._active_source_code = source_code
+            self._active_run_started_at = utc_now()
+            self._live_product_progress = {}
+            self.live_results.clear()
+            self.live_discovery_label.setText(
+                "جستجوی جدید شروع شد؛ Preview محصولات همین لینک در حال ساخته‌شدن است…"
+            )
+            self._update_live_selection_label()
+        else:
+            self._active_listing_url = ""
+            self._active_source_code = source_code
+            self._active_run_started_at = utc_now()
+            self._live_product_progress = {}
+            self.live_results.clear()
 
         requested = self.requested.value()
         image_limit = self.image_limit.value()
@@ -2642,10 +2827,30 @@ class OperationsPage(QWidget):
 
     def _progress(self, value: int, message: str) -> None:
         self.progress.setValue(int(value))
-        self.status.setText(str(message or ""))
-        if int(value) <= 25 or "کشف" in str(message or ""):
+        text = str(message or "")
+        self.status.setText(text)
+
+        if "ID=" in text:
+            external_id = text.split("ID=", 1)[1].split("•", 1)[0].strip()
+            if external_id:
+                self._live_product_progress[external_id] = text
+
+        if (
+            int(value) <= 25
+            or "Preview" in text
+            or "پیش‌نمایش" in text
+            or "کشف" in text
+            or "عکس " in text
+            or "ذخیره شد" in text
+        ):
+            self._schedule_live_refresh()
+
+        if (
+            "کشف تمام شد" in text
+            or "پیش‌نمایش:" in text
+            or int(value) == 100
+        ):
             self._populate_queue(reset=True)
-            self._refresh_live_discovery()
 
     def _stop(self) -> None:
         self.kernel.acquisition.request_stop()
@@ -2676,14 +2881,30 @@ class OperationsPage(QWidget):
             self.status.setText(
                 "✅ Chrome پروفایل بسته شد و نشست مرورگر حفظ شد."
             )
-        elif operation == "queue_collect_ai":
+        elif operation in {"queue_collect", "queue_collect_ai"}:
             ai = dict(data.get("ai") or {})
-            self.status.setText(
-                "✅ دریافت + AI تمام شد — "
-                f"Collected={data.get('collected', 0)} • "
-                f"AI={ai.get('completed', 0)} • "
-                f"Failed={data.get('failed', 0) + ai.get('failed', 0)}"
+            ai_completed = (
+                ai.get("completed", 0)
+                if operation == "queue_collect_ai"
+                else 0
             )
+            ai_failed = (
+                ai.get("failed", 0)
+                if operation == "queue_collect_ai"
+                else 0
+            )
+            self.status.setText(
+                "✅ انتقال انتخاب‌شده‌ها به محصولات تمام شد — "
+                f"جدید={data.get('collected', 0)} • "
+                f"قبلاً موجود={data.get('already_collected_count', 0)} • "
+                f"AI={ai_completed} • "
+                f"خطا={data.get('failed', 0) + ai_failed}"
+            )
+            if data.get("product_ids") and callable(self.navigate):
+                QTimer.singleShot(
+                    0,
+                    lambda: self.navigate("products"),
+                )
         elif data.get("already_collected"):
             self.status.setText(
                 f"این Product قبلاً دریافت شده — ID {data.get('product_id') or '—'}"
@@ -2732,6 +2953,8 @@ class OperationsPage(QWidget):
             self.queue_collect_ai_btn.setEnabled(True)
         if hasattr(self, "queue_open_btn"):
             self.queue_open_btn.setEnabled(True)
+        if hasattr(self, "live_add_btn"):
+            self.live_add_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
 
     def _reset_failed(self) -> None:
@@ -2854,12 +3077,122 @@ class OperationsPage(QWidget):
         )
 
     def _queue_icon(self, row: dict) -> QIcon:
-        if not row.get("product_id"):
-            return QIcon.fromTheme("image-x-generic")
-        path = self.kernel.images.preferred_local_path(
-            self._queue_product_row(row)
+        if row.get("product_id"):
+            path = self.kernel.images.preferred_local_path(
+                self._queue_product_row(row)
+            )
+            if path:
+                return QIcon(path)
+        preview = self.kernel.acquisition.candidate_preview_path(
+            str(row.get("source_code") or ""),
+            str(row.get("external_id") or ""),
         )
-        return QIcon(path) if path else QIcon.fromTheme("image-x-generic")
+        if preview:
+            return QIcon(preview)
+        return QIcon.fromTheme("image-x-generic")
+
+    def _update_queue_selection_label(self) -> None:
+        if hasattr(self, "queue_selected_label"):
+            self.queue_selected_label.setText(
+                f"{len(self._selected_queue_ids())} انتخاب‌شده"
+            )
+
+    def _select_all_queue(self) -> None:
+        if self.queue_views.currentIndex() == 0:
+            self.queue_gallery.selectAll()
+        else:
+            self.queue_table.selectAll()
+        self._update_queue_selection_label()
+
+    def _clear_queue_selection(self) -> None:
+        if self.queue_views.currentIndex() == 0:
+            self.queue_gallery.clearSelection()
+        else:
+            self.queue_table.clearSelection()
+        self._update_queue_selection_label()
+
+    def _update_live_selection_label(self) -> None:
+        if hasattr(self, "live_selected_label"):
+            self.live_selected_label.setText(
+                f"{len(self.live_results.selectedItems())} انتخاب‌شده"
+            )
+
+    def _selected_live_records(self) -> list[dict]:
+        output = []
+        for item in self.live_results.selectedItems():
+            output.append({
+                "queue_id": int(item.data(Qt.ItemDataRole.UserRole) or 0),
+                "product_id": int(item.data(Qt.ItemDataRole.UserRole + 1) or 0),
+                "external_id": str(item.data(Qt.ItemDataRole.UserRole + 2) or ""),
+                "url": str(item.data(Qt.ItemDataRole.UserRole + 3) or ""),
+            })
+        return output
+
+    def _open_selected_live_source(self) -> None:
+        rows = self._selected_live_records()
+        if not rows:
+            return
+        url = str(rows[0].get("url") or "")
+        if url.startswith(("http://", "https://")):
+            QDesktopServices.openUrl(QUrl(url))
+
+    def _collect_selected_live(self) -> None:
+        rows = self._selected_live_records()
+        if not rows:
+            QMessageBox.warning(
+                self,
+                "نتایج همین جستجو",
+                "حداقل یک محصول را انتخاب کن.",
+            )
+            return
+        queue_ids = [
+            int(row["queue_id"])
+            for row in rows
+            if int(row.get("queue_id") or 0) > 0
+        ]
+        product_ids = [
+            int(row["product_id"])
+            for row in rows
+            if int(row.get("product_id") or 0) > 0
+        ]
+        if not queue_ids:
+            if product_ids and callable(self.navigate):
+                self.status.setText(
+                    f"{len(set(product_ids))} محصول انتخاب‌شده از قبل داخل محصولات هستند."
+                )
+                self.navigate("products")
+                return
+            QMessageBox.warning(
+                self,
+                "نتایج همین جستجو",
+                "برای این انتخاب‌ها رکورد قابل دریافت در صف ساخته نشده است.",
+            )
+            return
+        self._collect_queue_ids(
+            queue_ids,
+            run_ai=False,
+            seed_product_ids=product_ids,
+            origin_label="نتایج همین جستجو",
+        )
+
+    def _reject_selected_live(self) -> None:
+        rows = self._selected_live_records()
+        queue_ids = [
+            int(row["queue_id"])
+            for row in rows
+            if int(row.get("queue_id") or 0) > 0
+        ]
+        if not queue_ids:
+            QMessageBox.warning(
+                self,
+                "نتایج همین جستجو",
+                "حداقل یک کاندیدای در صف را انتخاب کن.",
+            )
+            return
+        count = self.kernel.acquisition.reject_queue_items(queue_ids)
+        self.status.setText(f"{count} مورد انتخاب‌شده از همین جستجو رد شد.")
+        self._populate_queue(reset=True)
+        self._refresh_live_discovery()
 
     def _show_queue_inventory(self) -> None:
         self.workspace_tabs.setCurrentIndex(0)
@@ -2873,6 +3206,8 @@ class OperationsPage(QWidget):
             else 1
         )
         self.queue_views.setCurrentIndex(target)
+        self.queue_gallery.clearSelection()
+        self.queue_table.clearSelection()
         if selected:
             if target == 0:
                 for index in range(self.queue_gallery.count()):
@@ -2889,6 +3224,7 @@ class OperationsPage(QWidget):
                             int(item.data(Qt.ItemDataRole.UserRole) or 0)
                             in selected
                         ) else None
+        self._update_queue_selection_label()
 
     def _selected_queue_ids(self) -> list[int]:
         values: list[int] = []
@@ -2951,6 +3287,7 @@ class OperationsPage(QWidget):
                 title = (
                     row.get("product_title_fa")
                     or row.get("product_source_title")
+                    or row.get("candidate_title")
                     or row.get("external_id")
                     or "بدون عنوان دریافت‌شده"
                 )
@@ -2969,12 +3306,20 @@ class OperationsPage(QWidget):
                 gallery_item.setData(Qt.ItemDataRole.UserRole, queue_id)
                 gallery_item.setIcon(icon)
                 technical_summary = self._queue_technical_summary(row)
+                preview_path = self.kernel.acquisition.candidate_preview_path(
+                    source,
+                    str(row.get("external_id") or ""),
+                )
                 gallery_lines = [
                     str(title),
                     (
-                        f"🖼 {image_count} عکس • {source} • {status}"
+                        f"🖼 {image_count} عکس دارد • {source} • {status}"
                         if row.get("product_id")
-                        else f"🔗 {source} • {status} • برای عکس/متن ابتدا دریافت شود"
+                        else (
+                            f"🖼 Preview: 1 عکس • {source} • {status}"
+                            if preview_path
+                            else f"🔗 {source} • {status} • Preview تصویر ندارد"
+                        )
                     ),
                 ]
                 if technical_summary:
@@ -3024,7 +3369,11 @@ class OperationsPage(QWidget):
                     str(row.get("product_id") or ""),
                     str(title or ""),
                     short_description,
-                    str(image_count),
+                    (
+                        str(image_count)
+                        if row.get("product_id")
+                        else ("Preview 1" if preview_path else "")
+                    ),
                     f"{weight:g}" if weight > 0 else "",
                     time_label,
                     dimensions,
@@ -3050,6 +3399,7 @@ class OperationsPage(QWidget):
             self.queue_gallery.setUpdatesEnabled(True)
         self._queue_offset += len(rows)
         self._update_queue_loaded_label()
+        self._update_queue_selection_label()
 
     def _fetch_queue_if_needed(self) -> None:
         if self._queue_offset >= self._queue_total:
@@ -3101,39 +3451,66 @@ class OperationsPage(QWidget):
         self.refresh()
 
     def _collect_selected_queue(self, *, run_ai: bool = False) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(
+                self,
+                "صف Crawl",
+                "حداقل یک رکورد را انتخاب کن.",
+            )
+            return
+        self._collect_queue_ids(
+            ids,
+            run_ai=run_ai,
+            origin_label="موجودی دائمی Crawl",
+        )
+
+    def _collect_queue_ids(
+        self,
+        ids: list[int],
+        *,
+        run_ai: bool = False,
+        seed_product_ids: list[int] | None = None,
+        origin_label: str = "صف Crawl",
+    ) -> None:
         if self._worker is not None:
             QMessageBox.information(
                 self,
-                "صف Crawl",
+                origin_label,
                 "یک عملیات دریافت در حال اجرا است.",
             )
             return
-        ids = self._selected_queue_ids()
-        if not ids:
-            QMessageBox.warning(self, "صف Crawl", "حداقل یک رکورد را انتخاب کن.")
-            return
-        rows = [
-            self._queue_rows_by_id[row_id]
-            for row_id in ids
-            if row_id in self._queue_rows_by_id
-        ]
+        rows = self.kernel.acquisition.queue_rows_by_ids(ids)
         if not rows:
+            QMessageBox.warning(
+                self,
+                origin_label,
+                "رکورد انتخاب‌شده در صف پیدا نشد.",
+            )
             return
 
         image_limit = self.image_limit.value()
         download_images = self.download_images.isChecked()
+        seed_ids = sorted({
+            int(value)
+            for value in (seed_product_ids or [])
+            if int(value) > 0
+        })
 
         def job(progress):
             collected = 0
             failed = 0
             already = 0
             errors = []
-            product_ids: list[int] = []
+            product_ids: list[int] = list(seed_ids)
             total = max(1, len(rows))
             for index, row in enumerate(rows, 1):
                 queue_id = int(row.get("id") or 0)
                 status = str(row.get("status") or "")
-                if status == "collected" and row.get("product_id"):
+                existing_product_id = int(row.get("product_id") or 0)
+                if status == "collected" and existing_product_id > 0:
+                    if existing_product_id not in product_ids:
+                        product_ids.append(existing_product_id)
                     already += 1
                     progress(
                         int(index / total * 100),
@@ -3190,14 +3567,21 @@ class OperationsPage(QWidget):
                         str(exc),
                     )
                 progress(int(index / total * 100), f"پردازش {index}/{total}")
+
             ai_result = {}
             if run_ai and product_ids:
-                progress(88, "شروع ترجمه/SEO و تکمیل محتوایی با همان هسته واحد AI…")
+                progress(
+                    88,
+                    "شروع ترجمه/SEO انتخاب‌شده‌ها با همان هسته واحد AI…",
+                )
                 ai_result = self.kernel.complete_products_with_ai(
                     product_ids,
                     "link",
                     progress=lambda value, message: progress(
-                        min(99, 88 + int(max(0, min(100, int(value))) * 0.11)),
+                        min(
+                            99,
+                            88 + int(max(0, min(100, int(value))) * 0.11),
+                        ),
                         message,
                     ),
                 )
@@ -3218,10 +3602,11 @@ class OperationsPage(QWidget):
         self.queue_collect_btn.setEnabled(False)
         self.queue_collect_ai_btn.setEnabled(False)
         self.queue_open_btn.setEnabled(False)
+        self.live_add_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
         self.progress.setValue(0)
         self.status.setText(
-            f"شروع دریافت {len(rows)} رکورد انتخاب‌شده از موجودی دائمی Crawl…"
+            f"شروع پردازش {len(rows)} انتخاب از {origin_label}…"
         )
         worker.signals.progress.connect(self._progress)
         worker.signals.result.connect(self._done)

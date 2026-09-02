@@ -135,6 +135,7 @@ class MainWindow(QMainWindow):
         self.operations_page = OperationsPage(
             self.db,
             kernel=self.kernel,
+            navigate=self.navigate,
         )
         self.settings_page = SettingsPage(
             self.db,
