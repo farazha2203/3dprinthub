@@ -391,10 +391,49 @@ class ImageCore:
         if raw_local:
             add(Path(raw_local))
 
+        def add_identity_variants(source_dir: Path) -> None:
+            if not source_dir.is_dir():
+                return
+            add(source_dir / external)
+
+            # Mature Tk refetch/source-refresh flows intentionally wrote into
+            # sibling folders instead of the original Product directory. Keep
+            # all of those historical files visible without moving or rewriting
+            # anything on disk.
+            known_exact = (
+                source_dir / f"{external}_refresh_latest",
+            )
+            for candidate in known_exact:
+                add(candidate)
+
+            variants: list[Path] = []
+            for pattern in (
+                f"{external}_refetch_*",
+                f"{external}_bulk_refetch_*",
+            ):
+                try:
+                    variants.extend(
+                        item
+                        for item in source_dir.glob(pattern)
+                        if item.is_dir()
+                    )
+                except OSError:
+                    continue
+
+            def newest_first(path: Path) -> tuple[float, str]:
+                try:
+                    stamp = float(path.stat().st_mtime)
+                except OSError:
+                    stamp = 0.0
+                return (-stamp, path.name.casefold())
+
+            for candidate in sorted(variants, key=newest_first):
+                add(candidate)
+
         data_root = Path(self.db.path).resolve().parent
         collected_root = data_root / "collected"
         if source:
-            add(collected_root / source / external)
+            add_identity_variants(collected_root / source)
 
         if collected_root.is_dir():
             try:
@@ -403,7 +442,7 @@ class ImageCore:
                         continue
                     if source and source_dir.name.casefold() != source.casefold():
                         continue
-                    add(source_dir / external)
+                    add_identity_variants(source_dir)
             except OSError:
                 pass
 
@@ -413,7 +452,7 @@ class ImageCore:
         if legacy_root != data_root and legacy_root.is_dir():
             legacy_collected = legacy_root / "collected"
             if source:
-                add(legacy_collected / source / external)
+                add_identity_variants(legacy_collected / source)
             if legacy_collected.is_dir():
                 try:
                     for source_dir in legacy_collected.iterdir():
@@ -421,7 +460,7 @@ class ImageCore:
                             continue
                         if source and source_dir.name.casefold() != source.casefold():
                             continue
-                        add(source_dir / external)
+                        add_identity_variants(source_dir)
                 except OSError:
                     pass
 
@@ -1075,7 +1114,7 @@ class AcquisitionCore:
                 product = self.db.conn.execute(
                     """
                     SELECT id FROM products
-                    WHERE source_code=? AND external_id=?
+                    WHERE source_code = ? COLLATE NOCASE AND external_id=?
                     ORDER BY id DESC LIMIT 1
                     """,
                     (str(item.get("source_code") or ""), external_id),
@@ -1084,7 +1123,7 @@ class AcquisitionCore:
                 product = self.db.conn.execute(
                     """
                     SELECT id FROM products
-                    WHERE source_code=? AND normalized_url=?
+                    WHERE source_code = ? COLLATE NOCASE AND normalized_url=?
                     ORDER BY id DESC LIMIT 1
                     """,
                     (str(item.get("source_code") or ""), normalized_url),
