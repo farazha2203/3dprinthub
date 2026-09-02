@@ -28,6 +28,7 @@ from app.epic49_desktop_schema import (
     ensure_epic49_desktop_schema,
     list_available_material_colors,
     normalize_material_color_options,
+    normalize_palette_hexes,
 )
 from app.phase49_3b_guided_wizard import (
     ensure_schema as ensure_guided_slider_schema,
