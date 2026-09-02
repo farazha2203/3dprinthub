@@ -1,3 +1,17 @@
+## 2026-09-02 — Phase49.3I.52F
+- added permanent Crawl `انتخاب ناقص‌ها` bulk selector;
+- added 5/10/20 image recovery target;
+- added `بازیابی دیتا + عکس` for selected Crawl rows;
+- complete Product + sufficient local images are reused without network;
+- incomplete existing Products use mature safe source refetch;
+- orphan terminal identities can be explicitly rebuilt from Product URL;
+- URL slug supplies readable identity before receive;
+- split crowded queue actions into separate selection/data rows;
+- renamed queue status recovery to `بازگردانی به صف`;
+- Qt `33637452385`, Single Active AI `33637452588`, Portable `33637452243` PASS;
+- 227 portable regressions PASS; artifact `9849484898`; SHA256 `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`;
+- no migration, destructive media operation, Host change or Production write.
+
 ## 2026-09-02 — Phase49.3I.52E
 - fixed permanent Crawl inventory image misses from mature refetch/source-refresh sibling folders;
 - added read-only lookup for `_refresh_latest`, `_refetch_*`, and `_bulk_refetch_*`;
