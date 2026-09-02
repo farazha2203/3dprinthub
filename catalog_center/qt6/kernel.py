@@ -346,6 +346,143 @@ class ImageCore:
                     output.append(value)
         return output
 
+    def identity_local_dirs(
+        self,
+        source_code: str,
+        external_id: str,
+        row: dict[str, Any] | Any | None = None,
+    ) -> list[Path]:
+        """Resolve mature on-disk Product folders without mutating DB state.
+
+        Historical Catalog Center builds stored downloaded files below the
+        persistent data root as collected/<source>/<external_id>/images.
+        Qt review must keep reading that layout even when an old Crawl ledger
+        row is not linked to a Product row yet or its source-code casing drifted.
+        """
+        source = str(source_code or "").strip()
+        external = str(external_id or "").strip()
+        if not external:
+            return []
+
+        output: list[Path] = []
+        seen: set[str] = set()
+
+        def add(candidate: Path) -> None:
+            try:
+                resolved = candidate.resolve()
+            except Exception:
+                return
+            key = str(resolved).casefold()
+            if key in seen or not resolved.is_dir():
+                return
+            seen.add(key)
+            output.append(resolved)
+
+        data = (
+            dict(row)
+            if row is not None and not isinstance(row, dict)
+            else dict(row or {})
+        )
+        raw_local = str(
+            data.get("local_dir")
+            or data.get("product_local_dir")
+            or ""
+        ).strip()
+        if raw_local:
+            add(Path(raw_local))
+
+        data_root = Path(self.db.path).resolve().parent
+        collected_root = data_root / "collected"
+        if source:
+            add(collected_root / source / external)
+
+        if collected_root.is_dir():
+            try:
+                for source_dir in collected_root.iterdir():
+                    if not source_dir.is_dir():
+                        continue
+                    if source and source_dir.name.casefold() != source.casefold():
+                        continue
+                    add(source_dir / external)
+            except OSError:
+                pass
+
+        # Old installed source/data copies are retained on the owner's Windows
+        # workstation. This is a read-only compatibility fallback only.
+        legacy_root = Path(r"D:\projects\3dprinthub_catalog_center")
+        if legacy_root != data_root and legacy_root.is_dir():
+            legacy_collected = legacy_root / "collected"
+            if source:
+                add(legacy_collected / source / external)
+            if legacy_collected.is_dir():
+                try:
+                    for source_dir in legacy_collected.iterdir():
+                        if not source_dir.is_dir():
+                            continue
+                        if source and source_dir.name.casefold() != source.casefold():
+                            continue
+                        add(source_dir / external)
+                except OSError:
+                    pass
+
+        return output
+
+    def identity_local_items(
+        self,
+        source_code: str,
+        external_id: str,
+        row: dict[str, Any] | Any | None = None,
+    ) -> list[str]:
+        allowed = {
+            ".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif",
+            ".bmp", ".tif", ".tiff",
+        }
+        output: list[str] = []
+        seen: set[str] = set()
+        for local_dir in self.identity_local_dirs(
+            source_code,
+            external_id,
+            row,
+        ):
+            for candidate_root in (
+                local_dir / "seo_images",
+                local_dir / "images",
+            ):
+                if not candidate_root.is_dir():
+                    continue
+                try:
+                    files = sorted(
+                        candidate_root.iterdir(),
+                        key=lambda item: item.name.casefold(),
+                    )
+                except OSError:
+                    continue
+                for candidate in files:
+                    if (
+                        not candidate.is_file()
+                        or candidate.suffix.lower() not in allowed
+                    ):
+                        continue
+                    try:
+                        resolved = candidate.resolve()
+                    except OSError:
+                        continue
+                    key = str(resolved).casefold()
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    output.append(str(resolved))
+        return output
+
+    def preferred_identity_local_path(
+        self,
+        source_code: str,
+        external_id: str,
+        row: dict[str, Any] | Any | None = None,
+    ) -> str:
+        items = self.identity_local_items(source_code, external_id, row)
+        return items[0] if items else ""
+
     def preferred_local_path(self, row: dict[str, Any] | Any) -> str:
         data = dict(row) if not isinstance(row, dict) else row
         rejected = str(data.get("rejected_thumbnail_path") or "").strip()
@@ -361,7 +498,13 @@ class ImageCore:
             if path:
                 return path
         legacy = self._legacy_local_candidates(row)
-        return legacy[0] if legacy else ""
+        if legacy:
+            return legacy[0]
+        return self.preferred_identity_local_path(
+            str(data.get("source_code") or ""),
+            str(data.get("external_id") or ""),
+            data,
+        )
 
     def image_count(self, row: dict[str, Any] | Any) -> int:
         data = dict(row) if not isinstance(row, dict) else row
