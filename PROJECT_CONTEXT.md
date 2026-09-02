@@ -1,3 +1,29 @@
+## Current owner checkpoint — Phase49.3I.52C / Crawl visual recovery
+
+Repository authority: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Runtime/CI checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`  
+Catalog Center: `8.9.10` / build `2026.09.02.1`  
+Production: NOT TOUCHED.
+
+Owner screenshots required restoring the mature visual Crawl workflow: Product thumbnails, image counts, visible per-Product image progress, fresh results per Search, easy multi-select/bulk transfer and a safe Product-level source data/more-images recovery action.
+
+3I.52C implements Preview-first current-Search cards, stable legacy Preview thumbnail reuse, per-image 3/5→5/5 progress, explicit Qt MultiSelection in current Search and persistent inventory, Product navigation after selected transfer, and safe `دریافت داده و عکس بیشتر از لینک محصول` that preserves operator Persian content/final price/sale/publish decisions.
+
+Evidence:
+- Qt6 `33624135672` PASS;
+- Single Active AI `33625043627` PASS;
+- Windows Portable `33625043651` PASS after ERR-49-097 corrected the release job Qt dependency boundary;
+- portable regression gate 215 tests PASS;
+- artifact id `9844568575`, EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`.
+
+Rollback:
+`backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
+
+Next task is owner Local clean ff-only pull, root `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` version `49.3I.52.2` with `-LaunchApp`, then bounded real MakerWorld foreground QA. No Host/deploy work before owner acceptance.
+
+---
+
 ## Current owner checkpoint — Phase49.3I.49
 
 Owner requested moving from Catalog-only preparation into the site publishing/admin boundary. GitHub now contains a guarded multi-select Ready → Publish flow, strict Store/public verification before Published state, full Desktop↔Site Slider presentation round-trip, and task-oriented ProductCatalogProfile/HomepageHeroSlide Admin composition.
