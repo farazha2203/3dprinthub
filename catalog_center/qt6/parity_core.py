@@ -801,12 +801,140 @@ class StageCore:
 
 
 class FilamentParityCore:
+    BRAND_REGISTRY_KEY = "qt_filament_brand_registry_v1"
+    COLOR_REGISTRY_KEY = "qt_filament_color_registry_v1"
+    DEFAULT_COLOR_PRESETS = (
+        {"name": "صورتی پاستیلی", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#F7C9D9"]},
+        {"name": "آبی پاستیلی", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#BDD7F2"]},
+        {"name": "سبز پاستیلی", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#C7E7D2"]},
+        {"name": "کرم / Ivory", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#F2E8CF"]},
+        {"name": "سفید", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#F7F7F7"]},
+        {"name": "مشکی", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#161616"]},
+        {"name": "قرمز + آبی", "color_type": "dual", "color_finish": "glossy", "palette_hexes": ["#D92D20", "#2563EB"]},
+        {"name": "هفت‌رنگ", "color_type": "multicolor", "color_finish": "glossy", "palette_hexes": ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#06B6D4", "#3B82F6", "#A855F7"]},
+    )
+
     def __init__(self, db) -> None:
         self.db = db
         ensure_epic49_desktop_schema(db)
 
     def list(self) -> list[dict[str, Any]]:
         return [dict(row) for row in list_available_material_colors(self.db)]
+
+    def _registry(self, key: str) -> list[Any]:
+        try:
+            value = json.loads(str(self.db.setting(key, "[]") or "[]"))
+        except Exception:
+            return []
+        return list(value) if isinstance(value, list) else []
+
+    def brands(self) -> list[str]:
+        names: dict[str, str] = {}
+        for raw in self._registry(self.BRAND_REGISTRY_KEY):
+            name = str(raw or "").strip()
+            if name:
+                names.setdefault(name.casefold(), name)
+        for row in self.list():
+            name = str(row.get("brand") or row.get("brand_name") or "").strip()
+            if name:
+                names.setdefault(name.casefold(), name)
+        return sorted(names.values(), key=str.casefold)
+
+    def add_brand(self, name: str) -> list[str]:
+        value = str(name or "").strip()
+        if not value:
+            raise ValueError("نام برند خالی است.")
+        values = self.brands()
+        if value.casefold() not in {item.casefold() for item in values}:
+            values.append(value)
+        values = sorted(dict.fromkeys(values), key=str.casefold)
+        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(values, ensure_ascii=False))
+        return values
+
+    def delete_brand(self, name: str) -> list[str]:
+        value = str(name or "").strip()
+        if not value:
+            return self.brands()
+        if any(
+            str(row.get("brand") or row.get("brand_name") or "").strip().casefold()
+            == value.casefold()
+            for row in self.list()
+        ):
+            raise ValueError("این برند روی فیلامنت فعال استفاده شده است؛ ابتدا فیلامنت‌های آن را ویرایش/غیرفعال کن.")
+        values = [item for item in self.brands() if item.casefold() != value.casefold()]
+        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(values, ensure_ascii=False))
+        return values
+
+    def color_presets(self) -> list[dict[str, Any]]:
+        presets: dict[str, dict[str, Any]] = {}
+        for raw in [*self.DEFAULT_COLOR_PRESETS, *self._registry(self.COLOR_REGISTRY_KEY)]:
+            if not isinstance(raw, dict):
+                continue
+            name = str(raw.get("name") or "").strip()
+            if not name:
+                continue
+            presets[name.casefold()] = {
+                "name": name,
+                "color_type": str(raw.get("color_type") or "solid"),
+                "color_finish": str(raw.get("color_finish") or "matte"),
+                "palette_hexes": normalize_palette_hexes(raw.get("palette_hexes") or []),
+            }
+        for row in self.list():
+            name = str(row.get("color") or row.get("color_name") or "").strip()
+            if not name or name.casefold() in presets:
+                continue
+            presets[name.casefold()] = {
+                "name": name,
+                "color_type": str(row.get("color_type") or "solid"),
+                "color_finish": str(row.get("color_finish") or "matte"),
+                "palette_hexes": normalize_palette_hexes(
+                    row.get("palette_hex_json") or [],
+                    row.get("hex_code") or "",
+                    row.get("secondary_hex") or "",
+                    row.get("tertiary_hex") or "",
+                ),
+            }
+        return sorted(presets.values(), key=lambda item: str(item.get("name") or "").casefold())
+
+    def save_color_preset(
+        self,
+        preset: dict[str, Any],
+        *,
+        previous_name: str = "",
+    ) -> list[dict[str, Any]]:
+        name = str(preset.get("name") or "").strip()
+        palette = normalize_palette_hexes(preset.get("palette_hexes") or [])
+        if not name:
+            raise ValueError("نام رنگ خالی است.")
+        if not palette:
+            raise ValueError("حداقل یک رنگ از Color Picker انتخاب کن.")
+        custom = [
+            dict(item)
+            for item in self._registry(self.COLOR_REGISTRY_KEY)
+            if isinstance(item, dict)
+            and str(item.get("name") or "").strip().casefold()
+            not in {name.casefold(), str(previous_name or "").strip().casefold()}
+        ]
+        custom.append({
+            "name": name,
+            "color_type": str(preset.get("color_type") or "solid"),
+            "color_finish": str(preset.get("color_finish") or "matte"),
+            "palette_hexes": palette,
+        })
+        custom.sort(key=lambda item: str(item.get("name") or "").casefold())
+        self.db.set_setting(self.COLOR_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.color_presets()
+
+    def delete_color_preset(self, name: str) -> list[dict[str, Any]]:
+        value = str(name or "").strip().casefold()
+        custom = [
+            dict(item)
+            for item in self._registry(self.COLOR_REGISTRY_KEY)
+            if isinstance(item, dict)
+            and str(item.get("name") or "").strip().casefold() != value
+        ]
+        self.db.set_setting(self.COLOR_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.color_presets()
 
     def _materialize_image(self, data: dict[str, Any]) -> str:
         raw = str(data.get("filament_image_path") or "").strip()
