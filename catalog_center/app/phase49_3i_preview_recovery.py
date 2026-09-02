@@ -11,12 +11,21 @@ from .phase49_3i_discovery_review import candidates_from_dom_rows
 PREVIEW_CARD_EVAL_JS = r"""els => els.map(a => {
     const host = a.closest('article, li, [class*="card"], [class*="model"], [class*="item"]') || a.parentElement || a;
     const img = (host && host.querySelector('img')) || a.querySelector('img');
+    const source = host ? host.querySelector('picture source') : null;
+    const styled = host ? host.querySelector('[style*="background-image"]') : null;
     return {
         href: a.href || '',
-        text: ((a.innerText || '') + '\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
-        image: img ? (img.currentSrc || img.src || img.getAttribute('data-src') || '') : ''
+        text: ((a.innerText || '') + '\\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
+        image: img ? (img.currentSrc || '') : '',
+        src: img ? (img.getAttribute('src') || '') : '',
+        data_src: img ? (img.getAttribute('data-src') || '') : '',
+        data_original: img ? (img.getAttribute('data-original') || '') : '',
+        data_lazy_src: img ? (img.getAttribute('data-lazy-src') || '') : '',
+        srcset: img ? (img.getAttribute('srcset') || '') : '',
+        source_srcset: source ? (source.getAttribute('srcset') || '') : '',
+        background: styled ? (styled.style.backgroundImage || '') : ''
     };
-})"""
+})
 
 
 async def discover_preview_candidates_safe(
