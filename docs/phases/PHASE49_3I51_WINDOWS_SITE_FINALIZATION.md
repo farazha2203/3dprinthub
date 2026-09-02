@@ -2,7 +2,7 @@
 
 Date: 2026-09-02
 
-Status: `IN_PROGRESS / SOURCE IMPLEMENTED / CI RECERTIFICATION RUNNING / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
+Status: `IMPLEMENTED / WINDOWS CI PASS / SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`
 
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
@@ -30,6 +30,8 @@ Site:
 - persist optional Brand, Material and Filament descriptions;
 - expose the same management concepts through Django Admin;
 - extend the existing authenticated Filament Bridge rather than creating a second sync API;
+- add selected/full Qt Site reconciliation over that Bridge, including inactive Local Filaments;
+- keep Bridge-only Filament sync independent from FTP credentials;
 - keep real Filament selling price authority as sale-price-per-roll divided by roll weight.
 
 ## Touched surfaces
@@ -107,6 +109,36 @@ Two earlier red runs represented changed contracts or test-fixture debt, not une
 - Site regressions that asserted Filament Bridge contract v2 were updated to v3 because the payload now intentionally round-trips registry descriptions.
 
 No failed command is repeated under the same known-bad condition.
+
+## Final implementation and verification
+
+Approved source checkpoint: `8f01ea264dea2771cf1eb2f592be794d0dc95bbf`.  
+Exact Windows runtime checkpoint: `25981269c2859ba107aad1feaa04b711b5761ae5`.
+
+Additional final behavior beyond the initial phase draft:
+- registry renames propagate to assigned Filaments and are collision-checked before mutation;
+- Filament optional description survives Qt table/edit normalization;
+- Qt exposes `Sync انتخابی با سایت` and full Site reconciliation using the existing authenticated Filament Bridge;
+- Bridge-only sync no longer depends on FTP credentials;
+- full reconciliation includes inactive Local offers so stale Site offers can be deactivated;
+- Site Material Admin preserves print/supervision runtime rates together with the new registry fields.
+
+Passing evidence:
+- `33611776817` — Windows Qt full parity — PASS;
+- `33611776806` — Windows Portable — PASS;
+- `33611776891` — Single Active AI/no-migration safety — PASS;
+- `33611936196` — final Product Admin/Bridge/migration CI — PASS;
+- `33611936216` — final Single Active AI/no-migration safety — PASS.
+
+Windows artifact from the final Windows checkpoint:
+- `3DPrintHub-CatalogCenter-v8.9.10`;
+- artifact id `9839347209`.
+
+Compare `25981269... → 8f01ea26...` contains only the final Site Admin fieldset regression/visibility delta; no Windows runtime source changed after the passing Qt checkpoint.
+
+Rollback branch was verified identical to `191e8ef83f9a804805dda4cdd3df66b8224264d6`.
+
+Known implementation failures and prevention rules are recorded as ERR-49-093, ERR-49-094 and ERR-49-095.
 
 ## Acceptance sequence
 

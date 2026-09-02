@@ -1,3 +1,64 @@
+## 2026-09-02 — Phase49.3I.51 Windows + Site finalization
+
+Status: `GITHUB_UPDATED / WINDOWS CI PASS / SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Approved source checkpoint: `8f01ea264dea2771cf1eb2f592be794d0dc95bbf`  
+Exact Windows/Qt checkpoint: `25981269c2859ba107aad1feaa04b711b5761ae5`  
+Rollback: `backup/pre-phase49-3i51-windows-site-finalization-20260902` → `191e8ef83f9a804805dda4cdd3df66b8224264d6`.
+
+Implemented:
+- Product image review is larger while multi-image selection/bulk operations remain intact;
+- Product editor keeps the fixed source-page open action;
+- pasted MakerWorld Search/Product URLs auto-select MakerWorld instead of inheriting a stale GrabCAD selection;
+- Crawl exposes live Discovery/Receive progress and persistent review data;
+- missing source production facts create one explicit `پیش‌فرض` Profile using owner defaults 100 g model + 50 g support + 60 min;
+- fallback Profile includes all active PLA/PETG-family Filaments and excludes unrelated materials;
+- Filament workspace is split into Filaments / Materials / Brands / Colors;
+- Brand/Material/Color are managed registries; rename propagates to assigned Filaments and collision is rejected before mutation;
+- optional Filament/Brand/Material descriptions and Material reference price/kg are preserved;
+- Filament description survives Qt table normalization/edit;
+- Qt exposes selected/full Filament Site Sync over the existing authenticated Bridge; FTP is not required for this Bridge-only operation;
+- full Site reconciliation includes inactive Local Filaments so stale active Site offers can be deactivated;
+- Site Django models/Admin persist FilamentBrand and optional descriptions; Material Admin keeps price/kg plus print/supervision rates visible;
+- existing selling-price authority remains sale price per roll ÷ roll weight.
+
+Verification:
+- `33611776817` — Qt6 full parity on `25981269...` — PASS, including dedicated 3I.51 finalization regression and mature acquisition/Filament/Profile/Stage/launcher/source guards;
+- `33611776806` — Windows Portable on `25981269...` — PASS; artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9839347209`;
+- `33611776891` — Single Active AI/no-migration safety on `25981269...` — PASS;
+- `33611936196` — Product Admin/Bridge/migration CI on final source `8f01ea26...` — PASS, including `website.0024` and `store.0042` on isolated CI SQLite and the 3I.51 Admin/Bridge regressions;
+- `33611936216` — Single Active AI/no-migration safety on final source `8f01ea26...` — PASS;
+- compare `25981269... → 8f01ea26...` changes only `website/admin.py` and `store/test_phase49_3i51_filament_registry_admin.py`; Windows runtime source did not change after the passing Qt checkpoint.
+
+Known implementation failures were resolved and are recorded as ERR-49-093..095. No failed command was repeated under the same known-bad condition.
+
+Database/Production safety:
+- Catalog SQLite change is additive only: `available_filament_offers.description`;
+- registry metadata remains in existing Catalog settings;
+- new Django migrations are additive candidates `website.0024_phase49_3i51_material_catalog_description` and `store.0042_phase49_3i51_filament_registry_descriptions`;
+- Production MySQL has NOT been migrated;
+- Host/Production source has NOT been changed;
+- last verified Production application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- last verified Production migration evidence remains only through `store.0035`; no later migration is assumed;
+- secrets remain in the existing secure Local/environment boundary.
+
+Local acceptance:
+- canonical runner: `RUN_PHASE49_3I42C_LOCAL_GATE.ps1`;
+- runner version: `49.3I.51.1`;
+- runner remains ASCII-only for Windows PowerShell 5.1;
+- it must checksum-back up `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` before foreground QA.
+
+Exact next task:
+1. close Catalog Center;
+2. verify Local repository/origin/branch/clean worktree and live GitHub head;
+3. ff-only pull the final documentation head;
+4. run the canonical 3I.51 Local gate with `-ExpectedHead <final-doc-head> -LaunchApp`;
+5. foreground-QA Product images/source link, MakerWorld Search-Link Source detection/live results, default Profile, Filament registries, descriptions and selected/full Site Sync controls without intentionally publishing a Product;
+6. only after owner Local acceptance start the read-only Host/MySQL/migration/disk/backup audit;
+7. Production deploy/migrations remain blocked until that audit and fresh verified backups are complete.
+
 ## 2026-09-02 — Phase49.3I.49 guarded multi-product site publish + full Slider/Admin sync
 
 Status: `GITHUB_UPDATED / WINDOWS CI PASS / ADMIN CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.

@@ -1,5 +1,55 @@
 # DATABASE — 3DPrintHub
 
+## 2026-09-02 — Phase49.3I.51 Filament registry/site-sync schema candidates
+
+### Windows Catalog SQLite
+Canonical path remains:
+`D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+
+Additive local schema delta:
+- `available_filament_offers.description TEXT NOT NULL DEFAULT ''`.
+
+Registry persistence:
+- Brand metadata uses existing Catalog `settings`;
+- Material metadata uses existing Catalog `settings`;
+- Color presets use existing Catalog `settings`;
+- no destructive table rewrite is introduced.
+
+The canonical Local gate must create and checksum a backup before the 3I.51 runtime opens the real Catalog DB.
+
+### Django candidate migrations
+New additive candidates:
+- `website.0024_phase49_3i51_material_catalog_description`;
+- `store.0042_phase49_3i51_filament_registry_descriptions`.
+
+They provide:
+- `Material.catalog_description`;
+- persistent `FilamentBrand` registry with optional description;
+- optional `MaterialColorOption.description`.
+
+CI evidence:
+- Product Admin/Bridge run `33611936196` PASS;
+- `makemigrations --check --dry-run` PASS;
+- isolated CI SQLite migration application PASS through `website.0024` and `store.0042`;
+- Bridge v3 and Admin regressions PASS.
+
+This is NOT Production MySQL evidence.
+
+### Production gate
+Last verified Production app commit remains:
+`c283864290f9c989a9fcdf24ee8eef519560e917`.
+
+Last verified applied Production Store migrations remain only through `store.0035`. Do not assume `0036..0042` or `website.0024` are applied.
+
+Before any Production migration:
+1. read-only verify Host root/branch/HEAD/clean worktree;
+2. verify effective Django DB vendor is MySQL and exact DB name is `sfkilvrs_EmiAdmin_3dprinthub`;
+3. capture actual `showmigrations store website`;
+4. inspect exact `migrate --plan`;
+5. verify disk and `mysqldump`;
+6. create fresh source/environment/MySQL backups and verify non-empty dump/checksums;
+7. stop on any unexpected migration/schema divergence.
+
 ## 2026-09-01 — Catalog SQLite paging/index stabilization (Phase49.3I.46)
 
 Environment: Windows Catalog Center local persistent SQLite only.  

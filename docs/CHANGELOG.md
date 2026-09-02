@@ -1,3 +1,22 @@
+## 2026-09-02 — Phase49.3I.51
+- enlarged Product image review while preserving multi-image selection and bulk image actions;
+- restored fixed source-page open behavior and MakerWorld URL Source auto-detection in Crawl;
+- added live Discovery/Receive result presentation;
+- added explicit `پیش‌فرض` Profile fallback using 100 g model, 50 g support and 60 min when source production facts are absent;
+- fallback Profile now matches all active PLA/PETG-family Filaments, including variants such as PLA-CF/PLA Silk/PETG-HF;
+- split Filament management into Filaments / Materials / Brands / Colors;
+- changed Filament Brand/Material/Color identity to managed registry selection and added rename propagation/collision guards;
+- preserved optional Filament/Brand/Material descriptions plus Material reference price/kg;
+- restored Filament description through Qt table/edit normalization;
+- added selected/full Filament Site Sync over the existing authenticated Bridge without requiring FTP;
+- full Site reconciliation includes inactive Local Filaments;
+- added persistent Site FilamentBrand and optional Brand/Material/Filament descriptions;
+- kept Material print/supervision rates visible in Django Admin;
+- Bridge contract is `phase49-filament-library-v3`;
+- candidate migrations added: `website.0024`, `store.0042`;
+- final Windows Qt `33611776817`, Portable `33611776806`, Site/Admin/Bridge `33611936196`, and Single Active AI `33611936216` PASS;
+- Production/Host/MySQL remain untouched.
+
 ## 2026-09-02 — Phase49.3I.49
 - added guarded multi-select Product ready/publish actions to Qt Products;
 - added reusable bulk publish service over the mature Batch 8.5 / FTP / Bridge / public HTTP verification path;

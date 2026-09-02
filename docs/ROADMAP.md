@@ -1,3 +1,39 @@
+## 2026-09-02 — Phase49.3I.51 Windows + Site finalization
+
+Status: `IMPLEMENTED + WINDOWS CI PASS + SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- final Product image/source-link/Crawl Source-detection/live-result parity;
+- explicit source-missing default Profile with owner fallback production facts;
+- PLA/PETG-family fallback Filament matching;
+- four-part Filament registry workspace with managed Material/Brand/Color identities;
+- optional descriptions and Material reference price/kg;
+- registry rename propagation/collision protection;
+- selected and full Site Filament reconciliation over the mature authenticated Bridge, including inactive offers;
+- persistent Site FilamentBrand + Material/Filament descriptions;
+- task-focused Django Admin parity while preserving Material production rates;
+- additive Django migration candidates `website.0024` and `store.0042`;
+- canonical owner gate upgraded to `49.3I.51.1`.
+
+Evidence:
+- Windows Qt `33611776817` PASS;
+- Windows Portable `33611776806` PASS;
+- Single Active AI `33611776891` PASS;
+- final Site/Admin/Bridge `33611936196` PASS on `8f01ea264dea2771cf1eb2f592be794d0dc95bbf`;
+- final Single Active AI `33611936216` PASS;
+- rollback branch verified identical to pre-phase `191e8ef83f9a804805dda4cdd3df66b8224264d6`.
+
+Immediate next:
+1. owner Local 3I.51 gate + foreground QA;
+2. if PASS, read-only Host audit of root/HEAD/worktree/Python/Django/MySQL/migration state/disk/backup tools;
+3. fresh source + environment + MySQL backup with checksum/non-empty verification;
+4. deploy only the owner-approved GitHub commit;
+5. apply only the verified migration chain;
+6. Production runtime/Admin/Bridge/Product verification;
+7. then continue visual/accessibility/typography polish and remaining stability work.
+
+Production remains blocked until Local acceptance and Host audit.
+
 ## 2026-09-02 — Phase49.3I.49 site publish + Slider/Admin parity
 
 Status: `IMPLEMENTED + WINDOWS CI PASS + ADMIN CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

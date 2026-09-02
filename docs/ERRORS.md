@@ -1,5 +1,84 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-095 — Filament Bridge v3 palette normalization overwrote explicit legacy HEX slots
+**Date:** 2026-09-02  
+**Environment:** GitHub Product Admin/Bridge CI during Phase49.3I.51.
+
+**Observed CI evidence:**  
+Run `33610330120` failed only in `test_invalid_color_type_is_normalized_and_inactive_sync_updates_same_row`: expected legacy `secondary_hex=#112233` but the Bridge persisted `#445566`.
+
+**Root cause:**  
+The v3 Bridge normalized `palette_hexes` correctly for the modern palette contract, but then reused palette positions to overwrite explicit compatibility fields `secondary_hex`/`tertiary_hex`. Those compatibility slots are independently supplied by mature callers and must not be silently remapped.
+
+**Failed condition was not repeated unchanged.**  
+The Bridge parsing/persistence boundary was changed before rerun.
+
+**Correct fix:**  
+Normalize explicit single HEX fields separately; keep `palette_hexes` authoritative for the modern palette while preserving valid explicit compatibility slots when supplied.
+
+**Implementation:** `ca89533d6d4546a008c04b31efa56c8cf6efe3a1`.
+
+**Verification:**  
+Final Site/Admin/Bridge run `33611936196` PASS, including Bridge v3 regressions.
+
+**Prevention rule:**  
+When modernizing a payload, do not infer that a compatibility field is merely an alias of a new aggregate field unless the mature contract explicitly says so.
+
+---
+
+## ERR-49-094 — Phase49.3I.51 Filament editor description field crashed because QPlainTextEdit was not imported
+**Date:** 2026-09-02  
+**Environment:** GitHub Windows Qt CI.
+
+**Observed CI evidence:**  
+Run `33610057719` reached the real offscreen Filament editor construction and failed with:
+`NameError: name 'QPlainTextEdit' is not defined` in `catalog_center/qt6/parity_dialogs.py`.
+
+**Root cause:**  
+Phase49.3I.51 added the optional Filament description editor but omitted `QPlainTextEdit` from the PySide6 QtWidgets import list. Compile-only validation could not detect the runtime symbol lookup.
+
+**Failed condition was not repeated unchanged.**  
+The import was added before the next full Qt run.
+
+**Correct fix:**  
+Import the concrete Qt widget and keep offscreen dialog construction in the regression suite.
+
+**Implementation:** `ca89533d6d4546a008c04b31efa56c8cf6efe3a1`.
+
+**Verification:**  
+Final Windows Qt run `33611776817` PASS, including 3I.48 and 3I.51 Filament editor construction/behavior.
+
+**Prevention rule:**  
+Every newly introduced concrete Qt widget must be exercised by offscreen construction; compileall alone is not a sufficient GUI dependency test.
+
+---
+
+## ERR-49-093 — Phase49.3I.51 fallback regression referenced a helper that does not exist in that test class
+**Date:** 2026-09-02  
+**Environment:** GitHub Windows Qt CI / Phase49.3I.51 regression alignment.
+
+**Observed CI evidence:**  
+The first updated source-profile fallback regression attempted to call a Product helper that belongs to a different test class and stopped before testing the actual owner fallback contract.
+
+**Root cause:**  
+The test contract changed from “do not create a fallback Profile” to the owner-requested explicit default Profile, but the rewritten fixture accidentally reused a helper unavailable in that class.
+
+**Failed condition was not repeated unchanged.**  
+The fixture was corrected before rerun.
+
+**Correct fix:**  
+Create the Product through the same `Database.upsert_product` path already used by the suite, then resolve its id from the kernel Product list.
+
+**Implementation:** `f3dd80bd7fc6293c73aa4f9353aad6e40eb9dc9d`.
+
+**Verification:**  
+Dedicated 3I.51 regression and final Qt run `33611776817` PASS.
+
+**Prevention rule:**  
+When an acceptance contract changes, keep fixture construction local to the test class or use a shared verified fixture helper; do not copy helper calls across suites without resolving ownership.
+
+---
+
 ## ERR-49-092 — Phase49.3I.50 Crawl technical-fact regression used a bare test schema and failed on a pre-existing image metadata column
 **Date:** 2026-09-02  
 **Environment:** GitHub Windows Qt CI / exact code checkpoint `7aadf4830061c2104cda6b4164e0f9b1351f8893`.

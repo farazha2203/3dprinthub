@@ -1,3 +1,38 @@
+## REQ-49-087 — Finalize Windows Product/Crawl/Profile/Filament parity and matching Site Filament management
+Date: 2026-09-02  
+Status: `IMPLEMENTED + WINDOWS/SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- keep the mature Windows Catalog workflow but finish the Product image/source/Crawl usability gaps;
+- pasted MakerWorld links must not run under a stale GrabCAD Source;
+- create a usable default Profile when source weight/time/dimensions/material evidence is incomplete;
+- default production fallback is 100 g model + 50 g support + 60 minutes;
+- match all active PLA/PETG-family Filaments for that fallback instead of one hard-coded offer;
+- manage Filaments, Materials, Brands and Colors as separate reusable entities;
+- Brand/Material/Color must be selected from managed registries inside Filament edit;
+- add optional descriptions and Material reference price/kg;
+- keep Site Admin concepts aligned with Windows;
+- reuse the existing authenticated Filament Bridge rather than create a new sync architecture;
+- keep pricing authority and Production safety unchanged.
+
+Acceptance:
+- Product source-page action and larger image review remain available;
+- multi-image selection/bulk actions remain intact;
+- MakerWorld URL auto-selects MakerWorld and live receive/discovery results are visible;
+- explicit `پیش‌فرض` Profile is created only when source facts cannot create a usable source-grounded Profile;
+- all active PLA/PETG-family Filaments are included, unrelated materials excluded;
+- registry rename propagates to assigned Filaments or fails before mutation on collision;
+- Filament descriptions survive list/edit round-trip;
+- selected/full Site Sync uses the mature Bridge and does not require FTP credentials;
+- full reconciliation can deactivate Site rows that are inactive locally;
+- Site persists FilamentBrand and optional descriptions;
+- Material Admin keeps price/kg and production rates;
+- Windows Qt, Bridge/Admin, migration-drift, Single Active AI and portable gates pass;
+- Production stays untouched until owner Local acceptance and Host audit.
+
+Verification:
+`33611776817`, `33611776806`, `33611776891`, `33611936196`, `33611936216` PASS.
+
 ## REQ-49-086 — Multi-product ready/publish workflow and site-equivalent Slider/Admin controls
 Status: `IMPLEMENTED / GITHUB CI TESTED / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
 
