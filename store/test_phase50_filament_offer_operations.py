@@ -124,7 +124,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         response = filament_sync_view(request)
         self.assertEqual(response.status_code, 200, response.content)
         payload = json.loads(response.content.decode("utf-8"))
-        self.assertEqual(payload["contract"], "phase49-filament-library-v2")
+        self.assertEqual(payload["contract"], "phase49-filament-library-v3")
 
         color = MaterialColorOption.objects.get(
             material=self.material,

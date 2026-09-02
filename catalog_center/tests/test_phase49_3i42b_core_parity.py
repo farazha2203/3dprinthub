@@ -273,7 +273,7 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         finally:
             window.close()
 
-    def test_image_stage_uses_four_column_cards_with_size_and_seo_facts(self):
+    def test_image_stage_uses_three_large_column_cards_with_size_and_seo_facts(self):
         product_id = self._product_id()
         local_dir = Path(self.temporary.name) / "product-images"
         image_dir = local_dir / "images"
@@ -312,7 +312,8 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
             window.open_product(product_id)
             wizard = window.wizard_page
             grid = wizard.image_grid
-            self.assertEqual(grid.columns, 4)
+            self.assertEqual(grid.columns, 3)
+            self.assertGreaterEqual(grid.minimumHeight(), 540)
             self.assertEqual(len(grid.cards), 1)
 
             item = grid.cards[0].item

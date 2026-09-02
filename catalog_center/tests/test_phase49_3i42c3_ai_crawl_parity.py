@@ -335,30 +335,61 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertEqual(int(product.get("price_min") or 0), 0)
         self.assertEqual(int(product.get("price_max") or 0), 0)
 
-    def test_source_profile_bootstrap_refuses_to_invent_print_time(self):
-        self.db.upsert_product({
-            "source_code": "makerworld",
-            "external_id": "ERR49-086-NO-TIME",
-            "source_url": "https://makerworld.com/en/models/err49-086-no-time",
-            "source_title": "Lamp",
-            "source_description": "PLA",
-            "estimated_weight_grams": 100,
-            "estimated_print_minutes": 0,
-            "source_print_profiles_json": "[]",
-            "workflow_status": "review",
-        })
-        product_id = int(next(
-            row["id"]
-            for row in self.kernel.products.list()
-            if row["external_id"] == "ERR49-086-NO-TIME"
-        ))
+    def test_source_profile_bootstrap_uses_owner_default_when_source_time_is_missing(self):
+        product_id = self._product("7011")
+        self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Fallback Brand",
+                "color": "Fallback PLA",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#334455"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 2_000_000,
+            }
+        )
+        self.kernel.filaments.save(
+            {
+                "material": "PETG-HF",
+                "brand": "Fallback Brand",
+                "color": "Fallback PETG",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#556677"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 2_200_000,
+            }
+        )
+        self.db.update_product(
+            product_id,
+            {
+                "source_description": "",
+                "source_specs_json": "{}",
+                "estimated_print_minutes": 0,
+                "estimated_weight_grams": 0,
+            },
+        )
+
         result = self.kernel.commerce.bootstrap_from_source(
             product_id,
             self.kernel.filaments.list(),
         )
-        self.assertFalse(result["changed"])
-        self.assertEqual(result["reason"], "source_print_time_missing")
-        self.assertEqual(self.kernel.commerce.profiles(product_id), [])
+        self.assertTrue(result["changed"])
+        self.assertTrue(result["fallback_used"])
+        profiles = self.kernel.commerce.profiles(product_id)
+        self.assertEqual(len(profiles), 1)
+        profile = profiles[0]
+        self.assertEqual(profile["name"], "پیش‌فرض")
+        self.assertEqual(profile["size_label"], "پیش‌فرض")
+        production = profile["production_rows"][0]
+        self.assertEqual(float(production["weight_grams"]), 100.0)
+        self.assertEqual(float(production["support_weight_grams"]), 50.0)
+        self.assertEqual(int(production["print_time_minutes"]), 60)
+        self.assertEqual(
+            {item["material"] for item in profile["material_options"]},
+            {"PLA", "PETG-HF"},
+        )
 
     def test_auto_finalize_ready_accepts_owner_approved_specs_but_never_publish(self):
         self.db.upsert_product({
