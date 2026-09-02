@@ -1,3 +1,58 @@
+## 2026-09-02 — Phase49.3I.49 guarded multi-product site publish + full Slider/Admin sync
+
+Status: `GITHUB_UPDATED / WINDOWS CI PASS / ADMIN CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact Windows/Local-gate source checkpoint: `f9f89643de883ff549a9c0089235e43f061c5d4d`  
+Admin/Bridge checkpoint: `16cf7cfaf6be3e8594435e3489cb0615624fcb00`  
+Rollback: `backup/pre-phase49-3i49-site-bulk-publish-admin-control-20260901` → `1f8910b6c8c7c601cfd50689d8c48af492f7c453`.
+
+Requested delta:
+- Products supports explicit multi-select `آماده انتشار` and guarded multi-product site publish;
+- only factually complete Products can enter the publish queue;
+- publish reuses the mature `Batch 8.5 → FTP → Bridge Import → Store/public HTTP verification` path;
+- only a strict successful ACK/public verification moves Local state to `workflow_status=uploaded`, clears `upload_ready`, and therefore moves the Product into `ارسال / منتشرشده`;
+- failures remain visible as failures and are never presented as Published;
+- the complete existing Slider presentation contract now round-trips Desktop ↔ Bridge ↔ ProductCatalogProfile ↔ HomepageHeroSlide;
+- Django Admin exposes the same site-relevant Product/Profile/Slider controls in task order instead of creating a duplicate settings store.
+
+Site-relevant Slider round-trip now covers:
+`presentation_mode`, object fit, focal position, image scale, X/Y position, background mode/color/blur, Desktop/Mobile max width/height, Persian Slider title/description/Alt/button/focus keyword, transition effect/duration, display duration, sort order, active state and optimistic sync revision.
+
+Admin information architecture follows the repository professional-commerce design rules derived from the owner design references: task-first grouping, progressive disclosure for diagnostics, one explicit publish action, and responsive/motion controls separated from content/SEO.
+
+Verification:
+- `33596830380` — exact-head `qt6-full-parity-windows` on `f9f896...` — PASS, including the dedicated `Qt6 3I.49 bulk site publish parity` regression, mature acquisition/Filament/Profile/Stage regressions, offscreen Qt launch, legacy launcher and final source guards;
+- `33596830268` — exact-head Single Active AI / no-migration safety — PASS;
+- `33596562467` — Product Admin Workspace CI on `16cf7c...` — PASS: compile, Django check, `makemigrations --check --dry-run`, CI migration apply and Admin regressions including 3I.49;
+- compare `16cf7c... → f9f896...`: only `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` changed, so no Admin/Bridge source changed after the successful Admin run.
+
+Local gate:
+- `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` now includes 3I.46 paging, 3I.47 workspace/image/bulk-AI, 3I.48 owner/Filament/Slider and 3I.49 bulk-publish regressions;
+- success marker: `PHASE49_3I49_LOCAL_GATE=PASS`;
+- existing checksum-verified backup of `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` remains mandatory before Local QA.
+
+Safety:
+- Django migration added = NO;
+- Catalog destructive schema change = NO;
+- Production MySQL changed = NO;
+- Production source changed = NO;
+- Host touched = NO;
+- secret storage changed = NO;
+- FTP password and Bridge token remain in the existing secure Local/environment boundary and are not copied into Django Admin;
+- last verified Production application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- last verified Production migration evidence remains only `store.0034` and `store.0035`.
+
+Exact next task:
+1. owner closes Catalog Center;
+2. verify Local repo/origin/branch/clean worktree and live GitHub head;
+3. ff-only pull the final documentation head;
+4. run the canonical Local gate with `-LaunchApp`;
+5. verify ready-state visibility and multi-select behavior on disposable Products;
+6. do NOT click the real site-publish action until the owner intentionally chooses a disposable Product and the current Production receiver/deploy state has been verified;
+7. after Local acceptance, start the normal read-only Host/migration/backup/deploy chain from the approved GitHub commit.
+
 # CURRENT PROJECT STATE
 
 ## Continuation checkpoint — 2026-09-01 / ERR-49-088 PS5.1 Local gate repair + professional commerce design standard
