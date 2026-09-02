@@ -63,6 +63,10 @@ class Phase493I52SiteAuthoringAITests(TestCase):
         profile.stock_quantity = 7
         profile.commercial_license_status = "verified"
         profile.license_name = "Commercial"
+        profile.technical_features = {
+            "ابعاد تأییدشده اپراتور": "120×80×35 mm",
+            "کاربرد": "ثبت دستی اپراتور",
+        }
         profile.save()
 
         proposal = {
@@ -113,7 +117,14 @@ class Phase493I52SiteAuthoringAITests(TestCase):
             self.product.title,
             "پایه کیک مینیمال برای پذیرایی",
         )
-        self.assertEqual(profile.technical_features["کاربرد"], "پذیرایی")
+        self.assertEqual(
+            profile.technical_features["کاربرد"],
+            "ثبت دستی اپراتور",
+        )
+        self.assertEqual(
+            profile.technical_features["ابعاد تأییدشده اپراتور"],
+            "120×80×35 mm",
+        )
         self.assertFalse(profile.homepage_slider_enabled)
 
     def test_product_admin_has_site_profile_inline_ai_preview_and_manual_site_controls(self):

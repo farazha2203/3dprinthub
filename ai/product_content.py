@@ -185,9 +185,18 @@ def apply_site_product_proposal(
         else {}
     )
 
+    existing_specs = (
+        dict(profile.technical_features)
+        if isinstance(profile.technical_features, dict)
+        else {}
+    )
+    # AI may translate/add source-grounded labels, but an operator-entered fact
+    # already present on the canonical Site profile always wins on key conflict.
+    merged_specs = {**specs, **existing_specs}
+
     profile_values = {
         "use_description": use_description,
-        "technical_features": specs,
+        "technical_features": merged_specs,
         "keywords": keywords,
         "homepage_slider_title_fa": str(slider.get("title_fa") or "").strip()[:220],
         "homepage_slider_description_fa": str(
