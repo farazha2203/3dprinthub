@@ -1079,7 +1079,7 @@ async def _collect_one_legacy(
             ensure_ascii=False,
             default=str,
         ),
-        "acquisition_method": f"qt52g-{method}",
+        "acquisition_method": f"qt46-legacy-{method}",
     }
 
     metrics = _acquisition_quality_metrics(
@@ -1138,7 +1138,7 @@ async def _collect_one_legacy(
         "images_found": int(metrics.get("image_urls_found") or len(images)),
         "images_saved": min(len(_local_image_files(local_dir)), image_limit),
         "files_saved": len(downloaded_model_files),
-        "acquisition_method": f"qt52g-{method}",
+        "acquisition_method": f"qt46-legacy-{method}",
         "selected_method": method,
         "image_fallback_method": str(image_fallback.get("method") or ""),
         "quality": metrics,
@@ -1778,10 +1778,11 @@ async def refresh_source_products_async(
     progress: Progress = None,
     should_stop: ShouldStop = None,
 ) -> dict[str, Any]:
-    """Safely refresh source-owned Products with adaptive method failover."""
+    """Refetch source-owned Products while preserving operator decisions."""
     source_row = db.source(str(source_code or ""))
     if source_row is None:
         raise ValueError("Source انتخاب‌شده پیدا نشد.")
+    source_cfg = _source_dict(source_row)
     rows = db.product_page(
         filter_name="all",
         source_code=source_code,
@@ -1791,10 +1792,6 @@ async def refresh_source_products_async(
     )
     changed = unchanged = failed = 0
     total = len(rows)
-    preferred_method = "rich"
-    circuit_breaker = False
-    unattempted = 0
-
     for index, lite in enumerate(rows, 1):
         if _stopped(should_stop):
             break
@@ -1802,50 +1799,85 @@ async def refresh_source_products_async(
         if row is None:
             continue
         try:
+            url = str(row["source_url"] or "")
+            external_id = str(row["external_id"] or row["id"])
             _emit(
                 progress,
                 int((index - 1) / max(1, total) * 95),
-                f"بروزرسانی {index}/{total} • Product #{int(row['id'])} • روش {preferred_method}",
+                f"بروزرسانی {index}/{total} — {url}",
             )
-            result = await refetch_product_from_source_async(
-                db,
-                int(row["id"]),
-                image_limit=image_limit,
+            delay = await _browser_robots_gate(db, source_code, url)
+            if delay > 0:
+                await asyncio.sleep(min(30.0, delay))
+            output = data_root() / "collected" / source_code / f"{external_id}_refresh_latest"
+            result = await extract_direct_link(
+                url,
+                output,
+                data_root() / "browser_profiles" / source_code,
+                headed=False,
                 download_images=bool(download_images),
-                progress=progress,
-                preferred_method=preferred_method,
-                adaptive_fallback=True,
+                image_limit=normalize_image_limit(image_limit),
             )
-            preferred_method = str(result.get("selected_method") or preferred_method)
-            if bool(result.get("changed")):
-                changed += 1
-            else:
+            try:
+                images = json.loads(result.get("images_json") or "[]")
+            except Exception:
+                images = []
+            images = [str(value) for value in images[: normalize_image_limit(image_limit)]]
+            fresh = {
+                **_source_defaults(source_cfg, normalize_image_limit(image_limit)),
+                **{k: v for k, v in dict(result).items() if k != "downloaded_image_files"},
+                "source_code": source_code,
+                "external_id": external_id,
+                "source_url": str(result.get("source_url") or url),
+                "local_dir": str(output),
+                "images_json": json.dumps(images, ensure_ascii=False),
+                "selected_images_json": json.dumps(images, ensure_ascii=False),
+                "primary_image_url": images[0] if images else "",
+                "last_refetched_at": utc_now(),
+                "source_state": "active",
+            }
+            fresh["fingerprint"] = product_fingerprint(
+                source_code,
+                external_id,
+                fresh["source_url"],
+            )
+            fresh["source_hash"] = source_payload_hash(fresh)
+            fresh["needs_update"] = (
+                1
+                if should_mark_needs_update(row, fresh["source_hash"])
+                else int(row["needs_update"] or 0)
+            )
+            fresh["content_status"] = (
+                "stale"
+                if fresh["needs_update"]
+                else str(row["content_status"] or "pending")
+            )
+            diff = product_diff(dict(row), fresh)
+            if not diff:
                 unchanged += 1
-        except (RobotsDeniedError, RateLimitedError, PermissionError):
-            failed += 1
-            circuit_breaker = True
-            unattempted = max(0, total - index)
-            break
-        except Exception as exc:
-            failed += 1
-            circuit_breaker = True
-            unattempted = max(0, total - index)
-            acquisition_event(
-                db,
-                "source_refresh_stop",
-                status="error",
-                source_code=source_code,
-                method=preferred_method,
-                message=f"{type(exc).__name__}: {exc}",
-                detail={"product_id": int(row["id"]), "unattempted": unattempted},
+                continue
+            before = dict(row)
+            merged = merge_refetch(row, fresh)
+            allowed = set(row.keys()) - {"id", "created_at", "updated_at"}
+            db.update_product(
+                int(row["id"]),
+                {key: value for key, value in merged.items() if key in allowed},
             )
-            break
-
+            db.save_history(
+                int(row["id"]),
+                "source_refresh",
+                before,
+                dict(db.product(int(row["id"]))),
+                diff_summary(diff),
+            )
+            changed += 1
+        except Exception:
+            failed += 1
+            continue
     _emit(
         progress,
         100,
-        f"بروزرسانی Source تمام شد — changed={changed}, unchanged={unchanged}, "
-        f"failed={failed}, unattempted={unattempted}, method={preferred_method}",
+        f"بروزرسانی Source تمام شد — changed={changed}, unchanged={unchanged}, failed={failed}",
     )
     return {
         "source_code": source_code,
@@ -1853,9 +1885,6 @@ async def refresh_source_products_async(
         "unchanged": unchanged,
         "failed": failed,
         "stopped": _stopped(should_stop),
-        "circuit_breaker": circuit_breaker,
-        "unattempted": unattempted,
-        "preferred_method": preferred_method,
     }
 
 def refresh_source_products(db, **kwargs) -> dict[str, Any]:
