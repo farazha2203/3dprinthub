@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer, QUrl
@@ -2400,7 +2401,11 @@ class OperationsPage(QWidget):
         report_header.addWidget(QLabel("وضعیت Source، صف و Runهای اخیر"))
         report_refresh = QPushButton("بروزرسانی گزارش")
         report_refresh.clicked.connect(self.refresh)
+        report_logs = QPushButton("پوشه لاگ Crawl")
+        report_logs.setToolTip("لاگ روش‌های دریافت، کیفیت داده، تعداد عکس و علت Failover را باز می‌کند.")
+        report_logs.clicked.connect(self._open_acquisition_logs)
         report_header.addStretch(1)
+        report_header.addWidget(report_logs)
         report_header.addWidget(report_refresh)
         report_layout.addLayout(report_header)
         self.summary = QPlainTextEdit()
@@ -3031,7 +3036,9 @@ class OperationsPage(QWidget):
                 f"محلیِ کافی={data.get('local_reused', 0)} • "
                 f"بازیابی‌شده={data.get('recovered', 0)} • "
                 f"ساخته‌شده={data.get('created', 0)} • "
-                f"خطا={data.get('failed', 0)}"
+                f"خطا={data.get('failed', 0)} • "
+                f"دست‌نخورده={data.get('unattempted', 0)} • "
+                f"روش={data.get('preferred_method') or '—'}"
             )
         elif operation in {"queue_collect", "queue_collect_ai"}:
             ai = dict(data.get("ai") or {})
@@ -3893,6 +3900,9 @@ class OperationsPage(QWidget):
             errors: list[str] = []
             product_ids: list[int] = []
             total = max(1, len(rows))
+            preferred_method = "rich"
+            circuit_breaker = False
+            unattempted = 0
 
             for index, raw in enumerate(rows, 1):
                 if self.kernel.acquisition.should_stop():
@@ -3988,12 +3998,16 @@ class OperationsPage(QWidget):
                         source_code=source_code,
                         product_url=product_url,
                         image_limit=image_limit,
-                        collection_method="rich",
+                        collection_method=preferred_method,
                         download_images=True,
                         download_files=False,
                         same_domain_only=True,
                         progress=child_progress,
                         force_recover=True,
+                        adaptive_fallback=True,
+                    )
+                    preferred_method = str(
+                        result.get("selected_method") or preferred_method
                     )
                     new_product_id = int(result.get("product_id") or 0)
                     if new_product_id <= 0:
@@ -4015,10 +4029,20 @@ class OperationsPage(QWidget):
                         [queue_id],
                         message,
                     )
+                    circuit_breaker = True
+                    unattempted = max(0, total - index)
+                    progress(
+                        min(99, int(index / total * 100)),
+                        (
+                            f"#{queue_id} • توقف حفاظتی؛ همه روش‌های واقعی ناموفق بودند. "
+                            f"{unattempted} رکورد بعدی دست‌نخورده ماند."
+                        ),
+                    )
+                    break
 
                 progress(
                     int(index / total * 100),
-                    f"پردازش بازیابی {index}/{total}",
+                    f"پردازش بازیابی {index}/{total} • روش ترجیحی {preferred_method}",
                 )
 
             return {
@@ -4030,6 +4054,9 @@ class OperationsPage(QWidget):
                 "product_ids": product_ids,
                 "errors": errors[-20:],
                 "stopped": self.kernel.acquisition.should_stop(),
+                "circuit_breaker": circuit_breaker,
+                "unattempted": unattempted,
+                "preferred_method": preferred_method,
             }
 
         worker = Worker(job)
@@ -4216,11 +4243,21 @@ class OperationsPage(QWidget):
         worker.signals.finished.connect(self._finished)
         self.pool.start(worker)
 
+    def _open_acquisition_logs(self) -> None:
+        try:
+            path = Path(self.kernel.acquisition.acquisition_log_path()).resolve()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.parent)))
+        except Exception as exc:
+            QMessageBox.warning(self, "لاگ Crawl", str(exc))
+
     def refresh(self) -> None:
         self._reload_sources()
         source_code = str(self.source.currentData() or "")
         queue = self.kernel.acquisition.queue_counts(source_code)
         runs = self.kernel.acquisition.recent_runs(limit=12)
+        acquisition_log = self.kernel.acquisition.acquisition_log_path()
+        acquisition_events = self.kernel.acquisition.recent_acquisition_events(limit=24)
 
         lines = [
             "صف Source فعلی:",
@@ -4234,8 +4271,24 @@ class OperationsPage(QWidget):
             "crawl_listing_state هر بار عمیق‌تر ادامه می‌دهد.",
             "هویت‌های collected/rejected/blocked دوباره Crawl نمی‌شوند.",
             "",
-            "۱۲ Run آخر:",
+            f"لاگ جزئیات Crawl: {acquisition_log}",
+            "این لاگ برای هر Product روش، کیفیت داده، تعداد عکس محلی، Failover و علت شکست را ثبت می‌کند.",
+            "",
+            "آخرین تلاش‌های دریافت:",
         ]
+        for event in acquisition_events[-12:]:
+            detail = dict(event.get("detail") or {})
+            quality = dict(detail.get("quality") or {})
+            lines.append(
+                "- "
+                f"{event.get('status')} / {event.get('external_id') or '—'} / "
+                f"{event.get('method') or '—'} / {event.get('action')} / "
+                f"title={quality.get('title_ok', '—')} / "
+                f"data={quality.get('data_signal', '—')} / "
+                f"local_images={quality.get('local_images', detail.get('images_saved', '—'))} / "
+                f"{event.get('message') or ''}"
+            )
+        lines.extend(["", "۱۲ Run آخر:"])
         for row in runs:
             lines.append(
                 f"- #{row.get('id')} {row.get('source_code')} / "

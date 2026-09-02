@@ -450,6 +450,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertEqual(result["failed"], 0)
             self.assertEqual(len(calls), 1)
             self.assertTrue(calls[0]["force_recover"])
+            self.assertTrue(calls[0]["adaptive_fallback"])
             self.assertEqual(calls[0]["image_limit"], 10)
             self.assertTrue(calls[0]["download_images"])
         finally:
@@ -598,20 +599,20 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_main_window_reports_current_3i52f_phase_instead_of_stale_3i48(self):
+    def test_main_window_reports_current_3i52g_phase_instead_of_stale_3i48(self):
         from qt6.main_window import MainWindow
 
         window = MainWindow(self.db)
         try:
             contract = window.structural_contract()
-            self.assertEqual(contract["active_phase"], "49.3I.52F")
+            self.assertEqual(contract["active_phase"], "49.3I.52G")
             phase_labels = [
                 label.text()
                 for label in window.findChildren(QLabel)
                 if "Phase49.3I." in label.text()
             ]
             self.assertTrue(
-                any("Phase49.3I.52F" in value for value in phase_labels)
+                any("Phase49.3I.52G" in value for value in phase_labels)
             )
             self.assertFalse(
                 any("Phase49.3I.48" in value for value in phase_labels)
@@ -803,12 +804,22 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             "downloaded_image_files": ["a.jpg", "b.jpg"],
         }
 
+        async def fake_extract(_url, output_dir, _profile_dir, **_kwargs):
+            images_dir = Path(output_dir) / "images"
+            images_dir.mkdir(parents=True, exist_ok=True)
+            local_files = []
+            for index in range(1, 3):
+                target = images_dir / f"{index}.jpg"
+                Image.new("RGB", (480, 320), "white").save(target, format="JPEG")
+                local_files.append(str(target))
+            return {**async_result, "downloaded_image_files": local_files}
+
         with patch(
             "qt6.acquisition_runtime._browser_robots_gate",
             new=AsyncMock(return_value=0),
         ), patch(
             "qt6.acquisition_runtime.extract_direct_link",
-            new=AsyncMock(return_value=async_result),
+            new=AsyncMock(side_effect=fake_extract),
         ):
             result = self.kernel.acquisition.recover_product_images(
                 product_id,
@@ -844,6 +855,243 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertNotIn(
                 "دریافت مجدد تصاویر از لینک محصول",
                 labels,
+            )
+        finally:
+            page.close()
+
+
+    def test_adaptive_single_fails_over_and_reports_selected_method(self):
+        calls = []
+
+        async def fail_rich(*_args, **_kwargs):
+            raise acquisition_runtime.AcquisitionQualityError(
+                "no usable image",
+                {"title_ok": True, "data_signal": True, "local_images": 0},
+            )
+
+        async def legacy(_db, _source_cfg, **kwargs):
+            method = str(kwargs.get("collection_method") or "")
+            calls.append(method)
+            if method == "network_capture":
+                return {
+                    "product_id": 952001,
+                    "source_title": "Recovered Product",
+                    "images_found": 5,
+                    "images_saved": 5,
+                    "selected_method": method,
+                    "quality": {
+                        "title_ok": True,
+                        "data_signal": True,
+                        "local_images": 5,
+                    },
+                }
+            raise RuntimeError("unexpected fallback")
+
+        with patch(
+            "qt6.acquisition_runtime._collect_one",
+            new=AsyncMock(side_effect=fail_rich),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_legacy",
+            new=AsyncMock(side_effect=legacy),
+        ):
+            result = acquisition_runtime.run_single(
+                self.db,
+                source_code="makerworld",
+                product_url="https://makerworld.com/en/models/952001-adaptive-test",
+                image_limit=5,
+                collection_method="rich",
+                adaptive_fallback=True,
+            )
+
+        self.assertEqual(result["selected_method"], "network_capture")
+        self.assertEqual(
+            result["attempted_methods"],
+            ["rich", "network_capture"],
+        )
+        self.assertEqual(calls, ["network_capture"])
+        events = self.kernel.acquisition.recent_acquisition_events(limit=20)
+        selected = [
+            row for row in events
+            if row.get("action") == "method_selected"
+            and row.get("external_id") == "952001"
+        ]
+        self.assertTrue(selected)
+        self.assertEqual(selected[-1]["method"], "network_capture")
+
+    def test_batch_sticks_to_successful_method_for_next_product(self):
+        listing = "https://makerworld.com/en/search/models?keyword=sticky"
+        candidates = [
+            self._candidate("952010", listing),
+            self._candidate("952011", listing),
+        ]
+        preferred = []
+
+        async def adaptive(_db, _source_cfg, **kwargs):
+            preferred.append(str(kwargs.get("preferred_method") or ""))
+            external_id = str(kwargs.get("external_id") or "")
+            return {
+                "product_id": 960000 + int(external_id[-2:]),
+                "source_title": f"Product {external_id}",
+                "images_found": 5,
+                "images_saved": 5,
+                "selected_method": "network_capture",
+            }
+
+        with patch(
+            "qt6.acquisition_runtime._browser_robots_gate",
+            new=AsyncMock(return_value=0),
+        ), patch(
+            "qt6.acquisition_runtime.discover_preview_candidates_safe",
+            new=AsyncMock(return_value=candidates),
+        ), patch(
+            "qt6.acquisition_runtime._cache_candidate_thumbnail",
+            return_value="",
+        ), patch(
+            "qt6.acquisition_runtime._discover_listing",
+            new=AsyncMock(),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(side_effect=adaptive),
+        ):
+            result = acquisition_runtime.run_batch(
+                self.db,
+                source_code="makerworld",
+                listing_url=listing,
+                requested=2,
+                image_limit=5,
+                collection_method="rich",
+            )
+
+        self.assertEqual(result["collected"], 2)
+        self.assertEqual(preferred, ["rich", "network_capture"])
+        self.assertEqual(result["preferred_method"], "network_capture")
+
+    def test_batch_stops_after_all_methods_fail_and_leaves_remaining_new(self):
+        listing = "https://makerworld.com/en/search/models?keyword=circuit"
+        candidates = [
+            self._candidate("952020", listing),
+            self._candidate("952021", listing),
+        ]
+
+        with patch(
+            "qt6.acquisition_runtime._browser_robots_gate",
+            new=AsyncMock(return_value=0),
+        ), patch(
+            "qt6.acquisition_runtime.discover_preview_candidates_safe",
+            new=AsyncMock(return_value=candidates),
+        ), patch(
+            "qt6.acquisition_runtime._cache_candidate_thumbnail",
+            return_value="",
+        ), patch(
+            "qt6.acquisition_runtime._discover_listing",
+            new=AsyncMock(),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(
+                side_effect=acquisition_runtime.AcquisitionMethodsExhausted(
+                    [{"method": "rich", "error": "empty data"}]
+                )
+            ),
+        ):
+            result = acquisition_runtime.run_batch(
+                self.db,
+                source_code="makerworld",
+                listing_url=listing,
+                requested=2,
+                image_limit=5,
+            )
+
+        self.assertEqual(result["failed"], 1)
+        self.assertTrue(result["circuit_breaker"])
+        self.assertEqual(result["unattempted"], 1)
+        rows = list(
+            self.db.conn.execute(
+                "SELECT external_id, status FROM discovered_urls ORDER BY external_id"
+            )
+        )
+        states = {str(row["external_id"]): str(row["status"]) for row in rows}
+        self.assertEqual(states["952020"], "failed")
+        self.assertEqual(states["952021"], "new")
+
+    def test_bulk_recovery_stops_after_first_exhausted_product(self):
+        listing = "https://makerworld.com/en/search/models?keyword=recover-stop"
+        for external_id in ("952030", "952031"):
+            url = f"https://makerworld.com/en/models/{external_id}-recover-stop"
+            self.db.add_discovered("makerworld", external_id, url, listing)
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        calls = []
+        try:
+            page._populate_queue(reset=True)
+            page.queue_select_all_btn.click()
+            page.pool.start = lambda worker: captured.append(worker)
+
+            def fail_once(**kwargs):
+                calls.append(dict(kwargs))
+                raise acquisition_runtime.AcquisitionMethodsExhausted(
+                    [{"method": "rich", "error": "no data/image"}]
+                )
+
+            with patch.object(
+                QMessageBox,
+                "question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ), patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=fail_once,
+            ):
+                page._recover_selected_queue()
+                self.assertEqual(len(captured), 1)
+                result = captured[0].fn(lambda _value, _message: None)
+
+            self.assertEqual(len(calls), 1)
+            self.assertTrue(calls[0]["adaptive_fallback"])
+            self.assertEqual(result["failed"], 1)
+            self.assertTrue(result["circuit_breaker"])
+            self.assertEqual(result["unattempted"], 1)
+            rows = list(
+                self.db.conn.execute(
+                    "SELECT status FROM discovered_urls ORDER BY id"
+                )
+            )
+            self.assertEqual(
+                [str(row["status"]) for row in rows],
+                ["failed", "new"],
+            )
+        finally:
+            page.close()
+
+    def test_acquisition_log_is_visible_in_history_report(self):
+        from qt6.acquisition_trace import event
+
+        event(
+            self.db,
+            "method_failed",
+            status="error",
+            source_code="makerworld",
+            external_id="952040",
+            url="https://makerworld.com/en/models/952040-log-test",
+            method="rich",
+            message="no image",
+            detail={
+                "quality": {
+                    "title_ok": True,
+                    "data_signal": True,
+                    "local_images": 0,
+                }
+            },
+        )
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page.refresh()
+            text = page.summary.toPlainText()
+            self.assertIn("952040", text)
+            self.assertIn("rich", text)
+            self.assertIn("local_images=0", text)
+            self.assertTrue(
+                Path(self.kernel.acquisition.acquisition_log_path()).is_file()
             )
         finally:
             page.close()

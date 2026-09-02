@@ -1323,6 +1323,7 @@ class AcquisitionCore:
         same_domain_only: bool = True,
         progress=None,
         force_recover: bool = False,
+        adaptive_fallback: bool = False,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_single
 
@@ -1339,7 +1340,18 @@ class AcquisitionCore:
             same_domain_only=bool(same_domain_only),
             progress=progress,
             force_recover=bool(force_recover),
+            adaptive_fallback=bool(adaptive_fallback),
         )
+
+    def acquisition_log_path(self) -> str:
+        from .acquisition_trace import log_path
+
+        return str(log_path(self.db))
+
+    def recent_acquisition_events(self, limit: int = 60) -> list[dict[str, Any]]:
+        from .acquisition_trace import recent_events
+
+        return recent_events(self.db, limit=limit)
 
     def refresh_source_products(
         self,

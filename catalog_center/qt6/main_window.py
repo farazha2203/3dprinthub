@@ -34,7 +34,7 @@ from .theme import apply_theme
 from .workers import TaskPool
 
 
-ACTIVE_PHASE_LABEL = "49.3I.52F"
+ACTIVE_PHASE_LABEL = "49.3I.52G"
 
 
 NAV_ITEMS = (
