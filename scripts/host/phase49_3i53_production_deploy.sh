@@ -188,8 +188,9 @@ fi
 printf '%s\n' "===== MYSQL BACKUP ====="
 git show "$FETCHED:scripts/host/phase49_3i53_mysql_backup.py" > "$BACKUP_ROOT/phase49_3i53_mysql_backup.py"
 chmod 700 "$BACKUP_ROOT/phase49_3i53_mysql_backup.py"
-PHASE49_BACKUP_ROOT="$BACKUP_ROOT" "$PY" \
-    "$BACKUP_ROOT/phase49_3i53_mysql_backup.py" "$EXPECTED_DB"
+PHASE49_BACKUP_ROOT="$BACKUP_ROOT" \
+PHASE49_PROJECT_ROOT="$ROOT" \
+"$PY" "$BACKUP_ROOT/phase49_3i53_mysql_backup.py" "$EXPECTED_DB"
 
 gzip -t "$BACKUP_ROOT/database-before-3i53.sql.gz"
 sha256sum "$BACKUP_ROOT/database-before-3i53.sql.gz" > "$BACKUP_ROOT/database.sha256"

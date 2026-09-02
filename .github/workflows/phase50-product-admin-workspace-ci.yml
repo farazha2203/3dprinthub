@@ -152,6 +152,7 @@ jobs:
           grep -F 'git merge --ff-only "$FETCHED"' scripts/host/phase49_3i53_production_deploy.sh
           grep -F 'PHASE49_3I53C_PRODUCTION_DEPLOY=PASS' scripts/host/phase49_3i53_production_deploy.sh
           grep -F 'phase49_3i53_mysql_backup.py' scripts/host/phase49_3i53_production_deploy.sh
+          grep -F 'PHASE49_PROJECT_ROOT="$ROOT"' scripts/host/phase49_3i53_production_deploy.sh
           python scripts/host/phase49_3i53_mysql_backup.py --self-test
 
       - name: Django system check

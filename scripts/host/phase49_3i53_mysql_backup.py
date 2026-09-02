@@ -75,7 +75,27 @@ def verify_gzip_mysql_dump(outfile: Path) -> int:
     return size
 
 
+def configure_project_import_path() -> Path:
+    raw_root = str(os.environ.get("PHASE49_PROJECT_ROOT") or "").strip()
+    if not raw_root:
+        raise SystemExit("DEPLOY_FAIL=project_root_env_missing")
+
+    project_root = Path(raw_root).expanduser().resolve()
+    if not (project_root / "manage.py").is_file():
+        raise SystemExit("DEPLOY_FAIL=project_root_manage_py_missing")
+    if not (project_root / "config" / "__init__.py").is_file():
+        raise SystemExit("DEPLOY_FAIL=project_root_config_package_missing")
+
+    root_text = str(project_root)
+    if root_text in sys.path:
+        sys.path.remove(root_text)
+    sys.path.insert(0, root_text)
+    return project_root
+
+
 def run_production_backup(expected_db: str) -> None:
+    project_root = configure_project_import_path()
+    print("PROJECT_ROOT=" + str(project_root))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
     import django
@@ -150,6 +170,28 @@ def run_production_backup(expected_db: str) -> None:
 
 
 def self_test() -> None:
+    with tempfile.TemporaryDirectory() as project_tmp:
+        project_root = Path(project_tmp) / "project"
+        (project_root / "config").mkdir(parents=True)
+        (project_root / "manage.py").write_text("# fixture\n", encoding="utf-8")
+        (project_root / "config" / "__init__.py").write_text("", encoding="utf-8")
+
+        previous_root = os.environ.get("PHASE49_PROJECT_ROOT")
+        previous_path = list(sys.path)
+        try:
+            os.environ["PHASE49_PROJECT_ROOT"] = str(project_root)
+            resolved = configure_project_import_path()
+            if resolved != project_root.resolve():
+                raise SystemExit("MYSQL_BACKUP_SELF_TEST=FAIL:project_root")
+            if sys.path[0] != str(project_root.resolve()):
+                raise SystemExit("MYSQL_BACKUP_SELF_TEST=FAIL:sys_path")
+        finally:
+            sys.path[:] = previous_path
+            if previous_root is None:
+                os.environ.pop("PHASE49_PROJECT_ROOT", None)
+            else:
+                os.environ["PHASE49_PROJECT_ROOT"] = previous_root
+
     payload = (
         b"-- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)\n"
         + b"CREATE TABLE demo(id bigint);\n"
