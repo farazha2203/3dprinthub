@@ -16,6 +16,7 @@ Persistent Catalog Root: `D:\projects\3dprinthub-catalog-manager`
 Catalog SQLite: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
 Canonical downloaded Product images: `D:\projects\3dprinthub-catalog-manager\collected\<source_code>\<external_id>\images`
 Canonical finalized SEO images: `D:\projects\3dprinthub-catalog-manager\collected\<source_code>\<external_id>\seo_images`
+Historical mature refetch folders below the same Source directory: `<external_id>_refresh_latest`, `<external_id>_refetch_<timestamp>`, `<external_id>_bulk_refetch_<timestamp>` (read-only image compatibility)
 Legacy Installed Application Root (retained/read-only fallback): `D:\projects\3dprinthub_catalog_center`
 Backups: `D:\projects\3dprinthub-backups`
 Runtime Logs: under persistent Catalog data root, including `logs\phase49_3f\YYYY-MM-DD\workflow-*.jsonl`
@@ -27,16 +28,16 @@ Rejected Product physical purge boundary: only under persistent Catalog `collect
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current 3I.52C runtime/CI checkpoint: `bb0dcd7cc521cacc540943ed8091a323038c28f9`
-Current 3I.52C Qt run: `33625257602` PASS
-Current 3I.52C Portable run: `33625257693` PASS
+Current 3I.52E runtime/CI checkpoint: `016e84ab98d2e5577633833cbc87cb96824dbbf0`
+Current 3I.52E Qt run: `33632062812` PASS
+Current 3I.52E Portable run: `33632062880` PASS
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
 Current Store/Profile/Filament CI runtime: `d519a360e65b79db4b62af206b95f63c3539bc12`
 Current Store/Profile/Filament CI run: `33059883188` PASS
-Current Windows packaged runtime: `bb0dcd7cc521cacc540943ed8091a323038c28f9`
+Current Windows packaged runtime: `016e84ab98d2e5577633833cbc87cb96824dbbf0`
 Catalog Center: `8.9.10` / build `2026.09.02.1`
-Windows artifact ID: `9844598171`
-Windows EXE SHA256: `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`
+Windows artifact ID: `9847317893`
+Windows EXE SHA256: `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`
 Last owner Local automated gate: PASS at local head `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local Django SQLite is through `store.0039`; backup `D:\projects\3dprinthub-backups\phase49-3i35-resume-20260827-142404\django-local-before-0039.sqlite3`.
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
