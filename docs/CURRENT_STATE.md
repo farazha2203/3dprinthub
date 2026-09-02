@@ -4,7 +4,7 @@ Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS P
 
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Runtime/CI checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`  
+Runtime/CI checkpoint: `bb0dcd7cc521cacc540943ed8091a323038c28f9`  
 Pre-phase rollback: `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.  
 Catalog Center: `8.9.10` / build `2026.09.02.1`.
 
@@ -15,6 +15,8 @@ Catalog Center: `8.9.10` / build `2026.09.02.1`.
 - stable discovery Preview cache is reused by Qt and persistent Crawl inventory;
 - cards visibly report `Preview: 1 عکس`, `N عکس دارد` or the explicit no-preview state;
 - rich receive emits per-Product image progress such as `عکس 3/5` and `عکس 5/5`;
+- selected collected Product has a dedicated live image strip showing actual local images, total image count and locally displayable file count;
+- dense receive/bulk controls were shortened to task labels (`شروع دریافت`, `موجودی Crawl`, `لینک پیش‌فرض`, `دریافت Product`, `افزودن انتخابی`, `حذف انتخابی`) while full explanations remain in tooltips;
 - current Search and persistent Crawl gallery/table use explicit Qt MultiSelection with select-all/clear and selected-count feedback;
 - selected candidates can be bulk-added/rejected; successful selected transfer returns Product ids and navigates to Products;
 - already-collected identities stay mapped to their existing Product;
@@ -24,15 +26,15 @@ Catalog Center: `8.9.10` / build `2026.09.02.1`.
 - Crawl bulk actions are task-grouped with shorter operator labels rather than a dense row of long actions.
 
 ### Verification
-- `33624135672` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS on source checkpoint `4cecdea...`;
+- `33625257602` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS on final runtime `bb0dcd7...`;
 - dedicated 3I.52C regression covers visual Preview, image count, Search clearing/scoping, Qt MultiSelection, per-image progress, Product routing and safe source recovery;
-- `33625043627` — Single Active AI — PASS;
+- `33625257485` — Single Active AI — PASS;
 - initial Portable `33624135587` failed because the new Qt regression imported PySide6 while that job installed only non-Qt requirements; recorded as ERR-49-097 and not rerun unchanged;
-- CI dependency boundary fixed at `b43880a763d00bfda52dc29c4bf080cb428b1230`;
-- `33625043651` — Windows Portable — PASS;
-- Portable release regression gate: 215 tests PASS;
-- artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9844568575`;
-- EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- CI dependency boundary was fixed at `b43880a763d00bfda52dc29c4bf080cb428b1230`; final visual runtime is `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
+- `33625257693` — Windows Portable — PASS;
+- Portable release regression gate: 217 tests PASS;
+- artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9844598171`;
+- EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
 - EXE self-verify and browser smoke PASS.
 
 ### Database / media / Production
