@@ -2380,7 +2380,18 @@ class ConnectionCore:
     def test_bridge(self) -> dict[str, Any]:
         settings = self.bridge_settings()
         health = dict(test_bridge(settings))
-        health["publish_readiness"] = dict(test_publish_readiness(settings))
+        try:
+            readiness = dict(test_publish_readiness(settings))
+        except Exception as exc:
+            readiness = {
+                "status": "blocked",
+                "ready": False,
+                "contract": "epic49-site-publish-readiness-v1",
+                "blockers": [
+                    f"publish_readiness_unavailable:{type(exc).__name__}"
+                ],
+            }
+        health["publish_readiness"] = readiness
         return health
 
 

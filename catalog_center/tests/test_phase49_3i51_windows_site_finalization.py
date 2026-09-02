@@ -397,10 +397,39 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             with patch(
                 "qt6.parity_core.test_bridge",
                 return_value={"ok": True, "status": "ok"},
-            ) as probe:
+            ) as probe, patch(
+                "qt6.parity_core.test_publish_readiness",
+                return_value={
+                    "ready": True,
+                    "status": "ready",
+                    "blockers": [],
+                },
+            ) as readiness_probe:
                 result = self.kernel.connection.test_bridge()
             self.assertTrue(result["ok"])
+            self.assertTrue(result["publish_readiness"]["ready"])
             self.assertEqual(probe.call_args.args[0].ftp_host, "")
+            self.assertEqual(readiness_probe.call_args.args[0].ftp_host, "")
+
+    def test_bridge_health_survives_missing_publish_readiness_endpoint(self):
+        self.db.set_setting("site_url", "https://3dprinthub.ir")
+        with patch("qt6.parity_core.get_secret", return_value="bridge-token"), patch(
+            "qt6.parity_core.test_bridge",
+            return_value={"ok": True, "status": "ok"},
+        ), patch(
+            "qt6.parity_core.test_publish_readiness",
+            side_effect=RuntimeError("Bridge HTTP 404"),
+        ):
+            result = self.kernel.connection.test_bridge()
+
+        self.assertTrue(result["ok"])
+        readiness = result["publish_readiness"]
+        self.assertFalse(readiness["ready"])
+        self.assertEqual(readiness["status"], "blocked")
+        self.assertIn(
+            "publish_readiness_unavailable:RuntimeError",
+            readiness["blockers"],
+        )
 
     def test_kernel_filament_sync_reuses_existing_bridge_and_reports_partial_failure(self):
         self.kernel.filaments.save_material("PLA")
