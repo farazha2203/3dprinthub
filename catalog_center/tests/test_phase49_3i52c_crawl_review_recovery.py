@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QLabel, QListWidget
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QLabel, QListWidget, QMessageBox
 
 from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
