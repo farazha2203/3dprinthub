@@ -1,3 +1,20 @@
+## 3I.53B — Host baseline correction before Production receiver audit
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / AUDIT RUNNER CI PASS / HOST READ-ONLY FORENSICS PARTIAL / PRODUCTION NOT CHANGED`.
+
+Read-only owner evidence corrected two stale assumptions:
+- Host HEAD is actually `198fa8e41ea4f4d87eb287ba69c91076acc78d62`, 23 commits ahead of the previous documented `c283864...` baseline and on the same GitHub ancestry chain;
+- system `python3` is unavailable; the documented Production venv Python is authoritative.
+
+The audit runner now accepts the verified current Host baseline explicitly instead of hardcoding an old SHA. It remains fail-closed on dirty worktree and live-target mismatch and performs no merge/migrate/collectstatic/restart.
+
+Current untracked blocker: `ls-output.txt`, old ASCII output/evidence file, SHA256 `8e01c07fcdf242fdc9be7de5a3a9b86cd7f0244e37ace629bc22d10ac1bee738`. It must be inspected without printing contents, then preserved outside the repo if safe.
+
+Verification: `d0984e1f9e01d959c028d2714c4814b6556acd84`; Product Admin/audit CI `33656829478` PASS; Single Active AI `33656829551` PASS.
+
+Next: venv-Python secret-marker scan → reversible evidence move with hash verification → updated read-only audit → review actual MySQL/migration/storage state before any backup/deploy/migration.
+
 ## 3I.53 — Site Product receiver readiness + Production read-only audit
 
 Date: 2026-09-02  

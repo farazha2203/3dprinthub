@@ -1,3 +1,38 @@
+## 2026-09-02 — Phase49.3I.53B Host baseline correction before receiver audit
+
+Status: `GITHUB_UPDATED / SITE CI PASS / AUDIT RUNNER FIX PASS / HOST FORENSICS PARTIAL / PRODUCTION NOT CHANGED BY THIS PHASE`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Current code checkpoint: `d0984e1f9e01d959c028d2714c4814b6556acd84`.  
+Rollback: `backup/pre-phase49-3i53b-host-audit-baseline-fix-20260902` → `eb03396a926a0b99d22a880c17c8a39d55e684d4`.
+
+### New Host evidence
+Owner read-only Host output proved:
+- root `/home/sfkilvrs/3dprinthub`;
+- origin `https://github.com/farazha2203/3dprinthub.git`;
+- branch `agent/phase49-3i18-operator-bulk-ai-rebuild`;
+- actual Host HEAD `198fa8e41ea4f4d87eb287ba69c91076acc78d62`;
+- tracked worktree unchanged and index unchanged;
+- one untracked file `ls-output.txt`, 1,153,478 bytes / 20,891 lines, SHA256 `8e01c07fcdf242fdc9be7de5a3a9b86cd7f0244e37ace629bc22d10ac1bee738`, mtime 2026-08-27;
+- system `python3` command is unavailable in the login shell.
+
+GitHub ancestry verification proved `198fa8e...` is 23 commits ahead of the previously documented `c283864...` and remains an ancestor of the current target branch. Therefore the old documented Production HEAD was stale and must not be used for reset/rollback.
+
+### Fix
+The repository audit runner no longer hardcodes `c283864...`. It now requires the operator-verified current Production HEAD as its second argument and still requires the live GitHub target as its first argument. The runner continues to use the documented Production venv Python `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`, not `python3`.
+
+### Verification
+- Phase50 Product Admin / audit contract run `33656829478` PASS;
+- Single Active AI `33656829551` PASS;
+- shell syntax and explicit two-argument baseline contract PASS.
+
+### Exact next task
+Use Production venv Python to inspect only metadata/secret markers of `ls-output.txt` without printing its contents. If safe, move the file reversibly to a Host evidence directory outside the repo and verify its SHA256 unchanged. Then run the updated repository-owned read-only audit with:
+1. live GitHub target resolved by `git ls-remote`;
+2. verified Host baseline `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.
+Do not migrate/deploy until that audit output is reviewed.
+
 ## 2026-09-02 — Phase49.3I.53 Site publish receiver readiness + Host audit gate
 
 Status: `GITHUB_UPDATED / SITE CI PASS / WINDOWS QT PASS / PORTABLE PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT TOUCHED`.

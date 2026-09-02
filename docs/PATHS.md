@@ -1,3 +1,10 @@
+## Phase49.3I.53B Host evidence — 2026-09-02
+Verified Host project Python: `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`.
+System `python3`: unavailable in the login shell.
+Actual read-only Host HEAD observed: `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.
+Untracked Host evidence currently blocking clean-worktree gate: `/home/sfkilvrs/3dprinthub/ls-output.txt`; SHA256 `8e01c07fcdf242fdc9be7de5a3a9b86cd7f0244e37ace629bc22d10ac1bee738`.
+Updated audit runner contract: `scripts/host/phase49_3i53_production_readonly_audit.sh <target-sha> <verified-host-head>`.
+
 ## Phase49.3I.53 Site/Host paths — 2026-09-02
 Production read-only audit runner in Repository: `scripts/host/phase49_3i53_production_readonly_audit.sh`.
 Site receiver readiness endpoint after deploy: `https://3dprinthub.ir/api/catalog-bridge/v1/publish-readiness/`.

@@ -1,3 +1,17 @@
+## Phase49.3I.53B Host evidence correction — 2026-09-02
+
+New verified Host facts:
+- system/login-shell `python3` is not available;
+- use `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python` for project Python probes;
+- actual Host HEAD observed read-only is `198fa8e41ea4f4d87eb287ba69c91076acc78d62`;
+- tracked worktree/index were clean, but `ls-output.txt` is an untracked old evidence/output file and must be inspected/preserved before clearing the repo;
+- do not reset to stale documented `c283864...`; GitHub comparison shows current Host HEAD is 23 commits ahead on the same ancestry chain.
+
+The Production read-only audit now takes:
+`phase49_3i53_production_readonly_audit.sh <live-target-sha> <verified-current-host-head>`.
+
+Strict clean-worktree remains mandatory before deployment. Untracked operational evidence should be moved reversibly outside the repository with hash verification rather than deleted blindly.
+
 ## Phase49.3I.53 receiver/deploy constraint — 2026-09-02
 
 Before any new Product-receiver deployment, run the repository-owned read-only audit:

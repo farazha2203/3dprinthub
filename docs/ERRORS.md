@@ -1,3 +1,21 @@
+### ERR-49-105 — Host forensic helper used unavailable system python3 and stale audit baseline
+**Date:** 2026-09-02  
+**Environment:** cPanel Host `/home/sfkilvrs/3dprinthub`.
+
+**Observed:** the first read-only deploy audit stopped on a dirty worktree because of untracked `ls-output.txt`. Follow-up forensics proved tracked files/index were clean and actual Host HEAD was `198fa8e41ea4f4d87eb287ba69c91076acc78d62`, but the helper then stopped at `bash: python3: command not found` before secret-marker scanning, ancestry and live-target checks completed.
+
+**Root cause:** two assumptions were stale/wrong:
+1. the ad-hoc forensic helper used generic `python3` instead of the documented Production venv Python;
+2. the repository audit runner still hardcoded historical Production HEAD `c283864...`, while GitHub comparison proves the actual Host HEAD `198fa8e...` is 23 commits ahead of it and on the same ancestry chain.
+
+**Failed condition:** do not rerun the same helper with `python3`; do not reset Host to `c283864...`; do not rerun the old hardcoded audit script unchanged.
+
+**Correct fix:** use `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python` for Host Python probes; parameterize the audit runner so the operator-verified current Host HEAD is passed explicitly as argument 2; keep live GitHub target as argument 1; preserve strict clean-worktree and no-deploy semantics.
+
+**Verification:** commit `d0984e1f9e01d959c028d2714c4814b6556acd84`; Product Admin/audit CI `33656829478` PASS; Single Active AI `33656829551` PASS.
+
+**Prevention:** Host operational scripts must use the verified project venv interpreter and must accept a read-only verified baseline rather than freezing an old Production SHA in source.
+
 ### ERR-49-104 — Bridge-only Windows fixture crossed the new Site readiness boundary
 **Date:** 2026-09-02  
 **Environment:** first Phase49.3I.53 Windows Qt run `33652583946` on code `bca8aceee9b08935e82aea36f82d3f331e079d83`.
