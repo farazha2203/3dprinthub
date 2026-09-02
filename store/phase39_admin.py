@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import re
 
+from django import forms
 from django.contrib import admin
 from django.db.models import Sum
 from django.utils.html import format_html
 
 from .models import PricingSetting, Product, ProductReview, ProductVariant
 from .phase39_models import (
-    AccessoryComponent, MaterialColorOption, ProductBOMItem, ProductMaterialRecommendation,
+    AccessoryComponent, FilamentBrand, MaterialColorOption, ProductBOMItem, ProductMaterialRecommendation,
     ProductPromotion, ProductReviewImage, ShippingRateRule,
 )
 
@@ -91,15 +92,50 @@ if pricing_admin:
     pricing_admin.__class__.list_display = display
 
 
+@admin.register(FilamentBrand)
+class FilamentBrandAdmin(admin.ModelAdmin):
+    list_display = ["name", "description_excerpt", "is_active", "sort_order"]
+    list_editable = ["is_active", "sort_order"]
+    search_fields = ["name", "description"]
+    list_filter = ["is_active"]
+
+    @admin.display(description="توضیح")
+    def description_excerpt(self, obj):
+        value = str(obj.description or "").strip()
+        return value[:100] + ("…" if len(value) > 100 else "")
+
+
+class MaterialColorOptionAdminForm(forms.ModelForm):
+    brand_name = forms.ChoiceField(label="برند", choices=(), required=True)
+
+    class Meta:
+        model = MaterialColorOption
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = [
+            (item.name, item.name)
+            for item in FilamentBrand.objects.filter(is_active=True).order_by(
+                "sort_order", "name", "id"
+            )
+        ]
+        current = str(getattr(self.instance, "brand_name", "") or "").strip()
+        if current and current not in {value for value, _label in choices}:
+            choices.append((current, current))
+        self.fields["brand_name"].choices = choices
+
+
 @admin.register(MaterialColorOption)
 class MaterialColorOptionAdmin(admin.ModelAdmin):
+    form = MaterialColorOptionAdminForm
     list_display = [
         "material", "brand_name", "color_chip", "name", "color_type",
         "color_finish", "sale_price_per_roll", "effective_price",
         "current_stock", "current_roll_count", "is_active",
     ]
     list_filter = ["material", "color_type", "color_finish", "is_active"]
-    search_fields = ["name", "code", "material__name", "brand_name"]
+    search_fields = ["name", "code", "material__name", "brand_name", "description"]
     list_editable = ["is_active"]
     readonly_fields = ["effective_price", "current_stock", "filament_preview"]
     fieldsets = (
@@ -109,6 +145,7 @@ class MaterialColorOptionAdmin(admin.ModelAdmin):
                 "fields": (
                     "material",
                     "brand_name",
+                    "description",
                     "name",
                     "code",
                     "is_active",

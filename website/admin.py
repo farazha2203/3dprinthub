@@ -173,7 +173,66 @@ class MaterialAdmin(admin.ModelAdmin):
         "sort_order",
     ]
     list_editable = ["price_per_kg", "is_active", "sort_order"]
-    search_fields = ["name", "main_usage", "sample_parts"]
+    search_fields = ["name", "catalog_description", "main_usage", "sample_parts"]
+    fieldsets = (
+        (
+            "هویت و SEO متریال",
+            {
+                "fields": (
+                    "name",
+                    "catalog_description",
+                    "main_usage",
+                    "sample_parts",
+                    "is_active",
+                    "sort_order",
+                )
+            },
+        ),
+        (
+            "قیمت و موجودی",
+            {
+                "fields": (
+                    "price_per_kg",
+                    "default_roll_weight_grams",
+                    "default_purchase_price_per_roll",
+                    "sale_price_per_gram",
+                    "reorder_threshold_grams",
+                    "track_filament_inventory",
+                )
+            },
+        ),
+        (
+            "ویژگی‌های فنی",
+            {
+                "fields": (
+                    "strength",
+                    "heat_resistance",
+                    "flexibility",
+                    "chemical_resistance",
+                    "printability",
+                )
+            },
+        ),
+        (
+            "قیمت‌گذاری بازار / مرجع",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "market_pricing_enabled",
+                    "bambu_product_url",
+                    "bambu_variant_hint",
+                    "bambu_reference_weight_grams",
+                    "market_import_cost_percent",
+                    "market_margin_percent",
+                    "market_bambu_usd_price",
+                    "market_fx_daily_high_toman",
+                    "market_cost_price_per_gram",
+                    "market_sale_price_per_gram",
+                    "market_price_updated_at",
+                ),
+            },
+        ),
+    )
 
 
 @admin.register(IndustryRecommendation)
