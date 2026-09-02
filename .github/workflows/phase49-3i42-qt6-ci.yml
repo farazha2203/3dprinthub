@@ -20,6 +20,8 @@ on:
       - "catalog_center/tests/test_phase49_3i46_catalog_paging_parity.py"
       - "catalog_center/tests/test_phase49_3i47_qt_workspace_image_bulk_ai.py"
       - "catalog_center/tests/test_phase49_3i48_owner_filament_site_foundation.py"
+      - "catalog_center/tests/test_phase49_3i49_site_bulk_publish.py"
+      - "catalog_center/app/phase49_3i49_site_publish.py"
       - "catalog_center/app/phase49_3i40_commerce_precision.py"
       - "catalog_center/tests/test_phase49_3i40_commerce_precision.py"
       - "catalog_center/tests/test_phase49_3i35_operator_workflow.py"
@@ -130,7 +132,7 @@ jobs:
       - name: Compile Qt6 and touched mature contracts
         shell: pwsh
         run: |
-          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/app/phase49_3i40_commerce_precision.py catalog_center/app/classic_methods.py catalog_center/app/page_extractor.py catalog_center/app/phase49_3i16_resilient_acquisition.py catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py catalog_center/tests/test_phase49_3i42c3_ai_crawl_parity.py catalog_center/tests/test_phase49_3i46_catalog_paging_parity.py catalog_center/tests/test_phase49_3i47_qt_workspace_image_bulk_ai.py catalog_center/tests/test_phase49_3i48_owner_filament_site_foundation.py catalog_center/tests/test_phase49_3i40_commerce_precision.py catalog_center/tests/test_phase49_3i35_operator_workflow.py catalog_center/app/epic49_site_sync.py catalog_center/app/phase49_readiness_wizard.py catalog_center/app/db.py catalog_center/app/ai_model_catalog.py catalog_center/app/ai_providers.py
+          python -m compileall -q catalog_center/qt6 catalog_center/qt_launch.py catalog_center/app/epic49_desktop_schema.py catalog_center/app/phase49_3b_guided_wizard.py catalog_center/app/phase49_3c_image_pipeline.py catalog_center/app/phase49_3f_workspace.py catalog_center/app/phase49_3f_gemini_provider.py catalog_center/app/phase49_3i17_single_active_ai_runtime.py catalog_center/app/phase49_3i34_profile_matrix.py catalog_center/app/phase49_3i35_operator_ledger.py catalog_center/app/phase49_3i36_stage_finalization.py catalog_center/app/phase49_3i37_seven_stage_ai.py catalog_center/app/phase49_3i39_professional_commerce.py catalog_center/app/phase49_3i40_commerce_precision.py catalog_center/app/classic_methods.py catalog_center/app/page_extractor.py catalog_center/app/phase49_3i16_resilient_acquisition.py catalog_center/app/phase49_3i38_crawl_ledger_stage_ai.py catalog_center/app/phase49_3i43_modern_acquisition_intelligence.py catalog_center/app/phase49_3i45_incremental_discovery_intelligence.py catalog_center/tests/test_phase49_3i42_qt6_foundation.py catalog_center/tests/test_phase49_3i42b_core_parity.py catalog_center/tests/test_phase49_3i42c_acquisition_runtime.py catalog_center/tests/test_phase49_3i42c3_ai_crawl_parity.py catalog_center/tests/test_phase49_3i46_catalog_paging_parity.py catalog_center/tests/test_phase49_3i47_qt_workspace_image_bulk_ai.py catalog_center/tests/test_phase49_3i48_owner_filament_site_foundation.py catalog_center/tests/test_phase49_3i49_site_bulk_publish.py catalog_center/app/phase49_3i49_site_publish.py catalog_center/tests/test_phase49_3i40_commerce_precision.py catalog_center/tests/test_phase49_3i35_operator_workflow.py catalog_center/app/epic49_site_sync.py catalog_center/app/phase49_readiness_wizard.py catalog_center/app/db.py catalog_center/app/ai_model_catalog.py catalog_center/app/ai_providers.py
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 full parity compileall failed' }
 
       - name: Qt6 foundation and full parity tests
@@ -174,6 +176,13 @@ jobs:
         run: |
           python -m unittest -v tests.test_phase49_3i48_owner_filament_site_foundation
           if ($LASTEXITCODE -ne 0) { throw 'Qt6 3I.48 owner contract failed' }
+
+      - name: Qt6 3I.49 bulk site publish parity
+        shell: pwsh
+        working-directory: catalog_center
+        run: |
+          python -m unittest -v tests.test_phase49_3i49_site_bulk_publish
+          if ($LASTEXITCODE -ne 0) { throw 'Qt6 3I.49 bulk site publish failed' }
 
       - name: Mature acquisition regressions
         shell: pwsh
