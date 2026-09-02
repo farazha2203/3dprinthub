@@ -82,6 +82,7 @@ def main(argv=None) -> int:
         print("QT6_SEARCH_LINK_REVIEW_AI=ENABLED", flush=True)
         print("QT6_FILAMENT_BRAND_COLOR_REGISTRY=ENABLED", flush=True)
         print("QT6_PUBLISHED_REPUBLISH_UPDATE=ENABLED", flush=True)
+        print("QT6_CRAWL_VISUAL_REVIEW_RECOVERY=ENABLED", flush=True)
         print(f"QT6_ROUTES={len(contract['routes'])}", flush=True)
         print(f"QT6_ACTIONS={contract['action_count']}", flush=True)
         print(f"QT6_CORES={len(contract['core_names'])}", flush=True)
@@ -107,6 +108,12 @@ def main(argv=None) -> int:
                 raise RuntimeError("Qt6 Filament brand/color registry core missing")
             if not hasattr(kernel, "complete_products_with_ai"):
                 raise RuntimeError("Qt6 Search-Link collect+AI completion core missing")
+            if not hasattr(kernel.acquisition, "current_review_items"):
+                raise RuntimeError("Qt6 current-search visual review core missing")
+            if not hasattr(kernel.acquisition, "candidate_preview_path"):
+                raise RuntimeError("Qt6 Crawl preview thumbnail core missing")
+            if not hasattr(kernel.acquisition, "recover_product_images"):
+                raise RuntimeError("Qt6 safe Product source recovery core missing")
             print("QT6_FOUNDATION_VERIFY=OK", flush=True)
             print("QT6_42B2_FULL_PARITY_VERIFY=OK", flush=True)
             window.close()

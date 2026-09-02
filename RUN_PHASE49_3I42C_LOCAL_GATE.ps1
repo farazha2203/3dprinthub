@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.52.1"
+$RunnerVersion = "49.3I.52.2"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -169,6 +169,7 @@ $required = @(
     "catalog_center\tests\test_phase49_3i49_site_bulk_publish.py",
     "catalog_center\tests\test_phase49_3i51_windows_site_finalization.py",
     "catalog_center\tests\test_phase49_3i52b_bidirectional_site_sync.py",
+    "catalog_center\tests\test_phase49_3i52c_crawl_review_recovery.py",
     "catalog_center\app\phase49_3i49_site_publish.py",
     "catalog_center\app\ai_model_catalog.py",
     "templates\store\product_detail.html",
@@ -262,6 +263,7 @@ Run-Native -File $Py -Arguments @(
     (Join-Path $Catalog "tests\test_phase49_3i49_site_bulk_publish.py"),
     (Join-Path $Catalog "tests\test_phase49_3i51_windows_site_finalization.py"),
     (Join-Path $Catalog "tests\test_phase49_3i52b_bidirectional_site_sync.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i52c_crawl_review_recovery.py"),
     (Join-Path $Catalog "app\phase49_3i49_site_publish.py"),
     (Join-Path $Catalog "app\ai_model_catalog.py")
 )
@@ -280,7 +282,8 @@ try {
         "tests.test_phase49_3i48_owner_filament_site_foundation",
         "tests.test_phase49_3i49_site_bulk_publish",
         "tests.test_phase49_3i51_windows_site_finalization",
-        "tests.test_phase49_3i52b_bidirectional_site_sync"
+        "tests.test_phase49_3i52b_bidirectional_site_sync",
+        "tests.test_phase49_3i52c_crawl_review_recovery"
     )
 
     Run-Native -File $Py -Arguments @(
@@ -387,6 +390,7 @@ Write-Host "PHASE49_3I47_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "PHASE49_3I50_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "PHASE49_3I51_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "PHASE49_3I52_LOCAL_GATE=PASS" -ForegroundColor Green
+Write-Host "PHASE49_3I52C_CRAWL_REVIEW_RECOVERY_LOCAL=PASS" -ForegroundColor Green
 Write-Host "HEAD=$FinalHead" -ForegroundColor Green
 Write-Host "CLASSIC_SEARCH_CONTINUATION=ENABLED" -ForegroundColor Green
 Write-Host "HYBRID_HTTP_SITEMAP_BROWSER=ENABLED" -ForegroundColor Green
@@ -409,7 +413,11 @@ Write-Host "9) Verify Filament tabs are Filaments / Materials / Brands / Colors 
 Write-Host "10) Verify a source-missing Product gets one explicit default Profile with owner defaults and PLA/PETG-family Filaments only."
 Write-Host "11) Products: verify 'Receive Site Changes' can pull a newer clean Site revision and reports a conflict instead of overwriting dirty Local edits."
 Write-Host "12) Verify a Site-only Product appears as a non-publishable Local mirror and cannot enter Batch publish until linked."
-Write-Host "13) Site migrations are NOT applied by this gate. Production and Host remain out of scope."
+Write-Host "13) Crawl Search-Link: verify current-search area clears, shows visual cards, and each fetched Product reports image progress such as 3/5 and 5/5."
+Write-Host "14) Crawl multi-select: normal clicks can keep multiple items selected; Select All/Clear/Add/Reject remain readable and usable."
+Write-Host "15) After Add Selected, verify existing/new collected Products are visible in Products instead of silently disappearing."
+Write-Host "16) Stage 3 Images: verify safe Source data+image recovery restores source facts/images while operator price/Profile/Filament/SEO/publish choices remain unchanged."
+Write-Host "17) Site migrations are NOT applied by this gate. Production and Host remain out of scope."
 
 if ($LaunchApp) {
     Step "11. START QT6 CATALOG CENTER"

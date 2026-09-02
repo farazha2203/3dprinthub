@@ -128,6 +128,7 @@ jobs:
             tests.test_phase49_3i18_operator_editing `
             tests.test_epic49_phase49_3i17_single_active_ai_runtime `
             tests.test_epic49_phase49_3i16_resilient_acquisition `
+            tests.test_phase49_3i52c_crawl_review_recovery `
             tests.test_portable_exe_contract `
             tests.test_v854_launcher `
             tests.test_epic49_operator_workflow `
