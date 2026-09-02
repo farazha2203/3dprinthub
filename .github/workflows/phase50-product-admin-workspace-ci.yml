@@ -22,6 +22,7 @@ on:
       - catalog_bridge/tests/test_phase49_3i53_publish_readiness.py
       - catalog_center/app/site_connection.py
       - catalog_center/app/phase49_3i49_site_publish.py
+      - scripts/host/phase49_3i53_production_readonly_audit.sh
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
@@ -135,6 +136,12 @@ jobs:
           node --check static/admin/master-django.js
           node --check static/admin/phase50-admin-console-v2.js
           node --check static/admin/phase49-admin-tabs.js
+
+      - name: Validate Production read-only audit script
+        run: |
+          bash -n scripts/host/phase49_3i53_production_readonly_audit.sh
+          grep -F "NO FETCH / NO MERGE / NO MIGRATE / NO COLLECTSTATIC / NO RESTART" scripts/host/phase49_3i53_production_readonly_audit.sh
+          grep -F "PHASE49_3I53_PRODUCTION_READONLY_AUDIT=PASS" scripts/host/phase49_3i53_production_readonly_audit.sh
 
       - name: Django system check
         run: python manage.py check
