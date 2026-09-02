@@ -153,7 +153,9 @@ class ProductsPage(QWidget):
         self.open_product = open_product
         self.navigate = navigate
         self.ai_pool = TaskPool()
+        self.publish_pool = TaskPool()
         self._bulk_ai_worker: Worker | None = None
+        self._bulk_publish_worker: Worker | None = None
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
@@ -246,6 +248,26 @@ class ProductsPage(QWidget):
         self.loaded_label.setObjectName("Muted")
         bulk_bar.addWidget(self.loaded_label)
         root.addLayout(bulk_bar)
+
+        publish_bar = QHBoxLayout()
+        publish_bar.addWidget(QLabel("انتشار سایت"))
+        self.ready_publish_btn = QPushButton("✅ آماده انتشار انتخاب‌شده‌ها")
+        self.ready_publish_btn.setToolTip(
+            "همه Gateهای واقعی Product را بررسی می‌کند و فقط موارد کامل را وارد صف انتشار می‌کند."
+        )
+        self.bulk_publish_btn = QPushButton("🚀 انتشار انتخاب‌شده‌های آماده روی سایت")
+        self.bulk_publish_btn.setProperty("primary", True)
+        self.bulk_publish_btn.setToolTip(
+            "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
+        )
+        self.bulk_publish_status = QLabel("")
+        self.bulk_publish_status.setObjectName("Muted")
+        self.ready_publish_btn.clicked.connect(self._mark_ready_selected)
+        self.bulk_publish_btn.clicked.connect(self._publish_selected)
+        publish_bar.addWidget(self.ready_publish_btn)
+        publish_bar.addWidget(self.bulk_publish_btn)
+        publish_bar.addWidget(self.bulk_publish_status, 1)
+        root.addLayout(publish_bar)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setChildrenCollapsible(False)
@@ -579,6 +601,200 @@ class ProductsPage(QWidget):
             f"{count} محصول بازیابی شد.",
         )
 
+    def _mark_ready_selected(self) -> None:
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(
+                self,
+                "آماده انتشار",
+                "حداقل یک محصول را از گالری یا جدول انتخاب کن.",
+            )
+            return
+
+        result = self.kernel.publish.mark_ready_many(product_ids)
+        marked = int(result.get("marked") or 0)
+        blocked = list(result.get("blocked") or [])
+        self.refresh()
+
+        detail = ""
+        if blocked:
+            lines = []
+            for item in blocked[:8]:
+                missing = "، ".join(list(item.get("missing") or [])[:3])
+                lines.append(f"#{item.get('product_id')}: {missing}")
+            detail = "\n\nموارد آماده‌نشده:\n" + "\n".join(lines)
+
+        QMessageBox.information(
+            self,
+            "آمادگی انتشار",
+            (
+                f"{marked} محصول تیک «آماده انتشار» گرفت.\n"
+                f"{len(blocked)} محصول به‌دلیل Gate ناقص وارد صف نشد."
+                + detail
+            ),
+        )
+
+    def _publish_selected(self) -> None:
+        if self._bulk_publish_worker is not None:
+            QMessageBox.information(
+                self,
+                "انتشار گروهی",
+                "یک عملیات انتشار گروهی در حال اجرا است.",
+            )
+            return
+        if self._bulk_ai_worker is not None:
+            QMessageBox.information(
+                self,
+                "انتشار گروهی",
+                "ابتدا عملیات AI گروهی جاری را تمام کن.",
+            )
+            return
+
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(
+                self,
+                "انتشار گروهی",
+                "حداقل یک محصول را انتخاب کن.",
+            )
+            return
+
+        preflight = self.kernel.publish.preflight(product_ids)
+        queued = list(preflight.get("queued_ids") or [])
+        blocked = list(preflight.get("blocked") or [])
+        ready_not_checked = sorted(
+            set(preflight.get("publishable_ids") or []) - set(queued)
+        )
+        if not queued:
+            message = (
+                "هیچ Product انتخاب‌شده‌ای تیک «آماده انتشار» ندارد.\n\n"
+                "ابتدا «آماده انتشار انتخاب‌شده‌ها» را بزن تا Gateها بررسی شوند."
+            )
+            if blocked:
+                first = blocked[0]
+                message += (
+                    "\n\nنمونه نقص: #"
+                    + str(first.get("product_id"))
+                    + " • "
+                    + "، ".join(list(first.get("missing") or [])[:4])
+                )
+            QMessageBox.warning(self, "انتشار گروهی", message)
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "تأیید انتشار گروهی روی سایت",
+            (
+                f"محصول انتخاب‌شده: {len(product_ids)}\n"
+                f"آماده و تیک‌خورده برای ارسال: {len(queued)}\n"
+                f"کامل ولی بدون تیک آماده: {len(ready_not_checked)}\n"
+                f"دارای نقص Gate: {len(blocked)}\n\n"
+                "فقط Productهای آماده و تیک‌خورده Batch می‌شوند. "
+                "بعد از FTP + Bridge + بررسی HTTP عمومی، موارد موفق خودکار "
+                "به تب «ارسال / منتشرشده» منتقل می‌شوند.\n\n"
+                "انتشار شروع شود؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        self.archive_btn.setEnabled(False)
+        self.remove_btn.setEnabled(False)
+        self.restore_btn.setEnabled(False)
+        self.bulk_ai_btn.setEnabled(False)
+        self.ready_publish_btn.setEnabled(False)
+        self.bulk_publish_btn.setEnabled(False)
+        self.bulk_publish_status.setText(
+            f"شروع انتشار {len(queued)} محصول…"
+        )
+
+        def job(progress):
+            return self.kernel.publish.publish_many(
+                product_ids,
+                progress=progress,
+            )
+
+        worker = Worker(job)
+        self._bulk_publish_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.bulk_publish_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._bulk_publish_done)
+        worker.signals.error.connect(self._bulk_publish_error)
+        worker.signals.finished.connect(self._bulk_publish_finished)
+        self.publish_pool.start(worker)
+
+    def _bulk_publish_done(self, result=None) -> None:
+        data = dict(result or {})
+        published = int(data.get("published") or 0)
+        failed = int(data.get("failed") or 0)
+        skipped = int(data.get("skipped_count") or 0)
+        self.bulk_publish_status.setText(
+            f"✅ {published} منتشر • {failed} خطا • {skipped} رد Gate/بدون تیک"
+        )
+
+        if published:
+            target = next(
+                (
+                    index
+                    for index in range(self.lifecycle_tabs.count())
+                    if str(self.lifecycle_tabs.tabData(index) or "") == "published"
+                ),
+                -1,
+            )
+            if target >= 0:
+                self.lifecycle_tabs.setCurrentIndex(target)
+            else:
+                self.refresh()
+        else:
+            self.refresh()
+
+        lines = []
+        for item in list(data.get("items") or [])[:8]:
+            if not item.get("ok"):
+                lines.append(
+                    f"#{item.get('product_id')}: "
+                    f"{item.get('error') or item.get('status')}"
+                )
+        detail = ("\n\n" + "\n".join(lines)) if lines else ""
+        QMessageBox.information(
+            self,
+            "نتیجه انتشار گروهی",
+            (
+                f"منتشرشده و HTTP-تأییدشده: {published}\n"
+                f"ناموفق: {failed}\n"
+                f"رد Gate / بدون تیک آماده: {skipped}\n"
+                f"Batch: {data.get('batch_uuid') or '—'}"
+                + detail
+            ),
+        )
+
+    def _bulk_publish_error(self, detail: str) -> None:
+        self.bulk_publish_status.setText("❌ انتشار گروهی ناموفق")
+        self.refresh()
+        show_diagnostic_error(
+            self,
+            "خطای انتشار گروهی سایت",
+            detail,
+            context={
+                "product_count": len(self._selected_product_ids()),
+                "publish_queue_count": len(self.kernel.publish.queue()),
+            },
+        )
+
+    def _bulk_publish_finished(self) -> None:
+        self._bulk_publish_worker = None
+        self.archive_btn.setEnabled(True)
+        self.remove_btn.setEnabled(True)
+        self.restore_btn.setEnabled(True)
+        self.bulk_ai_btn.setEnabled(True)
+        self.ready_publish_btn.setEnabled(True)
+        self.bulk_publish_btn.setEnabled(True)
+
     def _bulk_ai_selected(self) -> None:
         if self._bulk_ai_worker is not None:
             QMessageBox.information(
@@ -647,6 +863,8 @@ class ProductsPage(QWidget):
         self.archive_btn.setEnabled(False)
         self.remove_btn.setEnabled(False)
         self.restore_btn.setEnabled(False)
+        self.ready_publish_btn.setEnabled(False)
+        self.bulk_publish_btn.setEnabled(False)
         self.bulk_ai_status.setText(
             f"شروع AI گروهی برای {len(product_ids)} محصول…"
         )
@@ -716,6 +934,8 @@ class ProductsPage(QWidget):
         self.archive_btn.setEnabled(True)
         self.remove_btn.setEnabled(True)
         self.restore_btn.setEnabled(True)
+        self.ready_publish_btn.setEnabled(True)
+        self.bulk_publish_btn.setEnabled(True)
 
     def _refresh_detail(self) -> None:
         product_id = self._selected_product_id()
