@@ -2127,20 +2127,48 @@ class OperationsPage(QWidget):
         self.image_limit.setValue(5)
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
 
-        self.start_btn = QPushButton("شروع دریافت محصولات از لینک")
+        self.start_btn = QPushButton("شروع دریافت")
         self.start_btn.setProperty("primary", True)
+        self.start_btn.setToolTip(
+            "Search/Listing فعلی را اجرا می‌کند؛ Preview محصولات ابتدا ظاهر می‌شود "
+            "و سپس دریافت صفحه و عکس هر Product با پیشرفت جداگانه ادامه پیدا می‌کند."
+        )
         self.stop_btn = QPushButton("توقف امن")
         self.stop_btn.setEnabled(False)
-        self.reset_failed_btn = QPushButton("بازگرداندن Failedها به صف")
-        self.queue_btn = QPushButton("رفتن به موجودی محصولات")
-        self.default_url_btn = QPushButton("لینک Search پیش‌فرض Source")
-        self.direct_btn = QPushButton("دریافت هوشمند از لینک Product")
-        self.login_profile_btn = QPushButton("Chrome پروفایل / ورود دستی")
-        self.debug_chrome_btn = QPushButton("Chrome متصل 9222")
-        self.harvest_btn = QPushButton("🔎 کشف جدیدها از همه Sourceها")
+        self.stop_btn.setToolTip("در مرز امن بعدی Crawl را متوقف می‌کند.")
+        self.reset_failed_btn = QPushButton("بازگردانی Failed")
+        self.reset_failed_btn.setToolTip("موارد Failed را برای تلاش مجدد به صف برمی‌گرداند.")
+        self.queue_btn = QPushButton("موجودی Crawl")
+        self.queue_btn.setToolTip("موجودی دائمی همه رکوردهای Crawl را باز می‌کند.")
+        self.default_url_btn = QPushButton("لینک پیش‌فرض")
+        self.default_url_btn.setToolTip(
+            "Search/Listing پیش‌فرض Source انتخاب‌شده را در فیلد لینک می‌گذارد."
+        )
+        self.direct_btn = QPushButton("دریافت Product")
+        self.direct_btn.setToolTip(
+            "لینک فعلی را به‌عنوان یک صفحه Product مستقیم دریافت می‌کند."
+        )
+        self.login_profile_btn = QPushButton("Chrome پروفایل")
+        self.login_profile_btn.setToolTip(
+            "Chrome با پروفایل پایدار را برای ورود دستی مجاز باز می‌کند."
+        )
+        self.debug_chrome_btn = QPushButton("Chrome 9222")
+        self.debug_chrome_btn.setToolTip(
+            "Chrome متصل روی پورت 9222 را برای روش موجود باز می‌کند."
+        )
+        self.harvest_btn = QPushButton("🔎 کشف همه Sourceها")
         self.harvest_btn.setProperty("success", True)
-        self.source_refresh_btn = QPushButton("♻ بروزرسانی محصولات Source")
-        self.refresh_btn = QPushButton("بروزرسانی وضعیت")
+        self.harvest_btn.setToolTip(
+            "از Sourceهای فعال، محصولات جدید را به‌صورت محدود و robots-aware کشف می‌کند."
+        )
+        self.source_refresh_btn = QPushButton("♻ بروزرسانی Source")
+        self.source_refresh_btn.setToolTip(
+            "محصولات موجود Source انتخاب‌شده را بدون پاک کردن تصمیم‌های اپراتور دوباره می‌خواند."
+        )
+        self.refresh_btn = QPushButton("بروزرسانی")
+        self.refresh_btn.setToolTip(
+            "وضعیت صف، Run و نمایش فعلی را دوباره می‌خواند."
+        )
 
         grid.addWidget(QLabel("سایت مادر / Source"), 0, 0)
         grid.addWidget(self.source, 0, 1)
@@ -2227,9 +2255,17 @@ class OperationsPage(QWidget):
         live_actions = QHBoxLayout()
         self.live_select_all_btn = QPushButton("انتخاب همه")
         self.live_clear_selection_btn = QPushButton("لغو انتخاب")
-        self.live_add_btn = QPushButton("افزودن انتخابی به محصولات")
+        self.live_add_btn = QPushButton("افزودن انتخابی")
         self.live_add_btn.setProperty("primary", True)
-        self.live_reject_btn = QPushButton("رد / حذف انتخابی")
+        self.live_add_btn.setToolTip(
+            "همه Productهای انتخاب‌شده همین جستجو را دریافت/تطبیق می‌دهد "
+            "و بعد صفحه محصولات را باز می‌کند."
+        )
+        self.live_reject_btn = QPushButton("حذف انتخابی")
+        self.live_reject_btn.setToolTip(
+            "کاندیداهای انتخاب‌شده همین جستجو را rejected می‌کند "
+            "تا دوباره خودکار اضافه نشوند."
+        )
         self.live_selected_label = QLabel("0 انتخاب‌شده")
         self.live_selected_label.setObjectName("Muted")
         live_actions.addWidget(self.live_select_all_btn)
@@ -2253,7 +2289,67 @@ class OperationsPage(QWidget):
             QAbstractItemView.SelectionMode.MultiSelection
         )
         self.live_results.setMinimumHeight(330)
-        live_layout.addWidget(self.live_results)
+
+        self.live_detail = QFrame()
+        self.live_detail.setObjectName("Card")
+        live_detail_layout = QVBoxLayout(self.live_detail)
+        self.live_detail_title = QLabel("یک محصول را برای بازبینی انتخاب کن")
+        self.live_detail_title.setStyleSheet(
+            "font-size: 15px; font-weight: 700;"
+        )
+        self.live_detail_title.setWordWrap(True)
+        self.live_detail_meta = QLabel(
+            "Preview و سپس عکس‌های واقعی دریافت‌شده همین Product اینجا دیده می‌شوند."
+        )
+        self.live_detail_meta.setObjectName("Muted")
+        self.live_detail_meta.setWordWrap(True)
+        live_detail_layout.addWidget(self.live_detail_title)
+        live_detail_layout.addWidget(self.live_detail_meta)
+
+        self.live_detail_images = QListWidget()
+        self.live_detail_images.setViewMode(QListWidget.ViewMode.IconMode)
+        self.live_detail_images.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.live_detail_images.setMovement(QListWidget.Movement.Static)
+        self.live_detail_images.setWrapping(True)
+        self.live_detail_images.setWordWrap(True)
+        self.live_detail_images.setIconSize(QSize(108, 78))
+        self.live_detail_images.setGridSize(QSize(132, 122))
+        self.live_detail_images.setSpacing(6)
+        self.live_detail_images.setSelectionMode(
+            QAbstractItemView.SelectionMode.NoSelection
+        )
+        self.live_detail_images.setMinimumHeight(245)
+        live_detail_layout.addWidget(self.live_detail_images, 1)
+
+        self.live_detail_url = QLineEdit()
+        self.live_detail_url.setReadOnly(True)
+        self.live_detail_url.setPlaceholderText("لینک صفحه Product")
+        live_detail_layout.addWidget(self.live_detail_url)
+
+        live_detail_actions = QHBoxLayout()
+        self.live_detail_open_btn = QPushButton("صفحه منبع")
+        self.live_detail_open_btn.clicked.connect(
+            self._open_selected_live_source
+        )
+        self.live_detail_product_btn = QPushButton("نمایش در محصولات")
+        self.live_detail_product_btn.setProperty("primary", True)
+        self.live_detail_product_btn.clicked.connect(
+            self._go_selected_live_product
+        )
+        self.live_detail_open_btn.setEnabled(False)
+        self.live_detail_product_btn.setEnabled(False)
+        live_detail_actions.addWidget(self.live_detail_open_btn)
+        live_detail_actions.addWidget(self.live_detail_product_btn)
+        live_detail_actions.addStretch(1)
+        live_detail_layout.addLayout(live_detail_actions)
+
+        live_splitter = QSplitter(Qt.Orientation.Horizontal)
+        live_splitter.setChildrenCollapsible(False)
+        live_splitter.addWidget(self.live_results)
+        live_splitter.addWidget(self.live_detail)
+        live_splitter.setStretchFactor(0, 3)
+        live_splitter.setStretchFactor(1, 2)
+        live_layout.addWidget(live_splitter, 1)
         receive_layout.addWidget(live_card, 1)
         receive_layout.addStretch(1)
 
@@ -2833,7 +2929,19 @@ class OperationsPage(QWidget):
         if "ID=" in text:
             external_id = text.split("ID=", 1)[1].split("•", 1)[0].strip()
             if external_id:
-                self._live_product_progress[external_id] = text
+                segments = [
+                    part.strip()
+                    for part in text.split("•")
+                    if part.strip()
+                ]
+                compact = ""
+                for position, part in enumerate(segments):
+                    if part.startswith("ID="):
+                        compact = " • ".join(
+                            segments[position + 1 :]
+                        ).strip()
+                        break
+                self._live_product_progress[external_id] = compact or text
 
         if (
             int(value) <= 25
@@ -3116,6 +3224,131 @@ class OperationsPage(QWidget):
             self.live_selected_label.setText(
                 f"{len(self.live_results.selectedItems())} انتخاب‌شده"
             )
+        if hasattr(self, "live_detail_images"):
+            self._refresh_live_detail()
+
+    def _refresh_live_detail(self) -> None:
+        self.live_detail_images.clear()
+        selected = self._selected_live_records()
+        if not selected:
+            self.live_detail_title.setText(
+                "یک محصول را برای بازبینی انتخاب کن"
+            )
+            self.live_detail_meta.setText(
+                "Preview و سپس عکس‌های واقعی دریافت‌شده همین Product اینجا دیده می‌شوند."
+            )
+            self.live_detail_url.clear()
+            self.live_detail_open_btn.setEnabled(False)
+            self.live_detail_product_btn.setEnabled(False)
+            return
+
+        if len(selected) > 1:
+            self.live_detail_title.setText(
+                f"{len(selected)} محصول انتخاب شده"
+            )
+            self.live_detail_meta.setText(
+                "برای مشاهده عکس‌های یک Product فقط همان مورد را انتخاب کن؛ "
+                "افزودن/حذف گروهی برای همه انتخاب‌ها فعال است."
+            )
+            self.live_detail_url.clear()
+            self.live_detail_open_btn.setEnabled(False)
+            self.live_detail_product_btn.setEnabled(False)
+            return
+
+        record = selected[0]
+        product_id = int(record.get("product_id") or 0)
+        external_id = str(record.get("external_id") or "")
+        source_code = str(
+            self._active_source_code
+            or self.source.currentData()
+            or ""
+        )
+        url = str(record.get("url") or "").strip()
+        self.live_detail_url.setText(url)
+        self.live_detail_open_btn.setEnabled(
+            url.startswith(("http://", "https://"))
+        )
+
+        if product_id > 0:
+            row = self.db.product(product_id)
+            data = dict(row) if row is not None else {}
+            title = (
+                data.get("title_fa")
+                or data.get("source_title")
+                or external_id
+                or f"Product #{product_id}"
+            )
+            image_items = self.kernel.images.local_items(product_id)
+            local_count = 0
+            for image in image_items[:24]:
+                slot = int(image.get("slot") or 0)
+                path = str(image.get("path") or "")
+                if path:
+                    local_count += 1
+                label = (
+                    f"عکس {slot or self.live_detail_images.count() + 1}"
+                )
+                if image.get("primary"):
+                    label += "\nاصلی"
+                elif image.get("slider"):
+                    label += "\nاسلایدر"
+                item = QListWidgetItem(label)
+                if path:
+                    item.setIcon(QIcon(path))
+                item.setToolTip(
+                    f"{image.get('filename') or ''}\n"
+                    f"{image.get('width') or 0}×{image.get('height') or 0}\n"
+                    f"{image.get('url') or ''}"
+                )
+                self.live_detail_images.addItem(item)
+
+            image_count = self.kernel.images.image_count(data)
+            if self.live_detail_images.count() == 0:
+                preferred = self.kernel.images.preferred_local_path(data)
+                if preferred:
+                    fallback_item = QListWidgetItem("تصویر محصول")
+                    fallback_item.setIcon(QIcon(preferred))
+                    self.live_detail_images.addItem(fallback_item)
+                    local_count = max(local_count, 1)
+
+            self.live_detail_title.setText(str(title))
+            self.live_detail_meta.setText(
+                f"{image_count} عکس دارد • {local_count} فایل محلی قابل نمایش • "
+                f"Product #{product_id}"
+            )
+            self.live_detail_product_btn.setEnabled(
+                callable(self.navigate)
+            )
+            return
+
+        preview = self.kernel.acquisition.candidate_preview_path(
+            source_code,
+            external_id,
+        )
+        if preview:
+            item = QListWidgetItem("Preview کشف")
+            item.setIcon(QIcon(preview))
+            self.live_detail_images.addItem(item)
+            preview_text = "۱ عکس Preview دارد"
+        else:
+            preview_text = "هنوز Preview تصویری ندارد"
+
+        self.live_detail_title.setText(
+            external_id or "کاندیدای کشف‌شده"
+        )
+        self.live_detail_meta.setText(
+            f"{preview_text} • دریافت کامل صفحه و عکس‌ها هنوز در صف است."
+        )
+        self.live_detail_product_btn.setEnabled(False)
+
+    def _go_selected_live_product(self) -> None:
+        rows = self._selected_live_records()
+        if len(rows) != 1:
+            return
+        if int(rows[0].get("product_id") or 0) <= 0:
+            return
+        if callable(self.navigate):
+            self.navigate("products")
 
     def _selected_live_records(self) -> list[dict]:
         output = []

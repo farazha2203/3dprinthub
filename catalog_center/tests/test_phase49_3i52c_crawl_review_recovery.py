@@ -17,6 +17,7 @@ from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
     candidate_by_identity,
     candidate_preview_cache_path,
+    set_candidate_status,
     upsert_candidate,
 )
 from qt6 import acquisition_runtime
@@ -192,6 +193,88 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             page.live_select_all_btn.click()
             self.assertEqual(len(page.live_results.selectedItems()), 2)
             self.assertIn("2 انتخاب‌شده", page.live_selected_label.text())
+        finally:
+            page.close()
+
+    def test_selected_collected_live_product_shows_real_image_strip_and_count(self):
+        listing = "https://makerworld.com/en/search/models?keyword=review-images"
+        external_id = "520015"
+        product_id = self._create_product(external_id)
+        local_dir = self.root / "collected" / "makerworld" / external_id
+        images_dir = local_dir / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        for name in ("one.jpg", "two.jpg"):
+            Image.new("RGB", (420, 300), "white").save(
+                images_dir / name,
+                format="JPEG",
+            )
+        urls = ["local://one.jpg", "local://two.jpg"]
+        self.db.update_product(
+            product_id,
+            {
+                "local_dir": str(local_dir),
+                "images_json": json.dumps(urls),
+                "selected_images_json": json.dumps(urls),
+                "primary_image_url": urls[0],
+            },
+        )
+        candidate = self._candidate(external_id, listing)
+        candidate_id = upsert_candidate(self.db, candidate)
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            candidate["source_url"],
+            listing,
+        )
+        queue = self.db.conn.execute(
+            "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
+            ("makerworld", external_id),
+        ).fetchone()
+        self.db.mark_url(int(queue["id"]), "collected")
+        set_candidate_status(
+            self.db,
+            candidate_id,
+            "imported",
+            product_id=product_id,
+        )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page._active_source_code = "makerworld"
+            page._active_listing_url = listing
+            page._active_run_started_at = ""
+            page._refresh_live_discovery()
+            self.assertEqual(page.live_results.count(), 1)
+            page.live_results.item(0).setSelected(True)
+            self.app.processEvents()
+            self.assertEqual(page.live_detail_images.count(), 2)
+            self.assertIn("2 عکس دارد", page.live_detail_meta.text())
+            self.assertIn(
+                "2 فایل محلی قابل نمایش",
+                page.live_detail_meta.text(),
+            )
+            self.assertTrue(page.live_detail_open_btn.isEnabled())
+        finally:
+            page.close()
+
+    def test_receive_action_labels_are_compact_but_keep_full_tooltips(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            self.assertEqual(page.start_btn.text(), "شروع دریافت")
+            self.assertEqual(page.queue_btn.text(), "موجودی Crawl")
+            self.assertEqual(page.default_url_btn.text(), "لینک پیش‌فرض")
+            self.assertEqual(page.direct_btn.text(), "دریافت Product")
+            self.assertEqual(page.live_add_btn.text(), "افزودن انتخابی")
+            self.assertEqual(page.live_reject_btn.text(), "حذف انتخابی")
+            for button in (
+                page.start_btn,
+                page.queue_btn,
+                page.default_url_btn,
+                page.direct_btn,
+                page.live_add_btn,
+                page.live_reject_btn,
+            ):
+                self.assertTrue(button.toolTip().strip())
         finally:
             page.close()
 
