@@ -19,11 +19,16 @@ _PERSIAN_RE = re.compile(r"[\u0600-\u06FF]")
 _SELECTION_CACHE: dict[str, tuple[float, "RuntimeSelection"]] = {}
 
 
-def _provider_client(provider: str, key: str, model: str = ""):
-    # Keep Django/site startup import-safe. The desktop/provider transport
-    # dependency (httpx) is required only when an operator actually runs AI.
-    from catalog_center.app.ai_providers import AIProviderClient
+def AIProviderClient(provider: str, key: str, model: str = ""):
+    # Compatibility-preserving lazy constructor: mature tests/extensions patch
+    # ai.model_policy.AIProviderClient, while normal Django startup still avoids
+    # importing the transport-backed desktop provider module.
+    from catalog_center.app.ai_providers import AIProviderClient as ProviderClient
 
+    return ProviderClient(provider, key, model)
+
+
+def _provider_client(provider: str, key: str, model: str = ""):
     return AIProviderClient(provider, key, model)
 
 
