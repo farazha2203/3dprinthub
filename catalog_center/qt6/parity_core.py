@@ -1211,6 +1211,117 @@ class FilamentParityCore:
             deactivate_available_material_color(self.db, int(previous_row_id))
         return dict(saved)
 
+    def site_payload(
+        self,
+        item: dict[str, Any],
+        *,
+        is_active: bool | None = None,
+    ) -> dict[str, Any]:
+        row = dict(item or {})
+        material = str(row.get("material") or row.get("material_name") or "").strip()
+        brand = str(
+            row.get("brand")
+            or row.get("brand_name")
+            or row.get("manufacturer")
+            or row.get("manufacturer_name")
+            or ""
+        ).strip()
+        color = str(row.get("color") or row.get("color_name") or "").strip()
+        if not material or not brand or not color:
+            raise ValueError("هویت Filament برای Sync سایت کامل نیست.")
+
+        palette = normalize_palette_hexes(
+            row.get("palette_hexes") or row.get("palette_hex_json") or [],
+            row.get("hex") or row.get("hex_code") or "",
+            row.get("secondary_hex") or "",
+            row.get("tertiary_hex") or "",
+        )
+        payload: dict[str, Any] = {
+            "material": material,
+            "brand": brand,
+            "manufacturer": brand,
+            "color": color,
+            "description": str(
+                row.get("description") or row.get("filament_description") or ""
+            ).strip(),
+            "color_type": str(row.get("color_type") or "solid").strip(),
+            "color_finish": str(row.get("color_finish") or "matte").strip(),
+            "palette_hexes": palette,
+            "hex": palette[0] if palette else "",
+            "secondary_hex": palette[1] if len(palette) > 1 else "",
+            "tertiary_hex": palette[2] if len(palette) > 2 else "",
+            "roll_weight_grams": max(
+                1, _number(row.get("roll_weight_grams"), 1000)
+            ),
+            "stock_roll_count": max(
+                0, _number(row.get("stock_roll_count"), 0)
+            ),
+            "purchase_price_per_roll": max(
+                0, _integer(row.get("purchase_price_per_roll"), 0)
+            ),
+            "sale_price_per_roll": max(
+                0, _integer(row.get("sale_price_per_roll"), 0)
+            ),
+            "usd_price_per_roll": max(
+                0, _number(row.get("usd_price_per_roll"), 0)
+            ),
+            "usd_fx_rate_toman": max(
+                0, _number(row.get("usd_fx_rate_toman"), 0)
+            ),
+            "print_hourly_rate": max(
+                0, _integer(row.get("print_hourly_rate"), 0)
+            ),
+            "supervision_hourly_rate": max(
+                0, _integer(row.get("supervision_hourly_rate"), 0)
+            ),
+            "preheat_hours": max(
+                0, _number(row.get("preheat_hours"), 0)
+            ),
+            "preheat_temperature_c": max(
+                0, _number(row.get("preheat_temperature_c"), 0)
+            ),
+            "preheat_hourly_rate": max(
+                0, _integer(row.get("preheat_hourly_rate"), 0)
+            ),
+            "filament_image_url": str(
+                row.get("filament_image_url") or ""
+            ).strip(),
+            "filament_image_path": str(
+                row.get("filament_image_path") or ""
+            ).strip(),
+            "is_active": (
+                bool(row.get("is_active", True))
+                if is_active is None
+                else bool(is_active)
+            ),
+        }
+
+        # Registry metadata is sent only when it is explicitly stored locally.
+        # This prevents an old inventory-only row from clearing richer Site
+        # metadata with an accidental empty fallback.
+        for raw in self._registry(self.BRAND_REGISTRY_KEY):
+            if not isinstance(raw, dict):
+                continue
+            if str(raw.get("name") or "").strip().casefold() == brand.casefold():
+                payload["brand_description"] = str(
+                    raw.get("description") or ""
+                ).strip()
+                break
+
+        for raw in self._registry(self.MATERIAL_REGISTRY_KEY):
+            if not isinstance(raw, dict):
+                continue
+            if str(raw.get("name") or "").strip().casefold() == material.casefold():
+                payload["material_description"] = str(
+                    raw.get("description") or ""
+                ).strip()
+                payload["material_price_per_kg"] = max(
+                    0, _integer(raw.get("price_per_kg"), 0)
+                )
+                break
+
+        return payload
+
     def deactivate(self, row_id: int) -> None:
         deactivate_available_material_color(self.db, int(row_id))
 
@@ -2210,6 +2321,21 @@ class ConnectionCore:
 
     def clear_bridge_token(self) -> None:
         delete_secret("bridge_token")
+
+    def bridge_settings(self) -> SiteConnection:
+        values = self.values()
+        cfg = SiteConnection(
+            ftp_host="",
+            ftp_port=21,
+            ftp_user="",
+            ftp_password="",
+            remote_root="/",
+            site_url=values["site_url"],
+            bridge_token=get_secret("bridge_token"),
+        ).normalized()
+        if not all([cfg.site_url, cfg.bridge_token]):
+            raise ValueError("آدرس سایت و Bridge Token باید کامل باشند.")
+        return cfg
 
     def settings(self, *, require_bridge: bool = True) -> SiteConnection:
         values = self.values()

@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -290,6 +291,91 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             {row["brand_name"] for row in rows},
             {"Brand A", "Brand B"},
         )
+
+    def test_filament_site_payload_carries_registry_metadata_without_ftp_dependency(self):
+        self.kernel.filaments.save_material(
+            "PLA",
+            "توضیح متریال سایت",
+            1_450_000,
+        )
+        self.kernel.filaments.save_brand(
+            "Bambu Lab",
+            "توضیح برند سایت",
+        )
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "Ocean",
+                "color_type": "dual",
+                "color_finish": "glossy",
+                "palette_hexes": ["#112233", "#445566"],
+            }
+        )
+        saved = self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Bambu Lab",
+                "color": "Ocean",
+                "description": "توضیح خود Filament",
+                "color_type": "dual",
+                "color_finish": "glossy",
+                "palette_hexes": ["#112233", "#445566"],
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 2,
+                "sale_price_per_roll": 2_000_000,
+            }
+        )
+        row = next(
+            item
+            for item in self.kernel.filaments.list()
+            if int(item["id"]) == int(saved["id"])
+        )
+        payload = self.kernel.filaments.site_payload(row)
+        self.assertEqual(payload["material"], "PLA")
+        self.assertEqual(payload["material_description"], "توضیح متریال سایت")
+        self.assertEqual(payload["material_price_per_kg"], 1_450_000)
+        self.assertEqual(payload["brand_description"], "توضیح برند سایت")
+        self.assertEqual(payload["description"], "توضیح خود Filament")
+        self.assertEqual(payload["palette_hexes"], ["#112233", "#445566"])
+
+        disabled = self.kernel.filaments.site_payload(row, is_active=False)
+        self.assertFalse(disabled["is_active"])
+
+    def test_kernel_filament_sync_reuses_existing_bridge_and_reports_partial_failure(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Brand One")
+        self.kernel.filaments.save_brand("Brand Two")
+        self._save_filament("PLA", "Brand One", "Black")
+        self._save_filament("PLA", "Brand Two", "White")
+        rows = self.kernel.filaments.list()
+
+        self.kernel.connection.bridge_settings = lambda: object()
+        calls = []
+
+        def fake_sync(_settings, payload, *, operator):
+            calls.append((dict(payload), operator))
+            if payload["brand"] == "Brand Two":
+                raise RuntimeError("simulated site failure")
+            return {"status": "ok"}
+
+        with patch("app.epic49_site_sync.sync_filament", side_effect=fake_sync):
+            result = self.kernel.sync_filaments_with_site(rows)
+
+        self.assertEqual(result["requested"], 2)
+        self.assertEqual(result["synced"], 1)
+        self.assertEqual(result["failed"], 1)
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(
+            all(operator == "catalog-center-qt6" for _payload, operator in calls)
+        )
+
+    def test_filament_page_exposes_selected_and_all_site_sync_controls(self):
+        page = FilamentsPage(self.db, kernel=self.kernel)
+        try:
+            self.assertEqual(page.site_sync_selected_btn.text(), "Sync انتخابی با سایت")
+            self.assertEqual(page.site_sync_all_btn.text(), "Sync همه با سایت")
+            self.assertIsNotNone(page.site_sync_status)
+        finally:
+            page.close()
 
     def test_product_image_stage_is_larger_two_row_capable_and_source_link_is_fixed(self):
         product_id = self._make_product("3510002")

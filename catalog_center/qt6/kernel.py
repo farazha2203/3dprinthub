@@ -1418,6 +1418,69 @@ class ApplicationKernel:
     def ai(self) -> AICore:
         return self.registry.require("ai", AICore)  # type: ignore[return-value]
 
+    def sync_filaments_with_site(
+        self,
+        items: list[dict[str, Any]] | None = None,
+        *,
+        progress=None,
+    ) -> dict[str, Any]:
+        from app.epic49_site_sync import sync_filament
+
+        rows = (
+            [dict(item) for item in items]
+            if items is not None
+            else self.filaments.list()
+        )
+        if not rows:
+            return {
+                "requested": 0,
+                "synced": 0,
+                "failed": 0,
+                "failures": [],
+            }
+
+        settings = self.connection.bridge_settings()
+        synced = 0
+        failures: list[dict[str, Any]] = []
+        total = len(rows)
+        for index, row in enumerate(rows, 1):
+            active = bool(row.pop("_site_active", row.get("is_active", True)))
+            payload = self.filaments.site_payload(row, is_active=active)
+            label = (
+                f"{payload.get('material')} / "
+                f"{payload.get('brand')} / "
+                f"{payload.get('color')}"
+            )
+            if callable(progress):
+                progress(
+                    int((index - 1) / max(1, total) * 100),
+                    f"Sync Filament {index}/{total}: {label}",
+                )
+            try:
+                sync_filament(
+                    settings,
+                    payload,
+                    operator="catalog-center-qt6",
+                )
+                synced += 1
+            except Exception as exc:
+                failures.append({
+                    "identity": label,
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
+            if callable(progress):
+                progress(
+                    int(index / max(1, total) * 100),
+                    f"Sync Filament {index}/{total} تمام شد",
+                )
+
+        return {
+            "requested": total,
+            "synced": synced,
+            "failed": len(failures),
+            "failures": failures,
+        }
+
     def postprocess_full_product_ai(
         self,
         product_id: int,

@@ -1056,6 +1056,8 @@ class FilamentsPage(QWidget):
             raise RuntimeError("FilamentsPage requires ApplicationKernel")
         self.db = db
         self.kernel = kernel
+        self.site_pool = TaskPool()
+        self._site_sync_worker: Worker | None = None
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
@@ -1083,11 +1085,16 @@ class FilamentsPage(QWidget):
         add_btn.setProperty("primary", True)
         edit_btn = QPushButton("ویرایش فیلامنت")
         deactivate_btn = QPushButton("غیرفعال")
+        self.site_sync_selected_btn = QPushButton("Sync انتخابی با سایت")
+        self.site_sync_all_btn = QPushButton("Sync همه با سایت")
+        self.site_sync_all_btn.setProperty("primary", True)
         refresh_btn = QPushButton("بروزرسانی")
 
         add_btn.clicked.connect(self._add_filament)
         edit_btn.clicked.connect(self._edit_filament)
         deactivate_btn.clicked.connect(self._deactivate_filament)
+        self.site_sync_selected_btn.clicked.connect(self._sync_selected_site)
+        self.site_sync_all_btn.clicked.connect(self._sync_all_site)
         refresh_btn.clicked.connect(self.refresh)
 
         bar.addWidget(QLabel("متریال"))
@@ -1096,8 +1103,17 @@ class FilamentsPage(QWidget):
         bar.addWidget(add_btn)
         bar.addWidget(edit_btn)
         bar.addWidget(deactivate_btn)
+        bar.addWidget(self.site_sync_selected_btn)
+        bar.addWidget(self.site_sync_all_btn)
         bar.addWidget(refresh_btn)
         filament_layout.addLayout(bar)
+
+        self.site_sync_status = QLabel(
+            "تغییرات Filament ابتدا در Catalog محلی ذخیره می‌شوند؛ Sync سایت از Bridge امن موجود استفاده می‌کند."
+        )
+        self.site_sync_status.setObjectName("Muted")
+        self.site_sync_status.setWordWrap(True)
+        filament_layout.addWidget(self.site_sync_status)
 
         self.model = FilamentTableModel(db)
         self.proxy = FilamentFilterProxyModel(self)
@@ -1291,11 +1307,17 @@ class FilamentsPage(QWidget):
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
         try:
-            self.kernel.filaments.save(dialog.values())
+            saved = self.kernel.filaments.save(dialog.values())
         except Exception as exc:
             QMessageBox.warning(self, "فیلامنت", str(exc))
             return
         self.refresh()
+        enriched = self._filament_by_id(int(saved.get("id") or 0))
+        if enriched:
+            self._start_site_sync(
+                [enriched],
+                "Filament جدید محلی ذخیره شد؛ Sync سایت",
+            )
 
     def _edit_filament(self) -> None:
         row = self._selected_row()
@@ -1309,15 +1331,30 @@ class FilamentsPage(QWidget):
         )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
+        old_id = int(row.get("_row_id") or row.get("id") or 0)
         try:
-            self.kernel.filaments.save(
+            saved = self.kernel.filaments.save(
                 dialog.values(),
-                previous_row_id=int(row.get("_row_id") or row.get("id") or 0),
+                previous_row_id=old_id,
             )
         except Exception as exc:
             QMessageBox.warning(self, "فیلامنت", str(exc))
             return
         self.refresh()
+        sync_rows: list[dict] = []
+        new_id = int(saved.get("id") or 0)
+        if old_id and new_id and old_id != new_id:
+            old_payload = dict(row)
+            old_payload["_site_active"] = False
+            sync_rows.append(old_payload)
+        enriched = self._filament_by_id(new_id)
+        if enriched:
+            sync_rows.append(enriched)
+        if sync_rows:
+            self._start_site_sync(
+                sync_rows,
+                "ویرایش Filament محلی ذخیره شد؛ Sync سایت",
+            )
 
     def _deactivate_filament(self) -> None:
         row = self._selected_row()
@@ -1337,6 +1374,121 @@ class FilamentsPage(QWidget):
             QMessageBox.warning(self, "فیلامنت", str(exc))
             return
         self.refresh()
+        disabled = dict(row)
+        disabled["_site_active"] = False
+        self._start_site_sync(
+            [disabled],
+            "Filament محلی غیرفعال شد؛ Sync وضعیت سایت",
+        )
+
+    def _filament_by_id(self, row_id: int) -> dict | None:
+        if int(row_id or 0) <= 0:
+            return None
+        return next(
+            (
+                dict(item)
+                for item in self.kernel.filaments.list()
+                if int(item.get("id") or 0) == int(row_id)
+            ),
+            None,
+        )
+
+    def _start_site_sync(self, rows: list[dict], label: str) -> None:
+        payloads = [dict(item) for item in rows or [] if isinstance(item, dict)]
+        if not payloads:
+            self.site_sync_status.setText("Filament قابل Sync پیدا نشد.")
+            return
+        if self._site_sync_worker is not None:
+            self.site_sync_status.setText(
+                "یک Sync سایت در حال اجرا است؛ تغییر محلی ذخیره شد. پس از پایان «Sync همه با سایت» را بزن."
+            )
+            return
+
+        def job(progress):
+            return self.kernel.sync_filaments_with_site(
+                payloads,
+                progress=progress,
+            )
+
+        worker = Worker(job)
+        self._site_sync_worker = worker
+        self.site_sync_selected_btn.setEnabled(False)
+        self.site_sync_all_btn.setEnabled(False)
+        self.site_sync_status.setText(f"{label}…")
+        worker.signals.progress.connect(
+            lambda value, message: self.site_sync_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._site_sync_done)
+        worker.signals.error.connect(self._site_sync_error)
+        worker.signals.finished.connect(self._site_sync_finished)
+        self.site_pool.start(worker)
+
+    def _site_sync_done(self, result=None) -> None:
+        data = dict(result or {})
+        synced = int(data.get("synced") or 0)
+        failed = int(data.get("failed") or 0)
+        self.site_sync_status.setText(
+            f"✅ Sync سایت: {synced} موفق • {failed} خطا"
+            if failed == 0
+            else f"⚠️ Sync سایت: {synced} موفق • {failed} خطا؛ جزئیات در Retry بعدی حفظ می‌شود."
+        )
+
+    def _site_sync_error(self, detail: str) -> None:
+        lines = [line.strip() for line in str(detail or "").splitlines() if line.strip()]
+        short = lines[-1] if lines else "خطای نامشخص"
+        self.site_sync_status.setText(
+            f"⚠️ تغییر محلی محفوظ است؛ Sync سایت انجام نشد: {short}"
+        )
+
+    def _site_sync_finished(self) -> None:
+        self._site_sync_worker = None
+        self.site_sync_selected_btn.setEnabled(True)
+        self.site_sync_all_btn.setEnabled(True)
+
+    def _sync_selected_site(self) -> None:
+        row = self._selected_row()
+        if not row:
+            QMessageBox.warning(self, "Sync سایت", "یک Filament را انتخاب کن.")
+            return
+        enriched = self._filament_by_id(
+            int(row.get("_row_id") or row.get("id") or 0)
+        ) or dict(row)
+        self._start_site_sync([enriched], "Sync Filament انتخابی با سایت")
+
+    def _sync_all_site(self) -> None:
+        rows = self.kernel.filaments.list()
+        if not rows:
+            QMessageBox.information(self, "Sync سایت", "Filament فعال برای Sync وجود ندارد.")
+            return
+        self._start_site_sync(rows, f"Sync {len(rows)} Filament فعال با سایت")
+
+    def _registry_sync_delta(
+        self,
+        before_rows: list[dict],
+        *,
+        field: str,
+        new_name: str,
+    ) -> list[dict]:
+        target = str(new_name or "").strip().casefold()
+        old_rows = [dict(item) for item in before_rows]
+        active_after = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if str(item.get(field) or "").strip().casefold() == target
+        ]
+        old_names = {
+            str(item.get(field) or "").strip().casefold()
+            for item in old_rows
+        }
+        sync_rows: list[dict] = []
+        if old_names and old_names != {target}:
+            for item in old_rows:
+                item["_site_active"] = False
+                sync_rows.append(item)
+        sync_rows.extend(active_after)
+        return sync_rows
 
     def _reload_material_registry(self) -> None:
         records = self.kernel.filaments.material_records()
@@ -1385,13 +1537,30 @@ class FilamentsPage(QWidget):
         )
         if not ok:
             return
+        previous_name = str(current.get("name") or "").strip()
+        before_rows = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if str(item.get("material_name") or "").strip().casefold()
+            == previous_name.casefold()
+        ] if previous_name else []
         self.kernel.filaments.save_material(
             name,
             description,
             price,
-            previous_name=str(current.get("name") or ""),
+            previous_name=previous_name,
         )
         self.refresh()
+        sync_rows = self._registry_sync_delta(
+            before_rows,
+            field="material_name",
+            new_name=name,
+        )
+        if sync_rows:
+            self._start_site_sync(
+                sync_rows,
+                "متریال محلی بروزرسانی شد؛ Sync Filamentهای وابسته با سایت",
+            )
 
     def _add_material(self) -> None:
         try:
@@ -1459,12 +1628,29 @@ class FilamentsPage(QWidget):
         )
         if not ok:
             return
+        previous_name = str(current.get("name") or "").strip()
+        before_rows = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if str(item.get("brand_name") or "").strip().casefold()
+            == previous_name.casefold()
+        ] if previous_name else []
         self.kernel.filaments.save_brand(
             name,
             description,
-            previous_name=str(current.get("name") or ""),
+            previous_name=previous_name,
         )
         self.refresh()
+        sync_rows = self._registry_sync_delta(
+            before_rows,
+            field="brand_name",
+            new_name=name,
+        )
+        if sync_rows:
+            self._start_site_sync(
+                sync_rows,
+                "برند محلی بروزرسانی شد؛ Sync Filamentهای وابسته با سایت",
+            )
 
     def _add_brand(self) -> None:
         try:
@@ -1545,15 +1731,33 @@ class FilamentsPage(QWidget):
         dialog = ColorPresetDialog(preset, parent=self)
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
+        previous_name = str(preset.get("name") or "").strip()
+        before_rows = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if str(item.get("color_name") or "").strip().casefold()
+            == previous_name.casefold()
+        ]
+        values = dialog.values()
         try:
             self.kernel.filaments.save_color_preset(
-                dialog.values(),
-                previous_name=str(preset.get("name") or ""),
+                values,
+                previous_name=previous_name,
             )
         except Exception as exc:
             QMessageBox.warning(self, "رنگ", str(exc))
             return
-        self._reload_colors()
+        self.refresh()
+        sync_rows = self._registry_sync_delta(
+            before_rows,
+            field="color_name",
+            new_name=str(values.get("name") or ""),
+        )
+        if sync_rows:
+            self._start_site_sync(
+                sync_rows,
+                "رنگ محلی بروزرسانی شد؛ Sync Filamentهای وابسته با سایت",
+            )
 
     def _delete_color(self) -> None:
         preset = self._selected_color_preset()
