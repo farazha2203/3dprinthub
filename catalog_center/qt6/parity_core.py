@@ -2358,7 +2358,7 @@ class ConnectionCore:
         return dict(test_ftp(self.settings(require_bridge=False)))
 
     def test_bridge(self) -> dict[str, Any]:
-        return dict(test_bridge(self.settings(require_bridge=True)))
+        return dict(test_bridge(self.bridge_settings()))
 
 
 def product_description_summary(row: dict[str, Any]) -> str:

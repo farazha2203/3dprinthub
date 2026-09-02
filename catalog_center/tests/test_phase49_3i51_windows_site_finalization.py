@@ -386,6 +386,22 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         disabled = self.kernel.filaments.site_payload(row, is_active=False)
         self.assertFalse(disabled["is_active"])
 
+    def test_bridge_only_settings_and_test_do_not_require_ftp_credentials(self):
+        self.db.set_setting("site_url", "https://3dprinthub.ir")
+        with patch("qt6.parity_core.get_secret", return_value="bridge-token"):
+            cfg = self.kernel.connection.bridge_settings()
+            self.assertEqual(cfg.site_url, "https://3dprinthub.ir")
+            self.assertEqual(cfg.bridge_token, "bridge-token")
+            self.assertEqual(cfg.ftp_host, "")
+            self.assertEqual(cfg.ftp_user, "")
+            with patch(
+                "qt6.parity_core.test_bridge",
+                return_value={"ok": True, "status": "ok"},
+            ) as probe:
+                result = self.kernel.connection.test_bridge()
+            self.assertTrue(result["ok"])
+            self.assertEqual(probe.call_args.args[0].ftp_host, "")
+
     def test_kernel_filament_sync_reuses_existing_bridge_and_reports_partial_failure(self):
         self.kernel.filaments.save_material("PLA")
         self.kernel.filaments.save_brand("Brand One")

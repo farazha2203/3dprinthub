@@ -1716,12 +1716,25 @@ class FilamentsPage(QWidget):
         dialog = ColorPresetDialog(parent=self)
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
+        values = dialog.values()
+        name = str(values.get("name") or "").strip()
         try:
-            self.kernel.filaments.save_color_preset(dialog.values())
+            self.kernel.filaments.save_color_preset(values)
         except Exception as exc:
             QMessageBox.warning(self, "رنگ", str(exc))
             return
-        self._reload_colors()
+        self.refresh()
+        affected = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if str(item.get("color_name") or "").strip().casefold()
+            == name.casefold()
+        ]
+        if affected:
+            self._start_site_sync(
+                affected,
+                "رنگ محلی ثبت شد؛ Sync Filamentهای وابسته با سایت",
+            )
 
     def _edit_color(self) -> None:
         preset = self._selected_color_preset()
