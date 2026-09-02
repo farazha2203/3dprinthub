@@ -16,6 +16,8 @@ Owner request:
 
 Acceptance implemented:
 - current-search icon/card gallery with stable Preview thumbnails and image-count copy;
+- selected collected Product exposes its real local image strip plus total/local-displayable image counts;
+- long receive actions use compact labels with explanatory tooltips;
 - new Search clears prior live cards;
 - per-image acquisition progress callback;
 - explicit MultiSelection + select-all/clear + selected-count state in current Search and persistent inventory;
@@ -25,11 +27,11 @@ Acceptance implemented:
 - safe recovery updates source data/images and preserves operator title/description/final price/sale approval/publish decision.
 
 Verification:
-- Qt6 run `33624135672` PASS;
-- Single Active AI `33625043627` PASS;
-- Windows Portable `33625043651` PASS after correcting its Qt dependency boundary;
+- Qt6 run `33625257602` PASS;
+- Single Active AI `33625257485` PASS;
+- Windows Portable `33625257693` PASS after correcting its Qt dependency boundary;
 - portable regression gate 215 tests PASS;
-- runtime/CI checkpoint `b43880a763d00bfda52dc29c4bf080cb428b1230`;
+- runtime/CI checkpoint `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
 - Production untouched.
 
 Owner Local foreground acceptance is still required before this request can be marked ACCEPTED.
