@@ -1,3 +1,39 @@
+## 2026-09-02 — Phase49.3I.53E extracted backup helper project-root binding
+
+Status: `GITHUB_UPDATED / BACKUP HELPER FIX CI PASS / PRODUCTION STILL AT VERIFIED BASELINE / DEPLOY RETRY NEXT`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Verified Host baseline remains `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.  
+Current fix checkpoint: `2016b84ee1b053e792ceb44ede516b3d7a2dea7e`.
+
+### Owner deploy attempt evidence
+The corrected gzip helper was extracted from GitHub into the timestamped backup directory and executed from there. It failed before backup verification with:
+`ModuleNotFoundError: No module named 'config'`.
+
+The runner had not printed `PREDEPLOY_BACKUP_VERIFIED=YES`, therefore it had not ff-merged source, run migrations, collectstatic, or restarted Passenger. Production remains at the verified baseline.
+
+### Root cause
+Python sets `sys.path[0]` to the directory containing the executed script. Because the helper is intentionally copied into `/home/sfkilvrs/3dprinthub-deploy-backups/<timestamp>/`, the Production project root was not importable as `config` even though the shell working directory was the correct repository.
+
+### Fix
+- helper now requires `PHASE49_PROJECT_ROOT`;
+- verifies `manage.py` and `config/__init__.py`;
+- inserts the verified project root at `sys.path[0]` before importing Django;
+- deploy runner passes `PHASE49_PROJECT_ROOT="$ROOT"` explicitly;
+- self-test now covers project-root resolution/sys.path binding in addition to gzip round-trip.
+
+### Verification
+- Product Admin / deploy-helper CI `33661199115` PASS;
+- Single Active AI `33661199159` PASS;
+- `config/__init__.py` verified present at the approved target.
+
+### Backup safety
+The failed `20260902-204716-phase49-3i53` directory is evidence only; its MySQL backup did not complete and must not be used as restore evidence. The retry must create a new timestamped backup root and must reach `DATABASE_BACKUP_GZIP=VALID` and `PREDEPLOY_BACKUP_VERIFIED=YES` before source promotion.
+
+### Exact next task
+Retry the repository deploy runner from Host baseline `198fa8e...` against the current live GitHub target. Do not repeat the previous target/runner unchanged. Stop on any new error and preserve full output.
+
 ## 2026-09-02 — Phase49.3I.53D MySQL backup gzip boundary fixed before Production promotion
 
 Status: `GITHUB_UPDATED / BACKUP FIX CI PASS / PRODUCTION STILL AT VERIFIED BASELINE / DEPLOY RETRY NEXT`.

@@ -1,3 +1,11 @@
+## 2026-09-02 — Phase49.3I.53E
+- fixed Production backup helper import context when executed from outside the repository;
+- helper now requires `PHASE49_PROJECT_ROOT`, validates project markers and prepends the project root to `sys.path` before Django setup;
+- deploy runner passes the verified Production root explicitly;
+- self-test covers project-root/sys.path binding plus existing gzip round-trip;
+- second Production attempt stopped before any merge/migration/restart;
+- Product Admin CI `33661199115` PASS; Single Active AI `33661199159` PASS.
+
 ## 2026-09-02 — Phase49.3I.53D
 - fixed Production MySQL backup compression: mysqldump stdout is now piped through the parent Python gzip encoder instead of being attached directly to a GzipFile descriptor;
 - added `scripts/host/phase49_3i53_mysql_backup.py`;

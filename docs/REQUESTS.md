@@ -1,3 +1,15 @@
+## REQ-49-095 — Backup helper must work before source promotion from an external backup directory
+Date: 2026-09-02  
+Status: `IMPLEMENTED + CI PASS / DEPLOY RETRY NEXT`.
+
+Required behavior:
+- backup helper remains outside the live repository before ff-only promotion;
+- Django settings import must not depend on script location or shell cwd;
+- exact Production project root is explicit and validated;
+- no source promotion until MySQL backup is real gzip + checksum verified.
+
+Verification: `2016b84ee1b053e792ceb44ede516b3d7a2dea7e`; Product Admin `33661199115` PASS; Single Active AI `33661199159` PASS.
+
 ## REQ-49-094 — Production receiver deploy must stop unless MySQL backup is a real verified gzip
 Date: 2026-09-02  
 Status: `IMPLEMENTED + CI PASS / DEPLOY RETRY NEXT`.

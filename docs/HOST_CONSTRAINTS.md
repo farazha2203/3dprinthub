@@ -1,3 +1,15 @@
+## Phase49.3I.53E Python helper import constraint — 2026-09-02
+
+A Python helper executed from `/home/sfkilvrs/3dprinthub-deploy-backups/<timestamp>/` must not rely on cwd for importing the Django project. The deploy runner now passes:
+`PHASE49_PROJECT_ROOT=/home/sfkilvrs/3dprinthub`.
+
+The helper validates:
+- `/home/sfkilvrs/3dprinthub/manage.py`;
+- `/home/sfkilvrs/3dprinthub/config/__init__.py`;
+and inserts that root into `sys.path` before `django.setup()`.
+
+The failed `20260902-204716-phase49-3i53` backup directory is evidence only. Retry must use a fresh timestamped backup root.
+
 ## Phase49.3I.53D backup compression constraint — 2026-09-02
 
 Do not treat a filename ending in `.gz` as a verified MySQL backup. The failed 20260902-203857 artifact demonstrated that attaching a child process directly to a Python `gzip.GzipFile` file descriptor writes raw bytes and bypasses the codec.

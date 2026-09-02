@@ -1,3 +1,21 @@
+### ERR-49-108 — extracted MySQL backup helper could not import Production Django config
+**Date:** 2026-09-02  
+**Environment:** Production Host second Phase49.3I.53 deploy attempt.
+
+**Observed:** gzip helper execution stopped with `ModuleNotFoundError: No module named 'config'` while running from the timestamped backup directory.
+
+**Root cause:** the helper is deliberately extracted outside the repository before source promotion. Executing a Python script by pathname makes the script directory the first import path entry; the Production repository root was not explicitly on `sys.path`. Shell `cd` alone was not a reliable import contract.
+
+**Safety result:** failure occurred before `PREDEPLOY_BACKUP_VERIFIED=YES`; no source merge, migration, collectstatic, or Passenger restart occurred.
+
+**Failed condition:** do not rerun the previous helper/target unchanged.
+
+**Correct fix:** require explicit `PHASE49_PROJECT_ROOT`, validate `manage.py` + `config/__init__.py`, insert that verified root at the front of `sys.path`, and have the deploy runner pass the known Production root. Keep the helper outside the repository so backup still precedes source promotion.
+
+**Verification:** code `2016b84ee1b053e792ceb44ede516b3d7a2dea7e`; Product Admin CI `33661199115` PASS; Single Active AI `33661199159` PASS.
+
+**Prevention:** any repository helper copied/executed outside the repository must receive its project root explicitly; never rely on current working directory to define Python import semantics.
+
 ### ERR-49-107 — MySQL gzip helper self-test exceeded Linux argv limit
 **Date:** 2026-09-02  
 **Environment:** GitHub Product Admin CI `33659570675`.

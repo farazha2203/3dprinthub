@@ -1,3 +1,23 @@
+## 3I.53E — Extracted backup helper project-root binding
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / CI PASS / PRODUCTION DEPLOY RETRY NEXT`.
+
+The second Production deploy attempt stopped before backup verification with `ModuleNotFoundError: config`. The gzip fix itself was not the failure; the helper was executed from the external backup directory and therefore did not have the repository root on Python's import path.
+
+Fix:
+- explicit `PHASE49_PROJECT_ROOT`;
+- project marker validation;
+- project root inserted at `sys.path[0]` before Django import;
+- runner passes the known Host root;
+- self-test covers this external-script import boundary.
+
+Production source/database/runtime remained unchanged because failure occurred before `PREDEPLOY_BACKUP_VERIFIED=YES`.
+
+Verification: `2016b84ee1b053e792ceb44ede516b3d7a2dea7e`; Product Admin `33661199115` PASS; Single Active AI `33661199159` PASS.
+
+Next: fresh deploy retry from verified Host baseline, then exact migration/readiness/public HTTP gates.
+
 ## 3I.53D — MySQL backup gzip correctness gate
 
 Date: 2026-09-02  

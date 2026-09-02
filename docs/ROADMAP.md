@@ -1,3 +1,15 @@
+## 2026-09-02 — Phase49.3I.53E backup helper import-boundary fix
+
+Status: `IMPLEMENTED + CI PASS / PRODUCTION DEPLOY RETRY NEXT`.
+
+Second deploy attempt stopped safely before source promotion because the extracted backup helper could not import `config` from outside the repository. The helper now receives and validates the exact Production project root and prepends it to Python import paths before Django setup.
+
+Production remains on `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.
+
+Evidence: `2016b84ee1b053e792ceb44ede516b3d7a2dea7e`; Product Admin CI `33661199115` PASS; Single Active AI `33661199159` PASS.
+
+Next: fresh timestamped backup and deploy retry against the current live GitHub target.
+
 ## 2026-09-02 — Phase49.3I.53D verified MySQL backup streaming fix
 
 Status: `IMPLEMENTED + CI PASS / PRODUCTION DEPLOY RETRY NEXT`.
