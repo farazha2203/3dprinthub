@@ -9,6 +9,7 @@ from urllib import error as urllib_error
 from urllib import request as urllib_request
 from urllib.parse import urlencode
 
+from .db import utc_now
 from .site_connection import SiteConnection
 
 
