@@ -189,6 +189,71 @@ def _unique_public_slug(product, preferred="") -> str:
     return candidate
 
 
+def ensure_admin_catalog_profile(
+    product,
+    *,
+    actor: str = "admin",
+    bump_revision: bool = True,
+) -> ProductCatalogProfile:
+    """Ensure Site-only Product authoring uses the canonical catalog profile.
+
+    This is deliberately Admin/runtime glue, not a second persistence model.
+    Desktop publish later sees the same Product/Profile rows and optimistic
+    revision fields.
+    """
+    if not getattr(product, "pk", None):
+        raise ValueError("Product must be saved before creating its catalog profile.")
+
+    profile = ProductCatalogProfile.objects.filter(product=product).first()
+    created = profile is None
+    if profile is None:
+        profile = ProductCatalogProfile(
+            product=product,
+            public_slug=_unique_public_slug(
+                product,
+                getattr(product, "title_en", "")
+                or getattr(product, "sku", "")
+                or getattr(product, "title", ""),
+            ),
+            legacy_slug=str(getattr(product, "slug", "") or ""),
+            product_type="ready_product",
+            use_description=str(getattr(product, "description", "") or ""),
+            availability_status="made_to_order",
+            stock_quantity=0,
+            lead_time_min_days=max(
+                1, int(getattr(product, "fixed_delivery_days", 1) or 1)
+            ),
+            lead_time_max_days=max(
+                1, int(getattr(product, "fixed_delivery_days", 1) or 1)
+            ),
+            has_3d_file=bool(getattr(product, "model_file", None)),
+            commercial_license_status="unknown",
+        )
+
+    fixed = _positive_int(getattr(product, "fixed_price", 0), 0)
+    if str(getattr(product, "order_mode", "") or "") == "fixed" and fixed > 0:
+        profile.price_min = fixed
+        profile.price_max = fixed
+        profile.price_mode = "fixed"
+        if hasattr(profile, "pricing_strategy"):
+            profile.pricing_strategy = "fixed"
+    elif created:
+        has_variants = product.variants.filter(is_active=True).exists()
+        profile.price_mode = "variant" if has_variants else "fixed"
+        if hasattr(profile, "pricing_strategy") and not has_variants:
+            profile.pricing_strategy = "legacy"
+
+    if created:
+        profile.sync_revision = 1
+    elif bump_revision:
+        profile.sync_revision = max(1, int(profile.sync_revision or 1)) + 1
+    profile.last_modified_source = "admin"
+    profile.last_modified_by = str(actor or "admin")[:120]
+    profile.last_synced_at = timezone.now()
+    profile.save()
+    return profile
+
+
 def sync_catalog_profile(
     product,
     asset,

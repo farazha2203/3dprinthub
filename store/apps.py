@@ -149,4 +149,11 @@ class StoreConfig(AppConfig):
         from .phase49_3i49_admin_control import install as install_phase49_3i49_admin_control
         install_phase49_3i49_admin_control()
 
+        # Phase49.3I.52 makes the Site a first-class fallback authoring surface
+        # and reuses the same Structured Product AI/provider client on Host.
+        # It extends the already-composed Product Admin and creates no second
+        # Product/Profile/Variant database.
+        from .phase49_3i52_site_authoring_ai import install as install_phase49_3i52_site_authoring_ai
+        install_phase49_3i52_site_authoring_ai()
+
         from . import checks  # noqa: F401

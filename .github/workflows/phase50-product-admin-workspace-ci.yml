@@ -19,6 +19,9 @@ on:
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
+      - store/phase49_3i52_site_authoring_ai.py
+      - store/test_phase49_3i52_site_authoring_ai.py
+      - ai/**
       - website/phase49_3i49_admin_control.py
       - website/apps.py
       - store/apps.py
@@ -87,6 +90,10 @@ jobs:
             catalog_bridge/tests/test_phase49_3i41_filament_bridge.py \
             catalog_center/app/epic49_site_sync.py \
             store/phase49_3i49_admin_control.py \
+            store/phase49_3i52_site_authoring_ai.py \
+            store/test_phase49_3i52_site_authoring_ai.py \
+            ai/model_policy.py \
+            ai/product_content.py \
             website/phase49_3i49_admin_control.py \
             website/apps.py \
             store/apps.py \
@@ -129,6 +136,7 @@ jobs:
             store.test_phase50_filament_offer_operations \
             store.test_phase49_3i49_site_publish_admin_sync \
             store.test_phase49_3i51_filament_registry_admin \
+            store.test_phase49_3i52_site_authoring_ai \
             catalog_bridge.tests.test_phase49_3i41_filament_bridge \
             -v 2
 
@@ -139,4 +147,5 @@ jobs:
           echo "PHASE49_3I51_FILAMENT_REGISTRY_ADMIN_CI=PASS"
           echo "PHASE49_3I51_FILAMENT_BRIDGE_V3_CI=PASS"
           echo "PHASE49_3I51_MIGRATIONS_0024_0042_CI=PASS"
+          echo "PHASE49_3I52_SITE_AUTHORING_AI_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"

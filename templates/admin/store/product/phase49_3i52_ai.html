@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="module aligned" style="max-width:1100px">
+  <h1>{{ title }}</h1>
+  <p>
+    این ابزار همان AI Structured/Validation مسیر Catalog Center را روی Host reuse می‌کند.
+    هیچ تغییر AI روی قیمت، موجودی، متریال، رنگ، مجوز یا وضعیت انتشار انجام نمی‌شود.
+  </p>
+
+  <fieldset class="module">
+    <h2>وضعیت AI Host</h2>
+    <div class="form-row"><strong>Provider policy:</strong> {{ ai_status.preferred_provider }}</div>
+    <div class="form-row"><strong>Model override:</strong> {{ ai_status.model_override|default:"Auto verified free/cheap Persian" }}</div>
+    <div class="form-row"><strong>Paid fallback budget:</strong> {{ ai_status.paid_budget_usd_per_1m }} USD / 1M input+output</div>
+    <div class="form-row">
+      <strong>Secret:</strong>
+      {% if ai_status.configured %}configured in environment/secret boundary{% else %}not configured{% endif %}
+    </div>
+  </fieldset>
+
+  <fieldset class="module">
+    <h2>Fact boundary</h2>
+    <p>
+      منبع فعلی: {{ product.source_name|default:"—" }} /
+      {{ product.source_url|default:"بدون لینک منبع" }}
+    </p>
+    <p>
+      AI فقط Title، Short/Long Description، SEO، OpenGraph، Keywords،
+      Technical summary و Alt گالری را پیشنهاد می‌دهد.
+    </p>
+  </fieldset>
+
+  {% if proposal %}
+  <fieldset class="module">
+    <h2>Preview — قبل از Apply بررسی شود</h2>
+    <p>
+      Provider: <strong>{{ proposal.provider }}</strong> /
+      Model: <strong>{{ proposal.model }}</strong> /
+      {% if proposal.free %}<strong>رایگان</strong>{% else %}Low-cost fallback{% endif %}
+    </p>
+    <div class="form-row"><strong>عنوان:</strong><div>{{ proposal.content.title_fa }}</div></div>
+    <div class="form-row"><strong>توضیح کوتاه:</strong><div>{{ proposal.content.short_description_fa }}</div></div>
+    <div class="form-row"><strong>توضیح کامل:</strong><div style="white-space:pre-wrap">{{ proposal.content.description_fa }}</div></div>
+    <div class="form-row"><strong>SEO Title:</strong><div>{{ proposal.content.seo_title_fa }}</div></div>
+    <div class="form-row"><strong>SEO Description:</strong><div>{{ proposal.content.seo_description_fa }}</div></div>
+    <div class="form-row"><strong>کاربرد:</strong><div>{{ proposal.content.use_description_fa }}</div></div>
+    <div class="form-row"><strong>Category suggestion:</strong><div>{{ proposal.content.suggested_category_slug }} — فقط پیشنهاد؛ خودکار اعمال نمی‌شود.</div></div>
+    <div class="form-row"><strong>Keywords:</strong><div>{{ proposal.content.target_keywords_fa|join:", " }}</div></div>
+    <div class="form-row"><strong>Notes:</strong><div>{{ proposal.content.content_notes|join:" | " }}</div></div>
+  </fieldset>
+  {% endif %}
+
+  <form method="post" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+    {% csrf_token %}
+    <button type="submit" name="action" value="generate" class="button default">
+      {% if proposal %}تولید مجدد Preview{% else %}Generate AI Preview{% endif %}
+    </button>
+    {% if proposal %}
+      <button type="submit" name="action" value="apply" class="button default">Apply Content + SEO</button>
+      <button type="submit" name="action" value="discard" class="button">حذف Preview</button>
+    {% endif %}
+    <a class="button" href="{{ change_url }}">بازگشت به محصول</a>
+  </form>
+</div>
+{% endblock %}
