@@ -1,3 +1,15 @@
+## 2026-09-02 — Phase49.3I.49
+- added guarded multi-select Product ready/publish actions to Qt Products;
+- added reusable bulk publish service over the mature Batch 8.5 / FTP / Bridge / public HTTP verification path;
+- successful ACKs now move Local Products to the existing Published lifecycle state; failures never do;
+- added explicit ready/published labels in Product Gallery/Table;
+- completed full existing Slider presentation-field round-trip between Desktop, Bridge, ProductCatalogProfile and HomepageHeroSlide;
+- reorganized ProductCatalogProfile and Hero Slider Admin around task-first content, responsive composition, motion/timing, publish and collapsed sync diagnostics;
+- expanded owner Local gate through 3I.49;
+- added dedicated Qt and Django regressions;
+- Windows Qt run `33596830380`, Single Active AI run `33596830268` and Admin run `33596562467` PASS;
+- no Django migration, Production deploy, Host change or secret migration.
+
 # CHANGELOG
 
 ## 2026-09-01 — ERR-49-088 Windows PowerShell 5.1 owner-gate repair
