@@ -1,3 +1,27 @@
+## ERR-49-099 — Preview recovery raw JavaScript string temporarily lost its closing triple quote
+**Date:** 2026-09-02  
+**Environment:** GitHub source edit during Phase49.3I.52E.
+
+**Observed:**  
+While extending the listing Preview DOM payload, an intermediate edit to `phase49_3i_preview_recovery.py` omitted the closing Python raw-string delimiter around `PREVIEW_CARD_EVAL_JS`.
+
+**Root cause:**  
+The file update replaced the JavaScript block by text slicing and consumed the original closing triple quote.
+
+**Response:**  
+The malformed condition was inspected immediately and corrected before the final CI run. The broken condition was not used for owner Local QA and was not deployed.
+
+**Correct fix:**  
+Restore the explicit closing `"""` and keep the JavaScript newline represented as escaped `\n` inside the raw Python string.
+
+**Verification:**  
+Final runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`: compile/full Qt parity `33632062812` PASS; Portable `33632062880` PASS; 223 release regressions PASS.
+
+**Prevention:**  
+Any future edit of embedded JavaScript in Python must be covered by compileall plus the existing Windows Preview regression before acceptance.
+
+---
+
 ## ERR-49-098 — Qt Crawl inventory ignored mature downloaded images when Product linkage was missing
 **Date:** 2026-09-02  
 **Environment:** owner foreground Windows QA, Catalog Center 8.9.10 / Qt6.
