@@ -1,3 +1,15 @@
+## Current Production checkpoint — Phase49.3I.53C / 2026-09-02
+
+The real Host audit is complete and the receiver deployment is now gated by a repository-owned backup/deploy runner.
+
+Actual Production before promotion: Host HEAD `198fa8e...`, Store 0036 + Website 0023 applied, MySQL/database identity correct, storage/token/prerequisites healthy, 531G disk free and mysqldump available. Pending target schema is exactly Store 0037–0042 + Website 0024.
+
+Deploy runner `5c5f087ae26e78c106984cf3c92e9b322537f203` creates checksum-verified source/environment/pending/MySQL backups, requires exact migration delta/plan, ff-only promotes the live GitHub target, migrates, collects static, restarts Passenger and verifies authenticated receiver readiness and public HTTP.
+
+CI: Product Admin/audit `33658713537` PASS; Single Active AI `33658713594` PASS.
+
+Next: execute the runner on Host. Then publish one Product end-to-end before bulk publishing.
+
 ## Current Site/Host checkpoint — Phase49.3I.53 / 2026-09-02
 
 Immediate priority is now enabling safe Windows → Site Product publishing.

@@ -1,3 +1,16 @@
+## 2026-09-02 — Phase49.3I.53C
+- accepted clean Production read-only audit: MySQL DB correct, Store 0036/Website 0023 applied, Store 0037–0042 + Website 0024 pending;
+- corrected effective Production Media path evidence to `/home/sfkilvrs/3dprinthub/media`;
+- recorded active Material=13, PrintQuality=5, Bridge token configured, disk/inode headroom and mysqldump availability;
+- added `scripts/host/phase49_3i53_production_deploy.sh`;
+- deploy runner verifies live target/ancestry/exact migration-file delta and baseline migration recorder;
+- creates checksum-verified Git bundle, environment, pending-import and MySQL backups before source promotion;
+- validates exact target MigrationExecutor plan before applying migrations;
+- post-migration requires in-process publish readiness, collectstatic, Passenger restart, authenticated Bridge health/readiness and public home/store HTTP 200;
+- no automatic destructive rollback on failure; verified restore evidence is preserved;
+- deploy-runner CI `33658713537` PASS; Single Active AI `33658713594` PASS;
+- rollback branch `rollback/phase49-3i53-predeploy-host-198fa8e-20260902` created at actual Host baseline.
+
 ## 2026-09-02 — Phase49.3I.53
 - added authenticated Site publish-readiness endpoint;
 - readiness checks required migration rows, required receiver schema, pending/media storage, Bridge token configuration and active Material/PrintQuality prerequisites;

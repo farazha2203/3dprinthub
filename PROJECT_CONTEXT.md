@@ -1,3 +1,15 @@
+## Continuation checkpoint — 2026-09-02 / Phase49.3I.53C audited Site receiver deploy
+
+Host read-only audit passed. Actual Production baseline is `198fa8e41ea4f4d87eb287ba69c91076acc78d62`; Store 0036 and Website 0023 are applied. Store 0037–0042 + Website 0024 are the exact pending receiver migrations. MySQL/database, storage, Bridge token, 13 active Materials, 5 active PrintQualities, disk/inodes and mysqldump are ready.
+
+Repository deployment is now encoded in `scripts/host/phase49_3i53_production_deploy.sh`. It backs up and verifies source/env/pending/MySQL before any source promotion, requires the exact migration delta and Django plan, then performs ff-only deploy → migrate → collectstatic → Passenger restart → authenticated readiness/health + public HTTP verification.
+
+Rollback source branch: `rollback/phase49-3i53-predeploy-host-198fa8e-20260902`. No automatic destructive rollback is performed on failure; backup artifacts are preserved.
+
+Deploy-runner code `5c5f087ae26e78c106984cf3c92e9b322537f203`; CI `33658713537` PASS + Single Active AI `33658713594` PASS.
+
+Next user action: execute the runner from the current live GitHub branch, provide the complete terminal output, then validate one real Product publish before enabling bulk.
+
 ## Continuation checkpoint — 2026-09-02 / Phase49.3I.53 Site receiver readiness
 
 Owner moved the active goal from Crawl recovery to making the Site/Host ready for real Product publishing.

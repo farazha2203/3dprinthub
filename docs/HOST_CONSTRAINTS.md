@@ -1,3 +1,30 @@
+## Phase49.3I.53C audited deploy constraints — 2026-09-02
+
+Verified Production before deploy:
+- HEAD `198fa8e41ea4f4d87eb287ba69c91076acc78d62`;
+- tracked/index worktree clean;
+- Python 3.12.13 / Django 6.0.7 via project venv;
+- MySQL `sfkilvrs_EmiAdmin_3dprinthub`;
+- Store 0036 and Website 0023 applied;
+- exact pending receiver chain Store 0037–0042 + Website 0024;
+- Bridge token configured; active Material=13, PrintQuality=5;
+- disk/inode headroom healthy; mysqldump available.
+
+Use only `scripts/host/phase49_3i53_production_deploy.sh` for this promotion. It enforces the mature Host caveats:
+- live branch verified by `git ls-remote`;
+- explicit branch fetch to `FETCH_HEAD`;
+- ff-only merge only;
+- no process substitution;
+- Production venv Python only;
+- exact MySQL vendor/name before backup;
+- checksum-verified database/source/environment/pending backups before migration;
+- exact migration delta and MigrationExecutor plan;
+- collectstatic without `--clear`;
+- Passenger restart via `tmp/restart.txt`;
+- authenticated Bridge health/readiness plus public home/store verification after restart.
+
+Do not manually pre-run the pending migrations. Do not reset Host to the older documented c283 baseline. Do not delete persistent Media/Private/Pending data as a deployment shortcut.
+
 ## Phase49.3I.53B Host evidence correction — 2026-09-02
 
 New verified Host facts:

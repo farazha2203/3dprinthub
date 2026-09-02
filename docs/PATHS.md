@@ -1,3 +1,16 @@
+## Phase49.3I.53C verified Production paths — 2026-09-02
+Host audit effective paths:
+- Static: `/home/sfkilvrs/public_html/static`;
+- Media: `/home/sfkilvrs/3dprinthub/media`;
+- Private Media: `/home/sfkilvrs/3dprinthub/private_media`;
+- Bridge pending: `/home/sfkilvrs/3dprinthub/imports/desktop_catalog/pending`;
+- deploy backups: `/home/sfkilvrs/3dprinthub-deploy-backups/<timestamp>-phase49-3i53`;
+- Production deploy runner: `scripts/host/phase49_3i53_production_deploy.sh`.
+
+Verified Host baseline: `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.
+Rollback branch: `rollback/phase49-3i53-predeploy-host-198fa8e-20260902`.
+Deploy-runner checkpoint: `5c5f087ae26e78c106984cf3c92e9b322537f203`.
+
 ## Phase49.3I.53B Host evidence — 2026-09-02
 Verified Host project Python: `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`.
 System `python3`: unavailable in the login shell.

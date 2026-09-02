@@ -1,3 +1,27 @@
+## 2026-09-02 — Phase49.3I.53C verified Production migration state
+
+Read-only Host audit now supersedes the older assumption that Production was only through Store 0035.
+
+Actual Production MySQL:
+- vendor: `mysql`;
+- database: `sfkilvrs_EmiAdmin_3dprinthub`;
+- Store through `0036_phase50_checkout_snapshot` is applied;
+- Website through `0023_phase49_3f_material_runtime_rates` is applied;
+- pending for the current receiver target:
+  - Store 0037 professional commerce policy;
+  - Store 0038 profile matrix;
+  - Store 0039 filament offer pricing;
+  - Store 0040 filament offer operations;
+  - Store 0041 filament visual identity;
+  - Website 0024 material catalog description;
+  - Store 0042 filament registry descriptions.
+
+Current live schema evidence correctly lacks fields/tables introduced by that pending chain. This is expected, not corruption.
+
+The deployment runner first verifies the migration-file delta is exactly these seven files, then after source ff-only promotion uses Django `MigrationExecutor` to require the exact same pending migration set before `migrate --noinput`.
+
+Because 0037/0041/0042 include data migrations, the runner creates and checksum-verifies a fresh compressed MySQL dump before source promotion/migration. Migration failure does not trigger an automatic reverse migration; controlled restore uses the preserved dump and source bundle after diagnosis.
+
 ## 2026-09-02 — Phase49.3I.53 Site receiver database gate
 
 Phase49.3I.53 adds **no new Django migration**. Its purpose is to prove the live Site receiver is structurally ready before Catalog Center sends a Product.

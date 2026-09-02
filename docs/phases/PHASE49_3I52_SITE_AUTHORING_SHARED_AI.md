@@ -1,3 +1,44 @@
+## 3I.53C — Audited Production receiver deployment runner
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / HOST AUDIT PASS / DEPLOY RUNNER CI PASS / PRODUCTION EXECUTION NEXT`.
+
+Owner Host audit established the real deployment starting point:
+- clean tracked/index state after preserving historical untracked evidence;
+- HEAD `198fa8e...`;
+- Python/Django and exact MySQL DB verified;
+- Store 0036 + Website 0023 applied;
+- Store 0037–0042 + Website 0024 pending;
+- receiver storage/token/prerequisites healthy;
+- backup tooling and capacity healthy.
+
+New runner:
+`scripts/host/phase49_3i53_production_deploy.sh`.
+
+Safety/sequence:
+1. verify exact baseline/branch/origin/clean worktree/live target;
+2. explicit fetch + fast-forward ancestry;
+3. verify exact seven migration-file delta;
+4. verify baseline migration recorder;
+5. create checksum-verified Git bundle, .env/pending backups when present, and compressed MySQL dump;
+6. ff-only promote target;
+7. Django check + no model drift;
+8. require exact seven-migration `MigrationExecutor` plan;
+9. migrate;
+10. require in-process receiver readiness;
+11. collectstatic;
+12. Passenger restart;
+13. verify Django, authenticated Bridge health/readiness, home and Store HTTP;
+14. print final HEAD/worktree/backup root.
+
+No automatic reverse migration or destructive rollback is performed. Failure preserves backup evidence for controlled recovery.
+
+Rollback branch: `rollback/phase49-3i53-predeploy-host-198fa8e-20260902`.
+
+Verification: deploy-runner `5c5f087ae26e78c106984cf3c92e9b322537f203`; Product Admin/audit CI `33658713537` PASS; Single Active AI `33658713594` PASS.
+
+Next: Production runner execution, then one Product end-to-end publish + public image/ACK verification before bulk.
+
 ## 3I.53B — Host baseline correction before Production receiver audit
 
 Date: 2026-09-02  

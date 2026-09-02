@@ -1,3 +1,66 @@
+## 2026-09-02 — Phase49.3I.53C Production receiver deploy prepared after clean Host audit
+
+Status: `GITHUB_UPDATED / HOST READ-ONLY AUDIT PASS / BACKUP+DEPLOY RUNNER CI PASS / PRODUCTION DEPLOY NEXT`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Deploy-runner code checkpoint: `5c5f087ae26e78c106984cf3c92e9b322537f203`.  
+Verified current Host baseline: `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.  
+Rollback GitHub branch: `rollback/phase49-3i53-predeploy-host-198fa8e-20260902` → `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.
+
+### Host audit accepted
+Owner audit completed with:
+- tracked Production worktree/index CLEAN after preserving old `ls-output.txt` outside the repo;
+- Host HEAD `198fa8e...` is an ancestor of the approved GitHub branch;
+- Production Python `3.12.13`, Django `6.0.7`;
+- MySQL vendor and exact DB `sfkilvrs_EmiAdmin_3dprinthub`;
+- `manage.py check` with only known warnings;
+- `makemigrations --check --dry-run`: no model drift;
+- actual Production migration state: Store `0036` applied, Website `0023` applied;
+- pending receiver chain: Store `0037..0042` plus Website `0024`;
+- active Materials: 13; active PrintQualities: 5;
+- effective writable paths: Static `/home/sfkilvrs/public_html/static`, Media `/home/sfkilvrs/3dprinthub/media`, Private Media `/home/sfkilvrs/3dprinthub/private_media`, pending imports `/home/sfkilvrs/3dprinthub/imports/desktop_catalog/pending`;
+- Bridge token configured (length 64, value not printed);
+- disk: 531G available / 37% used; inode usage 15%;
+- `mysqldump 8.0.45` available.
+
+The old-source `migrate --plan` reported no operations because that checked-out baseline contains only migrations through Store 0036/Website 0023. The deployment runner therefore validates the exact migration-file delta again after fetching the approved target and validates the exact Django MigrationExecutor plan after ff-only source promotion.
+
+### Deploy runner
+Repository runner: `scripts/host/phase49_3i53_production_deploy.sh`.
+
+It fails closed unless:
+- current Host HEAD is exactly `198fa8e...`;
+- worktree is clean;
+- live GitHub SHA equals the supplied target;
+- target is a fast-forward descendant;
+- migration-file delta is exactly Store 0037–0042 + Website 0024;
+- baseline DB migration recorder is unchanged.
+
+Before source promotion it creates and verifies:
+- Git bundle source backup;
+- private `.env` backup when present;
+- pending-import tar backup when present;
+- gzip MySQL dump using the effective Django DB credentials without printing the password;
+- SHA256 manifest checks.
+
+After backup verification it performs:
+ff-only merge → Django check/model-drift gate → exact MigrationExecutor-plan gate → `migrate --noinput` → in-process publish-readiness check → `collectstatic --noinput` → Passenger restart → Django check → authenticated public Bridge health/readiness + home/store HTTP verification.
+
+No automatic destructive rollback is attempted on a migration/runtime failure; the verified Git bundle/MySQL dump and rollback branch are preserved for diagnosis/controlled restore.
+
+### Verification
+- deploy-runner syntax/contract + Product Admin CI `33658713537` PASS;
+- Single Active AI `33658713594` PASS.
+
+### Known warnings
+- CKEditor4 unsupported/security-debt warning remains known and is not new to this deploy;
+- in-memory realtime channel-layer warning remains known; Redis is a separate architecture task;
+- MySQL conditional unique-constraint warnings are known platform limitations.
+
+### Exact next task
+Execute the repository deploy runner from the live GitHub target. Do not manually run migrations or edit Production source. Preserve the full output. If it reaches `PHASE49_3I53C_PRODUCTION_DEPLOY=PASS`, then run one controlled Catalog Center Product publish and verify Product page + images + strict ACK before widening to bulk publish.
+
 ## 2026-09-02 — Phase49.3I.53B Host baseline correction before receiver audit
 
 Status: `GITHUB_UPDATED / SITE CI PASS / AUDIT RUNNER FIX PASS / HOST FORENSICS PARTIAL / PRODUCTION NOT CHANGED BY THIS PHASE`.
