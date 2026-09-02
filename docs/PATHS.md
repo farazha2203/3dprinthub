@@ -28,16 +28,16 @@ Rejected Product physical purge boundary: only under persistent Catalog `collect
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Current 3I.52E runtime/CI checkpoint: `016e84ab98d2e5577633833cbc87cb96824dbbf0`
-Current 3I.52E Qt run: `33632062812` PASS
-Current 3I.52E Portable run: `33632062880` PASS
+Current 3I.52F runtime/CI checkpoint: `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`
+Current 3I.52F Qt run: `33637452385` PASS
+Current 3I.52F Portable run: `33637452243` PASS
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
 Current Store/Profile/Filament CI runtime: `d519a360e65b79db4b62af206b95f63c3539bc12`
 Current Store/Profile/Filament CI run: `33059883188` PASS
-Current Windows packaged runtime: `016e84ab98d2e5577633833cbc87cb96824dbbf0`
+Current Windows packaged runtime: `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`
 Catalog Center: `8.9.10` / build `2026.09.02.1`
-Windows artifact ID: `9847317893`
-Windows EXE SHA256: `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`
+Windows artifact ID: `9849484898`
+Windows EXE SHA256: `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`
 Last owner Local automated gate: PASS at local head `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local Django SQLite is through `store.0039`; backup `D:\projects\3dprinthub-backups\phase49-3i35-resume-20260827-142404\django-local-before-0039.sqlite3`.
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
