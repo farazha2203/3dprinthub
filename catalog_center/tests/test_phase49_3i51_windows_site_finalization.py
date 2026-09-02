@@ -494,7 +494,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 button.text()
                 for button in page.findChildren(type(page.product_source_btn))
             }
-            self.assertIn("دریافت مجدد تصاویر از لینک محصول", button_texts)
+            self.assertIn("دریافت داده و عکس بیشتر از لینک محصول", button_texts)
             self.assertIn("حذف انتخاب‌شده‌ها", button_texts)
         finally:
             page.close()
