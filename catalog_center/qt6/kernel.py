@@ -1322,6 +1322,7 @@ class AcquisitionCore:
         download_files: bool = False,
         same_domain_only: bool = True,
         progress=None,
+        force_recover: bool = False,
     ) -> dict[str, Any]:
         from .acquisition_runtime import run_single
 
@@ -1337,6 +1338,7 @@ class AcquisitionCore:
             download_files=bool(download_files),
             same_domain_only=bool(same_domain_only),
             progress=progress,
+            force_recover=bool(force_recover),
         )
 
     def refresh_source_products(
