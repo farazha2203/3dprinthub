@@ -1,3 +1,16 @@
+## 2026-09-02 — Phase49.3I.52D legacy image-path + Crawl numeric layout repair
+- verified mature Windows storage: `D:\projects\3dprinthub-catalog-manager\collected\<source>\<external_id>\images`, with `seo_images` preferred when present;
+- fixed Qt Crawl cards that could report no Preview while real downloaded files already existed in the mature collected tree;
+- added read-only identity-path image discovery even when a Crawl row is not linked to a Product id yet;
+- added case-insensitive source-code Product matching for legacy `MakerWorld`/current `makerworld` drift;
+- cards and table now report the real local image count for those rows;
+- live single-candidate review can show mature local images without Product linkage;
+- retained `D:\projects\3dprinthub_catalog_center\collected` only as a secondary read-only compatibility fallback;
+- fixed RTL QSpinBox crowding for requested Product count and per-Product image limit using LTR numeric controls, safe width/padding and explicit grid spacing;
+- runtime `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`: Qt `33628825851` PASS, Single Active AI `33628825772` PASS, Portable `33628825715` PASS;
+- Portable release regression 221 tests PASS; artifact `9846044486`; EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`;
+- no migration, destructive file operation, Host change or Production write.
+
 ## 2026-09-02 — Phase49.3I.52C Crawl visual review recovery
 - restored Preview-first visual cards in Add Product/Crawl so Product title/thumbnail is visible before full receive;
 - current Search now clears the previous live result workspace and remains scoped to that Search/Listing URL;
