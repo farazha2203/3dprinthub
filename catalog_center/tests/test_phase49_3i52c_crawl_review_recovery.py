@@ -17,9 +17,11 @@ from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
     candidate_by_identity,
     candidate_preview_cache_path,
+    candidates_from_dom_rows,
     set_candidate_status,
     upsert_candidate,
 )
+from app.phase49_3i_preview_recovery import PREVIEW_CARD_EVAL_JS
 from qt6 import acquisition_runtime
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage
@@ -228,6 +230,89 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 )
         finally:
             page.close()
+
+    def test_queue_reuses_mature_refetch_variant_folders_without_product_link(self):
+        listing = "https://makerworld.com/en/search/models?keyword=legacy-variants"
+        external_id = "520007"
+        candidate = self._candidate(
+            external_id,
+            listing,
+            title="Legacy Variant Product",
+        )
+        upsert_candidate(self.db, candidate)
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            candidate["source_url"],
+            listing,
+        )
+
+        source_root = (
+            Path(self.db.path).resolve().parent
+            / "collected"
+            / "makerworld"
+        )
+        refetch = source_root / f"{external_id}_refetch_20260902_120000" / "images"
+        refresh = source_root / f"{external_id}_refresh_latest" / "images"
+        bulk = source_root / f"{external_id}_bulk_refetch_1780000000" / "images"
+        for folder, name in (
+            (refetch, "refetch.jpg"),
+            (refresh, "refresh.jpg"),
+            (bulk, "bulk.jpg"),
+        ):
+            folder.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (480, 320), "white").save(
+                folder / name,
+                format="JPEG",
+            )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page._populate_queue(reset=True)
+            self.assertEqual(page.queue_gallery.count(), 1)
+            card = page.queue_gallery.item(0)
+            self.assertIn("3 عکس دارد", card.text())
+            self.assertFalse(card.icon().isNull())
+        finally:
+            page.close()
+
+    def test_listing_thumbnail_recovers_srcset_and_lazy_attributes(self):
+        pattern = (
+            r"https?://(?:www\.)?makerworld\.com/"
+            r"(?:[a-z]{2}/)?models/(?P<external_id>\d+)[^?#]*"
+        )
+        rows = [
+            {
+                "href": "https://makerworld.com/en/models/520008-lazy-preview",
+                "text": "Lazy Preview Product",
+                "image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP",
+                "src": "",
+                "data_src": "",
+                "data_original": "",
+                "data_lazy_src": "",
+                "srcset": (
+                    "https://cdn.example.com/520008-small.jpg 1x, "
+                    "https://cdn.example.com/520008-large.jpg 2x"
+                ),
+                "source_srcset": "",
+                "background": "",
+            }
+        ]
+        candidates = candidates_from_dom_rows(
+            rows,
+            pattern,
+            "https://makerworld.com/en/search/models?keyword=lazy",
+            "makerworld",
+            5,
+        )
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(
+            candidates[0]["thumbnail_url"],
+            "https://cdn.example.com/520008-large.jpg",
+        )
+        self.assertIn("data-lazy-src", PREVIEW_CARD_EVAL_JS)
+        self.assertIn("source_srcset", PREVIEW_CARD_EVAL_JS)
+        self.assertIn("background-image", PREVIEW_CARD_EVAL_JS)
 
     def test_current_search_gallery_is_visual_scoped_and_click_toggle_multiselect(self):
         listing = "https://makerworld.com/en/search/models?keyword=japandi"
