@@ -1,3 +1,73 @@
+## 2026-09-02 — Phase49.3I.52F bulk recovery for incomplete Crawl Products
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested runtime: `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`  
+Rollback: `backup/pre-phase49-3i52f-bulk-recover-incomplete-20260902` → `f35bd3e409c4293a756ddfe2fc9d4f7dcb968445`.  
+Catalog Center: `8.9.10` / build `2026.09.02.1`; Qt shell marker: `Phase49.3I.52F`.
+
+### Owner request
+The permanent Crawl inventory must be actionable even when a row has no usable title, description or image. The operator must be able to select many rows (for example 100), choose a target image count such as 5 or 10, and run one recovery operation. Existing local/database evidence should be reused first; incomplete records should be re-read from the original Product URL without opening each Product manually.
+
+### Mature behavior reviewed
+The previous Tk application already had `bulk_refetch_selected()`: selected Products were re-read from their source, downloaded images were refreshed, and `merge_refetch()` preserved human/operator edits. 3I.52F extends that mature safety contract into Qt Crawl inventory instead of inventing a parallel recovery path.
+
+### Implemented
+- permanent Crawl inventory has `انتخاب ناقص‌ها`;
+- loaded rows lacking a Product, meaningful title/description, or local image are selected in one action;
+- permanent inventory has a dedicated image target selector: 5 / 10 / 20;
+- permanent inventory has `بازیابی دیتا + عکس`;
+- controls are split into selection row + data-action row to avoid the crowded toolbar;
+- `بازیابی` status action was renamed `بازگردانی به صف` so it is not confused with Product data recovery;
+- recovery reuses existing local files without network when Product data is already complete and local image count meets the requested target;
+- incomplete existing Products are force-refetched through the safe source recovery merge, preserving operator Persian content, final price, approval and publish state;
+- orphan Crawl identities whose ledger says already collected but whose Product row is missing can be explicitly recovered from the original Product URL;
+- rejected/blocked Product safety remains enforced: blocked Products are not silently revived by source recovery;
+- Product URL slug is used as a readable fallback title before full receive; owner example `2953550-japandi-small-key-tray` displays `japandi small key tray` instead of an opaque id-only card;
+- recovery progress reports queue id, item index/total and child image/data progress;
+- no model/STL file download is triggered by this action; scope is Product data + images.
+
+### Verification
+- `33637452385` — Qt full parity PASS;
+- dedicated 3I.52 visual/recovery suite: 19 tests PASS;
+- explicit PASS: URL-slug identity before full receive;
+- explicit PASS: incomplete-row selection;
+- explicit PASS: complete local Product skips network;
+- explicit PASS: incomplete existing Product uses forced safe source refetch with selected 10-image target;
+- explicit PASS: orphan terminal ledger can be explicitly recovered;
+- `33637452588` — Single Active AI PASS;
+- `33637452243` — Windows Portable PASS;
+- Portable release regression: 227 tests PASS;
+- artifact id `9849484898`;
+- EXE SHA256 `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`;
+- EXE self-verify and browser smoke PASS.
+
+### Errors resolved during implementation
+- ERR-49-100: first portable regression exposed a missing `QMessageBox` import in the new test fixture; import was added before rerun.
+- ERR-49-101: next regression proved the mocked `run_single` lifetime ended before the captured Worker executed; fixture scope was corrected before final rerun.
+- neither failed condition was rerun unchanged.
+
+### Safety
+- no Django migration;
+- no Catalog migration;
+- no destructive media operation;
+- no direct Production/Host change;
+- Production MySQL untouched;
+- explicit source recovery remains robots-aware and sequential, not an aggressive parallel crawler.
+
+### Exact next task
+1. owner closes the currently running Catalog Center;
+2. clean ff-only Local sync to the live GitHub branch;
+3. run canonical Local gate with dynamic live HEAD and relaunch;
+4. sidebar must report `Phase49.3I.52F`;
+5. in permanent Crawl inventory, filter/load the target rows and click `انتخاب ناقص‌ها`;
+6. choose 5 or 10 images, click `بازیابی دیتا + عکس`;
+7. verify external id `2953550` becomes a readable Product with source title/description and requested images without manually opening its URL;
+8. verify a Product already complete with enough local images is reported as local reuse rather than downloaded again;
+9. Production remains blocked until owner Local acceptance.
+
 ## 2026-09-02 — Phase49.3I.52E Crawl preview recovery + mature refetch-folder image parity
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
