@@ -263,8 +263,19 @@ async def _discover_listing(
                     model_pattern=model_pattern,
                     requested=requested,
                 )
-        except (RobotsDeniedError, RateLimitedError, AccessDeniedError):
+        except (RobotsDeniedError, RateLimitedError):
             raise
+        except AccessDeniedError as exc:
+            # A public listing can reject plain HTTP while still being usable
+            # through the existing browser collector. Do not repeat the same
+            # blocked HTTP request; continue once into the mature browser path,
+            # which performs its own robots gate before navigation.
+            modern_candidates = []
+            _emit(
+                progress,
+                5,
+                f"HTTP listing blocked ({exc}); switching to robots-gated Browser fallback…",
+            )
         except TransientHttpError:
             modern_candidates = []
         except Exception:
