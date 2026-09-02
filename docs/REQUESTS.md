@@ -1,3 +1,20 @@
+## REQ-49-091 — Permanent Crawl inventory must show recent and historical images consistently
+Date: 2026-09-02  
+Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner evidence:
+- permanent inventory shows images for some rows but not many recent rows and some historical rows;
+- recent `new` identities need visual listing Preview before full receive;
+- historical rows with already-downloaded files must reuse every mature storage variant.
+
+Acceptance implemented:
+- exact and mature refetch/source-refresh folders are resolved read-only;
+- lazy MakerWorld listing image attributes are captured for Preview;
+- same Search can be rerun to backfill empty Preview evidence without duplicate identities;
+- local image count remains based on real files.
+
+Verification: runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Qt `33632062812` PASS; Portable `33632062880` PASS; 223 regressions.
+
 ## REQ-49-090 — Show already-downloaded Crawl images and repair overlapped numeric inputs
 Date: 2026-09-02  
 Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
