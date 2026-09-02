@@ -1,3 +1,39 @@
+## REQ-49-089 — Restore visual Crawl review, multi-select transfer and safe Product image/data recovery
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED + WINDOWS CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- Crawl/Add Product must show Product images instead of text-only identities;
+- every card must expose how many images are available/saved;
+- while collecting a Product the operator must see image progress such as 3/5, 4/5, 5/5 and then move to the next Product;
+- each new Search must clear the prior Search result area and show only the current Search candidates;
+- multiple candidates must be selectable together for add/reject operations;
+- selected collected Products must actually route into the Products workspace;
+- persistent Crawl inventory must remain visual, not hide older products or thumbnails;
+- Product editing must include an explicit action to fetch more source data/images from the Product link;
+- source recovery must not overwrite operator-owned Persian content, price or publish state;
+- controls must be task-focused and readable rather than a dense row of long labels.
+
+Acceptance implemented:
+- current-search icon/card gallery with stable Preview thumbnails and image-count copy;
+- new Search clears prior live cards;
+- per-image acquisition progress callback;
+- explicit MultiSelection + select-all/clear + selected-count state in current Search and persistent inventory;
+- bulk selected transfer returns Product ids and navigates to Products;
+- persistent inventory reuses candidate/legacy Preview title and thumbnail;
+- Product image/source stage exposes `دریافت داده و عکس بیشتر از لینک محصول`;
+- safe recovery updates source data/images and preserves operator title/description/final price/sale approval/publish decision.
+
+Verification:
+- Qt6 run `33624135672` PASS;
+- Single Active AI `33625043627` PASS;
+- Windows Portable `33625043651` PASS after correcting its Qt dependency boundary;
+- portable regression gate 215 tests PASS;
+- runtime/CI checkpoint `b43880a763d00bfda52dc29c4bf080cb428b1230`;
+- Production untouched.
+
+Owner Local foreground acceptance is still required before this request can be marked ACCEPTED.
+
 ## REQ-49-088 — Site fallback Product authoring, shared low-cost Persian AI and safe bidirectional Windows sync
 Date: 2026-09-02  
 Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
