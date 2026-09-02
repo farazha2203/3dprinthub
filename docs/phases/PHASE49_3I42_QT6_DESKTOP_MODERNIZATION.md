@@ -1,3 +1,35 @@
+## Phase49.3I.49 — guarded multi-product site publish + full Slider/Admin sync
+
+Status: `WINDOWS CI PASS + ADMIN CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Implementation checkpoint before documentation: `f9f89643de883ff549a9c0089235e43f061c5d4d`.
+Rollback: `backup/pre-phase49-3i49-site-bulk-publish-admin-control-20260901` → `1f8910b6c8c7c601cfd50689d8c48af492f7c453`.
+
+Desktop Products now owns an explicit two-step publish flow:
+1. `آماده انتشار انتخاب‌شده‌ها` — checks real factual Stage readiness and only then sets the existing upload-ready/Product intent state;
+2. `انتشار انتخاب‌شده‌های آماده روی سایت` — publishes only selected + ready Products through the mature Batch8.5/FTP/Bridge/public-HTTP path.
+
+A Product becomes Published locally only when the Bridge ACK confirms the requested Product target, Store visibility and public HTTP verification. Success writes `workflow_status=uploaded`, clears `upload_ready` and `needs_update`, and the existing Published lifecycle filter picks it up automatically. Missing/failed ACKs never enter Published.
+
+The existing Slider persistence is reused, not duplicated. Full round-trip now includes presentation mode, fit, focal point, scale, position, background, Desktop/Mobile bounds, Persian Slider SEO/copy, effect/timing, active/order and sync revision.
+
+Django Admin is composed around operator task order:
+- Product/image;
+- content + SEO;
+- responsive image composition;
+- motion/timing;
+- publish;
+- collapsed sync diagnostics.
+
+The composition follows `docs/PROFESSIONAL_COMMERCE_DESIGN_ARCHITECTURE.md`: task-first IA, progressive disclosure, restrained motion and no duplicate business authority.
+
+Regression evidence:
+- `33596830380` exact `f9f896...` Windows Qt full parity PASS;
+- `33596830268` exact `f9f896...` Single Active AI/no-migration PASS;
+- `33596562467` Admin/Bridge CI PASS on `16cf7c...`; exact compare to `f9f896...` shows only the Local PowerShell gate changed afterwards.
+
+No Django migration, Production MySQL write, Host deploy, secret migration or direct Production source edit is part of 3I.49.
+
 # Phase49.3I.42 — Qt 6 Desktop Modernization
 
 ## 42C5 / Phase49.3I.46 — Bounded Product/Crawl paging + pre-Qt acquisition parity — WINDOWS CI PASS / OWNER LOCAL QA NEXT
