@@ -14,7 +14,9 @@ Venv: `D:\projects\3DPrintHub\.venv`
 Django DB: `D:\projects\3DPrintHub\db.sqlite3`
 Persistent Catalog Root: `D:\projects\3dprinthub-catalog-manager`
 Catalog SQLite: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`
-Legacy Retained Data: `D:\projects\3dprinthub_catalog_center`
+Canonical downloaded Product images: `D:\projects\3dprinthub-catalog-manager\collected\<source_code>\<external_id>\images`
+Canonical finalized SEO images: `D:\projects\3dprinthub-catalog-manager\collected\<source_code>\<external_id>\seo_images`
+Legacy Installed Application Root (retained/read-only fallback): `D:\projects\3dprinthub_catalog_center`
 Backups: `D:\projects\3dprinthub-backups`
 Runtime Logs: under persistent Catalog data root, including `logs\phase49_3f\YYYY-MM-DD\workflow-*.jsonl`
 Canonical validated pre-49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3H_LOCAL_GATE.ps1`
