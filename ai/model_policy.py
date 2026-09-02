@@ -61,15 +61,17 @@ def provider_key(provider: str) -> str:
         if value:
             return value
 
-    # Desktop may keep the same provider secret in Windows Credential Store.
-    # Shared-host Django normally reaches this function through environment
-    # variables only. The fallback never persists the secret to Django/SQLite.
-    try:
-        from catalog_center.app.secure_secrets import get_provider_key
+    # Production/shared-host Django is environment-only by policy. On
+    # Windows development we may reuse the mature Credential Store boundary.
+    # This deliberately avoids Host fallback to legacy project files/keyrings.
+    if os.name == "nt":
+        try:
+            from catalog_center.app.secure_secrets import get_provider_key
 
-        return str(get_provider_key(provider) or "").strip()
-    except Exception:
-        return ""
+            return str(get_provider_key(provider) or "").strip()
+        except Exception:
+            return ""
+    return ""
 
 
 def _ensure_provider_installed(provider: str) -> None:
