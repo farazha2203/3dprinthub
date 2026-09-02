@@ -1,3 +1,13 @@
+## 2026-09-02 — Phase49.3I.52E
+- fixed permanent Crawl inventory image misses from mature refetch/source-refresh sibling folders;
+- added read-only lookup for `_refresh_latest`, `_refetch_*`, and `_bulk_refetch_*`;
+- fixed lazy MakerWorld card Preview extraction for srcset/picture/data-lazy/background-image sources;
+- duplicate Search reruns now refresh candidate Preview evidence without duplicating identity;
+- Qt shell reports `Phase49.3I.52E`;
+- Qt `33632062812`, Single Active AI `33632062877`, Portable `33632062880` PASS;
+- 223 portable regressions PASS; artifact `9847317893`; SHA256 `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`;
+- no migration, destructive media operation, Host change or Production write.
+
 ## 2026-09-02 — Phase49.3I.52D legacy image-path + Crawl numeric layout repair
 - verified mature Windows storage: `D:\projects\3dprinthub-catalog-manager\collected\<source>\<external_id>\images`, with `seo_images` preferred when present;
 - fixed Qt Crawl cards that could report no Preview while real downloaded files already existed in the mature collected tree;
