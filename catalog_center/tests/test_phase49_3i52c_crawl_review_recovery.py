@@ -422,20 +422,20 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_main_window_reports_current_3i52c_phase_instead_of_stale_3i48(self):
+    def test_main_window_reports_current_3i52e_phase_instead_of_stale_3i48(self):
         from qt6.main_window import MainWindow
 
         window = MainWindow(self.db)
         try:
             contract = window.structural_contract()
-            self.assertEqual(contract["active_phase"], "49.3I.52C")
+            self.assertEqual(contract["active_phase"], "49.3I.52E")
             phase_labels = [
                 label.text()
                 for label in window.findChildren(QLabel)
                 if "Phase49.3I." in label.text()
             ]
             self.assertTrue(
-                any("Phase49.3I.52C" in value for value in phase_labels)
+                any("Phase49.3I.52E" in value for value in phase_labels)
             )
             self.assertFalse(
                 any("Phase49.3I.48" in value for value in phase_labels)
