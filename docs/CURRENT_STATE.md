@@ -1,3 +1,75 @@
+## 2026-09-02 — Phase49.3I.52D Legacy downloaded-image path parity + Crawl numeric layout repair
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested runtime checkpoint: `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`  
+Rollback: `backup/pre-phase49-3i52d-legacy-image-path-layout-20260902` → `28b51d2f95b272d3bf6311fb02f55a7a4fa808e4`.  
+Catalog Center: `8.9.10` / build `2026.09.02.1`.
+
+### Owner QA evidence
+The owner screenshot of `Add Products / Crawl → Inventory` showed many MakerWorld rows with `Preview تصویر ندارد` even though older Catalog Center downloads already existed locally. The two numeric receive controls also rendered with RTL spin arrows/text colliding.
+
+### Verified mature storage contract
+The retained mature Tk runtime uses:
+- persistent DB/data root: `D:\projects\3dprinthub-catalog-manager`;
+- Product download directory: `D:\projects\3dprinthub-catalog-manager\collected\<source_code>\<external_id>\`;
+- original images: `...\images\`;
+- finalized SEO images when present: `...\seo_images\`.
+
+The old installed application/source target `D:\projects\3dprinthub_catalog_center` is not the canonical active SQLite data root. It is retained only as a read-only compatibility fallback.
+
+### Root cause
+Qt Crawl inventory only asked the Product image resolver when a `discovered_urls` row had already resolved to a Product id. Old/stale Crawl rows without that linkage fell straight to the newer `discovery_previews` cache. Therefore a mature `collected/<source>/<external_id>/images` folder could contain real downloaded files while the card still reported no Preview. An additional compatibility gap made Product matching source-code case-sensitive.
+
+The numeric QSpinBox controls inherited the application-wide RTL direction and generic padding, which put the Windows arrow subcontrol and digits into the same visual area.
+
+### Implemented
+- ImageCore now resolves the mature downloaded-image folder directly from the active Catalog SQLite parent + `collected/<source>/<external_id>`;
+- it scans `seo_images` first and `images` second, read-only, with deduplication;
+- the retained old `D:\projects\3dprinthub_catalog_center\collected` tree is accepted only as a secondary read-only fallback when it physically exists;
+- Product local_dir remains first authority when available;
+- Crawl inventory and current-search cards can now display/count real local downloaded images even before Product-id linkage is repaired;
+- card text uses the requested `N عکس دارد` contract whenever real local files exist;
+- single-item live review can display those local files even for an unlinked Crawl candidate;
+- bounded Crawl→Product resolution is now case-insensitive for source_code, preserving old `MakerWorld` vs current `makerworld` rows;
+- Product/business data is not rewritten by image-path discovery;
+- `requested` and `image_limit` spinboxes are explicitly LTR, centered, width-bounded and padded away from Windows arrow buttons;
+- Crawl control grid now has explicit horizontal/vertical spacing and balanced editable columns.
+
+### Verification
+Exact tested runtime: `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`.
+- `33628825851` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS;
+- dedicated 3I.52C/52D suite: 13 tests PASS, including:
+  - mature collected folder visible without Product linkage;
+  - legacy Product source-code case mismatch resolves;
+  - numeric spinboxes are LTR/non-cramped;
+- `33628825772` — Single Active AI — PASS;
+- `33628825715` — Windows Portable — PASS;
+- Portable release regression gate: 221 tests PASS;
+- artifact id: `9846044486`;
+- EXE SHA256: `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`;
+- EXE self-verify and browser smoke PASS.
+
+### Database / media / Production safety
+- no Django migration;
+- no Catalog migration;
+- no Product/Crawl row rewrite is required to show legacy images;
+- no local downloaded file is moved/deleted/renamed by this repair;
+- compatibility discovery is read-only;
+- Host and Production source are untouched;
+- Production MySQL is untouched.
+
+### Exact next task
+1. owner closes the running Qt app;
+2. clean ff-only Local sync to the live GitHub branch;
+3. run the canonical Local gate and relaunch Qt;
+4. verify the same Crawl Inventory rows now show the actual downloaded thumbnail and `N عکس دارد`;
+5. verify a single candidate opens the local image strip;
+6. verify `100` and `5` numeric controls no longer overlap their arrow buttons;
+7. if a specific row still has no image, capture its external id and the UI will be checked against its exact `collected/<source>/<external_id>` folder and DB identity without destructive repair.
+
 ## 2026-09-02 — Phase49.3I.52C Crawl visual review + multi-select + safe Product recovery
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
