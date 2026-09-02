@@ -1,3 +1,71 @@
+## 2026-09-02 — Phase49.3I.52C Crawl visual review + multi-select + safe Product recovery
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Runtime/CI checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`  
+Pre-phase rollback: `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.  
+Catalog Center: `8.9.10` / build `2026.09.02.1`.
+
+### What changed
+- current Crawl Search results are now a visual icon/card gallery, scoped to the active Search/Listing URL;
+- each new Search clears the previous live-result cards before starting;
+- Preview-first discovery shows Product title/thumbnail before full receive;
+- stable discovery Preview cache is reused by Qt and persistent Crawl inventory;
+- cards visibly report `Preview: 1 عکس`, `N عکس دارد` or the explicit no-preview state;
+- rich receive emits per-Product image progress such as `عکس 3/5` and `عکس 5/5`;
+- current Search and persistent Crawl gallery/table use explicit Qt MultiSelection with select-all/clear and selected-count feedback;
+- selected candidates can be bulk-added/rejected; successful selected transfer returns Product ids and navigates to Products;
+- already-collected identities stay mapped to their existing Product;
+- persistent Crawl inventory is enriched with candidate title/thumbnail/status evidence;
+- Product image/source stage exposes `دریافت داده و عکس بیشتر از لینک محصول`;
+- safe recovery refreshes source-owned/source-derived data and images while preserving operator Persian title/description, final price, final-price flag, sale approval and publish decision;
+- Crawl bulk actions are task-grouped with shorter operator labels rather than a dense row of long actions.
+
+### Verification
+- `33624135672` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS on source checkpoint `4cecdea...`;
+- dedicated 3I.52C regression covers visual Preview, image count, Search clearing/scoping, Qt MultiSelection, per-image progress, Product routing and safe source recovery;
+- `33625043627` — Single Active AI — PASS;
+- initial Portable `33624135587` failed because the new Qt regression imported PySide6 while that job installed only non-Qt requirements; recorded as ERR-49-097 and not rerun unchanged;
+- CI dependency boundary fixed at `b43880a763d00bfda52dc29c4bf080cb428b1230`;
+- `33625043651` — Windows Portable — PASS;
+- Portable release regression gate: 215 tests PASS;
+- artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9844568575`;
+- EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- EXE self-verify and browser smoke PASS.
+
+### Database / media / Production
+- no new Django migration in 3I.52C;
+- no destructive Catalog schema/data operation;
+- Preview cache is additive below the persistent Catalog data root;
+- canonical Local Catalog SQLite remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`;
+- no Host source change;
+- no Production MySQL write or migration;
+- last verified Production application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- existing 3I.51 Site migration candidates remain pending until a later verified Host audit; nothing in 3I.52C claims they are applied.
+
+### Documentation updated
+- active Phase49.3I.52 document;
+- CURRENT_STATE;
+- ROADMAP;
+- CHANGELOG;
+- REQUESTS as REQ-49-089;
+- ERRORS as ERR-49-097;
+- PATHS;
+- master roadmap and PROJECT_CONTEXT.
+
+### Exact next task
+1. close Catalog Center;
+2. on Windows verify `D:\projects\3DPrintHub`, origin, active branch and clean worktree;
+3. ff-only pull the latest `agent/phase49-3i18-operator-bulk-ai-rebuild`;
+4. run root `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` version `49.3I.52.2` with the exact live GitHub head and `-LaunchApp`;
+5. foreground QA one bounded MakerWorld Search: prior cards clear, Preview title/image appears, each Product shows 3/5→5/5 progress and final image count;
+6. select multiple candidates, add them, verify automatic navigation to Products and visible Product identity;
+7. verify persistent Crawl inventory remains visual/multi-selectable;
+8. in Product image/source stage run `دریافت داده و عکس بیشتر از لینک محصول` and verify source images/data refresh while operator Persian content/final price/publish state remain unchanged;
+9. only after owner Local acceptance may the normal Host read-only audit/backups begin; Production deploy remains blocked.
+
 ## 2026-09-02 — Phase49.3I.52 Site authoring + Shared Host AI + Bidirectional Product sync
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SITE ADMIN-BRIDGE CI PASS / PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
