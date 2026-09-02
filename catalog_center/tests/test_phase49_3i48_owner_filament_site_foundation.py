@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication
 from app.db import Database
 from qt6.kernel import build_kernel
 from qt6.parity_dialogs import FilamentEditorDialog
+from qt6.pages import FilamentsPage
 from qt6.product_wizard import ProductWizardPage
 
 
@@ -269,6 +270,37 @@ class Phase493I48OwnerFilamentSiteFoundationTests(unittest.TestCase):
         self.assertEqual(float(profiles[0]["part_height_cm"]), 3.5)
         self.assertEqual(len(profiles[0]["material_options"]), 1)
         self.assertEqual(profiles[0]["material_options"][0]["brand"], "Bambu Lab")
+
+    def test_brand_and_color_registries_are_persistent_and_filament_page_is_tabbed(self):
+        self.kernel.filaments.add_brand("Polymaker")
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "آبی تغییررنگ",
+                "color_type": "color_shift",
+                "color_finish": "glossy",
+                "palette_hexes": ["#2563EB", "#7C3AED"],
+            }
+        )
+
+        self.assertIn("Polymaker", self.kernel.filaments.brands())
+        preset = next(
+            item
+            for item in self.kernel.filaments.color_presets()
+            if item["name"] == "آبی تغییررنگ"
+        )
+        self.assertEqual(preset["color_type"], "color_shift")
+        self.assertEqual(preset["palette_hexes"], ["#2563EB", "#7C3AED"])
+
+        page = FilamentsPage(self.db, kernel=self.kernel)
+        try:
+            labels = [
+                page.workspace_tabs.tabText(index)
+                for index in range(page.workspace_tabs.count())
+            ]
+            self.assertEqual(labels, ["فیلامنت‌ها", "برندها", "رنگ‌ها"])
+            self.assertGreaterEqual(page.color_table.rowCount(), 1)
+        finally:
+            page.close()
 
     def test_stage3_save_does_not_cross_write_locked_slider_stage(self):
         product_id = self._make_product("3148003")
