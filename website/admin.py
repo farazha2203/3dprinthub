@@ -196,6 +196,8 @@ class MaterialAdmin(admin.ModelAdmin):
                     "default_roll_weight_grams",
                     "default_purchase_price_per_roll",
                     "sale_price_per_gram",
+                    "print_hourly_rate_toman",
+                    "supervision_hourly_rate_toman",
                     "reorder_threshold_grams",
                     "track_filament_inventory",
                 )

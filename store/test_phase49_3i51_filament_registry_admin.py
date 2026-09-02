@@ -48,4 +48,6 @@ class Phase493I51FilamentRegistryAdminTests(TestCase):
         }
         self.assertIn("catalog_description", fields)
         self.assertIn("price_per_kg", fields)
+        self.assertIn("print_hourly_rate_toman", fields)
+        self.assertIn("supervision_hourly_rate_toman", fields)
         self.assertIn("catalog_description", registered.search_fields)
