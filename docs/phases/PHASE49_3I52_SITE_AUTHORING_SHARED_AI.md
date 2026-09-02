@@ -148,6 +148,8 @@ Implemented:
 - selected candidates can be added/rejected in bulk; successful transfer returns Product ids and navigates to Products;
 - already-collected identities route to their existing Product;
 - persistent Crawl inventory is enriched with candidate title/thumbnail/status evidence;
+- selected collected Product exposes a dedicated live image review strip with the actual local images, total image count and local-displayable file count;
+- compact operator labels such as `شروع دریافت`, `موجودی Crawl`, `لینک پیش‌فرض`, `دریافت Product`, `افزودن انتخابی` and `حذف انتخابی` keep the full explanation in tooltips;
 - Product image/source stage exposes `دریافت داده و عکس بیشتر از لینک محصول`;
 - safe recovery refreshes source-owned data/images while preserving operator Persian title/description, final price, sale approval and publish decision.
 
@@ -155,13 +157,13 @@ Rollback:
 `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
 
 Verification:
-- `33624135672` Qt6 Crawl + AI Runtime CI PASS on `4cecdea34774a0c109e8f854bac19831f7bcf234`;
-- `33625043627` Single Active AI PASS;
+- `33625257602` Qt6 Crawl + AI Runtime CI PASS on final runtime `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
+- `33625257485` Single Active AI PASS;
 - initial Portable run `33624135587` failed only because the newly added Qt regression imported PySide6 while that release job installed only the non-Qt requirements;
 - the failed condition was changed: Portable CI now installs `requirements-qt6.txt`;
-- `33625043651` Windows Portable PASS on `b43880a763d00bfda52dc29c4bf080cb428b1230`;
-- portable regression gate: 215 tests PASS;
-- artifact id `9844568575`, EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- `33625257693` Windows Portable PASS on final runtime `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
+- portable regression gate: 217 tests PASS;
+- artifact id `9844598171`, EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
 - browser smoke and EXE self-verification PASS.
 
 Safety:
