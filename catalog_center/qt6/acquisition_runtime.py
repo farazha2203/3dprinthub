@@ -1308,6 +1308,173 @@ async def _collect_one_adaptive(
     )
     raise AcquisitionMethodsExhausted(attempts)
 
+def _cache_candidate_thumbnail(candidate: dict[str, Any]) -> str:
+    url = str(candidate.get("thumbnail_url") or "").strip()
+    if not url.startswith(("http://", "https://")):
+        return ""
+    target = candidate_preview_cache_path(
+        str(candidate.get("source_code") or ""),
+        str(candidate.get("external_id") or ""),
+    )
+    if target.is_file() and target.stat().st_size > 0:
+        return str(target)
+    request = urlrequest.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": str(
+                candidate.get("discovered_from")
+                or candidate.get("source_url")
+                or ""
+            ),
+        },
+    )
+    try:
+        with urlrequest.urlopen(request, timeout=8) as response:
+            content_type = str(response.headers.get("Content-Type") or "").lower()
+            if content_type and not content_type.startswith("image/"):
+                return ""
+            raw = response.read(5_000_001)
+        if not raw or len(raw) > 5_000_000:
+            return ""
+        with Image.open(io.BytesIO(raw)) as image:
+            prepared = ImageOps.exif_transpose(image).convert("RGB")
+            prepared.thumbnail((720, 540), Image.Resampling.LANCZOS)
+            temp = target.with_suffix(".tmp.jpg")
+            prepared.save(temp, format="JPEG", quality=86, optimize=True)
+            temp.replace(target)
+        return str(target)
+    except Exception:
+        return ""
+
+async def _preview_listing_candidates(
+    db,
+    source_cfg: dict[str, Any],
+    listing_url: str,
+    requested: int,
+    *,
+    progress: Progress = None,
+    should_stop: ShouldStop = None,
+) -> dict[str, Any]:
+    """Restore the mature Preview-first UX without replacing the crawler."""
+    ensure_candidate_schema(db)
+    source_code = str(source_cfg.get("code") or "")
+    model_pattern = str(source_cfg.get("model_url_pattern") or "")
+    delay = await _browser_robots_gate(db, source_code, listing_url)
+    if delay > 0:
+        await asyncio.sleep(min(30.0, delay))
+    _emit(progress, 2, "پیش‌نمایش لیست: عنوان و تصویر کارت‌های محصول در حال خواندن است…")
+    try:
+        candidates = await discover_preview_candidates_safe(
+            listing_url,
+            source_code=source_code,
+            model_pattern=model_pattern,
+            requested=max(1, min(500, int(requested or 1))),
+            scroll_rounds=8,
+            headed=False,
+        )
+    except (RobotsDeniedError, RateLimitedError):
+        raise
+    except Exception as exc:
+        _emit(
+            progress,
+            4,
+            "پیش‌نمایش تصویری در دسترس نبود؛ کشف اصلی بدون تکرار Preview ادامه دارد "
+            f"({type(exc).__name__}).",
+        )
+        return {"previewed": 0, "new": 0, "duplicates": 0, "thumbs": 0}
+
+    new_count = duplicate_count = 0
+    prepared: list[dict[str, Any]] = []
+    for candidate in candidates:
+        if _stopped(should_stop):
+            break
+        item = dict(candidate)
+        item["discovered_from"] = listing_url
+        upsert_candidate(db, item)
+        if terminal_identity_state(
+            db,
+            source_code,
+            str(item.get("external_id") or ""),
+            str(item.get("source_url") or ""),
+        ):
+            duplicate_count += 1
+        elif db.add_discovered(
+            source_code,
+            str(item.get("external_id") or ""),
+            str(item.get("source_url") or ""),
+            listing_url,
+        ):
+            new_count += 1
+        else:
+            duplicate_count += 1
+        prepared.append(item)
+
+    _emit(
+        progress,
+        8,
+        f"پیش‌نمایش: {len(prepared)} محصول پیدا شد؛ تصاویر Preview در حال آماده‌سازی است.",
+    )
+
+    semaphore = asyncio.Semaphore(10)
+    thumb_count = 0
+
+    async def cache_one(item):
+        async with semaphore:
+            if _stopped(should_stop):
+                return ""
+            return await asyncio.to_thread(_cache_candidate_thumbnail, item)
+
+    thumbnail_candidates = [
+        item for item in prepared
+        if str(item.get("thumbnail_url") or "").startswith(("http://", "https://"))
+    ][: min(150, max(1, int(requested or 1)))]
+    tasks = [asyncio.create_task(cache_one(item)) for item in thumbnail_candidates]
+    if tasks:
+        completed = 0
+        for task in asyncio.as_completed(tasks):
+            try:
+                if await task:
+                    thumb_count += 1
+            except Exception:
+                pass
+            completed += 1
+            if completed == len(tasks) or completed % 8 == 0:
+                _emit(
+                    progress,
+                    min(18, 8 + int(completed / max(1, len(tasks)) * 10)),
+                    f"Preview تصویر {completed}/{len(tasks)} • آماده {thumb_count}",
+                )
+
+    return {
+        "previewed": len(prepared),
+        "new": new_count,
+        "duplicates": duplicate_count,
+        "thumbs": thumb_count,
+    }
+
+def _mark_candidate_result(
+    db,
+    source_code: str,
+    external_id: str,
+    status: str,
+    *,
+    product_id: int | None = None,
+    error: str = "",
+) -> None:
+    try:
+        candidate = candidate_by_identity(db, source_code, external_id)
+        if candidate is not None:
+            set_candidate_status(
+                db,
+                int(candidate["id"]),
+                status,
+                product_id=product_id,
+                error=error,
+            )
+    except Exception:
+        return
+
 async def run_batch_async(
     db,
     *,
@@ -1952,6 +2119,15 @@ async def refetch_product_from_source_async(
         "image_fallback_method": str(result.get("image_fallback_method") or ""),
         "quality": dict(result.get("quality") or {}),
     }
+
+def refetch_product_from_source(db, product_id: int, **kwargs) -> dict[str, Any]:
+    return asyncio.run(
+        refetch_product_from_source_async(
+            db,
+            int(product_id),
+            **kwargs,
+        )
+    )
 
 async def recover_product_images_async(
     db,
