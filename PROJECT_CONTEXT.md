@@ -1,3 +1,19 @@
+## Current owner checkpoint — Phase49.3I.52D / legacy Crawl image-path parity
+
+Exact tested runtime: `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`. Production remains untouched.
+
+Owner foreground QA showed real legacy downloaded images were invisible in Add Products / Crawl because Qt only used the Product image resolver after Product-id linkage. The mature retained Tk contract was verified: active Catalog data is `D:\projects\3dprinthub-catalog-manager`, with downloaded images under `collected\<source>\<external_id>\images` and finalized SEO files under `seo_images`. The old `D:\projects\3dprinthub_catalog_center` path is the retained installed application root, not the active SQLite data authority.
+
+3I.52D adds read-only identity-based lookup of those mature files, case-insensitive legacy source-code matching, real local image counts/icons for unlinked Crawl rows, live local-image review, and LTR/width-safe QSpinBox geometry for the requested-count/image-limit controls.
+
+Evidence: Qt `33628825851` PASS; dedicated suite 13 tests PASS; Single Active AI `33628825772` PASS; Portable `33628825715` PASS with 221 release regressions; artifact `9846044486`; EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`.
+
+Rollback: `backup/pre-phase49-3i52d-legacy-image-path-layout-20260902` → `28b51d2f95b272d3bf6311fb02f55a7a4fa808e4`.
+
+Next: owner clean Local sync + canonical gate + foreground verification of the exact Crawl rows from the screenshot. No Host work before owner acceptance.
+
+---
+
 ## Current owner checkpoint — Phase49.3I.52C / Crawl visual recovery
 
 Repository authority: `farazha2203/3dprinthub`  
