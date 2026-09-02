@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -207,6 +207,9 @@ class ProductsPage(QWidget):
         edit_btn = QPushButton("ویرایش محصول")
         edit_btn.setProperty("primary", True)
         edit_btn.clicked.connect(self._open_selected)
+        self.open_source_btn = QPushButton("🌐 باز کردن صفحه محصول")
+        self.open_source_btn.setToolTip("صفحه منبع همان Product انتخاب‌شده را در مرورگر باز می‌کند.")
+        self.open_source_btn.clicked.connect(self._open_source_selected)
 
         bar.addWidget(self.search, 1)
         bar.addWidget(QLabel("نمایش"))
@@ -215,6 +218,7 @@ class ProductsPage(QWidget):
         bar.addWidget(self.sort_combo)
         bar.addWidget(refresh_btn)
         bar.addWidget(crawl_btn)
+        bar.addWidget(self.open_source_btn)
         bar.addWidget(edit_btn)
         root.addLayout(bar)
 
@@ -373,6 +377,8 @@ class ProductsPage(QWidget):
             "این لیست دقیقاً همان Productهایی است که عملیات گروهی روی آن‌ها اجرا می‌شود."
         )
 
+        detail_open_source = QPushButton("🌐 باز کردن صفحه منبع")
+        detail_open_source.clicked.connect(self._open_source_selected)
         detail_edit = QPushButton("ویرایش کامل محصول")
         detail_edit.setProperty("primary", True)
         detail_edit.clicked.connect(self._open_selected)
@@ -385,6 +391,7 @@ class ProductsPage(QWidget):
         detail_layout.addWidget(selected_title)
         detail_layout.addWidget(self.selected_products)
         detail_layout.addStretch(1)
+        detail_layout.addWidget(detail_open_source)
         detail_layout.addWidget(detail_edit)
 
         splitter.addWidget(detail)
@@ -1021,6 +1028,19 @@ class ProductsPage(QWidget):
             )
         )
 
+    def _open_source_selected(self) -> None:
+        product_id = self._selected_product_id()
+        if product_id is None:
+            QMessageBox.warning(self, "صفحه محصول", "یک محصول را انتخاب کن.")
+            return
+        row = self.kernel.products.get(product_id) or {}
+        url = str(row.get("source_url") or "").strip()
+        if not url.startswith(("http://", "https://")):
+            QMessageBox.warning(self, "صفحه محصول", "لینک عمومی معتبر برای این محصول ثبت نشده است.")
+            return
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.warning(self, "صفحه محصول", "مرورگر سیستم نتوانست لینک محصول را باز کند.")
+
     def _open_selected(self) -> None:
         product_id = self._selected_product_id()
         if product_id is not None:
@@ -1219,8 +1239,11 @@ class OperationsPage(QWidget):
         self.queue_view_mode.addItem("آیکون‌های بزرگ", "icons")
         self.queue_view_mode.addItem("جزئیات", "details")
 
+        self.queue_open_btn = QPushButton("🌐 مشاهده صفحه محصول")
         self.queue_collect_btn = QPushButton("افزودن انتخاب‌شده‌ها به محصولات")
         self.queue_collect_btn.setProperty("primary", True)
+        self.queue_collect_ai_btn = QPushButton("✨ دریافت + ترجمه/SEO با AI")
+        self.queue_collect_ai_btn.setProperty("success", True)
         self.queue_reject_btn = QPushButton("رد/حذف از صف")
         self.queue_restore_btn = QPushButton("بازگرداندن به صف")
         self.queue_loaded_label = QLabel("")
@@ -1230,7 +1253,9 @@ class OperationsPage(QWidget):
         queue_header.addWidget(self.queue_filter)
         queue_header.addWidget(QLabel("نوع نمایش"))
         queue_header.addWidget(self.queue_view_mode)
+        queue_header.addWidget(self.queue_open_btn)
         queue_header.addWidget(self.queue_collect_btn)
+        queue_header.addWidget(self.queue_collect_ai_btn)
         queue_header.addWidget(self.queue_reject_btn)
         queue_header.addWidget(self.queue_restore_btn)
         queue_header.addStretch(1)
@@ -1471,7 +1496,7 @@ class OperationsPage(QWidget):
         report_layout.addWidget(self.summary, 1)
 
         self.workspace_tabs.addTab(inventory_page, "موجودی محصولات")
-        self.workspace_tabs.addTab(receive_page, "دریافت جدید")
+        self.workspace_tabs.addTab(receive_page, "دریافت محصولات از لینک جستجو")
         self.workspace_tabs.addTab(report_page, "گزارش و History")
         self.workspace_tabs.setCurrentIndex(0)
 
@@ -1507,7 +1532,17 @@ class OperationsPage(QWidget):
         self.queue_filter.currentIndexChanged.connect(
             lambda _index: self._populate_queue(reset=True)
         )
+        self.queue_open_btn.clicked.connect(self._open_selected_queue_source)
         self.queue_collect_btn.clicked.connect(self._collect_selected_queue)
+        self.queue_collect_ai_btn.clicked.connect(
+            lambda: self._collect_selected_queue(run_ai=True)
+        )
+        self.queue_gallery.itemDoubleClicked.connect(
+            lambda _item: self._open_selected_queue_source()
+        )
+        self.queue_table.itemDoubleClicked.connect(
+            lambda _item: self._open_selected_queue_source()
+        )
         self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
 
@@ -1876,6 +1911,14 @@ class OperationsPage(QWidget):
             self.status.setText(
                 "✅ Chrome پروفایل بسته شد و نشست مرورگر حفظ شد."
             )
+        elif operation == "queue_collect_ai":
+            ai = dict(data.get("ai") or {})
+            self.status.setText(
+                "✅ دریافت + AI تمام شد — "
+                f"Collected={data.get('collected', 0)} • "
+                f"AI={ai.get('completed', 0)} • "
+                f"Failed={data.get('failed', 0) + ai.get('failed', 0)}"
+            )
         elif data.get("already_collected"):
             self.status.setText(
                 f"این Product قبلاً دریافت شده — ID {data.get('product_id') or '—'}"
@@ -1919,6 +1962,10 @@ class OperationsPage(QWidget):
         self.start_btn.setEnabled(True)
         if hasattr(self, "queue_collect_btn"):
             self.queue_collect_btn.setEnabled(True)
+        if hasattr(self, "queue_collect_ai_btn"):
+            self.queue_collect_ai_btn.setEnabled(True)
+        if hasattr(self, "queue_open_btn"):
+            self.queue_open_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
 
     def _reset_failed(self) -> None:
@@ -2177,6 +2224,19 @@ class OperationsPage(QWidget):
                 f"نمایش {self._queue_offset:,} از {self._queue_total:,} • اسکرول برای ادامه"
             )
 
+    def _open_selected_queue_source(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(self, "صف Crawl", "یک رکورد را انتخاب کن.")
+            return
+        row = self._queue_rows_by_id.get(ids[0]) or {}
+        url = str(row.get("url") or row.get("normalized_url") or "").strip()
+        if not url.startswith(("http://", "https://")):
+            QMessageBox.warning(self, "صف Crawl", "این رکورد لینک عمومی معتبر ندارد.")
+            return
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.warning(self, "صف Crawl", "مرورگر سیستم نتوانست لینک را باز کند.")
+
     def _reject_selected_queue(self) -> None:
         ids = self._selected_queue_ids()
         if not ids:
@@ -2195,7 +2255,7 @@ class OperationsPage(QWidget):
         self.status.setText(f"{count} رکورد دوباره در صف new قرار گرفت.")
         self.refresh()
 
-    def _collect_selected_queue(self) -> None:
+    def _collect_selected_queue(self, *, run_ai: bool = False) -> None:
         if self._worker is not None:
             QMessageBox.information(
                 self,
@@ -2223,6 +2283,7 @@ class OperationsPage(QWidget):
             failed = 0
             already = 0
             errors = []
+            product_ids: list[int] = []
             total = max(1, len(rows))
             for index, row in enumerate(rows, 1):
                 queue_id = int(row.get("id") or 0)
@@ -2269,6 +2330,9 @@ class OperationsPage(QWidget):
                         progress=child_progress,
                     )
                     self.kernel.acquisition.mark_queue_collected([queue_id])
+                    product_id = int(result.get("product_id") or 0)
+                    if product_id > 0 and product_id not in product_ids:
+                        product_ids.append(product_id)
                     if result.get("already_collected"):
                         already += 1
                     else:
@@ -2281,11 +2345,25 @@ class OperationsPage(QWidget):
                         str(exc),
                     )
                 progress(int(index / total * 100), f"پردازش {index}/{total}")
+            ai_result = {}
+            if run_ai and product_ids:
+                progress(88, "شروع ترجمه/SEO و تکمیل محتوایی با همان هسته واحد AI…")
+                ai_result = self.kernel.complete_products_with_ai(
+                    product_ids,
+                    "link",
+                    progress=lambda value, message: progress(
+                        min(99, 88 + int(max(0, min(100, int(value))) * 0.11)),
+                        message,
+                    ),
+                )
             return {
+                "operation": "queue_collect_ai" if run_ai else "queue_collect",
                 "collected": collected,
                 "failed": failed,
                 "already_collected_count": already,
                 "discovered": 0,
+                "product_ids": product_ids,
+                "ai": ai_result,
                 "errors": errors[-10:],
             }
 
@@ -2293,6 +2371,8 @@ class OperationsPage(QWidget):
         self._worker = worker
         self.start_btn.setEnabled(False)
         self.queue_collect_btn.setEnabled(False)
+        self.queue_collect_ai_btn.setEnabled(False)
+        self.queue_open_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
         self.progress.setValue(0)
         self.status.setText(
