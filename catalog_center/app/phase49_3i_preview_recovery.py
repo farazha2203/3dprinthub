@@ -25,7 +25,7 @@ PREVIEW_CARD_EVAL_JS = r"""els => els.map(a => {
         source_srcset: source ? (source.getAttribute('srcset') || '') : '',
         background: styled ? (styled.style.backgroundImage || '') : ''
     };
-})
+})"""
 
 
 async def discover_preview_candidates_safe(
