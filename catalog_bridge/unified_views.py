@@ -148,6 +148,19 @@ def _profile_payload(profile) -> dict:
         "homepage_slider_transition_effect": profile.homepage_slider_transition_effect,
         "homepage_slider_transition_duration_ms": profile.homepage_slider_transition_duration_ms,
         "homepage_slider_display_duration_ms": profile.homepage_slider_display_duration_ms,
+        "homepage_slider_presentation_mode": profile.homepage_slider_presentation_mode,
+        "homepage_slider_object_fit": profile.homepage_slider_object_fit,
+        "homepage_slider_focal_position": profile.homepage_slider_focal_position,
+        "homepage_slider_image_scale_percent": profile.homepage_slider_image_scale_percent,
+        "homepage_slider_position_x_percent": profile.homepage_slider_position_x_percent,
+        "homepage_slider_position_y_percent": profile.homepage_slider_position_y_percent,
+        "homepage_slider_background_mode": profile.homepage_slider_background_mode,
+        "homepage_slider_background_color": profile.homepage_slider_background_color,
+        "homepage_slider_background_blur_px": profile.homepage_slider_background_blur_px,
+        "homepage_slider_desktop_max_width_percent": profile.homepage_slider_desktop_max_width_percent,
+        "homepage_slider_desktop_max_height_percent": profile.homepage_slider_desktop_max_height_percent,
+        "homepage_slider_mobile_max_width_percent": profile.homepage_slider_mobile_max_width_percent,
+        "homepage_slider_mobile_max_height_percent": profile.homepage_slider_mobile_max_height_percent,
         "sync_revision": int(profile.sync_revision or 1),
         "last_modified_source": profile.last_modified_source,
         "last_modified_by": profile.last_modified_by,
@@ -209,6 +222,17 @@ def serialize_slide(slide) -> dict:
         "button_text": str(slide.button_text or ""),
         "object_fit": str(slide.object_fit or ""),
         "focal_position": str(slide.focal_position or ""),
+        "presentation_mode": str(slide.presentation_mode or "product_fit"),
+        "image_scale_percent": int(slide.image_scale_percent or 100),
+        "image_position_x_percent": int(slide.image_position_x_percent or 50),
+        "image_position_y_percent": int(slide.image_position_y_percent or 50),
+        "background_mode": str(slide.background_mode or "blur"),
+        "background_color": str(slide.background_color or "#071827"),
+        "background_blur_px": int(slide.background_blur_px or 18),
+        "desktop_max_width_percent": int(slide.desktop_max_width_percent or 78),
+        "desktop_max_height_percent": int(slide.desktop_max_height_percent or 88),
+        "mobile_max_width_percent": int(slide.mobile_max_width_percent or 92),
+        "mobile_max_height_percent": int(slide.mobile_max_height_percent or 72),
         "transition_effect": str(slide.transition_effect or "cinematic_fade"),
         "transition_duration_ms": int(slide.transition_duration_ms or 1400),
         "display_duration_ms": int(slide.display_duration_ms or 7000),
@@ -533,6 +557,75 @@ def _bounded(value, default, minimum, maximum):
     return min(maximum, max(minimum, _as_int(value, default)))
 
 
+PROFILE_MEDIA_FIELDS = (
+    "homepage_slider_presentation_mode",
+    "homepage_slider_object_fit",
+    "homepage_slider_focal_position",
+    "homepage_slider_image_scale_percent",
+    "homepage_slider_position_x_percent",
+    "homepage_slider_position_y_percent",
+    "homepage_slider_background_mode",
+    "homepage_slider_background_color",
+    "homepage_slider_background_blur_px",
+    "homepage_slider_desktop_max_width_percent",
+    "homepage_slider_desktop_max_height_percent",
+    "homepage_slider_mobile_max_width_percent",
+    "homepage_slider_mobile_max_height_percent",
+)
+
+
+def _normalized_profile_media_patch(profile, data: dict) -> dict:
+    from store.phase49_3b_profile_media import normalized_profile_media
+
+    merged = {
+        name: getattr(profile, name)
+        for name in PROFILE_MEDIA_FIELDS
+    }
+    merged.update({
+        name: data[name]
+        for name in PROFILE_MEDIA_FIELDS
+        if name in data
+    })
+    normalized = normalized_profile_media(merged)
+    return {
+        name: value
+        for name, value in normalized.items()
+        if name in data
+    }
+
+
+def _normalized_slide_media_patch(slide, data: dict) -> dict:
+    output = {}
+    if "presentation_mode" in data:
+        value = str(data.get("presentation_mode") or "product_fit").strip().lower()
+        output["presentation_mode"] = value if value in {"product_fit", "full_bleed", "framed", "cinematic"} else "product_fit"
+    if "object_fit" in data:
+        value = str(data.get("object_fit") or "contain").strip().lower()
+        output["object_fit"] = value if value in {"contain", "cover"} else "contain"
+    if "focal_position" in data:
+        value = str(data.get("focal_position") or "center").strip().lower()
+        output["focal_position"] = value if value in {"center", "top", "bottom", "left", "right"} else "center"
+    if "background_mode" in data:
+        value = str(data.get("background_mode") or "blur").strip().lower()
+        output["background_mode"] = value if value in {"solid", "blur", "gradient", "image"} else "blur"
+    if "background_color" in data:
+        output["background_color"] = str(data.get("background_color") or "#071827").strip()[:24] or "#071827"
+
+    for name, default, minimum, maximum in (
+        ("image_scale_percent", 100, 60, 140),
+        ("image_position_x_percent", 50, 0, 100),
+        ("image_position_y_percent", 50, 0, 100),
+        ("background_blur_px", 18, 0, 60),
+        ("desktop_max_width_percent", 78, 30, 100),
+        ("desktop_max_height_percent", 88, 30, 100),
+        ("mobile_max_width_percent", 92, 30, 100),
+        ("mobile_max_height_percent", 72, 30, 100),
+    ):
+        if name in data:
+            output[name] = _bounded(data[name], default, minimum, maximum)
+    return output
+
+
 @require_GET
 @_auth
 def products_view(request):
@@ -643,6 +736,14 @@ def product_sync_view(request, product_id: int):
             profile.homepage_slider_transition_duration_ms = _bounded(profile_data["homepage_slider_transition_duration_ms"], 1400, 300, 4000)
         if "homepage_slider_display_duration_ms" in profile_data:
             profile.homepage_slider_display_duration_ms = _bounded(profile_data["homepage_slider_display_duration_ms"], 7000, 2000, 30000)
+        if "has_3d_file" in profile_data:
+            profile.has_3d_file = bool(profile_data["has_3d_file"])
+        if "price_mode" in profile_data:
+            price_mode = str(profile_data.get("price_mode") or "fixed")
+            if price_mode in {"fixed", "range", "variant", "quote"}:
+                profile.price_mode = price_mode
+        for name, value in _normalized_profile_media_patch(profile, profile_data).items():
+            setattr(profile, name, value)
         if "technical_features" in profile_data and isinstance(profile_data["technical_features"], dict):
             profile.technical_features = profile_data["technical_features"]
         if "keywords" in profile_data and isinstance(profile_data["keywords"], list):
@@ -651,6 +752,12 @@ def product_sync_view(request, product_id: int):
         profile.last_modified_source = "desktop"
         profile.last_modified_by = actor
         profile.save()
+
+        # Reuse the existing ProductCatalogProfile -> HomepageHeroSlide mirror.
+        # The Phase49.3B wrapper extends it with fit/scale/background fields, so
+        # Desktop/API/Admin all operate on one persistent Slider contract.
+        from store import epic49_catalog_admin
+        epic49_catalog_admin._mirror_profile_to_hero(profile, actor)
 
     return JsonResponse({"status": "ok", "product": serialize_product(product), "revision": profile.sync_revision})
 
@@ -700,6 +807,8 @@ def hero_slide_sync_view(request, slide_id: int):
             if name in data:
                 value = str(data.get(name) or "")
                 setattr(slide, name, value[:max_length] if max_length else value)
+        for name, value in _normalized_slide_media_patch(slide, data).items():
+            setattr(slide, name, value)
         if "transition_effect" in data:
             effect = str(data.get("transition_effect") or "cinematic_fade")
             slide.transition_effect = effect if effect in SLIDER_EFFECT_CODES else "cinematic_fade"
@@ -735,6 +844,22 @@ def hero_slide_sync_view(request, slide_id: int):
             profile.homepage_slider_description_fa = slide.description
             profile.homepage_slider_alt_text = slide.image_alt_text
             profile.homepage_slider_button_text = slide.button_text
+            selected = getattr(slide, "selected_asset_image", None)
+            selected_url = _file_url(getattr(selected, "image", None)) or str(getattr(selected, "remote_url", "") or "")
+            profile.homepage_slider_image_url = selected_url or str(slide.image_url or "")
+            profile.homepage_slider_presentation_mode = slide.presentation_mode
+            profile.homepage_slider_object_fit = slide.object_fit
+            profile.homepage_slider_focal_position = slide.focal_position
+            profile.homepage_slider_image_scale_percent = slide.image_scale_percent
+            profile.homepage_slider_position_x_percent = slide.image_position_x_percent
+            profile.homepage_slider_position_y_percent = slide.image_position_y_percent
+            profile.homepage_slider_background_mode = slide.background_mode
+            profile.homepage_slider_background_color = slide.background_color
+            profile.homepage_slider_background_blur_px = slide.background_blur_px
+            profile.homepage_slider_desktop_max_width_percent = slide.desktop_max_width_percent
+            profile.homepage_slider_desktop_max_height_percent = slide.desktop_max_height_percent
+            profile.homepage_slider_mobile_max_width_percent = slide.mobile_max_width_percent
+            profile.homepage_slider_mobile_max_height_percent = slide.mobile_max_height_percent
             profile.homepage_slider_transition_effect = slide.transition_effect
             profile.homepage_slider_transition_duration_ms = slide.transition_duration_ms
             profile.homepage_slider_display_duration_ms = slide.display_duration_ms
