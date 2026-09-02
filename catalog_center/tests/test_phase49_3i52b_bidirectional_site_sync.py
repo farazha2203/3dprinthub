@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -128,7 +129,11 @@ class Phase493I52BBidirectionalSiteSyncTests(unittest.TestCase):
 
     def test_pull_creates_non_publishable_site_origin_mirror(self):
         payload = server_product(product_id=777, revision=2, active=True)
-        with patch(
+        with patch.object(
+            self.kernel.connection,
+            "bridge_settings",
+            return_value=SimpleNamespace(site_url="https://site.test"),
+        ), patch(
             "app.epic49_site_sync.list_all_products",
             return_value=[payload],
         ):
@@ -153,7 +158,11 @@ class Phase493I52BBidirectionalSiteSyncTests(unittest.TestCase):
             revision=3,
             title="نباید overwrite شود",
         )
-        with patch(
+        with patch.object(
+            self.kernel.connection,
+            "bridge_settings",
+            return_value=SimpleNamespace(site_url="https://site.test"),
+        ), patch(
             "app.epic49_site_sync.list_all_products",
             return_value=[payload],
         ):
@@ -169,7 +178,11 @@ class Phase493I52BBidirectionalSiteSyncTests(unittest.TestCase):
     def test_clean_local_product_accepts_newer_site_revision(self):
         local_id = self._local_product(revision=2, dirty=False)
         payload = server_product(product_id=501, revision=3)
-        with patch(
+        with patch.object(
+            self.kernel.connection,
+            "bridge_settings",
+            return_value=SimpleNamespace(site_url="https://site.test"),
+        ), patch(
             "app.epic49_site_sync.list_all_products",
             return_value=[payload],
         ):
