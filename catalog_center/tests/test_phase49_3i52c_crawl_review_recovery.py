@@ -441,9 +441,11 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 side_effect=fake_run_single,
             ):
                 page._recover_selected_queue()
+                self.assertEqual(len(captured), 1)
+                result = captured[0].fn(
+                    lambda _value, _message: None
+                )
 
-            self.assertEqual(len(captured), 1)
-            result = captured[0].fn(lambda _value, _message: None)
             self.assertEqual(result["recovered"], 1)
             self.assertEqual(result["failed"], 0)
             self.assertEqual(len(calls), 1)
