@@ -14,7 +14,9 @@ on:
       - store/phase50_variant_views.py
       - store/test_phase50_profile_matrix.py
       - store/test_phase50_filament_offer_operations.py
+      - store/test_phase49_3i51_filament_registry_admin.py
       - catalog_bridge/unified_views.py
+      - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
       - website/phase49_3i49_admin_control.py
@@ -24,6 +26,9 @@ on:
       - templates/store/product_detail.html
       - static/store/js/phase50-profile-selector.js
       - website/admin.py
+      - website/models.py
+      - website/migrations/0024_phase49_3i51_material_catalog_description.py
+      - store/migrations/0042_phase49_3i51_filament_registry_descriptions.py
       - store/phase50_product_admin_workspace.py
       - store/test_phase50_product_admin_workspace.py
       - store/test_phase50_admin_http_regression.py
@@ -79,6 +84,7 @@ jobs:
             store/phase50_profile_matrix.py \
             store/phase50_variant_views.py \
             catalog_bridge/unified_views.py \
+            catalog_bridge/tests/test_phase49_3i41_filament_bridge.py \
             catalog_center/app/epic49_site_sync.py \
             store/phase49_3i49_admin_control.py \
             website/phase49_3i49_admin_control.py \
@@ -86,6 +92,9 @@ jobs:
             store/apps.py \
             store/test_phase49_3i49_site_publish_admin_sync.py \
             website/admin.py \
+            website/models.py \
+            website/migrations/0024_phase49_3i51_material_catalog_description.py \
+            store/migrations/0042_phase49_3i51_filament_registry_descriptions.py \
             store/phase50_product_admin_workspace.py \
             store/phase50_filament_offer.py \
             store/migrations/0041_phase50_filament_visual_identity.py \
@@ -93,6 +102,7 @@ jobs:
             store/test_phase50_admin_http_regression.py \
             store/test_phase50_profile_matrix.py \
             store/test_phase50_filament_offer_operations.py \
+            store/test_phase49_3i51_filament_registry_admin.py \
             website/templatetags/admin_console.py
 
       - name: Validate Admin console JavaScript
@@ -118,10 +128,15 @@ jobs:
             store.test_phase50_profile_matrix \
             store.test_phase50_filament_offer_operations \
             store.test_phase49_3i49_site_publish_admin_sync \
+            store.test_phase49_3i51_filament_registry_admin \
+            catalog_bridge.tests.test_phase49_3i41_filament_bridge \
             -v 2
 
       - name: Gate marker
         run: |
           echo "PHASE50_PRODUCT_ADMIN_WORKSPACE_CI=PASS"
           echo "PHASE50_FILAMENT_ADMIN_0041_CI=PASS"
+          echo "PHASE49_3I51_FILAMENT_REGISTRY_ADMIN_CI=PASS"
+          echo "PHASE49_3I51_FILAMENT_BRIDGE_V3_CI=PASS"
+          echo "PHASE49_3I51_MIGRATIONS_0024_0042_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
