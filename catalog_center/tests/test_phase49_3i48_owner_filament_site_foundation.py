@@ -297,7 +297,7 @@ class Phase493I48OwnerFilamentSiteFoundationTests(unittest.TestCase):
                 page.workspace_tabs.tabText(index)
                 for index in range(page.workspace_tabs.count())
             ]
-            self.assertEqual(labels, ["فیلامنت‌ها", "برندها", "رنگ‌ها"])
+            self.assertEqual(labels, ["فیلامنت‌ها", "متریال‌ها", "برندها", "رنگ‌ها"])
             self.assertGreaterEqual(page.color_table.rowCount(), 1)
         finally:
             page.close()
