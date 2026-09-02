@@ -1,6 +1,6 @@
 # PROJECT PATHS AND ENVIRONMENTS
 
-Last Verified: 2026-08-30 from Repository + prior owner Production verification. Re-verify actual Local/Host state again before operations.
+Last Verified: 2026-09-02 from Repository + GitHub Actions + prior owner Production verification. Re-verify actual Local/Host state again before operations.
 
 ## LOCAL / WINDOWS
 OS: Windows / PowerShell
@@ -18,20 +18,23 @@ Legacy Retained Data: `D:\projects\3dprinthub_catalog_center`
 Backups: `D:\projects\3dprinthub-backups`
 Runtime Logs: under persistent Catalog data root, including `logs\phase49_3f\YYYY-MM-DD\workflow-*.jsonl`
 Canonical validated pre-49.3I Runner: `D:\projects\3DPrintHub\RUN_PHASE49_3H_LOCAL_GATE.ps1`
-Canonical current Local gate: `D:\projects\3DPrintHub\catalog_center\RUN_PHASE49_3I31_SMART_AI_GATE.ps1`
+Canonical current Local gate: `D:\projects\3DPrintHub\RUN_PHASE49_3I42C_LOCAL_GATE.ps1` (`49.3I.52.2`)
 Crawl ledger continuation table: Catalog SQLite `crawl_listing_state` (additive; mature `discovered_urls` remains identity ledger)
 Rejected Product physical purge boundary: only under persistent Catalog `collected\` root; source URL/external ID tombstone stays in Catalog SQLite.
 
 ## GITHUB
 Repository: `farazha2203/3dprinthub`
 Active Development Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
+Current 3I.52C runtime/CI checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`
+Current 3I.52C Qt run: `33624135672` PASS
+Current 3I.52C Portable run: `33625043651` PASS
 Current Admin shell CI runtime: `27335832e90c35dd95bb8a686dd89d1efd46dc8f`
 Current Store/Profile/Filament CI runtime: `d519a360e65b79db4b62af206b95f63c3539bc12`
 Current Store/Profile/Filament CI run: `33059883188` PASS
-Current Windows packaged runtime: `c904193a7f0af9aad80365834ec3f0b856e77dc9`
-Catalog Center: `8.9.6` / build `2026.08.27.8`
-Windows artifact ID: `9648474905`
-Windows EXE SHA256: `6490e4815f1e6e0d75f09c112bb6990041578616f170954f62fae037b98bd507`
+Current Windows packaged runtime: `b43880a763d00bfda52dc29c4bf080cb428b1230`
+Catalog Center: `8.9.10` / build `2026.09.02.1`
+Windows artifact ID: `9844568575`
+Windows EXE SHA256: `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`
 Last owner Local automated gate: PASS at local head `2cdb356fca6d6c4c4bcd0edf203acf8e24bab2b9`; Local Django SQLite is through `store.0039`; backup `D:\projects\3dprinthub-backups\phase49-3i35-resume-20260827-142404\django-local-before-0039.sqlite3`.
 Delivery: GitHub-first only; no standalone chat patches/scripts and no permanent direct Production source edits.
 
