@@ -1,3 +1,36 @@
+## 3I.53G — MySQL 0039 partial-DDL recovery
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / REAL MYSQL PROBE PASS / PRODUCTION PARTIAL DB RECOVERY NEXT`.
+
+53F reached actual migration execution after all source/dependency/backup gates. Website 0024 and Store 0037/0038 applied. Store 0039 failed on duplicate `ProductVariant.support_weight_grams`.
+
+Root cause:
+- Store 0033 already created the ProductVariant support-weight column;
+- 0039 incorrectly declared another AddField;
+- MySQL may preserve preceding DDL from a failed migration even though Django does not record 0039.
+
+Correction:
+- 0039 ProductVariant support weight = AlterField;
+- new 0039 columns = AddFieldIfMissing;
+- StoreOrderItem new fields use same idempotent recovery operation;
+- dedicated partial runner refuses to proceed until migration recorder and table columns exactly match the observed failure boundary;
+- valid pre-migration rollback sets are reverified;
+- a new backup of CURRENT partial DB is mandatory before corrected migration.
+
+Host runner:
+`scripts/host/phase49_3i53_partial_0039_resume.sh`.
+
+Final evidence:
+- `66e940e6e659f86e3783d78d091b3ff00acbf5aa`;
+- Product Admin `33666085743` PASS including 56 focused/site tests and real MySQL AddField skip/add probe;
+- Single Active AI `33666085841` PASS;
+- Variant/Profile `33664796042` PASS on the same migration implementation.
+
+Broad MySQL-from-zero experiments hit unrelated old third-party/legacy migrations before the target boundary; final evidence is deliberately focused on the actual recovery operation and Production forensics.
+
+Next: run partial recovery on Host. After full receiver readiness and HTTP verification, publish one real Product before enabling bulk.
+
 ## 3I.53F — Partial Production deploy recovery after missing target dependency
 
 Date: 2026-09-02  

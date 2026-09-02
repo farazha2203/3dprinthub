@@ -1,3 +1,13 @@
+## 2026-09-02 — Phase49.3I.53G
+- recorded Production partial migration state: Website 0024 + Store 0037/0038 applied; Store 0039 failed before recorder commit; 0040–0042 pending;
+- found duplicate schema declaration: ProductVariant.support_weight_grams already exists from Store 0033 and was incorrectly AddField'ed again by 0039;
+- changed 0039 ProductVariant support weight to AlterField;
+- added `AddFieldIfMissing` for genuinely new 0039 columns to safely recover a persisted MySQL DDL prefix;
+- added `scripts/host/phase49_3i53_partial_0039_resume.sh` with exact recorder/schema forensics and fresh partial-state backup before repair;
+- added focused migration contract test and real MySQL AddField idempotence probe;
+- broad MySQL-from-zero test attempts were retired after exposing unrelated old/third-party migration limitations before the 0039 boundary;
+- final Product Admin workflow `33666085743` PASS including real MySQL probe; Single Active AI `33666085841` PASS; Variant/Profile `33664796042` PASS on same migration implementation.
+
 ## 2026-09-02 — Phase49.3I.53F
 - recorded that Production source fast-forward to `b372586a...` succeeded before the deploy paused;
 - DB migrations/static/restart remain unapplied;

@@ -1,3 +1,88 @@
+## 2026-09-02 — Phase49.3I.53G MySQL 0039 partial-migration recovery ready
+
+Status: `PRODUCTION SOURCE=5f6c13ab / DB PARTIALLY MIGRATED / RECOVERY IMPLEMENTED + REAL MYSQL PROBE PASS / HOST RECOVERY NEXT`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Production source HEAD from owner evidence: `5f6c13ab879558cb66db3e316e0522c5e5783ae0`.  
+Exact tested recovery code: `66e940e6e659f86e3783d78d091b3ff00acbf5aa`.  
+Pre-fix rollback branch: `backup/pre-phase49-3i53g-mysql-partial-0039-recovery-20260902` → `5f6c13ab879558cb66db3e316e0522c5e5783ae0`.
+
+### Production evidence from owner
+Phase49.3I.53F successfully:
+- reverified the original pre-migration rollback set;
+- fast-forwarded source to `5f6c13ab...`;
+- proved Django can boot before httpx;
+- installed and verified `httpx==0.28.1`;
+- verified DB was still pre-migration;
+- created and verified fresh pre-migration MySQL backup:
+  `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-212529-phase49-3i53-resume/database-before-3i53.sql.gz`;
+- required the exact seven-migration plan.
+
+Migration execution then produced:
+- `website.0024_phase49_3i51_material_catalog_description` → OK;
+- `store.0037_phase50_professional_commerce_policy` → OK;
+- `store.0038_phase50_profile_matrix` → OK;
+- `store.0039_phase50_filament_offer_pricing` → STOPPED with MySQL 1060 duplicate column `support_weight_grams`.
+
+Because the failure occurred inside 0039:
+- 0039 is not recorded as applied;
+- 0040–0042 are not applied;
+- collectstatic was not run;
+- Passenger was not restarted;
+- final public/Bridge readiness verification did not run.
+
+### Root cause
+Repository history proves `ProductVariant.support_weight_grams` was already created by `store.0033_phase49_3f_pricing_intelligence`. Migration 0039 incorrectly attempted a second `AddField` for the same database column.
+
+This corrects the incomplete historical wording in ERR-50-016: 0039 was the intended later metadata contract, but it was not the original database-column creator; 0033 had already created the physical ProductVariant column.
+
+On MySQL, DDL operations inside a migration are not reliably rolled back as one transaction. The 0039 operations preceding the duplicate-column failure may therefore remain physically present even though 0039 is not recorded. Recovery must inspect the exact schema before continuing.
+
+### Recovery implementation
+`store/migrations/0039_phase50_filament_offer_pricing.py` now:
+- uses `AddFieldIfMissing` for the genuinely new 0039 columns so a persisted prefix from a failed MySQL run is safely recognized;
+- changes ProductVariant `support_weight_grams` to `AlterField`, preserving state/metadata without trying to create the already-existing 0033 column again;
+- keeps StoreOrderItem support/brand/manufacturer fields as idempotent adds.
+
+Dedicated Host runner:
+`scripts/host/phase49_3i53_partial_0039_resume.sh`.
+
+Before any new DB mutation it:
+1. requires current Host source exactly `5f6c13ab...` and clean worktree;
+2. re-verifies both valid pre-migration backups;
+3. verifies migration recorder is exactly the observed partial state;
+4. introspects the 0039 schema shape and stops if it differs from the observed failure boundary;
+5. creates a third fresh MySQL backup of the CURRENT PARTIAL state;
+6. verifies live GitHub target + fast-forward ancestry + corrected 0039 contract;
+7. ff-only applies source fix;
+8. requires exact remaining plan 0039–0042;
+9. migrates, verifies receiver readiness, collectstatic, Passenger restart, public Store and authenticated Bridge/readiness HTTP.
+
+### Verification
+- migration/recovery implementation commit: `bec98fc5a5e40ed534364cc3eb1047759c2a3cdc`;
+- Variant/Profile CI `33664796042` PASS on the same migration implementation;
+- final Product Admin workflow `33666085743` PASS:
+  - main Product Admin job PASS;
+  - 56 focused/site tests PASS;
+  - SQLite migration through Store 0042 PASS;
+  - real MySQL focused `AddFieldIfMissing` probe PASS:
+    - `MYSQL_ADDFIELD_EXISTING_COLUMN_SKIP=PASS`;
+    - `MYSQL_ADDFIELD_MISSING_COLUMN_ADD=PASS`;
+    - `MYSQL_ADDFIELD_PROBE=PASS`;
+    - `PHASE49_3I53G_REAL_MYSQL_ADDFIELD_PROBE=PASS`;
+- final Single Active AI `33666085841` PASS.
+
+### CI investigation notes
+Two broad from-zero MySQL attempts crossed unrelated historical schema incompatibilities before reaching 0039:
+- third-party `sb_admin_audit.0001` indexed TEXT/BLOB;
+- old `store.0009` key length > MySQL 3072 bytes.
+Those are not the current Production state and were not used as evidence for 0039. The test strategy was narrowed to a real MySQL probe of the exact custom AddField operation.
+The first focused probe also had two harness-only issues (numeric migration module import syntax, then script-root import path); both conditions were changed and the final real MySQL probe passed.
+
+### Exact next task
+Do NOT rerun the 53F resume command. Run the 53G partial-0039 recovery runner from the current Host source `5f6c13ab...`. If its read-only schema forensics does not exactly match the expected failure boundary, it will stop before mutation and the output must be reviewed. If it passes, it creates a fresh partial-state DB backup before applying the corrected 0039–0042 chain.
+
 ## 2026-09-02 — Phase49.3I.53F Production source is promoted; DB migration paused on missing Host dependency
 
 Status: `SOURCE DEPLOYED TO b372 / DB MIGRATIONS NOT RUN / COLLECTSTATIC NOT RUN / PASSENGER NOT RESTARTED / RECOVERY FIX CI PASS / RESUME NEXT`.

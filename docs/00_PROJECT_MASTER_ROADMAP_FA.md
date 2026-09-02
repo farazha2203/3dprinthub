@@ -1,3 +1,15 @@
+## Current Production checkpoint — Phase49.3I.53G / 2026-09-02
+
+Production is in a controlled partial MySQL migration recovery state, not a normal fresh deploy.
+
+Source is `5f6c13ab...`. Website 0024 and Store 0037/0038 applied. Store 0039 stopped on a duplicate ProductVariant support-weight column and is not recorded; 0040–0042 are pending. The two pre-migration rollback dumps remain valid.
+
+Repository history proves ProductVariant.support_weight_grams was created in Store 0033. Store 0039 is corrected to AlterField for that existing column and AddFieldIfMissing for the newly introduced columns. A dedicated Host recovery runner verifies recorder + physical schema, takes a new partial-state MySQL backup, then allows only exact 0039–0042 completion.
+
+Tested code `66e940e6e659f86e3783d78d091b3ff00acbf5aa`; Product Admin + real MySQL operation probe `33666085743` PASS; Single Active AI `33666085841` PASS; Variant/Profile `33664796042` PASS.
+
+Next: run 53G partial recovery. Product publishing remains blocked until migration/readiness/static/restart/public verification is fully green.
+
 ## Current Production checkpoint — Phase49.3I.53F / 2026-09-02
 
 Production source has been promoted to `b372586a...`; database/static/runtime restart have not yet been promoted because post-merge Django startup caught missing `httpx==0.28.1`.

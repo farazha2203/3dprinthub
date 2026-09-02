@@ -1,3 +1,24 @@
+## Continuation checkpoint — 2026-09-02 / Phase49.3I.53G partial MySQL 0039 recovery
+
+Latest owner Host run:
+- Production source advanced to `5f6c13ab879558cb66db3e316e0522c5e5783ae0`;
+- httpx 0.28.1 installed and pip check passed;
+- original and fresh pre-migration backups verified;
+- exact seven-migration plan accepted;
+- Website 0024, Store 0037, Store 0038 applied;
+- Store 0039 failed with MySQL 1060 duplicate `support_weight_grams`;
+- 0039 not recorded, 0040–0042 not run; no collectstatic/restart/final readiness.
+
+Repository root cause: Store 0033 already creates ProductVariant.support_weight_grams. Corrected 0039 uses AlterField for that existing field and idempotent AddFieldIfMissing for new columns, allowing safe continuation only after physical schema forensics.
+
+Dedicated runner: `scripts/host/phase49_3i53_partial_0039_resume.sh`.
+It verifies exact current Host HEAD, rollback artifacts, partial migration recorder and physical schema, creates a third current-partial MySQL backup, ff-only pulls the recovery fix, requires exact 0039–0042 plan, then migrates and completes readiness/static/restart/public verification.
+
+Exact tested recovery code `66e940e6e659f86e3783d78d091b3ff00acbf5aa`.
+CI: Product Admin + focused real MySQL probe `33666085743` PASS; Single Active AI `33666085841` PASS; Variant/Profile `33664796042` PASS.
+
+Do not rerun 53F, fake 0039, drop columns, or manually write migration recorder rows. Next is the 53G runner from current Host partial state.
+
 ## Continuation checkpoint — 2026-09-02 / Phase49.3I.53F partial Production deploy recovery
 
 Actual Production source HEAD is now `b372586ab60234ec3faf3ce0624e07766db6ecce`. The source fast-forward happened only after the 21:10 rollback set was fully verified. The deploy then stopped at the first post-merge Django check because Host venv lacked target dependency `httpx==0.28.1`.

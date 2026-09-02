@@ -1,3 +1,12 @@
+## Phase49.3I.53G partial MySQL recovery paths — 2026-09-02
+Production partial-recovery runner: `scripts/host/phase49_3i53_partial_0039_resume.sh`.
+Original verified rollback set: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53`.
+Fresh verified pre-migration DB backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-212529-phase49-3i53-resume/database-before-3i53.sql.gz`.
+53G creates a new current-partial backup below:
+`/home/sfkilvrs/3dprinthub-deploy-backups/<timestamp>-phase49-3i53g-partial`.
+Expected current Host source before 53G recovery: `5f6c13ab879558cb66db3e316e0522c5e5783ae0`.
+Exact tested 53G recovery checkpoint: `66e940e6e659f86e3783d78d091b3ff00acbf5aa`.
+
 ## Phase49.3I.53D backup helper — 2026-09-02
 Production MySQL backup helper in Repository: `scripts/host/phase49_3i53_mysql_backup.py`.
 Failed evidence backup root retained: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-203857-phase49-3i53`.

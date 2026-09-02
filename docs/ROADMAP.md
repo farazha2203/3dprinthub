@@ -1,3 +1,17 @@
+## 2026-09-02 — Phase49.3I.53G recover partial MySQL migration 0039
+
+Status: `IMPLEMENTED + REAL MYSQL PROBE PASS / HOST PARTIAL-STATE RECOVERY NEXT`.
+
+Production source is `5f6c13ab...`. Website 0024 and Store 0037/0038 are applied. Store 0039 stopped on duplicate `ProductVariant.support_weight_grams`; 0040–0042 remain pending.
+
+Root cause is confirmed in Repository history: 0033 already creates ProductVariant support weight; 0039 incorrectly attempted a second AddField. 0039 is corrected to AlterField for that existing ProductVariant column and idempotent AddFieldIfMissing for the truly new columns.
+
+Recovery is encoded in `scripts/host/phase49_3i53_partial_0039_resume.sh`: exact recorder/schema forensics → reverify old rollback sets → fresh backup of current partial DB → ff-only source fix → exact 0039–0042 plan → migrate → readiness → static/restart/public verification.
+
+Evidence: Variant/Profile `33664796042` PASS; Product Admin + real MySQL focused recovery probe `33666085743` PASS; Single Active AI `33666085841` PASS; tested recovery code `66e940e6e659f86e3783d78d091b3ff00acbf5aa`.
+
+Next: run 53G recovery on Host. If physical partial state differs from the observed failure boundary, stop and inspect; no fake migration.
+
 ## 2026-09-02 — Phase49.3I.53F post-merge dependency/startup recovery
 
 Status: `IMPLEMENTED + CI PASS / PRODUCTION RESUME NEXT`.

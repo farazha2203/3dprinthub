@@ -1,3 +1,21 @@
+## REQ-49-097 — Recover Production safely from a partially executed MySQL 0039
+Date: 2026-09-02  
+Status: `IMPLEMENTED + REAL MYSQL PROBE PASS / HOST EXECUTION NEXT`.
+
+Required behavior after the Production 1060 duplicate-column stop:
+- do not fake migration 0039;
+- do not blindly rerun old 0039;
+- do not restore the whole DB unless current partial state cannot be reconciled safely;
+- first verify migration recorder and exact physical columns;
+- preserve the two valid pre-migration rollback dumps;
+- create a fresh backup of the CURRENT partial DB before repair;
+- correct historical duplicate ownership of ProductVariant support weight;
+- safely reuse already-created prefix columns if the Host matches the observed failure boundary;
+- apply only the exact remaining 0039–0042 plan;
+- require receiver readiness, collectstatic, restart and public/Bridge verification before Product publishing.
+
+Verification: `66e940e6e659f86e3783d78d091b3ff00acbf5aa`; Product Admin/MySQL `33666085743` PASS; Single Active AI `33666085841` PASS.
+
 ## REQ-49-096 — Resume Production safely after source promotion but before migrations
 Date: 2026-09-02  
 Status: `IMPLEMENTED + CI PASS / HOST RESUME NEXT`.

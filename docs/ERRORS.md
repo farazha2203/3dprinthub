@@ -1,3 +1,47 @@
+### ERR-49-112 — MySQL recovery CI initially crossed unrelated historical migrations and had probe harness import errors
+**Date:** 2026-09-02  
+**Environment:** GitHub Actions while adding real-MySQL coverage for ERR-49-111.
+
+**Observed:**
+- a full all-app MySQL-from-zero job stopped in third-party `sb_admin_audit.0001` because MySQL rejected an indexed TEXT/BLOB `object_id`;
+- a Store-targeted from-zero job stopped at historical `store.0009` with MySQL key length > 3072 bytes;
+- the first focused 0039 probe then failed compile because Python cannot use direct import syntax for module component `0039_...`;
+- the next probe executed by pathname from `scripts/ci` and could not import project package `config`.
+
+**Root cause:** the first CI strategy was too broad for a Production incident occurring on a mature database whose historical migrations are already applied. The focused test harness then repeated two Python execution-boundary mistakes already seen elsewhere: numeric migration modules require `importlib`, and an external script path must explicitly place Repository root on `sys.path`.
+
+**Failed conditions:** none of these failed jobs were rerun unchanged.
+
+**Correct fix:** scope real-MySQL evidence to the exact 0039 idempotent AddField operation. Import `store.migrations.0039_phase50_filament_offer_pricing` through `importlib.import_module`, and bind the Repository root before `django.setup()`.
+
+**Verification:** exact tested checkpoint `66e940e6e659f86e3783d78d091b3ff00acbf5aa`; Product Admin workflow `33666085743` PASS; MySQL probe markers `MYSQL_ADDFIELD_EXISTING_COLUMN_SKIP=PASS`, `MYSQL_ADDFIELD_MISSING_COLUMN_ADD=PASS`, `MYSQL_ADDFIELD_PROBE=PASS`; Single Active AI `33666085841` PASS.
+
+**Prevention:** incident CI must reproduce the failing boundary, not unnecessarily replay unrelated historical migrations. Numeric migration modules are imported with `importlib`; repository scripts executed by pathname must bind Repository root explicitly before Django setup.
+
+
+### ERR-49-111 — MySQL 0039 duplicated ProductVariant.support_weight_grams and left a partial migration
+**Date:** 2026-09-02  
+**Environment:** Production MySQL `sfkilvrs_EmiAdmin_3dprinthub`, Phase49.3I.53F resume.
+
+**Observed:** exact migration plan was accepted. Website 0024, Store 0037 and Store 0038 applied successfully. Store 0039 then stopped with:
+`django.db.utils.OperationalError: (1060, "Duplicate column name 'support_weight_grams'")`.
+
+**Root cause:** `store.0033_phase49_3f_pricing_intelligence` already creates physical column `ProductVariant.support_weight_grams`. Store 0039 later declared another `AddField` for the same ProductVariant field. SQLite-focused migration gates did not expose the MySQL duplicate-column boundary.
+
+**Historical correction:** ERR-50-016 correctly identified metadata drift around the same runtime field, but its wording treated 0039 as the migration authority without noting that 0033 had already created the physical column. The real schema history is: 0033 creates the ProductVariant column; 0039 must only align its migration state/metadata for that field while adding the new filament/order fields.
+
+**Partial-state risk:** MySQL schema DDL is not a single safely rollbackable transaction across this migration. Operations executed before the duplicate-column statement may persist although Django does not record 0039 as applied. Never fake 0039 and never blindly rerun the old migration.
+
+**Correct fix:**
+- ProductVariant `support_weight_grams` in 0039 is now `AlterField`, not `AddField`;
+- new 0039 columns use `AddFieldIfMissing`, which introspects the target table and skips only a column that already physically exists;
+- dedicated recovery runner verifies the exact migration-recorder + physical-schema boundary before mutation;
+- it re-verifies prior rollback dumps and creates a fresh CURRENT-PARTIAL MySQL dump before applying the corrected chain.
+
+**Verification:** implementation `bec98fc5a5e40ed534364cc3eb1047759c2a3cdc`; Variant/Profile `33664796042` PASS; final Product Admin + focused real MySQL probe `33666085743` PASS; Single Active AI `33666085841` PASS; exact tested checkpoint `66e940e6e659f86e3783d78d091b3ff00acbf5aa`.
+
+**Prevention:** before adding a field in a later migration, search all historical migrations for the same physical model/column. Production MySQL migration gates must include a real-MySQL operation probe for recovery-sensitive custom schema operations. A failed MySQL migration must be treated as possible partial DDL until recorder and table schema are both inspected.
+
 ### ERR-49-110 — lazy transport refactor temporarily removed mature AIProviderClient patch seam
 **Date:** 2026-09-02  
 **Environment:** GitHub Product Admin CI `33663092964`.

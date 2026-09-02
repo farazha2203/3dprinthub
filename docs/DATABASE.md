@@ -1,3 +1,34 @@
+## 2026-09-02 — Phase49.3I.53G Production MySQL is in a verified-by-log partial migration incident
+
+Production migration recorder evidence from the failed run:
+- Website 0024 applied successfully;
+- Store 0037 applied successfully;
+- Store 0038 applied successfully;
+- Store 0039 failed and therefore is not recorded as applied;
+- Store 0040–0042 did not run.
+
+Failure: duplicate physical column `ProductVariant.support_weight_grams`.
+
+Repository schema history:
+- Store 0033 already creates `ProductVariant.support_weight_grams`;
+- Store 0039 must not create it again;
+- corrected 0039 uses AlterField for ProductVariant support weight;
+- genuinely new 0039 columns are now AddFieldIfMissing to recover a possible persisted MySQL prefix.
+
+Expected partial physical shape based on 0039 operation order is NOT accepted by assumption. The 53G recovery runner introspects it before any new mutation. It requires:
+- all eight MaterialColorOption 0039 pricing/brand prefix columns present;
+- ProductVariant support_weight_grams present;
+- none of the three later StoreOrderItem 0039 fields present.
+Any other shape stops recovery for manual evidence review.
+
+Rollback artifacts:
+- original full pre-migration set: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53`;
+- fresh pre-migration DB before first migration attempt: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-212529-phase49-3i53-resume/database-before-3i53.sql.gz`.
+
+Before corrected 0039 is allowed to run, 53G creates a third gzip+SHA256 dump of the CURRENT PARTIAL DB.
+
+Real MySQL operation evidence: Product Admin workflow `33666085743` proves the custom AddFieldIfMissing operation skips an existing column and adds a missing one on MySQL. The complete current migration path remains guarded by Production recorder/schema evidence, because unrelated historical from-zero MySQL migrations have their own legacy constraints.
+
 ## 2026-09-02 — Phase49.3I.53F DB remains pre-migration after source-only promotion
 
 Owner deploy output proves source promotion to `b372586a...` completed, but the immediately following Django startup failed on missing httpx before the MigrationExecutor gate or `manage.py migrate`.

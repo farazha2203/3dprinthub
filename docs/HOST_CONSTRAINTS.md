@@ -1,3 +1,24 @@
+## Phase49.3I.53G MySQL partial-migration constraint — 2026-09-02
+
+Current Production must be treated as partial DB migration state:
+- source HEAD expected `5f6c13ab879558cb66db3e316e0522c5e5783ae0`;
+- Website 0024 + Store 0037/0038 applied;
+- Store 0039 not recorded and failed mid-DDL;
+- Store 0040–0042 pending;
+- httpx 0.28.1 is installed in Production venv;
+- collectstatic and Passenger restart for this release have not yet completed.
+
+Do not:
+- rerun the old 53F resume;
+- fake 0039;
+- manually drop duplicate columns;
+- manually mark migration rows;
+- restore an older DB over the partial state without a new decision.
+
+Use only `scripts/host/phase49_3i53_partial_0039_resume.sh`. It must first reverify old rollback artifacts, then prove exact partial recorder/schema shape and take a fresh partial-state MySQL backup before any corrected migration is applied.
+
+ProductVariant support_weight_grams is physically owned historically by 0033. Corrected 0039 aligns state via AlterField instead of AddField. Real-MySQL focused CI for AddFieldIfMissing passed in workflow `33666085743`.
+
 ## Phase49.3I.53F dependency/source-promotion constraint — 2026-09-02
 
 Current Host source is no longer the predeploy baseline. Owner output proves `git merge --ff-only` completed to `b372586ab60234ec3faf3ce0624e07766db6ecce` before Django startup failed.
