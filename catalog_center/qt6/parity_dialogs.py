@@ -137,16 +137,23 @@ class FilamentEditorDialog(QDialog):
 
         identity = QGroupBox("هویت و نمایش رنگ")
         form = QFormLayout(identity)
-        self.brand = QLineEdit()
         self.brand_library = QComboBox()
         self.brand_library.addItem("انتخاب برند ثبت‌شده…", "")
+        self.material_library = QComboBox()
+        self.material_library.addItem("انتخاب متریال ثبت‌شده…", "")
         if self.filament_core is not None:
             for value in self.filament_core.brands():
                 self.brand_library.addItem(str(value), str(value))
-        self.brand_library.currentIndexChanged.connect(self._brand_library_changed)
+            for value in self.filament_core.materials():
+                self.material_library.addItem(str(value), str(value))
 
-        self.material = QLineEdit()
         self.color = QLineEdit()
+        self.color.setReadOnly(True)
+        self.filament_description = QPlainTextEdit()
+        self.filament_description.setPlaceholderText(
+            "توضیح اختیاری فیلامنت برای مدیریت و SEO سایت"
+        )
+        self.filament_description.setMaximumHeight(105)
         self.color_library = QComboBox()
         self.color_library.addItem("انتخاب رنگ ثبت‌شده…", None)
         if self.filament_core is not None:
@@ -181,11 +188,11 @@ class FilamentEditorDialog(QDialog):
             palette_layout.addWidget(button)
         palette_layout.addStretch(1)
 
-        form.addRow("برند ثبت‌شده", self.brand_library)
-        form.addRow("برند", self.brand)
-        form.addRow("متریال", self.material)
-        form.addRow("رنگ ثبت‌شده", self.color_library)
-        form.addRow("نام رنگ", self.color)
+        form.addRow("برند", self.brand_library)
+        form.addRow("متریال", self.material_library)
+        form.addRow("رنگ", self.color_library)
+        form.addRow("نام رنگ تخصیص‌یافته", self.color)
+        form.addRow("توضیح اختیاری Filament", self.filament_description)
         form.addRow("رفتار رنگ", self.color_type)
         form.addRow("نوع سطح / Finish", self.color_finish)
         form.addRow("پالت آماده", self.preset)
@@ -302,19 +309,40 @@ class FilamentEditorDialog(QDialog):
 
     def _load(self) -> None:
         row = self.row
-        self.brand.setText(
-            str(
-                row.get("brand")
-                or row.get("brand_name")
-                or row.get("manufacturer")
-                or row.get("manufacturer_name")
-                or ""
-            )
+        brand_value = str(
+            row.get("brand")
+            or row.get("brand_name")
+            or row.get("manufacturer")
+            or row.get("manufacturer_name")
+            or ""
+        ).strip()
+        material_value = str(
+            row.get("material") or row.get("material_name") or ""
+        ).strip()
+        for combo, value in (
+            (self.brand_library, brand_value),
+            (self.material_library, material_value),
+        ):
+            if value and combo.findData(value) < 0:
+                combo.addItem(value, value)
+            index = combo.findData(value)
+            combo.setCurrentIndex(index if index >= 0 else 0)
+
+        color_value = str(row.get("color") or row.get("color_name") or "").strip()
+        self.color.setText(color_value)
+        self.filament_description.setPlainText(
+            str(row.get("description") or row.get("filament_description") or "")
         )
-        self.material.setText(
-            str(row.get("material") or row.get("material_name") or "")
-        )
-        self.color.setText(str(row.get("color") or row.get("color_name") or ""))
+        if color_value:
+            for preset_index in range(self.color_library.count()):
+                preset = self.color_library.itemData(preset_index)
+                if (
+                    isinstance(preset, dict)
+                    and str(preset.get("name") or "").strip().casefold()
+                    == color_value.casefold()
+                ):
+                    self.color_library.setCurrentIndex(preset_index)
+                    break
 
         code = str(row.get("color_type") or "solid")
         index = self.color_type.findData(code)
@@ -354,11 +382,6 @@ class FilamentEditorDialog(QDialog):
         self.preheat_hourly.setValue(
             int(float(row.get("preheat_hourly_rate") or 0))
         )
-
-    def _brand_library_changed(self, index: int) -> None:
-        value = str(self.brand_library.itemData(index) or "").strip()
-        if value:
-            self.brand.setText(value)
 
     def _color_library_changed(self, index: int) -> None:
         preset = self.color_library.itemData(index)
@@ -469,46 +492,35 @@ class FilamentEditorDialog(QDialog):
         )
 
     def _accept(self) -> None:
-        if not self.brand.text().strip():
-            QMessageBox.warning(self, "فیلامنت", "برند الزامی است.")
+        if not str(self.brand_library.currentData() or "").strip():
+            QMessageBox.warning(self, "فیلامنت", "برند را از تب برندها تعریف و انتخاب کن.")
             return
-        if not self.material.text().strip():
-            QMessageBox.warning(self, "فیلامنت", "نام متریال الزامی است.")
+        if not str(self.material_library.currentData() or "").strip():
+            QMessageBox.warning(self, "فیلامنت", "متریال را از تب متریال‌ها تعریف و انتخاب کن.")
             return
         if not self.color.text().strip():
-            QMessageBox.warning(self, "فیلامنت", "نام رنگ الزامی است.")
+            QMessageBox.warning(self, "فیلامنت", "رنگ را از تب رنگ‌ها تعریف و انتخاب کن.")
             return
         if not self._palette:
             QMessageBox.warning(
                 self,
                 "فیلامنت",
-                "حداقل یک رنگ از پالت انتخاب کن.",
+                "حداقل یک رنگ از پالت ثبت‌شده انتخاب کن.",
             )
             return
-        if self.filament_core is not None:
-            try:
-                self.filament_core.add_brand(self.brand.text().strip())
-                self.filament_core.save_color_preset({
-                    "name": self.color.text().strip(),
-                    "color_type": self.color_type.currentData(),
-                    "color_finish": self.color_finish.currentData(),
-                    "palette_hexes": normalize_palette_hexes(self._palette),
-                })
-            except Exception as exc:
-                QMessageBox.warning(self, "کتابخانه برند/رنگ", str(exc))
-                return
         self.accept()
 
     def values(self) -> dict[str, Any]:
-        brand = self.brand.text().strip()
+        brand = str(self.brand_library.currentData() or "").strip()
         roll_weight = max(1.0, float(self.roll_weight.value()))
         stock_grams = self._stock_grams()
         palette = normalize_palette_hexes(self._palette)
         return {
             "manufacturer": brand,
             "brand": brand,
-            "material": self.material.text().strip(),
+            "material": str(self.material_library.currentData() or "").strip(),
             "color": self.color.text().strip(),
+            "description": self.filament_description.toPlainText().strip(),
             "color_type": self.color_type.currentData(),
             "color_finish": self.color_finish.currentData(),
             "palette_hexes": palette,

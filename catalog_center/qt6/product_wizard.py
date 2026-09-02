@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QTimer, Qt, QUrl
+from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
@@ -162,7 +162,13 @@ class ProductWizardPage(QWidget):
         self.product_meta = QLabel("")
         self.product_meta.setObjectName("Muted")
         self.product_meta.setWordWrap(True)
-        root.addWidget(self.product_label)
+        identity_row = QHBoxLayout()
+        identity_row.addWidget(self.product_label, 1)
+        self.product_source_btn = QPushButton("🌐 باز کردن صفحه محصول")
+        self.product_source_btn.setEnabled(False)
+        self.product_source_btn.clicked.connect(self._open_current_source)
+        identity_row.addWidget(self.product_source_btn)
+        root.addLayout(identity_row)
         root.addWidget(self.product_meta)
 
         ai_box = QFrame()
@@ -357,16 +363,19 @@ class ProductWizardPage(QWidget):
 
         control = QFrame()
         control.setObjectName("Card")
-        actions = QHBoxLayout(control)
+        control_layout = QVBoxLayout(control)
+        selection_actions = QHBoxLayout()
+        operation_actions = QHBoxLayout()
 
         select_all = QPushButton("انتخاب همه")
         clear_all = QPushButton("لغو انتخاب همه")
         edit_seo = QPushButton("ویرایش SEO انتخاب‌شده‌ها")
         apply_seo = QPushButton("اعمال SEO فارسی محصول")
         delete_selected = QPushButton("حذف انتخاب‌شده‌ها")
+        delete_selected.setProperty("danger", True)
         renumber_images = QPushButton("اصلاح شماره عکس‌ها")
         screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
-        recover = QPushButton("بازیابی تصاویر از صفحه محصول")
+        recover = QPushButton("دریافت مجدد تصاویر از لینک محصول")
         recover.setProperty("primary", True)
 
         self.image_recover_limit = QSpinBox()
@@ -374,12 +383,8 @@ class ProductWizardPage(QWidget):
         self.image_recover_limit.setValue(5)
         self.image_recover_limit.setSuffix(" عکس")
 
-        select_all.clicked.connect(
-            lambda: self.image_grid.set_all_selected(True)
-        )
-        clear_all.clicked.connect(
-            lambda: self.image_grid.set_all_selected(False)
-        )
+        select_all.clicked.connect(lambda: self.image_grid.set_all_selected(True))
+        clear_all.clicked.connect(lambda: self.image_grid.set_all_selected(False))
         edit_seo.clicked.connect(self._edit_selected_image_seo)
         apply_seo.clicked.connect(self._apply_product_image_seo)
         delete_selected.clicked.connect(self._delete_selected_images)
@@ -387,20 +392,17 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
-        for widget in (
-            select_all,
-            clear_all,
-            edit_seo,
-            apply_seo,
-            delete_selected,
-            renumber_images,
-            screenshot,
-        ):
-            actions.addWidget(widget)
-        actions.addStretch(1)
-        actions.addWidget(QLabel("تعداد عکس"))
-        actions.addWidget(self.image_recover_limit)
-        actions.addWidget(recover)
+        for widget in (select_all, clear_all, edit_seo, apply_seo, delete_selected):
+            selection_actions.addWidget(widget)
+        selection_actions.addStretch(1)
+        operation_actions.addWidget(renumber_images)
+        operation_actions.addWidget(screenshot)
+        operation_actions.addWidget(QLabel("تعداد عکس"))
+        operation_actions.addWidget(self.image_recover_limit)
+        operation_actions.addWidget(recover)
+        operation_actions.addStretch(1)
+        control_layout.addLayout(selection_actions)
+        control_layout.addLayout(operation_actions)
         layout.addWidget(control)
 
         slider_box = QFrame()
@@ -424,7 +426,8 @@ class ProductWizardPage(QWidget):
         self.image_task_status.setObjectName("Muted")
         layout.addWidget(self.image_task_status)
 
-        self.image_grid = ProductImageGrid(columns=4)
+        self.image_grid = ProductImageGrid(columns=3)
+        self.image_grid.setMinimumHeight(540)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])
@@ -708,6 +711,9 @@ class ProductWizardPage(QWidget):
             f"منبع: {row.get('source_name') or row.get('source_code') or '—'}"
             f"  •  وضعیت: {row.get('workflow_status') or '—'}"
             f"  •  Server ID: {row.get('server_id') or '—'}"
+        )
+        self.product_source_btn.setEnabled(
+            str(row.get("source_url") or "").startswith(("http://", "https://"))
         )
 
         self._load_stage1(row)
@@ -1250,6 +1256,17 @@ class ProductWizardPage(QWidget):
     def _sync_slider_from_image_grid(self, url: str) -> None:
         if hasattr(self, "slider_image"):
             self.slider_image.setEditText(str(url or ""))
+
+    def _open_current_source(self) -> None:
+        if self.product_id is None:
+            return
+        row = self.kernel.products.get(self.product_id) or {}
+        url = str(row.get("source_url") or "").strip()
+        if not url.startswith(("http://", "https://")):
+            QMessageBox.warning(self, "صفحه محصول", "لینک عمومی معتبر برای این محصول ثبت نشده است.")
+            return
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.warning(self, "صفحه محصول", "مرورگر سیستم نتوانست لینک محصول را باز کند.")
 
     def _delete_single_image(self, url: str) -> None:
         if self.product_id is None or not url:

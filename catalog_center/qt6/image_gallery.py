@@ -43,8 +43,8 @@ class ImageCard(QFrame):
         super().__init__(parent)
         self.item = dict(item)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(215)
-        self.setMaximumWidth(285)
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(380)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -52,8 +52,8 @@ class ImageCard(QFrame):
 
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumSize(190, 145)
-        self.preview.setMaximumHeight(175)
+        self.preview.setMinimumSize(250, 190)
+        self.preview.setMaximumHeight(235)
         path = str(self.item.get("path") or "")
         pixmap = QPixmap(path) if path else QPixmap()
         if pixmap.isNull():
@@ -62,8 +62,8 @@ class ImageCard(QFrame):
         else:
             self.preview.setPixmap(
                 pixmap.scaled(
-                    220,
-                    165,
+                    330,
+                    225,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -160,6 +160,7 @@ class ProductImageGrid(QWidget):
         self.cards: list[ImageCard] = []
         self._primary_sync = False
         self._slider_sync = False
+        self._missing_count = 0
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -197,7 +198,7 @@ class ProductImageGrid(QWidget):
             card = ImageCard(item, self.host)
             card.deleteRequested.connect(self.deleteRequested.emit)
             card.seoRequested.connect(self.seoRequested.emit)
-            card.selectionChanged.connect(self.selectionChanged.emit)
+            card.selectionChanged.connect(self._selection_changed)
             card.primaryChanged.connect(self._primary_changed)
             card.sliderChanged.connect(self._slider_changed)
             self.cards.append(card)
@@ -213,8 +214,18 @@ class ProductImageGrid(QWidget):
             max(0, (len(self.cards) + self.columns - 1) // self.columns),
             1,
         )
+        self._missing_count = missing
+        self._update_summary()
+
+    def _selection_changed(self) -> None:
+        self._update_summary()
+        self.selectionChanged.emit()
+
+    def _update_summary(self) -> None:
+        selected = sum(1 for card in self.cards if card.selected.isChecked())
         self.summary.setText(
-            f"{len(self.cards)} تصویر • {missing} تصویر بدون فایل محلی"
+            f"{len(self.cards)} تصویر • {selected} انتخاب‌شده • "
+            f"{self._missing_count} تصویر بدون فایل محلی"
         )
 
     def _primary_changed(self, url: str) -> None:
