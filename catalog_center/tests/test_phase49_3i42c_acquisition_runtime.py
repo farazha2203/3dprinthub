@@ -432,6 +432,57 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             ["4201"],
         )
 
+    def test_crawl_inventory_exposes_image_and_source_technical_facts(self):
+        acquisition_runtime.ensure_epic49_desktop_schema(self.db)
+        url = self._model(4901)[1]
+        self.db.upsert_product(
+            {
+                "source_code": "makerworld",
+                "external_id": "4901",
+                "source_url": url,
+                "source_title": "Technical Queue Product",
+                "tags_json": json.dumps(["lamp", "decor"], ensure_ascii=False),
+                "source_specs_json": json.dumps(
+                    {
+                        "dimensions": {
+                            "x": 120,
+                            "y": 80,
+                            "z": 35,
+                            "unit": "mm",
+                        }
+                    },
+                    ensure_ascii=False,
+                ),
+                "estimated_weight_grams": 42.5,
+                "estimated_print_minutes": 135,
+                "images_json": json.dumps(
+                    ["https://cdn.example.com/a.jpg", "https://cdn.example.com/b.jpg"],
+                    ensure_ascii=False,
+                ),
+                "selected_images_json": json.dumps(
+                    ["https://cdn.example.com/a.jpg", "https://cdn.example.com/b.jpg"],
+                    ensure_ascii=False,
+                ),
+            }
+        )
+        self.db.add_discovered(
+            "makerworld",
+            "4901",
+            url,
+            "https://makerworld.com/en/search/models?keyword=technical",
+        )
+        self.db.set_discovered_status([1], "collected")
+
+        rows = self.db.discovered_items_page(status="collected", limit=10, offset=0)
+        row = next(item for item in rows if str(item["external_id"]) == "4901")
+        self.assertEqual(row["product_estimated_weight_grams"], 42.5)
+        self.assertEqual(row["product_estimated_print_minutes"], 135)
+        self.assertEqual(json.loads(row["product_tags_json"]), ["lamp", "decor"])
+        self.assertEqual(
+            json.loads(row["product_source_specs_json"])["dimensions"]["x"],
+            120,
+        )
+
     def test_invalid_discovery_strategy_is_rejected_before_crawl(self):
         with self.assertRaisesRegex(ValueError, "strategy"):
             asyncio.run(
