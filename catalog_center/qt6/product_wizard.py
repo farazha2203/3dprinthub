@@ -1912,6 +1912,21 @@ class ProductWizardPage(QWidget):
             )
             if str(value or "")
         }
+
+        publish_review_ready = bool(
+            full_content_run
+            and len(statuses) >= 7
+            and all(
+                bool(item.get("data_ready"))
+                and bool(item.get("finalized"))
+                for item in statuses[:6]
+            )
+        )
+        if publish_review_ready:
+            # Completion of stages 1..6 moves the operator to the final review.
+            # It deliberately does not publish or set upload_ready by itself;
+            # Phase49.3I.49 keeps final site publication an explicit action.
+            self.stepper.set_stage(6)
         relevant = [
             item
             for item in statuses
@@ -1970,8 +1985,9 @@ class ProductWizardPage(QWidget):
                 f"{remaining_operator} مورد اپراتوری/واقعی باقی است{source_note}"
             )
         else:
+            suffix = " • آماده بررسی انتشار" if publish_review_ready else ""
             self.ai_status.setText(
-                f"✅ AI تکمیل شد • {changed} فیلد تغییر کرد{source_note}"
+                f"✅ AI تکمیل شد • {changed} فیلد تغییر کرد{source_note}{suffix}"
             )
 
     def _ai_error(self, detail: str) -> None:
