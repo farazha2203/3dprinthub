@@ -1,3 +1,42 @@
+## ERR-49-098 — Qt Crawl inventory ignored mature downloaded images when Product linkage was missing
+**Date:** 2026-09-02  
+**Environment:** owner foreground Windows QA, Catalog Center 8.9.10 / Qt6.
+
+**Observed evidence:**  
+The Crawl inventory showed rows such as MakerWorld external ids with `Preview تصویر ندارد` even though the mature Catalog Center had already downloaded image files. The same owner screenshot also showed the requested-count and image-limit QSpinBox digits colliding with RTL arrow controls.
+
+**Verified mature storage contract:**  
+The retained Tk runtime stores persistent data in `D:\projects\3dprinthub-catalog-manager`, and Product downloads in `collected\<source_code>\<external_id>\images` with optional finalized `seo_images`. The old installed application target `D:\projects\3dprinthub_catalog_center` is not the canonical active SQLite data root.
+
+**Root cause:**  
+The Qt queue image path was gated by `product_id`. If a `discovered_urls` row was old/unlinked, Qt skipped the mature Product image resolver and only checked the newer `discovery_previews` cache. Therefore real files could exist under the mature collected tree while the UI still claimed no Preview. Product resolution also compared `source_code` case-sensitively, so legacy `MakerWorld` vs current `makerworld` could keep a valid Product row unlinked. Separately, global RTL layout + generic QSpinBox padding caused Windows arrow/text overlap.
+
+**Correct fix:**  
+- add read-only ImageCore identity resolution rooted at the actual Catalog SQLite parent;
+- scan mature `seo_images` then `images` for `<source>/<external_id>` even before Product linkage;
+- preserve DB `local_dir` as first authority;
+- accept the old retained install tree only as a secondary read-only fallback if physically present;
+- make bounded Crawl Product matching source-code case-insensitive;
+- use actual local-file count/icon in queue/current-search cards regardless of Product linkage;
+- make the two receive spinboxes explicitly LTR, centered, width-bounded and padded away from the arrow subcontrol.
+
+**Failed attempts / prevention:**  
+Do not solve this by downloading the same images again or moving/deleting old folders. The existing mature files are authoritative evidence. UI image lookup must resolve the existing storage contract before triggering acquisition.
+
+**Implementation:** `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`.
+
+**Verification:**  
+- `33628825851` Qt full parity PASS;
+- dedicated 3I.52C/52D suite: 13 tests PASS, including mature-folder-without-Product-link, source-code case mismatch and non-cramped numeric controls;
+- `33628825772` Single Active AI PASS;
+- `33628825715` Portable PASS, 221 release regressions;
+- artifact `9846044486`;
+- EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`.
+
+**Safety:** no migration, no Product data rewrite, no image move/delete, no Host/Production change.
+
+---
+
 ## ERR-49-097 — 3I.52C Qt regression was added to Portable release gate without the Qt runtime dependency
 **Date:** 2026-09-02  
 **Environment:** GitHub Actions `Catalog Center Windows Portable Release`, run `33624135587`.
