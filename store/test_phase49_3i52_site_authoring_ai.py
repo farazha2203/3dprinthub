@@ -194,13 +194,13 @@ class Phase493I52SiteAuthoringAITests(TestCase):
 
     def test_desktop_import_identity_links_exact_manual_site_product_instead_of_duplicate(self):
         source = PrintCatalogSource.objects.create(
-            name="MakerWorld",
-            code="makerworld",
+            name="MakerWorld Phase52 Link",
+            code="makerworld-phase52-link",
             base_url="https://makerworld.com",
             default_category=self.category,
             is_active=True,
         )
-        self.product.source_name = "MakerWorld"
+        self.product.source_name = "MakerWorld Phase52 Link"
         self.product.source_external_id = "2834255"
         self.product.source_url = (
             "https://makerworld.com/en/models/2834255-cake-stand"
@@ -243,13 +243,13 @@ class Phase493I52SiteAuthoringAITests(TestCase):
 
     def test_desktop_import_identity_fails_closed_on_ambiguous_site_products(self):
         source = PrintCatalogSource.objects.create(
-            name="MakerWorld",
-            code="makerworld",
+            name="MakerWorld Phase52 Ambiguous",
+            code="makerworld-phase52-ambiguous",
             base_url="https://makerworld.com",
             default_category=self.category,
             is_active=True,
         )
-        self.product.source_name = "MakerWorld"
+        self.product.source_name = "MakerWorld Phase52 Ambiguous"
         self.product.source_external_id = "999"
         self.product.source_url = "https://makerworld.com/en/models/site-one"
         self.product.save(
@@ -267,7 +267,7 @@ class Phase493I52SiteAuthoringAITests(TestCase):
             sku="SITE-3I52-002",
             short_description="test",
             description="test",
-            source_name="MakerWorld",
+            source_name="MakerWorld Phase52 Ambiguous",
             source_external_id="999",
             source_url="https://makerworld.com/en/models/site-two",
             is_active=False,
