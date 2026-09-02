@@ -1955,9 +1955,26 @@ class OperationsPage(QWidget):
         )
         self.queue_collect_ai_btn.setProperty("success", True)
         self.queue_reject_btn = QPushButton("رد / حذف")
-        self.queue_restore_btn = QPushButton("بازیابی")
+        self.queue_restore_btn = QPushButton("بازگردانی به صف")
+        self.queue_restore_btn.setToolTip(
+            "فقط وضعیت rejected/failed را برای دریافت دوباره آزاد می‌کند؛ بازیابی داده/عکس دکمه جدا دارد."
+        )
         self.queue_select_all_btn = QPushButton("انتخاب همه")
+        self.queue_select_incomplete_btn = QPushButton("انتخاب ناقص‌ها")
+        self.queue_select_incomplete_btn.setToolTip(
+            "از رکوردهای لودشده، موارد بدون Product کامل، بدون عنوان/توضیح یا بدون عکس محلی را انتخاب می‌کند."
+        )
         self.queue_clear_selection_btn = QPushButton("لغو انتخاب")
+        self.queue_recover_image_limit = QComboBox()
+        for count in (5, 10, 20):
+            self.queue_recover_image_limit.addItem(f"{count} عکس", count)
+        self.queue_recover_image_limit.setCurrentIndex(0)
+        self.queue_recover_btn = QPushButton("بازیابی دیتا + عکس")
+        self.queue_recover_btn.setProperty("success", True)
+        self.queue_recover_btn.setToolTip(
+            "برای همه انتخاب‌ها: اگر داده و تعداد عکس محلی کافی باشد همان را استفاده می‌کند؛ "
+            "اگر ناقص باشد صفحه Product را دوباره می‌خواند و اطلاعات/عکس را امن بازیابی می‌کند."
+        )
         self.queue_selected_label = QLabel("0 انتخاب‌شده")
         self.queue_selected_label.setObjectName("Muted")
         self.queue_loaded_label = QLabel("")
@@ -1972,16 +1989,25 @@ class OperationsPage(QWidget):
         queue_header.addWidget(self.queue_loaded_label)
         queue_layout.addLayout(queue_header)
 
-        queue_actions = QHBoxLayout()
-        queue_actions.addWidget(self.queue_select_all_btn)
-        queue_actions.addWidget(self.queue_clear_selection_btn)
-        queue_actions.addWidget(self.queue_collect_btn)
-        queue_actions.addWidget(self.queue_collect_ai_btn)
-        queue_actions.addWidget(self.queue_reject_btn)
-        queue_actions.addWidget(self.queue_restore_btn)
-        queue_actions.addStretch(1)
-        queue_actions.addWidget(self.queue_selected_label)
-        queue_layout.addLayout(queue_actions)
+        queue_select_actions = QHBoxLayout()
+        queue_select_actions.addWidget(self.queue_select_all_btn)
+        queue_select_actions.addWidget(self.queue_select_incomplete_btn)
+        queue_select_actions.addWidget(self.queue_clear_selection_btn)
+        queue_select_actions.addStretch(1)
+        queue_select_actions.addWidget(self.queue_selected_label)
+        queue_layout.addLayout(queue_select_actions)
+
+        queue_data_actions = QHBoxLayout()
+        queue_data_actions.addWidget(QLabel("تعداد عکس بازیابی"))
+        queue_data_actions.addWidget(self.queue_recover_image_limit)
+        queue_data_actions.addWidget(self.queue_recover_btn)
+        queue_data_actions.addSpacing(12)
+        queue_data_actions.addWidget(self.queue_collect_btn)
+        queue_data_actions.addWidget(self.queue_collect_ai_btn)
+        queue_data_actions.addWidget(self.queue_reject_btn)
+        queue_data_actions.addWidget(self.queue_restore_btn)
+        queue_data_actions.addStretch(1)
+        queue_layout.addLayout(queue_data_actions)
 
         self.queue_views = QStackedWidget()
 
@@ -2411,6 +2437,7 @@ class OperationsPage(QWidget):
             self._update_queue_selection_label
         )
         self.queue_select_all_btn.clicked.connect(self._select_all_queue)
+        self.queue_select_incomplete_btn.clicked.connect(self._select_incomplete_queue)
         self.queue_clear_selection_btn.clicked.connect(self._clear_queue_selection)
 
         self.mode.currentIndexChanged.connect(self._mode_changed)
@@ -2436,6 +2463,7 @@ class OperationsPage(QWidget):
         self.queue_collect_ai_btn.clicked.connect(
             lambda: self._collect_selected_queue(run_ai=True)
         )
+        self.queue_recover_btn.clicked.connect(self._recover_selected_queue)
         self.queue_gallery.itemDoubleClicked.connect(
             lambda _item: self._open_selected_queue_source()
         )
@@ -3067,6 +3095,10 @@ class OperationsPage(QWidget):
             self.queue_collect_btn.setEnabled(True)
         if hasattr(self, "queue_collect_ai_btn"):
             self.queue_collect_ai_btn.setEnabled(True)
+        if hasattr(self, "queue_recover_btn"):
+            self.queue_recover_btn.setEnabled(True)
+        if hasattr(self, "queue_select_incomplete_btn"):
+            self.queue_select_incomplete_btn.setEnabled(True)
         if hasattr(self, "queue_open_btn"):
             self.queue_open_btn.setEnabled(True)
         if hasattr(self, "live_add_btn"):
