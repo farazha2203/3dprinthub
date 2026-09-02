@@ -1097,5 +1097,177 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             page.close()
 
 
+    def test_recovery_invalid_url_stops_and_leaves_later_selection_untouched(self):
+        listing = "https://makerworld.com/en/search/models?keyword=invalid-stop"
+        first = "952050"
+        second = "952051"
+        self.db.add_discovered(
+            "makerworld",
+            first,
+            f"https://makerworld.com/en/models/{first}-invalid-stop",
+            listing,
+        )
+        self.db.add_discovered(
+            "makerworld",
+            second,
+            f"https://makerworld.com/en/models/{second}-valid-next",
+            listing,
+        )
+        self.db.conn.execute(
+            """
+            UPDATE discovered_urls
+            SET url='', normalized_url=''
+            WHERE source_code=? AND external_id=?
+            """,
+            ("makerworld", first),
+        )
+        self.db.conn.commit()
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        try:
+            page._populate_queue(reset=True)
+            page.queue_select_all_btn.click()
+            page.pool.start = lambda worker: captured.append(worker)
+            with patch.object(
+                QMessageBox,
+                "question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ), patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=AssertionError(
+                    "network recovery must not run after invalid identity"
+                ),
+            ):
+                page._recover_selected_queue()
+                self.assertEqual(len(captured), 1)
+                result = captured[0].fn(lambda _value, _message: None)
+
+            self.assertEqual(result["failed"], 1)
+            self.assertTrue(result["circuit_breaker"])
+            self.assertEqual(result["unattempted"], 1)
+            rows = list(
+                self.db.conn.execute(
+                    """
+                    SELECT external_id, status
+                    FROM discovered_urls
+                    WHERE external_id IN (?, ?)
+                    ORDER BY id
+                    """,
+                    (first, second),
+                )
+            )
+            self.assertEqual(str(rows[0]["status"]), "failed")
+            self.assertEqual(str(rows[1]["status"]), "new")
+        finally:
+            page.close()
+
+    def test_partial_batch_circuit_breaker_is_reported_failed_not_completed(self):
+        listing = "https://makerworld.com/en/search/models?keyword=partial-stop"
+        candidates = [
+            self._candidate("952060", listing),
+            self._candidate("952061", listing),
+        ]
+        calls = 0
+
+        async def adaptive(_db, _source_cfg, **kwargs):
+            nonlocal calls
+            calls += 1
+            external_id = str(kwargs.get("external_id") or "")
+            if calls == 1:
+                return {
+                    "product_id": 996060,
+                    "source_title": "First usable product",
+                    "images_found": 5,
+                    "images_saved": 5,
+                    "selected_method": "network_capture",
+                }
+            raise acquisition_runtime.AcquisitionMethodsExhausted(
+                [
+                    {"method": "network_capture", "error": "no usable product data"},
+                    {"method": "rich", "error": "no usable local image"},
+                ]
+            )
+
+        with patch(
+            "qt6.acquisition_runtime._browser_robots_gate",
+            new=AsyncMock(return_value=0),
+        ), patch(
+            "qt6.acquisition_runtime.discover_preview_candidates_safe",
+            new=AsyncMock(return_value=candidates),
+        ), patch(
+            "qt6.acquisition_runtime._cache_candidate_thumbnail",
+            return_value="",
+        ), patch(
+            "qt6.acquisition_runtime._discover_listing",
+            new=AsyncMock(),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(side_effect=adaptive),
+        ):
+            result = acquisition_runtime.run_batch(
+                self.db,
+                source_code="makerworld",
+                listing_url=listing,
+                requested=2,
+                image_limit=5,
+            )
+
+        self.assertEqual(result["collected"], 1)
+        self.assertEqual(result["failed"], 1)
+        self.assertTrue(result["circuit_breaker"])
+        run = next(
+            row for row in self.db.runs(limit=10)
+            if int(row["id"]) == int(result["run_id"])
+        )
+        self.assertEqual(str(run["status"]), "failed")
+
+    def test_batch_log_separates_discovery_success_from_product_fetch(self):
+        listing = "https://makerworld.com/en/search/models?keyword=trace-boundary"
+        candidates = [self._candidate("952070", listing)]
+
+        with patch(
+            "qt6.acquisition_runtime._browser_robots_gate",
+            new=AsyncMock(return_value=0),
+        ), patch(
+            "qt6.acquisition_runtime.discover_preview_candidates_safe",
+            new=AsyncMock(return_value=candidates),
+        ), patch(
+            "qt6.acquisition_runtime._cache_candidate_thumbnail",
+            return_value="",
+        ), patch(
+            "qt6.acquisition_runtime._discover_listing",
+            new=AsyncMock(),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(
+                side_effect=acquisition_runtime.AcquisitionMethodsExhausted(
+                    [{"method": "rich", "error": "no usable image"}]
+                )
+            ),
+        ):
+            result = acquisition_runtime.run_batch(
+                self.db,
+                source_code="makerworld",
+                listing_url=listing,
+                requested=1,
+                image_limit=5,
+            )
+
+        self.assertTrue(result["circuit_breaker"])
+        events = self.kernel.acquisition.recent_acquisition_events(limit=50)
+        boundary = [
+            row for row in events
+            if row.get("action") == "discovery_ready"
+            and row.get("url") == listing
+        ]
+        self.assertTrue(boundary)
+        detail = dict(boundary[-1].get("detail") or {})
+        self.assertEqual(detail["previewed"], 1)
+        self.assertEqual(detail["pending_product_fetch"], 1)
+        self.assertTrue(detail["discovery_succeeded"])
+
+
 if __name__ == "__main__":
     unittest.main()

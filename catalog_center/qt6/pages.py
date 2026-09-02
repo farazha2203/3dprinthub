@@ -3972,11 +3972,16 @@ class OperationsPage(QWidget):
                         [queue_id],
                         message,
                     )
+                    circuit_breaker = True
+                    unattempted = max(0, total - index)
                     progress(
-                        int(index / total * 100),
-                        f"#{queue_id} • {index}/{total} • لینک معتبر ندارد",
+                        min(99, int(index / total * 100)),
+                        (
+                            f"#{queue_id} • لینک معتبر ندارد؛ توقف حفاظتی. "
+                            f"{unattempted} رکورد بعدی دست‌نخورده ماند."
+                        ),
                     )
-                    continue
+                    break
 
                 base = int((index - 1) / total * 100)
                 span = max(1, int(100 / total))

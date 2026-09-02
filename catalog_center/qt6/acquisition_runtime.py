@@ -1593,6 +1593,29 @@ async def run_batch_async(
             requested,
             include_failed=bool(include_failed),
         )
+        acquisition_event(
+            db,
+            "discovery_ready",
+            status="success",
+            source_code=source_code,
+            url=listing_url,
+            method=strategy,
+            message=(
+                f"Discovery complete; pending_product_fetch={len(rows)}, "
+                f"previewed={int(preview.get('previewed') or 0)}, "
+                f"preview_thumbs={int(preview.get('thumbs') or 0)}"
+            ),
+            detail={
+                "previewed": int(preview.get("previewed") or 0),
+                "preview_thumbs": int(preview.get("thumbs") or 0),
+                "discovered_new": discovered,
+                "duplicates": duplicates,
+                "pending_product_fetch": len(rows),
+                "discovery_succeeded": bool(
+                    int(preview.get("previewed") or 0) or discovered or duplicates
+                ),
+            },
+        )
         if not rows:
             _emit(progress, 100, "مورد جدیدی برای دریافت پیدا نشد.")
             db.finish_run(
@@ -1702,7 +1725,7 @@ async def run_batch_async(
 
         stopped = _stopped(should_stop)
         status = "stopped" if stopped else (
-            "failed" if circuit_breaker and not collected else "completed"
+            "failed" if circuit_breaker else "completed"
         )
         message = (
             f"Qt acquisition: collected={collected}, failed={failed}, "
