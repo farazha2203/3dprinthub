@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QApplication
 from app.db import Database
 from app.phase49_3i49_site_publish import mark_ready_many, publish_many
 from qt6.kernel import build_kernel
-from qt6.pages import ProductsPage
+from qt6.pages import OperationsPage, ProductsPage
 
 
 class FakeStages:
@@ -218,6 +218,60 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             )
         )
 
+    def test_editing_published_content_sets_needs_update_for_same_identity_republish(self):
+        product_id = self._product("3491010")
+        self.db.update_product(
+            product_id,
+            {
+                "server_id": "asset-777",
+                "server_product_id": 1777,
+                "server_status": "updated",
+                "workflow_status": "uploaded",
+                "needs_update": 0,
+                "upload_ready": 0,
+            },
+        )
+
+        self.kernel.stages.update(
+            product_id,
+            "content",
+            {"description_fa": "توضیح فارسی اصلاح‌شده برای انتشار مجدد"},
+        )
+        row = dict(self.db.product(product_id))
+        self.assertEqual(row["server_id"], "asset-777")
+        self.assertEqual(int(row["server_product_id"]), 1777)
+        self.assertEqual(row["workflow_status"], "uploaded")
+        self.assertEqual(int(row["needs_update"]), 1)
+        self.assertEqual(int(row["upload_ready"]), 0)
+        self.assertEqual(self.db.product_count(filter_name="published"), 0)
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        self.assertEqual(int(self.db.product(product_id)["upload_ready"]), 1)
+
+    def test_existing_server_import_contract_updates_asset_product_in_place(self):
+        source = (
+            Path(__file__).resolve().parents[2]
+            / "store"
+            / "phase34b_publishing.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("if asset.product_id:", source)
+        self.assertIn("_sync_product_fields(product, asset)", source)
+        self.assertIn("return product", source)
+
+    def test_operations_page_exposes_search_link_review_and_collect_ai_actions(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            labels = [
+                page.workspace_tabs.tabText(index)
+                for index in range(page.workspace_tabs.count())
+            ]
+            self.assertIn("دریافت محصولات از لینک جستجو", labels)
+            self.assertIn("مشاهده صفحه محصول", page.queue_open_btn.text())
+            self.assertIn("AI", page.queue_collect_ai_btn.text())
+        finally:
+            page.close()
+
     def test_products_page_exposes_explicit_ready_and_bulk_publish_actions(self):
         page = ProductsPage(
             self.db,
@@ -226,6 +280,7 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         )
         try:
             self.assertIn("آماده انتشار", page.ready_publish_btn.text())
+            self.assertIn("باز کردن صفحه محصول", page.open_source_btn.text())
             self.assertIn("انتشار", page.bulk_publish_btn.text())
             self.assertIn("سایت", page.bulk_publish_btn.text())
         finally:
