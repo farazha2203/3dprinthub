@@ -1,3 +1,32 @@
+## 2026-09-02 — Phase49.3I.49 site publish + Slider/Admin parity
+
+Status: `IMPLEMENTED + WINDOWS CI PASS + ADMIN CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- explicit Product multi-select ready-for-publish gate;
+- selected-ready-only bulk publish;
+- mature Batch8.5/FTP/Bridge/public-HTTP verification retained;
+- successful publish automatically enters the existing Published lifecycle workspace;
+- failed/skipped Products remain outside Published with diagnostics;
+- full existing Slider composition/SEO/motion/timing fields round-trip Desktop ↔ Site;
+- HomepageHeroSlide and ProductCatalogProfile Admin organized by operator task, with sync diagnostics collapsed;
+- Local gate expanded through 3I.49.
+
+Evidence:
+- exact final Windows Qt CI `33596830380` PASS on `f9f89643de883ff549a9c0089235e43f061c5d4d`;
+- exact final Single Active AI/no-migration CI `33596830268` PASS;
+- Admin/Bridge CI `33596562467` PASS on `16cf7cfaf6be3e8594435e3489cb0615624fcb00`;
+- the only later delta from `16cf7c...` to `f9f896...` is the repository-owned Local gate.
+
+Owner acceptance next:
+1. clean ff-only pull on `D:\projects\3DPrintHub`;
+2. checksum-backed Local gate + foreground launch;
+3. verify multi-select Ready state, blocked-Gate explanation and Published workspace transition;
+4. verify Slider controls are present in Qt and, after a later approved site deploy, in Django Admin;
+5. no Production publish/deploy until explicit owner acceptance and the normal Host audit/backup sequence.
+
+No new Django migration or secret-store contract is introduced by 3I.49.
+
 # ROADMAP
 
 ## 2026-09-01 — Phase49.3I.47 owner rerun + professional commerce design-system track
