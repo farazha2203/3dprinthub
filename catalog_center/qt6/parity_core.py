@@ -820,10 +820,25 @@ class FilamentParityCore:
         self.db = db
         ensure_epic49_desktop_schema(db)
 
-    def _raw_list(self) -> list[dict[str, Any]]:
-        return [dict(row) for row in list_available_material_colors(self.db)]
+    def _raw_list(self, *, include_inactive: bool = False) -> list[dict[str, Any]]:
+        if not include_inactive:
+            return [dict(row) for row in list_available_material_colors(self.db)]
+        return [
+            dict(row)
+            for row in self.db.conn.execute(
+                """
+                SELECT *
+                FROM available_filament_offers
+                ORDER BY material_name COLLATE NOCASE,
+                         brand_name COLLATE NOCASE,
+                         sort_order,
+                         color_name COLLATE NOCASE,
+                         id
+                """
+            ).fetchall()
+        ]
 
-    def list(self) -> list[dict[str, Any]]:
+    def list(self, *, include_inactive: bool = False) -> list[dict[str, Any]]:
         brand_meta = {
             str(item.get("name") or "").strip().casefold(): dict(item)
             for item in self._registry(self.BRAND_REGISTRY_KEY)
@@ -835,7 +850,7 @@ class FilamentParityCore:
             if isinstance(item, dict) and str(item.get("name") or "").strip()
         }
         output = []
-        for raw in self._raw_list():
+        for raw in self._raw_list(include_inactive=include_inactive):
             item = dict(raw)
             brand = str(item.get("brand_name") or "").strip()
             material = str(item.get("material_name") or "").strip()

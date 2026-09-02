@@ -1458,11 +1458,16 @@ class FilamentsPage(QWidget):
         self._start_site_sync([enriched], "Sync Filament انتخابی با سایت")
 
     def _sync_all_site(self) -> None:
-        rows = self.kernel.filaments.list()
+        rows = self.kernel.filaments.list(include_inactive=True)
         if not rows:
-            QMessageBox.information(self, "Sync سایت", "Filament فعال برای Sync وجود ندارد.")
+            QMessageBox.information(self, "Sync سایت", "Filament برای Sync وجود ندارد.")
             return
-        self._start_site_sync(rows, f"Sync {len(rows)} Filament فعال با سایت")
+        active_count = sum(1 for item in rows if bool(item.get("is_active", True)))
+        inactive_count = len(rows) - active_count
+        self._start_site_sync(
+            rows,
+            f"Sync کامل سایت: {active_count} فعال + {inactive_count} غیرفعال",
+        )
 
     def _registry_sync_delta(
         self,

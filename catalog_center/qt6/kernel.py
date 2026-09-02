@@ -1429,7 +1429,7 @@ class ApplicationKernel:
         rows = (
             [dict(item) for item in items]
             if items is not None
-            else self.filaments.list()
+            else self.filaments.list(include_inactive=True)
         )
         if not rows:
             return {

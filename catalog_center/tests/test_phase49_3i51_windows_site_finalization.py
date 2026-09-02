@@ -430,6 +430,49 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             all(operator == "catalog-center-qt6" for _payload, operator in calls)
         )
 
+    def test_full_site_reconciliation_includes_locally_inactive_filaments(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Inactive Brand")
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "Inactive Color",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#222222"],
+            }
+        )
+        saved = self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Inactive Brand",
+                "color": "Inactive Color",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#222222"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 2_000_000,
+            }
+        )
+        self.kernel.filaments.deactivate(int(saved["id"]))
+        self.assertEqual(self.kernel.filaments.list(), [])
+        all_rows = self.kernel.filaments.list(include_inactive=True)
+        self.assertEqual(len(all_rows), 1)
+        self.assertFalse(bool(all_rows[0]["is_active"]))
+
+        self.kernel.connection.bridge_settings = lambda: object()
+        sent = []
+
+        def fake_sync(_settings, payload, *, operator):
+            sent.append(dict(payload))
+            return {"status": "ok"}
+
+        with patch("app.epic49_site_sync.sync_filament", side_effect=fake_sync):
+            result = self.kernel.sync_filaments_with_site()
+
+        self.assertEqual(result["requested"], 1)
+        self.assertEqual(result["synced"], 1)
+        self.assertFalse(sent[0]["is_active"])
+
     def test_filament_page_exposes_selected_and_all_site_sync_controls(self):
         page = FilamentsPage(self.db, kernel=self.kernel)
         try:
