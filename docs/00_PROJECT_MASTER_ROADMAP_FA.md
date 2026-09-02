@@ -1,3 +1,22 @@
+## Current Windows checkpoint — Phase49.3I.52C / 2026-09-02
+
+Catalog Center `8.9.10` build `2026.09.02.1` now restores the owner-requested visual Crawl review flow on top of the mature acquisition/runtime instead of replacing it.
+
+Implemented:
+- Preview-first current-Search Product cards with title/thumbnail and visible image count;
+- per-Product image acquisition progress such as 3/5 → 5/5;
+- each new Search clears the previous live Search workspace;
+- explicit multi-select and bulk transfer/reject in current Search and persistent Crawl inventory;
+- selected collected rows route into Products;
+- persistent inventory reuses legacy candidate Preview evidence;
+- Product source/image stage adds safe `دریافت داده و عکس بیشتر از لینک محصول` and preserves operator-owned content/pricing/publish decisions.
+
+Runtime checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`.  
+Qt `33624135672` PASS; Single Active AI `33625043627` PASS; Portable `33625043651` PASS with 215 release regressions.  
+Rollback: `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
+
+ERR-49-097 records the one Portable-CI dependency failure and its corrected PySide6/Qt requirements boundary. Production/Host/MySQL remain untouched. Owner Local checksum-backed gate + foreground QA is the immediate next step.
+
 # 3DPrintHub — نقشه مادر پروژه، معماری، فازها و مسیر بعدی
 
 > این فایل قبل از هر Phase/Hotfix/UI change/Migration/Sync/Deploy خوانده می‌شود. GitHub/Repository منبع اصلی حقیقت است.
