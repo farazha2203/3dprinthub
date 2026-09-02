@@ -1,3 +1,13 @@
+## Current owner checkpoint — Phase49.3I.49
+
+Owner requested moving from Catalog-only preparation into the site publishing/admin boundary. GitHub now contains a guarded multi-select Ready → Publish flow, strict Store/public verification before Published state, full Desktop↔Site Slider presentation round-trip, and task-oriented ProductCatalogProfile/HomepageHeroSlide Admin composition.
+
+Exact Windows Qt checkpoint `f9f89643de883ff549a9c0089235e43f061c5d4d` passed run `33596830380`; exact Single Active AI/no-migration run `33596830268` passed. Admin/Bridge checkpoint `16cf7cfaf6be3e8594435e3489cb0615624fcb00` passed run `33596562467`; the only later file to the Windows checkpoint is the repository-owned Local gate.
+
+Rollback remains `backup/pre-phase49-3i49-site-bulk-publish-admin-control-20260901` at `1f8910b6c8c7c601cfd50689d8c48af492f7c453`.
+
+Production remains untouched. Owner Local gate/foreground QA is next; do not assume later Production migrations or deploy state.
+
 # Current continuation — 2026-09-01 / Phase49.3I.47 + ERR-49-088
 
 Repository authority: `farazha2203/3dprinthub`  
