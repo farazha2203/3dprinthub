@@ -128,3 +128,50 @@ Acceptance must cover:
 - checksum-verified backup of the real Catalog SQLite.
 
 Production remains blocked until owner Local acceptance, read-only Host/MySQL/migration audit and fresh verified backups.
+
+
+## 3I.52C — Crawl visual review, multi-select and safe Product source recovery
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Owner foreground evidence showed that the Qt Crawl/Add Product workspace had become harder to operate than the mature Windows flow: candidates were text-heavy, image acquisition progress was not visible enough, current Search results were not an obvious fresh visual workspace, bulk selection/transfer was unclear, and Product editing needed an explicit safe source-data/image recovery action.
+
+Implemented:
+- current Search is a visual icon/card gallery scoped to the active Listing URL;
+- every new Search clears prior live cards before its worker starts;
+- Preview-first discovery exposes Product title/thumbnail before full collection;
+- stable preview-thumbnail cache is shared with the legacy discovery evidence;
+- cards report image state as `Preview: 1 عکس`, `N عکس دارد`, or an explicit no-preview state;
+- rich collection emits per-image progress such as `عکس 3/5` and `عکس 5/5`;
+- current-search and persistent Crawl gallery/table use explicit Qt MultiSelection with select-all/clear and selected-count feedback;
+- selected candidates can be added/rejected in bulk; successful transfer returns Product ids and navigates to Products;
+- already-collected identities route to their existing Product;
+- persistent Crawl inventory is enriched with candidate title/thumbnail/status evidence;
+- Product image/source stage exposes `دریافت داده و عکس بیشتر از لینک محصول`;
+- safe recovery refreshes source-owned data/images while preserving operator Persian title/description, final price, sale approval and publish decision.
+
+Rollback:
+`backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
+
+Verification:
+- `33624135672` Qt6 Crawl + AI Runtime CI PASS on `4cecdea34774a0c109e8f854bac19831f7bcf234`;
+- `33625043627` Single Active AI PASS;
+- initial Portable run `33624135587` failed only because the newly added Qt regression imported PySide6 while that release job installed only the non-Qt requirements;
+- the failed condition was changed: Portable CI now installs `requirements-qt6.txt`;
+- `33625043651` Windows Portable PASS on `b43880a763d00bfda52dc29c4bf080cb428b1230`;
+- portable regression gate: 215 tests PASS;
+- artifact id `9844568575`, EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- browser smoke and EXE self-verification PASS.
+
+Safety:
+- no new Django migration;
+- no destructive Catalog migration;
+- Preview cache is additive under the persistent Catalog data root;
+- no Host/Production source or MySQL write;
+- Production remains at `c283864290f9c989a9fcdf24ee8eef519560e917`.
+
+Owner Local acceptance:
+- canonical runner is `RUN_PHASE49_3I42C_LOCAL_GATE.ps1`, version `49.3I.52.2`;
+- it checksum-backs up `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` before foreground QA;
+- verify fresh Search clearing, visual Preview, per-Product 3/5→5/5 image progress, image-count labels, multi-select bulk transfer to Products, persistent visual inventory, and safe more-data/more-images Product recovery.
