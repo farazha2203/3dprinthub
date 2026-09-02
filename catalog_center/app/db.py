@@ -492,7 +492,9 @@ class Database:
                            source_short_description, source_description,
                            short_description_fa, description_fa,
                            primary_image_url, local_dir,
-                           selected_images_json, images_json, image_metadata_json
+                           selected_images_json, images_json, image_metadata_json,
+                           source_specs_json, tags_json, dimensions,
+                           estimated_weight_grams, estimated_print_minutes
                     FROM products
                     WHERE source_code=? AND external_id IN ({placeholders})
                     """,
@@ -509,7 +511,9 @@ class Database:
                            source_short_description, source_description,
                            short_description_fa, description_fa,
                            primary_image_url, local_dir,
-                           selected_images_json, images_json, image_metadata_json
+                           selected_images_json, images_json, image_metadata_json,
+                           source_specs_json, tags_json, dimensions,
+                           estimated_weight_grams, estimated_print_minutes
                     FROM products
                     WHERE source_code=? AND normalized_url IN ({placeholders})
                     """,
@@ -561,6 +565,21 @@ class Database:
                 ),
                 "product_image_metadata_json": (
                     str(product["image_metadata_json"] or "[]") if product else "[]"
+                ),
+                "product_source_specs_json": (
+                    str(product["source_specs_json"] or "{}") if product else "{}"
+                ),
+                "product_tags_json": (
+                    str(product["tags_json"] or "[]") if product else "[]"
+                ),
+                "product_dimensions": (
+                    str(product["dimensions"] or "") if product else ""
+                ),
+                "product_estimated_weight_grams": (
+                    float(product["estimated_weight_grams"] or 0) if product else 0.0
+                ),
+                "product_estimated_print_minutes": (
+                    int(product["estimated_print_minutes"] or 0) if product else 0
                 ),
             })
             output.append(item)
