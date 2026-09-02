@@ -38,6 +38,14 @@ def _contribute(model, name: str, field: models.Field) -> None:
 def install_model_fields() -> None:
     for name, field in (
         (
+            "description",
+            models.TextField(
+                blank=True,
+                default="",
+                verbose_name="توضیح Filament / SEO",
+            ),
+        ),
+        (
             "brand_name",
             models.CharField(
                 max_length=120,

@@ -6,6 +6,22 @@ from django.db import models
 from django.utils import timezone
 
 
+class FilamentBrand(models.Model):
+    name = models.CharField(max_length=120, unique=True, db_index=True, verbose_name="نام برند")
+    description = models.TextField(blank=True, default="", verbose_name="توضیح برند / SEO")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="فعال")
+    sort_order = models.PositiveIntegerField(default=100, verbose_name="ترتیب")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "name", "id"]
+        verbose_name = "برند فیلامنت"
+        verbose_name_plural = "برندهای فیلامنت"
+
+    def __str__(self):
+        return self.name
+
+
 class MaterialColorOption(models.Model):
     COLOR_TYPE_CHOICES = [
         ("solid", "تک‌رنگ"),

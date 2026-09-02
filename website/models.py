@@ -187,6 +187,11 @@ class Material(models.Model):
         default=0,
         verbose_name="قیمت هر کیلوگرم به تومان"
     )
+    catalog_description = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="توضیح متریال / SEO",
+    )
 
     # BEGIN MATERIAL INVENTORY PHASE 8 FIELDS
     default_roll_weight_grams = models.DecimalField(
