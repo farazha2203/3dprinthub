@@ -1,3 +1,35 @@
+## 2026-09-02 — Phase49.3I.52C Crawl visual review + bulk transfer recovery
+
+Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- Preview-first Product cards in the current Crawl Search workspace;
+- stable candidate thumbnail reuse and visible image-count state;
+- per-Product image progress during full receive;
+- new Search clears prior live Search cards;
+- explicit multi-select/select-all/clear/bulk add/reject in current Search and persistent Crawl inventory;
+- successful bulk transfer navigates to Products and preserves existing collected identity;
+- safe Product source-data/more-images recovery that preserves operator/business-owned fields;
+- shorter task-oriented Crawl bulk actions and explicit selected-count feedback;
+- dedicated 3I.52C regressions;
+- Portable CI dependency correction after ERR-49-097.
+
+Evidence:
+- runtime/CI checkpoint `b43880a763d00bfda52dc29c4bf080cb428b1230`;
+- Qt `33624135672` PASS;
+- Single Active AI `33625043627` PASS;
+- Windows Portable `33625043651` PASS, 215 release regressions;
+- artifact id `9844568575`, EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- pre-phase rollback `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
+
+Immediate next:
+1. owner clean ff-only Local pull;
+2. canonical `RUN_PHASE49_3I42C_LOCAL_GATE.ps1` / runner `49.3I.52.2` with exact final GitHub head and `-LaunchApp`;
+3. foreground QA with one bounded MakerWorld Search: Preview image/title, 3/5→5/5 progress, image-count labels, multi-select transfer and Products navigation;
+4. verify persistent Crawl inventory thumbnails/multi-select;
+5. verify Product `دریافت داده و عکس بیشتر از لینک محصول` without operator price/content/publish clobber;
+6. only after owner acceptance start the normal Host read-only audit/backups. Production remains blocked.
+
 ## 2026-09-02 — Phase49.3I.52 Site fallback authoring + Shared AI + bidirectional Product sync
 
 Status: `IMPLEMENTED + WINDOWS QT CI PASS + SITE/ADMIN CI PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
