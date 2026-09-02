@@ -192,9 +192,15 @@ class ProductGalleryModel(QAbstractListModel):
                 "archived": "⚫",
             }.get(lifecycle, "🟠")
             seo = "SEO✓" if product_seo_ready(row) else "SEO…"
+            if lifecycle == "published":
+                publish_gate = "منتشرشده✓"
+            elif int(row.get("upload_ready") or 0):
+                publish_gate = "آماده انتشار✓"
+            else:
+                publish_gate = "آماده انتشار—"
             image_count = self.images.image_count(row)
             lines = [
-                f"{status_icon} {seo} • 🖼 {image_count} • #{row.get('id', '')}",
+                f"{status_icon} {seo} • {publish_gate} • 🖼 {image_count} • #{row.get('id', '')}",
                 str(title),
             ]
             if source and source != title:
