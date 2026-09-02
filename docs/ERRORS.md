@@ -1,5 +1,117 @@
 # PROJECT ERROR KNOWLEDGE BASE
 
+## ERR-49-092 — Phase49.3I.50 Crawl technical-fact regression used a bare test schema and failed on a pre-existing image metadata column
+**Date:** 2026-09-02  
+**Environment:** GitHub Windows Qt CI / exact code checkpoint `7aadf4830061c2104cda6b4164e0f9b1351f8893`.
+
+**Observed CI evidence:**
+- Qt foundation/full parity passed;
+- the acquisition strategy step failed only in the newly-added Crawl technical-fact test;
+- traceback: `sqlite3.OperationalError: no such column: image_metadata_json` from `Database.discovered_items_page()`;
+- `image_metadata_json` was already a mature Qt image-pipeline column before 3I.50.
+
+**Root cause:**
+The new test created a bare `Database()` and installed only the Epic49 desktop schema. Real Qt startup composes `ensure_qt_parity_schema()`, which also installs the mature image/profile/slider/stage schemas. The regression therefore exercised an impossible partial runtime schema rather than the application contract.
+
+**Failed condition was not repeated unchanged.**
+The fixture was changed before the next CI run.
+
+**Correct fix:**
+Initialize the regression through the same `ensure_qt_parity_schema()` composition used by `build_kernel()`.
+
+**Implementation:** `b6bc5b08903e6880d01dc0fd27d7f8c2b17fab47`.
+
+**Verification:**
+- `33601229888` — Qt full parity — PASS;
+- `33601229884` — Windows Portable — PASS;
+- later runner-only checkpoint `d45730990cc90002fb1da1236380e033a379db7a`: `33601382428` Qt full parity PASS.
+
+**Prevention rule:** clean-schema tests for Qt surfaces must initialize the real composed Qt schema, not an arbitrary subset, unless the test explicitly targets that lower-level subset.
+
+---
+
+## ERR-49-091 — Phase49.3I.50 Color registry crashed in CI because the canonical palette normalizer was not imported
+**Date:** 2026-09-02  
+**Environment:** GitHub Windows Qt CI / early 3I.50 Brand/Color registry implementation.
+
+**Observed CI evidence:**
+- compile succeeded;
+- constructing the real MainWindow/FilamentsPage failed at runtime;
+- `NameError: normalize_palette_hexes is not defined` in `FilamentParityCore.color_presets()`;
+- failing Qt run: `33600561989`.
+
+**Root cause:**
+The new registry reused the mature palette-normalization function but the symbol was omitted from `qt6/parity_core.py` imports. Static compile could not detect this runtime name lookup.
+
+**Failed condition was not repeated unchanged.**
+The canonical import was added before rerun.
+
+**Correct fix:** import `normalize_palette_hexes` from `app.epic49_desktop_schema` rather than duplicating palette logic.
+
+**Implementation:** `65cded6d1f22c653ff63e0c6c62f89743a805871`.
+
+**Verification:**
+- `33600690429` — Qt full parity — PASS;
+- `33600690527` — Single Active AI — PASS;
+- final 3I.50 Qt run `33601382428` — PASS.
+
+**Prevention rule:** reusable UI registries must import and test the same canonical normalizers used by persisted Filament data; full MainWindow construction remains a mandatory runtime regression.
+
+---
+
+## ERR-49-090 — Hybrid Listing HTTP 403 stopped before the existing robots-gated Browser fallback
+**Date:** 2026-09-02  
+**Environment:** owner Local Windows Qt6 / GrabCAD public library URL.
+
+**Observed owner evidence:**
+`AccessDeniedError: HTTP 403 for https://grabcad.com/library` was raised by `discover_conditional_http` and propagated from `_discover_listing`, so the already-existing browser acquisition path was never reached.
+
+**Root cause:**
+Hybrid discovery re-raised `AccessDeniedError` together with fail-closed robots/rate-limit errors even though the browser branch already had its own `_browser_robots_gate`.
+
+**Correct fix:**
+- continue only once from static HTTP AccessDenied into the mature browser collector;
+- do not retry the same blocked static request;
+- keep `RobotsDeniedError` and `RateLimitedError` fail-closed;
+- run the existing browser robots gate before navigation.
+
+**Implementation:** `98badc4d43f34dd991fe5c5ebcee1946342c88e0`.
+
+**Verification:**
+- regression proves one blocked HTTP attempt → one robots gate → one browser discovery;
+- final Qt full run `33601382428` PASS;
+- Modern Acquisition run `33600888264` PASS on the implemented acquisition subset.
+
+**Safety:** this is a fallback, not an access-control bypass. Login/CAPTCHA/robots restrictions remain enforced.
+
+**Prevention rule:** an HTTP access-denied response from a public Listing is not equivalent to a robots denial. Fallback may occur only through an independently robots-gated browser path and must never repeat the unchanged blocked request.
+
+---
+
+## ERR-49-089 — Filament editor crashed because QWidget was used but not imported
+**Date:** 2026-09-02  
+**Environment:** owner Local Windows Qt6 / Filament Library.
+
+**Observed owner evidence:**
+Repeated traceback from `FilamentEditorDialog`:
+`NameError: name 'QWidget' is not defined` at `palette_host = QWidget()`.
+
+**Root cause:**
+`catalog_center/qt6/parity_dialogs.py` used `QWidget` for palette/image/Profile containers but its QtWidgets import list omitted `QWidget`.
+
+**Correct fix:** restore the PySide6 `QWidget` import and add a regression that constructs the Filament editor offscreen.
+
+**Implementation:** `789d07b75b70ab34042e35a5b1ca57848774ac03`.
+
+**Verification:**
+- dedicated Filament editor construction regression PASS;
+- 3I.48 Filament/registry stage in final run `33601382428` PASS.
+
+**Prevention rule:** every Qt dialog introduced or expanded with concrete widgets must be instantiated in offscreen CI; compile-only validation is insufficient for missing runtime symbols.
+
+---
+
+
 ## ERR-49-088 — Phase49.3I.47 owner Local gate broke on Windows PowerShell 5.1 because a non-ASCII QA label violated the established ASCII-only runner contract
 **Date:** 2026-09-01  
 **Environment:** owner Local Windows PowerShell 5.1 / canonical branch / exact head `946b8594f0ee001bd9833973e23eb47803c98bac`.
