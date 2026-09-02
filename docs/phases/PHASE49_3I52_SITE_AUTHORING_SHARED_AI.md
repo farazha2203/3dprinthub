@@ -245,3 +245,45 @@ Verification:
 - EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`.
 
 No Django migration, Catalog migration, destructive file operation, Host source change, Production deploy or Production MySQL write was performed.
+
+
+## 3I.52E — Permanent Crawl image parity for recent Preview + historical refetch folders
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Owner screenshots after 3I.52D clarified two remaining image-miss classes:
+1. historical files written by mature refetch/source-refresh workflows into sibling folders rather than the exact external-id folder;
+2. recent `new` identities whose listing-card image is lazy-loaded and therefore did not populate the Preview cache.
+
+Verified mature historical folders:
+- `<external_id>_refresh_latest`;
+- `<external_id>_refetch_<timestamp>`;
+- `<external_id>_bulk_refetch_<timestamp>`.
+
+Implemented:
+- read-only ImageCore resolution covers those folders plus exact/local_dir authority;
+- queue selected Product identity matching is source-code case-insensitive;
+- listing Preview extraction captures currentSrc, src, data-src, data-original, data-lazy-src, img srcset, picture/source srcset and CSS background-image;
+- HTTP candidates are selected instead of data/blob placeholders;
+- srcset prefers the largest/right-most candidate;
+- rerunning the same Search updates candidate Preview evidence while Crawl uniqueness prevents duplicate identities;
+- local `N عکس دارد` remains evidence-based and is never synthesized for merely discovered rows;
+- Qt shell reports `Phase49.3I.52E`.
+
+Rollback:
+`backup/pre-phase49-3i52e-preview-legacy-variants-20260902` → `ef82abe775f88f6326c345b4e17c797471acbc27`.
+
+Verification:
+- exact tested runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`;
+- Qt full parity `33632062812` PASS;
+- dedicated visual/recovery suite 15 tests PASS;
+- Single Active AI `33632062877` PASS;
+- Windows Portable `33632062880` PASS;
+- portable release regression 223 tests PASS;
+- artifact `9847317893`;
+- EXE SHA256 `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`.
+
+ERR-49-099 records and closes the intermediate raw-JavaScript string delimiter mistake; final CI passed after correction.
+
+No database migration, media rewrite, Host source change, Production deploy or Production MySQL write was performed.
