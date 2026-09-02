@@ -1,3 +1,19 @@
+## 2026-09-02 — Phase49.3I.53F DB remains pre-migration after source-only promotion
+
+Owner deploy output proves source promotion to `b372586a...` completed, but the immediately following Django startup failed on missing httpx before the MigrationExecutor gate or `manage.py migrate`.
+
+Therefore Production DB truth remains:
+- Store 0036 applied;
+- Website 0023 applied;
+- Store 0037–0042 pending;
+- Website 0024 pending.
+
+Valid pre-migration DB rollback artifact:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53/database-before-3i53.sql.gz`.
+That dump passed helper validation, `gzip -t` and SHA256 manifest verification before source promotion.
+
+The 53F resume runner re-verifies this artifact, restores startup/dependency health, rechecks migration recorder state, creates a fresh pre-migration DB dump, and only then allows the exact seven-migration plan to execute.
+
 ## 2026-09-02 — Phase49.3I.53C verified Production migration state
 
 Read-only Host audit now supersedes the older assumption that Production was only through Store 0035.

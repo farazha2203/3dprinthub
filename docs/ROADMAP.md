@@ -1,3 +1,20 @@
+## 2026-09-02 — Phase49.3I.53F post-merge dependency/startup recovery
+
+Status: `IMPLEMENTED + CI PASS / PRODUCTION RESUME NEXT`.
+
+Production source is already at `b372586a...`, but DB remains unchanged because the deploy stopped at post-merge Django startup on missing `httpx==0.28.1`.
+
+Recovery now:
+- makes Site AI provider/content transport imports lazy;
+- preserves mature AIProviderClient patchability;
+- proves Django bootstrap does not require httpx;
+- adds target dependency install/verify to normal deployment;
+- adds a dedicated post-merge resume runner that reuses/re-verifies the valid rollback backup, then installs exact dependency, takes a fresh DB backup, verifies the exact migration plan and completes migration/static/restart/readiness.
+
+Evidence: `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
+Next: execute post-merge resume from Host HEAD `b372586a...`; do not rerun the original baseline deploy runner.
+
 ## 2026-09-02 — Phase49.3I.53E backup helper import-boundary fix
 
 Status: `IMPLEMENTED + CI PASS / PRODUCTION DEPLOY RETRY NEXT`.

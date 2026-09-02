@@ -1,3 +1,44 @@
+### ERR-49-110 — lazy transport refactor temporarily removed mature AIProviderClient patch seam
+**Date:** 2026-09-02  
+**Environment:** GitHub Product Admin CI `33663092964`.
+
+**Observed:** after fixing Host startup import safety, mature test `test_auto_policy_prefers_exact_verified_free_persian_structured_model` failed because it patches `ai.model_policy.AIProviderClient`, but the first lazy-import implementation had removed that module attribute.
+
+**Root cause:** import-safety refactor preserved runtime behavior but unintentionally broke a mature testing/extension seam.
+
+**Failed condition:** the failed CI was not rerun unchanged.
+
+**Correct fix:** restore `ai.model_policy.AIProviderClient` as a lazy compatibility constructor that imports the real transport class only when called. `_provider_client` delegates through that symbol, so existing patches keep working while Django startup remains independent of httpx.
+
+**Verification:** `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
+**Prevention:** when converting eager imports to lazy factories, preserve mature public/patchable module seams unless there is an explicit deprecation contract.
+
+
+### ERR-49-109 — target source promoted before required httpx dependency was installed
+**Date:** 2026-09-02  
+**Environment:** Production Host third Phase49.3I.53 deploy attempt.
+
+**Observed:** valid source/MySQL/.env/pending backups were fully verified and source fast-forwarded from `198fa8e...` to `b372586a...`. The first post-merge `manage.py check` then failed:
+`ModuleNotFoundError: No module named 'httpx'`.
+
+**Root cause:** target `requirements.txt` adds `httpx==0.28.1`, but the deploy runner did not reconcile target runtime dependencies before invoking target Django code. The failure was amplified by eager Site-AI imports: `store.apps.ready` imports Site authoring AI, which imported `ai.model_policy` and `ai.product_content`; those imported desktop provider modules requiring httpx even for ordinary Django startup.
+
+**Production state:** source is already at `b372586a...`; DB migrations did not run; collectstatic and Passenger restart did not run. The verified 21:10 pre-migration backup is valid and preserved.
+
+**Failed condition:** do not rerun the old deploy runner from baseline `198fa8e...` because Host source is no longer at that baseline. Do not run migrations manually before dependency/startup recovery.
+
+**Correct fix:**
+- make provider/client imports lazy at the Site AI boundary;
+- preserve existing `AIProviderClient` patch seam through a lazy compatibility constructor;
+- add regression proving Django setup does not import httpx;
+- make normal deploy install/verify exact target httpx after rollback backup and before target source execution;
+- add a dedicated post-merge resume runner for current `b372586a...` state that re-verifies rollback evidence, applies source boot-safety fix, installs exact dependency, creates a fresh DB backup, verifies migration state/plan and only then migrates/restarts.
+
+**Verification:** recovery checkpoint `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
+**Prevention:** Production deploys must treat requirements/runtime dependency delta as a first-class gate between verified rollback backup and execution of target Django code. Optional operator AI transport must not be imported during normal Site bootstrap.
+
 ### ERR-49-108 — extracted MySQL backup helper could not import Production Django config
 **Date:** 2026-09-02  
 **Environment:** Production Host second Phase49.3I.53 deploy attempt.

@@ -1,3 +1,16 @@
+## 2026-09-02 — Phase49.3I.53F
+- recorded that Production source fast-forward to `b372586a...` succeeded before the deploy paused;
+- DB migrations/static/restart remain unapplied;
+- fixed Site bootstrap dependency on eager desktop AI transport imports;
+- `ai.model_policy` provider client is lazy while preserving mature `AIProviderClient` patch seam;
+- `ai.product_content` loads `AIContentService` only for explicit AI Generate;
+- added Django-without-httpx startup regression;
+- added exact `httpx==0.28.1` install/version/`pip check` gate to normal Production deploy;
+- added `scripts/host/phase49_3i53_postmerge_resume.sh` for the current already-promoted source state;
+- resume re-verifies valid rollback backup, creates fresh pre-migration DB backup, requires exact migration plan and completes receiver verification;
+- first 53F CI exposed a compatibility test seam and was fixed before final PASS;
+- Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
 ## 2026-09-02 — Phase49.3I.53E
 - fixed Production backup helper import context when executed from outside the repository;
 - helper now requires `PHASE49_PROJECT_ROOT`, validates project markers and prepends the project root to `sys.path` before Django setup;

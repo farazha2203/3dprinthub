@@ -1,3 +1,31 @@
+## 3I.53F — Partial Production deploy recovery after missing target dependency
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / RECOVERY CI PASS / PRODUCTION SOURCE DEPLOYED / DB MIGRATION+STATIC+RESTART PENDING`.
+
+Third Production attempt passed all rollback backup gates and printed `PREDEPLOY_BACKUP_VERIFIED=YES`, then fast-forwarded source to `b372586a...`. First post-merge Django check failed because Host venv did not yet contain target requirement `httpx==0.28.1`.
+
+No DB migration, collectstatic or Passenger restart occurred.
+
+Recovery contract:
+1. reverify 21:10 source/MySQL/.env/pending rollback evidence;
+2. fetch exact live GitHub target and require current `b372586a...` as ancestor;
+3. fast-forward the import-safety hotfix;
+4. prove `manage.py check` succeeds before httpx is installed;
+5. install exact `httpx==0.28.1`, verify version + `pip check`;
+6. verify migration recorder still Store 0036/Website 0023;
+7. create fresh real-gzip pre-migration MySQL dump;
+8. require exact Store 0037–0042 + Website 0024 plan;
+9. migrate;
+10. require receiver readiness;
+11. collectstatic + Passenger restart;
+12. verify home/store/Bridge health/publish-readiness;
+13. only then allow one controlled Product publish.
+
+Import-safety implementation keeps provider transport and AIContentService lazy during Site startup. The historical `AIProviderClient` patch seam remains available through a lazy constructor.
+
+Verification: `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
 ## 3I.53E — Extracted backup helper project-root binding
 
 Date: 2026-09-02  

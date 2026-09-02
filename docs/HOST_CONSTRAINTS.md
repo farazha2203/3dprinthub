@@ -1,3 +1,18 @@
+## Phase49.3I.53F dependency/source-promotion constraint — 2026-09-02
+
+Current Host source is no longer the predeploy baseline. Owner output proves `git merge --ff-only` completed to `b372586ab60234ec3faf3ce0624e07766db6ecce` before Django startup failed.
+
+Therefore:
+- do NOT rerun `phase49_3i53_production_deploy.sh` expecting baseline `198fa8e...`;
+- use `scripts/host/phase49_3i53_postmerge_resume.sh` for this exact recovery state;
+- verified rollback backup is `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53`;
+- DB is still pre-migration;
+- target requirement delta from original baseline includes exact `httpx==0.28.1`;
+- runtime dependency reconciliation must happen before target AI use;
+- Site bootstrap itself must not require optional provider transport imports.
+
+The resume runner must reverify rollback hashes/gzip/bundle before any new DB mutation, then create a fresh pre-migration DB dump after dependency recovery and before migration.
+
 ## Phase49.3I.53E Python helper import constraint — 2026-09-02
 
 A Python helper executed from `/home/sfkilvrs/3dprinthub-deploy-backups/<timestamp>/` must not rely on cwd for importing the Django project. The deploy runner now passes:

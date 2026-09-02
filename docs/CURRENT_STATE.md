@@ -1,3 +1,64 @@
+## 2026-09-02 — Phase49.3I.53F Production source is promoted; DB migration paused on missing Host dependency
+
+Status: `SOURCE DEPLOYED TO b372 / DB MIGRATIONS NOT RUN / COLLECTSTATIC NOT RUN / PASSENGER NOT RESTARTED / RECOVERY FIX CI PASS / RESUME NEXT`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Current Production source HEAD from owner evidence: `b372586ab60234ec3faf3ce0624e07766db6ecce`.  
+Production DB remains pre-migration: Store 0036 + Website 0023 applied; Store 0037–0042 + Website 0024 still pending.  
+Verified pre-migration rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53`.
+
+### Owner deploy evidence
+The third deploy attempt successfully:
+- verified clean Host baseline `198fa8e...`;
+- fetched target `b372586a...`;
+- verified exact seven-file migration delta;
+- verified MySQL/database baseline;
+- created source bundle;
+- created a real gzip MySQL backup;
+- passed `gzip -t`;
+- passed SHA256 checks for source bundle, database, .env and pending import tar;
+- printed `PREDEPLOY_BACKUP_VERIFIED=YES`;
+- fast-forwarded Production source to `b372586a...`.
+
+It then stopped immediately at the first post-merge Django check with:
+`ModuleNotFoundError: No module named 'httpx'`.
+
+Therefore:
+- source promotion HAS happened;
+- database migrations have NOT happened;
+- collectstatic has NOT happened;
+- Passenger restart has NOT happened.
+
+### Root cause
+`requirements.txt` gained the exact new Production dependency `httpx==0.28.1`, but the original deploy runner did not reconcile target Python dependencies before executing target Django code. In addition, Site AI modules eagerly imported desktop provider transport during Django startup, so a missing optional AI transport dependency could block the entire Site startup path.
+
+### Recovery implemented
+- `ai.model_policy` now keeps provider transport lazy;
+- `ai.product_content` now imports `AIContentService` only when an operator explicitly runs AI Generate;
+- mature `ai.model_policy.AIProviderClient` patch seam is preserved through a lazy compatibility constructor;
+- new regression proves `django.setup()` succeeds while `httpx` is deliberately unavailable;
+- main deploy runner now installs/verifies exact target `httpx==0.28.1` after verified rollback backup and before target source execution;
+- new `scripts/host/phase49_3i53_postmerge_resume.sh` safely resumes from the already-promoted `b372586a...` source state;
+- resume runner re-verifies the existing valid rollback backup, fast-forwards only to the current GitHub target, proves boot safety before installing httpx, installs exact dependency + `pip check`, verifies DB is still pre-migration, creates a fresh pre-migration MySQL backup, requires the exact seven-migration plan, then migrates/collects static/restarts/verifies public + Bridge readiness.
+
+### Verification
+- first 53F Product Admin run `33663092964` failed because a mature test patched `ai.model_policy.AIProviderClient`, a compatibility symbol removed by the first lazy-import refactor;
+- the failed condition was changed: the patch seam is restored as a lazy constructor, without restoring eager transport import;
+- final Product Admin / Host recovery CI `33663316332` PASS;
+- final Single Active AI `33663316324` PASS;
+- recovery code checkpoint `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`.
+
+### Safety / rollback
+- verified source bundle still represents predeploy `198fa8e...`;
+- verified MySQL dump from 21:10 remains valid pre-migration rollback evidence;
+- GitHub rollback branch `rollback/phase49-3i53-predeploy-host-198fa8e-20260902` remains available;
+- current-source rollback branch `rollback/phase49-3i53-postmerge-b372-before-deps-20260902` records the exact source state at which deployment paused;
+- no automatic reverse migration is required because no new migration has run yet.
+
+### Exact next task
+Run the repository post-merge resume runner from current Host HEAD `b372586a...`. Do not rerun the old deploy runner, because its required starting baseline is no longer true. The resume must reach: rollback reverified → Django boot-safe without httpx → exact httpx install → fresh MySQL backup verified → exact migration plan → migrate → receiver readiness → collectstatic → Passenger restart → public/Bridge verification.
+
 ## 2026-09-02 — Phase49.3I.53E extracted backup helper project-root binding
 
 Status: `GITHUB_UPDATED / BACKUP HELPER FIX CI PASS / PRODUCTION STILL AT VERIFIED BASELINE / DEPLOY RETRY NEXT`.

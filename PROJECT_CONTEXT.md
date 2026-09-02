@@ -1,3 +1,21 @@
+## Continuation checkpoint — 2026-09-02 / Phase49.3I.53F partial Production deploy recovery
+
+Actual Production source HEAD is now `b372586ab60234ec3faf3ce0624e07766db6ecce`. The source fast-forward happened only after the 21:10 rollback set was fully verified. The deploy then stopped at the first post-merge Django check because Host venv lacked target dependency `httpx==0.28.1`.
+
+No target migration, collectstatic or Passenger restart happened. Production DB remains Store 0036 + Website 0023.
+
+Recovery `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`:
+- lazy Site AI transport imports;
+- mature AIProviderClient patch seam retained;
+- Django bootstrap regression without httpx;
+- normal deploy dependency gate;
+- dedicated post-merge resume runner;
+- fresh pre-migration DB backup before migration.
+
+CI: Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
+Use the resume runner from current Host source state. Do not rerun the original baseline deploy runner.
+
 ## Continuation checkpoint — 2026-09-02 / Phase49.3I.53C audited Site receiver deploy
 
 Host read-only audit passed. Actual Production baseline is `198fa8e41ea4f4d87eb287ba69c91076acc78d62`; Store 0036 and Website 0023 are applied. Store 0037–0042 + Website 0024 are the exact pending receiver migrations. MySQL/database, storage, Bridge token, 13 active Materials, 5 active PrintQualities, disk/inodes and mysqldump are ready.

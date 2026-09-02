@@ -1,3 +1,20 @@
+## REQ-49-096 — Resume Production safely after source promotion but before migrations
+Date: 2026-09-02  
+Status: `IMPLEMENTED + CI PASS / HOST RESUME NEXT`.
+
+Required behavior:
+- recognize that Production source already moved to `b372586a...`;
+- do not pretend the old `198fa8e...` deploy baseline is still checked out;
+- preserve/reverify the valid pre-migration rollback backup;
+- restore ordinary Django startup even when optional AI transport is unavailable;
+- install exactly the dependency declared by target requirements;
+- take a fresh DB backup before migration;
+- require the exact pending migration plan;
+- then migrate, collectstatic, restart and verify receiver/public endpoints;
+- no bulk Product publish until one end-to-end Product succeeds.
+
+Verification: `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
 ## REQ-49-095 — Backup helper must work before source promotion from an external backup directory
 Date: 2026-09-02  
 Status: `IMPLEMENTED + CI PASS / DEPLOY RETRY NEXT`.

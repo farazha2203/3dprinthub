@@ -1,3 +1,15 @@
+## Current Production checkpoint — Phase49.3I.53F / 2026-09-02
+
+Production source has been promoted to `b372586a...`; database/static/runtime restart have not yet been promoted because post-merge Django startup caught missing `httpx==0.28.1`.
+
+This is now a controlled partial-deploy recovery, not a fresh deploy from `198fa8e...`.
+
+53F makes Site AI transport imports lazy, adds exact dependency reconciliation, preserves mature AI test seams, and supplies a post-merge resume runner. The verified 21:10 source/MySQL/.env/pending rollback set remains valid; the resume runner re-verifies it and makes a fresh DB dump before migrations.
+
+Recovery code `ccd1b98997a8dd0c8389ccbe2b6c78b83dd7f176`; Product Admin `33663316332` PASS; Single Active AI `33663316324` PASS.
+
+Next: resume from current Host HEAD `b372586a...`, complete exact seven migrations, static/restart/readiness, then one Product end-to-end publish before bulk.
+
 ## Current Production checkpoint — Phase49.3I.53C / 2026-09-02
 
 The real Host audit is complete and the receiver deployment is now gated by a repository-owned backup/deploy runner.
