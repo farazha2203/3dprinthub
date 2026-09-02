@@ -5,7 +5,7 @@ import json
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from store.phase39_models import MaterialColorOption
+from store.phase39_models import FilamentBrand, MaterialColorOption
 from website.models import Material
 
 
@@ -54,7 +54,7 @@ class Phase493I41FilamentBridgeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(payload["created"])
-        self.assertEqual(payload["contract"], "phase49-filament-library-v1")
+        self.assertEqual(payload["contract"], "phase49-filament-library-v3")
 
         material = Material.objects.get(name="PLA")
         option = MaterialColorOption.objects.get(
@@ -81,6 +81,67 @@ class Phase493I41FilamentBridgeTests(TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["brand"], "Bambu Lab")
         self.assertEqual(rows[0]["current_stock_grams"], "2500.0000")
+
+    def test_sync_round_trips_filament_brand_and_material_descriptions(self):
+        response = self._post({
+            "filament": {
+                "material": "PLA-CF",
+                "material_description": "متریال تقویت‌شده برای قطعات فنی",
+                "material_price_per_kg": 2_750_000,
+                "brand": "Polymaker",
+                "brand_description": "برند تخصصی فیلامنت",
+                "color": "مشکی مات",
+                "description": "فیلامنت PLA-CF مشکی برای قطعات مهندسی",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#111111"],
+                "roll_weight_grams": 1000,
+                "stock_roll_count": 2,
+                "sale_price_per_roll": 4_000_000,
+            },
+        })
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["contract"], "phase49-filament-library-v3")
+
+        material = Material.objects.get(name="PLA-CF")
+        self.assertEqual(
+            material.catalog_description,
+            "متریال تقویت‌شده برای قطعات فنی",
+        )
+        self.assertEqual(material.price_per_kg, 2_750_000)
+
+        brand = FilamentBrand.objects.get(name="Polymaker")
+        self.assertEqual(brand.description, "برند تخصصی فیلامنت")
+
+        option = MaterialColorOption.objects.get(
+            material=material,
+            brand_name="Polymaker",
+            name="مشکی مات",
+        )
+        self.assertEqual(
+            option.description,
+            "فیلامنت PLA-CF مشکی برای قطعات مهندسی",
+        )
+
+        listing = self.client.get(
+            reverse("catalog_bridge:filaments"),
+            {"material": "PLA-CF"},
+            **HEADERS,
+        )
+        self.assertEqual(listing.status_code, 200)
+        row = listing.json()["items"][0]
+        self.assertEqual(row["brand_description"], "برند تخصصی فیلامنت")
+        self.assertEqual(
+            row["material_description"],
+            "متریال تقویت‌شده برای قطعات فنی",
+        )
+        self.assertEqual(row["material_price_per_kg"], 2_750_000)
+        self.assertEqual(
+            row["description"],
+            "فیلامنت PLA-CF مشکی برای قطعات مهندسی",
+        )
+
 
     def test_sync_updates_same_material_brand_color_instead_of_duplicating(self):
         first = self._post({
