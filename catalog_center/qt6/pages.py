@@ -1942,7 +1942,7 @@ class OperationsPage(QWidget):
         self.queue_view_mode.addItem("آیکون‌های بزرگ", "icons")
         self.queue_view_mode.addItem("جزئیات", "details")
 
-        self.queue_open_btn = QPushButton("🌐 باز کردن منبع")
+        self.queue_open_btn = QPushButton("🌐 مشاهده صفحه محصول")
         self.queue_open_btn.setToolTip("صفحه اصلی Product انتخاب‌شده را در مرورگر باز می‌کند.")
         self.queue_collect_btn = QPushButton("افزودن به محصولات")
         self.queue_collect_btn.setToolTip(
