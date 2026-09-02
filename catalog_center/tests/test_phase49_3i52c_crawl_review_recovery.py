@@ -314,6 +314,180 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         self.assertIn("source_srcset", PREVIEW_CARD_EVAL_JS)
         self.assertIn("background-image", PREVIEW_CARD_EVAL_JS)
 
+    def test_url_slug_gives_identity_before_full_receive_and_incomplete_rows_can_be_selected(self):
+        url = (
+            "https://makerworld.com/en/models/"
+            "2953550-japandi-small-key-tray?from=search#profileId-3309631"
+        )
+        self.db.add_discovered(
+            "makerworld",
+            "2953550",
+            url,
+            "https://makerworld.com/en/search/models?keyword=japandi",
+        )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            page._populate_queue(reset=True)
+            self.assertEqual(page.queue_gallery.count(), 1)
+            card = page.queue_gallery.item(0)
+            self.assertIn("japandi small key tray", card.text())
+            self.assertIn("هنوز دریافت نشده", card.text())
+
+            page.queue_select_incomplete_btn.click()
+            self.assertEqual(len(page._selected_queue_ids()), 1)
+            self.assertIn("1 انتخاب‌شده", page.queue_selected_label.text())
+        finally:
+            page.close()
+
+    def test_bulk_recovery_reuses_complete_local_product_without_network(self):
+        external_id = "520009"
+        product_id = self._create_product(external_id)
+        url = f"https://makerworld.com/en/models/{external_id}-complete-local"
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            url,
+            "phase49-3i52f-local",
+        )
+        images_dir = (
+            Path(self.db.path).resolve().parent
+            / "collected"
+            / "makerworld"
+            / external_id
+            / "images"
+        )
+        images_dir.mkdir(parents=True, exist_ok=True)
+        for index in range(1, 6):
+            Image.new("RGB", (480, 320), "white").save(
+                images_dir / f"{index}.jpg",
+                format="JPEG",
+            )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        try:
+            page._populate_queue(reset=True)
+            page.queue_select_all_btn.click()
+            page.pool.start = lambda worker: captured.append(worker)
+            with patch.object(
+                QMessageBox,
+                "question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ), patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=AssertionError("network recovery should not run"),
+            ):
+                page._recover_selected_queue()
+
+            self.assertEqual(len(captured), 1)
+            result = captured[0].fn(lambda _value, _message: None)
+            self.assertEqual(result["local_reused"], 1)
+            self.assertEqual(result["recovered"], 0)
+            self.assertEqual(result["created"], 0)
+            self.assertEqual(result["failed"], 0)
+            self.assertIn(product_id, result["product_ids"])
+        finally:
+            page.close()
+
+    def test_bulk_recovery_for_incomplete_existing_product_forces_safe_source_refetch(self):
+        external_id = "520012"
+        product_id = self._create_product(external_id)
+        self.db.update_product(
+            product_id,
+            {
+                "source_title": "",
+                "source_short_description": "",
+                "source_description": "",
+                "images_json": "[]",
+                "selected_images_json": "[]",
+            },
+        )
+        url = f"https://makerworld.com/en/models/{external_id}-broken-old-row"
+        self.db.add_discovered(
+            "makerworld",
+            external_id,
+            url,
+            "phase49-3i52f-recover",
+        )
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        calls = []
+        try:
+            page._populate_queue(reset=True)
+            page.queue_select_all_btn.click()
+            page.queue_recover_image_limit.setCurrentIndex(
+                page.queue_recover_image_limit.findData(10)
+            )
+            page.pool.start = lambda worker: captured.append(worker)
+
+            def fake_run_single(**kwargs):
+                calls.append(dict(kwargs))
+                return {
+                    "product_id": product_id,
+                    "already_collected": True,
+                    "recovered_existing": True,
+                }
+
+            with patch.object(
+                QMessageBox,
+                "question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ), patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=fake_run_single,
+            ):
+                page._recover_selected_queue()
+
+            self.assertEqual(len(captured), 1)
+            result = captured[0].fn(lambda _value, _message: None)
+            self.assertEqual(result["recovered"], 1)
+            self.assertEqual(result["failed"], 0)
+            self.assertEqual(len(calls), 1)
+            self.assertTrue(calls[0]["force_recover"])
+            self.assertEqual(calls[0]["image_limit"], 10)
+            self.assertTrue(calls[0]["download_images"])
+        finally:
+            page.close()
+
+    def test_force_recover_bypasses_terminal_identity_when_product_row_is_missing(self):
+        product_url = "https://makerworld.com/en/models/520013-orphan-ledger"
+        forced_result = {
+            "product_id": 9013,
+            "source_title": "Recovered orphan",
+            "images_found": 5,
+            "images_saved": 5,
+            "files_saved": 0,
+        }
+        with patch(
+            "qt6.acquisition_runtime.terminal_identity_state",
+            return_value="collected",
+        ), patch(
+            "qt6.acquisition_runtime._collect_one",
+            new=AsyncMock(return_value=forced_result),
+        ) as collect:
+            normal = acquisition_runtime.run_single(
+                self.db,
+                source_code="makerworld",
+                product_url=product_url,
+                image_limit=5,
+            )
+            forced = acquisition_runtime.run_single(
+                self.db,
+                source_code="makerworld",
+                product_url=product_url,
+                image_limit=5,
+                force_recover=True,
+            )
+
+        self.assertTrue(normal["already_collected"])
+        self.assertEqual(normal["product_id"], 0)
+        self.assertEqual(forced["product_id"], 9013)
+        collect.assert_awaited_once()
+
     def test_current_search_gallery_is_visual_scoped_and_click_toggle_multiselect(self):
         listing = "https://makerworld.com/en/search/models?keyword=japandi"
         for external_id in ("520010", "520011"):
