@@ -1,3 +1,9 @@
+## Current Windows checkpoint — Phase49.3I.52E / 2026-09-02
+
+Permanent Crawl image review now covers both mature historical refetch folders and current MakerWorld lazy listing thumbnails. Exact tested runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Qt `33632062812`, Single Active AI `33632062877`, Portable `33632062880` PASS; 223 portable regressions. Rollback `backup/pre-phase49-3i52e-preview-legacy-variants-20260902`.
+
+No DB migration, destructive media operation, Host change or Production write. Owner Local visual acceptance is next.
+
 ## Current Windows checkpoint — Phase49.3I.52D / 2026-09-02
 
 Owner QA exposed a compatibility bug rather than a missing download: Qt Crawl review could ignore already-downloaded mature images when the ledger row was not yet linked to a Product id.
