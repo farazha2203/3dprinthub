@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Callable
 
 from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer, QUrl
@@ -1482,7 +1483,7 @@ class OperationsPage(QWidget):
             QAbstractItemView.SelectionMode.ExtendedSelection
         )
 
-        self.queue_table = QTableWidget(0, 11)
+        self.queue_table = QTableWidget(0, 14)
         self.queue_table.setHorizontalHeaderLabels([
             "تصویر",
             "ID صف",
@@ -1492,6 +1493,9 @@ class OperationsPage(QWidget):
             "عنوان",
             "توضیح",
             "عکس",
+            "وزن g",
+            "زمان چاپ",
+            "ابعاد",
             "External ID",
             "Attempts",
             "URL / خطا",
@@ -1515,7 +1519,7 @@ class OperationsPage(QWidget):
             QHeaderView.ResizeMode.Stretch,
         )
         self.queue_table.horizontalHeader().setSectionResizeMode(
-            10,
+            13,
             QHeaderView.ResizeMode.Stretch,
         )
 
@@ -2210,6 +2214,11 @@ class OperationsPage(QWidget):
             "image_metadata_json": (
                 row.get("product_image_metadata_json") or "[]"
             ),
+            "source_specs_json": row.get("product_source_specs_json") or "{}",
+            "tags_json": row.get("product_tags_json") or "[]",
+            "dimensions": row.get("product_dimensions") or "",
+            "estimated_weight_grams": row.get("product_estimated_weight_grams") or 0,
+            "estimated_print_minutes": row.get("product_estimated_print_minutes") or 0,
         }
 
     def _queue_description(self, row: dict) -> str:
@@ -2222,6 +2231,66 @@ class OperationsPage(QWidget):
             or ""
         )
         return " ".join(str(value).split())
+
+    def _queue_dimensions(self, row: dict) -> str:
+        direct = str(row.get("product_dimensions") or "").strip()
+        if direct:
+            return direct
+        try:
+            specs = json.loads(str(row.get("product_source_specs_json") or "{}"))
+        except Exception:
+            specs = {}
+
+        def find_dimensions(node):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if "dimension" in str(key or "").casefold() or str(key or "") == "ابعاد":
+                        if isinstance(value, dict):
+                            x = value.get("x")
+                            y = value.get("y")
+                            z = value.get("z")
+                            if all(item not in (None, "") for item in (x, y, z)):
+                                unit = str(value.get("unit") or value.get("units") or "").strip()
+                                return f"{x} × {y} × {z} {unit}".strip()
+                        text = str(value or "").strip()
+                        if text:
+                            return text
+                    if isinstance(value, (dict, list)):
+                        found = find_dimensions(value)
+                        if found:
+                            return found
+            elif isinstance(node, list):
+                for value in node:
+                    found = find_dimensions(value)
+                    if found:
+                        return found
+            return ""
+
+        return str(find_dimensions(specs) or "")
+
+    def _queue_technical_summary(self, row: dict) -> str:
+        parts: list[str] = []
+        weight = float(row.get("product_estimated_weight_grams") or 0)
+        minutes = int(row.get("product_estimated_print_minutes") or 0)
+        dimensions = self._queue_dimensions(row)
+        if weight > 0:
+            parts.append(f"⚖ {weight:g} g")
+        if minutes > 0:
+            hours, remainder = divmod(minutes, 60)
+            parts.append(
+                f"⏱ {hours}h {remainder}m" if hours else f"⏱ {remainder}m"
+            )
+        if dimensions:
+            parts.append(f"📐 {dimensions}")
+        try:
+            tags = json.loads(str(row.get("product_tags_json") or "[]"))
+        except Exception:
+            tags = []
+        if isinstance(tags, list) and tags:
+            clean = [str(value).strip() for value in tags if str(value).strip()][:4]
+            if clean:
+                parts.append("🏷 " + "، ".join(clean))
+        return " • ".join(parts)
 
     def _queue_image_count(self, row: dict) -> int:
         if not row.get("product_id"):
@@ -2345,6 +2414,7 @@ class OperationsPage(QWidget):
                 gallery_item = QListWidgetItem()
                 gallery_item.setData(Qt.ItemDataRole.UserRole, queue_id)
                 gallery_item.setIcon(icon)
+                technical_summary = self._queue_technical_summary(row)
                 gallery_lines = [
                     str(title),
                     (
@@ -2353,6 +2423,8 @@ class OperationsPage(QWidget):
                         else f"🔗 {source} • {status} • برای عکس/متن ابتدا دریافت شود"
                     ),
                 ]
+                if technical_summary:
+                    gallery_lines.append(technical_summary)
                 if short_description:
                     gallery_lines.append(short_description)
                 gallery_item.setText("\n".join(gallery_lines))
@@ -2383,6 +2455,14 @@ class OperationsPage(QWidget):
                 image_item.setData(Qt.ItemDataRole.UserRole, queue_id)
                 self.queue_table.setItem(row_index, 0, image_item)
 
+                weight = float(row.get("product_estimated_weight_grams") or 0)
+                minutes = int(row.get("product_estimated_print_minutes") or 0)
+                dimensions = self._queue_dimensions(row)
+                if minutes > 0:
+                    hours, remainder = divmod(minutes, 60)
+                    time_label = f"{hours}h {remainder}m" if hours else f"{remainder}m"
+                else:
+                    time_label = ""
                 values = [
                     str(queue_id),
                     source,
@@ -2391,6 +2471,9 @@ class OperationsPage(QWidget):
                     str(title or ""),
                     short_description,
                     str(image_count),
+                    f"{weight:g}" if weight > 0 else "",
+                    time_label,
+                    dimensions,
                     str(row.get("external_id") or ""),
                     str(row.get("attempts") or 0),
                     url_or_error,
@@ -2404,7 +2487,7 @@ class OperationsPage(QWidget):
                         )
                     if offset == 6 and description:
                         item.setToolTip(description[:1200])
-                    if offset == 10:
+                    if offset == 13:
                         item.setToolTip(url_or_error)
                     self.queue_table.setItem(row_index, offset, item)
                 self.queue_table.setRowHeight(row_index, 64)
