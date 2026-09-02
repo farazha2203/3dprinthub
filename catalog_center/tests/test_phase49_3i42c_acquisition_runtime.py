@@ -15,6 +15,7 @@ from app.phase49_3i45_incremental_discovery_intelligence import (
     ensure_schema as ensure_incremental_schema,
 )
 from qt6 import acquisition_runtime
+from qt6.parity_core import ensure_qt_parity_schema
 
 
 class _FakeModernClient:
@@ -433,7 +434,9 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
         )
 
     def test_crawl_inventory_exposes_image_and_source_technical_facts(self):
-        acquisition_runtime.ensure_epic49_desktop_schema(self.db)
+        # Mirror the real Qt runtime schema composition. A bare Database()
+        # intentionally does not install later image/profile parity columns.
+        ensure_qt_parity_schema(self.db)
         url = self._model(4901)[1]
         self.db.upsert_product(
             {
