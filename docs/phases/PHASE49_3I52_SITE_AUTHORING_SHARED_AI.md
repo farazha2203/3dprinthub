@@ -287,3 +287,51 @@ Verification:
 ERR-49-099 records and closes the intermediate raw-JavaScript string delimiter mistake; final CI passed after correction.
 
 No database migration, media rewrite, Host source change, Production deploy or Production MySQL write was performed.
+
+
+## 3I.52F — Bulk recovery for incomplete permanent Crawl rows
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Requested operator workflow:
+- select many permanent Crawl rows;
+- select incomplete rows automatically;
+- choose 5 or 10 images;
+- reuse already-downloaded local evidence when complete;
+- otherwise revisit each Product source URL and recover Product title/description/images;
+- explicitly repair previously-collected-but-broken identities instead of being stopped forever by terminal-ledger deduplication.
+
+Mature precedent:
+the previous Tk application already provided `bulk_refetch_selected()` and used `merge_refetch()` to protect operator changes. Qt 3I.52F extends the same safety boundary to Crawl inventory.
+
+Implemented:
+- `انتخاب ناقص‌ها` on loaded permanent inventory rows;
+- image target combo 5/10/20;
+- `بازیابی دیتا + عکس` bulk action;
+- complete Product + sufficient local files is reused without network;
+- incomplete existing Product uses safe source refetch;
+- explicit `force_recover` bypasses terminal identity skip only for this operator-triggered repair action;
+- if an existing Product is found, force recovery routes through safe `refetch_product_from_source_async` rather than raw upsert;
+- blocked Product cannot be silently revived;
+- orphan ledger identity with no Product can be rebuilt;
+- Product URL slug supplies readable fallback title before full receive;
+- queue actions are split into two rows to avoid crowding;
+- old queue status button is renamed `بازگردانی به صف`.
+
+Rollback:
+`backup/pre-phase49-3i52f-bulk-recover-incomplete-20260902` → `f35bd3e409c4293a756ddfe2fc9d4f7dcb968445`.
+
+Verification:
+- exact tested runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`;
+- Qt full parity `33637452385` PASS;
+- dedicated 3I.52 suite 19 tests PASS;
+- Single Active AI `33637452588` PASS;
+- Windows Portable `33637452243` PASS;
+- Portable release regression 227 tests PASS;
+- artifact `9849484898`;
+- EXE SHA256 `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`.
+
+ERR-49-100 and ERR-49-101 record the two test-fixture failures encountered and corrected before final PASS.
+
+No Django/Catalog migration, destructive media operation, Host source change, Production deploy or Production MySQL write was performed.
