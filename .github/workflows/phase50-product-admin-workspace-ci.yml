@@ -57,6 +57,7 @@ on:
       - store/migrations/0039_phase50_filament_offer_pricing.py
       - store/migrations/0041_phase50_filament_visual_identity.py
       - scripts/host/phase49_3i53_partial_0039_resume.sh
+      - scripts/ci/phase49_3i53_mysql_addfield_probe.py
       - store/test_phase49_3i53_mysql_partial_migration.py
       - store/epic49_catalog_admin.py
       - website/templatetags/admin_console.py
