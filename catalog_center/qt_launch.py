@@ -79,6 +79,9 @@ def main(argv=None) -> int:
         print("QT6_PRODUCT_LIFECYCLE_BULK_ACTIONS=ENABLED", flush=True)
         print("QT6_PRODUCT_STATUS_BORDER_SEO=ENABLED", flush=True)
         print("QT6_SLIDER_DIRECT_INPUT_UX=ENABLED", flush=True)
+        print("QT6_SEARCH_LINK_REVIEW_AI=ENABLED", flush=True)
+        print("QT6_FILAMENT_BRAND_COLOR_REGISTRY=ENABLED", flush=True)
+        print("QT6_PUBLISHED_REPUBLISH_UPDATE=ENABLED", flush=True)
         print(f"QT6_ROUTES={len(contract['routes'])}", flush=True)
         print(f"QT6_ACTIONS={contract['action_count']}", flush=True)
         print(f"QT6_CORES={len(contract['core_names'])}", flush=True)
@@ -100,6 +103,10 @@ def main(argv=None) -> int:
                 raise RuntimeError("Qt6 Product lifecycle bulk core missing")
             if not hasattr(kernel.products, "remove_many"):
                 raise RuntimeError("Qt6 Product reject/tombstone core missing")
+            if not hasattr(kernel.filaments, "brands") or not hasattr(kernel.filaments, "color_presets"):
+                raise RuntimeError("Qt6 Filament brand/color registry core missing")
+            if not hasattr(kernel, "complete_products_with_ai"):
+                raise RuntimeError("Qt6 Search-Link collect+AI completion core missing")
             print("QT6_FOUNDATION_VERIFY=OK", flush=True)
             print("QT6_42B2_FULL_PARITY_VERIFY=OK", flush=True)
             window.close()
