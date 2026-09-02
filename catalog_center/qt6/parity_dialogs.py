@@ -115,8 +115,15 @@ class FilamentEditorDialog(QDialog):
         ("هفت‌رنگ", ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#06B6D4", "#3B82F6", "#A855F7"]),
     )
 
-    def __init__(self, row: dict[str, Any] | None = None, parent=None) -> None:
+    def __init__(
+        self,
+        row: dict[str, Any] | None = None,
+        parent=None,
+        *,
+        filament_core=None,
+    ) -> None:
         super().__init__(parent)
+        self.filament_core = filament_core
         self.row = dict(row or {})
         self._palette: list[str] = []
         self._image_path = str(self.row.get("filament_image_path") or "").strip()
@@ -131,8 +138,21 @@ class FilamentEditorDialog(QDialog):
         identity = QGroupBox("هویت و نمایش رنگ")
         form = QFormLayout(identity)
         self.brand = QLineEdit()
+        self.brand_library = QComboBox()
+        self.brand_library.addItem("انتخاب برند ثبت‌شده…", "")
+        if self.filament_core is not None:
+            for value in self.filament_core.brands():
+                self.brand_library.addItem(str(value), str(value))
+        self.brand_library.currentIndexChanged.connect(self._brand_library_changed)
+
         self.material = QLineEdit()
         self.color = QLineEdit()
+        self.color_library = QComboBox()
+        self.color_library.addItem("انتخاب رنگ ثبت‌شده…", None)
+        if self.filament_core is not None:
+            for preset in self.filament_core.color_presets():
+                self.color_library.addItem(str(preset.get("name") or ""), dict(preset))
+        self.color_library.currentIndexChanged.connect(self._color_library_changed)
 
         self.color_type = QComboBox()
         for code, label in COLOR_BEHAVIORS:
@@ -161,8 +181,10 @@ class FilamentEditorDialog(QDialog):
             palette_layout.addWidget(button)
         palette_layout.addStretch(1)
 
+        form.addRow("برند ثبت‌شده", self.brand_library)
         form.addRow("برند", self.brand)
         form.addRow("متریال", self.material)
+        form.addRow("رنگ ثبت‌شده", self.color_library)
         form.addRow("نام رنگ", self.color)
         form.addRow("رفتار رنگ", self.color_type)
         form.addRow("نوع سطح / Finish", self.color_finish)
@@ -333,6 +355,31 @@ class FilamentEditorDialog(QDialog):
             int(float(row.get("preheat_hourly_rate") or 0))
         )
 
+    def _brand_library_changed(self, index: int) -> None:
+        value = str(self.brand_library.itemData(index) or "").strip()
+        if value:
+            self.brand.setText(value)
+
+    def _color_library_changed(self, index: int) -> None:
+        preset = self.color_library.itemData(index)
+        if not isinstance(preset, dict):
+            return
+        name = str(preset.get("name") or "").strip()
+        if name:
+            self.color.setText(name)
+        kind = str(preset.get("color_type") or "solid")
+        kind_index = self.color_type.findData(kind)
+        if kind_index >= 0:
+            self.color_type.setCurrentIndex(kind_index)
+        finish = str(preset.get("color_finish") or "matte")
+        finish_index = self.color_finish.findData(finish)
+        if finish_index >= 0:
+            self.color_finish.setCurrentIndex(finish_index)
+        palette = normalize_palette_hexes(preset.get("palette_hexes") or [])
+        if palette:
+            self._palette = palette
+            self._refresh_palette_buttons()
+
     def _preset_changed(self, index: int) -> None:
         values = self.preset.itemData(index)
         if isinstance(values, list) and values:
@@ -438,6 +485,18 @@ class FilamentEditorDialog(QDialog):
                 "حداقل یک رنگ از پالت انتخاب کن.",
             )
             return
+        if self.filament_core is not None:
+            try:
+                self.filament_core.add_brand(self.brand.text().strip())
+                self.filament_core.save_color_preset({
+                    "name": self.color.text().strip(),
+                    "color_type": self.color_type.currentData(),
+                    "color_finish": self.color_finish.currentData(),
+                    "palette_hexes": normalize_palette_hexes(self._palette),
+                })
+            except Exception as exc:
+                QMessageBox.warning(self, "کتابخانه برند/رنگ", str(exc))
+                return
         self.accept()
 
     def values(self) -> dict[str, Any]:
@@ -466,6 +525,114 @@ class FilamentEditorDialog(QDialog):
             "preheat_hours": self.preheat_hours.value(),
             "preheat_temperature_c": self.preheat_temp.value(),
             "preheat_hourly_rate": self.preheat_hourly.value(),
+        }
+
+
+class ColorPresetDialog(QDialog):
+    """Reusable site-facing color identity without Filament pricing fields."""
+
+    def __init__(self, preset: dict[str, Any] | None = None, parent=None) -> None:
+        super().__init__(parent)
+        self.original = dict(preset or {})
+        self._palette = normalize_palette_hexes(self.original.get("palette_hexes") or [])
+        self.setWindowTitle("رنگ — پالت، رفتار و Finish")
+        self.resize(760, 360)
+
+        root = QVBoxLayout(self)
+        form = QFormLayout()
+        self.name = QLineEdit(str(self.original.get("name") or ""))
+        self.color_type = QComboBox()
+        for code, label in COLOR_BEHAVIORS:
+            self.color_type.addItem(label, code)
+        self.color_finish = QComboBox()
+        for code, label in COLOR_FINISHES:
+            self.color_finish.addItem(label, code)
+
+        kind = str(self.original.get("color_type") or "solid")
+        index = self.color_type.findData(kind)
+        self.color_type.setCurrentIndex(index if index >= 0 else 0)
+        finish = str(self.original.get("color_finish") or "matte")
+        index = self.color_finish.findData(finish)
+        self.color_finish.setCurrentIndex(index if index >= 0 else 0)
+
+        palette_host = QWidget()
+        palette_layout = QHBoxLayout(palette_host)
+        palette_layout.setContentsMargins(0, 0, 0, 0)
+        self.palette_buttons: list[QPushButton] = []
+        for slot in range(7):
+            button = QPushButton(f"رنگ {slot + 1}")
+            button.setMinimumWidth(82)
+            button.clicked.connect(
+                lambda _checked=False, index=slot: self._pick_color(index)
+            )
+            self.palette_buttons.append(button)
+            palette_layout.addWidget(button)
+        palette_layout.addStretch(1)
+
+        form.addRow("نام رنگ", self.name)
+        form.addRow("رفتار رنگ", self.color_type)
+        form.addRow("Finish", self.color_finish)
+        form.addRow("پالت سایت (حداکثر ۷)", palette_host)
+        root.addLayout(form)
+
+        hint = QLabel(
+            "برای تک‌رنگ یک خانه، برای دو/چندرنگ چند خانه و برای Gradient/Color Shift "
+            "ترتیب رنگ‌ها را از ابتدا تا انتها انتخاب کن."
+        )
+        hint.setWordWrap(True)
+        hint.setObjectName("Muted")
+        root.addWidget(hint)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText("ذخیره رنگ")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("انصراف")
+        buttons.accepted.connect(self._accept)
+        buttons.rejected.connect(self.reject)
+        root.addWidget(buttons)
+        self._refresh_palette_buttons()
+
+    def _pick_color(self, slot: int) -> None:
+        initial = self._palette[slot] if slot < len(self._palette) else "#FFFFFF"
+        chosen = QColorDialog.getColor(QColor(initial), self, f"انتخاب رنگ {slot + 1}")
+        if not chosen.isValid():
+            return
+        while len(self._palette) <= slot:
+            self._palette.append("")
+        self._palette[slot] = chosen.name().upper()
+        self._palette = normalize_palette_hexes(self._palette)
+        self._refresh_palette_buttons()
+
+    def _refresh_palette_buttons(self) -> None:
+        for index, button in enumerate(self.palette_buttons):
+            value = self._palette[index] if index < len(self._palette) else ""
+            button.setText(value or f"رنگ {index + 1}")
+            if value:
+                color = QColor(value)
+                text = "#111827" if color.lightness() > 150 else "#FFFFFF"
+                button.setStyleSheet(
+                    f"background:{value};color:{text};font-weight:700;"
+                )
+            else:
+                button.setStyleSheet("")
+
+    def _accept(self) -> None:
+        if not self.name.text().strip():
+            QMessageBox.warning(self, "رنگ", "نام رنگ الزامی است.")
+            return
+        if not self._palette:
+            QMessageBox.warning(self, "رنگ", "حداقل یک رنگ از Color Picker انتخاب کن.")
+            return
+        self.accept()
+
+    def values(self) -> dict[str, Any]:
+        return {
+            "name": self.name.text().strip(),
+            "color_type": str(self.color_type.currentData() or "solid"),
+            "color_finish": str(self.color_finish.currentData() or "matte"),
+            "palette_hexes": normalize_palette_hexes(self._palette),
         }
 
 
