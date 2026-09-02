@@ -321,6 +321,43 @@ def _candidate_title(text: str, external_id: str) -> str:
     return f"MakerWorld model {external_id}" if external_id else "3D model"
 
 
+def _srcset_urls(value: str) -> list[str]:
+    output: list[str] = []
+    for part in str(value or "").split(","):
+        token = part.strip().split(None, 1)[0] if part.strip() else ""
+        if is_http_url(token) and token not in output:
+            output.append(token)
+    return output
+
+
+def _dom_thumbnail_url(row: dict) -> str:
+    data = dict(row or {})
+    candidates: list[str] = []
+
+    for key in (
+        "image",
+        "src",
+        "data_src",
+        "data_original",
+        "data_lazy_src",
+    ):
+        value = str(data.get(key) or "").strip()
+        if is_http_url(value) and value not in candidates:
+            candidates.append(value)
+
+    for key in ("srcset", "source_srcset"):
+        for value in reversed(_srcset_urls(str(data.get(key) or ""))):
+            if value not in candidates:
+                candidates.append(value)
+
+    background = str(data.get("background") or "")
+    for value in re.findall(r"https?://[^\\s'\")]+", background, re.I):
+        if is_http_url(value) and value not in candidates:
+            candidates.append(value)
+
+    return candidates[0] if candidates else ""
+
+
 def candidates_from_dom_rows(rows: list[dict], model_pattern: str, discovered_from: str, source_code: str, limit: int) -> list[dict]:
     regex = re.compile(model_pattern, re.I)
     output = []
@@ -340,19 +377,18 @@ def candidates_from_dom_rows(rows: list[dict], model_pattern: str, discovered_fr
         if identity in seen:
             continue
         seen.add(identity)
-        image_url = str((row or {}).get("image") or "").strip()
+        image_url = _dom_thumbnail_url(dict(row or {}))
         output.append({
             "source_code": source_code,
             "external_id": external_id,
             "source_url": matched_url,
             "source_title": _candidate_title(str((row or {}).get("text") or ""), external_id),
-            "thumbnail_url": image_url if is_http_url(image_url) else "",
+            "thumbnail_url": image_url,
             "discovered_from": discovered_from,
         })
         if len(output) >= max(1, int(limit)):
             break
     return output
-
 
 async def discover_preview_candidates(
     listing_url: str,
@@ -394,10 +430,19 @@ async def discover_preview_candidates(
                 """els => els.map(a => {
                     const host = a.closest('article, li, [class*="card"], [class*="model"], [class*="item"]') || a.parentElement || a;
                     const img = (host && host.querySelector('img')) || a.querySelector('img');
+                    const source = host ? host.querySelector('picture source') : null;
+                    const styled = host ? host.querySelector('[style*="background-image"]') : null;
                     return {
                         href: a.href || '',
-                        text: ((a.innerText || '') + '\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
-                        image: img ? (img.currentSrc || img.src || img.getAttribute('data-src') || '') : ''
+                        text: ((a.innerText || '') + '\\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
+                        image: img ? (img.currentSrc || '') : '',
+                        src: img ? (img.getAttribute('src') || '') : '',
+                        data_src: img ? (img.getAttribute('data-src') || '') : '',
+                        data_original: img ? (img.getAttribute('data-original') || '') : '',
+                        data_lazy_src: img ? (img.getAttribute('data-lazy-src') || '') : '',
+                        srcset: img ? (img.getAttribute('srcset') || '') : '',
+                        source_srcset: source ? (source.getAttribute('srcset') || '') : '',
+                        background: styled ? (styled.style.backgroundImage || '') : ''
                     };
                 })"""
             )
