@@ -198,3 +198,50 @@ Final verification:
 - EXE SHA256 `cd54431bd29bad76990c17eb818671e3f32c4d53a244cdc07132f5d93a532f4b`.
 
 No Django migration, Host source change, Production deploy or Production MySQL write was performed.
+
+
+## 3I.52D — Mature collected-image path parity + numeric control layout
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Owner foreground QA proved a remaining compatibility gap in Add Products / Crawl: real downloaded image files from the mature Catalog Center existed, but unlinked Crawl rows still rendered `Preview تصویر ندارد`. The receive-count QSpinBoxes also overlapped in RTL on Windows.
+
+Verified mature path:
+- persistent Catalog root: `D:\projects\3dprinthub-catalog-manager`;
+- downloaded Product folder: `collected\<source_code>\<external_id>`;
+- original images: `images`;
+- finalized images: `seo_images`;
+- retained old installed application root: `D:\projects\3dprinthub_catalog_center`, read-only compatibility only.
+
+Root cause:
+- Qt image lookup was Product-id-gated for Crawl rows;
+- unlinked old ledger identities skipped mature local files and checked only the newer discovery Preview cache;
+- source-code matching was case-sensitive;
+- RTL QSpinBox arrow/text geometry was not normalized.
+
+Implemented:
+- read-only identity-based local image discovery rooted at the active Catalog SQLite parent;
+- Product local_dir remains first authority;
+- `seo_images` is preferred before original `images`;
+- unlinked Crawl rows can show/count mature downloaded local images;
+- live review can show those actual files before Product linkage;
+- source-code Product resolution uses case-insensitive matching within the bounded page resolver;
+- no Product record or image file is moved/rewritten to make the display work;
+- requested Product count and image-limit QSpinBoxes are LTR, centered, width-bounded and padded from Windows arrow controls;
+- receive form grid spacing and editable-column stretch are explicit.
+
+Rollback:
+`backup/pre-phase49-3i52d-legacy-image-path-layout-20260902` → `28b51d2f95b272d3bf6311fb02f55a7a4fa808e4`.
+
+Verification:
+- exact runtime `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`;
+- Qt `33628825851` PASS;
+- dedicated 3I.52C/52D suite: 13 tests PASS;
+- Single Active AI `33628825772` PASS;
+- Windows Portable `33628825715` PASS;
+- Portable release regression: 221 tests PASS;
+- artifact id `9846044486`;
+- EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`.
+
+No Django migration, Catalog migration, destructive file operation, Host source change, Production deploy or Production MySQL write was performed.
