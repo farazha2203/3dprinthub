@@ -264,6 +264,11 @@ def resolve_product_model(*, force_refresh: bool = False) -> RuntimeSelection:
         or ""
     ).strip()
     if explicit_model:
+        if _is_variable_router(explicit_model):
+            raise RuntimeError(
+                "AI_SITE_PRODUCT_MODEL must be one exact model id; variable "
+                "OpenRouter free/auto routers are not valid Product models."
+            )
         return RuntimeSelection(
             provider=provider,
             model=explicit_model,

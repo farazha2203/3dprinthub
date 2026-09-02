@@ -321,6 +321,20 @@ class Phase493I52SiteAuthoringAITests(TestCase):
 
 
 class Phase493I52ModelPolicyTests(TestCase):
+    def test_explicit_variable_openrouter_router_is_rejected_for_product_work(self):
+        model_policy._SELECTION_CACHE.clear()
+        with patch.dict(
+            "os.environ",
+            {
+                "AI_SITE_PROVIDER": "openrouter",
+                "OPENROUTER_API_KEY": "ci-fake-key",
+                "AI_SITE_PRODUCT_MODEL": "openrouter/free",
+            },
+            clear=False,
+        ):
+            with self.assertRaises(RuntimeError):
+                model_policy.resolve_product_model(force_refresh=True)
+
     def test_auto_policy_prefers_exact_verified_free_persian_structured_model(self):
         model_policy._SELECTION_CACHE.clear()
 
