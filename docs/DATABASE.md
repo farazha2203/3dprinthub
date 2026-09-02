@@ -1,3 +1,32 @@
+## 2026-09-02 — Phase49.3I.53 Site receiver database gate
+
+Phase49.3I.53 adds **no new Django migration**. Its purpose is to prove the live Site receiver is structurally ready before Catalog Center sends a Product.
+
+The authenticated readiness endpoint requires the existing migration chain:
+- `store.0036_phase50_checkout_snapshot`;
+- `store.0037_phase50_professional_commerce_policy`;
+- `store.0038_phase50_profile_matrix`;
+- `store.0039_phase50_filament_offer_pricing`;
+- `store.0040_phase50_filament_offer_operations`;
+- `store.0041_phase50_filament_visual_identity`;
+- `website.0024_phase49_3i51_material_catalog_description`;
+- `store.0042_phase49_3i51_filament_registry_descriptions`.
+
+Receiver schema evidence is checked through Django introspection for the fields used by the current Product/Profile/Filament publishing contract.
+
+Production truth is unchanged until Host audit:
+- last verified app commit: `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- last verified Store migration: `0035`;
+- later migrations are NOT assumed applied.
+
+Migration risk note:
+- 0036/0038/0039/0040/website.0024 are additive field work;
+- 0037 also backfills fixed Product pricing policy and creates missing safe shipping presets;
+- 0041 normalizes existing MaterialColorOption visual identity/palette/brand aliases row-by-row;
+- 0042 creates FilamentBrand, adds Filament description and seeds brands from existing options.
+
+Therefore fresh source/environment/MySQL backups with non-empty/checksum verification are mandatory before Production migration. The repository read-only audit gathers the exact current `showmigrations` and `migrate --plan` first; no migration is approved merely because CI SQLite passed.
+
 ## 2026-09-02 — Phase49.3I.52 bidirectional Product sync database contract
 
 Phase49.3I.52/3I.52B adds no new Django migration and no destructive Catalog SQLite migration.

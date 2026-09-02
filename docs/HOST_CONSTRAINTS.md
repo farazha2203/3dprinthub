@@ -1,3 +1,24 @@
+## Phase49.3I.53 receiver/deploy constraint — 2026-09-02
+
+Before any new Product-receiver deployment, run the repository-owned read-only audit:
+`scripts/host/phase49_3i53_production_readonly_audit.sh`.
+
+The audit must prove:
+- exact Host root/repository/current HEAD and clean worktree;
+- live GitHub target SHA;
+- Production Python/Django;
+- effective DB vendor `mysql` and exact database `sfkilvrs_EmiAdmin_3dprinthub`;
+- `manage.py check`, `makemigrations --check --dry-run`, actual `showmigrations store website`, and `migrate --plan`;
+- effective Static/Media/Private/Pending paths;
+- Bridge token configured state without printing the secret;
+- active Material/PrintQuality prerequisites;
+- relevant receiver schema evidence;
+- disk/inodes and `mysqldump` availability.
+
+A passing script means only **read-only pre-deploy evidence is complete**. It does not authorize migration by itself. Because 0037/0041/0042 contain data operations, a fresh verified MySQL dump and rollback source/environment backups are mandatory before deployment/migration.
+
+The Desktop receiver-readiness endpoint is a second fail-closed gate: even after Bridge health succeeds, Product FTP/upload must not start unless the live Site reports `ready=true`.
+
 # HOST / PRODUCTION CONSTRAINTS
 
 Last Verified From Project Source of Truth: 2026-08-26.

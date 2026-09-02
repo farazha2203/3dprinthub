@@ -1,3 +1,21 @@
+## Continuation checkpoint — 2026-09-02 / Phase49.3I.53 Site receiver readiness
+
+Owner moved the active goal from Crawl recovery to making the Site/Host ready for real Product publishing.
+
+Final code checkpoint `62ce5c3393a888cc1a027e4ca6bbb88f189bc845` adds:
+- authenticated Site publish-readiness endpoint;
+- live migration/schema/storage/token/prerequisite checks;
+- Desktop fail-closed readiness call before FTP;
+- separate Bridge-health vs publish-readiness UX;
+- compatibility state for old Site health + missing readiness endpoint;
+- repository-owned Production read-only audit.
+
+Existing Batch 8.5 → FTP → Bridge → canonical Product/Profile/Variant → Store/public verification → strict ACK remains the only publish path.
+
+Evidence: Site `33652584032`, Variant/Profile `33652583964`, audit `33652996666`, Qt `33653229142`, Single Active AI `33653229219`, Portable `33653229400` PASS; 235 portable regressions; artifact `9855771656`, SHA256 `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`.
+
+Production/Host/MySQL are still untouched. Next operation is read-only audit of the actual cPanel Host before backups/deploy/migrations.
+
 ## Continuation checkpoint — 2026-09-02 / Phase49.3I.52G
 
 Windows Catalog Center runtime `bf1fafdb38233a23e13a5715ffac72f772412005` addresses owner evidence where MakerWorld Crawl discovery succeeds but Product rows fail with no image.

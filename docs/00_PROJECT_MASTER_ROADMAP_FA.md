@@ -1,3 +1,15 @@
+## Current Site/Host checkpoint — Phase49.3I.53 / 2026-09-02
+
+Immediate priority is now enabling safe Windows → Site Product publishing.
+
+3I.53 adds a live authenticated receiver-readiness contract before FTP. The Site proves required migrations/schema/storage/Bridge-token/prerequisites; Windows refuses Product upload when the receiver is not ready. Bridge health remains independent so an older Site can be recognized as connected while publishing stays blocked.
+
+A repository-owned Production read-only audit now verifies the real Host/MySQL/migration/storage/backup-tool state before any deploy. No Host change has been made yet.
+
+Final code `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`: Site `33652584032`, Variant/Profile `33652583964`, audit contract `33652996666`, Qt `33653229142`, Single Active AI `33653229219`, Portable `33653229400` PASS; 235 portable regressions; artifact `9855771656`.
+
+Production still last-verified at `c283864290f9c989a9fcdf24ee8eef519560e917` and Store migration 0035. Next is read-only Host evidence, then fresh backups and controlled deployment only if the evidence matches the documented plan.
+
 ## Current Windows checkpoint — Phase49.3I.52G / 2026-09-02
 
 MakerWorld QA proved Crawl discovery can succeed while full Product data/image acquisition fails. 52G separates those stages, adds redacted per-method JSONL diagnostics, factual Product quality gates, adaptive failover across distinct mature receive methods, successful-method stickiness and a circuit breaker that leaves later selected rows untouched after one Product exhausts all real methods.

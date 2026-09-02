@@ -1,3 +1,16 @@
+## Phase49.3I.53 Site/Host paths — 2026-09-02
+Production read-only audit runner in Repository: `scripts/host/phase49_3i53_production_readonly_audit.sh`.
+Site receiver readiness endpoint after deploy: `https://3dprinthub.ir/api/catalog-bridge/v1/publish-readiness/`.
+The runner is executed from the verified GitHub commit without permanently editing Production source during the audit.
+
+Current 3I.53 final code checkpoint: `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`.
+Current 3I.53 Site/Product Admin run: `33652584032` PASS.
+Current 3I.53 Qt run: `33653229142` PASS.
+Current 3I.53 Portable run: `33653229400` PASS.
+Current Windows packaged runtime: `62ce5c3393a888cc1a027e4ca6bbb88f189bc845`.
+Windows artifact ID: `9855771656`.
+Windows EXE SHA256: `a6bebd3c10a56aac1c65a58d5ffb1029382e98c7b0782a4b034a315e60c2f1ed`.
+
 # PROJECT PATHS AND ENVIRONMENTS
 
 Last Verified: 2026-09-02 from Repository + GitHub Actions + prior owner Production verification. Re-verify actual Local/Host state again before operations.
