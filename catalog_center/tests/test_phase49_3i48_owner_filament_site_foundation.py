@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 
 from app.db import Database
 from qt6.kernel import build_kernel
+from qt6.parity_dialogs import FilamentEditorDialog
 from qt6.product_wizard import ProductWizardPage
 
 
@@ -208,6 +209,66 @@ class Phase493I48OwnerFilamentSiteFoundationTests(unittest.TestCase):
             ["#F15D9C", "#7C3AED"],
         )
         self.assertEqual(float(item["effective_sale_price_per_gram"]), 4000.0)
+
+    def test_filament_editor_constructs_palette_host_and_remains_editable(self):
+        dialog = FilamentEditorDialog(parent=None)
+        try:
+            self.assertEqual(dialog.windowTitle(), "فیلامنت — هویت، رنگ، موجودی و قیمت")
+            self.assertEqual(len(dialog.palette_buttons), 7)
+        finally:
+            dialog.close()
+
+    def test_profile_bootstrap_reads_structured_dimensions_weight_time_and_real_filaments(self):
+        self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Bambu Lab",
+                "color": "Pastel Pink",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#F7C9D9"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 1_500_000,
+            }
+        )
+        product_id = self._make_product("3148010")
+        self.db.update_product(
+            product_id,
+            {
+                "source_description": "Printable in PLA for this model.",
+                "source_specs_json": json.dumps(
+                    {
+                        "dimensions": {
+                            "x": 120,
+                            "y": 80,
+                            "z": 35,
+                            "unit": "mm",
+                        }
+                    },
+                    ensure_ascii=False,
+                ),
+                "estimated_weight_grams": 42.5,
+                "estimated_print_minutes": 135,
+            },
+        )
+
+        result = self.kernel.commerce.bootstrap_from_source(
+            product_id,
+            self.kernel.filaments.list(),
+        )
+        profiles = self.kernel.commerce.profiles(product_id)
+
+        self.assertTrue(result["changed"])
+        self.assertEqual(result["dimensions_cm"], [12.0, 8.0, 3.5])
+        self.assertEqual(result["weight_grams"], 42.5)
+        self.assertEqual(result["print_time_minutes"], 135)
+        self.assertEqual(result["matched_offer_count"], 1)
+        self.assertEqual(len(profiles), 1)
+        self.assertEqual(float(profiles[0]["part_length_cm"]), 12.0)
+        self.assertEqual(float(profiles[0]["part_width_cm"]), 8.0)
+        self.assertEqual(float(profiles[0]["part_height_cm"]), 3.5)
+        self.assertEqual(len(profiles[0]["material_options"]), 1)
+        self.assertEqual(profiles[0]["material_options"][0]["brand"], "Bambu Lab")
 
     def test_stage3_save_does_not_cross_write_locked_slider_stage(self):
         product_id = self._make_product("3148003")
