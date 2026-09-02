@@ -560,7 +560,20 @@ class StageCore:
             return _row_dict(row)
 
         before = _row_dict(row)
+        changed = any(before.get(key) != value for key, value in allowed.items())
         self.db.update_product(int(product_id), allowed)
+        if (
+            changed
+            and str(before.get("server_id") or "").strip()
+            and str(before.get("workflow_status") or "").strip().lower() == "uploaded"
+        ):
+            # Editing a published Product is an update, not a duplicate publish.
+            # Clear the prior ready tick and require the guarded publish flow to
+            # resend the same source identity/server-linked Product.
+            self.db.update_product(
+                int(product_id),
+                {"needs_update": 1, "upload_ready": 0},
+            )
         after = _row_dict(self.db.product(int(product_id)))
         try:
             self.db.save_history(
