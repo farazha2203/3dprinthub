@@ -2,14 +2,16 @@
 - restored Preview-first visual cards in Add Product/Crawl so Product title/thumbnail is visible before full receive;
 - current Search now clears the previous live result workspace and remains scoped to that Search/Listing URL;
 - cards report image state/count and full receive emits per-image progress such as 3/5 and 5/5;
+- selected collected Product now exposes an actual local image review strip with total image count and local-displayable file count;
+- shortened dense receive/bulk button labels while keeping complete behavior descriptions in tooltips;
 - restored explicit Qt MultiSelection, select-all/clear and selected-count feedback for current Search and persistent Crawl inventory;
 - selected transfer now returns Product ids and navigates to Products; already-collected identities route to their existing Product;
 - persistent Crawl inventory reuses discovery-candidate/legacy Preview title and thumbnail evidence;
 - added explicit Product source action `دریافت داده و عکس بیشتر از لینک محصول` with source-only safe recovery that preserves operator Persian content, final price, sale approval and publish state;
 - added dedicated 3I.52C regression coverage;
 - fixed ERR-49-097: Portable release regression now installs the Qt requirements required by the new Qt test instead of dropping the regression;
-- Qt run `33624135672`, Single Active AI `33625043627`, and Windows Portable `33625043651` PASS;
-- Portable release regression: 215 tests PASS; artifact id `9844568575`; EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`;
+- Qt run `33625257602`, Single Active AI `33625257485`, and Windows Portable `33625257693` PASS;
+- Portable release regression: 217 tests PASS; artifact id `9844598171`; EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
 - no Django migration, Host change, Production deploy or Production MySQL write.
 
 ## 2026-09-02 — Phase49.3I.52 / 3I.52B
