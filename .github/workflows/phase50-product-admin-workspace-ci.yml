@@ -15,6 +15,12 @@ on:
       - store/test_phase50_profile_matrix.py
       - store/test_phase50_filament_offer_operations.py
       - catalog_bridge/unified_views.py
+      - catalog_center/app/epic49_site_sync.py
+      - store/phase49_3i49_admin_control.py
+      - website/phase49_3i49_admin_control.py
+      - website/apps.py
+      - store/apps.py
+      - store/test_phase49_3i49_site_publish_admin_sync.py
       - templates/store/product_detail.html
       - static/store/js/phase50-profile-selector.js
       - website/admin.py
@@ -73,6 +79,12 @@ jobs:
             store/phase50_profile_matrix.py \
             store/phase50_variant_views.py \
             catalog_bridge/unified_views.py \
+            catalog_center/app/epic49_site_sync.py \
+            store/phase49_3i49_admin_control.py \
+            website/phase49_3i49_admin_control.py \
+            website/apps.py \
+            store/apps.py \
+            store/test_phase49_3i49_site_publish_admin_sync.py \
             website/admin.py \
             store/phase50_product_admin_workspace.py \
             store/phase50_filament_offer.py \
@@ -105,6 +117,7 @@ jobs:
             store.test_phase50_admin_http_regression \
             store.test_phase50_profile_matrix \
             store.test_phase50_filament_offer_operations \
+            store.test_phase49_3i49_site_publish_admin_sync \
             -v 2
 
       - name: Gate marker
