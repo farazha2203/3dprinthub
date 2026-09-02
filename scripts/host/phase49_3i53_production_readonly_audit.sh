@@ -5,9 +5,9 @@ umask 077
 ROOT="/home/sfkilvrs/3dprinthub"
 PY="/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python"
 BRANCH="agent/phase49-3i18-operator-bulk-ai-rebuild"
-EXPECTED_PROD_HEAD="c283864290f9c989a9fcdf24ee8eef519560e917"
 EXPECTED_DB="sfkilvrs_EmiAdmin_3dprinthub"
 TARGET_SHA="${1:-}"
+EXPECTED_PROD_HEAD="${2:-}"
 
 fail() {
     printf 'AUDIT_FAIL=%s\n' "$1" >&2
@@ -20,6 +20,7 @@ printf '%s\n' "NO FETCH / NO MERGE / NO MIGRATE / NO COLLECTSTATIC / NO RESTART"
 printf '%s\n' "============================================================"
 
 [ -n "$TARGET_SHA" ] || fail "target_sha_required"
+[ -n "$EXPECTED_PROD_HEAD" ] || fail "expected_production_head_required"
 [ -d "$ROOT/.git" ] || fail "project_root_or_git_missing"
 [ -x "$PY" ] || fail "production_python_missing"
 
@@ -47,7 +48,7 @@ esac
     fail "production_worktree_dirty"
 }
 
-[ "$CURRENT_HEAD" = "$EXPECTED_PROD_HEAD" ] || fail "production_head_changed_from_last_verified_baseline"
+[ "$CURRENT_HEAD" = "$EXPECTED_PROD_HEAD" ] || fail "production_head_changed_from_verified_baseline"
 
 REMOTE_LINE="$(git ls-remote origin "refs/heads/$BRANCH")"
 [ -n "$REMOTE_LINE" ] || fail "remote_branch_not_found"

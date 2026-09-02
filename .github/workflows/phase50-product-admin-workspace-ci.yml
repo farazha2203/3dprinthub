@@ -142,6 +142,8 @@ jobs:
           bash -n scripts/host/phase49_3i53_production_readonly_audit.sh
           grep -F "NO FETCH / NO MERGE / NO MIGRATE / NO COLLECTSTATIC / NO RESTART" scripts/host/phase49_3i53_production_readonly_audit.sh
           grep -F "PHASE49_3I53_PRODUCTION_READONLY_AUDIT=PASS" scripts/host/phase49_3i53_production_readonly_audit.sh
+          grep -F 'EXPECTED_PROD_HEAD="${2:-}"' scripts/host/phase49_3i53_production_readonly_audit.sh
+          grep -F 'expected_production_head_required' scripts/host/phase49_3i53_production_readonly_audit.sh
 
       - name: Django system check
         run: python manage.py check
