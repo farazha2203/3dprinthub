@@ -1229,11 +1229,35 @@ class AcquisitionCore:
 
 
 class PublishCore:
-    def __init__(self, db) -> None:
+    def __init__(self, db, stages, connection) -> None:
         self.db = db
+        self.stages = stages
+        self.connection = connection
 
     def queue(self) -> list[dict[str, Any]]:
         return [dict(row) for row in self.db.upload_queue()]
+
+    def preflight(self, product_ids) -> dict[str, Any]:
+        from app.phase49_3i49_site_publish import preflight_many
+
+        return preflight_many(self.db, self.stages, product_ids)
+
+    def mark_ready_many(self, product_ids) -> dict[str, Any]:
+        from app.phase49_3i49_site_publish import mark_ready_many
+
+        return mark_ready_many(self.db, self.stages, product_ids)
+
+    def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
+        from app.phase49_3i49_site_publish import publish_many
+
+        settings = self.connection.settings(require_bridge=True)
+        return publish_many(
+            self.db,
+            self.stages,
+            settings,
+            product_ids,
+            progress=progress,
+        )
 
 
 class AICore:
@@ -1573,9 +1597,10 @@ def build_kernel(db) -> ApplicationKernel:
     registry.register("stages", stages)
     registry.register("commerce", CommerceCore(db, stages))
     registry.register("providers", providers)
-    registry.register("connection", ConnectionCore(db))
+    connection = ConnectionCore(db)
+    registry.register("connection", connection)
     registry.register("acquisition", AcquisitionCore(db))
-    registry.register("publish", PublishCore(db))
+    registry.register("publish", PublishCore(db, stages, connection))
     registry.register("ai", ai)
 
     return ApplicationKernel(db=db, registry=registry)
