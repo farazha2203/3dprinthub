@@ -1,3 +1,31 @@
+## REQ-49-086 — Multi-product ready/publish workflow and site-equivalent Slider/Admin controls
+Status: `IMPLEMENTED / GITHUB CI TESTED / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`
+
+Owner request:
+- from Products, select several Products at once;
+- give only complete Products an explicit `آماده انتشار` state;
+- publish multiple selected-ready Products in one operation;
+- after a verified successful site publish, move them automatically into the existing Published area;
+- keep failures outside Published and show the reason;
+- expose site-relevant software/Product/Profile/Slider controls in Django Admin;
+- make Slider controls on Site equivalent to the mature Windows controls;
+- apply the project’s registered UI/UX book-derived task-first/progressive-disclosure rules to the Admin layout without inventing a second settings model.
+
+Acceptance:
+- factual Stage readiness is checked before `upload_ready=1`;
+- publish uses the existing Batch8.5 → FTP → Bridge → public HTTP verification path;
+- only strict ACK + Store visibility/public verification can produce `workflow_status=uploaded`;
+- Gallery/Table visibly distinguish ready vs published;
+- successful Products appear under `ارسال / منتشرشده`;
+- ProductCatalogProfile and HomepageHeroSlide share the existing persistent Slider fields and optimistic revisions;
+- Slider media/composition/responsive/motion/SEO fields round-trip in both directions;
+- secrets are not copied into the web Admin;
+- no duplicate Product/Slider database is created;
+- Windows Qt, Django Admin, no-migration and launcher regressions pass before Local QA.
+
+Verification:
+`33596830380` PASS; `33596830268` PASS; `33596562467` PASS.
+
 ## 2026-09-01 — Professional specialist store + owner Local 3I.47 failure
 
 Owner requirements:
