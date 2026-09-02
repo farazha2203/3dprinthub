@@ -23,6 +23,7 @@ on:
       - store/phase49_3i52_site_identity.py
       - store/management/commands/phase37_import_catalog_center.py
       - store/test_phase49_3i52_site_authoring_ai.py
+      - store/test_phase49_3i52b_bidirectional_sync.py
       - ai/**
       - website/phase49_3i49_admin_control.py
       - website/apps.py
@@ -96,6 +97,7 @@ jobs:
             store/phase49_3i52_site_identity.py \
             store/management/commands/phase37_import_catalog_center.py \
             store/test_phase49_3i52_site_authoring_ai.py \
+            store/test_phase49_3i52b_bidirectional_sync.py \
             ai/model_policy.py \
             ai/product_content.py \
             website/phase49_3i49_admin_control.py \
@@ -141,6 +143,7 @@ jobs:
             store.test_phase49_3i49_site_publish_admin_sync \
             store.test_phase49_3i51_filament_registry_admin \
             store.test_phase49_3i52_site_authoring_ai \
+            store.test_phase49_3i52b_bidirectional_sync \
             catalog_bridge.tests.test_phase49_3i41_filament_bridge \
             -v 2
 
@@ -152,4 +155,5 @@ jobs:
           echo "PHASE49_3I51_FILAMENT_BRIDGE_V3_CI=PASS"
           echo "PHASE49_3I51_MIGRATIONS_0024_0042_CI=PASS"
           echo "PHASE49_3I52_SITE_AUTHORING_AI_CI=PASS"
+          echo "PHASE49_3I52B_BIDIRECTIONAL_SITE_SYNC_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"
