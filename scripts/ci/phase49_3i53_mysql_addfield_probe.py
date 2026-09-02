@@ -11,7 +11,12 @@ django.setup()
 from django.db import connection, models
 from django.db.migrations.state import ModelState, ProjectState
 
-from store.migrations.0039_phase50_filament_offer_pricing import AddFieldIfMissing
+import importlib
+
+migration_0039 = importlib.import_module(
+    "store.migrations.0039_phase50_filament_offer_pricing"
+)
+AddFieldIfMissing = migration_0039.AddFieldIfMissing
 
 
 TABLE = "phase49_3i53_mysql_probe"
