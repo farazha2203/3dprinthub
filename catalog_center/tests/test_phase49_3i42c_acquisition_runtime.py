@@ -311,6 +311,56 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             "qt42c-rich-page-extractor",
         )
 
+    def test_hybrid_access_denied_http_falls_back_once_to_guarded_browser(self):
+        listing = "https://makerworld.com/en/search/models?keyword=blocked-http"
+        browser_gate = AsyncMock(return_value=0.0)
+        browser = AsyncMock(
+            return_value={
+                "links": [self._model(3901), self._model(3902)],
+            }
+        )
+
+        with (
+            patch.object(acquisition_runtime, "ModernHttpClient", _FakeModernClient),
+            patch.object(
+                acquisition_runtime,
+                "discover_conditional_http",
+                new=AsyncMock(
+                    side_effect=acquisition_runtime.AccessDeniedError(
+                        "HTTP 403 for public listing"
+                    )
+                ),
+            ) as modern,
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=browser_gate,
+            ),
+            patch.object(
+                acquisition_runtime,
+                "discover_classic",
+                new=browser,
+            ),
+        ):
+            result = asyncio.run(
+                acquisition_runtime._discover_listing(
+                    self.db,
+                    self._source(),
+                    listing,
+                    2,
+                    strategy="hybrid",
+                )
+            )
+
+        self.assertEqual(result["new"], 2)
+        self.assertEqual(modern.await_count, 1)
+        self.assertEqual(browser.await_count, 1)
+        self.assertEqual(browser_gate.await_count, 1)
+        self.assertEqual(
+            [str(row["external_id"]) for row in self.db.pending_urls("makerworld", 10)],
+            ["3901", "3902"],
+        )
+
     def test_classic_mode_never_bypasses_browser_robots_denial(self):
         listing = "https://makerworld.com/en/search/models?keyword=blocked"
 
