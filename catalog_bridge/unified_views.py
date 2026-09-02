@@ -19,7 +19,7 @@ from PIL import Image
 
 from store.epic49_catalog_profile import ProductCatalogProfile, _unique_public_slug, SLIDER_EFFECT_CODES
 from store.models import ImportedPrintAssetImage, Product
-from store.phase39_models import MaterialColorOption
+from store.phase39_models import FilamentBrand, MaterialColorOption
 from website.models import HomepageHeroSlide, Material
 
 from .views import _authorized, _unauthorized
@@ -332,6 +332,7 @@ def serialize_filament(option) -> dict:
         else Decimal("0")
     )
     brand = str(getattr(option, "brand_name", "") or "").strip()
+    brand_row = FilamentBrand.objects.filter(name__iexact=brand).first() if brand else None
     palette = list(getattr(option, "palette_hexes", None) or [])
     if not palette:
         palette = _normalize_filament_palette({
@@ -345,8 +346,12 @@ def serialize_filament(option) -> dict:
         "id": int(option.pk),
         "material": str(option.material.name or ""),
         "material_id": int(option.material_id),
+        "material_description": str(getattr(option.material, "catalog_description", "") or ""),
+        "material_price_per_kg": int(getattr(option.material, "price_per_kg", 0) or 0),
         "brand": brand,
+        "brand_description": str(getattr(brand_row, "description", "") or ""),
         "manufacturer": brand,
+        "description": str(getattr(option, "description", "") or ""),
         "color": str(option.name or ""),
         "code": str(option.code or ""),
         "hex": str(option.hex_code or ""),
@@ -400,7 +405,7 @@ def filaments_view(request):
         "status": "ok",
         "items": items,
         "count": len(items),
-        "contract": "phase49-filament-library-v2",
+        "contract": "phase49-filament-library-v3",
     })
 
 
@@ -419,6 +424,11 @@ def filament_sync_view(request):
     legacy_manufacturer = str(
         data.get("manufacturer") or data.get("manufacturer_name") or ""
     ).strip()[:160]
+    filament_description = str(
+        data.get("description") or data.get("filament_description") or ""
+    ).strip()
+    brand_description = str(data.get("brand_description") or "").strip()
+    material_description = str(data.get("material_description") or "").strip()
     if not brand:
         brand = legacy_manufacturer[:120]
     manufacturer = brand
@@ -458,6 +468,36 @@ def filament_sync_view(request):
             Material.objects.filter(pk=material.pk).update(is_active=True)
             material.is_active = True
 
+        material_updates = {}
+        if "material_description" in data:
+            material_updates["catalog_description"] = material_description
+        if "material_price_per_kg" in data:
+            material_updates["price_per_kg"] = max(
+                0, _as_int(data.get("material_price_per_kg"), 0)
+            )
+        if material_updates:
+            Material.objects.filter(pk=material.pk).update(**material_updates)
+            for key, value in material_updates.items():
+                setattr(material, key, value)
+
+        brand_row = FilamentBrand.objects.filter(name__iexact=brand).first()
+        if brand_row is None:
+            brand_row = FilamentBrand.objects.create(
+                name=brand,
+                description=brand_description,
+                is_active=True,
+            )
+        else:
+            brand_updates = {}
+            if not brand_row.is_active:
+                brand_updates["is_active"] = True
+            if "brand_description" in data:
+                brand_updates["description"] = brand_description
+            if brand_updates:
+                FilamentBrand.objects.filter(pk=brand_row.pk).update(**brand_updates)
+                for key, value in brand_updates.items():
+                    setattr(brand_row, key, value)
+
         option = MaterialColorOption.objects.filter(
             material=material,
             name__iexact=color,
@@ -479,6 +519,7 @@ def filament_sync_view(request):
         values = {
             "brand_name": brand,
             "manufacturer_name": manufacturer,
+            "description": filament_description,
             "hex_code": palette[0] if palette else "",
             "color_type": color_type,
             "color_finish": color_finish,
@@ -532,7 +573,7 @@ def filament_sync_view(request):
         "status": "ok",
         "created": created,
         "filament": serialize_filament(option),
-        "contract": "phase49-filament-library-v2",
+        "contract": "phase49-filament-library-v3",
     })
 
 
