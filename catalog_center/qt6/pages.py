@@ -3235,6 +3235,58 @@ class OperationsPage(QWidget):
                 return count
         return len(self._queue_local_identity_items(row))
 
+    def _queue_fallback_title_from_url(self, row: dict) -> str:
+        url = str(
+            row.get("url")
+            or row.get("normalized_url")
+            or ""
+        ).strip()
+        if not url:
+            return ""
+        try:
+            path = QUrl(url).path().rstrip("/")
+        except Exception:
+            return ""
+        slug = path.split("/")[-1] if path else ""
+        external_id = str(row.get("external_id") or "").strip()
+        if external_id and slug.startswith(external_id):
+            slug = slug[len(external_id):].lstrip("-_")
+        slug = slug.replace("-", " ").replace("_", " ")
+        return " ".join(slug.split()).strip()
+
+    def _queue_display_title(self, row: dict) -> str:
+        value = (
+            row.get("product_title_fa")
+            or row.get("product_source_title")
+            or row.get("candidate_title")
+            or self._queue_fallback_title_from_url(row)
+            or row.get("external_id")
+            or "بدون عنوان دریافت‌شده"
+        )
+        if not row.get("product_id"):
+            return f"{value} — کاندیدای کشف‌شده؛ هنوز دریافت نشده"
+        return str(value)
+
+    def _queue_is_incomplete(self, row: dict) -> bool:
+        if not int(row.get("product_id") or 0):
+            return True
+        product = self._queue_product_row(row)
+        has_title = bool(
+            str(product.get("title_fa") or "").strip()
+            or str(product.get("source_title") or "").strip()
+        )
+        has_description = bool(
+            str(product.get("short_description_fa") or "").strip()
+            or str(product.get("description_fa") or "").strip()
+            or str(product.get("source_short_description") or "").strip()
+            or str(product.get("source_description") or "").strip()
+        )
+        return (
+            not has_title
+            or not has_description
+            or self._queue_image_count(row) <= 0
+        )
+
     def _queue_icon(self, row: dict) -> QIcon:
         if row.get("product_id"):
             path = self.kernel.images.preferred_local_path(
@@ -3269,6 +3321,33 @@ class OperationsPage(QWidget):
         else:
             self.queue_table.selectAll()
         self._update_queue_selection_label()
+
+    def _select_incomplete_queue(self) -> None:
+        incomplete_ids = {
+            int(queue_id)
+            for queue_id, row in self._queue_rows_by_id.items()
+            if int(queue_id) > 0 and self._queue_is_incomplete(dict(row))
+        }
+        if self.queue_views.currentIndex() == 0:
+            self.queue_gallery.clearSelection()
+            for index in range(self.queue_gallery.count()):
+                item = self.queue_gallery.item(index)
+                item.setSelected(
+                    int(item.data(Qt.ItemDataRole.UserRole) or 0)
+                    in incomplete_ids
+                )
+        else:
+            self.queue_table.clearSelection()
+            for row_index in range(self.queue_table.rowCount()):
+                item = self.queue_table.item(row_index, 1)
+                if item is None:
+                    continue
+                if int(item.data(Qt.ItemDataRole.UserRole) or 0) in incomplete_ids:
+                    self.queue_table.selectRow(row_index)
+        self._update_queue_selection_label()
+        self.status.setText(
+            f"{len(incomplete_ids)} رکورد ناقص از موارد لودشده انتخاب شد."
+        )
 
     def _clear_queue_selection(self) -> None:
         if self.queue_views.currentIndex() == 0:
@@ -3594,15 +3673,7 @@ class OperationsPage(QWidget):
                 if queue_id:
                     self._queue_rows_by_id[queue_id] = row
 
-                title = (
-                    row.get("product_title_fa")
-                    or row.get("product_source_title")
-                    or row.get("candidate_title")
-                    or row.get("external_id")
-                    or "بدون عنوان دریافت‌شده"
-                )
-                if not row.get("product_id"):
-                    title = f"{title} — کاندیدای کشف‌شده؛ هنوز دریافت نشده"
+                title = self._queue_display_title(row)
                 description = self._queue_description(row)
                 short_description = description
                 if len(short_description) > 95:
