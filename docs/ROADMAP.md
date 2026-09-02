@@ -1,3 +1,21 @@
+## 2026-09-02 — Phase49.3I.52G adaptive Product recovery
+
+Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- discovery success is separate from full Product data/image success;
+- redacted per-method acquisition tracing + Qt log-folder access;
+- factual Product quality gates for meaningful title/data and real local image evidence;
+- ordered failover across distinct mature receive methods;
+- successful method becomes preferred for following Products;
+- all-method exhaustion or invalid Product identity stops the batch and leaves later rows untouched;
+- partial-success batches with a later circuit break are reported failed;
+- permanent Crawl bulk recovery opts into adaptive failover while preserving mature safe merge behavior.
+
+Evidence: runtime `bf1fafdb38233a23e13a5715ffac72f772412005`; Qt `33644903042` PASS; dedicated suite 27 PASS; Single Active AI `33644902970` PASS; Portable `33644902962` PASS; 235 portable regressions; artifact `9852476786`; SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`.
+
+Next: owner Local 2–5 Product real-source QA and log inspection if a live failure remains. Production stays blocked.
+
 ## 2026-09-02 — Phase49.3I.52F bulk incomplete Product recovery
 
 Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

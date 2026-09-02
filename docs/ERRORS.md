@@ -1,3 +1,26 @@
+### ERR-49-103 — 52G drifted mature legacy acquisition identity and Source Refresh history
+**Date:** 2026-09-02
+
+Intermediate Windows acquisition regression on `0dcc2053d75a3e50fa341ed61d8a2d075b3dc52a` showed Saved HTML persisted `qt52g-saved_html` instead of accepted `qt46-legacy-saved_html`, and Source Refresh no longer emitted the mature `source_refresh` history event.
+
+Root cause: adaptive recovery widened persisted method naming and replaced an unrelated mature Source Refresh implementation. The failed condition was not rerun unchanged.
+
+Fix: restore historical `qt46-legacy-<method>` provenance and the mature Source Refresh implementation; keep adaptive failover scoped to Product receive/recovery. Final runtime `bf1fafdb38233a23e13a5715ffac72f772412005` passed Qt `33644903042`, Single Active AI `33644902970`, Portable `33644902962`.
+
+Prevention: resilience work wraps mature operators; it must not silently rename persisted provenance or replace unrelated refresh semantics.
+
+
+### ERR-49-102 — first 52G block edit removed existing Preview/refetch helpers
+**Date:** 2026-09-02
+
+First 52G portable regression on `d4763fa3716917d15c5bcaad20136a4d187cf8c4` stopped because `_cache_candidate_thumbnail` was missing; source comparison also found `_preview_listing_candidates`, `_mark_candidate_result` and synchronous `refetch_product_from_source` removed.
+
+Root cause: a broad Python block replacement crossed mature helper definitions. The same failed command was not repeated unchanged.
+
+Fix: compare the exact pre-change runtime and restore all four helpers unchanged, then continue regression testing. Final runtime `bf1fafdb38233a23e13a5715ffac72f772412005` passed all three Windows workflows.
+
+Prevention: before/after top-level function inventories are required for broad region edits; prefer smaller Extend/Patch/Wrap boundaries.
+
 ## ERR-49-101 — bulk recovery test mock expired before captured Worker execution
 **Date:** 2026-09-02  
 **Environment:** Windows Portable regression for Phase49.3I.52F.

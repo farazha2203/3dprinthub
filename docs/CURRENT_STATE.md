@@ -1,3 +1,33 @@
+## 2026-09-02 — Phase49.3I.52G adaptive acquisition recovery
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested runtime: `bf1fafdb38233a23e13a5715ffac72f772412005`  
+Rollback: `backup/pre-phase49-3i52g-adaptive-acquisition-observability-20260902` → `aa5ae5c9ff859b6fcd7630ef11b29254b7e2bcf3`.  
+Catalog Center: `8.9.10` / build `2026.09.02.1`; Qt marker: `Phase49.3I.52G`.
+
+Owner QA showed MakerWorld identities were discovered into Crawl but full Product recovery could still fail with no image. 52G now separates discovery from Product success, writes redacted per-method acquisition JSONL, validates meaningful Product data and real local-image evidence, tries distinct mature acquisition methods in order, promotes the successful method for later Products, and stops the selected batch after one Product exhausts all real methods instead of cascading failures.
+
+Implemented methods: rich extractor, network capture, classic exact browser, public HTTP, attached Chrome; mature resilient image fallback is reused when page data exists but image acquisition leaves no local file. Invalid Product URL/source also triggers the circuit breaker. Existing operator Persian content, pricing, approval, publish state and mature Source Refresh behavior remain protected.
+
+Verification:
+- Qt/Crawl runtime CI `33644903042` PASS;
+- dedicated Crawl/recovery suite 27 PASS;
+- Single Active AI `33644902970` PASS;
+- Windows Portable `33644902962` PASS;
+- Portable regression 235 PASS;
+- artifact `9852476786`;
+- EXE SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`;
+- EXE self-verify/browser smoke/hash gate PASS.
+
+Errors fixed during implementation: ERR-49-102 restored accidentally removed Preview/refetch helpers; ERR-49-103 restored mature `qt46-legacy-*` identity and Source Refresh history after regression caught drift.
+
+Safety: no Django/Catalog migration, no destructive media operation, no Host source change, no Production deploy, Production MySQL untouched.
+
+Next: clean Local ff-only sync, canonical checksum-backed Local gate, then bounded foreground recovery of 2–5 previously failed MakerWorld rows and inspection of `logs\acquisition` only if a live failure remains.
+
 ## 2026-09-02 — Phase49.3I.52F bulk recovery for incomplete Crawl Products
 
 Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.

@@ -1,3 +1,19 @@
+## 2026-09-02 — Phase49.3I.52G
+- added persistent redacted acquisition JSONL under the Catalog data root;
+- added `پوشه لاگ Crawl` and recent method/quality/image diagnostics to Qt History/Report;
+- separated `discovery_ready` from full Product acquisition success;
+- added Product quality validation for meaningful title/data and actual local images;
+- added adaptive failover across rich, network capture, classic exact, public HTTP and attached Chrome;
+- reused mature resilient image fallback;
+- successful method is preferred for following Products;
+- added circuit breaker after all distinct methods fail or Product URL/source is invalid;
+- later selected rows remain untouched/new after circuit break;
+- permanent Crawl `بازیابی دیتا + عکس` opts into adaptive recovery;
+- fixed ERR-49-102 and ERR-49-103 compatibility regressions;
+- runtime `bf1fafdb38233a23e13a5715ffac72f772412005`: Qt `33644903042`, Single Active AI `33644902970`, Portable `33644902962` PASS;
+- dedicated suite 27 PASS; portable regression 235 PASS; artifact `9852476786`; EXE SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`;
+- no migration, destructive media operation, Host change or Production write.
+
 ## 2026-09-02 — Phase49.3I.52F
 - added permanent Crawl `انتخاب ناقص‌ها` bulk selector;
 - added 5/10/20 image recovery target;

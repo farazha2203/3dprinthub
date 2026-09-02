@@ -1,3 +1,19 @@
+## REQ-49-086 — Adaptive Product recovery + visible acquisition diagnostics
+Date: 2026-09-02  
+Status: `IMPLEMENTED + WINDOWS CI/PORTABLE PASS / OWNER LOCAL REAL-SOURCE QA NEXT`.
+
+Acceptance implemented:
+- discovering a Crawl URL/Preview does not claim full Product success;
+- runtime logs method, source/external id, Product data/image evidence, failure reason and method transition;
+- unusable Product data or no local image moves to another distinct mature method;
+- aliases are not counted as fake additional retries;
+- a successful method becomes first choice for later Products in that batch;
+- after all real methods fail, later selected rows stay untouched instead of all becoming failed;
+- invalid Product identities stop similarly;
+- operator content/pricing/publish and mature Source Refresh contracts are preserved.
+
+Verification: `bf1fafdb38233a23e13a5715ffac72f772412005`; Qt `33644903042`, Single Active AI `33644902970`, Portable `33644902962` PASS; dedicated 27-test suite and 235 portable regressions PASS.
+
 ## REQ-49-092 — Bulk recover incomplete Crawl Product data and images
 Date: 2026-09-02  
 Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

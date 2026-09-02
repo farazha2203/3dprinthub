@@ -1,3 +1,29 @@
+## 3I.52G — Adaptive Product acquisition failover + observable Crawl recovery
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS PORTABLE PASS / OWNER LOCAL REAL-SOURCE QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Owner foreground symptom: MakerWorld Crawl discovery succeeded but full Product recovery could fail across the visible batch with no images.
+
+Implemented:
+- redacted acquisition JSONL under persistent Catalog data;
+- Qt History/Report recent method diagnostics + log-folder action;
+- explicit separation of discovery/Preview success from Product fetch success;
+- meaningful-title, usable-data and real-local-image quality gates;
+- ordered failover across rich, network capture, classic exact, public HTTP and attached Chrome;
+- mature resilient image fallback reused when appropriate;
+- successful method promoted for following Products;
+- all-method exhaustion or invalid Product identity trips a circuit breaker and leaves later selected rows untouched;
+- permanent Crawl bulk recovery opts into adaptive recovery while mature operator-field protections remain.
+
+Rollback: `backup/pre-phase49-3i52g-adaptive-acquisition-observability-20260902` → `aa5ae5c9ff859b6fcd7630ef11b29254b7e2bcf3`.
+
+Verification: runtime `bf1fafdb38233a23e13a5715ffac72f772412005`; Qt `33644903042` PASS; dedicated suite 27 PASS; Single Active AI `33644902970` PASS; Portable `33644902962` PASS; 235 portable regressions; artifact `9852476786`; EXE SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`.
+
+No Django/Catalog migration, destructive media operation, Host change, Production deploy or Production MySQL write.
+
+Owner Local next: clean ff-only sync, checksum-backed Local gate, launch Qt, verify `Phase49.3I.52G`, recover only 2–5 previously failed MakerWorld rows, then inspect `logs\acquisition` if any live failure remains.
+
 # Phase49.3I.52 — Site Authoring Parity + Shared Host AI
 
 Date: 2026-09-02
