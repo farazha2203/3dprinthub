@@ -1106,6 +1106,27 @@ class CommerceCore:
             re.I,
         )
         for value in candidates:
+            if isinstance(value, dict):
+                raw_unit = str(
+                    value.get("unit")
+                    or value.get("units")
+                    or value.get("dimension_unit")
+                    or ""
+                ).strip().casefold()
+                numbers = [
+                    _number(value.get(key), 0)
+                    for key in ("x", "y", "z")
+                ]
+                if all(number > 0 for number in numbers):
+                    factor = 0.1 if raw_unit == "mm" else 1.0
+                    result = tuple(round(number * factor, 3) for number in numbers)
+                    if all(0 < number < 10000 for number in result):
+                        return result
+            elif isinstance(value, (list, tuple)) and len(value) >= 3:
+                numbers = [_number(item, 0) for item in value[:3]]
+                if all(0 < number < 10000 for number in numbers):
+                    return tuple(round(number, 3) for number in numbers)
+
             match = pattern.search(str(value or ""))
             if not match:
                 continue
