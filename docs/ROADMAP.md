@@ -8,6 +8,7 @@ Completed:
 - per-Product image progress during full receive;
 - selected collected Product local image review strip with real local files and explicit counts;
 - compact receive/bulk action labels with full tooltips;
+- Qt shell phase identity updated from stale 3I.48 to current 3I.52C;
 - new Search clears prior live Search cards;
 - explicit multi-select/select-all/clear/bulk add/reject in current Search and persistent Crawl inventory;
 - successful bulk transfer navigates to Products and preserves existing collected identity;
@@ -17,11 +18,11 @@ Completed:
 - Portable CI dependency correction after ERR-49-097.
 
 Evidence:
-- runtime/CI checkpoint `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
-- Qt `33625257602` PASS;
-- Single Active AI `33625257485` PASS;
-- Windows Portable `33625257693` PASS, 217 release regressions;
-- artifact id `9844598171`, EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
+- final runtime/CI checkpoint `f43c7aa464948832ba349543f94c94498490ab25`;
+- Qt `33625988684` PASS;
+- Single Active AI `33625988674` PASS;
+- Windows Portable `33625988663` PASS, 218 release regressions;
+- artifact id `9844889166`, EXE SHA256 `cd54431bd29bad76990c17eb818671e3f32c4d53a244cdc07132f5d93a532f4b`;
 - pre-phase rollback `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
 
 Immediate next:

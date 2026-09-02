@@ -4,7 +4,7 @@ Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SINGLE ACTIVE AI PASS / WINDOWS P
 
 Repository: `farazha2203/3dprinthub`  
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Runtime/CI checkpoint: `bb0dcd7cc521cacc540943ed8091a323038c28f9`  
+Final tested runtime checkpoint: `f43c7aa464948832ba349543f94c94498490ab25`  
 Pre-phase rollback: `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.  
 Catalog Center: `8.9.10` / build `2026.09.02.1`.
 
@@ -23,18 +23,19 @@ Catalog Center: `8.9.10` / build `2026.09.02.1`.
 - persistent Crawl inventory is enriched with candidate title/thumbnail/status evidence;
 - Product image/source stage exposes `دریافت داده و عکس بیشتر از لینک محصول`;
 - safe recovery refreshes source-owned/source-derived data and images while preserving operator Persian title/description, final price, final-price flag, sale approval and publish decision;
-- Crawl bulk actions are task-grouped with shorter operator labels rather than a dense row of long actions.
+- Crawl bulk actions are task-grouped with shorter operator labels rather than a dense row of long actions;
+- the Qt sidebar/About phase marker no longer reports stale `Phase49.3I.48`; it reports `Phase49.3I.52C` so the owner can immediately verify the running shell is current.
 
 ### Verification
-- `33625257602` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS on final runtime `bb0dcd7...`;
+- `33625988684` — Phase49.3I.42C3 Qt6 Crawl + AI Runtime CI — PASS on final runtime `f43c7aa...`;
 - dedicated 3I.52C regression covers visual Preview, image count, Search clearing/scoping, Qt MultiSelection, per-image progress, Product routing and safe source recovery;
-- `33625257485` — Single Active AI — PASS;
+- `33625988674` — Single Active AI — PASS;
 - initial Portable `33624135587` failed because the new Qt regression imported PySide6 while that job installed only non-Qt requirements; recorded as ERR-49-097 and not rerun unchanged;
-- CI dependency boundary was fixed at `b43880a763d00bfda52dc29c4bf080cb428b1230`; final visual runtime is `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
-- `33625257693` — Windows Portable — PASS;
-- Portable release regression gate: 217 tests PASS;
-- artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9844598171`;
-- EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
+- CI dependency boundary was fixed at `b43880a763d00bfda52dc29c4bf080cb428b1230`; final visual/runtime shell checkpoint is `f43c7aa464948832ba349543f94c94498490ab25`;
+- `33625988663` — Windows Portable — PASS;
+- Portable release regression gate: 218 tests PASS;
+- artifact `3DPrintHub-CatalogCenter-v8.9.10`, artifact id `9844889166`;
+- EXE SHA256 `cd54431bd29bad76990c17eb818671e3f32c4d53a244cdc07132f5d93a532f4b`;
 - EXE self-verify and browser smoke PASS.
 
 ### Database / media / Production

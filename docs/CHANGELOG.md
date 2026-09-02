@@ -4,14 +4,15 @@
 - cards report image state/count and full receive emits per-image progress such as 3/5 and 5/5;
 - selected collected Product now exposes an actual local image review strip with total image count and local-displayable file count;
 - shortened dense receive/bulk button labels while keeping complete behavior descriptions in tooltips;
+- corrected the Qt sidebar/About phase identity from stale `49.3I.48` to `49.3I.52C`;
 - restored explicit Qt MultiSelection, select-all/clear and selected-count feedback for current Search and persistent Crawl inventory;
 - selected transfer now returns Product ids and navigates to Products; already-collected identities route to their existing Product;
 - persistent Crawl inventory reuses discovery-candidate/legacy Preview title and thumbnail evidence;
 - added explicit Product source action `دریافت داده و عکس بیشتر از لینک محصول` with source-only safe recovery that preserves operator Persian content, final price, sale approval and publish state;
 - added dedicated 3I.52C regression coverage;
 - fixed ERR-49-097: Portable release regression now installs the Qt requirements required by the new Qt test instead of dropping the regression;
-- Qt run `33625257602`, Single Active AI `33625257485`, and Windows Portable `33625257693` PASS;
-- Portable release regression: 217 tests PASS; artifact id `9844598171`; EXE SHA256 `e4064509a8d3a53ab3787b785f97f849e929c0873ed4ea021a99d46bc363af2b`;
+- final Qt run `33625988684`, Single Active AI `33625988674`, and Windows Portable `33625988663` PASS on `f43c7aa464948832ba349543f94c94498490ab25`;
+- Portable release regression: 218 tests PASS; artifact id `9844889166`; EXE SHA256 `cd54431bd29bad76990c17eb818671e3f32c4d53a244cdc07132f5d93a532f4b`;
 - no Django migration, Host change, Production deploy or Production MySQL write.
 
 ## 2026-09-02 — Phase49.3I.52 / 3I.52B

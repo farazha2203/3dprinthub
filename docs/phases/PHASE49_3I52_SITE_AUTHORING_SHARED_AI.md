@@ -177,3 +177,24 @@ Owner Local acceptance:
 - canonical runner is `RUN_PHASE49_3I42C_LOCAL_GATE.ps1`, version `49.3I.52.2`;
 - it checksum-backs up `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` before foreground QA;
 - verify fresh Search clearing, visual Preview, per-Product 3/5→5/5 image progress, image-count labels, multi-select bulk transfer to Products, persistent visual inventory, and safe more-data/more-images Product recovery.
+
+
+## 3I.52C final visual/runtime checkpoint — 2026-09-02
+
+Final tested runtime: `f43c7aa464948832ba349543f94c94498490ab25`.
+
+Owner-visible finalizations on top of the initial 3I.52C recovery:
+- current-search cards keep Preview-first title/thumbnail and per-Product image progress;
+- selecting one collected Product exposes a real local image strip with total-image and local-displayable-file counts;
+- receive/bulk actions use compact labels plus full tooltips to prevent the crowded unreadable toolbar shown in owner QA;
+- the Qt sidebar and About dialog now report `Phase49.3I.52C` instead of the stale `Phase49.3I.48` identity.
+
+Final verification:
+- `33625988684` Qt full parity PASS, including the dedicated 3I.52C visual/recovery suite and all mature regressions;
+- `33625988674` Single Active AI PASS;
+- `33625988663` Windows Portable PASS;
+- Portable regression gate: 218 tests PASS;
+- artifact id `9844889166`;
+- EXE SHA256 `cd54431bd29bad76990c17eb818671e3f32c4d53a244cdc07132f5d93a532f4b`.
+
+No Django migration, Host source change, Production deploy or Production MySQL write was performed.

@@ -12,7 +12,8 @@ Owner request:
 - persistent Crawl inventory must remain visual, not hide older products or thumbnails;
 - Product editing must include an explicit action to fetch more source data/images from the Product link;
 - source recovery must not overwrite operator-owned Persian content, price or publish state;
-- controls must be task-focused and readable rather than a dense row of long labels.
+- controls must be task-focused and readable rather than a dense row of long labels;
+- the app must visibly identify the current 3I.52C shell instead of showing the stale 3I.48 phase footer.
 
 Acceptance implemented:
 - current-search icon/card gallery with stable Preview thumbnails and image-count copy;
@@ -27,11 +28,11 @@ Acceptance implemented:
 - safe recovery updates source data/images and preserves operator title/description/final price/sale approval/publish decision.
 
 Verification:
-- Qt6 run `33625257602` PASS;
-- Single Active AI `33625257485` PASS;
-- Windows Portable `33625257693` PASS after correcting its Qt dependency boundary;
-- portable regression gate 215 tests PASS;
-- runtime/CI checkpoint `bb0dcd7cc521cacc540943ed8091a323038c28f9`;
+- Qt6 run `33625988684` PASS;
+- Single Active AI `33625988674` PASS;
+- Windows Portable `33625988663` PASS after correcting its Qt dependency boundary;
+- portable regression gate 218 tests PASS;
+- final runtime/CI checkpoint `f43c7aa464948832ba349543f94c94498490ab25`;
 - Production untouched.
 
 Owner Local foreground acceptance is still required before this request can be marked ACCEPTED.
