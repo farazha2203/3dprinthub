@@ -127,7 +127,14 @@ class Phase493I52SiteAuthoringAITests(TestCase):
         self.assertIn("phase52_ai_admin", product_admin.readonly_fields)
         self.assertIn("phase52_site_parity_admin", product_admin.readonly_fields)
         titles = [title for title, _options in product_admin.fieldsets]
-        self.assertIn("هوش مصنوعی و کنترل مستقیم سایت", titles)
+        from store.phase50_product_admin_workspace import SECTION_TITLES
+        self.assertEqual(tuple(titles), SECTION_TITLES)
+        field_map = {
+            title: tuple(options.get("fields", ()))
+            for title, options in product_admin.fieldsets
+        }
+        self.assertIn("phase52_ai_admin", field_map["SEO"])
+        self.assertIn("phase52_site_parity_admin", field_map["قیمت‌گذاری"])
 
         User = get_user_model()
         user = User.objects.create_superuser(

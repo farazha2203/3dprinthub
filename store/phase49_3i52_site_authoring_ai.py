@@ -250,27 +250,21 @@ def install() -> None:
             readonly.append(name)
     product_admin.readonly_fields = tuple(readonly)
 
-    fieldsets = list(getattr(product_admin, "fieldsets", ()) or ())
-    if not any(title == "هوش مصنوعی و کنترل مستقیم سایت" for title, _ in fieldsets):
-        insert_at = 1 if fieldsets else 0
-        fieldsets.insert(
-            insert_at,
-            (
-                "هوش مصنوعی و کنترل مستقیم سایت",
-                {
-                    "fields": (
-                        "phase52_ai_admin",
-                        "phase52_site_parity_admin",
-                    ),
-                    "description": (
-                        "وقتی Windows Catalog Center در دسترس نیست، Product را همین‌جا "
-                        "اضافه/ویرایش کن. Profile/Variant/قیمت از همان مدل‌های اصلی سایت "
-                        "استفاده می‌کنند؛ AI فقط Content/SEO را با Preview تکمیل می‌کند."
-                    ),
-                },
-            ),
-        )
-        product_admin.fieldsets = tuple(fieldsets)
+    # Preserve the mature Phase50 business section order. AI belongs to SEO
+    # authoring and Site parity belongs to Pricing; adding a brand-new top-level
+    # section would break the established operator IA and tab contract.
+    fieldsets = []
+    for title, options in list(getattr(product_admin, "fieldsets", ()) or ()):
+        updated = dict(options)
+        fields = list(updated.get("fields", ()) or ())
+        if title == "SEO" and "phase52_ai_admin" not in fields:
+            fields.append("phase52_ai_admin")
+            updated["fields"] = tuple(fields)
+        elif title == "قیمت‌گذاری" and "phase52_site_parity_admin" not in fields:
+            fields.append("phase52_site_parity_admin")
+            updated["fields"] = tuple(fields)
+        fieldsets.append((title, updated))
+    product_admin.fieldsets = tuple(fieldsets)
 
     original_save_related = admin_cls.save_related
     if not getattr(admin_cls, "_phase49_3i52_save_related_wrapped", False):
