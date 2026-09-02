@@ -20,6 +20,8 @@ on:
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
       - store/phase49_3i52_site_authoring_ai.py
+      - store/phase49_3i52_site_identity.py
+      - store/management/commands/phase37_import_catalog_center.py
       - store/test_phase49_3i52_site_authoring_ai.py
       - ai/**
       - website/phase49_3i49_admin_control.py
@@ -91,6 +93,8 @@ jobs:
             catalog_center/app/epic49_site_sync.py \
             store/phase49_3i49_admin_control.py \
             store/phase49_3i52_site_authoring_ai.py \
+            store/phase49_3i52_site_identity.py \
+            store/management/commands/phase37_import_catalog_center.py \
             store/test_phase49_3i52_site_authoring_ai.py \
             ai/model_policy.py \
             ai/product_content.py \

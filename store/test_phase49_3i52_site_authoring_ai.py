@@ -4,14 +4,16 @@ from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ai import model_policy
 from ai.product_content import apply_site_product_proposal
 from store.epic49_catalog_profile import ensure_admin_catalog_profile
-from store.models import Category, Product
+from store.models import Category, ImportedPrintAsset, PrintCatalogSource, Product
 from store.phase49_3i52_site_authoring_ai import ProductCatalogProfileInline
+from store.phase49_3i52_site_identity import reconcile_asset_product_identity
 
 
 @override_settings(
@@ -151,6 +153,133 @@ class Phase493I52SiteAuthoringAITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "AI محتوا و SEO")
         self.assertContains(response, "AI قیمت، موجودی")
+
+    def test_manual_site_product_public_page_uses_same_canonical_profile_price(self):
+        self.product.is_active = True
+        self.product.save(update_fields=["is_active", "updated_at"])
+        profile = ensure_admin_catalog_profile(
+            self.product,
+            actor="owner",
+            bump_revision=True,
+        )
+        profile.availability_status = "made_to_order"
+        profile.lead_time_min_days = 2
+        profile.lead_time_max_days = 4
+        profile.save()
+
+        response = self.client.get(
+            reverse("store:product_detail", args=[self.product.slug])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "قیمت قطعی")
+        self.assertContains(response, "وضعیت عرضه")
+        self.assertContains(response, "زمان آماده‌سازی")
+        rendered_product = response.context["product"]
+        self.assertEqual(rendered_product.catalog_profile.price_min, 350000)
+        self.assertEqual(
+            rendered_product.catalog_profile.pricing_strategy,
+            "fixed",
+        )
+
+    def test_desktop_import_identity_links_exact_manual_site_product_instead_of_duplicate(self):
+        source = PrintCatalogSource.objects.create(
+            name="MakerWorld",
+            code="makerworld",
+            base_url="https://makerworld.com",
+            default_category=self.category,
+            is_active=True,
+        )
+        self.product.source_name = "MakerWorld"
+        self.product.source_external_id = "2834255"
+        self.product.source_url = (
+            "https://makerworld.com/en/models/2834255-cake-stand"
+        )
+        self.product.save(
+            update_fields=[
+                "source_name",
+                "source_external_id",
+                "source_url",
+                "updated_at",
+            ]
+        )
+        profile = ensure_admin_catalog_profile(self.product, actor="owner")
+        asset = ImportedPrintAsset.objects.create(
+            source=source,
+            external_id="2834255",
+            source_url=(
+                "https://makerworld.com/en/models/2834255-cake-stand/"
+            ),
+            title="Cake Stand",
+        )
+
+        linked = reconcile_asset_product_identity(
+            asset,
+            {
+                "source_url": asset.source_url,
+                "external_id": "2834255",
+                "desktop_product_id": 781,
+            },
+            desktop_product_id=781,
+        )
+        asset.refresh_from_db()
+        profile.refresh_from_db()
+
+        self.assertEqual(linked.pk, self.product.pk)
+        self.assertEqual(asset.product_id, self.product.pk)
+        self.assertEqual(profile.desktop_product_id, 781)
+        self.assertEqual(Product.objects.count(), 1)
+        self.assertEqual(self.product.fixed_price, 350000)
+
+    def test_desktop_import_identity_fails_closed_on_ambiguous_site_products(self):
+        source = PrintCatalogSource.objects.create(
+            name="MakerWorld",
+            code="makerworld",
+            base_url="https://makerworld.com",
+            default_category=self.category,
+            is_active=True,
+        )
+        self.product.source_name = "MakerWorld"
+        self.product.source_external_id = "999"
+        self.product.source_url = "https://makerworld.com/en/models/site-one"
+        self.product.save(
+            update_fields=[
+                "source_name",
+                "source_external_id",
+                "source_url",
+                "updated_at",
+            ]
+        )
+        Product.objects.create(
+            category=self.category,
+            title="Duplicate source identity",
+            slug="duplicate-source-identity",
+            sku="SITE-3I52-002",
+            short_description="test",
+            description="test",
+            source_name="MakerWorld",
+            source_external_id="999",
+            source_url="https://makerworld.com/en/models/site-two",
+            is_active=False,
+        )
+        asset = ImportedPrintAsset.objects.create(
+            source=source,
+            external_id="999",
+            source_url="https://makerworld.com/en/models/incoming",
+            title="Incoming",
+        )
+
+        with self.assertRaises(ValidationError):
+            reconcile_asset_product_identity(
+                asset,
+                {
+                    "source_url": asset.source_url,
+                    "external_id": "999",
+                    "desktop_product_id": 900,
+                },
+                desktop_product_id=900,
+            )
+        asset.refresh_from_db()
+        self.assertIsNone(asset.product_id)
 
     def test_admin_ai_preview_requires_explicit_apply(self):
         User = get_user_model()

@@ -11,6 +11,7 @@ from django.db import transaction
 from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource
 from store.phase34b_publishing import convert_to_fixed_product, convert_to_portfolio
 from store.phase49_catalog_visibility import publish_catalog_product_to_store
+from store.phase49_3i52_site_identity import reconcile_asset_product_identity
 
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
 VALID_LICENSES = ALLOWED_LICENSES | {"review", "blocked", "unknown"}
@@ -349,6 +350,11 @@ class Command(BaseCommand):
                     category = category_for(data)
                     source = source_for(data, category)
                     asset, created = upsert_asset(source, data)
+                    reconcile_asset_product_identity(
+                        asset,
+                        data,
+                        desktop_product_id=desktop_product_id,
+                    )
                     image_count = import_images(asset, editorial_path.parent, data)
                     product = portfolio = None
                     visibility = None
