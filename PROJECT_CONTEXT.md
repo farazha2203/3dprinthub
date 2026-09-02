@@ -1,3 +1,17 @@
+## Current owner checkpoint — Phase49.3I.52F / bulk recovery for incomplete Crawl rows
+
+Exact tested runtime: `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Production untouched.
+
+Permanent Crawl inventory now provides `انتخاب ناقص‌ها`, a 5/10/20 image target and `بازیابی دیتا + عکس`. Complete local Products are reused without network; incomplete existing Products use the mature safe source-refetch merge; orphan terminal-ledger identities can be explicitly rebuilt. URL slugs provide a readable identity before full receive. Qt shell marker is `Phase49.3I.52F`.
+
+Evidence: Qt `33637452385` PASS; Single Active AI `33637452588` PASS; Portable `33637452243` PASS; 227 regressions; artifact `9849484898`; SHA256 `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`.
+
+Rollback: `backup/pre-phase49-3i52f-bulk-recover-incomplete-20260902` → `f35bd3e409c4293a756ddfe2fc9d4f7dcb968445`.
+
+Next: owner clean Local sync + canonical gate, then recover the owner example external id 2953550 and a multi-row 5/10-image batch from permanent Crawl inventory.
+
+---
+
 ## Current owner checkpoint — Phase49.3I.52E / permanent Crawl image consistency
 
 Exact tested runtime: `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Production untouched.
