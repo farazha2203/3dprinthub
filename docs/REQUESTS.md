@@ -1,3 +1,26 @@
+## REQ-49-092 — Bulk recover incomplete Crawl Product data and images
+Date: 2026-09-02  
+Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- select many incomplete permanent Crawl rows at once;
+- choose 5 or 10 Product images;
+- use already-available DB/local images when sufficient;
+- otherwise revisit the Product URL and recover title, description and images;
+- do not require manually opening every Product URL;
+- previously-collected-but-broken identities must be repairable without being permanently skipped by the terminal ledger.
+
+Acceptance implemented:
+- `انتخاب ناقص‌ها`;
+- 5/10/20 image target;
+- `بازیابی دیتا + عکس`;
+- local reuse before network;
+- forced explicit recovery bypasses terminal skip only for the operator-requested recovery action;
+- existing Product refetch uses safe mature merge;
+- URL-slug readable title fallback.
+
+Verification: runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Qt `33637452385` PASS; Portable `33637452243` PASS; 227 regressions.
+
 ## REQ-49-091 — Permanent Crawl inventory must show recent and historical images consistently
 Date: 2026-09-02  
 Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
