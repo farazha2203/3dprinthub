@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QListWidget
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QLabel, QListWidget
 
 from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
@@ -256,6 +256,27 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertTrue(page.live_detail_open_btn.isEnabled())
         finally:
             page.close()
+
+    def test_main_window_reports_current_3i52c_phase_instead_of_stale_3i48(self):
+        from qt6.main_window import MainWindow
+
+        window = MainWindow(self.db)
+        try:
+            contract = window.structural_contract()
+            self.assertEqual(contract["active_phase"], "49.3I.52C")
+            phase_labels = [
+                label.text()
+                for label in window.findChildren(QLabel)
+                if "Phase49.3I." in label.text()
+            ]
+            self.assertTrue(
+                any("Phase49.3I.52C" in value for value in phase_labels)
+            )
+            self.assertFalse(
+                any("Phase49.3I.48" in value for value in phase_labels)
+            )
+        finally:
+            window.close()
 
     def test_receive_action_labels_are_compact_but_keep_full_tooltips(self):
         page = OperationsPage(self.db, kernel=self.kernel)

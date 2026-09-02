@@ -34,6 +34,9 @@ from .theme import apply_theme
 from .workers import TaskPool
 
 
+ACTIVE_PHASE_LABEL = "49.3I.52C"
+
+
 NAV_ITEMS = (
     ("dashboard", "داشبورد"),
     ("products", "محصولات"),
@@ -104,7 +107,7 @@ class MainWindow(QMainWindow):
         version_hint = QLabel(
             f"Version {APP_VERSION}\n"
             f"Build {BUILD_ID}\n"
-            "Phase49.3I.48 • Kernel فعال"
+            f"Phase{ACTIVE_PHASE_LABEL} • Kernel فعال"
         )
         version_hint.setObjectName("BrandSubtitle")
         version_hint.setWordWrap(True)
@@ -375,7 +378,7 @@ class MainWindow(QMainWindow):
             self,
             f"{APP_TITLE} — Qt 6",
             f"Version: {APP_VERSION}\nBuild: {BUILD_ID}\n"
-            "Phase: 49.3I.48\n\n"
+            f"Phase: {ACTIVE_PHASE_LABEL}\n\n"
             "Qt6 Shell + shared Application Kernel + Product lifecycle + "
             "Filament palette/inventory + multi-image SEO + Bulk AI + "
             "Site Bridge foundation.\n\n"
@@ -415,4 +418,5 @@ class MainWindow(QMainWindow):
             "ai_single_engine": kernel_contract["ai_single_engine"],
             "ai_bound": kernel_contract["ai_bound"],
             "stage_authority_shared": kernel_contract["stage_authority_shared"],
+            "active_phase": ACTIVE_PHASE_LABEL,
         }
