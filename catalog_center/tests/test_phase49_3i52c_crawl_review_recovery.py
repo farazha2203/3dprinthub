@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QListWidget
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QListWidget
 
 from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
@@ -128,11 +128,11 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             page._populate_queue(reset=True)
             self.assertEqual(
                 page.queue_gallery.selectionMode(),
-                page.queue_gallery.SelectionMode.MultiSelection,
+                QAbstractItemView.SelectionMode.MultiSelection,
             )
             self.assertEqual(
                 page.queue_table.selectionMode(),
-                page.queue_table.SelectionMode.MultiSelection,
+                QAbstractItemView.SelectionMode.MultiSelection,
             )
             self.assertEqual(page.queue_gallery.count(), 1)
             card = page.queue_gallery.item(0)
@@ -180,7 +180,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             )
             self.assertEqual(
                 page.live_results.selectionMode(),
-                page.live_results.SelectionMode.MultiSelection,
+                QAbstractItemView.SelectionMode.MultiSelection,
             )
             self.assertEqual(page.live_results.count(), 2)
             text = "\n".join(
