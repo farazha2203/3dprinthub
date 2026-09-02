@@ -1,3 +1,45 @@
+## ERR-49-101 — bulk recovery test mock expired before captured Worker execution
+**Date:** 2026-09-02  
+**Environment:** Windows Portable regression for Phase49.3I.52F.
+
+**Observed:**  
+After fixing the missing QMessageBox import, the incomplete-existing-Product recovery test still reported `recovered=0`.
+
+**Root cause:**  
+The test patched `AcquisitionCore.run_single`, queued the Worker, exited the patch context, and only then executed the captured Worker function. The real recovery path therefore ran outside the mock boundary.
+
+**Correct fix:**  
+Execute the captured Worker while the `run_single` patch is still active.
+
+**Verification:**  
+Final runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`: dedicated visual/recovery suite 19 tests PASS; Qt `33637452385` PASS; Portable `33637452243` PASS with 227 release regressions.
+
+**Prevention:**  
+For deferred Worker tests, mock lifetime must cover Worker execution, not merely Worker construction.
+
+---
+
+## ERR-49-100 — new bulk recovery tests omitted QMessageBox import
+**Date:** 2026-09-02  
+**Environment:** Windows Portable regression for Phase49.3I.52F.
+
+**Observed:**  
+The first 3I.52F portable regression stopped with `NameError: QMessageBox is not defined` in the two new recovery-confirmation tests.
+
+**Root cause:**  
+The test module used `QMessageBox.question` but its QtWidgets import list had not been extended.
+
+**Correct fix:**  
+Add `QMessageBox` to the explicit PySide6.QtWidgets test import.
+
+**Verification:**  
+The next run crossed that boundary and exposed ERR-49-101; after both conditions were corrected, final Qt/Portable gates passed.
+
+**Prevention:**  
+New concrete Qt widgets referenced by tests must be imported explicitly and exercised in the same Windows suite.
+
+---
+
 ## ERR-49-099 — Preview recovery raw JavaScript string temporarily lost its closing triple quote
 **Date:** 2026-09-02  
 **Environment:** GitHub source edit during Phase49.3I.52E.
