@@ -23,6 +23,7 @@ on:
       - catalog_center/app/site_connection.py
       - catalog_center/app/phase49_3i49_site_publish.py
       - scripts/host/phase49_3i53_production_readonly_audit.sh
+      - scripts/host/phase49_3i53_production_deploy.sh
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
@@ -144,6 +145,10 @@ jobs:
           grep -F "PHASE49_3I53_PRODUCTION_READONLY_AUDIT=PASS" scripts/host/phase49_3i53_production_readonly_audit.sh
           grep -F 'EXPECTED_PROD_HEAD="${2:-}"' scripts/host/phase49_3i53_production_readonly_audit.sh
           grep -F 'expected_production_head_required' scripts/host/phase49_3i53_production_readonly_audit.sh
+          bash -n scripts/host/phase49_3i53_production_deploy.sh
+          grep -F 'PREDEPLOY_BACKUP_VERIFIED=YES' scripts/host/phase49_3i53_production_deploy.sh
+          grep -F 'git merge --ff-only "$FETCHED"' scripts/host/phase49_3i53_production_deploy.sh
+          grep -F 'PHASE49_3I53C_PRODUCTION_DEPLOY=PASS' scripts/host/phase49_3i53_production_deploy.sh
 
       - name: Django system check
         run: python manage.py check
