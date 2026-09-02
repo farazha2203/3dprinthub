@@ -256,11 +256,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: MySQL migration chain from zero
+      - name: MySQL Store/Website migration chain from zero
         run: |
           python manage.py check
           python manage.py makemigrations --check --dry-run
-          python manage.py migrate --noinput
+          python manage.py migrate store 0042_phase49_3i51_filament_registry_descriptions --noinput
+          python manage.py migrate website 0024_phase49_3i51_material_catalog_description --noinput
           python manage.py showmigrations store website
           python - <<'PY'
           import os
@@ -287,6 +288,145 @@ jobs:
               raise SystemExit("MYSQL_MIGRATION_CI=FAIL:vendor")
           if missing:
               raise SystemExit("MYSQL_MIGRATION_CI=FAIL:missing")
-          print("MYSQL_MIGRATION_CI=PASS")
+          print("MYSQL_STORE_WEBSITE_MIGRATION_FROM_ZERO=PASS")
+          PY
+
+      - name: Recreate MySQL database for partial 0039 recovery simulation
+        run: |
+          python - <<'PY'
+          import os
+          import pymysql
+
+          conn = pymysql.connect(
+              host=os.environ["DB_HOST"],
+              port=int(os.environ["DB_PORT"]),
+              user=os.environ["DB_USER"],
+              password=os.environ["DB_PASSWORD"],
+              autocommit=True,
+          )
+          db = os.environ["DB_NAME"]
+          with conn.cursor() as cursor:
+              cursor.execute(f"DROP DATABASE IF EXISTS \`{db}\`")
+              cursor.execute(
+                  f"CREATE DATABASE \`{db}\` "
+                  "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+              )
+          conn.close()
+          print("MYSQL_PARTIAL_SIM_DATABASE_RESET=PASS")
+          PY
+
+      - name: Simulate Production partial 0039 and recover on MySQL
+        run: |
+          python manage.py migrate store 0038_phase50_profile_matrix --noinput
+          python manage.py migrate website 0024_phase49_3i51_material_catalog_description --noinput
+          python - <<'PY'
+          import importlib
+          import os
+
+          os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+          import django
+          django.setup()
+
+          from django.db import connection
+          from store.phase39_models import MaterialColorOption
+
+          module = importlib.import_module(
+              "store.migrations.0039_phase50_filament_offer_pricing"
+          )
+          names = [
+              "brand_name",
+              "manufacturer_name",
+              "roll_weight_grams",
+              "stock_roll_count_snapshot",
+              "purchase_price_per_roll",
+              "sale_price_per_roll",
+              "usd_price_per_roll",
+              "usd_fx_rate_toman",
+          ]
+          with connection.schema_editor() as schema_editor:
+              for name in names:
+                  field = MaterialColorOption._meta.get_field(name)
+                  schema_editor.add_field(MaterialColorOption, field)
+          print("MYSQL_PARTIAL_0039_PREFIX_SIMULATED=PASS")
+          PY
+          python manage.py migrate store 0042_phase49_3i51_filament_registry_descriptions --noinput
+          python - <<'PY'
+          import os
+          os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+          import django
+          django.setup()
+
+          from django.db import connection
+          from django.db.migrations.recorder import MigrationRecorder
+          from store.models import ProductVariant, StoreOrderItem
+          from store.phase39_models import MaterialColorOption
+
+          required = {
+              ("store", "0039_phase50_filament_offer_pricing"),
+              ("store", "0040_phase50_filament_offer_operations"),
+              ("store", "0041_phase50_filament_visual_identity"),
+              ("store", "0042_phase49_3i51_filament_registry_descriptions"),
+              ("website", "0024_phase49_3i51_material_catalog_description"),
+          }
+          applied = set(
+              MigrationRecorder.Migration.objects.filter(
+                  app__in={"store", "website"}
+              ).values_list("app", "name")
+          )
+          missing = sorted(required - applied)
+
+          def columns(model):
+              with connection.cursor() as cursor:
+                  desc = connection.introspection.get_table_description(
+                      cursor,
+                      model._meta.db_table,
+                  )
+              return {str(item.name) for item in desc}
+
+          material = columns(MaterialColorOption)
+          variant = columns(ProductVariant)
+          order = columns(StoreOrderItem)
+          required_material = {
+              "brand_name",
+              "manufacturer_name",
+              "roll_weight_grams",
+              "stock_roll_count_snapshot",
+              "purchase_price_per_roll",
+              "sale_price_per_roll",
+              "usd_price_per_roll",
+              "usd_fx_rate_toman",
+              "print_hourly_rate",
+              "color_finish",
+              "description",
+          }
+          required_order = {
+              "support_weight_grams",
+              "filament_brand_name",
+              "filament_manufacturer_name",
+          }
+
+          print("MYSQL_PARTIAL_RECOVERY_MIGRATIONS_MISSING=" + repr(missing))
+          print(
+              "MYSQL_PARTIAL_RECOVERY_MATERIAL_MISSING="
+              + repr(sorted(required_material - material))
+          )
+          print(
+              "MYSQL_PARTIAL_RECOVERY_ORDER_MISSING="
+              + repr(sorted(required_order - order))
+          )
+          print(
+              "MYSQL_PARTIAL_RECOVERY_VARIANT_SUPPORT="
+              + repr("support_weight_grams" in variant)
+          )
+
+          if missing:
+              raise SystemExit("MYSQL_PARTIAL_RECOVERY_CI=FAIL:migrations")
+          if required_material - material:
+              raise SystemExit("MYSQL_PARTIAL_RECOVERY_CI=FAIL:material")
+          if required_order - order:
+              raise SystemExit("MYSQL_PARTIAL_RECOVERY_CI=FAIL:order")
+          if "support_weight_grams" not in variant:
+              raise SystemExit("MYSQL_PARTIAL_RECOVERY_CI=FAIL:variant")
+          print("MYSQL_PARTIAL_0039_RECOVERY_CI=PASS")
           PY
 
