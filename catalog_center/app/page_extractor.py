@@ -6,7 +6,7 @@ import json
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 from urllib.parse import urljoin, urlsplit
 
 from PIL import Image
@@ -742,7 +742,15 @@ class RichPageExtractor:
         self.profile_dir = profile_dir
         self.headed = headed
 
-    async def extract(self, url: str, output_dir: Path, *, download_images: bool = True, image_limit: int = 60) -> ExtractedPage:
+    async def extract(
+        self,
+        url: str,
+        output_dir: Path,
+        *,
+        download_images: bool = True,
+        image_limit: int = 60,
+        image_progress: Callable[[int, int, str], None] | None = None,
+    ) -> ExtractedPage:
         from playwright.async_api import async_playwright
 
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -884,7 +892,13 @@ class RichPageExtractor:
                     json.dumps(extracted.as_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
                 )
                 if download_images and extracted.images:
-                    await self._download_images(context, extracted, output_dir, image_limit=image_limit)
+                    await self._download_images(
+                        context,
+                        extracted,
+                        output_dir,
+                        image_limit=image_limit,
+                        image_progress=image_progress,
+                    )
                     (output_dir / "page_extract.json").write_text(
                         json.dumps(extracted.as_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
                     )
@@ -892,7 +906,15 @@ class RichPageExtractor:
             finally:
                 await context.close()
 
-    async def _download_images(self, context, extracted: ExtractedPage, output_dir: Path, *, image_limit: int = 60) -> None:
+    async def _download_images(
+        self,
+        context,
+        extracted: ExtractedPage,
+        output_dir: Path,
+        *,
+        image_limit: int = 60,
+        image_progress: Callable[[int, int, str], None] | None = None,
+    ) -> None:
         image_dir = output_dir / "images"
         image_dir.mkdir(parents=True, exist_ok=True)
         saved_index = 0
@@ -935,6 +957,12 @@ class RichPageExtractor:
                 except Exception:
                     pass
                 image.local_file = str(target)
+                if callable(image_progress):
+                    image_progress(
+                        int(saved_index),
+                        max(1, int(image_limit)),
+                        str(image.url or ""),
+                    )
             except Exception:
                 continue
 
@@ -976,9 +1004,16 @@ async def extract_direct_link(
     headed: bool = True,
     download_images: bool = True,
     image_limit: int = 60,
+    image_progress: Callable[[int, int, str], None] | None = None,
 ) -> dict[str, Any]:
     extractor = RichPageExtractor(profile_dir, headed=headed)
-    page = await extractor.extract(url, output_dir, download_images=download_images, image_limit=image_limit)
+    page = await extractor.extract(
+        url,
+        output_dir,
+        download_images=download_images,
+        image_limit=image_limit,
+        image_progress=image_progress,
+    )
     source_code = detect_source_code(page.final_url or url)
     external_id = detect_external_id(page.final_url or url, source_code)
     selected_urls = [img.url for img in page.images if img.selected]

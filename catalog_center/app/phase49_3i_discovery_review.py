@@ -282,6 +282,25 @@ def candidate_row(db, candidate_id: int):
     return db.conn.execute(f"SELECT * FROM {CANDIDATE_TABLE} WHERE id=?", (int(candidate_id),)).fetchone()
 
 
+def candidate_by_identity(db, source_code: str, external_id: str):
+    ensure_schema(db)
+    return db.conn.execute(
+        f"SELECT * FROM {CANDIDATE_TABLE} WHERE source_code=? AND external_id=?",
+        (str(source_code or ""), str(external_id or "")),
+    ).fetchone()
+
+
+def candidate_preview_cache_path(source_code: str, external_id: str) -> Path:
+    """Stable cache path shared by the legacy Preview UI and the Qt review gallery."""
+    from .runtime_paths import data_root
+
+    safe_source = re.sub(r"[^A-Za-z0-9._-]+", "-", str(source_code or "source")).strip(".-")
+    safe_external = re.sub(r"[^A-Za-z0-9._-]+", "-", str(external_id or "candidate")).strip(".-")
+    folder = data_root() / "discovery_previews" / (safe_source or "source")
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder / f"{(safe_external or 'candidate')[:160]}.jpg"
+
+
 def set_candidate_status(db, candidate_id: int, status: str, *, product_id=None, error: str = "") -> None:
     status = str(status or "review")
     if status not in CANDIDATE_STATUSES:

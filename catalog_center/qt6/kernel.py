@@ -915,6 +915,124 @@ class AcquisitionCore:
             )
         ]
 
+    def queue_rows_by_ids(self, row_ids: list[int]) -> list[dict[str, Any]]:
+        output: list[dict[str, Any]] = []
+        for row_id in sorted({int(value) for value in row_ids or [] if int(value) > 0}):
+            row = self.db.conn.execute(
+                "SELECT * FROM discovered_urls WHERE id=?",
+                (row_id,),
+            ).fetchone()
+            if row is None:
+                continue
+            item = dict(row)
+            product = None
+            external_id = str(item.get("external_id") or "")
+            normalized_url = str(item.get("normalized_url") or "")
+            if external_id:
+                product = self.db.conn.execute(
+                    """
+                    SELECT id FROM products
+                    WHERE source_code=? AND external_id=?
+                    ORDER BY id DESC LIMIT 1
+                    """,
+                    (str(item.get("source_code") or ""), external_id),
+                ).fetchone()
+            if product is None and normalized_url:
+                product = self.db.conn.execute(
+                    """
+                    SELECT id FROM products
+                    WHERE source_code=? AND normalized_url=?
+                    ORDER BY id DESC LIMIT 1
+                    """,
+                    (str(item.get("source_code") or ""), normalized_url),
+                ).fetchone()
+            item["product_id"] = int(product["id"]) if product else None
+            output.append(item)
+        return output
+
+    def candidate_preview_path(self, source_code: str, external_id: str) -> str:
+        from app.phase49_3i_discovery_review import candidate_preview_cache_path
+
+        path = candidate_preview_cache_path(source_code, external_id)
+        return str(path) if path.is_file() else ""
+
+    def current_review_items(
+        self,
+        source_code: str,
+        listing_url: str,
+        *,
+        since: str = "",
+        limit: int = 500,
+    ) -> list[dict[str, Any]]:
+        """Current-run visual review rows from the mature Preview candidate table."""
+        from app.phase49_3i_discovery_review import (
+            CANDIDATE_TABLE,
+            ensure_schema as ensure_candidate_schema,
+        )
+
+        ensure_candidate_schema(self.db)
+        clauses = ["c.source_code=?", "c.discovered_from=?"]
+        args: list[Any] = [str(source_code or ""), str(listing_url or "")]
+        if str(since or "").strip():
+            clauses.append("c.updated_at>=?")
+            args.append(str(since))
+        page_limit = max(1, min(500, int(limit or 100)))
+        args.append(page_limit)
+        rows = self.db.conn.execute(
+            f"""
+            SELECT
+                c.id AS candidate_id,
+                c.source_code,
+                c.external_id,
+                c.source_url AS url,
+                c.normalized_url,
+                c.source_title AS candidate_title,
+                c.thumbnail_url AS candidate_thumbnail_url,
+                c.status AS candidate_status,
+                c.discovered_from,
+                c.updated_at AS candidate_updated_at,
+                d.id AS queue_id,
+                d.status AS status,
+                d.attempts,
+                d.last_error,
+                p.id AS product_id,
+                p.title_fa AS product_title_fa,
+                p.source_title AS product_source_title,
+                p.source_short_description AS product_source_short_description,
+                p.source_description AS product_source_description,
+                p.short_description_fa AS product_short_description_fa,
+                p.description_fa AS product_description_fa,
+                p.primary_image_url AS product_primary_image_url,
+                p.local_dir AS product_local_dir,
+                p.selected_images_json AS product_selected_images_json,
+                p.images_json AS product_images_json,
+                p.image_metadata_json AS product_image_metadata_json,
+                p.source_specs_json AS product_source_specs_json,
+                p.tags_json AS product_tags_json,
+                p.dimensions AS product_dimensions,
+                p.estimated_weight_grams AS product_estimated_weight_grams,
+                p.estimated_print_minutes AS product_estimated_print_minutes
+            FROM {CANDIDATE_TABLE} c
+            LEFT JOIN discovered_urls d
+              ON d.source_code=c.source_code
+             AND d.external_id=c.external_id
+            LEFT JOIN products p
+              ON p.source_code=c.source_code
+             AND p.external_id=c.external_id
+            WHERE {" AND ".join(clauses)}
+            ORDER BY c.id
+            LIMIT ?
+            """,
+            args,
+        )
+        output = []
+        for row in rows:
+            item = dict(row)
+            if not str(item.get("status") or ""):
+                item["status"] = str(item.get("candidate_status") or "review")
+            output.append(item)
+        return output
+
     def reject_queue_items(self, row_ids: list[int]) -> int:
         return int(
             self.db.set_discovered_status(

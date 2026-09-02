@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import io
 import json
 import re
 from pathlib import Path
 from typing import Any, Callable
+from urllib import request as urlrequest
+
+from PIL import Image, ImageOps
 
 from app.classic_methods import (
     collect_attached_chrome,
@@ -38,7 +42,15 @@ from app.phase49_3i45_incremental_discovery_intelligence import (
     discover_sitemap_candidates_incremental,
     ensure_schema as ensure_incremental_schema,
 )
-from app.phase49_3i_discovery_review import _source_defaults
+from app.phase49_3i_discovery_review import (
+    _source_defaults,
+    candidate_by_identity,
+    candidate_preview_cache_path,
+    ensure_schema as ensure_candidate_schema,
+    set_candidate_status,
+    upsert_candidate,
+)
+from app.phase49_3i_preview_recovery import discover_preview_candidates_safe
 from app.runtime_paths import data_root
 from app.v8_features import (
     diff_summary,
@@ -476,6 +488,7 @@ async def _collect_one(
     download_images: bool = True,
     download_files: bool = False,
     same_domain_only: bool = True,
+    image_progress: Callable[[int, int, str], None] | None = None,
 ) -> dict[str, Any]:
     """Collect one Product with the richest existing project extractor.
 
@@ -516,6 +529,7 @@ async def _collect_one(
         headed=False,
         download_images=bool(download_images),
         image_limit=image_limit,
+        image_progress=image_progress,
     )
 
     try:
@@ -761,6 +775,178 @@ async def _collect_one_legacy(
     }
 
 
+
+
+def _cache_candidate_thumbnail(candidate: dict[str, Any]) -> str:
+    url = str(candidate.get("thumbnail_url") or "").strip()
+    if not url.startswith(("http://", "https://")):
+        return ""
+    target = candidate_preview_cache_path(
+        str(candidate.get("source_code") or ""),
+        str(candidate.get("external_id") or ""),
+    )
+    if target.is_file() and target.stat().st_size > 0:
+        return str(target)
+    request = urlrequest.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": str(
+                candidate.get("discovered_from")
+                or candidate.get("source_url")
+                or ""
+            ),
+        },
+    )
+    try:
+        with urlrequest.urlopen(request, timeout=8) as response:
+            content_type = str(response.headers.get("Content-Type") or "").lower()
+            if content_type and not content_type.startswith("image/"):
+                return ""
+            raw = response.read(5_000_001)
+        if not raw or len(raw) > 5_000_000:
+            return ""
+        with Image.open(io.BytesIO(raw)) as image:
+            prepared = ImageOps.exif_transpose(image).convert("RGB")
+            prepared.thumbnail((720, 540), Image.Resampling.LANCZOS)
+            temp = target.with_suffix(".tmp.jpg")
+            prepared.save(temp, format="JPEG", quality=86, optimize=True)
+            temp.replace(target)
+        return str(target)
+    except Exception:
+        return ""
+
+
+async def _preview_listing_candidates(
+    db,
+    source_cfg: dict[str, Any],
+    listing_url: str,
+    requested: int,
+    *,
+    progress: Progress = None,
+    should_stop: ShouldStop = None,
+) -> dict[str, Any]:
+    """Restore the mature Preview-first UX without replacing the crawler."""
+    ensure_candidate_schema(db)
+    source_code = str(source_cfg.get("code") or "")
+    model_pattern = str(source_cfg.get("model_url_pattern") or "")
+    delay = await _browser_robots_gate(db, source_code, listing_url)
+    if delay > 0:
+        await asyncio.sleep(min(30.0, delay))
+    _emit(progress, 2, "پیش‌نمایش لیست: عنوان و تصویر کارت‌های محصول در حال خواندن است…")
+    try:
+        candidates = await discover_preview_candidates_safe(
+            listing_url,
+            source_code=source_code,
+            model_pattern=model_pattern,
+            requested=max(1, min(500, int(requested or 1))),
+            scroll_rounds=8,
+            headed=False,
+        )
+    except (RobotsDeniedError, RateLimitedError):
+        raise
+    except Exception as exc:
+        _emit(
+            progress,
+            4,
+            "پیش‌نمایش تصویری در دسترس نبود؛ کشف اصلی بدون تکرار Preview ادامه دارد "
+            f"({type(exc).__name__}).",
+        )
+        return {"previewed": 0, "new": 0, "duplicates": 0, "thumbs": 0}
+
+    new_count = duplicate_count = 0
+    prepared: list[dict[str, Any]] = []
+    for candidate in candidates:
+        if _stopped(should_stop):
+            break
+        item = dict(candidate)
+        item["discovered_from"] = listing_url
+        upsert_candidate(db, item)
+        if terminal_identity_state(
+            db,
+            source_code,
+            str(item.get("external_id") or ""),
+            str(item.get("source_url") or ""),
+        ):
+            duplicate_count += 1
+        elif db.add_discovered(
+            source_code,
+            str(item.get("external_id") or ""),
+            str(item.get("source_url") or ""),
+            listing_url,
+        ):
+            new_count += 1
+        else:
+            duplicate_count += 1
+        prepared.append(item)
+
+    _emit(
+        progress,
+        8,
+        f"پیش‌نمایش: {len(prepared)} محصول پیدا شد؛ تصاویر Preview در حال آماده‌سازی است.",
+    )
+
+    semaphore = asyncio.Semaphore(10)
+    thumb_count = 0
+
+    async def cache_one(item):
+        async with semaphore:
+            if _stopped(should_stop):
+                return ""
+            return await asyncio.to_thread(_cache_candidate_thumbnail, item)
+
+    thumbnail_candidates = [
+        item for item in prepared
+        if str(item.get("thumbnail_url") or "").startswith(("http://", "https://"))
+    ][: min(150, max(1, int(requested or 1)))]
+    tasks = [asyncio.create_task(cache_one(item)) for item in thumbnail_candidates]
+    if tasks:
+        completed = 0
+        for task in asyncio.as_completed(tasks):
+            try:
+                if await task:
+                    thumb_count += 1
+            except Exception:
+                pass
+            completed += 1
+            if completed == len(tasks) or completed % 8 == 0:
+                _emit(
+                    progress,
+                    min(18, 8 + int(completed / max(1, len(tasks)) * 10)),
+                    f"Preview تصویر {completed}/{len(tasks)} • آماده {thumb_count}",
+                )
+
+    return {
+        "previewed": len(prepared),
+        "new": new_count,
+        "duplicates": duplicate_count,
+        "thumbs": thumb_count,
+    }
+
+
+def _mark_candidate_result(
+    db,
+    source_code: str,
+    external_id: str,
+    status: str,
+    *,
+    product_id: int | None = None,
+    error: str = "",
+) -> None:
+    try:
+        candidate = candidate_by_identity(db, source_code, external_id)
+        if candidate is not None:
+            set_candidate_status(
+                db,
+                int(candidate["id"]),
+                status,
+                product_id=product_id,
+                error=error,
+            )
+    except Exception:
+        return
+
+
 async def run_batch_async(
     db,
     *,
@@ -827,17 +1013,38 @@ async def run_batch_async(
     failures: list[str] = []
 
     try:
-        discovery = await _discover_listing(
+        preview = await _preview_listing_candidates(
             db,
             source_cfg,
             listing_url,
             requested,
-            strategy=strategy,
             progress=progress,
             should_stop=should_stop,
         )
-        discovered += int(discovery["new"])
-        duplicates += int(discovery["duplicates"])
+        discovered += int(preview.get("new") or 0)
+        duplicates += int(preview.get("duplicates") or 0)
+
+        pending_after_preview = len(
+            _pending_for_listing(
+                db,
+                source_code,
+                listing_url,
+                requested,
+                include_failed=bool(include_failed),
+            )
+        )
+        if pending_after_preview < requested and not _stopped(should_stop):
+            discovery = await _discover_listing(
+                db,
+                source_cfg,
+                listing_url,
+                requested,
+                strategy=strategy,
+                progress=progress,
+                should_stop=should_stop,
+            )
+            discovered += int(discovery["new"])
+            duplicates += int(discovery["duplicates"])
         _emit(
             progress,
             23,
@@ -888,8 +1095,20 @@ async def run_batch_async(
             _emit(
                 progress,
                 24 + int((index - 1) / max(1, total) * 72),
-                f"دریافت صفحه محصول {index}/{total} — {url}",
+                f"محصول {index}/{total} • ID={external_id} • شروع دریافت صفحه",
             )
+
+            def image_progress(saved: int, target: int, _image_url: str) -> None:
+                fraction = min(1.0, max(0.0, float(saved) / max(1, int(target))))
+                overall = 24 + int(
+                    ((index - 1) + fraction) / max(1, total) * 72
+                )
+                _emit(
+                    progress,
+                    overall,
+                    f"محصول {index}/{total} • ID={external_id} • عکس {saved}/{target}",
+                )
+
             try:
                 if collection_method == "rich":
                     result = await _collect_one(
@@ -902,6 +1121,7 @@ async def run_batch_async(
                         download_images=bool(download_images),
                         download_files=bool(download_files),
                         same_domain_only=bool(same_domain_only),
+                        image_progress=image_progress,
                     )
                 else:
                     result = await _collect_one_legacy(
@@ -917,21 +1137,42 @@ async def run_batch_async(
                         same_domain_only=bool(same_domain_only),
                     )
                 db.mark_url(int(row["id"]), "collected")
+                _mark_candidate_result(
+                    db,
+                    source_code,
+                    external_id,
+                    "imported",
+                    product_id=int(result.get("product_id") or 0) or None,
+                )
                 collected += 1
                 _emit(
                     progress,
                     24 + int(index / max(1, total) * 72),
-                    f"#{index}: {result['source_title'] or external_id} — "
+                    f"محصول {index}/{total} • ID={external_id} • "
                     f"{result['images_saved']}/{image_limit} عکس ذخیره شد",
                 )
             except PermissionError as exc:
                 db.mark_url(int(row["id"]), "failed", str(exc))
+                _mark_candidate_result(
+                    db,
+                    source_code,
+                    external_id,
+                    "failed",
+                    error=str(exc),
+                )
                 failed += 1
                 failures.append(f"{url}: {exc}")
                 # A block/rate denial is not retried aggressively.
                 break
             except Exception as exc:
                 db.mark_url(int(row["id"]), "failed", str(exc))
+                _mark_candidate_result(
+                    db,
+                    source_code,
+                    external_id,
+                    "failed",
+                    error=str(exc),
+                )
                 failed += 1
                 failures.append(f"{url}: {type(exc).__name__}: {exc}")
                 # Continue to the next independent Product; failed identities
@@ -1141,9 +1382,17 @@ async def run_single_async(
             "already_collected": True,
         }
 
-    _emit(progress, 5, "دریافت مستقیم صفحه محصول…")
+    _emit(progress, 5, f"دریافت مستقیم صفحه محصول • ID={external_id}")
     local_dir = data_root() / "collected" / source_code / external_id
     method = str(collection_method or "rich").strip().lower()
+
+    def image_progress(saved: int, target: int, _image_url: str) -> None:
+        _emit(
+            progress,
+            min(92, 8 + int(saved / max(1, target) * 84)),
+            f"ID={external_id} • عکس {saved}/{target}",
+        )
+
     if method == "rich":
         result = await _collect_one(
             db,
@@ -1155,6 +1404,7 @@ async def run_single_async(
             download_images=bool(download_images),
             download_files=bool(download_files),
             same_domain_only=bool(same_domain_only),
+            image_progress=image_progress,
         )
     else:
         result = await _collect_one_legacy(
@@ -1178,6 +1428,153 @@ def run_single(db, **kwargs) -> dict[str, Any]:
     return asyncio.run(run_single_async(db, **kwargs))
 
 
+async def refetch_product_from_source_async(
+    db,
+    product_id: int,
+    *,
+    image_limit: int = 10,
+    download_images: bool = True,
+    progress: Progress = None,
+) -> dict[str, Any]:
+    """Re-fetch source-owned Product facts/images without overwriting operator work."""
+    row = db.product(int(product_id))
+    if row is None:
+        raise RuntimeError("محصول پیدا نشد.")
+    old = dict(row)
+    source_code = str(old.get("source_code") or "")
+    source_cfg = _source_dict(db.source(source_code))
+    if not source_cfg:
+        raise RuntimeError("Source محصول پیدا نشد.")
+    source_url = str(old.get("source_url") or "").strip()
+    if not source_url.startswith(("http://", "https://")):
+        raise RuntimeError("لینک منبع محصول معتبر نیست.")
+
+    image_limit = normalize_image_limit(image_limit)
+    external_id = str(old.get("external_id") or "").strip()
+    if not external_id:
+        external_id, _ = _product_identity(source_cfg, source_url)
+
+    _emit(progress, 3, "بازیابی امن داده و تصاویر از صفحه اصلی محصول…")
+    delay = await _browser_robots_gate(db, source_code, source_url)
+    if delay > 0:
+        await asyncio.sleep(min(30.0, delay))
+
+    output = (
+        data_root()
+        / "collected"
+        / source_code
+        / f"{external_id}_refresh_latest"
+    )
+
+    def image_progress(saved: int, target: int, _image_url: str) -> None:
+        _emit(
+            progress,
+            min(88, 12 + int(saved / max(1, target) * 76)),
+            f"بازیابی تصویر {saved}/{target}",
+        )
+
+    result = await extract_direct_link(
+        source_url,
+        output,
+        data_root() / "browser_profiles" / source_code,
+        headed=False,
+        download_images=bool(download_images),
+        image_limit=image_limit,
+        image_progress=image_progress,
+    )
+    try:
+        images = json.loads(result.get("images_json") or "[]")
+    except Exception:
+        images = []
+    images = [
+        str(value)
+        for value in images[:image_limit]
+        if str(value or "").strip()
+    ]
+    downloaded = [
+        str(value)
+        for value in (result.get("downloaded_image_files") or [])
+        if str(value or "").strip()
+    ]
+
+    fresh = {
+        **_source_defaults(source_cfg, image_limit),
+        **{
+            key: value
+            for key, value in dict(result or {}).items()
+            if key != "downloaded_image_files"
+        },
+        "source_code": source_code,
+        "external_id": external_id,
+        "source_url": str(result.get("source_url") or source_url),
+        "local_dir": str(output),
+        "images_json": json.dumps(images, ensure_ascii=False),
+        "selected_images_json": json.dumps(images, ensure_ascii=False),
+        "primary_image_url": images[0] if images else "",
+        "last_refetched_at": utc_now(),
+        "source_state": "active",
+    }
+    fresh["fingerprint"] = product_fingerprint(
+        source_code,
+        external_id,
+        fresh["source_url"],
+    )
+    fresh["source_hash"] = source_payload_hash(fresh)
+    fresh["needs_update"] = (
+        1
+        if should_mark_needs_update(row, fresh["source_hash"])
+        else int(old.get("needs_update") or 0)
+    )
+    fresh["content_status"] = (
+        "stale"
+        if fresh["needs_update"]
+        else str(old.get("content_status") or "pending")
+    )
+
+    diff = product_diff(old, fresh)
+    merged = merge_refetch(row, fresh)
+    allowed = set(row.keys()) - {"id", "created_at", "updated_at"}
+    db.update_product(
+        int(product_id),
+        {
+            key: value
+            for key, value in merged.items()
+            if key in allowed
+        },
+    )
+    after = dict(db.product(int(product_id)))
+    db.save_history(
+        int(product_id),
+        "source_product_recovery",
+        old,
+        after,
+        diff_summary(diff),
+    )
+    _emit(
+        progress,
+        100,
+        f"بازیابی کامل شد • {len(downloaded)}/{image_limit} عکس ذخیره شد",
+    )
+    return {
+        "product_id": int(product_id),
+        "changed": bool(diff) or str(old.get("local_dir") or "") != str(output),
+        "diff": diff,
+        "images_found": len(images),
+        "images_saved": min(len(downloaded), image_limit),
+        "source_title": str(result.get("source_title") or ""),
+    }
+
+
+def refetch_product_from_source(db, product_id: int, **kwargs) -> dict[str, Any]:
+    return asyncio.run(
+        refetch_product_from_source_async(
+            db,
+            int(product_id),
+            **kwargs,
+        )
+    )
+
+
 async def recover_product_images_async(
     db,
     product_id: int,
@@ -1185,34 +1582,17 @@ async def recover_product_images_async(
     image_limit: int = 10,
     progress: Progress = None,
 ) -> dict[str, Any]:
-    row = db.product(int(product_id))
-    if row is None:
-        raise RuntimeError("محصول پیدا نشد.")
-    data = dict(row)
-    source_cfg = _source_dict(db.source(str(data.get("source_code") or "")))
-    if not source_cfg:
-        raise RuntimeError("Source محصول پیدا نشد.")
-    source_url = str(data.get("source_url") or "").strip()
-    if not source_url.startswith(("http://", "https://")):
-        raise RuntimeError("لینک منبع محصول معتبر نیست.")
-
-    external_id = str(data.get("external_id") or "").strip()
-    if not external_id:
-        external_id, _ = _product_identity(source_cfg, source_url)
-    local_dir = Path(str(data.get("local_dir") or "") or (
-        data_root() / "collected" / str(data.get("source_code") or "source") / external_id
-    ))
-    _emit(progress, 5, "بازیابی تصاویر باکیفیت از صفحه اصلی محصول…")
-    result = await _collect_one(
+    # Compatibility name retained for old callers. The implementation is now
+    # the safe mature source-refetch merge, so image recovery can also restore
+    # source-owned title/spec/tag/weight/time facts without clobbering operator
+    # price/Profile/Filament/SEO/publish decisions.
+    return await refetch_product_from_source_async(
         db,
-        source_cfg,
-        external_id=external_id,
-        url=source_url,
-        image_limit=normalize_image_limit(image_limit),
-        local_dir=local_dir,
+        int(product_id),
+        image_limit=image_limit,
+        download_images=True,
+        progress=progress,
     )
-    _emit(progress, 100, f"{result['images_saved']} تصویر ذخیره شد.")
-    return result
 
 
 def recover_product_images(db, product_id: int, **kwargs) -> dict[str, Any]:

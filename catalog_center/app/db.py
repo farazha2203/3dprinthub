@@ -522,6 +522,40 @@ class Database:
                 for product in product_rows:
                     by_url[(code, str(product["normalized_url"] or ""))] = product
 
+        candidate_by_external = {}
+        try:
+            candidate_table = "phase49_3i_discovery_candidates"
+            has_candidates = self.conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (candidate_table,),
+            ).fetchone()
+            if has_candidates:
+                for code in sources:
+                    external_ids = sorted({
+                        str(row["external_id"] or "")
+                        for row in rows
+                        if str(row["source_code"] or "") == code
+                        and str(row["external_id"] or "")
+                    })
+                    if not external_ids:
+                        continue
+                    placeholders = ",".join("?" for _ in external_ids)
+                    candidate_rows = self.conn.execute(
+                        f"""
+                        SELECT id, source_code, external_id, source_title,
+                               thumbnail_url, status, discovered_from, updated_at
+                        FROM {candidate_table}
+                        WHERE source_code=? AND external_id IN ({placeholders})
+                        """,
+                        (code, *external_ids),
+                    )
+                    for candidate in candidate_rows:
+                        candidate_by_external[
+                            (code, str(candidate["external_id"] or ""))
+                        ] = candidate
+        except sqlite3.DatabaseError:
+            candidate_by_external = {}
+
         output = []
         for row in rows:
             item = dict(row)
@@ -533,7 +567,18 @@ class Database:
                 if external_id
                 else None
             ) or by_url.get((code, normalized_url))
+            candidate = (
+                candidate_by_external.get((code, external_id))
+                if external_id
+                else None
+            )
             item.update({
+                "candidate_id": int(candidate["id"]) if candidate else None,
+                "candidate_title": str(candidate["source_title"] or "") if candidate else "",
+                "candidate_thumbnail_url": str(candidate["thumbnail_url"] or "") if candidate else "",
+                "candidate_status": str(candidate["status"] or "") if candidate else "",
+                "candidate_discovered_from": str(candidate["discovered_from"] or "") if candidate else "",
+                "candidate_updated_at": str(candidate["updated_at"] or "") if candidate else "",
                 "product_id": int(product["id"]) if product else None,
                 "product_title_fa": str(product["title_fa"] or "") if product else "",
                 "product_source_title": str(product["source_title"] or "") if product else "",
