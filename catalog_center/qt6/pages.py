@@ -3025,6 +3025,14 @@ class OperationsPage(QWidget):
             self.status.setText(
                 "✅ Chrome پروفایل بسته شد و نشست مرورگر حفظ شد."
             )
+        elif operation == "queue_recover":
+            self.status.setText(
+                "✅ بازیابی گروهی تمام شد — "
+                f"محلیِ کافی={data.get('local_reused', 0)} • "
+                f"بازیابی‌شده={data.get('recovered', 0)} • "
+                f"ساخته‌شده={data.get('created', 0)} • "
+                f"خطا={data.get('failed', 0)}"
+            )
         elif operation in {"queue_collect", "queue_collect_ai"}:
             ai = dict(data.get("ai") or {})
             ai_completed = (
@@ -3830,6 +3838,219 @@ class OperationsPage(QWidget):
         count = self.kernel.acquisition.restore_queue_items(ids)
         self.status.setText(f"{count} رکورد دوباره در صف new قرار گرفت.")
         self.refresh()
+
+    def _recover_selected_queue(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(
+                self,
+                "بازیابی گروهی",
+                "حداقل یک رکورد را انتخاب کن.",
+            )
+            return
+        if self._worker is not None:
+            QMessageBox.information(
+                self,
+                "بازیابی گروهی",
+                "یک عملیات دریافت در حال اجرا است.",
+            )
+            return
+
+        rows = self.kernel.acquisition.queue_rows_by_ids(ids)
+        if not rows:
+            QMessageBox.warning(
+                self,
+                "بازیابی گروهی",
+                "رکورد انتخاب‌شده در موجودی Crawl پیدا نشد.",
+            )
+            return
+
+        image_limit = int(
+            self.queue_recover_image_limit.currentData() or 5
+        )
+        answer = QMessageBox.question(
+            self,
+            "بازیابی دیتا و عکس محصولات",
+            (
+                f"{len(rows)} رکورد انتخاب شده است.\n"
+                f"هدف عکس برای هر Product: {image_limit}\n\n"
+                "اگر داده و فایل محلی کافی باشد از همان نسخه موجود استفاده می‌شود.\n"
+                "اگر عنوان/توضیح/عکس ناقص باشد صفحه اصلی Product دوباره خوانده می‌شود.\n"
+                "عنوان و توضیح فارسی اپراتور، قیمت و وضعیت انتشار بازنویسی نمی‌شوند.\n\n"
+                "ادامه؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def job(progress):
+            local_reused = 0
+            recovered = 0
+            created = 0
+            failed = 0
+            errors: list[str] = []
+            product_ids: list[int] = []
+            total = max(1, len(rows))
+
+            for index, raw in enumerate(rows, 1):
+                if self.kernel.acquisition.should_stop():
+                    break
+
+                row = dict(raw)
+                queue_id = int(row.get("id") or 0)
+                source_code = str(row.get("source_code") or "").strip()
+                external_id = str(row.get("external_id") or "").strip()
+                product_url = str(
+                    row.get("url")
+                    or row.get("normalized_url")
+                    or ""
+                ).strip()
+                product_id = int(row.get("product_id") or 0)
+
+                if str(row.get("status") or "") == "rejected":
+                    self.kernel.acquisition.restore_queue_items([queue_id])
+
+                local_count = len(
+                    self.kernel.images.identity_local_items(
+                        source_code,
+                        external_id,
+                        self._queue_product_row(row),
+                    )
+                )
+
+                if product_id > 0:
+                    product_row = self.db.product(product_id)
+                    product = dict(product_row) if product_row is not None else {}
+                    has_title = bool(
+                        str(product.get("title_fa") or "").strip()
+                        or str(product.get("source_title") or "").strip()
+                    )
+                    has_description = bool(
+                        str(product.get("short_description_fa") or "").strip()
+                        or str(product.get("description_fa") or "").strip()
+                        or str(product.get("source_short_description") or "").strip()
+                        or str(product.get("source_description") or "").strip()
+                    )
+                    if (
+                        has_title
+                        and has_description
+                        and local_count >= image_limit
+                    ):
+                        self.kernel.acquisition.mark_queue_collected([queue_id])
+                        if product_id not in product_ids:
+                            product_ids.append(product_id)
+                        local_reused += 1
+                        progress(
+                            int(index / total * 100),
+                            (
+                                f"#{queue_id} • {index}/{total} • "
+                                f"داده موجود + {local_count} عکس محلی استفاده شد"
+                            ),
+                        )
+                        continue
+
+                if (
+                    not source_code
+                    or not product_url.startswith(("http://", "https://"))
+                ):
+                    failed += 1
+                    message = "Queue item has no valid public Product URL/source."
+                    errors.append(f"#{queue_id}: {message}")
+                    self.kernel.acquisition.mark_queue_failed(
+                        [queue_id],
+                        message,
+                    )
+                    progress(
+                        int(index / total * 100),
+                        f"#{queue_id} • {index}/{total} • لینک معتبر ندارد",
+                    )
+                    continue
+
+                base = int((index - 1) / total * 100)
+                span = max(1, int(100 / total))
+
+                def child_progress(value, message):
+                    mapped = min(
+                        99,
+                        base + int(
+                            max(0, min(100, int(value))) / 100 * span
+                        ),
+                    )
+                    progress(
+                        mapped,
+                        f"#{queue_id} • {index}/{total} • {message}",
+                    )
+
+                try:
+                    result = self.kernel.acquisition.run_single(
+                        source_code=source_code,
+                        product_url=product_url,
+                        image_limit=image_limit,
+                        collection_method="rich",
+                        download_images=True,
+                        download_files=False,
+                        same_domain_only=True,
+                        progress=child_progress,
+                        force_recover=True,
+                    )
+                    new_product_id = int(result.get("product_id") or 0)
+                    if new_product_id <= 0:
+                        raise RuntimeError(
+                            "Recovery finished without a Product id."
+                        )
+                    self.kernel.acquisition.mark_queue_collected([queue_id])
+                    if new_product_id not in product_ids:
+                        product_ids.append(new_product_id)
+                    if product_id > 0 or result.get("recovered_existing"):
+                        recovered += 1
+                    else:
+                        created += 1
+                except Exception as exc:
+                    failed += 1
+                    message = f"{type(exc).__name__}: {exc}"
+                    errors.append(f"#{queue_id}: {message}")
+                    self.kernel.acquisition.mark_queue_failed(
+                        [queue_id],
+                        message,
+                    )
+
+                progress(
+                    int(index / total * 100),
+                    f"پردازش بازیابی {index}/{total}",
+                )
+
+            return {
+                "operation": "queue_recover",
+                "local_reused": local_reused,
+                "recovered": recovered,
+                "created": created,
+                "failed": failed,
+                "product_ids": product_ids,
+                "errors": errors[-20:],
+                "stopped": self.kernel.acquisition.should_stop(),
+            }
+
+        worker = Worker(job)
+        self._worker = worker
+        self.start_btn.setEnabled(False)
+        self.queue_collect_btn.setEnabled(False)
+        self.queue_collect_ai_btn.setEnabled(False)
+        self.queue_recover_btn.setEnabled(False)
+        self.queue_select_incomplete_btn.setEnabled(False)
+        self.queue_open_btn.setEnabled(False)
+        self.live_add_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.progress.setValue(0)
+        self.status.setText(
+            f"شروع بازیابی دیتا و عکس {len(rows)} رکورد…"
+        )
+        worker.signals.progress.connect(self._progress)
+        worker.signals.result.connect(self._done)
+        worker.signals.error.connect(self._error)
+        worker.signals.finished.connect(self._finished)
+        self.pool.start(worker)
 
     def _collect_selected_queue(self, *, run_ai: bool = False) -> None:
         ids = self._selected_queue_ids()
