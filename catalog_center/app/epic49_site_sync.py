@@ -161,6 +161,19 @@ def apply_server_product_to_local(db, local_product_id: int, server: dict) -> No
         "homepage_slider_transition_effect": str(profile.get("homepage_slider_transition_effect") or "cinematic_fade"),
         "homepage_slider_transition_duration_ms": int(profile.get("homepage_slider_transition_duration_ms") or 1400),
         "homepage_slider_display_duration_ms": int(profile.get("homepage_slider_display_duration_ms") or 7000),
+        "homepage_slider_presentation_mode": str(profile.get("homepage_slider_presentation_mode") or "product_fit"),
+        "homepage_slider_object_fit": str(profile.get("homepage_slider_object_fit") or "contain"),
+        "homepage_slider_focal_position": str(profile.get("homepage_slider_focal_position") or "center"),
+        "homepage_slider_image_scale_percent": int(profile.get("homepage_slider_image_scale_percent") or 100),
+        "homepage_slider_position_x_percent": int(profile.get("homepage_slider_position_x_percent") or 50),
+        "homepage_slider_position_y_percent": int(profile.get("homepage_slider_position_y_percent") or 50),
+        "homepage_slider_background_mode": str(profile.get("homepage_slider_background_mode") or "blur"),
+        "homepage_slider_background_color": str(profile.get("homepage_slider_background_color") or "#071827"),
+        "homepage_slider_background_blur_px": int(profile.get("homepage_slider_background_blur_px") or 18),
+        "homepage_slider_desktop_max_width_percent": int(profile.get("homepage_slider_desktop_max_width_percent") or 78),
+        "homepage_slider_desktop_max_height_percent": int(profile.get("homepage_slider_desktop_max_height_percent") or 88),
+        "homepage_slider_mobile_max_width_percent": int(profile.get("homepage_slider_mobile_max_width_percent") or 92),
+        "homepage_slider_mobile_max_height_percent": int(profile.get("homepage_slider_mobile_max_height_percent") or 72),
     }
     db.update_product(int(local_product_id), values)
 
