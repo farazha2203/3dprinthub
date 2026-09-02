@@ -1,3 +1,17 @@
+## Current owner checkpoint — Phase49.3I.52E / permanent Crawl image consistency
+
+Exact tested runtime: `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Production untouched.
+
+Permanent Crawl inventory now resolves all mature image-folder forms, including `_refresh_latest`, `_refetch_*`, and `_bulk_refetch_*`, while recent listing Preview capture understands MakerWorld lazy/srcset/picture/background image sources. A rerun of the same Search can backfill empty Preview rows without duplicating identities. Qt shell marker is `Phase49.3I.52E`.
+
+Evidence: Qt `33632062812` PASS; Single Active AI `33632062877` PASS; Portable `33632062880` PASS; 223 regressions; artifact `9847317893`; SHA256 `f9bcfc0770a38b0c8eabc9f2deab7c05b2c4d8b577fd25eb540ea9b65f7dc970`.
+
+Rollback: `backup/pre-phase49-3i52e-preview-legacy-variants-20260902` → `ef82abe775f88f6326c345b4e17c797471acbc27`.
+
+Next: owner clean Local sync + canonical gate, then verify historical refetch-backed rows and rerun one bounded existing MakerWorld Search to backfill recent Preview cards.
+
+---
+
 ## Current owner checkpoint — Phase49.3I.52D / legacy Crawl image-path parity
 
 Exact tested runtime: `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`. Production remains untouched.
