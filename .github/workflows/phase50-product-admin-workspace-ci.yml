@@ -25,6 +25,8 @@ on:
       - scripts/host/phase49_3i53_production_readonly_audit.sh
       - scripts/host/phase49_3i53_production_deploy.sh
       - scripts/host/phase49_3i53_mysql_backup.py
+      - scripts/host/phase49_3i53_postmerge_resume.sh
+      - store/test_phase49_3i53_host_ai_import_safety.py
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
@@ -92,6 +94,7 @@ jobs:
         run: |
           python -m py_compile \
             scripts/host/phase49_3i53_mysql_backup.py \
+            store/test_phase49_3i53_host_ai_import_safety.py \
             store/apps.py \
             store/admin.py \
             store/admin_seo.py \
@@ -154,6 +157,12 @@ jobs:
           grep -F 'phase49_3i53_mysql_backup.py' scripts/host/phase49_3i53_production_deploy.sh
           grep -F 'PHASE49_PROJECT_ROOT="$ROOT"' scripts/host/phase49_3i53_production_deploy.sh
           python scripts/host/phase49_3i53_mysql_backup.py --self-test
+          bash -n scripts/host/phase49_3i53_postmerge_resume.sh
+          grep -F 'PRE_MIGRATION_ROLLBACK_REVERIFIED=YES' scripts/host/phase49_3i53_postmerge_resume.sh
+          grep -F 'DJANGO_BOOT_SAFE_BEFORE_HTTPX=YES' scripts/host/phase49_3i53_postmerge_resume.sh
+          grep -F 'FRESH_PRE_MIGRATION_DB_BACKUP_VERIFIED=YES' scripts/host/phase49_3i53_postmerge_resume.sh
+          grep -F 'PHASE49_3I53F_POSTMERGE_RECOVERY=PASS' scripts/host/phase49_3i53_postmerge_resume.sh
+          grep -F 'TARGET_DEPENDENCIES_READY=YES' scripts/host/phase49_3i53_production_deploy.sh
 
       - name: Django system check
         run: python manage.py check
@@ -175,6 +184,7 @@ jobs:
             store.test_phase49_3i51_filament_registry_admin \
             store.test_phase49_3i52_site_authoring_ai \
             store.test_phase49_3i52b_bidirectional_sync \
+            store.test_phase49_3i53_host_ai_import_safety \
             catalog_bridge.tests.test_phase49_3i41_filament_bridge \
             catalog_bridge.tests.test_phase49_3i53_publish_readiness \
             -v 2
@@ -189,4 +199,5 @@ jobs:
           echo "PHASE49_3I52_SITE_AUTHORING_AI_CI=PASS"
           echo "PHASE49_3I52B_BIDIRECTIONAL_SITE_SYNC_CI=PASS"
           echo "PHASE49_3I53_SITE_PUBLISH_READINESS_CI=PASS"
+          echo "PHASE49_3I53F_HOST_AI_IMPORT_SAFETY_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"

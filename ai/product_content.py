@@ -5,7 +5,6 @@ from typing import Any
 from django.db import transaction
 from django.utils import timezone
 
-from catalog_center.app.openai_content import AIContentService
 from store.epic49_catalog_profile import ensure_admin_catalog_profile
 from store.models import Category, Product
 
@@ -74,6 +73,11 @@ def _source_payload(product: Product) -> dict[str, Any]:
 
 
 def build_site_product_proposal(product: Product) -> dict[str, Any]:
+    # Import the transport-backed service only for an explicit AI Generate
+    # request. Normal Django startup/admin/product traffic must not depend on
+    # the optional provider HTTP client being importable.
+    from catalog_center.app.openai_content import AIContentService
+
     selection = resolve_product_model()
     key = provider_key(selection.provider)
     categories = list(

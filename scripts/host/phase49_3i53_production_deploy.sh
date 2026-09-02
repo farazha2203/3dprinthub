@@ -207,6 +207,24 @@ printf '%s\n' "===== BACKUP MANIFEST ====="
 
 printf '%s\n' "PREDEPLOY_BACKUP_VERIFIED=YES"
 
+printf '%s\n' "===== TARGET DEPENDENCY GATE ====="
+git show "$FETCHED:requirements.txt" > "$BACKUP_ROOT/requirements-target.txt"
+HTTPX_REQ="$(grep -E '^httpx==[0-9]+(\\.[0-9]+){2}$' "$BACKUP_ROOT/requirements-target.txt" || true)"
+[ "$HTTPX_REQ" = "httpx==0.28.1" ] || fail "unexpected_httpx_requirement"
+"$PY" -m pip --version
+"$PY" -m pip freeze > "$BACKUP_ROOT/pip-freeze-before.txt"
+sha256sum "$BACKUP_ROOT/pip-freeze-before.txt" > "$BACKUP_ROOT/pip-freeze-before.sha256"
+"$PY" -m pip install --disable-pip-version-check --no-input "$HTTPX_REQ"
+"$PY" -m pip check
+"$PY" - <<'PY'
+import httpx
+version = str(httpx.__version__)
+print("HTTPX_VERSION=" + version)
+if version != "0.28.1":
+    raise SystemExit("DEPLOY_FAIL=httpx_version_mismatch")
+PY
+printf '%s\n' "TARGET_DEPENDENCIES_READY=YES"
+
 printf '%s\n' "===== FF-ONLY DEPLOY FROM FETCH_HEAD ====="
 git merge --ff-only "$FETCHED"
 DEPLOYED_HEAD="$(git rev-parse HEAD)"

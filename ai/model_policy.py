@@ -7,8 +7,6 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from catalog_center.app.ai_providers import AIProviderClient
-
 
 _PROVIDER_KEYS = {
     "openrouter": "OPENROUTER_API_KEY",
@@ -19,6 +17,14 @@ _PROVIDER_KEYS = {
 _PROVIDER_ORDER = ("openrouter", "avalai", "google", "openai")
 _PERSIAN_RE = re.compile(r"[\u0600-\u06FF]")
 _SELECTION_CACHE: dict[str, tuple[float, "RuntimeSelection"]] = {}
+
+
+def _provider_client(provider: str, key: str, model: str = ""):
+    # Keep Django/site startup import-safe. The desktop/provider transport
+    # dependency (httpx) is required only when an operator actually runs AI.
+    from catalog_center.app.ai_providers import AIProviderClient
+
+    return AIProviderClient(provider, key, model)
 
 
 @dataclass(frozen=True)
@@ -232,7 +238,7 @@ def _probe_persian_structured(
         "properties": {"answer": {"type": "string"}},
         "required": ["answer"],
     }
-    client = AIProviderClient(provider, key, model_id)
+    client = _provider_client(provider, key, model_id)
     result, selected = client.structured_response(
         instructions=(
             "This is a tiny capability check for Persian ecommerce content. "
@@ -286,7 +292,7 @@ def resolve_product_model(*, force_refresh: bool = False) -> RuntimeSelection:
         if cached and (time.time() - cached[0]) < ttl:
             return cached[1]
 
-    client = AIProviderClient(provider, key)
+    client = _provider_client(provider, key)
     info = [
         dict(item)
         for item in client.list_model_info()
