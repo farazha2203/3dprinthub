@@ -1,3 +1,20 @@
+## Continuation checkpoint — 2026-09-02 / Phase49.3I.52G
+
+Windows Catalog Center runtime `bf1fafdb38233a23e13a5715ffac72f772412005` addresses owner evidence where MakerWorld Crawl discovery succeeds but Product rows fail with no image.
+
+Current contract:
+- discovery and full Product fetch are separate observable stages;
+- redacted per-method JSONL logs live at persistent Catalog `logs\acquisition`;
+- Product success requires meaningful source data and a real local image when requested;
+- distinct mature receive methods fail over in order;
+- a successful method is tried first on later Products;
+- all-method exhaustion or invalid Product URL trips a circuit breaker and leaves later rows untouched;
+- permanent Crawl recovery uses the adaptive path while operator pricing/content/publish safety remains intact.
+
+Windows evidence: Qt `33644903042` PASS with dedicated 27-test 3I.52 suite; Single Active AI `33644902970` PASS; Portable `33644902962` PASS with 235 regressions; artifact `9852476786`, EXE SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`.
+
+Production/Host/MySQL untouched. Next: owner Local checksum-backed gate and bounded 2–5 Product MakerWorld QA before Production work.
+
 ## Current owner checkpoint — Phase49.3I.52F / bulk recovery for incomplete Crawl rows
 
 Exact tested runtime: `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Production untouched.

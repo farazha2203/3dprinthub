@@ -1,3 +1,13 @@
+## Current Windows checkpoint — Phase49.3I.52G / 2026-09-02
+
+MakerWorld QA proved Crawl discovery can succeed while full Product data/image acquisition fails. 52G separates those stages, adds redacted per-method JSONL diagnostics, factual Product quality gates, adaptive failover across distinct mature receive methods, successful-method stickiness and a circuit breaker that leaves later selected rows untouched after one Product exhausts all real methods.
+
+Exact tested runtime `bf1fafdb38233a23e13a5715ffac72f772412005`; Qt `33644903042`, Single Active AI `33644902970`, Portable `33644902962` PASS; dedicated 27 tests; portable regression 235 tests; artifact `9852476786`; EXE SHA256 `f3e0bce9e5d3b40317b5fd37cff8a5fc6ff1d5a2cef6f5b1bf84dc6f6699c310`.
+
+Rollback: `backup/pre-phase49-3i52g-adaptive-acquisition-observability-20260902` → `aa5ae5c9ff859b6fcd7630ef11b29254b7e2bcf3`.
+
+Production/Host/MySQL remain untouched. Immediate next gate is owner Local bounded real-source recovery of 2–5 previously failed MakerWorld rows plus inspection of `logs\acquisition` if a live failure remains.
+
 ## Current Windows checkpoint — Phase49.3I.52F / 2026-09-02
 
 Permanent Crawl inventory now supports bulk repair of incomplete Products: automatic incomplete selection, 5/10/20 image target, local-evidence reuse, safe source refetch and explicit orphan-ledger recovery. Exact tested runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Qt `33637452385`, Single Active AI `33637452588`, Portable `33637452243` PASS; 227 release regressions.
