@@ -596,20 +596,20 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_main_window_reports_current_3i52e_phase_instead_of_stale_3i48(self):
+    def test_main_window_reports_current_3i52f_phase_instead_of_stale_3i48(self):
         from qt6.main_window import MainWindow
 
         window = MainWindow(self.db)
         try:
             contract = window.structural_contract()
-            self.assertEqual(contract["active_phase"], "49.3I.52E")
+            self.assertEqual(contract["active_phase"], "49.3I.52F")
             phase_labels = [
                 label.text()
                 for label in window.findChildren(QLabel)
                 if "Phase49.3I." in label.text()
             ]
             self.assertTrue(
-                any("Phase49.3I.52E" in value for value in phase_labels)
+                any("Phase49.3I.52F" in value for value in phase_labels)
             )
             self.assertFalse(
                 any("Phase49.3I.48" in value for value in phase_labels)
@@ -626,6 +626,10 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertEqual(page.direct_btn.text(), "دریافت Product")
             self.assertEqual(page.live_add_btn.text(), "افزودن انتخابی")
             self.assertEqual(page.live_reject_btn.text(), "حذف انتخابی")
+            self.assertEqual(page.queue_select_incomplete_btn.text(), "انتخاب ناقص‌ها")
+            self.assertEqual(page.queue_recover_btn.text(), "بازیابی دیتا + عکس")
+            self.assertEqual(page.queue_restore_btn.text(), "بازگردانی به صف")
+            self.assertEqual(page.queue_recover_image_limit.currentData(), 5)
             for button in (
                 page.start_btn,
                 page.queue_btn,
@@ -633,6 +637,8 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 page.direct_btn,
                 page.live_add_btn,
                 page.live_reject_btn,
+                page.queue_select_incomplete_btn,
+                page.queue_recover_btn,
             ):
                 self.assertTrue(button.toolTip().strip())
         finally:
