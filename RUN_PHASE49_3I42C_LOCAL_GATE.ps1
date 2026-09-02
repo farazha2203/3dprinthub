@@ -161,7 +161,11 @@ $required = @(
     "catalog_center\app\phase49_3c_image_pipeline.py",
     "catalog_center\tests\test_phase49_3i42c_acquisition_runtime.py",
     "catalog_center\tests\test_phase49_3i42c3_ai_crawl_parity.py",
+    "catalog_center\tests\test_phase49_3i46_catalog_paging_parity.py",
     "catalog_center\tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py",
+    "catalog_center\tests\test_phase49_3i48_owner_filament_site_foundation.py",
+    "catalog_center\tests\test_phase49_3i49_site_bulk_publish.py",
+    "catalog_center\app\phase49_3i49_site_publish.py",
     "catalog_center\app\ai_model_catalog.py",
     "templates\store\product_detail.html",
     "static\admin\phase49-admin-tabs.css",
@@ -248,7 +252,11 @@ Run-Native -File $Py -Arguments @(
     (Join-Path $Catalog "app\phase49_3c_image_pipeline.py"),
     (Join-Path $Catalog "tests\test_phase49_3i42c_acquisition_runtime.py"),
     (Join-Path $Catalog "tests\test_phase49_3i42c3_ai_crawl_parity.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i46_catalog_paging_parity.py"),
     (Join-Path $Catalog "tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i48_owner_filament_site_foundation.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i49_site_bulk_publish.py"),
+    (Join-Path $Catalog "app\phase49_3i49_site_publish.py"),
     (Join-Path $Catalog "app\ai_model_catalog.py")
 )
 
@@ -261,7 +269,10 @@ try {
         "tests.test_phase49_3i42b_core_parity",
         "tests.test_phase49_3i42c_acquisition_runtime",
         "tests.test_phase49_3i42c3_ai_crawl_parity",
-        "tests.test_phase49_3i47_qt_workspace_image_bulk_ai"
+        "tests.test_phase49_3i46_catalog_paging_parity",
+        "tests.test_phase49_3i47_qt_workspace_image_bulk_ai",
+        "tests.test_phase49_3i48_owner_filament_site_foundation",
+        "tests.test_phase49_3i49_site_bulk_publish"
     )
 
     Run-Native -File $Py -Arguments @(
@@ -360,8 +371,9 @@ if ($FinalDirty.Count -gt 0) {
     Fail "TESTS CHANGED WORKTREE"
 }
 
-Step "10. PHASE49.3I.47 AUTOMATED LOCAL GATE PASSED"
+Step "10. PHASE49.3I.49 AUTOMATED LOCAL GATE PASSED"
 Write-Host "PHASE49_3I47_LOCAL_GATE=PASS" -ForegroundColor Green
+Write-Host "PHASE49_3I49_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "HEAD=$FinalHead" -ForegroundColor Green
 Write-Host "CLASSIC_SEARCH_CONTINUATION=ENABLED" -ForegroundColor Green
 Write-Host "HYBRID_HTTP_SITEMAP_BROWSER=ENABLED" -ForegroundColor Green
