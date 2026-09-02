@@ -2052,6 +2052,10 @@ class OperationsPage(QWidget):
         controls = QFrame()
         controls.setObjectName("Card")
         grid = QGridLayout(controls)
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(1, 1)
+        grid.setColumnStretch(3, 1)
 
         self.source = QComboBox()
         self.mode = QComboBox()
@@ -2125,6 +2129,14 @@ class OperationsPage(QWidget):
         self.image_limit = QSpinBox()
         self.image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
         self.image_limit.setValue(5)
+        for spin in (self.requested, self.image_limit):
+            spin.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+            spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            spin.setMinimumWidth(112)
+            spin.setMaximumWidth(150)
+            spin.setStyleSheet(
+                "QSpinBox { padding-left: 8px; padding-right: 28px; }"
+            )
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
 
         self.start_btn = QPushButton("شروع دریافت")
@@ -2546,16 +2558,12 @@ class OperationsPage(QWidget):
                     or "کاندیدا"
                 )
                 icon = self._queue_icon(row)
-                image_count = (
-                    self._queue_image_count(row)
-                    if product_id
-                    else 0
-                )
+                image_count = self._queue_image_count(row)
                 preview_path = self.kernel.acquisition.candidate_preview_path(
                     source_code,
                     external_id,
                 )
-                if product_id:
+                if image_count > 0:
                     image_text = f"{image_count} عکس دارد"
                 elif preview_path:
                     image_text = "Preview: 1 عکس • دریافت کامل در صف"
@@ -3082,6 +3090,8 @@ class OperationsPage(QWidget):
     def _queue_product_row(self, row: dict) -> dict:
         return {
             "id": row.get("product_id"),
+            "source_code": row.get("source_code") or "",
+            "external_id": row.get("external_id") or "",
             "title_fa": row.get("product_title_fa") or "",
             "source_title": row.get("product_source_title") or "",
             "short_description_fa": row.get("product_short_description_fa") or "",
@@ -3177,12 +3187,21 @@ class OperationsPage(QWidget):
                 parts.append("🏷 " + "، ".join(clean))
         return " • ".join(parts)
 
-    def _queue_image_count(self, row: dict) -> int:
-        if not row.get("product_id"):
-            return 0
-        return self.kernel.images.image_count(
-            self._queue_product_row(row)
+    def _queue_local_identity_items(self, row: dict) -> list[str]:
+        return self.kernel.images.identity_local_items(
+            str(row.get("source_code") or ""),
+            str(row.get("external_id") or ""),
+            self._queue_product_row(row),
         )
+
+    def _queue_image_count(self, row: dict) -> int:
+        if row.get("product_id"):
+            count = self.kernel.images.image_count(
+                self._queue_product_row(row)
+            )
+            if count > 0:
+                return count
+        return len(self._queue_local_identity_items(row))
 
     def _queue_icon(self, row: dict) -> QIcon:
         if row.get("product_id"):
@@ -3191,6 +3210,13 @@ class OperationsPage(QWidget):
             )
             if path:
                 return QIcon(path)
+        identity_path = self.kernel.images.preferred_identity_local_path(
+            str(row.get("source_code") or ""),
+            str(row.get("external_id") or ""),
+            self._queue_product_row(row),
+        )
+        if identity_path:
+            return QIcon(identity_path)
         preview = self.kernel.acquisition.candidate_preview_path(
             str(row.get("source_code") or ""),
             str(row.get("external_id") or ""),
@@ -3319,6 +3345,25 @@ class OperationsPage(QWidget):
             self.live_detail_product_btn.setEnabled(
                 callable(self.navigate)
             )
+            return
+
+        local_paths = self.kernel.images.identity_local_items(
+            source_code,
+            external_id,
+        )
+        if local_paths:
+            for index, path in enumerate(local_paths[:24], 1):
+                item = QListWidgetItem(f"عکس {index}")
+                item.setIcon(QIcon(path))
+                item.setToolTip(path)
+                self.live_detail_images.addItem(item)
+            self.live_detail_title.setText(
+                external_id or "کاندیدای دارای فایل محلی"
+            )
+            self.live_detail_meta.setText(
+                f"{len(local_paths)} عکس دارد • فایل‌های دانلودشده نسخه قبلی پیدا شد"
+            )
+            self.live_detail_product_btn.setEnabled(False)
             return
 
         preview = self.kernel.acquisition.candidate_preview_path(
@@ -3547,7 +3592,7 @@ class OperationsPage(QWidget):
                     str(title),
                     (
                         f"🖼 {image_count} عکس دارد • {source} • {status}"
-                        if row.get("product_id")
+                        if image_count > 0
                         else (
                             f"🖼 Preview: 1 عکس • {source} • {status}"
                             if preview_path
@@ -3604,7 +3649,7 @@ class OperationsPage(QWidget):
                     short_description,
                     (
                         str(image_count)
-                        if row.get("product_id")
+                        if image_count > 0
                         else ("Preview 1" if preview_path else "")
                     ),
                     f"{weight:g}" if weight > 0 else "",
