@@ -803,6 +803,7 @@ class StageCore:
 
 class FilamentParityCore:
     BRAND_REGISTRY_KEY = "qt_filament_brand_registry_v1"
+    MATERIAL_REGISTRY_KEY = "qt_filament_material_registry_v1"
     COLOR_REGISTRY_KEY = "qt_filament_color_registry_v1"
     DEFAULT_COLOR_PRESETS = (
         {"name": "صورتی پاستیلی", "color_type": "solid", "color_finish": "matte", "palette_hexes": ["#F7C9D9"]},
@@ -819,8 +820,32 @@ class FilamentParityCore:
         self.db = db
         ensure_epic49_desktop_schema(db)
 
-    def list(self) -> list[dict[str, Any]]:
+    def _raw_list(self) -> list[dict[str, Any]]:
         return [dict(row) for row in list_available_material_colors(self.db)]
+
+    def list(self) -> list[dict[str, Any]]:
+        brand_meta = {
+            str(item.get("name") or "").strip().casefold(): dict(item)
+            for item in self._registry(self.BRAND_REGISTRY_KEY)
+            if isinstance(item, dict) and str(item.get("name") or "").strip()
+        }
+        material_meta = {
+            str(item.get("name") or "").strip().casefold(): dict(item)
+            for item in self._registry(self.MATERIAL_REGISTRY_KEY)
+            if isinstance(item, dict) and str(item.get("name") or "").strip()
+        }
+        output = []
+        for raw in self._raw_list():
+            item = dict(raw)
+            brand = str(item.get("brand_name") or "").strip()
+            material = str(item.get("material_name") or "").strip()
+            bmeta = brand_meta.get(brand.casefold(), {})
+            mmeta = material_meta.get(material.casefold(), {})
+            item["brand_description"] = str(bmeta.get("description") or "")
+            item["material_description"] = str(mmeta.get("description") or "")
+            item["material_price_per_kg"] = int(float(mmeta.get("price_per_kg") or 0))
+            output.append(item)
+        return output
 
     def _registry(self, key: str) -> list[Any]:
         try:
@@ -829,42 +854,109 @@ class FilamentParityCore:
             return []
         return list(value) if isinstance(value, list) else []
 
-    def brands(self) -> list[str]:
-        names: dict[str, str] = {}
-        for raw in self._registry(self.BRAND_REGISTRY_KEY):
-            name = str(raw or "").strip()
+    def _named_registry_records(self, key: str, *, inventory_field: str) -> list[dict[str, Any]]:
+        records: dict[str, dict[str, Any]] = {}
+        for raw in self._registry(key):
+            if isinstance(raw, dict):
+                name = str(raw.get("name") or "").strip()
+                description = str(raw.get("description") or "").strip()
+                price_per_kg = max(0, _integer(raw.get("price_per_kg"), 0))
+            else:
+                name = str(raw or "").strip()
+                description = ""
+                price_per_kg = 0
             if name:
-                names.setdefault(name.casefold(), name)
-        for row in self.list():
-            name = str(row.get("brand") or row.get("brand_name") or "").strip()
-            if name:
-                names.setdefault(name.casefold(), name)
-        return sorted(names.values(), key=str.casefold)
+                records[name.casefold()] = {
+                    "name": name,
+                    "description": description,
+                    "price_per_kg": price_per_kg,
+                }
+        for row in self._raw_list():
+            name = str(row.get(inventory_field) or "").strip()
+            if name and name.casefold() not in records:
+                records[name.casefold()] = {"name": name, "description": "", "price_per_kg": 0}
+        return sorted(records.values(), key=lambda item: str(item["name"]).casefold())
 
-    def add_brand(self, name: str) -> list[str]:
+    def brand_records(self) -> list[dict[str, Any]]:
+        return self._named_registry_records(self.BRAND_REGISTRY_KEY, inventory_field="brand_name")
+
+    def brands(self) -> list[str]:
+        return [str(item["name"]) for item in self.brand_records()]
+
+    def save_brand(self, name: str, description: str = "", *, previous_name: str = "") -> list[dict[str, Any]]:
         value = str(name or "").strip()
         if not value:
             raise ValueError("نام برند خالی است.")
-        values = self.brands()
-        if value.casefold() not in {item.casefold() for item in values}:
-            values.append(value)
-        values = sorted(dict.fromkeys(values), key=str.casefold)
-        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(values, ensure_ascii=False))
-        return values
+        previous = str(previous_name or "").strip().casefold()
+        custom = [
+            dict(item) for item in self.brand_records()
+            if str(item.get("name") or "").strip().casefold() not in {value.casefold(), previous}
+        ]
+        custom.append({"name": value, "description": str(description or "").strip(), "price_per_kg": 0})
+        custom.sort(key=lambda item: str(item.get("name") or "").casefold())
+        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.brand_records()
+
+    def add_brand(self, name: str) -> list[str]:
+        self.save_brand(name)
+        return self.brands()
 
     def delete_brand(self, name: str) -> list[str]:
         value = str(name or "").strip()
         if not value:
             return self.brands()
-        if any(
-            str(row.get("brand") or row.get("brand_name") or "").strip().casefold()
-            == value.casefold()
-            for row in self.list()
-        ):
+        if any(str(row.get("brand_name") or "").strip().casefold() == value.casefold() for row in self._raw_list()):
             raise ValueError("این برند روی فیلامنت فعال استفاده شده است؛ ابتدا فیلامنت‌های آن را ویرایش/غیرفعال کن.")
-        values = [item for item in self.brands() if item.casefold() != value.casefold()]
-        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(values, ensure_ascii=False))
-        return values
+        custom = [
+            dict(item) for item in self.brand_records()
+            if str(item.get("name") or "").strip().casefold() != value.casefold()
+        ]
+        self.db.set_setting(self.BRAND_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.brands()
+
+    def material_records(self) -> list[dict[str, Any]]:
+        return self._named_registry_records(self.MATERIAL_REGISTRY_KEY, inventory_field="material_name")
+
+    def materials(self) -> list[str]:
+        return [str(item["name"]) for item in self.material_records()]
+
+    def save_material(
+        self,
+        name: str,
+        description: str = "",
+        price_per_kg: int = 0,
+        *,
+        previous_name: str = "",
+    ) -> list[dict[str, Any]]:
+        value = str(name or "").strip()
+        if not value:
+            raise ValueError("نام متریال خالی است.")
+        previous = str(previous_name or "").strip().casefold()
+        custom = [
+            dict(item) for item in self.material_records()
+            if str(item.get("name") or "").strip().casefold() not in {value.casefold(), previous}
+        ]
+        custom.append({
+            "name": value,
+            "description": str(description or "").strip(),
+            "price_per_kg": max(0, _integer(price_per_kg, 0)),
+        })
+        custom.sort(key=lambda item: str(item.get("name") or "").casefold())
+        self.db.set_setting(self.MATERIAL_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.material_records()
+
+    def delete_material(self, name: str) -> list[str]:
+        value = str(name or "").strip()
+        if not value:
+            return self.materials()
+        if any(str(row.get("material_name") or "").strip().casefold() == value.casefold() for row in self._raw_list()):
+            raise ValueError("این متریال روی فیلامنت فعال استفاده شده است؛ ابتدا فیلامنت‌های آن را ویرایش/غیرفعال کن.")
+        custom = [
+            dict(item) for item in self.material_records()
+            if str(item.get("name") or "").strip().casefold() != value.casefold()
+        ]
+        self.db.set_setting(self.MATERIAL_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+        return self.materials()
 
     def color_presets(self) -> list[dict[str, Any]]:
         presets: dict[str, dict[str, Any]] = {}
@@ -1009,6 +1101,7 @@ class FilamentParityCore:
             preheat_hourly_rate=max(0, _integer(data.get("preheat_hourly_rate"), 0)),
             filament_image_url=str(data.get("filament_image_url") or "").strip(),
             filament_image_path=image_path,
+            description=str(data.get("description") or data.get("filament_description") or "").strip(),
             color_finish=str(data.get("color_finish") or "matte").strip(),
             palette_hexes=data.get("palette_hexes") or data.get("palette_hex_json") or [],
         )
@@ -1396,32 +1489,33 @@ class CommerceCore:
         current = self.profiles(product_id)
         changed = False
 
-        if not current:
-            # The profile ledger requires a real print duration. Refuse to
-            # create a fake 60-minute placeholder when the source has no time.
-            if minutes <= 0:
-                return {
-                    "changed": False,
-                    "reason": "source_print_time_missing",
-                    "materials": sorted(matched_materials),
-                    "matched_offer_count": len(matched_offers),
-                    "weight_grams": weight or None,
-                    "print_time_minutes": None,
-                    "dimensions_cm": list(dimensions) if dimensions else [],
-                }
+        fallback_offers = normalize_material_color_options(
+            [
+                item
+                for item in (filament_rows or [])
+                if str(item.get("material") or item.get("material_name") or "")
+                .strip().upper().replace("-", "").replace("_", "")
+                .startswith(("PLA", "PETG"))
+            ]
+        )
+        fallback_used = False
 
+        if not current:
+            # Owner-approved and explicitly labelled fallback. Source facts win
+            # where present; only missing production/material facts use defaults.
+            fallback_used = minutes <= 0 or not matched_offers
             profile_name = str(source_profile.get("name") or "").strip()
             profile: dict[str, Any] = {
-                "name": profile_name or "پروفایل منبع 1",
-                "size_label": profile_name,
+                "name": "پیش‌فرض" if fallback_used else (profile_name or "پروفایل منبع 1"),
+                "size_label": "پیش‌فرض" if fallback_used else profile_name,
                 "production_rows": [
                     {
-                        "weight_grams": weight,
-                        "print_time_minutes": minutes,
-                        "support_weight_grams": 0,
+                        "weight_grams": weight if weight > 0 else (100 if fallback_used else 0),
+                        "print_time_minutes": minutes if minutes > 0 else 60,
+                        "support_weight_grams": 50 if fallback_used else 0,
                     }
                 ],
-                "material_options": matched_offers,
+                "material_options": matched_offers if matched_offers else fallback_offers,
                 "pricing_strategy": "dynamic",
                 "price_min": 0,
                 "price_max": 0,
@@ -1500,6 +1594,7 @@ class CommerceCore:
             "weight_grams": weight or None,
             "print_time_minutes": minutes or None,
             "dimensions_cm": list(dimensions) if dimensions else [],
+            "fallback_used": bool(fallback_used),
         }
 
 

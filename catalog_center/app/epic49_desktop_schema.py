@@ -199,6 +199,7 @@ def ensure_epic49_desktop_schema(db) -> None:
             preheat_hourly_rate INTEGER NOT NULL DEFAULT 0,
             filament_image_url TEXT NOT NULL DEFAULT '',
             filament_image_path TEXT NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
             color_finish TEXT NOT NULL DEFAULT 'matte',
             palette_hex_json TEXT NOT NULL DEFAULT '[]',
             is_active INTEGER NOT NULL DEFAULT 1,
@@ -216,6 +217,7 @@ def ensure_epic49_desktop_schema(db) -> None:
         "preheat_hourly_rate": "INTEGER NOT NULL DEFAULT 0",
         "filament_image_url": "TEXT NOT NULL DEFAULT ''",
         "filament_image_path": "TEXT NOT NULL DEFAULT ''",
+        "description": "TEXT NOT NULL DEFAULT ''",
         "color_finish": "TEXT NOT NULL DEFAULT 'matte'",
         "palette_hex_json": "TEXT NOT NULL DEFAULT '[]'",
     }.items():
@@ -275,7 +277,7 @@ def list_available_material_colors(db) -> list[dict]:
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
                print_hourly_rate, supervision_hourly_rate,
                preheat_hours, preheat_temperature_c, preheat_hourly_rate,
-               filament_image_url, filament_image_path, color_finish,
+               filament_image_url, filament_image_path, description, color_finish,
                palette_hex_json, is_active, sort_order
         FROM available_filament_offers
         WHERE is_active=1
@@ -315,6 +317,7 @@ def add_available_material_color(
     preheat_hourly_rate: int = 0,
     filament_image_url: str = "",
     filament_image_path: str = "",
+    description: str = "",
     color_finish: str = "matte",
     palette_hexes=None,
 ) -> dict:
@@ -352,6 +355,7 @@ def add_available_material_color(
     preheat_rate = max(0, int(float(preheat_hourly_rate or 0)))
     image_url = str(filament_image_url or "").strip()
     image_path = str(filament_image_path or "").strip()
+    description_value = str(description or "").strip()
     db.conn.execute(
         """
         INSERT INTO available_filament_offers(
@@ -360,8 +364,8 @@ def add_available_material_color(
             purchase_price_per_roll,sale_price_per_roll,usd_price_per_roll,
             usd_fx_rate_toman,print_hourly_rate,supervision_hourly_rate,
             preheat_hours,preheat_temperature_c,preheat_hourly_rate,
-            filament_image_url,filament_image_path,color_finish,palette_hex_json,is_active
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            filament_image_url,filament_image_path,description,color_finish,palette_hex_json,is_active
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ON CONFLICT(material_name,brand_name,color_name) DO UPDATE SET
             manufacturer_name=excluded.manufacturer_name,
             hex_code=excluded.hex_code,
@@ -381,6 +385,7 @@ def add_available_material_color(
             preheat_hourly_rate=excluded.preheat_hourly_rate,
             filament_image_url=excluded.filament_image_url,
             filament_image_path=excluded.filament_image_path,
+            description=excluded.description,
             color_finish=excluded.color_finish,
             palette_hex_json=excluded.palette_hex_json,
             is_active=1
@@ -390,7 +395,7 @@ def add_available_material_color(
             str(secondary_hex or "").strip(), str(tertiary_hex or "").strip(),
             roll_weight, stock_rolls, purchase, sale, usd, fx,
             print_hourly, supervision_hourly, preheat_h, preheat_temp,
-            preheat_rate, image_url, image_path, finish,
+            preheat_rate, image_url, image_path, description_value, finish,
             json.dumps(palette, ensure_ascii=False),
         ),
     )
@@ -403,7 +408,7 @@ def add_available_material_color(
                sale_price_per_roll, usd_price_per_roll, usd_fx_rate_toman,
                print_hourly_rate, supervision_hourly_rate,
                preheat_hours, preheat_temperature_c, preheat_hourly_rate,
-               filament_image_url, filament_image_path, color_finish,
+               filament_image_url, filament_image_path, description, color_finish,
                palette_hex_json, is_active, sort_order
         FROM available_filament_offers
         WHERE material_name=? AND brand_name=? AND color_name=?
