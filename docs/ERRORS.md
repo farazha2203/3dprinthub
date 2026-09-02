@@ -1,3 +1,35 @@
+## ERR-49-096 — New 3I.52B Site-pull regression missed one import and the isolated test crossed the real Bridge settings boundary
+**Date:** 2026-09-02  
+**Environment:** GitHub Windows Qt CI during Phase49.3I.52B.
+
+**Observed evidence:**  
+- run `33619483446` reached the new 3I.52B test only after all mature Qt regressions through 3I.51 passed;
+- `apply_server_product_to_local()` raised `NameError: utc_now is not defined`;
+- Site-pull orchestration tests then raised the existing ConnectionCore validation that Site URL + Bridge token must be configured;
+- after importing `utc_now`, run `33619558541` proved the runtime mapping test passed and only the three Site-pull fixture cases still crossed the real Bridge settings boundary.
+
+**Root cause:**  
+1. the newly expanded Site→Local helper called the mature Catalog timestamp helper without importing it;  
+2. the new orchestration tests mocked the remote Product list but still called the real `ConnectionCore.bridge_settings()`, which correctly refuses an unconfigured Bridge token.
+
+**Failed attempts / rule:**  
+- the first failed test was not rerun unchanged;
+- after the import fix, the remaining failure was reclassified as a test-isolation/configuration-boundary issue rather than weakening the production Bridge credential guard.
+
+**Correct fix:**  
+- commit `d6450ca2d9016bbdb75b37b7a31d20d8c2b6d111` imports `utc_now`;
+- commit `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a` provides an isolated `bridge_settings` fixture while keeping the remote Product list mocked;
+- no fake secret is persisted and the real Bridge settings validation remains unchanged.
+
+**Verification:**  
+- `33619876564` final Qt full parity PASS, including 3I.52B plus all mature acquisition/Filament/Profile/Stage/launcher regressions;
+- `33619876317` Single Active AI PASS;
+- `33619876411` Windows Portable PASS;
+- `33619558467` Product Admin/Bridge/migration CI PASS on runtime-equivalent source.
+
+**Prevention:**  
+Cross-boundary Qt orchestration tests must provide the complete local configuration boundary they intentionally traverse, even when the remote transport function itself is mocked. Production credential validation must never be weakened merely to make an isolated test pass.
+
 # PROJECT ERROR KNOWLEDGE BASE
 
 ## ERR-49-095 — Filament Bridge v3 palette normalization overwrote explicit legacy HEX slots

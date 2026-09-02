@@ -1,3 +1,65 @@
+## 2026-09-02 — Phase49.3I.52 Site authoring + Shared Host AI + Bidirectional Product sync
+
+Status: `GITHUB_UPDATED / WINDOWS QT CI PASS / SITE ADMIN-BRIDGE CI PASS / PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Exact tested source checkpoint: `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a`  
+Site/Admin runtime checkpoint: `d6450ca2d9016bbdb75b37b7a31d20d8c2b6d111`  
+3I.52B rollback: `backup/pre-phase49-3i52b-bidirectional-site-sync-20260902` → `48290db404739f07e322a700b6baa71d6b801871`.
+
+Implemented:
+- Django Admin is now a first-class fallback Product authoring surface when Catalog Center is unavailable, while reusing the canonical Product, ProductCatalogProfile and ProductVariant authority;
+- manual Site Products receive the same canonical ProductCatalogProfile and existing pricing/Profile/Variant engine; no parallel commerce database was created;
+- Host Product AI reuses the mature Structured/semantic-validated Catalog provider stack through root `ai/`, with Preview-before-Apply and an explicit content/SEO-only safety boundary;
+- Host AI secrets are environment-only; Windows may keep using the mature OS Credential Store boundary;
+- automatic Product-model policy rejects variable OpenRouter routers, probes exact Structured models for real Persian output, prefers verified free models and only then a bounded low-cost fallback;
+- Bridge Product payload now includes source identity, category slug, pricing strategy, pricing inputs and technical summary, plus bounded offset pagination;
+- Products page now has `↻ دریافت تغییرات سایت` and pulls newer Site revisions into Windows through the authenticated Bridge;
+- clean Local Products accept a newer Site revision; Local Products with unpublished edits are never overwritten automatically and instead receive an explicit revision conflict;
+- Site-only Products become non-publishable Local mirrors (`reference_only=1`) until linked to a real acquisition/source identity;
+- republish now verifies the current Site Product revision before Batch packaging; mismatch or revision-check failure stops closed instead of overwriting newer Site Admin work;
+- existing Batch 8.5 → FTP → Bridge → Store/public HTTP verification remains unchanged after the revision gate.
+
+Verification:
+- `33619876564` — final Phase49.3I.42C3 Qt6 full parity on `6d19bed...` — PASS, including dedicated 3I.52B Site→Windows pull, conflict protection and publish revision guard plus all mature acquisition/Filament/Profile/Stage/launcher regressions;
+- `33619876411` — Windows Portable on `6d19bed...` — PASS;
+- `33619876317` — Single Active AI on `6d19bed...` — PASS;
+- `33619558467` — Product Admin/Bridge/migration CI on runtime-equivalent `d6450ca...` — PASS, including new 3I.52B Bridge serialization/pagination/pricing round-trip tests;
+- `33619558562` — Phase50 Variant2/Profile Matrix on `d6450ca...` — PASS;
+- delta `d6450ca... → 6d19bed...` is only the isolated Windows 3I.52B test fixture, so Site/Admin runtime source did not change after the passing Admin/Bridge gate.
+
+Errors resolved:
+- initial 3I.52B Qt test exposed missing `utc_now` import in the new Site→Local apply helper;
+- the next run proved the runtime fix and isolated the remaining failure to tests invoking the real Bridge settings boundary without a CI token;
+- the test fixture was corrected to provide an isolated Bridge settings object while the network Product list remained mocked;
+- final Qt full parity then passed. Recorded as ERR-49-096.
+
+Database / Production safety:
+- 3I.52/3I.52B add no new Django migration and no destructive Catalog migration;
+- existing 3I.51 additive migration candidates remain `website.0024` and `store.0042`;
+- pricing fields used by this sync already belong to the existing Store migration chain, including `store.0033`;
+- Production MySQL has NOT been changed;
+- Host/Production source has NOT been changed;
+- last verified Production application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- last verified Production Store migration evidence remains only through `store.0035`; no later migration is assumed.
+
+Local acceptance:
+- canonical runner: `RUN_PHASE49_3I42C_LOCAL_GATE.ps1`;
+- runner version: `49.3I.52.1`;
+- Windows PowerShell 5.1 ASCII/parser guard remains mandatory;
+- the gate checksum-backs up `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` before foreground QA.
+
+Exact next task:
+1. close Catalog Center;
+2. verify Local repo/origin/branch/clean worktree and live GitHub head;
+3. ff-only pull the final documentation head;
+4. run the canonical 3I.52 Local gate with the exact final GitHub head and `-LaunchApp`;
+5. foreground-QA Site Product pull, newer-clean revision acceptance, dirty-Local conflict protection and Site-only non-publishable mirror behavior together with the existing 3I.51 Product/Crawl/Profile/Filament checks;
+6. only after owner Local acceptance start the read-only Host/MySQL/migration/disk/backup audit;
+7. create and verify fresh source/environment/MySQL backups before any deploy or migration;
+8. Production deploy remains blocked until those gates pass.
+
 ## 2026-09-02 — Phase49.3I.51 Windows + Site finalization
 
 Status: `GITHUB_UPDATED / WINDOWS CI PASS / SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`.

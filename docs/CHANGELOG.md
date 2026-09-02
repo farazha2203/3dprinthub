@@ -1,3 +1,18 @@
+## 2026-09-02 — Phase49.3I.52 / 3I.52B
+- made Django Admin a canonical fallback Product authoring surface using the existing Product/Profile/Variant commerce authority;
+- added root `ai/` shared Product AI policy/playbook, Persian Structured model probe, verified-free-first/low-cost fallback policy and environment-only Host secret boundary;
+- added Preview-before-Apply Site AI that cannot change operator-owned pricing/stock/material/color/license/factual production data or publish state;
+- completed Bridge Product payload parity for source identity, category slug, pricing strategy, pricing inputs and technical summary;
+- added bounded Product offset pagination for Site→Windows reconciliation;
+- added Windows `دریافت تغییرات سایت`, Site-only non-publishable Local mirrors and revision-aware clean-update/dirty-conflict behavior;
+- added fail-closed Site revision verification before republishing an existing Product;
+- preserved the mature Batch 8.5 → FTP → Bridge → public HTTP verification path after the revision gate;
+- owner Local gate is now `49.3I.52.1`;
+- ERR-49-096 records the missing timestamp import and Bridge test-fixture correction;
+- final tested source `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a`;
+- Qt `33619876564`, Portable `33619876411`, Single Active AI `33619876317`, Admin/Bridge `33619558467`, Variant/Profile `33619558562` PASS;
+- no new Django migration, no Production MySQL write, no Host/Production deploy.
+
 ## 2026-09-02 — Phase49.3I.51
 - enlarged Product image review while preserving multi-image selection and bulk image actions;
 - restored fixed source-page open behavior and MakerWorld URL Source auto-detection in Crawl;

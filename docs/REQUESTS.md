@@ -1,3 +1,32 @@
+## REQ-49-088 — Site fallback Product authoring, shared low-cost Persian AI and safe bidirectional Windows sync
+Date: 2026-09-02  
+Status: `IMPLEMENTED + GITHUB CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Owner request:
+- the Site must remain operable when the Windows application is unavailable;
+- Product can be added/edited directly on Site, including the same pricing/Profile/Variant authority;
+- Host gets the same Product AI method with a cheap/free Persian-capable model policy;
+- AI implementation experience is collected under a root `ai/` folder for controlled reuse in other projects;
+- later Windows work must reconcile Site edits rather than overwrite them.
+
+Acceptance implemented:
+- Site Admin reuses canonical Product/ProductCatalogProfile/ProductVariant, not a duplicate commerce store;
+- shared Host AI reuses mature Structured + semantic validation, prefers a verified exact free Persian Structured model, then a bounded low-cost fallback;
+- variable OpenRouter routers are not accepted as the final Product model;
+- AI is Preview-before-Apply and cannot mutate operator-owned price/stock/material/color/license/factual production data/publish state;
+- Host keys remain environment-only;
+- Windows can explicitly pull Site Product changes through Bridge;
+- newer Site revisions overwrite only clean Local mirrors; dirty Local edits produce an explicit conflict;
+- Site-only Products are mirrored as non-publishable Local records until source identity is established;
+- republish verifies the live Site revision before Batch packaging and fails closed on mismatch;
+- full Pricing/Profile payload needed for this contract round-trips through Bridge.
+
+Evidence:
+`33619876564`, `33619876411`, `33619876317`, `33619558467`, `33619558562` PASS. Tested source: `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a`.
+
+Cross-project note:
+`ai/README.md` and `ai/PLAYBOOK_FA.md` are the canonical reusable policy/playbook. Other repositories must still be updated only after reading and verifying that repository's own `AGENTS.md`, architecture, secrets and tests; this change does not silently modify unrelated repositories.
+
 ## REQ-49-087 — Finalize Windows Product/Crawl/Profile/Filament parity and matching Site Filament management
 Date: 2026-09-02  
 Status: `IMPLEMENTED + WINDOWS/SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

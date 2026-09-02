@@ -1,3 +1,39 @@
+## 2026-09-02 — Phase49.3I.52 Site fallback authoring + Shared AI + bidirectional Product sync
+
+Status: `IMPLEMENTED + WINDOWS QT CI PASS + SITE/ADMIN CI PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- canonical Site Product authoring when Windows Catalog Center is unavailable;
+- same Product/Profile/Variant pricing authority on Site and Desktop;
+- root `ai/` shared policy/playbook with environment-only Host secrets, exact-model Product safety, Persian Structured probe, verified-free-first and bounded low-cost fallback;
+- Site AI Preview → explicit Apply, limited to Product content/SEO;
+- Bridge source identity + category + pricing/Profile payload parity and bounded Product pagination;
+- explicit Windows `دریافت تغییرات سایت` Product pull;
+- Site-only non-publishable Local mirrors;
+- dirty-Local/newer-Site conflict protection;
+- pre-publish Site revision verification that fails closed on mismatch or Bridge verification failure;
+- mature Batch/FTP/Bridge/public verification path retained after the guard;
+- owner Local gate upgraded to `49.3I.52.1`.
+
+Evidence:
+- tested source `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a`;
+- Qt full parity `33619876564` PASS;
+- Windows Portable `33619876411` PASS;
+- Single Active AI `33619876317` PASS;
+- Product Admin/Bridge/migration `33619558467` PASS on runtime-equivalent `d6450ca2...`;
+- Variant/Profile Matrix `33619558562` PASS;
+- rollback `backup/pre-phase49-3i52b-bidirectional-site-sync-20260902` → `48290db4...`.
+
+Immediate next:
+1. owner Local 3I.52 checksum-backed gate + foreground QA;
+2. if PASS, read-only Host audit of actual root/HEAD/worktree/Python/Django/MySQL/migrations/disk/backup tools;
+3. fresh source + environment + MySQL backups with non-empty/checksum verification;
+4. deploy only the owner-approved GitHub commit;
+5. apply only the migration plan proven by the live Host audit;
+6. Production verify Admin, Bridge, Product page, pricing/Profile and AI environment boundary.
+
+Production remains blocked until Local acceptance and Host audit.
+
 ## 2026-09-02 — Phase49.3I.51 Windows + Site finalization
 
 Status: `IMPLEMENTED + WINDOWS CI PASS + SITE CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.

@@ -1,3 +1,20 @@
+## 2026-09-02 — Phase49.3I.52 bidirectional Product sync database contract
+
+Phase49.3I.52/3I.52B adds no new Django migration and no destructive Catalog SQLite migration.
+
+The new synchronization contract reuses existing fields:
+- Store `ProductCatalogProfile` pricing intelligence from the existing `store.0033` chain;
+- existing Product/Profile optimistic sync revision fields;
+- existing Catalog Local `server_product_id`, `server_product_revision`, `last_sync_conflict`, pricing/Profile and Slider columns;
+- existing Product source identity fields.
+
+Site-only Products pulled into Windows are represented as Local mirrors with `reference_only=1`; this is a workflow safety state, not a new table/schema.
+
+Production evidence is unchanged:
+- last verified application commit remains `c283864290f9c989a9fcdf24ee8eef519560e917`;
+- last verified applied Production Store migrations remain only through `store.0035`;
+- 3I.51 candidates `website.0024` and `store.0042` remain unapplied until a fresh Host read-only audit and verified backups prove the exact migration plan.
+
 # DATABASE — 3DPrintHub
 
 ## 2026-09-02 — Phase49.3I.51 Filament registry/site-sync schema candidates
