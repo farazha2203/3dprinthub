@@ -163,7 +163,14 @@ def self_test() -> None:
         command = [
             sys.executable,
             "-c",
-            "import sys; sys.stdout.buffer.write(" + repr(payload) + ")",
+            (
+                "import sys; "
+                "sys.stdout.buffer.write("
+                "b'-- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)\\n' "
+                "+ b'CREATE TABLE demo(id bigint);\\n' "
+                "+ (b'INSERT INTO demo VALUES (1);\\n' * 80000)"
+                ")"
+            ),
         ]
 
         returncode, stderr = stream_command_to_gzip(
