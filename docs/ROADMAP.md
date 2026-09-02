@@ -1,3 +1,38 @@
+## 2026-09-02 — Phase49.3I.52D legacy image-path parity + numeric control repair
+
+Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- verified the mature Catalog download layout from the retained Tk runtime instead of inventing a new path;
+- canonical downloaded images remain under `D:\projects\3dprinthub-catalog-manager\collected\<source>\<external_id>\images`;
+- Qt Crawl inventory now reads that mature folder directly even when an old Crawl row is not yet linked to a Product id;
+- finalized `seo_images` are preferred before original `images`;
+- legacy source-code casing differences no longer hide matching Product rows;
+- actual local image count is shown as `N عکس دارد` for unlinked candidates too;
+- live single-candidate review exposes real downloaded files from the mature collected tree;
+- old retained `D:\projects\3dprinthub_catalog_center\collected` is a read-only secondary compatibility fallback only;
+- Product/price/SEO/publish state is not mutated by this image lookup;
+- Crawl `requested` and per-Product image-count spinboxes are LTR, centered, width-bounded and padded to prevent Windows RTL arrow/text overlap;
+- control grid spacing is explicit.
+
+Evidence:
+- exact runtime `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`;
+- Qt `33628825851` PASS;
+- dedicated 3I.52C/52D 13-test suite PASS;
+- Single Active AI `33628825772` PASS;
+- Windows Portable `33628825715` PASS with 221 release regressions;
+- artifact `9846044486`;
+- EXE SHA256 `c08aa1e9d12926203cb59c580aab6c606c2b0e259ad83df37aa3b3abec86c22a`;
+- rollback `backup/pre-phase49-3i52d-legacy-image-path-layout-20260902` → `28b51d2f95b272d3bf6311fb02f55a7a4fa808e4`.
+
+Immediate next:
+1. owner Local clean ff-only sync;
+2. canonical Local gate + foreground Qt launch;
+3. verify the exact owner screenshot area now displays mature downloaded images/counts;
+4. verify the 100/5 spinboxes are visually separated from arrow controls;
+5. if any one external id still misses, inspect that exact DB/local_dir/collected identity read-only before any further change;
+6. Production stays blocked.
+
 ## 2026-09-02 — Phase49.3I.52C Crawl visual review + bulk transfer recovery
 
 Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
