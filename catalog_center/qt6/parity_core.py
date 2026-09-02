@@ -877,6 +877,77 @@ class FilamentParityCore:
                 records[name.casefold()] = {"name": name, "description": "", "price_per_kg": 0}
         return sorted(records.values(), key=lambda item: str(item["name"]).casefold())
 
+    def _rename_inventory_identity(
+        self,
+        field: str,
+        previous_name: str,
+        new_name: str,
+    ) -> int:
+        field = str(field or "").strip()
+        if field not in {"brand_name", "material_name", "color_name"}:
+            raise ValueError("فیلد هویت Filament معتبر نیست.")
+        previous = str(previous_name or "").strip()
+        value = str(new_name or "").strip()
+        if not previous or not value or previous == value:
+            return 0
+
+        rows = list(
+            self.db.conn.execute(
+                f"""
+                SELECT id, material_name, brand_name, color_name
+                FROM available_filament_offers
+                WHERE LOWER(TRIM({field})) = LOWER(TRIM(?))
+                ORDER BY id
+                """,
+                (previous,),
+            )
+        )
+        if not rows:
+            return 0
+
+        for row in rows:
+            material = value if field == "material_name" else str(row["material_name"] or "")
+            brand = value if field == "brand_name" else str(row["brand_name"] or "")
+            color = value if field == "color_name" else str(row["color_name"] or "")
+            conflict = self.db.conn.execute(
+                """
+                SELECT id
+                FROM available_filament_offers
+                WHERE id <> ?
+                  AND LOWER(TRIM(material_name)) = LOWER(TRIM(?))
+                  AND LOWER(TRIM(brand_name)) = LOWER(TRIM(?))
+                  AND LOWER(TRIM(color_name)) = LOWER(TRIM(?))
+                LIMIT 1
+                """,
+                (int(row["id"]), material, brand, color),
+            ).fetchone()
+            if conflict is not None:
+                raise ValueError(
+                    "تغییر نام باعث تداخل با یک Filament موجود با همین "
+                    "متریال/برند/رنگ می‌شود؛ ابتدا رکوردهای تکراری را مدیریت کن."
+                )
+
+        if field == "brand_name":
+            self.db.conn.execute(
+                """
+                UPDATE available_filament_offers
+                SET brand_name=?, manufacturer_name=?
+                WHERE LOWER(TRIM(brand_name)) = LOWER(TRIM(?))
+                """,
+                (value, value, previous),
+            )
+        else:
+            self.db.conn.execute(
+                f"""
+                UPDATE available_filament_offers
+                SET {field}=?
+                WHERE LOWER(TRIM({field})) = LOWER(TRIM(?))
+                """,
+                (value, previous),
+            )
+        self.db.conn.commit()
+        return len(rows)
+
     def brand_records(self) -> list[dict[str, Any]]:
         return self._named_registry_records(self.BRAND_REGISTRY_KEY, inventory_field="brand_name")
 
@@ -887,7 +958,9 @@ class FilamentParityCore:
         value = str(name or "").strip()
         if not value:
             raise ValueError("نام برند خالی است.")
-        previous = str(previous_name or "").strip().casefold()
+        previous_text = str(previous_name or "").strip()
+        previous = previous_text.casefold()
+        self._rename_inventory_identity("brand_name", previous_text, value)
         custom = [
             dict(item) for item in self.brand_records()
             if str(item.get("name") or "").strip().casefold() not in {value.casefold(), previous}
@@ -931,7 +1004,9 @@ class FilamentParityCore:
         value = str(name or "").strip()
         if not value:
             raise ValueError("نام متریال خالی است.")
-        previous = str(previous_name or "").strip().casefold()
+        previous_text = str(previous_name or "").strip()
+        previous = previous_text.casefold()
+        self._rename_inventory_identity("material_name", previous_text, value)
         custom = [
             dict(item) for item in self.material_records()
             if str(item.get("name") or "").strip().casefold() not in {value.casefold(), previous}
@@ -1008,14 +1083,41 @@ class FilamentParityCore:
             and str(item.get("name") or "").strip().casefold()
             not in {name.casefold(), str(previous_name or "").strip().casefold()}
         ]
+        color_type = str(preset.get("color_type") or "solid")
+        color_finish = str(preset.get("color_finish") or "matte")
+        previous_text = str(previous_name or "").strip()
+        self._rename_inventory_identity("color_name", previous_text, name)
         custom.append({
             "name": name,
-            "color_type": str(preset.get("color_type") or "solid"),
-            "color_finish": str(preset.get("color_finish") or "matte"),
+            "color_type": color_type,
+            "color_finish": color_finish,
             "palette_hexes": palette,
         })
         custom.sort(key=lambda item: str(item.get("name") or "").casefold())
         self.db.set_setting(self.COLOR_REGISTRY_KEY, json.dumps(custom, ensure_ascii=False))
+
+        self.db.conn.execute(
+            """
+            UPDATE available_filament_offers
+            SET color_type=?,
+                color_finish=?,
+                palette_hex_json=?,
+                hex_code=?,
+                secondary_hex=?,
+                tertiary_hex=?
+            WHERE LOWER(TRIM(color_name)) = LOWER(TRIM(?))
+            """,
+            (
+                color_type,
+                color_finish,
+                json.dumps(palette, ensure_ascii=False),
+                palette[0] if palette else "",
+                palette[1] if len(palette) > 1 else "",
+                palette[2] if len(palette) > 2 else "",
+                name,
+            ),
+        )
+        self.db.conn.commit()
         return self.color_presets()
 
     def delete_color_preset(self, name: str) -> list[dict[str, Any]]:

@@ -192,6 +192,105 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_registry_renames_propagate_to_assigned_filaments_without_stale_identity(self):
+        self.kernel.filaments.save_material("PLA", "ماده اولیه", 1_200_000)
+        self.kernel.filaments.save_brand("Old Brand", "برند قدیمی")
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "Old Color",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#112233"],
+            }
+        )
+        self.kernel.filaments.save(
+            {
+                "material": "PLA",
+                "brand": "Old Brand",
+                "color": "Old Color",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#112233"],
+                "roll_weight_grams": 1000,
+                "sale_price_per_roll": 2_000_000,
+            }
+        )
+
+        self.kernel.filaments.save_brand(
+            "New Brand",
+            "برند جدید",
+            previous_name="Old Brand",
+        )
+        self.kernel.filaments.save_material(
+            "PLA Plus",
+            "متریال جدید",
+            1_350_000,
+            previous_name="PLA",
+        )
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "New Color",
+                "color_type": "dual",
+                "color_finish": "glossy",
+                "palette_hexes": ["#334455", "#778899"],
+            },
+            previous_name="Old Color",
+        )
+
+        rows = self.kernel.filaments.list()
+        self.assertEqual(len(rows), 1)
+        item = rows[0]
+        self.assertEqual(item["brand_name"], "New Brand")
+        self.assertEqual(item["manufacturer_name"], "New Brand")
+        self.assertEqual(item["material_name"], "PLA Plus")
+        self.assertEqual(item["color_name"], "New Color")
+        self.assertEqual(item["color_type"], "dual")
+        self.assertEqual(item["color_finish"], "glossy")
+        self.assertEqual(
+            json.loads(item["palette_hex_json"]),
+            ["#334455", "#778899"],
+        )
+        self.assertNotIn("Old Brand", self.kernel.filaments.brands())
+        self.assertNotIn("PLA", self.kernel.filaments.materials())
+
+    def test_registry_rename_refuses_identity_collision_before_mutation(self):
+        self.kernel.filaments.save_brand("Brand A")
+        self.kernel.filaments.save_brand("Brand B")
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_color_preset(
+            {
+                "name": "Black",
+                "color_type": "solid",
+                "color_finish": "matte",
+                "palette_hexes": ["#111111"],
+            }
+        )
+        for brand in ("Brand A", "Brand B"):
+            self.kernel.filaments.save(
+                {
+                    "material": "PLA",
+                    "brand": brand,
+                    "color": "Black",
+                    "color_type": "solid",
+                    "color_finish": "matte",
+                    "palette_hexes": ["#111111"],
+                    "roll_weight_grams": 1000,
+                    "sale_price_per_roll": 2_000_000,
+                }
+            )
+
+        with self.assertRaises(ValueError):
+            self.kernel.filaments.save_brand(
+                "Brand B",
+                previous_name="Brand A",
+            )
+
+        rows = self.kernel.filaments.list()
+        self.assertEqual(
+            {row["brand_name"] for row in rows},
+            {"Brand A", "Brand B"},
+        )
+
     def test_product_image_stage_is_larger_two_row_capable_and_source_link_is_fixed(self):
         product_id = self._make_product("3510002")
         page = ProductWizardPage(self.db, kernel=self.kernel)
