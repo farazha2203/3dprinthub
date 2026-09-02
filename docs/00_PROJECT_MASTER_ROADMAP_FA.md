@@ -1,3 +1,11 @@
+## Current Windows checkpoint — Phase49.3I.52F / 2026-09-02
+
+Permanent Crawl inventory now supports bulk repair of incomplete Products: automatic incomplete selection, 5/10/20 image target, local-evidence reuse, safe source refetch and explicit orphan-ledger recovery. Exact tested runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Qt `33637452385`, Single Active AI `33637452588`, Portable `33637452243` PASS; 227 release regressions.
+
+Rollback: `backup/pre-phase49-3i52f-bulk-recover-incomplete-20260902` → `f35bd3e409c4293a756ddfe2fc9d4f7dcb968445`.
+
+Production/Host/MySQL remain untouched. Owner Local foreground acceptance is next.
+
 ## Current Windows checkpoint — Phase49.3I.52E / 2026-09-02
 
 Permanent Crawl image review now covers both mature historical refetch folders and current MakerWorld lazy listing thumbnails. Exact tested runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`; Qt `33632062812`, Single Active AI `33632062877`, Portable `33632062880` PASS; 223 portable regressions. Rollback `backup/pre-phase49-3i52e-preview-legacy-variants-20260902`.
