@@ -67,7 +67,12 @@ from app.secure_secrets import (
     set_provider_key,
     set_secret,
 )
-from app.site_connection import SiteConnection, test_bridge, test_ftp
+from app.site_connection import (
+    SiteConnection,
+    test_bridge,
+    test_ftp,
+    test_publish_readiness,
+)
 
 _QT_READINESS_CONFIGURED = False
 
@@ -2373,7 +2378,10 @@ class ConnectionCore:
         return dict(test_ftp(self.settings(require_bridge=False)))
 
     def test_bridge(self) -> dict[str, Any]:
-        return dict(test_bridge(self.bridge_settings()))
+        settings = self.bridge_settings()
+        health = dict(test_bridge(settings))
+        health["publish_readiness"] = dict(test_publish_readiness(settings))
+        return health
 
 
 def product_description_summary(row: dict[str, Any]) -> str:

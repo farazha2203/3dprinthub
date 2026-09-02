@@ -311,6 +311,18 @@ def _augment_ack_with_public_verification(cfg: SiteConnection, ack: dict) -> dic
     return ack
 
 
+def test_publish_readiness(settings: SiteConnection) -> dict:
+    cfg = settings.normalized()
+    if not cfg.bridge_token:
+        raise ValueError("Bridge token is empty")
+    return _json_request(
+        f"{cfg.site_url}/api/catalog-bridge/v1/publish-readiness/",
+        cfg.bridge_token,
+        None,
+        cfg.timeout,
+    )
+
+
 def test_bridge(settings: SiteConnection) -> dict:
     cfg = settings.normalized()
     if not cfg.bridge_token:

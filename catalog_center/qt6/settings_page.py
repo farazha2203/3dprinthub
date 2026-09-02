@@ -574,9 +574,25 @@ class SettingsPage(QWidget):
                     f"✅ FTP متصل — {result.get('remote_path') or 'OK'}"
                 )
             else:
-                self.connection_status.setText(
-                    f"✅ Bridge متصل — {result.get('version') or result.get('status') or 'OK'}"
-                )
+                readiness = dict(result.get("publish_readiness") or {})
+                if readiness.get("ready") is True:
+                    self.connection_status.setText(
+                        f"✅ Bridge + گیرنده انتشار آماده — {result.get('version') or result.get('status') or 'OK'}"
+                    )
+                else:
+                    blockers = "، ".join(
+                        str(item)
+                        for item in (readiness.get("blockers") or [])[:8]
+                    ) or "receiver_not_ready"
+                    self.connection_status.setText(
+                        "⚠️ Bridge متصل است ولی انتشار مسدود است"
+                    )
+                    QMessageBox.warning(
+                        self,
+                        "آمادگی انتشار سایت",
+                        "Bridge پاسخ می‌دهد اما Host هنوز برای دریافت Product آماده نیست.\n\n"
+                        + blockers,
+                    )
             self.refresh()
 
         self._start_worker(

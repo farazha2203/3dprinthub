@@ -15,7 +15,7 @@ from .batch_packaging import (
 )
 from .crawler import download_public_file
 from .db import utc_now
-from .site_connection import import_batch, upload_batch
+from .site_connection import import_batch, test_publish_readiness, upload_batch
 from .epic49_site_sync import get_product as get_site_product
 from .v8_features import (
     ack_item_confirms_publish,
@@ -442,10 +442,26 @@ def publish_many(
     uploader=upload_batch,
     importer=import_batch,
     server_getter=get_site_product,
+    readiness_checker=test_publish_readiness,
 ) -> dict[str, Any]:
     requested = _ids(product_ids)
     preflight = preflight_many(db, stage_core, requested)
     queued = list(preflight["queued_ids"])
+
+    if queued:
+        readiness = dict(readiness_checker(settings) or {})
+        if readiness.get("ready") is not True:
+            blockers = [
+                str(item).strip()
+                for item in (readiness.get("blockers") or [])
+                if str(item).strip()
+            ]
+            detail = "، ".join(blockers[:12]) or "receiver_not_ready"
+            raise RuntimeError(
+                "گیرنده انتشار سایت آماده نیست؛ قبل از FTP/Import مشکل Host را رفع کن: "
+                + detail
+            )
+
     revision_guard = guard_site_revisions(
         db,
         settings,

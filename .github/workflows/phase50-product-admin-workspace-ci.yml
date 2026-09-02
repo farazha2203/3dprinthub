@@ -16,6 +16,12 @@ on:
       - store/test_phase50_filament_offer_operations.py
       - store/test_phase49_3i51_filament_registry_admin.py
       - catalog_bridge/unified_views.py
+      - catalog_bridge/views.py
+      - catalog_bridge/urls.py
+      - catalog_bridge/publish_readiness.py
+      - catalog_bridge/tests/test_phase49_3i53_publish_readiness.py
+      - catalog_center/app/site_connection.py
+      - catalog_center/app/phase49_3i49_site_publish.py
       - catalog_bridge/tests/test_phase49_3i41_filament_bridge.py
       - catalog_center/app/epic49_site_sync.py
       - store/phase49_3i49_admin_control.py
@@ -90,6 +96,12 @@ jobs:
             store/phase50_profile_matrix.py \
             store/phase50_variant_views.py \
             catalog_bridge/unified_views.py \
+            catalog_bridge/views.py \
+            catalog_bridge/urls.py \
+            catalog_bridge/publish_readiness.py \
+            catalog_bridge/tests/test_phase49_3i53_publish_readiness.py \
+            catalog_center/app/site_connection.py \
+            catalog_center/app/phase49_3i49_site_publish.py \
             catalog_bridge/tests/test_phase49_3i41_filament_bridge.py \
             catalog_center/app/epic49_site_sync.py \
             store/phase49_3i49_admin_control.py \
@@ -145,6 +157,7 @@ jobs:
             store.test_phase49_3i52_site_authoring_ai \
             store.test_phase49_3i52b_bidirectional_sync \
             catalog_bridge.tests.test_phase49_3i41_filament_bridge \
+            catalog_bridge.tests.test_phase49_3i53_publish_readiness \
             -v 2
 
       - name: Gate marker
@@ -156,4 +169,5 @@ jobs:
           echo "PHASE49_3I51_MIGRATIONS_0024_0042_CI=PASS"
           echo "PHASE49_3I52_SITE_AUTHORING_AI_CI=PASS"
           echo "PHASE49_3I52B_BIDIRECTIONAL_SITE_SYNC_CI=PASS"
+          echo "PHASE49_3I53_SITE_PUBLISH_READINESS_CI=PASS"
           echo "COMMIT=$GITHUB_SHA"

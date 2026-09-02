@@ -190,6 +190,10 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             batch_root=self.root / "batches",
             uploader=fake_upload,
             importer=fake_import,
+            readiness_checker=lambda _settings: {
+                "ready": True,
+                "blockers": [],
+            },
         )
         self.assertEqual(result["published"], 2)
         self.assertEqual(result["failed"], 0)
@@ -203,6 +207,40 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertTrue(str(row["server_id"]))
             self.assertTrue(str(row["published_at"]))
         self.assertEqual(self.db.product_count(filter_name="published"), 2)
+
+
+    def test_site_receiver_readiness_blocks_before_ftp(self):
+        product_id = self._product("3491011")
+        mark_ready_many(self.db, FakeStages(), [product_id])
+        uploaded = []
+
+        def fake_upload(*_args, **_kwargs):
+            uploaded.append(True)
+            return {}
+
+        with self.assertRaisesRegex(RuntimeError, "گیرنده انتشار سایت آماده نیست"):
+            publish_many(
+                self.db,
+                FakeStages(),
+                SimpleNamespace(),
+                [product_id],
+                batch_root=self.root / "blocked-batches",
+                uploader=fake_upload,
+                importer=lambda *_args, **_kwargs: {},
+                readiness_checker=lambda _settings: {
+                    "ready": False,
+                    "blockers": [
+                        "migration:store.0042_phase49_3i51_filament_registry_descriptions:missing",
+                        "media_root:not_writable",
+                    ],
+                },
+            )
+
+        self.assertEqual(uploaded, [])
+        self.assertEqual(
+            int(self.db.product(product_id)["upload_ready"]),
+            1,
+        )
 
     def test_incomplete_product_cannot_receive_ready_tick(self):
         product_id = self._product("3491003")

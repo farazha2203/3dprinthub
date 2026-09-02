@@ -66,6 +66,7 @@ def health_view(request):
         "schema_version": "8.5",
         "publish_contract": PUBLISH_CONTRACT,
         "pending_root_ready": _pending_root().is_dir(),
+        "publish_readiness_endpoint": "/api/catalog-bridge/v1/publish-readiness/",
     })
 
 

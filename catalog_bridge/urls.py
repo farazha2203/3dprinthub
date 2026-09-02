@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import diagnostic_view, health_view, import_view
+from .publish_readiness import publish_readiness_view
 from .unified_views import (
     filament_sync_view,
     filaments_view,
@@ -17,6 +18,7 @@ app_name = "catalog_bridge"
 
 urlpatterns = [
     path("health/", health_view, name="health"),
+    path("publish-readiness/", publish_readiness_view, name="publish_readiness"),
     path("import/", import_view, name="import"),
     path("diagnostics/<str:batch_name>/", diagnostic_view, name="diagnostic"),
 
