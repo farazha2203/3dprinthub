@@ -1360,6 +1360,7 @@ async def run_single_async(
     collection_method: str = "rich",
     saved_html_path: str = "",
     progress: Progress = None,
+    force_recover: bool = False,
 ) -> dict[str, Any]:
     source_row = db.source(source_code)
     if source_row is None:
@@ -1367,16 +1368,42 @@ async def run_single_async(
     source_cfg = _source_dict(source_row)
     image_limit = normalize_image_limit(image_limit)
     external_id, url = _product_identity(source_cfg, product_url)
-    if terminal_identity_state(db, source_code, external_id, url):
-        existing = db.conn.execute(
-            """
-            SELECT id FROM products
-            WHERE source_code=?
-              AND ((external_id<>'' AND external_id=?) OR normalized_url=?)
-            ORDER BY id DESC LIMIT 1
-            """,
-            (source_code, external_id, url),
-        ).fetchone()
+    normalized = normalize_url(url)
+    existing = db.conn.execute(
+        """
+        SELECT id, is_blocked
+        FROM products
+        WHERE source_code = ? COLLATE NOCASE
+          AND ((external_id<>'' AND external_id=?) OR normalized_url=?)
+        ORDER BY id DESC LIMIT 1
+        """,
+        (source_code, external_id, normalized),
+    ).fetchone()
+
+    if force_recover and existing is not None:
+        if int(existing["is_blocked"] or 0):
+            raise RuntimeError(
+                "Product is rejected/blocked. Restore it before source recovery."
+            )
+        recovered = await refetch_product_from_source_async(
+            db,
+            int(existing["id"]),
+            image_limit=image_limit,
+            download_images=bool(download_images),
+            progress=progress,
+        )
+        return {
+            **dict(recovered or {}),
+            "already_collected": True,
+            "recovered_existing": True,
+        }
+
+    if not force_recover and terminal_identity_state(
+        db,
+        source_code,
+        external_id,
+        url,
+    ):
         return {
             "product_id": int(existing["id"]) if existing else 0,
             "already_collected": True,
