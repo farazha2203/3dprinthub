@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$RunnerVersion = "49.3I.50.1"
+$RunnerVersion = "49.3I.51.1"
 $Root = "D:\projects\3DPrintHub"
 $Catalog = Join-Path $Root "catalog_center"
 $Py = Join-Path $Root ".venv\Scripts\python.exe"
@@ -24,7 +24,7 @@ function Step([string]$Title) {
 
 function Fail([string]$Message) {
     Write-Host ""
-    Write-Host "PHASE49.3I.50 LOCAL GATE FAILED" -ForegroundColor Red
+    Write-Host "PHASE49.3I.51 LOCAL GATE FAILED" -ForegroundColor Red
     Write-Host $Message -ForegroundColor Red
     throw $Message
 }
@@ -82,13 +82,13 @@ function Invoke-PythonStdin {
     }
 }
 
-Step "00. PHASE49.3I.50 QT6 PRODUCT / ACQUISITION LOCAL GATE"
+Step "00. PHASE49.3I.51 WINDOWS + SITE FINALIZATION LOCAL GATE"
 Write-Host "Runner     = $RunnerVersion"
 Write-Host "Project    = $Root"
 Write-Host "Catalog    = $Catalog"
 Write-Host "Production = NOT TOUCHED" -ForegroundColor Yellow
 Write-Host "Host       = NOT TOUCHED" -ForegroundColor Yellow
-Write-Host "Migration  = NONE" -ForegroundColor Yellow
+Write-Host "Migration  = SITE CANDIDATE ONLY - NOT APPLIED BY THIS GATE" -ForegroundColor Yellow
 
 if (-not (Test-Path -LiteralPath $Root)) { Fail "Project root not found: $Root" }
 if (-not (Test-Path -LiteralPath $Catalog)) { Fail "Catalog Center not found: $Catalog" }
@@ -152,6 +152,7 @@ $required = @(
     "docs\HOST_CONSTRAINTS.md",
     "docs\REQUESTS.md",
     "docs\phases\PHASE49_3I42_QT6_DESKTOP_MODERNIZATION.md",
+    "docs\phases\PHASE49_3I51_WINDOWS_SITE_FINALIZATION.md",
     "catalog_center\qt_launch.py",
     "catalog_center\qt6\acquisition_runtime.py",
     "catalog_center\qt6\pages.py",
@@ -165,6 +166,7 @@ $required = @(
     "catalog_center\tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py",
     "catalog_center\tests\test_phase49_3i48_owner_filament_site_foundation.py",
     "catalog_center\tests\test_phase49_3i49_site_bulk_publish.py",
+    "catalog_center\tests\test_phase49_3i51_windows_site_finalization.py",
     "catalog_center\app\phase49_3i49_site_publish.py",
     "catalog_center\app\ai_model_catalog.py",
     "templates\store\product_detail.html",
@@ -256,6 +258,7 @@ Run-Native -File $Py -Arguments @(
     (Join-Path $Catalog "tests\test_phase49_3i47_qt_workspace_image_bulk_ai.py"),
     (Join-Path $Catalog "tests\test_phase49_3i48_owner_filament_site_foundation.py"),
     (Join-Path $Catalog "tests\test_phase49_3i49_site_bulk_publish.py"),
+    (Join-Path $Catalog "tests\test_phase49_3i51_windows_site_finalization.py"),
     (Join-Path $Catalog "app\phase49_3i49_site_publish.py"),
     (Join-Path $Catalog "app\ai_model_catalog.py")
 )
@@ -272,7 +275,8 @@ try {
         "tests.test_phase49_3i46_catalog_paging_parity",
         "tests.test_phase49_3i47_qt_workspace_image_bulk_ai",
         "tests.test_phase49_3i48_owner_filament_site_foundation",
-        "tests.test_phase49_3i49_site_bulk_publish"
+        "tests.test_phase49_3i49_site_bulk_publish",
+        "tests.test_phase49_3i51_windows_site_finalization"
     )
 
     Run-Native -File $Py -Arguments @(
@@ -374,9 +378,10 @@ if ($FinalDirty.Count -gt 0) {
     Fail "TESTS CHANGED WORKTREE"
 }
 
-Step "10. PHASE49.3I.49 AUTOMATED LOCAL GATE PASSED"
+Step "10. PHASE49.3I.51 AUTOMATED LOCAL GATE PASSED"
 Write-Host "PHASE49_3I47_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "PHASE49_3I50_LOCAL_GATE=PASS" -ForegroundColor Green
+Write-Host "PHASE49_3I51_LOCAL_GATE=PASS" -ForegroundColor Green
 Write-Host "HEAD=$FinalHead" -ForegroundColor Green
 Write-Host "CLASSIC_SEARCH_CONTINUATION=ENABLED" -ForegroundColor Green
 Write-Host "HYBRID_HTTP_SITEMAP_BROWSER=ENABLED" -ForegroundColor Green
@@ -393,7 +398,11 @@ Write-Host "3) On one Product with 3+ images run full image/content completion; 
 Write-Host "4) Add Product/Crawl: default Inventory tab must show Products immediately; switch Large Icons <-> Details and verify title/description/image count."
 Write-Host "5) Profile/Pricing editor: verify Profile, Production Weight/Time and Filament/Fixed Price are separate full-height tabs with all rows visible."
 Write-Host "6) Receive tab: bounded Classic/Hybrid smoke only (5 Products / 5 images); Safe Stop and Failed reset must remain healthy."
-Write-Host "7) Do not stress the live source. Production and Host remain out of scope."
+Write-Host "7) Verify a MakerWorld URL auto-selects MakerWorld even if another Source was selected before paste."
+Write-Host "8) Verify Product image cards are larger, multi-selection count is visible, and bulk delete/recover actions remain usable."
+Write-Host "9) Verify Filament tabs are Filaments / Materials / Brands / Colors and editor identity fields are registry selections."
+Write-Host "10) Verify a source-missing Product gets one explicit default Profile with owner defaults and PLA/PETG-family Filaments only."
+Write-Host "11) Site migrations are NOT applied by this gate. Production and Host remain out of scope."
 
 if ($LaunchApp) {
     Step "11. START QT6 CATALOG CENTER"

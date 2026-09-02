@@ -336,7 +336,23 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         self.assertEqual(int(product.get("price_max") or 0), 0)
 
     def test_source_profile_bootstrap_uses_owner_default_when_source_time_is_missing(self):
-        product_id = self._product("7011")
+        self.db.upsert_product({
+            "source_code": "makerworld",
+            "external_id": "7011",
+            "source_url": "https://makerworld.com/en/models/7011-default-profile",
+            "source_title": "Fallback Profile Product",
+            "source_description": "",
+            "source_specs_json": "{}",
+            "estimated_print_minutes": 0,
+            "estimated_weight_grams": 0,
+            "product_type": "ready_product",
+            "workflow_status": "review",
+        })
+        product_id = int(next(
+            row["id"]
+            for row in self.kernel.products.list()
+            if row["external_id"] == "7011"
+        ))
         self.kernel.filaments.save(
             {
                 "material": "PLA",
