@@ -1,6 +1,14 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+root_text = str(ROOT)
+if root_text in sys.path:
+    sys.path.remove(root_text)
+sys.path.insert(0, root_text)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
