@@ -144,4 +144,9 @@ class StoreConfig(AppConfig):
         # atomically freezes customer-visible profile/package/weight/quote state.
         phase50_checkout_snapshot.install_runtime()
 
+        # Phase49.3I.49 finalizes the web-admin view of the existing persistent
+        # Catalog Profile/Slider contract. No duplicate settings model is created.
+        from .phase49_3i49_admin_control import install as install_phase49_3i49_admin_control
+        install_phase49_3i49_admin_control()
+
         from . import checks  # noqa: F401
