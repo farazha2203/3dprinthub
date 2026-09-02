@@ -105,5 +105,10 @@ class WebsiteConfig(AppConfig):
         from .phase50_home_seo_admin import install as install_phase50_home_seo_admin
         install_phase50_home_seo_admin()
 
+        # Phase49.3I.49 is the final Hero Admin composition boundary. It reuses
+        # the persistent 49.2C/49.3B Slider fields and groups them by operator task.
+        from .phase49_3i49_admin_control import install as install_phase49_3i49_admin_control
+        install_phase49_3i49_admin_control()
+
         # Register social-auth profile hooks only after Django has loaded apps.
         from . import checks, signals  # noqa: F401
