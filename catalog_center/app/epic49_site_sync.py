@@ -51,10 +51,46 @@ def _request(settings: SiteConnection, path: str, payload: dict | None = None, *
         raise RuntimeError(f"Bridge HTTP {exc.code}: {detail}") from exc
 
 
-def list_products(settings: SiteConnection, query: str = "", limit: int = 100) -> list[dict]:
-    params = urlencode({"q": str(query or ""), "limit": max(1, min(200, int(limit)))})
+def list_products(
+    settings: SiteConnection,
+    query: str = "",
+    limit: int = 100,
+    offset: int = 0,
+) -> list[dict]:
+    params = urlencode({
+        "q": str(query or ""),
+        "limit": max(1, min(200, int(limit))),
+        "offset": max(0, int(offset or 0)),
+    })
     data = _request(settings, f"products/?{params}")
     return list(data.get("items") or [])
+
+
+def list_all_products(
+    settings: SiteConnection,
+    query: str = "",
+    *,
+    page_size: int = 200,
+    max_items: int = 5000,
+) -> list[dict]:
+    page_size = max(1, min(200, int(page_size or 200)))
+    max_items = max(page_size, min(20_000, int(max_items or 5000)))
+    output: list[dict] = []
+    offset = 0
+    while len(output) < max_items:
+        page = list_products(
+            settings,
+            query,
+            min(page_size, max_items - len(output)),
+            offset=offset,
+        )
+        if not page:
+            break
+        output.extend(dict(item) for item in page if isinstance(item, dict))
+        offset += len(page)
+        if len(page) < page_size:
+            break
+    return output
 
 
 def get_product(settings: SiteConnection, product_id: int) -> dict:
@@ -136,8 +172,24 @@ def update_hero_slide(settings: SiteConnection, slide_id: int, expected_revision
 
 
 def apply_server_product_to_local(db, local_product_id: int, server: dict) -> None:
-    """Persist editable server fields; immutable/raw internet source data stays local."""
+    """Pull editable Site fields into one existing Local mirror.
+
+    Raw acquisition/source identity and local media files remain Local-owned.
+    Site Admin owns current canonical content/profile facts after its revision
+    is explicitly accepted by the caller.
+    """
     profile = server.get("profile") if isinstance(server.get("profile"), dict) else {}
+    price_min = max(0, int(profile.get("price_min") or 0))
+    price_max = max(0, int(profile.get("price_max") or price_min))
+    price_mode = str(profile.get("price_mode") or "fixed")
+    strategy = str(profile.get("pricing_strategy") or "legacy").strip().lower()
+    if strategy not in {"legacy", "fixed", "dynamic"}:
+        strategy = "legacy"
+    fixed_price = (
+        price_min
+        if price_min > 0 and price_min == price_max and price_mode == "fixed"
+        else 0
+    )
     values = {
         "server_product_id": int(server.get("id") or 0),
         "server_product_revision": int(profile.get("sync_revision") or 0),
@@ -145,11 +197,49 @@ def apply_server_product_to_local(db, local_product_id: int, server: dict) -> No
         "server_slider_revision": int(server.get("hero_revision") or 0),
         "server_updated_at": str(server.get("updated_at") or ""),
         "last_sync_conflict": "",
+        "last_synced_at": utc_now(),
+        "server_status": "updated",
+        "product_sync_error": "",
+        "upload_ready": 0,
+        "needs_update": 0,
         "title_fa": str(server.get("title") or ""),
         "short_description_fa": str(server.get("short_description") or ""),
         "description_fa": str(server.get("description") or ""),
         "seo_title_fa": str(server.get("meta_title") or ""),
         "seo_description_fa": str(server.get("meta_description") or ""),
+        "product_type": str(profile.get("product_type") or "ready_product"),
+        "use_description": str(profile.get("use_description") or ""),
+        "availability_status": str(profile.get("availability_status") or "made_to_order"),
+        "stock_quantity": max(0, int(profile.get("stock_quantity") or 0)),
+        "lead_time_min_days": max(0, int(profile.get("lead_time_min_days") or 0)),
+        "lead_time_max_days": max(0, int(profile.get("lead_time_max_days") or 0)),
+        "has_3d_file": int(bool(profile.get("has_3d_file"))),
+        "license_name": str(profile.get("license_name") or ""),
+        "license_url": str(profile.get("license_url") or ""),
+        "technical_features_json": json.dumps(
+            profile.get("technical_features")
+            if isinstance(profile.get("technical_features"), dict)
+            else {},
+            ensure_ascii=False,
+        ),
+        "keywords_json": json.dumps(
+            profile.get("keywords")
+            if isinstance(profile.get("keywords"), list)
+            else [],
+            ensure_ascii=False,
+        ),
+        "price_min": price_min,
+        "price_max": max(price_min, price_max),
+        "pricing_strategy": strategy,
+        "pricing_inputs_json": json.dumps(
+            profile.get("pricing_inputs")
+            if isinstance(profile.get("pricing_inputs"), dict)
+            else {},
+            ensure_ascii=False,
+        ),
+        "technical_summary_fa": str(profile.get("technical_summary_fa") or ""),
+        "final_price": fixed_price,
+        "price_is_final": int(bool(fixed_price)),
         "homepage_slider_enabled": int(bool(profile.get("homepage_slider_enabled"))),
         "homepage_slider_image_url": str(profile.get("homepage_slider_image_url") or ""),
         "homepage_slider_sort_order": int(profile.get("homepage_slider_sort_order") or 100),

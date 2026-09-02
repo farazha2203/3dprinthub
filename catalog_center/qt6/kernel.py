@@ -9,7 +9,7 @@ from typing import Any, Callable, TypeVar
 from urllib.parse import quote_plus, urlsplit
 
 from app import phase49_3c_image_pipeline as image_pipeline
-from app.db import utc_now
+from app.db import normalize_url, utc_now
 from app.phase49_3i38_crawl_ledger_stage_ai import (
     reject_and_purge_product,
     restore_rejected_identity,
@@ -1417,6 +1417,228 @@ class ApplicationKernel:
     @property
     def ai(self) -> AICore:
         return self.registry.require("ai", AICore)  # type: ignore[return-value]
+
+    def _local_product_for_server(self, server: dict) -> dict[str, Any] | None:
+        server_id = int(server.get("id") or 0)
+        profile = server.get("profile") if isinstance(server.get("profile"), dict) else {}
+        desktop_id = int(profile.get("desktop_product_id") or 0)
+
+        if desktop_id > 0:
+            row = self.db.product(desktop_id)
+            if row is not None:
+                return dict(row)
+
+        if server_id > 0:
+            row = self.db.conn.execute(
+                "SELECT * FROM products WHERE server_product_id=? ORDER BY id LIMIT 1",
+                (server_id,),
+            ).fetchone()
+            if row is not None:
+                return dict(row)
+
+        source_code = str(server.get("source_code") or "").strip()
+        external_id = str(server.get("source_external_id") or "").strip()
+        if source_code and external_id:
+            row = self.db.conn.execute(
+                "SELECT * FROM products WHERE source_code=? AND external_id=? ORDER BY id LIMIT 1",
+                (source_code, external_id),
+            ).fetchone()
+            if row is not None:
+                return dict(row)
+
+        source_url = str(server.get("source_url") or "").strip()
+        if source_code and source_url:
+            normalized = normalize_url(source_url)
+            row = self.db.conn.execute(
+                "SELECT * FROM products WHERE source_code=? AND normalized_url=? ORDER BY id LIMIT 1",
+                (source_code, normalized),
+            ).fetchone()
+            if row is not None:
+                return dict(row)
+        return None
+
+    def _create_site_product_mirror(
+        self,
+        server: dict,
+        *,
+        site_url: str,
+    ) -> int:
+        from urllib.parse import urljoin
+        from app.epic49_site_sync import apply_server_product_to_local
+
+        server_id = int(server.get("id") or 0)
+        if server_id <= 0:
+            raise RuntimeError("Site Product has no valid numeric id.")
+
+        source_code = str(server.get("source_code") or "").strip() or "site-admin"
+        external_id = str(server.get("source_external_id") or "").strip()
+        if not external_id:
+            external_id = f"site-product-{server_id}"
+        source_url = str(server.get("source_url") or "").strip()
+        if not source_url:
+            source_url = f"site-admin://product/{server_id}"
+
+        image_urls: list[str] = []
+        for item in server.get("images") or []:
+            if not isinstance(item, dict):
+                continue
+            value = str(item.get("url") or item.get("remote_url") or "").strip()
+            if not value:
+                continue
+            if value.startswith("/"):
+                value = urljoin(site_url.rstrip("/") + "/", value.lstrip("/"))
+            if value not in image_urls:
+                image_urls.append(value)
+        main_image = str(server.get("main_image") or "").strip()
+        if main_image:
+            if main_image.startswith("/"):
+                main_image = urljoin(site_url.rstrip("/") + "/", main_image.lstrip("/"))
+            if main_image not in image_urls:
+                image_urls.insert(0, main_image)
+
+        self.db.upsert_product({
+            "source_code": source_code,
+            "external_id": external_id,
+            "source_url": source_url,
+            "source_name": str(server.get("source_name") or "Site Admin"),
+            "source_title": str(server.get("title_en") or server.get("title") or ""),
+            "source_short_description": str(server.get("short_description") or ""),
+            "source_description": str(server.get("description") or ""),
+            "title_fa": str(server.get("title") or ""),
+            "short_description_fa": str(server.get("short_description") or ""),
+            "description_fa": str(server.get("description") or ""),
+            "local_category_slug": str(server.get("category_slug") or "external-other"),
+            "images_json": json.dumps(image_urls, ensure_ascii=False),
+            "selected_images_json": json.dumps(image_urls, ensure_ascii=False),
+            "primary_image_url": image_urls[0] if image_urls else "",
+            "workflow_status": "uploaded" if bool(server.get("is_active")) else "review",
+            "server_id": f"site-product:{server_id}",
+            "server_status": "updated" if bool(server.get("is_active")) else "review_required",
+            "server_product_id": server_id,
+            "reference_only": 1,
+            "upload_ready": 0,
+            "needs_update": 0,
+            "custom_notes": (
+                "Site-origin mirror. Batch publish is intentionally blocked "
+                "until the Product is explicitly linked to an acquisition identity."
+            ),
+        })
+        row = self.db.conn.execute(
+            "SELECT * FROM products WHERE source_code=? AND external_id=? ORDER BY id LIMIT 1",
+            (source_code, external_id),
+        ).fetchone()
+        if row is None:
+            raise RuntimeError("Local Site Product mirror was not created.")
+        local_id = int(row["id"])
+        apply_server_product_to_local(self.db, local_id, server)
+        self.db.save_history(
+            local_id,
+            "qt_site_product_mirror_created",
+            {},
+            dict(self.db.product(local_id)),
+            f"Pulled Site Product #{server_id} into a non-publishable Local mirror.",
+        )
+        return local_id
+
+    def pull_site_products(self, *, progress=None) -> dict[str, Any]:
+        from app.epic49_site_sync import (
+            apply_server_product_to_local,
+            list_all_products,
+        )
+
+        settings = self.connection.bridge_settings()
+        server_rows = list_all_products(settings)
+        result = {
+            "requested": len(server_rows),
+            "created": 0,
+            "updated": 0,
+            "unchanged": 0,
+            "conflicts": [],
+            "failures": [],
+        }
+        total = max(1, len(server_rows))
+
+        for index, server in enumerate(server_rows, 1):
+            if callable(progress):
+                progress(
+                    int((index - 1) / total * 100),
+                    f"Site Product {index}/{len(server_rows)}",
+                )
+            try:
+                local = self._local_product_for_server(server)
+                if local is None:
+                    self._create_site_product_mirror(
+                        server,
+                        site_url=settings.site_url,
+                    )
+                    result["created"] += 1
+                    continue
+
+                local_id = int(local["id"])
+                profile = (
+                    server.get("profile")
+                    if isinstance(server.get("profile"), dict)
+                    else {}
+                )
+                server_revision = int(profile.get("sync_revision") or 0)
+                local_revision = int(local.get("server_product_revision") or 0)
+                local_dirty = bool(
+                    int(local.get("needs_update") or 0)
+                    or int(local.get("upload_ready") or 0)
+                    or str(local.get("workflow_status") or "") in {"approved", "batched"}
+                )
+
+                if server_revision > local_revision and local_dirty:
+                    message = (
+                        f"Site revision {server_revision} is newer than Local "
+                        f"revision {local_revision}, while Local has unpublished changes."
+                    )
+                    self.db.update_product(
+                        local_id,
+                        {"last_sync_conflict": message},
+                    )
+                    result["conflicts"].append({
+                        "local_product_id": local_id,
+                        "server_product_id": int(server.get("id") or 0),
+                        "local_revision": local_revision,
+                        "server_revision": server_revision,
+                        "detail": message,
+                    })
+                    continue
+
+                if server_revision <= local_revision and local_revision > 0:
+                    result["unchanged"] += 1
+                    continue
+
+                before = dict(self.db.product(local_id))
+                apply_server_product_to_local(self.db, local_id, server)
+                after = dict(self.db.product(local_id))
+                self.db.save_history(
+                    local_id,
+                    "qt_site_product_pulled",
+                    before,
+                    after,
+                    (
+                        f"Accepted Site revision {server_revision} over "
+                        f"Local revision {local_revision}."
+                    ),
+                )
+                result["updated"] += 1
+            except Exception as exc:
+                result["failures"].append({
+                    "server_product_id": int(server.get("id") or 0),
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
+            finally:
+                if callable(progress):
+                    progress(
+                        int(index / total * 100),
+                        f"Site Product {index}/{len(server_rows)} تمام شد",
+                    )
+
+        result["failed"] = len(result["failures"])
+        result["conflict_count"] = len(result["conflicts"])
+        return result
 
     def sync_filaments_with_site(
         self,

@@ -16,6 +16,7 @@ from .batch_packaging import (
 from .crawler import download_public_file
 from .db import utc_now
 from .site_connection import import_batch, upload_batch
+from .epic49_site_sync import get_product as get_site_product
 from .v8_features import (
     ack_item_confirms_publish,
     new_batch_uuid,
@@ -372,6 +373,64 @@ def _record_failed(
         })
 
 
+def guard_site_revisions(
+    db,
+    settings,
+    product_ids,
+    *,
+    server_getter=get_site_product,
+) -> dict[str, Any]:
+    safe: list[int] = []
+    conflicts: list[dict[str, Any]] = []
+    for product_id in _ids(product_ids):
+        row = db.product(product_id)
+        if row is None:
+            continue
+        server_product_id = int(row["server_product_id"] or 0)
+        local_revision = int(row["server_product_revision"] or 0)
+        if server_product_id <= 0:
+            safe.append(product_id)
+            continue
+        try:
+            server = server_getter(settings, server_product_id)
+            profile = (
+                server.get("profile")
+                if isinstance(server.get("profile"), dict)
+                else {}
+            )
+            server_revision = int(profile.get("sync_revision") or 0)
+            if server_revision != local_revision:
+                detail = (
+                    f"Site revision {server_revision} != Local accepted revision "
+                    f"{local_revision}. Pull Site changes before publishing."
+                )
+                db.update_product(product_id, {"last_sync_conflict": detail})
+                conflicts.append({
+                    "product_id": product_id,
+                    "server_product_id": server_product_id,
+                    "local_revision": local_revision,
+                    "server_revision": server_revision,
+                    "missing": [detail],
+                })
+                continue
+            db.update_product(product_id, {"last_sync_conflict": ""})
+            safe.append(product_id)
+        except Exception as exc:
+            detail = (
+                "Site revision verification failed; publish stopped closed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            db.update_product(product_id, {"last_sync_conflict": detail})
+            conflicts.append({
+                "product_id": product_id,
+                "server_product_id": server_product_id,
+                "local_revision": local_revision,
+                "server_revision": None,
+                "missing": [detail],
+            })
+    return {"safe_ids": safe, "conflicts": conflicts}
+
+
 def publish_many(
     db,
     stage_core,
@@ -382,12 +441,21 @@ def publish_many(
     batch_root: Path | None = None,
     uploader=upload_batch,
     importer=import_batch,
+    server_getter=get_site_product,
 ) -> dict[str, Any]:
     requested = _ids(product_ids)
     preflight = preflight_many(db, stage_core, requested)
     queued = list(preflight["queued_ids"])
-    not_checked = sorted(set(preflight["publishable_ids"]) - set(queued))
+    revision_guard = guard_site_revisions(
+        db,
+        settings,
+        queued,
+        server_getter=server_getter,
+    )
+    queued = list(revision_guard["safe_ids"])
+    not_checked = sorted(set(preflight["publishable_ids"]) - set(preflight["queued_ids"]))
     skipped = list(preflight["blocked"])
+    skipped.extend(list(revision_guard["conflicts"]))
     skipped.extend(
         {
             "product_id": product_id,

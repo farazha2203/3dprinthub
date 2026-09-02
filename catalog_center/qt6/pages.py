@@ -156,8 +156,10 @@ class ProductsPage(QWidget):
         self.navigate = navigate
         self.ai_pool = TaskPool()
         self.publish_pool = TaskPool()
+        self.site_sync_pool = TaskPool()
         self._bulk_ai_worker: Worker | None = None
         self._bulk_publish_worker: Worker | None = None
+        self._site_pull_worker: Worker | None = None
 
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
@@ -199,6 +201,12 @@ class ProductsPage(QWidget):
 
         refresh_btn = QPushButton("بروزرسانی")
         refresh_btn.clicked.connect(self.refresh)
+        self.pull_site_btn = QPushButton("↻ دریافت تغییرات سایت")
+        self.pull_site_btn.setToolTip(
+            "Productهای سایت را با Revision Guard به Windows می‌آورد؛ "
+            "تغییرات Local منتشرنشده هرگز خودکار overwrite نمی‌شوند."
+        )
+        self.pull_site_btn.clicked.connect(self._pull_site_products)
         crawl_btn = QPushButton("➕ افزودن محصول / Crawl")
         crawl_btn.setProperty("success", True)
         crawl_btn.clicked.connect(
@@ -219,6 +227,7 @@ class ProductsPage(QWidget):
         bar.addWidget(QLabel("مرتب‌سازی گالری"))
         bar.addWidget(self.sort_combo)
         bar.addWidget(refresh_btn)
+        bar.addWidget(self.pull_site_btn)
         bar.addWidget(crawl_btn)
         bar.addWidget(self.open_source_btn)
         bar.addWidget(edit_btn)
@@ -803,6 +812,79 @@ class ProductsPage(QWidget):
         self.bulk_ai_btn.setEnabled(True)
         self.ready_publish_btn.setEnabled(True)
         self.bulk_publish_btn.setEnabled(True)
+
+    def _pull_site_products(self) -> None:
+        if self._site_pull_worker is not None:
+            QMessageBox.information(
+                self,
+                "همگام‌سازی سایت",
+                "دریافت تغییرات سایت هم‌اکنون در حال اجرا است.",
+            )
+            return
+        self.pull_site_btn.setEnabled(False)
+        self.bulk_publish_status.setText("در حال دریافت Productهای سایت…")
+
+        def job(progress):
+            return self.kernel.pull_site_products(progress=progress)
+
+        worker = Worker(job)
+        self._site_pull_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.bulk_publish_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._site_pull_done)
+        worker.signals.error.connect(self._site_pull_error)
+        worker.signals.finished.connect(self._site_pull_finished)
+        self.site_sync_pool.start(worker)
+
+    def _site_pull_done(self, result=None) -> None:
+        data = dict(result or {})
+        self.refresh()
+        self.bulk_publish_status.setText(
+            "↻ Site Pull: "
+            f"{int(data.get('created') or 0)} جدید • "
+            f"{int(data.get('updated') or 0)} بروزشده • "
+            f"{int(data.get('conflict_count') or 0)} تعارض"
+        )
+        details = []
+        for item in list(data.get("conflicts") or [])[:6]:
+            details.append(
+                f"Local #{item.get('local_product_id')}: "
+                f"Local r{item.get('local_revision')} / Site r{item.get('server_revision')}"
+            )
+        for item in list(data.get("failures") or [])[:4]:
+            details.append(
+                f"Site #{item.get('server_product_id')}: {item.get('error')}"
+            )
+        suffix = ("\n\n" + "\n".join(details)) if details else ""
+        QMessageBox.information(
+            self,
+            "نتیجه دریافت تغییرات سایت",
+            (
+                f"Productهای بررسی‌شده: {int(data.get('requested') or 0)}\n"
+                f"Mirror جدید: {int(data.get('created') or 0)}\n"
+                f"بروزرسانی از سایت: {int(data.get('updated') or 0)}\n"
+                f"بدون تغییر: {int(data.get('unchanged') or 0)}\n"
+                f"تعارض محافظت‌شده: {int(data.get('conflict_count') or 0)}\n"
+                f"خطا: {int(data.get('failed') or 0)}"
+                + suffix
+            ),
+        )
+
+    def _site_pull_error(self, detail: str) -> None:
+        self.bulk_publish_status.setText("❌ دریافت تغییرات سایت ناموفق")
+        show_diagnostic_error(
+            self,
+            "خطای دریافت Productهای سایت",
+            detail,
+            context={"operation": "site-product-pull"},
+        )
+
+    def _site_pull_finished(self) -> None:
+        self._site_pull_worker = None
+        self.pull_site_btn.setEnabled(True)
 
     def _bulk_ai_selected(self) -> None:
         if self._bulk_ai_worker is not None:

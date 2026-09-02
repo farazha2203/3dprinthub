@@ -136,6 +136,9 @@ def _profile_payload(profile) -> dict:
         "price_min": profile.price_min,
         "price_max": profile.price_max,
         "price_mode": profile.price_mode,
+        "pricing_strategy": str(getattr(profile, "pricing_strategy", "legacy") or "legacy"),
+        "pricing_inputs": dict(getattr(profile, "pricing_inputs", {}) or {}),
+        "technical_summary_fa": str(getattr(profile, "technical_summary_fa", "") or ""),
         "download_image_limit": profile.download_image_limit,
         "homepage_slider_enabled": profile.homepage_slider_enabled,
         "homepage_slider_image_url": profile.homepage_slider_image_url,
@@ -176,6 +179,10 @@ def serialize_product(product) -> dict:
         "id": product.pk,
         "asset_id": getattr(asset, "pk", None),
         "source_external_id": str(getattr(product, "source_external_id", "") or getattr(asset, "external_id", "") or ""),
+        "source_name": str(getattr(product, "source_name", "") or getattr(getattr(asset, "source", None), "name", "") or ""),
+        "source_code": str(getattr(getattr(asset, "source", None), "code", "") or ""),
+        "source_url": str(getattr(product, "source_url", "") or getattr(asset, "source_url", "") or ""),
+        "slug": str(getattr(product, "slug", "") or ""),
         "sku": str(product.sku or ""),
         "title": str(product.title or ""),
         "title_en": str(getattr(product, "title_en", "") or ""),
@@ -183,6 +190,7 @@ def serialize_product(product) -> dict:
         "description": str(getattr(product, "description", "") or ""),
         "category_id": product.category_id,
         "category": str(product.category.name if product.category_id else ""),
+        "category_slug": str(product.category.slug if product.category_id else ""),
         "is_active": bool(product.is_active),
         "main_image": _file_url(getattr(product, "main_image", None)),
         "meta_title": str(getattr(product, "meta_title", "") or ""),
@@ -699,8 +707,25 @@ def products_view(request):
         limit = min(200, max(1, int(request.GET.get("limit") or 50)))
     except Exception:
         limit = 50
-    items = [serialize_product(item) for item in queryset[:limit]]
-    return JsonResponse({"status": "ok", "items": items, "count": len(items), "contract": "epic49-unified-v1"})
+    try:
+        offset = max(0, int(request.GET.get("offset") or 0))
+    except Exception:
+        offset = 0
+    total = queryset.count()
+    items = [
+        serialize_product(item)
+        for item in queryset[offset : offset + limit]
+    ]
+    return JsonResponse({
+        "status": "ok",
+        "items": items,
+        "count": len(items),
+        "total_count": int(total),
+        "offset": offset,
+        "limit": limit,
+        "has_more": offset + len(items) < total,
+        "contract": "epic49-unified-v1",
+    })
 
 
 @require_GET
@@ -754,6 +779,7 @@ def product_sync_view(request, product_id: int):
         "homepage_slider_alt_text": 240,
         "homepage_slider_button_text": 80,
         "homepage_slider_focus_keyword": 180,
+        "technical_summary_fa": 0,
     }
 
     with transaction.atomic():
@@ -803,6 +829,13 @@ def product_sync_view(request, product_id: int):
             price_mode = str(profile_data.get("price_mode") or "fixed")
             if price_mode in {"fixed", "range", "variant", "quote"}:
                 profile.price_mode = price_mode
+        if "pricing_strategy" in profile_data and hasattr(profile, "pricing_strategy"):
+            strategy = str(profile_data.get("pricing_strategy") or "legacy").strip().lower()
+            if strategy in {"legacy", "fixed", "dynamic"}:
+                profile.pricing_strategy = strategy
+        if "pricing_inputs" in profile_data and hasattr(profile, "pricing_inputs"):
+            if isinstance(profile_data.get("pricing_inputs"), dict):
+                profile.pricing_inputs = dict(profile_data["pricing_inputs"])
         for name, value in _normalized_profile_media_patch(profile, profile_data).items():
             setattr(profile, name, value)
         if "technical_features" in profile_data and isinstance(profile_data["technical_features"], dict):
