@@ -496,7 +496,7 @@ class Database:
                            source_specs_json, tags_json, dimensions,
                            estimated_weight_grams, estimated_print_minutes
                     FROM products
-                    WHERE source_code=? AND external_id IN ({placeholders})
+                    WHERE source_code = ? COLLATE NOCASE AND external_id IN ({placeholders})
                     """,
                     (code, *external_ids),
                 )
@@ -515,7 +515,7 @@ class Database:
                            source_specs_json, tags_json, dimensions,
                            estimated_weight_grams, estimated_print_minutes
                     FROM products
-                    WHERE source_code=? AND normalized_url IN ({placeholders})
+                    WHERE source_code = ? COLLATE NOCASE AND normalized_url IN ({placeholders})
                     """,
                     (code, *normalized_urls),
                 )
@@ -545,7 +545,7 @@ class Database:
                         SELECT id, source_code, external_id, source_title,
                                thumbnail_url, status, discovered_from, updated_at
                         FROM {candidate_table}
-                        WHERE source_code=? AND external_id IN ({placeholders})
+                        WHERE source_code = ? COLLATE NOCASE AND external_id IN ({placeholders})
                         """,
                         (code, *external_ids),
                     )
