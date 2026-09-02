@@ -5,14 +5,16 @@ Catalog Center `8.9.10` build `2026.09.02.1` now restores the owner-requested vi
 Implemented:
 - Preview-first current-Search Product cards with title/thumbnail and visible image count;
 - per-Product image acquisition progress such as 3/5 → 5/5;
+- selected collected Product live detail now shows its actual local image strip and image/file counts;
+- dense receive/bulk controls use compact labels with full explanatory tooltips;
 - each new Search clears the previous live Search workspace;
 - explicit multi-select and bulk transfer/reject in current Search and persistent Crawl inventory;
 - selected collected rows route into Products;
 - persistent inventory reuses legacy candidate Preview evidence;
 - Product source/image stage adds safe `دریافت داده و عکس بیشتر از لینک محصول` and preserves operator-owned content/pricing/publish decisions.
 
-Runtime checkpoint: `b43880a763d00bfda52dc29c4bf080cb428b1230`.  
-Qt `33624135672` PASS; Single Active AI `33625043627` PASS; Portable `33625043651` PASS with 215 release regressions.  
+Runtime checkpoint: `bb0dcd7cc521cacc540943ed8091a323038c28f9`.  
+Qt `33625257602` PASS; Single Active AI `33625257485` PASS; Portable `33625257693` PASS with 217 release regressions.  
 Rollback: `backup/pre-phase49-3i52c-crawl-review-recovery-20260902` → `dfc883cc6ac68c49c589c0d5a6007d50a9a4719c`.
 
 ERR-49-097 records the one Portable-CI dependency failure and its corrected PySide6/Qt requirements boundary. Production/Host/MySQL remain untouched. Owner Local checksum-backed gate + foreground QA is the immediate next step.
