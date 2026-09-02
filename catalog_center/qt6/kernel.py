@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Lock
 from types import SimpleNamespace
 from typing import Any, Callable, TypeVar
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlsplit
 
 from app import phase49_3c_image_pipeline as image_pipeline
 from app.db import utc_now
@@ -817,6 +817,34 @@ class AcquisitionCore:
             )
         except Exception:
             return template
+
+    def detect_source_for_url(self, url: str) -> str:
+        target = str(url or "").strip()
+        if not target.startswith(("http://", "https://")):
+            return ""
+        host = urlsplit(target).netloc.casefold().split(":", 1)[0]
+        if not host:
+            return ""
+        for raw in self.sources():
+            source = dict(raw)
+            code = str(source.get("code") or "").strip()
+            try:
+                listings = json.loads(str(source.get("listing_urls_json") or "[]"))
+            except Exception:
+                listings = []
+            for listing in listings if isinstance(listings, list) else []:
+                listing_host = urlsplit(str(listing or "")).netloc.casefold().split(":", 1)[0]
+                if listing_host and (
+                    host == listing_host
+                    or host.endswith("." + listing_host)
+                    or listing_host.endswith("." + host)
+                ):
+                    return code
+            compact_host = host.replace("-", "").replace("_", "")
+            compact_code = code.casefold().replace("-", "").replace("_", "")
+            if compact_code and compact_code in compact_host:
+                return code
+        return ""
 
     def resolve_listing_url(
         self,

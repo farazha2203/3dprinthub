@@ -1060,7 +1060,7 @@ class FilamentsPage(QWidget):
         root = QVBoxLayout(self)
         root.addWidget(_title_block(
             "کتابخانه Filament",
-            "سه فضای مستقل برای فیلامنت‌ها، برندها و رنگ‌ها؛ رنگ/برند یک‌بار ساخته می‌شود و در ویرایش فیلامنت تخصیص می‌گیرد.",
+            "چهار فضای مستقل برای فیلامنت‌ها، متریال‌ها، برندها و رنگ‌ها؛ متریال/برند/رنگ یک‌بار ساخته می‌شود و در ویرایش فیلامنت فقط انتخاب می‌گردد.",
         ))
 
         self.workspace_tabs = QTabWidget()
@@ -1125,6 +1125,49 @@ class FilamentsPage(QWidget):
         self.workspace_tabs.addTab(filament_page, "فیلامنت‌ها")
 
         # --------------------------------------------------------------
+        # Material registry
+        # --------------------------------------------------------------
+        material_page = QWidget()
+        material_layout = QVBoxLayout(material_page)
+        material_hint = QLabel(
+            "متریال مادر را یک‌بار تعریف کن. قیمت پایه هر کیلو و توضیح اختیاری "
+            "برای مدیریت/SEO ثبت می‌شود؛ قیمت واقعی Filament همچنان از قیمت فروش رول ÷ وزن رول می‌آید."
+        )
+        material_hint.setWordWrap(True)
+        material_hint.setObjectName("Muted")
+        material_layout.addWidget(material_hint)
+
+        material_actions = QHBoxLayout()
+        add_material = QPushButton("➕ افزودن متریال")
+        add_material.setProperty("primary", True)
+        edit_material = QPushButton("ویرایش متریال")
+        delete_material = QPushButton("حذف متریال بدون مصرف")
+        add_material.clicked.connect(self._add_material)
+        edit_material.clicked.connect(self._edit_material)
+        delete_material.clicked.connect(self._delete_material)
+        material_actions.addWidget(add_material)
+        material_actions.addWidget(edit_material)
+        material_actions.addWidget(delete_material)
+        material_actions.addStretch(1)
+        material_layout.addLayout(material_actions)
+
+        self.material_table = QTableWidget(0, 3)
+        self.material_table.setHorizontalHeaderLabels(
+            ["نام متریال", "قیمت پایه هر کیلو (تومان)", "توضیح اختیاری"]
+        )
+        self.material_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.material_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.material_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.material_table.verticalHeader().setVisible(False)
+        self.material_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.material_table.horizontalHeader().resizeSection(0, 220)
+        self.material_table.horizontalHeader().resizeSection(1, 210)
+        self.material_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.material_table.doubleClicked.connect(lambda _index: self._edit_material())
+        material_layout.addWidget(self.material_table, 1)
+        self.workspace_tabs.addTab(material_page, "متریال‌ها")
+
+        # --------------------------------------------------------------
         # Brand registry
         # --------------------------------------------------------------
         brand_page = QWidget()
@@ -1139,17 +1182,28 @@ class FilamentsPage(QWidget):
         brand_actions = QHBoxLayout()
         add_brand = QPushButton("➕ افزودن برند")
         add_brand.setProperty("primary", True)
+        edit_brand = QPushButton("ویرایش برند")
         delete_brand = QPushButton("حذف برند بدون مصرف")
         add_brand.clicked.connect(self._add_brand)
+        edit_brand.clicked.connect(self._edit_brand)
         delete_brand.clicked.connect(self._delete_brand)
         brand_actions.addWidget(add_brand)
+        brand_actions.addWidget(edit_brand)
         brand_actions.addWidget(delete_brand)
         brand_actions.addStretch(1)
         brand_layout.addLayout(brand_actions)
 
-        self.brand_list = QListWidget()
-        self.brand_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        brand_layout.addWidget(self.brand_list, 1)
+        self.brand_table = QTableWidget(0, 2)
+        self.brand_table.setHorizontalHeaderLabels(["نام برند", "توضیح اختیاری"])
+        self.brand_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.brand_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.brand_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.brand_table.verticalHeader().setVisible(False)
+        self.brand_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.brand_table.horizontalHeader().resizeSection(0, 240)
+        self.brand_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.brand_table.doubleClicked.connect(lambda _index: self._edit_brand())
+        brand_layout.addWidget(self.brand_table, 1)
         self.workspace_tabs.addTab(brand_page, "برندها")
 
         # --------------------------------------------------------------
@@ -1284,31 +1338,156 @@ class FilamentsPage(QWidget):
             return
         self.refresh()
 
-    def _reload_brands(self) -> None:
-        selected = self.brand_list.currentItem().text() if self.brand_list.currentItem() else ""
-        self.brand_list.clear()
-        self.brand_list.addItems(self.kernel.filaments.brands())
-        matches = self.brand_list.findItems(selected, Qt.MatchFlag.MatchExactly)
-        if matches:
-            self.brand_list.setCurrentItem(matches[0])
+    def _reload_material_registry(self) -> None:
+        records = self.kernel.filaments.material_records()
+        self.material_table.setRowCount(len(records))
+        for row_index, record in enumerate(records):
+            values = [
+                str(record.get("name") or ""),
+                f"{int(record.get('price_per_kg') or 0):,}",
+                str(record.get("description") or ""),
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, dict(record))
+                self.material_table.setItem(row_index, column, item)
+            self.material_table.setRowHeight(row_index, 44)
 
-    def _add_brand(self) -> None:
-        value, ok = QInputDialog.getText(self, "برند جدید", "نام برند")
+    def _selected_material_record(self) -> dict | None:
+        row = self.material_table.currentRow()
+        if row < 0:
+            return None
+        item = self.material_table.item(row, 0)
+        value = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return dict(value) if isinstance(value, dict) else None
+
+    def _material_editor(self, record: dict | None = None) -> None:
+        current = dict(record or {})
+        name, ok = QInputDialog.getText(
+            self, "متریال", "نام متریال", text=str(current.get("name") or "")
+        )
         if not ok:
             return
+        description, ok = QInputDialog.getMultiLineText(
+            self, "متریال", "توضیح اختیاری", str(current.get("description") or "")
+        )
+        if not ok:
+            return
+        price, ok = QInputDialog.getInt(
+            self,
+            "متریال",
+            "قیمت پایه هر کیلو (تومان) — فقط مرجع متریال مادر",
+            int(current.get("price_per_kg") or 0),
+            0,
+            2_000_000_000,
+            1000,
+        )
+        if not ok:
+            return
+        self.kernel.filaments.save_material(
+            name,
+            description,
+            price,
+            previous_name=str(current.get("name") or ""),
+        )
+        self.refresh()
+
+    def _add_material(self) -> None:
         try:
-            self.kernel.filaments.add_brand(value)
+            self._material_editor()
+        except Exception as exc:
+            QMessageBox.warning(self, "متریال", str(exc))
+
+    def _edit_material(self) -> None:
+        record = self._selected_material_record()
+        if not record:
+            QMessageBox.warning(self, "متریال", "یک متریال را انتخاب کن.")
+            return
+        try:
+            self._material_editor(record)
+        except Exception as exc:
+            QMessageBox.warning(self, "متریال", str(exc))
+
+    def _delete_material(self) -> None:
+        record = self._selected_material_record()
+        if not record:
+            QMessageBox.warning(self, "متریال", "یک متریال را انتخاب کن.")
+            return
+        name = str(record.get("name") or "")
+        if QMessageBox.question(self, "حذف متریال", f"متریال «{name}» حذف شود؟") != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.kernel.filaments.delete_material(name)
+        except Exception as exc:
+            QMessageBox.warning(self, "متریال", str(exc))
+            return
+        self.refresh()
+
+    def _reload_brands(self) -> None:
+        records = self.kernel.filaments.brand_records()
+        self.brand_table.setRowCount(len(records))
+        for row_index, record in enumerate(records):
+            values = [
+                str(record.get("name") or ""),
+                str(record.get("description") or ""),
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, dict(record))
+                self.brand_table.setItem(row_index, column, item)
+            self.brand_table.setRowHeight(row_index, 44)
+
+    def _selected_brand_record(self) -> dict | None:
+        row = self.brand_table.currentRow()
+        if row < 0:
+            return None
+        item = self.brand_table.item(row, 0)
+        value = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return dict(value) if isinstance(value, dict) else None
+
+    def _brand_editor(self, record: dict | None = None) -> None:
+        current = dict(record or {})
+        name, ok = QInputDialog.getText(
+            self, "برند", "نام برند", text=str(current.get("name") or "")
+        )
+        if not ok:
+            return
+        description, ok = QInputDialog.getMultiLineText(
+            self, "برند", "توضیح اختیاری", str(current.get("description") or "")
+        )
+        if not ok:
+            return
+        self.kernel.filaments.save_brand(
+            name,
+            description,
+            previous_name=str(current.get("name") or ""),
+        )
+        self.refresh()
+
+    def _add_brand(self) -> None:
+        try:
+            self._brand_editor()
         except Exception as exc:
             QMessageBox.warning(self, "برند", str(exc))
-            return
-        self._reload_brands()
 
-    def _delete_brand(self) -> None:
-        item = self.brand_list.currentItem()
-        if item is None:
+    def _edit_brand(self) -> None:
+        record = self._selected_brand_record()
+        if not record:
             QMessageBox.warning(self, "برند", "یک برند را انتخاب کن.")
             return
-        name = item.text().strip()
+        try:
+            self._brand_editor(record)
+        except Exception as exc:
+            QMessageBox.warning(self, "برند", str(exc))
+
+    def _delete_brand(self) -> None:
+        record = self._selected_brand_record()
+        if not record:
+            QMessageBox.warning(self, "برند", "یک برند را انتخاب کن.")
+            return
+        name = str(record.get("name") or "")
         if QMessageBox.question(
             self,
             "حذف برند",
@@ -1320,7 +1499,7 @@ class FilamentsPage(QWidget):
         except Exception as exc:
             QMessageBox.warning(self, "برند", str(exc))
             return
-        self._reload_brands()
+        self.refresh()
 
     def _reload_colors(self) -> None:
         presets = self.kernel.filaments.color_presets()
@@ -1394,6 +1573,7 @@ class FilamentsPage(QWidget):
     def refresh(self) -> None:
         self.model.refresh()
         self._reload_materials()
+        self._reload_material_registry()
         self._apply_filters()
         self._reload_brands()
         self._reload_colors()
@@ -1573,6 +1753,7 @@ class OperationsPage(QWidget):
             self.collection_method.addItem(label, code)
 
         self.url = QLineEdit()
+        self.url.setClearButtonEnabled(True)
         self.url.setPlaceholderText(
             "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
         )
@@ -1689,6 +1870,21 @@ class OperationsPage(QWidget):
         self.status.setObjectName("Muted")
         receive_layout.addWidget(self.progress)
         receive_layout.addWidget(self.status)
+
+        live_card = QFrame()
+        live_card.setObjectName("Card")
+        live_layout = QVBoxLayout(live_card)
+        live_header = QHBoxLayout()
+        live_header.addWidget(QLabel("نتایج زنده کشف / دریافت"))
+        self.live_discovery_label = QLabel("هنوز Run شروع نشده است.")
+        self.live_discovery_label.setObjectName("Muted")
+        live_header.addStretch(1)
+        live_header.addWidget(self.live_discovery_label)
+        live_layout.addLayout(live_header)
+        self.live_results = QListWidget()
+        self.live_results.setMinimumHeight(210)
+        live_layout.addWidget(self.live_results)
+        receive_layout.addWidget(live_card, 1)
         receive_layout.addStretch(1)
 
         # --------------------------------------------------------------
@@ -1728,6 +1924,7 @@ class OperationsPage(QWidget):
         )
 
         self.mode.currentIndexChanged.connect(self._mode_changed)
+        self.url.editingFinished.connect(self._sync_source_from_url)
         self.collection_method.currentIndexChanged.connect(self._method_changed)
         self.source.currentIndexChanged.connect(self._source_changed)
         self.start_btn.clicked.connect(self._start)
@@ -1790,6 +1987,54 @@ class OperationsPage(QWidget):
         self.source_hint.setText(
             f"Source: {details.get('name') or source_code or '—'} • "
             f"Listing پیش‌فرض: {default or 'ثبت نشده'}"
+        )
+
+    def _sync_source_from_url(self) -> None:
+        detected = self.kernel.acquisition.detect_source_for_url(
+            self.url.text().strip()
+        )
+        if not detected:
+            return
+        index = self.source.findData(detected)
+        if index >= 0 and index != self.source.currentIndex():
+            self.source.setCurrentIndex(index)
+            self.source_hint.setText(
+                f"✅ Source از روی لینک تشخیص داده شد: {self.source.currentText()}"
+            )
+
+    def _refresh_live_discovery(self) -> None:
+        if not hasattr(self, "live_results"):
+            return
+        source_code = str(self.source.currentData() or "")
+        rows = self.kernel.acquisition.queue_page(
+            source_code,
+            "all",
+            limit=12,
+            offset=0,
+        )
+        self.live_results.clear()
+        for row in rows:
+            status = str(row.get("status") or "new")
+            title = (
+                row.get("product_title_fa")
+                or row.get("product_source_title")
+                or row.get("external_id")
+                or row.get("url")
+                or "کاندیدا"
+            )
+            image_count = self._queue_image_count(row) if row.get("product_id") else 0
+            suffix = (
+                f"{image_count} عکس"
+                if row.get("product_id")
+                else "کشف شده؛ جزئیات/عکس در صف دریافت"
+            )
+            self.live_results.addItem(f"{title}  •  {status}  •  {suffix}")
+        counts = self.kernel.acquisition.queue_counts(source_code)
+        self.live_discovery_label.setText(
+            " • ".join(
+                f"{key}={value}"
+                for key, value in sorted(counts.items())
+            ) or "صف خالی است"
         )
 
     def _fill_default_url(self) -> None:
@@ -1877,6 +2122,7 @@ class OperationsPage(QWidget):
             )
             return
 
+        self._sync_source_from_url()
         source_code = str(
             self.source.currentData() or ""
         ).strip()
@@ -2093,6 +2339,9 @@ class OperationsPage(QWidget):
     def _progress(self, value: int, message: str) -> None:
         self.progress.setValue(int(value))
         self.status.setText(str(message or ""))
+        if int(value) <= 25 or "کشف" in str(message or ""):
+            self._populate_queue(reset=True)
+            self._refresh_live_discovery()
 
     def _stop(self) -> None:
         self.kernel.acquisition.request_stop()
@@ -2144,6 +2393,7 @@ class OperationsPage(QWidget):
                 f"Files={data.get('files_saved', 0)}"
             )
         self.refresh()
+        self._refresh_live_discovery()
 
     def _error(self, detail: str) -> None:
         self.status.setText("❌ دریافت ناموفق")

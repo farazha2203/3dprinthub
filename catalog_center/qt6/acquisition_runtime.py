@@ -838,6 +838,12 @@ async def run_batch_async(
         )
         discovered += int(discovery["new"])
         duplicates += int(discovery["duplicates"])
+        _emit(
+            progress,
+            23,
+            f"کشف تمام شد — {discovered} مورد جدید / {duplicates} تکراری؛ "
+            "کاندیداها در موجودی قابل مشاهده‌اند و دریافت جزئیات/عکس شروع می‌شود.",
+        )
 
         rows = _pending_for_listing(
             db,
