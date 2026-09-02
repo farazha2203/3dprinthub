@@ -1541,6 +1541,9 @@ class OperationsPage(QWidget):
         self.mode.addItem("Category URL", "category")
         self.mode.addItem("Site Crawl از لینک شروع", "site_crawl")
         self.mode.addItem("دریافت مستقیم یک Product", "single")
+        search_mode_index = self.mode.findData("search")
+        if search_mode_index >= 0:
+            self.mode.setCurrentIndex(search_mode_index)
 
         self.strategy = QComboBox()
         self.strategy.addItem(
@@ -1604,7 +1607,7 @@ class OperationsPage(QWidget):
         self.image_limit.setValue(5)
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
 
-        self.start_btn = QPushButton("شروع دریافت")
+        self.start_btn = QPushButton("شروع دریافت محصولات از لینک")
         self.start_btn.setProperty("primary", True)
         self.stop_btn = QPushButton("توقف امن")
         self.stop_btn.setEnabled(False)
@@ -2345,7 +2348,7 @@ class OperationsPage(QWidget):
                 gallery_lines = [
                     str(title),
                     (
-                        f"🖼 {image_count} • {source} • {status}"
+                        f"🖼 {image_count} عکس • {source} • {status}"
                         if row.get("product_id")
                         else f"🔗 {source} • {status} • برای عکس/متن ابتدا دریافت شود"
                     ),
