@@ -1,3 +1,21 @@
+## 2026-09-02 — Phase49.3I.52F bulk incomplete Product recovery
+
+Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
+
+Completed:
+- restored the mature previous-version bulk refetch intent inside Qt permanent Crawl inventory;
+- `انتخاب ناقص‌ها` selects loaded rows missing Product/data/image evidence;
+- image target selector supports 5/10/20;
+- `بازیابی دیتا + عکس` reuses complete local evidence first and force-refetches only incomplete Products;
+- safe refetch preserves operator Persian content, pricing, approval and publish decisions;
+- orphan collected-ledger identities can be explicitly rebuilt from their Product URL;
+- URL slug gives a readable temporary Product identity before full receive;
+- queue actions are split across two rows and `بازگردانی به صف` is distinct from data recovery.
+
+Evidence: runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`; Qt `33637452385` PASS; Single Active AI `33637452588` PASS; Portable `33637452243` PASS; 227 release regressions; artifact `9849484898`; SHA256 `f0150359fd36c7ead84599ccd0b799797ed48e85e4c6eac1d191abc3f0315a64`.
+
+Next: owner Local sync/gate, then select incomplete permanent Crawl rows and recover 5/10 images in one batch. Production remains blocked.
+
 ## 2026-09-02 — Phase49.3I.52E Crawl preview + historical refetch image parity
 
 Status: `IMPLEMENTED + WINDOWS QT/PARITY PASS + PORTABLE PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT DEPLOYED`.
