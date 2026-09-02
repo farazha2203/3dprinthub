@@ -1,3 +1,38 @@
+### ERR-49-107 — MySQL gzip helper self-test exceeded Linux argv limit
+**Date:** 2026-09-02  
+**Environment:** GitHub Product Admin CI `33659570675`.
+
+**Symptom:** the newly added backup helper self-test failed with `OSError: [Errno 7] Argument list too long`.
+
+**Root cause:** the test embedded a multi-megabyte synthetic mysqldump payload directly inside one `python -c` argv element. The Production helper itself does not do this.
+
+**Failed condition:** the same oversized-argv test was not rerun unchanged.
+
+**Correct fix:** keep the child command bounded and generate the large synthetic payload inside the child process; continue exercising the same stdout-pipe → gzip encoder → round-trip verification boundary.
+
+**Verification:** `3b6254bf7700bb26b4af63d21e31e56e7700877c`; Product Admin CI `33659707983` PASS; Single Active AI `33659707957` PASS.
+
+**Prevention:** subprocess compression tests must stream large payloads through stdin/stdout/files, not encode them into argv or environment variables.
+
+
+### ERR-49-106 — mysqldump was written raw through a GzipFile descriptor
+**Date:** 2026-09-02  
+**Environment:** Production Host first Phase49.3I.53C deploy attempt.
+
+**Observed:** all predeploy gates passed and mysqldump reported a 17,469,650-byte file at `.../20260902-203857-phase49-3i53/database-before-3i53.sql.gz`, then `gzip -t` failed with `not in gzip format`.
+
+**Root cause:** the runner opened a Python `gzip.GzipFile` and passed that object directly as `subprocess.run(stdout=target)`. Subprocess consumes its OS file descriptor, so mysqldump wrote raw SQL bytes directly to the underlying file and bypassed the gzip encoder.
+
+**Safety result:** the runner stopped before `PREDEPLOY_BACKUP_VERIFIED=YES`; no ff-merge, migration, collectstatic or restart occurred. The failed artifact is evidence only and is not a valid compressed restore backup.
+
+**Failed condition:** do not repeat the old runner unchanged and do not trust a `.gz` suffix without gzip verification.
+
+**Correct fix:** repository helper `scripts/host/phase49_3i53_mysql_backup.py` launches mysqldump with `stdout=PIPE`, streams bytes through `gzip.open(...)` in the parent process, keeps stderr out of a pipe, validates gzip magic + mysqldump payload signature, and then the runner performs `gzip -t` + SHA256 manifest verification.
+
+**Verification:** final code `3b6254bf7700bb26b4af63d21e31e56e7700877c`; Product Admin/backup CI `33659707983` PASS; Single Active AI `33659707957` PASS.
+
+**Prevention:** never pass compression wrapper objects directly to subprocess stdout/stderr expecting the child process to execute the wrapper's codec. Child-process output must be piped through the parent codec or written plain then compressed in a separate verified step.
+
 ### ERR-49-105 — Host forensic helper used unavailable system python3 and stale audit baseline
 **Date:** 2026-09-02  
 **Environment:** cPanel Host `/home/sfkilvrs/3dprinthub`.

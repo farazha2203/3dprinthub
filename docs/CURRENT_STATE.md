@@ -1,3 +1,43 @@
+## 2026-09-02 — Phase49.3I.53D MySQL backup gzip boundary fixed before Production promotion
+
+Status: `GITHUB_UPDATED / BACKUP FIX CI PASS / PRODUCTION STILL AT VERIFIED BASELINE / DEPLOY RETRY NEXT`.
+
+Repository: `farazha2203/3dprinthub`  
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
+Verified Host baseline remains `198fa8e41ea4f4d87eb287ba69c91076acc78d62`.  
+Current backup/deploy fix checkpoint: `3b6254bf7700bb26b4af63d21e31e56e7700877c`.
+
+### Owner deploy attempt evidence
+The first 3I.53C Production runner correctly passed repository/branch/HEAD/live-target/fast-forward/migration-delta/MySQL-state/Django checks and created the source bundle. It then created:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20260902-203857-phase49-3i53/database-before-3i53.sql.gz`
+with size 17,469,650 bytes, but `gzip -t` reported `not in gzip format`.
+
+The runner stopped immediately at this backup-verification boundary. It did **not** print `PREDEPLOY_BACKUP_VERIFIED=YES`, did **not** ff-merge source, did **not** migrate, did **not** collectstatic and did **not** restart Passenger. Production therefore remains at the verified baseline.
+
+### Root cause and fix
+Passing a Python `gzip.GzipFile` object directly as `subprocess.run(..., stdout=target)` is unsafe: subprocess uses the underlying file descriptor and writes raw mysqldump bytes directly to the file, bypassing Python gzip encoding. The file had a `.gz` suffix without an actual gzip stream.
+
+The deploy runner now extracts a repository-owned helper `scripts/host/phase49_3i53_mysql_backup.py` from the exact fetched target. The helper:
+- starts mysqldump with `stdout=PIPE`;
+- streams stdout through Python's gzip encoder with `shutil.copyfileobj`;
+- redirects stderr to a private temporary file so pipe buffering cannot deadlock;
+- fails closed on mysqldump error;
+- verifies gzip magic and mysqldump payload signature before returning success;
+- the shell runner still performs full `gzip -t` and SHA256 verification before source promotion.
+
+### Verification
+- intermediate self-test run `33659570675` failed because the synthetic 2MB fixture was embedded directly in one command-line argument and exceeded Linux argv size; this was a test-fixture error, not the Production backup algorithm;
+- the failed condition was changed: the child now generates the fixture internally with a bounded command line;
+- final Product Admin/backup-contract CI `33659707983` PASS;
+- final Single Active AI `33659707957` PASS;
+- helper self-test now proves gzip round-trip and mysqldump header validation.
+
+### Backup safety
+The failed 20260902-203857 backup directory is retained as evidence and its `database-before-3i53.sql.gz` must **not** be used as a MySQL restore artifact because it is not gzip. A retry creates a fresh timestamped backup root and must reach `PREDEPLOY_BACKUP_VERIFIED=YES` before any merge/migration.
+
+### Exact next task
+Re-run the current repository deploy runner from the live GitHub target while Host HEAD is still `198fa8e...` and worktree is clean. Do not reuse the old failed backup directory. Stop on any new failure; if successful, require final authenticated receiver readiness and then publish exactly one Product end-to-end before bulk publishing.
+
 ## 2026-09-02 — Phase49.3I.53C Production receiver deploy prepared after clean Host audit
 
 Status: `GITHUB_UPDATED / HOST READ-ONLY AUDIT PASS / BACKUP+DEPLOY RUNNER CI PASS / PRODUCTION DEPLOY NEXT`.

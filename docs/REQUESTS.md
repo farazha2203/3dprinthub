@@ -1,3 +1,18 @@
+## REQ-49-094 — Production receiver deploy must stop unless MySQL backup is a real verified gzip
+Date: 2026-09-02  
+Status: `IMPLEMENTED + CI PASS / DEPLOY RETRY NEXT`.
+
+Accepted behavior:
+- no source promotion before a valid MySQL rollback artifact exists;
+- backup suffix alone is insufficient;
+- mysqldump bytes must pass through a real gzip encoder;
+- gzip magic, dump signature, full `gzip -t` and SHA256 must all pass;
+- partial/invalid backup stops deployment;
+- failed backup evidence is retained rather than silently reused;
+- retry uses a new timestamped backup directory.
+
+Verification: `3b6254bf7700bb26b4af63d21e31e56e7700877c`; Product Admin CI `33659707983` PASS; Single Active AI `33659707957` PASS.
+
 ## REQ-49-093 — Make the Site/Host ready to receive Products from Catalog Center
 Date: 2026-09-02  
 Status: `IMPLEMENTED + CI PASS / HOST READ-ONLY AUDIT NEXT / PRODUCTION NOT DEPLOYED`.

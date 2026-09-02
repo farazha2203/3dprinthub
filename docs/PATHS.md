@@ -1,3 +1,9 @@
+## Phase49.3I.53D backup helper — 2026-09-02
+Production MySQL backup helper in Repository: `scripts/host/phase49_3i53_mysql_backup.py`.
+Failed evidence backup root retained: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-203857-phase49-3i53`.
+Its `database-before-3i53.sql.gz` is NOT a valid gzip restore artifact and must not be reused.
+Current backup-fix checkpoint: `3b6254bf7700bb26b4af63d21e31e56e7700877c`.
+
 ## Phase49.3I.53C verified Production paths — 2026-09-02
 Host audit effective paths:
 - Static: `/home/sfkilvrs/public_html/static`;

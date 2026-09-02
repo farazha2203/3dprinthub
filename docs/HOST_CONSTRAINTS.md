@@ -1,3 +1,15 @@
+## Phase49.3I.53D backup compression constraint — 2026-09-02
+
+Do not treat a filename ending in `.gz` as a verified MySQL backup. The failed 20260902-203857 artifact demonstrated that attaching a child process directly to a Python `gzip.GzipFile` file descriptor writes raw bytes and bypasses the codec.
+
+Current Production deploy must use `scripts/host/phase49_3i53_mysql_backup.py` through the repository deploy runner. Required success evidence before any source merge:
+- helper prints `DATABASE_BACKUP_GZIP=VALID`;
+- shell `gzip -t` passes;
+- SHA256 manifest passes;
+- runner prints `PREDEPLOY_BACKUP_VERIFIED=YES`.
+
+The invalid `20260902-203857-phase49-3i53/database-before-3i53.sql.gz` is evidence only, not a restore backup. A retry must create a fresh timestamped backup root.
+
 ## Phase49.3I.53C audited deploy constraints — 2026-09-02
 
 Verified Production before deploy:

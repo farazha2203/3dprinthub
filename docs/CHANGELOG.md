@@ -1,3 +1,12 @@
+## 2026-09-02 — Phase49.3I.53D
+- fixed Production MySQL backup compression: mysqldump stdout is now piped through the parent Python gzip encoder instead of being attached directly to a GzipFile descriptor;
+- added `scripts/host/phase49_3i53_mysql_backup.py`;
+- helper redirects stderr to a private file, removes partial output on error, verifies gzip magic and mysqldump/MariaDB dump signature;
+- deploy runner extracts the exact helper from fetched GitHub target and still requires `gzip -t` + SHA256 before `PREDEPLOY_BACKUP_VERIFIED=YES`;
+- first Production attempt stopped before merge/migrate when invalid gzip was detected;
+- fixed CI self-test argv overflow by generating the large fixture in the child process;
+- final Product Admin CI `33659707983` PASS and Single Active AI `33659707957` PASS.
+
 ## 2026-09-02 — Phase49.3I.53C
 - accepted clean Production read-only audit: MySQL DB correct, Store 0036/Website 0023 applied, Store 0037–0042 + Website 0024 pending;
 - corrected effective Production Media path evidence to `/home/sfkilvrs/3dprinthub/media`;

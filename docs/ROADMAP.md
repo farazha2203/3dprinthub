@@ -1,3 +1,15 @@
+## 2026-09-02 — Phase49.3I.53D verified MySQL backup streaming fix
+
+Status: `IMPLEMENTED + CI PASS / PRODUCTION DEPLOY RETRY NEXT`.
+
+The first audited deploy stopped safely before source promotion because the MySQL file had a `.gz` suffix but raw mysqldump contents. The backup boundary has been corrected with a repository helper that pipes mysqldump output through the actual gzip encoder and verifies gzip magic/header before the existing `gzip -t` + SHA256 gate.
+
+Production remains at `198fa8e41ea4f4d87eb287ba69c91076acc78d62`; no migration or restart occurred.
+
+Final fix `3b6254bf7700bb26b4af63d21e31e56e7700877c`; Product Admin/backup CI `33659707983` PASS; Single Active AI `33659707957` PASS.
+
+Next: fresh timestamped backup + controlled deploy retry. Do not reuse the invalid 20260902-203857 MySQL artifact.
+
 ## 2026-09-02 — Phase49.3I.53C audited Production receiver deployment
 
 Status: `DEPLOY RUNNER READY + CI PASS / PRODUCTION EXECUTION NEXT`.

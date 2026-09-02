@@ -1,3 +1,26 @@
+## 3I.53D — MySQL backup gzip correctness gate
+
+Date: 2026-09-02  
+Status: `GITHUB_UPDATED / BACKUP FIX CI PASS / PRODUCTION DEPLOY RETRY NEXT`.
+
+First Production deploy attempt correctly stopped in the backup stage. The generated `.sql.gz` was raw mysqldump data because subprocess wrote through the underlying GzipFile descriptor instead of through Python's gzip codec. No source merge, migration, collectstatic or Passenger restart occurred.
+
+Current solution:
+- exact fetched target provides `scripts/host/phase49_3i53_mysql_backup.py`;
+- mysqldump stdout is a pipe;
+- parent Python streams it into gzip;
+- stderr goes to a private temporary file;
+- partial output is removed on failure;
+- gzip magic + mysqldump header are validated;
+- shell runner still requires `gzip -t` and SHA256 manifest;
+- source promotion remains blocked until `PREDEPLOY_BACKUP_VERIFIED=YES`.
+
+The first new CI self-test failed only because its synthetic payload exceeded argv size; fixture generation was moved into the child process before rerun.
+
+Final fix `3b6254bf7700bb26b4af63d21e31e56e7700877c`; Product Admin `33659707983` PASS; Single Active AI `33659707957` PASS.
+
+Next: retry from Host baseline `198fa8e...` using a fresh backup root and live GitHub target.
+
 ## 3I.53C — Audited Production receiver deployment runner
 
 Date: 2026-09-02  
