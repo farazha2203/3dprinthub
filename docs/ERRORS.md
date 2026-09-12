@@ -1,3 +1,18 @@
+### ERR-49-114 — Production documentation lagged behind completed 3I.53G recovery
+**Date:** 2026-09-12
+**Environment:** Production cPanel Host + authenticated live Bridge readiness.
+
+**Observed:** Repository documentation still described Production as Host HEAD `5f6c13ab...` with Store 0039 failed/pending. Fresh read-only FTPS Git metadata instead showed Host branch HEAD `e12fdaf...`; a 53G current-partial backup dated 2026-09-10 existed, Passenger restart evidence followed it, and authenticated `/api/catalog-bridge/v1/publish-readiness/` returned HTTP 200, `ready=true`, `blockers=[]`, MySQL, Store 0036–0042 + Website 0024 applied, and complete receiver schema.
+
+**Root cause:** recovery execution advanced Production after the last documentation checkpoint, but repository state docs were not updated with that later Host evidence. Relying on the stale checkpoint would have encouraged rerunning a recovery runner whose starting assumptions were no longer true.
+
+**Failed/unsafe condition avoided:** the old 53G runner was not rerun against `e12fdaf...`; no fake migration, manual recorder write, duplicate-column change, or direct FTPS source deployment was performed.
+
+**Correct fix:** treat live read-only Production evidence as reality, record 3I.53G as recovered, and use a new Phase50.A.2F no-migration deploy runner that requires exact recovered baseline `e12fdaf...`, empty migration plan and `publish_readiness.ready=true` before source promotion.
+
+**Verification:** Host migration/recovery files are byte-identical to GitHub; Bridge health HTTP 200/status ok; publish-readiness HTTP 200/ready true/no blockers; required migrations and schema all present. Local/GitHub configurator SHA `38458ce...` passed the canonical Windows gate.
+
+**Prevention:** every completed Production recovery/deploy must update CURRENT_STATE/HOST_CONSTRAINTS/PATHS/ROADMAP with the exact final Host SHA, migration recorder state, backup path and restart/readiness evidence before later deployment planning.
 ### ERR-49-113 — Desktop Commander PowerShell location did not change .NET relative-path resolution
 **Date:** 2026-09-12
 **Environment:** owner Windows Local documentation update through Remote Desktop Commander.

@@ -1,3 +1,11 @@
+## 2026-09-12 Recovery complete / current deployment constraint
+
+Live evidence supersedes the older “partial 0039” state below. Production source is `e12fdaf281f7e08013e54c7cf936f8275127ab2b`; authenticated publish-readiness on MySQL reports Store 0036–0042 and Website 0024 applied, complete required schema, `ready=true`, and no blockers. Do not rerun the 53F or 53G recovery runners against this recovered state.
+
+For Phase50.A.2F use only `scripts/host/phase50_a2f_storefront_production_deploy.sh`. It is intentionally no-migration and must fail closed unless Host branch/head/worktree match the verified baseline, the live GitHub target is exact and fast-forward, the reviewed target contains no migration/requirements/settings delta, the current MigrationExecutor plan is empty, and receiver readiness is already true. It creates source/environment/static backups before source promotion and does not write the database.
+
+FTPS is suitable for read-only evidence/file inspection but is not an approved replacement for GitHub-first source deployment. No permanent source file may be uploaded directly to Production over FTP/FTPS. Deployment still requires the cPanel shell/Git path so the Host can explicit-fetch `FETCH_HEAD`, ff-only merge, collectstatic, restart Passenger and run verification.
+
 ## Phase49.3I.53G MySQL partial-migration constraint — 2026-09-02
 
 Current Production must be treated as partial DB migration state:

@@ -1,3 +1,14 @@
+## 2026-09-12 Production/FTPS/deploy paths — live reverified
+
+- Explicit FTPS endpoint verified from owner Windows: `nphost4.parsblog.com:21` with TLS; account home maps to `/home/sfkilvrs` and exposes canonical project `/home/sfkilvrs/3dprinthub`.
+- Production Git branch ref read from Host: `agent/phase49-3i18-operator-bulk-ai-rebuild` → `e12fdaf281f7e08013e54c7cf936f8275127ab2b`.
+- Verified 53G current-partial backup evidence: `/home/sfkilvrs/3dprinthub-deploy-backups/20260910-131314-phase49-3i53g-partial`.
+- New Phase50.A.2F no-migration deploy runner: `scripts/host/phase50_a2f_storefront_production_deploy.sh`.
+- Current deploy baseline expected by that runner: `e12fdaf281f7e08013e54c7cf936f8275127ab2b`.
+- Production receiver endpoint `https://3dprinthub.ir/api/catalog-bridge/v1/publish-readiness/` was authenticated from Windows Credential Store and returned `ready=true` with no blockers on 2026-09-12.
+
+Historical path sections below remain evidence for earlier recovery stages but their “expected current Host source” values are not current.
+
 ## Phase49.3I.53G partial MySQL recovery paths — 2026-09-02
 Production partial-recovery runner: `scripts/host/phase49_3i53_partial_0039_resume.sh`.
 Original verified rollback set: `/home/sfkilvrs/3dprinthub-deploy-backups/20260902-211013-phase49-3i53`.

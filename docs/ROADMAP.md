@@ -1,3 +1,9 @@
+## 2026-09-12 — Production recovery verified; 2F deployment is the active gate
+
+Live Bridge/readiness evidence supersedes the older partial-0039 roadmap state: Production MySQL is ready, Store 0036–0042 and Website 0024 are applied, receiver schema/storage prerequisites pass with no blockers, and Production source is `e12fdaf...`. Do not rerun 53G.
+
+Phase50.A.2F is Local-tested and GitHub-tested at `38458ce...`; next is the repository-owned no-migration deploy gate. The deployment must start from exact clean Host baseline `e12fdaf...`, fetch the live branch explicitly to `FETCH_HEAD`, make verified source/env/static backups, prove no migration/requirements/settings delta, ff-only promote, collectstatic/restart and verify public Store + Bridge + new guided JS/CSS. After Production verification, continue Phase50 commerce/finance work.
+
 ## 2026-09-12 — Active Local gate: Phase50.A.2F Guided Storefront Configurator
 
 Phase50 customer ordering now advances from the internal Profile Matrix toward a four-step guided Storefront flow: size → color → compatible material → print quality. Canonical ProductVariant, server price, stock, weight/time and native fallback remain authoritative. Local Node/Django/Playwright gates pass and no migration is introduced.

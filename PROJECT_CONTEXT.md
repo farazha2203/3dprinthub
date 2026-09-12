@@ -1,3 +1,11 @@
+## Continuation checkpoint — 2026-09-12 / Production recovery verified + Phase50.A.2F deploy
+
+Current Local/GitHub Storefront checkpoint is `38458ceee351add5db4bb4e84c5f1980e86bd5b5`, clean and canonical Windows-gate PASS. Production Git metadata inspected read-only over explicit FTPS shows Host branch `agent/phase49-3i18-operator-bulk-ai-rebuild` at `e12fdaf281f7e08013e54c7cf936f8275127ab2b`.
+
+Live authenticated Bridge health/readiness proves the prior 0039 incident is recovered: MySQL; Store 0036–0042 + Website 0024 applied; required schema complete; active Materials 13; PrintQualities 5; pending/media storage ready; `ready=true`; no blockers. A 53G partial-state backup exists at `20260910-131314-phase49-3i53g-partial` and Passenger restart evidence follows it. Historical 2026-09-02 partial-state instructions must not be rerun.
+
+New repository runner `scripts/host/phase50_a2f_storefront_production_deploy.sh` is a no-migration promotion path from exact Host baseline `e12fdaf...`. It verifies clean Git/DB/readiness, live target/FETCH_HEAD and reviewed delta, backs up source/environment/static, ff-only merges, checks migration plan remains empty, runs collectstatic + Passenger restart, verifies collected asset hashes and checks public Home/Store, Bridge readiness and guided JS/CSS over HTTPS.
+
 ## Continuation checkpoint — 2026-09-02 / Phase49.3I.53G partial MySQL 0039 recovery
 
 Latest owner Host run:

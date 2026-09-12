@@ -1,3 +1,17 @@
+## 2026-09-12 — Production recovery live-verified + Phase50.A.2F deploy gate ready
+
+Status: `PRODUCTION 3I.53G VERIFIED COMPLETE / LOCAL+GITHUB 2F PASS / NO-MIGRATION DEPLOY RUNNER LOCAL-TESTED / COMMIT+PUSH NEXT`.
+
+Repository: `farazha2203/3dprinthub`; branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`. Local and live GitHub were reverified clean at `38458ceee351add5db4bb4e84c5f1980e86bd5b5`; the canonical Windows gate then passed on that exact SHA with 139 + 34 + 68 tests, Playwright Chromium smoke, Qt/Legacy verify and a checksum-identical Catalog SQLite backup.
+
+Production was re-audited from the live system rather than trusting the stale 2026-09-02 documentation. Explicit FTPS to the cPanel account succeeded over TLS. Production Git metadata shows branch `agent/phase49-3i18-operator-bulk-ai-rebuild` at `e12fdaf281f7e08013e54c7cf936f8275127ab2b`. The Host copy of corrected Store migration 0039 and `phase49_3i53_partial_0039_resume.sh` is byte-identical to Repository source. A 53G current-partial backup exists at `/home/sfkilvrs/3dprinthub-deploy-backups/20260910-131314-phase49-3i53g-partial`, and Passenger restart evidence is dated 2026-09-10 13:13:48.
+
+The authenticated live Bridge proves recovery completion: health HTTP 200/status ok; publish-readiness HTTP 200 with `ready=true`, `blockers=[]`, MySQL vendor, 13 active Materials and 5 active PrintQualities. Store migrations 0036–0042 and Website 0024 are all reported applied, and all required receiver tables/columns are present. Therefore the old “partial 0039 recovery still pending” sections below are historical and must not be used as the current execution state.
+
+Phase50.A.2F introduces no migration or dependency. Repository runner `scripts/host/phase50_a2f_storefront_production_deploy.sh` now guards exact Production baseline `e12fdaf...`, clean worktree, live GitHub target/FETCH_HEAD, empty migration plan and ready receiver; creates verified source/environment/static backups; permits only the reviewed 2F/docs/test/deploy-runner delta; performs ff-only deploy, collectstatic, Passenger restart, collected-static hash verification and public/Bridge/static HTTP verification. It contains no `manage.py migrate` command.
+
+Exact next: review diff → rerun focused Storefront + deploy-runner syntax/contract gates → commit/push → verify remote SHA → execute the no-migration runner from cPanel shell only after its clean-host guard passes → Production browser/Product configurator verification → update docs with deployed SHA and backup path.
+
 ## 2026-09-12 — Phase50.A.2F guided Storefront configurator Local PASS
 
 Status: `LOCAL DIRTY DELTA INSPECTED / GUIDED CONFIGURATOR AUTOMATED GATES PASS / COMMIT+PUSH NEXT / PRODUCTION 3I.53G RECOVERY STILL BLOCKING GENERIC DEPLOY`.

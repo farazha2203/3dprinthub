@@ -1,3 +1,9 @@
+## Current Production checkpoint — Phase50.A.2F / 2026-09-12
+
+وضعیت واقعی Production دوباره بررسی شد و بخش‌های قدیمی 3I.53G دیگر وضعیت جاری نیستند. Source واقعی Host روی `e12fdaf...` است و Bridge/Publish Readiness زنده روی MySQL با HTTP 200، `ready=true` و `blockers=[]` پاسخ می‌دهد. Migrationهای Store از 0036 تا 0042 و Website 0024 همگی Applied هستند و Schema موردنیاز Receiver کامل است. بنابراین Recovery مربوط به خطای 0039 در Production انجام شده و نباید دوباره اجرا شود.
+
+Phase50.A.2F Guided Storefront Configurator روی Local/GitHub در `38458ce...` تست شده و Gate کامل Windows نیز PASS است. مسیر بعدی یک Deploy بدون Migration است: `scripts/host/phase50_a2f_storefront_production_deploy.sh` فقط از baseline دقیق `e12fdaf...`، با clean worktree، explicit FETCH_HEAD، backup source/env/static، ff-only merge، collectstatic، Passenger restart و verify عمومی/Bridge/static اجازه ادامه دارد.
+
 ## Current Production checkpoint — Phase49.3I.53G / 2026-09-02
 
 Production is in a controlled partial MySQL migration recovery state, not a normal fresh deploy.

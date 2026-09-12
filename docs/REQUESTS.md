@@ -1,6 +1,6 @@
 ## REQ-50-029 — Customer guided Product configurator
 Date: 2026-09-12
-Status: `LOCAL IMPLEMENTED + AUTOMATED GATES PASS / GITHUB COMMIT NEXT / PRODUCTION BLOCKED BY 3I.53G`.
+Status: `LOCAL+GITHUB IMPLEMENTED / AUTOMATED + CANONICAL WINDOWS GATES PASS / PRODUCTION RECOVERY VERIFIED / NO-MIGRATION DEPLOY GATE READY`.
 
 Required behavior:
 - customer chooses size → color → compatible material → print quality instead of reasoning about internal Profile/Variant rows;
@@ -14,6 +14,7 @@ Required behavior:
 - no new migration or parallel commerce model.
 
 Local acceptance: Node 8/8, Django 15/15 and Playwright desktop/mobile/cart/fallback/stock/ambiguity/>100 PASS; no migration drift.
+Production pre-deploy acceptance: live Bridge/readiness on 2026-09-12 reports MySQL ready with Store 0036–0042 + Website 0024 applied and no blockers; canonical Windows gate on 38458ce... passed 139 + 34 + 68 tests. Deployment is intentionally no-migration from verified Host baseline e12fdaf....
 ## REQ-49-097 — Recover Production safely from a partially executed MySQL 0039
 Date: 2026-09-02  
 Status: `IMPLEMENTED + REAL MYSQL PROBE PASS / HOST EXECUTION NEXT`.

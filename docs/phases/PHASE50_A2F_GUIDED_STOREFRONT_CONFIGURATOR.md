@@ -2,7 +2,7 @@
 
 Date: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `LOCAL IMPLEMENTATION + BROWSER/DJANGO TESTS PASS / GITHUB COMMIT NEXT / PRODUCTION BLOCKED BY 3I.53G RECOVERY`
+Status: `LOCAL+GITHUB IMPLEMENTATION PASS / CANONICAL WINDOWS GATE PASS / PRODUCTION 3I.53G LIVE-VERIFIED COMPLETE / NO-MIGRATION DEPLOY GATE READY`
 
 ## Goal
 Make Product ordering understandable without exposing the internal Variant/Profile matrix. The customer chooses four guided steps: size → color → compatible material → print quality. The application resolves only a real canonical `ProductVariant`, then the mature price/cart flow remains authoritative.
@@ -33,7 +33,7 @@ Make Product ordering understandable without exposing the internal Variant/Profi
 - `makemigrations --check --dry-run`: `No changes detected`.
 
 ## Database / Production safety
-No Django migration is introduced by 2F. Local database migration state remains intentionally unchanged. Production is not eligible for a generic pull/deploy: documented 3I.53G partial MySQL recovery must be read-only reverified first and completed with its guarded recovery path before widening deployment.
+No Django migration is introduced by 2F. Production recovery was reverified live on 2026-09-12: authenticated publish-readiness reports MySQL, Store 0036–0042 and Website 0024 applied, complete receiver schema/storage and `ready=true` with no blockers. The current Production source baseline is `e12fdaf281f7e08013e54c7cf936f8275127ab2b`; the old partial-0039 instructions are historical and must not be rerun. Promotion of 2F must use `scripts/host/phase50_a2f_storefront_production_deploy.sh`, which has no migrate command and requires an empty migration plan before and after ff-only source promotion.
 
 ## Next
-Commit/push the tested Local delta, then run the canonical Windows Catalog Center Local gate on the clean exact GitHub HEAD. Host work begins only after that gate and a fresh read-only Production reality audit.
+The configurator commit `38458ceee351add5db4bb4e84c5f1980e86bd5b5` and canonical Windows gate are already PASS. Next: commit/push the Production-state documentation + no-migration deploy runner, verify the new live GitHub SHA, execute that exact runner from cPanel shell against its verified `e12fdaf...` baseline, then verify public Store/Product configurator, guided JS/CSS, Bridge health/readiness and final Production SHA.

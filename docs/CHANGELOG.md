@@ -1,3 +1,12 @@
+## 2026-09-12 — Phase50.A.2F production recovery revalidation and deploy guard
+
+- Reverified Local/GitHub clean head `38458ce...`; canonical Windows gate passed with 139 + 34 + 68 tests and checksum-backed Catalog data.
+- Re-established secure explicit FTPS access to the cPanel account and read Production Git metadata without modifying source.
+- Corrected stale Production assumption: Host source is `e12fdaf...`, not `5f6c...`.
+- Live authenticated publish-readiness proves MySQL recovery complete: Store 0036–0042 + Website 0024 applied, schema complete, `ready=true`, no blockers.
+- Added `scripts/host/phase50_a2f_storefront_production_deploy.sh`, a no-migration guarded deployment path with source/env/static backup, explicit FETCH_HEAD/ff-only promotion, collectstatic/restart and public/Bridge/static verification.
+- No Production source, DB, media or static file was changed while preparing this gate.
+
 ## 2026-09-12 — Phase50.A.2F guided Storefront configurator
 - recovered and inspected the existing dirty Local worktree instead of resetting it;
 - added four-step size → color → material → quality progressive enhancement over canonical ProductVariant data;
