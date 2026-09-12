@@ -1,3 +1,8 @@
+## 2026-09-12 — Active Local gate: Phase50.A.2F Guided Storefront Configurator
+
+Phase50 customer ordering now advances from the internal Profile Matrix toward a four-step guided Storefront flow: size → color → compatible material → print quality. Canonical ProductVariant, server price, stock, weight/time and native fallback remain authoritative. Local Node/Django/Playwright gates pass and no migration is introduced.
+
+Immediate sequence: commit/push exact Local delta; run canonical Windows Catalog Center Local gate on the clean GitHub HEAD; re-audit actual Host/partial MySQL state; complete 3I.53G recovery before any normal Production deployment. Finance/ZarinPal/Torob work remains after the current commerce/receiver safety gates.
 ## 2026-09-02 — Phase49.3I.53G recover partial MySQL migration 0039
 
 Status: `IMPLEMENTED + REAL MYSQL PROBE PASS / HOST PARTIAL-STATE RECOVERY NEXT`.

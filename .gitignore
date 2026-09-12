@@ -86,6 +86,7 @@ DEPLOY_PHASE34B_SERVER_NO_RSYNC*.sh
 .phase38_mirror_backup_*/
 phase44_reports/
 .host-state/
+.local-qa/
 .release-staging/
 imports/
 transfer/

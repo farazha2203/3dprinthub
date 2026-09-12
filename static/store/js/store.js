@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function updatePrice() {
             const option = select.options[select.selectedIndex];
-            if (!option || !option.value) {
+            if (!option || !option.value || option.disabled || option.dataset.unavailable === "1") {
                 breakdown.classList.add("hidden");
                 if (orderButton) orderButton.disabled = true;
                 if (variantInput) variantInput.value = "";

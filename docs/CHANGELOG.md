@@ -1,3 +1,13 @@
+## 2026-09-12 — Phase50.A.2F guided Storefront configurator
+- recovered and inspected the existing dirty Local worktree instead of resetting it;
+- added four-step size → color → material → quality progressive enhancement over canonical ProductVariant data;
+- preserved native select/API-failure fallback and mature cart listener;
+- fail-closed unavailable/out-of-stock options and ambiguous duplicate paths;
+- added canonical material/quality/color/stock API fields needed by the browser selector;
+- added responsive sticky mobile cart, keyboard focus and reduced-motion treatment;
+- added Node state-machine regression and isolated Playwright real-browser regression including >100 Variant batching;
+- Local verification: Node 8/8 PASS, Django 15/15 PASS, Playwright PASS, Django check PASS with known warning, no migration drift;
+- no Production/Host/DB mutation.
 ## 2026-09-02 — Phase49.3I.53G
 - recorded Production partial migration state: Website 0024 + Store 0037/0038 applied; Store 0039 failed before recorder commit; 0040–0042 pending;
 - found duplicate schema declaration: ProductVariant.support_weight_grams already exists from Store 0033 and was incorrectly AddField'ed again by 0039;

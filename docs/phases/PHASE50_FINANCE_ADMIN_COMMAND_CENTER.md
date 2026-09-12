@@ -1,10 +1,9 @@
 # Phase50 — Finance, Commerce & Admin Command Center
 
-Updated: 2026-08-29  
+Updated: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Current Subphase: `50.A.2E — Brand-aware Filament Offers + Immutable Filament Snapshot`  
-Status: `GITHUB CI TESTED THROUGH STORE 0040 / WINDOWS 8.9.8 PASS / OWNER LOCAL 3I.40 QA NEXT / PRODUCTION MIGRATION CHAIN BLOCKED UNTIL QA + BACKUP`
-
+Current Subphase: `50.A.2F — Guided Storefront Configurator`
+Status: `50.A.2F LOCAL AUTOMATED GATES PASS / COMMIT+PUSH NEXT / WINDOWS CLEAN-HEAD GATE NEXT / PRODUCTION BLOCKED BY 3I.53G PARTIAL MYSQL RECOVERY`
 Current verified Production application commit:
 `c283864290f9c989a9fcdf24ee8eef519560e917`.
 
@@ -14,6 +13,13 @@ Last verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
 - `store.0036_phase50_checkout_snapshot` pending at last verify,
 - `0037`, `0038`, `0039` and `0040` were created after that verify and are not claimed applied.
 
+## 50.A.2F — Guided Storefront Configurator
+
+Customer selection is simplified to four visible steps: size → color → compatible material → print quality. This is progressive enhancement over the existing canonical ProductVariant/native select; it does not create a second price or availability authority.
+
+Safety contract: upstream-prefix filtering, downstream invalidation, stock/orderability fail-closed, explicit final Variant choice on ambiguous duplicate paths, API-failure native fallback, server price/weight/time authority and no migration.
+
+Local 2026-09-12 evidence: Node 8/8 PASS; focused Django Profile/Filament 15/15 PASS; Playwright real-browser PASS across desktop, 390px mobile, cart post, native fallback, stock, ambiguity and >100 Variant batching; `manage.py check` PASS with known CKEditor warning; `makemigrations --check --dry-run` reports no changes.
 ## 50.A.2E extension — Filament Offer operations / migration 0040
 
 Migration:

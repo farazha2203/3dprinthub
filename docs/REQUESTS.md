@@ -1,3 +1,19 @@
+## REQ-50-029 — Customer guided Product configurator
+Date: 2026-09-12
+Status: `LOCAL IMPLEMENTED + AUTOMATED GATES PASS / GITHUB COMMIT NEXT / PRODUCTION BLOCKED BY 3I.53G`.
+
+Required behavior:
+- customer chooses size → color → compatible material → print quality instead of reasoning about internal Profile/Variant rows;
+- each next choice is restricted only by valid upstream choices;
+- changing upstream state clears incompatible downstream state;
+- unavailable combinations cannot enable cart;
+- duplicate combinations require an explicit canonical final Variant instead of silently choosing the wrong brand/profile;
+- server/API price, stock, material, quality, weight and print time remain authoritative;
+- native Variant selector remains usable when JavaScript/API enhancement fails;
+- mobile layout remains usable without horizontal overflow;
+- no new migration or parallel commerce model.
+
+Local acceptance: Node 8/8, Django 15/15 and Playwright desktop/mobile/cart/fallback/stock/ambiguity/>100 PASS; no migration drift.
 ## REQ-49-097 — Recover Production safely from a partially executed MySQL 0039
 Date: 2026-09-02  
 Status: `IMPLEMENTED + REAL MYSQL PROBE PASS / HOST EXECUTION NEXT`.

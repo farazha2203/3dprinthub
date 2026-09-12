@@ -1,3 +1,18 @@
+### ERR-49-113 — Desktop Commander PowerShell location did not change .NET relative-path resolution
+**Date:** 2026-09-12
+**Environment:** owner Windows Local documentation update through Remote Desktop Commander.
+
+**Observed:** a documentation update command began with `Set-Location D:\projects\3DPrintHub` but direct `[IO.File]::ReadAllText('docs\\...')` calls still resolved below the Desktop Commander npm process directory. Missing-path exceptions occurred and a non-fail-fast script printed a misleading final success marker. No repository document changed in that failed command.
+
+**Root cause:** PowerShell provider location and the host process current directory are not a safe shared contract for direct .NET relative-path APIs in this remote execution boundary.
+
+**Failed condition:** the same relative-path command was not repeated.
+
+**Correct fix:** direct .NET file APIs use absolute paths rooted at the already-verified `D:\projects\3DPrintHub` and update commands use `Stop='Stop'` before any success marker.
+
+**Verification:** corrected absolute-path write is followed by Git diff/readback before commit.
+
+**Prevention:** repository commands may use `Set-Location` for Git/PowerShell cmdlets, but direct .NET/Python helper paths must be explicitly repository-rooted and fail-fast.
 ### ERR-49-112 — MySQL recovery CI initially crossed unrelated historical migrations and had probe harness import errors
 **Date:** 2026-09-02  
 **Environment:** GitHub Actions while adding real-MySQL coverage for ERR-49-111.

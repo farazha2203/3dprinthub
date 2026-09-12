@@ -283,7 +283,7 @@ class Phase50ProfileMatrixTests(TestCase):
             "partDimensionsLabel",
             "filamentBrand",
             "supportWeight",
-            "store-profile-option__price",
+            "resolveGuidedVariant",
             "escapeHtml",
         ):
             self.assertIn(marker, js)

@@ -1,3 +1,18 @@
+## 2026-09-12 — Phase50.A.2F guided Storefront configurator Local PASS
+
+Status: `LOCAL DIRTY DELTA INSPECTED / GUIDED CONFIGURATOR AUTOMATED GATES PASS / COMMIT+PUSH NEXT / PRODUCTION 3I.53G RECOVERY STILL BLOCKING GENERIC DEPLOY`.
+
+Repository: `farazha2203/3dprinthub`
+Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
+Verified pre-commit Local/remote HEAD: `e12fdaf281f7e08013e54c7cf936f8275127ab2b`.
+
+The recovered Local worktree contained an intentional unfinished Storefront configurator delta rather than disposable changes. It progressively enhances the canonical Variant selector into size → color → compatible material → print quality, preserves the native selector as fallback, resolves only real orderable ProductVariants, and delegates final cart/price handoff to the mature Store listener.
+
+Verification on the actual Windows checkout: Node guided state 8/8 PASS; focused Django Profile/Filament tests 15/15 PASS; isolated Playwright browser regression PASS on desktop/mobile/cart/fallback/stock/ambiguity/>100 Variant batching; Django check PASS with the known CKEditor warning; migration drift = none. No Local Django migration was applied by this work.
+
+Parallel Windows Catalog Center remains at the repository 49.3I.52G contract until the canonical clean-head Local gate is rerun after this Storefront delta is committed. Production must not receive a generic pull: the last documented Host state is the 3I.53G partial MySQL 0039 recovery boundary and must be freshly read-only verified before any Host mutation.
+
+Exact next: commit/push this tested 2F delta → verify remote SHA → run clean-head Windows Local gate → read-only Host reality audit → only then choose the guarded 3I.53G recovery/deploy path.
 ## 2026-09-02 — Phase49.3I.53G MySQL 0039 partial-migration recovery ready
 
 Status: `PRODUCTION SOURCE=5f6c13ab / DB PARTIALLY MIGRATED / RECOVERY IMPLEMENTED + REAL MYSQL PROBE PASS / HOST RECOVERY NEXT`.

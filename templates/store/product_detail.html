@@ -134,7 +134,7 @@
 
             {% if variants %}
             <div class="mt-6">
-                <div class="store-profile-price-authority mb-3"><strong>قیمت و مشخصات بر اساس پروفایل انتخابی</strong><span>ابتدا سایز را انتخاب کنید؛ سپس فقط وزن‌ها و گزینه‌های معتبر همان سایز نمایش داده می‌شوند.</span></div>
+                <div class="store-profile-price-authority mb-3"><strong>قیمت و مشخصات بر اساس پروفایل انتخابی</strong><span>سایز ← رنگ ← متریال سازگار ← کیفیت؛ وزن و زمان چاپ خودکار نمایش داده می‌شوند.</span></div>
                 <label for="variant-select" class="block font-black mb-2">انتخاب پروفایل و مشخصات سفارش</label>
                 <select id="variant-select" class="form-input">
                     <option value="">انتخاب کنید</option>
@@ -176,7 +176,7 @@
                 <p id="pricing-formula-note" class="text-xs text-slate-500 mt-3">قیمت بر اساس وزن قابل محاسبه متریال، زمان چاپ، نرخ متریال، نظارت و هزینه‌های تکمیلی ثبت‌شده محاسبه می‌شود. هزینه ارسال در مرحله تسویه جدا است.</p>
             </div>
 
-            <div class="mt-5"><form method="post" action="{% url 'store:cart_add' product.slug %}" class="grid sm:grid-cols-[120px_1fr] gap-3">{% csrf_token %}<input type="hidden" name="variant_id" id="cart-variant-id" value=""><input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد"><button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button></form><div class="grid grid-cols-2 gap-3 mt-3"><a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a><form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form></div>{% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}</div>
+            <div class="mt-5"><form method="post" action="{% url 'store:cart_add' product.slug %}" class="store-order-cart-bar grid sm:grid-cols-[120px_1fr] gap-3">{% csrf_token %}<input type="hidden" name="variant_id" id="cart-variant-id" value=""><input type="number" name="quantity" value="1" min="1" class="form-input" aria-label="تعداد"><button type="submit" class="btn-primary rounded-2xl px-5 py-4 font-black disabled:opacity-50" id="order-variant-button" disabled>افزودن به سبد خرید</button></form><div class="grid grid-cols-2 gap-3 mt-3"><a href="{% url 'store:cart_detail' %}" class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold text-center">مشاهده سبد خرید</a><form action="{% url 'store:toggle_like' product.slug %}" method="post">{% csrf_token %}<button class="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 font-bold" type="submit">{% if is_liked %}پسندیده شد{% else %}پسندیدن محصول{% endif %}</button></form></div>{% if request.user.is_authenticated %}<a href="{% url 'store:product_review' product.slug %}" class="inline-block text-orange-600 font-bold mt-4">ثبت امتیاز خریدار</a>{% endif %}</div>
             {% endif %}
         </div>
     </div>

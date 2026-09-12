@@ -77,6 +77,10 @@ def variant_commerce_options_view(request):
             "build_profile_label": str(variant.get_build_profile_display()) if hasattr(variant, "get_build_profile_display") else "",
             "commerce_label": str(getattr(variant, "commerce_display_label", "") or ""),
             "material": str(getattr(variant, "material", "") or ""),
+            "material_id": variant.material_id,
+            "quality_id": variant.quality_id,
+            "quality": str(variant.quality),
+            "color_name": str(getattr(color_option, "name", "") or ""),
             "color": str(getattr(variant, "color", "") or ""),
             "filament_brand_name": str(getattr(color_option, "brand_name", "") or ""),
             # Brand is the public identity authority. Keep the manufacturer key
@@ -110,6 +114,7 @@ def variant_commerce_options_view(request):
             "preheat_hourly_rate": int(getattr(color_option, "preheat_hourly_rate", 0) or 0),
             "color_stock_sufficient": color_stock_ok,
             "orderable": orderable,
+            "stock_status": variant.stock_status,
             "material_weight_grams": str(getattr(variant, "material_weight_grams", 0) or 0),
             "support_weight_grams": str(getattr(variant, "support_weight_grams", 0) or 0),
             "final_weight_grams": str(getattr(variant, "final_weight_grams", 0) or 0),

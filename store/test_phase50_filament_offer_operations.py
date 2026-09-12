@@ -324,6 +324,12 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         meta = response.json()["variants"][str(variant.pk)]
         self.assertEqual(meta["filament_manufacturer_name"], "eSUN")
         self.assertEqual(meta["filament_brand_name"], "eSUN")
+        self.assertEqual(meta["color_name"], "صورتی")
+        self.assertEqual(meta["material_id"], self.material.pk)
+        self.assertEqual(meta["quality_id"], self.quality.pk)
+        self.assertEqual(meta["quality"], str(self.quality))
+        self.assertEqual(meta["unit_price"], variant.price_breakdown()["unit_price"])
+        self.assertEqual(meta["stock_status"], variant.stock_status)
         self.assertEqual(meta["color_hex"], "#FF66AA")
         self.assertEqual(meta["color_finish"], "glossy")
         self.assertEqual(meta["color_palette_hexes"], ["#FF66AA", "#FFFFFF"])
@@ -336,12 +342,12 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(meta["offer_print_hourly_rate"], 160000)
         self.assertEqual(Decimal(meta["preheat_hours"]), Decimal("2"))
 
-    def test_storefront_selector_is_brand_first_with_palette_and_finish_visuals(self):
+    def test_storefront_selector_is_color_first_with_palette_and_finish_visuals(self):
         root = Path(__file__).resolve().parents[1]
         js = (root / "static" / "store" / "js" / "phase50-profile-selector.js").read_text(encoding="utf-8")
         css = (root / "static" / "store" / "css" / "phase50-profile-selector.css").read_text(encoding="utf-8")
         template = (root / "templates" / "store" / "product_detail.html").read_text(encoding="utf-8")
-        self.assertIn('"brand", "material", "color", "quality"', js)
+        self.assertIn('GUIDED_DIMENSIONS = ["size", "color", "material", "quality"]', js)
         self.assertIn('brand: "برند فیلامنت"', js)
         self.assertNotIn('manufacturer: "سازنده / برند فیلامنت"', js)
         self.assertIn("colorPalette", js)
@@ -349,7 +355,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertIn("filamentSalePricePerGram", js)
         self.assertIn("linear-gradient(135deg", js)
         self.assertIn("button.disabled", js)
-        self.assertIn("selectionComplete", js)
+        self.assertIn("resolveGuidedVariant", js)
         self.assertIn(".store-profile-color-swatch", css)
         self.assertIn(".store-profile-color-image", css)
         self.assertIn("filament_visual_options", template)

@@ -16,13 +16,14 @@
 
     const LABELS = {
         profile: "پروفایل محصول",
-        size: "سایز / ابعاد",
+        size: "سایز قطعه",
         weight: "وزن",
         build: "مدل ساخت",
         brand: "برند فیلامنت",
-        material: "فیلامنت / متریال",
-        color: "رنگ فیلامنت",
+        material: "متریال",
+        color: "رنگ",
         quality: "کیفیت چاپ",
+        variant: "گزینه نهایی",
     };
 
     const formatNumber = (value) => Number(value || 0).toLocaleString("fa-IR");
@@ -39,8 +40,8 @@
 
     function readNativeOption(option, metadata) {
         const meta = metadata || {};
-        const finalWeight = Number(meta.final_weight_grams || option.dataset.partWeight || 0);
-        const materialWeight = Number(meta.material_weight_grams || option.dataset.chargeableWeight || 0);
+        const finalWeight = Number(meta.final_weight_grams ?? option.dataset.partWeight ?? 0);
+        const materialWeight = Number(meta.material_weight_grams ?? option.dataset.chargeableWeight ?? 0);
         const shippingWeight = Number(meta.effective_shipping_weight_grams || option.dataset.shippingWeight || finalWeight || materialWeight || 0);
         const profileLabel = clean(meta.profile_label || meta.profile_name || meta.selection_value || "");
         return {
@@ -54,7 +55,9 @@
             build: clean(meta.build_profile || option.dataset.buildProfile),
             buildLabel: clean(meta.build_profile_label || option.dataset.buildProfileLabel),
             material: clean(meta.material || option.dataset.material),
-            color: clean(meta.color || option.dataset.color),
+            materialId: clean(meta.material_id || meta.material || option.dataset.material),
+            qualityId: clean(meta.quality_id || meta.quality || option.dataset.quality),
+            color: clean(meta.color_name ?? option.dataset.color),
             filamentBrand: clean(meta.filament_brand_name || option.dataset.filamentBrand || ""),
             colorHex: clean(meta.color_hex || ""),
             colorSecondaryHex: clean(meta.color_secondary_hex || ""),
@@ -72,6 +75,7 @@
             filamentSalePricePerGram: Number(meta.filament_sale_price_per_gram || 0),
             currentStockGrams: Number(meta.current_stock_grams || 0),
             orderable: meta.orderable !== false,
+            stockStatus: clean(meta.stock_status),
             preheatHours: Number(meta.preheat_hours || 0),
             preheatTemperature: Number(meta.preheat_temperature_c || 0),
             quality: clean(meta.quality || option.dataset.quality),
@@ -80,8 +84,8 @@
             materialWeight,
             shippingWeight,
             packagingWeight: Number(meta.packaging_weight_grams || 0),
-            printMinutes: Number(meta.print_time_minutes || option.dataset.printTime || 0),
-            price: Number(meta.unit_price || option.dataset.total || 0),
+            printMinutes: Number(meta.print_time_minutes ?? option.dataset.printTime ?? 0),
+            price: Number(meta.unit_price ?? option.dataset.total ?? 0),
             partLength: Number(meta.part_length_cm || 0),
             partWidth: Number(meta.part_width_cm || 0),
             partHeight: Number(meta.part_height_cm || 0),
@@ -94,17 +98,25 @@
 
     function valueFor(variant, dim) {
         if (dim === "profile") return variant.profileKey || variant.id;
-        if (dim === "size") return variant.size;
+        if (dim === "size") return variant.size || "__unspecified__";
         if (dim === "weight") return String(variant.finalWeight || variant.materialWeight || 0);
         if (dim === "build") return variant.build;
         if (dim === "brand") return variant.filamentBrand || "بدون برند";
-        if (dim === "material") return variant.material;
-        if (dim === "color") return variant.color;
-        if (dim === "quality") return variant.quality;
+        if (dim === "material") return variant.materialId || variant.material || "__unspecified__";
+        // A visual color can span materials/brands; never use MaterialColorOption.__str__ here.
+        if (dim === "color") return JSON.stringify([
+            variant.color || "", variant.colorType || "solid", variant.colorFinish || "matte",
+            (variant.colorPalette?.length ? variant.colorPalette : [variant.colorHex || ""]).map((hex) => hex.toLowerCase()),
+        ]);
+        if (dim === "quality") return variant.qualityId || variant.quality || "__unspecified__";
+        if (dim === "variant") return variant.id;
         return "";
     }
 
     function labelFor(variant, dim) {
+        if (dim === "variant") return [variant.profileLabel, variant.filamentBrand,
+            variant.buildLabel, variant.finalWeight ? `${formatNumber(variant.finalWeight)} گرم` : "",
+            variant.printMinutes ? `${formatNumber(variant.printMinutes)} دقیقه` : ""].filter(Boolean).join(" — ");
         if (dim === "profile") return variant.profileLabel;
         if (dim === "size") return variant.size || "بدون سایز";
         if (dim === "weight") {
@@ -172,6 +184,30 @@
         });
     }
 
+    const GUIDED_DIMENSIONS = ["size", "color", "material", "quality"];
+
+    function guidedCandidates(variants, state) {
+        if (!GUIDED_DIMENSIONS.every((dim) => state[dim])) return [];
+        return matching(variants, upstreamState(state, GUIDED_DIMENSIONS, 4));
+    }
+
+    function resolveGuidedVariant(variants, state) {
+        const candidates = guidedCandidates(variants, state).filter((variant) => variant.orderable);
+        if (candidates.length === 1) return candidates[0];
+        return candidates.find((variant) => variant.id === state.variant) || null;
+    }
+
+    function fillGuidedSingletons(variants, state) {
+        for (let index = 0; index < GUIDED_DIMENSIONS.length; index += 1) {
+            const dim = GUIDED_DIMENSIONS[index];
+            const pool = variantsForDimension(variants, state, GUIDED_DIMENSIONS, index);
+            const options = uniqueOptions(pool.filter((variant) => variant.orderable), dim);
+            if (!options.some((item) => item.value === state[dim])) delete state[dim];
+            if (!state[dim] && options.length === 1) state[dim] = options[0].value;
+            if (!state[dim]) break;
+        }
+    }
+
     const TEST_API = {
         MODE_DIMENSIONS,
         buildDimensions,
@@ -181,6 +217,11 @@
         clearDownstreamState,
         valueFor,
         uniqueOptions,
+        GUIDED_DIMENSIONS,
+        guidedCandidates,
+        resolveGuidedVariant,
+        fillGuidedSingletons,
+        readNativeOption,
     };
 
     if (typeof module !== "undefined" && module.exports) {
@@ -190,18 +231,17 @@
 
     function installSelector(select, payload) {
         if (!select || select.dataset.phase50ProfileReady === "1") return;
-        const optionNodes = Array.from(select.options).filter((option) => option.value && !option.disabled);
+        const optionNodes = Array.from(select.options).filter((option) => option.value);
         if (!optionNodes.length) return;
 
         const variantsMap = payload && payload.variants ? payload.variants : {};
+        // Incomplete API metadata must leave the native fallback intact.
+        if (optionNodes.some((option) => !variantsMap[String(option.value)])) return;
         const variants = optionNodes.map((option) => readNativeOption(option, variantsMap[String(option.value)]));
         if (!variants.length) return;
 
-        const firstProductId = clean((variantsMap[variants[0].id] || {}).product_id);
-        const productMeta = (payload && payload.products && payload.products[firstProductId]) || {};
-        const mode = clean(productMeta.selection_mode || "size_build");
-        const selectorLabel = clean(productMeta.selector_label || "") || "انتخاب مشخصات محصول";
-        const dimensions = buildDimensions(mode, variants);
+        const selectorLabel = "انتخاب مشخصات سفارش";
+        const dimensions = [...GUIDED_DIMENSIONS];
         if (!dimensions.length) return;
 
         const label = document.querySelector('label[for="variant-select"]');
@@ -214,12 +254,12 @@
             <div class="store-profile-selector__head">
                 <div>
                     <h3>${escapeHtml(selectorLabel)}</h3>
-                    <p>پروفایل/سایز را انتخاب کنید؛ سپس برند، فیلامنت و رنگ/Finish موجود را مشخص کنید. قیمت فقط پس از کامل‌شدن مسیر انتخاب نمایش داده می‌شود.</p>
+                    <p>فقط چهار انتخاب ساده: سایز، رنگ، متریال و کیفیت. وزن، زمان چاپ و قیمت نهایی را سیستم محاسبه می‌کند.</p>
                 </div>
-                <span class="store-profile-selector__badge">پروفایل فروش</span>
+                <span class="store-profile-selector__badge">۴ مرحله ساده</span>
             </div>
             <div class="store-profile-controls" data-profile-controls></div>
-            <div class="store-profile-summary" data-profile-summary></div>
+            <div class="store-profile-summary" data-profile-summary role="status" aria-live="polite" aria-atomic="true"></div>
         `;
         if (label && label.parentNode) {
             label.parentNode.insertBefore(shell, label);
@@ -238,84 +278,46 @@
         const summary = shell.querySelector("[data-profile-summary]");
         const state = {};
 
+        let syncing = false;
         function syncStateToVariant(variant) {
-            dimensions.forEach((dim) => {
-                state[dim] = valueFor(variant, dim);
-            });
-        }
-
-        function chooseVariant(variant) {
-            if (!variant) return;
-            syncStateToVariant(variant);
-            select.value = variant.id;
-            select.dispatchEvent(new Event("change", { bubbles: true }));
-            render();
-        }
-
-        function selectionComplete() {
-            return dimensions.every((dim) => state[dim] !== undefined && state[dim] !== "");
+            dimensions.forEach((dim) => { state[dim] = valueFor(variant, dim); });
+            state.variant = variant.id;
         }
 
         function selectedVariant() {
-            if (!selectionComplete()) return null;
-            const exact = matching(variants, state).filter((variant) => variant.orderable !== false);
-            if (exact.length === 1) return exact[0];
-            const current = variants.find((variant) => variant.id === select.value);
-            if (current && exact.includes(current)) return current;
-            return exact.find((variant) => variant.isDefault) || exact[0] || null;
+            return resolveGuidedVariant(variants, state);
         }
 
-        function autoFillSingletons() {
-            dimensions.forEach((dim, index) => {
-                if (state[dim]) return;
-                const possible = variantsForDimension(variants, state, dimensions, index);
-                const options = uniqueOptions(possible.length ? possible : variants, dim);
-                const orderable = options.filter((item) => {
-                    const optionVariants = (possible.length ? possible : variants)
-                        .filter((variant) => valueFor(variant, dim) === item.value);
-                    return optionVariants.some((variant) => variant.orderable !== false);
-                });
-                if (orderable.length === 1) state[dim] = orderable[0].value;
-            });
+        function syncCart() {
+            const variant = selectedVariant();
+            syncing = true;
+            select.value = variant ? variant.id : "";
+            // The mature price/cart listener remains the only cart handoff.
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            syncing = false;
         }
 
         function renderSummary(variant) {
             if (!variant) {
-                summary.innerHTML = `<div class="text-sm text-slate-500">برای مشاهده قیمت و مشخصات، یک پروفایل را انتخاب کنید.</div>`;
+                summary.textContent = variants.some((item) => item.orderable)
+                    ? "برای مشاهده خلاصه و فعال‌شدن افزودن به سبد، انتخاب‌های مشخص‌شده را کامل کنید."
+                    : "در حال حاضر هیچ گزینه قابل سفارشی برای این محصول موجود نیست.";
                 return;
             }
-            const partText = variant.partDimensionsLabel || (
-                [variant.partLength, variant.partWidth, variant.partHeight].some(Boolean)
-                    ? `${formatNumber(variant.partLength)} × ${formatNumber(variant.partWidth)} × ${formatNumber(variant.partHeight)} سانتی‌متر`
-                    : "طبق پروفایل"
-            );
-            const packageText = [variant.packageLength, variant.packageWidth, variant.packageHeight].some(Boolean)
-                ? `${formatNumber(variant.packageLength)} × ${formatNumber(variant.packageWidth)} × ${formatNumber(variant.packageHeight)} سانتی‌متر`
-                : "طبق تنظیمات سفارش";
             const facts = [
-                ["پروفایل", variant.profileLabel],
-                ["سایز", variant.size || "—"],
-                ["مدل ساخت", variant.buildLabel || variant.build || "استاندارد"],
-                ["متریال", variant.material || "—"],
+                ["سایز", variant.size || "سایز استاندارد"],
+                ["رنگ", labelFor(variant, "color")],
+                ["متریال", variant.material || "استاندارد"],
+                ["کیفیت چاپ", variant.quality || "استاندارد"],
+                ["وزن قطعه", variant.finalWeight ? `${formatNumber(variant.finalWeight)} گرم` : "ثبت نشده"],
+                ["زمان چاپ", variant.printMinutes ? `${formatNumber(variant.printMinutes)} دقیقه` : "ثبت نشده"],
+                ["وضعیت سفارش", variant.stockStatus === "preorder" ? "پیش‌سفارش" : "قابل سفارش"],
                 ...(variant.filamentBrand ? [["برند فیلامنت", variant.filamentBrand]] : []),
-                ["رنگ", variant.color || "—"],
-                ...(variant.colorTypeLabel ? [["رفتار رنگ", variant.colorTypeLabel]] : []),
-                ...(variant.colorFinishLabel ? [["Finish", variant.colorFinishLabel]] : []),
-                ...(variant.filamentRollWeight ? [["وزن رول", `${formatNumber(variant.filamentRollWeight)} گرم`]] : []),
-                ...(variant.filamentSalePricePerRoll ? [["قیمت فروش رول", formatToman(variant.filamentSalePricePerRoll)]] : []),
-                ...(variant.filamentSalePricePerGram ? [["قیمت خودکار هر گرم", `${formatToman(variant.filamentSalePricePerGram)}/گرم`]] : []),
-                ["موجودی فیلامنت", variant.currentStockGrams ? `${formatNumber(variant.currentStockGrams)} گرم` : "ناموجود"],
-                ...(variant.preheatHours ? [["پیش‌گرم", `${formatNumber(variant.preheatHours)} ساعت${variant.preheatTemperature ? ` در ${formatNumber(variant.preheatTemperature)}°C` : ""}`]] : []),
-                ["کیفیت چاپ", variant.quality || "—"],
-                ["وزن قطعه", variant.finalWeight ? `${formatNumber(variant.finalWeight)} گرم` : "—"],
-                ...(variant.supportWeight ? [["وزن ساپورت", `${formatNumber(variant.supportWeight)} گرم`]] : []),
-                ["ابعاد قطعه", partText],
-                ["وزن ارسال", variant.shippingWeight ? `${formatNumber(variant.shippingWeight)} گرم` : "—"],
-                ["زمان چاپ", variant.printMinutes ? `${formatNumber(variant.printMinutes)} دقیقه` : "—"],
-                ["ابعاد بسته", packageText],
+                ...(variant.partDimensionsLabel ? [["ابعاد قطعه", variant.partDimensionsLabel]] : []),
             ];
             summary.innerHTML = `
-                <div class="store-profile-summary__price"><span>قیمت پروفایل انتخابی</span><strong>${formatToman(variant.price)}</strong></div>
+                <div class="store-profile-summary__price"><span>قیمت نهایی هر عدد</span><strong>${formatToman(variant.price)}</strong></div>
+                <p class="store-profile-summary__note">مالیات و هزینه ارسال در تسویه‌حساب محاسبه می‌شوند.</p>
                 ${variant.profileDescription ? `<p class="store-profile-summary__description">${escapeHtml(variant.profileDescription)}</p>` : ""}
                 <div class="store-profile-summary__facts">
                     ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
@@ -325,19 +327,34 @@
 
         function render() {
             controls.innerHTML = "";
-            dimensions.forEach((dim, dimIndex) => {
+            const candidates = guidedCandidates(variants, state);
+            const visibleDimensions = candidates.filter((variant) => variant.orderable).length > 1
+                ? [...dimensions, "variant"] : dimensions;
+            const activeIndex = visibleDimensions.findIndex((dim) => !state[dim]);
+            visibleDimensions.forEach((dim, dimIndex) => {
+                const unlocked = dimensions.slice(0, dimIndex).every((key) => state[key]);
                 const possibleVariants = variantsForDimension(variants, state, dimensions, dimIndex);
-                const options = uniqueOptions(possibleVariants.length ? possibleVariants : variants, dim);
-                if (!options.length) return;
+                const options = unlocked ? uniqueOptions(possibleVariants, dim) : [];
                 const group = document.createElement("div");
                 group.className = "store-profile-control";
-                group.innerHTML = `<div class="store-profile-control__label">${LABELS[dim] || dim}</div><div class="store-profile-options" role="group" aria-label="${LABELS[dim] || dim}"></div>`;
+                group.dataset.step = dim;
+                group.classList.toggle("is-pending", !unlocked);
+                group.classList.toggle("is-active", unlocked && dimIndex === activeIndex);
+                group.classList.toggle("is-complete", Boolean(state[dim]));
+                const title = LABELS[dim] || "گزینه نهایی";
+                group.innerHTML = `<div class="store-profile-control__label"><span class="store-profile-step-number">${formatNumber(dimIndex + 1)}</span>${title}${state[dim] ? '<span class="store-profile-step-done">انتخاب شد</span>' : ''}</div><div class="store-profile-options" role="group" aria-label="${title}"></div>`;
+                if (!unlocked) {
+                    const hint = document.createElement("p");
+                    hint.className = "store-profile-hint";
+                    hint.textContent = "ابتدا مرحله قبل را انتخاب کنید.";
+                    group.appendChild(hint);
+                }
                 const optionHost = group.querySelector(".store-profile-options");
                 options.forEach((item) => {
                     const button = document.createElement("button");
                     button.type = "button";
                     button.className = "store-profile-option";
-                    const optionVariants = (possibleVariants.length ? possibleVariants : variants)
+                    const optionVariants = possibleVariants
                         .filter((variant) => valueFor(variant, dim) === item.value);
                     if (dim === "color") {
                         const visual = item.variant || optionVariants[0] || {};
@@ -378,36 +395,24 @@
                     text.textContent = item.label;
                     button.appendChild(text);
                     button.disabled = !optionVariants.some((variant) => variant.orderable !== false);
-                    if (dim === "weight" || dim === "profile") {
-                        const matchingPrices = optionVariants.map((variant) => variant.price).filter((value) => value > 0);
-                        if (matchingPrices.length) {
-                            const minPrice = Math.min(...matchingPrices);
-                            const price = document.createElement("small");
-                            price.className = "store-profile-option__price";
-                            price.textContent = formatToman(minPrice);
-                            button.appendChild(price);
-                        }
+                    if (button.disabled) {
+                        const unavailable = document.createElement("small");
+                        unavailable.textContent = "ناموجود";
+                        button.appendChild(unavailable);
                     }
                     button.dataset.dimension = dim;
                     button.dataset.value = item.value;
                     button.setAttribute("aria-pressed", state[dim] === item.value ? "true" : "false");
                     button.addEventListener("click", () => {
                         state[dim] = item.value;
-                        clearDownstreamState(state, dimensions, dimIndex);
-                        autoFillSingletons();
-                        const prefix = upstreamState(state, dimensions, dimensions.length);
-                        const candidates = matching(variants, prefix)
-                            .filter((variant) => variant.orderable !== false);
-                        if (selectionComplete()) {
-                            const current = variants.find((variant) => variant.id === select.value);
-                            const preferred = (
-                                current && candidates.includes(current) ? current : null
-                            ) || candidates.find((variant) => variant.isDefault) || candidates[0];
-                            if (preferred) chooseVariant(preferred);
-                            else render();
-                        } else {
-                            render();
-                        }
+                        clearDownstreamState(state, visibleDimensions, dimIndex);
+                        if (dim !== "variant") delete state.variant;
+                        fillGuidedSingletons(variants, state);
+                        syncCart();
+                        render();
+                        const replacement = Array.from(controls.querySelectorAll("button")).find(
+                            (node) => node.dataset.dimension === dim && node.dataset.value === item.value);
+                        replacement?.focus({ preventScroll: true });
                     });
                     optionHost.appendChild(button);
                 });
@@ -416,22 +421,27 @@
             renderSummary(selectedVariant());
         }
 
-        const initial = variants.find((variant) => variant.isDefault && variant.orderable !== false)
-            || variants.find((variant) => variant.id === select.value && variant.orderable !== false)
-            || variants.find((variant) => variant.orderable !== false)
-            || variants[0];
-        syncStateToVariant(initial);
-        // Preserve profile/size defaults but require explicit downstream choice
-        // whenever there is more than one real brand/material/color.
-        ["brand", "material", "color"].forEach((dim) => {
-            if (dimensions.includes(dim) && uniqueOptions(variants, dim).length > 1) delete state[dim];
+        // Native fallback changes and browser restoration must update the guided state too.
+        select.addEventListener("change", () => {
+            if (syncing) return;
+            Object.keys(state).forEach((key) => delete state[key]);
+            const variant = variants.find((item) => item.id === select.value && item.orderable);
+            if (variant) syncStateToVariant(variant);
+            syncCart();
+            render();
         });
-        autoFillSingletons();
-        if (selectionComplete()) {
-            select.value = initial.id;
-            select.dispatchEvent(new Event("change", { bubbles: true }));
-        }
+        variants.forEach((variant) => {
+            variant.option.disabled = !variant.orderable;
+            variant.option.dataset.unavailable = variant.orderable ? "0" : "1";
+            variant.option.dataset.total = String(variant.price);
+        });
+        const initial = variants.find((variant) => variant.id === select.value && variant.orderable);
+        if (initial) syncStateToVariant(initial);
+        else fillGuidedSingletons(variants, state);
+        syncCart();
         render();
+        const breakdown = document.getElementById("price-breakdown");
+        if (breakdown) breakdown.hidden = true;
         shell.classList.add("is-ready");
         select.dataset.phase50ProfileReady = "1";
     }
@@ -442,12 +452,19 @@
         const ids = Array.from(select.options).filter((option) => option.value).map((option) => option.value);
         if (!ids.length) return;
         try {
-            const response = await fetch(`/store/api/variant-commerce-options/?ids=${encodeURIComponent(ids.join(","))}`, {
-                credentials: "same-origin",
-                headers: { Accept: "application/json" },
-            });
-            if (!response.ok) return;
-            installSelector(select, await response.json());
+            const payload = { products: {}, variants: {} };
+            // The existing endpoint bounds each request to 100 IDs.
+            for (let offset = 0; offset < ids.length; offset += 100) {
+                const response = await fetch(`/store/api/variant-commerce-options/?ids=${encodeURIComponent(ids.slice(offset, offset + 100).join(","))}`, {
+                    credentials: "same-origin",
+                    headers: { Accept: "application/json" },
+                });
+                if (!response.ok) return;
+                const batch = await response.json();
+                Object.assign(payload.products, batch.products);
+                Object.assign(payload.variants, batch.variants);
+            }
+            installSelector(select, payload);
         } catch (_error) {
             /* Progressive enhancement only: the mature native select remains. */
         }
