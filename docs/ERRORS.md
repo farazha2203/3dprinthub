@@ -1,3 +1,17 @@
+### ERR-49-115 ? Phase50.A.2F deploy delta allowlist omitted root PROJECT_CONTEXT.md
+**Date:** 2026-09-12
+**Environment:** Production cPanel guarded no-migration deploy from recovered baseline `e12fdaf...`.
+
+**Observed:** The runner correctly verified the live target and printed the reviewed target delta, then stopped with `PHASE50_A2F_DEPLOY_FAIL=unexpected_target_delta:PROJECT_CONTEXT.md` and Exit Code 1.
+
+**Root cause:** `PROJECT_CONTEXT.md` is a legitimate repository-root documentation file changed by the same reviewed A2F documentation checkpoint, but the runner allowlist accepted `docs/*` and forgot this root document.
+
+**Safety result:** failure happened in the target-delta gate before the backup/ff-only merge stage. Production source remained on `e12fdaf...`; no migration or database write was run. The printed BACKUP_ROOT was only the precomputed path at the fail boundary.
+
+**Correct fix:** explicitly allow only root `PROJECT_CONTEXT.md` in addition to the existing reviewed paths; keep the default `unexpected_target_delta` fail-closed rule for every other unreviewed path.
+
+**Prevention:** deployment allowlist tests must cover every intentionally changed root-level documentation file in the exact baseline-to-target delta before a Host run.
+
 ### ERR-49-114 — Production documentation lagged behind completed 3I.53G recovery
 **Date:** 2026-09-12
 **Environment:** Production cPanel Host + authenticated live Bridge readiness.

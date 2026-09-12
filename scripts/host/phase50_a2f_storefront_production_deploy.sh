@@ -135,7 +135,7 @@ cat "$TMP_DELTA"
 while IFS= read -r path; do
     [ -n "$path" ] || continue
     case "$path" in
-      .gitignore|docs/*|scripts/ci/*|scripts/host/phase50_a2f_storefront_production_deploy.sh) ;;
+      .gitignore|PROJECT_CONTEXT.md|docs/*|scripts/ci/*|scripts/host/phase50_a2f_storefront_production_deploy.sh) ;;
       static/store/css/phase50-profile-selector.css|static/store/js/phase50-profile-selector.js|static/store/js/store.js) ;;
       store/phase50_variant_views.py|store/test_phase50_filament_offer_operations.py|store/test_phase50_profile_matrix.py) ;;
       templates/store/product_detail.html) ;;

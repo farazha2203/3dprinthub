@@ -1,3 +1,4 @@
+- 2026-09-12 / REQ-50-029 deploy follow-up: first guarded Production attempt stopped safely on ERR-49-115; retry only after the reviewed-delta allowlist fix is tested and pushed.
 ## REQ-50-029 — Customer guided Product configurator
 Date: 2026-09-12
 Status: `LOCAL+GITHUB IMPLEMENTED / AUTOMATED + CANONICAL WINDOWS GATES PASS / PRODUCTION RECOVERY VERIFIED / NO-MIGRATION DEPLOY GATE READY`.

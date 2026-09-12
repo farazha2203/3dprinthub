@@ -1,3 +1,9 @@
+## 2026-09-12 ? A2F first Production attempt stopped safely at reviewed-delta guard
+
+Status: `PRODUCTION UNCHANGED / ERR-49-115 FIX LOCAL-TESTED / COMMIT+PUSH NEXT`.
+
+The first cPanel A2F attempt reached the exact target-delta inspection and stopped with `unexpected_target_delta:PROJECT_CONTEXT.md`. This is a deploy-runner allowlist omission, not a terminal/network disconnect. The stop occurred before source promotion and before any database action; recovered Production baseline remains `e12fdaf281f7e08013e54c7cf936f8275127ab2b`. The fix is narrowly scoped to accepting root `PROJECT_CONTEXT.md` while preserving fail-closed behavior for every other unexpected target path.
+
 ## 2026-09-12 — Production recovery live-verified + Phase50.A.2F deploy gate ready
 
 Status: `PRODUCTION 3I.53G VERIFIED COMPLETE / LOCAL+GITHUB 2F PASS / NO-MIGRATION DEPLOY RUNNER LOCAL-TESTED / COMMIT+PUSH NEXT`.

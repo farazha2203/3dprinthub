@@ -1,3 +1,4 @@
+- 2026-09-12: ERR-49-115 ? A2F Production runner now recognizes reviewed root `PROJECT_CONTEXT.md`; first Host attempt had stopped safely before merge/DB write.
 ## 2026-09-12 — Phase50.A.2F production recovery revalidation and deploy guard
 
 - Reverified Local/GitHub clean head `38458ce...`; canonical Windows gate passed with 139 + 34 + 68 tests and checksum-backed Catalog data.

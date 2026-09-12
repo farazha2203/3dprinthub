@@ -1,3 +1,6 @@
+## Continuation checkpoint ? 2026-09-12 / ERR-49-115 A2F deploy guard
+First A2F cPanel attempt stopped before merge/DB write because the reviewed delta contained root `PROJECT_CONTEXT.md`, omitted from the runner allowlist. Production remains at recovered baseline `e12fdaf...`. Fix is narrow: allow that exact root document and preserve fail-closed handling for all other unexpected paths.
+
 ## Continuation checkpoint — 2026-09-12 / Production recovery verified + Phase50.A.2F deploy
 
 Current Local/GitHub Storefront checkpoint is `38458ceee351add5db4bb4e84c5f1980e86bd5b5`, clean and canonical Windows-gate PASS. Production Git metadata inspected read-only over explicit FTPS shows Host branch `agent/phase49-3i18-operator-bulk-ai-rebuild` at `e12fdaf281f7e08013e54c7cf936f8275127ab2b`.

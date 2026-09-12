@@ -37,3 +37,6 @@ No Django migration is introduced by 2F. Production recovery was reverified live
 
 ## Next
 The configurator commit `38458ceee351add5db4bb4e84c5f1980e86bd5b5` and canonical Windows gate are already PASS. Next: commit/push the Production-state documentation + no-migration deploy runner, verify the new live GitHub SHA, execute that exact runner from cPanel shell against its verified `e12fdaf...` baseline, then verify public Store/Product configurator, guided JS/CSS, Bridge health/readiness and final Production SHA.
+
+## Production deploy attempt ? ERR-49-115
+The first guarded Host attempt on 2026-09-12 stopped before merge with `unexpected_target_delta:PROJECT_CONTEXT.md`. Root `PROJECT_CONTEXT.md` was part of the reviewed documentation delta but missing from the runner allowlist. Production remained unchanged. The runner was corrected narrowly and local syntax/exact-delta/Node/Django gates passed; no migration is added.

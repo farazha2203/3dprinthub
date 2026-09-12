@@ -1,3 +1,4 @@
+- 2026-09-12 A2F deploy follow-up: fix/test ERR-49-115 root-document allowlist, push a new exact GitHub target, then retry the no-migration guarded Host deploy from unchanged `e12fdaf...` baseline.
 ## 2026-09-12 — Production recovery verified; 2F deployment is the active gate
 
 Live Bridge/readiness evidence supersedes the older partial-0039 roadmap state: Production MySQL is ready, Store 0036–0042 and Website 0024 are applied, receiver schema/storage prerequisites pass with no blockers, and Production source is `e12fdaf...`. Do not rerun 53G.
