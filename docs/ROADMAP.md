@@ -2,7 +2,7 @@
 
 A2F is Production verified at `7d0b3df...`. A2G closes the final pre-bulk Product-publication boundary: only current finalized SEO WebP files may enter a Product Batch, exact media bytes/names survive Windows-to-Host, identical re-import is idempotent, and changed media advances visual revision only once. The Storefront wizard is responsive across desktop/tablet/mobile with progress, guidance, keyboard/touch support and canonical Variant fallback.
 
-Local gates pass: Catalog 10/10, Django 16/16, Node 8/8, Playwright responsive suite, compile/check/no-migration-drift/diff-check and A2G Host-runner syntax/no-migrate/exact-delta contract. Next: commit/push, exact clean-head Windows gate + foreground launch, then no-migration GitHub-first Host deploy from Production `7d0b3df...`; finally publish one controlled Product and verify Product/Profile/Variant/WebP/public page/strict ACK before bounded bulk.
+Local gates pass: Catalog 10/10, Django 16/16, Node 8/8, Playwright responsive suite, compile/check/no-migration-drift/diff-check and A2G Host-runner syntax/no-migrate/exact-delta contract. Exact runtime `e76e555...` is on live GitHub; the canonical checksum-backed Windows gate also PASSed on that exact SHA and Catalog Center launched. Next: no-migration GitHub-first Host deploy from Production `7d0b3df...`; finally publish one controlled Product and verify Product/Profile/Variant/WebP/public page/strict ACK before bounded bulk.
 
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 

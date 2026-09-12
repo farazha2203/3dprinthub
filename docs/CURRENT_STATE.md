@@ -1,6 +1,6 @@
 ## 2026-09-12 - Phase50.A.2G publish-ready media + order wizard LOCAL TESTED
 
-Status: `LOCAL_TESTED / HOST_RUNNER_LOCAL_TESTED / COMMIT+PUSH NEXT`. Production remains on verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
+Status: `GITHUB_UPDATED / CANONICAL WINDOWS GATE PASS / QT LAUNCHED / HOST DEPLOY NEXT`. Production remains on verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
 
 The Local delta hardens Windows Product publication so Ready/Batch requires current finalized SEO WebP media with complete metadata, current signature, valid WebP payload and matching SHA256. Batch 8.5 sends the exact finalized filename/bytes. The real Django importer refreshes an existing explicit media mapping only when bytes differ, skips identical FileField saves to preserve idempotence, and propagates manifest desktop_product_id before canonical Profile sync.
 
@@ -8,7 +8,7 @@ The customer configurator adds professional four-step progress/guidance, keyboar
 
 Verification: Catalog publish/media 10/10 PASS; Django import+Filament/Profile 16/16 PASS; Node 8/8 PASS; Playwright responsive suite PASS; Python compile PASS; Django check PASS with known warning; migration drift none; diff check PASS. A2G Host runner bash syntax, no-migrate contract and exact baseline-to-target allowlist PASS. No Production mutation.
 
-Exact next: commit/push -> exact clean-head canonical Windows gate + launch -> no-migration A2G deploy from `7d0b3df...` -> one controlled real Product Windows-to-Production acceptance before bulk.
+Exact next: no-migration A2G deploy from `7d0b3df...` to tested runtime `e76e555...` -> Production verification -> one controlled real Product Windows-to-Production acceptance before bulk.
 
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 

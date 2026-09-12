@@ -2,7 +2,7 @@
 
 Current Production remains verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5`, receiver ready on MySQL with Store 0036-0042 + Website 0024 applied. A2G is Local-tested: strict finalized SEO WebP gate and exact Batch bytes, idempotent real Host importer media reconciliation, stable Desktop identity on first import, plus professional responsive size -> color -> material -> quality wizard. Catalog 10/10, Django 16/16, Node 8/8, responsive Playwright, compile/check/no-drift/diff-check and Host runner contract all PASS. No Host/Production mutation yet.
 
-Next: commit/push exact delta -> canonical clean-head Windows gate + launch -> no-migration A2G Host runner from `7d0b3df...` -> one controlled Windows-to-Production Product publish/ACK before bulk.
+Next: no-migration A2G Host runner from `7d0b3df...` to approved runtime `e76e555...` -> Production verification -> one controlled Windows-to-Production Product publish/ACK before bulk.
 
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 

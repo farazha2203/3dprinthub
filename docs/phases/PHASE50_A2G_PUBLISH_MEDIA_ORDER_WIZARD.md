@@ -2,7 +2,7 @@
 
 Date: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `LOCAL_TESTED / HOST_RUNNER_LOCAL_TESTED / COMMIT+PUSH NEXT`
+Status: `GITHUB_UPDATED / CANONICAL WINDOWS GATE PASS / QT LAUNCHED / HOST DEPLOY NEXT`
 Rollback: `backup/pre-phase50-a2g-publish-media-order-wizard-20260912` → `02f654b0204266c2d7d329caf85b781c76a56a62`
 Production baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`
 
@@ -53,9 +53,9 @@ Historical paid orders, pricing authority, inventory authority, Coupon/VAT, manu
 No Django migration is introduced. Local Catalog media is only read/copied by publish packaging. Host importer changes are not on Production yet. Production remains on verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5` with receiver ready and Store 0036–0042 + Website 0024 already applied.
 
 ## Next exact gate
-1. update Repository state/request/error docs;
-2. commit/push exact tested delta and verify live GitHub SHA;
-3. run checksum-backed canonical Windows gate on that clean exact SHA and launch Catalog Center;
+1. Repository state/request/error docs updated for A2G;
+2. exact runtime `e76e555beef7ed549912b89ec2d9d4eecd9c6d8c` is committed/pushed and verified on live GitHub;
+3. checksum-backed canonical Windows gate PASSed on that exact SHA and Catalog Center launched;
 4. use the locally tested no-migration A2G Host runner from exact Production baseline `7d0b3df...`;
-5. deploy only the final GitHub SHA, collect static/restart/verify;
+5. deploy the approved GitHub target, collect static/restart/verify;
 6. publish exactly one controlled Product Windows → Production and verify Product/Profile/Variant/WebP/public page/strict ACK before bulk publish.
