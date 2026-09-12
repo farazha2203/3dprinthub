@@ -1,3 +1,6 @@
+## 2026-09-12 cPanel interactive-shell strict-mode constraint
+Do not paste `set -e` or `set -Eeuo pipefail` directly into the parent cPanel interactive shell. A deliberate fail-closed status will terminate that shell and the web UI will show Reconnect. Wrap strict bootstrap logic in a subshell `( ... )`; repository deploy runners remain child Bash processes and may keep strict mode.
+
 ## 2026-09-12 Recovery complete / current deployment constraint
 
 Live evidence supersedes the older “partial 0039” state below. Production source is `e12fdaf281f7e08013e54c7cf936f8275127ab2b`; authenticated publish-readiness on MySQL reports Store 0036–0042 and Website 0024 applied, complete required schema, `ready=true`, and no blockers. Do not rerun the 53F or 53G recovery runners against this recovered state.

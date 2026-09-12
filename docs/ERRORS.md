@@ -1,3 +1,15 @@
+### ERR-49-116 ? cPanel interactive shell exited when bootstrap enabled errexit globally
+**Date:** 2026-09-12
+**Environment:** cPanel web Terminal interactive login shell.
+
+**Observed:** When the guarded A2F runner returned Exit Code 1, the cPanel Terminal UI immediately showed Reconnect, making the safe deployment stop look like a network/session disconnect.
+
+**Root cause:** the pasted bootstrap executed `set -Eeuo pipefail` directly in the interactive login shell. Therefore a deliberate fail-closed nonzero status triggered `errexit` in the parent interactive shell and terminated that shell session.
+
+**Correct fix:** run strict-mode bootstrap logic inside a subshell `( set -Eeuo pipefail; ... )`, capture/report its return code outside the subshell, and keep the parent cPanel Terminal flags unchanged. Repository deploy runners may keep strict mode because they execute as child `bash` processes.
+
+**Prevention:** never enable `set -e`/`set -Eeuo pipefail` globally in an operator's interactive Production shell. All pasted guarded blocks must isolate strict mode in a subshell or execute a repository-owned child script.
+
 ### ERR-49-115 ? Phase50.A.2F deploy delta allowlist omitted root PROJECT_CONTEXT.md
 **Date:** 2026-09-12
 **Environment:** Production cPanel guarded no-migration deploy from recovered baseline `e12fdaf...`.

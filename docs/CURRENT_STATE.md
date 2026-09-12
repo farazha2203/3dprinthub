@@ -1,3 +1,7 @@
+## 2026-09-12 ? ERR-49-116 cPanel shell-exit behavior identified
+
+The A2F failure did not indicate a network drop. Directly enabling `set -Eeuo pipefail` in the parent cPanel interactive shell caused the shell itself to exit when the guarded child deploy returned nonzero. Future Host bootstrap blocks isolate strict mode in a subshell so fail-closed deployment errors leave the operator Terminal connected. ERR-49-115 allowlist fix is pushed; Production remains on the unchanged recovered baseline pending safe retry.
+
 ## 2026-09-12 ? A2F first Production attempt stopped safely at reviewed-delta guard
 
 Status: `PRODUCTION UNCHANGED / ERR-49-115 FIX LOCAL-TESTED / COMMIT+PUSH NEXT`.
