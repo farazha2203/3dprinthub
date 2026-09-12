@@ -85,11 +85,23 @@ def main():
         expect(page.locator('.store-profile-selector.is-ready')).to_be_visible()
         expect(page.locator('#order-variant-button')).to_be_disabled()
         assert page.locator('[data-step]').evaluate_all('(nodes) => nodes.map(n => n.dataset.step)') == ['size', 'color', 'material', 'quality']
+        expect(page.locator('.store-profile-progress__track')).to_have_attribute('aria-valuenow', '0')
+        expect(page.locator('[data-progress-step="size"]')).to_have_attribute('aria-current', 'step')
         assert page.locator('[data-step="color"] button').count() == 0
         page.locator('[data-step="size"] button', has_text='20').click()
+        expect(page.locator('.store-profile-progress__track')).to_have_attribute('aria-valuenow', '1')
+        expect(page.locator('[data-progress-step="color"]')).to_have_attribute('aria-current', 'step')
+        first_color = page.locator('[data-step="color"] button').first
+        first_color.focus()
+        first_color.press('ArrowLeft')
+        assert page.evaluate('document.activeElement.dataset.dimension') == 'color'
+        assert page.evaluate('document.activeElement.dataset.value') != 'Red'
         page.locator('[data-step="color"] button', has_text='Red').click()
         assert page.locator('[data-step="material"] button').all_text_contents() == ['PLA', 'PETG']
         page.locator('[data-step="material"] button', has_text='PETG').click()
+        expect(page.locator('.store-profile-progress__track')).to_have_attribute('aria-valuenow', '4')
+        expect(page.locator('.store-profile-ready')).to_be_visible()
+        assert page.locator('.store-profile-progress__track > span').evaluate('(node) => node.style.width') == '100%'
         expect(page.locator('#cart-variant-id')).to_have_value('2')
         expect(page.locator('#order-variant-button')).to_be_enabled()
         expect(page.locator('[data-profile-summary]')).to_contain_text('۲۰۰٬۰۰۰')
@@ -111,13 +123,19 @@ def main():
         expect(page.locator('#cart-variant-id')).to_have_value('1')
         expect(page.locator('[data-step="material"] button[aria-pressed="true"]')).to_have_text('PLA')
         page.locator('.store-profile-native-fallback summary').click()
+        page.set_viewport_size({"width": 768, "height": 900})
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        assert page.locator('.store-profile-progress').is_visible()
+        output = ROOT / '.local-qa'
+        output.mkdir(exist_ok=True)
+        page.screenshot(path=str(output / 'configurator-tablet.png'), full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert page.locator('.store-order-cart-bar').evaluate('(node) => getComputedStyle(node).position') == 'sticky'
+        assert page.locator('.store-profile-option').first.evaluate('(node) => node.getBoundingClientRect().height >= 44')
+        assert page.locator('.store-profile-step-help').count() >= 4
         expect(page.locator('.store-profile-selector__head')).to_contain_text('۴ مرحله ساده')
         expect(page.locator('[data-step="size"] .store-profile-control__label')).to_contain_text('سایز قطعه')
-        output = ROOT / '.local-qa'
-        output.mkdir(exist_ok=True)
         page.screenshot(path=str(output / 'configurator-mobile.png'), full_page=True)
         page.set_viewport_size({"width": 1280, "height": 1000})
         page.screenshot(path=str(output / 'configurator-desktop.png'), full_page=True)
@@ -146,7 +164,7 @@ def main():
         assert page.locator('.store-profile-selector').count() == 0
         assert not errors, errors
         browser.close()
-        print('GUIDED_CONFIGURATOR_BROWSER=PASS (desktop/mobile, cart, fallback, stock, ambiguity, >100)')
+        print('GUIDED_CONFIGURATOR_BROWSER=PASS (desktop/tablet/mobile, progress, keyboard, touch, cart, fallback, stock, ambiguity, >100)')
 
 
 if __name__ == '__main__':

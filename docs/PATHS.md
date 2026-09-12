@@ -1,3 +1,11 @@
+## 2026-09-12 A2G current paths / Production baseline
+- Current verified Production application SHA: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
+- Verified A2F backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260912-182234-phase50-a2f-storefront`.
+- Production project: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+- Current A2G phase: `docs/phases/PHASE50_A2G_PUBLISH_MEDIA_ORDER_WIZARD.md`.
+- A2G deploy runner: `scripts/host/phase50_a2g_publish_media_order_wizard_deploy.sh`.
+- Next A2G deploy baseline is exact `7d0b3df...`; older `e12fdaf...` A2F starting-baseline text below is historical.
+
 ## 2026-09-12 Production/FTPS/deploy paths — live reverified
 
 - Explicit FTPS endpoint verified from owner Windows: `nphost4.parsblog.com:21` with TLS; account home maps to `/home/sfkilvrs` and exposes canonical project `/home/sfkilvrs/3dprinthub`.

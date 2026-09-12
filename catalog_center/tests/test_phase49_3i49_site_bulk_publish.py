@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -14,6 +15,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
+from app.phase49_3c_image_pipeline import finalize_selected_images
 from app.phase49_3i49_site_publish import mark_ready_many, publish_many
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage, ProductsPage
@@ -78,7 +80,7 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.db.close()
         self.temp.cleanup()
 
-    def _product(self, external_id: str) -> int:
+    def _product(self, external_id: str, *, finalize_images: bool = True) -> int:
         local_dir = self.root / f"product-{external_id}"
         image_dir = local_dir / "images"
         image_dir.mkdir(parents=True, exist_ok=True)
@@ -126,7 +128,10 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             "SELECT id FROM products WHERE source_code=? AND external_id=?",
             ("makerworld", external_id),
         ).fetchone()
-        return int(row["id"])
+        product_id = int(row["id"])
+        if finalize_images:
+            finalize_selected_images(self.db, product_id)
+        return product_id
 
     def test_two_ready_products_publish_and_move_to_published_filter(self):
         first = self._product("3491001")
@@ -208,6 +213,96 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertTrue(str(row["published_at"]))
         self.assertEqual(self.db.product_count(filter_name="published"), 2)
 
+
+    def test_publish_ready_requires_current_final_seo_webp(self):
+        product_id = self._product("3491012", finalize_images=False)
+        blocked = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(blocked["marked"], 0)
+        self.assertTrue(
+            any(
+                "Publish media" in text
+                for text in blocked["blocked"][0]["missing"]
+            )
+        )
+
+        finalized = finalize_selected_images(self.db, product_id)
+        self.assertEqual(finalized["kept"], 1)
+        row = dict(self.db.product(product_id))
+        metadata = json.loads(row["image_metadata_json"])
+        self.assertEqual(len(metadata), 1)
+        final_path = Path(metadata[0]["final_local_file"])
+        self.assertEqual(final_path.suffix.lower(), ".webp")
+        self.assertTrue(final_path.is_file())
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+
+    def test_stale_image_seo_signature_blocks_ready_until_refinalized(self):
+        product_id = self._product("3491013")
+        self.db.update_product(
+            product_id,
+            {"seo_title_fa": "SEO title changed after image finalization"},
+        )
+        blocked = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(blocked["marked"], 0)
+        self.assertTrue(
+            any(
+                "stale" in text.lower()
+                for text in blocked["blocked"][0]["missing"]
+            )
+        )
+        finalize_selected_images(self.db, product_id)
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+
+    def test_publish_batch_preserves_final_seo_webp_bytes_and_filename(self):
+        product_id = self._product("3491014")
+        mark_ready_many(self.db, FakeStages(), [product_id])
+        row = dict(self.db.product(product_id))
+        metadata = json.loads(row["image_metadata_json"])
+        expected_name = metadata[0]["seo_filename"]
+        expected_sha = metadata[0]["final_sha256"]
+        seen = {}
+
+        def fake_upload(_settings, batch, callback=None):
+            matches = list(Path(batch).rglob(f"images/{expected_name}"))
+            self.assertEqual(len(matches), 1)
+            packaged = matches[0]
+            seen["name"] = packaged.name
+            seen["sha"] = hashlib.sha256(packaged.read_bytes()).hexdigest()
+            return {"remote_batch": "/remote/test", "uploaded_files": 1, "total_files": 1}
+
+        def fake_import(_settings, batch_name, batch_uuid):
+            return {
+                "status": "ok",
+                "batch_uuid": batch_uuid,
+                "diagnostic_id": batch_name,
+                "items": [{
+                    "desktop_product_id": product_id,
+                    "status": "created",
+                    "server_id": "asset-media",
+                    "product_id": 1514,
+                    "product_revision": 1,
+                    "visible_on_store": True,
+                    "public_http_ok": True,
+                    "product_url": "/shop/media/",
+                    "source_hash": "source-media",
+                }],
+            }
+
+        result = publish_many(
+            self.db,
+            FakeStages(),
+            SimpleNamespace(),
+            [product_id],
+            batch_root=self.root / "media-batches",
+            uploader=fake_upload,
+            importer=fake_import,
+            readiness_checker=lambda _settings: {"ready": True, "blockers": []},
+        )
+        self.assertEqual(result["published"], 1)
+        self.assertEqual(seen["name"], expected_name)
+        self.assertEqual(seen["sha"], expected_sha)
 
     def test_site_receiver_readiness_blocks_before_ftp(self):
         product_id = self._product("3491011")

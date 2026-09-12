@@ -1,3 +1,17 @@
+### ERR-49-117 - Explicit Batch media refresh caused storage suffix churn on identical re-import
+**Date:** 2026-09-12
+**Environment:** Local Django importer regression for Phase50.A.2G Windows-to-Site media publishing.
+
+**Observed:** After making explicit current-Batch image mappings authoritative, a real changed SEO WebP correctly refreshed Host media and advanced the Hero/Slider visual revision. Re-importing the exact same refreshed Batch advanced the revision again (`2 -> 3`) even though the incoming media bytes had not changed. The same investigation also showed that a manifest-level `desktop_product_id` was not available to first canonical Profile sync when it was absent from `desktop_editorial.json`.
+
+**Root cause:** Django storage `FileField.save()` was called unconditionally for every explicit mapping. When a same-name file already existed, storage generated a suffixed filename, so downstream visual identity appeared changed even with identical bytes. Separately, the importer resolved manifest Desktop identity for reconciliation but did not propagate it into the data passed to Profile sync.
+
+**Correct fix:** propagate manifest `desktop_product_id` into the editorial data before canonical sync. For explicit media mappings compare incoming and currently stored SHA256 first: save only when bytes differ; identical bytes reuse the existing FileField. A real media change remains authoritative and advances the visual revision once; an identical third import is idempotent. No historical media file is destructively deleted.
+
+**Verification:** focused import E2E PASS for initial import -> changed SEO WebP re-publish -> identical third re-import; combined Django import/Filament/Profile 16/16 PASS; Catalog publish-media 10/10 PASS; no migration drift.
+
+**Prevention:** current Batch authority means reconcile content, not unconditional FileField save. Media import regressions must prove both changed-content refresh and same-content idempotence, and Desktop identity must reach canonical sync on the first import.
+
 ### ERR-49-116 ? cPanel interactive shell exited when bootstrap enabled errexit globally
 **Date:** 2026-09-12
 **Environment:** cPanel web Terminal interactive login shell.

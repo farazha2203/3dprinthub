@@ -26,6 +26,14 @@
         variant: "گزینه نهایی",
     };
 
+    const STEP_HELP = {
+        size: "\u0627\u0646\u062f\u0627\u0632\u0647 \u0646\u0647\u0627\u06cc\u06cc \u0642\u0637\u0639\u0647 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f\u061b \u06af\u0632\u06cc\u0646\u0647\u200c\u0647\u0627\u06cc \u0628\u0639\u062f\u06cc \u0641\u0642\u0637 \u0628\u0631\u0627\u06cc \u0647\u0645\u06cc\u0646 \u0633\u0627\u06cc\u0632 \u0646\u0645\u0627\u06cc\u0634 \u062f\u0627\u062f\u0647 \u0645\u06cc\u200c\u0634\u0648\u0646\u062f.",
+        color: "\u0631\u0646\u06af \u062f\u0644\u062e\u0648\u0627\u0647 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f\u061b \u0631\u0646\u06af\u200c\u0647\u0627\u06cc \u0646\u0627\u0645\u0648\u062c\u0648\u062f \u06cc\u0627 \u0646\u0627\u0633\u0627\u0632\u06af\u0627\u0631 \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u0645\u06cc\u200c\u0634\u0648\u0646\u062f.",
+        material: "\u0645\u062a\u0631\u06cc\u0627\u0644 \u0633\u0627\u0632\u06af\u0627\u0631 \u0628\u0627 \u0633\u0627\u06cc\u0632 \u0648 \u0631\u0646\u06af \u0627\u0646\u062a\u062e\u0627\u0628\u06cc \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f.",
+        quality: "\u06a9\u06cc\u0641\u06cc\u062a \u0686\u0627\u067e \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f\u061b \u0633\u067e\u0633 \u0642\u06cc\u0645\u062a\u060c \u0648\u0632\u0646 \u0648 \u0632\u0645\u0627\u0646 \u0686\u0627\u067e \u0646\u0647\u0627\u06cc\u06cc \u0646\u0645\u0627\u06cc\u0634 \u062f\u0627\u062f\u0647 \u0645\u06cc\u200c\u0634\u0648\u062f.",
+        variant: "\u0627\u06cc\u0646 \u062a\u0631\u06a9\u06cc\u0628 \u0686\u0646\u062f \u067e\u0631\u0648\u0641\u0627\u06cc\u0644 \u0648\u0627\u0642\u0639\u06cc \u062f\u0627\u0631\u062f\u061b \u06af\u0632\u06cc\u0646\u0647 \u0646\u0647\u0627\u06cc\u06cc \u0631\u0627 \u0635\u0631\u06cc\u062d \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f.",
+    };
+
     const formatNumber = (value) => Number(value || 0).toLocaleString("fa-IR");
     const formatToman = (value) => `${formatNumber(value)} تومان`;
     const clean = (value) => String(value == null ? "" : value).trim();
@@ -258,6 +266,11 @@
                 </div>
                 <span class="store-profile-selector__badge">۴ مرحله ساده</span>
             </div>
+            <div class="store-profile-progress">
+                <div class="store-profile-progress__meta"><strong data-profile-progress-title></strong><span data-profile-progress-status></span></div>
+                <div class="store-profile-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span data-profile-progress-bar></span></div>
+                <ol class="store-profile-progress__steps" data-profile-progress-steps></ol>
+            </div>
             <div class="store-profile-controls" data-profile-controls></div>
             <div class="store-profile-summary" data-profile-summary role="status" aria-live="polite" aria-atomic="true"></div>
         `;
@@ -276,6 +289,12 @@
 
         const controls = shell.querySelector("[data-profile-controls]");
         const summary = shell.querySelector("[data-profile-summary]");
+        const progressTitle = shell.querySelector("[data-profile-progress-title]");
+        const progressStatus = shell.querySelector("[data-profile-progress-status]");
+        const progressTrack = shell.querySelector(".store-profile-progress__track");
+        const progressBar = shell.querySelector("[data-profile-progress-bar]");
+        const progressSteps = shell.querySelector("[data-profile-progress-steps]");
+        progressSteps.innerHTML = GUIDED_DIMENSIONS.map((dim, index) => `<li data-progress-step="${dim}"><span>${formatNumber(index + 1)}</span><strong>${escapeHtml(LABELS[dim])}</strong></li>`).join("");
         const state = {};
 
         let syncing = false;
@@ -316,6 +335,7 @@
                 ...(variant.partDimensionsLabel ? [["ابعاد قطعه", variant.partDimensionsLabel]] : []),
             ];
             summary.innerHTML = `
+                <div class="store-profile-ready"><span aria-hidden="true">&#10003;</span><div><strong>\u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc \u0622\u0645\u0627\u062f\u0647 \u0633\u0641\u0627\u0631\u0634</strong><small>\u0627\u0646\u062a\u062e\u0627\u0628\u200c\u0647\u0627\u06cc \u0634\u0645\u0627 \u06a9\u0627\u0645\u0644 \u0627\u0633\u062a\u061b \u0642\u06cc\u0645\u062a \u0648 \u0645\u0634\u062e\u0635\u0627\u062a \u0627\u0632 \u0647\u0645\u06cc\u0646 \u06af\u0632\u06cc\u0646\u0647 \u0648\u0627\u0642\u0639\u06cc \u0645\u062d\u0635\u0648\u0644 \u0645\u062d\u0627\u0633\u0628\u0647 \u0634\u062f\u0647\u200c\u0627\u0646\u062f.</small></div></div>
                 <div class="store-profile-summary__price"><span>قیمت نهایی هر عدد</span><strong>${formatToman(variant.price)}</strong></div>
                 <p class="store-profile-summary__note">مالیات و هزینه ارسال در تسویه‌حساب محاسبه می‌شوند.</p>
                 ${variant.profileDescription ? `<p class="store-profile-summary__description">${escapeHtml(variant.profileDescription)}</p>` : ""}
@@ -323,6 +343,30 @@
                     ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
                 </div>
             `;
+        }
+
+        function renderProgress() {
+            const completed = GUIDED_DIMENSIONS.filter((dim) => Boolean(state[dim])).length;
+            const nextDim = GUIDED_DIMENSIONS.find((dim) => !state[dim]);
+            const variant = selectedVariant();
+            const currentStep = Math.min(completed + 1, GUIDED_DIMENSIONS.length);
+            progressTitle.textContent = variant
+                ? `\u06f4 \u0645\u0631\u062d\u0644\u0647 \u062a\u06a9\u0645\u06cc\u0644 \u0634\u062f\u0647`
+                : `\u0645\u0631\u062d\u0644\u0647 ${formatNumber(currentStep)} \u0627\u0632 \u06f4`;
+            progressStatus.textContent = variant
+                ? `\u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc \u0622\u0645\u0627\u062f\u0647 \u0633\u0641\u0627\u0631\u0634`
+                : (LABELS[nextDim] || LABELS.variant);
+            progressTrack.setAttribute("aria-valuenow", String(completed));
+            progressBar.style.width = `${Math.round((completed / GUIDED_DIMENSIONS.length) * 100)}%`;
+            Array.from(progressSteps.children).forEach((item, index) => {
+                const dim = GUIDED_DIMENSIONS[index];
+                const complete = Boolean(state[dim]);
+                const active = !variant && dim === nextDim;
+                item.classList.toggle("is-complete", complete);
+                item.classList.toggle("is-active", active);
+                if (active) item.setAttribute("aria-current", "step");
+                else item.removeAttribute("aria-current");
+            });
         }
 
         function render() {
@@ -341,15 +385,23 @@
                 group.classList.toggle("is-pending", !unlocked);
                 group.classList.toggle("is-active", unlocked && dimIndex === activeIndex);
                 group.classList.toggle("is-complete", Boolean(state[dim]));
+                if (unlocked && dimIndex === activeIndex) group.setAttribute("aria-current", "step");
                 const title = LABELS[dim] || "گزینه نهایی";
                 group.innerHTML = `<div class="store-profile-control__label"><span class="store-profile-step-number">${formatNumber(dimIndex + 1)}</span>${title}${state[dim] ? '<span class="store-profile-step-done">انتخاب شد</span>' : ''}</div><div class="store-profile-options" role="group" aria-label="${title}"></div>`;
+                const helpId = `store-profile-step-help-${dim}`;
+                const help = document.createElement("p");
+                help.id = helpId;
+                help.className = "store-profile-step-help";
+                help.textContent = STEP_HELP[dim] || "";
+                const optionHost = group.querySelector(".store-profile-options");
+                optionHost.setAttribute("aria-describedby", helpId);
+                group.insertBefore(help, optionHost);
                 if (!unlocked) {
                     const hint = document.createElement("p");
                     hint.className = "store-profile-hint";
                     hint.textContent = "ابتدا مرحله قبل را انتخاب کنید.";
                     group.appendChild(hint);
                 }
-                const optionHost = group.querySelector(".store-profile-options");
                 options.forEach((item) => {
                     const button = document.createElement("button");
                     button.type = "button";
@@ -403,6 +455,20 @@
                     button.dataset.dimension = dim;
                     button.dataset.value = item.value;
                     button.setAttribute("aria-pressed", state[dim] === item.value ? "true" : "false");
+                    button.addEventListener("keydown", (event) => {
+                        const keys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"];
+                        if (!keys.includes(event.key)) return;
+                        const siblings = Array.from(optionHost.querySelectorAll("button:not(:disabled)"));
+                        const current = siblings.indexOf(button);
+                        if (current < 0 || !siblings.length) return;
+                        let target = current;
+                        if (event.key === "Home") target = 0;
+                        else if (event.key === "End") target = siblings.length - 1;
+                        else if (event.key === "ArrowRight" || event.key === "ArrowUp") target = Math.max(0, current - 1);
+                        else target = Math.min(siblings.length - 1, current + 1);
+                        event.preventDefault();
+                        siblings[target].focus();
+                    });
                     button.addEventListener("click", () => {
                         state[dim] = item.value;
                         clearDownstreamState(state, visibleDimensions, dimIndex);
@@ -418,6 +484,7 @@
                 });
                 controls.appendChild(group);
             });
+            renderProgress();
             renderSummary(selectedVariant());
         }
 

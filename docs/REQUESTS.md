@@ -1,4 +1,11 @@
-- 2026-09-12 / REQ-50-029 deploy follow-up: first guarded Production attempt stopped safely on ERR-49-115; retry only after the reviewed-delta allowlist fix is tested and pushed.
+## REQ-50-030 - Publish-ready Product media + professional responsive ordering wizard
+Date: 2026-09-12
+Status: `LOCAL_TESTED / HOST_RUNNER_LOCAL_TESTED / GITHUB UPDATE NEXT`.
+
+Acceptance: only finalized current SEO WebP media can become Ready; exact WebP filename/bytes must survive Windows-to-Batch-to-Host; changed explicit media refreshes the existing Site identity while identical bytes remain idempotent; desktop_product_id identity is stable from first import; customer ordering remains size -> color -> compatible material -> print quality with professional progress/guidance, keyboard/touch accessibility, mobile/tablet/desktop responsiveness and native canonical Variant fallback. Server price/stock/weight/time remain authoritative.
+
+Local evidence: Catalog 10/10 PASS; Django 16/16 PASS; Node 8/8 PASS; Playwright responsive suite PASS; compile/check/no migration drift/diff check PASS; A2G deploy runner syntax/no-migrate/exact-delta PASS. Production is still `7d0b3df...`; one controlled Product acceptance is required before bulk publication.
+
 ## REQ-50-029 — Customer guided Product configurator`r`nDate: 2026-09-12`r`nStatus: `PRODUCTION_VERIFIED`.
 
 Required behavior:

@@ -1,3 +1,13 @@
+## 2026-09-12 - Phase50.A.2G Publish-ready Product media + responsive order wizard
+- fail-closed Ready/Publish unless every selected Product image is a current finalized SEO WebP with complete metadata/signature/SHA;
+- Batch packaging now copies the exact final SEO WebP name and bytes and no longer falls back to original/download media during publish;
+- real Django importer refreshes explicit current-Batch media only when bytes differ, preventing stale media and duplicate storage suffix/revision churn;
+- manifest desktop_product_id now reaches canonical Profile sync on first import;
+- Storefront wizard adds four-step progress/guidance, active/completed/ready state, keyboard navigation, touch targets and desktop/tablet/mobile responsive behavior;
+- regression: Catalog 10/10, Django 16/16, Node 8/8, Playwright responsive suite, compile/check/no drift/diff check PASS;
+- A2G no-migration Host runner syntax/no-migrate/exact-delta contract PASS;
+- Production remains unchanged at `7d0b3df...` pending commit/push and clean-head gate.
+
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 
 Status: `PRODUCTION_VERIFIED`.

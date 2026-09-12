@@ -1,3 +1,7 @@
+## 2026-09-12 - Phase50.A.2G current checkpoint
+
+Production A2F is verified at `7d0b3df03c3657106ebaf86d5f9123ba262495a5`. The active Local slice is A2G: strict finalized SEO-WebP publication, byte-accurate/idempotent Windows-to-Host media import, and professional responsive four-step Storefront ordering. Local focused gates and the A2G no-migration Host-runner contract PASS. Next is exact GitHub commit/push + canonical clean-head Windows gate/foreground launch, then GitHub-first Host promotion and exactly one real Product end-to-end acceptance before bulk.
+
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 
 Status: `PRODUCTION_VERIFIED`.

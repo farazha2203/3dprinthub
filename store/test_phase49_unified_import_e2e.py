@@ -7,6 +7,7 @@ from pathlib import Path
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from PIL import Image
 
 from store.epic49_catalog_profile import ProductCatalogProfile
 from store.models import ImportedPrintAsset, PrintQuality, Product
@@ -175,13 +176,45 @@ class Epic49UnifiedImportE2ETests(TestCase):
 
         product_revision = profile.sync_revision
         slider_revision = slide.sync_revision
+
+        # Re-publish the same remote image identity with a newly finalized SEO
+        # WebP. The explicit Batch mapping must refresh Host media instead of
+        # leaving the historical file attached to the existing image row.
+        model = batch / "models" / "makerworld_EP49-E2E-001"
+        refreshed_image = model / "images" / "epic49-e2e-gear-3d-print-01.webp"
+        Image.new("RGB", (4, 3), (17, 99, 201)).save(refreshed_image, "WEBP", quality=92)
+        editorial_path = model / "desktop_editorial.json"
+        editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
+        editorial["local_image_files_json"] = [refreshed_image.name]
+        editorial_path.write_text(
+            json.dumps(editorial, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
         out2 = StringIO()
         call_command("phase37_import_catalog_center", str(batch), stdout=out2)
+        asset.refresh_from_db()
         profile.refresh_from_db()
         slide.refresh_from_db()
         product.refresh_from_db()
+        asset_image = asset.images.get(remote_url="https://example.com/media/hero.gif")
+        self.assertTrue(asset_image.image.name.endswith(refreshed_image.name))
+        self.assertTrue(asset.preview_image.name.endswith(refreshed_image.name))
+        self.assertTrue(product.main_image.name.endswith(refreshed_image.name))
+        self.assertTrue(slide.selected_asset_image.image.name.endswith(refreshed_image.name))
         self.assertEqual(profile.sync_revision, product_revision)
-        self.assertEqual(slide.sync_revision, slider_revision)
+        self.assertEqual(profile.desktop_product_id, 991)
+        self.assertEqual(slide.sync_revision, slider_revision + 1)
+        refreshed_slider_revision = slide.sync_revision
+
+        # Re-running the exact same refreshed Batch is idempotent: the media
+        # stays current and the visual revision does not advance again.
+        out3 = StringIO()
+        call_command("phase37_import_catalog_center", str(batch), stdout=out3)
+        profile.refresh_from_db()
+        slide.refresh_from_db()
+        self.assertEqual(profile.sync_revision, product_revision)
+        self.assertEqual(slide.sync_revision, refreshed_slider_revision)
         self.assertEqual(profile.price_min, 650000)
         self.assertEqual(profile.price_max, 850000)
         self.assertEqual(product.fixed_price, 650000)

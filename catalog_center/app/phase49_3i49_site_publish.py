@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -7,6 +8,9 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from PIL import Image
+
+from . import phase49_3c_image_pipeline as image_pipeline
 from .batch_packaging import (
     IMAGE_EXTENSIONS,
     copy_images_into_model,
@@ -49,6 +53,148 @@ def _safe_part(value: Any, fallback: str) -> str:
     return text[:96] or fallback
 
 
+def _json_list(value: Any) -> list:
+    if isinstance(value, list):
+        return list(value)
+    try:
+        parsed = json.loads(value or "[]")
+    except Exception:
+        return []
+    return list(parsed) if isinstance(parsed, list) else []
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def publish_media_gate(row) -> dict[str, Any]:
+    """Fail closed unless every selected Product image is current final SEO WebP."""
+    data = _row_dict(row)
+    product_id = int(data.get("id") or 0)
+    selected = image_pipeline.cap_unique_urls(
+        [str(item or "").strip() for item in _json_list(data.get("selected_images_json"))]
+    )
+    primary = str(data.get("primary_image_url") or "").strip()
+    missing: list[str] = []
+    items: list[dict[str, Any]] = []
+
+    if not selected:
+        missing.append("Publish media: at least one selected image is required")
+        return {"product_id": product_id, "ready": False, "missing": missing, "items": []}
+    if not primary or primary not in selected:
+        missing.append("Publish media: primary image must be one of the selected images")
+
+    raw_local_dir = str(data.get("local_dir") or "").strip()
+    if not raw_local_dir:
+        missing.append("Publish media: Product local directory is missing")
+        return {"product_id": product_id, "ready": False, "missing": missing, "items": []}
+    local_dir = Path(raw_local_dir).resolve()
+    seo_root = (local_dir / "seo_images").resolve()
+    metadata = [item for item in _json_list(data.get("image_metadata_json")) if isinstance(item, dict)]
+    by_url = {str(item.get("source_url") or "").strip(): dict(item) for item in metadata if str(item.get("source_url") or "").strip()}
+    current_signature = image_pipeline.image_seo_signature(data)
+    seen_names: set[str] = set()
+
+    for index, source_url in enumerate(selected, start=1):
+        prefix = f"Publish media image {index}"
+        meta = by_url.get(source_url)
+        if not meta:
+            missing.append(f"{prefix}: SEO metadata is missing")
+            continue
+        for key, label in (
+            ("seo_filename", "SEO filename"),
+            ("alt_text", "Alt text"),
+            ("title", "title"),
+            ("caption", "caption"),
+            ("creator", "creator"),
+            ("source_page_url", "source page"),
+        ):
+            if not str(meta.get(key) or "").strip():
+                missing.append(f"{prefix}: {label} is missing")
+        keywords = meta.get("keywords")
+        if not isinstance(keywords, list) or not any(str(item or "").strip() for item in keywords):
+            missing.append(f"{prefix}: SEO keywords are missing")
+        if meta.get("metadata_ready") is not True:
+            missing.append(f"{prefix}: metadata_ready is not true")
+        if str(meta.get("seo_signature") or "") != current_signature:
+            missing.append(f"{prefix}: SEO metadata is stale and must be finalized again")
+
+        filename = Path(str(meta.get("seo_filename") or "")).name
+        raw_final = str(meta.get("final_local_file") or "").strip()
+        if not raw_final:
+            missing.append(f"{prefix}: final SEO file is missing")
+            continue
+        final_path = Path(raw_final).resolve()
+        try:
+            final_path.relative_to(seo_root)
+        except ValueError:
+            missing.append(f"{prefix}: final file is outside seo_images")
+            continue
+        if final_path.suffix.lower() != ".webp":
+            missing.append(f"{prefix}: final file must be WebP")
+        if filename and final_path.name != filename:
+            missing.append(f"{prefix}: final filename does not match SEO metadata")
+        if final_path.name.casefold() in seen_names:
+            missing.append(f"{prefix}: duplicate final SEO filename")
+        seen_names.add(final_path.name.casefold())
+        if not final_path.is_file() or final_path.stat().st_size < 512:
+            missing.append(f"{prefix}: final WebP file is missing or empty")
+            continue
+        actual_sha = _sha256_file(final_path)
+        if str(meta.get("final_sha256") or "") != actual_sha:
+            missing.append(f"{prefix}: final WebP checksum mismatch")
+        try:
+            with Image.open(final_path) as image:
+                width, height = image.size
+                image_format = str(image.format or "").upper()
+                image.verify()
+            if image_format != "WEBP" or width <= 0 or height <= 0:
+                raise ValueError("not a valid WebP")
+        except Exception:
+            missing.append(f"{prefix}: final image is not a valid WebP")
+            continue
+        items.append({
+            "source_url": source_url,
+            "path": str(final_path),
+            "seo_filename": filename or final_path.name,
+            "sha256": actual_sha,
+            "width": int(width),
+            "height": int(height),
+        })
+
+    deduped = list(dict.fromkeys(item for item in missing if item))
+    return {
+        "product_id": product_id,
+        "ready": not deduped and len(items) == len(selected),
+        "missing": deduped,
+        "items": items,
+    }
+
+
+def _copy_publish_media(items: list[dict[str, Any]], model_dir: Path) -> list[str]:
+    image_target = Path(model_dir) / "images"
+    image_target.mkdir(parents=True, exist_ok=True)
+    names: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        source = Path(str(item.get("path") or "")).resolve()
+        name = Path(str(item.get("seo_filename") or source.name)).name
+        if not name.lower().endswith(".webp") or name.casefold() in seen:
+            raise RuntimeError(f"Publish media filename is not a unique WebP: {name}")
+        seen.add(name.casefold())
+        destination = image_target / name
+        shutil.copy2(source, destination)
+        expected_sha = str(item.get("sha256") or "")
+        if not destination.is_file() or destination.stat().st_size < 512 or _sha256_file(destination) != expected_sha:
+            raise RuntimeError(f"Publish media copy verification failed: {name}")
+        names.append(name)
+    return names
+
+
 def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
     product_id = int(product_id)
     row = db.product(product_id)
@@ -76,6 +222,8 @@ def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
                 missing.append(f"{label}: اطلاعات لازم ناقص است")
 
     data = _row_dict(row)
+    media_state = publish_media_gate(data)
+    missing.extend(media_state["missing"])
     if not bool(int(data.get("approved_for_sale") or 0)):
         missing.append("بررسی و انتشار: تأیید برای فروش")
     if not bool(int(data.get("publish_as_product") or 0)):
@@ -255,13 +403,14 @@ def build_publish_batch(
                         continue
                     shutil.copy2(source_file, target / source_file.name)
 
-            selected_pairs = materialize_selected_images(
-                row,
-                material_dir,
-                downloader=_download_batch_image,
-            )
-            selected_urls = [url for url, _path in selected_pairs]
-            local_image_files = copy_images_into_model(selected_pairs, target)
+            media_state = publish_media_gate(row)
+            if media_state.get("ready") is not True:
+                raise RuntimeError(
+                    f"Product #{int(row['id'])} publish media is not ready: "
+                    + "; ".join(media_state.get("missing") or [])
+                )
+            selected_urls = [str(item["source_url"]) for item in media_state["items"]]
+            local_image_files = _copy_publish_media(media_state["items"], target)
 
             editorial = {
                 key: row[key]

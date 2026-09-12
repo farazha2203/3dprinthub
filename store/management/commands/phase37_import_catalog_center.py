@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -274,6 +275,27 @@ def apply_phase43_product_details(product, data: dict) -> None:
     product.save(update_fields=list(dict.fromkeys(update_fields + (["updated_at"] if hasattr(product, "updated_at") else []))))
 
 
+def _stored_file_matches_local(field_file, local_file: Path) -> bool:
+    name = str(getattr(field_file, "name", "") or "").strip()
+    if not name or not local_file.is_file():
+        return False
+    try:
+        local_hash = hashlib.sha256()
+        with local_file.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                local_hash.update(block)
+        stored_hash = hashlib.sha256()
+        storage = getattr(field_file, "storage", None)
+        if storage is None:
+            return False
+        with storage.open(name, "rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                stored_hash.update(block)
+        return local_hash.digest() == stored_hash.digest()
+    except Exception:
+        return False
+
+
 def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int:
     urls = safe_json(data.get("images_json"), [])
     alt_texts = safe_json(data.get("image_alt_texts_json"), [])
@@ -300,11 +322,30 @@ def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int
                 local_file = candidate
         elif not has_explicit_mapping and index < len(locals_):
             local_file = locals_[index]
-        if local_file is not None and not row.image:
+        # An explicit current-batch mapping is authoritative for Desktop-managed
+        # media. Re-publish must refresh the stored image to the newly finalized
+        # SEO WebP even when this remote URL already has an older image row.
+        # FileField storage may retain historical physical files; no destructive
+        # media deletion is performed here.
+        should_refresh_row = bool(
+            local_file is not None
+            and (
+                not row.image
+                or (
+                    has_explicit_mapping
+                    and not _stored_file_matches_local(row.image, local_file)
+                )
+            )
+        )
+        if should_refresh_row:
             with local_file.open("rb") as handle:
                 row.image.save(local_file.name, File(handle), save=False)
         row.save()
-        if index == 0 and local_file is not None:
+        if (
+            index == 0
+            and local_file is not None
+            and not _stored_file_matches_local(asset.preview_image, local_file)
+        ):
             with local_file.open("rb") as handle:
                 asset.preview_image.save(local_file.name, File(handle), save=False)
             primary_saved = True
@@ -345,6 +386,8 @@ class Command(BaseCommand):
             code = str(data.get("source_code") or "")
             external_id = str(data.get("external_id") or "")
             desktop_product_id = data.get("desktop_product_id") or item.get("desktop_product_id")
+            if desktop_product_id and not data.get("desktop_product_id"):
+                data["desktop_product_id"] = desktop_product_id
             try:
                 with transaction.atomic():
                     category = category_for(data)

@@ -1,17 +1,26 @@
-# Phase50 — Finance, Commerce & Admin Command Center
+# Phase50 - Finance, Commerce & Admin Command Center
 
 Updated: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Current Subphase: `50.A.2F — Guided Storefront Configurator`
-Status: `50.A.2F LOCAL AUTOMATED GATES PASS / COMMIT+PUSH NEXT / WINDOWS CLEAN-HEAD GATE NEXT / PRODUCTION BLOCKED BY 3I.53G PARTIAL MYSQL RECOVERY`
+Current Subphase: `50.A.2G - Publish-ready Media + Professional Order Wizard`
+Status: `50.A.2G LOCAL_TESTED / COMMIT+PUSH NEXT / CLEAN-HEAD WINDOWS GATE NEXT`
 Current verified Production application commit:
-`c283864290f9c989a9fcdf24ee8eef519560e917`.
+`7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
 
-Last verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
-- `store.0034_phase50_variant2_commerce` applied,
-- `store.0035_phase50_sales_profiles` applied,
-- `store.0036_phase50_checkout_snapshot` pending at last verify,
-- `0037`, `0038`, `0039` and `0040` were created after that verify and are not claimed applied.
+Current verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
+- Store 0036-0042 applied;
+- Website 0024 applied;
+- authenticated publish-readiness `ready=true`, no blockers;
+- A2G introduces no migration.
+
+## 50.A.2G - Publish-ready Media + Professional Order Wizard
+Windows Ready/Publish now requires finalized current SEO WebP artifacts with complete metadata/signature/SHA. Batch packaging carries the exact final filenames/bytes. Django import refreshes changed explicit media but skips identical byte content, keeping re-publish idempotent and visual revisions truthful. Manifest Desktop identity is available before canonical Profile sync.
+
+Storefront keeps canonical size -> color -> material -> quality selection while adding visible progress, guidance, keyboard/touch behavior and desktop/tablet/mobile responsive presentation. ProductVariant/API remains the price/stock/facts authority and native Variant fallback remains available.
+
+Local evidence: Catalog publish/media 10/10 PASS; Django import+Filament/Profile 16/16 PASS; Node 8/8 PASS; Playwright desktop/tablet/mobile/progress/keyboard/touch/cart/fallback/stock/ambiguity/>100 PASS; compile/check/no migration drift/diff check PASS.
+
+Next: commit/push exact delta -> canonical clean-head Windows gate + app launch -> dedicated no-migration A2G Host deployment from exact Production baseline `7d0b3df...` -> one controlled Product Windows-to-Production acceptance before bulk.
 
 ## 50.A.2F — Guided Storefront Configurator
 

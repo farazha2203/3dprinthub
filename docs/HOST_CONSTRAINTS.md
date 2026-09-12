@@ -1,3 +1,8 @@
+## 2026-09-12 Phase50.A.2G current Production constraint
+Production is A2F-verified at exact source `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; MySQL receiver is ready with Store 0036-0042 + Website 0024 applied. A2G promotion must start from that exact clean Host baseline, use live `git ls-remote` + explicit branch fetch/FETCH_HEAD + ff-only merge, prove no migration/requirements/settings delta and an empty migration plan, create verified source/environment/static rollback evidence, then collectstatic/restart/HTTP+Bridge verify. A2G introduces no migration.
+
+Repository runner: `scripts/host/phase50_a2g_publish_media_order_wizard_deploy.sh`; its local bash syntax, no-migrate check and exact target-delta contract PASS. Do not reuse the older A2F runner as if its `e12fdaf...` starting guard were current. The cPanel parent shell strict-mode rule remains: use a subshell, never global interactive `set -e`.
+
 ## 2026-09-12 cPanel interactive-shell strict-mode constraint
 Do not paste `set -e` or `set -Eeuo pipefail` directly into the parent cPanel interactive shell. A deliberate fail-closed status will terminate that shell and the web UI will show Reconnect. Wrap strict bootstrap logic in a subshell `( ... )`; repository deploy runners remain child Bash processes and may keep strict mode.
 
