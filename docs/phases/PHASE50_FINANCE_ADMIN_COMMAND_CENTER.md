@@ -304,3 +304,7 @@ After 50.A.2D Production verification:
 - `ERR-50-007`: tag-only fetch refspec → live branch + explicit `FETCH_HEAD`.
 - `ERR-50-010`: no reliable cPanel `/dev/fd` process substitution.
 - `ERR-50-011`: JSON is data; verify with `python -` + `json.load`.
+
+## 2026-09-12 — Operations transport publication [REV-TUNNEL-OPS-2026-09-12]
+
+Reverse-management profile published on `ops/reverse-tunnel-remote-management-20260912` with Windows loopback port `22023`. This is operations transport only and does not change this phase's product/runtime/DB acceptance status. Runbook: `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`.

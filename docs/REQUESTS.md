@@ -880,3 +880,7 @@ Current remaining acceptance:
 New work extends/wraps mature behavior and must pass CI/Local gate before Production. No schema migration reaches Production without exact MySQL verification, migration plan, successful backup and rollback target. Production uses explicit live branch fetch to `FETCH_HEAD` because host remote-tracking refspec is stale/tag-only. Avoid `/dev/fd` process substitution on this cPanel host.
 
 - ERR-49-070 completes the Stage-5 request end-to-end: clean Catalog DBs must contain `technical_summary_fa`, Stage 5 must visibly show source/designer + Persian license + technical summary + technical-features JSON, and the exact visible license selector must persist through stage confirmation.
+
+## 2026-09-12 — Reverse SSH management publication [REV-TUNNEL-OPS-2026-09-12]
+
+Owner requested publishing the proven reverse-management method across repositories, with exact per-project profiles, reusable startup/verification steps and GitHub-persisted documentation. No secret material or Production mutation is authorized by this request.

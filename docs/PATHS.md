@@ -133,3 +133,10 @@ This cPanel environment did not provide a reliable `/dev/fd` path for Bash proce
 - Dirty Local/Host worktree: STOP/INSPECT; no reset/delete shortcut.
 - Before Production migration verify exact project root, branch, commit, Python venv, DB vendor/name, backup target and rollback.
 - JSON/API smoke payloads are data, not executable source; use `python - <args>` and explicit `json.load` when verifying endpoint responses.
+
+## 2026-09-12 — Reverse-management operator paths [REV-TUNNEL-OPS-2026-09-12]
+
+- Repository operator helpers: `scripts/operator/`.
+- Canonical runbook: `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`.
+- Reserved Windows loopback port for this project: `22023`.
+- Shared-host bridge binds to Host `127.0.0.1:22222` only after first-use acceptance; reservation is not runtime proof.

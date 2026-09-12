@@ -1,3 +1,10 @@
+## 2026-09-12 — Remote-management transport [REV-TUNNEL-OPS-2026-09-12]
+
+- [x] Add repository-owned reverse-tunnel runbook and loopback bridge/operator helpers.
+- [x] Reserve Windows loopback port `22023` for this repository profile.
+- [ ] First-use Host/source-IP/firewall/PBR/tunnel acceptance where profile status is not already proven.
+- [ ] Keep all Production deployment/database acceptance on the existing project roadmap; tunnel transport does not complete any product Phase/Epic.
+
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 
 Status: `PRODUCTION_VERIFIED`.

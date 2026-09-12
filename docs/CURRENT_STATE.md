@@ -1,3 +1,11 @@
+## 2026-09-12 — Reverse SSH remote-management standard [REV-TUNNEL-OPS-2026-09-12]
+
+Operations-only repository publication on branch `ops/reverse-tunnel-remote-management-20260912`. Project loopback port `22023` is reserved and profile mode is `shared-cpanel-bridge`. Activation state: PROFILE RESERVED; first-use source-IP/firewall/PBR/tunnel acceptance pending.
+
+No application source, database, migration, dependency, Production runtime or deploy state changes in this publication. Reverse access is transport only and remains subordinate to the normal GitHub/release/backup/rollback gates.
+
+Runbook: `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`. Exact next step after GitHub push: use the profile only after its first-use onboarding/identity/network gate passes; do not infer another project's Host source IP or routing state.
+
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 
 Status: `PRODUCTION_VERIFIED`.

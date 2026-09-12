@@ -206,3 +206,7 @@ Restart alone is not verification; follow with runtime verifier + HTTP/static/da
 - MySQL conditional unique-constraint warnings are known; do not infer a new migration failure from those warnings alone.
 
 Never assume Local Windows/SQLite behavior is valid on Production MySQL/Passenger.
+
+## 2026-09-12 — Reverse-management safety boundary [REV-TUNNEL-OPS-2026-09-12]
+
+Reverse SSH is an operator transport, not a deploy authority. Dedicated per-project key/user, source-IP-restricted Windows firewall/MikroTik DNAT, loopback-only forwarding and verified multi-WAN return routing are required. Never expose the command bridge publicly, never commit keys/tokens, and never use this transport to bypass GitHub-first release, backup, migration or rollback gates. On shared cPanel, run the bridge/tunnel as foreground child processes; do not assume arbitrary persistent daemons are provider-supported.

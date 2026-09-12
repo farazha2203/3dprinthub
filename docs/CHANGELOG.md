@@ -1,3 +1,7 @@
+## 2026-09-12 — Reverse SSH remote-management standard [REV-TUNNEL-OPS-2026-09-12]
+
+Published repository-owned loopback bridge/operator helpers and per-project runbook. No application runtime, dependency, database, migration or Production deployment change.
+
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 
 Status: `PRODUCTION_VERIFIED`.
