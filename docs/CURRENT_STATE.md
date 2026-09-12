@@ -1,3 +1,14 @@
+## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
+
+Status: `PRODUCTION_VERIFIED`.
+
+Production deployment completed successfully from recovered baseline `e12fdaf281f7e08013e54c7cf936f8275127ab2b` to exact GitHub commit `7d0b3df03c3657106ebaf86d5f9123ba262495a5` using `scripts/host/phase50_a2f_storefront_production_deploy.sh`.
+
+Verified Host evidence: MySQL `sfkilvrs_EmiAdmin_3dprinthub`; required Store 0036–0042 + Website 0024 migrations present; migration plan empty before and after promotion; publish-readiness ready=true with no blockers; verified source/.env/static backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260912-182234-phase50-a2f-storefront`; ff-only Git promotion; collectstatic; Passenger restart; Home/Store/Bridge health/readiness/new JS/new CSS all HTTP 200; final Host worktree clean.
+
+Guided customer ordering is now live on Production: size → color → compatible material → print quality → canonical ProductVariant → server-authoritative price/stock/weight/time → cart. Native Variant select remains fallback.
+
+Next exact acceptance: one controlled Product publish from Windows Catalog Center to the now-ready receiver, verify Product/Profile/Variant/images/public Store/strict ACK, then enable bounded multi-product publish. In parallel continue Phase50 finance/payment/admin work after this Product-publish acceptance.
 ## 2026-09-12 ? ERR-49-116 cPanel shell-exit behavior identified
 
 The A2F failure did not indicate a network drop. Directly enabling `set -Eeuo pipefail` in the parent cPanel interactive shell caused the shell itself to exit when the guarded child deploy returned nonzero. Future Host bootstrap blocks isolate strict mode in a subshell so fail-closed deployment errors leave the operator Terminal connected. ERR-49-115 allowlist fix is pushed; Production remains on the unchanged recovered baseline pending safe retry.

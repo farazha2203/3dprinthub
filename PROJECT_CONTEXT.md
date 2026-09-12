@@ -1,3 +1,14 @@
+## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
+
+Status: `PRODUCTION_VERIFIED`.
+
+Production deployment completed successfully from recovered baseline `e12fdaf281f7e08013e54c7cf936f8275127ab2b` to exact GitHub commit `7d0b3df03c3657106ebaf86d5f9123ba262495a5` using `scripts/host/phase50_a2f_storefront_production_deploy.sh`.
+
+Verified Host evidence: MySQL `sfkilvrs_EmiAdmin_3dprinthub`; required Store 0036–0042 + Website 0024 migrations present; migration plan empty before and after promotion; publish-readiness ready=true with no blockers; verified source/.env/static backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260912-182234-phase50-a2f-storefront`; ff-only Git promotion; collectstatic; Passenger restart; Home/Store/Bridge health/readiness/new JS/new CSS all HTTP 200; final Host worktree clean.
+
+Guided customer ordering is now live on Production: size → color → compatible material → print quality → canonical ProductVariant → server-authoritative price/stock/weight/time → cart. Native Variant select remains fallback.
+
+Next exact acceptance: one controlled Product publish from Windows Catalog Center to the now-ready receiver, verify Product/Profile/Variant/images/public Store/strict ACK, then enable bounded multi-product publish. In parallel continue Phase50 finance/payment/admin work after this Product-publish acceptance.
 ## Continuation checkpoint ? 2026-09-12 / ERR-49-115 A2F deploy guard
 First A2F cPanel attempt stopped before merge/DB write because the reviewed delta contained root `PROJECT_CONTEXT.md`, omitted from the runner allowlist. Production remains at recovered baseline `e12fdaf...`. Fix is narrow: allow that exact root document and preserve fail-closed handling for all other unexpected paths.
 
