@@ -1,6 +1,6 @@
 ## 2026-09-13 - Reverse Host management checkpoint
 
-The proven Asal shared-cPanel reverse-management standard is now adopted for 3DPrintHub. Windows uses dedicated non-admin `PrintHubTunnel`, source-restricted Host IP `89.39.208.237/32`, public endpoint `37.255.236.184:443`, operator loopback `22024`, and Host authenticated bridge loopback `22224`. The bridge scripts are byte-identical to the Asal reference and local syntax/compile contracts pass.
+The proven Asal shared-cPanel reverse-management standard is now adopted for 3DPrintHub. Windows uses dedicated non-admin `PrintHubTunnel`, source-restricted Host IP `89.39.208.237/32`, public endpoint `37.255.236.184:443`, operator loopback `22024`, and Host authenticated bridge loopback `22224`. The bridge scripts are byte-identical to the Asal reference, local syntax/compile/auth-health contracts pass, and the operations implementation is on GitHub at `180fe16c0e296156ef38ffc00a042c329318ff7c`.
 
 Read-only FTPS now proves Host branch HEAD `a320a0d346e4be573504978b23d197dc08f8bc2c`; Home, Store and A2G JS/CSS return HTTP 200. Full A2G Production acceptance remains pending authenticated Bridge/readiness + exact Host identity/worktree verification after tunnel E2E. Permanent source changes remain GitHub-first only.
 

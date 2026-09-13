@@ -2,7 +2,7 @@
 
 A2G source is now promoted on the Host: read-only FTPS Git evidence shows Production branch HEAD `a320a0d346e4be573504978b23d197dc08f8bc2c`. Public Home, Store and the A2G selector JS/CSS currently return HTTP 200. The earlier deploy runner stopped during immediate post-restart HTTP verification; authenticated Bridge/readiness plus exact Host worktree acceptance still must be repeated before declaring A2G `PRODUCTION_VERIFIED`.
 
-To remove repeated cPanel operator dependency, the proven Asal shared-cPanel reverse-management transport is being adopted without changing business/runtime authority. Windows side is ready (`PrintHubTunnel`, loopback `22024`, source restriction `89.39.208.237/32`); repository bridge/bootstrap scripts are local-tested. Host E2E onboarding is the next gate. This transport introduces no migration or Product/media write and does not permit direct permanent source edits on Production.
+To remove repeated cPanel operator dependency, the proven Asal shared-cPanel reverse-management transport is being adopted without changing business/runtime authority. Windows side is ready (`PrintHubTunnel`, loopback `22024`, source restriction `89.39.208.237/32`); repository bridge/bootstrap scripts are local-tested and pushed at `180fe16c0e296156ef38ffc00a042c329318ff7c`. Host E2E onboarding is the next gate. This transport introduces no migration or Product/media write and does not permit direct permanent source edits on Production.
 
 # Phase50.A.2G — Publish-ready Media + Professional Order Wizard
 
