@@ -1,3 +1,10 @@
+### ERR-49-125 - Unified Bridge exposed private imported working-media URLs for a published Product
+**Date:** 2026-09-13
+**Observed:** controlled Product #63 was publicly healthy under `store/products/gallery/`, but Bridge Product image payloads still returned `/media/store/imported-models/gallery/...`, which correctly returned HTTP 404 on Production.
+**Root cause:** `catalog_bridge.unified_views._image_rows()` and Hero `selected_image_url` serialized `ImportedPrintAssetImage.image.url` directly. That field is working-media identity, not a public Store media contract.
+**Correct fix:** preserve ImportedPrintAssetImage IDs for Desktop sync identity, but resolve the public URL by matching the imported image basename to Product-owned `ProductImage`; fall back to Product main image and only then a safe HTTP(S) remote source. Never widen Production routing to expose imported working-media.
+**Verification:** both real Product-owned Flexi Gecko gallery WebPs return HTTP 200/image-webp while the imported working-media URL remains correctly 404; Local Bridge/Hero/Admin focused suite 31/31 PASS; no migration drift.
+**Prevention:** every Bridge surface that represents public Product/Hero media must obey the same Product-owned media boundary as the Storefront. Tests must assert both the expected public URL and absence of `/media/store/imported-models/`.
 ### ERR-49-124 - Browser JS was initially executed as Node runtime during A2H validation
 **Date:** 2026-09-13
 **Observed:** direct `node static/js/theme-preview.js` reached valid browser code and failed with `ReferenceError: document is not defined`.

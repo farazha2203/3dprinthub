@@ -1,3 +1,12 @@
+## 2026-09-13 - A2G one-Product acceptance: Bridge public-media boundary fix LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION FIX NOT YET DEPLOYED`.
+
+Real Product #63 / Site Product #15 is already published with Product-owned gallery WebPs under `store/products/gallery/`; direct public HTTP verification returns 200 image/webp for both files. The remaining 404 was isolated to the unified Bridge serializer, which exposed private ImportedPrintAsset working-media URLs under `store/imported-models/` even though the public Product copies were healthy.
+
+The Local fix preserves ImportedPrintAssetImage row IDs for Desktop selection identity but resolves each returned media URL through the matching ProductImage filename, then Product main image, then a safe HTTP(S) remote fallback. Product and Hero Bridge payloads must never expose imported working-media as public URLs. No model, migration, pricing, inventory or Product data contract changed.
+
+Verification on exact pre-commit HEAD `282d67e43dc5765b6089cf1cdbcb00296798b7ba`: 31 focused Bridge/Hero/Admin tests PASS; Python compile PASS; Django check PASS with known CKEditor warning; `makemigrations --check --dry-run` reports no changes; migration plan empty; `git diff --check` PASS. Next: commit/push this narrow fix, deploy from GitHub with rollback evidence and Passenger restart, verify Bridge Product #15 returns only public Product-owned 200 WebPs, then finish guided selector/cart/strict-ACK acceptance before bounded bulk.
 ## 2026-09-13 - Phase50.A.2H Storefront showcase Local gate PASS
 
 Status: `A2H LOCAL_TESTED / GITHUB COMMIT+PUSH NEXT / PRODUCTION STILL d7cf71d`.

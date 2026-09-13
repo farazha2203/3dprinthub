@@ -90,12 +90,44 @@ def _slide_for_product(product):
     return HomepageHeroSlide.objects.filter(asset=asset).order_by("id").first()
 
 
+def _media_basename(field_file) -> str:
+    if not field_file:
+        return ""
+    try:
+        return str(field_file.name or "").replace("\\", "/").rsplit("/", 1)[-1]
+    except Exception:
+        return ""
+
+
+def _public_product_image_url(product, imported_row) -> str:
+    """Resolve a public Product-owned URL while preserving imported image identity."""
+    if imported_row is None:
+        return ""
+    filename = _media_basename(getattr(imported_row, "image", None))
+    if product is not None and filename:
+        try:
+            for product_row in product.images.all().order_by("sort_order", "id"):
+                if _media_basename(product_row.image) == filename:
+                    url = _file_url(product_row.image)
+                    if url:
+                        return url
+        except Exception:
+            pass
+    if product is not None:
+        main_url = _file_url(getattr(product, "main_image", None))
+        if main_url:
+            return main_url
+    remote = str(getattr(imported_row, "remote_url", "") or "").strip()
+    return remote if remote.startswith(("https://", "http://")) else ""
+
+
 def _image_rows(asset) -> list[dict]:
     if asset is None:
         return []
+    product = getattr(asset, "product", None)
     output = []
     for row in asset.images.all().order_by("sort_order", "id")[:80]:
-        url = _file_url(row.image) or str(row.remote_url or "").strip()
+        url = _public_product_image_url(product, row)
         if not url:
             continue
         output.append({
@@ -220,7 +252,7 @@ def serialize_slide(slide) -> dict:
         "product_id": getattr(product, "pk", None),
         "product_title": str(getattr(product, "title", "") or getattr(asset, "persian_title", "") or getattr(asset, "title", "") or ""),
         "selected_asset_image_id": getattr(slide, "selected_asset_image_id", None),
-        "selected_image_url": _file_url(getattr(selected, "image", None)) or str(getattr(selected, "remote_url", "") or ""),
+        "selected_image_url": _public_product_image_url(product, selected),
         "image_url": str(slide.image_url or ""),
         "effective_image_url": str(slide.effective_image_url or ""),
         "image_alt_text": str(slide.image_alt_text or ""),

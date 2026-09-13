@@ -5,7 +5,7 @@ import json
 from django.test import TestCase, override_settings
 
 from store.epic49_catalog_profile import ProductCatalogProfile
-from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource, Product
+from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource, Product, ProductImage
 from website.models import HomepageHeroSlide
 
 
@@ -51,6 +51,12 @@ class Epic49UnifiedBridgeTests(TestCase):
             alt_text="تصویر اسلایدر محصول Bridge",
             is_selected=True,
             is_primary=True,
+        )
+        cls.public_image = ProductImage.objects.create(
+            product=cls.product,
+            image="store/products/gallery/bridge.jpg",
+            alt_text="Bridge public product image",
+            sort_order=0,
         )
         cls.profile = ProductCatalogProfile.objects.create(
             product=cls.product,
@@ -127,12 +133,22 @@ class Epic49UnifiedBridgeTests(TestCase):
         self.assertEqual(match["profile"]["sync_revision"], 3)
         self.assertEqual(match["hero_revision"], 2)
         self.assertEqual(match["images"][0]["id"], self.image.pk)
+        self.assertEqual(match["images"][0]["url"], "/media/store/products/gallery/bridge.jpg")
+        self.assertNotIn("/media/store/imported-models/", match["images"][0]["url"])
 
         slides = self.client.get("/api/catalog-bridge/v1/hero-slides/", **HEADERS)
         self.assertEqual(slides.status_code, 200)
         row = next(item for item in slides.json()["items"] if item["id"] == self.slide.pk)
         self.assertEqual(row["focus_keyword"], "خرید محصول Bridge")
         self.assertEqual(row["sync_revision"], 2)
+        self.assertEqual(row["selected_image_url"], "/media/store/products/gallery/bridge.jpg")
+        self.assertNotIn("/media/store/imported-models/", row["selected_image_url"])
+
+        fallback = self.client.get("/api/catalog-bridge/v1/products/?q=BRIDGE-OTHER", **HEADERS)
+        self.assertEqual(fallback.status_code, 200)
+        fallback_item = next(item for item in fallback.json()["items"] if item["id"] == self.other_product.pk)
+        self.assertEqual(fallback_item["images"][0]["url"], "/media/store/products/other.jpg")
+        self.assertNotIn("/media/store/imported-models/", fallback_item["images"][0]["url"])
 
     def test_product_update_increments_revision_and_stale_update_returns_409(self):
         path = f"/api/catalog-bridge/v1/products/{self.product.pk}/sync/"

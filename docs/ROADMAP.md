@@ -1,3 +1,6 @@
+## 2026-09-13 - A2G controlled Product acceptance: public Bridge media hotfix
+
+Product #63 reached Production with valid Product-owned WebP gallery files, but the unified Bridge read contract still serialized ImportedPrintAsset working-media URLs. A narrow no-migration fix now maps imported image identity to Product-owned public gallery media and applies the same rule to Hero selected media. Local focused regression is green. Next: GitHub commit/push -> guarded no-migration Host promotion -> authenticated Bridge/public HTTP verification -> Product #63 guided cart + strict ACK. Bulk remains blocked until that acceptance passes.
 ## 2026-09-13 - Active gate: Phase50.A.2H Storefront Showcase Polish
 
 A2G remains Production-verified at `d7cf71d...`; A2H is the Local-tested visual follow-up. It improves Hero product staging, selected-Variant price presentation and the first-visit theme chooser without changing commerce authority or introducing a migration. Local Django/no-drift, Node 8/8, Playwright responsive and real Home desktop/tablet/mobile gates PASS. Next: dedicated no-migration GitHub-first deploy and Production verification, then the already-required one-Product end-to-end publish acceptance before bulk.

@@ -1,3 +1,5 @@
+## 2026-09-13 - Controlled Product publish acceptance follow-up
+Owner requested uninterrupted continuation through the first real Product acceptance. Product #63 is the controlled candidate. Current blocking defect is narrowed to Bridge public-media serialization; Local fix is tested and must be GitHub-deployed/Production-verified before final selector/cart/ACK acceptance. Multi-product publish remains intentionally locked until this Product passes end to end.
 ## REQ-50-032 - Professional Storefront product showcase and selected-price hierarchy
 Date: 2026-09-13
 Status: `LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.

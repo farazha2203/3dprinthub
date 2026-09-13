@@ -1,3 +1,6 @@
+## 2026-09-13 Controlled Product #63 media acceptance checkpoint
+
+The first real Product exposed one remaining contract bug after successful publication: Product-owned gallery WebPs exist and return HTTP 200, but the unified Bridge read payload referenced private imported working-media and therefore produced 404 URLs. The Local no-migration fix resolves public Bridge Product/Hero image URLs through Product-owned media while retaining imported image IDs for Desktop identity. Focused Bridge/Hero/Admin regression is 31/31 PASS; no schema drift. Status remains `PRODUCTION_VERIFIED / CONTROLLED PRODUCT ACCEPTANCE IN PROGRESS`; bulk remains blocked until the fix is deployed and Product #63 selector/cart/strict-ACK checks pass.
 ## 2026-09-13 Final Production verification checkpoint
 
 Reverse tunnel E2E, authenticated Host identity/worktree, repository read-only Production audit, MySQL/migration plan, in-process/public readiness, Home/Store, authenticated Bridge and live A2G JS/CSS marker gates all PASS at Production source `d7cf71dceca95e191a118336c7004683083278ee`. Store 0036-0042 + Website 0024 are applied; migration plan is empty; readiness is true with no blockers. No DB/Product/media mutation occurred during tunnel onboarding. Phase status is `PRODUCTION_VERIFIED`, not `ACCEPTED`; exactly one controlled real Product publish remains before bounded bulk.

@@ -1,3 +1,10 @@
+## 2026-09-13 - Bridge Product media ownership regression fix
+- Unified Product/hero Bridge payloads now resolve image URLs from Product-owned public media instead of imported working-media.
+- Imported image IDs remain stable for Desktop selection/sync identity.
+- Resolution order: matching ProductImage basename -> Product main image -> safe HTTP(S) source fallback.
+- Added regressions proving Product/hero payloads do not expose `/media/store/imported-models/`.
+- No migration, pricing, stock, Product-data or public-routing expansion.
+- Local focused gate: 31 tests PASS; compile/check/no-drift/diff-check PASS.
 ## 2026-09-13 - Phase50.A.2H Storefront showcase polish
 - added a dedicated professional Hero product stage with separate image/copy composition and responsive mobile stack;
 - improved guided configurator price presentation while preserving server-authoritative Variant price/stock/facts;
