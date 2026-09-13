@@ -1,3 +1,15 @@
+## 2026-09-13 - Phase50.A.2H Storefront showcase Local gate PASS
+
+Status: `A2H LOCAL_TESTED / GITHUB COMMIT+PUSH NEXT / PRODUCTION STILL d7cf71d`.
+
+Canonical branch remains `agent/phase49-3i18-operator-bulk-ai-rebuild`. A2H started from exact Local/live-GitHub `b7fe0e5d8ea8cf8b7df0ad6b11953b92d8a98c5f`; rollback branch `backup/pre-phase50-a2h-storefront-showcase-polish-20260913` points to that baseline. Last verified Production remains `d7cf71dceca95e191a118336c7004683083278ee` and is not claimed to contain A2H yet.
+
+A2H is presentation-only: professional Hero product staging, clearer Variant-price hierarchy, and a collapsed accessible first-visit theme chooser. ProductVariant/API/cart/price/stock/weight/time authority is unchanged. Local tests PASS: Django check, no migration drift, Node 8/8, guided Playwright desktop/tablet/mobile, JS parse, diff-check, and real Home browser QA at 1440/1024/390. Theme toggle ARIA/click/Escape and Persian text encoding PASS.
+
+Local Home QA exposed stale Local SQLite migrations, not a source defect. Before any Local DB write, `D:\projects\3DPrintHub\db.sqlite3` was checksum-backed up at `D:\projects\3dprinthub-backups\phase50-a2h-local-django-20260913-122930`; source/backup SHA256 both `94C1C59ABDA7215BBD4565BA1FC0D1E57C5E821A7E88E063C77806365C3DB22E`. Existing Website 0024 + Store 0041/0042 were then applied locally and the post-plan is empty. Production DB was untouched.
+
+Known unrelated visual debt: older desktop/tablet Home sections still create document-wide horizontal overflow; A2H Hero title/caption themselves remain in viewport and separate from media. Exact next task: create/test A2H no-migration deploy runner, commit/push, verify actual Host state through reverse tunnel, deploy only from GitHub, verify Production, then publish exactly one controlled real Product.
+
 ## 2026-09-13 - Reverse tunnel E2E verified + Phase50.A.2G Production verified
 
 Status: `REVERSE_TUNNEL_E2E_VERIFIED / PHASE50.A.2G PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`.

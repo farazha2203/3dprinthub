@@ -336,8 +336,11 @@
             ];
             summary.innerHTML = `
                 <div class="store-profile-ready"><span aria-hidden="true">&#10003;</span><div><strong>\u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc \u0622\u0645\u0627\u062f\u0647 \u0633\u0641\u0627\u0631\u0634</strong><small>\u0627\u0646\u062a\u062e\u0627\u0628\u200c\u0647\u0627\u06cc \u0634\u0645\u0627 \u06a9\u0627\u0645\u0644 \u0627\u0633\u062a\u061b \u0642\u06cc\u0645\u062a \u0648 \u0645\u0634\u062e\u0635\u0627\u062a \u0627\u0632 \u0647\u0645\u06cc\u0646 \u06af\u0632\u06cc\u0646\u0647 \u0648\u0627\u0642\u0639\u06cc \u0645\u062d\u0635\u0648\u0644 \u0645\u062d\u0627\u0633\u0628\u0647 \u0634\u062f\u0647\u200c\u0627\u0646\u062f.</small></div></div>
-                <div class="store-profile-summary__price"><span>قیمت نهایی هر عدد</span><strong>${formatToman(variant.price)}</strong></div>
-                <p class="store-profile-summary__note">مالیات و هزینه ارسال در تسویه‌حساب محاسبه می‌شوند.</p>
+                <div class="store-profile-summary__price">
+                    <div class="store-profile-summary__price-copy"><span>قیمت این پیکربندی</span><small>قیمت نهایی برای هر عدد</small></div>
+                    <div class="store-profile-summary__price-value"><strong>${formatNumber(variant.price)}</strong><span>تومان</span></div>
+                </div>
+                <div class="store-profile-summary__settlement"><span aria-hidden="true">●</span><p>قیمت از Variant واقعی همین انتخاب خوانده شده است؛ مالیات و ارسال در تسویه‌حساب جدا محاسبه می‌شوند.</p></div>
                 ${variant.profileDescription ? `<p class="store-profile-summary__description">${escapeHtml(variant.profileDescription)}</p>` : ""}
                 <div class="store-profile-summary__facts">
                     ${facts.map(([key, value]) => `<div class="store-profile-fact"><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}

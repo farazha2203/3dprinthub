@@ -1,3 +1,7 @@
+## 2026-09-13 - Active gate: Phase50.A.2H Storefront Showcase Polish
+
+A2G remains Production-verified at `d7cf71d...`; A2H is the Local-tested visual follow-up. It improves Hero product staging, selected-Variant price presentation and the first-visit theme chooser without changing commerce authority or introducing a migration. Local Django/no-drift, Node 8/8, Playwright responsive and real Home desktop/tablet/mobile gates PASS. Next: dedicated no-migration GitHub-first deploy and Production verification, then the already-required one-Product end-to-end publish acceptance before bulk.
+
 ## 2026-09-13 - Reverse management + A2G Production gate complete
 
 Reverse Host management is E2E verified and active: authenticated Windows loopback `127.0.0.1:22024` reaches the Host-only bridge `127.0.0.1:22224`, with Host source restricted to `89.39.208.237/32`. Exact Production/Local/GitHub source at acceptance is `d7cf71dceca95e191a118336c7004683083278ee`. The repository read-only Production audit, MySQL identity, Store 0036-0042 + Website 0024 recorder state, empty migration plan, receiver readiness, public Bridge and A2G static HTTP gates all PASS.

@@ -1,3 +1,7 @@
+## 2026-09-13 - Phase50.A.2H Storefront showcase Local-tested
+
+A2H is a presentation-only follow-up to Production-verified A2G. It adds a professional responsive Hero Product stage, stronger selected-Variant price hierarchy and a compact accessible theme chooser. Local baseline/live GitHub before the delta is `b7fe0e5d8ea8cf8b7df0ad6b11953b92d8a98c5f`; last verified Production remains `d7cf71dceca95e191a118336c7004683083278ee` until deploy. No Product/pricing/inventory/payment authority moves into UI code and no Django migration/dependency is added. Local Django/no-drift, Node 8/8, Playwright responsive and real Home browser gates PASS. A checksum-backed Local-only migration catch-up was required for visual QA; Production DB remained untouched. Next: guarded A2H GitHub deploy/Production verify, then one controlled Product publish.
+
 ## 2026-09-13 - Reverse Tunnel E2E verified / A2G Production verified
 
 The Asal-pattern direct shared-Host transport is now operational end-to-end. Host `89.39.208.237` connects outbound over TCP/443 to Windows `37.255.236.184`, authenticates as dedicated `PrintHubTunnel`, exposes only Windows loopback `22024`, and forwards to authenticated Host loopback bridge `22224`. Local/GitHub/Production identity at verification is exact commit `d7cf71dceca95e191a118336c7004683083278ee`; Production worktree is clean.

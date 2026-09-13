@@ -1,3 +1,9 @@
+## REQ-50-032 - Professional Storefront product showcase and selected-price hierarchy
+Date: 2026-09-13
+Status: `LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
+
+Acceptance: Home Hero must prioritize the Product image and keep editorial copy spatially clear across desktop/tablet/mobile; selected configurator price must be visually unambiguous while remaining sourced from the canonical real ProductVariant; the one-time theme chooser must not obscure the Product by default but must remain keyboard-accessible and retain existing choices/persistence. No pricing/business/migration authority may move into presentation JS/CSS. Local responsive/browser gates PASS; Production remains on the prior verified source until guarded GitHub-first deployment.
+
 ## 2026-09-13 - REQ-50-031/030 verification checkpoint
 Reverse management transport is E2E verified and active at Windows loopback `22024` -> Host bridge `22224`; authenticated Production identity/worktree/audit pass at `d7cf71d...`. Phase50.A.2G is Production verified. Remaining request acceptance is one controlled real Product Windows-to-Site publish with strict ACK, finalized SEO WebP, Product/Profile/Variant, public page/media and cart verification.
 

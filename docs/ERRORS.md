@@ -1,3 +1,22 @@
+### ERR-49-124 - Browser JS was initially executed as Node runtime during A2H validation
+**Date:** 2026-09-13
+**Observed:** direct `node static/js/theme-preview.js` reached valid browser code and failed with `ReferenceError: document is not defined`.
+**Root cause:** a browser DOM script was executed as a Node application instead of syntax-parsed.
+**Correct fix / prevention:** do not repeat the runtime command. Use `node --check` for syntax and the real Playwright browser gate for DOM behavior. Both now PASS.
+
+### ERR-49-123 - New Persian theme-toggle literal was corrupted at the PowerShell write boundary
+**Date:** 2026-09-13
+**Observed:** the first compact theme-toggle edit rendered `????` even though layout behavior worked.
+**Root cause:** Persian literal text crossed the remote PowerShell text boundary used for the source edit.
+**Correct fix / prevention:** restore mature Persian strings from Git HEAD and encode the newly inserted short label as HTML numeric entities; verify no question-mark corruption and then verify browser-visible Persian text. Final browser gate PASS.
+
+### ERR-49-122 - Local Django SQLite lag blocked A2H Home visual QA
+**Date:** 2026-09-13
+**Observed:** Local `/` returned HTTP 500 with `no such column: website_material.catalog_description` while A2H Hero code itself parsed correctly.
+**Root cause:** effective Local SQLite had not applied already-existing Website 0024 and Store 0041/0042 migrations.
+**Correct fix / safety:** verify SQLite identity and exact migration plan; create checksum-identical backup `D:\projects\3dprinthub-backups\phase50-a2h-local-django-20260913-122930`; then apply only the existing pending Local chain. Post-plan is empty and Home returns 200. Production DB was never touched.
+**Prevention:** real Local browser QA must verify Local migration plan first when source references schema newer than the developer SQLite; never interpret a stale Local schema as a Hero/template defect.
+
 ### ERR-49-121 - cPanel FTPS root is account-chrooted for private tunnel state
 **Date:** 2026-09-13
 **Environment:** WinSCP explicit FTPS to the Production cPanel account.

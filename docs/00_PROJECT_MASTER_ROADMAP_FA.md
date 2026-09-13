@@ -1,3 +1,7 @@
+## 2026-09-13 - Phase50.A.2H Storefront visual gate
+
+A2H is Local-tested on top of the Production-verified A2G foundation. Hero presentation now gives the Product a dedicated responsive stage, the configurator emphasizes the actual canonical Variant price, and the first-visit theme chooser is collapsed by default instead of covering the Product. Commerce authority is unchanged and no migration/dependency is introduced. Local Django/no-drift, Node, Playwright and real browser visual gates PASS. Next is GitHub-first no-migration Production deployment, then exactly one real Product publish acceptance before bulk.
+
 ## 2026-09-13 - Reverse Tunnel E2E + A2G Production Verified
 
 The Asal-pattern shared-Host management transport is now E2E verified. Production Host `89.39.208.237` connects outbound over TCP/443 to Windows `37.255.236.184`; dedicated `PrintHubTunnel` exposes only Windows loopback `127.0.0.1:22024`, forwarding to authenticated Host loopback bridge `127.0.0.1:22224`. Local, live GitHub and Production identity were exact at `d7cf71dceca95e191a118336c7004683083278ee`, with a clean Host worktree.

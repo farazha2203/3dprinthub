@@ -1,3 +1,12 @@
+## 2026-09-13 - Phase50.A.2H Storefront showcase polish
+- added a dedicated professional Hero product stage with separate image/copy composition and responsive mobile stack;
+- improved guided configurator price presentation while preserving server-authoritative Variant price/stock/facts;
+- collapsed the first-visit theme chooser into an accessible default-closed toggle with click/Escape behavior;
+- preserved all existing theme choices/persistence;
+- synced stale Local-only Django SQLite through existing Website 0024 + Store 0041/0042 only after a checksum-identical backup; Production DB untouched;
+- Django/no-drift, Node 8/8, Playwright responsive, JS parse, diff-check and real 1440/1024/390 Home browser QA PASS;
+- known desktop/tablet page-wide overflow is from unrelated mature sections, not the new Hero.
+
 ## 2026-09-13 - Reverse tunnel E2E + Phase50.A.2G Production verification
 - ff-only promoted reviewed reverse-management ops/docs to Production with verified rollback bundle `/home/sfkilvrs/3dprinthub-deploy-backups/20260913-094206-reverse-tunnel-onboarding`;
 - established Host outbound SSH/443 -> dedicated Windows `PrintHubTunnel` -> loopback `22024` -> Host authenticated bridge `22224`;
