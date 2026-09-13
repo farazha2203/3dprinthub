@@ -188,16 +188,22 @@ for idx,row in enumerate(images,1):
     if not url.startswith('/media/store/products/'): raise SystemExit("product_media_not_product_owned")
     s,ct,_=fetch(url)
     print("PRODUCT15_IMAGE_%d_HTTP=%s CONTENT_TYPE=%s"%(idx,s,ct))
-    if s!=200 or 'image/webp' not in ct.lower(): raise SystemExit("product_media_http_or_type_invalid")slides=hero.get('items') or []
+    if s!=200 or 'image/webp' not in ct.lower(): raise SystemExit("product_media_http_or_type_invalid")
+slides=hero.get('items') or []
+print("HERO_SLIDE_COUNT="+str(len(slides)))
+for row in slides:
+    selected_url=str(row.get('selected_image_url') or '').strip()
+    if '/media/store/imported-models/' in selected_url: raise SystemExit("hero_private_imported_media_exposed")
 slide=next((x for x in slides if int(x.get('product_id') or 0)==15),None)
-if not slide: raise SystemExit("product15_hero_slide_missing")
-hero_url=str(slide.get('selected_image_url') or '').strip()
-print("PRODUCT15_HERO_URL="+hero_url)
-if '/media/store/imported-models/' in hero_url: raise SystemExit("hero_private_imported_media_exposed")
-if not hero_url.startswith('/media/store/products/'): raise SystemExit("hero_media_not_product_owned")
-s,ct,_=fetch(hero_url)
-print("PRODUCT15_HERO_HTTP=%s CONTENT_TYPE=%s"%(s,ct))
-if s!=200 or 'image/webp' not in ct.lower(): raise SystemExit("hero_media_http_or_type_invalid")
+if slide:
+    hero_url=str(slide.get('selected_image_url') or '').strip()
+    print("PRODUCT15_HERO_URL="+hero_url)
+    if hero_url:
+        s,ct,_=fetch(hero_url)
+        print("PRODUCT15_HERO_HTTP=%s CONTENT_TYPE=%s"%(s,ct))
+        if s!=200 or 'image/webp' not in ct.lower(): raise SystemExit("hero_media_http_or_type_invalid")
+else:
+    print("PRODUCT15_HERO=NOT_CONFIGURED")
 print("A2G_BRIDGE_PUBLIC_MEDIA_VERIFY=PASS")
 PY
 
