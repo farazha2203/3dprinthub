@@ -1,3 +1,7 @@
+## 2026-09-13 Final Production verification checkpoint
+
+Reverse tunnel E2E, authenticated Host identity/worktree, repository read-only Production audit, MySQL/migration plan, in-process/public readiness, Home/Store, authenticated Bridge and live A2G JS/CSS marker gates all PASS at Production source `d7cf71dceca95e191a118336c7004683083278ee`. Store 0036-0042 + Website 0024 are applied; migration plan is empty; readiness is true with no blockers. No DB/Product/media mutation occurred during tunnel onboarding. Phase status is `PRODUCTION_VERIFIED`, not `ACCEPTED`; exactly one controlled real Product publish remains before bounded bulk.
+
 ## 2026-09-13 Operations support checkpoint - reverse Host management
 
 A2G source is now promoted on the Host: read-only FTPS Git evidence shows Production branch HEAD `a320a0d346e4be573504978b23d197dc08f8bc2c`. Public Home, Store and the A2G selector JS/CSS currently return HTTP 200. The earlier deploy runner stopped during immediate post-restart HTTP verification; authenticated Bridge/readiness plus exact Host worktree acceptance still must be repeated before declaring A2G `PRODUCTION_VERIFIED`.
@@ -8,9 +12,9 @@ To remove repeated cPanel operator dependency, the proven Asal shared-cPanel rev
 
 Date: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `HOST SOURCE PROMOTED / PUBLIC HTTP RECOVERED / AUTHENTICATED FINAL ACCEPTANCE + ONE PRODUCT NEXT`
+Status: `PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`
 Rollback: `backup/pre-phase50-a2g-publish-media-order-wizard-20260912` → `02f654b0204266c2d7d329caf85b781c76a56a62`
-Production pre-A2G baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; current Host source: `a320a0d346e4be573504978b23d197dc08f8bc2c`
+Production pre-A2G baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; current Host source: `d7cf71dceca95e191a118336c7004683083278ee`
 
 ## Goal
 Before broad Product publishing, make the complete Product path trustworthy: finalized SEO media on Windows, byte-accurate Batch transfer, idempotent Host import, and a clear responsive customer ordering wizard.
@@ -56,12 +60,12 @@ Historical paid orders, pricing authority, inventory authority, Coupon/VAT, manu
 - `git diff --check`: PASS.
 
 ## Safety
-No Django migration is introduced. Local Catalog media is only read/copied by publish packaging. A2G source/importer changes are now present in Host Git at `a320a0d...`; public Home/Store/new JS/CSS are HTTP 200. Authenticated worktree/Django/migration/readiness acceptance is still required before declaring Production verified. Store 0036–0042 + Website 0024 were previously verified applied.
+No Django migration is introduced. Local Catalog media is only read/copied by publish packaging. A2G runtime plus reverse-management ops are present in Host Git at `d7cf71d...`; authenticated Host worktree/Django/MySQL/migration/readiness acceptance PASSed, and public Home/Store/Bridge/readiness/new JS/CSS are HTTP 200. Store 0036-0042 + Website 0024 are verified applied with an empty migration plan.
 
 ## Next exact gate
 1. Repository state/request/error docs updated for A2G;
 2. exact runtime `e76e555beef7ed549912b89ec2d9d4eecd9c6d8c` is committed/pushed and verified on live GitHub;
 3. checksum-backed canonical Windows gate PASSed on that exact SHA and Catalog Center launched;
-4. Host source promotion is already at `a320a0d...`; do not rerun the old `7d0b3df...` baseline deploy;
-5. complete reverse-tunnel E2E and authenticated Host identity/worktree/Django/migration/readiness verification;
-6. publish exactly one controlled Product Windows → Production and verify Product/Profile/Variant/WebP/public page/strict ACK before bulk publish.
+4. Host source and authenticated reverse-management transport are verified at `d7cf71d...`; do not rerun the old `7d0b3df...` baseline deploy;
+5. reverse-tunnel E2E and authenticated Host identity/worktree/Django/MySQL/migration/readiness verification PASSed;
+6. publish exactly one controlled Product Windows -> Production and verify Product/Profile/Variant/WebP/public page/guided cart/strict ACK before bulk publish.

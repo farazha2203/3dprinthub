@@ -1,3 +1,13 @@
+## 2026-09-13 Reverse management E2E verified constraint
+
+The 3DPrintHub shared Host is now manageable through the proven Asal pattern without inbound Host SSH: Host `89.39.208.237` opens outbound SSH/443 to Windows `37.255.236.184:443`; dedicated non-admin `PrintHubTunnel` exposes only Windows loopback `127.0.0.1:22024`, forwarding to authenticated Host bridge `127.0.0.1:22224`. Both bridge and tunnel background processes were verified alive. Tokens/private keys remain outside Git/chat.
+
+Authenticated identity and repository audit proved Production is `sfkilvrs@nphost4.parsblog.com`, root `/home/sfkilvrs/3dprinthub`, clean branch `agent/phase49-3i18-operator-bulk-ai-rebuild`, source `d7cf71dceca95e191a118336c7004683083278ee`. MySQL/migration/readiness/public HTTP gates pass. This transport authorizes remote diagnostics and guarded repository-owned operations; it does NOT authorize permanent direct Production source edits or bypass GitHub-first, backup, migration-plan or rollback rules.
+
+Windows caveat: running `sshd -t` from a non-elevated process can return 255 because protected OpenSSH host private keys are unreadable to that process even while the Windows `sshd` service is healthy. Do not classify that return code alone as config failure; use elevated validation or verify service/listener/Event Log evidence. FTPS is account-chrooted: `/` maps to `/home/sfkilvrs`, so private Host state is `/.config/...` in WinSCP.
+
+If the reverse tunnel dies, first verify current Local/GitHub/Host identities and protected state, then reuse `scripts/host/phase50_reverse_tunnel_bootstrap.sh`; do not broaden the Windows firewall or expose the Host bridge publicly.
+
 ## 2026-09-13 Reverse Host management transport constraint
 
 3DPrintHub adopts the proven Asal shared-cPanel reverse-management pattern. Windows is prepared with dedicated non-admin `PrintHubTunnel`, project loopback `127.0.0.1:22024`, and source-restricted firewall access only from Host `89.39.208.237/32` to LAN SSH target `192.168.0.23:22`. Public Windows endpoint is `37.255.236.184:443/tcp`.

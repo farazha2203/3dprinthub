@@ -1,3 +1,14 @@
+## 2026-09-13 - Reverse tunnel E2E + Phase50.A.2G Production verification
+- ff-only promoted reviewed reverse-management ops/docs to Production with verified rollback bundle `/home/sfkilvrs/3dprinthub-deploy-backups/20260913-094206-reverse-tunnel-onboarding`;
+- established Host outbound SSH/443 -> dedicated Windows `PrintHubTunnel` -> loopback `22024` -> Host authenticated bridge `22224`;
+- proved Windows OpenSSH accepted the Host `89.39.208.237` public-key connection and both bridge/tunnel processes are running;
+- protected operator token was transferred outside Git/chat into the Windows local security boundary;
+- authenticated Host identity/worktree proof PASS at exact `d7cf71dceca95e191a118336c7004683083278ee`;
+- repository Production read-only audit PASS: Python 3.12.13, Django 6.0.7, exact MySQL DB, Store 0036-0042 + Website 0024 applied, no model drift, empty migration plan, storage/schema/prerequisites healthy;
+- in-process and public publish readiness PASS with no blockers; public Home/Store/A2G JS/CSS and authenticated Bridge endpoints HTTP 200;
+- A2G is now `PRODUCTION_VERIFIED`; one real Product E2E remains before acceptance/bulk publish;
+- no DB migration/write, Product/media mutation, collectstatic or Passenger restart was performed by tunnel onboarding.
+
 ## 2026-09-13 - Reverse Host management transport based on Asal proven standard
 - imported the Asal loopback-authenticated command bridge/operator scripts byte-for-byte;
 - added a 3DPrintHub runbook and shared-cPanel Host bootstrap runner;

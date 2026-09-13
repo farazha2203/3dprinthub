@@ -1,3 +1,17 @@
+## 2026-09-13 - Reverse tunnel E2E verified + Phase50.A.2G Production verified
+
+Status: `REVERSE_TUNNEL_E2E_VERIFIED / PHASE50.A.2G PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`.
+
+Canonical branch is `agent/phase49-3i18-operator-bulk-ai-rebuild`. Local, live GitHub and authenticated Production Host identity were verified at `d7cf71dceca95e191a118336c7004683083278ee`; both Windows and Host worktrees were clean. Production identity through the authenticated reverse bridge is `sfkilvrs@nphost4.parsblog.com`, cwd `/home/sfkilvrs/3dprinthub`, with the canonical origin.
+
+The Asal-pattern shared-host transport is now E2E proven: Host `89.39.208.237` opens outbound SSH/443 to Windows public endpoint `37.255.236.184:443`; Windows OpenSSH accepted the dedicated `PrintHubTunnel` ED25519 public key; `127.0.0.1:22024` is listening and forwards to Host loopback bridge `127.0.0.1:22224`. Authenticated bridge health reports version 1.0.0. Bridge PID `2086137` and tunnel PID `2179441` were both alive at verification. Secrets remain outside Git/chat.
+
+Repository read-only Production audit PASSed on exact Host/GitHub `d7cf71d...`: Python 3.12.13, Django 6.0.7, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, clean worktree, no model drift, Store 0036-0042 + Website 0024 applied, migration plan empty, receiver schema/storage writable, 13 active Materials, 5 active PrintQualities and mysqldump available. In-process publish readiness is `ready=True`, `blockers=[]`. Public Home, Store, guided JS and CSS are HTTP 200; authenticated public Bridge health is HTTP 200/status ok; public publish-readiness is HTTP 200/ready true/no blockers; live JS/CSS contain the A2G markers. Known warnings remain CKEditor4 support/security debt and `store.W026` in-memory channel layer.
+
+Tunnel onboarding performed no migration, database write, Product/media mutation, collectstatic or Passenger restart. The Git-only ops/docs promotion had verified rollback bundle evidence at `/home/sfkilvrs/3dprinthub-deploy-backups/20260913-094206-reverse-tunnel-onboarding`. Phase50.A.2G is therefore `PRODUCTION_VERIFIED`, not `ACCEPTED`.
+
+Exact next task: create a fresh checksum backup of the canonical Windows Catalog SQLite, select exactly one factually ready Product with current finalized SEO WebPs and valid Profile/Variants/pricing, publish only through the existing Catalog Center Batch 8.5 -> FTPS -> authenticated Bridge path, then verify strict ACK, Product/Profile/Variant identity, public WebP media/Product page, guided selector/cart and Local Published transition. Only after that one-Product gate PASSes may bounded multi-product publication begin.
+
 ## 2026-09-13 - Reverse tunnel transport based on Asal proven pattern
 
 Status: `GITHUB_UPDATED / WINDOWS_SIDE_READY / HOST_SOURCE=a320a0d / HOST E2E ONBOARDING NEXT`.

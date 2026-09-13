@@ -1,3 +1,23 @@
+### ERR-49-121 - cPanel FTPS root is account-chrooted for private tunnel state
+**Date:** 2026-09-13
+**Environment:** WinSCP explicit FTPS to the Production cPanel account.
+
+**Observed:** requesting `/home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/...` failed even though bootstrap had created the private state. Listing `/.config/reverse-host-bridge/3dprinthub/` succeeded.
+
+**Root cause:** the FTPS session root maps to `/home/sfkilvrs`; supplying the absolute filesystem home path duplicated the account-home prefix at the FTP boundary.
+
+**Correct fix / prevention:** keep filesystem paths and FTPS-chroot paths distinct. For shell/bridge use `/home/sfkilvrs/...`; for this WinSCP account use `/.config/...`. Never infer one namespace from the other without verification.
+
+### ERR-49-120 - Unelevated Windows `sshd -t` returned 255 despite healthy service/config
+**Date:** 2026-09-13
+**Environment:** owner Windows OpenSSH validation through a non-elevated Remote Desktop process.
+
+**Observed:** manual `sshd -t` returned 255 with no parser diagnostic while the `sshd` service remained Running and listening. Host private-key ACL checks returned Access Denied. Windows OpenSSH Event Log then proved successful public-key authentication from Production Host `89.39.208.237`.
+
+**Root cause:** the non-elevated process could not read protected `C:\ProgramData\ssh\ssh_host_*_key` private keys; the return code alone was not evidence of invalid `sshd_config`.
+
+**Correct fix / prevention:** validate config elevated when required, or distinguish parser failure from host-key ACL by service/listener/Event Log evidence. Never tear down a working tunnel profile solely because unelevated `sshd -t` returns 255.
+
 ### ERR-49-119 - PowerShell reserved `$Host` variable stopped tunnel documentation update safely
 **Date:** 2026-09-13
 **Environment:** Windows repository documentation update through Remote Desktop Commander.

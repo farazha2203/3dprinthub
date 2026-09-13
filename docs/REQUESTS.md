@@ -1,16 +1,19 @@
+## 2026-09-13 - REQ-50-031/030 verification checkpoint
+Reverse management transport is E2E verified and active at Windows loopback `22024` -> Host bridge `22224`; authenticated Production identity/worktree/audit pass at `d7cf71d...`. Phase50.A.2G is Production verified. Remaining request acceptance is one controlled real Product Windows-to-Site publish with strict ACK, finalized SEO WebP, Product/Profile/Variant, public page/media and cart verification.
+
 ## REQ-50-031 - Direct shared-Host management through proven reverse tunnel transport
 Date: 2026-09-13
-Status: `WINDOWS_READY / REPOSITORY_LOCAL_TESTED / HOST E2E ONBOARDING NEXT`.
+Status: `E2E_VERIFIED / ACTIVE OPERATIONS TRANSPORT`.
 
 Required behavior: reuse the proven Asal shared-cPanel pattern instead of requiring inbound Host SSH. Host runs an authenticated loopback-only command bridge, opens outbound SSH/443 to the owner Windows PC, and exposes only project loopback `22024`. 3DPrintHub uses `PrintHubTunnel`, Host bridge `22224`, Windows public endpoint `37.255.236.184:443`, and Host source restriction `89.39.208.237/32`. Secrets stay outside Git/chat and transport never bypasses GitHub-first deploy, backup/rollback, migration or Production verification gates.
 
 ## REQ-50-030 - Publish-ready Product media + professional responsive ordering wizard
 Date: 2026-09-12
-Status: `LOCAL_TESTED / HOST_RUNNER_LOCAL_TESTED / GITHUB UPDATE NEXT`.
+Status: `PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`.
 
 Acceptance: only finalized current SEO WebP media can become Ready; exact WebP filename/bytes must survive Windows-to-Batch-to-Host; changed explicit media refreshes the existing Site identity while identical bytes remain idempotent; desktop_product_id identity is stable from first import; customer ordering remains size -> color -> compatible material -> print quality with professional progress/guidance, keyboard/touch accessibility, mobile/tablet/desktop responsiveness and native canonical Variant fallback. Server price/stock/weight/time remain authoritative.
 
-Local evidence: Catalog 10/10 PASS; Django 16/16 PASS; Node 8/8 PASS; Playwright responsive suite PASS; compile/check/no migration drift/diff check PASS; A2G deploy runner syntax/no-migrate/exact-delta PASS. Production is still `7d0b3df...`; one controlled Product acceptance is required before bulk publication.
+Local evidence: Catalog 10/10 PASS; Django 16/16 PASS; Node 8/8 PASS; Playwright responsive suite PASS; compile/check/no migration drift/diff check PASS; A2G deploy runner syntax/no-migrate/exact-delta PASS. Production is verified at `d7cf71d...`; authenticated audit/readiness/public A2G gates PASS. One controlled Product acceptance is required before bulk publication.
 
 ## REQ-50-029 — Customer guided Product configurator`r`nDate: 2026-09-12`r`nStatus: `PRODUCTION_VERIFIED`.
 

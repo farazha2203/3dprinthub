@@ -1,3 +1,9 @@
+## 2026-09-13 - Reverse Tunnel E2E + A2G Production Verified
+
+The Asal-pattern shared-Host management transport is now E2E verified. Production Host `89.39.208.237` connects outbound over TCP/443 to Windows `37.255.236.184`; dedicated `PrintHubTunnel` exposes only Windows loopback `127.0.0.1:22024`, forwarding to authenticated Host loopback bridge `127.0.0.1:22224`. Local, live GitHub and Production identity were exact at `d7cf71dceca95e191a118336c7004683083278ee`, with a clean Host worktree.
+
+Authenticated Production audit PASS: Python 3.12.13, Django 6.0.7, correct MySQL database, Store 0036-0042 + Website 0024 applied, empty migration plan, 13 active Materials, 5 active PrintQualities, healthy storage/schema, and `publish_readiness.ready=True` with no blockers. Public Home/Store/Bridge/readiness and the A2G JS/CSS are HTTP 200. Phase50.A.2G is `PRODUCTION_VERIFIED`; the remaining acceptance gate is exactly one controlled real Product Windows -> Site publish with SEO WebP, strict ACK, canonical Product/Profile/Variant, public page/media and cart verification before bounded bulk.
+
 ## 2026-09-13 - Reverse Host management operations checkpoint
 
 برای مدیریت مستقیم Host اشتراکی، الگوی اثبات‌شده پروژه Asal وارد 3DPrintHub شده است: bridge احراز هویت‌شده فقط روی loopback Host `127.0.0.1:22224` و reverse SSH خروجی Host به Windows `37.255.236.184:443` با loopback اپراتور `22024`. Windows profile با کاربر اختصاصی `PrintHubTunnel` و Firewall محدود به `89.39.208.237/32` آماده است. این مسیر فقط transport مدیریتی است و قانون GitHub-first/backup/migration/rollback/deploy را تغییر نمی‌دهد.

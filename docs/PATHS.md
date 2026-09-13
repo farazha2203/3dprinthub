@@ -1,3 +1,13 @@
+## 2026-09-13 Reverse tunnel E2E verified paths
+- Current Production/Local/GitHub checkpoint at verification: `d7cf71dceca95e191a118336c7004683083278ee`.
+- Windows operator loopback: `127.0.0.1:22024`; Host bridge loopback: `127.0.0.1:22224`.
+- Windows public endpoint: `37.255.236.184:443`; Windows LAN SSH target: `192.168.0.23:22`; Host source IP: `89.39.208.237`.
+- Windows tunnel identity: `PrintHubTunnel`; authorized key file is protected under `C:\ProgramData\ssh\printhubtunnel_authorized_keys`.
+- Host private tunnel state: `/home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/`; the FTPS account is chrooted so the same location appears in WinSCP as `/.config/reverse-host-bridge/3dprinthub/`.
+- Protected Windows operator token file: `C:\Users\Emad-PC\AppData\Local\3DPrintHub\reverse-host-bridge\operator.token`; record path only, never token value.
+- Production root `/home/sfkilvrs/3dprinthub`; Production Python `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+- Onboarding rollback evidence: `/home/sfkilvrs/3dprinthub-deploy-backups/20260913-094206-reverse-tunnel-onboarding`.
+
 ## 2026-09-13 Reverse tunnel operations paths
 - Reference standard source: Asal branch `ops/reverse-tunnel-remote-management-20260912` / commit `7948a7c`.
 - 3DPrintHub runbook: `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`.

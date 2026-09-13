@@ -1,3 +1,9 @@
+## 2026-09-13 - Reverse management + A2G Production gate complete
+
+Reverse Host management is E2E verified and active: authenticated Windows loopback `127.0.0.1:22024` reaches the Host-only bridge `127.0.0.1:22224`, with Host source restricted to `89.39.208.237/32`. Exact Production/Local/GitHub source at acceptance is `d7cf71dceca95e191a118336c7004683083278ee`. The repository read-only Production audit, MySQL identity, Store 0036-0042 + Website 0024 recorder state, empty migration plan, receiver readiness, public Bridge and A2G static HTTP gates all PASS.
+
+Phase50.A.2G is now `PRODUCTION_VERIFIED`. Next is exactly one controlled Product Windows-to-Production acceptance with finalized SEO WebPs, strict ACK, canonical Product/Profile/Variant, public media/page and guided cart verification. Bulk Product publication remains blocked until that one Product passes. The tunnel changes transport only; development remains Local -> tests -> GitHub -> Host ff-only -> Production verify.
+
 ## 2026-09-13 - Operations gate: 3DPrintHub reverse Host management
 
 Adopt the repository-published Asal reverse-management standard for this shared cPanel Host: loopback authenticated command bridge on Host `127.0.0.1:22224`, outbound Host SSH/443 to the verified Windows public endpoint, and Windows loopback operator port `22024`. Windows side is prepared and source-restricted for declared Host IP `89.39.208.237/32`; Repository operations implementation `180fe16c0e296156ef38ffc00a042c329318ff7c` is on live GitHub. Host onboarding/E2E identity proof is next. This is transport only; normal Local test -> GitHub -> Host ff-only deploy -> Production verify remains mandatory.
