@@ -1,3 +1,11 @@
+### ERR-49-126 - A2G deploy-runner contract scan initially matched a descriptive NO COLLECTSTATIC banner
+**Date:** 2026-09-13
+**Observed:** the first Local runner gate passed compile, focused Bridge tests, Django check and no-migration drift, then the safety scan stopped on `FORBIDDEN_COLLECTSTATIC_FOUND` even though the runner contained no collectstatic command.
+**Root cause:** the test scanned for the bare word `collectstatic` and matched the banner text `NO ... COLLECTSTATIC`.
+**Correct fix:** change only the test condition to search for an executable `manage.py collectstatic` command boundary; keep the runtime runner unchanged. Also verify `manage.py migrate` independently.
+**Verification:** Bash syntax, `git diff --check`, `manage.py migrate` absence and `manage.py collectstatic` absence PASS.
+**Prevention:** safety scanners must match executable command forms rather than descriptive denial text; do not weaken the runner to satisfy a naive grep.
+
 ### ERR-49-125 - Unified Bridge exposed private imported working-media URLs for a published Product
 **Date:** 2026-09-13
 **Observed:** controlled Product #63 was publicly healthy under `store/products/gallery/`, but Bridge Product image payloads still returned `/media/store/imported-models/gallery/...`, which correctly returned HTTP 404 on Production.

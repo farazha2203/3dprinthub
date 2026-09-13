@@ -1,3 +1,7 @@
+## 2026-09-13 - A2G Bridge media hotfix deployment gate
+
+A dedicated fail-closed Production runner is Local-tested for the ERR-49-125 public-media serializer fix. It requires exact clean Host baseline `443d1b70...`, live target equality and ff-only ancestry, forbids migration/dependency/settings drift, creates verified source/environment rollback evidence, performs no DB migration/write or collectstatic, restarts Passenger and verifies Product #15/Hero use only Product-owned public WebPs. Next: commit/push -> guarded Host deploy -> Product #63 selector/cart/strict ACK -> bounded multi-product publish.
+
 ## 2026-09-13 - A2G controlled Product acceptance: public Bridge media hotfix
 
 Product #63 reached Production with valid Product-owned WebP gallery files, but the unified Bridge read contract still serialized ImportedPrintAsset working-media URLs. A narrow no-migration fix now maps imported image identity to Product-owned public gallery media and applies the same rule to Hero selected media. Local focused regression is green and the fix is on live GitHub at `d830a9af05d768f9b81568a0665a74f59e864a34`. Next: guarded no-migration Host promotion -> authenticated Bridge/public HTTP verification -> Product #63 guided cart + strict ACK. Bulk remains blocked until that acceptance passes.

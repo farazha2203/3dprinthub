@@ -1,3 +1,8 @@
+## 2026-09-13 - A2G Bridge media hotfix deploy gate
+- Added `scripts/host/phase50_a2g_bridge_media_hotfix_deploy.sh` for the ERR-49-125 serializer promotion from exact Host baseline `443d1b70...`.
+- Runner is no-migration/no-DB-write/no-collectstatic, creates verified source/.env rollback evidence, uses explicit live GitHub/FETCH_HEAD + ff-only promotion, and verifies authenticated Product #15/Hero public WebP media after Passenger restart.
+- Local bash syntax, `git diff --check` and forbidden-command contract scan PASS.
+
 ## 2026-09-13 - Bridge Product media ownership regression fix
 - Unified Product/hero Bridge payloads now resolve image URLs from Product-owned public media instead of imported working-media.
 - Imported image IDs remain stable for Desktop selection/sync identity.

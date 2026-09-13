@@ -1,3 +1,7 @@
+## 2026-09-13 Bridge public-media hotfix deploy runner checkpoint
+
+Production identity is freshly verified at clean `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. A dedicated no-migration/no-DB-write/no-collectstatic runner is Local-tested to promote the ERR-49-125 Bridge serializer fix only from the live GitHub branch, with verified source/.env rollback evidence, ff-only Git promotion, Passenger restart, authenticated readiness and Product #15/Hero Product-owned WebP verification. Bulk remains blocked until this deploy passes and Product #63 selector/cart/strict ACK acceptance completes.
+
 ## 2026-09-13 Controlled Product #63 media acceptance checkpoint
 
 The first real Product exposed one remaining contract bug after successful publication: Product-owned gallery WebPs exist and return HTTP 200, but the unified Bridge read payload referenced private imported working-media and therefore produced 404 URLs. The Local no-migration fix resolves public Bridge Product/Hero image URLs through Product-owned media while retaining imported image IDs for Desktop identity. Focused Bridge/Hero/Admin regression is 31/31 PASS; no schema drift. The fix is committed/pushed at `d830a9af05d768f9b81568a0665a74f59e864a34`. Status remains `PRODUCTION_VERIFIED / CONTROLLED PRODUCT ACCEPTANCE IN PROGRESS`; bulk remains blocked until the fix is deployed and Product #63 selector/cart/strict-ACK checks pass.

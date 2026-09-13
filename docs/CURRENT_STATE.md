@@ -1,3 +1,9 @@
+## 2026-09-13 - A2G Bridge media hotfix deploy runner LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.
+
+Production was reverified through the authenticated reverse bridge at exact clean Host HEAD `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`, correct branch/repository and healthy receiver. Local/GitHub remain exact at `7da77d30ed8504200c41c99270533631bfeffa21` before this runner delta. A dedicated no-migration/no-DB-write/no-collectstatic runner `scripts/host/phase50_a2g_bridge_media_hotfix_deploy.sh` now guards that exact Host baseline, live GitHub target, reviewed delta, source/.env backup, ff-only promotion, empty migration plan, Passenger restart, authenticated Bridge health/readiness and Product #15 public Product-owned WebP/Hero verification. Bash syntax, diff-check and command-contract scan PASS. Next: commit/push runner, execute it from the exact GitHub target, then finish Product #63 selector/cart/strict-ACK acceptance.
+
 ## 2026-09-13 - A2G one-Product acceptance: Bridge public-media boundary fix LOCAL_TESTED
 
 Status: `GITHUB_UPDATED / PRODUCTION DEPLOY NEXT / BULK STILL BLOCKED`.
