@@ -1,10 +1,16 @@
+## 2026-09-13 Operations support checkpoint - reverse Host management
+
+A2G source is now promoted on the Host: read-only FTPS Git evidence shows Production branch HEAD `a320a0d346e4be573504978b23d197dc08f8bc2c`. Public Home, Store and the A2G selector JS/CSS currently return HTTP 200. The earlier deploy runner stopped during immediate post-restart HTTP verification; authenticated Bridge/readiness plus exact Host worktree acceptance still must be repeated before declaring A2G `PRODUCTION_VERIFIED`.
+
+To remove repeated cPanel operator dependency, the proven Asal shared-cPanel reverse-management transport is being adopted without changing business/runtime authority. Windows side is ready (`PrintHubTunnel`, loopback `22024`, source restriction `89.39.208.237/32`); repository bridge/bootstrap scripts are local-tested. Host E2E onboarding is the next gate. This transport introduces no migration or Product/media write and does not permit direct permanent source edits on Production.
+
 # Phase50.A.2G — Publish-ready Media + Professional Order Wizard
 
 Date: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `GITHUB_UPDATED / CANONICAL WINDOWS GATE PASS / QT LAUNCHED / HOST DEPLOY NEXT`
+Status: `HOST SOURCE PROMOTED / PUBLIC HTTP RECOVERED / AUTHENTICATED FINAL ACCEPTANCE + ONE PRODUCT NEXT`
 Rollback: `backup/pre-phase50-a2g-publish-media-order-wizard-20260912` → `02f654b0204266c2d7d329caf85b781c76a56a62`
-Production baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`
+Production pre-A2G baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; current Host source: `a320a0d346e4be573504978b23d197dc08f8bc2c`
 
 ## Goal
 Before broad Product publishing, make the complete Product path trustworthy: finalized SEO media on Windows, byte-accurate Batch transfer, idempotent Host import, and a clear responsive customer ordering wizard.
@@ -50,12 +56,12 @@ Historical paid orders, pricing authority, inventory authority, Coupon/VAT, manu
 - `git diff --check`: PASS.
 
 ## Safety
-No Django migration is introduced. Local Catalog media is only read/copied by publish packaging. Host importer changes are not on Production yet. Production remains on verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5` with receiver ready and Store 0036–0042 + Website 0024 already applied.
+No Django migration is introduced. Local Catalog media is only read/copied by publish packaging. A2G source/importer changes are now present in Host Git at `a320a0d...`; public Home/Store/new JS/CSS are HTTP 200. Authenticated worktree/Django/migration/readiness acceptance is still required before declaring Production verified. Store 0036–0042 + Website 0024 were previously verified applied.
 
 ## Next exact gate
 1. Repository state/request/error docs updated for A2G;
 2. exact runtime `e76e555beef7ed549912b89ec2d9d4eecd9c6d8c` is committed/pushed and verified on live GitHub;
 3. checksum-backed canonical Windows gate PASSed on that exact SHA and Catalog Center launched;
-4. use the locally tested no-migration A2G Host runner from exact Production baseline `7d0b3df...`;
-5. deploy the approved GitHub target, collect static/restart/verify;
+4. Host source promotion is already at `a320a0d...`; do not rerun the old `7d0b3df...` baseline deploy;
+5. complete reverse-tunnel E2E and authenticated Host identity/worktree/Django/migration/readiness verification;
 6. publish exactly one controlled Product Windows → Production and verify Product/Profile/Variant/WebP/public page/strict ACK before bulk publish.

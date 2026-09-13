@@ -1,3 +1,25 @@
+### ERR-49-119 - PowerShell reserved `$Host` variable stopped tunnel documentation update safely
+**Date:** 2026-09-13
+**Environment:** Windows repository documentation update through Remote Desktop Commander.
+
+**Observed:** the first multi-document update wrote CURRENT_STATE/ROADMAP/PATHS, then stopped when the script attempted to assign a here-string to `$Host`, a read-only automatic PowerShell variable. Later files were not written by that command.
+
+**Correct fix:** inspect and preserve the valid partial diff, continue with non-reserved variable names and absolute repository-rooted paths, and do not reset the earlier valid writes.
+
+**Prevention:** never use PowerShell automatic/reserved names such as `$Host` for document payload variables; fail-fast and inspect partial writes before continuation.
+
+### ERR-49-118 - First elevated Windows tunnel bootstrap stopped after backup before security mutation
+**Date:** 2026-09-13
+**Environment:** owner Windows OpenSSH onboarding for 3DPrintHub reverse management.
+
+**Observed:** bootstrap v1 returned nonzero after creating only an `sshd_config` backup; tunnel user, Match block, authorized-key file and firewall rule were absent and sshd remained healthy.
+
+**Root cause:** the initial user-creation path relied on `net user` empty-password semantics that were not valid in this environment.
+
+**Correct fix:** change the condition before retry: use `New-LocalUser -NoPassword`, retain dedicated non-admin/no-group identity, validate `sshd -t`, then create the source-restricted firewall rule and restart sshd. Bootstrap v2 passed; `PrintHubTunnel` exists, only remote forwarding to `127.0.0.1:22024` is allowed, firewall is restricted to `89.39.208.237/32`, and sshd is running.
+
+**Prevention:** use verified LocalAccounts cmdlets on this Windows host and prove no partial security mutation before retrying a failed elevated bootstrap.
+
 ### ERR-49-117 - Explicit Batch media refresh caused storage suffix churn on identical re-import
 **Date:** 2026-09-12
 **Environment:** Local Django importer regression for Phase50.A.2G Windows-to-Site media publishing.

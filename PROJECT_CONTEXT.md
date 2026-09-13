@@ -1,8 +1,14 @@
+## 2026-09-13 - Reverse Host management checkpoint
+
+The proven Asal shared-cPanel reverse-management standard is now adopted for 3DPrintHub. Windows uses dedicated non-admin `PrintHubTunnel`, source-restricted Host IP `89.39.208.237/32`, public endpoint `37.255.236.184:443`, operator loopback `22024`, and Host authenticated bridge loopback `22224`. The bridge scripts are byte-identical to the Asal reference and local syntax/compile contracts pass.
+
+Read-only FTPS now proves Host branch HEAD `a320a0d346e4be573504978b23d197dc08f8bc2c`; Home, Store and A2G JS/CSS return HTTP 200. Full A2G Production acceptance remains pending authenticated Bridge/readiness + exact Host identity/worktree verification after tunnel E2E. Permanent source changes remain GitHub-first only.
+
 ## 2026-09-12 - Phase50.A.2G publish-ready checkpoint
 
-Current Production remains verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5`, receiver ready on MySQL with Store 0036-0042 + Website 0024 applied. A2G is Local-tested: strict finalized SEO WebP gate and exact Batch bytes, idempotent real Host importer media reconciliation, stable Desktop identity on first import, plus professional responsive size -> color -> material -> quality wizard. Catalog 10/10, Django 16/16, Node 8/8, responsive Playwright, compile/check/no-drift/diff-check and Host runner contract all PASS. No Host/Production mutation yet.
+A2G is Local-tested: strict finalized SEO WebP gate and exact Batch bytes, idempotent real Host importer media reconciliation, stable Desktop identity on first import, plus professional responsive size -> color -> material -> quality wizard. Catalog 10/10, Django 16/16, Node 8/8, responsive Playwright, compile/check/no-drift/diff-check and Host runner contract all PASS. Host source promotion has already advanced Production Git to `a320a0d...`; public Home/Store/new JS/CSS are HTTP 200. Authenticated Bridge/readiness and exact Host worktree verification remain the final A2G Production gate.
 
-Next: no-migration A2G Host runner from `7d0b3df...` to approved runtime `e76e555...` -> Production verification -> one controlled Windows-to-Production Product publish/ACK before bulk.
+Next: reverse-tunnel E2E -> authenticated Host identity/worktree + Django/migration/readiness verification -> one controlled Windows-to-Production Product publish/ACK before bulk.
 
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 

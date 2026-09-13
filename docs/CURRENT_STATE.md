@@ -1,3 +1,16 @@
+## 2026-09-13 - Reverse tunnel transport based on Asal proven pattern
+
+Status: `WINDOWS_SIDE_READY / REPOSITORY_PROFILE_LOCAL_TESTED / HOST_SOURCE=a320a0d / COMMIT+PUSH NEXT / HOST E2E ONBOARDING NEXT`.
+
+The Asal repository operations standard was inspected from branch `ops/reverse-tunnel-remote-management-20260912` at commit `7948a7c`. 3DPrintHub now carries the same byte-identical authenticated loopback bridge/operator scripts with its own project profile. Pre-change Local/GitHub head was `a320a0d346e4be573504978b23d197dc08f8bc2c`; rollback branch is `backup/pre-reverse-tunnel-remote-management-20260912`.
+
+Windows transport preparation is complete: OpenSSH service is running; dedicated non-admin `PrintHubTunnel` exists; password auth/TTY/agent forwarding are disabled by Match policy; only remote forwarding to `127.0.0.1:22024` is permitted; dedicated firewall rule `ChatGPT-ReverseTunnel-3DPrintHub` allows TCP/22 only from declared Host source `89.39.208.237/32` to LAN target `192.168.0.23`; public endpoint remains `37.255.236.184:443/tcp`. Port 22024 is correctly not listening until the Host reverse connection exists.
+
+Shared-host design: Host runs repository `reverse_host_bridge.py` only on `127.0.0.1:22224` using the verified Production Python and a 64-hex token outside Git. Host then opens outbound SSH/443 to the Windows tunnel account with `-R 127.0.0.1:22024:127.0.0.1:22224`. The bridge is transport only and does not bypass GitHub-first deploy, backup, migration, rollback or Production verification rules.
+
+Local operator script parity with Asal: three SHA256 hashes match exactly; Python compile PASS; Git Bash syntax PASS; Windows PowerShell parser PASS. No DB, migration, application dependency, Product data or Production runtime mutation was performed by this operations preparation.
+
+Exact next: commit/push operations profile -> ff-only merge approved operations-only commit from verified Host source `a320a0d...` -> bootstrap protected Host token/key + loopback bridge -> install only the generated public key into Windows authorized_keys -> establish outbound reverse SSH -> require authenticated health + whoami/hostname/pwd/branch/HEAD/worktree identity proof before any remote Host action. If TCP/443 fails, inspect current MikroTik/PBR return path for `89.39.208.237/32`; do not copy Asal's old Host route blindly.
 ## 2026-09-12 - Phase50.A.2G publish-ready media + order wizard LOCAL TESTED
 
 Status: `GITHUB_UPDATED / CANONICAL WINDOWS GATE PASS / QT LAUNCHED / HOST DEPLOY NEXT`. Production remains on verified A2F SHA `7d0b3df03c3657106ebaf86d5f9123ba262495a5`.

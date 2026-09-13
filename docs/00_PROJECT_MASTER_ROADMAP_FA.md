@@ -1,6 +1,12 @@
+## 2026-09-13 - Reverse Host management operations checkpoint
+
+برای مدیریت مستقیم Host اشتراکی، الگوی اثبات‌شده پروژه Asal وارد 3DPrintHub شده است: bridge احراز هویت‌شده فقط روی loopback Host `127.0.0.1:22224` و reverse SSH خروجی Host به Windows `37.255.236.184:443` با loopback اپراتور `22024`. Windows profile با کاربر اختصاصی `PrintHubTunnel` و Firewall محدود به `89.39.208.237/32` آماده است. این مسیر فقط transport مدیریتی است و قانون GitHub-first/backup/migration/rollback/deploy را تغییر نمی‌دهد.
+
+Host source با FTPS به‌صورت read-only روی `a320a0d346e4be573504978b23d197dc08f8bc2c` Verify شده و Home/Store/JS/CSS فعلاً HTTP 200 هستند. Gate بعدی: commit/push ابزارهای ops، Host onboarding E2E، health/identity/worktree verification، سپس تکمیل A2G authenticated Production acceptance و یک Product واقعی.
+
 ## 2026-09-12 - Phase50.A.2G current checkpoint
 
-Production A2F is verified at `7d0b3df03c3657106ebaf86d5f9123ba262495a5`. The active Local slice is A2G: strict finalized SEO-WebP publication, byte-accurate/idempotent Windows-to-Host media import, and professional responsive four-step Storefront ordering. Local focused gates and the A2G no-migration Host-runner contract PASS. Exact runtime `e76e555...` is on live GitHub; the canonical checksum-backed Windows gate PASSed on that SHA and Catalog Center launched. Next is GitHub-first Host promotion and exactly one real Product end-to-end acceptance before bulk.
+A2G implements strict finalized SEO-WebP publication, byte-accurate/idempotent Windows-to-Host media import, and professional responsive four-step Storefront ordering. Local focused gates and the no-migration Host-runner contract PASS; exact runtime `e76e555...` passed the canonical Windows gate. Production Git has now advanced from A2F `7d0b3df...` to `a320a0d...`; public Home/Store/new JS/CSS are HTTP 200. Next is reverse-tunnel E2E plus authenticated Host/Bridge/readiness verification, then exactly one real Product end-to-end acceptance before bulk.
 
 ## 2026-09-12 — Phase50.A.2F PRODUCTION VERIFIED
 

@@ -1,3 +1,9 @@
+## REQ-50-031 - Direct shared-Host management through proven reverse tunnel transport
+Date: 2026-09-13
+Status: `WINDOWS_READY / REPOSITORY_LOCAL_TESTED / HOST E2E ONBOARDING NEXT`.
+
+Required behavior: reuse the proven Asal shared-cPanel pattern instead of requiring inbound Host SSH. Host runs an authenticated loopback-only command bridge, opens outbound SSH/443 to the owner Windows PC, and exposes only project loopback `22024`. 3DPrintHub uses `PrintHubTunnel`, Host bridge `22224`, Windows public endpoint `37.255.236.184:443`, and Host source restriction `89.39.208.237/32`. Secrets stay outside Git/chat and transport never bypasses GitHub-first deploy, backup/rollback, migration or Production verification gates.
+
 ## REQ-50-030 - Publish-ready Product media + professional responsive ordering wizard
 Date: 2026-09-12
 Status: `LOCAL_TESTED / HOST_RUNNER_LOCAL_TESTED / GITHUB UPDATE NEXT`.

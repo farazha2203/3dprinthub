@@ -1,10 +1,20 @@
+## 2026-09-13 Reverse tunnel operations paths
+- Reference standard source: Asal branch `ops/reverse-tunnel-remote-management-20260912` / commit `7948a7c`.
+- 3DPrintHub runbook: `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`.
+- Operator scripts: `scripts/operator/reverse_host_bridge.py`, `start_reverse_host_bridge.sh`, `invoke_reverse_host_bridge.ps1`.
+- Windows public endpoint: `37.255.236.184:443/tcp`; LAN SSH target `192.168.0.23:22`; project loopback `127.0.0.1:22024`.
+- Windows tunnel account: `PrintHubTunnel`; authorized-key file under ProgramData SSH; key value remains outside docs/Git/chat.
+- Windows firewall profile: `ChatGPT-ReverseTunnel-3DPrintHub`, source `89.39.208.237/32`, local `192.168.0.23:22`.
+- Production project root remains `/home/sfkilvrs/3dprinthub`; bridge base is that verified root.
+- Production bridge Python remains `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`; Host bridge loopback port is `22224`.
+- Host private tunnel key and bridge token must live outside Git under the Host account; exact file locations are provisioned during first-use onboarding and then recorded without secret values.
 ## 2026-09-12 A2G current paths / Production baseline
-- Current verified Production application SHA: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
+- Current Host Git source (read-only FTPS verified 2026-09-13): `a320a0d346e4be573504978b23d197dc08f8bc2c`. Full A2G Production acceptance is still pending tunnel-based authenticated verification.
 - Verified A2F backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260912-182234-phase50-a2f-storefront`.
 - Production project: `/home/sfkilvrs/3dprinthub`; venv `/home/sfkilvrs/virtualenv/3dprinthub/3.12`; MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
 - Current A2G phase: `docs/phases/PHASE50_A2G_PUBLISH_MEDIA_ORDER_WIZARD.md`.
 - A2G deploy runner: `scripts/host/phase50_a2g_publish_media_order_wizard_deploy.sh`.
-- Next A2G deploy baseline is exact `7d0b3df...`; older `e12fdaf...` A2F starting-baseline text below is historical.
+- A2G source promotion already advanced Host from `7d0b3df...` to `a320a0d...`; do not rerun the old baseline deploy. Finish authenticated runtime/readiness/worktree acceptance after reverse tunnel onboarding.
 
 ## 2026-09-12 Production/FTPS/deploy paths — live reverified
 

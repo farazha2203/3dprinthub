@@ -1,3 +1,11 @@
+## 2026-09-13 Reverse Host management transport constraint
+
+3DPrintHub adopts the proven Asal shared-cPanel reverse-management pattern. Windows is prepared with dedicated non-admin `PrintHubTunnel`, project loopback `127.0.0.1:22024`, and source-restricted firewall access only from Host `89.39.208.237/32` to LAN SSH target `192.168.0.23:22`. Public Windows endpoint is `37.255.236.184:443/tcp`.
+
+The Host does not require inbound sshd. It runs the authenticated command bridge only on `127.0.0.1:22224`, then opens outbound SSH/443 to Windows with remote forward `127.0.0.1:22024 -> Host 127.0.0.1:22224`. Bridge token and tunnel private key remain outside Git/chat.
+
+Repository onboarding runner: `scripts/host/phase50_reverse_tunnel_bootstrap.sh`. It performs no migration, DB write, Git deploy, collectstatic or Passenger restart. Current Host source was reverified read-only on 2026-09-13 as `a320a0d346e4be573504978b23d197dc08f8bc2c`; public Home/Store and A2G JS/CSS are HTTP 200. Full A2G acceptance still requires authenticated Bridge/readiness and exact Host identity/worktree verification after the tunnel is live.
+
 ## 2026-09-12 Phase50.A.2G current Production constraint
 Production is A2F-verified at exact source `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; MySQL receiver is ready with Store 0036-0042 + Website 0024 applied. A2G promotion must start from that exact clean Host baseline, use live `git ls-remote` + explicit branch fetch/FETCH_HEAD + ff-only merge, prove no migration/requirements/settings delta and an empty migration plan, create verified source/environment/static rollback evidence, then collectstatic/restart/HTTP+Bridge verify. A2G introduces no migration.
 

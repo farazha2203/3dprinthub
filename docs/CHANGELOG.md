@@ -1,3 +1,11 @@
+## 2026-09-13 - Reverse Host management transport based on Asal proven standard
+- imported the Asal loopback-authenticated command bridge/operator scripts byte-for-byte;
+- added a 3DPrintHub runbook and shared-cPanel Host bootstrap runner;
+- prepared dedicated Windows non-admin `PrintHubTunnel`, remote-forward-only policy and firewall restriction for `89.39.208.237/32`;
+- reserved Windows loopback `22024` and Host bridge loopback `22224`;
+- verified Python compile, Git Bash syntax, PowerShell parse, no-DB/no-deploy bootstrap contract and Asal hash parity;
+- no database migration, Product/media mutation or direct Production source edit is part of this transport work.
+
 ## 2026-09-12 - Phase50.A.2G Publish-ready Product media + responsive order wizard
 - fail-closed Ready/Publish unless every selected Product image is a current finalized SEO WebP with complete metadata/signature/SHA;
 - Batch packaging now copies the exact final SEO WebP name and bytes and no longer falls back to original/download media during publish;
