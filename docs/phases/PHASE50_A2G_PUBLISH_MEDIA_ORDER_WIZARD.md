@@ -1,3 +1,7 @@
+## 2026-09-14 ERR-49-131 bounded-sales owner-license parity checkpoint
+
+Status extension: `LOCAL_TESTED / PRODUCTION HOTFIX NEXT / BOUNDED RETRY #628+#634 ONLY`. The first two-Product bounded publish reached FTP/Bridge but both ACKs returned `review_required`. Source-of-truth review proved this was Host contract drift: the explicit 2026-09-01 owner policy uses `source_license_owner_approved=1` as business approval while preserving source license status/text as evidence. Windows readiness/export already honors it. Local Host hotfix applies the same effective rule to importer editorial state, fixed Product conversion and Store visibility; owner-approved `review` is publishable without rewriting the evidence, while unapproved `review` stays blocked. 9 focused + 16 Site + 18 Catalog regressions PASS; no migration drift. Production is unchanged at `44a7be9...` until guarded GitHub-first deployment.
+
 ## 2026-09-13 Bridge public-media hotfix deploy runner checkpoint
 
 Production identity is freshly verified at clean `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. A dedicated no-migration/no-DB-write/no-collectstatic runner is Local-tested to promote the ERR-49-125 Bridge serializer fix only from the live GitHub branch, with verified source/.env rollback evidence, ff-only Git promotion, Passenger restart, authenticated readiness and Product #15/Hero Product-owned WebP verification. Bulk remains blocked until this deploy passes and Product #63 selector/cart/strict ACK acceptance completes.

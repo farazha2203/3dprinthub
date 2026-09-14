@@ -132,6 +132,48 @@ class Epic49UnifiedImportE2ETests(TestCase):
         )
         return root
 
+    def _set_batch_license(self, batch: Path, *, status: str, owner_approved: int) -> None:
+        editorial_path = (
+            batch
+            / "models"
+            / "makerworld_EP49-E2E-001"
+            / "desktop_editorial.json"
+        )
+        data = json.loads(editorial_path.read_text(encoding="utf-8"))
+        data["commercial_status"] = status
+        data["source_license_owner_approved"] = int(owner_approved)
+        editorial_path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    def test_owner_approved_review_license_publishes_and_preserves_source_status(self):
+        batch = self._build_batch()
+        self._set_batch_license(batch, status="review", owner_approved=1)
+        out = StringIO()
+        call_command("phase37_import_catalog_center", str(batch), stdout=out)
+        output = out.getvalue()
+        self.assertIn("STATE=created", output)
+        self.assertIn("PRODUCT_COUNT=1", output)
+        asset = ImportedPrintAsset.objects.get(external_id="EP49-E2E-001")
+        self.assertEqual(asset.commercial_license_status, "review")
+        self.assertEqual(asset.editorial_status, "product")
+        self.assertIsNotNone(asset.product_id)
+        self.assertTrue(Product.objects.get(pk=asset.product_id).is_active)
+
+    def test_review_license_without_owner_approval_remains_review_required(self):
+        batch = self._build_batch()
+        self._set_batch_license(batch, status="review", owner_approved=0)
+        out = StringIO()
+        call_command("phase37_import_catalog_center", str(batch), stdout=out)
+        output = out.getvalue()
+        self.assertIn("STATE=review_required", output)
+        self.assertIn("PRODUCT_COUNT=0", output)
+        asset = ImportedPrintAsset.objects.get(external_id="EP49-E2E-001")
+        self.assertEqual(asset.commercial_license_status, "review")
+        self.assertEqual(asset.editorial_status, "review")
+        self.assertIsNone(asset.product_id)
+
     def test_windows_batch_creates_product_profile_and_cinematic_hero_then_reimport_is_idempotent(self):
         batch = self._build_batch()
         out = StringIO()

@@ -1773,8 +1773,23 @@ class ImportedPrintAsset(models.Model):
         )
 
     @property
+    def source_license_owner_approved(self):
+        payload = self.source_payload if isinstance(self.source_payload, dict) else {}
+        desktop = payload.get("desktop_catalog_v85")
+        if not isinstance(desktop, dict):
+            return False
+        raw = desktop.get("source_license_owner_approved", 0)
+        if isinstance(raw, str):
+            return raw.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(raw)
+
+    @property
     def can_convert_to_fixed_product(self):
-        return self.commercial_license_status in {"allowed", "owned", "public_domain"} and self.fixed_print_price > 0
+        license_ok = (
+            self.commercial_license_status in {"allowed", "owned", "public_domain"}
+            or self.source_license_owner_approved
+        )
+        return license_ok and self.fixed_print_price > 0
 
     @property
     def display_title(self):

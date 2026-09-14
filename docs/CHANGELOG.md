@@ -1,3 +1,10 @@
+## 2026-09-14 - ERR-49-131 owner-license publication parity
+- aligned Host importer, fixed-Product conversion and Store visibility with the existing explicit `source_license_owner_approved` authority;
+- preserved raw source `commercial_status`/license evidence instead of rewriting `review` to an allowed value;
+- retained fail-closed behavior when neither owner approval nor an allowed raw commercial status exists;
+- added positive owner-approved-review and negative unapproved-review E2E/visibility regressions;
+- added guarded no-migration/no-DB-write/no-collectstatic Production runner from verified `44a7be9...` baseline.
+
 ## 2026-09-14 - A2I + Bridge public-media Production verification
 - Deployed exact GitHub commit `44a7be91057c60891960fbb9d9b4f53780273c33` from Production baseline `443d1b70...` with verified rollback bundle/environment/static evidence.
 - Collected and hash-verified A2I CSS, A2I JS and mature Hero engine; restarted Passenger; Home/Store/Bridge/readiness/new assets all HTTP 200.

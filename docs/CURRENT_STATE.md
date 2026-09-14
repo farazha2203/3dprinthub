@@ -1,3 +1,11 @@
+## 2026-09-14 - ERR-49-131 Owner-approved license Host parity LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 44a7be9`.
+
+After Product #63 acceptance unlocked bounded publishing, Products #628 and #634 were sent through the mature FTP/Bridge path but both returned `review_required`; neither was falsely marked uploaded. Repository evidence corrected the initial diagnosis: the canonical 2026-09-01 owner policy intentionally keeps source `commercial_status` as evidence while `source_license_owner_approved=1` is the explicit business approval authority. Windows Stage-5 readiness and `Database.exportable()` already honor this override. Host importer editorial classification, `ImportedPrintAsset.can_convert_to_fixed_product`, and final Store visibility checked only the raw status and therefore disagreed with Desktop.
+
+The Local hotfix introduces one effective-license rule on Host: explicit owner approval OR raw status in allowed/owned/public_domain. It never rewrites source status. Owner-approved `review` can publish; `review` with owner approval disabled remains fail-closed. Verification PASS: touched Python compile, focused 9 Django tests, broader 16 Site regressions, 18 Catalog owner/bulk-publish regressions, Django check with known warnings only, no migration drift, empty migration plan, diff-check, and Git-Bash syntax/contract for `scripts/host/phase50_owner_license_hotfix_deploy.sh`. Rollback branch `backup/pre-err49-131-commercial-license-publish-gate-20260914` is live at exact pre-hotfix `693c7e8...`. Production remains clean `44a7be9...`; exact next: commit/push -> guarded no-migration deploy -> fresh Catalog SQLite backup -> retry exactly #628/#634 -> strict ACK/public page/media/selector/cart verification before widening sales publication.
+
 ## 2026-09-14 - Phase50.A.2I + A2G Bridge PRODUCTION_VERIFIED / CONTROLLED PRODUCT GATE PASS
 
 Status: `PRODUCTION_VERIFIED / PRODUCT63_ACCEPTANCE_PASS / BOUNDED_BULK_UNLOCKED`.

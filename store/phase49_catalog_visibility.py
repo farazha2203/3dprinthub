@@ -8,6 +8,16 @@ from django.utils import timezone
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
 
 
+def catalog_license_allows_publish(status, data: dict) -> bool:
+    """Apply the explicit owner approval without rewriting source license evidence."""
+    raw_owner = data.get("source_license_owner_approved", 0)
+    if isinstance(raw_owner, str):
+        owner_approved = raw_owner.strip().lower() in {"1", "true", "yes", "on"}
+    else:
+        owner_approved = bool(raw_owner)
+    return owner_approved or str(status or "").strip().lower() in ALLOWED_LICENSES
+
+
 @dataclass(frozen=True)
 class VisibilityDecision:
     requested: bool
@@ -55,6 +65,7 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
 
     requested = bool(data.get("publish_as_product") and data.get("approved_for_sale"))
     license_status = str(getattr(asset, "commercial_license_status", "") or "")
+    license_ok = catalog_license_allows_publish(license_status, data)
 
     try:
         category_active = bool(product.category_id and product.category.is_active)
@@ -77,7 +88,7 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
     checks = {
         "requested_for_store": requested,
         "approved_for_sale": bool(data.get("approved_for_sale")),
-        "commercial_license": license_status in ALLOWED_LICENSES,
+        "commercial_license": license_ok,
         "category_active": category_active,
         "main_image": main_image,
         "main_image_storage": main_image_storage,

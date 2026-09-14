@@ -1,3 +1,21 @@
+### ERR-49-132 - Local Bash syntax gate selected WSL stub instead of Git Bash
+**Date:** 2026-09-14
+**Observed:** deploy-runner syntax validation stopped before parsing the runner because `Get-Command bash` resolved to the Windows WSL launcher and no Linux distribution is installed.
+**Root cause:** the validation harness treated a generic `bash` command name as an implementation guarantee on this Windows machine.
+**Correct fix:** do not rerun the unchanged command; select the verified Git for Windows executable explicitly (`C:\Program Files\Git\bin\bash.exe`) and run `-n` there.
+**Verification:** Git Bash parsed `phase50_owner_license_hotfix_deploy.sh` successfully; no-migrate/no-collectstatic and required deployment markers also PASS.
+**Prevention:** Windows repository Bash syntax gates must use the verified Git Bash path unless a real WSL distribution is explicitly verified first.
+
+### ERR-49-131 - Host ignored explicit owner source/license approval during bounded Product publish
+**Date:** 2026-09-14
+**Observed:** the first bounded retry candidates Product #628 and #634 passed all Windows stages/media and reached FTP/Bridge, but Host ACK returned `review_required`; `published=0`, so neither was falsely transitioned to uploaded.
+**Initial diagnosis corrected:** blocking every raw `commercial_status=review` on Windows would contradict the repository's explicit 2026-09-01 owner policy. `source_license_owner_approved=1` is the separate business approval authority; source license status/text must remain evidence and must not be fabricated.
+**Root cause:** Windows readiness and `Database.exportable()` already accepted owner approval, but Host `phase37_import_catalog_center`, `ImportedPrintAsset.can_convert_to_fixed_product`, and `phase49_catalog_visibility` checked only the raw commercial status. The same Batch therefore passed Desktop but failed Host.
+**Correct fix:** define one Host effective-license rule: explicit owner approval OR raw status in `allowed/owned/public_domain`; preserve `commercial_status` unchanged. Persisted Batch owner approval is read from `source_payload.desktop_catalog_v85` for the mature conversion property. `review` without owner approval remains blocked.
+**Regression path:** the first positive E2E exposed the old conversion-property gate via ValidationError, so that underlying condition was fixed before rerun. The next run reached successful conversion and exposed only a stale test expectation (`editorial_status` becomes mature lifecycle `product`, not interim `printable`); test was aligned without weakening runtime.
+**Verification:** focused 9 Django PASS; broader 16 Site PASS; 18 Catalog owner-policy/bulk-publish PASS; compile/check/no migration drift/empty plan/diff-check PASS.
+**Prevention:** every business approval override accepted by Windows export must be represented explicitly in the Batch and enforced identically by Host import, conversion and Store visibility; never translate that approval into fabricated source-license evidence.
+
 ### ERR-49-130 - Production documentation update repeated the reserved PowerShell `$Host` variable failure
 **Date:** 2026-09-14
 **Observed:** after successful Production deploy/acceptance, a multi-document PowerShell update again attempted to assign a here-string to `$Host` and stopped after writing the documents that appeared earlier in the command. This is the same underlying condition already documented by ERR-49-119.

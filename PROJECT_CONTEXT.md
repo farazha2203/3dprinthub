@@ -1,3 +1,7 @@
+## 2026-09-14 - ERR-49-131 owner-license Host contract hotfix LOCAL_TESTED
+
+Bounded publish of Catalog Products #628/#634 reached the mature Host importer but returned `review_required` even though both rows carry the project-wide explicit `source_license_owner_approved=1`. Repository forensics proved the 2026-09-01 owner policy is authoritative: source license text/status remains factual evidence and is never rewritten, while the explicit owner flag permits publication. Windows readiness/export already obeyed that rule; three Host-side gates did not. Local hotfix now aligns importer editorial state, fixed-product conversion and Store visibility with the same effective-license authority while preserving raw `commercial_status=review`. Positive owner-approved and negative unapproved-review regressions pass. Dedicated no-migration/no-DB-write/no-collectstatic deploy runner is Local-tested from exact Production baseline `44a7be9...`.
+
 ## 2026-09-14 - A2I/Bridge Production and Product #63 acceptance complete
 
 Production is clean at `44a7be91057c60891960fbb9d9b4f53780273c33` after the combined no-migration deploy; verified backup is `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. Live Home/Store/Bridge/readiness/A2I assets and Product #15 media are healthy. Stored Windows Product #63 ACK passes the real strict publish predicate and live Product selector/cart wiring resolves Variant 618 correctly. The former one-Product block on bounded multi-product publication is closed.

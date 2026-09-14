@@ -67,6 +67,36 @@ class Phase49VisibilityTests(SimpleTestCase):
         self.assertTrue(product.robots_follow)
         self.assertIn("is_active", product.saved_fields)
 
+    def test_owner_approved_review_license_can_publish_without_rewriting_evidence(self):
+        product = _Product()
+        asset = _Asset()
+        asset.commercial_license_status = "review"
+        data = {
+            "publish_as_product": 1,
+            "approved_for_sale": 1,
+            "source_license_owner_approved": 1,
+        }
+        decision = publish_catalog_product_to_store(product, asset, data)
+        self.assertTrue(decision.visible)
+        self.assertTrue(decision.checks["commercial_license"])
+        self.assertEqual(asset.commercial_license_status, "review")
+
+    def test_review_license_without_owner_approval_still_fails_closed(self):
+        product = _Product()
+        asset = _Asset()
+        asset.commercial_license_status = "review"
+        with self.assertRaises(ValidationError):
+            publish_catalog_product_to_store(
+                product,
+                asset,
+                {
+                    "publish_as_product": 1,
+                    "approved_for_sale": 1,
+                    "source_license_owner_approved": 0,
+                },
+            )
+        self.assertFalse(product.is_active)
+
     def test_missing_main_image_fails_closed(self):
         product = _Product()
         product.main_image = ""

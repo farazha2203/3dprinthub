@@ -1,3 +1,7 @@
+## 2026-09-14 - Start selling with bounded real Product publication
+Status: `IN_PROGRESS / OWNER-LICENSE HOST PARITY LOCAL_TESTED`.
+Owner requested continued development through direct Host access so the site can start selling. The current bounded publication blocker is ERR-49-131: Host must honor the repository's existing explicit owner source/license approval without falsifying source license evidence. Hotfix is Local-tested; next is guarded GitHub-first Production deployment and exact retry of Products #628/#634 before widening the sellable catalog.
+
 ## 2026-09-14 - Professional 3D slider + Product site-send issue Production-verified
 Status: `TECHNICAL_GATE_PASS`.
 The owner-reported regressions around the old/unprofessional slider and Product site-send path are now verified on Production: the managed Home Hero uses the new seven-slice A2I 3D transition on desktop with safe mobile fallback, and the controlled Product #63 is published as Site Product #15 with strict ACK, public Product-owned WebP media, canonical Variant selection and working Cart form wiring. No uncontrolled bulk publish has been started.

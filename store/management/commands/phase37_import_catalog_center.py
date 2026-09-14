@@ -11,7 +11,10 @@ from django.db import transaction
 
 from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource
 from store.phase34b_publishing import convert_to_fixed_product, convert_to_portfolio
-from store.phase49_catalog_visibility import publish_catalog_product_to_store
+from store.phase49_catalog_visibility import (
+    catalog_license_allows_publish,
+    publish_catalog_product_to_store,
+)
 from store.phase49_3i52_site_identity import reconcile_asset_product_identity
 
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
@@ -92,7 +95,8 @@ def upsert_asset(source: PrintCatalogSource, data: dict):
     if commercial not in VALID_LICENSES:
         commercial = "review"
     approved = bool(data.get("approved_for_sale"))
-    editorial = "printable" if approved and commercial in ALLOWED_LICENSES else "review"
+    license_ok = catalog_license_allows_publish(commercial, data)
+    editorial = "printable" if approved and license_ok else "review"
 
     source_tags = safe_json(data.get("tags_json"), [])
     tags_fa = safe_json(data.get("tags_fa_json"), [])
@@ -401,7 +405,10 @@ class Command(BaseCommand):
                     image_count = import_images(asset, editorial_path.parent, data)
                     product = portfolio = None
                     visibility = None
-                    license_ok = asset.commercial_license_status in ALLOWED_LICENSES
+                    license_ok = catalog_license_allows_publish(
+                        asset.commercial_license_status,
+                        data,
+                    )
                     if data.get("publish_as_product") and data.get("approved_for_sale") and license_ok:
                         product = convert_to_fixed_product(asset)
                         apply_phase39_product_intelligence(product, data)
