@@ -1,3 +1,6 @@
+## 2026-09-14 - Owner sales-start request: expand only genuinely orderable Products
+Owner requested that products/site stay current and sales begin immediately. Current accepted sales set is Site Product #16 (#628), #17 (#634), and #18 (#62). Continue widening only after strict Profile/media/license/orderability/Cart gates; do not expose Product #19 (#84) as sellable while its selected black-matte inventory is zero, and do not guess missing facts for #43.
+
 ## 2026-09-14 - Immediate sales truth
 Owner wants current Products/site and immediate selling. The implementation must prefer a smaller actually-orderable catalog over public Products whose Cart is disabled. #62 is eligible for factual repair; #84 stays off Store until its selected black-matte filament has real stock; #43 remains blocked on factual Material/Color.
 

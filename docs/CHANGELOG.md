@@ -1,3 +1,11 @@
+## 2026-09-14 - Product #62 canonical Profile repair and sales acceptance
+- Added no new source schema or migration; used the existing canonical CommerceCore/Profile ledger runtime.
+- Repaired Catalog #62 with verified fixed-price 500,000 Toman, 138 g / 180 min, PLA E-Sun white offer with one real roll.
+- Preserved Host asset 140 and Site Product 18 identity; republish returned published=1 / failed=0 and visible/orderable true.
+- Public Product and Product-owned WebPs return HTTP 200; Variant API exposes orderable Variant 884 at 500,000 Toman.
+- Chromium default-selected Variant 884, enabled Cart and emitted variant_id=884 / quantity=1; request was intercepted before server delivery.
+- Products 16/17/18 are now sales-ready. Product 19 remains non-orderable pending stale-public deployment and factual black-matte stock.
+
 ## 2026-09-14 - ERR-49-138 stale-public orderability
 - Already-public Products that fail current Store orderability are now deactivated and noindexed instead of remaining stale-public after a transaction rollback.
 - Catalog importer marks a committed non-visible republish as `publish_incomplete` and does not increment published Product count.

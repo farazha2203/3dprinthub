@@ -1,3 +1,6 @@
+## 2026-09-14 current sales/Host execution boundary
+Production is freshly verified clean at `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, empty migration plan and publish readiness true. Live GitHub is `07772ca9247357ff63d2395eea9eed70780c9a68` and its stale-public lifecycle tests/CI pass, but the current remote-command safety layer rejects Host Git mutation. Treat this as an execution-channel boundary, not authorization to bypass GitHub-first governance. Read-only verification and verified backups remain allowed; permanent Production source must still move only from approved GitHub code through an authorized Host execution path.
+
 ## 2026-09-14 ERR-49-138 deploy constraint
 Deploy stale-public cleanup only from exact clean Production baseline `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7` using `scripts/host/phase50_stale_public_orderability_deploy.sh`. No migration, dependency, DB migration/write step or collectstatic is permitted by the runner; Product state changes occur later only through the canonical Catalog import path.
 

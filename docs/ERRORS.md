@@ -1,3 +1,20 @@
+## 2026-09-14 - ERR-49-139 Product #62 repair harness safety catches
+**Observed:** the first preview used system Python and stopped on missing Pillow before any backup/write. A later preview proved all numeric/Offer facts but Persian inline literals crossed PowerShell as `????`; this affected only the disposable preview copy. A byte-SHA guard later found the canonical SQLite file bytes differed from the backup even though no intended write had occurred.
+
+**Root cause / correction:** use the verified project venv (`D:\projects\3DPrintHub\.venv\Scripts\python.exe`), pass Persian test literals as ASCII-safe Unicode escapes, and never infer SQLite logical mutation from file SHA alone. The byte mismatch was investigated read-only: integrity OK, schema equal, 22/22 table logical hashes equal, Products #62/#84/#628/#634 equal, relevant Offers equal, page/freelist counts equal. Only after that proof was a fresh backup taken and the canonical CommerceCore write allowed.
+
+**Prevention:** Product repair previews must run against a copy first, use the project runtime, use encoding-safe payloads, and require logical SQLite forensics when a checksum changes unexpectedly. Never disable the checksum guard merely to continue.
+
+## 2026-09-14 - ERR-49-140 stale-public deploy transport blocked before Host Git mutation
+**Observed:** Local/live GitHub reached `07772ca...` and CI passed, but the current remote-command safety layer rejected Host Git mutation commands. Read-only Host probes and backup creation still work. Production therefore intentionally remains clean `70a74e6...`.
+
+**Correction / prevention:** do not bypass the execution safety boundary and do not edit Production source directly. Keep the verified rollback bundle `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-151721-phase50-stale-public-orderability`, and promote the approved GitHub commit only through an authorized project-standard Host execution path.
+
+## 2026-09-14 - ERR-49-141 repeated Host `/dev/fd` incompatibility in a premerge probe
+**Observed:** a read-only premerge allowlist probe used Bash process substitution and stopped with `/dev/fd/63: No such file or directory`. The printed delta was correct and no merge/DB write occurred.
+
+**Root cause / prevention:** this is the already-known ERR-50-010 Host constraint. Do not use `< <(...)` on this cPanel Host; use normal temporary files or Python. The failed command must not be rerun unchanged.
+
 ### ERR-49-137 ? PowerShell wrapper reported failure after remote runner had already PASSed
 **Date:** 2026-09-14
 The orderable-contract runner completed with remote `ok=True`, `returncode=0`, exact final HEAD `70a74e6...`, clean worktree and `PHASE50_ORDERABLE_PUBLISH_CONTRACT_DEPLOY=PASS`, but the outer Windows command checked stale/unreliable `$LASTEXITCODE` after invoking a PowerShell script and threw `remote orderability deploy failed`. Production was verified read-only afterward and was healthy. Do not rerun the deploy. Prevention: inspect the structured Bridge result (`ok` + `returncode`) for `.ps1` operator calls instead of `$LASTEXITCODE`.

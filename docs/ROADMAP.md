@@ -1,10 +1,22 @@
+## 2026-09-14 - Sales expansion checkpoint: Product #62 accepted
+- [x] Repair Catalog #62 with one canonical factual Profile using the mature CommerceCore ledger path.
+- [x] Preserve existing Host/Site identity: asset 140 / Product 18.
+- [x] Create fresh Catalog + Production MySQL rollback backups before writes.
+- [x] Republish #62 through Batch 8.5 -> FTP -> Bridge; strict visibility/orderability/public-media checks PASS.
+- [x] Real Chromium Cart acceptance: Variant 884, 500,000 Toman, quantity 1; POST intercepted before server.
+- [x] Confirm current orderable Production set: Site Products 16, 17, 18.
+- [ ] Deploy GitHub-approved `07772ca...` stale-public lifecycle fix through an authorized Host execution path.
+- [ ] Republish #84; keep Product 19 inactive/noindex while selected black-matte stock remains zero.
+- [ ] Audit the next factual ready subset; do not guess #43 Material/Color/image metadata.
+
 ## 2026-09-14 - ERR-49-138 stale-public gate
 - [x] Prove #18/#19 active but 0 orderable Variants on Production.
 - [x] Add committed deactivation/noindex path for already-public non-orderable Products.
 - [x] Importer reports `publish_incomplete` and excludes non-visible Product from published count.
 - [x] 19 focused E2E/visibility/Variant tests + no-drift PASS.
-- [ ] Commit/push/deploy from exact `70a74e6...`.
-- [ ] Repair #62 with factual fixed-price/PLA-white/Profile data and republish.
+- [x] Commit/push ERR-49-138 source from exact `70a74e6...` baseline to GitHub (`07772ca...`).
+- [x] Repair #62 with factual fixed-price/PLA-white/Profile data and republish; Chromium Cart acceptance PASS.
+- [ ] Deploy `07772ca...` to Production through an authorized Host mutation path.
 - [ ] Republish #84 fail-closed; keep off Store until selected black-matte inventory is real.
 
 ## 2026-09-14 - Active sales gate: ERR-49-135 real orderability
@@ -12,9 +24,10 @@
 - [x] Detect #62/#84 false-positive visibility: public but no orderable Variant.
 - [x] Local contract fix: canonical Profile required before FTP + shared Store orderability + visibility orderable gate.
 - [x] Local compile/tests/check/no-drift/runner syntax gates PASS.
-- [ ] Commit/push exact hotfix and verify GitHub head/CI.
-- [ ] Guarded no-migration Production deploy from exact `6569e5a...`.
-- [ ] Backup Catalog, bootstrap canonical Profiles for #62/#84, republish same identities, require live Cart PASS.
+- [x] Commit/push exact orderability hotfix and verify GitHub head/CI.
+- [x] Guarded no-migration Production deploy from exact `6569e5a...` to `70a74e6...`.
+- [x] Backup Catalog and repair/re-publish #62 same identity; live Cart PASS.
+- [ ] Repair/republish #84 only when lifecycle fix is live; current selected black-matte stock is zero.
 - [ ] Keep #43 blocked until factual Material/Color and current image metadata are complete.
 
 ## 2026-09-14 - Sales launch gate passed

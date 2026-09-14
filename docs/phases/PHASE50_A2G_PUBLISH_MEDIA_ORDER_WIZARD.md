@@ -1,3 +1,6 @@
+## 2026-09-14 Product #62 controlled expansion acceptance PASS
+A2G bounded publication now has a third customer-orderable Product. Catalog #62 was repaired through the canonical Profile ledger and republished to existing Site Product #18. Strict ACK/public media/visibility/orderability passed; public API exposes orderable Variant 884 with E-Sun white stock, 138 g, 180 min and 500,000 Toman. Chromium selected Variant 884 by default, kept legacy Variant 877 disabled, enabled Cart and emitted the exact variant/quantity POST, intercepted before server delivery. Product #19/#84 is explicitly not accepted: selected black-matte stock is zero and it has no orderable Variant. The approved stale-public lifecycle fix is on GitHub at `07772ca...` but Production remains `70a74e6...` until an authorized deployment path can promote it.
+
 ## 2026-09-14 - Stale-public fail-closed extension
 A2G acceptance now includes lifecycle cleanup: a Product already public under an older weaker contract must be deactivated/noindexed when republish proves it has no actually orderable Variant. Local ERR-49-138 regression PASS; Production deploy and Product #62/#84 repair are next.
 

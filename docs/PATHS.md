@@ -1,3 +1,12 @@
+## 2026-09-14 Product #62 acceptance / stale-public pending paths
+- Local/live GitHub source: `07772ca9247357ff63d2395eea9eed70780c9a68`.
+- Current verified Production source: `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7` (clean).
+- Product #62 canonical pre-write Catalog backup: `D:\projects\3dprinthub-backups\phase50-profile62-write-20260914-152628\catalog-before-profile62-write.sqlite3`.
+- Product #62 Production prepublish MySQL backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-152920-product62-prepublish/database-before-3i53.sql.gz`.
+- Stale-public source/env rollback bundle: `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-151721-phase50-stale-public-orderability`.
+- Catalog #62 -> Host asset 140 -> Site Product 18 `/store/product/fanart-solidarity-bear/` -> orderable Variant 884.
+- Catalog #84 -> Site Product 19 `/store/product/halloween-samhain-pumpkin-led-goth-tealight-holder/`; currently 0 orderable Variants.
+
 ## 2026-09-14 ERR-49-138
 - Stale-public deploy runner: `scripts/host/phase50_stale_public_orderability_deploy.sh`.
 - Rollback branch: `backup/pre-err49-138-stale-public-orderability-20260914` -> `70a74e6...`.
