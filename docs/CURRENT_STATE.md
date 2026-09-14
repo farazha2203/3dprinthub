@@ -1,3 +1,14 @@
+## 2026-09-14 - Phase50.A.2I + A2G Bridge PRODUCTION_VERIFIED / CONTROLLED PRODUCT GATE PASS
+
+Status: `PRODUCTION_VERIFIED / PRODUCT63_ACCEPTANCE_PASS / BOUNDED_BULK_UNLOCKED`.
+
+Production was promoted GitHub-first from clean `443d1b70ecdf59e26b106d8887d56cb0e61ece8d` to exact approved commit `44a7be91057c60891960fbb9d9b4f53780273c33` with `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh`. Verified rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. MySQL identity is correct, all required Store 0036-0042 + Website 0024 migrations are applied, migration plan stayed empty, publish readiness stayed true with no blockers, source/env/static backup hashes passed, collectstatic copied the three changed Hero assets, Passenger restarted, and final Host worktree is clean.
+
+Public verification PASS: Home/Store/Bridge health/readiness/Product #15/Hero API/A2I CSS/A2I JS/mature Hero engine all HTTP 200. Product #15 exposes exactly two Product-owned gallery WebPs and both return image/webp 200; no private `store/imported-models` URL is exposed. Production browser QA found five Hero slides, exactly seven temporary A2I slices during desktop transition and zero after cleanup, zero slices on 390px mobile and exact 390px document width.
+
+The existing controlled Windows Product #63 ACK was re-read from canonical Catalog SQLite read-only and passed the actual strict runtime predicate: status `created`, server id `138`, Site Product `15`, `visible_on_store=True`, `public_http_ok=True`, Product URL `/store/product/flexi-gecko/`, and `ack_item_confirms_publish(..., require_store_visibility=True)=True`. Local state is `uploaded`, `upload_ready=0`, sync error empty. Production Product browser QA resolved canonical Variant `618`, showed price `2,303,200` Toman, enabled Cart and generated the real POST payload for variant 618 / quantity 1; the request was intercepted before server delivery so no test order/cart DB mutation was created. The only zero-width image was the intentional lightbox `<img>` placeholder with no `src`, not broken Product media.
+
+ERR-49-128/129 record two acceptance-harness-only corrections (receipt schema introspection and Windows console encoding). Exact next engineering gate: bounded multi-product publication may begin with a small factually-ready set; parallel Phase50 finance/payment/admin development may continue. Owner visual review of the live Hero remains useful but is no longer a technical blocker for the controlled Product publication path.
 ## 2026-09-14 - Phase50.A.2I combined Bridge + Hero deploy runner LOCAL_TESTED
 
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.

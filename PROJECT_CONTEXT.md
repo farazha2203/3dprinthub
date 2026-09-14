@@ -1,3 +1,6 @@
+## 2026-09-14 - A2I/Bridge Production and Product #63 acceptance complete
+
+Production is clean at `44a7be91057c60891960fbb9d9b4f53780273c33` after the combined no-migration deploy; verified backup is `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. Live Home/Store/Bridge/readiness/A2I assets and Product #15 media are healthy. Stored Windows Product #63 ACK passes the real strict publish predicate and live Product selector/cart wiring resolves Variant 618 correctly. The former one-Product block on bounded multi-product publication is closed.
 ## 2026-09-14 - A2I combined deploy continuation checkpoint
 
 Local/live GitHub are exact at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`; authenticated Production identity is clean at `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. A combined repository-owned deploy runner is Local-tested to promote both the Product-owned Bridge media fix and A2I Slicebox-inspired Hero, including collectstatic/static hash verification and no-migration/readiness guards. Production is still unchanged. Next is rollback branch + commit/push, then GitHub-first combined deploy and Product #63 final acceptance.

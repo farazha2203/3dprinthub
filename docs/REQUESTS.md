@@ -1,3 +1,6 @@
+## 2026-09-14 - Professional 3D slider + Product site-send issue Production-verified
+Status: `TECHNICAL_GATE_PASS`.
+The owner-reported regressions around the old/unprofessional slider and Product site-send path are now verified on Production: the managed Home Hero uses the new seven-slice A2I 3D transition on desktop with safe mobile fallback, and the controlled Product #63 is published as Site Product #15 with strict ACK, public Product-owned WebP media, canonical Variant selection and working Cart form wiring. No uncontrolled bulk publish has been started.
 ## 2026-09-14 - Continue current 3DPrintHub development from repository truth
 Status: `IN_PROGRESS`.
 The active requested continuation is to finish the professional 3D Hero/public Product publishing path from the verified repository state, not from chat memory. The immediate delivery gate is the combined A2I Hero + ERR-49-125 Bridge public-media Production promotion followed by Product #63 selector/cart/strict-ACK acceptance before any bounded bulk publication.

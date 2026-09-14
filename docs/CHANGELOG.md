@@ -1,3 +1,8 @@
+## 2026-09-14 - A2I + Bridge public-media Production verification
+- Deployed exact GitHub commit `44a7be91057c60891960fbb9d9b4f53780273c33` from Production baseline `443d1b70...` with verified rollback bundle/environment/static evidence.
+- Collected and hash-verified A2I CSS, A2I JS and mature Hero engine; restarted Passenger; Home/Store/Bridge/readiness/new assets all HTTP 200.
+- Verified Product #15 exposes only Product-owned public WebPs; Product #63 stored strict ACK confirms public visibility and HTTP success.
+- Real browser QA: seven desktop Hero slices with cleanup, mobile fallback at 390px, canonical Variant 618 + 2,303,200 Toman price, and intercepted Cart POST without server mutation.
 ## 2026-09-14 - Phase50.A.2I combined deploy gate
 - Added `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh` for the exact Production `443d1b70...` -> current GitHub promotion.
 - Runner combines ERR-49-125 Product-owned Bridge media correction with A2I Hero static deployment, verified backups, collectstatic hash checks, restart and authenticated/public verification.

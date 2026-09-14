@@ -19,7 +19,7 @@ To remove repeated cPanel operator dependency, the proven Asal shared-cPanel rev
 
 Date: 2026-09-12
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`
+Status: `PRODUCTION_VERIFIED / CONTROLLED PRODUCT ACCEPTANCE PASS / BOUNDED BULK UNLOCKED`
 Rollback: `backup/pre-phase50-a2g-publish-media-order-wizard-20260912` → `02f654b0204266c2d7d329caf85b781c76a56a62`
 Production pre-A2G baseline: `7d0b3df03c3657106ebaf86d5f9123ba262495a5`; current Host source: `d7cf71dceca95e191a118336c7004683083278ee`
 
@@ -76,3 +76,6 @@ No Django migration is introduced. Local Catalog media is only read/copied by pu
 4. Host source and authenticated reverse-management transport are verified at `d7cf71d...`; do not rerun the old `7d0b3df...` baseline deploy;
 5. reverse-tunnel E2E and authenticated Host identity/worktree/Django/MySQL/migration/readiness verification PASSed;
 6. publish exactly one controlled Product Windows -> Production and verify Product/Profile/Variant/WebP/public page/guided cart/strict ACK before bulk publish.
+
+## 2026-09-14 controlled Product acceptance PASS
+Combined Production source is `44a7be91057c60891960fbb9d9b4f53780273c33`. Product #63 stored ACK passes `ack_item_confirms_publish(..., require_store_visibility=True)` with Site Product #15, `visible_on_store=True`, `public_http_ok=True`, and Local state `uploaded`. Product #15 public WebPs return 200/image-webp and no imported working-media URL is public. Live selector resolves Variant 618 and Cart wiring produces the correct variant/quantity POST; the acceptance request was intercepted before server delivery, so no test order mutation occurred. The one-Product prerequisite is closed; only bounded factually-ready publishing is now permitted.

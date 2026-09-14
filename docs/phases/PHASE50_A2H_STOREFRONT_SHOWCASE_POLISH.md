@@ -2,7 +2,7 @@
 
 Date: 2026-09-13
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `PRODUCTION_VERIFIED / ONE CONTROLLED PRODUCT ACCEPTANCE NEXT`
+Status: `PRODUCTION_VERIFIED / CONTROLLED PRODUCT ACCEPTANCE PASS / BOUNDED BULK UNLOCKED`
 Pre-phase Local/GitHub baseline: `b7fe0e5d8ea8cf8b7df0ad6b11953b92d8a98c5f`
 Rollback branch: `backup/pre-phase50-a2h-storefront-showcase-polish-20260913` -> `b7fe0e5d...`
 Verified A2H Production source: `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`
@@ -69,3 +69,6 @@ A2H introduced no Django migration file, dependency, settings, Product data, pri
 4. Publish only through the existing Batch 8.5 -> FTPS -> authenticated Bridge path.
 5. Verify strict ACK, Product/Profile/Variant identity, public WebP media/Product page, guided selector/cart and Local Published transition.
 6. Only after that one-Product gate PASSes may bounded multi-product publication begin.
+
+## 2026-09-14 controlled Product gate closed
+The Product #63 -> Site #15 strict ACK/public-media/selector/cart acceptance now passes on Production `44a7be9...`. Therefore A2H has crossed its previously documented one-Product acceptance prerequisite. Existing commerce authority remains unchanged; bounded multi-product publication may proceed under the same strict gates.

@@ -1,3 +1,26 @@
+### ERR-49-130 - Production documentation update repeated the reserved PowerShell `$Host` variable failure
+**Date:** 2026-09-14
+**Observed:** after successful Production deploy/acceptance, a multi-document PowerShell update again attempted to assign a here-string to `$Host` and stopped after writing the documents that appeared earlier in the command. This is the same underlying condition already documented by ERR-49-119.
+**Root cause:** the new documentation command violated the existing prevention rule and reused the read-only automatic variable name `$Host`.
+**Correct fix:** do not reset valid partial writes. Inspect `git status`/diff and file readback, then continue only the missing document with a non-reserved variable name (`$hostEntry`).
+**Verification:** CURRENT_STATE/ROADMAP/master/CHANGELOG/REQUESTS/PROJECT_CONTEXT/PATHS partial writes were confirmed intact; HOST_CONSTRAINTS was then updated separately. No source/runtime/Production mutation was caused by this documentation harness error.
+**Prevention:** PowerShell documentation payload variables must never use automatic/reserved names; reuse the ERR-49-119 safe naming rule explicitly in future multi-file edits.
+
+### ERR-49-129 - Production browser QA output hit Windows cp1252 on Persian text
+**Date:** 2026-09-14
+**Observed:** Product page loaded HTTP 200 and Hero QA had already passed, but the first Product browser harness stopped while printing the Persian H1 with `UnicodeEncodeError` from the Windows cp1252 console boundary.
+**Root cause:** the diagnostic script printed Persian text directly to a legacy console encoding; the web page/runtime itself was healthy.
+**Correct fix:** keep browser behavior unchanged and make diagnostic output ASCII-safe with `json.dumps(..., ensure_ascii=True)` before continuing Product controls/image/cart inspection.
+**Verification:** corrected harness completed Product page inspection, selector/price/cart wiring and media diagnostics successfully.
+**Prevention:** Remote Windows acceptance scripts should serialize non-ASCII UI text safely instead of relying on the process console code page.
+
+### ERR-49-128 - Read-only Product #63 receipt probe guessed a nonexistent `event_type` column
+**Date:** 2026-09-14
+**Observed:** the first read-only acceptance query successfully returned Product #63 state, then failed on `sync_receipts.event_type` because the actual table uses `status`.
+**Root cause:** the diagnostic query guessed the receipt schema instead of introspecting it first.
+**Correct fix:** do not rerun the guessed query. Inspect `PRAGMA table_info(sync_receipts)` read-only, then query the verified columns `id, product_id, batch_uuid, status, server_id, payload_json, created_at`.
+**Verification:** the corrected read-only query recovered the real successful ACK and the runtime strict predicate returned `True` with Product #63 still `uploaded` and sync error empty.
+**Prevention:** SQLite diagnostic/acceptance probes must introspect actual schema before referencing columns, even when similar event-ledger tables use different names.
 ### ERR-49-127 - PowerShell rollback push refspec was corrupted by colon interpolation
 **Date:** 2026-09-14
 **Observed:** the first rollback-branch push failed locally with `fatal: invalid refspec 'refs/heads//heads/backup/pre-phase50-a2i-combined-deploy-20260914'`. The local rollback branch itself had already been created correctly at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`; no source, Production or database mutation occurred.

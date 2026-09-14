@@ -1,3 +1,6 @@
+## 2026-09-14 - A2I/Bridge Production gate complete
+
+Production is verified at `44a7be91057c60891960fbb9d9b4f53780273c33`; backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. A2I desktop seven-slice Hero/mobile fallback, Product-owned Bridge media, Product #63 -> Site #15 strict ACK, Variant 618 selector and no-write Cart wiring all PASS. The controlled one-Product gate is closed and bounded multi-product publication is now permitted. Continue with a small factually-ready batch plus Phase50 finance/payment/admin track; do not widen to uncontrolled bulk.
 ## 2026-09-13 - Phase50.A.2H Storefront visual gate
 
 A2H is Local-tested on top of the Production-verified A2G foundation. Hero presentation now gives the Product a dedicated responsive stage, the configurator emphasizes the actual canonical Variant price, and the first-visit theme chooser is collapsed by default instead of covering the Product. Commerce authority is unchanged and no migration/dependency is introduced. Local Django/no-drift, Node, Playwright and real browser visual gates PASS. Next is GitHub-first no-migration Production deployment, then exactly one real Product publish acceptance before bulk.

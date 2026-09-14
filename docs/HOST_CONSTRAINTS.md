@@ -1,3 +1,6 @@
+## 2026-09-14 A2I + Bridge current Production constraint
+
+Current verified Production source is `44a7be91057c60891960fbb9d9b4f53780273c33`, clean after the combined A2I + ERR-49-125 promotion. MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`; required migrations are applied and plan is empty; publish readiness is true. Verified rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. Do not rerun the old Bridge-only `443d1b70` baseline runner. Future deployment planning must start from fresh read-only verification of this newer Host state.
 ## 2026-09-13 Reverse management E2E verified constraint
 
 The 3DPrintHub shared Host is now manageable through the proven Asal pattern without inbound Host SSH: Host `89.39.208.237` opens outbound SSH/443 to Windows `37.255.236.184:443`; dedicated non-admin `PrintHubTunnel` exposes only Windows loopback `127.0.0.1:22024`, forwarding to authenticated Host bridge `127.0.0.1:22224`. Both bridge and tunnel background processes were verified alive. Tokens/private keys remain outside Git/chat.

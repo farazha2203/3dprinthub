@@ -1,3 +1,8 @@
+## 2026-09-14 A2I + Bridge verified Production checkpoint
+- Verified Production source: `44a7be91057c60891960fbb9d9b4f53780273c33` on canonical branch.
+- Combined deploy runner: `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh`.
+- Verified rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`.
+- Production root/Python/MySQL/static/media paths are unchanged from the verified reverse-tunnel profile.
 ## 2026-09-13 Reverse tunnel E2E verified paths
 - Current Production/Local/GitHub checkpoint at verification: `d7cf71dceca95e191a118336c7004683083278ee`.
 - Windows operator loopback: `127.0.0.1:22024`; Host bridge loopback: `127.0.0.1:22224`.
