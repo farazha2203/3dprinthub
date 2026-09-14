@@ -1,3 +1,14 @@
+## 2026-09-14 - ERR-49-145 Qt6 CI retained obsolete three-large-column gallery assertion
+**Observed:** GitHub run `34864938351` for ERR-49-144 failed one test: `test_image_stage_uses_three_large_column_cards_with_size_and_seo_facts`, asserting `grid.columns == 3` while the accepted runtime intentionally uses four compact columns. All neighboring tests in that job passed; three other workflows on the same commit also passed.
+
+**Root cause:** the visual contract test from the earlier large-card layout was not included in the first focused 77-test regression set. The implementation and owner requirement had moved to a compact four-column gallery, but this older parity assertion still encoded the superseded design.
+
+**Correction:** rename/update only that parity contract to require four compact columns while preserving its image width/height/bytes/Alt and Slider assertions. No runtime, database, migration, publish or media behavior changed by this correction.
+
+**Verification:** exact failed GitHub suite (`tests.test_phase49_3i42_qt6_foundation` + `tests.test_phase49_3i42b_core_parity`) now passes 23/23 locally. Do not rerun the failed GitHub command unchanged; push the changed test condition and require a fresh green workflow.
+
+**Prevention:** when an owner-requested visual contract intentionally changes density/layout, search all parity tests for the old design wording and assertions in addition to running the focused feature suite.
+
 ## 2026-09-14 - ERR-49-144 Published lifecycle and Product gallery conflated dirty/source state with customer-visible state
 **Observed:** already-published Products disappeared from the Qt `Sent / Published` workspace after any Local edit set `needs_update=1`. Older Products could also show roughly 60 broken/empty image cards because the gallery iterated raw source URLs even when only 16 or 25 local files actually existed; the three-column cards were unnecessarily large.
 

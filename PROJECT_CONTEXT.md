@@ -1,3 +1,6 @@
+## 2026-09-14 - ERR-49-144 pushed runtime + ERR-49-145 CI contract correction
+ERR-49-144 runtime/docs checkpoint is on GitHub at `1a5ba6a...`; fresh Catalog rollback backup is checksum-identical and integrity-verified, and the pushed Qt runtime is running as PID 54440. Three workflows passed. The only failed Qt6 workflow was ERR-49-145, an obsolete test that still required three large image columns; the accepted runtime is four compact columns. Corrected exact CI suite passes 23/23 locally; corrective push is next. Production remains untouched by this Windows bugfix.
+
 ## 2026-09-14 - ERR-49-144 Windows Published/gallery compatibility checkpoint
 Local Qt now keeps uploaded Products in the Published lifecycle even when `needs_update=1`, while the existing Work Queue still carries republish work. Product gallery cards/counts are based on actual locally-displayable files; legacy numbered files are display-compatible without weakening strict modern publish mapping, and unsafe unmapped legacy image mutations are disabled. Real Catalog probe: Published=19; #33=16 display files, #34=25, #63/#628/#634=2 each. Related Qt/Crawl/Publish tests 77/77 PASS. Production was not touched by this slice. Rollback branch `backup/pre-err49-144-published-gallery-regression-20260914` points to `b85f946...`.
 

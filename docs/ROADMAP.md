@@ -1,3 +1,14 @@
+## 2026-09-14 - ERR-49-144 GitHub CI correction follow-up
+- [x] Runtime/docs commit `1a5ba6a...` pushed and remote verified.
+- [x] Fresh checksum-identical Catalog backup created and SQLite integrity/count parity verified.
+- [x] Pushed Qt runtime launched successfully; startup structural contract PASS and DB post-launch quick check PASS.
+- [x] Three GitHub workflows PASS on `1a5ba6a...`.
+- [x] Diagnose Qt6 CI failure as stale three-column test expectation, not runtime regression.
+- [x] Update parity test to the accepted four compact columns.
+- [x] Run exact failed CI foundation/parity suite locally: 23/23 PASS.
+- [ ] Push corrective test/docs checkpoint and require GitHub Qt6 CI PASS.
+- [ ] After green CI, preserve the currently running owner foreground app for visual acceptance.
+
 ## 2026-09-14 - ERR-49-144 Published/gallery regression
 - [x] Preserve `workflow_status=uploaded` Products in the Published lifecycle even when Local edits set `needs_update=1`.
 - [x] Preserve republish discoverability through the existing Work Queue at the same time.

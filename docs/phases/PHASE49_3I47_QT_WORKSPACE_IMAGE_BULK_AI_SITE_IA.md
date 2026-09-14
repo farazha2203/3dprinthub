@@ -232,3 +232,7 @@ Owner foreground QA against the modern Catalog exposed two regressions in the or
 The compatibility repair restores the original 3I.47 intent without changing publish authority: uploaded Products stay in the Published lifecycle while `needs_update` continues to drive republish work; Product display count/cards use factual local files; exact modern SEO mappings remain preferred; legacy numbered files are UI-display compatible; unmapped display-only files cannot perform mutating image actions; the gallery is four compact columns. The strict publish resolver remains fail-closed and unchanged.
 
 Canonical Catalog read-only evidence after the fix: Published=19; #33 source=60/display=16; #34=60/display=25; #63/#628/#634 each source=2/display=2. Dedicated 3I.47 suite 9/9 PASS and combined neighboring Qt/Crawl/Publish suite 77/77 PASS. Rollback: `backup/pre-err49-144-published-gallery-regression-20260914` -> `b85f946094ffeb0aea406ebaf6603273a7ef49ed`. Production was not touched.
+
+## 2026-09-14 ERR-49-145 CI contract follow-up
+
+Initial ERR-49-144 GitHub checkpoint `1a5ba6a...` passed Single Active AI, Modern Acquisition and Windows Portable workflows. Qt6 Crawl + AI Runtime failed only because an older 3I.42B parity test still asserted the previous three-large-column gallery. The runtime intentionally implements the owner-approved four compact columns. The stale test contract was updated without runtime changes; the exact failed foundation/parity suite is 23/23 PASS locally. A fresh GitHub run is required before final acceptance.

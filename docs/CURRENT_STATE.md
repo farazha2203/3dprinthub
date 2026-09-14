@@ -1,3 +1,10 @@
+## 2026-09-14 - ERR-49-144 GitHub/backup/foreground checkpoint
+Status: `GITHUB RUNTIME PUSHED / BACKUP VERIFIED / QT APP RUNNING / CI CONTRACT CORRECTION LOCAL_PASS`.
+
+Runtime/docs commit `1a5ba6a4fde2d4668bad5f191b1ac652b18176b4` was pushed and live-remote verified. Before foreground launch, canonical Catalog backup `D:\projects\3dprinthub-backups\err49-144-published-gallery-20260914-192355\catalog-before-err49-144-launch.sqlite3` was created with exact SHA256 parity to the source (`B47105E97E60F3294CEC90027FDCDCCBB5FAB8AB1B7EE50175252798F1BF36EB`), equal size 302288896 bytes, `integrity_check=ok`, 635 Products and 19 Published rows. Qt was launched from the pushed runtime as PID 54440; startup reports 6 routes, 11 actions and 11 cores with empty stderr. Post-launch read-only DB quick check remains ok with 635 Products / 19 Published.
+
+GitHub workflows for `1a5ba6a...`: Single Active AI PASS, Modern Acquisition PASS, Windows Portable PASS; Qt6 Crawl + AI Runtime failed only because `test_phase49_3i42b_core_parity.py` still asserted the superseded three-large-column layout. Runtime behavior was not the failure. The stale test contract was updated to the owner-approved four compact columns and the exact failed CI foundation/parity suite now passes 23/23 locally. Corrective test/docs commit + push is next; Production remains untouched by ERR-49-144.
+
 ## 2026-09-14 - ERR-49-144 Published workspace + legacy Product gallery truth LOCAL_TESTED
 Status: `LOCAL_TESTED / DOCUMENTED / COMMIT+PUSH NEXT / PRODUCTION NOT TOUCHED BY THIS SLICE`.
 

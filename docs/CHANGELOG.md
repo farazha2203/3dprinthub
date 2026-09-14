@@ -1,3 +1,9 @@
+## 2026-09-14 - ERR-49-144 initial GitHub CI contract correction
+- Pushed runtime/docs checkpoint `1a5ba6a...`; three workflows passed and Qt6 runtime CI exposed one stale test expectation.
+- The failed test still required the superseded three-large-column image layout and failed only on `4 != 3`.
+- Updated the parity test name/assertion to the accepted four compact columns; exact failed CI suite now passes 23/23 locally.
+- Created checksum-identical Catalog rollback backup before launch and successfully launched the pushed Qt runtime with 6 routes / 11 actions / 11 cores.
+
 ## 2026-09-14 - ERR-49-144 Published lifecycle and factual local image gallery
 - Published workspace now keeps uploaded Products visible after Local edits while the work queue still exposes republish work.
 - Product gallery image counts/cards are based on real locally-displayable files, not every raw source URL.
