@@ -1,3 +1,8 @@
+## 2026-09-14 - ERR-49-142 DIAGNOSTIC HOTFIX LOCAL_TESTED / PRODUCT303 PREVIEW READY
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCT303_PREVIEW_ONLY`. The canonical-profile publish blocker still fails closed, but its corrupted question-mark diagnostic was restored and regression-tested. Focused Catalog publish tests 11/11, compile and diff-check PASS.
+
+A full-Catalog readiness audit was executed on a checksum-safe SQLite copy: 5 non-uploaded approved candidates exist; 4 still need factual operator inputs, while Product #303 is the only AI-fixable-only candidate. A DB+Product-folder preview repaired #303 using keywords already present in its finalized image metadata, then re-finalized Content/Images; preview publish gate became ready with 5 valid WebPs and DB integrity `ok`. Canonical #303 remains unchanged until a fresh backup/write gate.
+
 ## 2026-09-14 - SALES EXPANSION: PRODUCT #62 ACCEPTED / 3 PRODUCTS ORDERABLE
 Status: `PRODUCT62_ACCEPTED / SALES_ACTIVE / GITHUB_07772ca / PRODUCTION_70a74e6 / PRODUCT84_STALE_PUBLIC_CLEANUP_PENDING`.
 

@@ -1,3 +1,17 @@
+## 2026-09-14 - ERR-49-143 focused unittest invoked from wrong module root
+**Observed:** the first focused ERR-49-142 regression command ran from repository root and failed before executing tests with `ModuleNotFoundError: No module named app`.
+
+**Root cause / correction:** Catalog Center tests import the mature `app.*` package relative to the `catalog_center` runtime root. The failed condition was not repeated unchanged; the suite was rerun from `D:\\projects\\3DPrintHub\\catalog_center` with the verified project venv and passed 11/11.
+
+**Prevention:** run Catalog Center unittest modules from the Catalog Center runtime root (or set the equivalent verified import path); do not classify import-root harness failures as runtime defects.
+
+## 2026-09-14 - ERR-49-142 publish-gate canonical-profile blocker text was corrupted
+**Observed:** the fail-closed canonical Sales Profile check worked, but its operator-facing missing-data message in `phase49_3i49_site_publish.py` had been persisted as question marks.
+
+**Root cause / correction:** prior Windows text-boundary corruption affected only the diagnostic literal. The blocker was restored to a Persian UTF-8 message and the regression now asserts the exact message and rejects `????` corruption.
+
+**Verification:** focused Catalog bulk-publish suite 11/11 PASS, touched compile PASS, `git diff --check` PASS. Rollback branch `backup/pre-err49-142-publish-gate-message-20260914` points to `1ccc0ae...`. No Catalog/Production data or Host runtime was changed by this source hotfix.
+
 ## 2026-09-14 - ERR-49-139 Product #62 repair harness safety catches
 **Observed:** the first preview used system Python and stopped on missing Pillow before any backup/write. A later preview proved all numeric/Offer facts but Persian inline literals crossed PowerShell as `????`; this affected only the disposable preview copy. A byte-SHA guard later found the canonical SQLite file bytes differed from the backup even though no intended write had occurred.
 

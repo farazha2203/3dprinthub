@@ -232,7 +232,7 @@ def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
             canonical_profiles = parsed
             break
     if not canonical_profiles:
-        missing.append("????? ? ????: ????? ?? ??????? ???? canonical ???? ???")
+        missing.append('سفارش و قیمت: حداقل یک پروفایل فروش canonical لازم است')
     media_state = publish_media_gate(data)
     missing.extend(media_state["missing"])
     if not bool(int(data.get("approved_for_sale") or 0)):

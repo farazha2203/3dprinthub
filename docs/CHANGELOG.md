@@ -1,3 +1,10 @@
+## 2026-09-14 - Catalog publish diagnostic integrity / Product #303 preview
+- restored the canonical Sales Profile blocker message after Windows encoding corruption;
+- added exact regression preventing future `????` diagnostic corruption;
+- focused Catalog publish suite 11/11 PASS;
+- audited all approved non-uploaded Catalog Products on a copied SQLite database; #303 is the only candidate with AI-fixable-only missing data;
+- preview-only #303 repair reused finalized image keywords and passed Content/Images/publish-media/publish-gate checks without mutating the canonical Catalog.
+
 ## 2026-09-14 - Product #62 canonical Profile repair and sales acceptance
 - Added no new source schema or migration; used the existing canonical CommerceCore/Profile ledger runtime.
 - Repaired Catalog #62 with verified fixed-price 500,000 Toman, 138 g / 180 min, PLA E-Sun white offer with one real roll.

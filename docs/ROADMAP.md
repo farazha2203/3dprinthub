@@ -1,3 +1,12 @@
+## 2026-09-14 - Product #303 bounded sales candidate
+- [x] Audit all approved non-uploaded candidates on a copied Catalog DB.
+- [x] Identify #303 as the only candidate with no operator-only missing facts.
+- [x] Preview keyword backfill from existing finalized image metadata on copied DB + copied Product folder.
+- [x] Preview Content/Images finalization, media gate and publish gate PASS.
+- [ ] Create fresh canonical Catalog + Product-media rollback backup.
+- [ ] Apply the same StageCore repair to canonical #303 and verify no unrelated Product changed.
+- [ ] Mark ready, receiver/FTP/Bridge gate, publish exactly #303, then strict public Variant/orderability/cart acceptance.
+
 ## 2026-09-14 - Sales expansion checkpoint: Product #62 accepted
 - [x] Repair Catalog #62 with one canonical factual Profile using the mature CommerceCore ledger path.
 - [x] Preserve existing Host/Site identity: asset 140 / Product 18.

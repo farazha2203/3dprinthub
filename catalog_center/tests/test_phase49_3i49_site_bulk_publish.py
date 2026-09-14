@@ -171,7 +171,9 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(result["marked"], 0)
         self.assertEqual(result["publishable_ids"], [])
         missing = result["blocked"][0]["missing"]
-        self.assertTrue(any("canonical" in item for item in missing))
+        expected = "سفارش و قیمت: حداقل یک پروفایل فروش canonical لازم است"
+        self.assertIn(expected, missing)
+        self.assertFalse(any("????" in item for item in missing))
         self.assertEqual(int(self.db.product(product_id)["upload_ready"]), 0)
 
     def test_two_ready_products_publish_and_move_to_published_filter(self):
