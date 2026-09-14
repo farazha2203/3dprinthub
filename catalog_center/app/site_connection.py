@@ -180,6 +180,77 @@ def _json_request(url: str, token: str, payload: dict | None, timeout: int) -> d
         raise RuntimeError(f"Bridge HTTP {exc.code}: {detail}") from exc
 
 
+def _timeout_error(exc: BaseException) -> bool:
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, (TimeoutError, socket.timeout)):
+            return True
+        if isinstance(current, urllib_error.URLError):
+            reason = getattr(current, "reason", None)
+            if isinstance(reason, (TimeoutError, socket.timeout)):
+                return True
+        current = getattr(current, "__cause__", None) or getattr(current, "__context__", None)
+    return False
+
+
+def _diagnostic_ack_for_batch(diagnostic: dict, batch_name: str, batch_uuid: str) -> dict | None:
+    if str(diagnostic.get("batch_name") or "") != str(batch_name or ""):
+        raise RuntimeError("Bridge diagnostic batch name mismatch")
+    if str(diagnostic.get("batch_uuid") or "") != str(batch_uuid or ""):
+        raise RuntimeError("Bridge diagnostic batch UUID mismatch")
+    status = str(diagnostic.get("status") or "").strip().lower()
+    ack = diagnostic.get("ack")
+    if status in {"completed", "completed_with_errors"} and isinstance(ack, dict):
+        recovered = dict(ack)
+        recovered.setdefault("bridge_status", status)
+        recovered.setdefault("diagnostic_id", batch_name)
+        recovered["desktop_timeout_reconciled"] = True
+        return recovered
+    if status in {"bridge_exception", "import_failed"}:
+        detail = str(diagnostic.get("detail") or diagnostic.get("command_error") or status)
+        raise RuntimeError(f"Bridge import failed after timeout: {detail[:1200]}")
+    return None
+
+
+def _reconcile_import_timeout(
+    cfg: SiteConnection,
+    batch_name: str,
+    batch_uuid: str,
+    *,
+    wait_seconds: int = 180,
+    poll_seconds: float = 2.0,
+) -> dict:
+    deadline = time.monotonic() + max(10, int(wait_seconds))
+    diagnostic_url = f"{cfg.site_url}/api/catalog-bridge/v1/diagnostics/{batch_name}/"
+    last_detail = "diagnostic_not_available"
+    while time.monotonic() < deadline:
+        try:
+            diagnostic = _json_request(
+                diagnostic_url,
+                cfg.bridge_token,
+                None,
+                max(8, min(20, int(cfg.timeout))),
+            )
+        except RuntimeError as exc:
+            text = str(exc)
+            if "Bridge HTTP 404" not in text:
+                last_detail = text[:1200]
+        except Exception as exc:
+            last_detail = f"{type(exc).__name__}: {exc}"[:1200]
+        else:
+            recovered = _diagnostic_ack_for_batch(diagnostic, batch_name, batch_uuid)
+            if recovered is not None:
+                return recovered
+            last_detail = str(diagnostic.get("status") or "diagnostic_pending")
+        time.sleep(max(0.25, float(poll_seconds)))
+    raise TimeoutError(
+        "Bridge import response timed out and no terminal diagnostic was received; "
+        "the same batch was NOT resubmitted. Last diagnostic: " + last_detail
+    )
+
+
 def _absolute_public_url(cfg: SiteConnection, value: str) -> str:
     value = str(value or "").strip()
     if not value:
@@ -339,12 +410,25 @@ def import_batch(settings: SiteConnection, batch_name: str, batch_uuid: str) -> 
     cfg = settings.normalized()
     if not cfg.bridge_token:
         raise ValueError("Bridge token is empty")
-    ack = _json_request(
-        f"{cfg.site_url}/api/catalog-bridge/v1/import/",
-        cfg.bridge_token,
-        {"batch_name": batch_name, "batch_uuid": batch_uuid, "schema_version": "8.5"},
-        max(60, cfg.timeout),
-    )
+    try:
+        ack = _json_request(
+            f"{cfg.site_url}/api/catalog-bridge/v1/import/",
+            cfg.bridge_token,
+            {"batch_name": batch_name, "batch_uuid": batch_uuid, "schema_version": "8.5"},
+            max(180, cfg.timeout),
+        )
+    except Exception as exc:
+        if not _timeout_error(exc):
+            raise
+        # An HTTP read timeout is ambiguous: Django may still be importing the
+        # already-uploaded batch. Never POST the same import blindly. Reconcile
+        # the exact batch UUID through the server-side diagnostic/ACK instead.
+        ack = _reconcile_import_timeout(
+            cfg,
+            batch_name,
+            batch_uuid,
+            wait_seconds=max(180, min(360, int(cfg.timeout) * 6)),
+        )
     return _augment_ack_with_public_verification(cfg, ack)
 
 

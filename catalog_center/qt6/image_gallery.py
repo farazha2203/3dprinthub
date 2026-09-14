@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -45,6 +46,8 @@ class ImageCard(QFrame):
         self.setObjectName("ImageCard")
         self.setMinimumWidth(220)
         self.setMaximumWidth(285)
+        self.setMinimumHeight(350)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -69,6 +72,10 @@ class ImageCard(QFrame):
                 )
             )
         root.addWidget(self.preview)
+
+        self.options_label = QLabel("\u06af\u0632\u06cc\u0646\u0647\u200c\u0647\u0627\u06cc \u062a\u0635\u0648\u06cc\u0631")
+        self.options_label.setStyleSheet("font-weight: 700;")
+        root.addWidget(self.options_label)
 
         top = QHBoxLayout()
         self.selected = QCheckBox("انتخاب")
@@ -180,10 +187,14 @@ class ProductImageGrid(QWidget):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.host = QWidget()
+        self.host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.grid = QGridLayout(self.host)
-        self.grid.setContentsMargins(2, 2, 2, 2)
-        self.grid.setSpacing(10)
+        self.grid.setContentsMargins(4, 4, 10, 12)
+        self.grid.setSpacing(12)
+        self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.scroll.setWidget(self.host)
         root.addWidget(self.scroll, 1)
 
@@ -218,10 +229,12 @@ class ProductImageGrid(QWidget):
             )
         for column in range(self.columns):
             self.grid.setColumnStretch(column, 1)
-        self.grid.setRowStretch(
-            max(0, (len(self.cards) + self.columns - 1) // self.columns),
-            1,
-        )
+        rows = max(1, (len(self.cards) + self.columns - 1) // self.columns)
+        # QScrollArea with widgetResizable=True can otherwise compress a long
+        # grid and make the controls under the final image rows unreachable.
+        # Give the content widget a factual row-based minimum height so the
+        # vertical scrollbar always spans the entire card/control surface.
+        self.host.setMinimumHeight(rows * 374 + max(0, rows - 1) * self.grid.spacing())
         self._missing_count = missing
         self._update_summary()
 

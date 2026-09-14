@@ -16,12 +16,14 @@ CONNECTION_USERS = {
     "bridge_token": "CATALOG_BRIDGE_TOKEN",
     "openrouter_management_key": "OPENROUTER_MANAGEMENT_KEY",
     "openai_admin_key": "OPENAI_ADMIN_KEY",
+    "instagram_access_token": "INSTAGRAM_ACCESS_TOKEN",
 }
 LEGACY_CONNECTION_USERS = {
     "ftp_password": ["FTP_PASSWORD"],
     "bridge_token": [],
     "openrouter_management_key": [],
     "openai_admin_key": [],
+    "instagram_access_token": [],
 }
 
 LEGACY_FILES = {

@@ -161,6 +161,7 @@ class ProductsPage(QWidget):
         self.site_sync_pool = TaskPool()
         self._bulk_ai_worker: Worker | None = None
         self._bulk_publish_worker: Worker | None = None
+        self._instagram_worker: Worker | None = None
         self._site_pull_worker: Worker | None = None
 
         root = QVBoxLayout(self)
@@ -277,12 +278,18 @@ class ProductsPage(QWidget):
         self.bulk_publish_btn.setToolTip(
             "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
         )
+        self.instagram_publish_btn = QPushButton("🚀 سایت → Instagram")
+        self.instagram_publish_btn.setToolTip(
+            "اول Product را روی سایت منتشر و لینک عمومی آن را تأیید می‌کند؛ سپس همان لینک و SEO Product را به Instagram می‌فرستد."
+        )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
         self.ready_publish_btn.clicked.connect(self._mark_ready_selected)
         self.bulk_publish_btn.clicked.connect(self._publish_selected)
+        self.instagram_publish_btn.clicked.connect(self._publish_instagram_selected)
         publish_bar.addWidget(self.ready_publish_btn)
         publish_bar.addWidget(self.bulk_publish_btn)
+        publish_bar.addWidget(self.instagram_publish_btn)
         publish_bar.addWidget(self.bulk_publish_status, 1)
         root.addLayout(publish_bar)
 
@@ -747,6 +754,125 @@ class ProductsPage(QWidget):
         worker.signals.error.connect(self._bulk_publish_error)
         worker.signals.finished.connect(self._bulk_publish_finished)
         self.publish_pool.start(worker)
+
+    def _publish_instagram_selected(self) -> None:
+        if self._instagram_worker is not None or self._bulk_publish_worker is not None:
+            QMessageBox.information(
+                self,
+                "سایت → Instagram",
+                "یک عملیات انتشار در حال اجرا است.",
+            )
+            return
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(
+                self,
+                "سایت → Instagram",
+                "حداقل یک محصول را انتخاب کن.",
+            )
+            return
+
+        preflight = self.kernel.publish.preflight(product_ids)
+        queued = set(preflight.get("queued_ids") or [])
+        already_public = []
+        for product_id in product_ids:
+            try:
+                self.kernel.instagram.preview(product_id)
+                already_public.append(product_id)
+            except Exception:
+                pass
+        actionable = sorted(queued | set(already_public))
+        blocked_count = len(product_ids) - len(actionable)
+        if not actionable:
+            QMessageBox.warning(
+                self,
+                "سایت → Instagram",
+                "هیچ محصولی لینک عمومی تأییدشده یا تیک آماده انتشار ندارد. ابتدا Gateهای Product را کامل و آماده انتشار کن.",
+            )
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "تأیید سایت → Instagram",
+            (
+                f"محصول انتخاب‌شده: {len(product_ids)}\n"
+                f"آماده انتشار سایت: {len(queued)}\n"
+                f"از قبل عمومی و HTTP-تأییدشده: {len(already_public)}\n"
+                f"رد Gate / بدون تیک آماده: {blocked_count}\n\n"
+                "ترتیب اجباری است: ابتدا سایت، سپس تأیید لینک عمومی Product و بعد Instagram. "
+                "قیمت و انتخاب Variant همچنان فقط در صفحه محصول سایت انجام می‌شود."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        self.instagram_publish_btn.setEnabled(False)
+        self.bulk_publish_btn.setEnabled(False)
+        self.ready_publish_btn.setEnabled(False)
+        self.bulk_publish_status.setText(
+            f"شروع سایت → Instagram برای {len(actionable)} محصول…"
+        )
+        worker = Worker(
+            lambda progress: self.kernel.instagram.publish_site_then_instagram(
+                actionable,
+                progress=progress,
+            )
+        )
+        self._instagram_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.bulk_publish_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._instagram_done)
+        worker.signals.error.connect(self._instagram_error)
+        worker.signals.finished.connect(self._instagram_finished)
+        self.publish_pool.start(worker)
+
+    def _instagram_done(self, result=None) -> None:
+        data = dict(result or {})
+        site = dict(data.get("site") or {})
+        instagram = dict(data.get("instagram") or {})
+        published = int(instagram.get("published") or 0)
+        failed = int(instagram.get("failed") or 0)
+        site_blocked = list(data.get("site_blocked") or [])
+        self.bulk_publish_status.setText(
+            f"✅ سایت {int(site.get('published') or 0)} • Instagram {published} • خطا {failed + len(site_blocked)}"
+        )
+        lines = [
+            f"#{item.get('product_id')}: {item.get('error')}"
+            for item in (site_blocked + list(instagram.get("failures") or []))[:8]
+        ]
+        detail = ("\n\n" + "\n".join(lines)) if lines else ""
+        QMessageBox.information(
+            self,
+            "نتیجه سایت → Instagram",
+            (
+                f"انتشار جدید سایت: {int(site.get('published') or 0)}\n"
+                f"Instagram موفق: {published}\n"
+                f"Instagram ناموفق: {failed}\n"
+                f"بدون لینک عمومی معتبر: {len(site_blocked)}"
+                + detail
+            ),
+        )
+        self.refresh()
+
+    def _instagram_error(self, detail: str) -> None:
+        self.bulk_publish_status.setText("❌ سایت → Instagram ناموفق")
+        show_diagnostic_error(
+            self,
+            "خطای سایت → Instagram",
+            detail,
+            context={"operation": "site-then-instagram-publish"},
+        )
+
+    def _instagram_finished(self) -> None:
+        self._instagram_worker = None
+        self.instagram_publish_btn.setEnabled(True)
+        self.bulk_publish_btn.setEnabled(True)
+        self.ready_publish_btn.setEnabled(True)
 
     def _bulk_publish_done(self, result=None) -> None:
         data = dict(result or {})

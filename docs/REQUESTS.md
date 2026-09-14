@@ -1,3 +1,8 @@
+## 2026-09-15 - Owner client-handoff request: empty Store, finish prior app changes, replace stale Hero and publish
+Status: `LOCAL_IMPLEMENTED + TESTED / GITHUB+PRODUCTION NEXT`.
+
+Owner requires the client-facing site to stop showing the old Product catalog, all previously requested Windows publishing changes to be checked rather than assumed, and the visibly stale top slider to be replaced with the professional 3D implementation before handoff. Accepted execution order is GitHub-first and rollback-safe: deploy the tested source, create and verify fresh Production source/environment/static/MySQL/Product-media backups, run exact reset preflight, remove only eligible imported Store Products, preserve source assets/master data/Portfolio/Hero/history, then verify an empty Store plus the new live Hero in a real browser. Site→Instagram remains Site-first and cannot be claimed live until Professional Instagram credentials are configured.
+
 ## 2026-09-14 - Owner request: restore Published Products and real Product images in the Windows app
 Status: `LOCAL_TESTED / COMMIT+PUSH+FOREGROUND ACCEPTANCE NEXT`.
 

@@ -23,7 +23,10 @@ class Phase50A2ISliceboxHeroContractTests(SimpleTestCase):
         engine = self.read("static/js/phase49_2c-home-hero.js")
         self.assertIn("window.P50SliceboxHero", runtime)
         self.assertIn("cloneNode(true)", runtime)
-        self.assertIn("slices = 7", runtime)
+        self.assertIn("p50i-slicebox__cuboid", runtime)
+        self.assertIn("p50i-slicebox__face--next", runtime)
+        self.assertIn("data-p50i-cuboids-random", self.read("templates/website/partials/hero.html"))
+        self.assertIn("randomOdd", runtime)
         self.assertIn("prefers-reduced-motion", runtime)
         self.assertIn("window.innerWidth < 721", runtime)
         self.assertIn("P50SliceboxHero.play", engine)
@@ -31,10 +34,13 @@ class Phase50A2ISliceboxHeroContractTests(SimpleTestCase):
 
     def test_css_has_segmented_3d_and_safe_fallbacks(self):
         css = self.read("static/css/phase50-a2i-slicebox-hero.css")
-        self.assertIn("perspective: 1400px", css)
+        self.assertIn("var(--p50i-perspective, 1200px)", css)
         self.assertIn("transform-style: preserve-3d", css)
-        self.assertIn("clip-path: inset", css)
-        self.assertIn("p50i-slicebox-turn", css)
+        self.assertIn("p50i-cuboid-v", css)
+        self.assertIn("p50i-cuboid-h", css)
+        self.assertIn("rotateY(var(--p50i-cuboid-turn))", css)
+        self.assertIn("rotateX(var(--p50i-cuboid-turn))", css)
+        self.assertIn("inset: 0;", css)
         self.assertIn("max-width: 720px", css)
         self.assertIn("prefers-reduced-motion: reduce", css)
 

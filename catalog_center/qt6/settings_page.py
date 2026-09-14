@@ -20,6 +20,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.instagram_publish import InstagramConfig, test_connection as test_instagram_connection
+from app.secure_secrets import get_secret, secret_source, set_secret
+
 from app.ai_model_catalog import (
     enrich_model_info,
     format_model_label,
@@ -60,6 +63,7 @@ class SettingsPage(QWidget):
         host_layout = QVBoxLayout(host)
         host_layout.addWidget(self._build_ai_box())
         host_layout.addWidget(self._build_connection_box())
+        host_layout.addWidget(self._build_instagram_box())
         host_layout.addStretch(1)
 
         scroll = QScrollArea()
@@ -197,6 +201,44 @@ class SettingsPage(QWidget):
         layout.addWidget(self.connection_status)
         return box
 
+    def _build_instagram_box(self) -> QGroupBox:
+        box = QGroupBox("Instagram / انتشار از مسیر سایت")
+        layout = QVBoxLayout(box)
+        form = QFormLayout()
+        self.instagram_account_id = QLineEdit()
+        self.instagram_account_id.setPlaceholderText("Instagram Professional Account ID")
+        self.instagram_api_version = QLineEdit()
+        self.instagram_api_version.setPlaceholderText("v26.0")
+        self.instagram_login_mode = QComboBox()
+        self.instagram_login_mode.addItem("Instagram Login (بدون Facebook Page)", "instagram")
+        self.instagram_login_mode.addItem("Facebook Login / Linked Page", "facebook")
+        self.instagram_token = QLineEdit()
+        self.instagram_token.setEchoMode(QLineEdit.EchoMode.Password)
+        self.instagram_token.setPlaceholderText("خالی = Windows Credential Store")
+        self.instagram_secret_source = QLabel("")
+        self.instagram_secret_source.setObjectName("Muted")
+        self.instagram_status = QLabel("اول Product روی سایت منتشر می‌شود؛ بعد لینک عمومی همان Product به Instagram می‌رود.")
+        self.instagram_status.setObjectName("Muted")
+        self.instagram_status.setWordWrap(True)
+        form.addRow("Professional Account ID", self.instagram_account_id)
+        form.addRow("Graph API Version", self.instagram_api_version)
+        form.addRow("Login Mode", self.instagram_login_mode)
+        form.addRow("Access Token", self.instagram_token)
+        form.addRow("منبع Token", self.instagram_secret_source)
+        layout.addLayout(form)
+        actions = QHBoxLayout()
+        self.save_instagram_btn = QPushButton("ذخیره امن Instagram")
+        self.save_instagram_btn.setProperty("primary", True)
+        self.test_instagram_btn = QPushButton("تست اتصال Instagram")
+        self.save_instagram_btn.clicked.connect(self._save_instagram)
+        self.test_instagram_btn.clicked.connect(self._test_instagram)
+        actions.addWidget(self.save_instagram_btn)
+        actions.addWidget(self.test_instagram_btn)
+        actions.addStretch(1)
+        layout.addLayout(actions)
+        layout.addWidget(self.instagram_status)
+        return box
+
     def refresh(self) -> None:
         active = self.kernel.providers.active()
         provider = active.get("provider") or ""
@@ -219,6 +261,80 @@ class SettingsPage(QWidget):
         self.connection_secret_source.setText(
             f"FTP: {values.get('ftp_password_source') or '—'}   •   "
             f"Bridge: {values.get('bridge_token_source') or '—'}"
+        )
+        self.instagram_account_id.setText(
+            str(self.db.setting("instagram_account_id", "") or "")
+        )
+        self.instagram_api_version.setText(
+            str(self.db.setting("instagram_api_version", "v26.0") or "v26.0")
+        )
+        login_mode = str(
+            self.db.setting("instagram_login_mode", "instagram") or "instagram"
+        )
+        login_index = self.instagram_login_mode.findData(login_mode)
+        if login_index >= 0:
+            self.instagram_login_mode.setCurrentIndex(login_index)
+        self.instagram_secret_source.setText(
+            secret_source("instagram_access_token")
+        )
+
+    def _instagram_config(self) -> InstagramConfig:
+        account_id = self.instagram_account_id.text().strip()
+        if not account_id:
+            raise ValueError("Instagram Professional Account ID خالی است.")
+        version = self.instagram_api_version.text().strip() or "v26.0"
+        if not version.startswith("v"):
+            version = "v" + version
+        return InstagramConfig(
+            account_id=account_id,
+            api_version=version,
+            login_mode=str(self.instagram_login_mode.currentData() or "instagram"),
+        )
+
+    def _save_instagram(self) -> None:
+        try:
+            cfg = self._instagram_config()
+            token = self.instagram_token.text().strip()
+            if token:
+                set_secret("instagram_access_token", token)
+                self.instagram_token.clear()
+            elif not get_secret("instagram_access_token"):
+                raise ValueError("Access Token خالی است و Token امن هم ذخیره نشده است.")
+            self.db.set_setting("instagram_account_id", cfg.account_id)
+            self.db.set_setting("instagram_api_version", cfg.api_version)
+            self.db.set_setting("instagram_login_mode", cfg.login_mode)
+            self.instagram_secret_source.setText(secret_source("instagram_access_token"))
+            self.instagram_status.setText("✅ تنظیمات Instagram به‌صورت امن ذخیره شد.")
+        except Exception as exc:
+            QMessageBox.warning(self, "Instagram", str(exc))
+
+    def _test_instagram(self) -> None:
+        try:
+            cfg = self._instagram_config()
+            token = self.instagram_token.text().strip()
+            if token:
+                set_secret("instagram_access_token", token)
+                self.instagram_token.clear()
+            self.db.set_setting("instagram_account_id", cfg.account_id)
+            self.db.set_setting("instagram_api_version", cfg.api_version)
+            self.db.set_setting("instagram_login_mode", cfg.login_mode)
+        except Exception as exc:
+            QMessageBox.warning(self, "Instagram", str(exc))
+            return
+        self.test_instagram_btn.setEnabled(False)
+        self._start_worker(
+            lambda: test_instagram_connection(cfg),
+            status_label=self.instagram_status,
+            start_text="در حال تست Instagram…",
+            done=self._instagram_test_done,
+        )
+
+    def _instagram_test_done(self, result) -> None:
+        data = dict(result or {})
+        self.test_instagram_btn.setEnabled(True)
+        self.instagram_secret_source.setText(secret_source("instagram_access_token"))
+        self.instagram_status.setText(
+            f"✅ @{data.get('username') or '—'} • {data.get('account_type') or 'Professional'} • ID {data.get('id') or '—'}"
         )
 
     def _provider_changed(self) -> None:

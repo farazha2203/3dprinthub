@@ -517,7 +517,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         try:
             page.load_product(product_id)
             self.assertTrue(page.product_source_btn.isEnabled())
-            self.assertEqual(page.image_grid.columns, 3)
+            self.assertEqual(page.image_grid.columns, 4)
             self.assertGreaterEqual(page.image_grid.minimumHeight(), 540)
             button_texts = {
                 button.text()

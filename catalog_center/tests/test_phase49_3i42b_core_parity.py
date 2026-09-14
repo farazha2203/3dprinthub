@@ -98,11 +98,13 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
                 "connection",
                 "acquisition",
                 "publish",
+                "instagram",
                 "ai",
             ),
         )
         self.assertIs(self.kernel.ai, self.kernel.ai)
         self.assertIs(self.kernel.products, self.kernel.products)
+        self.assertIs(self.kernel.instagram, self.kernel.instagram)
         self.assertTrue(self.kernel.contract()["ai_single_engine"])
         self.assertTrue(self.kernel.contract()["ai_bound"])
         self.assertTrue(self.kernel.contract()["database_shared"])

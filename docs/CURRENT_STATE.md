@@ -1,3 +1,12 @@
+## 2026-09-15 - CLIENT HANDOFF DELIVERY CANDIDATE LOCAL_PASS / PRODUCTION DEPLOY+RESET NEXT
+Status: `LOCAL_PASS / GITHUB PROMOTION NEXT / PRODUCTION NOT YET MUTATED`.
+
+Owner delivery scope is now explicit: finish the Windows publishing workflow, replace the visibly stale Home Hero with the full-screen native 3D cuboid/Slicebox implementation, and empty the current Production Store Products before client handoff while preserving source assets, master data, Portfolio, Hero slides and historical commerce records. The Local Store Reset endpoint is fail-closed and now has a repository-owned backup-preparation helper `scripts/host/phase50_store_reset_prepare.py`; reset cannot run unless a fresh real MySQL gzip dump, exact live-count manifest and checksum-identical Product media backup exist under the approved backup root. Manual/unlinked Products, inventory movements, protected relations, count drift or media/hash drift block deletion.
+
+Hero candidate `50.3.0` uses full-bleed desktop media, dark professional stage, glass caption, random horizontal/vertical 3D cuboids, 3/5/7 slice variation, sequential dispersion and mobile/reduced-motion fallback while keeping Django SSR title/description/alt/Product links authoritative. Windows Site→Instagram sequencing also remains in this candidate: Site publish/public URL verification precedes Instagram; live Instagram delivery remains disabled until Professional Account credentials are configured in the OS secret boundary.
+
+Local verification: Store Reset + Hero 8/8 PASS; broader Qt/Publish/Instagram/SiteConnection 57/57 PASS; touched Python compile PASS; Node syntax PASS; Django check PASS with known CKEditor warning only; no model drift; migration plan empty; `git diff --check` PASS. Canonical Local/GitHub baseline before this candidate is `8123b024f1afe3acc0427738391835c195f93529`. Reverse Host loopback `22024` is currently unavailable, so no Production deletion/deploy is claimed yet. Exact next: commit/push this tested candidate, recover/verify authorized Host transport, deploy from GitHub with fresh source/env/static rollback evidence, generate fresh MySQL+media Store Reset backup, run preflight, reset only if eligible, then verify empty Store + preserved Hero/master/source data + live 3D Hero browser behavior.
+
 ## 2026-09-14 - ERR-49-144 GitHub/backup/foreground checkpoint
 Status: `GITHUB RUNTIME PUSHED / BACKUP VERIFIED / QT APP RUNNING / CI CONTRACT CORRECTION LOCAL_PASS`.
 

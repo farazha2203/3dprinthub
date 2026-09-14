@@ -1,3 +1,14 @@
+## 2026-09-15 - Client handoff Store Reset + Hero 50.3.0 candidate
+- completed a fail-closed authenticated Store Reset API for imported Catalog Products only;
+- reset preserves source ImportedPrintAsset records, master Material/Quality/Color/Brand data, Portfolio, Homepage Hero slides and historical commerce records; protected/manual/inventory-conflicted state blocks deletion;
+- added `scripts/host/phase50_store_reset_prepare.py` to create exact live-count manifest plus checksum-identical Product-media rollback copies under an approved backup root; reset still additionally requires a verified real MySQL gzip dump;
+- upgraded the pending Hero from flat segmented flips to true four-face 3D cuboids with randomized horizontal/vertical orientation, odd 3/5/7 slice counts, dispersion and full-bleed desktop presentation; mobile/reduced-motion keep the mature fallback;
+- preserved SSR Hero title/description/alt/Product link authority and existing managed Hero data;
+- Site→Instagram workflow now explicitly publishes/verifies the Site Product URL before social delivery; token remains in Windows Credential Store and live Instagram cannot run without configured Professional credentials;
+- added ambiguous Bridge-import timeout reconciliation by exact batch UUID instead of blindly resubmitting the same import;
+- local acceptance: Store Reset+Hero 8/8 PASS, broader Qt/Publish/Instagram/SiteConnection 57/57 PASS, compile/Node/Django/no-drift/empty-plan/diff-check PASS;
+- Production not yet mutated; reverse Host loopback 22024 must be restored and Host state reverified before GitHub-first deployment/reset.
+
 ## 2026-09-14 - ERR-49-144 initial GitHub CI contract correction
 - Pushed runtime/docs checkpoint `1a5ba6a...`; three workflows passed and Qt6 runtime CI exposed one stale test expectation.
 - The failed test still required the superseded three-large-column image layout and failed only on `4 != 3`.

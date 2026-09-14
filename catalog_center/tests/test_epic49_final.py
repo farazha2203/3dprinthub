@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from app import site_connection
 from app.site_connection import SiteConnection, _augment_ack_with_public_verification
 from app.v8_features import ack_item_confirms_publish
 
@@ -120,6 +121,48 @@ class Epic49PublicVerificationTests(unittest.TestCase):
         item = _augment_ack_with_public_verification(self._cfg(), ack)["items"][0]
         self.assertFalse(item["public_http_ok"])
         self.assertIn("PRODUCT_MEDIA_HTTP_FAILED", item["error"])
+
+
+class Epic49BulkImportTimeoutTests(unittest.TestCase):
+    def _cfg(self):
+        return Epic49PublicVerificationTests()._cfg()
+
+    @patch("app.site_connection._augment_ack_with_public_verification", side_effect=lambda _cfg, ack: ack)
+    @patch("app.site_connection._reconcile_import_timeout")
+    @patch("app.site_connection._json_request")
+    def test_read_timeout_reconciles_exact_batch_without_second_import_post(self, request_json, reconcile, _augment):
+        request_json.side_effect = TimeoutError("read timed out")
+        reconcile.return_value = {
+            "bridge_status": "completed",
+            "diagnostic_id": "desktop_catalog_v85_20260914_210000",
+            "items": [{"desktop_product_id": 42, "status": "updated"}],
+        }
+        result = site_connection.import_batch(
+            self._cfg(),
+            "desktop_catalog_v85_20260914_210000",
+            "batch-uuid-42",
+        )
+        self.assertEqual(request_json.call_count, 1)
+        self.assertGreaterEqual(request_json.call_args.args[3], 180)
+        reconcile.assert_called_once()
+        self.assertEqual(result["bridge_status"], "completed")
+
+    def test_completed_diagnostic_recovers_only_matching_batch_uuid(self):
+        diagnostic = {
+            "batch_name": "desktop_catalog_v85_20260914_210000",
+            "batch_uuid": "batch-uuid-42",
+            "status": "completed",
+            "ack": {"items": [], "failed_count": 0},
+        }
+        recovered = site_connection._diagnostic_ack_for_batch(
+            diagnostic, diagnostic["batch_name"], diagnostic["batch_uuid"]
+        )
+        self.assertTrue(recovered["desktop_timeout_reconciled"])
+        self.assertEqual(recovered["bridge_status"], "completed")
+        with self.assertRaisesRegex(RuntimeError, "UUID mismatch"):
+            site_connection._diagnostic_ack_for_batch(
+                diagnostic, diagnostic["batch_name"], "different-uuid"
+            )
 
 
 class Epic49ServerSyncContractTests(unittest.TestCase):

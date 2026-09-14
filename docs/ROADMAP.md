@@ -1,3 +1,19 @@
+## 2026-09-15 - Client handoff delivery gate
+- [x] Re-read repository rules/state/errors/paths/active Phase from source of truth.
+- [x] Preserve the existing dirty worktree and inspect Store Reset, Hero, publish/Instagram and timeout-reconciliation deltas instead of resetting them.
+- [x] Complete fail-closed Store Reset API that preserves source assets/master data/Portfolio/Hero/history and refuses protected/manual/inventory-conflicted state.
+- [x] Add repository-owned Store Reset backup-manifest/media helper with exact MySQL identity and checksum boundaries.
+- [x] Upgrade Home Hero candidate to full-screen native 3D cuboids with random horizontal/vertical transitions and mobile/reduced-motion fallback.
+- [x] Verify Site→Instagram order remains Site publish/public URL first, Instagram second; no social post without configured Professional credentials.
+- [x] Local gates: 8/8 Store Reset+Hero, 57/57 broader Qt/Publish/Instagram/SiteConnection, compile, Node syntax, Django check, no drift, empty migration plan, diff-check PASS.
+- [ ] Commit/push exact candidate and verify live GitHub SHA.
+- [ ] Re-establish authorized reverse Host transport and verify Host root/branch/HEAD/worktree/MySQL/readiness read-only.
+- [ ] Deploy only the GitHub candidate with fresh source/env/static rollback evidence.
+- [ ] Generate fresh real MySQL gzip + Store Reset manifest/media backup and verify hashes/counts.
+- [ ] Run Production reset only if preflight is eligible; verify Store Product/Variant/Image count reaches zero and protected/master/source/Hero data is unchanged.
+- [ ] Browser-verify Production Hero desktop 3D transition, mobile fallback and public Home/Store HTTP after reset.
+- [ ] Update final docs with deployed SHA, backup root, reset counts and browser acceptance before client handoff.
+
 ## 2026-09-14 - ERR-49-144 GitHub CI correction follow-up
 - [x] Runtime/docs commit `1a5ba6a...` pushed and remote verified.
 - [x] Fresh checksum-identical Catalog backup created and SQLite integrity/count parity verified.

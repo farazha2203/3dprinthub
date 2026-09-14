@@ -1733,6 +1733,106 @@ class PublishCore:
         )
 
 
+class InstagramCore:
+    """Social publisher. The public Site Product remains the commerce authority."""
+
+    def __init__(self, db, connection, publish_core) -> None:
+        self.db = db
+        self.connection = connection
+        self.publish_core = publish_core
+
+    def config(self):
+        from app.instagram_publish import InstagramConfig
+        account_id = str(self.db.setting("instagram_account_id", "") or "").strip()
+        if not account_id:
+            raise RuntimeError("شناسه Instagram Professional Account هنوز تنظیم نشده است.")
+        return InstagramConfig(
+            account_id=account_id,
+            api_version=str(self.db.setting("instagram_api_version", "v26.0") or "v26.0"),
+            login_mode=str(self.db.setting("instagram_login_mode", "instagram") or "instagram"),
+        )
+
+    def preview(self, product_id: int) -> dict[str, Any]:
+        from app.instagram_publish import canonical_site_payload
+        row = self.db.product(int(product_id))
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        settings = self.connection.settings(require_bridge=False)
+        return canonical_site_payload(dict(row), site_url=settings.site_url)
+
+    def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
+        from app.instagram_publish import publish_product
+        cfg = self.config()
+        settings = self.connection.settings(require_bridge=False)
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        results, failures = [], []
+        total = max(1, len(ids))
+        for index, product_id in enumerate(ids, 1):
+            if progress:
+                progress(int((index - 1) / total * 100), f"Instagram {index}/{total} • #{product_id}")
+            try:
+                results.append({"product_id": product_id, **publish_product(self.db, product_id, cfg, site_url=settings.site_url)})
+            except Exception as exc:
+                failures.append({"product_id": product_id, "error": str(exc)})
+            if progress:
+                progress(int(index / total * 100), f"Instagram {index}/{total} تمام شد")
+        return {"requested": len(ids), "published": len(results), "failed": len(failures), "results": results, "failures": failures}
+
+    def publish_site_then_instagram(self, product_ids, *, progress=None) -> dict[str, Any]:
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        already_public, site_needed = [], []
+        for product_id in ids:
+            try:
+                self.preview(product_id)
+                already_public.append(product_id)
+            except Exception:
+                site_needed.append(product_id)
+
+        site_result = {"published": 0, "failed": 0, "items": []}
+        if site_needed:
+            if progress:
+                progress(5, f"انتشار سایت برای {len(site_needed)} محصول")
+            site_result = self.publish_core.publish_many(
+                site_needed,
+                progress=(
+                    (lambda value, message: progress(min(65, 5 + int(value * 0.6)), message))
+                    if progress else None
+                ),
+            )
+
+        instagram_ready, site_blocked = [], []
+        for product_id in ids:
+            try:
+                self.preview(product_id)
+                instagram_ready.append(product_id)
+            except Exception as exc:
+                site_blocked.append({"product_id": product_id, "error": str(exc)})
+
+        if not instagram_ready:
+            return {
+                "requested": len(ids),
+                "site": site_result,
+                "site_blocked": site_blocked,
+                "instagram": {"requested": 0, "published": 0, "failed": 0, "results": [], "failures": []},
+            }
+        if progress:
+            progress(68, "لینک عمومی سایت تأیید شد؛ شروع انتشار Instagram")
+        instagram_result = self.publish_many(
+            instagram_ready,
+            progress=(
+                (lambda value, message: progress(68 + int(value * 0.32), message))
+                if progress else None
+            ),
+        )
+        return {
+            "requested": len(ids),
+            "already_public": already_public,
+            "site": site_result,
+            "site_blocked": site_blocked,
+            "instagram": instagram_result,
+        }
+
+
 class AICore:
     """One process-level AI engine entry point for all Qt callers."""
 
@@ -1858,6 +1958,10 @@ class ApplicationKernel:
     @property
     def publish(self) -> PublishCore:
         return self.registry.require("publish", PublishCore)  # type: ignore[return-value]
+
+    @property
+    def instagram(self) -> InstagramCore:
+        return self.registry.require("instagram", InstagramCore)  # type: ignore[return-value]
 
     @property
     def ai(self) -> AICore:
@@ -2358,7 +2462,9 @@ def build_kernel(db) -> ApplicationKernel:
     connection = ConnectionCore(db)
     registry.register("connection", connection)
     registry.register("acquisition", AcquisitionCore(db))
-    registry.register("publish", PublishCore(db, stages, connection))
+    publish_core = PublishCore(db, stages, connection)
+    registry.register("publish", publish_core)
+    registry.register("instagram", InstagramCore(db, connection, publish_core))
     registry.register("ai", ai)
 
     return ApplicationKernel(db=db, registry=registry)
