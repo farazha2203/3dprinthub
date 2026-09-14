@@ -1,3 +1,6 @@
+## 2026-09-14 - Start selling with current Products/site kept live and trustworthy
+Owner priority is immediate sales start with Products and site kept current. Execution rule: widen publication only when Product pages, media, canonical Profile/Variant mapping, price and real customer Cart are all verified. #628/#634 are accepted sales-ready; #62/#84 require Profile repair + republish after ERR-49-135; #43 must not be completed by guessing missing Material/Color.
+
 ## 2026-09-14 - Start real sales publication
 Owner requested direct continuation toward selling. Implemented bounded production publication after the owner-license parity hotfix: #628 and #634 are now publicly orderable and browser-verified. Remaining explicitly ready candidates are #43/#62/#84 and must still pass fresh factual stage/media/readiness gates before publication; do not widen beyond the passing subset automatically.
 

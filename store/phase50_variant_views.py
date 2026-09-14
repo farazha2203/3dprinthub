@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
 from .models import ProductVariant
+from .phase50_orderability import variant_is_orderable
 
 
 def _filament_image_url(color_option) -> str:
@@ -48,21 +49,8 @@ def variant_commerce_options_view(request):
         price_contract = getattr(variant, "price_breakdown", {})
         price = price_contract() if callable(price_contract) else (price_contract or {})
         color_option = getattr(variant, "color", None)
-        inventory_ok = (
-            not bool(getattr(variant, "track_inventory", False))
-            or bool(getattr(variant, "allow_backorder", False))
-            or max(
-                0,
-                int(getattr(variant, "stock_quantity", 0) or 0)
-                - int(getattr(variant, "reserved_quantity", 0) or 0),
-            ) > 0
-        )
         color_stock_ok = bool(getattr(variant, "color_stock_sufficient", True))
-        orderable = (
-            str(getattr(variant, "stock_status", "") or "") != "out_of_stock"
-            and inventory_ok
-            and color_stock_ok
-        )
+        orderable = variant_is_orderable(variant)
         payload[str(variant.pk)] = {
             "product_id": product.pk,
             "profile_name": str(getattr(variant, "sales_profile_name", "") or ""),

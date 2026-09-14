@@ -1,3 +1,10 @@
+## 2026-09-14 ERR-49-135 sales repair paths
+- Production baseline before orderability hotfix: `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
+- Dedicated deploy runner: `scripts/host/phase50_orderable_publish_contract_deploy.sh`.
+- Pre-refinalize backup retained: `D:\projects\3dprinthub-backups\phase50-image-refinalize-20260914-142031`.
+- Pre-publish #62/#84 backup retained: `D:\projects\3dprinthub-backups\phase50-prepublish-62-84-20260914-142108`.
+- Current Site mappings needing orderability repair: Catalog #62 -> Site #18; Catalog #84 -> Site #19.
+
 ## 2026-09-14 owner-license sales retry paths
 - Current verified Production runtime: `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
 - Fresh canonical Catalog pre-retry backup: `D:\projects\3dprinthub-backups\phase50-owner-license-retry-20260914-141227\catalog.sqlite3`.

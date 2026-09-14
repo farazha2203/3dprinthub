@@ -1,3 +1,6 @@
+## 2026-09-14 - ERR-49-135 orderability hardening checkpoint
+Bounded expansion found that HTTP/public visibility was weaker than customer orderability for older Products without canonical sales Profiles. A2G acceptance is therefore tightened: Desktop must have canonical Profile rows before FTP, and final Store visibility must contain at least one Variant that passes the exact shared customer `variant_is_orderable` rule. Local regression/no-drift/runner gates PASS. #628/#634 stay accepted; #62/#84 require Profile bootstrap + republish + live Cart acceptance before they join the sales-ready set.
+
 ## 2026-09-14 - Bounded multi-product acceptance PASS / SALES STARTED
 Owner-license Host parity is live at `6569e5a...`. Exactly Product #628/#634 were republished through the mature Batch 8.5 -> FTP -> Bridge route and both passed strict Store/public media visibility; Local rows became `uploaded`. Real browser customer flow selected Variants 651/775, displayed 360,000/560,000 Toman and generated valid Cart POSTs intercepted before server delivery. A2G publication/order wiring is therefore accepted for this bounded two-product batch. Wider publication remains gated by fresh factual readiness/media/stage checks and a new Catalog backup.
 

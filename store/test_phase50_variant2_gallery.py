@@ -1,11 +1,13 @@
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 
 from django.contrib import admin
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
 
 from .models import ProductVariant, StoreOrderItem
+from .phase50_orderability import variant_is_orderable
 from .phase50_variant_views import variant_commerce_options_view
 
 
@@ -46,6 +48,21 @@ class Phase50Variant2GalleryContractTests(SimpleTestCase):
         variant.shipping_weight_grams = Decimal("210")
         self.assertEqual(variant.effective_shipping_weight_grams, Decimal("210"))
 
+    def test_shared_orderability_contract_matches_customer_rules(self):
+        base = {
+            "stock_status": "made_to_order",
+            "track_inventory": False,
+            "allow_backorder": False,
+            "stock_quantity": 0,
+            "reserved_quantity": 0,
+            "color_stock_sufficient": True,
+        }
+        self.assertTrue(variant_is_orderable(SimpleNamespace(**base)))
+        self.assertFalse(variant_is_orderable(SimpleNamespace(**{**base, "color_stock_sufficient": False})))
+        self.assertFalse(variant_is_orderable(SimpleNamespace(**{**base, "stock_status": "out_of_stock"})))
+        tracked = {**base, "track_inventory": True, "stock_quantity": 0}
+        self.assertFalse(variant_is_orderable(SimpleNamespace(**tracked)))
+        self.assertTrue(variant_is_orderable(SimpleNamespace(**{**tracked, "allow_backorder": True})))
     def test_variant_metadata_endpoint_is_stable_and_public(self):
         path = reverse("store:variant_commerce_options")
         self.assertEqual(path, "/store/api/variant-commerce-options/")

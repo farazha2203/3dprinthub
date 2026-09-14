@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
@@ -13,18 +14,31 @@ from store.phase49_catalog_visibility import (
 
 
 class _Variants:
-    def __init__(self, active=True, priced=True):
+    def __init__(self, active=True, priced=True, orderable=True):
         self.active = active
         self.priced = priced
+        self.orderable = orderable
         self._price_filter = False
 
     def filter(self, **kwargs):
-        clone = _Variants(self.active, self.priced)
+        clone = _Variants(self.active, self.priced, self.orderable)
         clone._price_filter = "cached_unit_price__gt" in kwargs
         return clone
 
     def exists(self):
         return self.priced if self._price_filter else self.active
+
+    def __iter__(self):
+        if not self.active:
+            return iter(())
+        return iter((SimpleNamespace(
+            stock_status="made_to_order",
+            track_inventory=False,
+            allow_backorder=False,
+            stock_quantity=0,
+            reserved_quantity=0,
+            color_stock_sufficient=self.orderable,
+        ),))
 
 
 class _Category:
@@ -97,6 +111,19 @@ class Phase49VisibilityTests(SimpleTestCase):
             )
         self.assertFalse(product.is_active)
 
+    def test_active_priced_but_nonorderable_variant_fails_closed(self):
+        product = _Product()
+        product.variants = _Variants(orderable=False)
+        decision = evaluate_catalog_product_visibility(
+            product, _Asset(), {"publish_as_product": 1, "approved_for_sale": 1}
+        )
+        self.assertFalse(decision.visible)
+        self.assertFalse(decision.checks["orderable_variant"])
+        with self.assertRaises(ValidationError):
+            publish_catalog_product_to_store(
+                product, _Asset(), {"publish_as_product": 1, "approved_for_sale": 1}
+            )
+        self.assertFalse(product.is_active)
     def test_missing_main_image_fails_closed(self):
         product = _Product()
         product.main_image = ""

@@ -1,3 +1,21 @@
+### ERR-49-135 ? Store visibility ACK could pass while every customer Variant was non-orderable
+**Date:** 2026-09-14
+**Observed:** #62/#84 imported successfully, public Product/media returned HTTP 200 and ACK reported `visible_on_store=true`; real browser QA found Cart disabled. Variant API returned `orderable=false` for every Variant.
+
+**Root cause:** older Catalog rows had empty `sales_profiles_json` / `sales_profile_ledger_json`, but Desktop publish gate did not require canonical Profile data. Host therefore created legacy fallback Variants. Final Store visibility required active Variant + price but did not reuse the real customer orderability rule (stock status + tracked inventory/backorder + filament color stock).
+
+**Correct fix:** require at least one canonical sales Profile before Desktop FTP; centralize customer orderability in `store.phase50_orderability.variant_is_orderable`; use the same helper in Variant API and final Catalog visibility; require `orderable_variant=true` before Store-visible ACK. Repair already-published #62/#84 through mature Commerce Profile bootstrap and republish the same source/Site identities; do not hand-edit Production Variants.
+
+**Safety:** no migration, no price invention, no inventory invention, no direct Production source edit. #43 stays blocked because Material/Color are factual operator inputs. Rollback branch: `backup/pre-err49-135-orderable-publish-contract-20260914` -> `e9e2257...`.
+
+**Verification:** local Python compile PASS; Store 35 tests PASS; Catalog Profile/Publish 19 tests PASS; Django check PASS with known warnings; no migration drift; migration plan empty; diff-check; dedicated runner Bash syntax/contract PASS. Production deploy and #62/#84 repair remain next.
+
+**Prevention:** strict Product publication acceptance must mean at least one Variant can actually be ordered by the same rule the customer API uses. Public HTTP 200 + active/priced Variant alone is insufficient.
+
+### ERR-49-136 ? exact-text fixture patch anchors failed before write
+**Date:** 2026-09-14
+Several local test-fixture edit attempts used Unicode/line-ending-sensitive exact anchors and stopped with anchor-not-found errors before writing the file. The failed commands were not repeated unchanged. The fixture was patched using deterministic line/ASCII field anchors instead, then `git diff --check` and tests passed. Prevention: for mixed Persian/CRLF files, prefer line-structured or ASCII-key anchors over large exact Unicode blocks.
+
 ### ERR-49-134 - Live browser DOM diagnostic embedded invalid inline JavaScript
 **Date:** 2026-09-14
 **Observed:** after correcting the hidden-select issue, a diagnostic-only `evaluate_all` expression failed with JavaScript `SyntaxError` before reading the Product DOM.

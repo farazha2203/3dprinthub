@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from .phase50_orderability import variant_is_orderable
+
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
 
 
@@ -76,9 +78,11 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
         active_variants = product.variants.filter(is_active=True)
         variant_exists = active_variants.exists()
         priced_variant = active_variants.filter(cached_unit_price__gt=0).exists()
+        orderable_variant = any(variant_is_orderable(item) for item in active_variants)
     except Exception:
         variant_exists = False
         priced_variant = False
+        orderable_variant = False
 
     main_image_field = getattr(product, "main_image", None)
     main_image = bool(main_image_field)
@@ -93,6 +97,7 @@ def evaluate_catalog_product_visibility(product, asset, data: dict) -> Visibilit
         "main_image": main_image,
         "main_image_storage": main_image_storage,
         "active_variant": variant_exists,
+        "orderable_variant": orderable_variant,
         "price_available": bool(fixed_price > 0 or priced_variant),
     }
     reasons = tuple(name for name, ok in checks.items() if not ok)

@@ -222,6 +222,17 @@ def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
                 missing.append(f"{label}: اطلاعات لازم ناقص است")
 
     data = _row_dict(row)
+    canonical_profiles = []
+    for key in ("sales_profile_ledger_json", "sales_profiles_json"):
+        try:
+            parsed = json.loads(data.get(key) or "[]")
+        except Exception:
+            parsed = []
+        if isinstance(parsed, list) and any(isinstance(item, dict) for item in parsed):
+            canonical_profiles = parsed
+            break
+    if not canonical_profiles:
+        missing.append("????? ? ????: ????? ?? ??????? ???? canonical ???? ???")
     media_state = publish_media_gate(data)
     missing.extend(media_state["missing"])
     if not bool(int(data.get("approved_for_sale") or 0)):

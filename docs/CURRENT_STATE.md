@@ -1,3 +1,11 @@
+## 2026-09-14 - ERR-49-135 ORDERABLE PUBLISH CONTRACT LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH+DEPLOY NEXT / #628+#634 SALES-READY / #62+#84 REPAIR REQUIRED`.
+
+After the accepted #628/#634 batch, #62 and #84 were image-refinalized and imported as Site Product #18/#19 with public page/media HTTP 200. Real Chromium customer QA then correctly failed: both Products exposed only disabled Variants. Store API evidence shows `orderable=false` because the imported Variants are legacy fallback rows with empty profile_key/size_label and insufficient color stock. Local Catalog evidence proves #62/#84 had empty canonical sales_profiles_json and sales_profile_ledger_json before publish, while healthy #628/#634 carry canonical Profile ledgers.
+
+ERR-49-135 fixes the contract instead of masking data: Desktop publish gate now requires at least one canonical sales Profile before FTP; Store API and final Catalog visibility share one `variant_is_orderable()` authority; visibility additionally requires `orderable_variant=true`. Local verification PASS: Python compile, 35 broader Store tests, 19 Catalog Profile/Publish tests, Django check with known warnings only, no migration drift, empty migration plan, diff-check, and Git-Bash syntax/contract for the dedicated no-migration deploy runner. Rollback branch `backup/pre-err49-135-orderable-publish-contract-20260914` points to `e9e2257...`. Exact next: commit/push -> guarded Production deploy from `6569e5a...` -> checksum backup -> canonical Profile bootstrap for #62/#84 -> mark ready/update -> republish same identities -> strict ACK plus live Cart acceptance. #43 remains blocked on factual operator Material/Color + image metadata and must not be guessed.
+
 ## 2026-09-14 - OWNER-LICENSE HOTFIX PRODUCTION_VERIFIED / SALES STARTED
 
 Status: `PRODUCTION_VERIFIED / BOUNDED_MULTI_PRODUCT_ACCEPTANCE_PASS / SALES_STARTED`.

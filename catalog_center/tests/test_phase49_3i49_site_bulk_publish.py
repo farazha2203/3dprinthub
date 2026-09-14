@@ -80,7 +80,13 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.db.close()
         self.temp.cleanup()
 
-    def _product(self, external_id: str, *, finalize_images: bool = True) -> int:
+    def _product(
+        self,
+        external_id: str,
+        *,
+        finalize_images: bool = True,
+        with_profiles: bool = True,
+    ) -> int:
         local_dir = self.root / f"product-{external_id}"
         image_dir = local_dir / "images"
         image_dir.mkdir(parents=True, exist_ok=True)
@@ -114,6 +120,32 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             "image_alt_texts_json": json.dumps([f"محصول {external_id}"]),
             "materials_json": json.dumps(["PLA"]),
             "colors_json": json.dumps(["مشکی"]),
+            "sales_profiles_json": json.dumps([{
+                "key": "test-profile-1",
+                "name": "Default",
+                "size_label": "Default",
+                "weight_grams": 100,
+                "material_weight_grams": 100,
+                "print_time_minutes": 60,
+                "build_profile": "standard",
+                "material": "PLA",
+                "color": "Black",
+                "quality": "standard",
+                "stock_status": "made_to_order",
+                "track_inventory": False,
+                "is_active": True,
+            }] if with_profiles else []),
+            "sales_profile_ledger_json": json.dumps([{
+                "key": "test-ledger-1",
+                "name": "Default",
+                "size_label": "Default",
+                "production_rows": [{
+                    "weight_grams": 100,
+                    "print_time_minutes": 60,
+                    "support_weight_grams": 0,
+                }],
+                "material_options": [{"material": "PLA", "color": "Black"}],
+            }] if with_profiles else []),
             "keywords_json": json.dumps(["چاپ سه بعدی", "محصول سه بعدی", "دکور"]),
             "seo_title_fa": f"خرید محصول {external_id}",
             "seo_description_fa": "توضیح سئو کامل برای محصول سه بعدی و سفارش چاپ حرفه ای.",
@@ -132,6 +164,15 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         if finalize_images:
             finalize_selected_images(self.db, product_id)
         return product_id
+
+    def test_product_without_canonical_sales_profile_never_becomes_ready(self):
+        product_id = self._product("3491099", with_profiles=False)
+        result = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(result["marked"], 0)
+        self.assertEqual(result["publishable_ids"], [])
+        missing = result["blocked"][0]["missing"]
+        self.assertTrue(any("canonical" in item for item in missing))
+        self.assertEqual(int(self.db.product(product_id)["upload_ready"]), 0)
 
     def test_two_ready_products_publish_and_move_to_published_filter(self):
         first = self._product("3491001")

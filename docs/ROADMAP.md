@@ -1,3 +1,13 @@
+## 2026-09-14 - Active sales gate: ERR-49-135 real orderability
+- [x] #628/#634 strict ACK + live customer Cart acceptance.
+- [x] Detect #62/#84 false-positive visibility: public but no orderable Variant.
+- [x] Local contract fix: canonical Profile required before FTP + shared Store orderability + visibility orderable gate.
+- [x] Local compile/tests/check/no-drift/runner syntax gates PASS.
+- [ ] Commit/push exact hotfix and verify GitHub head/CI.
+- [ ] Guarded no-migration Production deploy from exact `6569e5a...`.
+- [ ] Backup Catalog, bootstrap canonical Profiles for #62/#84, republish same identities, require live Cart PASS.
+- [ ] Keep #43 blocked until factual Material/Color and current image metadata are complete.
+
 ## 2026-09-14 - Sales launch gate passed
 - [x] Deploy owner-license Host parity at `6569e5a...`.
 - [x] Fresh Catalog backup before bounded retry.

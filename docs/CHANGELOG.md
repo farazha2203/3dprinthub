@@ -1,3 +1,11 @@
+## 2026-09-14 - ERR-49-135 orderable publish contract
+- Added Desktop fail-closed requirement for canonical sales Profile data before Product FTP/publish.
+- Added shared Store `variant_is_orderable()` contract and reused it in Variant API plus Catalog visibility.
+- Store visibility now requires at least one actually orderable active Variant, not only an active/priced Variant.
+- Added regression coverage for missing canonical Profile and active/priced-but-nonorderable Variant.
+- Added guarded no-migration Production runner from exact `6569e5a...` baseline.
+- #62/#84 are not considered sales-ready until canonical Profile repair + republish + live Cart acceptance; #628/#634 remain accepted.
+
 ## 2026-09-14 - Bounded sales publication accepted
 - Production owner-license hotfix verified at `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
 - Product #628 and #634 successfully republished to Site Products #16 and #17.
