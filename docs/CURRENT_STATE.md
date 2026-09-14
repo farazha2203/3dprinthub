@@ -1,3 +1,10 @@
+## 2026-09-14 - Phase50.A.2I combined Bridge + Hero deploy runner LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.
+
+Actual Local and live GitHub are clean and exact at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`; Production was reverified through the authenticated reverse bridge at clean `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. A dedicated combined no-migration/no-DB-write deploy runner now covers the pending ERR-49-125 Product-owned Bridge media fix plus A2I Slicebox-inspired Hero assets. Unlike the older Bridge-only runner, it intentionally performs collectstatic and verifies source/collected hashes for the A2I CSS/JS.
+
+Local gate PASS: Bash syntax, both Hero JavaScript syntax checks, Python compile, focused Bridge/Hero Django tests 17/17, Django check with known warnings only, no model drift, empty migration plan, reviewed baseline-to-target delta and no migration/requirements/settings delta. Rollback branch `backup/pre-phase50-a2i-combined-deploy-20260914` is now live on GitHub at exact pre-runner SHA `b1bbdee...`. ERR-49-127 records the one corrected PowerShell refspec interpolation failure; no source or Production mutation occurred. Exact next: commit/push runner + docs, verify live GitHub target, execute only the repository-owned combined runner from Production baseline `443d1b70`, then Production browser Hero desktop/mobile plus Product #63/#15 Bridge media, selector/cart and strict-ACK acceptance before bulk publishing.
 ## 2026-09-13 - Phase50.A.2I Slicebox-inspired 3D Hero LOCAL_TESTED
 
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.

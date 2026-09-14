@@ -2,7 +2,7 @@
 
 Date: 2026-09-13
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `LOCAL_TESTED / COMMIT+PUSH NEXT`
+Status: `LOCAL_TESTED / COMBINED_DEPLOY_RUNNER_LOCAL_TESTED / COMMIT+PUSH NEXT`
 Baseline: `ae8df27764b4452e2858429f3ee5759b0613e173`
 
 ## Goal
@@ -39,3 +39,5 @@ No Product data, Catalog SQLite, Production MySQL, migrations, dependency files,
 
 ## Next exact gate
 Document the Local-tested state, create a rollback branch, commit/push the exact reviewed delta, then use a dedicated no-migration/static deploy path from GitHub. Production must verify collected A2I CSS/JS, Home Hero desktop transition/mobile fallback and the still-required Product #63 Bridge/cart/strict-ACK gate before A2G/A2H/A2I can be accepted.
+## 2026-09-14 combined Production deploy gate
+Production was freshly reverified at clean `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`; Local/live GitHub A2I source is exact at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`. `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh` is Local-tested and intentionally combines the pending ERR-49-125 Bridge public-media correction with A2I static collection. It allows no migration, dependency/settings drift or DB write; it backs up source/environment/current Hero static, ff-only promotes the live GitHub target, hashes collected A2I assets, restarts Passenger and verifies authenticated Bridge readiness/Product #15 public Product-owned WebPs plus live Home/A2I markers. Commit/push and Production execution are next.

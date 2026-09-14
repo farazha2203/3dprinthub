@@ -1,3 +1,7 @@
+## 2026-09-14 - Phase50.A.2I combined deploy gate
+- Added `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh` for the exact Production `443d1b70...` -> current GitHub promotion.
+- Runner combines ERR-49-125 Product-owned Bridge media correction with A2I Hero static deployment, verified backups, collectstatic hash checks, restart and authenticated/public verification.
+- Local syntax/compile/focused Django/no-drift/empty-plan/delta safety gates PASS; Production unchanged pending GitHub promotion.
 ## 2026-09-13 - A2G Bridge media hotfix deploy gate
 - Added `scripts/host/phase50_a2g_bridge_media_hotfix_deploy.sh` for the ERR-49-125 serializer promotion from exact Host baseline `443d1b70...`.
 - Runner is no-migration/no-DB-write/no-collectstatic, creates verified source/.env rollback evidence, uses explicit live GitHub/FETCH_HEAD + ff-only promotion, and verifies authenticated Product #15/Hero public WebP media after Passenger restart.

@@ -1,3 +1,6 @@
+## 2026-09-14 - Continue current 3DPrintHub development from repository truth
+Status: `IN_PROGRESS`.
+The active requested continuation is to finish the professional 3D Hero/public Product publishing path from the verified repository state, not from chat memory. The immediate delivery gate is the combined A2I Hero + ERR-49-125 Bridge public-media Production promotion followed by Product #63 selector/cart/strict-ACK acceptance before any bounded bulk publication.
 ## 2026-09-13 - Controlled Product publish acceptance follow-up
 Owner requested uninterrupted continuation through the first real Product acceptance. Product #63 is the controlled candidate. Current blocking defect is narrowed to Bridge public-media serialization; Local fix is tested and must be GitHub-deployed/Production-verified before final selector/cart/ACK acceptance. Multi-product publish remains intentionally locked until this Product passes end to end.
 ## REQ-50-032 - Professional Storefront product showcase and selected-price hierarchy

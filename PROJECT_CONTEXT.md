@@ -1,3 +1,6 @@
+## 2026-09-14 - A2I combined deploy continuation checkpoint
+
+Local/live GitHub are exact at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`; authenticated Production identity is clean at `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. A combined repository-owned deploy runner is Local-tested to promote both the Product-owned Bridge media fix and A2I Slicebox-inspired Hero, including collectstatic/static hash verification and no-migration/readiness guards. Production is still unchanged. Next is rollback branch + commit/push, then GitHub-first combined deploy and Product #63 final acceptance.
 ## 2026-09-13 - Controlled Product #63 Bridge media boundary checkpoint
 
 The real A2G acceptance candidate has healthy Product-owned public WebPs, but the unified Bridge serializer exposed private imported working-media URLs. Local source now maps imported image identity to Product-owned public gallery/main media and keeps imported media private. Focused 31-test regression and no-migration gates PASS; fix is live on GitHub at `d830a9af05d768f9b81568a0665a74f59e864a34`. Next is GitHub-first no-migration deploy and Production Bridge/public-media verification, followed by Product #63 guided cart + strict ACK. Bulk publication is still blocked.

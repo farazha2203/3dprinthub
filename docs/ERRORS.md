@@ -1,3 +1,10 @@
+### ERR-49-127 - PowerShell rollback push refspec was corrupted by colon interpolation
+**Date:** 2026-09-14
+**Observed:** the first rollback-branch push failed locally with `fatal: invalid refspec 'refs/heads//heads/backup/pre-phase50-a2i-combined-deploy-20260914'`. The local rollback branch itself had already been created correctly at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`; no source, Production or database mutation occurred.
+**Root cause:** PowerShell parsed `$rb:refs` inside a double-quoted refspec as a colon-qualified variable expression instead of the intended `$rb` value followed by a literal colon.
+**Correct fix:** inspect the partial result, verify the local rollback ref and SHA, then change the command condition to use explicit `${rb}` boundaries in `refs/heads/${rb}:refs/heads/${rb}`. The corrected push created the remote rollback branch at the exact expected SHA.
+**Verification:** `git show-ref`, `git rev-parse` and live `git ls-remote` all report the rollback branch at `b1bbdeec2db2f3876def2fd1c61d17db01e67fb7`.
+**Prevention:** when a PowerShell interpolated variable is immediately adjacent to `:`, delimit the variable with `${...}` or construct the refspec from separate literal components; never rerun the malformed refspec unchanged.
 ### ERR-49-126 - A2G deploy-runner contract scan initially matched a descriptive NO COLLECTSTATIC banner
 **Date:** 2026-09-13
 **Observed:** the first Local runner gate passed compile, focused Bridge tests, Django check and no-migration drift, then the safety scan stopped on `FORBIDDEN_COLLECTSTATIC_FOUND` even though the runner contained no collectstatic command.
