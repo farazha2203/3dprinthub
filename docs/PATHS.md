@@ -1,3 +1,8 @@
+## 2026-09-14 ERR-49-138
+- Stale-public deploy runner: `scripts/host/phase50_stale_public_orderability_deploy.sh`.
+- Rollback branch: `backup/pre-err49-138-stale-public-orderability-20260914` -> `70a74e6...`.
+- Pre-repair Catalog backup: `D:\projects\3dprinthub-backups\phase50-profile-repair-preview-20260914-145936\catalog-before-profile-repair.sqlite3`.
+
 ## 2026-09-14 ERR-49-135 sales repair paths
 - Production baseline before orderability hotfix: `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
 - Dedicated deploy runner: `scripts/host/phase50_orderable_publish_contract_deploy.sh`.

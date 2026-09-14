@@ -1,3 +1,12 @@
+## 2026-09-14 - ERR-49-138 stale-public gate
+- [x] Prove #18/#19 active but 0 orderable Variants on Production.
+- [x] Add committed deactivation/noindex path for already-public non-orderable Products.
+- [x] Importer reports `publish_incomplete` and excludes non-visible Product from published count.
+- [x] 19 focused E2E/visibility/Variant tests + no-drift PASS.
+- [ ] Commit/push/deploy from exact `70a74e6...`.
+- [ ] Repair #62 with factual fixed-price/PLA-white/Profile data and republish.
+- [ ] Republish #84 fail-closed; keep off Store until selected black-matte inventory is real.
+
 ## 2026-09-14 - Active sales gate: ERR-49-135 real orderability
 - [x] #628/#634 strict ACK + live customer Cart acceptance.
 - [x] Detect #62/#84 false-positive visibility: public but no orderable Variant.

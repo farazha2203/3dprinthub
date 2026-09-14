@@ -1,3 +1,17 @@
+### ERR-49-137 ? PowerShell wrapper reported failure after remote runner had already PASSed
+**Date:** 2026-09-14
+The orderable-contract runner completed with remote `ok=True`, `returncode=0`, exact final HEAD `70a74e6...`, clean worktree and `PHASE50_ORDERABLE_PUBLISH_CONTRACT_DEPLOY=PASS`, but the outer Windows command checked stale/unreliable `$LASTEXITCODE` after invoking a PowerShell script and threw `remote orderability deploy failed`. Production was verified read-only afterward and was healthy. Do not rerun the deploy. Prevention: inspect the structured Bridge result (`ok` + `returncode`) for `.ps1` operator calls instead of `$LASTEXITCODE`.
+
+### ERR-49-138 ? Previously active non-orderable Product could remain public after visibility failure
+**Date:** 2026-09-14
+**Observed:** Production #18/#19 were already active from the older weak visibility contract but each had zero truly orderable Variants. The new visibility function raised inside `transaction.atomic()`, which is correct for a new invalid publish but would roll back any attempted deactivation of a stale public Product.
+
+**Root cause:** visibility rejection and stale-public cleanup shared the same exception path.
+
+**Fix:** if the Product was already public/indexed, clear `is_active`, `robots_index`, and `robots_follow`, save that state, return the non-visible decision and let the importer commit it as `publish_incomplete`. New invalid Products still raise before publication. Importer only increments Product count for `visibility.visible=True`.
+
+**Verification:** compile PASS; 19 visibility/unified-import/Variant tests PASS; no migration drift; diff-check and dedicated runner Bash syntax PASS. Rollback `backup/pre-err49-138-stale-public-orderability-20260914` -> `70a74e6...`.
+
 ### ERR-49-135 ? Store visibility ACK could pass while every customer Variant was non-orderable
 **Date:** 2026-09-14
 **Observed:** #62/#84 imported successfully, public Product/media returned HTTP 200 and ACK reported `visible_on_store=true`; real browser QA found Cart disabled. Variant API returned `orderable=false` for every Variant.

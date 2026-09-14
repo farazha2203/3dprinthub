@@ -1,3 +1,6 @@
+## 2026-09-14 - ERR-49-138 STALE PUBLIC ORDERABILITY LOCAL_TESTED
+Status: `LOCAL_TESTED / DEPLOY NEXT`. Production is verified clean at `70a74e6...`; #16/#17 have orderable Variants while #18/#19 have zero. ERR-49-138 makes stale active/noindex state fail closed without transaction rollback and changes importer state to `publish_incomplete` when visibility remains false. 19 E2E/visibility/Variant tests PASS, compile PASS, no migration drift, diff-check PASS, dedicated no-migration runner syntax PASS. Exact next: commit/push -> guarded deploy -> canonical repair #62 -> republish #62 -> stale-safe republish #84 so it leaves public Store until matching stocked black-matte offer exists.
+
 ## 2026-09-14 - ERR-49-135 ORDERABLE PUBLISH CONTRACT LOCAL_TESTED
 
 Status: `LOCAL_TESTED / COMMIT+PUSH+DEPLOY NEXT / #628+#634 SALES-READY / #62+#84 REPAIR REQUIRED`.

@@ -117,6 +117,20 @@ def publish_catalog_product_to_store(product, asset, data: dict) -> VisibilityDe
     if not decision.requested:
         return decision
     if not decision.visible:
+        stale_public = bool(
+            product.is_active
+            or product.robots_index
+            or product.robots_follow
+        )
+        if stale_public:
+            product.is_active = False
+            product.robots_index = False
+            product.robots_follow = False
+            update_fields = ["is_active", "robots_index", "robots_follow"]
+            if hasattr(product, "updated_at"):
+                update_fields.append("updated_at")
+            product.save(update_fields=update_fields)
+            return evaluate_catalog_product_visibility(product, asset, data)
         raise ValidationError("STORE_VISIBILITY_BLOCKED: " + ", ".join(decision.reasons))
 
     update_fields: list[str] = []

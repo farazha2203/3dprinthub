@@ -124,6 +124,23 @@ class Phase49VisibilityTests(SimpleTestCase):
                 product, _Asset(), {"publish_as_product": 1, "approved_for_sale": 1}
             )
         self.assertFalse(product.is_active)
+    def test_stale_public_nonorderable_product_is_deactivated_without_rollback_error(self):
+        product = _Product()
+        product.is_active = True
+        product.robots_index = True
+        product.robots_follow = True
+        product.variants = _Variants(orderable=False)
+        decision = publish_catalog_product_to_store(
+            product, _Asset(), {"publish_as_product": 1, "approved_for_sale": 1}
+        )
+        self.assertFalse(decision.visible)
+        self.assertFalse(product.is_active)
+        self.assertFalse(product.robots_index)
+        self.assertFalse(product.robots_follow)
+        self.assertIn("is_active", product.saved_fields)
+        self.assertIn("robots_index", product.saved_fields)
+        self.assertIn("robots_follow", product.saved_fields)
+
     def test_missing_main_image_fails_closed(self):
         product = _Product()
         product.main_image = ""

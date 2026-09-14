@@ -1,3 +1,6 @@
+## 2026-09-14 ERR-49-138 deploy constraint
+Deploy stale-public cleanup only from exact clean Production baseline `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7` using `scripts/host/phase50_stale_public_orderability_deploy.sh`. No migration, dependency, DB migration/write step or collectstatic is permitted by the runner; Product state changes occur later only through the canonical Catalog import path.
+
 ## 2026-09-14 ERR-49-135 deployment constraint
 Production application baseline for the orderability hotfix is exact clean `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`. Deploy only through `scripts/host/phase50_orderable_publish_contract_deploy.sh` from a live GitHub target. The runner is no-migration/no-DB-write/no-collectstatic, requires empty migration plan/readiness, checksum-verifies source/.env rollback evidence, ff-only promotes, restarts Passenger, and proves known-good Site Products #16/#17 still contain an actually orderable Variant. #62/#84 are repaired only afterward through the Windows Catalog publish path; do not hand-edit their Production Variants.
 

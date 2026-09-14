@@ -1,3 +1,6 @@
+## 2026-09-14 - Stale-public fail-closed extension
+A2G acceptance now includes lifecycle cleanup: a Product already public under an older weaker contract must be deactivated/noindexed when republish proves it has no actually orderable Variant. Local ERR-49-138 regression PASS; Production deploy and Product #62/#84 repair are next.
+
 ## 2026-09-14 - ERR-49-135 orderability hardening checkpoint
 Bounded expansion found that HTTP/public visibility was weaker than customer orderability for older Products without canonical sales Profiles. A2G acceptance is therefore tightened: Desktop must have canonical Profile rows before FTP, and final Store visibility must contain at least one Variant that passes the exact shared customer `variant_is_orderable` rule. Local regression/no-drift/runner gates PASS. #628/#634 stay accepted; #62/#84 require Profile bootstrap + republish + live Cart acceptance before they join the sales-ready set.
 

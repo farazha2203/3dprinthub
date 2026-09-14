@@ -414,7 +414,8 @@ class Command(BaseCommand):
                         apply_phase39_product_intelligence(product, data)
                         apply_phase43_product_details(product, data)
                         visibility = publish_catalog_product_to_store(product, asset, data)
-                        products += 1
+                        if visibility.visible:
+                            products += 1
                     if data.get("publish_as_portfolio") and license_ok:
                         portfolio = convert_to_portfolio(asset)
                         portfolios += 1
@@ -425,6 +426,8 @@ class Command(BaseCommand):
                 if wants_product and (not data.get("approved_for_sale") or not license_ok):
                     state = "review_required"
                 elif wants_product and product is None:
+                    state = "publish_incomplete"
+                elif wants_product and visibility is not None and not visibility.visible:
                     state = "publish_incomplete"
                 elif wants_portfolio and portfolio is None:
                     state = "publish_incomplete"

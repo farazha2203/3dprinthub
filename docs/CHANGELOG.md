@@ -1,3 +1,8 @@
+## 2026-09-14 - ERR-49-138 stale-public orderability
+- Already-public Products that fail current Store orderability are now deactivated and noindexed instead of remaining stale-public after a transaction rollback.
+- Catalog importer marks a committed non-visible republish as `publish_incomplete` and does not increment published Product count.
+- Added regression proving stale active non-orderable Product is deactivated. No migration or dependency delta.
+
 ## 2026-09-14 - ERR-49-135 orderable publish contract
 - Added Desktop fail-closed requirement for canonical sales Profile data before Product FTP/publish.
 - Added shared Store `variant_is_orderable()` contract and reused it in Variant API plus Catalog visibility.

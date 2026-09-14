@@ -1,3 +1,6 @@
+## 2026-09-14 - Immediate sales truth
+Owner wants current Products/site and immediate selling. The implementation must prefer a smaller actually-orderable catalog over public Products whose Cart is disabled. #62 is eligible for factual repair; #84 stays off Store until its selected black-matte filament has real stock; #43 remains blocked on factual Material/Color.
+
 ## 2026-09-14 - Start selling with current Products/site kept live and trustworthy
 Owner priority is immediate sales start with Products and site kept current. Execution rule: widen publication only when Product pages, media, canonical Profile/Variant mapping, price and real customer Cart are all verified. #628/#634 are accepted sales-ready; #62/#84 require Profile repair + republish after ERR-49-135; #43 must not be completed by guessing missing Material/Color.
 
