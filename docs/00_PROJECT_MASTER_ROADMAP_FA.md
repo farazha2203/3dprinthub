@@ -461,3 +461,7 @@ Web verification:
 
 ## 11) Safety
 No Production migration without exact MySQL vendor/name, exact plan, fresh verified backup and rollback. No public imported working-media. No guessed carrier/gateway endpoint. Purchased Velzon/font assets remain private.
+
+## 2026-09-14 - Phase50.A.2I Hero transition checkpoint
+
+A2I is Local-tested: the current managed Hero gains a dependency-free Slicebox-inspired seven-slice desktop transition while SSR Product/SEO content and mature interaction remain unchanged. Mobile/reduced-motion safely fall back. No migration or commerce-authority change. The next Production promotion must also carry the pending A2G Bridge public-media correction, then close Product #63 selector/cart/strict-ACK acceptance before bulk publishing.

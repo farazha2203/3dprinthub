@@ -1,3 +1,14 @@
+## 2026-09-13 - Phase50.A.2I Slicebox-inspired 3D Hero LOCAL_TESTED
+
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.
+
+Local and live GitHub baseline before A2I are exact at `ae8df27764b4452e2858429f3ee5759b0613e173`. A2I extends the existing managed Django Hero with a dependency-free Slicebox-inspired desktop transition: seven temporary 3D slices/cube faces are built only during transitions while the mature server-rendered title/description/alt/Product-link, timing, arrows, dots, keyboard, swipe and automatic rotation remain authoritative. Widths below 721px, reduced-motion and unsupported CSS 3D fall back to the mature transition engine.
+
+Local verification PASS: changed Python compile, both Hero JavaScript syntax checks, focused Hero/Public-Media suite 30/30, Django check with known warnings only, no model drift, empty migration plan, diff-check, and real Playwright Home QA. Browser evidence: four real slides; desktop transition produced one overlay with exactly seven slices then removed it; 390px mobile produced zero slices and exact 390px document width. No migration, dependency, Product data, pricing, inventory, cart/payment authority or DB write was introduced.
+
+The focused suite also exposed one stale Phase49.2C expectation that still required private imported working-media after ERR-49-125. The test was aligned to the current Product-owned public-media contract; runtime was not reverted. A temporary PowerShell newline-escaping edit defect was caught by source readback before tests and corrected before the passing gate.
+
+Production remains unchanged at last verified `443d1b70ecdf59e26b106d8887d56cb0e61ece8d`. Exact next: create rollback branch at the pre-A2I baseline, commit/push this reviewed delta, then build a dedicated combined no-migration deploy path because A2I requires collectstatic while the earlier Bridge-only runner intentionally forbids it. Production acceptance must include A2I static hashes/Home desktop+mobile and the still-required Product #15/#63 Bridge-public-media, selector, cart and strict-ACK gate before bounded bulk publication.
 ## 2026-09-13 - A2G Bridge media hotfix deploy runner LOCAL_TESTED
 
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 443d1b70`.

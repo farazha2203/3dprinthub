@@ -1,0 +1,66 @@
+/* Phase50.A.2I - Slicebox-inspired 3D hero transition, dependency-free. */
+[data-p50i-slicebox] .p45-hero__media {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+[data-p50i-slicebox] .p50i-slicebox {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow: hidden;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  perspective: 1400px;
+}
+[data-p50i-slicebox] .p50i-slicebox__slice,
+[data-p50i-slicebox] .p50i-slicebox__face {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+[data-p50i-slicebox] .p50i-slicebox__slice {
+  clip-path: inset(0 var(--p50i-right) 0 var(--p50i-left));
+  transform-origin: var(--p50i-origin) 50%;
+  will-change: transform, filter;
+}
+[data-p50i-slicebox] .p50i-slicebox__face {
+  overflow: hidden;
+}
+[data-p50i-slicebox] .p50i-slicebox__face--front {
+  transform: rotateY(0deg) translateZ(1px);
+}
+[data-p50i-slicebox] .p50i-slicebox__face--back {
+  transform: rotateY(180deg) translateZ(1px);
+}
+[data-p50i-slicebox] .p50i-slicebox.is-playing .p50i-slicebox__slice {
+  animation: p50i-slicebox-turn var(--p50i-duration, 1200ms) cubic-bezier(.22,.72,.18,1) both;
+  animation-delay: calc(var(--p50i-index) * 48ms);
+}
+[data-p50i-slicebox].p50i-slicebox-active .p45-hero__slide.is-entering,
+[data-p50i-slicebox].p50i-slicebox-active .p45-hero__slide.is-leaving {
+  animation: none !important;
+  filter: none !important;
+}
+[data-p50i-slicebox].p50i-slicebox-active .p45-hero__slide.is-entering .p45-hero__caption {
+  animation: p50i-caption-in calc(var(--p49c-transition, 1200ms) * .72) ease-out both;
+}
+@keyframes p50i-slicebox-turn {
+  0% { transform: rotateY(0deg) translateZ(0); filter: brightness(1); }
+  42% { filter: brightness(.72); }
+  100% { transform: rotateY(var(--p50i-turn, 180deg)) translateZ(0); filter: brightness(1); }
+}
+@keyframes p50i-caption-in {
+  from { opacity: 0; transform: translate3d(18px, 12px, 0); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+@media (max-width: 720px) {
+  [data-p50i-slicebox] .p50i-slicebox { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-p50i-slicebox] .p50i-slicebox { display: none !important; }
+  [data-p50i-slicebox].p50i-slicebox-active .p45-hero__slide.is-entering .p45-hero__caption { animation: none !important; }
+}
+
+[data-p50i-slicebox].p50i-slicebox-active .p50i-slicebox img { animation: none !important; transition: none !important; }

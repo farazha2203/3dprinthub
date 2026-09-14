@@ -895,3 +895,10 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 
 ## 2026-08-25 — Phase49.3I Production closeout
 - Product-owned public Hero media, structured web Product presentation and verified Production deploy; imported Catalog working-media remained private.
+
+## 2026-09-14 - Phase50.A.2I Slicebox-inspired Hero
+- Added dependency-free seven-slice CSS/JS 3D transition over the existing managed Hero.
+- Preserved server-rendered Hero SEO/content/Product links and mature controls/rotation.
+- Added mobile, reduced-motion and unsupported-3D fallback to the mature transition.
+- Aligned the stale Hero media regression with ERR-49-125 Product-owned public-media policy.
+- Local Hero/Public-Media suite 30/30 PASS; real Playwright desktop/mobile QA PASS; no migration/dependency/DB write.

@@ -112,6 +112,13 @@
       root.setAttribute("data-p49c-active-effect", effect);
       root.style.setProperty("--p49c-transition", duration + "ms");
 
+      var sliceDirection = target < index ? -1 : 1;
+      if (index === slides.length - 1 && nextIndex === 0) sliceDirection = 1;
+      if (index === 0 && nextIndex === slides.length - 1) sliceDirection = -1;
+      if (window.P50SliceboxHero && typeof window.P50SliceboxHero.play === "function") {
+        window.P50SliceboxHero.play(root, outgoing, incoming, duration, sliceDirection);
+      }
+
       incoming.classList.add("is-active", "is-entering");
       incoming.classList.remove("is-leaving");
       incoming.setAttribute("aria-hidden", "false");

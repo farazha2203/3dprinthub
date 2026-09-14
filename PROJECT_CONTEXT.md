@@ -579,3 +579,7 @@ A fresh Production source/environment/MySQL backup is still mandatory before sch
 - `ERR-50-007`: Production remote refspec is tag-only; verify live branch and explicit `FETCH_HEAD`.
 - `ERR-50-010`: do not rely on cPanel `/dev/fd` process substitution.
 - `ERR-50-011`: JSON is data; parse with `python -` + `json.load`.
+
+## 2026-09-14 - Phase50.A.2I Local acceptance
+
+The active Home Hero has a Local-tested dependency-free Slicebox-inspired seven-slice desktop transition. Existing managed slide data, server-rendered SEO text/Product links and mature navigation/autoplay remain authoritative; mobile/reduced-motion use fallback. Focused Hero/Public-Media regression 30/30 and real Playwright desktop/mobile QA PASS. Production is unchanged until GitHub-first deployment; Product #63 final A2G cart/ACK acceptance still gates bulk publication.

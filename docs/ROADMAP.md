@@ -459,3 +459,7 @@ Last verified Production application commit remains `c283864290f9c989a9fcdf24ee8
 Last verified Production migration evidence remains only `store.0034` and `store.0035`; no later migration is assumed applied.
 
 Historical roadmap checkpoints remain available in Git history and dedicated `docs/phases/` documents.
+
+## 2026-09-14 - Phase50.A.2I Slicebox-inspired 3D Hero
+
+Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero now has an optional dependency-free seven-slice 3D transition inspired by Codrops Slicebox. Existing SSR content, Product links, timing, arrows, dots, keyboard/swipe and mobile/reduced-motion fallback remain authoritative. Focused Hero/Public-Media regression 30/30 PASS and real Playwright desktop/mobile QA PASS. No migration, dependency or commerce-authority change. Next: commit/push the reviewed A2I delta, then combine it with the already-tested A2G Bridge public-media fix for guarded Production deployment and Product #63 final cart/ACK acceptance.

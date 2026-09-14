@@ -182,4 +182,5 @@ class Phase49_2CHeroStudioBehaviorTests(TestCase):
         self.assertEqual(slide.transition_effect, "wedding_dissolve")
         self.assertEqual(slide.transition_duration_ms, 1800)
         self.assertEqual(slide.display_duration_ms, 8500)
-        self.assertTrue(slide.effective_image_url.endswith("/store/imported-models/gallery/phase49c-hero.jpg"))
+        self.assertEqual(slide.effective_image_url, "/media/store/products/phase49c-main.jpg")
+        self.assertNotIn("/media/store/imported-models/", slide.effective_image_url)
