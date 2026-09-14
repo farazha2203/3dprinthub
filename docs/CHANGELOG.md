@@ -953,3 +953,12 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Added mobile, reduced-motion and unsupported-3D fallback to the mature transition.
 - Aligned the stale Hero media regression with ERR-49-125 Product-owned public-media policy.
 - Local Hero/Public-Media suite 30/30 PASS; real Playwright desktop/mobile QA PASS; no migration/dependency/DB write.
+
+## 2026-09-14 - Local Filament defaults + all-Product Profile preselection
+- Backed up canonical Catalog SQLite before mutation.
+- Set all 66 active Filament rows to one 1000 g roll and nonzero purchase/sale/print/supervision pricing.
+- Applied owner pricing overrides for PLA, PETG, HT-PLA-GF and PLA-CF; specialist Material prices came from existing project Material reference data.
+- Backfilled canonical Sales Profiles for all 635 Products and selected all 64 unique active Filament identities in every Profile.
+- Opened 12 Commerce locks through StageCore so dimensions can be edited; 19 prior uploads now carry `needs_update=1` for republish/update.
+- Focused Filament/Profile tests 34/34 PASS, Qt verify-only PASS, Catalog integrity `ok`.
+- Relaunched Windows Catalog Center v8.9.10. No Production publish/deploy was performed.

@@ -1232,3 +1232,14 @@ Last verified Production DB evidence still confirms only `store.0034` and `store
 7. Production remains blocked until explicit owner Local acceptance.
 
 Historical checkpoints remain available in Git history and their dedicated `docs/phases/` documents.
+
+## 2026-09-14 - LOCAL FILAMENT DEFAULTS / MANUAL REPUBLISH READY
+Status: `LOCAL_DATA_UPDATED / TESTED / QT_LAUNCHED / NO PRODUCTION PUBLISH`.
+
+Owner-requested Local Catalog defaults are applied to `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`. Fresh rollback backup: `D:\projects\3dprinthub-backups\phase50-filament-defaults-20260914-175618`. Source/backup/preview integrity and logical pre-write guards passed.
+
+All 66 active Filament rows now have 1000 g roll weight, stock_roll_count=1, nonzero purchase/sale price and nonzero print/supervision rates. Owner overrides: PLA 3.5m/4.5m, PETG 4.5m/5.5m, HT-PLA-GF 4.5m/5.5m, PLA-CF 8.5m/9.5m Toman purchase/sale; print rates 150k/150k/150k/200k and supervision 50k. Specialist materials reuse existing project Material reference prices, with 150k/50k service fallback where the reference service fields were empty.
+
+Every one of 635 Local Products now has a canonical Sales Profile; 636 Profiles total. Every Profile contains all 64 unique selectable Filament identities (66 inventory rows include two duplicate identities that the mature Core intentionally deduplicates). Twelve Commerce locks were opened through StageCore so dimensions can be edited. Nineteen previously uploaded Products are marked `needs_update=1` for same-identity republish.
+
+Verification: Filament/Profile focused suites 34/34 PASS; Qt verify-only PASS; Catalog integrity `ok`; zero invalid/zero-price active Filament rows; zero Products without Profile. Catalog Center v8.9.10 Qt6 relaunched and responsive. No Product was published and Production DB/source was not changed by this Local policy update.

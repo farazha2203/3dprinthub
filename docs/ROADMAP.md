@@ -522,3 +522,14 @@ Historical roadmap checkpoints remain available in Git history and dedicated `do
 ## 2026-09-14 - Phase50.A.2I Slicebox-inspired 3D Hero
 
 Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero now has an optional dependency-free seven-slice 3D transition inspired by Codrops Slicebox. Existing SSR content, Product links, timing, arrows, dots, keyboard/swipe and mobile/reduced-motion fallback remain authoritative. Focused Hero/Public-Media regression 30/30 PASS and real Playwright desktop/mobile QA PASS. No migration, dependency or commerce-authority change. Next: commit/push the reviewed A2I delta, then combine it with the already-tested A2G Bridge public-media fix for guarded Production deployment and Product #63 final cart/ACK acceptance.
+
+## 2026-09-14 - Manual publication simplification checkpoint
+- [x] Give every active Local Filament one 1000 g roll of stock.
+- [x] Remove zero purchase/sale/service pricing from active Local Filaments using owner overrides + existing Material reference authority.
+- [x] Ensure every Local Product has a canonical Sales Profile.
+- [x] Preselect every unique active Filament identity in every Product Profile.
+- [x] Preserve existing factual Profile rows; use fallback production facts only where Profile/production data was absent.
+- [x] Mark previously uploaded Products for same-identity republish instead of duplicate publication.
+- [x] Focused Filament/Profile tests 34/34 + Qt verification PASS; relaunch Windows Catalog Center.
+- [ ] Owner manually adjusts Product dimensions/finalizes required stages and publishes selected Products from Windows.
+- [ ] Continue the separate Store Reset feature before claiming the Production Store is empty; do not conflate that pending source work with this Local data policy.
