@@ -1,3 +1,8 @@
+## 2026-09-14 - Owner request: restore Published Products and real Product images in the Windows app
+Status: `LOCAL_TESTED / COMMIT+PUSH+FOREGROUND ACCEPTANCE NEXT`.
+
+Owner requires the `Sent / Published` workspace to continue showing Products already sent to the Site even when they have new Local edits, and Product image galleries must show the real downloaded/finalized files rather than dozens of broken placeholders generated from historical source URLs. The gallery should be compact and usable. The accepted implementation keeps dirty published Products visible while separately queueing republish, displays factual local files including legacy numbered media, protects unmapped compatibility files from mutation, and preserves the strict modern SEO/publish media contract. Real Catalog evidence and 77/77 related regressions PASS.
+
 ## 2026-09-14 - Owner sales-start request: expand only genuinely orderable Products
 Owner requested that products/site stay current and sales begin immediately. Current accepted sales set is Site Product #16 (#628), #17 (#634), and #18 (#62). Continue widening only after strict Profile/media/license/orderability/Cart gates; do not expose Product #19 (#84) as sellable while its selected black-matte inventory is zero, and do not guess missing facts for #43.
 

@@ -430,7 +430,7 @@ class ProductWizardPage(QWidget):
         self.image_task_status.setObjectName("Muted")
         layout.addWidget(self.image_task_status)
 
-        self.image_grid = ProductImageGrid(columns=3)
+        self.image_grid = ProductImageGrid(columns=4)
         self.image_grid.setMinimumHeight(540)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
@@ -765,9 +765,13 @@ class ProductWizardPage(QWidget):
             bool(int(row.get("homepage_slider_enabled") or 0))
         )
         self.image_slider_enabled.blockSignals(False)
-        missing = sum(1 for item in items if not item.get("downloaded"))
+        local_count = len(items)
+        source_count = self.kernel.images.source_image_count(row)
+        source_only = max(0, source_count - local_count)
         self.image_task_status.setText(
-            f"{len(items)} تصویر • {missing} فایل محلی مفقود/دریافت‌نشده"
+            f"{local_count} \u0641\u0627\u06cc\u0644 \u0645\u062d\u0644\u06cc \u0642\u0627\u0628\u0644 \u0646\u0645\u0627\u06cc\u0634 ? "
+            f"{source_count} \u0644\u06cc\u0646\u06a9 \u062a\u0635\u0648\u06cc\u0631 \u0645\u0646\u0628\u0639 ? "
+            f"{source_only} \u0628\u062f\u0648\u0646 \u0641\u0627\u06cc\u0644 Local"
         )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:

@@ -1,3 +1,12 @@
+## 2026-09-14 - ERR-49-144 Published workspace + legacy Product gallery truth LOCAL_TESTED
+Status: `LOCAL_TESTED / DOCUMENTED / COMMIT+PUSH NEXT / PRODUCTION NOT TOUCHED BY THIS SLICE`.
+
+Owner foreground QA exposed two Local Qt regressions: already-published Products disappeared from `Sent / Published` as soon as a Local edit set `needs_update=1`, and older Product galleries created cards from every raw source URL even when only a smaller set of real local files existed. The fix keeps an uploaded Product in the Published lifecycle while the existing work queue still carries its republish work. ImageCore now separates source-image evidence from factual locally-displayable files; legacy numbered local files are displayable without weakening the strict publish mapping, and unmapped display-only cards cannot mutate selection/SEO/delete state. Gallery density is restored to four compact columns.
+
+Real canonical Catalog read-only acceptance after the patch: Published count=19; Product #33 source URLs=60 / displayable local files=16; #34=60/25; #63=2/2; #628=2/2; #634=2/2. Modern finalized SEO WebPs for #63/#628/#634 remain exact. Focused + adjacent Crawl/Publish suites are 77/77 PASS. The only intermediate test failure was an obsolete expectation that a dirty uploaded Product leaves Published; the contract was corrected to require presence in both Published and Work Queue. Rollback branch `backup/pre-err49-144-published-gallery-regression-20260914` points to pre-fix `b85f946094ffeb0aea406ebaf6603273a7ef49ed`.
+
+No Django/Catalog migration, canonical Catalog write, media rename/delete, secret change, Host source change or Production DB write occurred. Last verified Production source remains the previously documented `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`; this Windows-only fix does not claim a Production deployment. Exact next: commit/push this isolated delta, create a fresh checksum-safe Catalog backup, relaunch the pushed Qt runtime and complete owner foreground verification of Published and image galleries.
+
 ## 2026-09-14 - ERR-49-142 DIAGNOSTIC HOTFIX LOCAL_TESTED / PRODUCT303 PREVIEW READY
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCT303_PREVIEW_ONLY`. The canonical-profile publish blocker still fails closed, but its corrupted question-mark diagnostic was restored and regression-tested. Focused Catalog publish tests 11/11, compile and diff-check PASS.
 

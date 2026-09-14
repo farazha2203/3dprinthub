@@ -223,3 +223,12 @@ Owner-supplied File Library references were reviewed directly and the durable im
 
 The current Qt offscreen missing bundled-font-directory warning is non-blocking for ERR-49-088, but it is explicitly queued for the Persian typography/runtime packaging audit. Licensed font binaries remain outside Git.
 
+
+
+## 2026-09-14 compatibility hotfix - ERR-49-144
+
+Owner foreground QA against the modern Catalog exposed two regressions in the original 3I.47 presentation contract. First, `Sent / Published` incorrectly became empty for Products that were already uploaded but had new Local changes. Second, legacy Products with many historical source URLs could render dozens of broken cards even though a smaller set of real local files existed.
+
+The compatibility repair restores the original 3I.47 intent without changing publish authority: uploaded Products stay in the Published lifecycle while `needs_update` continues to drive republish work; Product display count/cards use factual local files; exact modern SEO mappings remain preferred; legacy numbered files are UI-display compatible; unmapped display-only files cannot perform mutating image actions; the gallery is four compact columns. The strict publish resolver remains fail-closed and unchanged.
+
+Canonical Catalog read-only evidence after the fix: Published=19; #33 source=60/display=16; #34=60/display=25; #63/#628/#634 each source=2/display=2. Dedicated 3I.47 suite 9/9 PASS and combined neighboring Qt/Crawl/Publish suite 77/77 PASS. Rollback: `backup/pre-err49-144-published-gallery-regression-20260914` -> `b85f946094ffeb0aea406ebaf6603273a7ef49ed`. Production was not touched.

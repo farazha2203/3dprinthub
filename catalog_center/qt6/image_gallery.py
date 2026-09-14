@@ -43,8 +43,8 @@ class ImageCard(QFrame):
         super().__init__(parent)
         self.item = dict(item)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(300)
-        self.setMaximumWidth(380)
+        self.setMinimumWidth(220)
+        self.setMaximumWidth(285)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -52,8 +52,8 @@ class ImageCard(QFrame):
 
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumSize(250, 190)
-        self.preview.setMaximumHeight(235)
+        self.preview.setMinimumSize(190, 145)
+        self.preview.setMaximumHeight(180)
         path = str(self.item.get("path") or "")
         pixmap = QPixmap(path) if path else QPixmap()
         if pixmap.isNull():
@@ -62,8 +62,8 @@ class ImageCard(QFrame):
         else:
             self.preview.setPixmap(
                 pixmap.scaled(
-                    330,
-                    225,
+                    255,
+                    170,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -88,7 +88,7 @@ class ImageCard(QFrame):
         if not filename:
             filename = str(self.item.get("url") or "").rsplit("/", 1)[-1][:55]
         self.filename = QLabel(filename or "بدون نام فایل")
-        self.filename.setWordWrap(True)
+        self.filename.setWordWrap(False)
         self.filename.setToolTip(str(self.item.get("url") or ""))
         root.addWidget(self.filename)
 
@@ -106,7 +106,8 @@ class ImageCard(QFrame):
 
         alt = str(self.item.get("alt_text") or "").strip()
         self.alt = QLabel(f"Alt: {alt or '—'}")
-        self.alt.setWordWrap(True)
+        self.alt.setWordWrap(False)
+        self.alt.setToolTip(alt)
         self.alt.setObjectName("Muted")
         root.addWidget(self.alt)
 
@@ -123,6 +124,13 @@ class ImageCard(QFrame):
         actions.addWidget(delete)
         actions.addStretch(1)
         root.addLayout(actions)
+
+        if bool(self.item.get("display_only")):
+            self.selected.setEnabled(False)
+            self.primary.setEnabled(False)
+            self.slider.setEnabled(False)
+            seo.setEnabled(False)
+            delete.setEnabled(False)
 
         # QCheckBox.toggled emits bool, while the gallery contract is a
         # zero-argument semantic notification. Consume the Qt payload here.

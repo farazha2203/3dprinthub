@@ -1,3 +1,12 @@
+## 2026-09-14 - ERR-49-144 Published lifecycle and factual local image gallery
+- Published workspace now keeps uploaded Products visible after Local edits while the work queue still exposes republish work.
+- Product gallery image counts/cards are based on real locally-displayable files, not every raw source URL.
+- Legacy numbered local images can render through a display-only compatibility layer; strict publish mapping remains unchanged.
+- Unmapped legacy display-only cards cannot change selection/primary/slider/SEO/delete state.
+- Product image gallery is compact four-column again.
+- Real Catalog acceptance: Published=19; #33=16 displayable files from 60 source URLs; #34=25/60; modern #63/#628/#634 remain 2/2.
+- Focused + adjacent Qt/Crawl/Publish suites: 77/77 PASS; no migration or Production mutation.
+
 ## 2026-09-14 - Catalog publish diagnostic integrity / Product #303 preview
 - restored the canonical Sales Profile blocker message after Windows encoding corruption;
 - added exact regression preventing future `????` diagnostic corruption;

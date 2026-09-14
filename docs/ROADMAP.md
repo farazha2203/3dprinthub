@@ -1,3 +1,15 @@
+## 2026-09-14 - ERR-49-144 Published/gallery regression
+- [x] Preserve `workflow_status=uploaded` Products in the Published lifecycle even when Local edits set `needs_update=1`.
+- [x] Preserve republish discoverability through the existing Work Queue at the same time.
+- [x] Count/render actual locally-displayable Product media instead of raw source URL count.
+- [x] Reuse legacy numbered local WebPs read-only without weakening strict publish media mapping.
+- [x] Disable mutating controls for legacy display-only files that lack trustworthy source URL identity.
+- [x] Restore a compact four-column Product image gallery.
+- [x] Verify real Catalog: Published=19; #33=16 real files; #34=25; #63/#628/#634=2 each.
+- [x] Run focused + adjacent Qt/Crawl/Publish regression: 77/77 PASS.
+- [ ] Commit/push exact isolated delta and verify live GitHub SHA.
+- [ ] Create fresh Catalog rollback backup and relaunch the pushed Qt runtime for owner foreground acceptance.
+
 ## 2026-09-14 - Product #303 bounded sales candidate
 - [x] Audit all approved non-uploaded candidates on a copied Catalog DB.
 - [x] Identify #303 as the only candidate with no operator-only missing facts.

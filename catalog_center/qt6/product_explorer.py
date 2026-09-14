@@ -28,7 +28,6 @@ def product_lifecycle_status(row: dict[str, Any]) -> str:
     if (
         str(row.get("server_id") or "").strip()
         and workflow == "uploaded"
-        and not int(row.get("needs_update") or 0)
     ):
         return "published"
     if (

@@ -16,7 +16,8 @@ from app.db import Database
 from qt6.kernel import AICore, build_kernel
 from qt6.pages import OperationsPage, ProductsPage
 from qt6.parity_dialogs import ProfileEditorDialog
-from qt6.product_explorer import ProductGalleryModel
+from qt6.product_explorer import ProductGalleryModel, product_lifecycle_status
+from qt6.product_wizard import ProductWizardPage
 
 
 class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
@@ -242,6 +243,81 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             )
         finally:
             page.close()
+
+    def test_published_workspace_keeps_uploaded_product_with_local_updates(self):
+        product_id = self._make_product("3147010")
+        self.db.update_product(
+            product_id,
+            {
+                "server_id": "site-product:901",
+                "server_status": "updated",
+                "workflow_status": "uploaded",
+                "needs_update": 1,
+            },
+        )
+        row = dict(self.db.product(product_id))
+        self.assertEqual(product_lifecycle_status(row), "published")
+        self.assertEqual(self.db.product_count("published"), 1)
+
+        model = ProductGalleryModel(self.kernel.products, self.kernel.images)
+        model.refresh(filter_name="published")
+        self.assertEqual(model.total_count, 1)
+        self.assertEqual(model.rowCount(), 1)
+
+    def test_legacy_numbered_images_render_real_files_not_sixty_placeholders(self):
+        local_dir = self.root / "legacy-numbered"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        for slot in (1, 2, 4):
+            Image.new("RGB", (400 + slot, 300 + slot), "white").save(
+                image_dir / f"{slot:02d}.webp",
+                format="WEBP",
+            )
+        urls = [f"https://cdn.example.com/source-{index:02d}.jpg" for index in range(1, 61)]
+        product_id = self._make_product(
+            "3147011",
+            local_dir=local_dir,
+            urls=urls,
+        )
+        row = dict(self.db.product(product_id))
+
+        items = self.kernel.images.local_items(product_id)
+        self.assertEqual(self.kernel.images.source_image_count(row), 60)
+        self.assertEqual(self.kernel.images.image_count(row), 3)
+        self.assertEqual(len(items), 3)
+        self.assertTrue(all(item["downloaded"] for item in items))
+        self.assertEqual(
+            [item["filename"] for item in items],
+            ["01.webp", "02.webp", "04.webp"],
+        )
+        self.assertEqual(
+            [item["url"] for item in items],
+            [urls[0], urls[1], urls[3]],
+        )
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(page.image_grid.columns, 4)
+            self.assertEqual(len(page.image_grid.cards), 3)
+            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 220)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 190)
+            self.assertIn("60", page.image_task_status.text())
+            self.assertIn("3", page.image_task_status.text())
+        finally:
+            page.close()
+
+    def test_source_urls_without_local_files_do_not_create_broken_gallery_cards(self):
+        urls = [f"https://cdn.example.com/missing-{index:02d}.jpg" for index in range(1, 61)]
+        product_id = self._make_product(
+            "3147012",
+            local_dir=self.root / "missing-local",
+            urls=urls,
+        )
+        row = dict(self.db.product(product_id))
+        self.assertEqual(self.kernel.images.source_image_count(row), 60)
+        self.assertEqual(self.kernel.images.image_count(row), 0)
+        self.assertEqual(self.kernel.images.local_items(product_id), [])
 
     def test_profile_editor_uses_three_full_height_tabs(self):
         profile = {

@@ -419,7 +419,8 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(row["workflow_status"], "uploaded")
         self.assertEqual(int(row["needs_update"]), 1)
         self.assertEqual(int(row["upload_ready"]), 0)
-        self.assertEqual(self.db.product_count(filter_name="published"), 0)
+        self.assertEqual(self.db.product_count(filter_name="published"), 1)
+        self.assertEqual(self.db.product_count(filter_name="work_queue"), 1)
 
         ready = mark_ready_many(self.db, FakeStages(), [product_id])
         self.assertEqual(ready["marked"], 1)

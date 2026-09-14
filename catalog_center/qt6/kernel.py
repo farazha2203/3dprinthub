@@ -545,15 +545,103 @@ class ImageCore:
             data,
         )
 
-    def image_count(self, row: dict[str, Any] | Any) -> int:
+    @staticmethod
+    def _preferred_legacy_display_files(paths: list[str]) -> list[str]:
+        resolved_paths: list[Path] = []
+        seen: set[str] = set()
+        for raw in paths or []:
+            try:
+                candidate = Path(str(raw or "")).resolve()
+            except Exception:
+                continue
+            if not candidate.is_file():
+                continue
+            key = str(candidate).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            resolved_paths.append(candidate)
+
+        finalized = [
+            path for path in resolved_paths
+            if path.parent.name.casefold() == "seo_images"
+        ]
+        originals = [
+            path for path in resolved_paths
+            if path.parent.name.casefold() == "images"
+        ]
+        preferred = finalized or originals or resolved_paths
+        return [str(path) for path in preferred]
+
+    def display_local_paths(self, row: dict[str, Any] | Any) -> list[str]:
+        """Return real local files for UI display without weakening publish mapping."""
         data = dict(row) if not isinstance(row, dict) else row
-        urls = self.urls(data)
-        if urls:
-            return len(urls)
+
         rejected = str(data.get("rejected_thumbnail_path") or "").strip()
-        if rejected and Path(rejected).is_file():
-            return 1
-        return len(self._legacy_local_candidates(data))
+        if rejected:
+            try:
+                rejected_path = Path(rejected).resolve()
+                if rejected_path.is_file():
+                    return [str(rejected_path)]
+            except Exception:
+                pass
+
+        urls = self.urls(data)
+        exact: list[str] = []
+        seen: set[str] = set()
+        for url in urls:
+            path = self.local_path_for_url(data, url)
+            if not path:
+                continue
+            try:
+                resolved = Path(path).resolve()
+            except Exception:
+                continue
+            if not resolved.is_file():
+                continue
+            key = str(resolved).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            exact.append(str(resolved))
+
+        metadata = [
+            item for item in self._json_list(
+                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+            )
+            if isinstance(item, dict)
+        ]
+        if metadata and exact:
+            return exact
+
+        direct = self._preferred_legacy_display_files(
+            self._legacy_local_candidates(data)
+        )
+        if direct:
+            return direct
+        if exact:
+            return exact
+
+        for local_dir in self.identity_local_dirs(
+            str(data.get("source_code") or ""),
+            str(data.get("external_id") or ""),
+            data,
+        ):
+            candidate_data = dict(data)
+            candidate_data["local_dir"] = str(local_dir)
+            candidates = self._preferred_legacy_display_files(
+                self._legacy_local_candidates(candidate_data)
+            )
+            if candidates:
+                return candidates
+        return []
+
+    def source_image_count(self, row: dict[str, Any] | Any) -> int:
+        data = dict(row) if not isinstance(row, dict) else row
+        return len(self.urls(data))
+
+    def image_count(self, row: dict[str, Any] | Any) -> int:
+        return len(self.display_local_paths(row))
 
     def renumber(self, product_id: int) -> dict[str, Any]:
         """Rebuild final SEO files as -01/-02/... and remove stale derivatives."""
@@ -614,6 +702,7 @@ class ImageCore:
         slider_image = str(
             data.get("homepage_slider_image_url") or ""
         ).strip()
+        urls = self.urls(data)
         selected_urls: list[str] = []
         for raw in self._json_list(data.get("selected_images_json")):
             if isinstance(raw, dict):
@@ -634,35 +723,83 @@ class ImageCore:
                 data.get("image_alt_texts_json")
             )
         ]
-        raw_meta = self._json_list(
-            data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
-        )
         metadata = [
             dict(item)
-            for item in raw_meta
+            for item in self._json_list(
+                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+            )
             if isinstance(item, dict)
         ]
 
-        output: list[dict[str, Any]] = []
-        for index, url in enumerate(self.urls(data), 1):
+        exact_by_path: dict[str, tuple[int, str]] = {}
+        for slot, url in enumerate(urls, 1):
             path = self.local_path_for_url(data, url)
-            file_path = Path(path) if path else None
+            if not path:
+                continue
+            try:
+                resolved = Path(path).resolve()
+            except Exception:
+                continue
+            if not resolved.is_file():
+                continue
+            exact_by_path.setdefault(
+                str(resolved).casefold(),
+                (slot, url),
+            )
+
+        output: list[dict[str, Any]] = []
+        used_urls: set[str] = set()
+        for display_index, raw_path in enumerate(
+            self.display_local_paths(data),
+            1,
+        ):
+            try:
+                file_path = Path(raw_path).resolve()
+            except Exception:
+                continue
+            if not file_path.is_file():
+                continue
+
+            mapped = exact_by_path.get(str(file_path).casefold())
+            slot = display_index
+            url = ""
+            display_only = False
+            if mapped is not None:
+                slot, url = mapped
+            else:
+                stem = file_path.stem
+                if stem.isdigit():
+                    numbered_slot = int(stem)
+                    if 1 <= numbered_slot <= len(urls):
+                        candidate_url = urls[numbered_slot - 1]
+                        if candidate_url not in used_urls:
+                            slot = numbered_slot
+                            url = candidate_url
+                if not url:
+                    display_only = True
+                    source_code = str(data.get("source_code") or "local")
+                    external_id = str(data.get("external_id") or product_id)
+                    url = (
+                        f"local-display://{source_code}/{external_id}/"
+                        f"{file_path.name}"
+                    )
+            used_urls.add(url)
+
             width = height = file_bytes = 0
             image_format = ""
-            if file_path is not None and file_path.is_file():
-                try:
-                    from PIL import Image
+            try:
+                from PIL import Image
 
-                    with Image.open(file_path) as image:
-                        width = int(image.width)
-                        height = int(image.height)
-                        image_format = str(image.format or "")
-                except Exception:
-                    pass
-                try:
-                    file_bytes = int(file_path.stat().st_size)
-                except Exception:
-                    pass
+                with Image.open(file_path) as image:
+                    width = int(image.width)
+                    height = int(image.height)
+                    image_format = str(image.format or "")
+            except Exception:
+                pass
+            try:
+                file_bytes = int(file_path.stat().st_size)
+            except Exception:
+                pass
 
             meta = next(
                 (
@@ -687,21 +824,15 @@ class ImageCore:
 
             output.append(
                 {
-                    "slot": index,
+                    "slot": slot,
                     "url": url,
-                    "path": str(file_path or ""),
-                    "filename": (
-                        file_path.name
-                        if file_path is not None
-                        else str(meta.get("original_filename") or "")
-                    ),
-                    "downloaded": bool(
-                        file_path is not None
-                        and file_path.is_file()
-                    ),
-                    "primary": url == primary,
-                    "slider": url == slider_image,
-                    "selected": url in selected,
+                    "path": str(file_path),
+                    "filename": file_path.name,
+                    "downloaded": True,
+                    "display_only": display_only,
+                    "primary": (not display_only and url == primary),
+                    "slider": (not display_only and url == slider_image),
+                    "selected": (not display_only and url in selected),
                     "width": width,
                     "height": height,
                     "format": image_format,

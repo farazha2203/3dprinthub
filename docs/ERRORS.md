@@ -1,3 +1,16 @@
+## 2026-09-14 - ERR-49-144 Published lifecycle and Product gallery conflated dirty/source state with customer-visible state
+**Observed:** already-published Products disappeared from the Qt `Sent / Published` workspace after any Local edit set `needs_update=1`. Older Products could also show roughly 60 broken/empty image cards because the gallery iterated raw source URLs even when only 16 or 25 local files actually existed; the three-column cards were unnecessarily large.
+
+**Root cause:** the Published filter and lifecycle badge treated `needs_update=0` as part of publication identity instead of as a separate republish state. Separately, Qt display count/card construction conflated source URL evidence with locally renderable media. The strict publish resolver intentionally refuses index guessing, but that strict mutation/publish rule was incorrectly reused as the only UI display path for legacy files.
+
+**Correct fix:** an uploaded Product with a server identity remains in Published regardless of `needs_update`; the existing Work Queue simultaneously carries dirty/ready republish work. ImageCore now has a UI-only factual local-file resolver and separate source-image count. Exact current mappings remain preferred; legacy local numbered files can be shown read-only; unmapped display-only cards have selection/primary/slider/SEO/delete controls disabled. The strict SEO/publish mapping in `phase49_3c_image_pipeline` is unchanged. Gallery density returns to four compact columns.
+
+**Verification:** canonical Catalog read-only probe: Published=19; Product #33 source=60/display=16, #34=60/25, #63/#628/#634=2/2 with their finalized SEO WebPs preserved. Dedicated 3I.47 regression is 9/9 PASS; combined 3I.47 + 3I.42C3 + 3I.49 + 3I.52C suite is 77/77 PASS. One first broader run failed only because the old republish test asserted Published count=0 after a dirty edit; after review, the test contract was changed to require the same Product in both Published and Work Queue. No failed runtime command was repeated unchanged.
+
+**Rollback:** `backup/pre-err49-144-published-gallery-regression-20260914` -> `b85f946094ffeb0aea406ebaf6603273a7ef49ed`.
+
+**Prevention:** lifecycle identity, republish dirtiness, source media evidence, local-display media and strict publish media are distinct contracts. Tests must cover all five explicitly; never make a UI visibility/count rule stronger by reusing a fail-closed publication rule.
+
 ## 2026-09-14 - ERR-49-143 focused unittest invoked from wrong module root
 **Observed:** the first focused ERR-49-142 regression command ran from repository root and failed before executing tests with `ModuleNotFoundError: No module named app`.
 

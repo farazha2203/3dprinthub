@@ -724,7 +724,7 @@ class Database:
             "upload_queue": "upload_ready=1",
             "review": "workflow_status='review'",
             "work_queue": "(server_id='' OR needs_update=1 OR upload_ready=1 OR workflow_status<>'uploaded')",
-            "published": "(server_id<>'' AND workflow_status='uploaded' AND needs_update=0 AND server_status IN ('created','updated','review_required'))",
+            "published": "(server_id<>'' AND workflow_status='uploaded')",
             "needs_update": "needs_update=1",
             "without_images": "(images_json='[]' OR images_json='' OR images_json IS NULL)",
             "without_content": "(title_fa='' OR description_fa='' OR content_status<>'ready')",
