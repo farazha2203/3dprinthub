@@ -1,3 +1,11 @@
+## 2026-09-14 - Sales launch gate passed
+- [x] Deploy owner-license Host parity at `6569e5a...`.
+- [x] Fresh Catalog backup before bounded retry.
+- [x] Publish exactly #628/#634: strict ACK/public media/Product visibility PASS.
+- [x] Real browser Variant/price/Cart wiring PASS with POST intercepted before server.
+- [ ] Audit remaining ready #43/#62/#84 against current factual gates.
+- [ ] Publish only passing subset, then verify strict ACK/public pages/media/cart before any larger batch.
+
 ## 2026-09-14 - Active sales-unblock gate: ERR-49-131 owner-license Host parity
 
 The first bounded two-Product publish exposed a contract mismatch, not a legal-status rewrite requirement. Project owner policy already marks every reviewed Catalog source/license stage through explicit `source_license_owner_approved`; Windows readiness/export honors it, while the Host importer/conversion/visibility path ignored it and returned `review_required` for #628/#634. Local hotfix preserves raw license evidence and honors the separate owner approval at every Host gate. Automated Site/Catalog/no-drift/deploy-runner gates PASS. Next: GitHub-first no-migration Production promotion from `44a7be9...`, then retry only #628/#634 from a fresh checksum Catalog backup. Broader Product publishing remains bounded until both receive strict Store-visible ACK and live cart verification.

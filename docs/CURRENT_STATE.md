@@ -1,3 +1,13 @@
+## 2026-09-14 - OWNER-LICENSE HOTFIX PRODUCTION_VERIFIED / SALES STARTED
+
+Status: `PRODUCTION_VERIFIED / BOUNDED_MULTI_PRODUCT_ACCEPTANCE_PASS / SALES_STARTED`.
+
+Production is exact clean runtime `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`; the guarded no-migration owner-license hotfix deploy passed with Home/Store/Bridge/readiness HTTP 200 and `ready=true`. A fresh canonical Catalog SQLite backup was created with SQLite backup API at `D:\projects\3dprinthub-backups\phase50-owner-license-retry-20260914-141227`; source and backup both passed integrity, Product/receipt/history counts matched, and the two target rows matched before mutation.
+
+Bounded retry of exactly Product #628 and #634 then passed through the mature Batch 8.5 -> FTP -> Bridge import path: published=2, failed=0, skipped=0. #628 maps to Site Product #16 `/store/product/majestic-hydra-voronoi-art-sculpture/`; #634 maps to Site Product #17 `/store/product/flexi-mini-seal/`. Both ACKs report `visible_on_store=true`, `public_http_ok=true`, active Variant/price/category/image checks true, and all reported Product-owned WebPs return HTTP 200 image/webp. Local state for both is now `workflow_status=uploaded`, `upload_ready=0`, `product_sync_error=''`.
+
+Real Chromium Production QA also PASSed without creating an order: #628 resolved Variant 651 at 360,000 Toman and #634 Variant 775 at 560,000 Toman; both Cart buttons enabled, form targets were canonical `/store/cart/add/<slug>/`, and exact POST payloads carried `variant_id` plus `quantity=1`. Requests were intercepted before server delivery, so no test cart/order write was created. No non-empty-src Product image was broken and no browser page errors occurred. Exact next: factual readiness/media/stage audit of only remaining exportable #43/#62/#84; publish only the subset that passes current gates, with a new pre-publish backup.
+
 ## 2026-09-14 - ERR-49-131 Owner-approved license Host parity LOCAL_TESTED
 
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT / PRODUCTION STILL 44a7be9`.

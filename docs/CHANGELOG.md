@@ -1,3 +1,10 @@
+## 2026-09-14 - Bounded sales publication accepted
+- Production owner-license hotfix verified at `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
+- Product #628 and #634 successfully republished to Site Products #16 and #17.
+- Both strict ACK/public HTTP/media visibility contracts PASS; Local sync errors cleared and rows moved to uploaded.
+- Browser QA: Variant 651 = 360,000 Toman; Variant 775 = 560,000 Toman; Cart POST wiring PASS without server-side test order creation.
+- Added rollback-grade SQLite backup `phase50-owner-license-retry-20260914-141227`.
+
 ## 2026-09-14 - ERR-49-131 owner-license publication parity
 - aligned Host importer, fixed-Product conversion and Store visibility with the existing explicit `source_license_owner_approved` authority;
 - preserved raw source `commercial_status`/license evidence instead of rewriting `review` to an allowed value;

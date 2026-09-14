@@ -1,3 +1,6 @@
+## 2026-09-14 owner-license parity current Production constraint
+Current Production source is `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`, clean after the guarded no-migration owner-license deploy. The Host now treats explicit `source_license_owner_approved=1` as effective business approval while preserving raw source `commercial_status` evidence. Product #628/#634 strict public visibility and browser Cart wiring are verified. Future publication must still use current Catalog factual gates, fresh Local backup, authenticated receiver readiness, strict ACK/public verification, and bounded batches.
+
 ## 2026-09-14 A2I + Bridge current Production constraint
 
 Current verified Production source is `44a7be91057c60891960fbb9d9b4f53780273c33`, clean after the combined A2I + ERR-49-125 promotion. MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`; required migrations are applied and plan is empty; publish readiness is true. Verified rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`. Do not rerun the old Bridge-only `443d1b70` baseline runner. Future deployment planning must start from fresh read-only verification of this newer Host state.

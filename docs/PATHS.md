@@ -1,3 +1,8 @@
+## 2026-09-14 owner-license sales retry paths
+- Current verified Production runtime: `6569e5a9ec7e75da7185b851fc6eea82cd7fc0ea`.
+- Fresh canonical Catalog pre-retry backup: `D:\projects\3dprinthub-backups\phase50-owner-license-retry-20260914-141227\catalog.sqlite3`.
+- Published Site Products: #16 `/store/product/majestic-hydra-voronoi-art-sculpture/`; #17 `/store/product/flexi-mini-seal/`.
+
 ## 2026-09-14 A2I + Bridge verified Production checkpoint
 - Verified Production source: `44a7be91057c60891960fbb9d9b4f53780273c33` on canonical branch.
 - Combined deploy runner: `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh`.

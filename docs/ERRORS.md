@@ -1,3 +1,17 @@
+### ERR-49-134 - Live browser DOM diagnostic embedded invalid inline JavaScript
+**Date:** 2026-09-14
+**Observed:** after correcting the hidden-select issue, a diagnostic-only `evaluate_all` expression failed with JavaScript `SyntaxError` before reading the Product DOM.
+**Root cause:** nested quote/escape complexity in the inline diagnostic expression; Production page was not the failing boundary.
+**Correct fix:** do not rerun the expression unchanged; read DOM nodes with Playwright's Python locator API instead. The corrected DOM inspection returned HTTP 200, real guided steps and canonical Cart form.
+**Prevention:** prefer locator APIs for acceptance diagnostics; reserve inline `evaluate` for small syntax-stable expressions.
+
+### ERR-49-133 - Live browser acceptance tried normal select on intentionally hidden native fallback
+**Date:** 2026-09-14
+**Observed:** first live Product browser QA timed out at `select_option` because `#variant-select` is intentionally hidden after guided progressive enhancement.
+**Root cause:** harness treated the native fallback as the primary visible control even though the Phase50 guided selector correctly hides it when JS is ready.
+**Correct fix:** do not repeat unchanged. Inspect the live guided DOM and drive visible `[data-step]` buttons; keep the native select only as fallback contract. Final QA for #628/#634 PASSed through visible customer controls and intercepted Cart POST.
+**Prevention:** Production browser acceptance must follow the user-visible enhanced path first; hidden native controls are fallback evidence, not the default interaction target.
+
 ### ERR-49-132 - Local Bash syntax gate selected WSL stub instead of Git Bash
 **Date:** 2026-09-14
 **Observed:** deploy-runner syntax validation stopped before parsing the runner because `Get-Command bash` resolved to the Windows WSL launcher and no Linux distribution is installed.

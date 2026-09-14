@@ -1,3 +1,6 @@
+## 2026-09-14 - Start real sales publication
+Owner requested direct continuation toward selling. Implemented bounded production publication after the owner-license parity hotfix: #628 and #634 are now publicly orderable and browser-verified. Remaining explicitly ready candidates are #43/#62/#84 and must still pass fresh factual stage/media/readiness gates before publication; do not widen beyond the passing subset automatically.
+
 ## 2026-09-14 - Start selling with bounded real Product publication
 Status: `IN_PROGRESS / OWNER-LICENSE HOST PARITY LOCAL_TESTED`.
 Owner requested continued development through direct Host access so the site can start selling. The current bounded publication blocker is ERR-49-131: Host must honor the repository's existing explicit owner source/license approval without falsifying source license evidence. Hotfix is Local-tested; next is guarded GitHub-first Production deployment and exact retry of Products #628/#634 before widening the sellable catalog.
