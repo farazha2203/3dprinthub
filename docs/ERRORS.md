@@ -1,3 +1,6 @@
+## 2026-09-15 - ERR-49-146 RECOVERED / watchdog contract reverified
+Owner ran the repository bootstrap once from cPanel. `127.0.0.1:22024` returned to LISTENING and authenticated bridge health is `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. A tunnel-side `crontab -l` probe then proved the required one-minute `3DPrintHub reverse tunnel watchdog` entry is installed exactly with `flock` and `phase50_reverse_tunnel_bootstrap.sh`. Normal operations therefore return to Remote-Desktop Local work + reverse-tunnel Host deployment; owner cPanel entry is break-glass only.
+
 ## 2026-09-15 - ERR-49-146 3DPrintHub reverse watchdog stopped; no authorized Host execution channel
 **Observed:** Windows `127.0.0.1:22024` is closed. Host private `watchdog.log` and `tunnel.pid` stopped updating on 2026-09-14; `tunnel.log` ends with `Connection reset by peer` / `Broken pipe`. Windows authorized-key fingerprint exactly matches the Host tunnel-key fingerprint, and Windows OpenSSH is healthy for the same Host source IP through another isolated project identity, so the 3DPrintHub failure is not a key mismatch or global Windows SSH outage.
 

@@ -1,3 +1,11 @@
+## 2026-09-15 - REVERSE TUNNEL RECOVERED / SELF-HEAL CONTRACT VERIFIED
+Status: `TUNNEL_HEALTHY / BRIDGE_AUTHENTICATED / WATCHDOG_CRON_PRESENT / DEPLOY THROUGH TUNNEL NEXT`.
+Windows loopback `127.0.0.1:22024` is listening again. Authenticated bridge reports `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. Tunnel-side `crontab -l` proves the one-minute 3DPrintHub watchdog entry is installed with `flock` and the repository bootstrap. Normal Host execution now resumes through the tunnel; no more routine owner-pasted deploy commands.
+
+## 2026-09-15 - PERMANENT REMOTE EXECUTION TOPOLOGY CONFIRMED
+Status: `REMOTE_DESKTOP_LOCAL / REVERSE_TUNNEL_HOST / WATCHDOG_REQUIRED`.
+Owner reconfirmed the permanent operations rule: all Local development/testing is performed on the verified Windows workstation through Remote Desktop; all Production Host operations are performed through the dedicated 3DPrintHub reverse tunnel (`127.0.0.1:22024` -> Host bridge `127.0.0.1:22224`). Routine deploy commands must not be handed back to the owner while the authorized tunnel is healthy. The cPanel one-minute watchdog plus repository bootstrap is required to auto-recover the tunnel after disconnects. Tunnel was manually recovered by the owner and Windows loopback 22024 is listening again; next is GitHub-first deployment and final Store reset/QA through that tunnel.
+
 ## 2026-09-15 - CLIENT HANDOFF BLOCKED ONLY BY HOST EXECUTION TRANSPORT
 Status: `GITHUB_READY 1dc3f31 / LOCAL+CI GATES PASS / PRODUCTION 70a74e6 / HOST TRANSPORT BLOCKED`.
 

@@ -1,3 +1,8 @@
+## 2026-09-15 permanent execution topology
+- Local repository: `D:\projects\3DPrintHub`, operated through the connected Windows Remote Desktop device.
+- Production operator path: Windows `127.0.0.1:22024` -> Host authenticated bridge `127.0.0.1:22224` -> `/home/sfkilvrs/3dprinthub`.
+- Persistence authority: cPanel cron watchdog + `scripts/host/phase50_reverse_tunnel_bootstrap.sh`; other project tunnels are out of scope.
+
 ## 2026-09-15 Client handoff deploy paths
 - Candidate GitHub commit before runner commit: `dd1e770abd26438021d9728a7ee616c89429e137`.
 - Current verified Production source: `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`.

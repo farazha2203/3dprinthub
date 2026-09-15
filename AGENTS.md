@@ -1,3 +1,9 @@
+## Permanent execution topology
+- Local development, inspection and testing must run on the verified Windows workstation through Remote Desktop access against `D:\projects\3DPrintHub`.
+- Production Host operations must use the dedicated 3DPrintHub reverse tunnel only: Windows loopback `127.0.0.1:22024` -> Host bridge `127.0.0.1:22224`. Do not ask the owner to paste routine deploy commands when this authorized tunnel is healthy.
+- The Host-side one-minute cPanel cron watchdog is part of the required operations contract. If the tunnel drops, first recover/verify this watchdog and the repository-owned `phase50_reverse_tunnel_bootstrap.sh`; do not use another project's tunnel or broaden firewall exposure.
+- Normal delivery is: Remote Desktop Local work -> test -> commit/push GitHub -> reverse-tunnel Host deploy from GitHub -> Production verify -> docs.
+
 # PROJECT AGENT RULES
 
 GitHub is the permanent source of truth. Do not rely only on chat history.

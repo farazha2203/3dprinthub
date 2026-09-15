@@ -1,3 +1,6 @@
+## Permanent operator rule — 2026-09-15
+This transport is the normal Production execution path for 3DPrintHub. ChatGPT operates the Local repository through the connected Windows Remote Desktop device and operates Production through this dedicated reverse tunnel. When `127.0.0.1:22024` is healthy, routine Host/deploy commands must be executed through the tunnel rather than handed to the owner. The one-minute cPanel cron watchdog is mandatory; owner-side cPanel bootstrap is break-glass recovery only.
+
 # Reverse SSH Remote Management Standard
 
 Date: 2026-09-13

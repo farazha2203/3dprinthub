@@ -1,3 +1,6 @@
+## 2026-09-15 permanent Host execution rule
+Production operations for 3DPrintHub must use the dedicated reverse-management path only: `127.0.0.1:22024` on Windows to authenticated Host bridge `127.0.0.1:22224`. Do not substitute Retoucher/Asal tunnels. The one-minute cPanel watchdog is mandatory persistence infrastructure and must run the repository-owned `phase50_reverse_tunnel_bootstrap.sh` under `flock`; if the tunnel disappears, repair/verify watchdog execution before asking the owner for routine Host commands.
+
 ## 2026-09-15 ERR-49-146 current handoff constraint
 The 3DPrintHub reverse-management watchdog is not currently executing; Windows loopback 22024 is closed. Host private state is reachable read-only by FTPS, but FTPS must not be used to upload permanent source and does not provide command execution. The Host tunnel key fingerprint still exactly matches Windows `printhubtunnel_authorized_keys`, so key replacement is forbidden. Do not use another project tunnel. Client-handoff deploy/reset may resume only after the 3DPrintHub cPanel cron/bootstrap is restored and authenticated bridge identity passes.
 

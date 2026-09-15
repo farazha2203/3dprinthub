@@ -1,3 +1,10 @@
+## 2026-09-15 - Host transport recovery
+- [x] Restore dedicated 3DPrintHub reverse tunnel and verify Windows `127.0.0.1:22024` listening.
+- [x] Verify authenticated Host bridge identity/base.
+- [x] Verify one-minute cPanel watchdog cron entry is present and uses `flock` + repository bootstrap.
+- [ ] Deploy current GitHub handoff head through the reverse tunnel.
+- [ ] Create fresh MySQL/media reset backup, execute eligible Store reset, and complete Production browser QA.
+
 ## 2026-09-15 - Client handoff transport blocker
 - [x] Push application candidate and dedicated guarded deploy runner.
 - [x] Prove Local Hero 50.3.0 in Chromium and Store Reset regression gates.

@@ -91,7 +91,7 @@ printf '%s\n' "===== TARGET DELTA ====="; cat "$TMP_DELTA"
 while IFS= read -r path; do
   [ -n "$path" ] || continue
   case "$path" in
-    PROJECT_CONTEXT.md|docs/*) ;;
+    AGENTS.md|PROJECT_CONTEXT.md|docs/*) ;;
     catalog_bridge/store_reset.py|catalog_bridge/test_phase50_store_reset.py|catalog_bridge/urls.py) ;;
     catalog_center/app/db.py|catalog_center/app/instagram_publish.py|catalog_center/app/phase49_3i49_site_publish.py|catalog_center/app/secure_secrets.py|catalog_center/app/site_connection.py) ;;
     catalog_center/qt6/image_gallery.py|catalog_center/qt6/kernel.py|catalog_center/qt6/pages.py|catalog_center/qt6/product_explorer.py|catalog_center/qt6/product_wizard.py|catalog_center/qt6/settings_page.py) ;;
