@@ -1,3 +1,8 @@
+## 2026-09-15 - CLIENT HANDOFF BLOCKED ONLY BY HOST EXECUTION TRANSPORT
+Status: `GITHUB_READY 1dc3f31 / LOCAL+CI GATES PASS / PRODUCTION 70a74e6 / HOST TRANSPORT BLOCKED`.
+
+Final application + Store Reset + Hero candidate and guarded deploy runner are on GitHub. Production remains intentionally unchanged because the dedicated 3DPrintHub reverse watchdog stopped running and there is currently no second authorized Host command channel. FTPS read-only evidence proves the private state exists but is stale; authorized-key fingerprint parity is correct; cPanel API cannot authenticate with the stored FTP credential; no auto-deploy hook exists. Exact next operation after cPanel recovery is: authenticated identity/readiness -> guarded GitHub deploy -> fresh MySQL/media reset backup -> Store Reset -> Production browser acceptance.
+
 ## 2026-09-15 - CLIENT HANDOFF DEPLOY RUNNER LOCAL_TESTED / PUSH NEXT
 Status: `GITHUB_CANDIDATE dd1e770 / DEPLOY_RUNNER_LOCAL_TESTED / PRODUCTION STILL 70a74e6`.
 

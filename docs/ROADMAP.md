@@ -1,3 +1,12 @@
+## 2026-09-15 - Client handoff transport blocker
+- [x] Push application candidate and dedicated guarded deploy runner.
+- [x] Prove Local Hero 50.3.0 in Chromium and Store Reset regression gates.
+- [x] Diagnose reverse tunnel: Host bridge state exists; authorized-key fingerprint matches; Windows loopback 22024 closed.
+- [x] Prove watchdog/cron stopped updating and FTPS has no command channel.
+- [x] Prove stored FTP credential is not accepted by cPanel API and no `.cpanel.yml`/GitHub auto-deploy exists.
+- [ ] Restore only 3DPrintHub cPanel watchdog/bootstrap execution.
+- [ ] Run guarded GitHub deploy, verified reset backup, Store Reset and Production browser acceptance.
+
 ## 2026-09-15 - Client handoff deploy runner checkpoint
 - [x] Push application candidate `dd1e770...` to canonical branch.
 - [x] Browser-verify Local Hero 50.3.0: 1440x823 full-bleed, real temporary 3D cuboids, mobile fallback.

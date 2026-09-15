@@ -1,3 +1,6 @@
+## 2026-09-15 transport recovery prerequisite
+Before any client-handoff deployment, require the dedicated 3DPrintHub reverse tunnel on Windows loopback 22024 and authenticated Host identity. If the cPanel watchdog is stale, restore/run only the documented 3DPrintHub bootstrap through an authorized cPanel execution channel. FTPS is not a deployment channel, another project tunnel is not a substitute, and cPanel authentication must not be bypassed.
+
 # Deployment
 
 ## 2026-09-15 Client handoff path

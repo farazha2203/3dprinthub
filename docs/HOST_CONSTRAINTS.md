@@ -1,3 +1,6 @@
+## 2026-09-15 ERR-49-146 current handoff constraint
+The 3DPrintHub reverse-management watchdog is not currently executing; Windows loopback 22024 is closed. Host private state is reachable read-only by FTPS, but FTPS must not be used to upload permanent source and does not provide command execution. The Host tunnel key fingerprint still exactly matches Windows `printhubtunnel_authorized_keys`, so key replacement is forbidden. Do not use another project tunnel. Client-handoff deploy/reset may resume only after the 3DPrintHub cPanel cron/bootstrap is restored and authenticated bridge identity passes.
+
 ## 2026-09-14 current sales/Host execution boundary
 Production is freshly verified clean at `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, empty migration plan and publish readiness true. Live GitHub is `07772ca9247357ff63d2395eea9eed70780c9a68` and its stale-public lifecycle tests/CI pass, but the current remote-command safety layer rejects Host Git mutation. Treat this as an execution-channel boundary, not authorization to bypass GitHub-first governance. Read-only verification and verified backups remain allowed; permanent Production source must still move only from approved GitHub code through an authorized Host execution path.
 

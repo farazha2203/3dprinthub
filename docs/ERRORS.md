@@ -1,3 +1,12 @@
+## 2026-09-15 - ERR-49-146 3DPrintHub reverse watchdog stopped; no authorized Host execution channel
+**Observed:** Windows `127.0.0.1:22024` is closed. Host private `watchdog.log` and `tunnel.pid` stopped updating on 2026-09-14; `tunnel.log` ends with `Connection reset by peer` / `Broken pipe`. Windows authorized-key fingerprint exactly matches the Host tunnel-key fingerprint, and Windows OpenSSH is healthy for the same Host source IP through another isolated project identity, so the 3DPrintHub failure is not a key mismatch or global Windows SSH outage.
+
+**Root cause boundary:** the accepted one-minute cPanel cron/watchdog is no longer executing. FTPS exposes files only and advertises no command execution. The stored FTP credential is not a cPanel API credential (HTTPS 2083 read-only probe returns 401). Repository has no `.cpanel.yml`, GitHub deploy workflow, or alternate direct inbound Host SSH path.
+
+**Safety response:** do not upload permanent source over FTPS, do not borrow Asal/Retoucher tunnels, do not bypass cPanel authentication, and do not mutate Production DB/Store until GitHub-first Host execution is restored.
+
+**Recovery:** restore only the documented 3DPrintHub cPanel cron or run the repository bootstrap from the cPanel Terminal; then require `22024` listener + authenticated bridge identity before running `phase50_client_handoff_deploy.sh`.
+
 ## 2026-09-14 - ERR-49-145 Qt6 CI retained obsolete three-large-column gallery assertion
 **Observed:** GitHub run `34864938351` for ERR-49-144 failed one test: `test_image_stage_uses_three_large_column_cards_with_size_and_seo_facts`, asserting `grid.columns == 3` while the accepted runtime intentionally uses four compact columns. All neighboring tests in that job passed; three other workflows on the same commit also passed.
 

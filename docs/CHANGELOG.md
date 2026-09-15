@@ -1,3 +1,10 @@
+## 2026-09-15 - Host transport diagnosis before client handoff
+- Diagnosed dead 3DPrintHub reverse-management transport without touching other project tunnels.
+- Verified Host/Windows tunnel public-key fingerprints are identical.
+- Verified private watchdog state stopped updating and final tunnel log ended with reset/broken pipe.
+- Verified FTPS is file-only, stored FTP credential is rejected by cPanel API, and repository has no automatic cPanel/GitHub deploy hook.
+- Production source/database/store remain unchanged pending restoration of the authorized 3DPrintHub Host execution channel.
+
 ## 2026-09-15 - Client handoff deployment gate
 - Added dedicated `phase50_client_handoff_deploy.sh` for exact clean Production baseline `70a74e6...`.
 - Deployment remains GitHub-first, ff-only, no-migration, backup-gated, collectstatic/restart/HTTP verified.
