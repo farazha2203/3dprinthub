@@ -43,6 +43,10 @@ class Phase50A2JHeroSeedTests(TestCase):
         self.assertEqual(Product.objects.count(), 0)
         self.assertTrue(all(slide.target_url == "/#order" for slide in slides))
         self.assertTrue(all(slide.effective_image_url for slide in slides))
+        description_limit = HomepageHeroSlide._meta.get_field("description").max_length
+        self.assertTrue(all(0 < len(slide.description) <= description_limit for slide in slides))
+        self.assertTrue(all(len(slide.description) < 180 for slide in slides))
+
     def test_unknown_commercial_license_is_rejected(self):
         asset = ImportedPrintAsset.objects.get(pk=119)
         asset.commercial_license_status = "unknown"

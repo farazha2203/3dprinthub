@@ -6,13 +6,14 @@ from website.models import HomepageHeroSlide
 
 
 SEED_SLIDES = (
-    (119, 10, "نظم‌دهنده کفش دیواری", "محصولات کاربردی"),
-    (120, 20, "نگهدارنده و نظم‌دهنده کلاه", "محصولات کاربردی"),
-    (135, 30, "چراغ رومیزی ارگانیک Driftbloom", "نورپردازی و دکور"),
-    (136, 40, "چراغ رومیزی Crystal Summit", "نورپردازی و دکور"),
+    (119, 10, "نظم‌دهنده کفش دیواری", "محصولات کاربردی", "راهکاری جمع‌وجور برای مرتب‌کردن کفش‌ها؛ قابل سفارش با چاپ سه‌بعدی و متریال متناسب."),
+    (120, 20, "نگهدارنده و نظم‌دهنده کلاه", "محصولات کاربردی", "نگهدارنده دیواری برای مرتب‌کردن کلاه‌ها؛ قابل ساخت با رنگ و متریال انتخابی."),
+    (135, 30, "چراغ رومیزی ارگانیک Driftbloom", "نورپردازی و دکور", "چراغ رومیزی با فرم ارگانیک برای نورپردازی دکوراتیو؛ قابل سفارش با چاپ سه‌بعدی."),
+    (136, 40, "چراغ رومیزی Crystal Summit", "نورپردازی و دکور", "چراغ رومیزی با فرم کریستالی برای دکور و نور محیطی؛ قابل سفارش با چاپ سه‌بعدی."),
 )
 
 SAFE_COMMERCIAL_STATUSES = {"allowed", "owned", "public_domain"}
+DESCRIPTION_MAX = int(HomepageHeroSlide._meta.get_field("description").max_length or 480)
 
 
 class Command(BaseCommand):
@@ -52,14 +53,14 @@ class Command(BaseCommand):
         with transaction.atomic():
             HomepageHeroSlide.objects.filter(is_active=True).update(is_active=False)
             active_ids = []
-            for asset_id, sort_order, title, group_title in SEED_SLIDES:
+            for asset_id, sort_order, title, group_title, description in SEED_SLIDES:
                 asset = assets[asset_id]
                 slide = HomepageHeroSlide.objects.filter(asset=asset).order_by("id").first()
                 if slide is None:
                     slide = HomepageHeroSlide(asset=asset)
                 slide.title_override = title
                 slide.group_title = group_title
-                slide.description = ""
+                slide.description = description[:DESCRIPTION_MAX]
                 slide.button_text = "ثبت سفارش چاپ مشابه"
                 slide.image_url = ""
                 slide.image_alt_text = f"{title} - نمونه چاپ سه‌بعدی 3DPrintHub"
