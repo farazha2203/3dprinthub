@@ -1,3 +1,6 @@
+## 2026-09-15 Product Wizard direct-send continuity hotfix
+After the client-handoff Store reset, the owner needs immediate Product re-entry. The Site receiver/FTP path is currently healthy and 12/15 Ready Catalog Products pass real publish preflight. The remaining usability gap was inside Qt Product Wizard: Stage 7 stored publication intent but did not expose the actual guarded site-publish action. Stage 7 now has explicit single-Product Ready + Send buttons wired to the same Batch 8.5/FTP/Bridge/public-HTTP strict-ACK Core as Products bulk publication. 71 related regressions PASS. Next: GitHub promotion, fresh rollback backups and one real #628 acceptance before wider publication.
+
 ## 2026-09-15 Client handoff deploy-runner checkpoint
 Application candidate `dd1e770...` is on GitHub. A dedicated exact-baseline handoff runner is Local-tested to promote from Production `70a74e6...` only after clean worktree, target equality, no migration/dependency/settings delta and rollback backup checks. It collects Hero static, restarts Passenger and verifies public Home/Store plus authenticated Bridge/readiness and Hero markers. Store deletion remains a separate post-deploy, backup-gated operation through the authenticated Store Reset contract.
 

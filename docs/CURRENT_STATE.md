@@ -1,3 +1,12 @@
+## 2026-09-15 - PRODUCT ENTRY HOTFIX LOCAL_TESTED / SITE RECEIVER READY
+Status: `LOCAL_TESTED / WINDOWS SINGLE-PRODUCT SEND ADDED / RECEIVER_READY / ONE REAL PRODUCT ACCEPTANCE NEXT`.
+
+Owner priority returned to Product entry/publication. Real canonical Catalog is healthy with 635 Products, 15 `upload_ready=1`, zero currently `uploaded` rows after the intentional Store reset, and 19 historical server-linked identities. Read-only preflight on a checksum-safe Catalog backup proves 12 of the 15 Ready Products currently pass all factual publish gates; #40/#43/#146 remain correctly blocked on missing image SEO/slider facts. Live Catalog connection diagnostics also prove FTP PASS and Site publish readiness `ready=True`, blockers empty.
+
+Root UX defect: Qt Products page already had guarded bulk publishing, but Product Wizard Stage 7 only stored sale/Product/Portfolio intent and exposed no direct action to send the Product. The hotfix adds `بررسی و آماده انتشار همین محصول` and `ارسال همین محصول به سایت` directly inside Stage 7. It reuses the existing Batch 8.5 -> FTP -> Bridge -> public HTTP verification path, never bypasses factual gates, never silently approves sale intent, and handles finalized Stage 7 without rewriting unchanged locked values.
+
+Verification PASS: touched compile, `git diff --check`, focused publish/workspace 21/21 and broader Product Wizard/Filament/Site/Crawl regressions 71/71. Rollback branch `backup/pre-product-single-publish-ui-20260915` points to pre-hotfix `5f3a24b...`. Exact next: commit/push this UI hotfix, create fresh canonical Catalog + Production MySQL rollback backups, publish exactly one known-good Ready Product (#628 preferred), require strict ACK/public media/orderable Cart verification, then launch the pushed Windows app for owner Product entry.
+
 ## 2026-09-15 - Phase50.A.3 ZarinPal current API LOCAL_TESTED
 Status: `LOCAL_TESTED / GATEWAY_DISABLED / COMMIT_PUSH_DEPLOY_NEXT / STOREPAYMENT_WIRING_REMAINS`.
 

@@ -1,3 +1,6 @@
+## 2026-09-15 - Owner-priority Product publication interruption
+50.A.3 payment compatibility remains safely staged, but owner priority temporarily returns to Product entry. A2G direct single-Product publication usability is Local-tested: Stage 7 now exposes the guarded publish action, receiver readiness/FTP are healthy, and 12 Ready Products pass preflight. Complete one real rollback-backed Product acceptance before resuming StorePayment wiring.
+
 ## 2026-09-15 - 50.A.3 - Secure ZarinPal current API compatibility LOCAL_TESTED
 The mature Phase30 quote-payment engine is retained as the security authority. Current live defaults now use `payment.zarinpal.com` v4 request/verify and StartPay; Verify sends only merchant ID, exact provider amount and Authority. Sandbox remains on `sandbox.zarinpal.com`. Production is still fail-closed: env toggle false, Site toggle false, Merchant ID absent, zero gateway rows.
 

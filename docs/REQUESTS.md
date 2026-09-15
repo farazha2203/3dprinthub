@@ -1,3 +1,7 @@
+## 2026-09-15 - Owner urgent Product entry + direct Product send request
+Status: `LOCAL_TESTED / DIRECT SINGLE-PRODUCT SEND IMPLEMENTED / REAL PRODUCT ACCEPTANCE NEXT`.
+Owner needs Catalog Center immediately for adding Products and expects both Windows and Site publication paths to work from the Product being edited. Stage 7 now provides direct Ready and Send-to-Site actions using the mature guarded publisher. Current live receiver is ready and FTP passes; 12 current Ready Products pass preflight. Acceptance requires one real known-good Product publish with strict public Product/media/Variant/Cart verification before wider publication.
+
 ## 2026-09-15 - Owner client-handoff request ACCEPTED on Production
 Status: `PRODUCTION_ACCEPTED / EMPTY STORE / HERO 50.3.0 LIVE`.
 

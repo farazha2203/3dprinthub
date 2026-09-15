@@ -1,3 +1,17 @@
+## ERR-49-149 - Product Wizard had publish intent but no direct send action
+Date: 2026-09-15
+Status: `RESOLVED LOCAL / PRODUCTION PRODUCT ACCEPTANCE NEXT`.
+
+Observed: the owner could mark a Product for sale/site publication inside the Product Wizard, but Stage 7 had no action to publish that Product. The only Qt send action lived back on the Products multi-select page. This made the Product-detail workflow appear broken even though the mature Batch/FTP/Bridge publisher existed.
+
+Reality audit: canonical Catalog integrity is OK; 15 rows are currently `upload_ready=1`; 12 pass the actual publish gate. Live Site receiver readiness is true with no blockers and FTP connection passes. Therefore the current blocker is not Host readiness. Three Ready rows (#40/#43/#146) are correctly blocked by missing image SEO/slider evidence and must not be force-published.
+
+Fix: Stage 7 now exposes explicit single-Product ready/publish actions. It persists only explicit operator intent, calls the same mature PublishCore used by bulk publishing, shows exact gate failures, prevents concurrent duplicate clicks, and reports success only when strict Bridge/public HTTP verification returns one published Product. A finalized Stage 7 can publish unchanged values without an unnecessary locked-stage write.
+
+Verification: first new test run reached the runtime successfully but the new fixture omitted `QMessageBox` import; the condition was corrected before rerun. Final focused 21/21 and broader 71/71 regressions PASS; compile/diff-check PASS. Rollback `backup/pre-product-single-publish-ui-20260915` -> `5f3a24b...`.
+
+Prevention: every operator-owned final workflow stage must expose the actual next action in the same workspace or clearly route to it; UI intent flags alone are not an acceptable publish workflow. Keep single and bulk publication on one shared guarded Core.
+
 ## ERR-49-148 - Phase50.A.3 gate harness and baseline Store regression classification
 Date: 2026-09-15
 Status: `A3 RESOLVED / BASELINE STORE DEBT OPEN / NO PRODUCTION WRITE`.

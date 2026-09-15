@@ -1,3 +1,10 @@
+## 2026-09-15 - Windows Product Wizard direct site publish hotfix
+- Added direct `Ready this Product` and `Send this Product to Site` actions to Qt Product Wizard Stage 7.
+- Single-Product publish uses the existing guarded publish Core: factual preflight, finalized SEO WebP package, receiver readiness, FTP, Bridge import, strict ACK and public HTTP verification.
+- Operator sale/Product intent is never auto-invented; locked Stage 7 is not rewritten when values are unchanged.
+- Real Catalog diagnostic: 635 Products, 15 Ready, 12 currently publishable; Site readiness true/no blockers; FTP PASS.
+- 71 related regressions PASS.
+
 ## 2026-09-15 - Phase50.A.3 ZarinPal current API compatibility
 - aligned default live ZarinPal request/verify/StartPay hosts with the current official `payment.zarinpal.com` v4 contract;
 - Verify payload now sends `merchant_id`, exact provider amount and `authority` only; request currency remains a stored amount-reconstruction fact;

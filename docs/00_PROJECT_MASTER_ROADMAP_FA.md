@@ -1,3 +1,6 @@
+## 2026-09-15 - Immediate Product re-entry gate
+Windows Product Wizard now closes the owner-reported direct-send usability gap: Stage 7 includes explicit single-Product Ready and Send-to-Site actions while preserving the mature strict publisher. Site receiver readiness and FTP are healthy; 12 current Ready Products pass preflight. One known-good Product must now be published with fresh Catalog/MySQL backups and live Store/Cart verification before widening publication.
+
 ## 2026-09-15 - Phase50.A.3 secure ZarinPal compatibility
 Current payment work has moved into 50.A.3 from the completed client-handoff baseline. The existing Phase30 secure quote-payment architecture is preserved; only current ZarinPal v4 endpoint/Verify compatibility is being patched now. Local payment gates pass, Production remains disabled/no-credential, and a guarded no-migration/no-DB-write deploy runner is ready from exact runtime `b1caeba...`. After compatibility deploy, the next implementation is canonical StorePayment checkout wiring into the same authority; merchant Sandbox/Live activation comes only after that and legitimate credentials.
 

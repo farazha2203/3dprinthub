@@ -141,6 +141,7 @@ class ProductWizardPage(QWidget):
         self._pending_ai_request: dict[str, Any] | None = None
         self._pending_ai_quote: dict[str, Any] | None = None
         self._image_worker: Worker | None = None
+        self._publish_worker: Worker | None = None
 
         root = QVBoxLayout(self)
 
@@ -693,6 +694,25 @@ class ProductWizardPage(QWidget):
         layout.addWidget(self.publish_product)
         layout.addWidget(self.publish_portfolio)
 
+        publish_actions = QHBoxLayout()
+        self.ready_current_btn = QPushButton("✅ بررسی و آماده انتشار همین محصول")
+        self.ready_current_btn.setToolTip(
+            "مرحله ۷ را ذخیره می‌کند، همه Gateهای واقعی Product را بررسی می‌کند و فقط در صورت کامل بودن همین محصول را آماده انتشار می‌کند."
+        )
+        self.publish_current_btn = QPushButton("🚀 ارسال همین محصول به سایت")
+        self.publish_current_btn.setProperty("primary", True)
+        self.publish_current_btn.setToolTip(
+            "فقط همین Product را از مسیر Batch → FTP → Bridge → بررسی HTTP عمومی منتشر می‌کند."
+        )
+        self.publish_current_status = QLabel("")
+        self.publish_current_status.setObjectName("Muted")
+        self.ready_current_btn.clicked.connect(self._mark_current_ready)
+        self.publish_current_btn.clicked.connect(self._publish_current)
+        publish_actions.addWidget(self.ready_current_btn)
+        publish_actions.addWidget(self.publish_current_btn)
+        publish_actions.addWidget(self.publish_current_status, 1)
+        layout.addLayout(publish_actions)
+
         self.readiness_text = QPlainTextEdit()
         self.readiness_text.setReadOnly(True)
         layout.addWidget(self.readiness_text, 1)
@@ -1053,6 +1073,133 @@ class ProductWizardPage(QWidget):
                 "publish_as_portfolio": 1 if self.publish_portfolio.isChecked() else 0,
             },
         )
+
+    def _publish_intent_ready(self) -> bool:
+        if self.product_id is None:
+            QMessageBox.warning(self, "انتشار محصول", "ابتدا یک محصول را انتخاب کن.")
+            return False
+        if not self.approved_for_sale.isChecked():
+            QMessageBox.warning(self, "انتشار محصول", "برای ارسال به سایت، «تأیید برای فروش» را فعال کن.")
+            return False
+        if not self.publish_product.isChecked():
+            QMessageBox.warning(self, "انتشار محصول", "برای ارسال فروشگاهی، «انتشار به عنوان Product» را فعال کن.")
+            return False
+        row = self.kernel.products.get(int(self.product_id)) or {}
+        desired = {
+            "approved_for_sale": 1 if self.approved_for_sale.isChecked() else 0,
+            "publish_as_product": 1 if self.publish_product.isChecked() else 0,
+            "publish_as_portfolio": 1 if self.publish_portfolio.isChecked() else 0,
+        }
+        changed = any(int(row.get(key) or 0) != value for key, value in desired.items())
+        if changed:
+            try:
+                self._save_stage7()
+            except Exception as exc:
+                QMessageBox.warning(self, "انتشار محصول", str(exc))
+                return False
+        return True
+
+    @staticmethod
+    def _publish_blocker_text(blocked) -> str:
+        lines = []
+        for item in list(blocked or [])[:6]:
+            missing = [str(value) for value in (item.get("missing") or []) if str(value).strip()]
+            lines.extend(f"• {value}" for value in missing[:8])
+        return "\n".join(lines) or "Gateهای انتشار کامل نیستند."
+
+    def _mark_current_ready(self) -> None:
+        if not self._publish_intent_ready():
+            return
+        result = self.kernel.publish.mark_ready_many([int(self.product_id)])
+        if int(result.get("marked") or 0) != 1:
+            detail = self._publish_blocker_text(result.get("blocked"))
+            self.publish_current_status.setText("❌ محصول هنوز آماده انتشار نیست")
+            QMessageBox.warning(self, "آمادگی انتشار", detail)
+            self.load_product(int(self.product_id))
+            return
+        self.publish_current_status.setText("✅ آماده انتشار روی سایت")
+        self.load_product(int(self.product_id))
+        QMessageBox.information(self, "آمادگی انتشار", "این محصول همه Gateها را پاس کرد و آماده ارسال به سایت است.")
+
+    def _publish_current(self) -> None:
+        if self._publish_worker is not None:
+            QMessageBox.information(self, "انتشار محصول", "انتشار همین محصول در حال اجرا است.")
+            return
+        if not self._publish_intent_ready():
+            return
+        ready = self.kernel.publish.mark_ready_many([int(self.product_id)])
+        if int(ready.get("marked") or 0) != 1:
+            detail = self._publish_blocker_text(ready.get("blocked"))
+            self.publish_current_status.setText("❌ Gate انتشار ناقص است")
+            QMessageBox.warning(self, "انتشار محصول", detail)
+            self.load_product(int(self.product_id))
+            return
+        preflight = self.kernel.publish.preflight([int(self.product_id)])
+        if int(self.product_id) not in set(preflight.get("queued_ids") or []):
+            detail = self._publish_blocker_text(preflight.get("blocked"))
+            self.publish_current_status.setText("❌ محصول وارد صف انتشار نشد")
+            QMessageBox.warning(self, "انتشار محصول", detail)
+            return
+        answer = QMessageBox.question(
+            self,
+            "تأیید ارسال همین محصول به سایت",
+            "فقط همین Product از مسیر امن Batch → FTP → Bridge ارسال و سپس صفحه و تصاویر عمومی آن با HTTP بررسی می‌شود.\n\nارسال شروع شود؟",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        product_id = int(self.product_id)
+        self.ready_current_btn.setEnabled(False)
+        self.publish_current_btn.setEnabled(False)
+        self.publish_current_status.setText("در حال ارسال همین محصول…")
+        worker = Worker(lambda progress: self.kernel.publish.publish_many([product_id], progress=progress))
+        self._publish_worker = worker
+        worker.signals.progress.connect(lambda value, message: self.publish_current_status.setText(f"{value}% • {message}"))
+        worker.signals.result.connect(self._publish_current_done)
+        worker.signals.error.connect(self._publish_current_error)
+        worker.signals.finished.connect(self._publish_current_finished)
+        self.task_pool.start(worker)
+
+    def _publish_current_done(self, result=None) -> None:
+        data = dict(result or {})
+        published = int(data.get("published") or 0)
+        failed = int(data.get("failed") or 0)
+        skipped = int(data.get("skipped_count") or 0)
+        if published == 1:
+            item = next((dict(value) for value in (data.get("items") or []) if value.get("ok")), {})
+            self.publish_current_status.setText("✅ منتشر و HTTP-تأیید شد")
+            self.load_product(int(self.product_id))
+            QMessageBox.information(
+                self,
+                "انتشار محصول موفق",
+                "محصول روی سایت منتشر و صفحه/تصاویر عمومی تأیید شد.\n"
+                f"آدرس Product: {item.get('product_url') or '—'}",
+            )
+            return
+        item = next((dict(value) for value in (data.get("items") or []) if not value.get("ok")), {})
+        reason = item.get("error") or self._publish_blocker_text(data.get("skipped"))
+        self.publish_current_status.setText("❌ انتشار تأیید نشد")
+        self.load_product(int(self.product_id))
+        QMessageBox.warning(
+            self,
+            "انتشار محصول ناموفق",
+            f"منتشرشده: {published} • خطا: {failed} • رد Gate: {skipped}\n\n{reason}",
+        )
+
+    def _publish_current_error(self, detail: str) -> None:
+        self.publish_current_status.setText("❌ خطای ارسال به سایت")
+        show_diagnostic_error(
+            self,
+            "خطای ارسال همین محصول به سایت",
+            detail,
+            context={"product_id": self.product_id, "operation": "single-product-site-publish"},
+        )
+
+    def _publish_current_finished(self) -> None:
+        self._publish_worker = None
+        self.ready_current_btn.setEnabled(True)
+        self.publish_current_btn.setEnabled(True)
 
     def _finalize_current(self) -> None:
         if self.product_id is None:

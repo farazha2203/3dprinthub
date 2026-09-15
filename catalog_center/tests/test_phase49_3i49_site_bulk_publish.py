@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,13 +13,14 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from app.phase49_3c_image_pipeline import finalize_selected_images
 from app.phase49_3i49_site_publish import mark_ready_many, publish_many
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage, ProductsPage
+from qt6.product_wizard import ProductWizardPage
 
 
 class FakeStages:
@@ -446,6 +448,30 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertIn("دریافت محصولات از لینک جستجو", labels)
             self.assertIn("مشاهده صفحه محصول", page.queue_open_btn.text())
             self.assertIn("AI", page.queue_collect_ai_btn.text())
+        finally:
+            page.close()
+
+    def test_product_wizard_stage7_exposes_single_product_publish_actions(self):
+        product_id = self._product("3491020")
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertIn("آماده انتشار همین محصول", page.ready_current_btn.text())
+            self.assertIn("ارسال همین محصول به سایت", page.publish_current_btn.text())
+            page.approved_for_sale.setChecked(True)
+            page.publish_product.setChecked(True)
+            page.kernel.publish.mark_ready_many = lambda ids: mark_ready_many(
+                self.db, FakeStages(), ids
+            )
+            with patch.object(QMessageBox, "information"), patch.object(
+                QMessageBox, "warning"
+            ):
+                page._mark_current_ready()
+            row = self.db.product(product_id)
+            self.assertEqual(int(row["approved_for_sale"]), 1)
+            self.assertEqual(int(row["publish_as_product"]), 1)
+            self.assertEqual(int(row["upload_ready"]), 1)
+            self.assertEqual(str(row["workflow_status"]), "approved")
         finally:
             page.close()
 

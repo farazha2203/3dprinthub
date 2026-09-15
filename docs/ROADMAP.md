@@ -1,3 +1,15 @@
+## 2026-09-15 - Urgent Product entry/publication recovery
+- [x] Verify canonical Windows Catalog integrity and real Ready queue.
+- [x] Verify Site publish readiness = true/no blockers and FTP connection PASS.
+- [x] Prove 12/15 currently Ready Products pass actual publish preflight; keep #40/#43/#146 blocked on factual media/slider gaps.
+- [x] Add direct single-Product Ready + Send-to-Site controls inside Product Wizard Stage 7.
+- [x] Reuse mature Batch/FTP/Bridge/public-HTTP strict ACK path; no parallel publisher.
+- [x] Run 71 related Qt/Product/Site regressions PASS.
+- [ ] Commit/push exact hotfix and verify GitHub head.
+- [ ] Fresh Catalog + Production MySQL backups before real publish.
+- [ ] Publish exactly one known-good Product (#628) and verify public Product/media/Variant/Cart.
+- [ ] Launch pushed Catalog Center for owner and continue bounded Product entry/publication.
+
 ## 2026-09-15 - Phase50.A.3 secure ZarinPal current-API gate
 - [x] Audit mature Phase30 quote-payment security/idempotency architecture from source.
 - [x] Read-only verify Production payment state: env/site gateway disabled, no Merchant ID, Sandbox on, zero gateway Payment/Ledger rows.

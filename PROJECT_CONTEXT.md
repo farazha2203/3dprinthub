@@ -1,3 +1,6 @@
+## 2026-09-15 - Product entry continuity hotfix
+Owner priority is immediate Product entry/publication. Windows Catalog is healthy; live receiver readiness is true and FTP passes. Product Wizard Stage 7 now directly exposes Ready + Send-this-Product actions through the existing strict Batch/FTP/Bridge/public verification Core. 12/15 current Ready Products pass preflight; #40/#43/#146 remain factually blocked. 71 related regressions PASS. Next is one rollback-backed real Product acceptance.
+
 ## 2026-09-15 - Phase50.A.3 ZarinPal current API checkpoint
 The mature secure quote-payment engine is now Local-tested against the current ZarinPal v4 endpoint contract: live defaults use `payment.zarinpal.com`, Verify sends only merchant/amount/authority, and Sandbox keeps `sandbox.zarinpal.com`. Production remains safely disabled with no Merchant ID and zero gateway rows; no migration/DB/static/dependency change is introduced. Payment tests 17/17 and payment audit pass. Broad Store 6F/9E are proven pre-existing by exact baseline reproduction. Next: commit/push -> guarded reverse-tunnel compatibility deploy -> canonical StorePayment wiring before merchant activation.
 
