@@ -251,12 +251,21 @@ def _ascii_slug(value: str, fallback: str = "product") -> str:
     return slug[:72] or fallback
 
 
+def _seo_slug(value: str, fallback: str = "product") -> str:
+    """Build a filesystem/web-safe SEO slug while retaining Persian words."""
+    normalized = unicodedata.normalize("NFKC", str(value or "")).casefold().strip()
+    slug = re.sub(r"[^\w]+", "-", normalized, flags=re.UNICODE).strip("-_")
+    slug = slug.replace("_", "-")
+    return slug[:96] or fallback
+
+
 def planned_seo_filename(row, index: int) -> str:
-    source_title = str(_row_value(row, "source_title", "") or "")
-    title_fa = str(_row_value(row, "title_fa", "") or "")
+    seo_title = str(_row_value(row, "seo_title_fa", "") or "").strip()
+    title_fa = str(_row_value(row, "title_fa", "") or "").strip()
+    source_title = str(_row_value(row, "source_title", "") or "").strip()
     product_id = str(_row_value(row, "id", "") or "item")
-    base = _ascii_slug(source_title or title_fa, fallback=f"product-{product_id}")
-    if "3d" not in base:
+    base = _seo_slug(seo_title or source_title or title_fa, fallback=f"product-{product_id}")
+    if "3d" not in base and "سه-بعد" not in base:
         base = f"{base}-3d-print"
     return f"{base}-{index:02d}.webp"
 
@@ -484,6 +493,67 @@ def _persist_derived_image_state(db, product_id: int, values: dict) -> None:
         raw_update(int(product_id), payload)
         return
     db.update_product(int(product_id), payload)
+
+
+def prepare_full_ai_image_refresh(db, product_id: int) -> dict:
+    """Drop stale AI-derived image SEO while preserving explicit operator edits.
+
+    Full Product AI refresh changes the Product SEO/content authority. Previous
+    AI image overrides must therefore be rebuilt from the new Product facts,
+    while operator-owned fields remain immutable. The next finalizer pass also
+    regenerates ordered filenames and embedded WebP metadata.
+    """
+    ensure_schema(db)
+    row = db.product(int(product_id))
+    if row is None:
+        raise RuntimeError(f"Product {product_id} not found")
+    selected = cap_unique_urls(_json_list(_row_value(row, "selected_images_json", "[]")))
+    selected_set = set(selected)
+    items = []
+    refreshed = 0
+    operator_preserved = 0
+    operator_alt_by_url: dict[str, str] = {}
+    for raw in _json_list(_row_value(row, IMAGE_METADATA_COLUMN, "[]")):
+        if not isinstance(raw, dict):
+            continue
+        item = dict(raw)
+        url = str(item.get("source_url") or "").strip()
+        if url not in selected_set:
+            items.append(item)
+            continue
+        operator_fields = {
+            str(key) for key in (item.get("_operator_override_fields") or []) if str(key)
+        }
+        item.pop("_ai_override_fields", None)
+        for key in ("alt_text", "title", "caption", "keywords", "seo_filename"):
+            if key in operator_fields:
+                operator_preserved += 1
+                if key == "alt_text" and str(item.get(key) or "").strip():
+                    operator_alt_by_url[url] = str(item.get(key) or "").strip()
+                continue
+            item.pop(key, None)
+        item["metadata_ready"] = False
+        item["seo_signature"] = ""
+        item.pop("final_local_file", None)
+        item.pop("final_sha256", None)
+        items.append(item)
+        refreshed += 1
+    _persist_derived_image_state(
+        db,
+        int(product_id),
+        {
+            "image_alt_texts_json": json.dumps(
+                [operator_alt_by_url.get(url, "") for url in selected],
+                ensure_ascii=False,
+            ),
+            IMAGE_METADATA_COLUMN: json.dumps(items, ensure_ascii=False),
+        },
+    )
+    return {
+        "selected": len(selected),
+        "refreshed": refreshed,
+        "operator_fields_preserved": operator_preserved,
+    }
 
 
 def finalize_selected_images(db, product_id: int) -> dict:

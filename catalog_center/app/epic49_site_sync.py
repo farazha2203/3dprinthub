@@ -24,6 +24,15 @@ class BridgeConflictError(RuntimeError):
         return f"نسخه سایت جدیدتر است: {entity} (local={expected}, server={current})"
 
 
+@dataclass
+class BridgeNotFoundError(RuntimeError):
+    path: str
+    payload: dict
+
+    def __str__(self):
+        return f"رکورد سایت دیگر وجود ندارد: {self.path}"
+
+
 def _request(settings: SiteConnection, path: str, payload: dict | None = None, *, timeout: int | None = None) -> dict:
     cfg = settings.normalized()
     if not cfg.bridge_token:
@@ -49,6 +58,8 @@ def _request(settings: SiteConnection, path: str, payload: dict | None = None, *
             detail = {"detail": raw[:2000]}
         if exc.code == 409 and isinstance(detail, dict):
             raise BridgeConflictError(detail) from exc
+        if exc.code == 404 and isinstance(detail, dict):
+            raise BridgeNotFoundError(path=str(path), payload=detail) from exc
         raise RuntimeError(f"Bridge HTTP {exc.code}: {detail}") from exc
 
 

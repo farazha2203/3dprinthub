@@ -641,6 +641,10 @@ class StageCore:
                 locks.pop(stage, None)
                 opened.append(stage)
         before = _row_dict(row)
+        image_refresh = image_pipeline.prepare_full_ai_image_refresh(
+            self.db,
+            product_id,
+        )
         if opened:
             values: dict[str, Any] = {
                 LOCK_COLUMN: json.dumps(locks, ensure_ascii=False),
@@ -662,6 +666,7 @@ class StageCore:
         return {
             "product_id": product_id,
             "opened_stages": opened,
+            "image_refresh": image_refresh,
         }
 
     def finalize(

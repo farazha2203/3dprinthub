@@ -17,7 +17,8 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from app.phase49_3c_image_pipeline import finalize_selected_images
-from app.phase49_3i49_site_publish import mark_ready_many, publish_many
+from app.phase49_3i49_site_publish import build_publish_batch, mark_ready_many, publish_many
+from app.epic49_site_sync import BridgeNotFoundError
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage, ProductsPage
 from qt6.product_wizard import ProductWizardPage
@@ -427,6 +428,112 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         ready = mark_ready_many(self.db, FakeStages(), [product_id])
         self.assertEqual(ready["marked"], 1)
         self.assertEqual(int(self.db.product(product_id)["upload_ready"]), 1)
+
+    def test_explicit_ready_requeues_unchanged_uploaded_product(self):
+        product_id = self._product("3491021")
+        self.db.update_product(product_id, {
+            "server_id": "asset-900",
+            "server_product_id": 1900,
+            "server_product_revision": 4,
+            "workflow_status": "uploaded",
+            "needs_update": 0,
+            "upload_ready": 0,
+        })
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        row = dict(self.db.product(product_id))
+        self.assertEqual(row["workflow_status"], "approved")
+        self.assertEqual(int(row["upload_ready"]), 1)
+        self.assertEqual(row["server_id"], "asset-900")
+        self.assertEqual(int(row["server_product_id"]), 1900)
+
+    def test_republish_batch_carries_updated_profile_filament_and_print_time(self):
+        product_id = self._product("3491023")
+        self.db.update_product(product_id, {
+            "server_id": "asset-902",
+            "server_product_id": 1902,
+            "server_product_revision": 2,
+            "workflow_status": "uploaded",
+            "needs_update": 0,
+            "upload_ready": 0,
+        })
+        profiles = [{
+            "key": "updated-profile",
+            "name": "Updated",
+            "size_label": "30cm",
+            "weight_grams": 180,
+            "material_weight_grams": 180,
+            "print_time_minutes": 150,
+            "build_profile": "standard",
+            "material": "PETG",
+            "color": "Black",
+            "quality": "standard",
+            "stock_status": "made_to_order",
+            "track_inventory": False,
+            "is_active": True,
+        }]
+        ledger = [{
+            "key": "updated-profile",
+            "name": "Updated",
+            "size_label": "30cm",
+            "production_rows": [{
+                "weight_grams": 180,
+                "print_time_minutes": 150,
+                "support_weight_grams": 12,
+            }],
+            "material_options": [{
+                "material": "PETG",
+                "brand": "E-Sun",
+                "color": "Black",
+            }],
+        }]
+        self.kernel.stages.update(product_id, "commerce", {
+            "sales_profiles_json": json.dumps(profiles),
+            "sales_profile_ledger_json": json.dumps(ledger),
+        })
+        self.assertEqual(int(self.db.product(product_id)["needs_update"]), 1)
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        batch = build_publish_batch(self.db, [product_id], batch_root=self.root / "updated-batches")
+        manifest = json.loads((Path(batch["batch"]) / "batch_manifest.json").read_text(encoding="utf-8"))
+        editorial_path = Path(batch["batch"]) / manifest["models"][0]["editorial"]
+        editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
+        carried_profiles = json.loads(editorial["sales_profiles_json"])
+        carried_ledger = json.loads(editorial["sales_profile_ledger_json"])
+        self.assertEqual(carried_profiles[0]["print_time_minutes"], 150)
+        self.assertEqual(carried_profiles[0]["material"], "PETG")
+        self.assertEqual(carried_ledger[0]["production_rows"][0]["print_time_minutes"], 150)
+        self.assertEqual(carried_ledger[0]["material_options"][0]["brand"], "E-Sun")
+
+    def test_missing_site_product_recreates_from_preserved_asset_identity(self):
+        product_id = self._product("3491022")
+        self.db.update_product(product_id, {
+            "server_id": "asset-901",
+            "server_product_id": 1901,
+            "server_product_revision": 8,
+            "workflow_status": "uploaded",
+            "needs_update": 0,
+            "upload_ready": 0,
+        })
+        mark_ready_many(self.db, FakeStages(), [product_id])
+        def missing(*_args, **_kwargs):
+            raise BridgeNotFoundError(path="products/1901/", payload={"detail": "not found"})
+        def upload(*_args, **_kwargs):
+            return {"remote_batch": "/remote/recreate", "uploaded_files": 1, "total_files": 1}
+        def imported(_settings, _batch_name, batch_uuid):
+            return {"status":"ok","batch_uuid":batch_uuid,"items":[{
+                "desktop_product_id":product_id,"status":"updated","server_id":"asset-901",
+                "product_id":2901,"product_revision":1,"visible_on_store":True,"public_http_ok":True,
+                "product_url":"/store/product/recreated/","source_hash":"recreated-source",
+            }]}
+        result = publish_many(self.db, FakeStages(), SimpleNamespace(), [product_id],
+            batch_root=self.root / "recreate-batches", uploader=upload, importer=imported,
+            server_getter=missing, readiness_checker=lambda _settings:{"ready":True,"blockers":[]})
+        self.assertEqual(result["published"], 1)
+        row = dict(self.db.product(product_id))
+        self.assertEqual(int(row["server_product_id"]), 2901)
+        self.assertEqual(int(row["server_product_revision"]), 1)
+        self.assertEqual(row["workflow_status"], "uploaded")
 
     def test_existing_server_import_contract_updates_asset_product_in_place(self):
         source = (

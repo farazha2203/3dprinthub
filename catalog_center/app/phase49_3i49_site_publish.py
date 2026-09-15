@@ -20,7 +20,7 @@ from .batch_packaging import (
 from .crawler import download_public_file
 from .db import utc_now
 from .site_connection import import_batch, test_publish_readiness, upload_batch
-from .epic49_site_sync import get_product as get_site_product
+from .epic49_site_sync import BridgeNotFoundError, get_product as get_site_product
 from .v8_features import (
     ack_item_confirms_publish,
     new_batch_uuid,
@@ -195,7 +195,7 @@ def _copy_publish_media(items: list[dict[str, Any]], model_dir: Path) -> list[st
     return names
 
 
-def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
+def publish_gate(db, stage_core, product_id: int, *, allow_already_public: bool = False) -> dict[str, Any]:
     product_id = int(product_id)
     row = db.product(product_id)
     if row is None:
@@ -254,7 +254,7 @@ def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
         and str(data.get("workflow_status") or "").strip().lower() == "uploaded"
         and not bool(int(data.get("needs_update") or 0))
     )
-    if already_public:
+    if already_public and not allow_already_public:
         missing.append("محصول قبلاً منتشر شده و تغییر جدیدی برای ارسال ندارد")
 
     deduped = list(dict.fromkeys(str(item) for item in missing if str(item).strip()))
@@ -266,14 +266,14 @@ def publish_gate(db, stage_core, product_id: int) -> dict[str, Any]:
     }
 
 
-def preflight_many(db, stage_core, product_ids) -> dict[str, Any]:
+def preflight_many(db, stage_core, product_ids, *, allow_already_public: bool = False) -> dict[str, Any]:
     requested_ids = _ids(product_ids)
     publishable_ids: list[int] = []
     queued_ids: list[int] = []
     blocked: list[dict[str, Any]] = []
 
     for product_id in requested_ids:
-        state = publish_gate(db, stage_core, product_id)
+        state = publish_gate(db, stage_core, product_id, allow_already_public=allow_already_public)
         if not state["ready"]:
             blocked.append({
                 "product_id": product_id,
@@ -296,7 +296,7 @@ def preflight_many(db, stage_core, product_ids) -> dict[str, Any]:
 
 
 def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
-    preflight = preflight_many(db, stage_core, product_ids)
+    preflight = preflight_many(db, stage_core, product_ids, allow_already_public=True)
     marked: list[int] = []
 
     for product_id in preflight["publishable_ids"]:
@@ -574,6 +574,29 @@ def guard_site_revisions(
                 })
                 continue
             db.update_product(product_id, {"last_sync_conflict": ""})
+            safe.append(product_id)
+        except BridgeNotFoundError:
+            before = dict(row)
+            db.update_product(product_id, {
+                "server_product_id": 0,
+                "server_product_revision": 0,
+                "server_slider_id": 0,
+                "server_slider_revision": 0,
+                "workflow_status": "approved",
+                "needs_update": 1,
+                "last_sync_conflict": "",
+                "product_sync_error": "",
+            })
+            try:
+                db.save_history(
+                    product_id,
+                    "qt_site_product_missing_republish",
+                    before,
+                    dict(db.product(product_id)),
+                    "Site Product was removed; preserved source asset identity and reopened Product recreation.",
+                )
+            except Exception:
+                pass
             safe.append(product_id)
         except Exception as exc:
             detail = (

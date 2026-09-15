@@ -169,6 +169,40 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             {("چراغ رومیزی", "چاپ سه بعدی")},
         )
 
+    def test_full_ai_repair_rebuilds_derived_image_seo_but_preserves_operator_title(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        self.kernel.images.update_metadata(
+            product_id,
+            [urls[0]],
+            {"title": "عنوان دستی تصویر اول"},
+        )
+        before = json.loads(self.db.product(product_id)["image_metadata_json"])
+        self.assertTrue(all(item["metadata_ready"] for item in before))
+
+        opened = self.kernel.stages.prepare_ai_content_repair(product_id)
+        self.assertEqual(opened["image_refresh"]["selected"], 3)
+        staged = json.loads(self.db.product(product_id)["image_metadata_json"])
+        first = next(item for item in staged if item["source_url"] == urls[0])
+        second = next(item for item in staged if item["source_url"] == urls[1])
+        self.assertEqual(first["title"], "عنوان دستی تصویر اول")
+        self.assertIn("title", first["_operator_override_fields"])
+        self.assertFalse(first["metadata_ready"])
+        self.assertNotIn("title", second)
+        self.assertFalse(second["metadata_ready"])
+
+        self.kernel.stages.update(
+            product_id,
+            "content",
+            {"seo_title_fa": "چراغ رومیزی جدید چاپ سه بعدی"},
+        )
+        self.kernel.images.finalize(product_id)
+        refreshed = json.loads(self.db.product(product_id)["image_metadata_json"])
+        first = next(item for item in refreshed if item["source_url"] == urls[0])
+        second = next(item for item in refreshed if item["source_url"] == urls[1])
+        self.assertEqual(first["title"], "عنوان دستی تصویر اول")
+        self.assertEqual(second["title"], "چراغ رومیزی جدید چاپ سه بعدی")
+        self.assertTrue(all(item["metadata_ready"] for item in refreshed))
+
     def test_legacy_product_without_url_mapping_still_shows_local_image(self):
         local_dir = self.root / "legacy-product"
         image_dir = local_dir / "images"
