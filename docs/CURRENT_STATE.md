@@ -1,3 +1,14 @@
+## 2026-09-15 - Phase50.A.3 ZarinPal current API LOCAL_TESTED
+Status: `LOCAL_TESTED / GATEWAY_DISABLED / COMMIT_PUSH_DEPLOY_NEXT / STOREPAYMENT_WIRING_REMAINS`.
+
+The secure Phase30 payment engine was audited from Repository source and Production read-only state before modification. Production remains on application SHA `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`; online payment env toggle is false, Site toggle is false, Merchant ID is absent, Sandbox is true, and there are zero gateway Payment/Ledger rows. Host TLS to `payment.zarinpal.com` and `sandbox.zarinpal.com` passes.
+
+Local compatibility delta updates live defaults to the current official `payment.zarinpal.com/pg/v4` request/verify and StartPay host. Verify sends only `merchant_id`, exact provider amount and `authority`; request currency remains stored and is used only to reconstruct the exact provider amount. No migration, dependency, static, DB write, credential, or gateway-enable change is introduced.
+
+Local gate PASS: Git-Bash runner syntax, touched Python compile, payment suites 17/17, Django check, no model drift, `phase30_payment_audit=OK`, and `git diff --check`. The broad 534-test suite still reports 6 failures + 9 errors, but the exact same 41 failing Store tests reproduce as 6/9 on rollback baseline `1a29e225...` with the same local `.env`; these are confirmed pre-existing Store debt and not an A3 regression. Rollback branch `backup/pre-phase50-a3-zarinpal-current-api-20260915` points to `1a29e225...`.
+
+Exact next: commit/push -> verify live GitHub target -> execute `scripts/host/phase50_zarinpal_current_api_deploy.sh` through the authenticated reverse tunnel from exact Production baseline `b1caeba...` -> Production HTTP/runtime verify. Real merchant activation remains forbidden until StorePayment wiring and legitimate ZarinPal credentials are available.
+
 ## 2026-09-15 - CLIENT HANDOFF PRODUCTION COMPLETE / STORE EMPTY / HERO 50.3.0 VERIFIED
 Status: `PRODUCTION_VERIFIED / EMPTY_STORE / HERO_50.3.0_BROWSER_PASS / TUNNEL_HEALTHY`.
 

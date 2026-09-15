@@ -1,20 +1,27 @@
+## 2026-09-15 - 50.A.3 - Secure ZarinPal current API compatibility LOCAL_TESTED
+The mature Phase30 quote-payment engine is retained as the security authority. Current live defaults now use `payment.zarinpal.com` v4 request/verify and StartPay; Verify sends only merchant ID, exact provider amount and Authority. Sandbox remains on `sandbox.zarinpal.com`. Production is still fail-closed: env toggle false, Site toggle false, Merchant ID absent, zero gateway rows.
+
+Local acceptance: provider + online-payment suites 17/17 PASS, Django check, no migration drift, payment audit and diff-check PASS; Host outbound TLS to live/sandbox hosts PASS. Broad Store 6F/9E were reproduced identically on pre-change SHA `1a29e225...`, so they are documented baseline debt, not this delta. Dedicated runner is no-migration/no-DB-write/no-collectstatic/no-enable from exact Production `b1caeba...`.
+
+Next: commit/push -> guarded reverse-tunnel deploy -> Production runtime/public verification -> implement REQ-50-010 StorePayment wiring into the same secure architecture before any merchant activation.
+
 ## 2026-09-15 ? Handoff baseline for next Phase50 work
 Client handoff is Production-complete at exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`: guarded source deployment, empty imported Store, preserved master/source/Portfolio/Hero state and Hero 50.3.0 browser acceptance all PASS. Store reset is rollback-backed and must not be repeated. The next Finance/Commerce/Admin work must branch from this verified empty-Store baseline and preserve the existing StoreOrder/Payment/Invoice/accounting safety contracts.
 
 # Phase50 - Finance, Commerce & Admin Command Center
 
-Updated: 2026-09-12
+Updated: 2026-09-15
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`  
-Current Subphase: `50.A.2G - Publish-ready Media + Professional Order Wizard`
-Status: `50.A.2G LOCAL_TESTED / COMMIT+PUSH NEXT / CLEAN-HEAD WINDOWS GATE NEXT`
+Current Subphase: `50.A.3 - Secure ZarinPal`
+Status: `50.A.3 CURRENT-API COMPATIBILITY LOCAL_TESTED / COMMIT+PUSH+GUARDED DEPLOY NEXT / STOREPAYMENT WIRING NEXT`
 Current verified Production application commit:
-`7d0b3df03c3657106ebaf86d5f9123ba262495a5`.
+`b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
 
 Current verified Production MySQL `sfkilvrs_EmiAdmin_3dprinthub` state:
 - Store 0036-0042 applied;
 - Website 0024 applied;
 - authenticated publish-readiness `ready=true`, no blockers;
-- A2G introduces no migration.
+- Phase50.A.3 ZarinPal compatibility introduces no migration.
 
 ## 50.A.2G - Publish-ready Media + Professional Order Wizard
 Windows Ready/Publish now requires finalized current SEO WebP artifacts with complete metadata/signature/SHA. Batch packaging carries the exact final filenames/bytes. Django import refreshes changed explicit media but skips identical byte content, keeping re-publish idempotent and visual revisions truthful. Manifest Desktop identity is available before canonical Profile sync.

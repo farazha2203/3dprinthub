@@ -1,3 +1,11 @@
+## 2026-09-15 Phase50.A.3 ZarinPal compatibility paths
+- Pre-change rollback branch: `backup/pre-phase50-a3-zarinpal-current-api-20260915` -> `1a29e22537a1471119d6b040eb7957b029c9c732`.
+- Production baseline for this deploy: `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
+- Dedicated deploy runner: `scripts/host/phase50_zarinpal_current_api_deploy.sh`.
+- Live defaults: `https://payment.zarinpal.com/pg/v4/payment/request.json`, `.../verify.json`, `https://payment.zarinpal.com/pg/StartPay/`.
+- Sandbox host: `https://sandbox.zarinpal.com/` with the same v4 paths.
+- Merchant credentials remain only in the existing Production secret boundary; no secret path/value is added to Git.
+
 ## 2026-09-15 permanent execution topology
 - Local repository: `D:\projects\3DPrintHub`, operated through the connected Windows Remote Desktop device.
 - Production operator path: Windows `127.0.0.1:22024` -> Host authenticated bridge `127.0.0.1:22224` -> `/home/sfkilvrs/3dprinthub`.

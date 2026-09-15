@@ -1,3 +1,6 @@
+## 2026-09-15 - Phase50.A.3 secure ZarinPal compatibility
+Current payment work has moved into 50.A.3 from the completed client-handoff baseline. The existing Phase30 secure quote-payment architecture is preserved; only current ZarinPal v4 endpoint/Verify compatibility is being patched now. Local payment gates pass, Production remains disabled/no-credential, and a guarded no-migration/no-DB-write deploy runner is ready from exact runtime `b1caeba...`. After compatibility deploy, the next implementation is canonical StorePayment checkout wiring into the same authority; merchant Sandbox/Live activation comes only after that and legitimate credentials.
+
 ## 2026-09-15 - Client handoff Production milestone closed
 Production/Local/GitHub are exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Reverse tunnel, MySQL identity, empty migration plan and readiness PASS. Guarded deploy and Store reset are complete with verified rollback sets. Store is intentionally empty; Hero/master/source/Portfolio are preserved. Real Chromium confirms Hero 50.3.0 3D desktop transition, mobile fallback and empty Store. Next development must start from this checkpoint and must not rerun the old baseline deploy/reset.
 

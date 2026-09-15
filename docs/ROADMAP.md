@@ -1,3 +1,16 @@
+## 2026-09-15 - Phase50.A.3 secure ZarinPal current-API gate
+- [x] Audit mature Phase30 quote-payment security/idempotency architecture from source.
+- [x] Read-only verify Production payment state: env/site gateway disabled, no Merchant ID, Sandbox on, zero gateway Payment/Ledger rows.
+- [x] Re-verify current official ZarinPal v4 live/sandbox hosts and Host outbound TLS.
+- [x] Update live request/verify/StartPay defaults and remove request-only currency from Verify payload.
+- [x] Add live/sandbox endpoint and Verify-payload regressions; payment suite 17/17 PASS.
+- [x] Classify broad-suite 6F/9E as pre-existing by exact baseline worktree reproduction.
+- [x] Add guarded no-migration/no-DB-write/no-collectstatic/no-enable Production runner from `b1caeba...`.
+- [ ] Commit/push exact candidate and verify live GitHub SHA.
+- [ ] Guarded reverse-tunnel Production deployment + runtime/public verification.
+- [ ] Wire canonical StorePayment checkout into the mature secure gateway architecture before merchant activation.
+- [ ] Configure/test legitimate Merchant ID in Sandbox, then separately approve Live activation.
+
 ## 2026-09-15 - CLIENT HANDOFF GATE CLOSED
 - [x] Local/GitHub exact clean head verified: `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
 - [x] Dedicated reverse tunnel/bridge authenticated and Host identity verified.

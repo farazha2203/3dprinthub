@@ -73,4 +73,17 @@ class Phase30ZarinPalProviderTests(SimpleTestCase):
         )
         sent = post.call_args.kwargs["json"]
         self.assertEqual(sent["amount"], 100000)
-        self.assertEqual(sent["currency"], "IRR")
+        self.assertNotIn("currency", sent)
+
+    @override_settings(ZARINPAL_SANDBOX=False)
+    def test_live_defaults_follow_current_official_zarinpal_hosts(self):
+        gateway = ZarinPalGateway()
+        self.assertEqual(gateway.request_url, "https://payment.zarinpal.com/pg/v4/payment/request.json")
+        self.assertEqual(gateway.verify_url, "https://payment.zarinpal.com/pg/v4/payment/verify.json")
+        self.assertEqual(gateway.start_url, "https://payment.zarinpal.com/pg/StartPay/")
+
+    def test_sandbox_defaults_follow_current_official_zarinpal_host(self):
+        gateway = ZarinPalGateway()
+        self.assertEqual(gateway.request_url, "https://sandbox.zarinpal.com/pg/v4/payment/request.json")
+        self.assertEqual(gateway.verify_url, "https://sandbox.zarinpal.com/pg/v4/payment/verify.json")
+        self.assertEqual(gateway.start_url, "https://sandbox.zarinpal.com/pg/StartPay/")

@@ -1,3 +1,16 @@
+## Current ZarinPal API compatibility - 2026-09-15
+
+Repository defaults were re-verified against the current official ZarinPal v4 documentation:
+
+```text
+Live request: https://payment.zarinpal.com/pg/v4/payment/request.json
+Live verify:  https://payment.zarinpal.com/pg/v4/payment/verify.json
+Live start:   https://payment.zarinpal.com/pg/StartPay/
+Sandbox:      the same paths on https://sandbox.zarinpal.com/
+```
+
+The payment request carries `currency=IRT|IRR`. Verification carries only `merchant_id`, the exact provider amount and `authority`; it does not send `currency`. The stored request currency remains the authority for reconstructing the provider amount before Verify. Existing code treats ZarinPal verify codes `100` and `101` as successful/idempotent outcomes. Environment URL overrides remain supported, and this compatibility patch does not enable the gateway or add credentials.
+
 # فاز ۳۰ — پرداخت آنلاین امن پیش‌فاکتور
 
 ## هدف

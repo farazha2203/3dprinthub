@@ -32,9 +32,9 @@ class ZarinPalGateway(BasePaymentGateway):
             self.verify_url = str(getattr(settings, "ZARINPAL_SANDBOX_VERIFY_URL", "https://sandbox.zarinpal.com/pg/v4/payment/verify.json"))
             self.start_url = str(getattr(settings, "ZARINPAL_SANDBOX_START_URL", "https://sandbox.zarinpal.com/pg/StartPay/"))
         else:
-            self.request_url = str(getattr(settings, "ZARINPAL_REQUEST_URL", "https://api.zarinpal.com/pg/v4/payment/request.json"))
-            self.verify_url = str(getattr(settings, "ZARINPAL_VERIFY_URL", "https://api.zarinpal.com/pg/v4/payment/verify.json"))
-            self.start_url = str(getattr(settings, "ZARINPAL_START_URL", "https://www.zarinpal.com/pg/StartPay/"))
+            self.request_url = str(getattr(settings, "ZARINPAL_REQUEST_URL", "https://payment.zarinpal.com/pg/v4/payment/request.json"))
+            self.verify_url = str(getattr(settings, "ZARINPAL_VERIFY_URL", "https://payment.zarinpal.com/pg/v4/payment/verify.json"))
+            self.start_url = str(getattr(settings, "ZARINPAL_START_URL", "https://payment.zarinpal.com/pg/StartPay/"))
 
     @property
     def currency(self) -> str:
@@ -124,11 +124,13 @@ class ZarinPalGateway(BasePaymentGateway):
         if verify_currency not in {"IRT", "IRR"}:
             raise PaymentGatewayError("واحد ذخیره‌شده تراکنش نامعتبر است.")
         provider_amount = int(gateway_amount or 0) or (int(amount_toman) if verify_currency == "IRT" else int(amount_toman) * 10)
+        # Current ZarinPal verification contract accepts the original amount and
+        # authority; currency belongs to the payment-request contract. Keep the
+        # stored request currency only to reconstruct the exact provider amount.
         payload = {
             "merchant_id": self.merchant_id,
             "amount": provider_amount,
             "authority": authority,
-            "currency": verify_currency,
         }
         body = self._post(self.verify_url, payload)
         data, errors = self._extract(body)

@@ -1,3 +1,12 @@
+## 2026-09-15 - Phase50.A.3 ZarinPal current API compatibility
+- aligned default live ZarinPal request/verify/StartPay hosts with the current official `payment.zarinpal.com` v4 contract;
+- Verify payload now sends `merchant_id`, exact provider amount and `authority` only; request currency remains a stored amount-reconstruction fact;
+- added explicit live/sandbox endpoint regressions and no-currency Verify regression;
+- payment security/idempotency suite 17/17 PASS, Django check/no-drift/payment audit/diff-check PASS;
+- Production payment remains intentionally disabled with no Merchant ID and no payment data mutation;
+- added guarded reverse-tunnel deploy runner with exact baseline/live-target/backup/TLS/AST/runtime/public gates and no migration/DB write/collectstatic/gateway enable;
+- broad Store 6F/9E failures were reproduced identically on pre-patch baseline and recorded as unrelated regression debt.
+
 ## 2026-09-15 - Client handoff Production closeout
 - verified Local/live-GitHub/Production exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`;
 - verified authenticated reverse-tunnel Host execution, correct MySQL DB, empty migration plan and receiver readiness;

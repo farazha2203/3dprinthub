@@ -1,3 +1,13 @@
+## ERR-49-148 - Phase50.A.3 gate harness and baseline Store regression classification
+Date: 2026-09-15
+Status: `A3 RESOLVED / BASELINE STORE DEBT OPEN / NO PRODUCTION WRITE`.
+
+During the ZarinPal compatibility gate, several operator-harness issues were caught before commit/deploy: PowerShell colon interpolation produced one invalid rollback push refspec; generic `bash` resolved to the WSL stub without a distro; one Git probe wrapper mangled a PowerShell variable; an inline Python runner edit failed on quoting before write; and an inline PowerShell documentation write interpreted Markdown backticks as escape sequences. The first git commit wrapper also parsed the parenthesized commit message as PowerShell syntax; no commit was created, and the retry uses a shell-safe message. Each failed condition was changed before retry. The verified rollback branch is live at exact `1a29e225...`; Git-Bash syntax now uses `C:\Program Files\Git\bin\bash.exe`; runner edits/docs were completed with direct UTF-8 local helpers and readback.
+
+The full Django suite ran 534 tests and reported 6 failures + 9 errors. The affected Store modules were isolated to 41 tests. Current patch: 6F/9E. Exact rollback baseline `1a29e225...`, in a detached worktree with the same local `.env`: the same 6F/9E. Therefore these failures predate and are independent of the ZarinPal delta. Payment-specific suites remain 17/17 PASS, Django check/no-drift and `phase30_payment_audit` PASS.
+
+Prevention: do not classify a broad-suite failure as a new feature regression without exact-baseline reproduction when touched surfaces are disjoint. On Windows, use explicit Git Bash, avoid variable/colon ambiguity, do not inline Markdown backticks through PowerShell, and require UTF-8 file readback after documentation edits.
+
 ## ERR-49-147 ? Continuation QA wrapper encoding/interpolation failures
 Date: 2026-09-15
 Status: `RESOLVED / NO PRODUCTION WRITE`.

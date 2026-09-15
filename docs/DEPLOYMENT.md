@@ -1,3 +1,10 @@
+## 2026-09-15 Phase50.A.3 ZarinPal compatibility deploy
+Production application baseline is exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. The dedicated runner is `scripts/host/phase50_zarinpal_current_api_deploy.sh` and must be executed only through the authenticated 3DPrintHub reverse tunnel after the target commit is the exact live canonical GitHub head.
+
+The runner verifies repository/branch/baseline/clean worktree, MySQL identity, empty migration plan, publish readiness, current payment disabled/credential-presence booleans, outbound TLS to live/sandbox ZarinPal, explicit `FETCH_HEAD`, ff-only ancestry and an allowlisted target delta. It creates and checksum-verifies source bundle + `.env` rollback evidence before merge. It performs no migration, no Production DB write, no collectstatic and no gateway enable. Post-merge it runs Django/no-drift/payment audit, validates live/sandbox endpoint defaults and the Verify payload AST, restarts Passenger, and requires Home/Store HTTP 200.
+
+This deploy only makes the existing secure provider compatible with the current API defaults. Real Store checkout activation remains blocked on canonical StorePayment wiring and legitimate merchant credentials.
+
 ## 2026-09-15 Client handoff ? deployed and verified
 Current verified Production application/source HEAD is `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`, exact with Local/live GitHub and clean on the canonical branch. Authenticated reverse management is healthy through Windows loopback `127.0.0.1:22024`. The successful handoff deploy rollback directory is `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-094656-phase50-client-handoff`; its source bundle verifies and records pre-deploy HEAD `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`.
 

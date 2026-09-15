@@ -758,8 +758,8 @@ Status: `PRESERVED / INCLUDED IN 50.A.2B REGRESSION BOUNDARY`
 Do not duplicate current Coupon/VAT logic; shipping snapshot finalization must preserve discount, packaging, tax and payment totals.
 
 ## REQ-50-006 — Phishing-resistant comprehensive payment
-Status: `REQUESTED / 50.A.3 PLANNED`
-Server-owned amount, DB locking, callback identity, exact Authority, server-to-server verification and idempotency; never collect/store card/PIN/CVV.
+Status: `50.A.3 IN_PROGRESS / MATURE QUOTE ENGINE VERIFIED / CURRENT-API COMPATIBILITY LOCAL_TESTED`
+Server-owned amount, DB locking, callback identity, exact Authority, server-to-server verification and idempotency are already present in the mature quote-payment engine; never collect/store card/PIN/CVV. Current ZarinPal endpoint/Verify compatibility is Local-tested; StorePayment wiring and merchant activation remain separate gates.
 
 ## REQ-50-008 — Variant 2.0 size/build/packaging parity
 Status: `PRODUCTION VERIFIED FOUNDATION`
@@ -770,8 +770,8 @@ Status: `REQUESTED / 50.A.4 PLANNED`
 Official Product API v3 with stable Product/Profile grouping, price/availability and image-quality rules.
 
 ## REQ-50-010 — ZarinPal Store checkout activation
-Status: `REQUESTED / 50.A.3 PLANNED`
-Connect StorePayment to mature secure payment architecture before merchant activation.
+Status: `50.A.3 IN_PROGRESS / PROVIDER COMPATIBILITY LOCAL_TESTED / STORE WIRING NEXT`
+Current ZarinPal v4 provider defaults and Verify payload are Local-tested against the mature secure quote-payment engine. Connect canonical StorePayment checkout to that same architecture before any merchant activation; do not create a parallel payment authority.
 
 ## REQ-50-014 — Windows Product image pixel dimensions
 Status: `SOURCE IMPLEMENTED / CI TESTED / INCLUDED IN NEXT OWNER-ACCEPTED EXE`
