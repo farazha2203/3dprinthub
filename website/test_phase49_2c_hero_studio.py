@@ -62,19 +62,19 @@ class Phase49_2CHeroStudioContractTests(SimpleTestCase):
         self.assertIn(".p49c-gallery", css)
         self.assertIn(".p49c-edit-link", css)
 
-    def test_frontend_uses_per_slide_effect_and_timing_contract(self):
+    def test_frontend_preserves_slide_timing_while_a2j_owns_public_transition(self):
         hero = self.read("templates/website/partials/hero.html")
-        self.assertIn("data-p49c-engine", hero)
-        self.assertIn("data-p49c-effect", hero)
+        self.assertIn("data-p50j-slicebox", hero)
         self.assertIn("slide.transition_duration_ms", hero)
         self.assertIn("slide.display_duration_ms", hero)
-        self.assertIn("phase49_2c-hero-effects.css", hero)
-        self.assertIn("phase49_2c-home-hero.js", hero)
+        self.assertIn("phase50-a2j-slicebox-hero.css", hero)
+        self.assertIn("phase50-a2j-slicebox-hero.js", hero)
+        self.assertNotIn("data-p49c-engine", hero)
+        self.assertNotIn("phase49_2c-home-hero.js", hero)
 
-        engine = self.read("static/js/phase49_2c-home-hero.js")
-        self.assertIn('root.removeAttribute("data-p45-hero")', engine)
-        self.assertIn("displayOf", engine)
-        self.assertIn("transitionOf", engine)
+        engine = self.read("static/js/phase50-a2j-slicebox-hero.js")
+        self.assertIn("displayDuration", engine)
+        self.assertIn("transitionDuration", engine)
         self.assertIn("setTimeout", engine)
         self.assertNotIn("setInterval", engine)
 

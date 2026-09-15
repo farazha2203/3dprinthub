@@ -14,7 +14,8 @@ class Phase46HomeExperienceContractTests(SimpleTestCase):
     def test_phase45_active_home_view_is_consistent(self):
         source = self.source("website/views.py")
         self.assertIn("from website.models import HomepageHeroSlide", source)
-        self.assertIn("HomepageHeroSlide.objects.filter(is_active=True)", source)
+        self.assertIn("HomepageHeroSlide.objects.filter(", source)
+        self.assertIn("asset__product__is_active=True", source)
 
     def test_material_guide_is_tabbed_and_not_table_based(self):
         source = self.source("templates/website/partials/recommendations.html")

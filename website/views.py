@@ -952,9 +952,25 @@ def home_view(request):
         newest_first=True,
     )
     # PHASE45_MANAGED_HERO_QUERY
+    # Public Hero is Product-backed. Store cleanup/republication may legitimately
+    # remove a Product while retaining its ImportedPrintAsset and historical
+    # HomepageHeroSlide row for audit/admin reuse. Never render those orphaned
+    # slides: their image would advertise a deleted Product and their CTA would
+    # fall back to an empty Store. A newly published Product with Slider enabled
+    # automatically becomes eligible again through the existing asset->product
+    # relation.
     homepage_hero_slides = list(
-        HomepageHeroSlide.objects.filter(is_active=True)
-        .select_related("asset", "asset__source", "asset__metrics", "asset__metrics__publication")
+        HomepageHeroSlide.objects.filter(
+            is_active=True,
+            asset__product__is_active=True,
+        )
+        .select_related(
+            "asset",
+            "asset__source",
+            "asset__product",
+            "asset__metrics",
+            "asset__metrics__publication",
+        )
         .order_by("sort_order", "id")
     )
     catalog_groups, catalog_preview = categorized_presentation(
