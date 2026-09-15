@@ -1,3 +1,6 @@
+## 2026-09-15 - Product entry reopened after client handoff
+مسیر ورود و انتشار Product دوباره به‌صورت واقعی پذیرفته شد: Product Wizard ویندوز در Stage 7 دکمه مستقیم Ready/Send دارد، نسخه `6e306e5...` اجرا شده و Product #628 از Windows تا Store به Site Product #21 رسیده است. 190 Variant سفارش‌پذیر، 2 تصویر عمومی و Cart واقعی Variant 1837 تأیید شدند؛ سفارش تستی ایجاد نشد. از این checkpoint مالک می‌تواند Productهای کامل را وارد/منتشر کند و Gateهای ناقص همچنان fail-closed می‌مانند.
+
 ## 2026-09-15 - Immediate Product re-entry gate
 Windows Product Wizard now closes the owner-reported direct-send usability gap: Stage 7 includes explicit single-Product Ready and Send-to-Site actions while preserving the mature strict publisher. Site receiver readiness and FTP are healthy; 12 current Ready Products pass preflight. One known-good Product must now be published with fresh Catalog/MySQL backups and live Store/Cart verification before widening publication.
 

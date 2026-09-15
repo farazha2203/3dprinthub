@@ -1,3 +1,11 @@
+## ERR-49-150 - Product #628 acceptance diagnostic harness corrections
+Date: 2026-09-15
+Status: `RESOLVED / ACCEPTANCE PASS / NO TEST ORDER WRITE`.
+
+During final #628 acceptance, one Host read-only diagnostic tried `ProductVariant.price`, which is not a model field, after already proving Product=1 and 190/190 Variants orderable. The failed probe performed no write and was not repeated unchanged; the corrected final probe used only verified model/orderability contracts and confirmed Product=1, Variant=190, Image=2, StoreOrder=0. The first browser harness also targeted numeric `data-step` values, while the live guided selector uses `data-dimension`; it therefore left Cart disabled without proving a runtime defect. The corrected browser condition drove the visible `data-dimension` controls, enabled Cart and resolved Variant 1837.
+
+Prevention: acceptance harnesses must follow the live user-visible selector contract and must introspect/use verified model fields instead of guessing diagnostic attributes. A harness failure is not a Product/runtime failure until reproduced through the real contract.
+
 ## ERR-49-149 - Product Wizard had publish intent but no direct send action
 Date: 2026-09-15
 Status: `RESOLVED LOCAL / PRODUCTION PRODUCT ACCEPTANCE NEXT`.

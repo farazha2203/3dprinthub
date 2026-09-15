@@ -1,3 +1,9 @@
+## 2026-09-15 - Product Wizard direct publish + real Production acceptance
+- Added direct single-Product Ready and Site Send actions to Qt Product Wizard Stage 7 while reusing the mature Batch/FTP/Bridge/HTTP publisher.
+- GitHub runtime `6e306e5353a6d6cd9d434894870839e533fa9622`; Windows Catalog Center relaunched from that SHA.
+- Real #628 acceptance PASS: Site Product #21, 190 orderable Variants, 2 Product images, public media/page HTTP 200, browser Cart Variant 1837; no test order delivered.
+- Fresh rollback sets: Local Catalog `product628-prepublish-20260915-135143`; Production `20260915-135005-product628-prepublish`.
+
 ## 2026-09-15 - Windows Product Wizard direct site publish hotfix
 - Added direct `Ready this Product` and `Send this Product to Site` actions to Qt Product Wizard Stage 7.
 - Single-Product publish uses the existing guarded publish Core: factual preflight, finalized SEO WebP package, receiver readiness, FTP, Bridge import, strict ACK and public HTTP verification.

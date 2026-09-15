@@ -1,3 +1,6 @@
+## 2026-09-15 Product re-entry acceptance state
+Production MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`; no schema migration occurred. Before #628 publish: Product=0, ProductVariant=0, ProductImage=0. After the canonical Batch/FTP/Bridge import: Product=1, ProductVariant=190, ProductImage=2, StoreOrder=0. Site Product #21 is active and all 190 Variants pass the shared `variant_is_orderable` rule. The acceptance Cart request was intercepted before server delivery, so no test order/payment/inventory write was created. Pre-write DB rollback is `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-135005-product628-prepublish/database-before-3i53.sql.gz` and passed gzip validation.
+
 ## 2026-09-15 ? Client handoff Store reset Production truth
 Production source is clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`; effective DB is MySQL `sfkilvrs_EmiAdmin_3dprinthub`; Django migration plan is empty. The handoff reset is a data operation, not a migration.
 

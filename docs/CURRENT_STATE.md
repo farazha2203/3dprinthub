@@ -1,3 +1,12 @@
+## 2026-09-15 - PRODUCT ENTRY PATH PRODUCTION_ACCEPTED / #628 END-TO-END PASS
+Status: `PRODUCTION_ACCEPTED / WINDOWS_APP_RUNNING / SINGLE_PRODUCT_SEND_PASS / PRODUCT21_ORDERABLE`.
+
+Windows Product Wizard direct-send hotfix is committed/pushed at `6e306e5353a6d6cd9d434894870839e533fa9622` and the Qt Catalog Center was relaunched from that exact runtime. Product #628 passed the real Stage/Publish preflight and was sent through Batch 8.5 -> FTP -> Bridge -> public HTTP verification. Batch `desktop_catalog_v85_20260915_135231`, UUID `6b13e27b-c08a-446b-98d9-76260d906cca`, published=1/failed=0. Local #628 is now `uploaded`, upload_ready=0, server Product #21, sync error empty.
+
+Fresh rollback evidence before the write: Catalog backup `D:\projects\3dprinthub-backups\product628-prepublish-20260915-135143` (integrity OK, SHA256 `bc89abeec0123274637ba3345e3a9b45404b1d9b4d2475235201a3200d5e89eb`) and Production MySQL/media backup `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-135005-product628-prepublish` with valid gzip DB backup. Production final truth: Product=1, Variant=190, ProductImage=2, StoreOrder=0; Product #21 active and all 190 Variants pass the shared orderability rule. Public Product and all reported WebPs are HTTP 200.
+
+Real Chromium customer acceptance: visible guided controls selected size -> color -> PLA, Cart became enabled, canonical Variant `1837` was resolved, and the actual cart POST carried `variant_id=1837&quantity=1`; request was intercepted/aborted before server delivery, so StoreOrder remains zero. Product-entry and Product-to-Site path are now accepted for owner use. #40/#43/#146 remain correctly blocked until their factual image SEO/slider gaps are completed.
+
 ## 2026-09-15 - PRODUCT ENTRY HOTFIX LOCAL_TESTED / SITE RECEIVER READY
 Status: `LOCAL_TESTED / WINDOWS SINGLE-PRODUCT SEND ADDED / RECEIVER_READY / ONE REAL PRODUCT ACCEPTANCE NEXT`.
 

@@ -1,3 +1,7 @@
+## 2026-09-15 - Owner urgent Product-entry request ACCEPTED
+Status: `PRODUCTION_ACCEPTED / WINDOWS DIRECT SEND LIVE`.
+Owner requested immediate ability to enter Products in the Windows app and send them to the Site. Product Wizard Stage 7 now contains direct Ready/Send actions; runtime is pushed at `6e306e5...` and relaunched. Real #628 Windows -> FTP -> Bridge -> Store acceptance passed with Site Product #21, public WebP media, 190 orderable Variants and real browser Cart wiring. No test StoreOrder was created. Owner can proceed with Product entry; factual incomplete Products remain blocked rather than force-published.
+
 ## 2026-09-15 - Owner urgent Product entry + direct Product send request
 Status: `LOCAL_TESTED / DIRECT SINGLE-PRODUCT SEND IMPLEMENTED / REAL PRODUCT ACCEPTANCE NEXT`.
 Owner needs Catalog Center immediately for adding Products and expects both Windows and Site publication paths to work from the Product being edited. Stage 7 now provides direct Ready and Send-to-Site actions using the mature guarded publisher. Current live receiver is ready and FTP passes; 12 current Ready Products pass preflight. Acceptance requires one real known-good Product publish with strict public Product/media/Variant/Cart verification before wider publication.

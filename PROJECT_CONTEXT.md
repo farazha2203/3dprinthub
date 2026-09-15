@@ -1,3 +1,6 @@
+## 2026-09-15 - Product entry path accepted
+Windows direct single-Product publishing is now available inside Product Wizard Stage 7 at GitHub runtime `6e306e5...`. Real #628 was republished from Windows through the canonical Batch/FTP/Bridge/public-HTTP path as Site Product #21; 190/190 Variants are orderable, media/page checks pass, and Chromium Cart wiring resolves Variant 1837 without creating a test order. Fresh Local Catalog and Production MySQL/media backups exist before the acceptance write.
+
 ## 2026-09-15 - Product entry continuity hotfix
 Owner priority is immediate Product entry/publication. Windows Catalog is healthy; live receiver readiness is true and FTP passes. Product Wizard Stage 7 now directly exposes Ready + Send-this-Product actions through the existing strict Batch/FTP/Bridge/public verification Core. 12/15 current Ready Products pass preflight; #40/#43/#146 remain factually blocked. 71 related regressions PASS. Next is one rollback-backed real Product acceptance.
 

@@ -1,3 +1,10 @@
+## 2026-09-15 Product #628 re-entry acceptance paths
+- Windows runtime/GitHub: `6e306e5353a6d6cd9d434894870839e533fa9622`.
+- Fresh Catalog rollback: `D:\projects\3dprinthub-backups\product628-prepublish-20260915-135143\catalog-before-product628.sqlite3`.
+- Fresh Production rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-135005-product628-prepublish`.
+- Accepted Batch: `desktop_catalog_v85_20260915_135231`, UUID `6b13e27b-c08a-446b-98d9-76260d906cca`.
+- Catalog #628 -> Site Product #21 -> `/store/product/majestic-hydra-voronoi-art-sculpture/`.
+
 ## 2026-09-15 Phase50.A.3 ZarinPal compatibility paths
 - Pre-change rollback branch: `backup/pre-phase50-a3-zarinpal-current-api-20260915` -> `1a29e22537a1471119d6b040eb7957b029c9c732`.
 - Production baseline for this deploy: `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.

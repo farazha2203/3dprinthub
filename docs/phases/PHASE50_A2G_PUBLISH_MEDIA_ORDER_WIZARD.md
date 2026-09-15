@@ -1,3 +1,6 @@
+## 2026-09-15 Product re-entry acceptance after Store reset
+The direct Product Wizard Stage-7 Ready/Send hotfix is live on GitHub at `6e306e5353a6d6cd9d434894870839e533fa9622` and Windows Catalog Center is relaunched from that SHA. Real Catalog #628 was published after fresh Local/Production rollback backups. Strict ACK/public HTTP passed as Site Product #21 with 2 WebPs and 190/190 orderable Variants. Chromium customer flow selected size/color/PLA, resolved Variant 1837 and generated the real quantity=1 Cart POST, intercepted before server delivery. Product entry/publish path is now accepted for owner use.
+
 ## 2026-09-15 Product Wizard direct-send continuity hotfix
 After the client-handoff Store reset, the owner needs immediate Product re-entry. The Site receiver/FTP path is currently healthy and 12/15 Ready Catalog Products pass real publish preflight. The remaining usability gap was inside Qt Product Wizard: Stage 7 stored publication intent but did not expose the actual guarded site-publish action. Stage 7 now has explicit single-Product Ready + Send buttons wired to the same Batch 8.5/FTP/Bridge/public-HTTP strict-ACK Core as Products bulk publication. 71 related regressions PASS. Next: GitHub promotion, fresh rollback backups and one real #628 acceptance before wider publication.
 

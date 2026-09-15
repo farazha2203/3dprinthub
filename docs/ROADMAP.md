@@ -1,3 +1,14 @@
+## 2026-09-15 - Product entry / single Product publish gate CLOSED
+- [x] Add direct Ready + Send actions inside Product Wizard Stage 7.
+- [x] Focused/broader Windows regressions PASS: 21/21 and 71/71.
+- [x] Commit/push Windows runtime `6e306e5353a6d6cd9d434894870839e533fa9622` and relaunch Catalog Center.
+- [x] Fresh Catalog + Production MySQL/media rollback backups before real publish.
+- [x] Publish exactly Catalog #628 through Batch/FTP/Bridge/public HTTP; published=1, failed=0.
+- [x] Production Product #21 active with 190/190 orderable Variants and 2 Product images.
+- [x] Browser guided selector + Cart wiring PASS; Variant 1837, quantity 1, POST intercepted before server write.
+- [x] StoreOrder remains 0 after acceptance.
+- [ ] Owner may now enter/publish Products; incomplete Product gates remain fail-closed.
+
 ## 2026-09-15 - Urgent Product entry/publication recovery
 - [x] Verify canonical Windows Catalog integrity and real Ready queue.
 - [x] Verify Site publish readiness = true/no blockers and FTP connection PASS.
