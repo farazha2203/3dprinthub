@@ -1,3 +1,8 @@
+## 2026-09-15 - Client handoff deployment gate
+- Added dedicated `phase50_client_handoff_deploy.sh` for exact clean Production baseline `70a74e6...`.
+- Deployment remains GitHub-first, ff-only, no-migration, backup-gated, collectstatic/restart/HTTP verified.
+- Local Hero 50.3.0 browser QA confirms full-bleed desktop and native 3D cuboid transition with mobile fallback.
+
 ## 2026-09-15 - Client handoff Store Reset + Hero 50.3.0 candidate
 - completed a fail-closed authenticated Store Reset API for imported Catalog Products only;
 - reset preserves source ImportedPrintAsset records, master Material/Quality/Color/Brand data, Portfolio, Homepage Hero slides and historical commerce records; protected/manual/inventory-conflicted state blocks deletion;

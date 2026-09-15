@@ -1,3 +1,8 @@
+## 2026-09-15 - CLIENT HANDOFF DEPLOY RUNNER LOCAL_TESTED / PUSH NEXT
+Status: `GITHUB_CANDIDATE dd1e770 / DEPLOY_RUNNER_LOCAL_TESTED / PRODUCTION STILL 70a74e6`.
+
+Repository handoff candidate is pushed at `dd1e770abd26438021d9728a7ee616c89429e137`. Dedicated `scripts/host/phase50_client_handoff_deploy.sh` now guards exact Production baseline `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`, live GitHub target equality, ff-only promotion, no migration/dependency/settings delta, source/.env/static rollback backup, collectstatic, Passenger restart, authenticated readiness and Hero/Store verification. Runner bash syntax, diff-check and secret scan PASS. Production is not yet mutated; reverse tunnel 22024 must be restored before execution.
+
 ## 2026-09-15 - CLIENT HANDOFF DELIVERY CANDIDATE LOCAL_PASS / PRODUCTION DEPLOY+RESET NEXT
 Status: `LOCAL_PASS / GITHUB PROMOTION NEXT / PRODUCTION NOT YET MUTATED`.
 

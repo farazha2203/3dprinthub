@@ -1,3 +1,12 @@
+## 2026-09-15 - Client handoff deploy runner checkpoint
+- [x] Push application candidate `dd1e770...` to canonical branch.
+- [x] Browser-verify Local Hero 50.3.0: 1440x823 full-bleed, real temporary 3D cuboids, mobile fallback.
+- [x] Add dedicated exact-baseline handoff deploy runner.
+- [x] Runner bash syntax, diff-check and secret scan PASS.
+- [ ] Commit/push runner and require GitHub checks green.
+- [ ] Restore PrintHubTunnel only; verify Host branch/HEAD/worktree/MySQL/readiness.
+- [ ] Run guarded GitHub deploy, create verified MySQL/media reset backup, reset Store if eligible, then Production browser acceptance.
+
 ## 2026-09-15 - Client handoff delivery gate
 - [x] Re-read repository rules/state/errors/paths/active Phase from source of truth.
 - [x] Preserve the existing dirty worktree and inspect Store Reset, Hero, publish/Instagram and timeout-reconciliation deltas instead of resetting them.

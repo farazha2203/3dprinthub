@@ -1,3 +1,11 @@
+## 2026-09-15 Client handoff deploy paths
+- Candidate GitHub commit before runner commit: `dd1e770abd26438021d9728a7ee616c89429e137`.
+- Current verified Production source: `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`.
+- Dedicated deploy runner: `scripts/host/phase50_client_handoff_deploy.sh`.
+- Store reset backup helper: `scripts/host/phase50_store_reset_prepare.py`.
+- Reverse operator loopback: `127.0.0.1:22024`; Host bridge loopback: `127.0.0.1:22224`.
+- Production root/Python/MySQL/static remain `/home/sfkilvrs/3dprinthub`, `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`, `sfkilvrs_EmiAdmin_3dprinthub`, `/home/sfkilvrs/public_html/static`.
+
 ## 2026-09-14 Product #62 acceptance / stale-public pending paths
 - Local/live GitHub source: `07772ca9247357ff63d2395eea9eed70780c9a68`.
 - Current verified Production source: `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7` (clean).
