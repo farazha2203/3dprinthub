@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" data-customer-theme="{{ customer_theme|default:'original' }}" data-theme-prompt="{{ customer_theme_prompt|yesno:'1,0' }}" data-theme-endpoint="{{ customer_theme_endpoint }}" data-authenticated="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
@@ -155,7 +155,6 @@
     <script src="{% static 'js/theme-preview.js' %}"></script>
     <script src="{% static 'js/phase13-frontend.js' %}" defer></script>
     <script src="{% static 'js/phase14-presentation.js' %}" defer></script>
-    <script src="{% static 'js/phase45-home-hero.js' %}?v=45.0.0" defer></script>
     <script src="{% static 'js/phase46-home-experience.js' %}?v=46.0.0" defer></script>
     <script src="{% static 'js/phase47-home-polish.js' %}?v=47.0.0" defer></script>
 </body>

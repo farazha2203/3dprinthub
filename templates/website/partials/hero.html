@@ -1,62 +1,60 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/phase49_2c-hero-effects.css' %}?v=49.3.2">
-<link rel="stylesheet" href="{% static 'css/phase49_3b-hero-media.css' %}?v=49.3.2">
-<link rel="stylesheet" href="{% static 'css/phase50-mobile-hero.css' %}?v=50.1.1">
-<link rel="stylesheet" href="{% static 'css/phase50-a2h-product-showcase.css' %}?v=50.2.8">
-<link rel="stylesheet" href="{% static 'css/phase50-a2i-slicebox-hero.css' %}?v=50.3.0">
-<script src="{% static 'js/phase50-a2i-slicebox-hero.js' %}?v=50.3.0" defer></script>
-<script src="{% static 'js/phase49_2c-home-hero.js' %}?v=49.3.3" defer></script>
-<section id="home" class="p45-hero" data-p45-hero data-p49c-engine data-p50i-slicebox data-p50i-orientation="r" data-p50i-cuboids-random="true" data-p50i-max-cuboids="7" data-p50i-perspective="1200" data-p50i-disperse="28" data-p50i-sequential="85" aria-label="مدل‌های منتخب 3DPrintHub">
-  <div class="p45-hero__viewport">
+<link rel="stylesheet" href="{% static 'css/phase50-a2j-slicebox-hero.css' %}?v=50.4.0">
+<script src="{% static 'js/phase50-a2j-slicebox-hero.js' %}?v=50.4.0" defer></script>
+
+<section
+  id="home"
+  class="p50j-hero"
+  data-p50j-slicebox
+  data-p50j-version="50.4.0"
+  data-p50j-orientation="r"
+  data-p50j-cuboids-random="true"
+  data-p50j-max-cuboids="7"
+  data-p50j-perspective="1200"
+  data-p50j-disperse="28"
+  data-p50j-sequential="85"
+  aria-label="مدل‌های منتخب 3DPrintHub"
+>
+  <div class="p50j-hero__viewport" data-p50j-viewport>
     {% if homepage_hero_slides %}
-      <div class="p45-hero__track" data-p45-track>
+      <div class="p50j-hero__stage" data-p50j-stage>
         {% for slide in homepage_hero_slides %}
           <article
-            class="p45-hero__slide{% if forloop.first %} is-active{% endif %}"
-            data-p45-slide
-            data-p49c-effect="{{ slide.transition_effect|default:'cinematic_fade' }}"
-            data-p49c-transition="{{ slide.transition_duration_ms|default:1400 }}"
-            data-p49c-display="{{ slide.display_duration_ms|default:7000 }}"
-            data-p49b-presentation="{{ slide.presentation_mode|default:'product_fit' }}"
-            data-p49b-background="{{ slide.background_mode|default:'blur' }}"
-            style="--p49c-transition:{{ slide.transition_duration_ms|default:1400 }}ms;--p49c-display:{{ slide.display_duration_ms|default:7000 }}ms"
+            class="p50j-hero__slide{% if forloop.first %} is-active{% endif %}"
+            data-p50j-slide
+            data-p50j-transition="{{ slide.transition_duration_ms|default:1400 }}"
+            data-p50j-display="{{ slide.display_duration_ms|default:7000 }}"
+            data-p50j-presentation="{{ slide.presentation_mode|default:'product_fit' }}"
             aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
           >
             <a
-              class="p45-hero__media"
+              class="p50j-hero__media"
               href="{{ slide.target_url }}"
               aria-label="مشاهده {{ slide.effective_title }}"
-              style="--p49b-bg-color:{{ slide.background_color|default:'#071827' }};--p49b-bg-blur:{{ slide.background_blur_px|default:18 }}px;--p49b-bg-image:url('{{ slide.effective_image_url }}')"
+              style="--p50j-bg-color:{{ slide.background_color|default:'#071827' }};--p50j-bg-blur:{{ slide.background_blur_px|default:18 }}px;--p50j-bg-image:url('{{ slide.effective_image_url }}')"
             >
               {% if slide.effective_image_url %}
-              <img
-                src="{{ slide.effective_image_url }}"
-                alt="{{ slide.effective_alt_text }}"
-                width="1920"
-                height="1080"
-                loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-                decoding="async"
-                {% if forloop.first %}fetchpriority="high"{% endif %}
-                style="--p45-fit:{{ slide.object_fit }};--p45-position:{{ slide.focal_position }};--p49b-x:{{ slide.image_position_x_percent|default:50 }};--p49b-y:{{ slide.image_position_y_percent|default:50 }};--p49b-scale:{{ slide.image_scale_percent|default:100 }};--p49b-desktop-w:{{ slide.desktop_max_width_percent|default:78 }};--p49b-desktop-h:{{ slide.desktop_max_height_percent|default:88 }};--p49b-mobile-w:{{ slide.mobile_max_width_percent|default:92 }};--p49b-mobile-h:{{ slide.mobile_max_height_percent|default:72 }}"
-              >
+                <img
+                  class="p50j-hero__image"
+                  src="{{ slide.effective_image_url }}"
+                  alt="{{ slide.effective_alt_text }}"
+                  width="1920"
+                  height="1080"
+                  loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                  decoding="async"
+                  {% if forloop.first %}fetchpriority="high"{% endif %}
+                  style="--p50j-fit:{{ slide.object_fit|default:'cover' }};--p50j-focus:{{ slide.focal_position|default:'center' }};--p50j-scale:{{ slide.image_scale_percent|default:100 }};--p50j-x:{{ slide.image_position_x_percent|default:50 }}%;--p50j-y:{{ slide.image_position_y_percent|default:50 }}%;--p50j-desktop-w:{{ slide.desktop_max_width_percent|default:100 }}%;--p50j-desktop-h:{{ slide.desktop_max_height_percent|default:100 }}%;--p50j-mobile-w:{{ slide.mobile_max_width_percent|default:100 }}%;--p50j-mobile-h:{{ slide.mobile_max_height_percent|default:100 }}%"
+                >
               {% endif %}
             </a>
-            <div class="p45-hero__caption">
-              <span class="p45-hero__group">{{ slide.effective_group_title }}</span>
-              <h2>{{ slide.effective_title }}</h2>
+
+            <div class="p50j-hero__content">
+              <span class="p50j-hero__eyebrow">{{ slide.effective_group_title }}</span>
+              <h2 class="p50j-hero__title">{{ slide.effective_title }}</h2>
               {% if slide.effective_description %}
-                <button
-                  type="button"
-                  class="p49c-hero__description"
-                  data-p49c-description
-                  aria-expanded="false"
-                  aria-label="نمایش توضیح کامل {{ slide.effective_title }}"
-                >
-                  <span class="p49c-hero__description-text">{{ slide.effective_description }}</span>
-                  <span class="p49c-hero__description-more" data-p49c-description-more>نمایش بیشتر</span>
-                </button>
+                <p class="p50j-hero__description">{{ slide.effective_description }}</p>
               {% endif %}
-              <a class="p45-hero__product-link" href="{{ slide.target_url }}">
+              <a class="p50j-hero__cta" href="{{ slide.target_url }}">
                 <span>{{ slide.effective_button_text|default:"مشاهده محصول" }}</span>
                 <span aria-hidden="true">←</span>
               </a>
@@ -66,25 +64,41 @@
       </div>
 
       {% if homepage_hero_slides|length > 1 %}
-        <div class="p45-hero__controls" aria-label="کنترل اسلایدر">
-          <button type="button" class="p45-hero__arrow" data-p45-prev aria-label="اسلاید قبلی">›</button>
-          <div class="p45-hero__dots" role="tablist" aria-label="انتخاب اسلاید">
+        <div class="p50j-hero__controls" aria-label="کنترل اسلایدر">
+          <button type="button" class="p50j-hero__arrow" data-p50j-prev aria-label="اسلاید قبلی">›</button>
+          <div class="p50j-hero__dots" role="tablist" aria-label="انتخاب اسلاید">
             {% for slide in homepage_hero_slides %}
-              <button type="button" class="p45-hero__dot{% if forloop.first %} is-active{% endif %}" data-p45-dot="{{ forloop.counter0 }}" aria-label="اسلاید {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}"></button>
+              <button
+                type="button"
+                role="tab"
+                class="p50j-hero__dot{% if forloop.first %} is-active{% endif %}"
+                data-p50j-dot="{{ forloop.counter0 }}"
+                aria-label="اسلاید {{ forloop.counter }}"
+                aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              ></button>
             {% endfor %}
           </div>
-          <button type="button" class="p45-hero__arrow" data-p45-next aria-label="اسلاید بعدی">‹</button>
+          <button type="button" class="p50j-hero__arrow" data-p50j-next aria-label="اسلاید بعدی">‹</button>
         </div>
       {% endif %}
 
-      <div class="p45-hero__counter" aria-hidden="true"><span data-p45-current>01</span><i></i><span>{{ homepage_hero_slides|length|stringformat:"02d" }}</span></div>
+      <div class="p50j-hero__counter" aria-hidden="true">
+        <span data-p50j-current>01</span><i></i><span>{{ homepage_hero_slides|length|stringformat:"02d" }}</span>
+      </div>
     {% else %}
-      <div class="p45-hero__fallback">
-        <img class="brand-mark brand-mark--hero p45-hero__fallback-logo" src="{% static 'img/brand/3dprinthublogo.png' %}" alt="3DPrintHub" width="320" height="320" style="width:min(28vw,320px);max-width:320px;max-height:320px;height:auto;object-fit:contain;background:transparent;border:0;padding:0">
+      <div class="p50j-hero__fallback">
+        <img
+          class="brand-mark brand-mark--hero p50j-hero__fallback-logo"
+          src="{% static 'img/brand/3dprinthublogo.png' %}"
+          alt="3DPrintHub"
+          width="330"
+          height="330"
+        >
       </div>
     {% endif %}
 
-    <a href="#home-intro" class="p45-hero__scroll" aria-label="ادامه صفحه"><span>ادامه</span><i></i></a>
+    <a href="#home-intro" class="p50j-hero__scroll" aria-label="ادامه صفحه"><span>ادامه</span><i></i></a>
   </div>
 </section>
 

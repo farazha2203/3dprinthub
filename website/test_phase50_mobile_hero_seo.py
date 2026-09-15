@@ -10,17 +10,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Phase50MobileHeroContractTests(SimpleTestCase):
-    def test_mobile_hero_override_is_loaded_after_phase49_media_styles(self):
+    def test_standalone_hero_owns_mobile_behavior_without_legacy_override(self):
         template = (ROOT / "templates" / "website" / "partials" / "hero.html").read_text(encoding="utf-8")
-        self.assertIn("phase50-mobile-hero.css", template)
-        self.assertGreater(template.index("phase50-mobile-hero.css"), template.index("phase49_3b-hero-media.css"))
+        self.assertIn("phase50-a2j-slicebox-hero.css", template)
+        self.assertIn("phase50-a2j-slicebox-hero.js", template)
+        self.assertNotIn("phase50-mobile-hero.css", template)
+        self.assertNotIn("phase49_3b-hero-media.css", template)
 
     def test_mobile_caption_is_compact_and_small_phone_hides_description(self):
-        css = (ROOT / "static" / "css" / "phase50-mobile-hero.css").read_text(encoding="utf-8")
-        self.assertIn("max-height: 36svh", css)
-        self.assertIn("font-size: clamp(1rem, 4.4vw, 1.38rem)", css)
-        self.assertIn("max-width: 420px", css)
-        self.assertIn(".p49c-hero__description", css)
+        css = (ROOT / "static" / "css" / "phase50-a2j-slicebox-hero.css").read_text(encoding="utf-8")
+        self.assertIn("@media (max-width: 720px)", css)
+        self.assertIn("max-height: 42svh", css)
+        self.assertIn("font-size: clamp(1.3rem, 6.2vw, 2rem)", css)
+        self.assertIn("@media (max-width: 420px)", css)
+        self.assertIn(".p50j-hero__description", css)
         self.assertIn("display: none", css)
 
 
