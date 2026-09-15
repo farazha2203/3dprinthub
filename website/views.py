@@ -952,18 +952,25 @@ def home_view(request):
         newest_first=True,
     )
     # PHASE45_MANAGED_HERO_QUERY
-    # Public Hero is Product-backed. Store cleanup/republication may legitimately
-    # remove a Product while retaining its ImportedPrintAsset and historical
-    # HomepageHeroSlide row for audit/admin reuse. Never render those orphaned
-    # slides: their image would advertise a deleted Product and their CTA would
-    # fall back to an empty Store. A newly published Product with Slider enabled
-    # automatically becomes eligible again through the existing asset->product
-    # relation.
+    # Public Hero is slide-authoritative, not Store-count-authoritative. Curated
+    # source-backed slides remain valid while the Store is intentionally empty;
+    # active Product-backed slides still deep-link to their Product. Rejected or
+    # archived source assets remain fail-closed.
+    from django.db.models import Q as _phase50_hero_Q
+
     homepage_hero_slides = list(
         HomepageHeroSlide.objects.filter(
             is_active=True,
-            asset__product__is_active=True,
+            asset__isnull=False,
         )
+        .filter(
+            _phase50_hero_Q(asset__product__is_active=True)
+            | _phase50_hero_Q(
+                asset__product__isnull=True,
+                asset__commercial_license_status__in=("allowed", "owned", "public_domain"),
+            )
+        )
+        .exclude(asset__editorial_status__in=("rejected", "archived", "license_review"))
         .select_related(
             "asset",
             "asset__source",

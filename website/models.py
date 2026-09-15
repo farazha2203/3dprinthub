@@ -1460,7 +1460,10 @@ class HomepageHeroSlide(models.Model):
 
     @property
     def target_url(self):
-        return reverse("store:external_catalog_detail", args=[self.asset_id])
+        product = getattr(self.asset, "product", None)
+        if product is not None and product.is_active and product.slug:
+            return reverse("store:product_detail", args=[product.slug])
+        return reverse("website:home") + "#order"
 
     def candidate_image_urls(self):
         urls = []

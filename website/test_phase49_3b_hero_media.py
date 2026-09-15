@@ -105,6 +105,14 @@ class Phase493BHeroMediaBehaviorTests(TestCase):
             product=cls.product,
         )
 
+    def test_hero_target_prefers_live_product_and_falls_back_to_order(self):
+        slide = HomepageHeroSlide.objects.create(asset=self.asset, is_active=True)
+        self.assertEqual(slide.target_url, "/store/product/hero-media-product/")
+        self.asset.product = None
+        self.asset.save(update_fields=["product"])
+        slide.refresh_from_db()
+        self.assertEqual(slide.target_url, "/#order")
+
     def test_desktop_publish_contract_applies_media_values(self):
         from store.epic49_publish_options import apply_homepage_slider
 

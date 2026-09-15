@@ -14,7 +14,7 @@ class Phase492BHeroAndLoginHotfixContractTests(SimpleTestCase):
     def test_hero_runtime_uses_store_product_and_not_retired_external_catalog(self):
         hotfix = self.read("website/phase49_2b_hero_hotfix.py")
         hero = self.read("templates/website/partials/hero.html")
-        self.assertIn('reverse("store:product_list")', hotfix)
+        self.assertIn('reverse("website:home") + "#order"', hotfix)
         self.assertNotIn("external_catalog_detail", hotfix)
         self.assertNotIn("external_catalog_detail", hero)
         self.assertIn("{{ slide.target_url }}", hero)

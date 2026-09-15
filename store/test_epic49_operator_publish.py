@@ -107,12 +107,12 @@ class Epic49OperatorPublishContractTests(SimpleTestCase):
         self.assertNotIn("external_catalog_detail", template)
 
         # Active Store Products link to their canonical detail URL. If a Product
-        # is not public yet, the Hero falls back to the Store list and never to the
-        # retired external catalog route.
+        # is not public yet, the curated Hero falls back to homepage order intake
+        # and never to the empty Store list or retired external catalog route.
         self.assertIn("def _asset_target", runtime)
         self.assertIn('getattr(product, "is_active", False)', runtime)
         self.assertIn("product.get_absolute_url()", runtime)
-        self.assertIn('reverse("store:product_list")', runtime)
+        self.assertIn('reverse("website:home") + "#order"', runtime)
         self.assertNotIn("external_catalog_detail", runtime)
 
 

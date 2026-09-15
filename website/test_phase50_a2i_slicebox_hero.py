@@ -80,7 +80,10 @@ class Phase50A2JStandaloneSliceboxHeroContractTests(SimpleTestCase):
         ):
             self.assertIn(token, template)
 
-    def test_public_query_fail_closes_orphaned_or_inactive_products(self):
+    def test_public_query_allows_curated_source_slides_and_excludes_unsafe_assets(self):
         source = self.read("website/views.py")
+        self.assertIn("asset__isnull=False", source)
         self.assertIn("asset__product__is_active=True", source)
+        self.assertIn("asset__commercial_license_status__in", source)
+        self.assertIn("asset__editorial_status__in", source)
         self.assertIn('"asset__product"', source)
