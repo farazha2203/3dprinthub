@@ -1,3 +1,12 @@
+## 2026-09-15 - Client handoff Production closeout
+- verified Local/live-GitHub/Production exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`;
+- verified authenticated reverse-tunnel Host execution, correct MySQL DB, empty migration plan and receiver readiness;
+- verified deploy rollback bundle `20260915-094656-phase50-client-handoff` from pre-deploy `70a74e6...`;
+- verified Store reset rollback set `20260915-094827-store-product-reset`, real gzip DB dump, manifest and 71/71 media hashes;
+- confirmed Production Store is already empty (Products/Variants/ProductImages/linked assets all zero) while Hero/master/source/Portfolio data remains present;
+- real Chromium Production QA PASS: Home 200, Hero 50.3.0 desktop 7-cuboid 3D transition + cleanup, mobile 390px fallback/no overflow, Store 200 with zero Product cards and empty state;
+- no repeat reset/deploy was performed after detecting the already-completed live state.
+
 ## 2026-09-15 - Host transport diagnosis before client handoff
 - Diagnosed dead 3DPrintHub reverse-management transport without touching other project tunnels.
 - Verified Host/Windows tunnel public-key fingerprints are identical.

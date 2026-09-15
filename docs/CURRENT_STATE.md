@@ -1,3 +1,14 @@
+## 2026-09-15 - CLIENT HANDOFF PRODUCTION COMPLETE / STORE EMPTY / HERO 50.3.0 VERIFIED
+Status: `PRODUCTION_VERIFIED / EMPTY_STORE / HERO_50.3.0_BROWSER_PASS / TUNNEL_HEALTHY`.
+
+Canonical Local, live GitHub and Production Host are exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d` on `agent/phase49-3i18-operator-bulk-ai-rebuild`. Authenticated reverse bridge is healthy on Windows loopback `127.0.0.1:22024`, Host is `nphost4.parsblog.com`, effective DB is MySQL `sfkilvrs_EmiAdmin_3dprinthub`, migration plan is empty, and publish readiness is `ready=True` with no blockers.
+
+Client-handoff deploy rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-094656-phase50-client-handoff`; its verified source bundle records pre-deploy HEAD `70a74e6f21113ae6bc5ed1f679d1e57e4e5a8eb7`. Store reset rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-094827-store-product-reset`. The reset backup contains a valid gzip MySQL dump (SHA256 `5cf91d9356e21427d349ce44bd37df20c91d00c5a350274800d7a2bbe237c962`), manifest SHA256 `d9b7fa41d563b858df1b122e6865509ea004a13e5bf9d13d0d145cfb9b6f80ec`, and 71/71 Product-media backups with matching hashes. Pre-reset truth was 20 Products / 1607 Variants / 51 ProductImages / 20 linked Catalog assets / 0 orders / 10 Hero slides.
+
+Current Production reset preflight reports Product/Variant/ProductImage/linked-asset counts all zero; its only blocker is `store_already_empty`, proving the destructive action is already complete and must not be repeated. Preserved current state includes 10 Hero-slide rows, 97 source ImportedPrintAssets, 17 Portfolio rows, 13 Materials, 5 PrintQualities and 64 color/Filament option rows.
+
+Real Chromium Production QA PASS: Home HTTP 200, one live Hero root with 8 rendered active slides and `v=50.3.0`; a desktop Next transition created 7 real cuboids with horizontal orientation and cleaned the overlay afterward; Store HTTP 200 with 0 `.store-product-card` and exactly one `.store-empty-state`; 390px mobile created zero 3D cuboids and `innerWidth == scrollWidth == 390`. Client-handoff runtime/reset/browser acceptance is therefore closed. Next engineering work starts from this exact checkpoint, not the older pending-deploy entries below.
+
 ## 2026-09-15 - REVERSE TUNNEL RECOVERED / SELF-HEAL CONTRACT VERIFIED
 Status: `TUNNEL_HEALTHY / BRIDGE_AUTHENTICATED / WATCHDOG_CRON_PRESENT / DEPLOY THROUGH TUNNEL NEXT`.
 Windows loopback `127.0.0.1:22024` is listening again. Authenticated bridge reports `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. Tunnel-side `crontab -l` proves the one-minute 3DPrintHub watchdog entry is installed with `flock` and the repository bootstrap. Normal Host execution now resumes through the tunnel; no more routine owner-pasted deploy commands.

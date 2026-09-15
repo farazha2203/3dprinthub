@@ -1,3 +1,6 @@
+## 2026-09-15 ? Hero 50.3.0 client-handoff Production acceptance
+Current Production is exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Real Chromium Home QA is HTTP 200 with 8 rendered slides and `v=50.3.0`; a desktop manual Next transition produced 7 native cuboids (`orientation=h`) and cleaned them after transition. At 390px mobile no cuboids are created and document width remains exactly 390px. The handoff Store is also intentionally empty. This supersedes the older owner-visual-review/pending-handoff language for the 50.3.0 delivery milestone.
+
 # Phase50.A.2I — Slicebox-inspired 3D Hero
 
 Date: 2026-09-13

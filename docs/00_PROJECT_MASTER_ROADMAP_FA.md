@@ -1,3 +1,6 @@
+## 2026-09-15 - Client handoff Production milestone closed
+Production/Local/GitHub are exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Reverse tunnel, MySQL identity, empty migration plan and readiness PASS. Guarded deploy and Store reset are complete with verified rollback sets. Store is intentionally empty; Hero/master/source/Portfolio are preserved. Real Chromium confirms Hero 50.3.0 3D desktop transition, mobile fallback and empty Store. Next development must start from this checkpoint and must not rerun the old baseline deploy/reset.
+
 ## 2026-09-14 - Sales launch expansion: three real orderable Products
 Products #16 (#628), #17 (#634) and #18 (#62) have passed strict public-media, orderability and Cart acceptance. #62 preserves its existing identity and now has canonical Variant 884: PLA / E-Sun / white, 138 g, 180 min, 500,000 Toman, backed by real stock. Product #19 (#84) remains non-orderable because its selected black-matte stock is zero; do not substitute another color merely to enable sales. GitHub source `07772ca...` contains the CI-green stale-public cleanup, while Production is still clean `70a74e6...` because the current remote-command safety boundary blocks Host Git mutation. Next: authorized GitHub-first promotion, fail-closed #84 cleanup, then factual audit of the next bounded sales candidates.
 

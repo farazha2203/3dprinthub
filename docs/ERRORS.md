@@ -1,3 +1,11 @@
+## ERR-49-147 ? Continuation QA wrapper encoding/interpolation failures
+Date: 2026-09-15
+Status: `RESOLVED / NO PRODUCTION WRITE`.
+
+Two verification-harness failures occurred after the handoff runtime was already live. First, the initial Playwright Production probe reached Home HTTP 200 and then Windows CP1252 stdout failed while printing the Persian page title (`UnicodeEncodeError`). The rerun changed the condition by setting `PYTHONIOENCODING=utf-8` and completed the entire desktop/mobile/Store browser gate successfully. Second, a double-quoted PowerShell wrapper eagerly expanded remote `$R` before sending the backup-verification command, so remote Python received an empty reset-backup path and raised `FileNotFoundError`. The retry used a single-quoted here-string/literal Host path and verified the intended backup.
+
+Prevention: browser/CLI probes that can emit Persian must force UTF-8 output; nested Windows?Host commands must not rely on `$variable` names inside double-quoted PowerShell transport strings; use single-quoted here-strings or explicit literal/argument passing. A failed verification command is never rerun unchanged. Neither incident mutated Source, DB, media, static files or Production runtime.
+
 ## 2026-09-15 - ERR-49-146 RECOVERED / watchdog contract reverified
 Owner ran the repository bootstrap once from cPanel. `127.0.0.1:22024` returned to LISTENING and authenticated bridge health is `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. A tunnel-side `crontab -l` probe then proved the required one-minute `3DPrintHub reverse tunnel watchdog` entry is installed exactly with `flock` and `phase50_reverse_tunnel_bootstrap.sh`. Normal operations therefore return to Remote-Desktop Local work + reverse-tunnel Host deployment; owner cPanel entry is break-glass only.
 

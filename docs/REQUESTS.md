@@ -1,3 +1,8 @@
+## 2026-09-15 - Owner client-handoff request ACCEPTED on Production
+Status: `PRODUCTION_ACCEPTED / EMPTY STORE / HERO 50.3.0 LIVE`.
+
+The requested handoff outcome is now factual Production state: the current GitHub handoff source is live at `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`; the prior Store catalog was removed only after verified MySQL + Product-media rollback evidence; Store currently has no Product cards; source/master/Portfolio/Hero data is preserved; and the new full-screen Hero 50.3.0 produces real randomized native 3D cuboids on capable desktop while mobile uses the safe fallback without horizontal overflow. Site?Instagram remains credential-gated and is not falsely claimed live without Professional Instagram credentials.
+
 ## 2026-09-15 - Owner client-handoff request: empty Store, finish prior app changes, replace stale Hero and publish
 Status: `LOCAL_IMPLEMENTED + TESTED / GITHUB+PRODUCTION NEXT`.
 

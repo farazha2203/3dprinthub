@@ -1,3 +1,6 @@
+## 2026-09-15 ? Current reverse-management verification rule
+The canonical 3DPrintHub tunnel is currently authenticated and healthy (`Windows 127.0.0.1:22024` -> Host bridge base `/home/sfkilvrs/3dprinthub`). A single Windows `Get-NetTCPConnection` observation is not sufficient to declare the tunnel down: during final handoff verification it transiently returned no row while `Test-NetConnection`, `netstat` and authenticated Bridge health proved the listener/session healthy. Use listener evidence plus authenticated `/health`; only recover the tunnel when the bridge itself is unreachable.
+
 ## 2026-09-15 permanent Host execution rule
 Production operations for 3DPrintHub must use the dedicated reverse-management path only: `127.0.0.1:22024` on Windows to authenticated Host bridge `127.0.0.1:22224`. Do not substitute Retoucher/Asal tunnels. The one-minute cPanel watchdog is mandatory persistence infrastructure and must run the repository-owned `phase50_reverse_tunnel_bootstrap.sh` under `flock`; if the tunnel disappears, repair/verify watchdog execution before asking the owner for routine Host commands.
 

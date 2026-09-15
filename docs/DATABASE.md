@@ -1,3 +1,10 @@
+## 2026-09-15 ? Client handoff Store reset Production truth
+Production source is clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`; effective DB is MySQL `sfkilvrs_EmiAdmin_3dprinthub`; Django migration plan is empty. The handoff reset is a data operation, not a migration.
+
+Verified rollback set: `/home/sfkilvrs/3dprinthub-deploy-backups/20260915-094827-store-product-reset`. `database-before-3i53.sql.gz` passes `gzip -t` and SHA256 is `5cf91d9356e21427d349ce44bd37df20c91d00c5a350274800d7a2bbe237c962`; manifest SHA256 is `d9b7fa41d563b858df1b122e6865509ea004a13e5bf9d13d0d145cfb9b6f80ec`; all 71 backed-up Product-media files match their manifest SHA256.
+
+Manifest before reset: 20 Products, 1607 ProductVariants, 51 ProductImages, 20 linked ImportedPrintAssets, 0 StoreOrders, 0 StoreOrderItems, 0 InventoryMovements, 10 HomepageHeroSlide rows. Current live reset preflight: Products=0, Variants=0, ProductImages=0, linked assets=0, Orders=0, OrderItems=0, InventoryMovements=0, Hero slides=10. Preserved master/source counts include ImportedPrintAsset=97, Portfolio=17, Material=13, PrintQuality=5 and MaterialColorOption=64. The current `store_already_empty` reset blocker is expected and prevents accidental repeat deletion.
+
 ## 2026-09-02 — Phase49.3I.53G Production MySQL is in a verified-by-log partial migration incident
 
 Production migration recorder evidence from the failed run:
