@@ -191,6 +191,16 @@ def _timeout_error(exc: BaseException) -> bool:
             reason = getattr(current, "reason", None)
             if isinstance(reason, (TimeoutError, socket.timeout)):
                 return True
+        text = str(current or "").lower()
+        if "bridge http" in text and any(
+            marker in text
+            for marker in (
+                "request timeout",
+                "timed out by the server",
+                "connection timeout",
+            )
+        ):
+            return True
         current = getattr(current, "__cause__", None) or getattr(current, "__context__", None)
     return False
 

@@ -147,6 +147,29 @@ class Epic49BulkImportTimeoutTests(unittest.TestCase):
         reconcile.assert_called_once()
         self.assertEqual(result["bridge_status"], "completed")
 
+    @patch("app.site_connection._augment_ack_with_public_verification", side_effect=lambda _cfg, ack: ack)
+    @patch("app.site_connection._reconcile_import_timeout")
+    @patch("app.site_connection._json_request")
+    def test_litespeed_http_500_request_timeout_reconciles_exact_batch(self, request_json, reconcile, _augment):
+        request_json.side_effect = RuntimeError(
+            "Bridge HTTP 500: {'detail': '<h2>Request Timeout</h2> "
+            "This request takes too long to process, it is timed out by the server. "
+            "Please increase Connection Timeout.'}"
+        )
+        reconcile.return_value = {
+            "bridge_status": "completed",
+            "diagnostic_id": "desktop_catalog_v85_20260916_114000",
+            "items": [{"desktop_product_id": 77, "status": "updated"}],
+        }
+        result = site_connection.import_batch(
+            self._cfg(),
+            "desktop_catalog_v85_20260916_114000",
+            "batch-uuid-77",
+        )
+        self.assertEqual(request_json.call_count, 1)
+        reconcile.assert_called_once()
+        self.assertEqual(result["bridge_status"], "completed")
+
     def test_completed_diagnostic_recovers_only_matching_batch_uuid(self):
         diagnostic = {
             "batch_name": "desktop_catalog_v85_20260914_210000",
