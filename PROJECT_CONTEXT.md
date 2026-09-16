@@ -1,3 +1,6 @@
+## 2026-09-16 - Windows image reorder completion checkpoint
+Canonical Windows pre-change and live GitHub were exact `551f70624536857ab36ba004404298abb503d180`; rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` preserves it. Stage 3 now exposes per-image previous/next controls for trusted selected media. Mature Primary=slot-1 behavior is preserved, secondary order persists, URL-owned Alt/metadata/Slider identity is preserved, uploaded Products become same-identity republish work, and the existing image finalizer immediately regenerates ordered SEO WebPs. Local gates PASS: 12/12 dedicated, 27/27 Image+Publish and 87/87 broader Windows plus compile/diff-check. Production is unchanged. Next is exact commit/push, fresh Catalog backup, receiver verification, pushed-SHA `qt_launch.py --verify-only` and Windows launch.
+
 ## 2026-09-15 - Product entry path accepted
 Windows direct single-Product publishing is now available inside Product Wizard Stage 7 at GitHub runtime `6e306e5...`. Real #628 was republished from Windows through the canonical Batch/FTP/Bridge/public-HTTP path as Site Product #21; 190/190 Variants are orderable, media/page checks pass, and Chromium Cart wiring resolves Variant 1837 without creating a test order. Fresh Local Catalog and Production MySQL/media backups exist before the acceptance write.
 

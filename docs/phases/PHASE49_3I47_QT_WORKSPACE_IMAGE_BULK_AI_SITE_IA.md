@@ -1,5 +1,14 @@
 # Phase49.3I.47 — Qt Workspace, Multi-Image SEO, Bulk AI, Admin + Storefront Information Architecture
 
+## 2026-09-16 image-order continuation
+Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
+
+The remaining owner image-workspace gap is now implemented without replacing the mature image authority. Trusted selected cards have explicit previous/next controls. Primary remains fixed as slot 1; selected secondary images can be reordered. The Core persists ordered `selected_images_json`, keeps Alt and metadata aligned by source URL, preserves Slider identity, marks an uploaded Product dirty for same-identity republish, and the Qt action immediately invokes the existing finalizer/renumber path so physical SEO WebPs follow the new `-01/-02/-03...` order. Legacy display-only cards cannot reorder. The image-card/scroll height contract was increased so the added action row remains reachable.
+
+Regression evidence: Phase49.3I.47 12/12 PASS; combined Image+Publish 27/27 PASS; broader 3I.36/37/42C3/47/49 87/87 PASS; touched compile and diff-check PASS. Rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` points to exact pre-change `551f70624536857ab36ba004404298abb503d180`. No Catalog schema, Django migration, Host source or Production data change is part of this continuation.
+
+Acceptance remainder: push exact tested source/docs -> fresh canonical Catalog backup -> live receiver/FTP/Bridge verification -> exact pushed `qt_launch.py --verify-only` -> foreground Windows launch + post-launch Catalog integrity/process evidence.
+
 Date: 2026-09-01
 
 Status: `IMPLEMENTED + WINDOWS CI PASS + ADMIN CI PASS + STOREFRONT CI PASS / OWNER LOCAL QA NEXT / PRODUCTION NOT TOUCHED`

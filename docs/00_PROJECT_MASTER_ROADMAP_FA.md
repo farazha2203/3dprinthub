@@ -1,3 +1,6 @@
+## 2026-09-16 - Windows image-order completion gate
+بخش باقی‌مانده Workspace تصاویر Windows اکنون Local-tested است: روی کارت هر تصویر انتخابی کنترل قبلی/بعدی اضافه شده، تصویر اصلی طبق قرارداد بالغ همیشه Slot 1 می‌ماند، ترتیب تصاویر ثانویه Persist می‌شود و Alt/Metadata/Slider با URL خودشان حفظ می‌شوند. هر جابه‌جایی واقعی شماره‌های SEO WebP را از مسیر Finalizer موجود دوباره می‌سازد و Product منتشرشده را برای republish همان هویت علامت می‌زند. تست‌های 12/12، 27/27 و 87/87 PASS هستند. Gate بعدی فقط GitHub exact push، backup تازه Catalog، Receiver/FTP/Bridge verify و اجرای/Launch نسخه pushed Windows است؛ Production این Slice تغییر نکرده است.
+
 ## 2026-09-15 - Product entry reopened after client handoff
 مسیر ورود و انتشار Product دوباره به‌صورت واقعی پذیرفته شد: Product Wizard ویندوز در Stage 7 دکمه مستقیم Ready/Send دارد، نسخه `6e306e5...` اجرا شده و Product #628 از Windows تا Store به Site Product #21 رسیده است. 190 Variant سفارش‌پذیر، 2 تصویر عمومی و Cart واقعی Variant 1837 تأیید شدند؛ سفارش تستی ایجاد نشد. از این checkpoint مالک می‌تواند Productهای کامل را وارد/منتشر کند و Gateهای ناقص همچنان fail-closed می‌مانند.
 

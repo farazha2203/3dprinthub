@@ -1,3 +1,12 @@
+## 2026-09-16 - Qt Product image reorder + SEO renumber continuity
+- Added explicit `قبلی` / `بعدی` controls below trusted selected image cards in Product Wizard Stage 3.
+- Primary image remains the mature fixed slot-1 authority; secondary selected images can be reordered without changing Primary or Slider identity.
+- Reorder preserves Alt/image metadata by source URL, marks already-uploaded Products for guarded republish, and regenerates deterministic SEO WebP sequence through the existing finalizer.
+- Display-only legacy image cards remain non-mutating; gallery row height was extended so the added controls remain reachable through the existing vertical scroll.
+- Added regressions for Core ordering, Alt/metadata/Slider preservation, `needs_update`, SEO `-01/-02/-03` regeneration and real Qt button-click wiring.
+- Local gates PASS: Phase49.3I.47 12/12; Image+Publish 27/27; broader Windows 87/87; touched compile and `git diff --check`.
+- Rollback branch: `backup/pre-phase49-3i47-image-reorder-20260916` -> `551f70624536857ab36ba004404298abb503d180`; Production unchanged by this Windows slice.
+
 ## 2026-09-15 - Product Wizard direct publish + real Production acceptance
 - Added direct single-Product Ready and Site Send actions to Qt Product Wizard Stage 7 while reusing the mature Batch/FTP/Bridge/HTTP publisher.
 - GitHub runtime `6e306e5353a6d6cd9d434894870839e533fa9622`; Windows Catalog Center relaunched from that SHA.

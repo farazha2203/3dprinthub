@@ -1,3 +1,14 @@
+## 2026-09-16 - WINDOWS IMAGE REORDER LOCAL_TESTED / GITHUB PROMOTION NEXT
+Status: `LOCAL_TESTED / IMAGE ORDER+SEO RENUMBER PASS / PRODUCTION UNCHANGED`.
+
+Canonical Windows repository and live GitHub were reverified exact at pre-change `551f70624536857ab36ba004404298abb503d180` on `agent/phase49-3i18-operator-bulk-ai-rebuild`; tracked source was clean and only historical `.tmp_*` evidence files were untracked. Rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` is live at that exact SHA.
+
+Qt Product Image Stage now exposes explicit `قبلی` / `بعدی` controls below trusted selected images. The mature primary-image contract is preserved: Primary stays slot 1 and is moved by choosing a different Primary, while secondary selected images can be reordered. Reorder persists `selected_images_json`, keeps Alt and image metadata bound to source URL, leaves Slider identity unchanged, marks an already-uploaded Product `needs_update=1`/`upload_ready=0`, and immediately rebuilds deterministic SEO WebP numbering through the existing finalizer. Display-only legacy compatibility cards remain non-mutating. Card/scroll height was extended so the new controls remain reachable.
+
+Local verification PASS: touched Python compile; dedicated Phase49.3I.47 12/12; Image+Publish 27/27; broader Stage/AI/Crawl/Image/Publish 87/87; `git diff --check`. Regression proves the real Qt button click executes Save -> Reorder -> SEO renumber, preserves Primary/Slider/Alt facts and reorders metadata/`-01/-02/-03` filenames. No Django migration, Catalog schema change, Host source change, Production DB write or Production deploy occurred.
+
+Exact next: commit/push this Local-tested runtime+docs and verify remote SHA -> create a fresh checksum/integrity Catalog backup -> verify live Site receiver/FTP/Bridge readiness -> run `qt_launch.py --verify-only` from the pushed SHA -> launch that exact Windows runtime -> post-launch Catalog integrity/process check -> final docs checkpoint.
+
 ## 2026-09-15 - PRODUCT ENTRY PATH PRODUCTION_ACCEPTED / #628 END-TO-END PASS
 Status: `PRODUCTION_ACCEPTED / WINDOWS_APP_RUNNING / SINGLE_PRODUCT_SEND_PASS / PRODUCT21_ORDERABLE`.
 

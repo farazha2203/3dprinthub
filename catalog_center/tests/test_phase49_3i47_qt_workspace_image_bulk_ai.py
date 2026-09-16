@@ -169,6 +169,91 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             {("چراغ رومیزی", "چاپ سه بعدی")},
         )
 
+    def test_image_reorder_preserves_url_owned_facts_and_rebuilds_numbered_seo(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        for index, url in enumerate(urls, start=1):
+            self.kernel.images.update_metadata(
+                product_id,
+                [url],
+                {"alt_text": f"ALT-{index}"},
+            )
+        self.db.update_product(
+            product_id,
+            {
+                "homepage_slider_image_url": urls[2],
+                "server_id": "site-product:901",
+                "workflow_status": "uploaded",
+                "needs_update": 0,
+                "upload_ready": 1,
+            },
+        )
+
+        moved = self.kernel.images.reorder_selected(product_id, urls[2], -1)
+        self.assertTrue(moved["changed"])
+        self.assertEqual(moved["order"], [urls[0], urls[2], urls[1]])
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(
+            json.loads(row["selected_images_json"]),
+            [urls[0], urls[2], urls[1]],
+        )
+        self.assertEqual(
+            json.loads(row["image_alt_texts_json"]),
+            ["ALT-1", "ALT-3", "ALT-2"],
+        )
+        self.assertEqual(row["primary_image_url"], urls[0])
+        self.assertEqual(row["homepage_slider_image_url"], urls[2])
+        self.assertEqual(int(row["needs_update"]), 1)
+        self.assertEqual(int(row["upload_ready"]), 0)
+
+        self.kernel.images.renumber(product_id)
+        refreshed = dict(self.db.product(product_id))
+        metadata = json.loads(refreshed["image_metadata_json"])
+        self.assertEqual(
+            [item["source_url"] for item in metadata],
+            [urls[0], urls[2], urls[1]],
+        )
+        self.assertEqual(
+            [item["alt_text"] for item in metadata],
+            ["ALT-1", "ALT-3", "ALT-2"],
+        )
+        self.assertEqual(
+            [item["seo_filename"].rsplit("-", 1)[-1] for item in metadata],
+            ["01.webp", "02.webp", "03.webp"],
+        )
+
+    def test_image_stage_exposes_reorder_controls_with_primary_pinned(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            self.assertEqual(set(cards), set(urls))
+            self.assertFalse(cards[urls[0]].move_earlier.isEnabled())
+            self.assertFalse(cards[urls[0]].move_later.isEnabled())
+            self.assertFalse(cards[urls[1]].move_earlier.isEnabled())
+            self.assertTrue(cards[urls[1]].move_later.isEnabled())
+            self.assertTrue(cards[urls[2]].move_earlier.isEnabled())
+            self.assertFalse(cards[urls[2]].move_later.isEnabled())
+            self.assertGreaterEqual(cards[urls[2]].minimumHeight(), 390)
+
+            cards[urls[2]].move_earlier.click()
+            reordered = dict(self.db.product(product_id))
+            self.assertEqual(
+                json.loads(reordered["selected_images_json"]),
+                [urls[0], urls[2], urls[1]],
+            )
+            self.assertEqual(
+                [item["url"] for item in self.kernel.images.local_items(product_id)],
+                [urls[0], urls[2], urls[1]],
+            )
+            self.assertIn("شماره‌های SEO", page.image_task_status.text())
+        finally:
+            page.close()
+
     def test_full_ai_repair_rebuilds_derived_image_seo_but_preserves_operator_title(self):
         product_id, urls, _local_dir = self._mapped_image_product()
         self.kernel.images.update_metadata(

@@ -228,6 +228,15 @@ class ProductWizardPage(QWidget):
         self.image_grid.selectionChanged.connect(
             self._queue_image_selection_save
         )
+        self.image_grid.primaryChanged.connect(
+            lambda _url: self._queue_image_selection_save()
+        )
+        self.image_grid.moveEarlierRequested.connect(
+            lambda url: self._move_image(url, -1)
+        )
+        self.image_grid.moveLaterRequested.connect(
+            lambda url: self._move_image(url, 1)
+        )
         self.image_slider_enabled.toggled.connect(
             lambda checked: self.slider_enabled.setChecked(bool(checked))
         )
@@ -1422,6 +1431,36 @@ class ProductWizardPage(QWidget):
             return
         if not QDesktopServices.openUrl(QUrl(url)):
             QMessageBox.warning(self, "صفحه محصول", "مرورگر سیستم نتوانست لینک محصول را باز کند.")
+
+    def _move_image(self, url: str, direction: int) -> None:
+        if self.product_id is None or not str(url or "").strip():
+            return
+        # Persist the current checkbox/primary UI first so the reorder Core
+        # always works against the exact operator-visible state.
+        if hasattr(self, "_image_selection_save_timer"):
+            self._image_selection_save_timer.stop()
+        if not self._save_stage3_safely():
+            return
+        try:
+            result = self.kernel.images.reorder_selected(
+                self.product_id,
+                str(url),
+                int(direction),
+            )
+            if bool(result.get("changed")):
+                renumbered = self.kernel.images.renumber(self.product_id)
+            else:
+                renumbered = {}
+        except Exception as exc:
+            QMessageBox.warning(self, "ترتیب تصاویر", str(exc))
+            return
+        removed = int(renumbered.get("stale_seo_files_removed") or 0)
+        self.load_product(self.product_id)
+        if bool(result.get("changed")):
+            self.image_task_status.setText(
+                "✅ ترتیب تصاویر ذخیره و شماره‌های SEO بازسازی شد"
+                + (f" • {removed} فایل قدیمی پاک شد" if removed else "")
+            )
 
     def _delete_single_image(self, url: str) -> None:
         if self.product_id is None or not url:

@@ -1,3 +1,16 @@
+## 2026-09-16 - Windows image ordering + launch readiness
+- [x] Reverify canonical Local/GitHub at pre-change `551f70624536857ab36ba004404298abb503d180` and preserve dirty-state evidence without reset.
+- [x] Push rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` at the exact pre-change SHA.
+- [x] Add explicit previous/next controls below each trusted selected Product image.
+- [x] Preserve mature Primary=slot-1 authority; reorder only secondary selected images and keep Slider/Alt/metadata bound by URL.
+- [x] Rebuild deterministic SEO WebP numbering after each actual reorder and mark uploaded Products for guarded republish.
+- [x] Dedicated Phase49.3I.47 12/12, Image+Publish 27/27, broader Windows 87/87, compile/diff-check PASS.
+- [ ] Commit/push exact runtime+docs and verify live GitHub SHA.
+- [ ] Create fresh checksum/integrity backup of canonical Catalog SQLite.
+- [ ] Verify current Site Receiver + FTP/Bridge readiness without exposing credentials.
+- [ ] Run pushed `qt_launch.py --verify-only`, then launch exact approved SHA and verify process + Catalog integrity.
+- [ ] Record final Windows runtime/backup/receiver evidence and owner-ready Product/image entry status.
+
 ## 2026-09-15 - Product entry / single Product publish gate CLOSED
 - [x] Add direct Ready + Send actions inside Product Wizard Stage 7.
 - [x] Focused/broader Windows regressions PASS: 21/21 and 71/71.

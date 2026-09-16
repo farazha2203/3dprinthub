@@ -1,3 +1,7 @@
+## 2026-09-16 - Owner image workspace reorder + immediate Windows relaunch
+Status: `LOCAL_TESTED / PUSH+BACKUP+RECEIVER+LAUNCH NEXT`.
+Owner requires the remaining Windows image workspace gap to be closed before Product/image entry resumes. Stage 3 now has explicit per-image previous/next controls for trusted selected images; Primary remains slot 1, secondary order is persisted, URL-owned Alt/metadata/Slider facts stay attached, and SEO WebP numbering is rebuilt immediately. Uploaded Products become guarded republish work rather than duplicate Products. Local dedicated/broader gates are 12/12, 27/27 and 87/87 PASS. Acceptance still requires exact GitHub push, fresh Catalog rollback backup, live receiver verification, `qt_launch.py --verify-only` and launch from the pushed SHA.
+
 ## 2026-09-15 - Owner urgent Product-entry request ACCEPTED
 Status: `PRODUCTION_ACCEPTED / WINDOWS DIRECT SEND LIVE`.
 Owner requested immediate ability to enter Products in the Windows app and send them to the Site. Product Wizard Stage 7 now contains direct Ready/Send actions; runtime is pushed at `6e306e5...` and relaunched. Real #628 Windows -> FTP -> Bridge -> Store acceptance passed with Site Product #21, public WebP media, 190 orderable Variants and real browser Cart wiring. No test StoreOrder was created. Owner can proceed with Product entry; factual incomplete Products remain blocked rather than force-published.

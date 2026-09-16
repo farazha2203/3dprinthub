@@ -36,6 +36,8 @@ def human_bytes(value: int) -> str:
 class ImageCard(QFrame):
     deleteRequested = Signal(str)
     seoRequested = Signal(str)
+    moveEarlierRequested = Signal(str)
+    moveLaterRequested = Signal(str)
     selectionChanged = Signal()
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
@@ -46,7 +48,7 @@ class ImageCard(QFrame):
         self.setObjectName("ImageCard")
         self.setMinimumWidth(220)
         self.setMaximumWidth(285)
-        self.setMinimumHeight(350)
+        self.setMinimumHeight(390)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
@@ -118,6 +120,22 @@ class ImageCard(QFrame):
         self.alt.setObjectName("Muted")
         root.addWidget(self.alt)
 
+        order_actions = QHBoxLayout()
+        self.move_earlier = QPushButton("قبلی")
+        self.move_later = QPushButton("بعدی")
+        self.move_earlier.setToolTip("این تصویر را یک جایگاه زودتر قرار بده")
+        self.move_later.setToolTip("این تصویر را یک جایگاه دیرتر قرار بده")
+        self.move_earlier.clicked.connect(
+            lambda: self.moveEarlierRequested.emit(str(self.item.get("url") or ""))
+        )
+        self.move_later.clicked.connect(
+            lambda: self.moveLaterRequested.emit(str(self.item.get("url") or ""))
+        )
+        order_actions.addWidget(self.move_earlier)
+        order_actions.addWidget(self.move_later)
+        order_actions.addStretch(1)
+        root.addLayout(order_actions)
+
         actions = QHBoxLayout()
         seo = QPushButton("SEO")
         delete = QPushButton("حذف")
@@ -136,6 +154,8 @@ class ImageCard(QFrame):
             self.selected.setEnabled(False)
             self.primary.setEnabled(False)
             self.slider.setEnabled(False)
+            self.move_earlier.setEnabled(False)
+            self.move_later.setEnabled(False)
             seo.setEnabled(False)
             delete.setEnabled(False)
 
@@ -165,6 +185,8 @@ class ProductImageGrid(QWidget):
 
     deleteRequested = Signal(str)
     seoRequested = Signal(str)
+    moveEarlierRequested = Signal(str)
+    moveLaterRequested = Signal(str)
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
     selectionChanged = Signal()
@@ -217,6 +239,8 @@ class ProductImageGrid(QWidget):
             card = ImageCard(item, self.host)
             card.deleteRequested.connect(self.deleteRequested.emit)
             card.seoRequested.connect(self.seoRequested.emit)
+            card.moveEarlierRequested.connect(self.moveEarlierRequested.emit)
+            card.moveLaterRequested.connect(self.moveLaterRequested.emit)
             card.selectionChanged.connect(self._selection_changed)
             card.primaryChanged.connect(self._primary_changed)
             card.sliderChanged.connect(self._slider_changed)
@@ -234,13 +258,35 @@ class ProductImageGrid(QWidget):
         # grid and make the controls under the final image rows unreachable.
         # Give the content widget a factual row-based minimum height so the
         # vertical scrollbar always spans the entire card/control surface.
-        self.host.setMinimumHeight(rows * 374 + max(0, rows - 1) * self.grid.spacing())
+        self.host.setMinimumHeight(rows * 414 + max(0, rows - 1) * self.grid.spacing())
         self._missing_count = missing
         self._update_summary()
+        self._refresh_move_controls()
 
     def _selection_changed(self) -> None:
         self._update_summary()
+        self._refresh_move_controls()
         self.selectionChanged.emit()
+
+    def _refresh_move_controls(self) -> None:
+        movable = [
+            card
+            for card in self.cards
+            if (
+                card.selected.isChecked()
+                and not bool(card.item.get("display_only"))
+                and not card.primary.isChecked()
+            )
+        ]
+        positions = {id(card): index for index, card in enumerate(movable)}
+        for card in self.cards:
+            index = positions.get(id(card))
+            if index is None:
+                card.move_earlier.setEnabled(False)
+                card.move_later.setEnabled(False)
+                continue
+            card.move_earlier.setEnabled(index > 0)
+            card.move_later.setEnabled(index < len(movable) - 1)
 
     def _update_summary(self) -> None:
         selected = sum(1 for card in self.cards if card.selected.isChecked())
@@ -257,6 +303,7 @@ class ProductImageGrid(QWidget):
             for card in self.cards:
                 if str(card.item.get("url") or "") != url:
                     card.primary.setChecked(False)
+            self._refresh_move_controls()
             self.primaryChanged.emit(url)
         finally:
             self._primary_sync = False

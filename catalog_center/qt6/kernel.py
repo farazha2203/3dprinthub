@@ -643,6 +643,127 @@ class ImageCore:
     def image_count(self, row: dict[str, Any] | Any) -> int:
         return len(self.display_local_paths(row))
 
+    def reorder_selected(
+        self,
+        product_id: int,
+        url: str,
+        direction: int,
+    ) -> dict[str, Any]:
+        """Move one selected non-primary image while keeping URL-owned facts aligned.
+
+        The mature Catalog contract keeps the primary image in slot 1. Reorder
+        therefore applies to the remaining selected Site images, preserving Alt
+        text and metadata by source URL. Physical SEO numbering is regenerated
+        separately by ``renumber()`` after this persisted order change.
+        """
+        row = self._assert_images_editable(product_id)
+        data = dict(row)
+        target = str(url or "").strip()
+        if not target:
+            raise ValueError("تصویر برای جابه‌جایی مشخص نشده است.")
+        step = -1 if int(direction) < 0 else 1 if int(direction) > 0 else 0
+        if not step:
+            raise ValueError("جهت جابه‌جایی معتبر نیست.")
+
+        selected: list[str] = []
+        for raw in self._json_list(data.get("selected_images_json")):
+            if isinstance(raw, dict):
+                value = str(raw.get("url") or raw.get("source_url") or "").strip()
+            else:
+                value = str(raw or "").strip()
+            if value and value not in selected:
+                selected.append(value)
+        if target not in selected:
+            raise ValueError("فقط تصویر انتخاب‌شده قابل جابه‌جایی است.")
+
+        primary = str(data.get("primary_image_url") or "").strip()
+        if target == primary:
+            raise ValueError(
+                "تصویر اصلی همیشه جایگاه اول است؛ برای جابه‌جایی آن ابتدا تصویر اصلی را تغییر بده."
+            )
+
+        secondary = [value for value in selected if value != primary]
+        index = secondary.index(target)
+        next_index = max(0, min(len(secondary) - 1, index + step))
+        if next_index == index:
+            return {
+                "changed": False,
+                "order": list(selected),
+                "primary": primary,
+            }
+        secondary.pop(index)
+        secondary.insert(next_index, target)
+        ordered = ([primary] if primary and primary in selected else []) + secondary
+
+        old_alts = [
+            str(item or "").strip()
+            for item in self._json_list(data.get("image_alt_texts_json"))
+        ]
+        alt_map = {
+            selected[index]: old_alts[index] if index < len(old_alts) else ""
+            for index in range(len(selected))
+        }
+
+        metadata = [
+            dict(item)
+            for item in self._json_list(data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]"))
+            if isinstance(item, dict)
+        ]
+        metadata_by_url = {
+            str(item.get("source_url") or "").strip(): item
+            for item in metadata
+            if str(item.get("source_url") or "").strip()
+        }
+        ordered_metadata = [
+            metadata_by_url[value]
+            for value in ordered
+            if value in metadata_by_url
+        ]
+        ordered_set = set(ordered)
+        ordered_metadata.extend(
+            item
+            for item in metadata
+            if str(item.get("source_url") or "").strip() not in ordered_set
+        )
+
+        before = dict(data)
+        values = {
+            "selected_images_json": json.dumps(ordered, ensure_ascii=False),
+            "image_alt_texts_json": json.dumps(
+                [alt_map.get(value, "") for value in ordered],
+                ensure_ascii=False,
+            ),
+            image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(
+                ordered_metadata,
+                ensure_ascii=False,
+            ),
+        }
+        self.db.update_product(int(product_id), values)
+        if (
+            str(before.get("server_id") or "").strip()
+            and str(before.get("workflow_status") or "").strip().lower() == "uploaded"
+        ):
+            self.db.update_product(
+                int(product_id),
+                {"needs_update": 1, "upload_ready": 0},
+            )
+        after = dict(self.db.product(int(product_id)) or {})
+        try:
+            self.db.save_history(
+                int(product_id),
+                "qt_image_reordered",
+                before,
+                after,
+                f"Qt image reorder direction={step}",
+            )
+        except Exception:
+            pass
+        return {
+            "changed": True,
+            "order": ordered,
+            "primary": primary,
+        }
+
     def renumber(self, product_id: int) -> dict[str, Any]:
         """Rebuild final SEO files as -01/-02/... and remove stale derivatives."""
         product_id = int(product_id)
