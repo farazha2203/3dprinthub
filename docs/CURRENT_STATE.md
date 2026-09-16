@@ -1,3 +1,14 @@
+## 2026-09-17 - QT WINDOWS OPERATOR RUNTIME / LEGACY-LAUNCH ROOT CAUSE RESOLVED
+
+- Owner report that the old Windows UI opened instead of the newer Product/Filament application is reproduced and explained by repository truth: `catalog_center\RUN_DEBUG.ps1` and `RUN.ps1` intentionally still target legacy `launch.py`; the newer application is `qt_launch.py`.
+- No Product/Filament/republish work was lost. Current source already contains explicit re-send, Site-404 recreation, update-in-place identity, and updated Profile/Filament/print-time Batch propagation.
+- Legacy launchers remain preserved for rollback/side-by-side acceptance. New repository-owned operator launcher `catalog_center\RUN_QT.ps1` verifies `qt_launch.py` against canonical `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` and launches Qt detached with `pythonw.exe` when available.
+- The pre-existing unfinished Local fix that prevents implicit persistence when a hydrated legacy workspace is merely closed is preserved; its regression passes and no dirty work was reset or discarded.
+- Pre-launch Catalog backup: `D:\projects\3dprinthub-backups\pre-qt-new-launch-20260917-001903\catalog.sqlite3`; source/backup SHA256 both `BE0C5F3140CA615739F9EE25B6E18D85E49A919809AF2BF9E02E257A2E97C775`.
+- Corrected focused acceptance PASS: 40/40 Windows tests covering explicit Qt launcher separation, close-without-save, Qt foundation, Product resend/update/recreate, Profile/Filament/print-time republish and image workspace; `RUN_QT.ps1 -VerifyOnly`, Qt structural verify, touched `py_compile`, and `git diff --check` also PASS. One broader harness produced 92 runtime PASS plus two loader-only errors from retired test-module names; recorded as `ERR-49-151` and not repeated unchanged.
+- GitHub rollback branch before this operator-launch slice: `backup/pre-windows-qt-operator-launch-20260917` -> `6a3a51aacdccff69a4999c4a470cb10807ceb648`.
+- Production was not changed by this Windows slice. Next: commit/push exact Windows candidate, relaunch through `RUN_QT.ps1` from pushed SHA, then use the documented reverse tunnel for fresh read-only Store/reset/receiver verification before any Production write.
+
 ## 2026-09-16 - WINDOWS IMAGE REORDER LOCAL_TESTED / GITHUB PROMOTION NEXT
 
 ## 2026-09-17 - Exact-SHA Windows publisher runtime verification

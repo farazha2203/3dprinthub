@@ -167,6 +167,19 @@ class Phase493I42Qt6FoundationTests(unittest.TestCase):
             self.assertNotIn("import tkinter", text, source.name)
             self.assertNotIn("from tkinter", text, source.name)
 
+    def test_operator_qt_launcher_is_explicit_and_legacy_launchers_remain_separate(self):
+        catalog_root = Path(__file__).resolve().parents[1]
+        qt_runner = (catalog_root / "RUN_QT.ps1").read_text(encoding="utf-8")
+        legacy_runner = (catalog_root / "RUN.ps1").read_text(encoding="utf-8")
+        legacy_debug = (catalog_root / "RUN_DEBUG.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("qt_launch.py", qt_runner)
+        self.assertIn("--verify-only", qt_runner)
+        self.assertIn("CATALOG_DATA_ROOT", qt_runner)
+        self.assertNotIn('Join-Path $Root "launch.py"', qt_runner)
+        self.assertIn('Join-Path $Root "launch.py"', legacy_runner)
+        self.assertIn('Join-Path $Root "launch.py"', legacy_debug)
+
 
 if __name__ == "__main__":
     unittest.main()

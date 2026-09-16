@@ -111,10 +111,8 @@ class ProductStudio(tk.Toplevel):
         return widget.get("1.0", "end").strip()
 
     def close(self):
-        try:
-            self.save(silent=True)
-        except Exception:
-            pass
+        # Closing a hydrated workspace must never persist UI-derived/default state.
+        # Save remains an explicit operator action (stage/final-save/publish paths).
         self.destroy()
 
     # ---------- UI ----------

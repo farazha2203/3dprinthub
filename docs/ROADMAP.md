@@ -1,3 +1,17 @@
+## 2026-09-17 - Correct Qt Windows operator launch + immediate Product entry
+- [x] Verify Local repository/branch and live GitHub are exact at pre-change `6a3a51aacdccff69a4999c4a470cb10807ceb648`.
+- [x] Preserve existing dirty Local work instead of reset/delete; archive `.tmp_*` evidence outside the repo and backup the two modified tracked files.
+- [x] Prove root cause: prior `RUN_DEBUG.ps1` launches legacy `launch.py`; new Product/Filament application is `qt_launch.py`.
+- [x] Create rollback branch `backup/pre-windows-qt-operator-launch-20260917`.
+- [x] Add explicit `catalog_center\RUN_QT.ps1` with canonical Catalog path, Qt verify gate and detached Qt launch.
+- [x] Preserve legacy `RUN.ps1` / `RUN_DEBUG.ps1` unchanged as rollback-only launchers.
+- [x] Corrected focused Windows acceptance: 40/40 PASS across launcher/Qt/republish/image contracts; Qt verify, launcher verify, touched compile and diff-check PASS. Retired-module harness names are recorded under ERR-49-151.
+- [ ] Commit/push exact candidate and verify live GitHub SHA.
+- [ ] Relaunch Qt from that pushed SHA and verify window/process + Catalog integrity.
+- [ ] Reverse-tunnel read-only Production Store/receiver/reset eligibility verification.
+- [ ] If eligible, fresh rollback backup then canonical Store reset to empty; verify A2J four safe Hero slides and zero old Store Products.
+- [ ] Keep Product republish/update path available for owner Product entry immediately after reset.
+
 ## 2026-09-16 - Windows image ordering + launch readiness
 - [x] Reverify canonical Local/GitHub at pre-change `551f70624536857ab36ba004404298abb503d180` and preserve dirty-state evidence without reset.
 - [x] Push rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` at the exact pre-change SHA.

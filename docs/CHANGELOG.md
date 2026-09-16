@@ -1,3 +1,10 @@
+## 2026-09-17 - Explicit Qt operator launcher + close-without-save guard
+- Added `catalog_center\RUN_QT.ps1` as the repository-owned operator entrypoint for the modern `qt_launch.py` runtime and canonical Catalog SQLite root.
+- Kept `RUN.ps1` and `RUN_DEBUG.ps1` unchanged as intentional legacy `launch.py` rollback/side-by-side launchers, eliminating ambiguity about which Windows UI is being started.
+- Removed implicit ProductStudio save-on-window-close so merely opening/hydrating and closing the legacy workspace cannot persist UI-derived/default values; explicit Save/Stage/Publish actions remain authoritative.
+- Added regression coverage for launcher separation and close-without-save behavior. Product republish contracts remain intact: explicit requeue, same-identity update, Site-404 recreation, and changed Profile/Filament/print-time propagation. Corrected focused gate is 40/40 PASS; Qt launcher verify, touched compile and diff-check PASS. A stale broader harness named two retired test modules and is documented as ERR-49-151 rather than treated as runtime failure.
+- Pre-change rollback branch: `backup/pre-windows-qt-operator-launch-20260917` at `6a3a51aacdccff69a4999c4a470cb10807ceb648`; Production unchanged by this Windows slice.
+
 ## 2026-09-16 - Qt Product image reorder + SEO renumber continuity
 - Added explicit `قبلی` / `بعدی` controls below trusted selected image cards in Product Wizard Stage 3.
 - Primary image remains the mature fixed slot-1 authority; secondary selected images can be reordered without changing Primary or Slider identity.

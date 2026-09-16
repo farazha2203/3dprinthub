@@ -1,3 +1,11 @@
+## ERR-49-151 - Windows broad-gate command referenced retired test modules
+Date: 2026-09-17
+Status: `RESOLVED AS HARNESS SELECTION / RUNTIME TESTS PASSING`.
+
+A broad Local Windows regression command executed 94 unittest entries and produced 92 PASS plus two loader errors because it still named `tests.test_phase50_social_publish_providers` and `tests.test_phase50_image_workspace_responsive`, which are not present in the current test package. The failures occurred at unittest module import and did not execute Product/Qt/Site runtime code. The same run already PASSed the live republish contracts for existing-product update-in-place, explicit requeue of an uploaded Product, Site-404 recreation, current SEO WebP packaging and changed Profile/Filament/print-time propagation.
+
+Correction/prevention: do not rerun the stale command unchanged. Use only test modules verified in the current repository and keep harness/module-selection failures separate from runtime regressions. Missing test-module names must be removed from the gate rather than interpreted as a Product failure.
+
 ## ERR-49-150 - Product #628 acceptance diagnostic harness corrections
 Date: 2026-09-15
 Status: `RESOLVED / ACCEPTANCE PASS / NO TEST ORDER WRITE`.

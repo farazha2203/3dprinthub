@@ -1,5 +1,9 @@
 # Phase49.3I.47 — Qt Workspace, Multi-Image SEO, Bulk AI, Admin + Storefront Information Architecture
 
+## 2026-09-17 operator-launch continuation
+Status: `LOCAL_GATED 40/40 / GITHUB PROMOTION NEXT`.
+The owner-reported old Windows UI was traced to intentional legacy launcher routing, not loss of the modern Qt Product/Filament implementation. `RUN.ps1` and `RUN_DEBUG.ps1` remain legacy `launch.py` rollback paths; the operator-facing modern runtime is `qt_launch.py`. A dedicated `RUN_QT.ps1` now verifies the canonical Catalog SQLite root and Qt release before detached launch. The pre-existing close-without-save guard is retained so simply closing a hydrated legacy ProductStudio cannot write UI defaults. Existing republish/update contracts remain unchanged and regression-covered. After exact commit/push, acceptance requires closing duplicate/stale instances, launching one Qt process from the pushed SHA, checking Catalog integrity, then fresh reverse-tunnel Production receiver/reset verification before any write.
+
 ## 2026-09-16 image-order continuation
 Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
 

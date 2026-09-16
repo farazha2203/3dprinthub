@@ -8,6 +8,7 @@ from app.epic49_product_studio_final import ProductStudio as Epic49ProductStudio
 from app.product_workspace_epic49 import ProductWorkspace as ProductWorkspaceEpic49
 from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
 from app.product_workspace_v87 import ProductWorkspace as ProductWorkspace87
+from app.product_studio import ProductStudio as BaseProductStudio
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +29,11 @@ class Epic49FinalStudioTests(unittest.TestCase):
         self.assertIn("publish_code", reconcile)
         self.assertIn("database_code", reconcile)
         self.assertIn("self._reconcile_license_controls()", save)
+
+    def test_close_never_implicitly_saves_hydrated_workspace_state(self):
+        close_source = inspect.getsource(BaseProductStudio.close)
+        self.assertNotIn("self.save", close_source)
+        self.assertIn("self.destroy()", close_source)
 
     def test_unified_workspace_preserves_final_studio_chain(self):
         self.assertTrue(issubclass(ProductWorkspace871, ProductWorkspace87))
