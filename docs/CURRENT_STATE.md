@@ -1,5 +1,17 @@
 ## 2026-09-16 - WINDOWS IMAGE REORDER LOCAL_TESTED / GITHUB PROMOTION NEXT
 
+## 2026-09-17 - Exact-SHA Windows publisher runtime verification
+
+- GitHub exact source is `67445d60f07625faeb0d384ebeec809cc54bf8f3` on `agent/phase49-3i18-operator-bulk-ai-rebuild`.
+- `catalog_center/launch.py --verify-only` passed from that source: Catalog Center `8.9.10`, build `2026.09.02.1`, source root `D:\projects\3DPrintHub\catalog_center`.
+- Before foreground launch, canonical persistent Catalog SQLite `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` was backed up to `D:\projects\3dprinthub-backups\final-windows-publisher-20260917-000808\catalog-exact.sqlite3`; source and exact-copy SHA256 both `45B14FA296491769ABC7AEBCE4754697D727323342538CB3A3A071BE3167FFFF`; source/backup integrity checks PASS; 635 Products / 14 Ready.
+- Canonical `catalog_center\RUN_DEBUG.ps1` launched the UI. Window title: `3DPrintHub Catalog Center v8.9.10 ? BUILD 2026.09.02.1`; process is responsive.
+- Runtime transcript `D:\projects\3dprinthub-catalog-manager\logs\powershell-debug-20260917-000856.log` proves `DATABASE_PATH=D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`, `SQLITE_INTEGRITY=ok`, FTP login OK and Bridge health HTTP 200 (`version=1.3.0`, `schema_version=8.5`).
+- Post-launch read-only DB verification: integrity `ok`, 635 Products, 14 Ready, 17 Uploaded, 2 Needs Update.
+- Production A2J runtime files in the accepted release are behavior-equivalent to this SHA; `store/epic49_runtime_contract.py` differs only in explanatory docstring text, not executable fallback logic. No redundant Production source deploy was performed.
+- Production Store destructive reset is still NOT executed: the automation safety layer blocked the canonical write call after the verified rollback backup was prepared. Live Store must still be treated as the preflight state until a new read-only verification proves otherwise.
+
+
 ## 2026-09-17 - Windows republish + empty-store Hero reconciliation (LOCAL_ACCEPTED / RESET_BACKUP_READY)
 
 - Local branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`; baseline before this change: `3c6d295912bb5f305dccd978f07038d3e38d98bd`.

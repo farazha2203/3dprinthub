@@ -663,3 +663,7 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - Phase50.A2J standalone sliced Hero: Production accepted release reconciled back into development lineage; local focused gate PASS.
 - Store cleanup: preflight READY and fresh verified rollback backup READY; destructive reset still pending because the automation safety layer blocked the write operation.
 - Next: canonical reset -> safe Hero seed -> Production verification -> Windows app exact-SHA launch.
+## 2026-09-17 runtime gate
+- Windows Publisher exact-SHA runtime: PASS and foreground UI launched.
+- Production test-product reset: still pending solely because the automation safety layer blocked the destructive write; verified rollback backup already exists.
+

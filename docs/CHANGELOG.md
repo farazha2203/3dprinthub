@@ -1047,3 +1047,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Added the accepted A2J seed command/tests and guarded host runner provenance.
 - Verified Windows publish `16/16` and Hero focused `25/25`.
 - Prepared and verified a fresh Production Store-reset rollback backup; destructive reset remains not executed because the automation safety layer blocked the write call.
+## 2026-09-17 - Windows publisher exact-SHA runtime verification
+- Launched Catalog Center 8.9.10 from GitHub exact SHA `67445d60...` using canonical `RUN_DEBUG.ps1`.
+- Verified exact-copy rollback of persistent Catalog SQLite, runtime DB path, FTP login and Bridge health.
+- No redundant A2J Production source deploy was needed because accepted Production runtime is behavior-equivalent.
+
