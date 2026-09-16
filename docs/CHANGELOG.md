@@ -1,3 +1,15 @@
+## 2026-09-16 - Phase50.A.2J standalone Hero Production acceptance
+- Production release/GitHub/Host exact at `859b9e77de1c8ecd5c53a9c395382b35579f78b4`; Host clean, MySQL correct, migration plan empty.
+- Store remains intentionally empty: Product/Variant/ProductImage `0/0/0`.
+- Seeded four safe source-backed Hero slides: assets `119,120,135,136`, sort order `10,20,30,40`, CTA `/#order`.
+- Closed ERR-49-147: later Persian-sales runtime could exceed the 480-character persisted Hero description limit; persistence now derives and enforces the model bound and Seeder copy is explicitly short.
+- Failed seed transaction was proven fully rolled back before the fix; no partial Hero activation remained.
+- Focused 29/29 and broad Hero 90/90 regressions PASS; compile/check/no model drift/diff-check PASS.
+- Verified rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260916-030333-phase50-a2j-description-seed`: baseline/pre-seed bundles, real MySQL gzip and Hero JSON checksum PASS.
+- Production Playwright desktop PASS: four slides, A2J 50.4 assets only, five real 3D cuboids, `preserve-3d`, `p50j-cuboid-v`, slide advance and overlay cleanup, no page/request/image errors.
+- Production Playwright mobile 390x844 PASS: four slides, fallback transition, zero cuboids, slide advance, exact 390px document width, no errors/broken images.
+- `/store/` stays HTTP 200 with no Product-detail links. No A3/payment delta is part of the release.
+
 ## 2026-09-15 - Host transport diagnosis before client handoff
 - Diagnosed dead 3DPrintHub reverse-management transport without touching other project tunnels.
 - Verified Host/Windows tunnel public-key fingerprints are identical.

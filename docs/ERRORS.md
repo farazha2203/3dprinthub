@@ -1,3 +1,18 @@
+## 2026-09-16 - ERR-49-147 A2J Hero seed exceeded persisted description length
+**Observed:** the first Production A2J four-slide seed stopped on MySQL `Data too long for column 'description'`; the Hero was not accepted live at that point.
+
+**Read-only verification:** Production MySQL column `HomepageHeroSlide.description` is `varchar(480)` and the Django model max length is also 480. Migration plan was empty. Store remained `0/0/0` and the failed seed transaction fully rolled back to zero active Hero slides.
+
+**Root cause:** `website.phase49_persian_sales_hero` is a later runtime patch over the older bounded Hero helper. Its sales-copy resolver accepted description text up to 1200 characters and rebound the legacy resolver/pre-save path. On real Production asset 119, `hero_suggestions()` returned 498 characters, exceeding the persisted 480-character contract. This was runtime contract drift, not database/schema drift.
+
+**Correct fix:** derive `HERO_DESCRIPTION_MAX` from the model field; bound `_asset_description`, effective description and pre-save persistence to that value; give the four A2J seed slides explicit short descriptions and still slice Seeder persistence to the model maximum. Preserve the 1200-character richer sales-copy builder for non-persisted contexts rather than weakening the database contract.
+
+**Regression:** focused Hero/Persian/Seeder suite 29/29 PASS; broad Hero suite 90/90 PASS; Python compile, Django check, `makemigrations --check --dry-run` and diff-check PASS. Rollback branch `backup/pre-err49-147-a2j-description-bound-20260916` points to `f5aa5af1e3cea39f6a04099eec6ad5696e30a3ad`.
+
+**Production recovery/verification:** source was promoted GitHub-first and seed resumed from verified rollback evidence. Production release source is `859b9e77de1c8ecd5c53a9c395382b35579f78b4`; four slides assets `119,120,135,136` are active with description lengths 82/75/78/77; Store remains empty and migration plan zero. Backup root `/home/sfkilvrs/3dprinthub-deploy-backups/20260916-030333-phase50-a2j-description-seed` passes source-bundle, MySQL-gzip, Hero-JSON and checksum verification. Desktop/mobile browser acceptance PASS.
+
+**Prevention:** every value persisted into a bounded model field must be bounded at the final persistence boundary, especially when runtime monkey-patches/rebindings replace an older helper. Seeder tests must include an overlong real-world-style description and assert against the model field max length, not a duplicated magic number.
+
 ## 2026-09-15 - ERR-49-146 RECOVERED / watchdog contract reverified
 Owner ran the repository bootstrap once from cPanel. `127.0.0.1:22024` returned to LISTENING and authenticated bridge health is `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. A tunnel-side `crontab -l` probe then proved the required one-minute `3DPrintHub reverse tunnel watchdog` entry is installed exactly with `flock` and `phase50_reverse_tunnel_bootstrap.sh`. Normal operations therefore return to Remote-Desktop Local work + reverse-tunnel Host deployment; owner cPanel entry is break-glass only.
 

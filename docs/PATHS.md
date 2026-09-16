@@ -1,3 +1,15 @@
+## 2026-09-16 A2J release/Production paths
+- Canonical Windows development root remains `D:\projects\3DPrintHub`.
+- Isolated Hero release worktree: `D:\projects\3DPrintHub-a2j-release`.
+- Production/release branch: `release/phase50-a2j-hero-20260915`.
+- Production runtime source at A2J acceptance: `859b9e77de1c8ecd5c53a9c395382b35579f78b4`.
+- Dedicated A2J Phase doc: `docs/phases/PHASE50_A2J_STANDALONE_SLICED_3D_HERO.md`.
+- Guarded continuation runners: `scripts/host/phase50_a2j_description_seed_deploy.sh` and `scripts/host/phase50_a2j_seed_resume.sh`.
+- Verified A2J rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20260916-030333-phase50-a2j-description-seed`.
+- Reverse management stays Windows `127.0.0.1:22024` -> Host bridge `127.0.0.1:22224` -> `/home/sfkilvrs/3dprinthub`.
+- Production Python/MySQL/static remain `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python`, `sfkilvrs_EmiAdmin_3dprinthub`, `/home/sfkilvrs/public_html/static`.
+- Canonical Catalog SQLite remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`; A2J did not move or replace Windows Product authority.
+
 ## 2026-09-15 permanent execution topology
 - Local repository: `D:\projects\3DPrintHub`, operated through the connected Windows Remote Desktop device.
 - Production operator path: Windows `127.0.0.1:22024` -> Host authenticated bridge `127.0.0.1:22224` -> `/home/sfkilvrs/3dprinthub`.

@@ -1,3 +1,14 @@
+## 2026-09-16 - PHASE50.A.2J STANDALONE HERO PRODUCTION VERIFIED
+Status: `PRODUCTION_VERIFIED / STORE_EMPTY / WINDOWS REPUBLISH READINESS NEXT`.
+
+Production and live GitHub release source were reverified exact at `859b9e77de1c8ecd5c53a9c395382b35579f78b4` on `release/phase50-a2j-hero-20260915`; Host worktree is clean. MySQL is `sfkilvrs_EmiAdmin_3dprinthub`, migration plan count is zero, and Store Product/Variant/ProductImage counts remain `0/0/0`. Exactly four safe source-backed Hero slides are active: assets `119,120,135,136` with sort order `10,20,30,40` and bounded short descriptions.
+
+ERR-49-147 is closed. The failed seed was not schema drift: MySQL/model description max length is 480, but the later Persian Hero runtime could return 498 characters. The failed transaction fully rolled back. Runtime and Seeder are now bounded; focused 29/29 and broad Hero 90/90 tests PASS. Verified rollback evidence is `/home/sfkilvrs/3dprinthub-deploy-backups/20260916-030333-phase50-a2j-description-seed`; both source bundles, MySQL gzip and Hero JSON pass verification/checksum gates.
+
+Production browser acceptance PASS: desktop 1440x900 exposes four A2J slides and no legacy Hero JS; a manual transition created five real preserve-3d cuboids using `p50j-cuboid-v`, advanced the active slide and cleaned the overlay. Mobile 390x844 used fallback with zero cuboids, changed slides without horizontal overflow, and had no page errors or broken Hero images. Store remains HTTP 200 with no Product-detail links. A3/payment changes are absent from this release delta.
+
+Current branch/commit for the Production runtime: `release/phase50-a2j-hero-20260915` / `859b9e77de1c8ecd5c53a9c395382b35579f78b4`. Current exact next step: return to canonical Windows `D:\projects\3DPrintHub`, re-verify its branch/head/Catalog DB/backup/receiver readiness, then launch the exact tested Catalog Center runtime for intentional Product/image republish; do not deploy the broader Windows branch to Production.
+
 ## 2026-09-15 - REVERSE TUNNEL RECOVERED / SELF-HEAL CONTRACT VERIFIED
 Status: `TUNNEL_HEALTHY / BRIDGE_AUTHENTICATED / WATCHDOG_CRON_PRESENT / DEPLOY THROUGH TUNNEL NEXT`.
 Windows loopback `127.0.0.1:22024` is listening again. Authenticated bridge reports `ok=True`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. Tunnel-side `crontab -l` proves the one-minute 3DPrintHub watchdog entry is installed with `flock` and the repository bootstrap. Normal Host execution now resumes through the tunnel; no more routine owner-pasted deploy commands.

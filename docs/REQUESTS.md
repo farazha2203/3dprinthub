@@ -1,3 +1,10 @@
+## 2026-09-16 - Owner request: fully replace top Hero and make Windows republish-ready
+Status: `HERO PRODUCTION_VERIFIED / STORE EMPTY / WINDOWS REPUBLISH READINESS NEXT`.
+
+The public top Hero is now the standalone A2J Slicebox-style runtime rather than the old engine plus an added effect. Acceptance on Production requires exactly four safe source-backed slides, no legacy Hero JS, real desktop 3D cuboids, mobile fallback with no overflow, no broken images/errors and no Product-detail CTA while the Store is intentionally empty. All of those gates now PASS on Production source `859b9e77...`.
+
+The empty Store is deliberate and must remain empty until the owner intentionally sends Products/images from the Windows Catalog Center. The next request gate is therefore the Windows operator path: verify the canonical Windows repo/Catalog DB/backups/receiver readiness, relaunch the exact tested Qt runtime, and prove a controlled same-identity resend/update before widening publication. Do not deploy the broader canonical/A3/payment branch merely to satisfy the Windows runtime request.
+
 ## 2026-09-15 - Owner client-handoff request: empty Store, finish prior app changes, replace stale Hero and publish
 Status: `LOCAL_IMPLEMENTED + TESTED / GITHUB+PRODUCTION NEXT`.
 

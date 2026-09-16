@@ -1,3 +1,19 @@
+## 2026-09-16 - Phase50.A.2J standalone Hero acceptance
+- [x] Recover and verify the dedicated 3DPrintHub reverse tunnel/watchdog path.
+- [x] Keep the client-facing Store empty: Product/Variant/ProductImage = `0/0/0`.
+- [x] Replace the public top Hero with standalone A2J CSS/JS; no legacy A2I/Phase49 Hero JS is loaded.
+- [x] Fix ERR-49-147 by bounding Persian Hero description persistence to the real model max length and using explicit short Seeder copy.
+- [x] Focused 29/29 and broad Hero 90/90 tests PASS; compile/check/no-model-drift/diff-check PASS.
+- [x] Production source/GitHub release exact at `859b9e77...`; MySQL identity correct; migration plan empty; Host clean.
+- [x] Verified rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260916-030333-phase50-a2j-description-seed` including source bundles, MySQL gzip and Hero JSON checksums.
+- [x] Seed exactly assets `119,120,135,136` in order `10,20,30,40` with safe `/#order` targets.
+- [x] Browser desktop: four slides, real five-cuboid preserve-3d transition, slide change and overlay cleanup, no broken images/errors.
+- [x] Browser mobile 390px: four slides, zero cuboids, fallback transition, no overflow/errors.
+- [x] Store `/store/` HTTP 200 and empty after Hero release.
+- [ ] Re-verify canonical Windows Catalog Center branch/head/SQLite backup/receiver readiness.
+- [ ] Relaunch the exact tested Windows runtime so the owner can intentionally resend Products/images to the empty Store.
+- [ ] Run one controlled resend/update from Windows after owner selects a Product; require strict ACK/public media/Store verification before widening.
+
 ## 2026-09-15 - Host transport recovery
 - [x] Restore dedicated 3DPrintHub reverse tunnel and verify Windows `127.0.0.1:22024` listening.
 - [x] Verify authenticated Host bridge identity/base.
