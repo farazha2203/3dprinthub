@@ -54,7 +54,47 @@ def _request_json(url: str, token: str, *, payload: dict | None = None, timeout:
     return data
 
 
-def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, Any]:
+def tracking_product_url(
+    product_url: str,
+    *,
+    product_id: int = 0,
+    utm_source: str = "instagram",
+    utm_medium: str = "social",
+    utm_campaign: str = "product",
+) -> str:
+    """Attach deterministic social attribution without changing Product identity."""
+    parsed = urllib_parse.urlsplit(str(product_url or "").strip())
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise RuntimeError("Product tracking URL must be a public HTTPS URL.")
+    query = dict(urllib_parse.parse_qsl(parsed.query, keep_blank_values=True))
+    query.update(
+        {
+            "utm_source": str(utm_source or "instagram"),
+            "utm_medium": str(utm_medium or "social"),
+            "utm_campaign": str(utm_campaign or "product"),
+        }
+    )
+    if int(product_id or 0) > 0:
+        query["utm_content"] = f"product-{int(product_id)}"
+    return urllib_parse.urlunsplit(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            urllib_parse.urlencode(query),
+            parsed.fragment,
+        )
+    )
+
+
+def canonical_site_payload(
+    row: dict[str, Any],
+    *,
+    site_url: str,
+    utm_source: str = "instagram",
+    utm_medium: str = "social",
+    utm_campaign: str = "product",
+) -> dict[str, Any]:
     ack = {}
     try:
         ack = json.loads(row.get("server_ack_json") or "{}")
@@ -90,14 +130,22 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
             tag = text if text.startswith("#") else f"#{text}"
             if tag not in hashtags:
                 hashtags.append(tag)
+    tracking_url = tracking_product_url(
+        product_url,
+        product_id=int(row.get("id") or 0),
+        utm_source=utm_source,
+        utm_medium=utm_medium,
+        utm_campaign=utm_campaign,
+    )
     caption_parts = [part for part in (title, description) if part]
-    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{product_url}")
+    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{tracking_url}")
     if hashtags:
         caption_parts.append(" ".join(hashtags[:24]))
     caption = "\n\n".join(caption_parts).strip()[:2200]
     alt_texts = [str(x or "").strip() for x in _json_list(row.get("image_alt_texts_json"))]
     return {
         "product_url": product_url,
+        "tracking_url": tracking_url,
         "media_urls": media[:10],
         "caption": caption,
         "alt_texts": alt_texts[:10],
@@ -123,11 +171,10 @@ def _create_image_container(cfg: InstagramConfig, token: str, url: str, *, alt_t
     payload: dict[str, Any] = {"image_url": url}
     if carousel:
         payload["is_carousel_item"] = "true"
-    else:
-        if caption:
-            payload["caption"] = caption
-        if alt_text:
-            payload["alt_text"] = alt_text[:1000]
+    elif caption:
+        payload["caption"] = caption
+    if alt_text:
+        payload["alt_text"] = alt_text[:1000]
     result = _request_json(f"{cfg.graph_base}/{cfg.account_id}/media", token, payload=payload, timeout=cfg.timeout)
     container_id = str(result.get("id") or "").strip()
     if not container_id:
@@ -187,9 +234,12 @@ def publish_product(db, product_id: int, cfg: InstagramConfig, *, site_url: str)
         raise RuntimeError("Instagram did not return the published media id")
     receipt_payload = {
         "channel": "instagram",
+        "provider": "instagram_direct",
+        "provider_post_id": media_id,
         "media_id": media_id,
         "creation_id": creation_id,
         "site_product_url": payload["product_url"],
+        "tracking_url": payload["tracking_url"],
         "media_urls": media_urls,
         "caption": payload["caption"],
         "site_ack_fingerprint": fingerprint,

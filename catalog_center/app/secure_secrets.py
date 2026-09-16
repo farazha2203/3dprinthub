@@ -17,6 +17,7 @@ CONNECTION_USERS = {
     "openrouter_management_key": "OPENROUTER_MANAGEMENT_KEY",
     "openai_admin_key": "OPENAI_ADMIN_KEY",
     "instagram_access_token": "INSTAGRAM_ACCESS_TOKEN",
+    "buffer_api_key": "BUFFER_API_KEY",
 }
 LEGACY_CONNECTION_USERS = {
     "ftp_password": ["FTP_PASSWORD"],

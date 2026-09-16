@@ -419,8 +419,9 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             page.load_product(product_id)
             self.assertEqual(page.image_grid.columns, 4)
             self.assertEqual(len(page.image_grid.cards), 3)
-            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 220)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 190)
+            self.assertGreaterEqual(page.image_grid.cards[0].minimumWidth(), 280)
+            self.assertGreaterEqual(page.image_grid.cards[0].preview.minimumHeight(), 250)
+            self.assertGreaterEqual(page.image_grid.cards[0].preview.minimumWidth(), 250)
             self.assertIn("60", page.image_task_status.text())
             self.assertIn("3", page.image_task_status.text())
         finally:

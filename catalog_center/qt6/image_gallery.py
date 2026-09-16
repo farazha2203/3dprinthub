@@ -36,6 +36,7 @@ def human_bytes(value: int) -> str:
 class ImageCard(QFrame):
     deleteRequested = Signal(str)
     seoRequested = Signal(str)
+    previewRequested = Signal(str)
     moveEarlierRequested = Signal(str)
     moveLaterRequested = Signal(str)
     selectionChanged = Signal()
@@ -46,9 +47,9 @@ class ImageCard(QFrame):
         super().__init__(parent)
         self.item = dict(item)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(220)
-        self.setMaximumWidth(285)
-        self.setMinimumHeight(390)
+        self.setMinimumWidth(280)
+        self.setMaximumWidth(420)
+        self.setMinimumHeight(510)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
@@ -57,22 +58,16 @@ class ImageCard(QFrame):
 
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumSize(190, 145)
-        self.preview.setMaximumHeight(180)
+        self.preview.setMinimumSize(250, 250)
+        self.preview.setMaximumHeight(310)
+        self.preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         path = str(self.item.get("path") or "")
-        pixmap = QPixmap(path) if path else QPixmap()
-        if pixmap.isNull():
+        self._source_pixmap = QPixmap(path) if path else QPixmap()
+        if self._source_pixmap.isNull():
             self.preview.setText("⚠ تصویر محلی دریافت نشده")
             self.preview.setObjectName("MissingImage")
         else:
-            self.preview.setPixmap(
-                pixmap.scaled(
-                    255,
-                    170,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-            )
+            self._render_preview(380)
         root.addWidget(self.preview)
 
         self.options_label = QLabel("\u06af\u0632\u06cc\u0646\u0647\u200c\u0647\u0627\u06cc \u062a\u0635\u0648\u06cc\u0631")
@@ -137,14 +132,19 @@ class ImageCard(QFrame):
         root.addLayout(order_actions)
 
         actions = QHBoxLayout()
+        preview_large = QPushButton("نمایش بزرگ")
         seo = QPushButton("SEO")
         delete = QPushButton("حذف")
+        preview_large.clicked.connect(
+            lambda: self.previewRequested.emit(str(self.item.get("path") or ""))
+        )
         seo.clicked.connect(
             lambda: self.seoRequested.emit(str(self.item.get("url") or ""))
         )
         delete.clicked.connect(
             lambda: self.deleteRequested.emit(str(self.item.get("url") or ""))
         )
+        actions.addWidget(preview_large)
         actions.addWidget(seo)
         actions.addWidget(delete)
         actions.addStretch(1)
@@ -179,9 +179,58 @@ class ImageCard(QFrame):
             )
         )
 
+    def _render_preview(self, width: int | None = None) -> None:
+        if self._source_pixmap.isNull():
+            return
+        target_width = max(250, min(390, int(width or (self.width() - 20) or 320)))
+        self.preview.setPixmap(
+            self._source_pixmap.scaled(
+                target_width,
+                295,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._render_preview(event.size().width() - 20)
+
+
+class ImagePreviewDialog(QDialog):
+    """Large, non-destructive preview for portrait/square/landscape source images."""
+
+    def __init__(self, path: str, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("نمایش بزرگ تصویر")
+        self.resize(1100, 820)
+        root = QVBoxLayout(self)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        label = QLabel()
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        pixmap = QPixmap(str(path or ""))
+        if pixmap.isNull():
+            label.setText("تصویر محلی برای نمایش بزرگ در دسترس نیست.")
+        else:
+            label.setPixmap(
+                pixmap.scaled(
+                    1040,
+                    760,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        scroll.setWidget(label)
+        root.addWidget(scroll, 1)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.accept)
+        root.addWidget(buttons)
+
 
 class ProductImageGrid(QWidget):
-    """Old-style visual gallery: four columns, rows continue until images end."""
+    """Responsive Product image workspace with a four-column desktop maximum."""
 
     deleteRequested = Signal(str)
     seoRequested = Signal(str)
@@ -194,6 +243,8 @@ class ProductImageGrid(QWidget):
     def __init__(self, parent=None, *, columns: int = 4) -> None:
         super().__init__(parent)
         self.columns = max(3, min(4, int(columns)))
+        self._active_columns = self.columns
+        self._card_min_width = 300
         self.cards: list[ImageCard] = []
         self._primary_sync = False
         self._slider_sync = False
@@ -232,36 +283,59 @@ class ProductImageGrid(QWidget):
     def set_items(self, items: list[dict[str, Any]]) -> None:
         self.clear()
         missing = 0
-        for index, raw in enumerate(items or []):
+        for raw in items or []:
             item = dict(raw)
             if not item.get("downloaded"):
                 missing += 1
             card = ImageCard(item, self.host)
             card.deleteRequested.connect(self.deleteRequested.emit)
             card.seoRequested.connect(self.seoRequested.emit)
+            card.previewRequested.connect(self._show_preview)
             card.moveEarlierRequested.connect(self.moveEarlierRequested.emit)
             card.moveLaterRequested.connect(self.moveLaterRequested.emit)
             card.selectionChanged.connect(self._selection_changed)
             card.primaryChanged.connect(self._primary_changed)
             card.sliderChanged.connect(self._slider_changed)
             self.cards.append(card)
+        self._missing_count = missing
+        self._reflow_cards()
+        self._update_summary()
+        self._refresh_move_controls()
+
+    def _responsive_columns(self, width: int) -> int:
+        usable = max(1, int(width or 0) - 24)
+        return max(1, min(self.columns, usable // self._card_min_width))
+
+    def _reflow_cards(self) -> None:
+        while self.grid.count():
+            self.grid.takeAt(0)
+        viewport_width = self.scroll.viewport().width() or self.width()
+        columns = self._responsive_columns(viewport_width)
+        self._active_columns = columns
+        for index, card in enumerate(self.cards):
             self.grid.addWidget(
                 card,
-                index // self.columns,
-                index % self.columns,
+                index // columns,
+                index % columns,
                 alignment=Qt.AlignmentFlag.AlignTop,
             )
         for column in range(self.columns):
-            self.grid.setColumnStretch(column, 1)
-        rows = max(1, (len(self.cards) + self.columns - 1) // self.columns)
-        # QScrollArea with widgetResizable=True can otherwise compress a long
-        # grid and make the controls under the final image rows unreachable.
-        # Give the content widget a factual row-based minimum height so the
-        # vertical scrollbar always spans the entire card/control surface.
-        self.host.setMinimumHeight(rows * 414 + max(0, rows - 1) * self.grid.spacing())
-        self._missing_count = missing
-        self._update_summary()
-        self._refresh_move_controls()
+            self.grid.setColumnStretch(column, 1 if column < columns else 0)
+        rows = max(1, (len(self.cards) + columns - 1) // columns)
+        # Keep every image/control row reachable while allowing 1-4 columns
+        # according to the actual Stage-3 viewport width.
+        self.host.setMinimumHeight(rows * 535 + max(0, rows - 1) * self.grid.spacing())
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        before = self._active_columns
+        after = self._responsive_columns(event.size().width())
+        if after != before:
+            self._reflow_cards()
+
+    def _show_preview(self, path: str) -> None:
+        dialog = ImagePreviewDialog(path, self)
+        dialog.exec()
 
     def _selection_changed(self) -> None:
         self._update_summary()

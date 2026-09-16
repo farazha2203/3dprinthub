@@ -1862,6 +1862,10 @@ class InstagramCore:
         self.connection = connection
         self.publish_core = publish_core
 
+    def provider(self) -> str:
+        value = str(self.db.setting("instagram_publish_provider", "direct") or "direct").strip().lower()
+        return value if value in {"direct", "buffer"} else "direct"
+
     def config(self):
         from app.instagram_publish import InstagramConfig
         account_id = str(self.db.setting("instagram_account_id", "") or "").strip()
@@ -1873,6 +1877,13 @@ class InstagramCore:
             login_mode=str(self.db.setting("instagram_login_mode", "instagram") or "instagram"),
         )
 
+    def buffer_config(self):
+        from app.buffer_publish import BufferConfig
+        return BufferConfig(
+            channel_id=str(self.db.setting("buffer_instagram_channel_id", "") or "").strip(),
+            mode=str(self.db.setting("buffer_publish_mode", "shareNow") or "shareNow").strip(),
+        )
+
     def preview(self, product_id: int) -> dict[str, Any]:
         from app.instagram_publish import canonical_site_payload
         row = self.db.product(int(product_id))
@@ -1882,22 +1893,36 @@ class InstagramCore:
         return canonical_site_payload(dict(row), site_url=settings.site_url)
 
     def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
-        from app.instagram_publish import publish_product
-        cfg = self.config()
+        provider = self.provider()
+        if provider == "buffer":
+            from app.buffer_publish import publish_product
+            cfg = self.buffer_config()
+            provider_label = "Buffer → Instagram"
+        else:
+            from app.instagram_publish import publish_product
+            cfg = self.config()
+            provider_label = "Instagram Direct"
         settings = self.connection.settings(require_bridge=False)
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         results, failures = [], []
         total = max(1, len(ids))
         for index, product_id in enumerate(ids, 1):
             if progress:
-                progress(int((index - 1) / total * 100), f"Instagram {index}/{total} • #{product_id}")
+                progress(int((index - 1) / total * 100), f"{provider_label} {index}/{total} • #{product_id}")
             try:
                 results.append({"product_id": product_id, **publish_product(self.db, product_id, cfg, site_url=settings.site_url)})
             except Exception as exc:
                 failures.append({"product_id": product_id, "error": str(exc)})
             if progress:
-                progress(int(index / total * 100), f"Instagram {index}/{total} تمام شد")
-        return {"requested": len(ids), "published": len(results), "failed": len(failures), "results": results, "failures": failures}
+                progress(int(index / total * 100), f"{provider_label} {index}/{total} تمام شد")
+        return {
+            "provider": provider,
+            "requested": len(ids),
+            "published": len(results),
+            "failed": len(failures),
+            "results": results,
+            "failures": failures,
+        }
 
     def publish_site_then_instagram(self, product_ids, *, progress=None) -> dict[str, Any]:
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
