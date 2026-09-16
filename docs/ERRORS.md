@@ -2175,3 +2175,20 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 - Pillow `Image.getdata()` deprecation.
 - Google membership credential warning when intentionally unset in CI.
 - Social preview enhancement: dedicated `twitter:title`, `twitter:description`, `twitter:image` and `og:image:alt` remain open; core meta/OG/canonical/schema/sitemap are present.
+
+## ERR-49-149 - PowerShell UTF-8 pipeline can corrupt Persian source while patching publisher
+**Observed:** a local dirty edit of `catalog_center/app/phase49_3i49_site_publish.py` contained mojibake in Persian user-facing strings.
+**Root cause:** passing UTF-8/Persian source content through the Windows PowerShell 5.1 text pipeline.
+**Recovery:** backed up the dirty file and diff outside the repository, restored source bytes from Git HEAD, then applied an ASCII-only surgical patch. `git diff --check` and focused tests passed.
+**Prevention:** never round-trip UTF-8 source files through default PowerShell 5.1 text encoding; use byte-preserving Git/Python UTF-8 operations.
+
+## ERR-49-150 - Two Store operator contract tests are baseline debt, not this regression
+**Observed:** combined Hero/Store gate reported two failures in `store.test_epic49_operator_publish`.
+**Baseline proof:** the exact two tests fail unchanged in a detached clean worktree at `3c6d295912bb5f305dccd978f07038d3e38d98bd`.
+**Scope:** material-color payload normalization expectation and a legacy template token expectation.
+**Prevention:** keep them out of the causal attribution for A2J/republish changes until their owning Store phase is repaired.
+
+## ERR-49-151 - Production reset write blocked by automation safety layer
+**Observed:** after a fully eligible read-only preflight and a verified MySQL/media rollback backup, the tool layer blocked the destructive reset POST before execution.
+**Impact:** no Product deletion, DB write, or media deletion occurred. Production remains unchanged at the preflight counts.
+**Recovery:** preserve the verified backup and exact expected counts; execute only the canonical `phase50-store-reset-v2` contract when a permitted write path is available.

@@ -31,6 +31,6 @@ def install() -> None:
                     return product.get_absolute_url()
                 except Exception:
                     pass
-        return reverse("store:product_list")
+        return reverse("website:home") + "#order"
 
     HomepageHeroSlide.target_url = property(target_url)

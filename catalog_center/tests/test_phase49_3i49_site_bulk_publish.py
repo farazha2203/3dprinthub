@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from app.phase49_3c_image_pipeline import finalize_selected_images
-from app.phase49_3i49_site_publish import build_publish_batch, mark_ready_many, publish_many
+from app.phase49_3i49_site_publish import _next_batch_name, build_publish_batch, mark_ready_many, publish_many
 from app.epic49_site_sync import BridgeNotFoundError
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage, ProductsPage
@@ -446,6 +446,16 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(int(row["upload_ready"]), 1)
         self.assertEqual(row["server_id"], "asset-900")
         self.assertEqual(int(row["server_product_id"]), 1900)
+
+    def test_batch_name_stays_bridge_compatible_when_current_second_is_taken(self):
+        root = self.root / "batch-name-collision"
+        root.mkdir(parents=True, exist_ok=True)
+        first = _next_batch_name(root)
+        (root / first).mkdir()
+        second = _next_batch_name(root)
+        self.assertRegex(first, r"^desktop_catalog_v85_[0-9]{8}_[0-9]{6}$")
+        self.assertRegex(second, r"^desktop_catalog_v85_[0-9]{8}_[0-9]{6}$")
+        self.assertNotEqual(first, second)
 
     def test_republish_batch_carries_updated_profile_filament_and_print_time(self):
         product_id = self._product("3491023")

@@ -964,3 +964,7 @@ Acceptance: retain the managed Django Hero/SEO/Admin contract while adding a Sli
 Owner requested that every Local Filament have nonzero pricing and exactly one 1 kg roll of stock, and that all Filaments be preselected for every Product so manual preparation focuses mainly on dimensions. This is a Local Catalog policy only; ChatGPT must not auto-publish Products.
 
 Implemented and verified: 66 active inventory rows, 64 unique selectable Filament identities, 635/635 Products with canonical Profiles, all Profiles preselected, and prior uploaded Products marked for same-identity update. Windows Catalog Center was relaunched for owner-driven publication.
+
+## REQ-50-011 - Final Windows publisher resend/update + empty Store handoff
+Requested behavior: clear old/test Store products; keep the professional standalone 3D Slicebox Hero; allow previously sent Windows Catalog products to be explicitly resent; update existing Site products in place when present; recreate safely when the old Site product was deleted; carry changed Profile, Filament, print time and other current product fields on republish.
+Status 2026-09-17: source behavior locally accepted; Production reset preflight/backup ready; destructive reset not yet executed due automation safety guard.

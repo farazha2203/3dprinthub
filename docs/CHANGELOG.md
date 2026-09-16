@@ -1040,3 +1040,10 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Opened 12 Commerce locks through StageCore so dimensions can be edited; 19 prior uploads now carry `needs_update=1` for republish/update.
 - Focused Filament/Profile tests 34/34 PASS, Qt verify-only PASS, Catalog integrity `ok`.
 - Relaunched Windows Catalog Center v8.9.10. No Production publish/deploy was performed.
+
+## 2026-09-17 - Publisher republish continuity and A2J empty-store parity
+- Added collision-safe second-resolution Catalog batch allocation while preserving the bridge naming contract.
+- Reconciled A2J source-backed Hero fallback into the main development lineage.
+- Added the accepted A2J seed command/tests and guarded host runner provenance.
+- Verified Windows publish `16/16` and Hero focused `25/25`.
+- Prepared and verified a fresh Production Store-reset rollback backup; destructive reset remains not executed because the automation safety layer blocked the write call.

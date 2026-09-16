@@ -1,4 +1,21 @@
 ## 2026-09-16 - WINDOWS IMAGE REORDER LOCAL_TESTED / GITHUB PROMOTION NEXT
+
+## 2026-09-17 - Windows republish + empty-store Hero reconciliation (LOCAL_ACCEPTED / RESET_BACKUP_READY)
+
+- Local branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`; baseline before this change: `3c6d295912bb5f305dccd978f07038d3e38d98bd`.
+- Windows explicit re-publish continuity from `9b006bb` was re-verified: already-published products can be explicitly requeued; existing Site products update in place; Site 404 recreates from preserved Catalog asset identity; Profile/Filament/print-time data is carried in the new batch.
+- Added server-compatible collision-safe Batch naming without changing the strict `desktop_catalog_v85_YYYYMMDD_HHMMSS` bridge contract.
+- Reconciled the accepted A2J behavior from Production back into the development lineage: safe source-backed Hero slides remain valid with an intentionally empty Store, Product-backed slides deep-link to the Product, and source-only slides fall back to `/#order`.
+- Local gates: Windows publish suite `16/16 PASS`; Hero/A2J focused suite `25/25 PASS`; `manage.py check` PASS except known CKEditor warning; `makemigrations --check --dry-run` => no changes.
+- Two Store contract failures were proven pre-existing on clean baseline `3c6d295` and are not regressions of this change: material-color normalization expectation and legacy technical-feature template expectation.
+- Production read-only preflight: `release/phase50-a2j-hero-20260915 @ 12e319ace1eb55c114d7117e1b5a2fa170b410ab`, clean, MySQL, zero migration plan, store-reset eligible with `8 Product / 2011 Variant / 29 Image / 0 Order / 0 OrderItem / 0 InventoryMovement / 8 linked assets`.
+- Root cause for the returned test products: explicit Windows Publisher batches were sent after the earlier accepted empty-store handoff; A2J did not recreate Store products by itself.
+- Fresh verified rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260917-000335-store-product-reset`; MySQL gzip valid (`3108367` bytes), manifest SHA256 `639f67e78e053932d86a8f317cd73ea69e0d8aad0305f62301ae7c79cdd92940`, and `37` Product-owned media files copied and hash-verified.
+- The destructive reset POST was not executed because the automation safety layer blocked that write call. No Production deletion or DB mutation occurred in that blocked call.
+- Rollback branch: `backup/pre-final-publisher-hero-cleanup-20260916` -> `3c6d295912bb5f305dccd978f07038d3e38d98bd`.
+
+Exact next step: run the already-verified canonical `phase50-store-reset-v2` reset against the fresh backup and exact live counts, apply `phase50_a2j_seed_hero --apply`, verify `Store Product/Variant/Image = 0` and four safe source-backed Hero slides, then launch the Windows publisher from the accepted GitHub SHA and perform a non-mutating resend readiness smoke.
+
 Status: `LOCAL_TESTED / IMAGE ORDER+SEO RENUMBER PASS / PRODUCTION UNCHANGED`.
 
 Canonical Windows repository and live GitHub were reverified exact at pre-change `551f70624536857ab36ba004404298abb503d180` on `agent/phase49-3i18-operator-bulk-ai-rebuild`; tracked source was clean and only historical `.tmp_*` evidence files were untracked. Rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` is live at that exact SHA.

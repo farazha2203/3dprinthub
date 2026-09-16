@@ -657,3 +657,9 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - [x] Focused Filament/Profile tests 34/34 + Qt verification PASS; relaunch Windows Catalog Center.
 - [ ] Owner manually adjusts Product dimensions/finalizes required stages and publishes selected Products from Windows.
 - [ ] Continue the separate Store Reset feature before claiming the Production Store is empty; do not conflate that pending source work with this Local data policy.
+
+## 2026-09-17 checkpoint
+- Phase50 Windows re-publish/update-in-place: LOCAL ACCEPTED; commit/push pending at time of this checkpoint.
+- Phase50.A2J standalone sliced Hero: Production accepted release reconciled back into development lineage; local focused gate PASS.
+- Store cleanup: preflight READY and fresh verified rollback backup READY; destructive reset still pending because the automation safety layer blocked the write operation.
+- Next: canonical reset -> safe Hero seed -> Production verification -> Windows app exact-SHA launch.

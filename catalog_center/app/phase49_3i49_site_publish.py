@@ -44,6 +44,17 @@ def _ids(values) -> list[int]:
     return sorted(output)
 
 
+def _next_batch_name(root: Path) -> str:
+    """Return a server-compatible unique second-resolution batch name."""
+    base = int(time.time())
+    for offset in range(120):
+        stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(base + offset))
+        name = "desktop_catalog_v85_" + stamp
+        if not (root / name).exists() and not (root / (name + ".building")).exists():
+            return name
+    raise RuntimeError("Unable to allocate a unique publish batch name.")
+
+
 def _row_dict(row) -> dict[str, Any]:
     return dict(row) if row is not None else {}
 
@@ -369,7 +380,7 @@ def build_publish_batch(
     root = Path(batch_root or (Path(db.path).resolve().parent / "publish_batches"))
     root.mkdir(parents=True, exist_ok=True)
     batch_uuid = new_batch_uuid()
-    name = "desktop_catalog_v85_" + time.strftime("%Y%m%d_%H%M%S")
+    name = _next_batch_name(root)
     batch = root / name
     building = root / (name + ".building")
     if batch.exists() or building.exists():
