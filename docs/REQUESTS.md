@@ -1,4 +1,10 @@
 ## 2026-09-16 - Owner image workspace reorder + immediate Windows relaunch
+
+## 2026-09-17 - Owner locked final Windows commerce/social scope
+Status: `IMPLEMENTED + LOCAL TESTED / LIVE SOCIAL CREDENTIAL ACCEPTANCE PENDING`.
+
+Owner requested one integrated Windows flow: definitive Batch publish/timeout handling -> professional Product image workspace -> Instagram Direct + Buffer providers -> Site-first Single/Carousel publication -> exact Product URL + SEO Alt/Caption/Hashtag/UTM -> provider Post ID receipt + duplicate prevention. Runtime source `81d9fafbcc29be41b14af3129afc1ccf681529b1` implements this scope locally; live Social acceptance is intentionally blocked until owner credentials are configured securely.
+
 Status: `LOCAL_TESTED / PUSH+BACKUP+RECEIVER+LAUNCH NEXT`.
 Owner requires the remaining Windows image workspace gap to be closed before Product/image entry resumes. Stage 3 now has explicit per-image previous/next controls for trusted selected images; Primary remains slot 1, secondary order is persisted, URL-owned Alt/metadata/Slider facts stay attached, and SEO WebP numbering is rebuilt immediately. Uploaded Products become guarded republish work rather than duplicate Products. Local dedicated/broader gates are 12/12, 27/27 and 87/87 PASS. Acceptance still requires exact GitHub push, fresh Catalog rollback backup, live receiver verification, `qt_launch.py --verify-only` and launch from the pushed SHA.
 

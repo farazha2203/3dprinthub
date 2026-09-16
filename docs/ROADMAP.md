@@ -1,4 +1,19 @@
 ## 2026-09-16 - Windows image ordering + launch readiness
+
+## 2026-09-17 - Windows Social + Image acceptance path
+- [x] Preserve clean Batch resend/timeout reconciliation lineage and re-run its regressions.
+- [x] Replace small fixed Product image cards with larger responsive 1-4 column cards and large preview while preserving reorder/SEO/Primary/Slider contracts.
+- [x] Add dual Social provider routing: Instagram Direct + Buffer -> Instagram.
+- [x] Enforce Site-first Product publication, verified public HTTPS media, ordered Single/Carousel assets, Alt/Caption/Hashtag and deterministic Product UTM.
+- [x] Record provider Post/Media ID and Site-ACK fingerprint; reject duplicate publish of the same public revision per provider.
+- [x] Store Direct token and Buffer API key only in Windows Credential Store.
+- [x] Local regression gate 112/112 PASS and push exact runtime source `81d9fafbcc29be41b14af3129afc1ccf681529b1`.
+- [ ] Create and verify fresh Catalog backup immediately before launch.
+- [ ] Verify Receiver/FTP/Bridge live read-only from exact pushed runtime.
+- [ ] Run exact pushed `qt_launch.py --verify-only` and foreground launch.
+- [ ] Configure owner Instagram Direct token/account ID or Buffer API key without exposing secrets in Git/Chat.
+- [ ] Run one real disposable Site -> Instagram Single/Carousel acceptance and verify receipt/idempotency/UTM.
+
 - [x] Reverify canonical Local/GitHub at pre-change `551f70624536857ab36ba004404298abb503d180` and preserve dirty-state evidence without reset.
 - [x] Push rollback branch `backup/pre-phase49-3i47-image-reorder-20260916` at the exact pre-change SHA.
 - [x] Add explicit previous/next controls below each trusted selected Product image.

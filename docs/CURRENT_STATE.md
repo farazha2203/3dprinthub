@@ -1,5 +1,22 @@
 ## 2026-09-16 - WINDOWS IMAGE REORDER LOCAL_TESTED / GITHUB PROMOTION NEXT
 
+## 2026-09-17 - Windows Social + responsive Image runtime candidate
+Status: `LOCAL_TESTED / GITHUB_SOURCE_PUSHED / WINDOWS RUNTIME GATE NEXT`.
+
+- Branch: `agent/phase49-windows-instagram-buffer-image-20260917`.
+- Exact runtime source SHA: `81d9fafbcc29be41b14af3129afc1ccf681529b1`; live GitHub branch was verified exact after push.
+- Rollback: `backup/pre-phase49-windows-instagram-buffer-image-20260917 -> 6a3a51aacdccff69a4999c4a470cb10807ceb648`.
+- Batch publish continuity remains on the clean `67445d6`/`3c6d295` lineage: collision-safe batch naming, already-public resend/update, stale Site Product recreation, and LiteSpeed HTTP-500 timeout reconciliation without blind re-POST.
+- Product Image workspace now uses larger 280-420px cards, >=250px preview surfaces, 1-4 responsive columns, preserved aspect ratio for portrait/square/landscape images, a large non-destructive preview dialog, and the existing Select/Primary/Slider/Previous/Next/SEO/Delete controls.
+- Social publishing is now provider-aware: `Instagram Direct` and `Buffer -> Instagram`. Both remain Site-first and require a verified public HTTPS Product URL and public Product media before social publication.
+- Social payload now keeps the canonical Product URL plus deterministic Instagram UTM attribution (`utm_source=instagram`, `utm_medium=social`, `utm_campaign=product`, `utm_content=product-<id>`), SEO/social caption + hashtags, ordered media and per-image Alt text.
+- Direct receipts now record provider + provider post/media ID + tracking URL. Buffer records Buffer Post ID/channel/external link/tracking URL. Same Site ACK revision is fail-closed against duplicate publication per provider.
+- Buffer API key and Instagram token remain outside SQLite/Git and use Windows Credential Store.
+- Verification: focused Social/Image/Core gate 58/58 PASS; broad Batch/Image/Social gate 99/99 PASS; combined expected 3I36/3I37/3I42C3/3I47/3I49 + Social/Image gate 112/112 PASS; touched Python compile + `git diff --check` + secret diff guard PASS.
+- Production Site/DB was not changed by this Windows candidate. Real Instagram/Buffer E2E remains pending owner credentials; secrets must never be pasted into Chat.
+- Exact next step: fresh Catalog SQLite backup -> live Receiver/FTP/Bridge read-only verification -> exact pushed `qt_launch.py --verify-only` -> foreground Windows launch -> owner configures Direct token/account ID or Buffer API key -> disposable real Product Site-to-Instagram acceptance.
+
+
 ## 2026-09-17 - Exact-SHA Windows publisher runtime verification
 
 - GitHub exact source is `67445d60f07625faeb0d384ebeec809cc54bf8f3` on `agent/phase49-3i18-operator-bulk-ai-rebuild`.

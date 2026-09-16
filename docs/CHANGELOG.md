@@ -1,4 +1,13 @@
 ## 2026-09-16 - Qt Product image reorder + SEO renumber continuity
+
+## 2026-09-17 - Windows Social providers + responsive Product image workspace
+- Runtime source: `81d9fafbcc29be41b14af3129afc1ccf681529b1` on `agent/phase49-windows-instagram-buffer-image-20260917`.
+- Added Buffer GraphQL Instagram publisher with Instagram-channel discovery/validation, Single/Carousel post creation, per-image Alt text, Site Product tracking URL, provider Post ID receipts and duplicate-revision protection.
+- Extended existing Instagram Direct publisher with deterministic UTM tracking, provider identity/Post ID receipts and Alt text on carousel children.
+- Added provider selection and secure Direct/Buffer configuration/testing to Qt Settings. Social secrets remain in Windows Credential Store.
+- Reworked Product image cards from fixed 220-285px/190x145 previews to larger 280-420px cards, >=250px responsive preview surfaces, 1-4 columns, and large preview dialog while preserving image authority/reorder/SEO semantics.
+- Revalidated Batch publish, LiteSpeed timeout reconciliation, resend/update, Image SEO and Social integration: 112/112 PASS.
+
 - Added explicit `قبلی` / `بعدی` controls below trusted selected image cards in Product Wizard Stage 3.
 - Primary image remains the mature fixed slot-1 authority; secondary selected images can be reordered without changing Primary or Slider identity.
 - Reorder preserves Alt/image metadata by source URL, marks already-uploaded Products for guarded republish, and regenerates deterministic SEO WebP sequence through the existing finalizer.

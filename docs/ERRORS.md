@@ -1,4 +1,18 @@
 ## ERR-49-150 - Product #628 acceptance diagnostic harness corrections
+
+## ERR-49-153 - GitHub HTTP 500 interrupted rollback-branch push (2026-09-17)
+- Symptom: normal `git push` of the pre-change rollback ref returned GitHub `500 Internal Server Error` before feature worktree creation.
+- Safety response: execution stopped immediately; no source change/worktree creation was allowed after the failed remote mutation.
+- Root cause boundary: transient GitHub remote failure, not repository corruption.
+- Resolution: remote state was verified separately; the same exact rollback ref was created through the connected GitHub API and re-read as `6a3a51aacdccff69a4999c4a470cb10807ceb648` before development continued.
+- Prevention: after any remote mutation transport error, stop and verify remote truth before any retry; never infer branch existence from the client-side failure alone.
+
+## ERR-49-152 - superseded exact 220px ImageCard test blocked intentional UX upgrade (2026-09-17)
+- Symptom: the first Social/Image focused run had one failure because an older 3I.47 presentation assertion still required `ImageCard.minimumWidth() == 220` after the owner explicitly requested larger image frames/previews.
+- Root cause: stale exact-pixel test contract, not an image authority/reorder/runtime regression.
+- Resolution: runtime stayed on the owner-requested larger responsive design; the regression was updated to require >=280px cards and >=250px preview surface. Focused 58/58, broad 99/99 and combined 112/112 then passed.
+- Prevention: when an owner-approved visual contract intentionally changes, update superseded exact-size assertions to test the new functional minimum/responsive behavior while retaining data/action regressions.
+
 Date: 2026-09-15
 Status: `RESOLVED / ACCEPTANCE PASS / NO TEST ORDER WRITE`.
 

@@ -1,5 +1,13 @@
 # Phase49.3I.47 — Qt Workspace, Multi-Image SEO, Bulk AI, Admin + Storefront Information Architecture
 
+## 2026-09-17 responsive Image + dual Social provider continuation
+Status: `LOCAL_TESTED / GITHUB_SOURCE_PUSHED / WINDOWS RUNTIME GATE NEXT`.
+
+The owner rejected the remaining small fixed image-frame UX and locked the final Windows commerce/social flow. The Product image workspace now has larger responsive cards, 1-4 columns, aspect-preserving portrait/square/landscape previews and a large preview dialog while retaining Select/Primary/Slider/reorder/SEO/delete authority. Social publication is Site-first and supports both Instagram Direct and Buffer -> Instagram, with ordered Single/Carousel media, per-image Alt, SEO/social caption + hashtags, deterministic UTM Product links, provider Post/Media ID receipts and same-public-revision duplicate prevention. Secrets stay in Windows Credential Store.
+
+Exact runtime source: `81d9fafbcc29be41b14af3129afc1ccf681529b1` on `agent/phase49-windows-instagram-buffer-image-20260917`. Rollback: `backup/pre-phase49-windows-instagram-buffer-image-20260917 -> 6a3a51aacdccff69a4999c4a470cb10807ceb648`. Evidence: 58/58 focused PASS; 99/99 Batch/Image/Social PASS; 112/112 combined 3I36/37/42C3/47/49 + Social/Image PASS; compile/diff/secret guards PASS. Production was not changed. Next gate is backup -> Receiver/FTP/Bridge -> exact pushed verify-only -> foreground launch -> real credentialed Site-to-Instagram acceptance.
+
+
 ## 2026-09-16 image-order continuation
 Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
 
