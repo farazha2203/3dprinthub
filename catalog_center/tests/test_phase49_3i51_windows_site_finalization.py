@@ -528,13 +528,15 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         try:
             page.load_product(product_id)
             self.assertTrue(page.product_source_btn.isEnabled())
-            self.assertEqual(page.image_grid.columns, 3)
+            self.assertEqual(page.image_grid.columns, 2)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 470)
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 560)
+            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 72)
+            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 420)
             button_texts = {
                 button.text()
                 for button in page.findChildren(type(page.product_source_btn))
@@ -560,6 +562,23 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             grid.set_all_selected(False)
             self.assertEqual(grid.selected_urls(), [])
             self.assertIn("0 انتخاب‌شده", grid.summary.text())
+        finally:
+            grid.close()
+
+    def test_image_grid_five_large_cards_keep_three_scroll_rows_reachable(self):
+        grid = ProductImageGrid(columns=2, large_cards=True)
+        try:
+            grid.set_items([
+                {"url": f"https://img.example/{index}.jpg", "selected": True}
+                for index in range(1, 6)
+            ])
+            self.assertEqual(len(grid.cards), 5)
+            self.assertGreaterEqual(grid.host.minimumHeight(), 3 * 492)
+            self.assertEqual(
+                grid.scroll.verticalScrollBarPolicy(),
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
+            )
+            self.assertEqual(len(grid.selected_urls()), 5)
         finally:
             grid.close()
 
@@ -631,6 +650,224 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             self.assertIn("\u0646\u0645\u0648\u0646\u0647 \u0642\u0637\u0639\u0627\u062a", headers)
             self.assertTrue(page.material_table.item(0, 3).text().strip())
             self.assertTrue(page.material_table.item(0, 4).text().strip())
+        finally:
+            page.close()
+
+
+    def test_full_site_sync_skips_legacy_blank_brand_without_aborting_valid_rows(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Managed Brand")
+        self._save_filament("PLA", "Managed Brand", "Black")
+        legacy = self.kernel.filaments.save({
+            "material": "PLA",
+            "brand": "",
+            "color": "Legacy Color",
+            "color_type": "solid",
+            "palette_hexes": ["#445566"],
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 2_000_000,
+        })
+        rows = self.kernel.filaments.list(include_inactive=True)
+        self.assertEqual(len(rows), 2)
+        self.kernel.connection.bridge_settings = lambda: object()
+        sent = []
+
+        def fake_sync(_settings, payload, *, operator):
+            sent.append(dict(payload))
+            return {"status": "ok"}
+
+        with patch("app.epic49_site_sync.sync_filament", side_effect=fake_sync):
+            result = self.kernel.sync_filaments_with_site(rows)
+
+        self.assertEqual(result["requested"], 2)
+        self.assertEqual(result["synced"], 1)
+        self.assertEqual(result["failed"], 1)
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent[0]["brand"], "Managed Brand")
+        self.assertEqual(result["failures"][0]["row_id"], int(legacy["id"]))
+        self.assertIn("ValueError", result["failures"][0]["error"])
+
+    def test_bulk_rates_dialog_changes_only_explicitly_enabled_fields(self):
+        dialog = FilamentBulkRatesDialog(4)
+        try:
+            enabled, widget = dialog._fields["print_hourly_rate"]
+            enabled.setChecked(True)
+            widget.setValue(175_000)
+            enabled, widget = dialog._fields["preheat_temperature_c"]
+            enabled.setChecked(True)
+            widget.setValue(70)
+            values = dialog.values()
+            self.assertEqual(values["print_hourly_rate"], 175_000)
+            self.assertEqual(values["preheat_temperature_c"], 70)
+            self.assertNotIn("supervision_hourly_rate", values)
+            self.assertNotIn("preheat_hours", values)
+        finally:
+            dialog.close()
+
+    def test_decorative_product_recommends_pla_petg_not_engineering_cf(self):
+        product_id = self._make_product("3510003")
+        self.db.update_product(product_id, {
+            "source_title": "Decorative dragon sculpture art display",
+            "source_description": "Desktop ornament and display sculpture",
+        })
+        result = self.kernel.commerce.recommend_materials(product_id, [
+            {"material": "PLA"},
+            {"material": "PETG"},
+            {"material": "PA12-CF10"},
+            {"material": "PLA-CF"},
+        ])
+        self.assertEqual(set(result["materials"]), {"PLA", "PETG"})
+        self.assertFalse(result["source_declared"])
+
+    def test_page_extract_mapping_preserves_five_distinct_source_images(self):
+        from qt6.acquisition_runtime import _page_extract_image_urls
+
+        local_dir = self.root / "capture"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True)
+        entries = []
+        for index in range(1, 6):
+            local_file = image_dir / f"{index:02d}.webp"
+            local_file.write_bytes(b"fixture")
+            entries.append({
+                "url": f"https://cdn.example.test/product/image-{index}.jpg?width=1000",
+                "local_file": str(local_file),
+            })
+        entries.append({
+            "url": "https://cdn.example.test/product/image-1.jpg?width=400",
+            "local_file": str(image_dir / "01.webp"),
+        })
+        (local_dir / "page_extract.json").write_text(
+            json.dumps({"images": entries}),
+            encoding="utf-8",
+        )
+        urls = _page_extract_image_urls(local_dir, 20)
+        self.assertEqual(len(urls), 5)
+        self.assertTrue(all(url.startswith("https://") for url in urls))
+
+
+    def test_makerworld_product_media_filter_rejects_store_and_avatar_assets(self):
+        from qt6.acquisition_runtime import _is_product_media_url
+
+        self.assertTrue(_is_product_media_url(
+            "makerworld",
+            "https://makerworld.bblmw.com/makerworld/model/USabc/design/hero.jpg?width=1000",
+        ))
+        self.assertTrue(_is_product_media_url(
+            "makerworld",
+            "https://makerworld.bblmw.com/makerworld/model/USabc/123/instance/plate_1.png",
+        ))
+        self.assertFalse(_is_product_media_url(
+            "makerworld",
+            "https://store.bblcdn.eu/s8/default/material/PLA_Silk.jpg",
+        ))
+        self.assertFalse(_is_product_media_url(
+            "makerworld",
+            "https://public-cdn.bblmw.com/avatar/123/avatar.png",
+        ))
+
+    def test_ai_production_estimate_is_preview_only_and_carries_images(self):
+        product_id = self._make_product("3510004")
+        self.db.update_product(product_id, {
+            "source_title": "Decorative vase",
+            "source_description": "A decorative display vase",
+            "images_json": json.dumps([
+                "https://cdn.example.test/a.webp",
+                "https://cdn.example.test/b.webp",
+            ]),
+            "selected_images_json": json.dumps([
+                "https://cdn.example.test/a.webp",
+            ]),
+            "estimated_weight_grams": 0,
+            "estimated_print_minutes": 0,
+        })
+        before = dict(self.db.product(product_id))
+        captured = {}
+
+        class FakeClient:
+            def __init__(self, provider, key, model, product_id=None):
+                captured["init"] = (provider, key, model, product_id)
+
+            def structured_response(self, **kwargs):
+                captured.update(kwargs)
+                return ({
+                    "length_cm": 18.0,
+                    "width_cm": 12.0,
+                    "height_cm": 24.0,
+                    "weight_grams": 210.0,
+                    "print_minutes": 315,
+                    "confidence": "medium",
+                    "evidence_summary": "estimated from product identity and imagery",
+                    "assumptions": ["standard decorative scale"],
+                    "recommended_materials": ["PLA", "PETG"],
+                }, "vision-model")
+
+        with patch("qt6.parity_core.active_ai_config", return_value=("openai", "test-key", "vision-model")), patch(
+            "qt6.parity_core.resolve_source",
+            return_value={
+                "source_url": before["source_url"],
+                "source_title": before["source_title"],
+                "source_description": before["source_description"],
+                "_effective_mode": "link",
+            },
+        ), patch("qt6.parity_core.AIProviderClient", FakeClient):
+            result = self.kernel.providers.estimate_product_production(product_id, "link")
+
+        after = dict(self.db.product(product_id))
+        self.assertEqual(before["estimated_weight_grams"], after["estimated_weight_grams"])
+        self.assertEqual(before["estimated_print_minutes"], after["estimated_print_minutes"])
+        self.assertTrue(result["preview_only"])
+        self.assertEqual(result["weight_grams"], 210.0)
+        self.assertEqual(result["print_minutes"], 315)
+        self.assertEqual(result["image_count"], 2)
+        image_inputs = [item for item in captured["input_content"] if item.get("type") == "input_image"]
+        self.assertEqual(len(image_inputs), 2)
+
+    def test_ai_production_apply_preserves_operator_values_and_uses_safe_material_rule(self):
+        for material in ("PLA", "PETG", "PA12-CF10"):
+            self.kernel.filaments.save_material(material)
+            self.kernel.filaments.save_brand("Owner Brand")
+            self._save_filament(material, "Owner Brand", material + " Black")
+        product_id = self._make_product("3510005")
+        self.db.update_product(product_id, {
+            "source_title": "Decorative dragon sculpture",
+            "source_description": "Art display ornament",
+        })
+        self.kernel.commerce.save_profiles(product_id, [{
+            "name": "اپراتور",
+            "size_label": "بزرگ",
+            "part_length_cm": 30,
+            "part_width_cm": 20,
+            "part_height_cm": 40,
+            "production_rows": [{
+                "weight_grams": 450,
+                "support_weight_grams": 20,
+                "print_time_minutes": 600,
+            }],
+            "material_options": [],
+            "pricing_strategy": "dynamic",
+        }])
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            changed = page._apply_production_estimate({
+                "length_cm": 10,
+                "width_cm": 11,
+                "height_cm": 12,
+                "weight_grams": 100,
+                "print_minutes": 120,
+            })
+            profile = self.kernel.commerce.profiles(product_id)[0]
+            self.assertEqual(float(profile["part_length_cm"]), 30.0)
+            self.assertEqual(float(profile["part_width_cm"]), 20.0)
+            self.assertEqual(float(profile["part_height_cm"]), 40.0)
+            production = profile["production_rows"][0]
+            self.assertEqual(float(production["weight_grams"]), 450.0)
+            self.assertEqual(int(production["print_time_minutes"]), 600)
+            materials = {str(item.get("material") or "") for item in profile["material_options"]}
+            self.assertEqual(materials, {"PLA", "PETG"})
+            self.assertNotIn("PA12-CF10", materials)
+            self.assertEqual(changed, 1)
         finally:
             page.close()
 

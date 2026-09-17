@@ -201,6 +201,10 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
     def test_rich_product_collection_persists_source_facts_and_caps_product_images(self):
         local_dir = Path(self.temporary.name) / "rich-product"
         local_dir.mkdir(parents=True, exist_ok=True)
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        for index in range(1, 7):
+            (image_dir / f"{index:03d}.jpg").write_bytes(b"fixture-image")
 
         urls = [
             f"https://cdn.example.com/product-{index}.jpg"

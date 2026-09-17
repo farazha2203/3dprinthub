@@ -164,7 +164,29 @@ def _local_image_files(local_dir: Path) -> list[str]:
     return output
 
 
-def _page_extract_image_urls(local_dir: Path, image_limit: int) -> list[str]:
+def _is_product_media_url(source_code: str, url: str) -> bool:
+    """Reject known source chrome/avatar/store media from Product galleries."""
+    value = str(url or "").strip()
+    if not value.startswith(("https://", "http://")):
+        return False
+    if str(source_code or "").strip().casefold() != "makerworld":
+        return True
+    parts = urlsplit(value)
+    host = parts.netloc.casefold()
+    path = parts.path.casefold()
+    if host != "makerworld.bblmw.com":
+        return False
+    if "/makerworld/model/" not in path:
+        return False
+    return "/design/" in path or "/instance/" in path
+
+
+def _page_extract_image_urls(
+    local_dir: Path,
+    image_limit: int,
+    *,
+    source_code: str = "",
+) -> list[str]:
     """Recover exact downloaded Product image URLs from the mature page map.
 
     Some source parsers return fewer URLs than the browser actually downloaded.
@@ -187,6 +209,8 @@ def _page_extract_image_urls(local_dir: Path, image_limit: int) -> list[str]:
         url = str(item.get("url") or "").strip()
         raw_file = str(item.get("local_file") or "").strip()
         if not url or not raw_file:
+            continue
+        if not _is_product_media_url(source_code, url):
             continue
         local_file = Path(raw_file)
         if not local_file.is_absolute():
@@ -2164,13 +2188,26 @@ async def refetch_product_from_source_async(
     if not fresh:
         raise RuntimeError("Source recovery returned no source payload.")
 
-    mapped_urls = _page_extract_image_urls(output, image_limit)
+    mapped_urls = _page_extract_image_urls(
+        output,
+        image_limit,
+        source_code=source_code,
+    )
     if mapped_urls:
-        current_urls = _json_urls(fresh.get("images_json"))
+        current_urls = [
+            value
+            for value in _json_urls(fresh.get("images_json"))
+            if _is_product_media_url(source_code, value)
+        ]
         merged_urls: list[str] = []
+        seen_assets: set[str] = set()
         for value in [*mapped_urls, *current_urls]:
-            if value and value not in merged_urls:
-                merged_urls.append(value)
+            parts = urlsplit(value)
+            asset_key = f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+            if not value or asset_key in seen_assets:
+                continue
+            seen_assets.add(asset_key)
+            merged_urls.append(value)
             if len(merged_urls) >= image_limit:
                 break
         fresh["images_json"] = json.dumps(merged_urls, ensure_ascii=False)

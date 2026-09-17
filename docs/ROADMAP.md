@@ -568,6 +568,11 @@ No new Django migration or secret-store contract is introduced by 3I.49.
 
 # ROADMAP
 
+## 2026-09-18 — Phase50.A.2L owner QA promotion path
+Status: `LOCAL_ACCEPTED / COMMIT_PUSH_RELAUNCH_NEXT / PRODUCTION_BLOCKED_ERR-49-154`.
+
+Immediate sequence: freeze the tested A2L source+docs+brand asset -> commit/push exact WIP candidate -> verify GitHub SHA -> relaunch Qt from that SHA and visually confirm #628 10-image scrolling/multi-select + Filament bulk/sync UI -> restore dedicated 22024 tunnel -> Host read-only identity/migration/readiness gate -> fresh MySQL/media rollback backup -> deploy exact GitHub release -> explicit Pasargad payment seed apply -> public bank-transfer receipt/admin notification acceptance. Podium/Farataz automation stays deferred to a separate verified source audit.
+
 ## 2026-09-01 — Phase49.3I.47 owner rerun + professional commerce design-system track
 
 Status: `PS5.1 GATE FIXED + EXACT WINDOWS CI PASS / OWNER LOCAL RERUN NEXT / PRODUCTION NOT DEPLOYED`.

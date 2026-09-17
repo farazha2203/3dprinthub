@@ -417,10 +417,16 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         page = ProductWizardPage(self.db, kernel=self.kernel)
         try:
             page.load_product(product_id)
-            self.assertEqual(page.image_grid.columns, 4)
+            self.assertEqual(page.image_grid.columns, 2)
+            self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(len(page.image_grid.cards), 3)
-            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 220)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 190)
+            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 270)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 255)
+            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 492)
+            self.assertEqual(
+                page.image_grid.scroll.verticalScrollBarPolicy(),
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
+            )
             self.assertIn("60", page.image_task_status.text())
             self.assertIn("3", page.image_task_status.text())
         finally:

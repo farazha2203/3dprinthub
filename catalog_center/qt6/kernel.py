@@ -260,6 +260,32 @@ class ImageCore:
             return []
         return list(parsed) if isinstance(parsed, list) else []
 
+    @staticmethod
+    def _url_asset_key(value: str) -> str:
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+        if raw.startswith(("https://", "http://")):
+            parts = urlsplit(raw)
+            return f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+        return raw.casefold()
+
+    def source_ordered_urls(self, row: dict[str, Any] | Any) -> list[str]:
+        """Return the source gallery order without inserting derived primary aliases."""
+        data = dict(row) if not isinstance(row, dict) else row
+        for field in ("images_json", "selected_images_json"):
+            output: list[str] = []
+            for raw in self._json_list(data.get(field)):
+                if isinstance(raw, dict):
+                    url = str(raw.get("url") or raw.get("source_url") or "").strip()
+                else:
+                    url = str(raw or "").strip()
+                if url and url not in output:
+                    output.append(url)
+            if output:
+                return output
+        return self.urls(data)
+
     def urls(self, row: dict[str, Any] | Any) -> list[str]:
         data = dict(row) if not isinstance(row, dict) else row
         output: list[str] = []
@@ -574,7 +600,14 @@ class ImageCore:
         return [str(path) for path in preferred]
 
     def display_local_paths(self, row: dict[str, Any] | Any) -> list[str]:
-        """Return real local files for UI display without weakening publish mapping."""
+        """Return every real source image file needed for operator review.
+
+        Numbered files below ``local_dir/images`` are the mature downloader's
+        source-gallery order. Prefer them for review when present, then fill
+        missing source slots from strict URL mappings. This prevents a few
+        finalized SEO derivatives from hiding later downloaded source images.
+        Auxiliary screenshots/non-numbered files stay out of the Product grid.
+        """
         data = dict(row) if not isinstance(row, dict) else row
 
         rejected = str(data.get("rejected_thumbnail_path") or "").strip()
@@ -586,15 +619,60 @@ class ImageCore:
             except Exception:
                 pass
 
+        source_urls = self.source_ordered_urls(data)
+        raw_root = str(data.get("local_dir") or "").strip()
+        numbered: dict[int, str] = {}
+        if raw_root and source_urls:
+            try:
+                image_dir = Path(raw_root).resolve() / "images"
+            except Exception:
+                image_dir = Path()
+            if image_dir.is_dir():
+                try:
+                    children = sorted(image_dir.iterdir(), key=lambda item: item.name.casefold())
+                except OSError:
+                    children = []
+                for child in children:
+                    if not child.is_file() or not child.stem.isdigit():
+                        continue
+                    slot = int(child.stem)
+                    if slot < 1 or slot > len(source_urls):
+                        continue
+                    try:
+                        numbered.setdefault(slot, str(child.resolve()))
+                    except OSError:
+                        continue
+
+        if numbered:
+            output: list[str] = []
+            seen: set[str] = set()
+            for slot, url in enumerate(source_urls, 1):
+                candidate = numbered.get(slot) or self.local_path_for_url(data, url)
+                if not candidate:
+                    continue
+                try:
+                    resolved = Path(candidate).resolve()
+                except Exception:
+                    continue
+                if not resolved.is_file():
+                    continue
+                key = str(resolved).casefold()
+                if key in seen:
+                    continue
+                seen.add(key)
+                output.append(str(resolved))
+            if output:
+                return output
+
         urls = self.urls(data)
         exact: list[str] = []
         seen: set[str] = set()
         for url in urls:
-            path = self.local_path_for_url(data, url)
-            if not path:
+            path_value = self.local_path_for_url(data, url)
+            if not path_value:
                 continue
             try:
-                resolved = Path(path).resolve()
+                resolved = Path(path_value).resolve()
             except Exception:
                 continue
             if not resolved.is_file():
@@ -614,9 +692,7 @@ class ImageCore:
         if metadata and exact:
             return exact
 
-        direct = self._preferred_legacy_display_files(
-            self._legacy_local_candidates(data)
-        )
+        direct = self._preferred_legacy_display_files(self._legacy_local_candidates(data))
         if direct:
             return direct
         if exact:
@@ -820,10 +896,13 @@ class ImageCore:
         data = dict(row)
 
         primary = str(data.get("primary_image_url") or "").strip()
+        primary_key = self._url_asset_key(primary)
         slider_image = str(
             data.get("homepage_slider_image_url") or ""
         ).strip()
+        slider_key = self._url_asset_key(slider_image)
         urls = self.urls(data)
+        source_urls = self.source_ordered_urls(data)
         selected_urls: list[str] = []
         for raw in self._json_list(data.get("selected_images_json")):
             if isinstance(raw, dict):
@@ -837,6 +916,7 @@ class ImageCore:
             if url:
                 selected_urls.append(url)
         selected = set(selected_urls)
+        selected_keys = {self._url_asset_key(value) for value in selected_urls if value}
 
         alts = [
             str(item or "").strip()
@@ -844,6 +924,11 @@ class ImageCore:
                 data.get("image_alt_texts_json")
             )
         ]
+        alt_by_key = {
+            self._url_asset_key(url): (alts[index] if index < len(alts) else "")
+            for index, url in enumerate(selected_urls)
+            if url
+        }
         metadata = [
             dict(item)
             for item in self._json_list(
@@ -891,8 +976,8 @@ class ImageCore:
                 stem = file_path.stem
                 if stem.isdigit():
                     numbered_slot = int(stem)
-                    if 1 <= numbered_slot <= len(urls):
-                        candidate_url = urls[numbered_slot - 1]
+                    if 1 <= numbered_slot <= len(source_urls):
+                        candidate_url = source_urls[numbered_slot - 1]
                         if candidate_url not in used_urls:
                             slot = numbered_slot
                             url = candidate_url
@@ -922,24 +1007,18 @@ class ImageCore:
             except Exception:
                 pass
 
+            url_key = self._url_asset_key(url)
             meta = next(
                 (
                     item
                     for item in metadata
-                    if str(
-                        item.get("source_url")
-                        or item.get("url")
-                        or ""
-                    ) == url
+                    if self._url_asset_key(
+                        str(item.get("source_url") or item.get("url") or "")
+                    ) == url_key
                 ),
                 {},
             )
-            alt = ""
-            if url in selected:
-                try:
-                    alt = alts[selected_urls.index(url)]
-                except Exception:
-                    alt = ""
+            alt = alt_by_key.get(url_key, "")
             if not alt:
                 alt = str(meta.get("alt_text") or "")
 
@@ -951,9 +1030,13 @@ class ImageCore:
                     "filename": file_path.name,
                     "downloaded": True,
                     "display_only": display_only,
-                    "primary": (not display_only and url == primary),
-                    "slider": (not display_only and url == slider_image),
-                    "selected": (not display_only and url in selected),
+                    "primary": (
+                        not display_only and bool(primary_key) and url_key == primary_key
+                    ),
+                    "slider": (
+                        not display_only and bool(slider_key) and url_key == slider_key
+                    ),
+                    "selected": (not display_only and url_key in selected_keys),
                     "width": width,
                     "height": height,
                     "format": image_format,
@@ -1862,15 +1945,41 @@ class InstagramCore:
         self.connection = connection
         self.publish_core = publish_core
 
+    def provider(self) -> str:
+        code = str(
+            self.db.setting("instagram_publish_provider", "buffer") or "buffer"
+        ).strip().lower()
+        return code if code in {"direct", "buffer"} else "buffer"
+
     def config(self):
+        if self.provider() == "buffer":
+            from app.buffer_publish import BufferConfig
+
+            channel_id = str(
+                self.db.setting("buffer_instagram_channel_id", "") or ""
+            ).strip()
+            if not channel_id:
+                raise RuntimeError(
+                    "شناسه Channel اینستاگرام در Buffer هنوز تنظیم نشده است."
+                )
+            return BufferConfig(channel_id=channel_id)
+
         from app.instagram_publish import InstagramConfig
-        account_id = str(self.db.setting("instagram_account_id", "") or "").strip()
+        account_id = str(
+            self.db.setting("instagram_account_id", "") or ""
+        ).strip()
         if not account_id:
-            raise RuntimeError("شناسه Instagram Professional Account هنوز تنظیم نشده است.")
+            raise RuntimeError(
+                "شناسه Instagram Professional Account هنوز تنظیم نشده است."
+            )
         return InstagramConfig(
             account_id=account_id,
-            api_version=str(self.db.setting("instagram_api_version", "v26.0") or "v26.0"),
-            login_mode=str(self.db.setting("instagram_login_mode", "instagram") or "instagram"),
+            api_version=str(
+                self.db.setting("instagram_api_version", "v26.0") or "v26.0"
+            ),
+            login_mode=str(
+                self.db.setting("instagram_login_mode", "instagram") or "instagram"
+            ),
         )
 
     def preview(self, product_id: int) -> dict[str, Any]:
@@ -1882,22 +1991,53 @@ class InstagramCore:
         return canonical_site_payload(dict(row), site_url=settings.site_url)
 
     def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
-        from app.instagram_publish import publish_product
+        provider = self.provider()
         cfg = self.config()
         settings = self.connection.settings(require_bridge=False)
+        if provider == "buffer":
+            from app.buffer_publish import publish_product
+            label = "Buffer/Instagram"
+        else:
+            from app.instagram_publish import publish_product
+            label = "Instagram Direct"
+
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         results, failures = [], []
         total = max(1, len(ids))
         for index, product_id in enumerate(ids, 1):
             if progress:
-                progress(int((index - 1) / total * 100), f"Instagram {index}/{total} • #{product_id}")
+                progress(
+                    int((index - 1) / total * 100),
+                    f"{label} {index}/{total} ? #{product_id}",
+                )
             try:
-                results.append({"product_id": product_id, **publish_product(self.db, product_id, cfg, site_url=settings.site_url)})
+                result = publish_product(
+                    self.db, product_id, cfg, site_url=settings.site_url
+                )
+                results.append(
+                    {"product_id": product_id, "provider": provider, **result}
+                )
             except Exception as exc:
-                failures.append({"product_id": product_id, "error": str(exc)})
+                failures.append(
+                    {
+                        "product_id": product_id,
+                        "provider": provider,
+                        "error": str(exc),
+                    }
+                )
             if progress:
-                progress(int(index / total * 100), f"Instagram {index}/{total} تمام شد")
-        return {"requested": len(ids), "published": len(results), "failed": len(failures), "results": results, "failures": failures}
+                progress(
+                    int(index / total * 100),
+                    f"{label} {index}/{total} تمام شد",
+                )
+        return {
+            "provider": provider,
+            "requested": len(ids),
+            "published": len(results),
+            "failed": len(failures),
+            "results": results,
+            "failures": failures,
+        }
 
     def publish_site_then_instagram(self, product_ids, *, progress=None) -> dict[str, Any]:
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})

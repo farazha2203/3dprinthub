@@ -1,3 +1,16 @@
+## 2026-09-18 — Phase50.A.2L owner QA local acceptance complete / exact candidate next
+- Current development branch: `wip/phase50-a2l-owner-qa-20260917`; this slice extends the accepted A2K baseline without changing Production.
+- Product Wizard Stage 3 now uses 2 large columns, always-on vertical scrolling and row-height expansion; canonical Product #628 resolves 10 real local Product images, so the owner screenshot showing only two cards is confirmed as an older running Qt process.
+- Source-image recovery preserves operator commerce/SEO decisions, filters MakerWorld avatars/store assets, maps distinct page images and displays real downloaded files.
+- Filament `Sync همه با سایت` is fail-soft per row; incomplete legacy identities are reported while valid rows continue. Single-row edit remains, plus selected/all-active bulk edit for print-hour, supervision and all preheat fields.
+- Smart Profile material selection exposes an explicit auto-select action; decorative/display products default conservatively to PLA/PETG and do not auto-select PA12-CF/PLA-CF without matching evidence.
+- AI production Preview reads source/link + saved Product images and can propose approximate dimensions/weight/print time; nothing is persisted before operator confirmation and existing operator values are preserved.
+- Real Buffer/Instagram secure gate PASS from Windows Credential Store; configured Instagram channel is connected/unlocked. Feed keeps all verified media (5 means 5), tracked Product URL, SEO copy/alt/hashtags and companion Story link. Highlight assignment remains operator-required on the current Buffer contract.
+- Manual bank transfer uses existing Store models: Pasargad / owner-approved card details are seeded only by explicit `--apply`; receipt upload enters admin review and operator notification fans out to Telegram/WhatsApp/Email where configured.
+- Local acceptance: Catalog scoped 55/55 PASS; Store/checkout 11/11 PASS; manual-payment 4/4 PASS; `git diff --check`, changed-file compile, Django check/no model drift and `RUN_QT.ps1 -VerifyOnly` PASS. ERR-49-156/157 record repaired stale Store fixtures and the unsuitable historical broad-discovery harness.
+- Production remains blocked by ERR-49-154 until dedicated `127.0.0.1:22024` reverse tunnel, Host identity, backup/rollback and readiness gates are restored. No card seed or A2L deploy has been applied to Production.
+- Exact next: commit/push exact A2L candidate -> verify remote SHA -> close the old Qt window -> relaunch exact pushed SHA -> Product #628 visual/runtime check -> recover tunnel -> Production backup/readiness -> deploy from GitHub -> apply manual-payment seed -> public checkout/receipt/admin-notification verification.
+
 ## 2026-09-17 — Phase50.A.2K local/release accepted; Production transport blocked
 - Owner-requested full Hero replacement is implemented with the exact vendored Tympanus/Codrops Slicebox v1.1.0 engine; legacy A2I/A2J public CSS/JS and Hero-only runners are removed.
 - Redundant Product filament gallery is removed; the four-step order wizard now shows material description/applications/examples.

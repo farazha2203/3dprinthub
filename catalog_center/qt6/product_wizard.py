@@ -141,6 +141,7 @@ class ProductWizardPage(QWidget):
         self._pending_ai_request: dict[str, Any] | None = None
         self._pending_ai_quote: dict[str, Any] | None = None
         self._image_worker: Worker | None = None
+        self._production_estimate_worker: Worker | None = None
         self._publish_worker: Worker | None = None
 
         root = QVBoxLayout(self)
@@ -360,6 +361,10 @@ class ProductWizardPage(QWidget):
                 button.setProperty("primary", True)
             button.clicked.connect(callback)
             profile_actions.addWidget(button)
+        ai_estimate = QPushButton("AI تخمین تولید (Preview)")
+        ai_estimate.setToolTip("Source/Link و عکس‌های محصول برای تخمین تقریبی ابعاد، وزن و زمان چاپ خوانده می‌شوند؛ Preview بدون تأیید شما چیزی را ذخیره نمی‌کند.")
+        ai_estimate.clicked.connect(self._estimate_production_ai)
+        profile_actions.addWidget(ai_estimate)
         profile_actions.addStretch(1)
         layout.addLayout(profile_actions)
         self.stack.addWidget(page)
@@ -367,8 +372,8 @@ class ProductWizardPage(QWidget):
     def _build_stage3(self) -> None:
         page, layout = _frame(
             "۳. تصاویر محصول",
-            "گالری تصویری چهارستونه مانند نسخه بالغ قبلی؛ انتخاب/حذف گروهی، تصویر اصلی، "
-            "تصویر اسلایدر، اندازه/حجم، SEO تکی/گروهی و بازیابی تصاویر در همین مرحله.",
+            "گالری دو ستونه بزرگ و اسکرول‌پذیر؛ انتخاب/حذف گروهی، تصویر اصلی، "
+            "تصویر اسلایدر، اندازه/حجم، SEO تکی/گروهی و بازیابی همه تصاویر در همین مرحله.",
         )
 
         control = QFrame()
@@ -441,10 +446,12 @@ class ProductWizardPage(QWidget):
         layout.addWidget(self.image_task_status)
 
         self.image_grid = ProductImageGrid(
-            columns=3,
+            columns=2,
             large_cards=True,
         )
-        self.image_grid.setMinimumHeight(470)
+        self.image_grid.setMinimumHeight(560)
+        self.image_grid.scroll.verticalScrollBar().setSingleStep(72)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(420)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])
@@ -801,9 +808,9 @@ class ProductWizardPage(QWidget):
         source_count = self.kernel.images.source_image_count(row)
         source_only = max(0, source_count - local_count)
         self.image_task_status.setText(
-            f"{local_count} \u0641\u0627\u06cc\u0644 \u0645\u062d\u0644\u06cc \u0642\u0627\u0628\u0644 \u0646\u0645\u0627\u06cc\u0634 ? "
-            f"{source_count} \u0644\u06cc\u0646\u06a9 \u062a\u0635\u0648\u06cc\u0631 \u0645\u0646\u0628\u0639 ? "
-            f"{source_only} \u0628\u062f\u0648\u0646 \u0641\u0627\u06cc\u0644 Local"
+            f"{local_count} فایل محلی قابل نمایش • "
+            f"{source_count} لینک تصویر منبع • "
+            f"{source_only} بدون فایل Local"
         )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
@@ -1441,6 +1448,140 @@ class ProductWizardPage(QWidget):
             return
         self._reload_profiles()
         self._refresh_stage_statuses()
+
+    def _estimate_production_ai(self) -> None:
+        if self.product_id is None:
+            QMessageBox.warning(self, "تخمین تولید", "ابتدا محصول را انتخاب کن.")
+            return
+        if self._production_estimate_worker is not None:
+            QMessageBox.information(self, "تخمین تولید", "یک تخمین در حال اجرا است.")
+            return
+        mode = str(self.ai_source.currentData() or "data")
+        answer = QMessageBox.question(
+            self, "تخمین تقریبی تولید با AI",
+            "AI منبع/لینک و عکس‌های محصول را برای تخمین تقریبی ابعاد، وزن و زمان چاپ می‌خواند. "
+            "خروجی فقط Preview است و تا تأیید شما روی Profile اعمال نمی‌شود. ادامه؟",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        product_id = int(self.product_id)
+        self.ai_status.setText("AI در حال تخمین مشخصات تولید…")
+
+        def job(progress):
+            progress(10, "خواندن Source و تصاویر")
+            result = self.kernel.providers.estimate_product_production(product_id, mode)
+            progress(100, "Preview آماده شد")
+            return result
+
+        worker = Worker(job)
+        self._production_estimate_worker = worker
+        worker.signals.progress.connect(lambda value, message: self.ai_status.setText(f"{value}% • {message}"))
+        worker.signals.result.connect(self._production_estimate_ready)
+        worker.signals.error.connect(self._production_estimate_error)
+        worker.signals.finished.connect(self._production_estimate_finished)
+        self.task_pool.start(worker)
+
+    def _production_estimate_ready(self, result=None) -> None:
+        estimate = dict(result or {})
+        dims = tuple(float(estimate.get(key) or 0) for key in ("length_cm", "width_cm", "height_cm"))
+        assumptions = [str(x).strip() for x in estimate.get("assumptions") or [] if str(x).strip()]
+        materials = [str(x).strip() for x in estimate.get("recommended_materials") or [] if str(x).strip()]
+        lines = [
+            "این مقادیر تقریبی‌اند و قبل از ذخیره باید بررسی شوند.",
+            f"ابعاد: {dims[0]:g} × {dims[1]:g} × {dims[2]:g} cm",
+            f"وزن: {float(estimate.get('weight_grams') or 0):g} g",
+            f"زمان چاپ: {int(estimate.get('print_minutes') or 0)} دقیقه",
+            f"Confidence: {estimate.get('confidence') or 'low'}",
+            f"Provider/Model: {estimate.get('provider') or '?'} / {estimate.get('model') or '?'}",
+            f"تصاویر بررسی‌شده: {int(estimate.get('image_count') or 0)}",
+        ]
+        evidence = str(estimate.get("evidence_summary") or "").strip()
+        if evidence:
+            lines.append("شواهد/منبع: " + evidence)
+        if materials:
+            lines.append("متریال پیشنهادی AI: " + "، ".join(materials))
+        if assumptions:
+            lines.append("فرضیات: " + " | ".join(assumptions[:8]))
+        lines.append("\nاعمال فقط فیلدهای خالی Profile را پر می‌کند؛ مقادیر ثبت‌شده اپراتور حفظ می‌شوند و انتخاب متریال از Rule سازگاری Catalog می‌آید.")
+        answer = QMessageBox.question(
+            self, "Preview تخمین تولید", "\n".join(lines) + "\n\nاین Preview اعمال شود؟",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            self.ai_status.setText("Preview AI بدون تغییر ذخیره نشد.")
+            return
+        try:
+            changed = self._apply_production_estimate(estimate)
+        except Exception as exc:
+            QMessageBox.warning(self, "اعمال تخمین تولید", str(exc))
+            return
+        self.load_product(int(self.product_id))
+        self.ai_status.setText(f"✅ تخمین تولید روی {changed} مقدار خالی اعمال شد")
+
+    def _apply_production_estimate(self, estimate: dict[str, Any]) -> int:
+        if self.product_id is None:
+            return 0
+        product_id = int(self.product_id)
+        profiles = [dict(item) for item in self.kernel.commerce.profiles(product_id)]
+        recommendation = self.kernel.commerce.recommend_materials(product_id, self.kernel.filaments.list())
+        allowed = {str(x).strip().casefold() for x in recommendation.get("materials") or []}
+        offers = [dict(item) for item in self.kernel.filaments.list() if str(item.get("material") or item.get("material_name") or "").strip().casefold() in allowed]
+        length = float(estimate.get("length_cm") or 0); width = float(estimate.get("width_cm") or 0); height = float(estimate.get("height_cm") or 0)
+        weight = float(estimate.get("weight_grams") or 0); minutes = int(estimate.get("print_minutes") or 0)
+        changed = 0
+        profile_had_dimensions = bool(
+            profiles
+            and all(
+                float(profiles[0].get(key) or 0) > 0
+                for key in ("part_length_cm", "part_width_cm", "part_height_cm")
+            )
+        )
+        if not profiles:
+            profile = {
+                "name": "پروفایل AI - نیازمند بازبینی", "size_label": "تقریبی",
+                "part_length_cm": length, "part_width_cm": width, "part_height_cm": height,
+                "production_rows": [{"weight_grams": weight, "support_weight_grams": 0, "print_time_minutes": minutes}],
+                "material_options": offers, "pricing_strategy": "dynamic",
+            }
+            self.kernel.commerce.save_profiles(product_id, [profile])
+            changed = sum(1 for value in (length, width, height, weight, minutes) if value > 0) + (1 if offers else 0)
+        else:
+            first = profiles[0]
+            for key, value in (("part_length_cm", length), ("part_width_cm", width), ("part_height_cm", height)):
+                if value > 0 and float(first.get(key) or 0) <= 0:
+                    first[key] = value; changed += 1
+            rows = [dict(item) for item in first.get("production_rows") or [] if isinstance(item, dict)]
+            if not rows:
+                rows = [{"weight_grams": 0, "support_weight_grams": 0, "print_time_minutes": 0}]
+            if weight > 0 and float(rows[0].get("weight_grams") or 0) <= 0:
+                rows[0]["weight_grams"] = weight; changed += 1
+            if minutes > 0 and int(rows[0].get("print_time_minutes") or 0) <= 0:
+                rows[0]["print_time_minutes"] = minutes; changed += 1
+            first["production_rows"] = rows
+            if not first.get("material_options") and offers:
+                first["material_options"] = offers; changed += 1
+            profiles[0] = first
+            if changed:
+                self.kernel.commerce.save_profiles(product_id, profiles)
+        if (
+            not profile_had_dimensions
+            and not self.dimensions.text().strip()
+            and all(value > 0 for value in (length, width, height))
+        ):
+            self.dimensions.setText(f"{length:g} × {width:g} × {height:g} cm")
+            self._save_stage2()
+            changed += 1
+        return changed
+
+    def _production_estimate_error(self, detail: str) -> None:
+        self.ai_status.setText("❌ تخمین تولید AI ناموفق")
+        show_diagnostic_error(self, "خطای تخمین تولید AI", detail, context={"product_id": self.product_id, "source_mode": str(self.ai_source.currentData() or "")})
+
+    def _production_estimate_finished(self) -> None:
+        self._production_estimate_worker = None
 
     def _sync_slider_from_image_grid(self, url: str) -> None:
         if hasattr(self, "slider_image"):

@@ -54,7 +54,7 @@ from app.phase49_3i36_stage_finalization import (
     stage_locks,
 )
 from app.phase49_3i39_professional_commerce import pricing_summary_range, validate_profile_identity
-from app.phase49_3i37_seven_stage_ai import AI_SOURCE_MODES, orchestrate_once
+from app.phase49_3i37_seven_stage_ai import AI_SOURCE_MODES, orchestrate_once, resolve_source
 from app.phase49_3f_gemini_provider import install as install_google_provider
 from app.runtime_paths import data_root
 from app.secure_secrets import (
@@ -2418,6 +2418,103 @@ class ProviderCore:
             target_stages=stages,
             refresh_existing=bool(refresh_existing),
         )
+
+    def estimate_product_production(
+        self,
+        product_id: int,
+        mode: str = "data",
+    ) -> dict[str, Any]:
+        """Preview-only AI estimate from source facts and up to five product images."""
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        proxy = SimpleNamespace(db=self.db, DATA=data_root())
+        provider, key, model = active_ai_config(proxy, require_key=True)
+        source = resolve_source(proxy, row, mode, provider, key, model)
+        data = _row_dict(row)
+        image_urls = []
+        for field in ("selected_images_json", "images_json"):
+            for value in _json_list(data.get(field, "[]")):
+                url = str(value or "").strip()
+                if url.startswith(("https://", "http://")) and url not in image_urls:
+                    image_urls.append(url)
+                if len(image_urls) >= 5:
+                    break
+            if len(image_urls) >= 5:
+                break
+        facts = {
+            "source_url": str(source.get("source_url") or data.get("source_url") or ""),
+            "source_title": str(source.get("source_title") or data.get("source_title") or ""),
+            "source_description": str(source.get("source_description") or data.get("source_description") or ""),
+            "source_specs": _json_dict(data.get("source_specs_json", "{}")),
+            "source_print_profiles": _json_list(data.get("source_print_profiles_json", "[]")),
+            "source_category": str(data.get("source_category") or ""),
+            "existing_weight_grams": _number(data.get("estimated_weight_grams"), 0),
+            "existing_print_minutes": _integer(data.get("estimated_print_minutes"), 0),
+            "image_urls": image_urls,
+        }
+        schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "length_cm": {"type": "number"},
+                "width_cm": {"type": "number"},
+                "height_cm": {"type": "number"},
+                "weight_grams": {"type": "number"},
+                "print_minutes": {"type": "integer"},
+                "confidence": {"type": "string"},
+                "evidence_summary": {"type": "string"},
+                "assumptions": {"type": "array", "items": {"type": "string"}},
+                "recommended_materials": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": [
+                "length_cm", "width_cm", "height_cm", "weight_grams",
+                "print_minutes", "confidence", "evidence_summary",
+                "assumptions", "recommended_materials",
+            ],
+        }
+        input_content = [{
+            "type": "input_text",
+            "text": json.dumps(facts, ensure_ascii=False, default=str),
+        }]
+        for url in image_urls:
+            input_content.append({"type": "input_image", "image_url": url, "detail": "auto"})
+        client = AIProviderClient(provider, key, model, product_id=product_id)
+        result, used_model = client.structured_response(
+            instructions=(
+                "Estimate production facts for a 3D-print product. Source facts win over inference. "
+                "You MAY estimate dimensions, weight and print time from the product identity, source text "
+                "and supplied images when the provider can inspect them, but estimates must be conservative. "
+                "Use 0 when no defensible estimate is possible. confidence must be low, medium or high. "
+                "List every assumption. recommended_materials are suggestions only, not facts."
+            ),
+            input_content=input_content,
+            schema=schema,
+            schema_name="product_production_estimate_a2l",
+            preferred_model=model,
+        )
+        def bounded_number(name: str, maximum: float) -> float:
+            return min(maximum, max(0.0, _number(result.get(name), 0)))
+        clean = {
+            "length_cm": bounded_number("length_cm", 1000),
+            "width_cm": bounded_number("width_cm", 1000),
+            "height_cm": bounded_number("height_cm", 1000),
+            "weight_grams": bounded_number("weight_grams", 100000),
+            "print_minutes": min(100000, max(0, _integer(result.get("print_minutes"), 0))),
+            "confidence": str(result.get("confidence") or "low").strip().lower(),
+            "evidence_summary": str(result.get("evidence_summary") or "").strip(),
+            "assumptions": [str(x).strip() for x in result.get("assumptions") or [] if str(x).strip()][:12],
+            "recommended_materials": [str(x).strip() for x in result.get("recommended_materials") or [] if str(x).strip()][:8],
+            "provider": provider,
+            "model": used_model,
+            "source_effective_mode": str(source.get("_effective_mode") or mode),
+            "image_count": len(image_urls),
+            "preview_only": True,
+        }
+        if clean["confidence"] not in {"low", "medium", "high"}:
+            clean["confidence"] = "low"
+        return clean
 
     def source_modes(self) -> list[dict[str, str]]:
         # Qt Product AI intentionally exposes exactly the two operator-approved

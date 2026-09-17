@@ -413,6 +413,15 @@ Next exact acceptance: one controlled Product publish from Windows Catalog Cente
 
 # CHANGELOG
 
+## 2026-09-18 — Phase50.A.2L owner QA media/filament/social/manual-payment local acceptance
+- Enlarged Product Wizard Stage 3 to a two-column, scrollable, multi-select review surface with reachable controls for 5+ images and source-link recovery.
+- Fixed source-media mapping/filtering so real Product images are displayed; Product #628 resolves 10 local MakerWorld images in the current runtime.
+- Made full Filament Site sync fail-soft and added selected/all-active bulk operating-rate edits.
+- Added conservative product-use material recommendation + explicit smart-selection UI and AI production Preview/confirm flow.
+- Preserved Site-first Buffer Instagram contract, verified live connected channel, retained all verified media, tracked Product link, companion Story and approved gold/navy profile/Highlight base asset.
+- Added dry-run-first Pasargad manual-payment seed and receipt operator notification across configured Telegram/WhatsApp/Email channels; admin review remains authoritative.
+- Repaired stale Store test fixture contracts (`post` preset collision and shipping fee signature). Scoped acceptance is green; historical broad Catalog discovery debt is tracked separately.
+
 ## 2026-09-01 — ERR-49-088 Windows PowerShell 5.1 owner-gate repair
 - fixed the Phase49.3I.47 Local runner ParserError caused by one non-ASCII Persian QA label violating the existing ASCII-only runner rule;
 - runner is now `49.3I.47.2`;

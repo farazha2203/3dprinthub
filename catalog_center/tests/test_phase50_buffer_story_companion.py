@@ -64,6 +64,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
         story_input = request.call_args_list[1].kwargs["variables"]["input"]
         self.assertEqual(story_input["metadata"]["instagram"]["type"], "story")
         self.assertFalse(story_input["metadata"]["instagram"]["shouldShareToFeed"])
+        self.assertIn("/store/product/story-demo/", story_input["metadata"]["instagram"]["link"])
         self.assertEqual(
             story_input["assets"][0]["image"]["url"],
             "https://3dprinthub.ir/media/story-card.webp",

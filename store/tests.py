@@ -104,7 +104,10 @@ class StoreCheckoutTests(TestCase):
             shipping_weight_grams=Decimal("15"),
             print_time_minutes=60,
         )
-        self.shipping = ShippingMethod.objects.create(code="post", title="پست", flat_fee=30_000)
+        self.shipping, _created = ShippingMethod.objects.update_or_create(
+            code="post",
+            defaults={"title": "پست", "flat_fee": 30_000, "is_active": True},
+        )
         self.user = get_user_model().objects.create_user(
             username="buyer",
             password="test-pass-123",
@@ -153,8 +156,8 @@ class StoreCheckoutTests(TestCase):
     def test_shipping_method_free_threshold(self):
         self.shipping.free_over = 300_000
         self.shipping.save()
-        self.assertEqual(self.shipping.calculate_fee(299_999), 30_000)
-        self.assertEqual(self.shipping.calculate_fee(300_000), 0)
+        self.assertEqual(self.shipping.calculate_fee(299_999, 0), 30_000)
+        self.assertEqual(self.shipping.calculate_fee(300_000, 0), 0)
 
     def test_out_of_stock_variant_is_not_added(self):
         self.variant.stock_status = "out_of_stock"

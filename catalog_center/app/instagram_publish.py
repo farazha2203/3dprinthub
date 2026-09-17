@@ -34,6 +34,40 @@ def _json_list(value: Any) -> list:
     return list(parsed) if isinstance(parsed, list) else []
 
 
+def _tracking_url(product_url: str, product_id: int) -> str:
+    parsed = urllib_parse.urlsplit(product_url)
+    blocked = {"utm_source", "utm_medium", "utm_campaign", "utm_content"}
+    query = [
+        (key, value)
+        for key, value in urllib_parse.parse_qsl(parsed.query, keep_blank_values=True)
+        if key.lower() not in blocked
+    ]
+    query.extend([
+        ("utm_source", "instagram"),
+        ("utm_medium", "social"),
+        ("utm_campaign", "product_catalog"),
+        ("utm_content", f"product-{int(product_id)}"),
+    ])
+    return urllib_parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, urllib_parse.urlencode(query), parsed.fragment)
+    )
+
+
+def same_public_revision_already_published(db, product_id: int, fingerprint: str) -> bool:
+    if not fingerprint:
+        return False
+    for receipt in db.sync_receipts(int(product_id), limit=80):
+        if str(receipt["status"] or "") not in {"instagram_published", "instagram_submitted"}:
+            continue
+        try:
+            previous = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            previous = {}
+        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+            return True
+    return False
+
+
 def _request_json(url: str, token: str, *, payload: dict | None = None, timeout: int = 30) -> dict:
     body = None
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
@@ -90,14 +124,16 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
             tag = text if text.startswith("#") else f"#{text}"
             if tag not in hashtags:
                 hashtags.append(tag)
+    tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
     caption_parts = [part for part in (title, description) if part]
-    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{product_url}")
+    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{tracking_url}")
     if hashtags:
         caption_parts.append(" ".join(hashtags[:24]))
     caption = "\n\n".join(caption_parts).strip()[:2200]
     alt_texts = [str(x or "").strip() for x in _json_list(row.get("image_alt_texts_json"))]
     return {
         "product_url": product_url,
+        "tracking_url": tracking_url,
         "media_urls": media[:10],
         "caption": caption,
         "alt_texts": alt_texts[:10],
@@ -190,6 +226,7 @@ def publish_product(db, product_id: int, cfg: InstagramConfig, *, site_url: str)
         "media_id": media_id,
         "creation_id": creation_id,
         "site_product_url": payload["product_url"],
+        "tracking_url": payload["tracking_url"],
         "media_urls": media_urls,
         "caption": payload["caption"],
         "site_ack_fingerprint": fingerprint,

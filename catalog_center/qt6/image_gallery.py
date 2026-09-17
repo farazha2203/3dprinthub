@@ -195,7 +195,7 @@ class ImageCard(QFrame):
 
 
 class ProductImageGrid(QWidget):
-    """Old-style visual gallery: four columns, rows continue until images end."""
+    """Scrollable Product gallery with configurable large review cards."""
 
     deleteRequested = Signal(str)
     seoRequested = Signal(str)

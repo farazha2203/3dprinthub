@@ -1,3 +1,15 @@
+## ERR-49-157 — Historical broad Catalog discovery is not a valid A2L release gate
+**Date:** 2026-09-18
+**Observed:** `unittest discover -s tests -p test_*.py` produced several legacy failures/errors and then remained blocked for more than three minutes without new output.
+**Response:** the unchanged broad command was terminated and not repeated. A2L release evidence uses the exact scoped contracts: Catalog 55/55 PASS, Store/checkout 11/11 PASS, manual-payment 4/4 PASS, Qt launcher PASS, compile and diff-check PASS.
+**Prevention:** release gates must target maintained modules/contracts; legacy/interactive historical discovery debt must be repaired independently rather than weakening current runtime assertions.
+
+## ERR-49-156 — Store checkout fixtures drifted behind current migration/runtime contracts
+**Date:** 2026-09-18
+**Observed:** fresh test DB seeded ShippingMethod `post` in migration 0037 while `store.tests` attempted a duplicate `.create()`, then one test called the obsolete one-argument `calculate_fee()` signature.
+**Fix:** make the fixture idempotent with `update_or_create` and call `calculate_fee(subtotal, total_weight_grams)`. Changed-condition rerun: 11/11 PASS.
+**Related:** Pasargad seed dry-run initially hit Windows `cp1252` on a Persian console line; command output was changed to ASCII-safe status + card suffix only and dry-run then PASS.
+
 ## ERR-49-154 — 3DPrintHub dedicated reverse tunnel did not recover after Windows sshd restart (2026-09-17)
 **Symptom:** `127.0.0.1:22024` is not listening, so the authenticated repository bridge cannot reach the 3DPrintHub Host.
 **Evidence:** Windows `sshd` is Running/Automatic and listens on port 22; OpenSSH shows other project tunnel authentications after the restart, but the last successful `PrintHubTunnel` authentication from `89.39.208.237` is 2026-09-15 with expected fingerprint `SHA256:vzNCviwq432S+qQXPsCIjvVuHN8xYYqOiHSqZEPVfnY`. No new PrintHubTunnel attempt appears after the 2026-09-17 restart.

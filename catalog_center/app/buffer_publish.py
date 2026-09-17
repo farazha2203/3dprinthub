@@ -132,7 +132,7 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
             "instagram": {
                 "type": "post",
                 "shouldShareToFeed": True,
-                "link": payload["product_url"],
+                "link": payload["tracking_url"],
             }
         },
     }
@@ -154,6 +154,7 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
         "provider": "buffer",
         "provider_post_id": post_id,
         "site_product_url": payload["product_url"],
+        "tracking_url": payload["tracking_url"],
         "media_urls": list(payload["media_urls"]),
         "caption": payload["caption"],
         "site_ack_fingerprint": fingerprint,
@@ -229,6 +230,7 @@ def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_ur
                 "type": "story",
                 "shouldShareToFeed": False,
                 "isAiGenerated": ai_generated,
+                "link": payload.get("tracking_url") or payload["product_url"],
             }
         },
     }
@@ -288,4 +290,3 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, co
         except Exception:
             pass
     return feed
-

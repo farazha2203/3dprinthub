@@ -93,3 +93,8 @@ transfer/
 
 # Local Buffer API credential handoff (never commit)
 /buffer-ker.txt
+
+# Local browser/Instagram QA evidence (may contain session/history data)
+/.instagram-cdp-profile/
+/instagram-assets/
+/_tmp_*
