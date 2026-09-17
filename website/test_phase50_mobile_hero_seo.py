@@ -10,23 +10,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Phase50MobileHeroContractTests(SimpleTestCase):
-    def test_standalone_hero_owns_mobile_behavior_without_legacy_override(self):
+    def test_reference_slicebox_owns_mobile_behavior_without_legacy_override(self):
         template = (ROOT / "templates" / "website" / "partials" / "hero.html").read_text(encoding="utf-8")
-        self.assertIn("phase50-a2j-slicebox-hero.css", template)
-        self.assertIn("phase50-a2j-slicebox-hero.js", template)
+        self.assertIn("phase50-a2k-tympanus-slicebox.css", template)
+        self.assertIn("phase50-a2k-tympanus-slicebox.js", template)
+        self.assertIn("vendor/slicebox/css/slicebox.css", template)
+        self.assertNotIn("phase50-a2j-slicebox-hero", template)
         self.assertNotIn("phase50-mobile-hero.css", template)
         self.assertNotIn("phase49_3b-hero-media.css", template)
-
-    def test_mobile_caption_is_compact_and_small_phone_hides_description(self):
-        css = (ROOT / "static" / "css" / "phase50-a2j-slicebox-hero.css").read_text(encoding="utf-8")
+    def test_mobile_caption_is_compact_and_description_is_hidden(self):
+        css = (ROOT / "static" / "css" / "phase50-a2k-tympanus-slicebox.css").read_text(encoding="utf-8")
         self.assertIn("@media (max-width: 720px)", css)
-        self.assertIn("max-height: 42svh", css)
-        self.assertIn("font-size: clamp(1.3rem, 6.2vw, 2rem)", css)
-        self.assertIn("@media (max-width: 420px)", css)
-        self.assertIn(".p50j-hero__description", css)
+        self.assertIn(".p50k-slicebox .sb-description p", css)
         self.assertIn("display: none", css)
-
-
+        self.assertIn("padding: 0 12px", css)
 class Phase50HomepageSeoAdminTests(TestCase):
     def test_existing_site_setting_is_extended_not_replaced(self):
         model_admin = admin.site._registry[SiteSetting]

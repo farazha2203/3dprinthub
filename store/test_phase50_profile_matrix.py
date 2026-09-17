@@ -232,6 +232,8 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(meta["final_weight_grams"], "300.00")
         self.assertEqual(meta["unit_price"], 850000)
         self.assertEqual(meta["part_dimensions_label"], "30 × 30 × 10 سانتی‌متر")
+        self.assertEqual(meta["material_main_usage"], "test")
+        self.assertEqual(meta["material_sample_parts"], "test")
 
     def test_brand_aware_filament_offer_sync_support_weight_and_api(self):
         rows = self._profiles()[:1]

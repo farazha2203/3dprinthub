@@ -62,22 +62,22 @@ class Phase49_2CHeroStudioContractTests(SimpleTestCase):
         self.assertIn(".p49c-gallery", css)
         self.assertIn(".p49c-edit-link", css)
 
-    def test_frontend_preserves_slide_timing_while_a2j_owns_public_transition(self):
+    def test_frontend_keeps_managed_copy_but_original_slicebox_owns_public_transition(self):
         hero = self.read("templates/website/partials/hero.html")
-        self.assertIn("data-p50j-slicebox", hero)
-        self.assertIn("slide.transition_duration_ms", hero)
-        self.assertIn("slide.display_duration_ms", hero)
-        self.assertIn("phase50-a2j-slicebox-hero.css", hero)
-        self.assertIn("phase50-a2j-slicebox-hero.js", hero)
-        self.assertNotIn("data-p49c-engine", hero)
-        self.assertNotIn("phase49_2c-home-hero.js", hero)
+        self.assertIn("data-p50k-slicebox", hero)
+        self.assertIn('id="sb-slider"', hero)
+        self.assertIn("slide.effective_title", hero)
+        self.assertIn("slide.effective_description", hero)
+        self.assertIn("phase50-a2k-tympanus-slicebox.css", hero)
+        self.assertIn("phase50-a2k-tympanus-slicebox.js", hero)
+        self.assertNotIn("data-p50j", hero)
+        self.assertNotIn("phase50-a2j-slicebox-hero", hero)
 
-        engine = self.read("static/js/phase50-a2j-slicebox-hero.js")
-        self.assertIn("displayDuration", engine)
-        self.assertIn("transitionDuration", engine)
-        self.assertIn("setTimeout", engine)
-        self.assertNotIn("setInterval", engine)
-
+        engine = self.read("static/vendor/slicebox/js/jquery.slicebox.js")
+        self.assertIn("jquery.slicebox.js v1.1.0", engine)
+        self.assertIn("Licensed under the MIT license", engine)
+        self.assertIn("cuboidsRandom", engine)
+        self.assertIn("disperseFactor", engine)
     def test_all_cinematic_effects_and_accessibility_fallback_are_present(self):
         runtime = self.read("website/phase49_2c_hero_studio.py")
         styles = self.read("static/css/phase49_2c-hero-effects.css")

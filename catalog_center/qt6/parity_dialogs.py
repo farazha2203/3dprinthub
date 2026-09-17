@@ -793,6 +793,12 @@ class ProfileEditorDialog(QDialog):
         filament_layout.addWidget(self.filament_table)
 
         filament_actions = QHBoxLayout()
+        select_all_filaments = QPushButton("انتخاب همه فیلامنت‌ها")
+        clear_all_filaments = QPushButton("لغو انتخاب همه")
+        select_all_filaments.clicked.connect(lambda: self._set_all_filaments_checked(True))
+        clear_all_filaments.clicked.connect(lambda: self._set_all_filaments_checked(False))
+        filament_actions.addWidget(select_all_filaments)
+        filament_actions.addWidget(clear_all_filaments)
         self.edit_filament_btn = QPushButton(
             "ویرایش قیمت / موجودی / هزینه‌های فیلامنت انتخابی"
         )
@@ -998,6 +1004,14 @@ class ProfileEditorDialog(QDialog):
             )
         return rows
 
+    def _set_all_filaments_checked(self, checked: bool) -> None:
+        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+        for row in range(self.filament_table.rowCount()):
+            item = self.filament_table.item(row, 0)
+            if item is not None:
+                item.setCheckState(state)
+        self._refresh_summary()
+
     def _selected_filaments(self) -> list[dict[str, Any]]:
         output: list[dict[str, Any]] = []
         for row in range(self.filament_table.rowCount()):
@@ -1063,7 +1077,7 @@ class ProfileEditorDialog(QDialog):
             _offer_key(item): dict(item)
             for item in self._selected_filaments()
         }
-        dialog = FilamentEditorDialog(offer, parent=self)
+        dialog = FilamentEditorDialog(offer, parent=self, filament_core=self.filament_core)
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
 

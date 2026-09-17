@@ -62,25 +62,22 @@ class Phase493BHeroMediaContractTests(SimpleTestCase):
         ):
             self.assertIn(name, flattened)
 
-    def test_public_hero_carries_media_contract_into_standalone_slicebox(self):
+    def test_public_hero_does_not_reintroduce_superseded_custom_media_background_contract(self):
         hero = self.read("templates/website/partials/hero.html")
-        css = self.read("static/css/phase50-a2j-slicebox-hero.css")
+        css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
+        self.assertIn('class="sb-slider"', hero)
+        self.assertIn('class="sb-description"', hero)
         for token in (
-            "slide.presentation_mode",
             "slide.background_color",
             "slide.background_blur_px",
             "slide.image_position_x_percent",
             "slide.image_scale_percent",
-            "slide.desktop_max_width_percent",
-            "slide.mobile_max_height_percent",
+            "--p50j-fit",
+            "--p50j-mobile-w",
         ):
-            self.assertIn(token, hero)
-        self.assertIn("--p50j-fit", hero)
-        self.assertIn("--p50j-mobile-w", css)
-        self.assertIn("--p50j-desktop-w", css)
-        self.assertIn("var(--p50j-fit, cover)", css)
-
-
+            self.assertNotIn(token, hero)
+        self.assertIn("fancy_deboss.png", css)
+        self.assertNotIn("p50j-hero", css)
 class Phase493BHeroMediaBehaviorTests(TestCase):
     @classmethod
     def setUpTestData(cls):

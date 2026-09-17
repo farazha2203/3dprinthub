@@ -16,7 +16,7 @@ from app.db import Database
 from qt6.image_gallery import ProductImageGrid
 from qt6.kernel import build_kernel
 from qt6.pages import FilamentsPage, OperationsPage
-from qt6.parity_dialogs import FilamentEditorDialog
+from qt6.parity_dialogs import FilamentEditorDialog, ProfileEditorDialog
 from qt6.product_wizard import ProductWizardPage
 
 
@@ -343,6 +343,8 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             "PLA",
             "توضیح متریال سایت",
             1_450_000,
+            "\u0646\u0645\u0648\u0646\u0647\u200c\u0633\u0627\u0632\u06cc \u0648 \u0642\u0637\u0639\u0627\u062a \u0639\u0645\u0648\u0645\u06cc",
+            "\u0645\u0627\u06a9\u062a\u060c \u0627\u0633\u062a\u0646\u062f \u0648 \u0646\u0638\u0645\u200c\u062f\u0647\u0646\u062f\u0647",
         )
         self.kernel.filaments.save_brand(
             "Bambu Lab",
@@ -379,6 +381,8 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         self.assertEqual(payload["material"], "PLA")
         self.assertEqual(payload["material_description"], "توضیح متریال سایت")
         self.assertEqual(payload["material_price_per_kg"], 1_450_000)
+        self.assertTrue(payload["material_main_usage"])
+        self.assertTrue(payload["material_sample_parts"])
         self.assertEqual(payload["brand_description"], "توضیح برند سایت")
         self.assertEqual(payload["description"], "توضیح خود Filament")
         self.assertEqual(payload["palette_hexes"], ["#112233", "#445566"])
@@ -560,6 +564,61 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             self.assertEqual(page.source.currentData(), "makerworld")
             self.assertIsNotNone(page.live_results)
             self.assertGreaterEqual(page.live_results.minimumHeight(), 210)
+        finally:
+            page.close()
+
+
+    def test_material_default_guide_is_case_insensitive_and_has_usage(self):
+        self.kernel.filaments.save_material("pla")
+        self.kernel.filaments.save_material("petg")
+        records = {str(row["name"]).casefold(): row for row in self.kernel.filaments.material_records()}
+        for key in ("pla", "petg"):
+            self.assertTrue(str(records[key].get("description") or "").strip())
+            self.assertTrue(str(records[key].get("main_usage") or "").strip())
+            self.assertTrue(str(records[key].get("sample_parts") or "").strip())
+
+    def test_profile_editor_supports_select_all_clear_all_and_registered_brand_edit_context(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Brand Alpha")
+        self.kernel.filaments.save_brand("Brand Beta")
+        self._save_filament("PLA", "Brand Alpha", "Black")
+        self._save_filament("PLA", "Brand Beta", "White")
+        dialog = ProfileEditorDialog(
+            self.kernel.filaments.list(),
+            filament_core=self.kernel.filaments,
+        )
+        try:
+            dialog._set_all_filaments_checked(True)
+            self.assertEqual(len(dialog._selected_filaments()), 2)
+            dialog._set_all_filaments_checked(False)
+            self.assertEqual(dialog._selected_filaments(), [])
+            editor = FilamentEditorDialog(
+                self.kernel.filaments.list()[0],
+                parent=dialog,
+                filament_core=dialog.filament_core,
+            )
+            try:
+                self.assertGreaterEqual(editor.brand_library.findData("Brand Alpha"), 0)
+                self.assertGreaterEqual(editor.brand_library.findData("Brand Beta"), 0)
+                self.assertGreaterEqual(editor.material_library.findData("PLA"), 0)
+            finally:
+                editor.close()
+        finally:
+            dialog.close()
+
+    def test_material_registry_exposes_usage_and_sample_columns(self):
+        self.kernel.filaments.save_material("PLA")
+        page = FilamentsPage(self.db, kernel=self.kernel)
+        try:
+            headers = [
+                page.material_table.horizontalHeaderItem(i).text()
+                for i in range(page.material_table.columnCount())
+            ]
+            self.assertEqual(page.material_table.columnCount(), 5)
+            self.assertIn("\u06a9\u0627\u0631\u0628\u0631\u062f\u0647\u0627", headers)
+            self.assertIn("\u0646\u0645\u0648\u0646\u0647 \u0642\u0637\u0639\u0627\u062a", headers)
+            self.assertTrue(page.material_table.item(0, 3).text().strip())
+            self.assertTrue(page.material_table.item(0, 4).text().strip())
         finally:
             page.close()
 

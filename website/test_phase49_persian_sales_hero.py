@@ -98,14 +98,13 @@ class Phase49PersianSalesHeroTests(SimpleTestCase):
         self.assertIn("خرید", resolved["focus_keyword"])
         self.assertTrue(safe_persian_text(resolved["meta_description"]))
 
-    def test_template_keeps_full_text_and_standalone_css_clamps_responsively(self):
+    def test_template_keeps_full_text_inside_reference_slicebox_caption(self):
         root = Path(settings.BASE_DIR)
         template = (root / "templates/website/partials/hero.html").read_text(encoding="utf-8")
-        css = (root / "static/css/phase50-a2j-slicebox-hero.css").read_text(encoding="utf-8")
+        css = (root / "static/css/phase50-a2k-tympanus-slicebox.css").read_text(encoding="utf-8")
         self.assertIn("slide.effective_description", template)
-        self.assertIn('class="p50j-hero__description"', template)
-        self.assertIn("-webkit-line-clamp: 3", css)
-        self.assertIn("-webkit-line-clamp: 2", css)
-        self.assertIn("overflow: hidden", css)
+        self.assertIn('class="sb-description"', template)
+        self.assertIn(".sb-description p", css)
+        self.assertIn("@media (max-width: 720px)", css)
         self.assertNotIn("data-p49c-description", template)
         self.assertNotIn("phase49_2c-home-hero.js", template)

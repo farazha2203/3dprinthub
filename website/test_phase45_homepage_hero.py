@@ -27,27 +27,27 @@ class Phase45HomepageHeroContractTests(SimpleTestCase):
         self.assertIn("homepage_hero_slides", hero)
         self.assertNotIn("hero_model_slider", hero)
 
-    def test_fullscreen_and_mobile_contract_is_owned_by_new_hero(self):
-        css = self.read("static/css/phase50-a2j-slicebox-hero.css")
-        self.assertIn("100svh", css)
-        self.assertIn("--p50j-header-height", css)
-        self.assertIn("--p50j-fit", css)
+    def test_reference_slicebox_component_and_mobile_contract_is_current(self):
+        css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
+        vendor = self.read("static/vendor/slicebox/css/slicebox.css")
+        self.assertIn("max-width: 840px", css)
+        self.assertIn("fancy_deboss.png", css)
         self.assertIn("@media (max-width: 720px)", css)
-
+        self.assertIn(".sb-perspective", vendor)
+        self.assertIn("transform-style: preserve-3d", vendor)
     def test_fixed_site_intro_is_below_new_slider_and_h1_is_preserved(self):
         hero = self.read("templates/website/partials/hero.html")
-        self.assertLess(hero.index('class="p50j-hero"'), hero.index('class="p45-intro"'))
+        self.assertLess(hero.index('class="p50k-slicebox"'), hero.index('class="p45-intro"'))
         self.assertEqual(hero.count("<h1"), 1)
         self.assertIn("home-intro-title", hero)
-        self.assertIn("ثبت سفارش ساخت قطعه", hero)
-
+        self.assertIn("<h1 id=\"home-intro-title\">", hero)
     def test_first_approved_slide_is_preloaded_for_lcp(self):
         index = self.read("templates/website/index.html")
         hero = self.read("templates/website/partials/hero.html")
         self.assertIn("homepage_hero_slides.0.effective_image_url", index)
         self.assertIn("phase45-home-hero.css", index)  # intro foundation remains
         self.assertNotIn("phase45-home-hero.js", index)
-        self.assertIn("phase50-a2j-slicebox-hero.js", hero)
+        self.assertIn("phase50-a2k-tympanus-slicebox.js", hero)
 
     def test_admin_image_picker_assets_are_installed(self):
         admin_py = self.read("website/admin.py")
