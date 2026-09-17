@@ -45,7 +45,8 @@ class Phase45HomepageHeroContractTests(SimpleTestCase):
         css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
         vendor = self.read("static/vendor/slicebox/css/slicebox.css")
         self.assertIn("max-width: 840px", css)
-        self.assertIn("fancy_deboss.png", css)        self.assertIn("@media (max-width: 720px)", css)
+        self.assertIn("fancy_deboss.png", css)
+        self.assertIn("@media (max-width: 720px)", css)
         self.assertIn(".sb-perspective", vendor)
         self.assertIn("transform-style: preserve-3d", vendor)
     def test_fixed_site_intro_is_below_new_slider_and_h1_is_preserved(self):
