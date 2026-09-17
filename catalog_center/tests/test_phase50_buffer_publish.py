@@ -67,6 +67,10 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(create_input["mode"], "shareNow")
         self.assertEqual(create_input["schedulingType"], "automatic")
         self.assertEqual(create_input["channelId"], "chan-1")
+        self.assertEqual(
+            create_input["metadata"]["instagram"]["link"],
+            "https://3dprinthub.ir/store/product/demo/",
+        )
         self.assertTrue(
             create_input["assets"][0]["image"]["url"].startswith("https://3dprinthub.ir/")
         )

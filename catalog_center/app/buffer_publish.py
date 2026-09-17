@@ -128,7 +128,13 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
         "saveToDraft": False,
         "source": "3dprinthub-windows",
         "assets": assets,
-        "metadata": {"instagram": {"type": "post", "shouldShareToFeed": True}},
+        "metadata": {
+            "instagram": {
+                "type": "post",
+                "shouldShareToFeed": True,
+                "link": payload["product_url"],
+            }
+        },
     }
     response = _request_graphql(token, _CREATE_POST_MUTATION, variables={"input": create_input}, timeout=cfg.timeout)
     result = response.get("createPost")
