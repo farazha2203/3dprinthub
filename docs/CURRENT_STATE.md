@@ -1,3 +1,11 @@
+## 2026-09-17 — Phase50.A.2K local/release accepted; Production transport blocked
+- Owner-requested full Hero replacement is implemented with the exact vendored Tympanus/Codrops Slicebox v1.1.0 engine; legacy A2I/A2J public CSS/JS and Hero-only runners are removed.
+- Redundant Product filament gallery is removed; the four-step order wizard now shows material description/applications/examples.
+- Windows Catalog Product/Profile filament UX now supports Select All/Clear All and central Filament edit with registered Brand/Material/Color libraries plus material applications/examples.
+- Canonical feature/GitHub: `71d34daae1571b4f46f05def91c86b1dcde173a6`; Production-based release/GitHub: `release/phase50-a2k-tympanus-20260917 @ 84d1a87c4ea632823743b9cc1c5fe3ba81b08843`.
+- Acceptance: release Django changed suites `50/50 PASS`; Windows Catalog suite `18/18 PASS`; no model changes; canonical migration plan empty; Qt launcher PASS and modern Qt window reopened.
+- Production remains unchanged at documented A2J release because dedicated `127.0.0.1:22024` tunnel is down. Windows sshd is healthy; last successful PrintHubTunnel auth is 2026-09-15. No deploy or destructive Hero DB reset has been executed.
+- Exact next: restore dedicated Host watchdog/tunnel -> Host read-only gate -> fresh DB/Hero rollback backup -> deploy exact `84d1a87...` from GitHub -> confirmed A2K Hero reset -> collectstatic/restart -> public verification.
 ## 2026-09-17 - CANONICAL QT WINDOWS RUNTIME + PRODUCTION STORE RESET / A2J RE-ACCEPTED
 
 Status: `WINDOWS_QT_LAUNCHED / STORE_EMPTY / A2J_PUBLIC_VERIFIED / PRODUCT_RESEND_READY`.

@@ -1,3 +1,9 @@
+## 2026-09-17 — Phase50.A.2K Tympanus Slicebox + Filament UX
+- Replaced the complete homepage Hero runtime with the official vendored Tympanus/Codrops Slicebox v1.1.0 engine and reference assets; removed superseded A2I/A2J runtime assets/runners.
+- Added explicit destructive Hero reset command guarded by confirmation and exact four-slide postcondition.
+- Removed redundant Product filament gallery; enriched four-step order wizard with material description, usage and examples.
+- Added Windows Product/Profile filament Select All/Clear All, central registry-backed editing and material usage/example registry fields + site sync.
+- Feature commit `71d34da...`; Production-based release `84d1a87...`; Production deploy pending dedicated tunnel recovery.
 ## 2026-09-17 - Windows Qt runtime handoff and Production Store cleanup
 - Fixed operator launch path operationally by using the repository-owned `RUN_QT.ps1` / `qt_launch.py` runtime from exact GitHub SHA `b116a27...`; only one canonical Qt v8.9.10 window remains running.
 - Preserved unrelated unfinished Social/Buffer changes on separate GitHub WIP branch `ea8a156` instead of mixing them into Product runtime.
