@@ -10,6 +10,7 @@
 - [x] Verify Production migration plan is empty.
 - [ ] Owner selects finalized Products for real publication from the Windows app; validate strict ACK, public media, Variant and Cart per Product.
 
+- [x] Final receiver gate after cleanup: publish readiness `true` with zero blockers; reset preflight blocked only because Store is already empty.
 ## 2026-09-17 - Correct Qt Windows operator launch + immediate Product entry
 - [x] Verify Local repository/branch and live GitHub are exact at pre-change `6a3a51aacdccff69a4999c4a470cb10807ceb648`.
 - [x] Preserve existing dirty Local work instead of reset/delete; archive `.tmp_*` evidence outside the repo and backup the two modified tracked files.

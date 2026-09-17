@@ -12,6 +12,7 @@ Status: `WINDOWS_QT_LAUNCHED / STORE_EMPTY / A2J_PUBLIC_VERIFIED / PRODUCT_RESEN
 - `phase50_a2j_seed_hero` dry-run and `--apply` PASS. Exactly four active safe source-backed slides remain: assets `119,120,135,136` at sort `10,20,30,40`. Public Home, A2J CSS and A2J JS are HTTP 200; raw UTF-8 decode PASS; rendered HTML has four `data-p50j-slide` and four dots with `01/04` counter and Slicebox perspective/random/sequential contract.
 - Production `migrate --plan` reports no planned migration operations. Known CKEditor / in-memory realtime / MySQL conditional-constraint warnings remain non-blocking debt.
 
+- Final post-cleanup receiver gate: `publish_ready=true`, `publish_blockers=[]`, MySQL, 13 active Materials and 5 active PrintQualities. Store-reset preflight now reports only `store_already_empty`; Product/Variant/Image/Order/InventoryMovement/linked-asset counts remain zero.
 Exact next: owner can finalize Products in the canonical Qt app and use explicit send/re-send. For every chosen Product, require current license/SEO/Profile facts, then Batch -> FTP -> Bridge strict ACK -> public media -> orderable Variant/Cart verification. Do not repopulate the Store with test Products.
 
 ## 2026-09-17 - QT WINDOWS OPERATOR RUNTIME / LEGACY-LAUNCH ROOT CAUSE RESOLVED
