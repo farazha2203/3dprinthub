@@ -90,3 +90,6 @@ phase44_reports/
 .release-staging/
 imports/
 transfer/
+
+# Local Buffer API credential handoff (never commit)
+/buffer-ker.txt

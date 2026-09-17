@@ -1072,3 +1072,11 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Verified exact-copy rollback of persistent Catalog SQLite, runtime DB path, FTP login and Bridge health.
 - No redundant A2J Production source deploy was needed because accepted Production runtime is behavior-equivalent.
 
+
+## 2026-09-17 — Buffer Instagram integration source
+- Registered Buffer as the project-preferred Instagram publishing provider after direct Meta Developer access failed by location.
+- Added `catalog_center/app/buffer_publish.py` for Buffer GraphQL channel validation and Site-first Instagram post creation.
+- Added explicit `BUFFER_API_KEY` secure-secret mapping and Git-ignore protection for the temporary `buffer-ker.txt` handoff file.
+- Added `docs/مستندات اتصال به اینستاگرام/` containing architecture, API contract, security rules, official Buffer references and safe GraphQL examples.
+- Added focused Buffer provider tests: healthy Instagram channel, `shareNow` public-media post input, and fail-closed missing-secret behavior.
+- Buffer-side Instagram login is owner-confirmed; live API transport remains pending because the local handoff file and Credential Store currently contain no Buffer API key.

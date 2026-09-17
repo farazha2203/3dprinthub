@@ -1402,3 +1402,13 @@ All 66 active Filament rows now have 1000 g roll weight, stock_roll_count=1, non
 Every one of 635 Local Products now has a canonical Sales Profile; 636 Profiles total. Every Profile contains all 64 unique selectable Filament identities (66 inventory rows include two duplicate identities that the mature Core intentionally deduplicates). Twelve Commerce locks were opened through StageCore so dimensions can be edited. Nineteen previously uploaded Products are marked `needs_update=1` for same-identity republish.
 
 Verification: Filament/Profile focused suites 34/34 PASS; Qt verify-only PASS; Catalog integrity `ok`; zero invalid/zero-price active Filament rows; zero Products without Profile. Catalog Center v8.9.10 Qt6 relaunched and responsive. No Product was published and Production DB/source was not changed by this Local policy update.
+
+## 2026-09-17 — Buffer Instagram source registered
+Status: `BUFFER_CHANNEL_CONNECTED / API_TRANSPORT_PENDING_CREDENTIAL`.
+- Owner confirmed the Instagram Professional account is connected and logged in inside Buffer.
+- Official integration source is now Buffer GraphQL API (`https://api.buffer.com`) because Meta for Developers is unavailable to the owner by location.
+- Canonical project documentation lives under `docs/مستندات اتصال به اینستاگرام/` with API contract, security rules, official sources and GraphQL examples.
+- Provider implementation is `catalog_center/app/buffer_publish.py`; Buffer secret authority is `BUFFER_API_KEY` through Windows Credential Store/environment only.
+- `buffer-ker.txt` is explicitly Git-ignored and must never be committed.
+- Current workstation verification found `buffer-ker.txt` empty (0 bytes) and no `BUFFER_API_KEY` in the secure store; therefore no live API/channel probe or real Instagram post is claimed yet.
+- Publish order remains fail-closed: Site publish -> public HTTPS Product/media verification -> Buffer -> Instagram, with duplicate-public-revision protection.
