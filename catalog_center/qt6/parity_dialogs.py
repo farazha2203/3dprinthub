@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QColorDialog,
     QComboBox,
     QDialog,
@@ -649,6 +650,72 @@ class ColorPresetDialog(QDialog):
         }
 
 
+class FilamentBulkRatesDialog(QDialog):
+    """Apply only explicitly enabled operational rates to many Filaments."""
+
+    def __init__(self, count: int, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("ویرایش گروهی هزینه و پیش‌گرم Filament")
+        self.resize(720, 430)
+        root = QVBoxLayout(self)
+        hint = QLabel(
+            f"{max(0, int(count))} Filament در این عملیات هستند. "
+            "فقط ردیف‌هایی که تیک «اعمال» دارند تغییر می‌کنند؛ هویت، رنگ، موجودی و قیمت رول دست‌نخورده می‌ماند."
+        )
+        hint.setWordWrap(True)
+        hint.setObjectName("Muted")
+        root.addWidget(hint)
+
+        grid = QGridLayout()
+        grid.addWidget(QLabel("اعمال"), 0, 0)
+        grid.addWidget(QLabel("فیلد"), 0, 1)
+        grid.addWidget(QLabel("مقدار جدید"), 0, 2)
+        self._fields: dict[str, tuple[QCheckBox, QWidget]] = {}
+
+        rows = (
+            ("print_hourly_rate", "هزینه ساعتی چاپ (تومان)", _money_spin()),
+            ("supervision_hourly_rate", "هزینه ساعتی نظارت (تومان)", _money_spin()),
+            ("preheat_hours", "مدت پیش‌گرم (ساعت)", _float_spin(240, 2, 0.25)),
+            ("preheat_temperature_c", "دمای پیش‌گرم °C", _float_spin(500, 1, 5)),
+            ("preheat_hourly_rate", "هزینه ساعتی پیش‌گرم (تومان)", _money_spin()),
+        )
+        for row_index, (key, label, widget) in enumerate(rows, 1):
+            enabled = QCheckBox()
+            enabled.toggled.connect(widget.setEnabled)
+            widget.setEnabled(False)
+            grid.addWidget(enabled, row_index, 0)
+            grid.addWidget(QLabel(label), row_index, 1)
+            grid.addWidget(widget, row_index, 2)
+            self._fields[key] = (enabled, widget)
+        root.addLayout(grid)
+        root.addStretch(1)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText("اعمال گروهی")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("انصراف")
+        buttons.accepted.connect(self._accept)
+        buttons.rejected.connect(self.reject)
+        root.addWidget(buttons)
+
+    def _accept(self) -> None:
+        if not self.values():
+            QMessageBox.warning(self, "ویرایش گروهی", "حداقل یک فیلد را برای اعمال انتخاب کن.")
+            return
+        self.accept()
+
+    def values(self) -> dict[str, Any]:
+        output: dict[str, Any] = {}
+        for key, (enabled, widget) in self._fields.items():
+            if not enabled.isChecked():
+                continue
+            if isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                output[key] = widget.value()
+        return output
+
+
 class ProfileEditorDialog(QDialog):
     """One size/profile owns many production rows and many reusable Filaments."""
 
@@ -659,9 +726,17 @@ class ProfileEditorDialog(QDialog):
         parent=None,
         *,
         filament_core=None,
+        recommended_materials: list[str] | None = None,
+        recommendation_reason: str = "",
     ) -> None:
         super().__init__(parent)
         self.filament_core = filament_core
+        self.recommended_materials = {
+            str(item or "").strip().casefold()
+            for item in (recommended_materials or [])
+            if str(item or "").strip()
+        }
+        self.recommendation_reason = str(recommendation_reason or "").strip()
         self.filaments = [dict(item) for item in filament_rows]
         self.original = normalize_ledger_profile(profile or {}, 1)
         self.setWindowTitle("پروفایل تولید و قیمت")
@@ -795,10 +870,19 @@ class ProfileEditorDialog(QDialog):
         filament_actions = QHBoxLayout()
         select_all_filaments = QPushButton("انتخاب همه فیلامنت‌ها")
         clear_all_filaments = QPushButton("لغو انتخاب همه")
+        smart_filaments = QPushButton("انتخاب هوشمند متریال مناسب محصول")
+        smart_filaments.setProperty("primary", True)
+        smart_filaments.setEnabled(bool(self.recommended_materials))
+        smart_filaments.setToolTip(
+            self.recommendation_reason
+            or "پیشنهاد بر اساس نوع/کاربرد محصول و خواص متریال‌های ثبت‌شده"
+        )
         select_all_filaments.clicked.connect(lambda: self._set_all_filaments_checked(True))
         clear_all_filaments.clicked.connect(lambda: self._set_all_filaments_checked(False))
+        smart_filaments.clicked.connect(self._select_recommended_filaments)
         filament_actions.addWidget(select_all_filaments)
         filament_actions.addWidget(clear_all_filaments)
+        filament_actions.addWidget(smart_filaments)
         self.edit_filament_btn = QPushButton(
             "ویرایش قیمت / موجودی / هزینه‌های فیلامنت انتخابی"
         )
@@ -1011,6 +1095,36 @@ class ProfileEditorDialog(QDialog):
             if item is not None:
                 item.setCheckState(state)
         self._refresh_summary()
+
+    def _select_recommended_filaments(self) -> None:
+        if not self.recommended_materials:
+            QMessageBox.information(
+                self,
+                "انتخاب هوشمند متریال",
+                "برای این محصول پیشنهاد متریال آماده نشده است.",
+            )
+            return
+        selected_count = 0
+        for row in range(self.filament_table.rowCount()):
+            item = self.filament_table.item(row, 0)
+            if item is None:
+                continue
+            offer = dict(item.data(Qt.ItemDataRole.UserRole) or {})
+            material = str(
+                offer.get("material") or offer.get("material_name") or ""
+            ).strip().casefold()
+            checked = material in self.recommended_materials
+            item.setCheckState(
+                Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+            )
+            selected_count += int(checked)
+        self._refresh_summary()
+        QMessageBox.information(
+            self,
+            "انتخاب هوشمند متریال",
+            f"{selected_count} Filament از متریال‌های مناسب انتخاب شد.\n"
+            + (self.recommendation_reason or ""),
+        )
 
     def _selected_filaments(self) -> list[dict[str, Any]]:
         output: list[dict[str, Any]] = []

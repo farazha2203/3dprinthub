@@ -2337,18 +2337,28 @@ class ApplicationKernel:
         total = len(rows)
         for index, row in enumerate(rows, 1):
             active = bool(row.pop("_site_active", row.get("is_active", True)))
-            payload = self.filaments.site_payload(row, is_active=active)
-            label = (
-                f"{payload.get('material')} / "
-                f"{payload.get('brand')} / "
-                f"{payload.get('color')}"
-            )
+            raw_material = str(row.get("material") or row.get("material_name") or "—").strip()
+            raw_brand = str(
+                row.get("brand")
+                or row.get("brand_name")
+                or row.get("manufacturer")
+                or row.get("manufacturer_name")
+                or "—"
+            ).strip()
+            raw_color = str(row.get("color") or row.get("color_name") or "—").strip()
+            label = f"{raw_material or '—'} / {raw_brand or '—'} / {raw_color or '—'}"
             if callable(progress):
                 progress(
                     int((index - 1) / max(1, total) * 100),
                     f"Sync Filament {index}/{total}: {label}",
                 )
             try:
+                payload = self.filaments.site_payload(row, is_active=active)
+                label = (
+                    f"{payload.get('material')} / "
+                    f"{payload.get('brand')} / "
+                    f"{payload.get('color')}"
+                )
                 sync_filament(
                     settings,
                     payload,
@@ -2358,6 +2368,7 @@ class ApplicationKernel:
             except Exception as exc:
                 failures.append({
                     "identity": label,
+                    "row_id": int(row.get("id") or row.get("_row_id") or 0),
                     "error": f"{type(exc).__name__}: {exc}",
                 })
             if callable(progress):

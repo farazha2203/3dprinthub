@@ -164,6 +164,51 @@ def _local_image_files(local_dir: Path) -> list[str]:
     return output
 
 
+def _page_extract_image_urls(local_dir: Path, image_limit: int) -> list[str]:
+    """Recover exact downloaded Product image URLs from the mature page map.
+
+    Some source parsers return fewer URLs than the browser actually downloaded.
+    ``page_extract.json`` is the factual URL -> local-file authority written by
+    the acquisition pipeline, so using it restores visibility without guessing.
+    Query-only thumbnail variants are deduplicated by scheme/host/path.
+    """
+    manifest = Path(local_dir) / "page_extract.json"
+    if not manifest.is_file():
+        return []
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    output: list[str] = []
+    seen_assets: set[str] = set()
+    for item in payload.get("images") or []:
+        if not isinstance(item, dict):
+            continue
+        url = str(item.get("url") or "").strip()
+        raw_file = str(item.get("local_file") or "").strip()
+        if not url or not raw_file:
+            continue
+        local_file = Path(raw_file)
+        if not local_file.is_absolute():
+            local_file = (Path(local_dir) / local_file).resolve()
+        try:
+            resolved = local_file.resolve()
+            root = Path(local_dir).resolve()
+        except Exception:
+            continue
+        if not resolved.is_file() or (resolved != root and root not in resolved.parents):
+            continue
+        parts = urlsplit(url)
+        asset_key = f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+        if asset_key in seen_assets:
+            continue
+        seen_assets.add(asset_key)
+        output.append(url)
+        if len(output) >= max(1, int(image_limit or 1)):
+            break
+    return output
+
+
 def _meaningful_source_title(value: Any, external_id: str) -> bool:
     text = " ".join(str(value or "").split()).strip()
     if len(text) < 3:
@@ -2118,6 +2163,34 @@ async def refetch_product_from_source_async(
     fresh = dict(result.get("source_payload") or {})
     if not fresh:
         raise RuntimeError("Source recovery returned no source payload.")
+
+    mapped_urls = _page_extract_image_urls(output, image_limit)
+    if mapped_urls:
+        current_urls = _json_urls(fresh.get("images_json"))
+        merged_urls: list[str] = []
+        for value in [*mapped_urls, *current_urls]:
+            if value and value not in merged_urls:
+                merged_urls.append(value)
+            if len(merged_urls) >= image_limit:
+                break
+        fresh["images_json"] = json.dumps(merged_urls, ensure_ascii=False)
+        if not _json_urls(fresh.get("selected_images_json")):
+            fresh["selected_images_json"] = json.dumps(
+                merged_urls,
+                ensure_ascii=False,
+            )
+        if not str(fresh.get("primary_image_url") or "").strip() and merged_urls:
+            fresh["primary_image_url"] = merged_urls[0]
+        result["images_found"] = max(
+            int(result.get("images_found") or 0),
+            len(merged_urls),
+        )
+        result["images_saved"] = max(
+            int(result.get("images_saved") or 0),
+            len(mapped_urls),
+        )
+        result["mapped_image_urls"] = len(mapped_urls)
+
     fresh["last_refetched_at"] = utc_now()
     fresh["source_state"] = "active"
     fresh["fingerprint"] = product_fingerprint(
@@ -2169,6 +2242,7 @@ async def refetch_product_from_source_async(
         "attempted_methods": list(result.get("attempted_methods") or []),
         "fallback_used": bool(result.get("fallback_used")),
         "image_fallback_method": str(result.get("image_fallback_method") or ""),
+        "mapped_image_urls": int(result.get("mapped_image_urls") or 0),
         "quality": dict(result.get("quality") or {}),
     }
 

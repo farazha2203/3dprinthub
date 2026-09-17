@@ -1696,6 +1696,95 @@ class CommerceCore:
                 matched.add(material.casefold())
         return matched
 
+    @staticmethod
+    def _material_code(value: Any) -> str:
+        return re.sub(r"[^A-Z0-9]+", "", str(value or "").upper())
+
+    def recommend_materials(
+        self,
+        product_id: int,
+        filament_rows: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Deterministic Product-use -> material recommendation for operator review.
+
+        Source-declared materials remain authoritative. Otherwise the rule set
+        intentionally prefers common printable materials and only unlocks
+        engineering/CF families when Product evidence actually calls for them.
+        """
+        row = self.db.product(int(product_id))
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        data = _row_dict(row)
+        source_materials = self._source_materials(data, filament_rows)
+        available = {
+            str(item.get("material") or item.get("material_name") or "").strip()
+            for item in (filament_rows or [])
+            if str(item.get("material") or item.get("material_name") or "").strip()
+        }
+        if source_materials:
+            chosen = sorted(
+                material
+                for material in available
+                if material.casefold() in source_materials
+            )
+            return {
+                "materials": chosen,
+                "reason": "متریال صریحاً در داده منبع محصول ثبت شده است.",
+                "source_declared": True,
+            }
+
+        text = "\n".join(
+            str(data.get(key) or "")
+            for key in (
+                "source_title", "title_fa", "source_description",
+                "short_description_fa", "description_fa", "use_description",
+                "source_category", "local_category_slug", "technical_summary_fa",
+                "source_specs_json", "specs_fa_json", "tags_json", "tags_fa_json",
+            )
+        ).casefold()
+        codes = {self._material_code(name): name for name in available}
+
+        def picks(prefixes: tuple[str, ...]) -> list[str]:
+            result: list[str] = []
+            for code, name in codes.items():
+                if code in prefixes and name not in result:
+                    result.append(name)
+            return sorted(result)
+
+        flexible = any(token in text for token in ("flexible", "rubber", "gasket", "grip", "انعطاف", "واشر", "ضربه گیر", "ضربه‌گیر"))
+        outdoor = any(token in text for token in ("outdoor", "uv", "sunlight", "weather", "garden", "فضای باز", "آفتاب", "بیرونی"))
+        decorative = any(token in text for token in ("decor", "sculpture", "figurine", "ornament", "art", "vase", "lamp", "display", "دکور", "مجسمه", "تزئین", "تزئینی", "هنری", "گلدان", "چراغ"))
+        mechanical = any(token in text for token in ("mechanical", "bracket", "gear", "fixture", "jig", "load bearing", "industrial", "مکانیکی", "براکت", "چرخ دنده", "چرخ‌دنده", "فیکسچر", "صنعتی", "باربر"))
+        high_heat = any(token in text for token in ("high temperature", "heat resistant", "engine bay", "electrical enclosure", "دما بالا", "حرارت بالا", "مقاوم حرارتی"))
+
+        if flexible:
+            chosen = picks(("TPU95", "TPU"))
+            reason = "کاربرد انعطاف‌پذیر/ضربه‌گیر تشخیص داده شد."
+        elif high_heat:
+            chosen = picks(("ASA", "ABS", "PCFR", "PPSCF10", "PETG"))
+            reason = "نیاز حرارتی/محفظه فنی تشخیص داده شد."
+        elif outdoor:
+            chosen = picks(("ASA", "PETG", "ABS"))
+            reason = "کاربرد بیرونی/UV تشخیص داده شد."
+        elif mechanical:
+            chosen = picks(("PETG", "ABS", "ASA", "PA12CF10", "PA6CF20", "PETCF"))
+            reason = "کاربرد مکانیکی/صنعتی تشخیص داده شد."
+        elif decorative:
+            chosen = picks(("PLA", "PETG"))
+            reason = "محصول دکوراتیو/نمایشی است؛ متریال‌های مهندسی CF/Nylon عمداً پیشنهاد نشدند."
+        else:
+            chosen = picks(("PLA", "PETG"))
+            reason = "برای کاربرد عمومی، PLA/PETG به‌عنوان انتخاب محافظه‌کارانه پیشنهاد شد."
+
+        if not chosen:
+            chosen = sorted(available)[:2]
+            reason += " انتخاب عمومی از موجودی فعلی استفاده شد چون خانواده استاندارد موجود نبود."
+        return {
+            "materials": chosen,
+            "reason": reason,
+            "source_declared": False,
+        }
+
     def bootstrap_from_source(
         self,
         product_id: int,
@@ -1760,13 +1849,18 @@ class CommerceCore:
         current = self.profiles(product_id)
         changed = False
 
+        recommendation = self.recommend_materials(product_id, filament_rows)
+        recommended_names = {
+            str(item or "").strip().casefold()
+            for item in (recommendation.get("materials") or [])
+            if str(item or "").strip()
+        }
         fallback_offers = normalize_material_color_options(
             [
                 item
                 for item in (filament_rows or [])
                 if str(item.get("material") or item.get("material_name") or "")
-                .strip().upper().replace("-", "").replace("_", "")
-                .startswith(("PLA", "PETG"))
+                .strip().casefold() in recommended_names
             ]
         )
         fallback_used = False
@@ -1866,6 +1960,8 @@ class CommerceCore:
             "print_time_minutes": minutes or None,
             "dimensions_cm": list(dimensions) if dimensions else [],
             "fallback_used": bool(fallback_used),
+            "recommended_materials": list(recommendation.get("materials") or []),
+            "recommendation_reason": str(recommendation.get("reason") or ""),
         }
 
 

@@ -42,13 +42,20 @@ class ImageCard(QFrame):
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
 
-    def __init__(self, item: dict[str, Any], parent=None) -> None:
+    def __init__(
+        self,
+        item: dict[str, Any],
+        parent=None,
+        *,
+        large: bool = False,
+    ) -> None:
         super().__init__(parent)
         self.item = dict(item)
+        self.large = bool(large)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(220)
-        self.setMaximumWidth(285)
-        self.setMinimumHeight(390)
+        self.setMinimumWidth(270 if self.large else 220)
+        self.setMaximumWidth(390 if self.large else 300)
+        self.setMinimumHeight(470 if self.large else 405)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
@@ -57,18 +64,25 @@ class ImageCard(QFrame):
 
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumSize(190, 145)
-        self.preview.setMaximumHeight(180)
+        if self.large:
+            self.preview.setMinimumSize(255, 190)
+            self.preview.setMaximumHeight(245)
+        else:
+            self.preview.setMinimumSize(190, 145)
+            self.preview.setMaximumHeight(180)
         path = str(self.item.get("path") or "")
         pixmap = QPixmap(path) if path else QPixmap()
         if pixmap.isNull():
             self.preview.setText("⚠ تصویر محلی دریافت نشده")
             self.preview.setObjectName("MissingImage")
         else:
+            preview_width, preview_height = (
+                (350, 230) if self.large else (255, 170)
+            )
             self.preview.setPixmap(
                 pixmap.scaled(
-                    255,
-                    170,
+                    preview_width,
+                    preview_height,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -191,9 +205,16 @@ class ProductImageGrid(QWidget):
     sliderChanged = Signal(str)
     selectionChanged = Signal()
 
-    def __init__(self, parent=None, *, columns: int = 4) -> None:
+    def __init__(
+        self,
+        parent=None,
+        *,
+        columns: int = 4,
+        large_cards: bool = False,
+    ) -> None:
         super().__init__(parent)
-        self.columns = max(3, min(4, int(columns)))
+        self.columns = max(2, min(4, int(columns)))
+        self.large_cards = bool(large_cards)
         self.cards: list[ImageCard] = []
         self._primary_sync = False
         self._slider_sync = False
@@ -210,7 +231,11 @@ class ProductImageGrid(QWidget):
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+            if self.large_cards
+            else Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
         self.host = QWidget()
         self.host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.grid = QGridLayout(self.host)
@@ -236,7 +261,11 @@ class ProductImageGrid(QWidget):
             item = dict(raw)
             if not item.get("downloaded"):
                 missing += 1
-            card = ImageCard(item, self.host)
+            card = ImageCard(
+                item,
+                self.host,
+                large=self.large_cards,
+            )
             card.deleteRequested.connect(self.deleteRequested.emit)
             card.seoRequested.connect(self.seoRequested.emit)
             card.moveEarlierRequested.connect(self.moveEarlierRequested.emit)
@@ -258,7 +287,10 @@ class ProductImageGrid(QWidget):
         # grid and make the controls under the final image rows unreachable.
         # Give the content widget a factual row-based minimum height so the
         # vertical scrollbar always spans the entire card/control surface.
-        self.host.setMinimumHeight(rows * 414 + max(0, rows - 1) * self.grid.spacing())
+        card_height = 492 if self.large_cards else 430
+        self.host.setMinimumHeight(
+            rows * card_height + max(0, rows - 1) * self.grid.spacing()
+        )
         self._missing_count = missing
         self._update_summary()
         self._refresh_move_controls()

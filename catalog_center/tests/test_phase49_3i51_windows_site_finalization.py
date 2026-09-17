@@ -16,7 +16,11 @@ from app.db import Database
 from qt6.image_gallery import ProductImageGrid
 from qt6.kernel import build_kernel
 from qt6.pages import FilamentsPage, OperationsPage
-from qt6.parity_dialogs import FilamentEditorDialog, ProfileEditorDialog
+from qt6.parity_dialogs import (
+    FilamentBulkRatesDialog,
+    FilamentEditorDialog,
+    ProfileEditorDialog,
+)
 from qt6.product_wizard import ProductWizardPage
 
 
@@ -101,7 +105,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             }
         )
 
-    def test_missing_source_profile_creates_explicit_default_with_all_pla_petg_family_filaments(self):
+    def test_missing_source_profile_uses_safe_general_material_recommendations(self):
         for material, color in (
             ("PLA", "PLA Base"),
             ("PLA-CF", "PLA CF"),
@@ -133,7 +137,10 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             str(item.get("material") or "")
             for item in profile["material_options"]
         }
-        self.assertTrue({"PLA", "PLA-CF", "PLA Silk", "PETG", "PETG-HF"}.issubset(materials))
+        self.assertEqual(materials, {"PLA", "PETG"})
+        self.assertEqual(set(result["recommended_materials"]), {"PLA", "PETG"})
+        self.assertNotIn("PLA-CF", materials)
+        self.assertNotIn("PETG-HF", materials)
         self.assertNotIn("ABS", materials)
 
     def test_filament_editor_uses_managed_brand_material_color_and_optional_description(self):
@@ -521,8 +528,13 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         try:
             page.load_product(product_id)
             self.assertTrue(page.product_source_btn.isEnabled())
-            self.assertEqual(page.image_grid.columns, 4)
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 540)
+            self.assertEqual(page.image_grid.columns, 3)
+            self.assertTrue(page.image_grid.large_cards)
+            self.assertEqual(
+                page.image_grid.scroll.verticalScrollBarPolicy(),
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
+            )
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 470)
             button_texts = {
                 button.text()
                 for button in page.findChildren(type(page.product_source_btn))

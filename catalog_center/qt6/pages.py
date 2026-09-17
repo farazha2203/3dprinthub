@@ -47,7 +47,11 @@ from .models import (
     FilamentTableModel,
     ProductTableModel,
 )
-from .parity_dialogs import ColorPresetDialog, FilamentEditorDialog
+from .parity_dialogs import (
+    ColorPresetDialog,
+    FilamentBulkRatesDialog,
+    FilamentEditorDialog,
+)
 from .product_explorer import (
     ProductGalleryModel,
     ProductStatusDelegate,
@@ -1325,6 +1329,23 @@ class FilamentsPage(QWidget):
         self.site_sync_status.setWordWrap(True)
         filament_layout.addWidget(self.site_sync_status)
 
+        bulk_bar = QHBoxLayout()
+        select_visible = QPushButton("انتخاب همه ردیف‌های نمایش‌داده‌شده")
+        clear_selection = QPushButton("لغو انتخاب")
+        bulk_selected = QPushButton("ویرایش گروهی انتخابی")
+        bulk_selected.setProperty("primary", True)
+        bulk_all_active = QPushButton("ویرایش گروهی همه فعال‌ها")
+        select_visible.clicked.connect(lambda: self.table.selectAll())
+        clear_selection.clicked.connect(lambda: self.table.clearSelection())
+        bulk_selected.clicked.connect(self._bulk_edit_selected_filaments)
+        bulk_all_active.clicked.connect(self._bulk_edit_all_active_filaments)
+        bulk_bar.addWidget(select_visible)
+        bulk_bar.addWidget(clear_selection)
+        bulk_bar.addWidget(bulk_selected)
+        bulk_bar.addWidget(bulk_all_active)
+        bulk_bar.addStretch(1)
+        filament_layout.addLayout(bulk_bar)
+
         self.model = FilamentTableModel(db)
         self.proxy = FilamentFilterProxyModel(self)
         self.proxy.setSourceModel(self.model)
@@ -1335,7 +1356,7 @@ class FilamentsPage(QWidget):
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
@@ -1510,12 +1531,80 @@ class FilamentsPage(QWidget):
         )
         self.proxy.set_query(query)
 
-    def _selected_row(self) -> dict | None:
+    def _selected_rows(self) -> list[dict]:
         selected = self.table.selectionModel().selectedRows()
-        if not selected:
-            return None
-        source_index = self.proxy.mapToSource(selected[0])
-        return self.model.row_at(source_index.row())
+        rows: list[dict] = []
+        seen: set[int] = set()
+        for proxy_index in selected:
+            source_index = self.proxy.mapToSource(proxy_index)
+            row = self.model.row_at(source_index.row())
+            if not row:
+                continue
+            row_id = int(row.get("_row_id") or row.get("id") or 0)
+            if row_id in seen:
+                continue
+            seen.add(row_id)
+            rows.append(dict(row))
+        return rows
+
+    def _selected_row(self) -> dict | None:
+        rows = self._selected_rows()
+        return rows[0] if rows else None
+
+    def _apply_bulk_filament_patch(self, rows: list[dict], label: str) -> None:
+        payloads = [dict(item) for item in rows if isinstance(item, dict)]
+        if not payloads:
+            QMessageBox.warning(self, "ویرایش گروهی", "Filament برای ویرایش انتخاب نشده است.")
+            return
+        dialog = FilamentBulkRatesDialog(len(payloads), parent=self)
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+        patch = dialog.values()
+        if not patch:
+            return
+        saved_rows: list[dict] = []
+        failures: list[str] = []
+        for row in payloads:
+            row_id = int(row.get("_row_id") or row.get("id") or 0)
+            if row_id <= 0:
+                failures.append("رکورد بدون ID")
+                continue
+            try:
+                saved = self.kernel.filaments.save(
+                    {**row, **patch},
+                    previous_row_id=row_id,
+                )
+                enriched = self._filament_by_id(int(saved.get("id") or row_id))
+                if enriched:
+                    saved_rows.append(enriched)
+            except Exception as exc:
+                failures.append(f"#{row_id}: {exc}")
+        self.refresh()
+        if saved_rows:
+            self._start_site_sync(saved_rows, f"{label} ذخیره شد؛ Sync سایت")
+        if failures:
+            QMessageBox.warning(
+                self,
+                "ویرایش گروهی",
+                "برخی رکوردها تغییر نکردند:\n" + "\n".join(failures[:8]),
+            )
+
+    def _bulk_edit_selected_filaments(self) -> None:
+        self._apply_bulk_filament_patch(
+            self._selected_rows(),
+            "ویرایش گروهی Filamentهای انتخابی",
+        )
+
+    def _bulk_edit_all_active_filaments(self) -> None:
+        rows = [
+            dict(item)
+            for item in self.kernel.filaments.list()
+            if bool(item.get("is_active", True))
+        ]
+        self._apply_bulk_filament_patch(
+            rows,
+            "ویرایش گروهی همه Filamentهای فعال",
+        )
 
     def _add_filament(self) -> None:
         dialog = FilamentEditorDialog(
@@ -1647,10 +1736,25 @@ class FilamentsPage(QWidget):
         data = dict(result or {})
         synced = int(data.get("synced") or 0)
         failed = int(data.get("failed") or 0)
+        failures = [
+            dict(item)
+            for item in (data.get("failures") or [])
+            if isinstance(item, dict)
+        ]
+        if failed == 0:
+            self.site_sync_status.setText(
+                f"✅ Sync سایت: {synced} موفق • بدون خطا"
+            )
+            return
+        examples = " | ".join(
+            f"#{int(item.get('row_id') or 0)} {item.get('identity') or '—'}"
+            for item in failures[:3]
+        )
+        suffix = f" • نمونه رکورد ناقص: {examples}" if examples else ""
         self.site_sync_status.setText(
-            f"✅ Sync سایت: {synced} موفق • {failed} خطا"
-            if failed == 0
-            else f"⚠️ Sync سایت: {synced} موفق • {failed} خطا؛ جزئیات در Retry بعدی حفظ می‌شود."
+            f"⚠️ Sync سایت: {synced} موفق • {failed} رد/خطا. "
+            "رکوردهای معتبر Sync شدند؛ Filamentهای هویت‌ناقص باید برند/متریال/رنگ کامل شوند."
+            + suffix
         )
 
     def _site_sync_error(self, detail: str) -> None:

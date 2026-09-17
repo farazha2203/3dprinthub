@@ -440,8 +440,11 @@ class ProductWizardPage(QWidget):
         self.image_task_status.setObjectName("Muted")
         layout.addWidget(self.image_task_status)
 
-        self.image_grid = ProductImageGrid(columns=4)
-        self.image_grid.setMinimumHeight(540)
+        self.image_grid = ProductImageGrid(
+            columns=3,
+            large_cards=True,
+        )
+        self.image_grid.setMinimumHeight(470)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])
@@ -1320,13 +1323,29 @@ class ProductWizardPage(QWidget):
                     item.setData(Qt.ItemDataRole.UserRole, profile)
                 self.profile_table.setItem(row_index, col, item)
 
+    def _material_recommendation(self) -> dict[str, Any]:
+        if self.product_id is None:
+            return {"materials": [], "reason": ""}
+        try:
+            return dict(
+                self.kernel.commerce.recommend_materials(
+                    self.product_id,
+                    self.kernel.filaments.list(),
+                )
+            )
+        except Exception:
+            return {"materials": [], "reason": ""}
+
     def _new_profile(self) -> None:
         if self.product_id is None:
             return
+        recommendation = self._material_recommendation()
         dialog = ProfileEditorDialog(
             self.kernel.filaments.list(),
             parent=self,
             filament_core=self.kernel.filaments,
+            recommended_materials=list(recommendation.get("materials") or []),
+            recommendation_reason=str(recommendation.get("reason") or ""),
         )
         if dialog.exec() == dialog.DialogCode.Accepted:
             try:
@@ -1344,11 +1363,14 @@ class ProductWizardPage(QWidget):
         if not profile:
             QMessageBox.warning(self, "پروفایل", "یک پروفایل را انتخاب کن.")
             return
+        recommendation = self._material_recommendation()
         dialog = ProfileEditorDialog(
             self.kernel.filaments.list(),
             profile=profile,
             parent=self,
             filament_core=self.kernel.filaments,
+            recommended_materials=list(recommendation.get("materials") or []),
+            recommendation_reason=str(recommendation.get("reason") or ""),
         )
         if dialog.exec() == dialog.DialogCode.Accepted:
             try:
@@ -1376,11 +1398,14 @@ class ProductWizardPage(QWidget):
         draft["name"] = f"{profile.get('name') or 'پروفایل'} - کپی"
         draft["size_label"] = f"{profile.get('size_label') or ''} - کپی".strip()
 
+        recommendation = self._material_recommendation()
         dialog = ProfileEditorDialog(
             self.kernel.filaments.list(),
             profile=draft,
             parent=self,
             filament_core=self.kernel.filaments,
+            recommended_materials=list(recommendation.get("materials") or []),
+            recommendation_reason=str(recommendation.get("reason") or ""),
         )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
@@ -1633,9 +1658,7 @@ class ProductWizardPage(QWidget):
                 f"{value}% — {message}"
             )
         )
-        worker.signals.result.connect(
-            lambda _result: self._image_task_done()
-        )
+        worker.signals.result.connect(self._image_task_done)
         worker.signals.error.connect(self._image_task_error)
         worker.signals.finished.connect(self._image_task_finished)
         self.task_pool.start(worker)
@@ -1670,10 +1693,25 @@ class ProductWizardPage(QWidget):
             task,
         )
 
-    def _image_task_done(self) -> None:
-        self.image_task_status.setText("✅ عملیات تصویر تمام شد")
+    def _image_task_done(self, result=None) -> None:
+        data = dict(result or {}) if isinstance(result, dict) else {}
         if self.product_id is not None:
             self.load_product(self.product_id)
+        visible = len(self.image_grid.cards)
+        saved = int(data.get("images_saved") or 0)
+        found = int(data.get("images_found") or 0)
+        mapped = int(data.get("mapped_image_urls") or 0)
+        method = str(data.get("selected_method") or "").strip()
+        if found or saved or mapped:
+            self.image_task_status.setText(
+                f"✅ بازیابی تصویر: {found} پیدا شد • {saved} ذخیره شد • "
+                f"{mapped} نگاشت معتبر • {visible} اکنون در گالری قابل مشاهده"
+                + (f" • روش: {method}" if method else "")
+            )
+        else:
+            self.image_task_status.setText(
+                f"✅ عملیات تصویر تمام شد • {visible} تصویر در گالری قابل مشاهده"
+            )
 
     def _image_task_error(self, detail: str) -> None:
         self.image_task_status.setText("❌ عملیات تصویر ناموفق")
