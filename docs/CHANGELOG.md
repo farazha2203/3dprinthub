@@ -1,3 +1,10 @@
+## 2026-09-17 - Windows Qt runtime handoff and Production Store cleanup
+- Fixed operator launch path operationally by using the repository-owned `RUN_QT.ps1` / `qt_launch.py` runtime from exact GitHub SHA `b116a27...`; only one canonical Qt v8.9.10 window remains running.
+- Preserved unrelated unfinished Social/Buffer changes on separate GitHub WIP branch `ea8a156` instead of mixing them into Product runtime.
+- Re-verified Product re-send/update/recreate behavior, including Profile/Filament/print-time propagation, 5/5 focused PASS.
+- Took fresh Catalog and Production rollback backups, reset old/test Store Products to zero with the canonical guarded Store-reset contract, and preserved source/master/portfolio data.
+- Re-seeded four safe A2J Hero slides and verified public Home + 3D Hero CSS/JS + UTF-8 rendering.
+
 ## 2026-09-17 - Explicit Qt operator launcher + close-without-save guard
 - Added `catalog_center\RUN_QT.ps1` as the repository-owned operator entrypoint for the modern `qt_launch.py` runtime and canonical Catalog SQLite root.
 - Kept `RUN.ps1` and `RUN_DEBUG.ps1` unchanged as intentional legacy `launch.py` rollback/side-by-side launchers, eliminating ambiguity about which Windows UI is being started.

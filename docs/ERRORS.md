@@ -1,3 +1,15 @@
+## 2026-09-17 - ERR-49-153 nested PowerShell wrapper quoting corrupted read-only probes
+A few early Desktop Commander probes nested `cmd / powershell` quoting and caused PowerShell to reinterpret pipeline/property syntax. Those probes failed locally before any Host mutation and did not change Repository, Catalog DB or Production.
+
+Correction/prevention: do not nest an additional PowerShell command inside Desktop Commander's PowerShell shell. Use direct cmdlets, repository-owned operator scripts, or a literal here-string for Python. A failed quoting form must not be repeated unchanged.
+
+## 2026-09-17 - ERR-49-152 Store-reset backup helper order created an existing-root collision
+The first fresh reset-backup attempt ran `phase49_3i53_mysql_backup.py` before `phase50_store_reset_prepare.py`. The MySQL helper correctly created the target directory and a valid gzip dump, then the prepare helper failed with `FileExistsError` because it intentionally owns creation of the Store-reset root with `exist_ok=False`. No reset or DB deletion had occurred.
+
+Correction: preserve the first DB-only backup, choose a new absent `*-store-product-reset` target, run `phase50_store_reset_prepare.py` first so media+manifest are captured, then run `phase49_3i53_mysql_backup.py` into that existing prepared root. Final root `/home/sfkilvrs/3dprinthub-deploy-backups/20260917-090106-final-store-product-reset` passed manifest/media and MySQL gzip verification before reset.
+
+Prevention: for future Store reset operations the enforced order is `VERIFY EMPTY TARGET -> STORE RESET PREPARE -> MYSQL BACKUP INTO SAME ROOT -> EXACT LIVE PREFLIGHT -> RESET`. Do not repeat MySQL-first against the same prepare target.
+
 ## ERR-49-151 - Windows broad-gate command referenced retired test modules
 Date: 2026-09-17
 Status: `RESOLVED AS HARNESS SELECTION / RUNTIME TESTS PASSING`.

@@ -1,3 +1,8 @@
+## 2026-09-17 canonical operator handoff accepted
+Status: `GITHUB_PROMOTED / QT_CANONICAL_LAUNCHED / RESEND_READY`.
+
+`b116a27add3ea4f08b68fb3c9c5e037068f576d3` is now exact on Local/GitHub primary Product branch. Unrelated Social/Buffer WIP was isolated to `wip/phase50-social-buffer-20260917 @ ea8a156`, leaving the canonical Product runtime clean. One visible Qt v8.9.10 window is running from `D:\projects\3DPrintHub\catalog_center\qt_launch.py` against the canonical Catalog DB (integrity `ok`, 635 Products). Five exact resend/update/recreate contracts PASS, including Site-404 recreation after the Production Store reset and changed Profile/Filament/print-time propagation. Production Store is intentionally empty; owner Product publication is the next operator action.
+
 # Phase49.3I.47 — Qt Workspace, Multi-Image SEO, Bulk AI, Admin + Storefront Information Architecture
 
 ## 2026-09-17 operator-launch continuation

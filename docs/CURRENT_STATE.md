@@ -1,3 +1,19 @@
+## 2026-09-17 - CANONICAL QT WINDOWS RUNTIME + PRODUCTION STORE RESET / A2J RE-ACCEPTED
+
+Status: `WINDOWS_QT_LAUNCHED / STORE_EMPTY / A2J_PUBLIC_VERIFIED / PRODUCT_RESEND_READY`.
+
+- Canonical Local branch and GitHub are exact at `b116a27add3ea4f08b68fb3c9c5e037068f576d3`; primary worktree is clean. `RUN_QT.ps1` was launched from the canonical path and the only remaining visible Qt window is `3DPrintHub Catalog Center v8.9.10 - Qt 6` from `D:\projects\3DPrintHub\catalog_center\qt_launch.py`.
+- Unrelated unfinished Instagram/Buffer work was preserved, not discarded, on GitHub branch `wip/phase50-social-buffer-20260917` at `ea8a156` and removed from the primary runtime lineage.
+- Canonical Catalog SQLite `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` is integrity `ok`, contains 635 Products and 66 available Filament offers. Fresh online rollback backup: `D:\projects\3dprinthub-backups\pre-qt-runtime-b116-20260917-online\catalog.sqlite3`, integrity `ok`, 635 Products.
+- Exact Product continuity gate PASS 5/5: same-identity dirty republish, explicit requeue of an uploaded Product, changed Profile/Filament/print-time propagation, Site-404 recreation after Store reset, and existing-Site update-in-place. Product #628 remains locally preserved and resend-ready; it was not republished so the owner receives an empty Store.
+- Dedicated reverse tunnel authenticated health PASS on Windows `127.0.0.1:22024` -> Host bridge base `/home/sfkilvrs/3dprinthub`, bridge version `1.0.0`. Production repo is clean on `release/phase50-a2j-hero-20260915 @ 12e319ace1eb55c114d7117e1b5a2fa170b410ab`.
+- Fresh verified Store-reset rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20260917-090106-final-store-product-reset`; manifest `639f67e78e053932d86a8f317cd73ea69e0d8aad0305f62301ae7c79cdd92940`, 37 Product-owned media files hash-verified, MySQL gzip valid at 3,108,367 bytes.
+- Canonical `phase50-store-reset-v2` POST returned HTTP 200: before `8 Product / 2011 Variant / 29 Image / 0 Order / 0 InventoryMovement`; after `0 / 0 / 0 / 0 / 0`. 37 Product media files were deleted; 97 source assets, 17 Portfolio rows, 13 Materials, 5 Qualities and 64 Colors were preserved.
+- `phase50_a2j_seed_hero` dry-run and `--apply` PASS. Exactly four active safe source-backed slides remain: assets `119,120,135,136` at sort `10,20,30,40`. Public Home, A2J CSS and A2J JS are HTTP 200; raw UTF-8 decode PASS; rendered HTML has four `data-p50j-slide` and four dots with `01/04` counter and Slicebox perspective/random/sequential contract.
+- Production `migrate --plan` reports no planned migration operations. Known CKEditor / in-memory realtime / MySQL conditional-constraint warnings remain non-blocking debt.
+
+Exact next: owner can finalize Products in the canonical Qt app and use explicit send/re-send. For every chosen Product, require current license/SEO/Profile facts, then Batch -> FTP -> Bridge strict ACK -> public media -> orderable Variant/Cart verification. Do not repopulate the Store with test Products.
+
 ## 2026-09-17 - QT WINDOWS OPERATOR RUNTIME / LEGACY-LAUNCH ROOT CAUSE RESOLVED
 
 - Owner report that the old Windows UI opened instead of the newer Product/Filament application is reproduced and explained by repository truth: `catalog_center\RUN_DEBUG.ps1` and `RUN.ps1` intentionally still target legacy `launch.py`; the newer application is `qt_launch.py`.

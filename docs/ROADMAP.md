@@ -1,3 +1,15 @@
+## 2026-09-17 - Canonical Qt launch + empty Production Store handoff
+- [x] Promote and verify the modern Windows Qt launcher on GitHub: `b116a27...`.
+- [x] Preserve unrelated Social/Buffer WIP on separate GitHub branch `wip/phase50-social-buffer-20260917 @ ea8a156`; restore primary Product runtime to clean exact source.
+- [x] Launch one canonical Qt v8.9.10 instance against the real Catalog DB; verify integrity `ok`, 635 Products and current Filament inventory.
+- [x] Re-run exact resend/update/recreate contracts: 5/5 PASS.
+- [x] Authenticated reverse-tunnel health and Production read-only preflight PASS.
+- [x] Create fresh verified MySQL + 37-media rollback backup for exact live Store counts.
+- [x] Execute canonical Store reset: 8/2011/29 -> 0/0/0 with zero Orders/Inventory movements and master/source data preserved.
+- [x] Re-apply and verify A2J safe Hero: four active source assets 119/120/135/136; public Home/CSS/JS HTTP 200 and four rendered slides/dots.
+- [x] Verify Production migration plan is empty.
+- [ ] Owner selects finalized Products for real publication from the Windows app; validate strict ACK, public media, Variant and Cart per Product.
+
 ## 2026-09-17 - Correct Qt Windows operator launch + immediate Product entry
 - [x] Verify Local repository/branch and live GitHub are exact at pre-change `6a3a51aacdccff69a4999c4a470cb10807ceb648`.
 - [x] Preserve existing dirty Local work instead of reset/delete; archive `.tmp_*` evidence outside the repo and backup the two modified tracked files.
