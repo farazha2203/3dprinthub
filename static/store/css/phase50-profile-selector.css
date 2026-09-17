@@ -648,3 +648,21 @@
         box-shadow: none;
     }
 }
+
+/* Phase50.A.2K - material explanation stays inside step 3 of the existing four-step wizard. */
+.store-profile-material-help {
+    display: block;
+    width: 100%;
+    margin-top: .35rem;
+    padding-top: .35rem;
+    border-top: 1px dashed #e2e8f0;
+    color: #64748b !important;
+    font-size: .66rem !important;
+    font-weight: 700 !important;
+    line-height: 1.75;
+    text-align: right;
+}
+.store-profile-option[aria-pressed="true"] .store-profile-material-help {
+    color: #7c5a16 !important;
+    border-top-color: #fde7b1;
+}

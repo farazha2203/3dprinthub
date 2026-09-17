@@ -396,6 +396,8 @@ def serialize_filament(option) -> dict:
         "material": str(option.material.name or ""),
         "material_id": int(option.material_id),
         "material_description": str(getattr(option.material, "catalog_description", "") or ""),
+        "material_main_usage": str(getattr(option.material, "main_usage", "") or ""),
+        "material_sample_parts": str(getattr(option.material, "sample_parts", "") or ""),
         "material_price_per_kg": int(getattr(option.material, "price_per_kg", 0) or 0),
         "brand": brand,
         "brand_description": str(getattr(brand_row, "description", "") or ""),
@@ -478,6 +480,8 @@ def filament_sync_view(request):
     ).strip()
     brand_description = str(data.get("brand_description") or "").strip()
     material_description = str(data.get("material_description") or "").strip()
+    material_main_usage = str(data.get("material_main_usage") or "").strip()
+    material_sample_parts = str(data.get("material_sample_parts") or "").strip()
     if not brand:
         brand = legacy_manufacturer[:120]
     manufacturer = brand
@@ -525,6 +529,10 @@ def filament_sync_view(request):
         material_updates = {}
         if "material_description" in data:
             material_updates["catalog_description"] = material_description
+        if "material_main_usage" in data:
+            material_updates["main_usage"] = material_main_usage
+        if "material_sample_parts" in data:
+            material_updates["sample_parts"] = material_sample_parts
         if "material_price_per_kg" in data:
             material_updates["price_per_kg"] = max(
                 0, _as_int(data.get("material_price_per_kg"), 0)

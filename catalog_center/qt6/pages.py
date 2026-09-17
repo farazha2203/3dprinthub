@@ -1377,9 +1377,15 @@ class FilamentsPage(QWidget):
         material_actions.addStretch(1)
         material_layout.addLayout(material_actions)
 
-        self.material_table = QTableWidget(0, 3)
+        self.material_table = QTableWidget(0, 5)
         self.material_table.setHorizontalHeaderLabels(
-            ["نام متریال", "قیمت پایه هر کیلو (تومان)", "توضیح اختیاری"]
+            [
+                "\u0646\u0627\u0645 \u0645\u062a\u0631\u06cc\u0627\u0644",
+                "\u0642\u06cc\u0645\u062a \u067e\u0627\u06cc\u0647 \u0647\u0631 \u06a9\u06cc\u0644\u0648 (\u062a\u0648\u0645\u0627\u0646)",
+                "\u062a\u0648\u0636\u06cc\u062d",
+                "\u06a9\u0627\u0631\u0628\u0631\u062f\u0647\u0627",
+                "\u0646\u0645\u0648\u0646\u0647 \u0642\u0637\u0639\u0627\u062a",
+            ]
         )
         self.material_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.material_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -1388,7 +1394,9 @@ class FilamentsPage(QWidget):
         self.material_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.material_table.horizontalHeader().resizeSection(0, 220)
         self.material_table.horizontalHeader().resizeSection(1, 210)
-        self.material_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.material_table.horizontalHeader().resizeSection(2, 260)
+        self.material_table.horizontalHeader().resizeSection(3, 320)
+        self.material_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.material_table.doubleClicked.connect(lambda _index: self._edit_material())
         material_layout.addWidget(self.material_table, 1)
         self.workspace_tabs.addTab(material_page, "متریال‌ها")
@@ -1713,6 +1721,8 @@ class FilamentsPage(QWidget):
                 str(record.get("name") or ""),
                 f"{int(record.get('price_per_kg') or 0):,}",
                 str(record.get("description") or ""),
+                str(record.get("main_usage") or ""),
+                str(record.get("sample_parts") or ""),
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
@@ -1752,6 +1762,16 @@ class FilamentsPage(QWidget):
         )
         if not ok:
             return
+        main_usage, ok = QInputDialog.getMultiLineText(
+            self, "\u0645\u062a\u0631\u06cc\u0627\u0644", "\u06a9\u0627\u0631\u0628\u0631\u062f\u0647\u0627", str(current.get("main_usage") or "")
+        )
+        if not ok:
+            return
+        sample_parts, ok = QInputDialog.getMultiLineText(
+            self, "\u0645\u062a\u0631\u06cc\u0627\u0644", "\u0646\u0645\u0648\u0646\u0647 \u0642\u0637\u0639\u0627\u062a / \u06a9\u0627\u0631\u0628\u0631\u062f\u0647\u0627\u06cc \u0648\u0627\u0642\u0639\u06cc", str(current.get("sample_parts") or "")
+        )
+        if not ok:
+            return
         previous_name = str(current.get("name") or "").strip()
         before_rows = [
             dict(item)
@@ -1763,6 +1783,8 @@ class FilamentsPage(QWidget):
             name,
             description,
             price,
+            main_usage,
+            sample_parts,
             previous_name=previous_name,
         )
         self.refresh()

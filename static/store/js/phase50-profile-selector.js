@@ -64,6 +64,9 @@
             buildLabel: clean(meta.build_profile_label || option.dataset.buildProfileLabel),
             material: clean(meta.material || option.dataset.material),
             materialId: clean(meta.material_id || meta.material || option.dataset.material),
+            materialDescription: clean(meta.material_description || ""),
+            materialMainUsage: clean(meta.material_main_usage || ""),
+            materialSampleParts: clean(meta.material_sample_parts || ""),
             qualityId: clean(meta.quality_id || meta.quality || option.dataset.quality),
             color: clean(meta.color_name ?? option.dataset.color),
             filamentBrand: clean(meta.filament_brand_name || option.dataset.filamentBrand || ""),
@@ -449,6 +452,20 @@
                     const text = document.createElement("span");
                     text.textContent = item.label;
                     button.appendChild(text);
+                    if (dim === "material") {
+                        const material = item.variant || optionVariants[0] || {};
+                        const details = [
+                            material.materialMainUsage ? `کاربرد: ${material.materialMainUsage}` : "",
+                            material.materialDescription || "",
+                            material.materialSampleParts ? `نمونه‌ها: ${material.materialSampleParts}` : "",
+                        ].filter(Boolean);
+                        if (details.length) {
+                            const help = document.createElement("small");
+                            help.className = "store-profile-material-help";
+                            help.textContent = details.join(" • ");
+                            button.appendChild(help);
+                        }
+                    }
                     button.disabled = !optionVariants.some((variant) => variant.orderable !== false);
                     if (button.disabled) {
                         const unavailable = document.createElement("small");

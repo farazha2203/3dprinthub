@@ -808,6 +808,21 @@ class StageCore:
 
 class FilamentParityCore:
     BRAND_REGISTRY_KEY = "qt_filament_brand_registry_v1"
+    DEFAULT_MATERIAL_GUIDE = {
+        "PLA": {"description": "چاپ‌پذیر، کم‌بو و مناسب قطعات عمومی با جزئیات خوب.", "main_usage": "نمونه‌سازی، دکور، ماکت، قطعات سبک و کاربردهای عمومی", "sample_parts": "ماکت، استند، نظم‌دهنده، قاب و قطعات تزئینی"},
+        "HT-PLA-GF": {"description": "PLA مهندسی تقویت‌شده با الیاف شیشه برای سختی و پایداری ابعادی بیشتر.", "main_usage": "جیگ و فیکسچر، قطعات نیمه‌صنعتی و قطعات صلب", "sample_parts": "براکت، نگهدارنده، فیکسچر و پوسته صلب"},
+        "PLA-CF": {"description": "PLA تقویت‌شده با فیبر کربن؛ صلب، سبک و با سطح مات مهندسی.", "main_usage": "قطعات صلب، نمونه‌های مهندسی و اجزای سبک", "sample_parts": "براکت سبک، قاب، بازو و قطعات نمایشی مهندسی"},
+        "PETG": {"description": "مقاوم‌تر و چقرمه‌تر از PLA با مقاومت رطوبتی و شیمیایی مناسب.", "main_usage": "قطعات کاربردی، محفظه، نگهدارنده و قطعات در معرض رطوبت", "sample_parts": "قاب، بست، براکت، ظرف و قطعات کارگاهی"},
+        "PET-CF": {"description": "PET تقویت‌شده با فیبر کربن برای قطعات مهندسی صلب و پایدار.", "main_usage": "قطعات صنعتی، جیگ، فیکسچر و اجزای سازه‌ای سبک", "sample_parts": "براکت صنعتی، فیکسچر و قطعات ماشین"},
+        "PETG-rCF08": {"description": "PETG تقویت‌شده با فیبر کربن بازیافتی برای سختی و ظاهر مهندسی.", "main_usage": "قطعات کاربردی صلب و نمونه‌های مهندسی", "sample_parts": "براکت، قاب، نگهدارنده و اجزای مکانیکی سبک"},
+        "ABS": {"description": "چقرمه و مقاوم به ضربه و دمای بالاتر؛ مناسب قطعات کاربردی.", "main_usage": "قطعات مکانیکی، پوسته و قطعات خودرو/کارگاهی", "sample_parts": "قاب، کاور، بست و قطعات یدکی"},
+        "ASA": {"description": "مشابه ABS با مقاومت بهتر در UV و شرایط بیرونی.", "main_usage": "فضای باز، خودرو، تابلو و قطعات در معرض آفتاب", "sample_parts": "کاور بیرونی، براکت خودرو و محفظه فضای باز"},
+        "TPU95": {"description": "فیلامنت انعطاف‌پذیر و مقاوم به سایش برای قطعات نرم و ضربه‌گیر.", "main_usage": "ضربه‌گیر، پایه ضدلغزش، واشر، کاور و قطعات انعطاف‌پذیر", "sample_parts": "بوش، گسکت، محافظ، چرخ نرم و گریپ"},
+        "PC-FR": {"description": "پلی‌کربنات مهندسی کندسوز با مقاومت حرارتی و مکانیکی بالا.", "main_usage": "محفظه الکتریکی، قطعات صنعتی و کاربردهای نیازمند مقاومت حرارتی", "sample_parts": "کاور الکترونیکی، براکت و قطعات صنعتی"},
+        "PA6-CF20": {"description": "نایلون PA6 تقویت‌شده با فیبر کربن برای استحکام و سختی بالا.", "main_usage": "قطعات مکانیکی باربر، جیگ و اجزای صنعتی", "sample_parts": "چرخ‌دنده، براکت، بازو و فیکسچر"},
+        "PA12-CF10": {"description": "نایلون PA12 فیبرکربن با جذب رطوبت کمتر و پایداری ابعادی خوب.", "main_usage": "قطعات دقیق مکانیکی و صنعتی با پایداری ابعادی", "sample_parts": "هوزینگ، براکت دقیق، بوش و قطعات متحرک"},
+        "PPS-CF10": {"description": "پلیمر مهندسی دما‌بالا تقویت‌شده با فیبر کربن برای محیط‌های سخت.", "main_usage": "قطعات دما‌بالا، شیمیایی و صنعتی تخصصی", "sample_parts": "فیکسچر حرارتی، قطعات ماشین و محفظه صنعتی"},
+    }
     MATERIAL_REGISTRY_KEY = "qt_filament_material_registry_v1"
     COLOR_REGISTRY_KEY = "qt_filament_color_registry_v1"
     DEFAULT_COLOR_PRESETS = (
@@ -863,6 +878,8 @@ class FilamentParityCore:
             mmeta = material_meta.get(material.casefold(), {})
             item["brand_description"] = str(bmeta.get("description") or "")
             item["material_description"] = str(mmeta.get("description") or "")
+            item["material_main_usage"] = str(mmeta.get("main_usage") or "")
+            item["material_sample_parts"] = str(mmeta.get("sample_parts") or "")
             item["material_price_per_kg"] = int(float(mmeta.get("price_per_kg") or 0))
             output.append(item)
         return output
@@ -880,21 +897,27 @@ class FilamentParityCore:
             if isinstance(raw, dict):
                 name = str(raw.get("name") or "").strip()
                 description = str(raw.get("description") or "").strip()
+                main_usage = str(raw.get("main_usage") or "").strip()
+                sample_parts = str(raw.get("sample_parts") or "").strip()
                 price_per_kg = max(0, _integer(raw.get("price_per_kg"), 0))
             else:
                 name = str(raw or "").strip()
                 description = ""
+                main_usage = ""
+                sample_parts = ""
                 price_per_kg = 0
             if name:
                 records[name.casefold()] = {
                     "name": name,
                     "description": description,
+                    "main_usage": main_usage,
+                    "sample_parts": sample_parts,
                     "price_per_kg": price_per_kg,
                 }
         for row in self._raw_list():
             name = str(row.get(inventory_field) or "").strip()
             if name and name.casefold() not in records:
-                records[name.casefold()] = {"name": name, "description": "", "price_per_kg": 0}
+                records[name.casefold()] = {"name": name, "description": "", "main_usage": "", "sample_parts": "", "price_per_kg": 0}
         return sorted(records.values(), key=lambda item: str(item["name"]).casefold())
 
     def _rename_inventory_identity(
@@ -1008,7 +1031,13 @@ class FilamentParityCore:
         return self.brands()
 
     def material_records(self) -> list[dict[str, Any]]:
-        return self._named_registry_records(self.MATERIAL_REGISTRY_KEY, inventory_field="material_name")
+        records = self._named_registry_records(self.MATERIAL_REGISTRY_KEY, inventory_field="material_name")
+        for item in records:
+            guide = {key.casefold(): value for key, value in self.DEFAULT_MATERIAL_GUIDE.items()}.get(str(item.get("name") or "").strip().casefold(), {})
+            for field in ("description", "main_usage", "sample_parts"):
+                if not str(item.get(field) or "").strip():
+                    item[field] = str(guide.get(field) or "")
+        return records
 
     def materials(self) -> list[str]:
         return [str(item["name"]) for item in self.material_records()]
@@ -1018,6 +1047,8 @@ class FilamentParityCore:
         name: str,
         description: str = "",
         price_per_kg: int = 0,
+        main_usage: str = "",
+        sample_parts: str = "",
         *,
         previous_name: str = "",
     ) -> list[dict[str, Any]]:
@@ -1034,6 +1065,8 @@ class FilamentParityCore:
         custom.append({
             "name": value,
             "description": str(description or "").strip(),
+            "main_usage": str(main_usage or "").strip(),
+            "sample_parts": str(sample_parts or "").strip(),
             "price_per_kg": max(0, _integer(price_per_kg, 0)),
         })
         custom.sort(key=lambda item: str(item.get("name") or "").casefold())
@@ -1328,9 +1361,7 @@ class FilamentParityCore:
                 ).strip()
                 break
 
-        for raw in self._registry(self.MATERIAL_REGISTRY_KEY):
-            if not isinstance(raw, dict):
-                continue
+        for raw in self.material_records():
             if str(raw.get("name") or "").strip().casefold() == material.casefold():
                 payload["material_description"] = str(
                     raw.get("description") or ""
@@ -1338,6 +1369,8 @@ class FilamentParityCore:
                 payload["material_price_per_kg"] = max(
                     0, _integer(raw.get("price_per_kg"), 0)
                 )
+                payload["material_main_usage"] = str(raw.get("main_usage") or "").strip()
+                payload["material_sample_parts"] = str(raw.get("sample_parts") or "").strip()
                 break
 
         return payload
