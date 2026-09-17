@@ -163,3 +163,129 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
     }
     db.record_sync_receipt(int(product_id), f"instagram:buffer:{post_id}", receipt_status, server_id=post_id, payload=receipt_payload)
     return receipt_payload
+
+# --- 3DPrintHub Instagram companion-story policy ---
+_publish_feed_product = publish_product
+
+
+def _story_already_sent(db, product_id: int, fingerprint: str) -> bool:
+    if not fingerprint:
+        return False
+    for receipt in db.sync_receipts(int(product_id), limit=120):
+        if str(receipt["status"] or "") not in {"instagram_story_published", "instagram_story_submitted"}:
+            continue
+        try:
+            previous = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            previous = {}
+        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+            return True
+    return False
+
+
+def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) -> dict[str, Any]:
+    row = db.product(int(product_id))
+    if row is None:
+        raise RuntimeError(f"Product {product_id} not found")
+    data = dict(row)
+    payload = canonical_site_payload(data, site_url=site_url)
+    fingerprint = str(data.get("server_ack_json") or "").strip()
+    if _story_already_sent(db, int(product_id), fingerprint):
+        return {"status": "already_sent", "site_product_url": payload["product_url"]}
+
+    token = get_secret("buffer_api_key")
+    if not token:
+        raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
+
+    ack = {}
+    try:
+        ack = json.loads(data.get("server_ack_json") or "{}")
+    except Exception:
+        ack = {}
+    story_url = str(ack.get("instagram_story_url") or ack.get("social_story_url") or "").strip()
+    story_source = "branded_story_asset" if story_url.startswith("https://") else "product_media_fallback"
+    if not story_url.startswith("https://"):
+        story_url = str((payload.get("media_urls") or [""])[0]).strip()
+    if not story_url.startswith("https://"):
+        raise RuntimeError("A public HTTPS Story asset is required for Buffer/Instagram.")
+
+    image: dict[str, Any] = {"url": story_url}
+    alt_texts = list(payload.get("alt_texts") or [])
+    if alt_texts and alt_texts[0]:
+        image["metadata"] = {"altText": str(alt_texts[0])[:1000]}
+
+    ai_generated = bool(data.get("instagram_story_ai_generated") or data.get("social_ai_generated"))
+    create_input = {
+        "text": "",
+        "channelId": cfg.channel_id,
+        "schedulingType": "automatic",
+        "mode": "shareNow",
+        "needsApproval": False,
+        "saveToDraft": False,
+        "source": "3dprinthub-windows-companion-story",
+        "assets": [{"image": image}],
+        "metadata": {
+            "instagram": {
+                "type": "story",
+                "shouldShareToFeed": False,
+                "isAiGenerated": ai_generated,
+            }
+        },
+    }
+    response = _request_graphql(token, _CREATE_POST_MUTATION, variables={"input": create_input}, timeout=cfg.timeout)
+    result = response.get("createPost")
+    if not isinstance(result, dict):
+        raise RuntimeError("Buffer did not return createPost result for Story")
+    post = result.get("post")
+    if not isinstance(post, dict):
+        raise RuntimeError(str(result.get("message") or "Buffer Story creation failed"))
+    story_id = str(post.get("id") or "").strip()
+    if not story_id:
+        raise RuntimeError("Buffer did not return a Story post id")
+    provider_status = str(post.get("status") or "").strip().lower()
+    receipt_status = "instagram_story_published" if provider_status == "sent" else "instagram_story_submitted"
+    receipt_payload = {
+        "channel": "instagram_story",
+        "provider": "buffer",
+        "provider_post_id": story_id,
+        "site_product_url": payload["product_url"],
+        "tracking_url": payload.get("tracking_url") or payload["product_url"],
+        "story_asset_url": story_url,
+        "story_asset_source": story_source,
+        "site_ack_fingerprint": fingerprint,
+        "buffer_channel_id": cfg.channel_id,
+        "buffer_status": provider_status,
+        "highlight_target": str(data.get("instagram_highlight") or data.get("social_highlight") or "").strip(),
+        "highlight_status": "operator_required",
+        "external_link": str(post.get("externalLink") or ""),
+    }
+    db.record_sync_receipt(int(product_id), f"instagram:buffer:story:{story_id}", receipt_status, server_id=story_id, payload=receipt_payload)
+    return receipt_payload
+
+
+def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, companion_story: bool | None = None) -> dict[str, Any]:
+    feed = _publish_feed_product(db, product_id, cfg, site_url=site_url)
+    if companion_story is None:
+        if hasattr(db, "setting"):
+            raw = str(db.setting("instagram_companion_story_enabled", "1") or "1").strip().lower()
+            companion_story = raw not in {"0", "false", "no", "off"}
+        else:
+            companion_story = False
+    if not companion_story:
+        return feed
+    try:
+        feed["companion_story"] = publish_story_for_product(db, product_id, cfg, site_url=site_url)
+    except Exception as exc:
+        feed["companion_story"] = {"status": "failed", "error": str(exc)}
+        try:
+            db.record_sync_receipt(
+                int(product_id),
+                f"instagram:buffer:story-failed:{feed.get('provider_post_id') or product_id}",
+                "instagram_story_failed",
+                server_id=str(feed.get("provider_post_id") or ""),
+                payload={"provider": "buffer", "error": str(exc), "feed_post_id": feed.get("provider_post_id") or ""},
+            )
+        except Exception:
+            pass
+    return feed
+
