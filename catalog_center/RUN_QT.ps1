@@ -1,5 +1,6 @@
 param(
-    [switch]$VerifyOnly
+    [switch]$VerifyOnly,
+    [switch]$Foreground
 )
 
 Set-StrictMode -Version Latest
@@ -33,6 +34,13 @@ try {
 
     if ($VerifyOnly) {
         Write-Host "QT_OPERATOR_LAUNCHER_VERIFY=PASS" -ForegroundColor Green
+        return
+    }
+
+    if ($Foreground) {
+        & $Python $Launcher
+        if ($LASTEXITCODE -ne 0) { throw "Qt application exited with code $LASTEXITCODE" }
+        Write-Host "QT_CATALOG_CENTER_EXITED=YES" -ForegroundColor Green
         return
     }
 

@@ -54,8 +54,10 @@ def _validate_source(source: Path) -> dict:
     if str(manifest.get("version") or "") != VERSION:
         raise RuntimeError(f"Expected package version {VERSION}")
     required = [
-        "app/main.py", "app/site_connection.py", "app/version.py", "launch.py",
-        "RUN.ps1", "assets/brand_icon.png", "assets/brand_logo_horizontal.png",
+        "app/main.py", "app/site_connection.py", "app/version.py", "launch.py", "qt_launch.py",
+        "RUN.ps1", "RUN_QT.ps1", "RUN_LEGACY.ps1", "RUN_LEGACY_DEBUG.ps1",
+        "requirements-qt6.txt", "qt6/main_window.py", "qt6/kernel.py",
+        "assets/brand_icon.png", "assets/brand_logo_horizontal.png",
     ]
     missing = [name for name in required if not (source / name).is_file()]
     if missing:
@@ -67,8 +69,14 @@ def _validate_source(source: Path) -> dict:
             f"Version mismatch: manifest={VERSION}, app={app_version}, launcher={launcher_version}"
         )
     run_text = (source / "RUN.ps1").read_text(encoding="utf-8")
-    if '"$Root\\launch.py"' not in run_text or "-m app.main" in run_text:
-        raise RuntimeError("RUN.ps1 does not use the absolute launcher")
+    qt_runner_text = (source / "RUN_QT.ps1").read_text(encoding="utf-8")
+    legacy_runner_text = (source / "RUN_LEGACY.ps1").read_text(encoding="utf-8")
+    if "RUN_QT.ps1" not in run_text or "launch.py" in run_text:
+        raise RuntimeError("RUN.ps1 is not routed to the canonical Qt launcher")
+    if 'Join-Path $Root "qt_launch.py"' not in qt_runner_text:
+        raise RuntimeError("RUN_QT.ps1 does not use the absolute Qt launcher")
+    if 'Join-Path $Root "launch.py"' not in legacy_runner_text:
+        raise RuntimeError("Explicit legacy rollback launcher is incomplete")
     main_text = (source / "app" / "main.py").read_text(encoding="utf-8")
     paste_contract = [
         "self.bridge_token_entry", "paste_bridge_token", "<Control-v>",

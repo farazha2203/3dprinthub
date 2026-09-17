@@ -36,22 +36,23 @@ try {
 }
 
 try {
-    & $Python -m pip install -r "$Target\requirements.txt"
-    if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed." }
+    & $Python -m pip install -r "$Target\requirements-qt6.txt"
+    if ($LASTEXITCODE -ne 0) { throw "Qt dependency installation failed." }
     $PreviousPythonPath = $env:PYTHONPATH
     Push-Location $Target
     try {
         $env:PYTHONPATH = $Target
-        & $Python -m compileall -q "$Target\app" "$Target\tests"
-        if ($LASTEXITCODE -ne 0) { throw "Python compile verification failed." }
+        & $Python -m compileall -q "$Target\app" "$Target\qt6" "$Target\tests" "$Target\qt_launch.py"
+        if ($LASTEXITCODE -ne 0) { throw "Python/Qt compile verification failed." }
         & $Python -m unittest discover -s tests -p "test_*.py"
         if ($LASTEXITCODE -ne 0) { throw "Unit/contract verification failed." }
-        $Launcher = Join-Path $Target "launch.py"
+        $Launcher = Join-Path $Target "qt_launch.py"
         $InstalledVersionOutput = @(& $Python $Launcher --verify-only)
-        if ($LASTEXITCODE -ne 0) { throw "Installed launcher verification failed." }
+        if ($LASTEXITCODE -ne 0) { throw "Installed Qt launcher verification failed." }
         $InstalledVersionOutput | ForEach-Object { Write-Host $_ }
-        if ($InstalledVersionOutput -notcontains "ACTIVE_VERSION=$ExpectedVersion") { throw "Wrong installed version. Expected $ExpectedVersion." }
-        if ($InstalledVersionOutput -notcontains "ACTIVE_SOURCE=$Target") { throw "Wrong installed source path. Expected $Target." }
+        if ($InstalledVersionOutput -notcontains "ACTIVE_VERSION=$ExpectedVersion") { throw "Wrong installed Qt version. Expected $ExpectedVersion." }
+        if ($InstalledVersionOutput -notcontains "ACTIVE_SOURCE=$Target") { throw "Wrong installed Qt source path. Expected $Target." }
+        if ($InstalledVersionOutput -notcontains "QT6_FOUNDATION_VERIFY=OK") { throw "Installed Qt structural verification marker missing." }
     } finally {
         if ($null -eq $PreviousPythonPath) { Remove-Item Env:PYTHONPATH -ErrorAction SilentlyContinue } else { $env:PYTHONPATH = $PreviousPythonPath }
         Pop-Location

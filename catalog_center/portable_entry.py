@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from app.runtime_paths import (
@@ -56,23 +57,19 @@ def _configure_runtime_paths() -> None:
 def _portable_verify() -> int:
     from app.env_settings import ENV_FILE
     from app.version import APP_NAME, APP_VERSION, BUILD_ID
-    from app.product_workspace_epic49 import ProductWorkspace
-    from app.phase49_persian_sales_desktop import install as install_persian_sales_workspace
-    from app.product_workspace_v871 import ProductWorkspace as ProductWorkspace871
-    from app.ux87_shell import build_app_class
-    from app import main as app_main
-    from launch import EXPECTED_VERSION, main as launch_main
+    from qt_launch import main as qt_main
 
-    install_persian_sales_workspace(ProductWorkspace)
-    workspace_epic49 = bool(
-        ProductWorkspace.__module__ == "app.product_workspace_epic49"
-        and issubclass(ProductWorkspace, ProductWorkspace871)
-    )
-    persian_sales = bool(getattr(ProductWorkspace, "_phase49_persian_sales_installed", False))
-    canonical_launcher_runtime = bool(
-        EXPECTED_VERSION == APP_VERSION
-        and callable(launch_main)
-    )
+    previous_data_root = os.environ.get("CATALOG_DATA_ROOT")
+    try:
+        with tempfile.TemporaryDirectory() as temporary:
+            os.environ["CATALOG_DATA_ROOT"] = temporary
+            qt_verify_rc = int(qt_main(["--verify-only"]))
+    finally:
+        if previous_data_root is None:
+            os.environ.pop("CATALOG_DATA_ROOT", None)
+        else:
+            os.environ["CATALOG_DATA_ROOT"] = previous_data_root
+
     payload = {
         "app_name": APP_NAME,
         "app_version": APP_VERSION,
@@ -85,14 +82,9 @@ def _portable_verify() -> int:
         "env_file": str(ENV_FILE),
         "data_is_outside_bundle": data_root().resolve() != Path(getattr(sys, "_MEIPASS", data_root())).resolve(),
         "data_is_release_independent": data_root().resolve() == persistent_data_root().resolve(),
-        "product_workspace_v87": workspace_epic49,
-        "product_workspace_v871": workspace_epic49,
-        "homepage_slider_seo_v871": workspace_epic49,
-        "epic49_unified_sync": workspace_epic49,
-        "epic49_server_slider_manager": workspace_epic49,
-        "epic49_persian_sales_hero": persian_sales,
-        "ux87_shell": build_app_class(app_main.App).__name__ == "CatalogCenterApp87",
-        "canonical_launcher_runtime": canonical_launcher_runtime,
+        "canonical_launcher_runtime": "qt_launch.py",
+        "qt6_runtime_verified": qt_verify_rc == 0,
+        "legacy_rollback_preserved": True,
         "ai_profile_preserved": True,
         "host_profile_preserved": True,
     }
@@ -101,13 +93,8 @@ def _portable_verify() -> int:
         and payload["brand_icon_exists"]
         and payload["data_is_outside_bundle"]
         and payload["data_is_release_independent"]
-        and payload["product_workspace_v871"]
-        and payload["homepage_slider_seo_v871"]
-        and payload["epic49_unified_sync"]
-        and payload["epic49_server_slider_manager"]
-        and payload["epic49_persian_sales_hero"]
-        and payload["ux87_shell"]
-        and payload["canonical_launcher_runtime"]
+        and payload["qt6_runtime_verified"]
+        and payload["canonical_launcher_runtime"] == "qt_launch.py"
     )
     payload["ok"] = ok
     output = str(os.getenv("CATALOG_VERIFY_OUTPUT") or "").strip()

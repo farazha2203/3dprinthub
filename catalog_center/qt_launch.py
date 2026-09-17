@@ -32,6 +32,7 @@ def main(argv=None) -> int:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
 
+    from app.version import APP_VERSION, BUILD_ID
     from qt6 import QT_UI_CONTRACT
     from qt6.main_window import MainWindow
     from qt6.theme import apply_theme
@@ -47,6 +48,9 @@ def main(argv=None) -> int:
         apply_theme(app, window._current_theme)
         contract = window.structural_contract()
 
+        print(f"ACTIVE_VERSION={APP_VERSION}", flush=True)
+        print(f"ACTIVE_BUILD={BUILD_ID}", flush=True)
+        print(f"ACTIVE_SOURCE={ROOT}", flush=True)
         print(f"QT_UI_CONTRACT={QT_UI_CONTRACT}", flush=True)
         print("QT6_MAIN_WINDOW=ENABLED", flush=True)
         print("QT6_MODEL_VIEW=ENABLED", flush=True)
