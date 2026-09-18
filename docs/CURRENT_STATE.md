@@ -1,3 +1,11 @@
+## 2026-09-18 — Stage-3 image workspace runtime pushed and relaunched
+- Approved runtime commit: `91d4c188aa57c125e46d45f39a70d913085dcf6c` on `wip/phase50-a2l-owner-qa-20260917`; Local and live GitHub SHA match exactly.
+- Fresh canonical Catalog online backup before launch: `D:\projects\3dprinthub-backups\pre-image-workspace-91d4c18-20260918-105013\catalog.sqlite3`; source and backup `integrity_check=ok`, Product count 635.
+- `RUN_QT.ps1 -VerifyOnly` passed from the exact pushed source, then the canonical launcher opened the Qt runtime. Venv launcher PID 2608 delegates to Python 3.12 child PID 27156; the child has visible window title `3DPrintHub Catalog Center v8.9.10 - Qt 6`.
+- Post-launch read-only Catalog verification: `integrity_check=ok`, Product count 635, Product #628 still has 11 persisted Site-selected images. Worktree remained clean at runtime SHA.
+- Production, Host, schema and migrations remain unchanged by this Windows slice.
+- Exact next: owner visual smoke Product #628 for larger review area, subset multi-select Edit/Delete, SEO filename labels and scroll behavior. Production promotion is not part of this Windows-only acceptance.
+
 ## 2026-09-18 — Stage-3 image workspace multi-select / SEO / Instagram cover LOCAL_TESTED
 - Branch/base verified before work: `wip/phase50-a2l-owner-qa-20260917 @ e076efa350e727a45dcdbc5fcc500f925090b59c`; Local and live GitHub branch SHA matched. Rollback branch `backup/pre-image-workspace-multiselect-seo-instagram-primary-20260918` preserves that exact base.
 - Owner-requested Stage-3 delta is implemented without changing Screenshot capture/naming: larger 2-column image cards/previews and a taller scroll viewport; compact top controls; an independent temporary `انتخاب` checkbox for bulk edit/delete separate from persistent `در سایت`; click-on-preview toggles the temporary bulk selection.

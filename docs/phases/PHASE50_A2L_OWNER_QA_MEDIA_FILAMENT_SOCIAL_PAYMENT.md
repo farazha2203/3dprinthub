@@ -1,3 +1,10 @@
+## Stage-3 image runtime promotion — 2026-09-18
+- Exact runtime `91d4c188aa57c125e46d45f39a70d913085dcf6c` is pushed and Local/GitHub match.
+- Fresh pre-launch Catalog backup: `pre-image-workspace-91d4c18-20260918-105013`, source/backup integrity `ok`, 635 Products.
+- Exact-SHA Qt verification passed and the canonical Qt application was relaunched; visible child window is `3DPrintHub Catalog Center v8.9.10 - Qt 6`.
+- Post-launch Catalog remains integrity `ok`; Product #628 keeps 11 persistent Site-selected images.
+- Remaining Stage-3 gate is owner visual smoke only. Production remains unchanged.
+
 ## Stage-3 image workspace continuation — 2026-09-18
 - Owner requested a larger image review surface, compact surrounding controls, arbitrary multi-select Edit/Delete, deterministic SEO filename display, and Product-main-image-first Instagram feed behavior.
 - Bulk-operation selection is now independent from persistent Site-image membership; clicking an image preview may toggle only the temporary operation selector.

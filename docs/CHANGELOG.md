@@ -1,3 +1,9 @@
+## 2026-09-18 - Stage-3 image workspace runtime promotion
+- Pushed exact Windows runtime `91d4c188aa57c125e46d45f39a70d913085dcf6c`.
+- Took a fresh integrity-checked Catalog backup before launch and relaunched the canonical Qt application from the pushed source.
+- Verified the visible Qt child window, clean runtime worktree, Catalog integrity, 635 Products and Product #628 persistent selection count 11.
+- Production/schema/migrations remain unchanged.
+
 ## 2026-09-18 - Stage-3 image multi-select / SEO naming / Instagram cover
 - Added a separate temporary bulk-operation selection layer so Edit/Delete can target any subset without changing Product Site-image membership.
 - Enlarged the Stage-3 review cards/preview/scroll viewport and reduced control typography/height.

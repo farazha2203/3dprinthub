@@ -1,3 +1,13 @@
+## 2026-09-18 — Stage-3 image runtime promotion
+- [x] Commit runtime/docs candidate `91d4c188aa57c125e46d45f39a70d913085dcf6c`.
+- [x] Push and verify Local/GitHub exact SHA match.
+- [x] Create fresh canonical Catalog online backup with source/backup integrity `ok`.
+- [x] Run exact-SHA `RUN_QT.ps1 -VerifyOnly`.
+- [x] Launch canonical Qt runtime from pushed source; visible child window verified.
+- [x] Post-launch Catalog read-only integrity/Product-count/#628 selection verification.
+- [ ] Owner visual smoke on Product #628.
+- [ ] Keep Production unchanged until separate Host/tunnel/deploy gates are explicitly resumed.
+
 ## 2026-09-18 — Active owner gate: Stage-3 image workspace
 - [x] Verify Local/GitHub base `e076efa...` and push rollback branch before edits.
 - [x] Separate temporary bulk-operation image selection from persistent `در سایت` membership.
