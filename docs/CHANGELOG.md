@@ -1,3 +1,12 @@
+## 2026-09-19 - A2L enlarged Product Hero + complete same-identity Republish
+- Enlarged the official Example-4 Slicebox wrapper from 840px to 1280px, reduced dead vertical padding, reserved responsive 16:9 geometry and bumped Hero CSS cache version to 50.7.0.
+- Product-backed Hero slides now use Product meta title/meta description/focus keyword, Product microdata and direct Product-detail navigation from both media and the full caption.
+- Product-backed curated slides take precedence over source-only fallback slides once active Store Products exist.
+- Added fail-closed transactional Republish parity covering Desktop-owned Product SEO, price range, media basename/SHA, active Profile/Variant identities, material/brand/manufacturer/color, weights, print time, dimensions and filament pricing inputs.
+- Product media now preserves the exact SEO basename under Product-specific content-addressed directories: same bytes reuse the same URL; changed bytes move to a new hash directory without deleting history or receiving random Django filename suffixes.
+- Preserved explicit manufacturer separately from brand in Profile sync and Variant API.
+- Focused 37/37 regression PASS; deliberate parity mismatch rolls back the entire Product mutation.
+
 ## 2026-09-19 - ERR-49-170 A2L nested static permission hotfix
 - First Production promotion reached `28cac45...` cleanly with MySQL/readiness/migration/static wrapper gates PASS and rollback root `20260919-011903-phase50-a2l-site-priority`.
 - Real Chromium found Slicebox vendor CSS/JS 404 because new public `static/vendor` directories were created as `0700` under runner `umask 077`; files themselves were correct `0644`.

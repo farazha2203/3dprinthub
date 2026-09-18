@@ -7,9 +7,18 @@
 - [x] Deploy ff-only from GitHub through the dedicated reverse tunnel; backup/readiness/no-migration/static-wrapper gates PASS.
 - [x] Detect ERR-49-170 in real Chromium: nested Slicebox vendor assets 404 because new public directories inherited `0700`.
 - [x] Add repository-owned static permission prevention + dedicated guarded hotfix runner.
-- [ ] Push/deploy permission hotfix from current clean Production `28cac45...`.
-- [ ] Re-run nested asset HTTP/MIME + desktop/mobile real-browser Example-4 acceptance.
-- [ ] Verify Product Admin runtime composition remains Variant-inline-free and close Production docs.
+- [x] Push/deploy ERR-49-170 static permission hotfix; Production is clean at `16e24292...`.
+- [x] Verify nested Slicebox assets HTTP/MIME, runtime `ready=1` and real desktop Example-4 transition.
+- [x] Detect ERR-49-171 external first-slide mobile collapse and implement Product-backed-first + 16:9 reserved sizing.
+- [x] Enlarge Slicebox to 1280px wrapper, expose Product SEO title/description/focus keyword/schema, and make image + full Product caption link to Product detail.
+- [x] Reproduce ERR-49-172 on real #625 -> Site #39; prove ACK was partial and Product media filenames churned.
+- [x] Implement transactional complete Republish parity + SEO filename-preserving content-addressed Product media + manufacturer preservation.
+- [x] Focused regression 37/37 PASS; compile/check/no-drift PASS.
+- [ ] Commit/push exact A2L closure candidate and verify live GitHub SHA.
+- [ ] Guarded no-migration Host deploy from exact GitHub SHA through reverse tunnel.
+- [ ] Chromium desktop/mobile verify enlarged Hero, nonzero mobile height, Product SEO copy and real Product navigation.
+- [ ] Fresh Local Catalog backup + Production MySQL/Product-media backup, then controlled #625 same-identity republish.
+- [ ] Read back Product #39 media names/SHA, price range, active variants, material/brand/manufacturer/color/weights/time and public page before clearing closure.
 
 ## 2026-09-16 - Phase50.A.2J standalone Hero acceptance
 - [x] Recover and verify the dedicated 3DPrintHub reverse tunnel/watchdog path.

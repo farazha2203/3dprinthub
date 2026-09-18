@@ -1,3 +1,29 @@
+## ERR-49-172 - Republish ACK accepted partial Product parity and public media filename churn
+Date: 2026-09-19
+
+**Observed:** owner re-published an already published Catalog Product and Windows recorded `server_status=updated` / cleared `needs_update`, while the owner still saw stale or unexpected Product facts. Real Product #625 -> Site Product #39 proved that the receiver revision advanced to 5 and current image bytes/active Profiles reached MySQL, but ACK success only proved HTTP 200 + visibility. Public Product media filenames accumulated random Django storage suffixes on every resend, and the Variant API exposed manufacturer as a brand alias.
+
+**Root cause:** `ack_item_confirms_publish()` and the receiver ACK had no complete post-import parity gate. `phase34b_publishing._sync_product_images()` unconditionally re-saved Product media into collision-prone shared directories, so Django renamed repeated filenames. Product Profile sync also collapsed explicit manufacturer into brand, and the Variant API repeated brand as manufacturer.
+
+**Correct fix:** receiver now runs a fail-closed post-import parity contract inside the same transaction. Desktop-owned title/SEO, price range, current selected media count + SEO basename + SHA256, active sales-profile keys, material/brand/manufacturer/color, weights, print time, dimensions, fixed override and filament pricing inputs must match the current Batch. Any mismatch raises `REPUBLISH_PARITY_MISMATCH` and rolls back the Product transaction, so existing Windows clients do not clear dirty state. Product media now uses a Product-specific content-addressed directory while preserving the exact SEO basename; identical bytes reuse the same path and changed bytes get a new hash directory without deleting history. Manufacturer is preserved independently through DB sync and Variant API.
+
+**Regression:** focused Import/Republish/Hero/Profile/Admin/Visibility suite 37/37 PASS. New E2E assertions prove exact public SEO basename, idempotent path reuse and full transaction rollback on a deliberately wrong media SHA. A distinct manufacturer-vs-brand regression also PASSes.
+
+**Intermediate test note:** one broader Filament UI test was intentionally not retried unchanged because it asserts an unrelated `filament_visual_options` template marker absent from this Production-based Release lineage. Exact touched Filament pricing/API methods were selected instead and PASS.
+
+**Prevention:** an ACK may clear `needs_update` only after the receiver proves parity for every Desktop-owned Product surface; HTTP 200/visibility alone is not publication success.
+
+## ERR-49-171 - Product Hero source fallback could collapse mobile Slicebox
+Date: 2026-09-19
+
+**Observed:** after Slicebox vendor assets were restored, Chromium showed `ready=1` and real Example-4 transitions, but the first source-only MakerWorld Hero image remained 0x0 and mobile Slider height collapsed.
+
+**Root cause:** active Product-backed and source-only fallback slides were mixed in one ordered query, so an external fallback could become the current first image even after Store Products existed.
+
+**Correct fix:** when any active Product-backed curated Hero exists, only Product-backed slides feed the Slicebox; approved source-only slides remain an empty-Store fallback. The Slider also reserves a 16:9 box on mobile/desktop so remote timing cannot collapse layout.
+
+**Prevention:** customer-facing Product Hero must not depend on external source hotlinks once Product-owned media exists.
+
 ## ERR-49-170 - New collectstatic vendor directories inherited private 0700 mode
 Date: 2026-09-19
 

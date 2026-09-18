@@ -196,7 +196,7 @@ def _resolve_color(material, item: dict):
     ).strip()[:160]
     if not brand:
         brand = legacy_manufacturer[:120]
-    manufacturer = brand
+    manufacturer = legacy_manufacturer or brand
 
     raw_palette = item.get("palette_hexes")
     if not isinstance(raw_palette, list):

@@ -241,7 +241,7 @@ class Phase50ProfileMatrixTests(TestCase):
             "fixed_price": 0,
             "material": self.material.name,
             "brand": "Bambu Lab",
-            "manufacturer": "Bambu Lab",
+            "manufacturer": "Bambu Lab Factory",
             "color": "سفید مات",
             "support_weight_grams": 20,
             "roll_weight_grams": 1000,
@@ -256,7 +256,7 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(variant.support_weight_grams, Decimal("20.00"))
         self.assertIsNotNone(variant.color)
         self.assertEqual(variant.color.brand_name, "Bambu Lab")
-        self.assertEqual(variant.color.manufacturer_name, "Bambu Lab")
+        self.assertEqual(variant.color.manufacturer_name, "Bambu Lab Factory")
         self.assertEqual(variant.color.sale_price_per_roll, 3_600_000)
         self.assertEqual(variant.color.effective_sale_price_per_gram, Decimal("3600"))
 
@@ -267,7 +267,7 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(response.status_code, 200)
         meta = response.json()["variants"][str(variant.pk)]
         self.assertEqual(meta["filament_brand_name"], "Bambu Lab")
-        self.assertEqual(meta["filament_manufacturer_name"], "Bambu Lab")
+        self.assertEqual(meta["filament_manufacturer_name"], "Bambu Lab Factory")
         self.assertEqual(meta["support_weight_grams"], "20.00")
 
     def test_storefront_marks_profile_as_single_price_authority(self):

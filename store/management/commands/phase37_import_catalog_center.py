@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -16,6 +17,7 @@ from store.phase49_catalog_visibility import (
     publish_catalog_product_to_store,
 )
 from store.phase49_3i52_site_identity import reconcile_asset_product_identity
+from store.phase50_republish_contract import verify_product_republish_contract
 
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
 VALID_LICENSES = ALLOWED_LICENSES | {"review", "blocked", "unknown"}
@@ -405,6 +407,7 @@ class Command(BaseCommand):
                     image_count = import_images(asset, editorial_path.parent, data)
                     product = portfolio = None
                     visibility = None
+                    parity = None
                     license_ok = catalog_license_allows_publish(
                         asset.commercial_license_status,
                         data,
@@ -415,6 +418,12 @@ class Command(BaseCommand):
                         apply_phase43_product_details(product, data)
                         visibility = publish_catalog_product_to_store(product, asset, data)
                         if visibility.visible:
+                            parity = verify_product_republish_contract(product, asset, data)
+                            if parity.get("ok") is not True:
+                                detail = " | ".join(parity.get("mismatches") or [])[:6000]
+                                raise ValidationError(
+                                    "REPUBLISH_PARITY_MISMATCH: " + (detail or "unknown parity mismatch")
+                                )
                             products += 1
                     if data.get("publish_as_portfolio") and license_ok:
                         portfolio = convert_to_portfolio(asset)
@@ -445,6 +454,7 @@ class Command(BaseCommand):
                     "visible_on_store": bool(visibility.visible) if visibility else False,
                     "product_url": visibility.product_url if visibility else "",
                     "visibility_checks": visibility.checks if visibility else {},
+                    "republish_parity": parity or {},
                     "source_hash": data.get("source_hash") or "",
                 }
                 ack_items.append(ack)

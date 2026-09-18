@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from PIL import Image
 
@@ -235,6 +236,7 @@ class Epic49UnifiedImportE2ETests(TestCase):
 
         out2 = StringIO()
         call_command("phase37_import_catalog_center", str(batch), stdout=out2)
+        self.assertIn('"republish_parity":{"ok":true', out2.getvalue())
         asset.refresh_from_db()
         profile.refresh_from_db()
         slide.refresh_from_db()
@@ -242,7 +244,10 @@ class Epic49UnifiedImportE2ETests(TestCase):
         asset_image = asset.images.get(remote_url="https://example.com/media/hero.gif")
         self.assertTrue(asset_image.image.name.endswith(refreshed_image.name))
         self.assertTrue(asset.preview_image.name.endswith(refreshed_image.name))
-        self.assertTrue(product.main_image.name.endswith(refreshed_image.name))
+        self.assertEqual(Path(product.main_image.name).name, refreshed_image.name)
+        gallery = list(product.images.order_by("sort_order", "id"))
+        self.assertEqual(len(gallery), 1)
+        self.assertEqual(Path(gallery[0].image.name).name, refreshed_image.name)
         self.assertTrue(slide.selected_asset_image.image.name.endswith(refreshed_image.name))
         self.assertEqual(profile.sync_revision, product_revision)
         self.assertEqual(profile.desktop_product_id, 991)
@@ -252,9 +257,14 @@ class Epic49UnifiedImportE2ETests(TestCase):
         # Re-running the exact same refreshed Batch is idempotent: the media
         # stays current and the visual revision does not advance again.
         out3 = StringIO()
+        main_name_before = product.main_image.name
+        gallery_name_before = product.images.order_by("sort_order", "id").first().image.name
         call_command("phase37_import_catalog_center", str(batch), stdout=out3)
         profile.refresh_from_db()
         slide.refresh_from_db()
+        product.refresh_from_db()
+        self.assertEqual(product.main_image.name, main_name_before)
+        self.assertEqual(product.images.order_by("sort_order", "id").first().image.name, gallery_name_before)
         self.assertEqual(profile.sync_revision, product_revision)
         self.assertEqual(slide.sync_revision, refreshed_slider_revision)
         self.assertEqual(profile.price_min, 650000)
@@ -262,3 +272,45 @@ class Epic49UnifiedImportE2ETests(TestCase):
         self.assertEqual(product.fixed_price, 650000)
         self.assertEqual(Product.objects.filter(pk=product.pk).count(), 1)
         self.assertEqual(HomepageHeroSlide.objects.filter(asset=asset).count(), 1)
+
+    def test_republish_parity_failure_rolls_back_all_product_mutation(self):
+        batch = self._build_batch()
+        call_command("phase37_import_catalog_center", str(batch), stdout=StringIO())
+        asset = ImportedPrintAsset.objects.get(external_id="EP49-E2E-001")
+        product = Product.objects.get(pk=asset.product_id)
+        profile = ProductCatalogProfile.objects.get(product=product)
+        old_name = product.main_image.name
+        old_price = product.fixed_price
+        old_revision = profile.sync_revision
+
+        editorial_path = (
+            batch
+            / "models"
+            / "makerworld_EP49-E2E-001"
+            / "desktop_editorial.json"
+        )
+        editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
+        editorial["price_min"] = 777000
+        editorial["price_max"] = 777000
+        editorial["image_metadata_json"] = [{
+            "seo_filename": "epic49-parity-must-rollback.webp",
+            "final_sha256": "0" * 64,
+        }]
+        editorial_path.write_text(
+            json.dumps(editorial, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(CommandError):
+            call_command(
+                "phase37_import_catalog_center",
+                str(batch),
+                stdout=StringIO(),
+                stderr=StringIO(),
+            )
+
+        product.refresh_from_db()
+        profile.refresh_from_db()
+        self.assertEqual(product.main_image.name, old_name)
+        self.assertEqual(product.fixed_price, old_price)
+        self.assertEqual(profile.sync_revision, old_revision)

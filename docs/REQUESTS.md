@@ -1,3 +1,10 @@
+## 2026-09-19 - Owner request: larger Hero, homepage Product SEO/link and complete Republish
+Status: `LOCAL_TESTED / DEPLOY+REAL_REPUBLISH NEXT`.
+
+Owner requires the new Slicebox to be materially larger, remove the excessive empty visual gap, show SEO-relevant Product copy on the homepage, and navigate to Product detail when the Product is clicked. Same-identity resend from the Windows app must update the existing Site Product rather than creating a second identity and must synchronize/verify images, SEO image names, price inputs/range, weights, materials, brand/manufacturer, colors, dimensions, print time, Profiles/Variants and SEO/content. A publish may not be reported successful merely because the Product URL is HTTP 200.
+
+Real acceptance candidate is Catalog #625 -> Site Product #39. After deploying the receiver fix with fresh rollback evidence, take fresh Local Catalog + Production MySQL/Product-media backups and re-publish this exact identity once; require read-back parity and public browser verification.
+
 ## 2026-09-19 - Owner priority: publish the site now through the permanent reverse tunnel
 Status: `LOCAL_TESTED / DEPLOY NEXT`.
 

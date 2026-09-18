@@ -1,22 +1,26 @@
 # Phase50.A.2L — Site Priority Release
 
 Date: 2026-09-19
-Status: `PRODUCTION 28cac45 DEPLOYED / ERR-49-170 STATIC HOTFIX LOCAL_READY`
+Status: `PRODUCTION 16e24292 / HERO+REPUBLISH LOCAL_TESTED / GITHUB+DEPLOY NEXT`
 
 ## Requested delta
-- Promote the owner-approved Tympanus Slicebox Example-4 homepage Hero from the Production-based A2K lineage.
-- Remove only the unbounded ProductVariant inline that caused Product Admin change-page 504 responses.
-- Preserve Product gallery, compatibility, FAQ/Profile editing, Store ordering, database state and Windows Catalog behavior.
+- Keep the owner-approved Tympanus Slicebox Example-4 engine but enlarge the public stage to a 1280px responsive Product presentation.
+- Prefer active Product-backed curated slides over source-only fallback slides; show canonical Product SEO copy/schema and navigate media/caption to Product detail.
+- Keep the Product Admin 504 fix by leaving the unbounded ProductVariant inline removed.
+- Make same-identity Windows Republish atomic and complete: Product/content/SEO/price range/current media filenames+bytes/current Profiles/Variants/material/brand/manufacturer/color/weights/time/dimensions/pricing inputs must pass post-import parity before ACK success.
+- Preserve Product identity, historical physical media, compatibility, FAQ/Profile editing, Store ordering and existing DB schema.
 
 ## Safety / rollback
-- Production baseline: `release/phase50-a2j-hero-20260915 @ 12e319ace1eb55c114d7117e1b5a2fa170b410ab`.
-- Release base/rollback: `84d1a87c4ea632823743b9cc1c5fe3ba81b08843`; branch `backup/pre-a2l-site-priority-release-20260919`.
+- Current verified Production baseline: `release/phase50-a2j-hero-20260915 @ 16e24292d697e79bc6498d44826e191d6da57e23`.
+- Current local rollback branch: `backup/pre-a2l-hero-scale-seo-20260919 @ 16e24292d697e79bc6498d44826e191d6da57e23`.
 - No migration, requirements or settings delta is allowed.
 - Deployment is dedicated reverse-tunnel only and must create verified source/.env/static rollback evidence before ff-only promotion.
 
 ## Local evidence
-- Node syntax PASS.
-- Django check PASS with known CKEditor warning only.
-- `makemigrations --check --dry-run` reports no changes.
-- Hero + Product Admin focused regression: 25/25 PASS.
-- Deploy runner Bash syntax and `git diff --check` PASS.
+- Python compile + Node syntax PASS.
+- Django check PASS with known CKEditor warning only; `makemigrations --check --dry-run` reports no changes.
+- Focused Hero/Republish/Profile/Filament API/Admin/Visibility regression: 37/37 PASS.
+- E2E proves exact Product SEO basename, same-byte idempotence and full rollback on deliberate post-import parity mismatch.
+- Real read-only evidence: Catalog #625 maps to Site #39; existing ACK revision reached 5 despite shallow verification, proving ERR-49-172.
+- Production read-only Hero evidence: source-only Crystal Summit plus Product #35/#36 exist; Product-first query will select only #35/#36.
+- Deploy runner Git-Bash syntax, Node syntax and `git diff --check` PASS.
