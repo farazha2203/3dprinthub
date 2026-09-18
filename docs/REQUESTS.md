@@ -1,3 +1,10 @@
+## 2026-09-18 - Owner request: professional Stage-3 image workspace
+Status: `LOCAL_TESTED / COMMIT+PUSH / EXACT-SHA RELAUNCH NEXT`.
+
+Owner requires the Product image area to be substantially larger and easier to scroll/review, with smaller surrounding controls. Any subset of images must be selectable for bulk Edit/Delete without changing which images belong to the Site Product. Image names must follow the existing deterministic SEO naming rules rather than raw numeric source filenames. The Product main image must be the first/cover media for the Instagram feed while the remaining verified Product images stay available for the carousel.
+
+Acceptance also includes legacy real numbered Product files: if the file physically exists in the trusted Product images directory it must be visible, selectable and editable; removal must remain recoverable. Screenshot capture/naming itself remains unchanged.
+
 ## 2026-09-18 - Owner report: Product Screenshot button still appears non-functional
 Status: `GITHUB_UPDATED / EXACT-SHA QT RELAUNCHED / OWNER SMOKE NEXT`.
 Owner reports the Product Screenshot button still does not work. Real Product #628 evidence proves capture itself is succeeding; the newer numbered-image resolver hides the persisted manual Screenshot after refresh. Acceptance is narrow: keep capture/naming/SEO/button behavior unchanged, make explicitly persisted `source-page-screenshot` images visible in the same Product gallery, prevent them from stealing numbered source-image identity, pass the maintained image/Qt regression gate, then push and relaunch. Production remains untouched.

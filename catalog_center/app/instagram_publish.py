@@ -110,8 +110,8 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
         if ok and url.startswith("https://") and url not in media:
             media.append(url)
     main = str(ack.get("public_main_image_url") or "").strip()
-    if main.startswith("https://") and main not in media:
-        media.insert(0, main)
+    if main.startswith("https://"):
+        media = [main, *[url for url in media if url != main]]
     if not media:
         raise RuntimeError("هیچ تصویر عمومی HTTPS تأییدشده‌ای برای Instagram وجود ندارد.")
 

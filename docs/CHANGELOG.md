@@ -1,3 +1,13 @@
+## 2026-09-18 - Stage-3 image multi-select / SEO naming / Instagram cover
+- Added a separate temporary bulk-operation selection layer so Edit/Delete can target any subset without changing Product Site-image membership.
+- Enlarged the Stage-3 review cards/preview/scroll viewport and reduced control typography/height.
+- Trusted real legacy numbered files in the Product images directory are now editable via safe `local://` identities; recoverable removal moves the file to `removed_images`.
+- Image cards now foreground the deterministic SEO filename and keep the factual source filename as a secondary label.
+- Operator SEO/renumber uses the existing finalizer in non-deduplicating mode with the current selected count; normal publication finalization keeps the previous dedup/default limit behavior.
+- Instagram/Buffer feed media now places the verified Product main image first while retaining the rest of the verified carousel.
+- Real-copy Product #628 isolated acceptance keeps 11 selected images, produces 11 unique SEO metadata names, preserves Primary, and leaves all 15 real local gallery files editable.
+- Regression gates: 9/9 targeted, 80/80 maintained, 107/107 expanded; compile, diff-check and Qt launcher verification PASS. No migration or Production change.
+
 ## 2026-09-18 — Qt Product Screenshot visibility repair
 - Fixed the Product Wizard Screenshot action appearing to do nothing even though capture succeeded.
 - Preserved the mature capture implementation, `source-page-screenshot-<timestamp>.png` naming/crop behavior, SEO pipeline, button wiring and Product image sizing.

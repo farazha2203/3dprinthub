@@ -556,12 +556,36 @@ def prepare_full_ai_image_refresh(db, product_id: int) -> dict:
     }
 
 
-def finalize_selected_images(db, product_id: int) -> dict:
+def finalize_selected_images(
+    db,
+    product_id: int,
+    *,
+    deduplicate: bool = True,
+    image_limit: int | None = None,
+) -> dict:
     ensure_schema(db)
     row = db.product(int(product_id))
     if row is None:
         raise RuntimeError(f"Product {product_id} not found")
-    selected = cap_unique_urls(_json_list(_row_value(row, "selected_images_json", "[]")))
+    raw_selected = _json_list(_row_value(row, "selected_images_json", "[]"))
+    if image_limit is None:
+        selected = cap_unique_urls(raw_selected)
+        effective_limit = int(MAX_SOURCE_IMAGES)
+    else:
+        effective_limit = max(1, int(image_limit))
+        selected = []
+        seen_selected: set[str] = set()
+        for raw in raw_selected:
+            value = str(raw or "").strip()
+            if not value:
+                continue
+            key = canonical_image_url(value)
+            if key in seen_selected:
+                continue
+            seen_selected.add(key)
+            selected.append(value)
+            if len(selected) >= effective_limit:
+                break
     if not selected:
         raise RuntimeError("حداقل یک تصویر برای سایت انتخاب کن.")
 
@@ -595,7 +619,10 @@ def finalize_selected_images(db, product_id: int) -> dict:
             continue
         sha = _sha256(source)
         visual = _visual_fingerprint(source)
-        if sha in seen_sha or any(_looks_like_same_image(visual, old) for old in seen_visual):
+        if deduplicate and (
+            sha in seen_sha
+            or any(_looks_like_same_image(visual, old) for old in seen_visual)
+        ):
             duplicate_count += 1
             continue
         seen_sha.add(sha)
@@ -632,7 +659,7 @@ def finalize_selected_images(db, product_id: int) -> dict:
         metadata["metadata_ready"] = True
         items.append(metadata)
         kept_urls.append(source_url)
-        if len(items) >= MAX_SOURCE_IMAGES:
+        if len(items) >= effective_limit:
             break
 
     if unresolved:
@@ -687,7 +714,8 @@ def finalize_selected_images(db, product_id: int) -> dict:
     manifest = {
         "schema": "phase49.3c-image-seo-v1",
         "product_id": int(product_id),
-        "max_images": MAX_SOURCE_IMAGES,
+        "max_images": effective_limit,
+        "deduplicated": bool(deduplicate),
         "items": items,
     }
     (local_dir / "image_seo_manifest.json").write_text(

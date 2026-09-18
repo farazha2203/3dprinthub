@@ -1,3 +1,27 @@
+## ERR-49-162 - Operator SEO renumber reused publish dedup and could shrink the selected image set
+**Date:** 2026-09-18
+**Observed:** isolated Product #628 acceptance initially entered `بازسازی نام‌های SEO` with 11 selected images and returned only 6 because the generic finalizer removed one perceptual duplicate Product image plus several visually-similar screenshots.
+**Root cause:** the operator rename/metadata action and the final publication dedup gate reused the same unconditional finalizer mode even though they have different authority. Operator SEO editing must not silently change the operator's selection.
+**Fix:** keep `finalize_selected_images()` default behavior unchanged for publication, but add explicit optional `deduplicate=False` / selected-count limit only for Qt operator metadata/renumber calls. Normalize trusted legacy local identities before that operator pass.
+**Verification:** isolated copy acceptance now keeps 11 -> 11, produces 11 unique SEO filenames, preserves Primary and SQLite integrity; expanded regression gate 107/107 PASS.
+**Prevention:** never reuse a destructive/normalizing publication gate for a metadata-only operator action unless selection mutation is explicitly part of the command contract.
+
+## ERR-49-161 - Stage-3 site membership was being used as the bulk-operation selector
+**Date:** 2026-09-18
+**Observed:** most Product images were already checked for Site publication, so bulk Edit/Delete behaved like all-or-nothing. Real numbered legacy files could also be shown as `display_only`, preventing subset operations.
+**Root cause:** one checkbox carried two separate meanings: persistent Product Site membership and temporary operator targeting. The legacy display resolver also treated unmapped-but-real numbered Product files as non-mutating compatibility cards.
+**Fix:** add independent temporary operation selection; preserve `در سایت` as the persistent selection contract; make only physically-present numbered files in the trusted Product images directory addressable by safe local identity and recoverable removal.
+**Verification:** dedicated regressions prove arbitrary subset selection, delete/SEO only on the chosen subset, Site membership remains unchanged, and trusted legacy removal is recoverable. Real #628 copy exposes all 15 real files as editable.
+**Prevention:** UI action targeting, persisted publication membership and source identity are separate contracts and must not share a single state bit.
+
+### ERR-49-160B - Historical Phase49.3C filename assertion lagged current SEO-title-first authority
+**Date:** 2026-09-18
+**Observed:** the expanded 107-test gate had one failure expecting `fanart-solidarity-bear-3d-print-...` even when the row contained a newer authoritative `seo_title_fa`.
+**Root cause:** runtime filename authority changed on 2026-09-15 (`9b006bbb...`) to Product SEO first while that older test still hard-coded the pre-change source-title filename.
+**Fix:** keep runtime naming policy unchanged and update the stale regression to compare the actual deterministic planner output. The direct source-title fallback test remains intact.
+**Verification:** the formerly failing test passes alone and the expanded 107/107 gate is green.
+**Prevention:** filename-policy tests should assert the current planner authority rather than duplicate an obsolete priority order.
+
 ## ERR-49-160 — Qt Screenshot captured successfully but disappeared from Product gallery
 **Date:** 2026-09-18
 **Observed:** pressing «دریافت اسکرین‌شات صفحه محصول» created real `source-page-screenshot-*` files and updated `images_json`, but after refresh the new Screenshot was not visible in the Qt Product image grid, making the button appear non-functional.

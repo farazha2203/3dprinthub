@@ -62,6 +62,23 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         self.assertEqual(len(payload["media_urls"]), 2)
         self.assertEqual(payload["alt_texts"][0], "نمای اصلی محصول")
 
+    def test_primary_public_image_is_always_first_instagram_media(self):
+        row = product_row()
+        ack = json.loads(row["server_ack_json"])
+        main = ack["public_main_image_url"]
+        ack["images"] = [
+            {"url": "https://3dprinthub.ir/media/store/products/test-02.webp", "ok": True},
+            {"url": main, "ok": True},
+            {"url": "https://3dprinthub.ir/media/store/products/test-03.webp", "ok": True},
+        ]
+        row["server_ack_json"] = json.dumps(ack, ensure_ascii=False)
+
+        payload = canonical_site_payload(row, site_url="https://3dprinthub.ir")
+
+        self.assertEqual(payload["media_urls"][0], main)
+        self.assertEqual(len(payload["media_urls"]), 3)
+        self.assertEqual(payload["media_urls"].count(main), 1)
+
     @patch("app.instagram_publish.get_secret", return_value="token")
     @patch("app.instagram_publish._wait_container")
     @patch("app.instagram_publish._request_json")

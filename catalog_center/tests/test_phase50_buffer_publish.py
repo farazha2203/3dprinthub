@@ -101,6 +101,7 @@ class BufferPublishTests(unittest.TestCase):
             {"url": f"https://3dprinthub.ir/media/demo-{index}.webp", "ok": True}
             for index in range(1, 6)
         ]
+        ack["public_main_image_url"] = "https://3dprinthub.ir/media/demo-4.webp"
         db.row["server_ack_json"] = json.dumps(ack)
         result = publish_product(
             db, 7, BufferConfig(channel_id="chan-1"),
@@ -109,6 +110,14 @@ class BufferPublishTests(unittest.TestCase):
         create_input = self._feed_input(request)
         self.assertEqual(len(create_input["assets"]), 5)
         self.assertEqual(len(result["media_urls"]), 5)
+        self.assertEqual(
+            create_input["assets"][0]["image"]["url"],
+            "https://3dprinthub.ir/media/demo-4.webp",
+        )
+        self.assertEqual(
+            result["media_urls"][0],
+            "https://3dprinthub.ir/media/demo-4.webp",
+        )
         self.assertIn("utm_source=instagram", result["tracking_url"])
         self.assertIn("utm_campaign=product_catalog", result["tracking_url"])
 

@@ -372,15 +372,19 @@ class ProductWizardPage(QWidget):
     def _build_stage3(self) -> None:
         page, layout = _frame(
             "۳. تصاویر محصول",
-            "گالری دو ستونه بزرگ و اسکرول‌پذیر؛ انتخاب/حذف گروهی، تصویر اصلی، "
-            "تصویر اسلایدر، اندازه/حجم، SEO تکی/گروهی و بازیابی همه تصاویر در همین مرحله.",
+            "گالری بزرگ و اسکرول‌پذیر؛ «انتخاب» برای عملیات گروهی مستقل از «در سایت» است. "
+            "تصویر اصلی/اسلایدر، SEO تکی/گروهی و بازیابی تصاویر در همین مرحله انجام می‌شود.",
         )
 
         control = QFrame()
         control.setObjectName("Card")
         control_layout = QVBoxLayout(control)
+        control_layout.setContentsMargins(6, 4, 6, 4)
+        control_layout.setSpacing(4)
         selection_actions = QHBoxLayout()
+        selection_actions.setSpacing(5)
         operation_actions = QHBoxLayout()
+        operation_actions.setSpacing(5)
 
         select_all = QPushButton("انتخاب همه")
         clear_all = QPushButton("لغو انتخاب همه")
@@ -388,7 +392,7 @@ class ProductWizardPage(QWidget):
         apply_seo = QPushButton("اعمال SEO فارسی محصول")
         delete_selected = QPushButton("حذف انتخاب‌شده‌ها")
         delete_selected.setProperty("danger", True)
-        renumber_images = QPushButton("اصلاح شماره عکس‌ها")
+        renumber_images = QPushButton("بازسازی نام‌های SEO")
         screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
         recover = QPushButton("دریافت داده و عکس بیشتر از لینک محصول")
         recover.setProperty("primary", True)
@@ -402,8 +406,12 @@ class ProductWizardPage(QWidget):
         self.image_recover_limit.setValue(5)
         self.image_recover_limit.setSuffix(" عکس")
 
-        select_all.clicked.connect(lambda: self.image_grid.set_all_selected(True))
-        clear_all.clicked.connect(lambda: self.image_grid.set_all_selected(False))
+        select_all.clicked.connect(
+            lambda: self.image_grid.set_all_operation_selected(True)
+        )
+        clear_all.clicked.connect(
+            lambda: self.image_grid.set_all_operation_selected(False)
+        )
         edit_seo.clicked.connect(self._edit_selected_image_seo)
         apply_seo.clicked.connect(self._apply_product_image_seo)
         delete_selected.clicked.connect(self._delete_selected_images)
@@ -411,12 +419,31 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
+        recover_count_label = QLabel("تعداد عکس")
+        compact_widgets = (
+            select_all,
+            clear_all,
+            edit_seo,
+            apply_seo,
+            delete_selected,
+            renumber_images,
+            screenshot,
+            recover,
+            self.image_recover_limit,
+            recover_count_label,
+        )
+        for widget in compact_widgets:
+            font = widget.font()
+            font.setPointSize(8)
+            widget.setFont(font)
+            widget.setMaximumHeight(30)
+
         for widget in (select_all, clear_all, edit_seo, apply_seo, delete_selected):
             selection_actions.addWidget(widget)
         selection_actions.addStretch(1)
         operation_actions.addWidget(renumber_images)
         operation_actions.addWidget(screenshot)
-        operation_actions.addWidget(QLabel("تعداد عکس"))
+        operation_actions.addWidget(recover_count_label)
         operation_actions.addWidget(self.image_recover_limit)
         operation_actions.addWidget(recover)
         operation_actions.addStretch(1)
@@ -427,6 +454,8 @@ class ProductWizardPage(QWidget):
         slider_box = QFrame()
         slider_box.setObjectName("Card")
         slider_layout = QHBoxLayout(slider_box)
+        slider_layout.setContentsMargins(6, 3, 6, 3)
+        slider_layout.setSpacing(6)
         self.image_slider_enabled = QCheckBox(
             "این محصول در اسلایدر صفحه اول نمایش داده شود"
         )
@@ -437,6 +466,12 @@ class ProductWizardPage(QWidget):
         )
         slider_hint.setObjectName("Muted")
         slider_hint.setWordWrap(True)
+        slider_font = slider_hint.font()
+        slider_font.setPointSize(8)
+        slider_hint.setFont(slider_font)
+        slider_toggle_font = self.image_slider_enabled.font()
+        slider_toggle_font.setPointSize(8)
+        self.image_slider_enabled.setFont(slider_toggle_font)
         slider_layout.addWidget(self.image_slider_enabled)
         slider_layout.addWidget(slider_hint, 1)
         layout.addWidget(slider_box)
@@ -449,9 +484,9 @@ class ProductWizardPage(QWidget):
             columns=2,
             large_cards=True,
         )
-        self.image_grid.setMinimumHeight(560)
-        self.image_grid.scroll.verticalScrollBar().setSingleStep(72)
-        self.image_grid.scroll.verticalScrollBar().setPageStep(420)
+        self.image_grid.setMinimumHeight(720)
+        self.image_grid.scroll.verticalScrollBar().setSingleStep(90)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(600)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])
@@ -1653,7 +1688,7 @@ class ProductWizardPage(QWidget):
     def _delete_selected_images(self) -> None:
         if self.product_id is None:
             return
-        urls = self.image_grid.selected_urls()
+        urls = self.image_grid.operation_urls()
         if not urls:
             QMessageBox.warning(
                 self,
@@ -1698,7 +1733,7 @@ class ProductWizardPage(QWidget):
         )
 
     def _edit_selected_image_seo(self) -> None:
-        urls = self.image_grid.selected_urls()
+        urls = self.image_grid.operation_urls()
         if not urls:
             QMessageBox.warning(
                 self,
@@ -1735,12 +1770,12 @@ class ProductWizardPage(QWidget):
     def _apply_product_image_seo(self) -> None:
         if self.product_id is None:
             return
-        urls = self.image_grid.selected_urls()
+        urls = self.image_grid.operation_urls()
         if not urls:
             QMessageBox.warning(
                 self,
                 "SEO تصاویر",
-                "برای اعمال SEO فارسی، حداقل یک تصویر را انتخاب کن.",
+                "برای اعمال SEO فارسی، حداقل یک تصویر را برای عملیات انتخاب کن.",
             )
             return
         row = self.kernel.products.get(self.product_id) or {}

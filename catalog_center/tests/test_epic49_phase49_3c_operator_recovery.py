@@ -159,7 +159,14 @@ class Phase493CImageIdentityTests(unittest.TestCase):
             self.assertEqual(metadata[0]["creator"], "Original Designer")
             self.assertEqual(metadata[0]["copyright_holder"], "Original Designer")
             self.assertEqual(metadata[0]["publisher"], "3DPrintHub")
-            self.assertTrue(metadata[0]["seo_filename"].startswith("fanart-solidarity-bear-3d-print-"))
+            # Current filename authority is Product SEO first. The older
+            # source-title-only expectation predates the 2026-09-15
+            # republish/image-refresh continuity contract.
+            self.assertEqual(
+                metadata[0]["seo_filename"],
+                planned_seo_filename(row, 1),
+            )
+            self.assertNotEqual(metadata[0]["seo_filename"], "001.webp")
             self.assertTrue(Path(metadata[0]["final_local_file"]).is_file())
 
 

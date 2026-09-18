@@ -5,12 +5,13 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from qt6.kernel import AICore, build_kernel
@@ -420,17 +421,133 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(page.image_grid.columns, 2)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(len(page.image_grid.cards), 3)
-            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 380)
-            self.assertEqual(page.image_grid.cards[0].minimumHeight(), 620)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 350)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 270)
-            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 640)
+            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 420)
+            self.assertEqual(page.image_grid.cards[0].minimumHeight(), 780)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 400)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 360)
+            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 800)
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 720)
+            self.assertGreaterEqual(
+                page.image_grid.scroll.verticalScrollBar().width(),
+                18,
+            )
             self.assertEqual(
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
             self.assertIn("60", page.image_task_status.text())
             self.assertIn("3", page.image_task_status.text())
+        finally:
+            page.close()
+
+    def test_operation_multiselect_is_independent_from_site_image_selection(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(set(page.image_grid.selected_urls()), set(urls))
+            self.assertEqual(page.image_grid.operation_urls(), [])
+
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            cards[urls[0]].bulk_selected.setChecked(True)
+            cards[urls[2]].bulk_selected.setChecked(True)
+
+            self.assertEqual(
+                page.image_grid.operation_urls(),
+                [urls[0], urls[2]],
+            )
+            self.assertEqual(set(page.image_grid.selected_urls()), set(urls))
+
+            page.image_grid.set_all_operation_selected(True)
+            self.assertEqual(set(page.image_grid.operation_urls()), set(urls))
+            page.image_grid.set_all_operation_selected(False)
+            self.assertEqual(page.image_grid.operation_urls(), [])
+            self.assertEqual(set(page.image_grid.selected_urls()), set(urls))
+        finally:
+            page.close()
+
+    def test_bulk_delete_removes_only_operation_selected_images(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            cards[urls[1]].bulk_selected.setChecked(True)
+            cards[urls[2]].bulk_selected.setChecked(True)
+            with patch(
+                "qt6.product_wizard.QMessageBox.question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ):
+                page._delete_selected_images()
+
+            row = dict(self.db.product(product_id))
+            self.assertEqual(json.loads(row["images_json"]), [urls[0]])
+            self.assertEqual(json.loads(row["selected_images_json"]), [urls[0]])
+            self.assertEqual(row["primary_image_url"], urls[0])
+        finally:
+            page.close()
+
+    def test_apply_product_seo_targets_only_operation_selected_images(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            cards[urls[1]].bulk_selected.setChecked(True)
+            page._apply_product_image_seo()
+
+            metadata = json.loads(
+                self.db.product(product_id)["image_metadata_json"]
+            )
+            by_url = {
+                str(item.get("source_url") or ""): item
+                for item in metadata
+            }
+            self.assertIn("alt_text", by_url[urls[1]].get("_operator_override_fields", []))
+            self.assertNotIn(
+                "alt_text",
+                by_url[urls[0]].get("_operator_override_fields", []),
+            )
+            self.assertNotIn(
+                "alt_text",
+                by_url[urls[2]].get("_operator_override_fields", []),
+            )
+        finally:
+            page.close()
+
+    def test_card_shows_seo_filename_and_keeps_source_filename_secondary(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        self.kernel.images.finalize(product_id)
+        items = {
+            str(item.get("url") or ""): item
+            for item in self.kernel.images.local_items(product_id)
+        }
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            first = cards[urls[0]]
+            self.assertEqual(
+                first.filename.text(),
+                items[urls[0]]["planned_filename"],
+            )
+            self.assertIn(
+                items[urls[0]]["filename"],
+                first.source_filename.text(),
+            )
+            self.assertTrue(first.filename.text().endswith("-01.webp"))
         finally:
             page.close()
 
@@ -459,10 +576,102 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         by_name = {item["filename"]: item for item in items}
         self.assertEqual(set(by_name), {"01.webp", "02.webp", screenshot_name})
         self.assertEqual(by_name["01.webp"]["url"], source_url)
-        self.assertTrue(by_name["02.webp"]["display_only"])
+        self.assertEqual(by_name["02.webp"]["url"], "local://02.webp")
+        self.assertFalse(by_name["02.webp"]["display_only"])
+        self.assertTrue(by_name["02.webp"]["planned_filename"].endswith("-02.webp"))
         self.assertEqual(by_name[screenshot_name]["url"], screenshot_url)
         self.assertFalse(by_name[screenshot_name]["display_only"])
         self.assertFalse(by_name[screenshot_name]["selected"])
+
+    def test_trusted_legacy_numbered_local_image_is_editable_and_removal_is_recoverable(self):
+        local_dir = self.root / "legacy-editable-local"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (400, 300), "white").save(
+            image_dir / "01.webp",
+            format="WEBP",
+        )
+        Image.new("RGB", (420, 320), "white").save(
+            image_dir / "02.webp",
+            format="WEBP",
+        )
+
+        source_url = "https://cdn.example.com/source-01.jpg"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": source_url,
+                            "local_file": str(image_dir / "01.webp"),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147014",
+            local_dir=local_dir,
+            urls=[source_url],
+        )
+        legacy_alias = "local-display://makerworld/3147014/02.webp"
+        self.db.update_product(
+            product_id,
+            {
+                "selected_images_json": json.dumps(
+                    [source_url, legacy_alias],
+                    ensure_ascii=False,
+                ),
+            },
+        )
+
+        items = {
+            item["filename"]: item
+            for item in self.kernel.images.local_items(product_id)
+        }
+        self.assertEqual(items["02.webp"]["url"], "local://02.webp")
+        self.assertFalse(items["02.webp"]["display_only"])
+        self.assertTrue(items["02.webp"]["selected"])
+        self.assertTrue(items["02.webp"]["planned_filename"].endswith("-02.webp"))
+
+        self.kernel.images.update_metadata(
+            product_id,
+            ["local://02.webp"],
+            {"alt_text": "نمای دوم محصول"},
+        )
+        seo_row = dict(self.db.product(product_id))
+        seo_selected = json.loads(seo_row["selected_images_json"])
+        self.assertIn("local://02.webp", seo_selected)
+        self.assertNotIn(legacy_alias, seo_selected)
+        seo_metadata = {
+            str(item.get("source_url") or ""): item
+            for item in json.loads(seo_row["image_metadata_json"])
+        }
+        self.assertTrue(
+            Path(seo_metadata["local://02.webp"]["final_local_file"]).is_file()
+        )
+        self.assertTrue(
+            seo_metadata["local://02.webp"]["seo_filename"].endswith("-02.webp")
+        )
+
+        self.kernel.images.remove_urls(product_id, ["local://02.webp"])
+
+        refreshed = dict(self.db.product(product_id))
+        self.assertNotIn(
+            legacy_alias,
+            json.loads(refreshed["selected_images_json"]),
+        )
+        self.assertFalse((image_dir / "02.webp").exists())
+        self.assertTrue((local_dir / "removed_images" / "02.webp").is_file())
+        self.assertNotIn(
+            "02.webp",
+            {
+                item["filename"]
+                for item in self.kernel.images.local_items(product_id)
+            },
+        )
 
     def test_source_urls_without_local_files_do_not_create_broken_gallery_cards(self):
         urls = [f"https://cdn.example.com/missing-{index:02d}.jpg" for index in range(1, 61)]

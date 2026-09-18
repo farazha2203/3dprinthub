@@ -33,12 +33,22 @@ def human_bytes(value: int) -> str:
     return f"{size / (1024 * 1024):.2f} MB"
 
 
+class ClickableImageLabel(QLabel):
+    clicked = Signal()
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+        super().mousePressEvent(event)
+
+
 class ImageCard(QFrame):
     deleteRequested = Signal(str)
     seoRequested = Signal(str)
     moveEarlierRequested = Signal(str)
     moveLaterRequested = Signal(str)
     selectionChanged = Signal()
+    operationSelectionChanged = Signal()
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
 
@@ -53,20 +63,20 @@ class ImageCard(QFrame):
         self.item = dict(item)
         self.large = bool(large)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(380 if self.large else 220)
-        self.setMaximumWidth(560 if self.large else 300)
-        self.setMinimumHeight(620 if self.large else 405)
+        self.setMinimumWidth(420 if self.large else 220)
+        self.setMaximumWidth(760 if self.large else 300)
+        self.setMinimumHeight(780 if self.large else 405)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(8, 8, 8, 8)
-        root.setSpacing(6)
+        root.setContentsMargins(6, 6, 6, 6)
+        root.setSpacing(4)
 
-        self.preview = QLabel()
+        self.preview = ClickableImageLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if self.large:
-            self.preview.setMinimumSize(350, 270)
-            self.preview.setMaximumHeight(360)
+            self.preview.setMinimumSize(400, 360)
+            self.preview.setMaximumHeight(520)
         else:
             self.preview.setMinimumSize(190, 145)
             self.preview.setMaximumHeight(180)
@@ -77,7 +87,7 @@ class ImageCard(QFrame):
             self.preview.setObjectName("MissingImage")
         else:
             preview_width, preview_height = (
-                (520, 340) if self.large else (255, 170)
+                (720, 500) if self.large else (255, 170)
             )
             self.preview.setPixmap(
                 pixmap.scaled(
@@ -90,11 +100,14 @@ class ImageCard(QFrame):
         root.addWidget(self.preview)
 
         self.options_label = QLabel("\u06af\u0632\u06cc\u0646\u0647\u200c\u0647\u0627\u06cc \u062a\u0635\u0648\u06cc\u0631")
-        self.options_label.setStyleSheet("font-weight: 700;")
+        self.options_label.setStyleSheet("font-size: 9px; font-weight: 700;")
         root.addWidget(self.options_label)
 
         top = QHBoxLayout()
-        self.selected = QCheckBox("انتخاب")
+        top.setSpacing(6)
+        self.bulk_selected = QCheckBox("انتخاب")
+        self.bulk_selected.setChecked(False)
+        self.selected = QCheckBox("در سایت")
         self.selected.setChecked(bool(self.item.get("selected")))
         self.primary = QRadioButton("اصلی")
         self.primary.setAutoExclusive(False)
@@ -102,18 +115,40 @@ class ImageCard(QFrame):
         self.slider = QRadioButton("اسلایدر")
         self.slider.setAutoExclusive(False)
         self.slider.setChecked(bool(self.item.get("slider")))
+        for control in (self.bulk_selected, self.selected, self.primary, self.slider):
+            font = control.font()
+            font.setPointSize(9)
+            control.setFont(font)
+        top.addWidget(self.bulk_selected)
         top.addWidget(self.selected)
         top.addWidget(self.primary)
         top.addWidget(self.slider)
+        top.addStretch(1)
         root.addLayout(top)
 
-        filename = str(self.item.get("filename") or "")
-        if not filename:
-            filename = str(self.item.get("url") or "").rsplit("/", 1)[-1][:55]
-        self.filename = QLabel(filename or "بدون نام فایل")
+        source_filename = str(self.item.get("filename") or "")
+        if not source_filename:
+            source_filename = str(self.item.get("url") or "").rsplit("/", 1)[-1][:55]
+        seo_filename = str(self.item.get("planned_filename") or "").strip()
+        self.filename = QLabel(seo_filename or source_filename or "بدون نام SEO")
         self.filename.setWordWrap(False)
-        self.filename.setToolTip(str(self.item.get("url") or ""))
+        self.filename.setToolTip(
+            f"نام SEO: {seo_filename or '—'}\nفایل منبع: {source_filename or '—'}"
+        )
+        seo_font = self.filename.font()
+        seo_font.setPointSize(10)
+        seo_font.setBold(True)
+        self.filename.setFont(seo_font)
         root.addWidget(self.filename)
+
+        self.source_filename = QLabel(f"فایل منبع: {source_filename or '—'}")
+        self.source_filename.setObjectName("Muted")
+        self.source_filename.setWordWrap(False)
+        self.source_filename.setToolTip(source_filename)
+        source_font = self.source_filename.font()
+        source_font.setPointSize(8)
+        self.source_filename.setFont(source_font)
+        root.addWidget(self.source_filename)
 
         width = int(self.item.get("width") or 0)
         height = int(self.item.get("height") or 0)
@@ -159,12 +194,22 @@ class ImageCard(QFrame):
         delete.clicked.connect(
             lambda: self.deleteRequested.emit(str(self.item.get("url") or ""))
         )
+        for button in (self.move_earlier, self.move_later, seo, delete):
+            font = button.font()
+            font.setPointSize(9)
+            button.setFont(font)
+            button.setMaximumHeight(28)
         actions.addWidget(seo)
         actions.addWidget(delete)
         actions.addStretch(1)
         root.addLayout(actions)
 
+        self.preview.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.preview.setToolTip("برای انتخاب/لغو انتخاب این تصویر در عملیات گروهی کلیک کن")
+        self.preview.clicked.connect(self._toggle_operation_selection)
+
         if bool(self.item.get("display_only")):
+            self.bulk_selected.setEnabled(False)
             self.selected.setEnabled(False)
             self.primary.setEnabled(False)
             self.slider.setEnabled(False)
@@ -175,6 +220,9 @@ class ImageCard(QFrame):
 
         # QCheckBox.toggled emits bool, while the gallery contract is a
         # zero-argument semantic notification. Consume the Qt payload here.
+        self.bulk_selected.toggled.connect(
+            lambda _checked=False: self.operationSelectionChanged.emit()
+        )
         self.selected.toggled.connect(
             lambda _checked=False: self.selectionChanged.emit()
         )
@@ -193,6 +241,10 @@ class ImageCard(QFrame):
             )
         )
 
+    def _toggle_operation_selection(self) -> None:
+        if self.bulk_selected.isEnabled():
+            self.bulk_selected.toggle()
+
 
 class ProductImageGrid(QWidget):
     """Scrollable Product gallery with configurable large review cards."""
@@ -204,6 +256,7 @@ class ProductImageGrid(QWidget):
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
     selectionChanged = Signal()
+    operationSelectionChanged = Signal()
 
     def __init__(
         self,
@@ -243,6 +296,7 @@ class ProductImageGrid(QWidget):
         self.grid.setSpacing(12)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.scroll.setWidget(self.host)
+        self.scroll.verticalScrollBar().setFixedWidth(18)
         root.addWidget(self.scroll, 1)
 
     def clear(self) -> None:
@@ -271,6 +325,7 @@ class ProductImageGrid(QWidget):
             card.moveEarlierRequested.connect(self.moveEarlierRequested.emit)
             card.moveLaterRequested.connect(self.moveLaterRequested.emit)
             card.selectionChanged.connect(self._selection_changed)
+            card.operationSelectionChanged.connect(self._operation_selection_changed)
             card.primaryChanged.connect(self._primary_changed)
             card.sliderChanged.connect(self._slider_changed)
             self.cards.append(card)
@@ -287,7 +342,7 @@ class ProductImageGrid(QWidget):
         # grid and make the controls under the final image rows unreachable.
         # Give the content widget a factual row-based minimum height so the
         # vertical scrollbar always spans the entire card/control surface.
-        card_height = 640 if self.large_cards else 430
+        card_height = 800 if self.large_cards else 430
         self.host.setMinimumHeight(
             rows * card_height + max(0, rows - 1) * self.grid.spacing()
         )
@@ -299,6 +354,10 @@ class ProductImageGrid(QWidget):
         self._update_summary()
         self._refresh_move_controls()
         self.selectionChanged.emit()
+
+    def _operation_selection_changed(self) -> None:
+        self._update_summary()
+        self.operationSelectionChanged.emit()
 
     def _refresh_move_controls(self) -> None:
         movable = [
@@ -321,10 +380,14 @@ class ProductImageGrid(QWidget):
             card.move_later.setEnabled(index < len(movable) - 1)
 
     def _update_summary(self) -> None:
-        selected = sum(1 for card in self.cards if card.selected.isChecked())
+        site_selected = sum(1 for card in self.cards if card.selected.isChecked())
+        operation_selected = sum(
+            1 for card in self.cards if card.bulk_selected.isChecked()
+        )
         self.summary.setText(
-            f"{len(self.cards)} تصویر • {selected} انتخاب‌شده • "
-            f"{self._missing_count} تصویر بدون فایل محلی"
+            f"{len(self.cards)} تصویر • {operation_selected} انتخاب عملیاتی • "
+            f"{site_selected} انتخاب‌شده در سایت • "
+            f"{self._missing_count} بدون فایل محلی"
         )
 
     def _primary_changed(self, url: str) -> None:
@@ -359,6 +422,16 @@ class ProductImageGrid(QWidget):
             if card.selected.isChecked()
         ]
 
+    def operation_urls(self) -> list[str]:
+        return [
+            str(card.item.get("url") or "")
+            for card in self.cards
+            if (
+                card.bulk_selected.isChecked()
+                and not bool(card.item.get("display_only"))
+            )
+        ]
+
     def primary_url(self) -> str:
         for card in self.cards:
             if card.primary.isChecked():
@@ -373,7 +446,13 @@ class ProductImageGrid(QWidget):
 
     def set_all_selected(self, checked: bool) -> None:
         for card in self.cards:
-            card.selected.setChecked(bool(checked))
+            if card.selected.isEnabled():
+                card.selected.setChecked(bool(checked))
+
+    def set_all_operation_selected(self, checked: bool) -> None:
+        for card in self.cards:
+            if card.bulk_selected.isEnabled():
+                card.bulk_selected.setChecked(bool(checked))
 
     def item_for_url(self, url: str) -> dict[str, Any] | None:
         for card in self.cards:

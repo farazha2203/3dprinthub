@@ -1,3 +1,17 @@
+## 2026-09-18 — Active owner gate: Stage-3 image workspace
+- [x] Verify Local/GitHub base `e076efa...` and push rollback branch before edits.
+- [x] Separate temporary bulk-operation image selection from persistent `در سایت` membership.
+- [x] Make trusted legacy numbered Product images selectable/editable/recoverable without inventing remote source URLs.
+- [x] Enlarge the image review/scroll workspace and compact the toolbar/control typography.
+- [x] Show deterministic SEO filename with source filename retained as secondary evidence.
+- [x] Preserve operator-selected image count during SEO edit/renumber; keep publish-time default dedup unchanged.
+- [x] Put verified Product main image first in Instagram/Buffer feed media.
+- [x] Real-copy acceptance Product #628: 11 -> 11 selected, unique SEO names, Primary preserved, 15/15 real gallery items editable.
+- [x] Targeted 9/9, maintained 80/80, expanded 107/107, compile/diff-check/Qt verify PASS.
+- [ ] Commit/push exact candidate and verify remote SHA.
+- [ ] Fresh canonical Catalog backup and exact-SHA Qt relaunch.
+- [ ] Owner visual smoke on Product #628.
+
 ## 2026-09-18 — Immediate Screenshot-button repair
 - [x] Prove on real Product #628 whether capture executes: multiple fresh Screenshot files + DB `local://` entries exist.
 - [x] Identify display-only regression in the A2L numbered-image resolver rather than changing capture/naming again.

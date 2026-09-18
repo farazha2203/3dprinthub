@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -622,21 +623,24 @@ class ImageCore:
         source_urls = self.source_ordered_urls(data)
         raw_root = str(data.get("local_dir") or "").strip()
         numbered: dict[int, str] = {}
-        if raw_root and source_urls:
+        if raw_root:
             try:
                 image_dir = Path(raw_root).resolve() / "images"
             except Exception:
                 image_dir = Path()
             if image_dir.is_dir():
                 try:
-                    children = sorted(image_dir.iterdir(), key=lambda item: item.name.casefold())
+                    children = sorted(
+                        image_dir.iterdir(),
+                        key=lambda item: item.name.casefold(),
+                    )
                 except OSError:
                     children = []
                 for child in children:
                     if not child.is_file() or not child.stem.isdigit():
                         continue
                     slot = int(child.stem)
-                    if slot < 1 or slot > len(source_urls):
+                    if slot < 1:
                         continue
                     try:
                         numbered.setdefault(slot, str(child.resolve()))
@@ -650,6 +654,23 @@ class ImageCore:
                 candidate = numbered.get(slot) or self.local_path_for_url(data, url)
                 if not candidate:
                     continue
+                try:
+                    resolved = Path(candidate).resolve()
+                except Exception:
+                    continue
+                if not resolved.is_file():
+                    continue
+                key = str(resolved).casefold()
+                if key in seen:
+                    continue
+                seen.add(key)
+                output.append(str(resolved))
+            # Every real numbered file in the Product's own images directory is
+            # reviewable/editable even when an old Product no longer has a
+            # one-to-one source URL for that slot. Never synthesize a missing
+            # file; append only files that physically exist.
+            for slot in sorted(numbered):
+                candidate = numbered[slot]
                 try:
                     resolved = Path(candidate).resolve()
                 except Exception:
@@ -871,13 +892,97 @@ class ImageCore:
         if not str(data.get("local_dir") or "").strip() or not local_dir.is_dir():
             raise RuntimeError("پوشه محلی محصول پیدا نشد.")
 
+        image_dir = (local_dir / "images").resolve()
+
+        def normalize_legacy_local(value: str) -> str:
+            raw = str(value or "").strip()
+            if not raw.startswith("local-display://"):
+                return raw
+            name = raw.rsplit("/", 1)[-1]
+            candidate_name = Path(name)
+            if candidate_name.name != name:
+                return raw
+            candidate = (image_dir / name).resolve()
+            if candidate.parent == image_dir and candidate.is_file():
+                return f"local://{name}"
+            return raw
+
+        raw_images = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("images_json"))
+            if str(value or "").strip()
+        ]
+        raw_selected = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        normalized_images = [
+            normalize_legacy_local(value) for value in raw_images
+        ]
+        normalized_selected = [
+            normalize_legacy_local(value) for value in raw_selected
+        ]
+        normalized_primary = normalize_legacy_local(
+            str(data.get("primary_image_url") or "")
+        )
+        metadata = [
+            dict(item)
+            for item in self._json_list(data.get("image_metadata_json"))
+            if isinstance(item, dict)
+        ]
+        metadata_changed = False
+        for item in metadata:
+            source_url = str(item.get("source_url") or "").strip()
+            normalized_url = normalize_legacy_local(source_url)
+            if normalized_url != source_url:
+                item["source_url"] = normalized_url
+                metadata_changed = True
+        identity_changed = (
+            normalized_images != raw_images
+            or normalized_selected != raw_selected
+            or normalized_primary != str(data.get("primary_image_url") or "")
+            or metadata_changed
+        )
+        if identity_changed:
+            self.db.update_product(
+                product_id,
+                {
+                    "images_json": json.dumps(
+                        list(dict.fromkeys(normalized_images)),
+                        ensure_ascii=False,
+                    ),
+                    "selected_images_json": json.dumps(
+                        list(dict.fromkeys(normalized_selected)),
+                        ensure_ascii=False,
+                    ),
+                    "primary_image_url": normalized_primary,
+                    "image_metadata_json": json.dumps(
+                        metadata,
+                        ensure_ascii=False,
+                    ),
+                },
+            )
+            data = dict(self.db.product(product_id) or data)
+
         seo_dir = (local_dir / "seo_images").resolve()
         before = {
             str(Path(str(item.get("final_local_file") or "")).resolve())
             for item in self._json_list(data.get("image_metadata_json"))
             if isinstance(item, dict) and str(item.get("final_local_file") or "").strip()
         }
-        result = dict(image_pipeline.finalize_selected_images(self.db, product_id) or {})
+        operator_selected_count = len(
+            self._json_list(data.get("selected_images_json"))
+        )
+        result = dict(
+            image_pipeline.finalize_selected_images(
+                self.db,
+                product_id,
+                deduplicate=False,
+                image_limit=max(1, operator_selected_count),
+            )
+            or {}
+        )
         refreshed = dict(self.db.product(product_id) or {})
         after = {
             str(Path(str(item.get("final_local_file") or "")).resolve())
@@ -937,6 +1042,18 @@ class ImageCore:
                 selected_urls.append(url)
         selected = set(selected_urls)
         selected_keys = {self._url_asset_key(value) for value in selected_urls if value}
+        selected_position_by_key: dict[str, int] = {}
+        for index, value in enumerate(selected_urls, 1):
+            key = self._url_asset_key(value)
+            if key:
+                selected_position_by_key.setdefault(key, index)
+            raw = str(value or "").strip()
+            if raw.startswith("local-display://"):
+                name = raw.rsplit("/", 1)[-1]
+                if name:
+                    local_key = self._url_asset_key(f"local://{name}")
+                    if local_key:
+                        selected_position_by_key.setdefault(local_key, index)
 
         alts = [
             str(item or "").strip()
@@ -990,6 +1107,7 @@ class ImageCore:
             slot = display_index
             url = ""
             display_only = False
+            legacy_alias = ""
             if mapped is not None:
                 slot, url = mapped
             else:
@@ -1005,13 +1123,30 @@ class ImageCore:
                             slot = numbered_slot
                             url = candidate_url
                 if not url:
-                    display_only = True
                     source_code = str(data.get("source_code") or "local")
                     external_id = str(data.get("external_id") or product_id)
-                    url = (
+                    legacy_alias = (
                         f"local-display://{source_code}/{external_id}/"
                         f"{file_path.name}"
                     )
+                    raw_root = str(data.get("local_dir") or "").strip()
+                    trusted_images_dir = None
+                    if raw_root:
+                        try:
+                            trusted_images_dir = (
+                                Path(raw_root).resolve() / "images"
+                            ).resolve()
+                        except Exception:
+                            trusted_images_dir = None
+                    if (
+                        trusted_images_dir is not None
+                        and file_path.parent == trusted_images_dir
+                    ):
+                        url = f"local://{file_path.name}"
+                        display_only = False
+                    else:
+                        url = legacy_alias
+                        display_only = True
             used_urls.add(url)
 
             width = height = file_bytes = 0
@@ -1031,19 +1166,55 @@ class ImageCore:
                 pass
 
             url_key = self._url_asset_key(url)
+            legacy_key = self._url_asset_key(legacy_alias)
+            candidate_keys = {key for key in (url_key, legacy_key) if key}
             meta = next(
                 (
                     item
                     for item in metadata
                     if self._url_asset_key(
                         str(item.get("source_url") or item.get("url") or "")
-                    ) == url_key
+                    ) in candidate_keys
                 ),
                 {},
             )
             alt = alt_by_key.get(url_key, "")
+            if not alt and legacy_key:
+                alt = alt_by_key.get(legacy_key, "")
             if not alt:
                 alt = str(meta.get("alt_text") or "")
+
+            planned_filename = str(
+                meta.get("seo_filename")
+                or meta.get("planned_filename")
+                or ""
+            ).strip()
+            seo_index = next(
+                (
+                    selected_position_by_key[key]
+                    for key in candidate_keys
+                    if key in selected_position_by_key
+                ),
+                0,
+            )
+            if not display_only and url:
+                try:
+                    filename_index = max(
+                        1,
+                        int(seo_index or slot or display_index),
+                    )
+                    fallback_name = image_pipeline.planned_seo_filename(
+                        data,
+                        filename_index,
+                    )
+                    planned_filename = image_pipeline._indexed_seo_filename(
+                        planned_filename or fallback_name,
+                        filename_index,
+                        fallback=fallback_name,
+                    )
+                except Exception:
+                    if not planned_filename:
+                        planned_filename = ""
 
             output.append(
                 {
@@ -1054,12 +1225,19 @@ class ImageCore:
                     "downloaded": True,
                     "display_only": display_only,
                     "primary": (
-                        not display_only and bool(primary_key) and url_key == primary_key
+                        not display_only
+                        and bool(primary_key)
+                        and primary_key in candidate_keys
                     ),
                     "slider": (
-                        not display_only and bool(slider_key) and url_key == slider_key
+                        not display_only
+                        and bool(slider_key)
+                        and slider_key in candidate_keys
                     ),
-                    "selected": (not display_only and url_key in selected_keys),
+                    "selected": (
+                        not display_only
+                        and bool(candidate_keys.intersection(selected_keys))
+                    ),
                     "width": width,
                     "height": height,
                     "format": image_format,
@@ -1072,11 +1250,7 @@ class ImageCore:
                         if isinstance(meta.get("keywords"), list)
                         else []
                     ),
-                    "planned_filename": str(
-                        meta.get("seo_filename")
-                        or meta.get("planned_filename")
-                        or ""
-                    ),
+                    "planned_filename": planned_filename,
                     "metadata": meta,
                 }
             )
@@ -1104,10 +1278,29 @@ class ImageCore:
             for value in urls or []
             if str(value or "").strip()
         }
+        remove_local_names = {
+            Path(value.split("local://", 1)[1]).name.casefold()
+            for value in remove
+            if value.startswith("local://")
+            and Path(value.split("local://", 1)[1]).name
+            == value.split("local://", 1)[1]
+        }
+
+        def matches_remove(value: str) -> bool:
+            raw = str(value or "").strip()
+            if raw in remove:
+                return True
+            if remove_local_names and raw.startswith(
+                ("local://", "local-display://")
+            ):
+                name = raw.rsplit("/", 1)[-1].casefold()
+                return name in remove_local_names
+            return False
+
         all_urls = [
             url
             for url in self.urls(data)
-            if url not in remove
+            if not matches_remove(url)
         ]
 
         old_selected = [
@@ -1134,10 +1327,10 @@ class ImageCore:
         selected = [
             url
             for url in old_selected
-            if url not in remove
+            if not matches_remove(url)
         ]
         primary = str(data.get("primary_image_url") or "")
-        if primary in remove:
+        if matches_remove(primary):
             primary = selected[0] if selected else (
                 all_urls[0] if all_urls else ""
             )
@@ -1149,7 +1342,7 @@ class ImageCore:
             )
             if (
                 isinstance(item, dict)
-                and str(item.get("source_url") or "") not in remove
+                and not matches_remove(str(item.get("source_url") or ""))
             )
         ]
         values = {
@@ -1171,7 +1364,52 @@ class ImageCore:
                 ensure_ascii=False,
             ),
         }
-        self.db.update_product(int(product_id), values)
+
+        moved_local_files: list[tuple[Path, Path]] = []
+        raw_root = str(data.get("local_dir") or "").strip()
+        if raw_root:
+            try:
+                local_root = Path(raw_root).resolve()
+                image_dir = (local_root / "images").resolve()
+                recovery_dir = (local_root / "removed_images").resolve()
+            except Exception:
+                image_dir = Path()
+                recovery_dir = Path()
+            for target_url in sorted(remove):
+                if not target_url.startswith("local://"):
+                    continue
+                local_name = target_url.split("local://", 1)[1]
+                candidate_name = Path(local_name)
+                if (
+                    candidate_name.name != local_name
+                    or not candidate_name.stem.isdigit()
+                    or not image_dir.is_dir()
+                ):
+                    continue
+                source = (image_dir / candidate_name.name).resolve()
+                if source.parent != image_dir or not source.is_file():
+                    continue
+                recovery_dir.mkdir(parents=True, exist_ok=True)
+                destination = recovery_dir / source.name
+                counter = 1
+                while destination.exists():
+                    destination = recovery_dir / (
+                        f"{source.stem}-{counter}{source.suffix}"
+                    )
+                    counter += 1
+                shutil.move(str(source), str(destination))
+                moved_local_files.append((source, destination))
+
+        try:
+            self.db.update_product(int(product_id), values)
+        except Exception:
+            for source, destination in reversed(moved_local_files):
+                try:
+                    if destination.is_file() and not source.exists():
+                        shutil.move(str(destination), str(source))
+                except Exception:
+                    pass
+            raise
         return dict(self.db.product(int(product_id)))
 
     @staticmethod
@@ -1200,6 +1438,37 @@ class ImageCore:
         if not targets:
             raise ValueError("حداقل یک تصویر انتخاب کن.")
 
+        target_local_by_name = {
+            Path(url.split("local://", 1)[1]).name.casefold(): url
+            for url in targets
+            if url.startswith("local://")
+            and Path(url.split("local://", 1)[1]).name
+            == url.split("local://", 1)[1]
+        }
+
+        def normalize_legacy_alias(value: str) -> str:
+            raw = str(value or "").strip()
+            if target_local_by_name and raw.startswith("local-display://"):
+                name = raw.rsplit("/", 1)[-1].casefold()
+                replacement = target_local_by_name.get(name)
+                if replacement:
+                    return replacement
+            return raw
+
+        normalized_images = [
+            normalize_legacy_alias(str(value or ""))
+            for value in self._json_list(data.get("images_json"))
+            if str(value or "").strip()
+        ]
+        normalized_selected = [
+            normalize_legacy_alias(str(value or ""))
+            for value in self._json_list(data.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        normalized_primary = normalize_legacy_alias(
+            str(data.get("primary_image_url") or "")
+        )
+
         existing = [
             dict(item)
             for item in self._json_list(
@@ -1207,6 +1476,11 @@ class ImageCore:
             )
             if isinstance(item, dict)
         ]
+        for item in existing:
+            source_url = str(item.get("source_url") or "").strip()
+            normalized_url = normalize_legacy_alias(source_url)
+            if normalized_url and normalized_url != source_url:
+                item["source_url"] = normalized_url
         by_url = {
             str(item.get("source_url") or ""): item
             for item in existing
@@ -1253,13 +1527,8 @@ class ImageCore:
             if changed:
                 item["_operator_override_fields"] = sorted(changed)
 
-        selected = [
-            str(item or "").strip()
-            for item in self._json_list(
-                data.get("selected_images_json")
-            )
-            if str(item or "").strip()
-        ]
+        selected = list(dict.fromkeys(normalized_selected))
+        images = list(dict.fromkeys(normalized_images))
         alt_map = {
             url: str(
                 by_url.get(url, {}).get("alt_text") or ""
@@ -1269,6 +1538,15 @@ class ImageCore:
         self.db.update_product(
             int(product_id),
             {
+                "images_json": json.dumps(
+                    images,
+                    ensure_ascii=False,
+                ),
+                "selected_images_json": json.dumps(
+                    selected,
+                    ensure_ascii=False,
+                ),
+                "primary_image_url": normalized_primary,
                 image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(
                     existing,
                     ensure_ascii=False,
@@ -1282,6 +1560,8 @@ class ImageCore:
         image_pipeline.finalize_selected_images(
             self.db,
             int(product_id),
+            deduplicate=False,
+            image_limit=max(1, len(selected)),
         )
         return dict(self.db.product(int(product_id)))
 

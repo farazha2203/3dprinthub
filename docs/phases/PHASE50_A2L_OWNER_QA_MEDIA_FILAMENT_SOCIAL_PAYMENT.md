@@ -1,3 +1,13 @@
+## Stage-3 image workspace continuation — 2026-09-18
+- Owner requested a larger image review surface, compact surrounding controls, arbitrary multi-select Edit/Delete, deterministic SEO filename display, and Product-main-image-first Instagram feed behavior.
+- Bulk-operation selection is now independent from persistent Site-image membership; clicking an image preview may toggle only the temporary operation selector.
+- Trusted real legacy numbered files are editable under safe local identity; recoverable delete moves those files outside the active images directory.
+- Operator metadata/renumber preserves the selected set and bypasses publish-time perceptual dedup only for that explicit operator action. Default publication finalization remains deduplicating.
+- Product #628 isolated-copy acceptance: selected 11 -> 11, zero legacy local-display identities after renumber, 11 unique final SEO metadata names, Primary preserved, 15 visible/15 editable local files.
+- Instagram/Buffer media ordering forces verified Product main image to first position without discarding remaining verified media.
+- Tests: 9/9 targeted, 80/80 maintained, 107/107 expanded, compile/diff-check/Qt VerifyOnly PASS. No migration/schema/Production change.
+- Next: commit/push exact candidate, verify remote SHA, fresh Catalog backup, exact-SHA Qt relaunch and owner visual smoke.
+
 # Phase50.A.2L — Owner QA: Media, Filament Intelligence, Social & Manual Payment
 
 Date: 2026-09-17
