@@ -17,43 +17,49 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn('id="sb-slider"', template)
         self.assertIn('class="sb-slider"', template)
         self.assertIn('id="nav-arrows"', template)
-        self.assertIn('id="nav-options"', template)
         self.assertIn('id="nav-dots"', template)
+        self.assertNotIn('id="nav-options"', template)
         self.assertIn('id="shadow"', template)
         self.assertIn("jquery.slicebox.js v1.1.0", vendor)
         self.assertIn("Licensed under the MIT license", vendor)
         self.assertNotIn("data-p50j", template)
         self.assertNotIn("phase50-a2j-slicebox-hero", template)
+        self.assertIn('loading="eager"', template)
+        self.assertNotIn('loading="lazy"', template)
 
-    def test_combined_reference_modes_cover_play_pause_random_slices_and_disperse(self):
+    def test_example4_runtime_uses_reference_rotation_random_cuboids_and_disperse(self):
         runtime = self.read("static/js/phase50-a2k-tympanus-slicebox.js")
         for token in (
             'orientation: "r"',
             "cuboidsRandom: true",
-            "maxCuboidsCount: 7",
             "disperseFactor: 30",
-            "autoplay: true",
-            "slicebox.play()",
-            "slicebox.pause()",
+            "slicebox.next()",
+            "slicebox.previous()",
             "slicebox.jump(index + 1)",
         ):
             self.assertIn(token, runtime)
+        self.assertNotIn("autoplay:", runtime)
+        self.assertNotIn("slicebox.play()", runtime)
+        self.assertNotIn("slicebox.pause()", runtime)
 
-    def test_reference_visual_assets_and_background_are_local(self):
+    def test_reference_visual_assets_use_site_background_and_index4_frame(self):
         css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
         core = self.read("static/vendor/slicebox/css/slicebox.css")
-        self.assertIn("#e4ebe9", css)
-        self.assertIn("fancy_deboss.png", css)
+        template = self.read("templates/website/partials/hero.html")
+        self.assertIn("background: #f6f9fc", css)
+        self.assertNotIn("fancy_deboss.png", css)
         self.assertIn("shadow.png", css)
         self.assertIn("nav.png", css)
-        self.assertIn("options.png", css)
         self.assertIn("max-width: 840px", css)
+        self.assertIn("aspect-ratio: 16 / 9", css)
+        self.assertIn('id="nav-dots"', template)
+        self.assertNotIn('id="nav-options"', template)
+        self.assertNotIn("navPlay", template)
+        self.assertNotIn("navPause", template)
         self.assertIn(".sb-perspective", core)
         for relative in (
-            "static/vendor/slicebox/images/fancy_deboss.png",
             "static/vendor/slicebox/images/shadow.png",
             "static/vendor/slicebox/images/nav.png",
-            "static/vendor/slicebox/images/options.png",
         ):
             self.assertTrue((ROOT / relative).is_file())
 

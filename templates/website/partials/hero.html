@@ -1,10 +1,10 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'vendor/slicebox/css/slicebox.css' %}?v=1.1.0">
-<link rel="stylesheet" href="{% static 'css/phase50-a2k-tympanus-slicebox.css' %}?v=50.5.0">
+<link rel="stylesheet" href="{% static 'css/phase50-a2k-tympanus-slicebox.css' %}?v=50.6.0">
 <script src="{% static 'vendor/slicebox/js/modernizr.custom.46884.js' %}" defer></script>
 <script src="{% static 'vendor/slicebox/js/jquery-3.7.1.min.js' %}" defer></script>
 <script src="{% static 'vendor/slicebox/js/jquery.slicebox.js' %}" defer></script>
-<script src="{% static 'js/phase50-a2k-tympanus-slicebox.js' %}?v=50.5.0" defer></script>
+<script src="{% static 'js/phase50-a2k-tympanus-slicebox.js' %}?v=50.6.0" defer></script>
 
 <section id="home" class="p50k-slicebox" data-p50k-slicebox aria-label="مدل‌های منتخب 3DPrintHub">
   <div class="p50k-slicebox__wrapper">
@@ -18,7 +18,7 @@
                 alt="{{ slide.effective_alt_text }}"
                 width="1920"
                 height="1080"
-                loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                loading="eager"
                 decoding="async"
                 {% if forloop.first %}fetchpriority="high"{% endif %}
               >
@@ -35,10 +35,6 @@
         <div id="nav-arrows" class="nav-arrows" aria-label="کنترل اسلایدر">
           <a href="#" aria-label="اسلاید بعدی">Next</a>
           <a href="#" aria-label="اسلاید قبلی">Previous</a>
-        </div>
-        <div id="nav-options" class="nav-options" aria-label="کنترل پخش">
-          <span id="navPlay" role="button" tabindex="0" aria-label="پخش خودکار">Play</span>
-          <span id="navPause" role="button" tabindex="0" aria-label="توقف پخش خودکار">Pause</span>
         </div>
         <div id="nav-dots" class="nav-dots" aria-label="انتخاب اسلاید">
           {% for slide in homepage_hero_slides %}

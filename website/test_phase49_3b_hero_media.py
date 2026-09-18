@@ -76,7 +76,8 @@ class Phase493BHeroMediaContractTests(SimpleTestCase):
             "--p50j-mobile-w",
         ):
             self.assertNotIn(token, hero)
-        self.assertIn("fancy_deboss.png", css)
+        self.assertIn("background: #f6f9fc", css)
+        self.assertNotIn("fancy_deboss.png", css)
         self.assertNotIn("p50j-hero", css)
 class Phase493BHeroMediaBehaviorTests(TestCase):
     @classmethod

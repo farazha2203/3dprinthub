@@ -528,7 +528,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_product_image_stage_is_larger_two_row_capable_and_source_link_is_fixed(self):
+    def test_product_image_stage_is_large_compact_single_row_and_source_link_fixed(self):
         product_id = self._make_product("3510002")
         page = ProductWizardPage(self.db, kernel=self.kernel)
         try:
@@ -540,15 +540,18 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 560)
-            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 72)
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 650)
+            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 90)
             self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 420)
-            button_texts = {
-                button.text()
-                for button in page.findChildren(type(page.product_source_btn))
-            }
-            self.assertIn("دریافت داده و عکس بیشتر از لینک محصول", button_texts)
-            self.assertIn("حذف انتخاب‌شده‌ها", button_texts)
+            buttons = page.findChildren(type(page.product_source_btn))
+            button_texts = {button.text() for button in buttons}
+            self.assertIn("بازیابی از لینک", button_texts)
+            self.assertIn("حذف انتخابی", button_texts)
+            recovery = next(
+                button for button in buttons
+                if button.text() == "بازیابی از لینک"
+            )
+            self.assertIn("دریافت داده و عکس بیشتر", recovery.toolTip())
         finally:
             page.close()
 

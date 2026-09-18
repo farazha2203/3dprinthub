@@ -1,3 +1,16 @@
+## 2026-09-18 — Owner fidelity continuation: Example 4 + real Browser acceptance
+Status: `LOCAL_ACCEPTED / GITHUB PROMOTION + PRODUCTION HOST GATE NEXT`
+
+- Official reference was re-read directly from `https://tympanus.net/Development/Slicebox/index4.html`: Example 4 uses `orientation:'r'`, `cuboidsRandom:true`, `disperseFactor:30`.
+- Vendored MIT Slicebox v1.1.0 remains unchanged. Only the 3DPrintHub wrapper presentation/runtime options changed.
+- Removed wrapper-only autoplay/Play/Pause extras; retained arrows/shadow and owner screenshot-requested dots; switched wrapper background from Codrops demo texture to the site's own `#f6f9fc`.
+- Existing SSR `HomepageHeroSlide` data remains authoritative; no Product/Hero-row reset is part of this delta.
+- Root cause of the previously non-ready Hero was found: hidden slides were `loading=lazy` while Slicebox waits for all images before ready. Four Hero images are now eager; first remains high fetch priority.
+- Local browser with real local Hero data: 4 images HTTP 200, plugin ready, 416px slider, 840px wrapper, two visible 42x42 arrows, four dots, no nav-options, zero browser errors; Next creates 5 cuboids/30 3D faces and moves slide 0 -> 1.
+- Evidence screenshots: `D:\projects\3dprinthub-backups\visual-index4-ready-20260918-120143\home-ready.png` and `home-transition.png`.
+- Selected Hero gate 27/27 PASS; Node syntax, Django check and no-migration gate PASS.
+- Production still requires fresh read-only tunnel/Host/source/DB truth, backups and GitHub-only deploy.
+
 # Phase50.A.2K — Tympanus Slicebox + Filament UX
 
 Date: 2026-09-17

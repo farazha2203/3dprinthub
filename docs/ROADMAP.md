@@ -1,3 +1,21 @@
+## 2026-09-18 — Active design-only UI + Example-4 homepage Hero
+- [x] Preserve all Stage-3 image operations/modes; change layout only.
+- [x] Put eight Stage-3 image actions in one compact row with text fitting inside controls.
+- [x] Put Save/Finalize/Unlock/Previous/Next in one compact bottom row.
+- [x] Give freed vertical space to image gallery (650px min; real viewport 634px) while remaining inside 1920x1032 working area.
+- [x] Qt regression 67/67 + Qt VerifyOnly/compile/diff-check PASS.
+- [x] Keep official vendored Slicebox engine and current HomepageHeroSlide data.
+- [x] Match official Example-4 runtime: random right/vertical cuboids + disperse 30; remove extra Play/Pause.
+- [x] Use 3DPrintHub background, reference arrows/shadow/caption and screenshot-requested dots.
+- [x] Fix hidden-lazy Slicebox startup deadlock by eager-loading the four Hero images.
+- [x] Browser real-runtime smoke: 4 slides, 42px arrows, 4 dots, 416px slider, 5 cuboids/30 faces, slide 0 -> 1, zero browser errors.
+- [x] Hero/Django selected gate 27/27; check/no-migration PASS.
+- [ ] Commit/push exact accepted candidate.
+- [ ] Fresh Catalog backup and exact-SHA Qt relaunch.
+- [ ] Verify live 3DPrintHub tunnel/Host Production truth read-only.
+- [ ] Deploy homepage from GitHub only after Host backup/rollback/readiness gates pass.
+- [ ] Verify Production DOM/assets/3D transition visually.
+
 ## 2026-09-18 — Stage-3 scroll runtime promotion
 - [x] Commit hotfix `00f16237cf27eea2cdf7bef97fa7cc140014c947`.
 - [x] Push and verify Local/GitHub exact SHA.

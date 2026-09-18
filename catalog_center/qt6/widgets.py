@@ -200,16 +200,29 @@ class WizardFooter(QWidget):
     previousClicked = Signal()
     nextClicked = Signal()
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, *, compact: bool = False) -> None:
         super().__init__(parent)
+        self.compact = bool(compact)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 6, 0, 0)
+        layout.setContentsMargins(0, 0 if self.compact else 6, 0, 0)
+        layout.setSpacing(6 if self.compact else 0)
         self.previous = QPushButton("مرحله قبل")
         self.next = QPushButton("مرحله بعد")
         self.next.setProperty("primary", True)
-        layout.addWidget(self.previous)
-        layout.addStretch(1)
-        layout.addWidget(self.next)
+        if self.compact:
+            for button in (self.previous, self.next):
+                font = button.font()
+                font.setPointSize(8)
+                button.setFont(font)
+                button.setMinimumHeight(28)
+                button.setMaximumHeight(28)
+                button.setMinimumWidth(72)
+            layout.addWidget(self.previous)
+            layout.addWidget(self.next)
+        else:
+            layout.addWidget(self.previous)
+            layout.addStretch(1)
+            layout.addWidget(self.next)
         self.previous.clicked.connect(self.previousClicked.emit)
         self.next.clicked.connect(self.nextClicked.emit)
 

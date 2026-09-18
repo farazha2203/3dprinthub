@@ -1,3 +1,10 @@
+## 2026-09-18 - Owner: design only in Windows + exact Slicebox Example-4 homepage
+Status: `LOCAL_ACCEPTED / GITHUB PROMOTION + HOST VERIFY NEXT`.
+
+Owner explicitly requires no Windows workflow/mode/operation changes: only compact the Stage-3 controls into one row, compact the bottom stage/navigation controls into one row, and allocate the freed height to the image review area. For the public homepage, remove the appearance/behavior of the previous top slider and present Product-backed Hero data with the Tympanus/Codrops Slicebox Example-4 3D method, using the 3DPrintHub site background and the reference-style frame/arrows/shadow/dots.
+
+Local acceptance is complete. The browser also exposed the actual reason the earlier Slicebox could appear absent: hidden lazy slides prevented the vendor all-images-ready gate from completing. The fix keeps Hero data unchanged and eagerly loads the four Hero images.
+
 ## 2026-09-18 - Owner Stage-3 scroll complaint runtime status
 Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
 

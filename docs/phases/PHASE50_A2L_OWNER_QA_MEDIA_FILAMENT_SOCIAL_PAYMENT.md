@@ -1,3 +1,11 @@
+## Design-only Stage-3 compaction — 2026-09-18
+- No image operation/mode/callback changed.
+- Eight Stage-3 actions are a single 7pt/26px row; Save/Finalize/Unlock/Previous/Next are a single compact bottom row.
+- Freed vertical space raises the gallery minimum to 650px; real Product #628 acceptance gives a 634px visible image viewport while the whole page remains within the 1032px Windows working height.
+- Geometry assertions prove one Y row for all eight top actions and zero vertical-center spread for all five bottom actions.
+- Maintained Qt/Gallery/Wizard/Screenshot suite 67/67 PASS; Qt VerifyOnly/compile/diff-check PASS.
+- Homepage Slicebox work is tracked in A2K; no Production/DB change yet.
+
 ## Stage-3 scroll runtime — 2026-09-18
 - Hotfix `00f16237cf27eea2cdf7bef97fa7cc140014c947` is pushed and running in the canonical Qt app.
 - Fresh Catalog backup `pre-stage3-scroll-00f1623-20260918-112042` passed source/backup integrity and retained 635 Products.

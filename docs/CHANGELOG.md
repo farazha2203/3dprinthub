@@ -1,3 +1,10 @@
+## 2026-09-18 - Compact Windows image UI + functional Tympanus Example-4 Hero
+- Catalog Center presentation only: Stage-3 action controls collapsed to one row, Stage footer/navigation collapsed to one row, and image review viewport enlarged to a 650px minimum without changing callbacks or image workflows.
+- Homepage Slicebox wrapper aligned to the official Example-4 settings while retaining 3DPrintHub Hero data and site background; extra Play/Pause UI removed.
+- Fixed the real Slicebox zero-height startup issue by eager-loading all four Hero images required by the vendor plugin's all-images-loaded ready gate.
+- Local Browser smoke: 4 live local media images, plugin ready, 416px slider, two visible 42px arrows, four dots, 5 cuboids/30 faces during transition, no browser errors.
+- Windows 67/67 PASS; Hero selected suites 27/27 PASS; Node/Django/check/no-migration/Qt VerifyOnly PASS. Production unchanged.
+
 ## 2026-09-18 - Stage-3 scroll hotfix runtime
 - Pushed runtime `00f16237cf27eea2cdf7bef97fa7cc140014c947`.
 - Took fresh integrity-checked Catalog backup `pre-stage3-scroll-00f1623-20260918-112042`.

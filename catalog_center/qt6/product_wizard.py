@@ -248,21 +248,36 @@ class ProductWizardPage(QWidget):
         action_row = QFrame()
         action_row.setObjectName("Card")
         action_layout = QHBoxLayout(action_row)
+        action_layout.setContentsMargins(6, 3, 6, 3)
+        action_layout.setSpacing(6)
+        self.stage_action_row = action_row
         self.stage_state_label = QLabel("مرحله انتخاب نشده")
         self.stage_state_label.setObjectName("Muted")
+        state_font = self.stage_state_label.font()
+        state_font.setPointSize(8)
+        self.stage_state_label.setFont(state_font)
         self.save_stage_btn = QPushButton("ذخیره تغییرات مرحله")
         self.save_stage_btn.setProperty("primary", True)
         self.finalize_stage_btn = QPushButton("✅ ثبت و تأیید مرحله")
         self.finalize_stage_btn.setProperty("success", True)
         self.unlock_stage_btn = QPushButton("اصلاح مرحله")
+        for button in (
+            self.save_stage_btn,
+            self.finalize_stage_btn,
+            self.unlock_stage_btn,
+        ):
+            font = button.font()
+            font.setPointSize(8)
+            button.setFont(font)
+            button.setMinimumHeight(28)
+            button.setMaximumHeight(28)
+        self.footer = WizardFooter(compact=True)
         action_layout.addWidget(self.stage_state_label, 1)
         action_layout.addWidget(self.save_stage_btn)
         action_layout.addWidget(self.finalize_stage_btn)
         action_layout.addWidget(self.unlock_stage_btn)
+        action_layout.addWidget(self.footer)
         workspace_layout.addWidget(action_row)
-
-        self.footer = WizardFooter()
-        workspace_layout.addWidget(self.footer)
 
         splitter.addWidget(workspace)
         splitter.setStretchFactor(0, 0)
@@ -378,33 +393,39 @@ class ProductWizardPage(QWidget):
 
         control = QFrame()
         control.setObjectName("Card")
-        control_layout = QVBoxLayout(control)
-        control_layout.setContentsMargins(6, 4, 6, 4)
-        control_layout.setSpacing(4)
-        selection_actions = QHBoxLayout()
-        selection_actions.setSpacing(5)
-        operation_actions = QHBoxLayout()
-        operation_actions.setSpacing(5)
+        control_layout = QHBoxLayout(control)
+        control_layout.setContentsMargins(6, 3, 6, 3)
+        control_layout.setSpacing(5)
+        self.image_stage3_toolbar = control
 
         select_all = QPushButton("انتخاب همه")
-        clear_all = QPushButton("لغو انتخاب همه")
-        edit_seo = QPushButton("ویرایش SEO انتخاب‌شده‌ها")
-        apply_seo = QPushButton("اعمال SEO فارسی محصول")
-        delete_selected = QPushButton("حذف انتخاب‌شده‌ها")
+        clear_all = QPushButton("لغو همه")
+        edit_seo = QPushButton("SEO انتخابی")
+        apply_seo = QPushButton("SEO فارسی")
+        delete_selected = QPushButton("حذف انتخابی")
         delete_selected.setProperty("danger", True)
-        renumber_images = QPushButton("بازسازی نام‌های SEO")
-        screenshot = QPushButton("دریافت اسکرین‌شات صفحه محصول")
-        recover = QPushButton("دریافت داده و عکس بیشتر از لینک محصول")
+        renumber_images = QPushButton("نام‌گذاری SEO")
+        screenshot = QPushButton("اسکرین‌شات")
+        recover = QPushButton("بازیابی از لینک")
         recover.setProperty("primary", True)
+
+        select_all.setToolTip("انتخاب همه تصاویر برای عملیات گروهی")
+        clear_all.setToolTip("لغو انتخاب عملیاتی همه تصاویر")
+        edit_seo.setToolTip("ویرایش SEO فقط برای تصاویر انتخاب‌شده")
+        apply_seo.setToolTip("اعمال SEO فارسی محصول روی تصاویر انتخاب‌شده")
+        delete_selected.setToolTip("حذف فقط تصاویر انتخاب‌شده")
+        renumber_images.setToolTip("بازسازی نام‌های SEO تصاویر")
+        screenshot.setToolTip("دریافت اسکرین‌شات صفحه محصول")
         recover.setToolTip(
-            "صفحه اصلی Product را دوباره می‌خواند، داده‌های Source و عکس‌ها را "
-            "بازیابی می‌کند و تصمیم‌های اپراتور مثل قیمت/Profile/Filament/SEO/انتشار را حفظ می‌کند."
+            "دریافت داده و عکس بیشتر از لینک محصول؛ تصمیم‌های اپراتور "
+            "مثل قیمت/Profile/Filament/SEO/انتشار حفظ می‌شوند."
         )
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
         self.image_recover_limit.setValue(5)
         self.image_recover_limit.setSuffix(" عکس")
+        self.image_recover_limit.setFixedWidth(72)
 
         select_all.clicked.connect(
             lambda: self.image_grid.set_all_operation_selected(True)
@@ -419,8 +440,8 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
-        recover_count_label = QLabel("تعداد عکس")
-        compact_widgets = (
+        recover_count_label = QLabel("تعداد")
+        self.image_stage3_toolbar_buttons = (
             select_all,
             clear_all,
             edit_seo,
@@ -429,26 +450,25 @@ class ProductWizardPage(QWidget):
             renumber_images,
             screenshot,
             recover,
+        )
+        compact_widgets = (
+            *self.image_stage3_toolbar_buttons,
             self.image_recover_limit,
             recover_count_label,
         )
         for widget in compact_widgets:
             font = widget.font()
-            font.setPointSize(8)
+            font.setPointSize(7)
             widget.setFont(font)
-            widget.setMaximumHeight(30)
+            widget.setMinimumHeight(26)
+            widget.setMaximumHeight(26)
 
-        for widget in (select_all, clear_all, edit_seo, apply_seo, delete_selected):
-            selection_actions.addWidget(widget)
-        selection_actions.addStretch(1)
-        operation_actions.addWidget(renumber_images)
-        operation_actions.addWidget(screenshot)
-        operation_actions.addWidget(recover_count_label)
-        operation_actions.addWidget(self.image_recover_limit)
-        operation_actions.addWidget(recover)
-        operation_actions.addStretch(1)
-        control_layout.addLayout(selection_actions)
-        control_layout.addLayout(operation_actions)
+        for button in self.image_stage3_toolbar_buttons[:7]:
+            control_layout.addWidget(button)
+        control_layout.addWidget(recover_count_label)
+        control_layout.addWidget(self.image_recover_limit)
+        control_layout.addWidget(recover)
+        control_layout.addStretch(1)
         layout.addWidget(control)
 
         slider_box = QFrame()
@@ -460,17 +480,20 @@ class ProductWizardPage(QWidget):
             "این محصول در اسلایدر صفحه اول نمایش داده شود"
         )
         slider_hint = QLabel(
+            "اسلایدر = عکس اسلایدر • اصلی = عکس Product • ثبت نهایی در مرحله ۶"
+        )
+        slider_hint.setObjectName("Muted")
+        slider_hint.setWordWrap(False)
+        slider_hint.setToolTip(
             "دایره «اسلایدر» روی کارت، عکس اسلایدر را تعیین می‌کند؛ "
             "دایره «اصلی» عکس اصلی Product است. انتخاب Stage 3 فقط Draft "
             "اسلایدر را عوض می‌کند و ثبت نهایی در Stage 6 انجام می‌شود."
         )
-        slider_hint.setObjectName("Muted")
-        slider_hint.setWordWrap(True)
         slider_font = slider_hint.font()
-        slider_font.setPointSize(8)
+        slider_font.setPointSize(7)
         slider_hint.setFont(slider_font)
         slider_toggle_font = self.image_slider_enabled.font()
-        slider_toggle_font.setPointSize(8)
+        slider_toggle_font.setPointSize(7)
         self.image_slider_enabled.setFont(slider_toggle_font)
         slider_layout.addWidget(self.image_slider_enabled)
         slider_layout.addWidget(slider_hint, 1)
@@ -478,19 +501,20 @@ class ProductWizardPage(QWidget):
 
         self.image_task_status = QLabel("آماده")
         self.image_task_status.setObjectName("Muted")
+        status_font = self.image_task_status.font()
+        status_font.setPointSize(7)
+        self.image_task_status.setFont(status_font)
         layout.addWidget(self.image_task_status)
 
         self.image_grid = ProductImageGrid(
             columns=2,
             large_cards=True,
         )
-        # Keep the Product Wizard inside the real desktop working area.
-        # The cards stay large; the gallery itself owns vertical scrolling.
-        # A larger minimum here previously forced the whole window beyond a
-        # 1920x1080 desktop and clipped the bottom controls off-screen.
-        self.image_grid.setMinimumHeight(560)
+        # The top and bottom controls are now single-row compact bars, so the
+        # freed vertical space belongs to the image review viewport.
+        self.image_grid.setMinimumHeight(650)
         self.image_grid.scroll.verticalScrollBar().setSingleStep(90)
-        self.image_grid.scroll.verticalScrollBar().setPageStep(520)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(600)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])

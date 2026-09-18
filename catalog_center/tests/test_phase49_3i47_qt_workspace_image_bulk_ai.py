@@ -427,7 +427,7 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 400)
             self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 360)
             self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 800)
-            self.assertEqual(page.image_grid.minimumHeight(), 560)
+            self.assertEqual(page.image_grid.minimumHeight(), 650)
             self.assertGreaterEqual(
                 page.image_grid.scroll.verticalScrollBar().width(),
                 18,
@@ -455,7 +455,37 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             grid = page.image_grid
             bar = grid.scroll.verticalScrollBar()
             self.assertGreater(bar.maximum(), 0)
-            self.assertEqual(grid.minimumHeight(), 560)
+            self.assertEqual(grid.minimumHeight(), 650)
+
+            toolbar_y = {
+                button.mapTo(page, QPoint(0, 0)).y()
+                for button in page.image_stage3_toolbar_buttons
+            }
+            self.assertEqual(len(toolbar_y), 1)
+            self.assertTrue(
+                all(
+                    button.maximumHeight() == 26
+                    and button.font().pointSize() <= 7
+                    for button in page.image_stage3_toolbar_buttons
+                )
+            )
+
+            bottom_widgets = (
+                page.save_stage_btn,
+                page.finalize_stage_btn,
+                page.unlock_stage_btn,
+                page.footer.previous,
+                page.footer.next,
+            )
+            bottom_centers = [
+                widget.mapTo(page, QPoint(0, 0)).y() + widget.height() // 2
+                for widget in bottom_widgets
+            ]
+            self.assertLessEqual(
+                max(bottom_centers) - min(bottom_centers),
+                2,
+            )
+            self.assertTrue(page.footer.compact)
 
             bar.setValue(0)
             event = QWheelEvent(

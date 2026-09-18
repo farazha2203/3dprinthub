@@ -1,3 +1,11 @@
+## ERR-49-164 - Slicebox stayed at zero height because hidden slides were lazy-loaded
+**Date:** 2026-09-18
+**Observed:** the Home template contained four valid Hero rows and all media URLs returned HTTP 200, but the rendered Slicebox stayed height 0, `pluginReady=False`, no `sb-current` item existed and navigation stayed hidden.
+**Root cause:** vendored Slicebox v1.1.0 calls its bundled `imagesLoaded` gate and waits for every slide image before `onReady`. The template used eager loading only for slide 1 and `loading="lazy"` for slides 2-4. Those slides are hidden before Slicebox readiness, so Chromium deferred their lazy image requests and the plugin waited indefinitely.
+**Fix:** mark all four Hero images `loading="eager"` while keeping `fetchpriority="high"` only on the first image. No model/query/Hero-row mutation is needed.
+**Verification:** after restarting the Local Django process, all four images became complete with non-zero natural dimensions, `pluginReady=True`, slider height 416px, arrows/dots visible; browser Next generated 5 cuboids / 30 sides and advanced slide 0 -> 1 with no console/page errors.
+**Prevention:** components that synchronously wait for all images must not combine their pre-ready hidden state with browser lazy loading. Browser acceptance must assert vendor-ready state and non-zero rendered geometry, not only DOM presence.
+
 ## ERR-49-163 - Large image preview swallowed wheel scrolling and Stage-3 minimum height pushed controls off-screen
 **Date:** 2026-09-18
 **Observed:** owner could see the large Product images but could not reach filename / multi-select / SEO / delete controls below them. Dragging/scrolling while the pointer was on the image appeared to do nothing.
