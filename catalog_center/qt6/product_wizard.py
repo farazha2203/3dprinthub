@@ -507,14 +507,14 @@ class ProductWizardPage(QWidget):
         layout.addWidget(self.image_task_status)
 
         self.image_grid = ProductImageGrid(
-            columns=2,
+            columns=3,
             large_cards=True,
         )
         # The top and bottom controls are now single-row compact bars, so the
         # freed vertical space belongs to the image review viewport.
-        self.image_grid.setMinimumHeight(650)
+        self.image_grid.setMinimumHeight(670)
         self.image_grid.scroll.verticalScrollBar().setSingleStep(90)
-        self.image_grid.scroll.verticalScrollBar().setPageStep(600)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(630)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])

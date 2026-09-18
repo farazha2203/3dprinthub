@@ -240,7 +240,8 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertTrue(cards[urls[1]].move_later.isEnabled())
             self.assertTrue(cards[urls[2]].move_earlier.isEnabled())
             self.assertFalse(cards[urls[2]].move_later.isEnabled())
-            self.assertGreaterEqual(cards[urls[2]].minimumHeight(), 390)
+            self.assertEqual(cards[urls[2]].minimumHeight(), 206)
+            self.assertEqual(cards[urls[2]].maximumHeight(), 206)
 
             cards[urls[2]].move_earlier.click()
             reordered = dict(self.db.product(product_id))
@@ -419,15 +420,15 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         page = ProductWizardPage(self.db, kernel=self.kernel)
         try:
             page.load_product(product_id)
-            self.assertEqual(page.image_grid.columns, 2)
+            self.assertEqual(page.image_grid.columns, 3)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(len(page.image_grid.cards), 3)
-            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 420)
-            self.assertEqual(page.image_grid.cards[0].minimumHeight(), 780)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 400)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 360)
-            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 800)
-            self.assertEqual(page.image_grid.minimumHeight(), 650)
+            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 300)
+            self.assertEqual(page.image_grid.cards[0].minimumHeight(), 206)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 260)
+            self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 90)
+            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 206)
+            self.assertEqual(page.image_grid.minimumHeight(), 670)
             self.assertGreaterEqual(
                 page.image_grid.scroll.verticalScrollBar().width(),
                 18,
@@ -454,8 +455,8 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
 
             grid = page.image_grid
             bar = grid.scroll.verticalScrollBar()
-            self.assertGreater(bar.maximum(), 0)
-            self.assertEqual(grid.minimumHeight(), 650)
+            self.assertEqual(grid.minimumHeight(), 670)
+            self.assertEqual(grid.columns, 3)
 
             toolbar_y = {
                 button.mapTo(page, QPoint(0, 0)).y()
@@ -486,6 +487,19 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
                 2,
             )
             self.assertTrue(page.footer.compact)
+
+            grid.set_items([
+                {
+                    "url": f"https://img.example/wheel-{index:02d}.jpg",
+                    "filename": f"wheel-{index:02d}.jpg",
+                    "planned_filename": f"wheel-seo-{index:02d}.webp",
+                    "selected": True,
+                }
+                for index in range(1, 13)
+            ])
+            for _ in range(4):
+                self.app.processEvents()
+            self.assertGreater(bar.maximum(), 0)
 
             bar.setValue(0)
             event = QWheelEvent(

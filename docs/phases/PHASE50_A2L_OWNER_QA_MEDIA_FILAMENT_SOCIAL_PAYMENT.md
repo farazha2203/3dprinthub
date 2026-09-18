@@ -1,3 +1,11 @@
+## Stage-3 3×3 compact review correction — 2026-09-18
+- Owner correction is presentation-only: three columns, three complete visible rows, smaller image preview, always-visible SEO filename and one compact Previous/Next/SEO/Delete row.
+- Review card: 300–520px width, fixed 206px height; preview 260x90 min / 94px max. Gallery min-height 670px.
+- 9-card isolated acceptance: viewport 652px high; row-three card bottom 634 and filename bottom 576; no scrollbar required. 12 cards require scroll and wheel-over-preview remains functional.
+- Image selection/Primary/Slider/SEO/Delete/Reorder/Screenshot behavior is unchanged.
+- Focused 4/4 + maintained Qt/Gallery/Wizard/Screenshot 68/68 PASS.
+- Host deploy remains separate and may use only the dedicated 3DPrintHub reverse tunnel.
+
 ## Design-only Stage-3 compaction — 2026-09-18
 - No image operation/mode/callback changed.
 - Eight Stage-3 actions are a single 7pt/26px row; Save/Finalize/Unlock/Previous/Next are a single compact bottom row.

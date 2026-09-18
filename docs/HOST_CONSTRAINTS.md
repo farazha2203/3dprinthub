@@ -1,3 +1,6 @@
+## 2026-09-18 — Owner reconfirmation: reverse tunnel is the only assistant Host channel
+All assistant Production/Host operations for 3DPrintHub must use only the dedicated reverse path `Windows 127.0.0.1:22024 -> Host bridge 127.0.0.1:22224`. Do not use a Windows browser, saved Chrome session, cPanel web Terminal, File Manager, or another project's tunnel as a fallback. If `22024` / authenticated bridge health is unavailable, Host deployment is BLOCKED/fail-closed until the same dedicated reverse tunnel recovers. Permanent source remains GitHub-first.
+
 ## 2026-09-15 ? Current reverse-management verification rule
 The canonical 3DPrintHub tunnel is currently authenticated and healthy (`Windows 127.0.0.1:22024` -> Host bridge base `/home/sfkilvrs/3dprinthub`). A single Windows `Get-NetTCPConnection` observation is not sufficient to declare the tunnel down: during final handoff verification it transiently returned no row while `Test-NetConnection`, `netstat` and authenticated Bridge health proved the listener/session healthy. Use listener evidence plus authenticated `/health`; only recover the tunnel when the bridge itself is unreachable.
 

@@ -1,3 +1,16 @@
+## 2026-09-18 — Stage-3 3×3 owner correction
+- [x] Restore three image cards per row.
+- [x] Make review cards smaller instead of enlarging individual images.
+- [x] Keep SEO filename visible on every card.
+- [x] Put Previous/Next/SEO/Delete in one compact row per card.
+- [x] Show three full rows / nine cards at once in a 670px gallery viewport.
+- [x] Keep fourth row and beyond scrollable; wheel over image still scrolls.
+- [x] Preserve all image operations/modes/callbacks.
+- [x] Focused 4/4 + maintained 68/68 Qt regressions PASS.
+- [ ] Commit/push exact candidate and relaunch Qt from pushed SHA.
+- [ ] Owner visual smoke.
+- [ ] Site deploy only through dedicated reverse tunnel after `127.0.0.1:22024` + authenticated Host gates pass; no cPanel/browser fallback.
+
 ## 2026-09-18 — Active design-only UI + Example-4 homepage Hero
 - [x] Preserve all Stage-3 image operations/modes; change layout only.
 - [x] Put eight Stage-3 image actions in one compact row with text fitting inside controls.

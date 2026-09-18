@@ -1,3 +1,10 @@
+## 2026-09-18 - Owner correction: three images per row / three rows visible
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT`.
+
+Owner explicitly rejects oversized image cards. Required visual contract: three images per row; by default three complete rows visible with filename and menus below each image; the Gallery itself should consume the available vertical space. Existing operations/modes/SEO/Screenshot/select/delete/reorder behavior must not change.
+
+Owner also reconfirmed the Host rule: assistant Host/Production work must use only the dedicated reverse tunnel. Windows browser/cPanel/Terminal is not an allowed alternate deployment path.
+
 ## 2026-09-18 - Owner: design only in Windows + exact Slicebox Example-4 homepage
 Status: `LOCAL_ACCEPTED / GITHUB PROMOTION + HOST VERIFY NEXT`.
 

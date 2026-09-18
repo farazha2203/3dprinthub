@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
@@ -534,13 +534,13 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         try:
             page.load_product(product_id)
             self.assertTrue(page.product_source_btn.isEnabled())
-            self.assertEqual(page.image_grid.columns, 2)
+            self.assertEqual(page.image_grid.columns, 3)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 650)
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 670)
             self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 90)
             self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 420)
             buttons = page.findChildren(type(page.product_source_btn))
@@ -574,7 +574,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         finally:
             grid.close()
 
-    def test_image_grid_five_large_cards_keep_three_scroll_rows_reachable(self):
+    def test_image_grid_five_review_cards_keep_three_scroll_rows_reachable(self):
         grid = ProductImageGrid(columns=2, large_cards=True)
         try:
             grid.set_items([
@@ -582,12 +582,47 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 for index in range(1, 6)
             ])
             self.assertEqual(len(grid.cards), 5)
-            self.assertGreaterEqual(grid.host.minimumHeight(), 3 * 492)
+            self.assertGreaterEqual(grid.host.minimumHeight(), 3 * 206)
             self.assertEqual(
                 grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
             self.assertEqual(len(grid.selected_urls()), 5)
+        finally:
+            grid.close()
+
+    def test_three_by_three_review_cards_keep_filename_and_actions_visible(self):
+        grid = ProductImageGrid(columns=3, large_cards=True)
+        grid.setMinimumHeight(670)
+        try:
+            grid.resize(1400, 670)
+            grid.show()
+            grid.set_items([
+                {
+                    "url": f"https://img.example/{index:02d}.jpg",
+                    "filename": f"source-{index:02d}.jpg",
+                    "planned_filename": f"seo-product-image-{index:02d}.webp",
+                    "selected": index <= 6,
+                }
+                for index in range(1, 10)
+            ])
+            for _ in range(4):
+                self.app.processEvents()
+
+            viewport = grid.scroll.viewport()
+            self.assertEqual(grid.columns, 3)
+            self.assertEqual(len(grid.cards), 9)
+            self.assertEqual(grid.scroll.verticalScrollBar().maximum(), 0)
+
+            for card in grid.cards:
+                card_top = card.mapTo(viewport, QPoint(0, 0)).y()
+                card_bottom = card_top + card.height()
+                filename_top = card.filename.mapTo(viewport, QPoint(0, 0)).y()
+                filename_bottom = filename_top + card.filename.height()
+                self.assertLessEqual(card_bottom, viewport.height())
+                self.assertLessEqual(filename_bottom, viewport.height())
+                self.assertTrue(card.filename.isVisible())
+                self.assertTrue(card.filename.text().startswith("seo-product-image-"))
         finally:
             grid.close()
 

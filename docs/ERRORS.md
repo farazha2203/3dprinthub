@@ -1,3 +1,11 @@
+## ERR-49-165 - Gallery-area request was incorrectly implemented by enlarging each image card
+**Date:** 2026-09-18
+**Observed:** Stage 3 showed only two huge images at a time; even after scroll fixes, filenames and per-image controls were inconvenient because each card itself was ~780px tall.
+**Root cause:** the owner request to make the image-review *area* larger was conflated with making each image/card larger. Two large columns consumed the viewport instead of increasing information density.
+**Correct fix:** use three columns and fixed 206px review cards; keep preview around 90px high; keep SEO filename visible; compact metadata and per-image actions; use a 670px gallery that displays three complete rows (nine cards) before scrolling.
+**Verification:** isolated 9-card viewport proves row-three bottom 634 <= viewport 652 and filename bottom 576 <= viewport; 12-card wheel-scroll gate PASS; maintained Qt suite 68/68 PASS.
+**Prevention:** distinguish viewport size from card/media size. For owner image-review UX, acceptance must assert columns, number of fully visible rows, filename visibility and action-row visibility—not only card width/height or scrollbar range.
+
 ## ERR-49-164 - Slicebox stayed at zero height because hidden slides were lazy-loaded
 **Date:** 2026-09-18
 **Observed:** the Home template contained four valid Hero rows and all media URLs returned HTTP 200, but the rendered Slicebox stayed height 0, `pluginReady=False`, no `sb-current` item existed and navigation stayed hidden.

@@ -73,20 +73,21 @@ class ImageCard(QFrame):
         self.item = dict(item)
         self.large = bool(large)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(420 if self.large else 220)
-        self.setMaximumWidth(760 if self.large else 300)
-        self.setMinimumHeight(780 if self.large else 405)
+        self.setMinimumWidth(300 if self.large else 220)
+        self.setMaximumWidth(520 if self.large else 300)
+        self.setMinimumHeight(206 if self.large else 405)
+        self.setMaximumHeight(206 if self.large else 16777215)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(6, 6, 6, 6)
-        root.setSpacing(4)
+        root.setContentsMargins(4 if self.large else 6, 4 if self.large else 6, 4 if self.large else 6, 4 if self.large else 6)
+        root.setSpacing(2 if self.large else 4)
 
         self.preview = ClickableImageLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if self.large:
-            self.preview.setMinimumSize(400, 360)
-            self.preview.setMaximumHeight(520)
+            self.preview.setMinimumSize(260, 90)
+            self.preview.setMaximumHeight(94)
         else:
             self.preview.setMinimumSize(190, 145)
             self.preview.setMaximumHeight(180)
@@ -97,7 +98,7 @@ class ImageCard(QFrame):
             self.preview.setObjectName("MissingImage")
         else:
             preview_width, preview_height = (
-                (720, 500) if self.large else (255, 170)
+                (420, 92) if self.large else (255, 170)
             )
             self.preview.setPixmap(
                 pixmap.scaled(
@@ -111,7 +112,9 @@ class ImageCard(QFrame):
 
         self.options_label = QLabel("\u06af\u0632\u06cc\u0646\u0647\u200c\u0647\u0627\u06cc \u062a\u0635\u0648\u06cc\u0631")
         self.options_label.setStyleSheet("font-size: 9px; font-weight: 700;")
-        root.addWidget(self.options_label)
+        self.options_label.setVisible(not self.large)
+        if not self.large:
+            root.addWidget(self.options_label)
 
         top = QHBoxLayout()
         top.setSpacing(6)
@@ -127,8 +130,10 @@ class ImageCard(QFrame):
         self.slider.setChecked(bool(self.item.get("slider")))
         for control in (self.bulk_selected, self.selected, self.primary, self.slider):
             font = control.font()
-            font.setPointSize(9)
+            font.setPointSize(7 if self.large else 9)
             control.setFont(font)
+            if self.large:
+                control.setMaximumHeight(20)
         top.addWidget(self.bulk_selected)
         top.addWidget(self.selected)
         top.addWidget(self.primary)
@@ -146,7 +151,7 @@ class ImageCard(QFrame):
             f"نام SEO: {seo_filename or '—'}\nفایل منبع: {source_filename or '—'}"
         )
         seo_font = self.filename.font()
-        seo_font.setPointSize(10)
+        seo_font.setPointSize(8 if self.large else 10)
         seo_font.setBold(True)
         self.filename.setFont(seo_font)
         root.addWidget(self.filename)
@@ -156,9 +161,10 @@ class ImageCard(QFrame):
         self.source_filename.setWordWrap(False)
         self.source_filename.setToolTip(source_filename)
         source_font = self.source_filename.font()
-        source_font.setPointSize(8)
+        source_font.setPointSize(7 if self.large else 8)
         self.source_filename.setFont(source_font)
-        root.addWidget(self.source_filename)
+        if not self.large:
+            root.addWidget(self.source_filename)
 
         width = int(self.item.get("width") or 0)
         height = int(self.item.get("height") or 0)
@@ -170,14 +176,29 @@ class ImageCard(QFrame):
         )
         self.facts = QLabel(facts)
         self.facts.setObjectName("Muted")
-        root.addWidget(self.facts)
+        facts_font = self.facts.font()
+        facts_font.setPointSize(7 if self.large else facts_font.pointSize())
+        self.facts.setFont(facts_font)
+        if not self.large:
+            root.addWidget(self.facts)
 
         alt = str(self.item.get("alt_text") or "").strip()
         self.alt = QLabel(f"Alt: {alt or '—'}")
         self.alt.setWordWrap(False)
         self.alt.setToolTip(alt)
         self.alt.setObjectName("Muted")
-        root.addWidget(self.alt)
+        alt_font = self.alt.font()
+        alt_font.setPointSize(7 if self.large else alt_font.pointSize())
+        self.alt.setFont(alt_font)
+        if self.large:
+            meta = QHBoxLayout()
+            meta.setSpacing(6)
+            meta.addWidget(self.source_filename, 2)
+            meta.addWidget(self.facts, 1)
+            self.alt.setVisible(False)
+            root.addLayout(meta)
+        else:
+            root.addWidget(self.alt)
 
         order_actions = QHBoxLayout()
         self.move_earlier = QPushButton("قبلی")
@@ -190,10 +211,11 @@ class ImageCard(QFrame):
         self.move_later.clicked.connect(
             lambda: self.moveLaterRequested.emit(str(self.item.get("url") or ""))
         )
-        order_actions.addWidget(self.move_earlier)
-        order_actions.addWidget(self.move_later)
-        order_actions.addStretch(1)
-        root.addLayout(order_actions)
+        if not self.large:
+            order_actions.addWidget(self.move_earlier)
+            order_actions.addWidget(self.move_later)
+            order_actions.addStretch(1)
+            root.addLayout(order_actions)
 
         actions = QHBoxLayout()
         seo = QPushButton("SEO")
@@ -206,9 +228,12 @@ class ImageCard(QFrame):
         )
         for button in (self.move_earlier, self.move_later, seo, delete):
             font = button.font()
-            font.setPointSize(9)
+            font.setPointSize(7 if self.large else 9)
             button.setFont(font)
-            button.setMaximumHeight(28)
+            button.setMaximumHeight(22 if self.large else 28)
+        if self.large:
+            actions.addWidget(self.move_earlier)
+            actions.addWidget(self.move_later)
         actions.addWidget(seo)
         actions.addWidget(delete)
         actions.addStretch(1)
@@ -307,7 +332,7 @@ class ProductImageGrid(QWidget):
         self.host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.grid = QGridLayout(self.host)
         self.grid.setContentsMargins(4, 4, 10, 12)
-        self.grid.setSpacing(12)
+        self.grid.setSpacing(6 if self.large_cards else 12)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.scroll.setWidget(self.host)
         self.scroll.verticalScrollBar().setFixedWidth(18)
@@ -357,7 +382,7 @@ class ProductImageGrid(QWidget):
         # grid and make the controls under the final image rows unreachable.
         # Give the content widget a factual row-based minimum height so the
         # vertical scrollbar always spans the entire card/control surface.
-        card_height = 800 if self.large_cards else 430
+        card_height = 206 if self.large_cards else 430
         self.host.setMinimumHeight(
             rows * card_height + max(0, rows - 1) * self.grid.spacing()
         )

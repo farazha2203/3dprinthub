@@ -1,3 +1,10 @@
+## 2026-09-18 - Stage-3 three-column / three-row compact image review
+- Replaced the oversized two-column 780px image-card presentation with 3-column fixed 206px review cards.
+- Preview is intentionally smaller; SEO filename and metadata remain visible; Previous/Next/SEO/Delete share one compact action row.
+- Gallery min-height is 670px and a 9-card acceptance proves all three rows fit with filename/actions visible. Row four and later remain scrollable.
+- No image business logic, SEO persistence, Screenshot, selection, Primary/Slider or delete/reorder behavior changed.
+- Focused 4/4 and maintained 68/68 Qt suites PASS.
+
 ## 2026-09-18 - Compact Windows image UI + functional Tympanus Example-4 Hero
 - Catalog Center presentation only: Stage-3 action controls collapsed to one row, Stage footer/navigation collapsed to one row, and image review viewport enlarged to a 650px minimum without changing callbacks or image workflows.
 - Homepage Slicebox wrapper aligned to the official Example-4 settings while retaining 3DPrintHub Hero data and site background; extra Play/Pause UI removed.

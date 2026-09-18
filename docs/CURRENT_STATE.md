@@ -1,3 +1,13 @@
+## 2026-09-18 — Owner correction: Stage-3 3×3 compact review LOCAL_TESTED
+- Owner clarified the target: do NOT enlarge each image card. Stage 3 must show three images per row and, by default, three complete rows (up to nine cards) including SEO filename and per-image controls.
+- Presentation-only correction: Product Wizard Stage 3 now uses 3 columns; review cards are 300–520px wide and fixed 206px high; image preview is 260x90 minimum / 94px max-height; filename stays visible; source filename + factual size are one compact metadata row; Previous/Next/SEO/Delete are one 22px action row. Existing selection, primary, slider, reorder, SEO, delete, screenshot and wheel-scroll callbacks are unchanged.
+- Gallery minimum is 670px. Isolated 1400x670 9-card acceptance: viewport 1386x652, rows top at 4/216/428, third-row card bottom 634, third-row filename bottom 576, scrollbar maximum 0. Therefore all 3×3 cards, filenames and action rows are fully visible at once. With 12 cards the fourth row creates real scroll and wheel-over-preview regression still passes.
+- Real Product-layout probe stays screen-bounded; compact card child controls end at y=202 inside the 206px card.
+- Verification: focused 3×3/Wheel gate 4/4 PASS; maintained Qt/Gallery/Wizard/Screenshot gate 68/68 PASS; changed-file compile/diff-check PASS.
+- Rollback ref: `backup/pre-stage3-three-column-20260918` -> `825f13ed35d6c83752e5e8d236e222f768924eec`.
+- Host rule reconfirmed by owner: Production/Host access is ONLY through the dedicated 3DPrintHub reverse tunnel. Do not use Windows browser/cPanel/Terminal as an alternate Host channel. Current `127.0.0.1:22024` probe is down, therefore site deploy remains fail-closed until that same reverse tunnel becomes healthy.
+- Exact next: commit/push this Windows design correction -> fresh Catalog backup -> exact-SHA Qt relaunch -> owner visual smoke. Site deployment resumes only after reverse-tunnel health/Host gates pass.
+
 ## 2026-09-18 — Owner design-only Windows compaction + real Example-4 Slicebox LOCAL_ACCEPTED
 - Requested Delta is presentation-only for Catalog Center: Stage-3 image operations/modes/callbacks remain unchanged. The eight image toolbar actions are now one compact row (7pt / 26px controls), the bottom Save/Finalize/Unlock/Previous/Next controls are one row, and the vertical room released by those rows raises the image gallery minimum to 650px.
 - Real-copy Product #628 RTL geometry acceptance at 1800x1000: page 1800x1009 (inside the real 1920x1032 Windows working area), Stage 3 1416x792, gallery 1398x652, visible image viewport 1384x634; all eight Stage-3 toolbar buttons share one Y coordinate and all five bottom controls share the exact same vertical center.
