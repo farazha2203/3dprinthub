@@ -1,3 +1,12 @@
+## ERR-49-171 - Direct Windows edits after publish did not always queue the existing Site Product for update
+**Date:** 2026-09-18
+**Observed:** owner could publish a Product, edit it in Windows, send again and still see stale Site data. The Site importer already had update-in-place logic, so duplicate creation was not the primary defect.
+**Root cause:** Stage-owned edits correctly passed through `StageCore.update()` and marked an uploaded Product `needs_update=1`, but several explicit direct mutation boundaries bypassed StageCore: Product operator fields, image metadata/SEO, SEO renumber, image removal and manual Screenshot capture. Those writes could preserve `workflow_status=uploaded` with `needs_update=0`, so normal work-queue/update semantics did not reflect the local change.
+**Fix:** add one shared local dirty marker used only by explicit operator mutations. If an existing server identity is present and the Product was uploaded, keep the same server identity and set `needs_update=1, upload_ready=0`. The existing Stage-7 Send action then explicitly requeues through revision guard and the mature Batch/FTP/Bridge importer.
+**Server verification:** strengthened unified-import E2E publishes once, edits title/description/meta SEO and finalized image, reimports the same source/Desktop identity and verifies the same Asset PK and Product PK are updated, Product count remains one, and public fields/media refresh in place.
+**Windows verification:** published image SEO edit and direct Product operator edit both preserve server IDs and set `needs_update=1`; Image workspace 22/22, Windows/Site 59/59, unified importer 3/3 and profile/identity/admin-sync 23/23 PASS.
+**Prevention:** every explicit post-publish Windows mutation must either use StageCore or invoke the shared dirty marker. Never change Site identity merely to force an update, and never bypass revision guard on re-publish.
+
 ## ERR-49-170 - Real Site ACK stored images as a count and crashed Instagram media parsing
 **Date:** 2026-09-18
 **Observed:** real Product #309/#301 Instagram preflight raised `TypeError: 'int' object is not iterable` although Mock social tests passed.

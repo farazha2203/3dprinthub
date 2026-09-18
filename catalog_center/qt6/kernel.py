@@ -35,6 +35,32 @@ from .parity_core import (
 T = TypeVar("T")
 
 
+def _mark_published_product_dirty(db, product_id: int, *, before=None) -> bool:
+    """Queue an already-published Product for guarded in-place re-publish."""
+    row = before if before is not None else db.product(int(product_id))
+    if row is None:
+        return False
+    data = dict(row)
+    try:
+        server_product_id = int(data.get("server_product_id") or 0)
+    except Exception:
+        server_product_id = 0
+    published_identity = bool(
+        str(data.get("server_id") or "").strip()
+        or server_product_id > 0
+    )
+    if (
+        not published_identity
+        or str(data.get("workflow_status") or "").strip().lower() != "uploaded"
+    ):
+        return False
+    db.update_product(
+        int(product_id),
+        {"needs_update": 1, "upload_ready": 0},
+    )
+    return True
+
+
 class CoreRegistry:
     """Long-lived object registry for the Qt application runtime."""
 
@@ -177,7 +203,14 @@ class ProductCore:
             return dict(before_row)
 
         before = dict(before_row)
+        changed = any(before.get(key) != value for key, value in allowed.items())
         self.db.update_product(int(product_id), allowed)
+        if changed:
+            _mark_published_product_dirty(
+                self.db,
+                int(product_id),
+                before=before,
+            )
         after = self.get(product_id) or {}
         try:
             self.db.save_history(
@@ -1012,6 +1045,11 @@ class ImageCore:
                 except Exception:
                     continue
         result["stale_seo_files_removed"] = removed
+        _mark_published_product_dirty(
+            self.db,
+            product_id,
+            before=data,
+        )
         return result
 
     def local_items(self, product_id: int) -> list[dict[str, Any]]:
@@ -1410,6 +1448,11 @@ class ImageCore:
                 except Exception:
                     pass
             raise
+        _mark_published_product_dirty(
+            self.db,
+            int(product_id),
+            before=data,
+        )
         return dict(self.db.product(int(product_id)))
 
     @staticmethod
@@ -1563,22 +1606,33 @@ class ImageCore:
             deduplicate=False,
             image_limit=max(1, len(selected)),
         )
+        _mark_published_product_dirty(
+            self.db,
+            int(product_id),
+            before=data,
+        )
         return dict(self.db.product(int(product_id)))
 
     def capture_source_screenshot(self, product_id: int) -> str:
-        self._assert_images_editable(product_id)
+        before = dict(self._assert_images_editable(product_id))
         from app.phase49_3i33_ai_core import capture_source_screenshot
 
         proxy = SimpleNamespace(
             db=self.db,
             DATA=Path(self.db.path).parent,
         )
-        return str(
+        result = str(
             capture_source_screenshot(
                 proxy,
                 int(product_id),
             )
         )
+        _mark_published_product_dirty(
+            self.db,
+            int(product_id),
+            before=before,
+        )
+        return result
 
     def finalize(self, product_id: int) -> dict[str, Any]:
         return dict(

@@ -228,17 +228,39 @@ class Epic49UnifiedImportE2ETests(TestCase):
         editorial_path = model / "desktop_editorial.json"
         editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
         editorial["local_image_files_json"] = [refreshed_image.name]
+        editorial["title_fa"] = "چرخ‌دنده تست Epic49 ویرایش‌شده"
+        editorial["short_description_fa"] = "توضیح کوتاه جدید پس از انتشار"
+        editorial["description_fa"] = "توضیحات کامل جدید که باید روی همان Product سایت جایگزین شود."
+        editorial["seo_title_fa"] = "خرید چرخ‌دنده Epic49 ویرایش‌شده"
+        editorial["seo_description_fa"] = "توضیح سئوی جدید برای همان محصول موجود سایت"
         editorial_path.write_text(
             json.dumps(editorial, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
+        original_product_pk = product.pk
+        original_asset_pk = asset.pk
         out2 = StringIO()
         call_command("phase37_import_catalog_center", str(batch), stdout=out2)
         asset.refresh_from_db()
         profile.refresh_from_db()
         slide.refresh_from_db()
         product.refresh_from_db()
+        self.assertEqual(asset.pk, original_asset_pk)
+        self.assertEqual(asset.product_id, original_product_pk)
+        self.assertEqual(product.pk, original_product_pk)
+        self.assertEqual(Product.objects.filter(pk=original_product_pk).count(), 1)
+        self.assertEqual(product.title, "چرخ‌دنده تست Epic49 ویرایش‌شده")
+        self.assertEqual(product.short_description, "تست فرایند Windows تا Store")
+        self.assertEqual(
+            product.description,
+            "توضیحات کامل جدید که باید روی همان Product سایت جایگزین شود.",
+        )
+        self.assertEqual(product.meta_title, "خرید چرخ‌دنده Epic49 ویرایش‌شده")
+        self.assertEqual(
+            product.meta_description,
+            "توضیح سئوی جدید برای همان محصول موجود سایت",
+        )
         asset_image = asset.images.get(remote_url="https://example.com/media/hero.gif")
         self.assertTrue(asset_image.image.name.endswith(refreshed_image.name))
         self.assertTrue(asset.preview_image.name.endswith(refreshed_image.name))

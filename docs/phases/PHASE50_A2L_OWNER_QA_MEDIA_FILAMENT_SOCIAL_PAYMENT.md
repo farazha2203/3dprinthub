@@ -1,3 +1,12 @@
+## Image name+SEO + in-place re-publish hardening — 2026-09-18
+- Owner requested one `اصلاح اسم و سئو` Stage-3 action. Automatic semantic SEO and deterministic numbered filename generation are now one operation; selected operation subset wins, otherwise all editable Site-selected images are processed.
+- Mature manual SEO editor, Screenshot, image membership, Primary/Slider and filename authority remain unchanged.
+- Windows direct image/operator mutation boundaries now mark a server-linked uploaded Product `needs_update=1` without changing its Site identity. Stage edits already had this behavior through StageCore.
+- Existing Stage-7 Send already requeues the Product and performs revision guard before Batch/FTP/Bridge.
+- Server E2E proves changed content/SEO/media re-import updates the same Product/Asset, not a duplicate.
+- Gates: 22/22 image, 59/59 Windows/Site, 3/3 unified importer, 23/23 profile/identity/admin-sync PASS.
+- Production unchanged; next Host action remains dedicated-tunnel recovery -> GitHub deploy -> Production verify -> #152 Site -> Instagram #152.
+
 ## Site-first Product/Admin hotfix — 2026-09-18
 - Owner priority: deploy Site before additional Instagram publication.
 - Public Product detail current source intentionally has no standalone Filament roll-price cards; the four-step guided selector remains customer ordering authority.

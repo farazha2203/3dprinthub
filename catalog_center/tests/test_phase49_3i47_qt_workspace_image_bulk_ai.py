@@ -602,6 +602,97 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_name_and_seo_button_repairs_all_site_images_when_no_operation_subset(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(page.image_grid.operation_urls(), [])
+            self.assertEqual(page.image_name_seo_btn.text(), "اصلاح اسم و سئو")
+
+            page._apply_product_image_seo()
+
+            row = dict(self.db.product(product_id))
+            metadata = [
+                dict(item)
+                for item in json.loads(row["image_metadata_json"])
+            ]
+            by_url = {
+                str(item.get("source_url") or ""): item
+                for item in metadata
+            }
+            self.assertEqual(set(by_url), set(urls))
+            self.assertEqual(
+                [by_url[url]["seo_filename"] for url in urls],
+                [
+                    "table-lamp-3d-print-01.webp",
+                    "table-lamp-3d-print-02.webp",
+                    "table-lamp-3d-print-03.webp",
+                ],
+            )
+            for url in urls:
+                self.assertIn(
+                    "alt_text",
+                    by_url[url].get("_operator_override_fields", []),
+                )
+            self.assertEqual(
+                json.loads(row["selected_images_json"]),
+                urls,
+            )
+            self.assertEqual(row["primary_image_url"], urls[0])
+        finally:
+            page.close()
+
+    def test_published_image_seo_edit_marks_same_product_for_republish(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        self.db.update_product(
+            product_id,
+            {
+                "server_id": "asset-existing",
+                "server_product_id": 1902,
+                "workflow_status": "uploaded",
+                "needs_update": 0,
+                "upload_ready": 0,
+            },
+        )
+
+        self.kernel.images.update_metadata(
+            product_id,
+            [urls[0]],
+            {"alt_text": "ALT updated after publish"},
+        )
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(row["server_id"], "asset-existing")
+        self.assertEqual(int(row["server_product_id"]), 1902)
+        self.assertEqual(row["workflow_status"], "uploaded")
+        self.assertEqual(int(row["needs_update"]), 1)
+        self.assertEqual(int(row["upload_ready"]), 0)
+
+    def test_published_operator_field_edit_marks_same_product_for_republish(self):
+        product_id = self._make_product("3147019")
+        self.db.update_product(
+            product_id,
+            {
+                "server_id": "asset-existing-operator",
+                "server_product_id": 1919,
+                "workflow_status": "uploaded",
+                "needs_update": 0,
+                "upload_ready": 0,
+            },
+        )
+
+        self.kernel.products.update_operator_fields(
+            product_id,
+            {"title_fa": "عنوان اصلاح‌شده پس از انتشار"},
+        )
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(row["server_id"], "asset-existing-operator")
+        self.assertEqual(int(row["server_product_id"]), 1919)
+        self.assertEqual(int(row["needs_update"]), 1)
+        self.assertEqual(int(row["upload_ready"]), 0)
+
     def test_card_shows_seo_filename_and_keeps_source_filename_secondary(self):
         product_id, urls, _local_dir = self._mapped_image_product()
         self.kernel.images.finalize(product_id)

@@ -1,3 +1,10 @@
+## 2026-09-18 - Owner: combine image filename+SEO repair and make re-upload update existing Site Product
+Status: `LOCAL_ACCEPTED / FINAL GATE + GITHUB PROMOTION NEXT`.
+
+Owner requires one Stage-3 action named `اصلاح اسم و سئو`: selected image(s) must receive complete Product image SEO and deterministic SEO filename together; when no temporary subset is selected, all Site-selected images should be standardized. Existing manual per-image/bulk SEO editing remains available.
+
+Owner also requires a Product already published to Site to keep its existing Site identity: after any explicit Windows edit and re-send, the previous Product must be updated in place rather than remaining stale or creating a duplicate. Site remains the current priority; after deploy and verification, #152 is Site-first then Instagram, while #309/#301 must not be reposted.
+
 ## 2026-09-18 - Owner: site first / remove duplicate Filament cards / fix Product edit 504 / English Profile identity
 Status: `LOCAL_ACCEPTED / COMMIT+PUSH+DEPLOY NEXT`.
 

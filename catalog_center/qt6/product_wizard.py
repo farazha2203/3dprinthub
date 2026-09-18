@@ -401,20 +401,21 @@ class ProductWizardPage(QWidget):
         select_all = QPushButton("انتخاب همه")
         clear_all = QPushButton("لغو همه")
         edit_seo = QPushButton("SEO انتخابی")
-        apply_seo = QPushButton("SEO فارسی")
+        self.image_name_seo_btn = QPushButton("اصلاح اسم و سئو")
         delete_selected = QPushButton("حذف انتخابی")
         delete_selected.setProperty("danger", True)
-        renumber_images = QPushButton("نام‌گذاری SEO")
         screenshot = QPushButton("اسکرین‌شات")
         recover = QPushButton("بازیابی از لینک")
         recover.setProperty("primary", True)
 
         select_all.setToolTip("انتخاب همه تصاویر برای عملیات گروهی")
         clear_all.setToolTip("لغو انتخاب عملیاتی همه تصاویر")
-        edit_seo.setToolTip("ویرایش SEO فقط برای تصاویر انتخاب‌شده")
-        apply_seo.setToolTip("اعمال SEO فارسی محصول روی تصاویر انتخاب‌شده")
+        edit_seo.setToolTip("ویرایش دستی SEO فقط برای تصاویر انتخاب‌شده")
+        self.image_name_seo_btn.setToolTip(
+            "نام فایل SEO و Alt/Title/Caption/Keywords را با هم اصلاح می‌کند؛ "
+            "اگر انتخاب عملیاتی نداشته باشی، روی همه تصاویر انتخاب‌شده برای سایت اجرا می‌شود."
+        )
         delete_selected.setToolTip("حذف فقط تصاویر انتخاب‌شده")
-        renumber_images.setToolTip("بازسازی نام‌های SEO تصاویر")
         screenshot.setToolTip("دریافت اسکرین‌شات صفحه محصول")
         recover.setToolTip(
             "دریافت داده و عکس بیشتر از لینک محصول؛ تصمیم‌های اپراتور "
@@ -434,9 +435,8 @@ class ProductWizardPage(QWidget):
             lambda: self.image_grid.set_all_operation_selected(False)
         )
         edit_seo.clicked.connect(self._edit_selected_image_seo)
-        apply_seo.clicked.connect(self._apply_product_image_seo)
+        self.image_name_seo_btn.clicked.connect(self._apply_product_image_seo)
         delete_selected.clicked.connect(self._delete_selected_images)
-        renumber_images.clicked.connect(self._renumber_images)
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
@@ -445,9 +445,8 @@ class ProductWizardPage(QWidget):
             select_all,
             clear_all,
             edit_seo,
-            apply_seo,
+            self.image_name_seo_btn,
             delete_selected,
-            renumber_images,
             screenshot,
             recover,
         )
@@ -463,7 +462,7 @@ class ProductWizardPage(QWidget):
             widget.setMinimumHeight(26)
             widget.setMaximumHeight(26)
 
-        for button in self.image_stage3_toolbar_buttons[:7]:
+        for button in self.image_stage3_toolbar_buttons[:-1]:
             control_layout.addWidget(button)
         control_layout.addWidget(recover_count_label)
         control_layout.addWidget(self.image_recover_limit)
@@ -1799,11 +1798,21 @@ class ProductWizardPage(QWidget):
         if self.product_id is None:
             return
         urls = self.image_grid.operation_urls()
+        scope = "انتخاب عملیاتی"
+        if not urls:
+            scope = "همه تصاویر سایت"
+            urls = [
+                url
+                for url in self.image_grid.selected_urls()
+                if not bool(
+                    (self.image_grid.item_for_url(url) or {}).get("display_only")
+                )
+            ]
         if not urls:
             QMessageBox.warning(
                 self,
-                "SEO تصاویر",
-                "برای اعمال SEO فارسی، حداقل یک تصویر را برای عملیات انتخاب کن.",
+                "اصلاح اسم و سئو",
+                "حداقل یک تصویر قابل ویرایش را برای سایت یا عملیات گروهی انتخاب کن.",
             )
             return
         row = self.kernel.products.get(self.product_id) or {}
@@ -1838,9 +1847,13 @@ class ProductWizardPage(QWidget):
             )
             self.kernel.images.renumber(self.product_id)
         except Exception as exc:
-            QMessageBox.warning(self, "SEO تصاویر", str(exc))
+            QMessageBox.warning(self, "اصلاح اسم و سئو", str(exc))
             return
+        repaired = len(urls)
         self.load_product(self.product_id)
+        self.image_task_status.setText(
+            f"✅ اصلاح اسم و سئو کامل شد • {repaired} تصویر • {scope}"
+        )
 
     def _start_image_task(self, label: str, fn) -> None:
         if self._image_worker is not None:

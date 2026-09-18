@@ -1,3 +1,10 @@
+## 2026-09-18 - Combined image name+SEO repair and reliable in-place re-publish
+- Stage-3 automatic image action is now `اصلاح اسم و سئو`: temporary operation selection scopes the repair; otherwise all editable Site-selected images are repaired. Product semantic SEO and deterministic English numbered WebP naming run together.
+- Removed the redundant standalone automatic `نام‌گذاری SEO` toolbar action; manual `SEO انتخابی`, Screenshot, delete, selection, Primary, Slider, recovery and mature filename authority are unchanged.
+- Added a shared Windows dirty-state boundary for already-uploaded Products after direct operator/image mutations that previously bypassed StageCore. Existing Site identity is retained while `needs_update=1` reopens guarded re-publish.
+- Server E2E now changes Persian title/description/meta SEO plus finalized image on second import and verifies the same Product PK/Asset PK are updated in place with no duplicate.
+- Local gates: Image 22/22, Windows/Site 59/59, real importer 3/3, Profile/identity/admin-sync 23/23 PASS; compile/diff-check PASS.
+
 ## 2026-09-18 - Site-first Product/Admin/Profile/Instagram hotfix
 - Removed ProductVariant inline from Product change pages; dedicated ProductVariant admin remains the editing surface. Benchmark dropped a 37-Variant change page from 781 to 60 queries and 1.399s to 0.075s in the isolated comparison.
 - Reconfirmed current Product detail source already omits the obsolete Filament roll-price card block shown on older Production; updated the stale regression to require it absent.

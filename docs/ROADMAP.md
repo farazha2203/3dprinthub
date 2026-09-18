@@ -1,3 +1,18 @@
+## 2026-09-18 — Image repair + reliable in-place re-publish
+- [x] Preserve mature filename authority, Screenshot, Primary/Slider and image membership behavior.
+- [x] Replace separate automatic image SEO/renumber controls with `اصلاح اسم و سئو`.
+- [x] Operation subset => repair subset; no operation subset => repair all editable Site-selected images.
+- [x] Mark uploaded Products dirty after explicit image metadata/renumber/remove/Screenshot and direct Product operator edits.
+- [x] Prove Stage/Profile edits still use existing StageCore dirty boundary.
+- [x] Prove Stage-7 single-product Send requeues uploaded Product through guarded publish flow.
+- [x] Strengthen server E2E: changed title/description/SEO/image re-import updates same Product PK and same Asset.
+- [x] Image 22/22 + Windows/Site 59/59 + Server E2E 3/3 + Django profile/sync 23/23 PASS.
+- [ ] Final VerifyOnly/check/no-migration/diff gate.
+- [ ] Commit/push exact candidate + fresh Catalog backup + exact-SHA Qt relaunch.
+- [ ] Restore dedicated reverse tunnel only on verified local Router.
+- [ ] Deploy from GitHub; verify Product Admin 504, duplicate Filament removal and Hero.
+- [ ] Publish #152 to Site, then Instagram #152; never duplicate #309/#301.
+
 ## 2026-09-18 — Site-first Product/Admin release
 - [x] Reproduce Production duplicate Filament card block and prove current source already omits it.
 - [x] Isolate Product Admin 504 to ProductVariant inline query/HTML explosion.
