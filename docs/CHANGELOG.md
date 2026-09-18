@@ -1,3 +1,9 @@
+## 2026-09-18 - Stage-3 3×3 runtime promotion
+- Pushed and launched exact Windows runtime `a52cd52a18a119f9aa2940ebc00f588828d1a558`.
+- Took fresh integrity-checked Catalog backup `pre-stage3-3x3-a52cd52-20260918-123308`.
+- Visible Qt child is responsive. Production site was not changed because the dedicated reverse tunnel remains down.
+- No cPanel/browser alternate Host access was used after the owner reconfirmed tunnel-only operations.
+
 ## 2026-09-18 - Stage-3 three-column / three-row compact image review
 - Replaced the oversized two-column 780px image-card presentation with 3-column fixed 206px review cards.
 - Preview is intentionally smaller; SEO filename and metadata remain visible; Previous/Next/SEO/Delete share one compact action row.

@@ -1,3 +1,11 @@
+## 2026-09-18 — Stage-3 3×3 runtime pushed and relaunched
+- Exact runtime commit `a52cd52a18a119f9aa2940ebc00f588828d1a558` is pushed to `wip/phase50-a2l-owner-qa-20260917`; Local/GitHub SHA matched before launch.
+- Fresh pre-launch Catalog backup: `D:\projects\3dprinthub-backups\pre-stage3-3x3-a52cd52-20260918-123308\catalog.sqlite3`; source/backup integrity `ok`, both 635 Products.
+- Canonical Qt was relaunched from the exact pushed source. Venv launcher PID 29816 delegates to Python child PID 53788; visible window `3DPrintHub Catalog Center v8.9.10 - Qt 6` is responsive.
+- Post-launch read-only Catalog: integrity `ok`, 635 Products. Product #628 currently stores 2 selected images / 2 source images; the 3×3 layout capacity is verified separately with isolated 9-card acceptance.
+- Dedicated reverse tunnel was rechecked only through Windows loopback `127.0.0.1:22024`: `TCP22024=False`. Per owner rule no cPanel/browser/alternate Host path is permitted, therefore Production site deployment remains BLOCKED/fail-closed.
+- Exact next: owner visual smoke of the new compact Stage-3 layout. Site Slicebox deployment resumes only when the dedicated reverse tunnel and authenticated Host gates are healthy.
+
 ## 2026-09-18 — Owner correction: Stage-3 3×3 compact review LOCAL_TESTED
 - Owner clarified the target: do NOT enlarge each image card. Stage 3 must show three images per row and, by default, three complete rows (up to nine cards) including SEO filename and per-image controls.
 - Presentation-only correction: Product Wizard Stage 3 now uses 3 columns; review cards are 300–520px wide and fixed 206px high; image preview is 260x90 minimum / 94px max-height; filename stays visible; source filename + factual size are one compact metadata row; Previous/Next/SEO/Delete are one 22px action row. Existing selection, primary, slider, reorder, SEO, delete, screenshot and wheel-scroll callbacks are unchanged.

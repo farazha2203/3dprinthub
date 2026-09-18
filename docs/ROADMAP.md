@@ -1,3 +1,12 @@
+## 2026-09-18 — Stage-3 3×3 runtime promotion
+- [x] Commit `a52cd52a18a119f9aa2940ebc00f588828d1a558`.
+- [x] Push and verify exact Local/GitHub SHA.
+- [x] Fresh Catalog backup; source/backup integrity `ok`, 635 Products.
+- [x] Relaunch canonical Qt from exact pushed source; visible child window responsive.
+- [x] Post-launch Catalog read-only integrity PASS.
+- [ ] Owner visual smoke of 3-column compact cards / filename / controls.
+- [ ] Site deploy remains blocked while dedicated reverse tunnel `127.0.0.1:22024` is down; no cPanel/browser fallback.
+
 ## 2026-09-18 — Stage-3 3×3 owner correction
 - [x] Restore three image cards per row.
 - [x] Make review cards smaller instead of enlarging individual images.

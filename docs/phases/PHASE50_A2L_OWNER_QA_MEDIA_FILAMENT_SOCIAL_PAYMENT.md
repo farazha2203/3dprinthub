@@ -1,3 +1,10 @@
+## Stage-3 3×3 runtime — 2026-09-18
+- Exact runtime `a52cd52a18a119f9aa2940ebc00f588828d1a558` is pushed and running in canonical Qt.
+- Fresh Catalog backup `pre-stage3-3x3-a52cd52-20260918-123308` passed source/backup integrity with 635 Products.
+- Qt child PID 53788 is visible/responsive.
+- Current Product #628 persistence has 2 selected/source images; isolated 9-card acceptance proves the 3×3 capacity.
+- Dedicated reverse tunnel `22024` is down. Production deploy is blocked and no alternate cPanel/browser path is allowed.
+
 ## Stage-3 3×3 compact review correction — 2026-09-18
 - Owner correction is presentation-only: three columns, three complete visible rows, smaller image preview, always-visible SEO filename and one compact Previous/Next/SEO/Delete row.
 - Review card: 300–520px width, fixed 206px height; preview 260x90 min / 94px max. Gallery min-height 670px.

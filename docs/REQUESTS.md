@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner Stage-3 3×3 runtime status
+Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
+
+The requested three-column compact gallery is now running from exact GitHub commit `a52cd52a18a119f9aa2940ebc00f588828d1a558`. Owner visual smoke is the remaining Windows acceptance gate. Site deployment remains blocked strictly on the dedicated reverse tunnel, which currently does not listen on `127.0.0.1:22024`.
+
 ## 2026-09-18 - Owner correction: three images per row / three rows visible
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT`.
 
