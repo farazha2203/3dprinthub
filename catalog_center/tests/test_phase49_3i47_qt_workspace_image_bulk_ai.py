@@ -434,6 +434,36 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_manual_source_screenshot_is_visible_without_stealing_numbered_source_slot(self):
+        local_dir = self.root / "manual-screenshot"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (400, 300), "white").save(image_dir / "01.webp", format="WEBP")
+        Image.new("RGB", (420, 320), "white").save(image_dir / "02.webp", format="WEBP")
+        screenshot_name = "source-page-screenshot-20260918-101500.png"
+        Image.new("RGB", (900, 700), "white").save(image_dir / screenshot_name, format="PNG")
+
+        source_url = "https://cdn.example.com/source-01.jpg"
+        screenshot_url = f"local://{screenshot_name}"
+        product_id = self._make_product(
+            "3147013",
+            local_dir=local_dir,
+            urls=[source_url, screenshot_url],
+        )
+        self.db.update_product(
+            product_id,
+            {"selected_images_json": json.dumps([source_url], ensure_ascii=False)},
+        )
+
+        items = self.kernel.images.local_items(product_id)
+        by_name = {item["filename"]: item for item in items}
+        self.assertEqual(set(by_name), {"01.webp", "02.webp", screenshot_name})
+        self.assertEqual(by_name["01.webp"]["url"], source_url)
+        self.assertTrue(by_name["02.webp"]["display_only"])
+        self.assertEqual(by_name[screenshot_name]["url"], screenshot_url)
+        self.assertFalse(by_name[screenshot_name]["display_only"])
+        self.assertFalse(by_name[screenshot_name]["selected"])
+
     def test_source_urls_without_local_files_do_not_create_broken_gallery_cards(self):
         urls = [f"https://cdn.example.com/missing-{index:02d}.jpg" for index in range(1, 61)]
         product_id = self._make_product(

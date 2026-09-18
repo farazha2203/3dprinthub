@@ -1,3 +1,10 @@
+## 2026-09-18 — Qt Product Screenshot visibility repair
+- Fixed the Product Wizard Screenshot action appearing to do nothing even though capture succeeded.
+- Preserved the mature capture implementation, `source-page-screenshot-<timestamp>.png` naming/crop behavior, SEO pipeline, button wiring and Product image sizing.
+- Updated only the Qt image resolver so explicitly persisted manual Screenshot files remain visible beside numbered Product images and cannot be misidentified as numbered source slots.
+- Added a focused regression reproducing the hidden-Screenshot/slot-stealing case; full maintained Qt/Gallery/Wizard/Screenshot gate 61/61 PASS plus launcher verify/compile/diff-check PASS.
+- Copy-of-real Product #628 acceptance passed on backup `pre-screenshot-resolver-20260918-095910`; canonical Catalog, schema and Production were not changed by the acceptance probe.
+
 ## 2026-09-18 — Stage-3 owner correction: workflow restored, gallery enlarged
 - Restored the mature Product image control layout/wiring, Screenshot path, recover-limit behavior, slider panel, AI visibility behavior and normal saved window geometry after the rejected `d564386` UI repair.
 - Kept the requested change presentation-only: larger two-column Product image cards/previews and sufficient scroll content height.

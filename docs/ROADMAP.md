@@ -1,3 +1,13 @@
+## 2026-09-18 — Immediate Screenshot-button repair
+- [x] Prove on real Product #628 whether capture executes: multiple fresh Screenshot files + DB `local://` entries exist.
+- [x] Identify display-only regression in the A2L numbered-image resolver rather than changing capture/naming again.
+- [x] Add failing regression for hidden manual Screenshot + numbered-slot identity theft.
+- [x] Patch only the Qt resolver; preserve Screenshot capture/naming/crop, SEO, button wiring and gallery sizing.
+- [x] Maintained Qt/Gallery/Wizard/Screenshot gate 61/61 PASS; launcher verify, compile and diff-check PASS.
+- [x] Copy-of-real Catalog acceptance PASS with integrity-checked backup; canonical Catalog untouched.
+- [ ] Commit/push exact SHA and verify GitHub match.
+- [ ] Relaunch one canonical Qt runtime from exact pushed SHA and owner-smoke the Screenshot button.
+
 ## 2026-09-18 — Immediate owner correction: Stage-3 image review only
 - [x] Restore pre-`d564386` image button workflow, Screenshot action path, recover-limit behavior, slider panel, AI visibility and normal window geometry.
 - [x] Enlarge only Product image cards/previews and preserve vertical scrolling.

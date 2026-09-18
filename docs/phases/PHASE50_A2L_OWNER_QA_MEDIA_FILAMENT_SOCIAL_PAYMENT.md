@@ -60,7 +60,14 @@ This phase is driven by the 2026-09-17 owner screenshots from Catalog Center v8.
 - Only the Product image review presentation may change: larger cards/previews with reachable scroll content. Image filename display/generation and Screenshot capture/naming are explicitly frozen to the mature pre-change behavior; the rejected filename-display override was removed.
 - No migration, Catalog schema or Production change. Corrective focused Qt/Gallery/Wizard/Screenshot regression: 60/60 PASS. Runtime correction is pushed at `20f483af983cad550b1e2473751798daf0e8d39b` and the canonical Qt window was relaunched after backup.
 
+## Screenshot visibility repair — 2026-09-18
+- Real Product #628 proved the Screenshot button was capturing and persisting files; the failure was in Qt display resolution after the A2L numbered-image path returned before explicit manual Screenshot mappings.
+- The fix changes only `qt6/kernel.py`: persisted `local://source-page-screenshot...` images remain visible beside numbered Product files and can no longer be mistaken for numbered source slots.
+- Screenshot capture/naming/crop, Product Wizard button wiring, SEO pipeline, selection persistence and enlarged card dimensions are unchanged.
+- Dedicated regression failed before the fix and passes after it; maintained Qt/Gallery/Wizard/Screenshot gate 61/61 PASS, launcher verify/compile/diff-check PASS.
+- Copy-of-real Catalog acceptance used integrity-checked backup `pre-screenshot-resolver-20260918-095910`; canonical Catalog, schema and Production were not mutated.
+
 ## Remaining gates
-- Commit/push the Brand-repair follow-up and relaunch Qt from that exact SHA for owner use.
+- Commit/push the Screenshot visibility repair and relaunch Qt from that exact SHA for owner use.
 - Production deploy/manual-payment apply remain blocked until ERR-49-154 reverse-tunnel recovery plus Host identity, MySQL backup, rollback and readiness gates.
 - Later Podium/Farataz payment automation is intentionally deferred per owner request; do not guess/import it before a separate source/document audit.

@@ -661,6 +661,26 @@ class ImageCore:
                     continue
                 seen.add(key)
                 output.append(str(resolved))
+            for screenshot_url in self.urls(data):
+                screenshot_url = str(screenshot_url or "").strip()
+                if not screenshot_url.casefold().startswith(
+                    "local://source-page-screenshot"
+                ):
+                    continue
+                candidate = self.local_path_for_url(data, screenshot_url)
+                if not candidate:
+                    continue
+                try:
+                    resolved = Path(candidate).resolve()
+                except Exception:
+                    continue
+                if not resolved.is_file():
+                    continue
+                key = str(resolved).casefold()
+                if key in seen:
+                    continue
+                seen.add(key)
+                output.append(str(resolved))
             if output:
                 return output
 
@@ -978,7 +998,10 @@ class ImageCore:
                     numbered_slot = int(stem)
                     if 1 <= numbered_slot <= len(source_urls):
                         candidate_url = source_urls[numbered_slot - 1]
-                        if candidate_url not in used_urls:
+                        is_manual_screenshot = candidate_url.casefold().startswith(
+                            "local://source-page-screenshot"
+                        )
+                        if not is_manual_screenshot and candidate_url not in used_urls:
                             slot = numbered_slot
                             url = candidate_url
                 if not url:

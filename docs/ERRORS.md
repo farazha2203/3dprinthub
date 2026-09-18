@@ -1,3 +1,11 @@
+## ERR-49-160 — Qt Screenshot captured successfully but disappeared from Product gallery
+**Date:** 2026-09-18
+**Observed:** pressing «دریافت اسکرین‌شات صفحه محصول» created real `source-page-screenshot-*` files and updated `images_json`, but after refresh the new Screenshot was not visible in the Qt Product image grid, making the button appear non-functional.
+**Root cause:** the A2L numbered-file resolver introduced at `4375c007...` returned numbered Product files before explicit non-numbered Screenshot mappings were considered. Its numbered fallback could also bind a `local://source-page-screenshot...` pseudo-URL to a numbered Product file slot.
+**Fix:** keep the existing capture/naming pipeline untouched; append only explicitly persisted `local://source-page-screenshot...` files to numbered gallery results and never use those pseudo-URLs as numbered source-slot identities.
+**Verification:** dedicated regression failed before the patch and passes after; maintained Qt/Gallery/Wizard/Screenshot suite 61/61 PASS; copy-of-real Product #628 resolves its persisted Screenshot items from an integrity-checked Catalog backup.
+**Prevention:** display resolvers may filter arbitrary auxiliary files, but an image explicitly persisted in Product `images_json` by an operator action must remain observable in the same Product workspace. Derived/manual pseudo-URLs must never be reused as source-gallery slot identity.
+
 ## ERR-49-159 — Stage-3 size fix unintentionally changed mature image controls
 **Date:** 2026-09-18
 **Observed:** the attempted image-workspace repair also changed button labels/layout, recover-limit behavior, AI-bar visibility and restored-window geometry; owner also observed raw numbered filenames and loss of the expected screenshot workflow.
