@@ -1,12 +1,8 @@
-## 2026-09-18 — A2L Product image workspace owner fix LOCAL_TESTED
-- Owner QA reproduced a Stage 3 usability problem rather than a missing image-data problem: the image cards/control rows could force an oversized workspace, persisted Qt geometry could reopen partly outside the current monitor, and the real multi-image actions were reachable only awkwardly.
-- The pre-existing dirty gallery patch was inspected and preserved before extension; rollback copies are under `.phase-backups/phase50_a2l_gallery_pre_ownerfix_20260918`.
-- Stage 3 now keeps the existing two-column review model but uses 330–520 px large cards, 300×220 minimum previews, non-fixed vertical sizing, a row-height-backed always-on vertical scroll surface and a compact three-row control grid. Select-all/clear, bulk SEO, delete, primary, slider and reorder remain the same guarded Core operations.
-- MainWindow now clamps restored non-maximized geometry to the active screen available area with a safe margin, preventing old QSettings geometry from reopening the bottom/right edge outside the monitor.
-- Regression reconciliation: an older 3I.47 assertion still hard-coded 270 px/255 px/492 px geometry. Runtime contract had intentionally changed, so the assertion was updated after inspection; the exact failed test then passed.
-- Local evidence: changed-file py_compile PASS; focused gallery/Wizard 28/28 PASS; geometry+gallery 36/36 PASS; corrected 3-module regression 48/48 PASS; bounded maintained A2L/Qt/Buffer/Instagram set 73/73 PASS; `git diff --check` PASS; `catalog_center/RUN_QT.ps1 -VerifyOnly` PASS.
-- No Catalog DB, Django DB, Host or Production write was performed by this slice. Production remains fail-closed behind ERR-49-154 until the dedicated 3DPrintHub reverse tunnel and Host backup/readiness gates are restored.
-- Exact next: document/commit/push this owner-fix candidate, take a fresh integrity-checked Catalog backup, close the old Qt process(es), relaunch from the exact pushed SHA, then visually verify Product #628 multi-image review on the real Windows monitor before any Production work.
+## 2026-09-18 — Owner correction: preserve image workflow, enlarge review only
+- Owner rejected the `d564386` Stage-3 workflow/layout changes. The corrective Local candidate restores the prior image controls, prior screenshot action path, prior recover-limit behavior, prior slider panel and prior window-geometry behavior.
+- Requested delta is now intentionally narrow: enlarge only the Product image review cards/preview area and show the already-owned SEO filename before the raw numbered source filename. No image ordering, selection, delete, SEO persistence, screenshot capture, slider or recovery logic is rewritten.
+- SEO filename authority is unchanged: the mature image pipeline derives deterministic numbered WebP names from Product SEO/title facts; the card now displays that existing planned filename instead of `01.webp` when metadata exists.
+- Focused Qt/Gallery/Wizard/Screenshot regression: 61/61 PASS. Production and database schema are unchanged. Exact GitHub promotion and one-runtime relaunch remain next.
 
 ## 2026-09-18 — A2L exact runtime relaunched / real Filament identity debt isolated
 - Exact A2L candidate `4375c007874faa87c874f3806705532128814176` is on GitHub and the Windows Qt Catalog Center was closed/relaunched from that exact SHA after a fresh online Catalog backup (`pre-a2l-exact-launch-20260918-083025`, integrity `ok`, 635 Products).

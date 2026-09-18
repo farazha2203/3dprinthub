@@ -1,7 +1,6 @@
-## 2026-09-18 - Owner correction: Product image workspace/window must be genuinely usable
-Status: `LOCAL_TESTED / GITHUB EXACT-CANDIDATE NEXT / PRODUCTION TUNNEL BLOCKED`.
-
-Owner reports the Product image area is still unusable in the real Windows window: window bounds are wrong, image review space is too small and the multi-image operating cycle is awkward. Acceptance requires the full app window to remain inside the current monitor, large two-column image review with reachable vertical scroll, and visible select-all/clear/bulk SEO/delete/reorder/primary/slider/recovery actions. The implementation preserves existing image authority and only changes presentation/geometry. Bounded relevant gate is 73/73 PASS plus launcher verify/diff-check.
+## 2026-09-18 - Owner correction: only enlarge Product image display
+Status: `LOCAL_TESTED / GITHUB PROMOTION + EXACT-SHA RELAUNCH NEXT`.
+Owner explicitly requires all mature Stage-3 image button workflows to remain as they were. Revert the recent control/layout/recover-limit/AI-visibility/window-geometry changes, preserve Screenshot and all image actions, enlarge only the image review cards/preview surface, and show the Product-owned SEO/planned filename instead of a raw numeric filename when available. Focused regression is 61/61 PASS; Production is untouched.
 
 ## 2026-09-18 - Owner continuation: real Windows image workspace + full Filament repair
 Status: `LOCAL_TESTED / FOLLOW-UP PUSH+RELAUNCH NEXT / PRODUCTION TUNNEL BLOCKED`.

@@ -10,7 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QSizePolicy
+from PySide6.QtWidgets import QApplication
 
 from app.db import Database
 from qt6.image_gallery import ProductImageGrid
@@ -540,16 +540,9 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
             )
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 430)
-            self.assertLessEqual(page.image_grid.minimumHeight(), 500)
-            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 96)
-            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 480)
-            self.assertEqual(
-                page.image_recover_limit.value(),
-                page.image_recover_limit.maximum(),
-            )
-            page._set_stage(2)
-            self.assertFalse(page.ai_box.isVisible())
+            self.assertGreaterEqual(page.image_grid.minimumHeight(), 560)
+            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().singleStep(), 72)
+            self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 420)
             button_texts = {
                 button.text()
                 for button in page.findChildren(type(page.product_source_btn))
@@ -586,13 +579,7 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 for index in range(1, 6)
             ])
             self.assertEqual(len(grid.cards), 5)
-            self.assertGreaterEqual(grid.host.minimumHeight(), 3 * 585)
-            for card in grid.cards:
-                self.assertGreaterEqual(card.minimumHeight(), 565)
-                self.assertNotEqual(
-                    card.sizePolicy().verticalPolicy(),
-                    QSizePolicy.Policy.Fixed,
-                )
+            self.assertGreaterEqual(grid.host.minimumHeight(), 3 * 492)
             self.assertEqual(
                 grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,

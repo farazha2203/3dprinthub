@@ -397,37 +397,6 @@ class MainWindow(QMainWindow):
         if isinstance(splitter_state, QByteArray):
             self.main_splitter.restoreState(splitter_state)
 
-        self._fit_window_to_available_screen()
-
-    def _fit_window_to_available_screen(self) -> None:
-        """Keep restored window geometry reachable on the current monitor."""
-        if self.isMaximized() or self.isFullScreen():
-            return
-        app = QApplication.instance()
-        if app is None:
-            return
-        screen = self.screen() or app.primaryScreen()
-        if screen is None:
-            return
-
-        available = screen.availableGeometry()
-        margin = 20
-        max_width = max(1, available.width() - (margin * 2))
-        max_height = max(1, available.height() - (margin * 2))
-        min_width = min(1220, max_width)
-        min_height = min(760, max_height)
-        self.setMinimumSize(min_width, min_height)
-
-        width = min(max(self.width(), min_width), max_width)
-        height = min(max(self.height(), min_height), max_height)
-        left = available.left() + margin
-        top = available.top() + margin
-        max_x = max(left, available.right() - width - margin + 1)
-        max_y = max(top, available.bottom() - height - margin + 1)
-        x = min(max(self.x(), left), max_x)
-        y = min(max(self.y(), top), max_y)
-        self.setGeometry(x, y, width, height)
-
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("splitter", self.main_splitter.saveState())

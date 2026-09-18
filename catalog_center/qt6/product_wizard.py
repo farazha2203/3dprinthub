@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QScrollArea,
     QAbstractSpinBox,
-    QSizePolicy,
     QSpinBox,
     QSplitter,
     QStackedWidget,
@@ -174,9 +173,9 @@ class ProductWizardPage(QWidget):
         root.addLayout(identity_row)
         root.addWidget(self.product_meta)
 
-        self.ai_box = QFrame()
-        self.ai_box.setObjectName("Card")
-        ai_layout = QHBoxLayout(self.ai_box)
+        ai_box = QFrame()
+        ai_box.setObjectName("Card")
+        ai_layout = QHBoxLayout(ai_box)
         ai_layout.addWidget(QLabel("منبع هوش مصنوعی"))
         self.ai_source = QComboBox()
         for item in self.kernel.providers.source_modes():
@@ -198,7 +197,7 @@ class ProductWizardPage(QWidget):
         ai_layout.addWidget(self.ai_cost_hint, 2)
         self.ai_current.clicked.connect(lambda: self._run_ai(current_only=True))
         self.ai_all.clicked.connect(lambda: self._run_ai(current_only=False))
-        root.addWidget(self.ai_box)
+        root.addWidget(ai_box)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setChildrenCollapsible(False)
@@ -380,13 +379,8 @@ class ProductWizardPage(QWidget):
         control = QFrame()
         control.setObjectName("Card")
         control_layout = QVBoxLayout(control)
-        # Keep Stage 3 controls compact at real desktop widths. Two long
-        # horizontal rows made the workspace request excessive width and
-        # squeezed the image review area. A bounded grid preserves every
-        # action without making the main window wider than the screen.
-        controls_grid = QGridLayout()
-        controls_grid.setHorizontalSpacing(8)
-        controls_grid.setVerticalSpacing(8)
+        selection_actions = QHBoxLayout()
+        operation_actions = QHBoxLayout()
 
         select_all = QPushButton("انتخاب همه")
         clear_all = QPushButton("لغو انتخاب همه")
@@ -405,8 +399,8 @@ class ProductWizardPage(QWidget):
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
-        self.image_recover_limit.setValue(HARD_MAX_IMAGE_LIMIT)
-        self.image_recover_limit.setSuffix(" عکس حداکثر")
+        self.image_recover_limit.setValue(5)
+        self.image_recover_limit.setSuffix(" عکس")
 
         select_all.clicked.connect(lambda: self.image_grid.set_all_selected(True))
         clear_all.clicked.connect(lambda: self.image_grid.set_all_selected(False))
@@ -417,27 +411,35 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
-        controls_grid.addWidget(select_all, 0, 0)
-        controls_grid.addWidget(clear_all, 0, 1)
-        controls_grid.addWidget(edit_seo, 0, 2)
-        controls_grid.addWidget(apply_seo, 0, 3)
-        controls_grid.addWidget(delete_selected, 1, 0)
-        controls_grid.addWidget(renumber_images, 1, 1)
-        controls_grid.addWidget(screenshot, 1, 2)
-        controls_grid.addWidget(recover, 1, 3)
-
-        count_label = QLabel("تعداد عکس بازیابی")
-        controls_grid.addWidget(count_label, 2, 0)
-        controls_grid.addWidget(self.image_recover_limit, 2, 1)
-        self.image_slider_enabled = QCheckBox("نمایش Product در اسلایدر صفحه اول")
-        self.image_slider_enabled.setToolTip(
-            "دایره «اسلایدر» روی کارت عکس Draft را تعیین می‌کند؛ ثبت نهایی اسلایدر در Stage 6 انجام می‌شود."
-        )
-        controls_grid.addWidget(self.image_slider_enabled, 2, 2, 1, 2)
-        for column in range(4):
-            controls_grid.setColumnStretch(column, 1)
-        control_layout.addLayout(controls_grid)
+        for widget in (select_all, clear_all, edit_seo, apply_seo, delete_selected):
+            selection_actions.addWidget(widget)
+        selection_actions.addStretch(1)
+        operation_actions.addWidget(renumber_images)
+        operation_actions.addWidget(screenshot)
+        operation_actions.addWidget(QLabel("تعداد عکس"))
+        operation_actions.addWidget(self.image_recover_limit)
+        operation_actions.addWidget(recover)
+        operation_actions.addStretch(1)
+        control_layout.addLayout(selection_actions)
+        control_layout.addLayout(operation_actions)
         layout.addWidget(control)
+
+        slider_box = QFrame()
+        slider_box.setObjectName("Card")
+        slider_layout = QHBoxLayout(slider_box)
+        self.image_slider_enabled = QCheckBox(
+            "این محصول در اسلایدر صفحه اول نمایش داده شود"
+        )
+        slider_hint = QLabel(
+            "دایره «اسلایدر» روی کارت، عکس اسلایدر را تعیین می‌کند؛ "
+            "دایره «اصلی» عکس اصلی Product است. انتخاب Stage 3 فقط Draft "
+            "اسلایدر را عوض می‌کند و ثبت نهایی در Stage 6 انجام می‌شود."
+        )
+        slider_hint.setObjectName("Muted")
+        slider_hint.setWordWrap(True)
+        slider_layout.addWidget(self.image_slider_enabled)
+        slider_layout.addWidget(slider_hint, 1)
+        layout.addWidget(slider_box)
 
         self.image_task_status = QLabel("آماده")
         self.image_task_status.setObjectName("Muted")
@@ -447,16 +449,9 @@ class ProductWizardPage(QWidget):
             columns=2,
             large_cards=True,
         )
-        # Stage 3 must stay inside the actual screen height. The grid itself
-        # scrolls, so an oversized page minimum only pushed the footer/cards
-        # below the owner's monitor. Keep a usable viewport and let it expand.
-        self.image_grid.setMinimumHeight(430)
-        self.image_grid.setSizePolicy(
-            self.image_grid.sizePolicy().horizontalPolicy(),
-            QSizePolicy.Policy.Expanding,
-        )
-        self.image_grid.scroll.verticalScrollBar().setSingleStep(96)
-        self.image_grid.scroll.verticalScrollBar().setPageStep(480)
+        self.image_grid.setMinimumHeight(560)
+        self.image_grid.scroll.verticalScrollBar().setSingleStep(72)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(420)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])
@@ -2445,10 +2440,6 @@ class ProductWizardPage(QWidget):
             self.stack.setCurrentIndex(index)
             self.footer.set_position(index, self.stack.count())
             code = STAGE_CODES[index]
-            # Stage 3 is an operator image-review workspace. The global AI bar
-            # consumed enough vertical space to force card controls below the
-            # real 940px owner window. Collapse it only while reviewing images.
-            self.ai_box.setVisible(code != "images")
             self.ai_current.setEnabled(code not in {"commerce", "publish"} and self._ai_worker is None)
             self._refresh_stage_statuses()
 
