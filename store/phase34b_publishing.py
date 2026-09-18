@@ -64,14 +64,25 @@ def _copy_image(
 
     digest = hashlib.sha256(raw).hexdigest()
     storage = target_field.storage
-    desired = f"{canonical_dir.strip('/')}/{digest[:16]}/{clean_name}"
+    max_length = int(getattr(getattr(target_field, "field", None), "max_length", 100) or 100)
+    base_dir = canonical_dir.strip("/")
+    desired = f"{base_dir}/{digest[:12]}/{clean_name}"
+
+    if len(desired) > max_length:
+        raise ValidationError(
+            f"مسیر نهایی تصویر ({len(desired)}) از حد فیلد ({max_length}) بیشتر است؛ "
+            "نام SEO تصویر حفظ شد اما مسیر عمومی باید کوتاه‌تر باشد."
+        )
+
     if storage.exists(desired):
         existing = hashlib.sha256()
         with storage.open(desired, "rb") as handle:
             for block in iter(lambda: handle.read(1024 * 1024), b""):
                 existing.update(block)
         if existing.hexdigest() != digest:
-            desired = f"{canonical_dir.strip('/')}/{digest}/{clean_name}"
+            raise ValidationError(
+                "برخورد هش در مسیر محتوایی تصویر رخ داد؛ انتشار برای جلوگیری از overwrite نادرست متوقف شد."
+            )
 
     if not storage.exists(desired):
         saved = storage.save(desired, ContentFile(raw))
@@ -171,7 +182,7 @@ def _sync_product_images(product: Product, asset: ImportedPrintAsset) -> int:
         primary_source,
         product.main_image,
         primary_name,
-        canonical_dir=f"store/products/catalog-{media_key}",
+        canonical_dir=f"p/{media_key}",
     )
 
     # Imported catalog Products are Desktop-managed. Rebuild only ProductImage
@@ -188,7 +199,7 @@ def _sync_product_images(product: Product, asset: ImportedPrintAsset) -> int:
             row.image,
             target.image,
             _canonical_media_filename(asset, index, row),
-            canonical_dir=f"store/products/gallery/catalog-{media_key}",
+            canonical_dir=f"p/{media_key}",
         )
         target.save()
         count += 1
@@ -333,7 +344,7 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
         primary_row.image if primary_row is not None else asset.preview_image,
         product.main_image,
         _canonical_media_filename(asset, 0, primary_row),
-        canonical_dir=f"store/products/catalog-{_desktop_media_key(asset)}",
+        canonical_dir=f"p/{_desktop_media_key(asset)}",
     )
     product.save()
     _ensure_default_variant(product, asset)
@@ -349,7 +360,7 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
             row.image,
             target.image,
             _canonical_media_filename(asset, index, row),
-            canonical_dir=f"store/products/gallery/catalog-{_desktop_media_key(asset)}",
+            canonical_dir=f"p/{_desktop_media_key(asset)}",
         )
         target.save()
 

@@ -1,3 +1,16 @@
+## ERR-49-173 - SEO-preserving content-addressed media path exceeded ImageField max_length
+Date: 2026-09-19
+
+**Observed:** after deploying the complete Republish parity contract, real Catalog Product #625 was sent three times in batches `desktop_catalog_v85_20260919_021123`, `...21134` and `...21147`. FTP completed, but every receiver import rolled back with MySQL `DataError: (1406, "Data too long for column 'image' at row 1")`. Windows correctly kept the publish failed; the subsequent Site->Instagram action therefore had no newly ACKed public Product URL and reported one item without a valid public link.
+
+**Root cause:** Django `Product.main_image` and `ProductImage.image` use the default persisted max length of 100 characters. The first content-addressed path design preserved the exact SEO basename but used long prefixes. For the real filename `mini-articulated-skeletal-spinosaurus-3d-print-01.webp`, the main path was 98 characters while the Gallery path was 106 characters, so the Gallery insert exceeded the MySQL column contract.
+
+**Correct fix:** keep the exact SEO basename and content-addressing, but use one compact Product namespace `p/<desktop-id>/<sha12>/<seo-basename>` for both main and gallery FieldFiles. The copy boundary reads the actual field max length, refuses any final path beyond it, reuses identical bytes idempotently, and fails closed on an unexpected hash collision instead of expanding to an overlong full digest path.
+
+**Verification:** representative #625 filename regression now asserts both main/gallery stored names stay within their real model max length while preserving the exact basename; focused unified-import/Profile/Hero gate 18/18 PASS; compile/check/no-migration-drift PASS.
+
+**Prevention:** any new public media storage layout must be validated against the persisted Django field `max_length` using the longest real SEO filename before Production deploy. URL cleanliness is not sufficient; DB path length is part of the media contract.
+
 ## ERR-49-172 - Republish ACK accepted partial Product parity and public media filename churn
 Date: 2026-09-19
 

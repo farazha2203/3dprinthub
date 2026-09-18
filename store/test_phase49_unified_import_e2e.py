@@ -224,7 +224,7 @@ class Epic49UnifiedImportE2ETests(TestCase):
         # WebP. The explicit Batch mapping must refresh Host media instead of
         # leaving the historical file attached to the existing image row.
         model = batch / "models" / "makerworld_EP49-E2E-001"
-        refreshed_image = model / "images" / "epic49-e2e-gear-3d-print-01.webp"
+        refreshed_image = model / "images" / "mini-articulated-skeletal-spinosaurus-3d-print-01.webp"
         Image.new("RGB", (4, 3), (17, 99, 201)).save(refreshed_image, "WEBP", quality=92)
         editorial_path = model / "desktop_editorial.json"
         editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
@@ -245,9 +245,17 @@ class Epic49UnifiedImportE2ETests(TestCase):
         self.assertTrue(asset_image.image.name.endswith(refreshed_image.name))
         self.assertTrue(asset.preview_image.name.endswith(refreshed_image.name))
         self.assertEqual(Path(product.main_image.name).name, refreshed_image.name)
+        self.assertLessEqual(
+            len(product.main_image.name),
+            Product._meta.get_field("main_image").max_length,
+        )
         gallery = list(product.images.order_by("sort_order", "id"))
         self.assertEqual(len(gallery), 1)
         self.assertEqual(Path(gallery[0].image.name).name, refreshed_image.name)
+        self.assertLessEqual(
+            len(gallery[0].image.name),
+            gallery[0]._meta.get_field("image").max_length,
+        )
         self.assertTrue(slide.selected_asset_image.image.name.endswith(refreshed_image.name))
         self.assertEqual(profile.sync_revision, product_revision)
         self.assertEqual(profile.desktop_product_id, 991)

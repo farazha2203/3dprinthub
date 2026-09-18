@@ -1,3 +1,12 @@
+## 2026-09-19 - ERR-49-173 real #625 Republish failure isolated / media-path hotfix LOCAL_TESTED
+Production is currently clean at `release/phase50-a2j-hero-20260915 @ c04539acfc6dd456699079edf206de019bf346e2`. The enlarged Product Hero/SEO/link and complete post-import parity contract are live. The dedicated reverse tunnel remains the only authorized Host path.
+
+Owner retried real Catalog #625 after that deploy. Three official Batch/FTP/Bridge attempts reached the receiver but each transaction rolled back with MySQL `Data too long for column 'image'`. Read-only Catalog evidence now shows `workflow_status=batched, upload_ready=1, server_status=failed`; the failed run did not produce a valid new ACK, which is why Site->Instagram reported one item with no valid public link. The previous Product #39 page remains publicly reachable from the last good revision.
+
+Root cause is bounded and confirmed: default ImageField persisted max length is 100; old content-addressed main path measured 98 characters but Gallery path measured 106 for the real #625 SEO filename. Local hotfix uses compact `p/<desktop-id>/<sha12>/<seo-basename>` paths, preserves the exact SEO basename, validates the real field max length before save, reuses identical bytes and fails closed on hash collision. Focused 18/18 regression plus compile/check/no-drift PASS.
+
+Exact next: commit/push the hotfix + guarded runner -> deploy exact GitHub SHA from current Production `c04539a...` -> fresh MySQL/Product-media backup -> invoke the official Windows `mark_ready_many/publish_many` path for #625 -> require strict parity/public URL/media SHA+basename read-back -> then run Buffer Instagram Post+Story from that newly verified ACK only.
+
 ## 2026-09-19 - Phase50.A.2L Hero scale + complete Republish contract LOCAL_TESTED
 Status: `LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
 

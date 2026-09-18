@@ -1,3 +1,10 @@
+## 2026-09-19 - Owner real acceptance: #625 changes + Instagram must actually publish
+Status: `ROOT_CAUSE_FIXED_LOCAL / GITHUB+DEPLOY+REAL_REPUBLISH NEXT`.
+
+Owner confirms Product #625 is the real acceptance Product: a Screenshot was added and the Product was resent, but Site changes did not update and the combined Site->Instagram action failed. Real receipts show the Site import itself failed three times on an overlong persisted image path, so Instagram had no valid new public ACK to consume.
+
+Acceptance is now explicit: resend #625 through the official Windows pipeline, keep the same Site Product identity, update current Product media/SEO/price/weight/material/color/Profile/Variant facts, preserve exact SEO image basenames and verify public bytes. Only then publish Instagram feed + companion Story. Instagram feed must keep Product primary image first, use verified current Product media only, include semantic caption, per-image ALT, relevant limited hashtags, tracked Product purchase URL and explicit nationwide shipping across Iran; no invented facts or unsupported tagging.
+
 ## 2026-09-19 - Owner request: larger Hero, homepage Product SEO/link and complete Republish
 Status: `LOCAL_TESTED / DEPLOY+REAL_REPUBLISH NEXT`.
 

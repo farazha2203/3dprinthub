@@ -1,3 +1,17 @@
+## 2026-09-19 - ERR-49-173 #625 republish/media-path closure
+- [x] Reproduce the owner's failed #625 resend from real Catalog receipts: three FTP PASS / receiver rollback attempts with MySQL `Data too long for column 'image'`.
+- [x] Prove the path boundary: real main path 98 chars, Gallery path 106 chars, persisted ImageField max 100.
+- [x] Implement compact content-addressed `p/<desktop-id>/<sha12>/<seo-basename>` storage with explicit model max-length guard and collision fail-closed behavior.
+- [x] Preserve exact SEO basename and idempotent same-byte reuse; no migration/schema change.
+- [x] Focused unified-import/Profile/Hero 18/18 PASS; compile/check/no-drift PASS.
+- [x] Add guarded Production hotfix runner from exact baseline `c04539a...`.
+- [ ] Commit/push exact hotfix and rollback branch; verify live GitHub SHA.
+- [ ] Deploy through dedicated reverse tunnel; require clean worktree and public Product #39 smoke.
+- [ ] Take fresh Production MySQL/Product #39 media rollback backup.
+- [ ] Official Windows pipeline: #625 mark-ready/publish once; require strict parity ACK, Product #39 identity retained, SEO basename/SHA/price/Profile/Variant read-back PASS.
+- [ ] Buffer Instagram Post+Story only after the verified new Site ACK; primary Product image first, tracked Product link, SEO caption/ALT/hashtags and nationwide-Iran shipping copy.
+- [ ] Close docs and relaunch exact tested Windows runtime.
+
 ## 2026-09-19 - Phase50.A.2L site-priority release
 - [x] Recover and authenticate dedicated reverse tunnel `22024`; verify Host identity, clean Production baseline and watchdog cron.
 - [x] Build Production-based release containing only Example-4 Slicebox Hero + Product Admin 504 fix.

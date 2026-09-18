@@ -1,3 +1,10 @@
+## 2026-09-19 - ERR-49-173 compact SEO-media storage hotfix
+- Real #625 resend exposed a Production-only persisted path limit: Gallery content-addressed SEO path was 106 chars while the ImageField/MySQL contract is 100.
+- Replaced long main/gallery directory prefixes with one compact Product namespace: `p/<desktop-id>/<sha12>/<exact-seo-basename>`.
+- Added explicit final-path max-length validation and fail-closed hash-collision handling; exact basename and idempotent content reuse remain mandatory.
+- Added real long-filename regression asserting both main and gallery stored names remain within model max length.
+- Focused 18/18 unified-import/Profile/Hero tests PASS; no migration drift.
+
 ## 2026-09-19 - A2L enlarged Product Hero + complete same-identity Republish
 - Enlarged the official Example-4 Slicebox wrapper from 840px to 1280px, reduced dead vertical padding, reserved responsive 16:9 geometry and bumped Hero CSS cache version to 50.7.0.
 - Product-backed Hero slides now use Product meta title/meta description/focus keyword, Product microdata and direct Product-detail navigation from both media and the full caption.

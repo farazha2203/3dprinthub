@@ -1,7 +1,7 @@
 # Phase50.A.2L — Site Priority Release
 
 Date: 2026-09-19
-Status: `PRODUCTION 16e24292 / HERO+REPUBLISH LOCAL_TESTED / GITHUB+DEPLOY NEXT`
+Status: `PRODUCTION c04539a / ERR-49-173 MEDIA-PATH HOTFIX LOCAL_TESTED / DEPLOY+REAL #625 NEXT`
 
 ## Requested delta
 - Keep the owner-approved Tympanus Slicebox Example-4 engine but enlarge the public stage to a 1280px responsive Product presentation.
@@ -11,8 +11,8 @@ Status: `PRODUCTION 16e24292 / HERO+REPUBLISH LOCAL_TESTED / GITHUB+DEPLOY NEXT`
 - Preserve Product identity, historical physical media, compatibility, FAQ/Profile editing, Store ordering and existing DB schema.
 
 ## Safety / rollback
-- Current verified Production baseline: `release/phase50-a2j-hero-20260915 @ 16e24292d697e79bc6498d44826e191d6da57e23`.
-- Current local rollback branch: `backup/pre-a2l-hero-scale-seo-20260919 @ 16e24292d697e79bc6498d44826e191d6da57e23`.
+- Current verified Production baseline: `release/phase50-a2j-hero-20260915 @ c04539acfc6dd456699079edf206de019bf346e2`.
+- Current local rollback branches: `backup/pre-a2l-hero-scale-seo-20260919` preserves the earlier Hero baseline; `backup/pre-err49-173-media-path-20260919 @ c04539acfc6dd456699079edf206de019bf346e2` is the immediate rollback for this media-path hotfix.
 - No migration, requirements or settings delta is allowed.
 - Deployment is dedicated reverse-tunnel only and must create verified source/.env/static rollback evidence before ff-only promotion.
 
