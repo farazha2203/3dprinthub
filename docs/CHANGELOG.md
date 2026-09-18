@@ -1,3 +1,11 @@
+## 2026-09-18 - Product #625 real re-publish acceptance
+- Promoted Screenshot SEO/source-byte refresh at exact GitHub SHA `89931e8958b3a738fbfb4b8d65c099124aa24de0`.
+- Fresh Catalog rollback backup passed integrity with 635 Products; Qt relaunched from the pushed source.
+- Product #625 kept Site Product #39 / server asset 143 and advanced to revision 5 through the mature FTP/Bridge path.
+- Bridge/readiness/FTP/preflight all PASS; ACK batch `desktop_catalog_v85_20260918_192011` reports `updated` and public HTTP checks PASS.
+- Public main/gallery image bytes exactly match Local finalized WebP SHA256 values for both selected images.
+- No duplicate Product identity was created.
+
 ## 2026-09-18 - Screenshot SEO defaults + changed-source media refresh
 - Per-card SEO editor now fills missing single-image Alt/Title/Caption/Keywords from the Product semantic SEO identity.
 - SEO metadata for an unselected Screenshot is retained without changing Site membership and remains non-publishable until explicitly selected.

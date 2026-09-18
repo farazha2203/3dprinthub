@@ -1,3 +1,11 @@
+## Screenshot SEO + changed-source real acceptance — 2026-09-18
+- Exact runtime `89931e8958b3a738fbfb4b8d65c099124aa24de0` is pushed and running.
+- Fresh Catalog backup `pre-republish-89931e8-20260918-191741` passed source/backup integrity with 635 Products.
+- Real Product #625 preflight: FTP PASS, Bridge/readiness PASS, zero blockers, two selected finalized images.
+- Same-identity Site update completed on Product #39 / asset 143; Product revision is now 5 and strict ACK reports `updated`.
+- Public Product page and all ACK media return HTTP 200. Public media SHA256 exactly equals Local finalized WebP SHA256 for both selected images.
+- Screenshot SEO + changed-source-media contract is now real-path verified. Remaining Production code promotion is separate and reverse-tunnel-only.
+
 ## Screenshot SEO + changed-source re-publish closure — 2026-09-18
 - Product #625 owner QA exposed two remaining media boundaries: empty per-card SEO on manual Screenshot and stale finalized WebP reuse after local source bytes changed.
 - Single-image SEO now receives Product semantic defaults only when stored metadata is absent; it does not toggle Site selection.

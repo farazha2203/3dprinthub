@@ -1,3 +1,14 @@
+## 2026-09-18 — Screenshot SEO + edited-source media refresh PRODUCTION_PRODUCT_VERIFIED
+- Runtime/source fix committed and pushed at exact GitHub SHA `89931e8958b3a738fbfb4b8d65c099124aa24de0`; Local and live GitHub matched exactly before runtime launch.
+- Fresh pre-republish Catalog backup: `D:\projects\3dprinthub-backups\pre-republish-89931e8-20260918-191741\catalog.sqlite3`; source and backup integrity both `ok`, 635 Products, SHA256 `3d9a25bf7a565caf490d50bbb6830eac229ab6993d5e80f1d9d82646e176cfd8`.
+- Canonical Qt was relaunched from `89931e8...`; visible child window `3DPrintHub Catalog Center v8.9.10 - Qt 6` is responsive.
+- Real Product #625 remained linked to existing Site Product #39 / server asset 143. FTP PASS, Bridge v1.3.0 PASS, publish-readiness `ready=true`, all required migrations/schema/storage prerequisites healthy, and Product preflight had zero blockers.
+- Guarded re-publish/update completed as batch `desktop_catalog_v85_20260918_192011`; server ACK is `status=updated`, Product revision advanced 4 -> 5, Store visibility/public HTTP checks PASS, and local state is now `uploaded, needs_update=0, upload_ready=0`.
+- Public byte verification is exact: local final image 01 SHA256 `cb230bc60455edd7e49b2152c06ff2633b4180d56fae21e68b50b60d799b60cb` equals both public main/gallery copies; local final image 02 SHA256 `6dad7f5e7312ea6691ac8c9ed82094f7363520e0db2852b9546f501c0a4ab3fd` equals the public gallery copy. Public Product page HTTP 200 contains both SEO filenames and current Product title.
+- The outer `publish_many` result reports `skipped/no new change` after guarded remote revision reconciliation, but the authoritative persisted ACK/batch/revision/public-byte evidence proves the same-identity update completed successfully.
+- Screenshot SEO/source-refresh regression is therefore closed for the real Product path.
+- Production application-source deploy for the pending Admin/Hero/template code remains a separate tunnel-only operation; no alternate cPanel/browser Host path is permitted.
+
 ## 2026-09-18 — Screenshot SEO + edited-source media refresh LOCAL_ACCEPTED
 - Owner regression reproduced on real Product #625 / Site Product #39: per-card SEO opened empty fields for a manual Screenshot without metadata, while republish could reuse an old finalized WebP after the local source image bytes changed.
 - Per-card SEO now seeds empty single-image fields from the Product semantic SEO identity (Alt/Title/Caption/Keywords) without auto-selecting the image for Site publication.

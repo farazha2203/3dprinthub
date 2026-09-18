@@ -8,10 +8,11 @@
 - [x] Keep genuinely incomplete/unfinalized media fail-closed.
 - [x] Focused 41/41 + current-contract 77/77 + broad 145/145 PASS.
 - [x] Qt VerifyOnly / compile / Django check / no migration drift / diff-check PASS.
-- [ ] Commit/push exact candidate.
-- [ ] Fresh Catalog backup + exact-SHA Qt relaunch.
-- [ ] Controlled Product #625 re-publish and public Product/media verification.
-- [ ] Production source deploy only through dedicated reverse tunnel after Host gates pass.
+- [x] Commit/push exact candidate `89931e8958b3a738fbfb4b8d65c099124aa24de0`.
+- [x] Fresh Catalog backup + exact-SHA Qt relaunch.
+- [x] Controlled Product #625 same-identity update -> Site Product #39 revision 5.
+- [x] Public Product/media verification with exact Local/Public SHA256 parity.
+- [ ] Production application-source deploy only through dedicated reverse tunnel after Host gates pass.
 
 ## 2026-09-18 — Image repair + reliable in-place re-publish
 - [x] Preserve mature filename authority, Screenshot, Primary/Slider and image membership behavior.
