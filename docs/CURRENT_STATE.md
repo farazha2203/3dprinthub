@@ -1,3 +1,11 @@
+## 2026-09-18 — Stage-3 scroll hotfix pushed / Qt relaunched
+- Runtime hotfix `00f16237cf27eea2cdf7bef97fa7cc140014c947` is pushed to `wip/phase50-a2l-owner-qa-20260917`; Local/GitHub SHA matched before launch.
+- Fresh pre-launch Catalog backup: `D:\projects\3dprinthub-backups\pre-stage3-scroll-00f1623-20260918-112042\catalog.sqlite3`; source/backup integrity `ok`, 635 Products.
+- Exact runtime source under `catalog_center/qt6` and `catalog_center/app` had no working-tree diff before launch. Unrelated Story/Instagram work remained outside the runtime source and was preserved.
+- Canonical `RUN_QT.ps1` launched the hotfix; Python child PID 36916 has visible responsive window `3DPrintHub Catalog Center v8.9.10 - Qt 6`.
+- Owner acceptance now pending on the same Product: wheel directly over the large image must scroll to SEO filename / select / edit / delete controls, and the application must remain within the Windows desktop rather than clipping the lower gallery.
+- Production/Host/schema remain unchanged.
+
 ## 2026-09-18 — Stage-3 visible-height / wheel-scroll repair LOCAL_TESTED
 - Owner screenshot proved the lower image controls were still unreachable in the real Windows layout even though the internal gallery had a valid scroll range.
 - Root cause was two-part: the Stage-3 gallery minimum height of 720px forced the Product Wizard beyond the 1920x1080 desktop working area, while `ClickableImageLabel` consumed wheel events over the large image preview so the gallery did not move when the pointer was on the image itself.

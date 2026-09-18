@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner Stage-3 scroll complaint runtime status
+Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
+
+The specific hotfix for the owner screenshot is now running: the Stage-3 gallery fits the desktop and mouse-wheel input over the image preview is forwarded to the gallery scrollbar. Owner smoke on the same Product is the remaining acceptance gate.
+
 ## 2026-09-18 - Owner screenshot: Stage-3 lower image controls still unreachable
 Status: `LOCAL_TESTED / COMMIT+PUSH+RELAUNCH NEXT`.
 

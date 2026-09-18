@@ -1,3 +1,9 @@
+## Stage-3 scroll runtime — 2026-09-18
+- Hotfix `00f16237cf27eea2cdf7bef97fa7cc140014c947` is pushed and running in the canonical Qt app.
+- Fresh Catalog backup `pre-stage3-scroll-00f1623-20260918-112042` passed source/backup integrity and retained 635 Products.
+- Visible Qt child is responsive. Owner smoke remains: wheel directly on image must reach lower filename/select/edit/delete controls and the Stage must stay screen-bounded.
+- Production is unchanged.
+
 ## Stage-3 visibility / wheel-scroll correction — 2026-09-18
 - Owner screenshot showed the large cards but lower filename/select/edit/delete controls were still unreachable.
 - Exact root cause: 720px gallery minimum pushed the Product Wizard beyond the real desktop working area; wheel events over `ClickableImageLabel` did not reach the gallery scrollbar.

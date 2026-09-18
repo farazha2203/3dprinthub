@@ -1,3 +1,11 @@
+## 2026-09-18 — Stage-3 scroll runtime promotion
+- [x] Commit hotfix `00f16237cf27eea2cdf7bef97fa7cc140014c947`.
+- [x] Push and verify Local/GitHub exact SHA.
+- [x] Fresh Catalog backup with source/backup integrity `ok`.
+- [x] Verify runtime source tree clean for `catalog_center/qt6` + `catalog_center/app` while preserving unrelated Story work.
+- [x] Relaunch canonical Qt runtime; visible child window responsive.
+- [ ] Owner visual smoke: wheel on image reaches filename/select/edit/delete and Stage 3 no longer clips below screen.
+
 ## 2026-09-18 — Stage-3 visibility/scroll hotfix
 - [x] Reproduce real geometry with Product #628 copy and prove internal scrollbar range exists.
 - [x] Prove wheel on preview fails before fix while wheel on viewport succeeds.

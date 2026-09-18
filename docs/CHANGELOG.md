@@ -1,3 +1,9 @@
+## 2026-09-18 - Stage-3 scroll hotfix runtime
+- Pushed runtime `00f16237cf27eea2cdf7bef97fa7cc140014c947`.
+- Took fresh integrity-checked Catalog backup `pre-stage3-scroll-00f1623-20260918-112042`.
+- Relaunched canonical Qt app; visible child window is responsive.
+- Production remains unchanged.
+
 ## 2026-09-18 - Stage-3 gallery visible-height and wheel-scroll repair
 - Kept the large two-column Product image cards and previews.
 - Reduced only the gallery container minimum height from 720px to 560px so the Product Wizard no longer overflows the 1920x1080 working area.
