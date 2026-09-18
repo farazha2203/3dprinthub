@@ -2,9 +2,14 @@ from pathlib import Path
 import html, subprocess, urllib.parse
 
 ROOT = Path(r"D:\projects\3DprintHub")
-OUT = ROOT / "assets" / "instagram" / "stories" / "2026-09-18"
+OUT = ROOT / "assets" / "instagram" / "stories" / "2026-09-18-v2-iransans"
 OUT.mkdir(parents=True, exist_ok=True)
 LOGO = ROOT / "assets" / "instagram" / "final" / "profile_logo_gold_navy.png"
+FONT_DIR = ROOT / "assets" / "fonts" / "private" / "fonts" / "iransans"
+FONT_REG = FONT_DIR / "IRANSansWeb.ttf"
+FONT_MED = FONT_DIR / "IRANSansWeb_Medium.woff"
+FONT_BOLD = FONT_DIR / "IRANSansWeb_Bold.woff"
+FONT_BLACK = FONT_DIR / "IRANSansWeb_Black.woff"
 
 stories = [
     {
@@ -50,8 +55,12 @@ def make_html(s):
     return f"""<!doctype html>
 <html lang="fa" dir="rtl"><head><meta charset="utf-8">
 <style>
+@font-face{{font-family:"IRANSans";src:url('{uri(FONT_REG)}') format("truetype");font-weight:400}}
+@font-face{{font-family:"IRANSansMedium";src:url('{uri(FONT_MED)}') format("woff");font-weight:500}}
+@font-face{{font-family:"IRANSansBold";src:url('{uri(FONT_BOLD)}') format("woff");font-weight:700}}
+@font-face{{font-family:"IRANSansBlack";src:url('{uri(FONT_BLACK)}') format("woff");font-weight:900}}
 *{{box-sizing:border-box}} html,body{{margin:0;width:1080px;height:1920px;overflow:hidden;background:#07131f}}
-body{{font-family:"Segoe UI","Tahoma",sans-serif;color:#fff;position:relative}}
+body{{font-family:"IRANSans","Tahoma",sans-serif;color:#fff;position:relative}}
 .bg{{position:absolute;inset:-80px;background:url('{uri(s["image"])}') center/cover no-repeat;filter:blur(28px) brightness(.38) saturate(.9);transform:scale(1.08)}}
 .veil{{position:absolute;inset:0;background:
 linear-gradient(180deg,rgba(3,14,25,.82) 0%,rgba(3,14,25,.68) 34%,rgba(14,8,3,.58) 72%,rgba(3,9,15,.94) 100%),
@@ -64,16 +73,16 @@ linear-gradient(90deg,rgba(2,14,25,.92) 0%,rgba(3,15,25,.72) 46%,rgba(72,37,10,.
 .logo .tag{{font-size:14px;letter-spacing:5px;color:#f7f1df;margin-top:8px}}
 .micro{{width:230px;color:#f6e6c5;font-size:16px;line-height:1.7;letter-spacing:4px;text-transform:uppercase}}
 .copy{{position:absolute;top:215px;left:70px;width:650px;text-align:right}}
-.eyebrow{{font-size:25px;color:#ffd373;margin-bottom:14px}}
-.title{{font-size:72px;line-height:1.25;font-weight:900;color:#f5c85b;text-shadow:0 4px 28px rgba(0,0,0,.45)}}
-.sub{{font-size:31px;line-height:1.6;color:#f5ead7;margin-top:20px;max-width:610px}}
+.eyebrow{{font-family:"IRANSansBold";font-size:25px;color:#ffd373;margin-bottom:14px}}
+.title{{font-family:"IRANSansBlack";font-size:72px;line-height:1.25;font-weight:900;color:#f5c85b;text-shadow:0 4px 28px rgba(0,0,0,.45)}}
+.sub{{font-family:"IRANSansMedium";font-size:31px;line-height:1.6;color:#f5ead7;margin-top:20px;max-width:610px}}
 .hero{{position:absolute;top:575px;left:305px;width:705px;height:760px;border-radius:42px;overflow:hidden;border:2px solid rgba(247,190,72,.72);box-shadow:0 35px 80px rgba(0,0,0,.55),0 0 42px rgba(244,170,35,.16)}}
 .hero:after{{content:"";position:absolute;inset:0;box-shadow:inset 0 -110px 120px rgba(0,0,0,.42)}}
 .hero img{{width:100%;height:100%;object-fit:cover;display:block}}
 .features{{position:absolute;top:625px;left:64px;width:270px;display:flex;flex-direction:column;gap:28px}}
-.feature{{direction:rtl;display:flex;align-items:center;gap:13px;padding-bottom:20px;border-bottom:1px solid rgba(255,210,117,.23);font-size:22px;line-height:1.45;color:#f7ecda}}
+.feature{{font-family:"IRANSans";direction:rtl;display:flex;align-items:center;gap:13px;padding-bottom:20px;border-bottom:1px solid rgba(255,210,117,.23);font-size:22px;line-height:1.45;color:#f7ecda}}
 .dot{{color:#f7c85c;font-size:19px}}
-.cta{{position:absolute;top:1400px;left:210px;right:210px;height:118px;border-radius:59px;border:3px solid #f4c258;background:linear-gradient(180deg,rgba(130,73,17,.82),rgba(31,18,9,.9));display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#ffe199;box-shadow:0 0 34px rgba(255,175,40,.28)}}
+.cta{{font-family:"IRANSansBold";position:absolute;top:1400px;left:210px;right:210px;height:118px;border-radius:59px;border:3px solid #f4c258;background:linear-gradient(180deg,rgba(130,73,17,.82),rgba(31,18,9,.9));display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#ffe199;box-shadow:0 0 34px rgba(255,175,40,.28)}}
 .url{{position:absolute;top:1540px;left:80px;right:80px;text-align:center;color:#f7efe0;font-size:23px;letter-spacing:3px;direction:ltr}}
 .footer{{position:absolute;bottom:92px;left:70px;right:70px;display:flex;justify-content:space-between;align-items:flex-end;direction:ltr}}
 .signature{{font-family:"Segoe Script","Segoe UI",sans-serif;font-size:47px;color:#f0b94c;transform:rotate(-4deg)}}

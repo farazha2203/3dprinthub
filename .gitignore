@@ -102,3 +102,6 @@ transfer/
 # Generated Instagram Story HTML render intermediates; final PNG/JPG campaign assets
 # and the reusable renderer are tracked separately.
 /assets/instagram/stories/**/*.html
+
+# User-supplied licensed fonts; local only
+assets/fonts/private/

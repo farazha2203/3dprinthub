@@ -47,3 +47,19 @@ Story باید از عکس واقعی همان محصول موجود در سای
 - پایه کیک
 - اکسسوری کریسمس
 این سه مورد باید با عکس واقعی همان Product/Post موجود ساخته شوند و از همین Grid و ابعاد نمونه پیروی کنند.
+
+## V2 — IRANSans production style
+
+Style ID: `3dprinthub_instagram_gold_navy_v2_iransans`
+
+- تیتر اصلی: IRANSans Black.
+- زیرتیتر و kicker: IRANSans Medium.
+- CTA: IRANSans Bold.
+- ویژگی‌ها و متن عادی: IRANSans Regular.
+- فایل‌های فونت از پکیج لایسنس‌دار محلی کاربر خوانده می‌شوند و **نباید** وارد Git/GitHub یا artifact عمومی شوند.
+- Renderer canonical: `scripts/social/render_instagram_story.py`.
+- تصاویر محصول باید همان media واقعی Product/Post باشند؛ تغییر ماهوی شکل محصول یا جایگزینی با محصول شبیه‌سازی‌شده ممنوع است.
+- خروجی canonical همچنان 1080x1920 و Gold/Navy است.
+- قبل از Buffer publish، asset باید از URL عمومی HTTPS با HTTP 200 و MIME صحیح قابل خواندن باشد.
+- اگر Meta خطای `It takes too long to download the media` داد، بدون تغییر طراحی از نسخه بهینه‌شده media استفاده شود و فقط Story خطادار retry شود؛ Storyهای `sent` دوباره ارسال نشوند.
+- وضعیت نهایی فقط پس از query مجدد Buffer و مشاهده `status=sent` بسته می‌شود.
