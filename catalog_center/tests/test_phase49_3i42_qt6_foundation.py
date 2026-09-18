@@ -98,6 +98,27 @@ class Phase493I42Qt6FoundationTests(unittest.TestCase):
         finally:
             window.close()
 
+    def test_main_window_clamps_restored_geometry_to_available_screen(self):
+        window = MainWindow(self.db)
+        try:
+            screen = window.screen() or self.app.primaryScreen()
+            self.assertIsNotNone(screen)
+            available = screen.availableGeometry()
+            window.setGeometry(
+                available.right() + 500,
+                available.bottom() + 500,
+                available.width() * 2,
+                available.height() * 2,
+            )
+            window._fit_window_to_available_screen()
+            geometry = window.geometry()
+            self.assertGreaterEqual(geometry.left(), available.left())
+            self.assertGreaterEqual(geometry.top(), available.top())
+            self.assertLessEqual(geometry.right(), available.right())
+            self.assertLessEqual(geometry.bottom(), available.bottom())
+        finally:
+            window.close()
+
     def test_action_registry_reuses_same_qaction_in_menu_and_toolbar(self):
         window = MainWindow(self.db)
         try:

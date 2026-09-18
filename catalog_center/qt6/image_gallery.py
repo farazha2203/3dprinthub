@@ -53,10 +53,17 @@ class ImageCard(QFrame):
         self.item = dict(item)
         self.large = bool(large)
         self.setObjectName("ImageCard")
-        self.setMinimumWidth(270 if self.large else 220)
-        self.setMaximumWidth(390 if self.large else 300)
-        self.setMinimumHeight(470 if self.large else 405)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(330 if self.large else 220)
+        self.setMaximumWidth(520 if self.large else 300)
+        # Large review cards contain preview + identity + selection + ordering
+        # + SEO/delete controls. Fixed-height cards clipped the bottom controls
+        # on the owner's real Persian/Windows font metrics. Let the layout grow
+        # vertically and keep only a safe minimum.
+        self.setMinimumHeight(565 if self.large else 425)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum,
+        )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -65,8 +72,8 @@ class ImageCard(QFrame):
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if self.large:
-            self.preview.setMinimumSize(255, 190)
-            self.preview.setMaximumHeight(245)
+            self.preview.setMinimumSize(300, 220)
+            self.preview.setMaximumHeight(300)
         else:
             self.preview.setMinimumSize(190, 145)
             self.preview.setMaximumHeight(180)
@@ -77,7 +84,7 @@ class ImageCard(QFrame):
             self.preview.setObjectName("MissingImage")
         else:
             preview_width, preview_height = (
-                (350, 230) if self.large else (255, 170)
+                (460, 285) if self.large else (255, 170)
             )
             self.preview.setPixmap(
                 pixmap.scaled(
@@ -135,8 +142,8 @@ class ImageCard(QFrame):
         root.addWidget(self.alt)
 
         order_actions = QHBoxLayout()
-        self.move_earlier = QPushButton("قبلی")
-        self.move_later = QPushButton("بعدی")
+        self.move_earlier = QPushButton("← جابه‌جایی به قبل")
+        self.move_later = QPushButton("جابه‌جایی به بعد →")
         self.move_earlier.setToolTip("این تصویر را یک جایگاه زودتر قرار بده")
         self.move_later.setToolTip("این تصویر را یک جایگاه دیرتر قرار بده")
         self.move_earlier.clicked.connect(
@@ -151,8 +158,9 @@ class ImageCard(QFrame):
         root.addLayout(order_actions)
 
         actions = QHBoxLayout()
-        seo = QPushButton("SEO")
-        delete = QPushButton("حذف")
+        seo = QPushButton("ویرایش SEO تصویر")
+        delete = QPushButton("حذف تصویر")
+        delete.setProperty("danger", True)
         seo.clicked.connect(
             lambda: self.seoRequested.emit(str(self.item.get("url") or ""))
         )
@@ -287,7 +295,9 @@ class ProductImageGrid(QWidget):
         # grid and make the controls under the final image rows unreachable.
         # Give the content widget a factual row-based minimum height so the
         # vertical scrollbar always spans the entire card/control surface.
-        card_height = 492 if self.large_cards else 430
+        # Use the real card minimum rather than the old undersized magic
+        # number. This makes every control row reachable through the scroll area.
+        card_height = 585 if self.large_cards else 440
         self.host.setMinimumHeight(
             rows * card_height + max(0, rows - 1) * self.grid.spacing()
         )

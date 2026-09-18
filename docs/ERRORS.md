@@ -1,3 +1,10 @@
+## ERR-49-159 — Stage 3 owner fix exposed stale exact geometry assertion
+**Date:** 2026-09-18
+**Observed:** the bounded Qt regression reached runtime successfully but `test_legacy_numbered_images_render_real_files_not_sixty_placeholders` still required an exact 270 px card / 255 px preview / 492 px row after the owner-required large-card Stage 3 redesign.
+**Root cause:** test-contract drift. The runtime now intentionally uses at least 330 px cards, 300 px previews and 585 px row backing so all image controls remain visible/reachable.
+**Fix:** inspect the failing contract, update only the stale geometry assertions to the accepted lower bounds, rerun the exact failed test (1/1 PASS), then rerun the related 48-test set (48/48 PASS) and bounded relevant set (73/73 PASS).
+**Prevention:** visual geometry tests should lock user-visible invariants/lower bounds rather than obsolete exact pixel values when responsive layout is intentional. Do not weaken real-file/multi-image behavior assertions.
+
 ## ERR-49-158 — Real Catalog full Filament sync exposed 63 legacy blank-Brand identities
 **Date:** 2026-09-18
 **Observed:** exact A2L runtime no longer aborts the whole batch, but a read-only simulation of the real 71-row Catalog could legitimately sync only 8 rows; 63 historical rows have Material+Color but blank Brand and therefore fail the Site identity contract.

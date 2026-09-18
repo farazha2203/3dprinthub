@@ -1,3 +1,16 @@
+## 2026-09-18 — Active execution: A2L Product image workspace owner fix
+- [x] Inspect the existing dirty Stage 3 patch without reset/delete and create a local rollback copy.
+- [x] Keep all real multi-image actions: select-all/clear, bulk SEO, delete, primary, slider and reorder.
+- [x] Expand image cards/previews while making card height non-fixed and the gallery vertically scrollable through every row/control.
+- [x] Replace the wide Stage 3 horizontal control wall with a compact 4-column/3-row grid.
+- [x] Clamp restored non-maximized Qt window geometry to the current monitor available area.
+- [x] Reconcile the stale 270 px legacy geometry assertion after verifying the new owner-required layout contract.
+- [x] Local gates: py_compile, 28/28, 36/36, corrected 48/48, bounded maintained 73/73, diff-check and Qt launcher verify all PASS.
+- [ ] Commit/push exact candidate and live-remote verify SHA.
+- [ ] Fresh integrity-checked Catalog backup, close stale/duplicate Qt instances and relaunch exact pushed SHA.
+- [ ] Real Product #628 foreground visual QA: full window inside screen, reachable scroll, multi-select + bulk SEO/delete/reorder controls.
+- [ ] Production remains blocked until ERR-49-154 tunnel recovery + Host identity/backup/readiness.
+
 ## 2026-09-18 — Active execution: Phase50.A.2L owner QA / Filament identity repair
 - [x] Push/relaunch exact A2L candidate `4375c00...`.
 - [x] Verify real #628 image workspace: 10 local images, 2-column large-card grid, reachable vertical scroll.

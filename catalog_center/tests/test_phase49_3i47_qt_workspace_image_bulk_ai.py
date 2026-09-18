@@ -420,9 +420,9 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(page.image_grid.columns, 2)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(len(page.image_grid.cards), 3)
-            self.assertEqual(page.image_grid.cards[0].minimumWidth(), 270)
-            self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 255)
-            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 492)
+            self.assertGreaterEqual(page.image_grid.cards[0].minimumWidth(), 330)
+            self.assertGreaterEqual(page.image_grid.cards[0].preview.minimumWidth(), 300)
+            self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 585)
             self.assertEqual(
                 page.image_grid.scroll.verticalScrollBarPolicy(),
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOn,

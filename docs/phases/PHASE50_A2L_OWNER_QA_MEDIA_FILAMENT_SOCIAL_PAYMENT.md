@@ -54,7 +54,16 @@ This phase is driven by the 2026-09-17 owner screenshots from Catalog Center v8.
 - Copy-of-real-Catalog repair of row #14 to an existing registered Bambulab identity passed Site-payload validation and SQLite integrity while leaving the canonical Catalog untouched.
 - Follow-up focused gate 28/28 PASS; full maintained A2L Catalog scope 57/57 PASS.
 
+## Product image workspace owner correction — 2026-09-18
+- The owner reported that the real Product image area was still too small/awkward and the application window could reopen with unusable bounds.
+- Stage 3 large cards now use at least 330 px width and 300×220 preview area, vertical card growth instead of fixed height, 585 px row backing and always-on scrolling.
+- Multi-image actions are grouped in a compact three-row control grid so select-all/clear/bulk SEO/delete/renumber/screenshot/recovery plus slider intent stay visible without forcing a wider window.
+- Restored Qt geometry is clamped to the current screen available area with a 20 px safety margin; maximized/full-screen state is preserved.
+- Mature image authority is unchanged: only real local files are cards; Primary/Slider identity, selected URL order, URL-owned SEO metadata, delete and SEO renumber all remain on the existing Core.
+- A stale 3I.47 exact-pixel regression was recorded as ERR-49-159 and corrected only after contract inspection. Exact failed test 1/1 PASS, related set 48/48 PASS, bounded relevant set 73/73 PASS; py_compile, diff-check and Qt launcher verify PASS.
+- No DB/migration/Host/Production mutation in this correction.
+
 ## Remaining gates
-- Commit/push the Brand-repair follow-up and relaunch Qt from that exact SHA for owner use.
+- Commit/push the combined Brand-repair + image-workspace follow-up and relaunch Qt from that exact SHA for owner use.
 - Production deploy/manual-payment apply remain blocked until ERR-49-154 reverse-tunnel recovery plus Host identity, MySQL backup, rollback and readiness gates.
 - Later Podium/Farataz payment automation is intentionally deferred per owner request; do not guess/import it before a separate source/document audit.

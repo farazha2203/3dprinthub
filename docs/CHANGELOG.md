@@ -1,3 +1,11 @@
+## 2026-09-18 — Phase50.A.2L Product image workspace/window owner fix
+- Enlarged Stage 3 review cards/previews while removing fixed vertical card sizing and keeping the two-column scrollable review model.
+- Repacked image actions into a compact three-row grid so multi-select/SEO/delete/reorder/recovery controls do not force an oversized Windows workspace.
+- Added safe Qt restored-geometry clamping to the active monitor available area while preserving maximized/full-screen behavior.
+- Preserved the mature image Core: selection, primary/slider identity, bulk SEO, delete, reorder + SEO renumber and real-local-file filtering.
+- Reconciled one stale 3I.47 geometry assertion after the new owner-required card contract was verified.
+- Local acceptance: py_compile PASS; 28/28, 36/36, corrected 48/48 and bounded relevant 73/73 PASS; diff-check and Qt launcher verify PASS. Production untouched.
+
 ## 2026-09-18 — Phase50.A.2L real Filament identity repair follow-up
 - Relaunched the exact pushed A2L Qt runtime and verified Product #628 now exposes all 10 local images through the large two-column scrollable Stage 3 workspace.
 - Audited the real 71-row Filament catalog: 63 historical rows have no factual Brand, explaining why a true full Site sync cannot honestly publish every row.

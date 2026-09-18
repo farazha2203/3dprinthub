@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner correction: Product image workspace/window must be genuinely usable
+Status: `LOCAL_TESTED / GITHUB EXACT-CANDIDATE NEXT / PRODUCTION TUNNEL BLOCKED`.
+
+Owner reports the Product image area is still unusable in the real Windows window: window bounds are wrong, image review space is too small and the multi-image operating cycle is awkward. Acceptance requires the full app window to remain inside the current monitor, large two-column image review with reachable vertical scroll, and visible select-all/clear/bulk SEO/delete/reorder/primary/slider/recovery actions. The implementation preserves existing image authority and only changes presentation/geometry. Bounded relevant gate is 73/73 PASS plus launcher verify/diff-check.
+
 ## 2026-09-18 - Owner continuation: real Windows image workspace + full Filament repair
 Status: `LOCAL_TESTED / FOLLOW-UP PUSH+RELAUNCH NEXT / PRODUCTION TUNNEL BLOCKED`.
 Owner asked development to continue after reporting that Product image review was too small/non-scrollable and `Sync همه با سایت` failed. Exact pushed A2L runtime now proves Product #628 has 10 locally viewable images in a two-column large-card scrolling workspace. Real Catalog audit found 63/71 legacy Filament rows missing Brand; the application must not invent those identities. Acceptance therefore includes fail-soft valid-row sync plus explicit selected-row repair from the registered Brand library, selected/all operating-rate edits, smart material rules and AI Preview already delivered in A2L. Follow-up regression gate is 57/57 PASS. Production remains gated by the dedicated 22024 reverse tunnel.
