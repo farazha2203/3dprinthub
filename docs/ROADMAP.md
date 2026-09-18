@@ -1,3 +1,15 @@
+## 2026-09-18 — Image filename/scroll correction
+- [x] Verify Product #301 real metadata before changes.
+- [x] Restore source English title as filename authority only.
+- [x] Preserve Alt/Title/Caption/Keywords/AI/operator override behavior.
+- [x] Force four-row scroll canvas even with zero/few images.
+- [x] Focused 4/4 and broader 97/97 regressions PASS.
+- [x] Compile/diff-check/Qt VerifyOnly PASS; no migration delta.
+- [ ] Commit/push exact candidate.
+- [ ] Fresh Catalog backup and exact-SHA Qt relaunch.
+- [ ] Owner visual smoke.
+- [ ] Production remains blocked until dedicated reverse tunnel is healthy.
+
 ## 2026-09-18 — Stage-3 3×3 runtime promotion
 - [x] Commit `a52cd52a18a119f9aa2940ebc00f588828d1a558`.
 - [x] Push and verify exact Local/GitHub SHA.

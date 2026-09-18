@@ -1,3 +1,9 @@
+## 2026-09-18 - Restore English image filenames and four-row gallery scroll
+- Restored Product image filename planning to the mature source-title-first rule: English `source_title` -> ASCII SEO slug -> numbered WebP.
+- Did not change image Alt, SEO title, caption, keywords, AI refresh, operator metadata overrides, Screenshot or image operations.
+- Stage-3 large gallery now reserves at least four rows of scrollable canvas even when empty or sparsely populated.
+- Product #301 read-only verification and 97/97 regression gate PASS.
+
 ## 2026-09-18 - Stage-3 3×3 runtime promotion
 - Pushed and launched exact Windows runtime `a52cd52a18a119f9aa2940ebc00f588828d1a558`.
 - Took fresh integrity-checked Catalog backup `pre-stage3-3x3-a52cd52-20260918-123308`.

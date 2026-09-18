@@ -378,13 +378,15 @@ class ProductImageGrid(QWidget):
         for column in range(self.columns):
             self.grid.setColumnStretch(column, 1)
         rows = max(1, (len(self.cards) + self.columns - 1) // self.columns)
-        # QScrollArea with widgetResizable=True can otherwise compress a long
-        # grid and make the controls under the final image rows unreachable.
-        # Give the content widget a factual row-based minimum height so the
-        # vertical scrollbar always spans the entire card/control surface.
+        # Stage-3 must retain enough scrollable canvas for four review rows,
+        # even when a Product currently has fewer (or zero) images. This keeps
+        # lower-row filename/actions reachable and avoids a dead-end viewport.
+        minimum_rows = 4 if self.large_cards else 1
+        scroll_rows = max(rows, minimum_rows)
         card_height = 206 if self.large_cards else 430
         self.host.setMinimumHeight(
-            rows * card_height + max(0, rows - 1) * self.grid.spacing()
+            scroll_rows * card_height
+            + max(0, scroll_rows - 1) * self.grid.spacing()
         )
         self._missing_count = missing
         self._update_summary()

@@ -260,12 +260,14 @@ def _seo_slug(value: str, fallback: str = "product") -> str:
 
 
 def planned_seo_filename(row, index: int) -> str:
-    seo_title = str(_row_value(row, "seo_title_fa", "") or "").strip()
-    title_fa = str(_row_value(row, "title_fa", "") or "").strip()
+    # Filename authority is the original/source English Product title.
+    # Product SEO/title metadata (Alt/Title/Caption/Keywords) remains separate
+    # and continues to use the approved Product SEO fields.
     source_title = str(_row_value(row, "source_title", "") or "").strip()
+    title_fa = str(_row_value(row, "title_fa", "") or "").strip()
     product_id = str(_row_value(row, "id", "") or "item")
-    base = _seo_slug(seo_title or source_title or title_fa, fallback=f"product-{product_id}")
-    if "3d" not in base and "سه-بعد" not in base:
+    base = _ascii_slug(source_title or title_fa, fallback=f"product-{product_id}")
+    if "3d" not in base:
         base = f"{base}-3d-print"
     return f"{base}-{index:02d}.webp"
 

@@ -612,7 +612,11 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             viewport = grid.scroll.viewport()
             self.assertEqual(grid.columns, 3)
             self.assertEqual(len(grid.cards), 9)
-            self.assertEqual(grid.scroll.verticalScrollBar().maximum(), 0)
+            self.assertGreaterEqual(
+                grid.host.minimumHeight(),
+                (4 * 206) + (3 * grid.grid.spacing()),
+            )
+            self.assertGreater(grid.scroll.verticalScrollBar().maximum(), 0)
 
             for card in grid.cards:
                 card_top = card.mapTo(viewport, QPoint(0, 0)).y()
@@ -623,6 +627,35 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
                 self.assertLessEqual(filename_bottom, viewport.height())
                 self.assertTrue(card.filename.isVisible())
                 self.assertTrue(card.filename.text().startswith("seo-product-image-"))
+        finally:
+            grid.close()
+
+    def test_large_gallery_keeps_four_scroll_rows_even_when_empty(self):
+        grid = ProductImageGrid(columns=3, large_cards=True)
+        grid.setMinimumHeight(670)
+        try:
+            grid.resize(1400, 670)
+            grid.show()
+            grid.set_items([])
+            for _ in range(4):
+                self.app.processEvents()
+
+            minimum_four_rows = (4 * 206) + (3 * grid.grid.spacing())
+            self.assertGreaterEqual(grid.host.minimumHeight(), minimum_four_rows)
+            self.assertGreater(grid.scroll.verticalScrollBar().maximum(), 0)
+
+            grid.set_items([
+                {
+                    "url": f"https://img.example/{index:02d}.jpg",
+                    "filename": f"source-{index:02d}.jpg",
+                    "planned_filename": f"seo-product-image-{index:02d}.webp",
+                }
+                for index in range(1, 6)
+            ])
+            for _ in range(4):
+                self.app.processEvents()
+            self.assertGreaterEqual(grid.host.minimumHeight(), minimum_four_rows)
+            self.assertGreater(grid.scroll.verticalScrollBar().maximum(), 0)
         finally:
             grid.close()
 

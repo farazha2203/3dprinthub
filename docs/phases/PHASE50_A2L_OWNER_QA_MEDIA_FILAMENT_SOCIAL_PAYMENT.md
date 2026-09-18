@@ -1,3 +1,11 @@
+## Image filename authority + four-row scroll correction — 2026-09-18
+- Product #301 read-only verification proved existing semantic image SEO is healthy: English finalized filename, Persian Alt/SEO title, caption, 12 keywords.
+- Restored only `planned_seo_filename()` to source-English-title-first ASCII naming.
+- Alt/Title/Caption/Keywords, AI refresh, operator overrides, Screenshot, selection and finalization behavior are unchanged.
+- Large Stage-3 gallery always reserves at least four 206px rows; empty probe host 842px / viewport 652px / scroll max 190.
+- Focused 4/4 + broader 97/97 PASS; compile/diff-check/Qt VerifyOnly PASS; no migration delta.
+- Production unchanged; dedicated reverse tunnel remains the only allowed Host path.
+
 ## Stage-3 3×3 runtime — 2026-09-18
 - Exact runtime `a52cd52a18a119f9aa2940ebc00f588828d1a558` is pushed and running in canonical Qt.
 - Fresh Catalog backup `pre-stage3-3x3-a52cd52-20260918-123308` passed source/backup integrity with 635 Products.

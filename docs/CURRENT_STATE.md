@@ -1,3 +1,14 @@
+## 2026-09-18 — Restore English image filename authority + four-row scroll canvas LOCAL_TESTED
+- Owner reported mixed/incorrect image naming and inaccessible lower-row controls. Real Product #301 (`Christmas Tree Minimalistic Japandi Decor`) was inspected read-only before code changes.
+- Product #301 proves mature image SEO metadata is still healthy: existing final filename `christmas-tree-minimalistic-japandi-decor-3d-print-01.webp`, Persian product-specific Alt, Persian SEO title, non-empty caption, 12 keywords, and `metadata_ready=True`.
+- Root cause of naming inconsistency was limited to `planned_seo_filename()`: commit `9b006bb...` changed fallback filename priority from source English title to `seo_title_fa`. Finalized older images still had English filenames while unfinalized/extra local images could receive a different Persian-derived planned name.
+- Fix restores the mature filename contract only: `source_title` English -> ASCII slug -> numbered WebP. Alt/Title/Caption/Keywords generation, operator overrides, AI refresh, image finalization, Screenshot and selection logic are untouched.
+- Gallery scroll contract is also narrowed: large Stage-3 gallery always reserves at least four 206px rows, even with zero/few images. Real isolated probe: host minimum 842px, viewport 652px, scrollbar max 190 with zero images.
+- Read-only Product #301 acceptance after fix: planned filename `christmas-tree-minimalistic-japandi-decor-3d-print-01.webp`; existing metadata filename matches; Alt remains `دکور درخت کریسمس مینیمال جاپاندی از جلو`; caption remains present; keyword count remains 12.
+- Verification: focused 4/4 PASS; broader Qt/ImageSEO/Site-publish regression 97/97 PASS; compile, diff-check and `RUN_QT.ps1 -VerifyOnly` PASS; no migration delta.
+- Rollback ref: `backup/pre-image-seo-source-title-four-row-scroll-20260918` -> `55f6d2068b25f4bb8f56572f2f991323c3dc4aeb`.
+- Production unchanged. Host work remains blocked/fail-closed while the dedicated reverse tunnel is down.
+
 ## 2026-09-18 — Stage-3 3×3 runtime pushed and relaunched
 - Exact runtime commit `a52cd52a18a119f9aa2940ebc00f588828d1a558` is pushed to `wip/phase50-a2l-owner-qa-20260917`; Local/GitHub SHA matched before launch.
 - Fresh pre-launch Catalog backup: `D:\projects\3dprinthub-backups\pre-stage3-3x3-a52cd52-20260918-123308\catalog.sqlite3`; source/backup integrity `ok`, both 635 Products.

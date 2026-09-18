@@ -1,3 +1,18 @@
+## ERR-49-166 - Planned filenames diverged from mature English source-title naming
+**Date:** 2026-09-18
+**Observed:** finalized images could retain English source-title filenames while extra/unfinalized local images displayed a different planned filename derived from Persian Product SEO title, creating mixed naming in one Product.
+**Root cause:** `9b006bb...` changed `planned_seo_filename()` authority from `source_title` to `seo_title_fa or source_title` while older finalized metadata remained source-title based.
+**Fix:** restore only filename planning to the mature source-title-first ASCII rule. Leave Product-specific Alt/Title/Caption/Keywords, AI refresh, operator overrides and finalizer behavior unchanged.
+**Verification:** Product #301 planned and existing finalized filename both resolve to `christmas-tree-minimalistic-japandi-decor-3d-print-01.webp`; Alt/SEO title/caption/12 keywords remain intact; 97/97 regression PASS.
+**Prevention:** filename authority and semantic image metadata are separate contracts. Do not change filename authority while modifying Product SEO/content unless the owner explicitly requests a naming-policy change.
+
+## ERR-49-167 - Sparse gallery had no lower scroll reserve
+**Date:** 2026-09-18
+**Observed:** with few images, the large gallery content height collapsed to the factual row count, so lower card controls could become awkward/unreachable and the owner had no extra scroll room.
+**Fix:** large Stage-3 gallery always reserves at least four 206px rows plus spacing, even with zero/few images.
+**Verification:** empty gallery host minimum 842px vs 652px viewport, scrollbar max 190; focused and 97-test gates PASS.
+**Prevention:** Stage-3 scroll capacity is a minimum workspace contract, not only a function of current image count.
+
 ## ERR-49-165 - Gallery-area request was incorrectly implemented by enlarging each image card
 **Date:** 2026-09-18
 **Observed:** Stage 3 showed only two huge images at a time; even after scroll fixes, filenames and per-image controls were inconvenient because each card itself was ~780px tall.

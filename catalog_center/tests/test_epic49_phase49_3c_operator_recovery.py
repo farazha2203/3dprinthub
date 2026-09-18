@@ -83,6 +83,18 @@ class Phase493CImageIdentityTests(unittest.TestCase):
         self.assertTrue(name.endswith(".webp"))
         self.assertNotEqual(name, "001.webp")
 
+    def test_source_english_title_remains_filename_authority_over_persian_seo_title(self):
+        row = {
+            "id": 301,
+            "source_title": "Christmas Tree Minimalistic Japandi Decor",
+            "title_fa": "دکور درخت کریسمس ساده و مینیمال جاپاندی",
+            "seo_title_fa": "دکور درخت کریسمس ساده و مینیمال جاپاندی - چاپ سه‌بعدی مدل",
+        }
+        self.assertEqual(
+            planned_seo_filename(row, 1),
+            "christmas-tree-minimalistic-japandi-decor-3d-print-01.webp",
+        )
+
     def test_finalize_deduplicates_content_keeps_sources_and_preserves_third_party_credit(self):
         class FakeDB:
             def __init__(self, row):
@@ -159,13 +171,15 @@ class Phase493CImageIdentityTests(unittest.TestCase):
             self.assertEqual(metadata[0]["creator"], "Original Designer")
             self.assertEqual(metadata[0]["copyright_holder"], "Original Designer")
             self.assertEqual(metadata[0]["publisher"], "3DPrintHub")
-            # Current filename authority is Product SEO first. The older
-            # source-title-only expectation predates the 2026-09-15
-            # republish/image-refresh continuity contract.
             self.assertEqual(
                 metadata[0]["seo_filename"],
-                planned_seo_filename(row, 1),
+                "fanart-solidarity-bear-3d-print-01.webp",
             )
+            self.assertEqual(metadata[0]["alt_text"], "خرس همبستگی - نمای اصلی")
+            self.assertEqual(metadata[0]["title"], "خرید فایل سه‌بعدی خرس همبستگی")
+            self.assertEqual(metadata[0]["caption"], "مدل تزئینی برای چاپ سه‌بعدی")
+            self.assertIn("خرید خرس سه بعدی", metadata[0]["keywords"])
+            self.assertIn("خرس", metadata[0]["keywords"])
             self.assertNotEqual(metadata[0]["seo_filename"], "001.webp")
             self.assertTrue(Path(metadata[0]["final_local_file"]).is_file())
 

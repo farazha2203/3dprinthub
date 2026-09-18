@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner: restore prior image SEO naming; keep four-row scroll
+Status: `LOCAL_TESTED / COMMIT+PUSH NEXT`.
+
+Owner requires the previous mature image SEO path to remain intact: filenames based on the Product's English source title, plus Product-specific Alt/SEO image metadata. Only the filename planner was corrected; semantic image metadata and AI workflows must not be altered. The image gallery must retain scroll space for at least four rows even when empty.
+
 ## 2026-09-18 - Owner Stage-3 3×3 runtime status
 Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
 
