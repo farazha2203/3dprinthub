@@ -52,7 +52,7 @@ CONTENT_SCHEMA = {
 _FORBIDDEN_STOREFRONT_CLAIM_RE = re.compile(
     r"(?:"
     r"دانلود\s*رایگان|رایگان|دانلود|"
-    r"فایل\s*(?:STL|مدل|سه[‌\s-]*بعدی)|"
+    r"فایل\s*(?:STL|مدل|چاپ\s*سه[‌\s-]*بعدی|سه[‌\s-]*بعدی)|"
     r"free\s+download|download\s+free|free\s+stl|"
     r"stl\s+file|model\s+file\s+download"
     r")",
@@ -83,6 +83,19 @@ def _has_forbidden_storefront_claim(value: Any) -> bool:
     return bool(_FORBIDDEN_STOREFRONT_CLAIM_RE.search(str(value or "")))
 
 
+def _without_forbidden_storefront_sentences(value: Any) -> str:
+    text = " ".join(str(value or "").split()).strip()
+    if not text or not _has_forbidden_storefront_claim(text):
+        return text
+    parts = re.split(r"(?<=[.!؟؛])\s+", text)
+    safe = [
+        part.strip()
+        for part in parts
+        if part.strip() and not _has_forbidden_storefront_claim(part)
+    ]
+    return " ".join(safe).strip()
+
+
 def apply_storefront_sales_policy(pack: dict[str, Any]) -> dict[str, Any]:
     """Keep public commerce copy about the physical Product and 3DPrintHub order flow.
 
@@ -104,6 +117,12 @@ def apply_storefront_sales_policy(pack: dict[str, Any]) -> dict[str, Any]:
         f"{title} | تصویر محصول برای سفارش چاپ سه‌بعدی از 3DPrintHub"
     )[:220]
 
+    for field in ("short_description_fa", "description_fa", "use_description_fa"):
+        value = result.get(field)
+        if _has_forbidden_storefront_claim(value):
+            cleaned = _without_forbidden_storefront_sentences(value)
+            result[field] = cleaned or safe_description
+
     if _has_forbidden_storefront_claim(result.get("seo_title_fa")):
         result["seo_title_fa"] = safe_title
     if _has_forbidden_storefront_claim(result.get("seo_description_fa")):
@@ -120,7 +139,7 @@ def apply_storefront_sales_policy(pack: dict[str, Any]) -> dict[str, Any]:
             for index, value in enumerate(alts, start=1)
         ]
 
-    for field in ("sales_bullets", "target_keywords_fa", "tags_fa"):
+    for field in ("sales_bullets", "target_keywords_fa", "tags_fa", "hashtags_fa"):
         values = list(result.get(field) or [])
         if values:
             result[field] = [
@@ -144,6 +163,8 @@ def apply_storefront_sales_policy(pack: dict[str, Any]) -> dict[str, Any]:
             slider["image_alt_fa"] = safe_alt[:240]
         if _has_forbidden_storefront_claim(slider.get("focus_keyword_fa")):
             slider["focus_keyword_fa"] = f"خرید {title}"[:180]
+        if _has_forbidden_storefront_claim(slider.get("button_text_fa")):
+            slider["button_text_fa"] = "مشاهده محصول"
         result["homepage_slider_seo"] = slider
 
     return result

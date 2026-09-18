@@ -219,6 +219,9 @@ class Phase493CAICompletenessTests(unittest.TestCase):
     def test_storefront_policy_removes_free_download_claims_from_public_seo(self):
         pack = {
             "title_fa": "اسکلتی مینی متحرک اسپینوزور",
+            "short_description_fa": "اسپینوزور مفصلی برای دکور.",
+            "description_fa": "این محصول برای دکور مناسب است. فایل STL را رایگان دانلود کنید.",
+            "use_description_fa": "برای دکور استفاده شود. سپس فایل مدل را دانلود کنید.",
             "seo_title_fa": "اسکلت اسپینوزور - چاپ 3 بعدی رایگان | 3DPrintHub",
             "seo_description_fa": "دانلود رایگان فایل STL اسپینوزور.",
             "image_alt_texts": [
@@ -229,17 +232,21 @@ class Phase493CAICompletenessTests(unittest.TestCase):
             "social_caption_fa": "Free download for Spinosaurus",
             "target_keywords_fa": ["خرید اسپینوزور", "دانلود اسپینوزور"],
             "tags_fa": ["اسپینوزور", "دانلود رایگان"],
+            "hashtags_fa": ["#اسپینوزور", "#دانلود_رایگان"],
             "homepage_slider_seo": {
                 "title_fa": "اسپینوزور رایگان",
                 "description_fa": "دانلود رایگان فایل مدل",
                 "image_alt_fa": "free download spinosaurus",
-                "button_text_fa": "مشاهده محصول",
+                "button_text_fa": "اکنون دانلود کنید",
                 "focus_keyword_fa": "دانلود رایگان اسپینوزور",
             },
         }
 
         result = apply_storefront_sales_policy(pack)
         public_values = [
+            result["short_description_fa"],
+            result["description_fa"],
+            result["use_description_fa"],
             result["seo_title_fa"],
             result["seo_description_fa"],
             *result["image_alt_texts"],
@@ -247,9 +254,11 @@ class Phase493CAICompletenessTests(unittest.TestCase):
             result["social_caption_fa"],
             *result["target_keywords_fa"],
             *result["tags_fa"],
+            *result["hashtags_fa"],
             result["homepage_slider_seo"]["title_fa"],
             result["homepage_slider_seo"]["description_fa"],
             result["homepage_slider_seo"]["image_alt_fa"],
+            result["homepage_slider_seo"]["button_text_fa"],
             result["homepage_slider_seo"]["focus_keyword_fa"],
         ]
         joined = " ".join(public_values).casefold()
