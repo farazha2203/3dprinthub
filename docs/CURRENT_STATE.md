@@ -4,7 +4,8 @@
 - Fix is deliberately narrow in `qt6/kernel.py`: explicitly persisted `local://source-page-screenshot...` files are appended to the numbered review result, and Screenshot pseudo-URLs are forbidden from stealing numbered source-slot identity. Capture implementation, Screenshot filename generation/crop, SEO generation, selection persistence, Product Wizard button wiring and gallery sizing are unchanged.
 - New regression failed before the patch and passes after it. Full maintained Qt/Gallery/Wizard/Screenshot gate is 61/61 PASS; `py_compile`, `git diff --check` and `RUN_QT.ps1 -VerifyOnly` PASS.
 - Copy-of-real-Catalog acceptance used `D:\\projects\\3dprinthub-backups\\pre-screenshot-resolver-20260918-095910\\catalog.sqlite3`; source/backup integrity are `ok`, and Product #628 resolves the persisted manual Screenshot items without mutating the canonical Catalog.
-- Production/schema remain unchanged. Exact next: commit/push this Windows-only fix, relaunch Qt from the pushed SHA, then owner smoke the Screenshot button on the same Product.
+- Runtime fix is committed and pushed at `bab82e89e9e27722b8b1000a959b1161ee84e038`; Local/GitHub SHA matched exactly before launch. The canonical `RUN_QT.ps1` launcher then started the Qt app from that exact source; the live child process is responsive with window title `3DPrintHub Catalog Center v8.9.10 - Qt 6`.
+- Production/schema remain unchanged. Exact next: owner smoke the Screenshot button on the same Product; a newly captured Screenshot must appear in the same Stage-3 gallery after refresh.
 
 ## 2026-09-18 — Owner correction: preserve image workflow, enlarge review only
 - Owner rejected the `d564386` Stage-3 workflow/layout changes. The corrective Local candidate restores the prior image controls, prior screenshot action path, prior recover-limit behavior, prior slider panel and prior window-geometry behavior.

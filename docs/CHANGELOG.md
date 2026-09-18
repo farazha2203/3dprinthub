@@ -4,6 +4,7 @@
 - Updated only the Qt image resolver so explicitly persisted manual Screenshot files remain visible beside numbered Product images and cannot be misidentified as numbered source slots.
 - Added a focused regression reproducing the hidden-Screenshot/slot-stealing case; full maintained Qt/Gallery/Wizard/Screenshot gate 61/61 PASS plus launcher verify/compile/diff-check PASS.
 - Copy-of-real Product #628 acceptance passed on backup `pre-screenshot-resolver-20260918-095910`; canonical Catalog, schema and Production were not changed by the acceptance probe.
+- Runtime fix committed/pushed as `bab82e89e9e27722b8b1000a959b1161ee84e038`, Local/GitHub SHA matched, and the canonical Qt app was relaunched from that source with a responsive `3DPrintHub Catalog Center v8.9.10 - Qt 6` window.
 
 ## 2026-09-18 — Stage-3 owner correction: workflow restored, gallery enlarged
 - Restored the mature Product image control layout/wiring, Screenshot path, recover-limit behavior, slider panel, AI visibility behavior and normal saved window geometry after the rejected `d564386` UI repair.

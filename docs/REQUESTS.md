@@ -1,5 +1,5 @@
 ## 2026-09-18 - Owner report: Product Screenshot button still appears non-functional
-Status: `LOCAL_TESTED / GITHUB PUSH + EXACT-SHA RELAUNCH NEXT`.
+Status: `GITHUB_UPDATED / EXACT-SHA QT RELAUNCHED / OWNER SMOKE NEXT`.
 Owner reports the Product Screenshot button still does not work. Real Product #628 evidence proves capture itself is succeeding; the newer numbered-image resolver hides the persisted manual Screenshot after refresh. Acceptance is narrow: keep capture/naming/SEO/button behavior unchanged, make explicitly persisted `source-page-screenshot` images visible in the same Product gallery, prevent them from stealing numbered source-image identity, pass the maintained image/Qt regression gate, then push and relaunch. Production remains untouched.
 
 ## 2026-09-18 - Owner correction: only enlarge Product image display

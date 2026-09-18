@@ -5,8 +5,9 @@
 - [x] Patch only the Qt resolver; preserve Screenshot capture/naming/crop, SEO, button wiring and gallery sizing.
 - [x] Maintained Qt/Gallery/Wizard/Screenshot gate 61/61 PASS; launcher verify, compile and diff-check PASS.
 - [x] Copy-of-real Catalog acceptance PASS with integrity-checked backup; canonical Catalog untouched.
-- [ ] Commit/push exact SHA and verify GitHub match.
-- [ ] Relaunch one canonical Qt runtime from exact pushed SHA and owner-smoke the Screenshot button.
+- [x] Commit/push runtime SHA `bab82e89e9e27722b8b1000a959b1161ee84e038` and verify Local/GitHub exact match.
+- [x] Relaunch one canonical Qt runtime from that exact pushed SHA; live Qt child is responsive with the expected Catalog Center window title.
+- [ ] Owner-smoke the Screenshot button on the same Product and confirm the newly captured Screenshot appears in Stage 3.
 
 ## 2026-09-18 — Immediate owner correction: Stage-3 image review only
 - [x] Restore pre-`d564386` image button workflow, Screenshot action path, recover-limit behavior, slider panel, AI visibility and normal window geometry.

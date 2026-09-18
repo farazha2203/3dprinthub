@@ -68,6 +68,6 @@ This phase is driven by the 2026-09-17 owner screenshots from Catalog Center v8.
 - Copy-of-real Catalog acceptance used integrity-checked backup `pre-screenshot-resolver-20260918-095910`; canonical Catalog, schema and Production were not mutated.
 
 ## Remaining gates
-- Commit/push the Screenshot visibility repair and relaunch Qt from that exact SHA for owner use.
+- Screenshot visibility repair is pushed at `bab82e89e9e27722b8b1000a959b1161ee84e038`; Local/GitHub SHA matched and the canonical Qt runtime was relaunched from that exact source. Remaining acceptance is the owner's same-Product Screenshot smoke.
 - Production deploy/manual-payment apply remain blocked until ERR-49-154 reverse-tunnel recovery plus Host identity, MySQL backup, rollback and readiness gates.
 - Later Podium/Farataz payment automation is intentionally deferred per owner request; do not guess/import it before a separate source/document audit.
