@@ -1,3 +1,14 @@
+## Screenshot SEO + changed-source re-publish closure — 2026-09-18
+- Product #625 owner QA exposed two remaining media boundaries: empty per-card SEO on manual Screenshot and stale finalized WebP reuse after local source bytes changed.
+- Single-image SEO now receives Product semantic defaults only when stored metadata is absent; it does not toggle Site selection.
+- Unselected Screenshot metadata persists for later review but stays `metadata_ready=False` until explicitly selected.
+- `اصلاح اسم و سئو` with no operation subset processes every editable Product image.
+- Ready/Send detects source-byte drift only for already-finalized selected images and rebuilds their final SEO WebP automatically. Missing/unfinalized media remains blocked.
+- Same Site Product identity is preserved; no duplicate Product path was introduced.
+- Local gates: 41/41 focused, 77/77 aligned current-contract, 145/145 broad regression, Qt VerifyOnly, compile/check/no-drift/diff-check PASS.
+- Rollback: `backup/pre-card-seo-source-refresh-20260918` at pre-fix `ea1a4a7...`.
+- Next: GitHub promotion -> Catalog backup -> exact-SHA Qt relaunch -> Product #625 controlled republish/public verification. Production source deploy remains tunnel-only.
+
 ## Image name+SEO + in-place re-publish hardening — 2026-09-18
 - Owner requested one `اصلاح اسم و سئو` Stage-3 action. Automatic semantic SEO and deterministic numbered filename generation are now one operation; selected operation subset wins, otherwise all editable Site-selected images are processed.
 - Mature manual SEO editor, Screenshot, image membership, Primary/Slider and filename authority remain unchanged.

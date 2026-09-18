@@ -314,7 +314,7 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
             window.open_product(product_id)
             wizard = window.wizard_page
             grid = wizard.image_grid
-            self.assertEqual(grid.columns, 4)
+            self.assertEqual(grid.columns, 3)
             self.assertGreaterEqual(grid.minimumHeight(), 540)
             self.assertEqual(len(grid.cards), 1)
 

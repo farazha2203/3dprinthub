@@ -1,3 +1,12 @@
+## 2026-09-18 - Screenshot SEO defaults + changed-source media refresh
+- Per-card SEO editor now fills missing single-image Alt/Title/Caption/Keywords from the Product semantic SEO identity.
+- SEO metadata for an unselected Screenshot is retained without changing Site membership and remains non-publishable until explicitly selected.
+- `اصلاح اسم و سئو` now defaults to all editable Product images when no temporary operation subset is selected.
+- Publish readiness compares selected source bytes with stored `original_sha256`; previously-finalized images whose source changed are rebuilt before Ready/Send.
+- Incomplete/unfinalized media still fails closed rather than being silently auto-created.
+- Updated stale tests to current owner-approved 3-column gallery and ASCII `Standard` Profile identity; conservative exact PLA/PETG recommendation behavior remains intact.
+- Gates: focused 41/41, current-contract 77/77, broad Windows 145/145, Qt VerifyOnly, compile, Django check, no migration drift and diff-check PASS.
+
 ## 2026-09-18 - Combined image name+SEO repair and reliable in-place re-publish
 - Stage-3 automatic image action is now `اصلاح اسم و سئو`: temporary operation selection scopes the repair; otherwise all editable Site-selected images are repaired. Product semantic SEO and deterministic English numbered WebP naming run together.
 - Removed the redundant standalone automatic `نام‌گذاری SEO` toolbar action; manual `SEO انتخابی`, Screenshot, delete, selection, Primary, Slider, recovery and mature filename authority are unchanged.

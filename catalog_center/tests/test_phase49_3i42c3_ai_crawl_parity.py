@@ -396,15 +396,15 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
         profiles = self.kernel.commerce.profiles(product_id)
         self.assertEqual(len(profiles), 1)
         profile = profiles[0]
-        self.assertEqual(profile["name"], "پیش‌فرض")
-        self.assertEqual(profile["size_label"], "پیش‌فرض")
+        self.assertEqual(profile["name"], "Standard")
+        self.assertEqual(profile["size_label"], "Standard")
         production = profile["production_rows"][0]
         self.assertEqual(float(production["weight_grams"]), 100.0)
         self.assertEqual(float(production["support_weight_grams"]), 50.0)
         self.assertEqual(int(production["print_time_minutes"]), 60)
         self.assertEqual(
             {item["material"] for item in profile["material_options"]},
-            {"PLA", "PETG-HF"},
+            {"PLA"},
         )
 
     def test_auto_finalize_ready_accepts_owner_approved_specs_but_never_publish(self):

@@ -484,6 +484,17 @@ class ProductImageGrid(QWidget):
             )
         ]
 
+    def editable_urls(self) -> list[str]:
+        """Return every real Product image the operator may SEO-edit."""
+        return [
+            str(card.item.get("url") or "")
+            for card in self.cards
+            if (
+                str(card.item.get("url") or "").strip()
+                and not bool(card.item.get("display_only"))
+            )
+        ]
+
     def primary_url(self) -> str:
         for card in self.cards:
             if card.primary.isChecked():
@@ -520,9 +531,12 @@ class ImageSeoDialog(QDialog):
         self,
         items: list[dict[str, Any]],
         parent=None,
+        *,
+        defaults: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(parent)
         self.items = [dict(item) for item in items or []]
+        self.defaults = dict(defaults or {})
         self.bulk = len(self.items) > 1
         self.setWindowTitle(
             "ویرایش گروهی SEO تصاویر"
@@ -549,18 +563,28 @@ class ImageSeoDialog(QDialog):
 
         self.alt_apply = QCheckBox("اعمال")
         self.alt_apply.setChecked(True)
-        self.alt = QLineEdit(str(first.get("alt_text") or "") if not self.bulk else "")
+        self.alt = QLineEdit(
+            str(first.get("alt_text") or self.defaults.get("alt_text") or "")
+            if not self.bulk
+            else ""
+        )
         form.addRow(self.alt_apply, self.alt)
 
         self.title_apply = QCheckBox("اعمال")
         self.title_apply.setChecked(True)
-        self.title = QLineEdit(str(first.get("seo_title") or "") if not self.bulk else "")
+        self.title = QLineEdit(
+            str(first.get("seo_title") or self.defaults.get("title") or "")
+            if not self.bulk
+            else ""
+        )
         form.addRow(self.title_apply, self.title)
 
         self.caption_apply = QCheckBox("اعمال")
         self.caption_apply.setChecked(True)
         self.caption = QPlainTextEdit(
-            str(first.get("caption") or "") if not self.bulk else ""
+            str(first.get("caption") or self.defaults.get("caption") or "")
+            if not self.bulk
+            else ""
         )
         self.caption.setMaximumHeight(120)
         form.addRow(self.caption_apply, self.caption)
@@ -568,7 +592,14 @@ class ImageSeoDialog(QDialog):
         self.keywords_apply = QCheckBox("اعمال")
         self.keywords_apply.setChecked(True)
         self.keywords = QPlainTextEdit(
-            "\n".join(str(x) for x in (first.get("keywords") or []))
+            "\n".join(
+                str(x)
+                for x in (
+                    first.get("keywords")
+                    or self.defaults.get("keywords")
+                    or []
+                )
+            )
             if not self.bulk
             else ""
         )

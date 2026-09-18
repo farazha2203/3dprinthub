@@ -82,6 +82,106 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _selected_source_media_drift(row) -> dict[str, Any]:
+    """Detect selected source bytes that changed after the last SEO finalization."""
+    data = _row_dict(row)
+    selected = image_pipeline.cap_unique_urls(
+        [
+            str(item or "").strip()
+            for item in _json_list(data.get("selected_images_json"))
+        ]
+    )
+    metadata = [
+        dict(item)
+        for item in _json_list(data.get("image_metadata_json"))
+        if isinstance(item, dict)
+    ]
+    by_url = {
+        str(item.get("source_url") or "").strip(): item
+        for item in metadata
+        if str(item.get("source_url") or "").strip()
+    }
+    changed: list[dict[str, str]] = []
+    for source_url in selected:
+        meta = by_url.get(source_url) or {}
+        expected = str(meta.get("original_sha256") or "").strip()
+        final_path_value = str(meta.get("final_local_file") or "").strip()
+        final_sha = str(meta.get("final_sha256") or "").strip()
+        if (
+            meta.get("metadata_ready") is not True
+            or not expected
+            or not final_path_value
+            or not final_sha
+        ):
+            # This is not an already-finalized image with changed source bytes.
+            # Missing/incomplete SEO media must keep the mature fail-closed gate.
+            continue
+        try:
+            final_path = Path(final_path_value).resolve()
+        except Exception:
+            continue
+        if not final_path.is_file():
+            continue
+
+        source_value = image_pipeline.strict_source_local_image(
+            data,
+            source_url,
+        )
+        if not str(source_value or "").strip():
+            continue
+        source_path = Path(str(source_value)).resolve()
+        if not source_path.is_file():
+            continue
+        actual = _sha256_file(source_path)
+        if expected != actual:
+            changed.append(
+                {
+                    "source_url": source_url,
+                    "path": str(source_path),
+                    "expected": expected,
+                    "actual": actual,
+                }
+            )
+    return {
+        "changed": bool(changed),
+        "items": changed,
+        "selected_count": len(selected),
+    }
+
+
+def _refresh_changed_publish_media(db, product_ids) -> dict[str, Any]:
+    """Refresh selected final WebPs only when their source bytes actually changed."""
+    refreshed: list[int] = []
+    failed: list[dict[str, Any]] = []
+    for product_id in _ids(product_ids):
+        row = db.product(product_id)
+        if row is None:
+            continue
+        drift = _selected_source_media_drift(row)
+        if not drift["changed"]:
+            continue
+        try:
+            image_pipeline.finalize_selected_images(
+                db,
+                product_id,
+                deduplicate=False,
+                image_limit=max(1, int(drift["selected_count"] or 0)),
+            )
+            refreshed.append(product_id)
+        except Exception as exc:
+            failed.append(
+                {
+                    "product_id": product_id,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+    return {
+        "refreshed_ids": refreshed,
+        "refreshed": len(refreshed),
+        "failed": failed,
+    }
+
+
 def publish_media_gate(row) -> dict[str, Any]:
     """Fail closed unless every selected Product image is current final SEO WebP."""
     data = _row_dict(row)
@@ -108,6 +208,11 @@ def publish_media_gate(row) -> dict[str, Any]:
     metadata = [item for item in _json_list(data.get("image_metadata_json")) if isinstance(item, dict)]
     by_url = {str(item.get("source_url") or "").strip(): dict(item) for item in metadata if str(item.get("source_url") or "").strip()}
     current_signature = image_pipeline.image_seo_signature(data)
+    source_drift = {
+        str(item.get("source_url") or ""): item
+        for item in _selected_source_media_drift(data).get("items") or []
+        if str(item.get("source_url") or "")
+    }
     seen_names: set[str] = set()
 
     for index, source_url in enumerate(selected, start=1):
@@ -133,6 +238,11 @@ def publish_media_gate(row) -> dict[str, Any]:
             missing.append(f"{prefix}: metadata_ready is not true")
         if str(meta.get("seo_signature") or "") != current_signature:
             missing.append(f"{prefix}: SEO metadata is stale and must be finalized again")
+        if source_url in source_drift:
+            missing.append(
+                f"{prefix}: source image changed after finalization; "
+                "SEO WebP must be rebuilt"
+            )
 
         filename = Path(str(meta.get("seo_filename") or "")).name
         raw_final = str(meta.get("final_local_file") or "").strip()
@@ -307,7 +417,14 @@ def preflight_many(db, stage_core, product_ids, *, allow_already_public: bool = 
 
 
 def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
-    preflight = preflight_many(db, stage_core, product_ids, allow_already_public=True)
+    requested_ids = _ids(product_ids)
+    media_refresh = _refresh_changed_publish_media(db, requested_ids)
+    preflight = preflight_many(
+        db,
+        stage_core,
+        requested_ids,
+        allow_already_public=True,
+    )
     marked: list[int] = []
 
     for product_id in preflight["publishable_ids"]:
@@ -341,6 +458,12 @@ def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
     result = dict(preflight)
     result["marked_ids"] = marked
     result["marked"] = len(marked)
+    result["media_refreshed_ids"] = list(
+        media_refresh.get("refreshed_ids") or []
+    )
+    result["media_refresh_failed"] = list(
+        media_refresh.get("failed") or []
+    )
     return result
 
 

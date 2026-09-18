@@ -15,6 +15,7 @@ from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
+from qt6.image_gallery import ImageSeoDialog
 from qt6.kernel import AICore, build_kernel
 from qt6.pages import OperationsPage, ProductsPage
 from qt6.parity_dialogs import ProfileEditorDialog
@@ -751,6 +752,211 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         self.assertEqual(by_name[screenshot_name]["url"], screenshot_url)
         self.assertFalse(by_name[screenshot_name]["display_only"])
         self.assertFalse(by_name[screenshot_name]["selected"])
+
+    def test_screenshot_seo_defaults_and_metadata_persist_without_site_selection(self):
+        local_dir = self.root / "screenshot-seo"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (500, 360), "white").save(
+            image_dir / "01.webp",
+            format="WEBP",
+        )
+        screenshot_name = "source-page-screenshot-20260918-152830.png"
+        Image.new("RGB", (1100, 760), "white").save(
+            image_dir / screenshot_name,
+            format="PNG",
+        )
+
+        source_url = "https://cdn.example.com/owner-source.jpg"
+        screenshot_url = f"local://{screenshot_name}"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": source_url,
+                            "local_file": str(image_dir / "01.webp"),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147020",
+            title="اسپینوزور مینی",
+            source_title="Mini Skeletal Spinosaurus",
+            local_dir=local_dir,
+            urls=[source_url, screenshot_url],
+        )
+        self.db.update_product(
+            product_id,
+            {
+                "selected_images_json": json.dumps(
+                    [source_url],
+                    ensure_ascii=False,
+                ),
+                "primary_image_url": source_url,
+                "seo_title_fa": "خرید اسپینوزور مینی چاپ سه بعدی",
+                "keywords_json": json.dumps(
+                    ["اسپینوزور", "چاپ سه بعدی"],
+                    ensure_ascii=False,
+                ),
+            },
+        )
+        self.kernel.images.finalize(product_id)
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            screenshot_item = page.image_grid.item_for_url(screenshot_url)
+            self.assertIsNotNone(screenshot_item)
+            self.assertFalse(bool(screenshot_item.get("selected")))
+
+            defaults = page._product_image_seo_values()
+            dialog = ImageSeoDialog(
+                [screenshot_item],
+                parent=page,
+                defaults=defaults,
+            )
+            try:
+                self.assertEqual(
+                    dialog.alt.text(),
+                    "خرید اسپینوزور مینی چاپ سه بعدی",
+                )
+                self.assertEqual(
+                    dialog.title.text(),
+                    "خرید اسپینوزور مینی چاپ سه بعدی",
+                )
+                self.assertTrue(dialog.caption.toPlainText().strip())
+                self.assertIn("اسپینوزور", dialog.keywords.toPlainText())
+                self.assertTrue(dialog.filename.text().endswith(".webp"))
+            finally:
+                dialog.close()
+
+            self.kernel.images.update_metadata(
+                product_id,
+                [screenshot_url],
+                defaults,
+            )
+            row = dict(self.db.product(product_id))
+            self.assertEqual(
+                json.loads(row["selected_images_json"]),
+                [source_url],
+            )
+            metadata = {
+                str(item.get("source_url") or ""): dict(item)
+                for item in json.loads(row["image_metadata_json"])
+            }
+            self.assertIn(screenshot_url, metadata)
+            screenshot_meta = metadata[screenshot_url]
+            self.assertEqual(
+                screenshot_meta["alt_text"],
+                "خرید اسپینوزور مینی چاپ سه بعدی",
+            )
+            self.assertEqual(
+                screenshot_meta["title"],
+                "خرید اسپینوزور مینی چاپ سه بعدی",
+            )
+            self.assertFalse(screenshot_meta["metadata_ready"])
+            self.assertFalse(
+                str(screenshot_meta.get("final_local_file") or "")
+            )
+
+            page.load_product(product_id)
+            refreshed_item = page.image_grid.item_for_url(screenshot_url)
+            self.assertEqual(
+                refreshed_item["alt_text"],
+                "خرید اسپینوزور مینی چاپ سه بعدی",
+            )
+            self.assertEqual(
+                refreshed_item["seo_title"],
+                "خرید اسپینوزور مینی چاپ سه بعدی",
+            )
+        finally:
+            page.close()
+
+    def test_name_and_seo_without_operation_subset_includes_unselected_screenshot(self):
+        local_dir = self.root / "screenshot-bulk-seo"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (500, 360), "white").save(
+            image_dir / "01.webp",
+            format="WEBP",
+        )
+        screenshot_name = "source-page-screenshot-20260918-160000.png"
+        Image.new("RGB", (1100, 760), "white").save(
+            image_dir / screenshot_name,
+            format="PNG",
+        )
+
+        source_url = "https://cdn.example.com/bulk-source.jpg"
+        screenshot_url = f"local://{screenshot_name}"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": source_url,
+                            "local_file": str(image_dir / "01.webp"),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147021",
+            title="محصول تست سئو",
+            source_title="SEO Test Product",
+            local_dir=local_dir,
+            urls=[source_url, screenshot_url],
+        )
+        self.db.update_product(
+            product_id,
+            {
+                "selected_images_json": json.dumps(
+                    [source_url],
+                    ensure_ascii=False,
+                ),
+                "primary_image_url": source_url,
+            },
+        )
+        self.kernel.images.finalize(product_id)
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(page.image_grid.operation_urls(), [])
+            self.assertIn(screenshot_url, page.image_grid.editable_urls())
+            page._apply_product_image_seo()
+
+            row = dict(self.db.product(product_id))
+            self.assertEqual(
+                json.loads(row["selected_images_json"]),
+                [source_url],
+            )
+            metadata = {
+                str(item.get("source_url") or ""): dict(item)
+                for item in json.loads(row["image_metadata_json"])
+            }
+            self.assertIn(source_url, metadata)
+            self.assertIn(screenshot_url, metadata)
+            self.assertTrue(metadata[source_url]["metadata_ready"])
+            self.assertFalse(metadata[screenshot_url]["metadata_ready"])
+            self.assertTrue(
+                str(metadata[screenshot_url].get("seo_filename") or "").endswith(
+                    ".webp"
+                )
+            )
+            self.assertEqual(
+                metadata[screenshot_url]["alt_text"],
+                page._product_image_seo_values()["alt_text"],
+            )
+        finally:
+            page.close()
 
     def test_trusted_legacy_numbered_local_image_is_editable_and_removal_is_recoverable(self):
         local_dir = self.root / "legacy-editable-local"

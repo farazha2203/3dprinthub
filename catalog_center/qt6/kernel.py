@@ -1537,10 +1537,51 @@ class ImageCore:
             "keywords",
             "seo_filename",
         }
+        selected_positions = {
+            url: index
+            for index, url in enumerate(normalized_selected, start=1)
+        }
+        image_positions = {
+            url: index
+            for index, url in enumerate(normalized_images, start=1)
+        }
         for url in targets:
             item = by_url.get(url)
             if item is None:
-                item = {"source_url": url}
+                source_value = image_pipeline.strict_source_local_image(
+                    data,
+                    url,
+                )
+                source_path = (
+                    Path(str(source_value)).resolve()
+                    if str(source_value or "").strip()
+                    else None
+                )
+                if source_path is not None and source_path.is_file():
+                    index = int(
+                        selected_positions.get(url)
+                        or image_positions.get(url)
+                        or (len(normalized_images) + 1)
+                    )
+                    item = dict(
+                        image_pipeline.build_image_metadata(
+                            data,
+                            url,
+                            source_path,
+                            max(1, index),
+                            self.db,
+                        )
+                    )
+                    # Non-Site images are prepared for operator review only.
+                    # They become final/publishable only after the operator
+                    # explicitly checks "در سایت".
+                    if url not in selected_positions:
+                        item["metadata_ready"] = False
+                        item["seo_signature"] = ""
+                        item.pop("final_local_file", None)
+                        item.pop("final_sha256", None)
+                else:
+                    item = {"source_url": url}
                 existing.append(item)
                 by_url[url] = item
             changed: set[str] = set(
@@ -1569,6 +1610,11 @@ class ImageCore:
                 changed.add(key)
             if changed:
                 item["_operator_override_fields"] = sorted(changed)
+            if url not in selected_positions:
+                item["metadata_ready"] = False
+                item["seo_signature"] = ""
+                item.pop("final_local_file", None)
+                item.pop("final_sha256", None)
 
         selected = list(dict.fromkeys(normalized_selected))
         images = list(dict.fromkeys(normalized_images))
@@ -1600,12 +1646,49 @@ class ImageCore:
                 ),
             },
         )
-        image_pipeline.finalize_selected_images(
-            self.db,
-            int(product_id),
-            deduplicate=False,
-            image_limit=max(1, len(selected)),
-        )
+        preserved_unselected = [
+            dict(item)
+            for item in existing
+            if str(item.get("source_url") or "") not in set(selected)
+        ]
+        if selected:
+            image_pipeline.finalize_selected_images(
+                self.db,
+                int(product_id),
+                deduplicate=False,
+                image_limit=max(1, len(selected)),
+            )
+            refreshed_row = dict(self.db.product(int(product_id)) or {})
+            finalized = [
+                dict(item)
+                for item in self._json_list(
+                    refreshed_row.get(
+                        image_pipeline.IMAGE_METADATA_COLUMN,
+                        "[]",
+                    )
+                )
+                if isinstance(item, dict)
+            ]
+            finalized_urls = {
+                str(item.get("source_url") or "")
+                for item in finalized
+                if str(item.get("source_url") or "")
+            }
+            merged_metadata = list(finalized)
+            merged_metadata.extend(
+                item
+                for item in preserved_unselected
+                if str(item.get("source_url") or "") not in finalized_urls
+            )
+            self.db.update_product(
+                int(product_id),
+                {
+                    image_pipeline.IMAGE_METADATA_COLUMN: json.dumps(
+                        merged_metadata,
+                        ensure_ascii=False,
+                    ),
+                },
+            )
         _mark_published_product_dirty(
             self.db,
             int(product_id),

@@ -1759,6 +1759,32 @@ class ProductWizardPage(QWidget):
             + (f"\n{removed} فایل SEO قدیمی حذف شد." if removed else ""),
         )
 
+    def _product_image_seo_values(self) -> dict[str, Any]:
+        if self.product_id is None:
+            return {}
+        row = self.kernel.products.get(self.product_id) or {}
+        title = (
+            str(row.get("seo_title_fa") or "").strip()
+            or str(row.get("title_fa") or "").strip()
+            or str(row.get("source_title") or "").strip()
+        )
+        caption = (
+            str(row.get("short_description_fa") or "").strip()
+            or str(row.get("seo_description_fa") or "").strip()
+        )
+        keywords: list[str] = []
+        for field in ("keywords_json", "tags_fa_json", "hashtags_fa_json"):
+            for item in _json_list(row.get(field)):
+                value = str(item or "").strip().lstrip("#")
+                if value and value not in keywords:
+                    keywords.append(value)
+        return {
+            "alt_text": title[:220],
+            "title": title[:220],
+            "caption": caption[:500],
+            "keywords": keywords[:16],
+        }
+
     def _edit_selected_image_seo(self) -> None:
         urls = self.image_grid.operation_urls()
         if not urls:
@@ -1780,7 +1806,11 @@ class ProductWizardPage(QWidget):
         items = [item for item in items if item]
         if not items:
             return
-        dialog = ImageSeoDialog(items, parent=self)
+        dialog = ImageSeoDialog(
+            items,
+            parent=self,
+            defaults=self._product_image_seo_values(),
+        )
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
         try:
@@ -1800,52 +1830,26 @@ class ProductWizardPage(QWidget):
         urls = self.image_grid.operation_urls()
         scope = "انتخاب عملیاتی"
         if not urls:
-            scope = "همه تصاویر سایت"
-            urls = [
-                url
-                for url in self.image_grid.selected_urls()
-                if not bool(
-                    (self.image_grid.item_for_url(url) or {}).get("display_only")
-                )
-            ]
+            scope = "همه تصاویر قابل ویرایش"
+            urls = self.image_grid.editable_urls()
         if not urls:
             QMessageBox.warning(
                 self,
                 "اصلاح اسم و سئو",
-                "حداقل یک تصویر قابل ویرایش را برای سایت یا عملیات گروهی انتخاب کن.",
+                "حداقل یک تصویر قابل ویرایش در محصول وجود ندارد.",
             )
             return
-        row = self.kernel.products.get(self.product_id) or {}
-        title = (
-            str(row.get("seo_title_fa") or "").strip()
-            or str(row.get("title_fa") or "").strip()
-            or str(row.get("source_title") or "").strip()
-        )
-        caption = (
-            str(row.get("short_description_fa") or "").strip()
-            or str(row.get("seo_description_fa") or "").strip()
-        )
-        keywords: list[str] = []
-        for field in ("keywords_json", "tags_fa_json", "hashtags_fa_json"):
-            for item in _json_list(row.get(field)):
-                value = str(item or "").strip().lstrip("#")
-                if value and value not in keywords:
-                    keywords.append(value)
 
         try:
-            # One Product = one semantic image SEO identity. Only physical
-            # filenames differ by the deterministic -01/-02/... suffix.
+            # One Product = one semantic image SEO identity. Selected Site media
+            # is finalized immediately; non-Site images (for example a manual
+            # Screenshot) keep complete editable metadata without changing Site
+            # membership. If selected later, the normal finalizer re-indexes it.
             self.kernel.images.update_metadata(
                 self.product_id,
                 urls,
-                {
-                    "alt_text": title[:220],
-                    "title": title[:220],
-                    "caption": caption[:500],
-                    "keywords": keywords[:16],
-                },
+                self._product_image_seo_values(),
             )
-            self.kernel.images.renumber(self.product_id)
         except Exception as exc:
             QMessageBox.warning(self, "اصلاح اسم و سئو", str(exc))
             return

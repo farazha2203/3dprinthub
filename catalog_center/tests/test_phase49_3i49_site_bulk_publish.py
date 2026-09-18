@@ -17,7 +17,13 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from app.phase49_3c_image_pipeline import finalize_selected_images
-from app.phase49_3i49_site_publish import _next_batch_name, build_publish_batch, mark_ready_many, publish_many
+from app.phase49_3i49_site_publish import (
+    _next_batch_name,
+    build_publish_batch,
+    mark_ready_many,
+    publish_many,
+    publish_media_gate,
+)
 from app.epic49_site_sync import BridgeNotFoundError
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage, ProductsPage
@@ -167,6 +173,48 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         if finalize_images:
             finalize_selected_images(self.db, product_id)
         return product_id
+
+    def test_ready_refreshes_edited_source_bytes_before_republish(self):
+        product_id = self._product("3491098")
+        row = dict(self.db.product(product_id))
+        selected_before = json.loads(row["selected_images_json"])
+        metadata_before = json.loads(row["image_metadata_json"])
+        self.assertEqual(len(metadata_before), 1)
+        old_original_sha = metadata_before[0]["original_sha256"]
+        old_final_sha = metadata_before[0]["final_sha256"]
+
+        source_path = Path(row["local_dir"]) / "images" / "source.jpg"
+        Image.new("RGB", (720, 540), (25, 190, 80)).save(
+            source_path,
+            "JPEG",
+            quality=94,
+        )
+        new_source_sha = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        self.assertNotEqual(new_source_sha, old_original_sha)
+
+        stale = publish_media_gate(self.db.product(product_id))
+        self.assertFalse(stale["ready"])
+        self.assertTrue(
+            any(
+                "source image changed after finalization" in item
+                for item in stale["missing"]
+            )
+        )
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        self.assertEqual(ready["media_refreshed_ids"], [product_id])
+        self.assertEqual(ready["media_refresh_failed"], [])
+
+        refreshed = dict(self.db.product(product_id))
+        self.assertEqual(
+            json.loads(refreshed["selected_images_json"]),
+            selected_before,
+        )
+        metadata_after = json.loads(refreshed["image_metadata_json"])
+        self.assertEqual(metadata_after[0]["original_sha256"], new_source_sha)
+        self.assertNotEqual(metadata_after[0]["final_sha256"], old_final_sha)
+        self.assertTrue(publish_media_gate(refreshed)["ready"])
 
     def test_product_without_canonical_sales_profile_never_becomes_ready(self):
         product_id = self._product("3491099", with_profiles=False)

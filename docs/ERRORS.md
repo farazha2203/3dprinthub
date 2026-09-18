@@ -1,3 +1,12 @@
+## ERR-49-172 - Screenshot SEO fields empty and edited source image could re-publish stale finalized WebP
+**Date:** 2026-09-18
+**Observed:** owner opened per-card SEO on a manually captured Screenshot and Alt/Title/Caption/Keywords were empty. Separately, editing a local image file and re-sending the already-published Product could leave the previous live image bytes on Site.
+**Root cause A:** manual Screenshot can exist as a trusted editable local image before image metadata has ever been built. The per-card SEO dialog only read stored metadata and had no Product-SEO fallback. Non-Site metadata could also be lost when the selected-image finalizer rewrote the metadata list.
+**Root cause B:** publish media gate validated the finalized WebP and its own hash/signature, but did not compare current selected source bytes with the stored `original_sha256`. A source file edited after finalization could therefore remain hidden behind a still-valid old final WebP.
+**Fix:** seed missing single-image SEO editor values from Product semantic SEO; persist unselected editable image metadata without toggling Site membership and keep it non-publishable until selected. For Ready/Send, detect source-byte drift only on previously-finalized selected media and automatically re-finalize that media before preflight. Genuinely missing/unfinalized media remains fail-closed.
+**Verification:** focused Image+Publish 41/41 PASS; current-contract 77/77 PASS; final broad Windows 145/145 PASS; Qt VerifyOnly, compile, Django check, no migration drift and diff-check PASS.
+**Prevention:** per-card SEO must support metadata-less trusted local images; selected publish media must validate both final bytes and source-to-final freshness. Never auto-select a Screenshot or weaken the incomplete-media fail-closed gate.
+
 ## ERR-49-171 - Direct Windows edits after publish did not always queue the existing Site Product for update
 **Date:** 2026-09-18
 **Observed:** owner could publish a Product, edit it in Windows, send again and still see stale Site data. The Site importer already had update-in-place logic, so duplicate creation was not the primary defect.

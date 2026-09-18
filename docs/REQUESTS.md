@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner: finish Screenshot SEO and ensure edited image bytes replace the live Site image
+Status: `LOCAL_ACCEPTED / COMMIT+PUSH+REPUBLISH NEXT`.
+
+Owner reported that the SEO button on a Screenshot still opened empty fields and that editing a local image then uploading the Product again did not visibly replace the live image. Required behavior: single-image SEO must be prefilled from Product SEO when metadata is absent; Screenshot SEO may be saved without forcing Site selection; the bulk `اصلاح اسم و سئو` must include all editable images when no explicit subset is selected; and re-publish must detect changed source bytes, rebuild the finalized SEO WebP, and update the same existing Site Product.
+
 ## 2026-09-18 - Owner: combine image filename+SEO repair and make re-upload update existing Site Product
 Status: `LOCAL_ACCEPTED / FINAL GATE + GITHUB PROMOTION NEXT`.
 

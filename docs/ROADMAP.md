@@ -1,3 +1,18 @@
+## 2026-09-18 — Screenshot SEO + source-byte refresh closure
+- [x] Reproduce empty per-card SEO fields on manual Screenshot.
+- [x] Seed empty single-image SEO editor from Product SEO without changing Site selection.
+- [x] Preserve SEO metadata for unselected editable images without making them publish-ready.
+- [x] Make `اصلاح اسم و سئو` cover every editable image when no operation subset exists.
+- [x] Detect selected source-byte drift after finalization.
+- [x] Auto-refinalize only previously-finalized media whose source bytes actually changed.
+- [x] Keep genuinely incomplete/unfinalized media fail-closed.
+- [x] Focused 41/41 + current-contract 77/77 + broad 145/145 PASS.
+- [x] Qt VerifyOnly / compile / Django check / no migration drift / diff-check PASS.
+- [ ] Commit/push exact candidate.
+- [ ] Fresh Catalog backup + exact-SHA Qt relaunch.
+- [ ] Controlled Product #625 re-publish and public Product/media verification.
+- [ ] Production source deploy only through dedicated reverse tunnel after Host gates pass.
+
 ## 2026-09-18 — Image repair + reliable in-place re-publish
 - [x] Preserve mature filename authority, Screenshot, Primary/Slider and image membership behavior.
 - [x] Replace separate automatic image SEO/renumber controls with `اصلاح اسم و سئو`.
