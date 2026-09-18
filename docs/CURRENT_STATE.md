@@ -2,7 +2,9 @@
 - Owner rejected the `d564386` Stage-3 workflow/layout changes. The corrective Local candidate restores the prior image controls, prior screenshot action path, prior recover-limit behavior, prior slider panel and prior window-geometry behavior.
 - Requested delta is now intentionally narrow: enlarge only the Product image review cards/preview area. Image naming, screenshot capture/naming, image ordering, selection, delete, SEO persistence, slider and recovery behavior are restored byte-for-byte to the pre-`d564386` implementation where applicable.
 - The attempted gallery-label change was rejected and removed; filename display is again the mature pre-change behavior. Screenshot implementation and image SEO pipeline also have zero source diff from the verified pre-`d564386` baseline `bf87c11`.
-- Corrective focused Qt/Gallery/Wizard/Screenshot regression: 60/60 PASS. Production and database schema remain unchanged.
+- Corrective focused Qt/Gallery/Wizard/Screenshot regression: 60/60 PASS. Corrective runtime commit `20f483af983cad550b1e2473751798daf0e8d39b` is pushed to GitHub and Local/remote SHA match.
+- Canonical Catalog online backup before relaunch: `D:\\projects\\3dprinthub-backups\\pre-owner-gallery-e50ee9b-20260918-094051\\catalog.sqlite3`; source and backup `integrity_check=ok`.
+- Qt was relaunched after the correction; one visible `3DPrintHub Catalog Center v8.9.10 - Qt 6` window is running from the canonical repository path. Production and database schema remain unchanged.
 
 ## 2026-09-18 — A2L exact runtime relaunched / real Filament identity debt isolated
 - Exact A2L candidate `4375c007874faa87c874f3806705532128814176` is on GitHub and the Windows Qt Catalog Center was closed/relaunched from that exact SHA after a fresh online Catalog backup (`pre-a2l-exact-launch-20260918-083025`, integrity `ok`, 635 Products).

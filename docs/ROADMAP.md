@@ -3,7 +3,7 @@
 - [x] Enlarge only Product image cards/previews and preserve vertical scrolling.
 - [x] Revert the rejected filename-display override; preserve mature image filename and Screenshot capture/naming behavior exactly.
 - [x] Rerun focused Qt/Gallery/Wizard/Screenshot regression with only sizing delta present: 60/60 PASS.
-- [ ] Commit/push exact corrective SHA, verify remote, and relaunch exactly one Qt runtime from that SHA.
+- [x] Commit/push corrective runtime SHA `20f483af983cad550b1e2473751798daf0e8d39b`, verify remote match, and relaunch one visible Qt runtime from the canonical repository.
 - [ ] Owner visual smoke on the affected Product: larger image surface with original controls, original filenames and original Screenshot behavior.
 
 ## 2026-09-18 — Active execution: Phase50.A.2L owner QA / Filament identity repair
