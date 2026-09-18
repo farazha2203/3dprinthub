@@ -1,12 +1,13 @@
-/* Phase50.A.2K - scoped integration of the original Codrops/Tympanus Slicebox demo.
- * Core Slicebox CSS/JS and reference nav/shadow assets are vendored unchanged under static/vendor/slicebox.
+/* Phase50.A.2K/A2L - 3DPrintHub wrapper for the original Codrops/Tympanus Slicebox.
+ * The vendored MIT engine stays unchanged. This file only adapts the reference
+ * Example 4 presentation to 3DPrintHub content and the site's own background.
  */
 .p50k-slicebox {
   position: relative;
   width: 100%;
-  padding: 100px 0 58px;
+  padding: 96px 0 72px;
   overflow: hidden;
-  background: #e4ebe9 url('../vendor/slicebox/images/fancy_deboss.png') repeat top left;
+  background: #f6f9fc;
   color: #444;
 }
 .p50k-slicebox__wrapper {
@@ -15,24 +16,41 @@
   width: 100%;
   padding: 0 50px;
   margin: 0 auto;
+  direction: ltr;
+}
+.p50k-slicebox .sb-slider {
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+.p50k-slicebox .sb-slider img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #111;
 }
 .p50k-slicebox .sb-description {
   direction: rtl;
   text-align: right;
+  padding: 18px 20px;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(190, 176, 155, 0.44);
+  border-left: 4px solid rgba(255,255,255,0.7);
 }
 .p50k-slicebox .sb-description h3 {
   margin: 0;
   font-size: 20px;
   line-height: 1.5;
-  text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
 }
 .p50k-slicebox .sb-description h3 a {
   color: #4a3c27;
-  text-shadow: 0 1px 1px rgba(255,255,255,.5);
+  text-shadow: 0 1px 1px rgba(255,255,255,0.5);
 }
 .p50k-slicebox .sb-description p {
-  margin: 6px 0 0;
-  line-height: 1.7;
+  display: none;
 }
 .p50k-slicebox .shadow {
   width: 100%;
@@ -41,12 +59,14 @@
   margin-top: -110px;
   background: transparent url('../vendor/slicebox/images/shadow.png') no-repeat bottom center;
   background-size: 100% 100%;
-  z-index: -1;
+  z-index: 1;
+  pointer-events: none;
   display: none;
 }
 .p50k-slicebox .nav-arrows,
-.p50k-slicebox .nav-options,
-.p50k-slicebox .nav-dots { display: none; }
+.p50k-slicebox .nav-dots {
+  display: none;
+}
 .p50k-slicebox .nav-arrows a {
   width: 42px;
   height: 42px;
@@ -54,19 +74,22 @@
   position: absolute;
   top: 50%;
   left: 2px;
+  z-index: 5;
   text-indent: -9000px;
   cursor: pointer;
   margin-top: -21px;
-  opacity: .9;
+  opacity: 0.9;
   border-radius: 50%;
-  box-shadow: 0 1px 1px rgba(255,255,255,.8);
+  box-shadow: 0 1px 1px rgba(255,255,255,0.8);
 }
 .p50k-slicebox .nav-arrows a:first-child {
   left: auto;
   right: 2px;
   background-position: top right;
 }
-.p50k-slicebox .nav-arrows a:hover { opacity: 1; }
+.p50k-slicebox .nav-arrows a:hover {
+  opacity: 1;
+}
 .p50k-slicebox .nav-dots {
   text-align: center;
   position: absolute;
@@ -74,6 +97,7 @@
   height: 30px;
   width: 100%;
   left: 0;
+  z-index: 5;
 }
 .p50k-slicebox .nav-dots span {
   display: inline-block;
@@ -83,41 +107,61 @@
   margin: 3px;
   background: #cbbfae;
   cursor: pointer;
-  box-shadow: 0 1px 1px rgba(255,255,255,.6), inset 0 1px 1px rgba(0,0,0,.1);
+  box-shadow: 0 1px 1px rgba(255,255,255,0.6), inset 0 1px 1px rgba(0,0,0,0.1);
 }
 .p50k-slicebox .nav-dots span.nav-dot-current {
-  box-shadow: 0 1px 1px rgba(255,255,255,.6), inset 0 1px 1px rgba(0,0,0,.1), inset 0 0 0 3px #cbbfae, inset 0 0 0 8px #fff;
+  box-shadow:
+    0 1px 1px rgba(255,255,255,0.6),
+    inset 0 1px 1px rgba(0,0,0,0.1),
+    inset 0 0 0 3px #cbbfae,
+    inset 0 0 0 8px #fff;
 }
-.p50k-slicebox .nav-options {
-  width: 70px;
-  height: 30px;
-  position: absolute;
-  right: 70px;
-  bottom: 0;
+.p50k-slicebox__fallback {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
 }
-.p50k-slicebox .nav-options span {
-  width: 30px;
-  height: 30px;
-  background: #cbbfae url('../vendor/slicebox/images/options.png') no-repeat top left;
-  text-indent: -9000px;
-  cursor: pointer;
-  opacity: .7;
-  display: inline-block;
-  border-radius: 50%;
+.p50k-slicebox__fallback img {
+  width: min(46vw, 260px);
+  height: auto;
 }
-.p50k-slicebox .nav-options span:first-child { background-position: -30px 0; margin-right: 3px; }
-.p50k-slicebox .nav-options span:hover { opacity: 1; }
-.p50k-slicebox__fallback { display: grid; place-items: center; min-height: 420px; }
-.p50k-slicebox__fallback img { width: min(46vw, 260px); height: auto; }
 @media (max-width: 720px) {
-  .p50k-slicebox { padding: 84px 0 42px; }
-  .p50k-slicebox__wrapper { padding: 0 12px; }
-  .p50k-slicebox .sb-description { padding: 10px 12px; bottom: 6px; left: 6px; right: 6px; }
-  .p50k-slicebox .sb-description p { display: none; }
-  .p50k-slicebox .shadow { height: 90px; margin-top: -58px; }
-  .p50k-slicebox .nav-options { right: 54px; bottom: -8px; }
-  .p50k-slicebox .nav-dots { bottom: -14px; }
+  .p50k-slicebox {
+    padding: 84px 0 48px;
+  }
+  .p50k-slicebox__wrapper {
+    padding: 0 12px;
+  }
+  .p50k-slicebox .sb-description {
+    padding: 10px 12px;
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
+  }
+  .p50k-slicebox .sb-description h3 {
+    font-size: 15px;
+  }
+  .p50k-slicebox .shadow {
+    height: 90px;
+    margin-top: -58px;
+  }
+  .p50k-slicebox .nav-arrows a {
+    width: 38px;
+    height: 38px;
+    margin-top: -19px;
+    background-size: auto 38px;
+  }
+  .p50k-slicebox .nav-dots {
+    bottom: -10px;
+  }
+  .p50k-slicebox .nav-dots span {
+    width: 13px;
+    height: 13px;
+    margin: 2px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .p50k-slicebox .sb-description { transition: none; }
+  .p50k-slicebox .sb-description {
+    transition: none;
+  }
 }

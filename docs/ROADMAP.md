@@ -1,3 +1,13 @@
+## 2026-09-19 - Phase50.A.2L site-priority release
+- [x] Recover and authenticate dedicated reverse tunnel `22024`; verify Host identity, clean Production baseline and watchdog cron.
+- [x] Build Production-based release containing only Example-4 Slicebox Hero + Product Admin 504 fix.
+- [x] Local syntax/check/no-drift and focused Hero/Admin 25/25 regression PASS.
+- [x] Add guarded no-migration deploy runner with source/.env/static rollback evidence and Production HTTP/runtime gates.
+- [ ] Commit/push exact release and verify live GitHub SHA.
+- [ ] Deploy ff-only from GitHub through the dedicated reverse tunnel.
+- [ ] Verify live Home/Store/Bridge/readiness, Example-4 transition markers and Product Admin runtime composition.
+- [ ] Record Production backup root/SHA and close A2L site-priority docs.
+
 ## 2026-09-16 - Phase50.A.2J standalone Hero acceptance
 - [x] Recover and verify the dedicated 3DPrintHub reverse tunnel/watchdog path.
 - [x] Keep the client-facing Store empty: Product/Variant/ProductImage = `0/0/0`.

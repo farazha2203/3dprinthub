@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner priority: publish the site now through the permanent reverse tunnel
+Status: `LOCAL_TESTED / DEPLOY NEXT`.
+
+Owner requires the homepage top slider to use the requested Tympanus Slicebox Example-4 presentation and requires the Product edit 504 to be fixed before more social publishing. Host access must use only the dedicated 3DPrintHub reverse tunnel, never cPanel edits or another project's tunnel. The release is intentionally narrow: Example-4 Hero plus Product Admin Variant-inline removal, with no schema/payment/Windows workflow expansion. Local regression is green; GitHub-first guarded deployment and Production verification are next.
+
 ## 2026-09-16 - Owner request: fully replace top Hero and make Windows republish-ready
 Status: `HERO PRODUCTION_VERIFIED / STORE EMPTY / WINDOWS REPUBLISH READINESS NEXT`.
 

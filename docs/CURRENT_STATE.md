@@ -1,3 +1,10 @@
+## 2026-09-19 - Phase50.A.2L site-priority release LOCAL_TESTED
+Status: `LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
+
+Dedicated reverse tunnel recovery has been reverified from Windows: `127.0.0.1:22024` is listening, authenticated bridge health is `ok=True` with base `/home/sfkilvrs/3dprinthub`, and the Host one-minute `flock` watchdog cron is present. Production is still exact clean `release/phase50-a2j-hero-20260915 @ 12e319ace1eb55c114d7117e1b5a2fa170b410ab` before this release.
+
+The Production-based A2L site release carries only the owner-priority web delta: official Tympanus Slicebox Example-4 behavior (`orientation=r`, random cuboids, disperseFactor 30, eager slide loading) and ERR-49-168 Product Admin 504 fix by removing only the unbounded ProductVariant inline. No migration/requirements/settings change is permitted. Local Node/Django/no-drift gates PASS and focused Hero+Admin regression is 25/25 PASS. Exact next: commit/push the release, verify live GitHub SHA, run the guarded reverse-tunnel deploy with verified rollback backup, then perform Production Home/Store/Hero/Admin-runtime verification.
+
 ## 2026-09-16 - PHASE50.A.2J STANDALONE HERO PRODUCTION VERIFIED
 Status: `PRODUCTION_VERIFIED / STORE_EMPTY / WINDOWS REPUBLISH READINESS NEXT`.
 

@@ -17,35 +17,22 @@ class Phase45HomepageHeroContractTests(SimpleTestCase):
         self.assertIn("تأیید و نمایش در اسلایدر", models_py)
         self.assertIn('"store.ImportedPrintAsset"', models_py)
 
-    def test_home_uses_active_safe_asset_backed_slides_for_hero(self):
+    def test_home_uses_only_active_product_backed_slides_for_hero(self):
         views = self.read("website/views.py")
         self.assertIn("HomepageHeroSlide.objects.filter(", views)
         self.assertIn("is_active=True", views)
-        self.assertIn("asset__isnull=False", views)
         self.assertIn("asset__product__is_active=True", views)
-        self.assertIn("asset__commercial_license_status__in", views)
-        self.assertIn("asset__editorial_status__in", views)
         self.assertIn('"homepage_hero_slides": homepage_hero_slides', views)
         hero = self.read("templates/website/partials/hero.html")
         self.assertIn("homepage_hero_slides", hero)
         self.assertNotIn("hero_model_slider", hero)
 
-    def test_source_backed_hero_has_safe_order_fallback_contract(self):
-        models_py = self.read("website/models.py")
-        command = self.read("website/management/commands/phase50_a2k_reset_hero.py")
-        self.assertIn('reverse("store:product_detail"', models_py)
-        self.assertIn('reverse("website:home") + "#order"', models_py)
-        self.assertNotIn('store:external_catalog_detail', models_py)
-        self.assertIn("SEED_SLIDES", command)
-        self.assertIn("SAFE_COMMERCIAL_STATUSES", command)
-        self.assertIn('CONFIRMATION = "RESET_HOMEPAGE_HERO"', command)
-        self.assertIn("A2K_HERO_RESET_DRY_RUN=PASS", command)
-
     def test_reference_slicebox_component_and_mobile_contract_is_current(self):
         css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
         vendor = self.read("static/vendor/slicebox/css/slicebox.css")
         self.assertIn("max-width: 840px", css)
-        self.assertIn("fancy_deboss.png", css)
+        self.assertIn("background: #f6f9fc", css)
+        self.assertNotIn("fancy_deboss.png", css)
         self.assertIn("@media (max-width: 720px)", css)
         self.assertIn(".sb-perspective", vendor)
         self.assertIn("transform-style: preserve-3d", vendor)

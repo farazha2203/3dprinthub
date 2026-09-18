@@ -1,3 +1,10 @@
+## 2026-09-19 - Phase50.A.2L site-priority release candidate
+- Rebased site delivery on the verified Production-descendant A2K release instead of deploying the broader Windows WIP lineage.
+- Promoted owner-approved official Tympanus Slicebox Example-4 runtime: right orientation, random cuboids, disperseFactor 30, eager slide loading, arrows/dots/shadow and existing managed Hero data.
+- Applied ERR-49-168 by removing only ProductVariantInline from Product change pages; dedicated ProductVariant/Profile admin remains authoritative.
+- Added `scripts/host/phase50_a2l_site_priority_deploy.sh`: exact baseline/live-GitHub/FETCH_HEAD guards, MySQL/readiness/no-migration gates, verified source/.env/static backup, ff-only merge, collectstatic, Passenger restart and public/runtime verification.
+- Local verification: Node syntax PASS; Django check PASS with known warning; no model drift; focused Hero/Admin 25/25 PASS; runner Bash syntax and diff-check PASS.
+
 ## 2026-09-16 - Phase50.A.2J standalone Hero Production acceptance
 - Production release/GitHub/Host exact at `859b9e77de1c8ecd5c53a9c395382b35579f78b4`; Host clean, MySQL correct, migration plan empty.
 - Store remains intentionally empty: Product/Variant/ProductImage `0/0/0`.
