@@ -1465,8 +1465,8 @@ class ProductWizardPage(QWidget):
 
         draft = dict(profile)
         draft.pop("key", None)
-        draft["name"] = f"{profile.get('name') or 'پروفایل'} - کپی"
-        draft["size_label"] = f"{profile.get('size_label') or ''} - کپی".strip()
+        draft["name"] = f"{profile.get('name') or 'Profile'} - Copy"
+        draft["size_label"] = f"{profile.get('size_label') or 'Standard'} - Copy".strip()
 
         recommendation = self._material_recommendation()
         dialog = ProfileEditorDialog(
@@ -1604,7 +1604,7 @@ class ProductWizardPage(QWidget):
         )
         if not profiles:
             profile = {
-                "name": "پروفایل AI - نیازمند بازبینی", "size_label": "تقریبی",
+                "name": "AI Preview", "size_label": "Approximate",
                 "part_length_cm": length, "part_width_cm": width, "part_height_cm": height,
                 "production_rows": [{"weight_grams": weight, "support_weight_grams": 0, "print_time_minutes": minutes}],
                 "material_options": offers, "pricing_strategy": "dynamic",

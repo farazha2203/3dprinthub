@@ -1,3 +1,16 @@
+## 2026-09-18 — Site-first Product/Admin release
+- [x] Reproduce Production duplicate Filament card block and prove current source already omits it.
+- [x] Isolate Product Admin 504 to ProductVariant inline query/HTML explosion.
+- [x] Remove only ProductVariant inline; preserve dedicated Variant/Profile admin and other Product inlines.
+- [x] Enforce ASCII/English Profile name + size identity and verify real Product #625 resolves to Standard/Standard with 64 material options preserved.
+- [x] Repair Instagram canonical media parser for real Site ACK count shape and Product-owned media filtering.
+- [x] Site/Admin 17/17, Catalog/Instagram/Qt 82/82, Hero 27/27, compile/check/drift/diff-check PASS.
+- [ ] Commit/push exact candidate and verify remote SHA.
+- [ ] Fresh Catalog backup + exact-SHA Qt VerifyOnly/relaunch.
+- [ ] Restore dedicated reverse tunnel on the verified local-router path; do not use MobinHoust or alternate Host access.
+- [ ] Guarded Production deploy from GitHub + Product edit 504/Home/Product detail browser verification.
+- [ ] Publish Product #152 Site-first, then one corrected Instagram feed/Story; do not duplicate #309/#301.
+
 ## 2026-09-18 — Filename/four-row runtime promotion
 - [x] Commit/push runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451`.
 - [x] Fresh Catalog backup with source/backup integrity `ok`, 635 Products.

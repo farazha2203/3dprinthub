@@ -1,3 +1,27 @@
+## ERR-49-170 - Real Site ACK stored images as a count and crashed Instagram media parsing
+**Date:** 2026-09-18
+**Observed:** real Product #309/#301 Instagram preflight raised `TypeError: 'int' object is not iterable` although Mock social tests passed.
+**Root cause:** `canonical_site_payload()` assumed `server_ack_json.images` was a list. Real Site ACK uses `images=<count>` and stores verified public media under `public_http_checks.images`; that verified list may also contain unrelated cross-Product checks.
+**Fix:** accept list-shaped legacy/public media when present; otherwise read `public_http_checks.images`, keep the verified main image first and filter fallback URLs to the current Product slug before carousel construction.
+**Verification:** dedicated real-shape regression PASS; real #309 returns 5 owned media and #301 returns 3 owned media; combined social/Qt gate 82/82 PASS.
+**Prevention:** social regressions must include the current strict Site ACK shape, not only synthetic list-shaped ACK fixtures.
+
+## ERR-49-169 - Product profile identity contained corrupt/Persian values where ASCII identity is required
+**Date:** 2026-09-18
+**Observed:** real Product #625 displayed `???????` for Profile name and size; canonical ledger itself stored those corrupt values and flattened 64 combinations inherited them.
+**Root cause:** profile normalization accepted arbitrary localized/corrupt strings for the two identity fields and older fallback/bootstrap paths generated Persian Profile identity.
+**Fix:** Profile name and size are now normalized as ASCII-only identity. Invalid/corrupt/localized values fall back to `Standard`, `Profile N`, or factual numeric `L x W x H cm`; Material/Color/content remain localized and untouched.
+**Verification:** Product #625 read-only runtime acceptance reports `Standard / Standard`, ASCII true, one production row and all 64 material options preserved; combined Catalog/Qt gate 82/82 PASS.
+**Prevention:** Profile identity fields are transport/selection identifiers and must remain ASCII; Persian remains appropriate for customer-facing Product/Material/Color copy.
+
+## ERR-49-168 - Product Admin change page 504 from full ProductVariant inline expansion
+**Date:** 2026-09-18
+**Observed:** Production Product edit page intermittently returned 504, especially for Products with many generated variants.
+**Root cause:** final Product Admin composition kept the entire `ProductVariantInline` in every Product change page even though a dedicated Variant/Profile admin already exists. A Local 37-Variant benchmark produced 781 queries, 1.399s and 892118 bytes of HTML.
+**Fix:** remove only `ProductVariantInline` from Product change pages; preserve ProductImage/Compatibility/FAQ/Profile inlines and keep all Variant/Profile editing in the existing dedicated ProductVariant admin linked from the Product workspace.
+**Verification:** same Local page after final composition is ~60-63 queries and 277103 bytes; focused Site/Admin 17/17 PASS. Production verification remains pending the guarded deploy.
+**Prevention:** do not embed unbounded generated commerce rows in Product change forms. Large child collections must use dedicated filtered admin surfaces.
+
 ## ERR-49-166 - Planned filenames diverged from mature English source-title naming
 **Date:** 2026-09-18
 **Observed:** finalized images could retain English source-title filenames while extra/unfinalized local images displayed a different planned filename derived from Persian Product SEO title, creating mixed naming in one Product.

@@ -78,6 +78,15 @@ def normalize_production_row(item: dict | None = None) -> dict:
     }
 
 
+def _ascii_profile_identity(value, fallback: str) -> str:
+    text = str(value or "").strip()
+    if not text or "?" in text or "�" in text:
+        return fallback
+    if any(ord(char) > 127 for char in text):
+        return fallback
+    return text
+
+
 def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
     source = dict(item or {})
     rows = [
@@ -96,13 +105,22 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
             )
         ]
     materials = normalize_material_color_options(source.get("material_options") or source.get("material_color_options") or [])
+    part_length = _number(source.get("part_length_cm"), 0)
+    part_width = _number(source.get("part_width_cm"), 0)
+    part_height = _number(source.get("part_height_cm"), 0)
+    dimensional_size = (
+        f"{part_length:g} x {part_width:g} x {part_height:g} cm"
+        if all(value > 0 for value in (part_length, part_width, part_height))
+        else "Standard"
+    )
+    default_name = "Standard" if index == 1 else f"Profile {index}"
     return {
         "key": str(source.get("key") or f"ledger-{uuid4().hex[:12]}")[:80],
-        "name": str(source.get("name") or f"پروفایل {index}")[:120],
-        "size_label": str(source.get("size_label") or "")[:80],
-        "part_length_cm": _number(source.get("part_length_cm"), 0),
-        "part_width_cm": _number(source.get("part_width_cm"), 0),
-        "part_height_cm": _number(source.get("part_height_cm"), 0),
+        "name": _ascii_profile_identity(source.get("name"), default_name)[:120],
+        "size_label": _ascii_profile_identity(source.get("size_label"), dimensional_size)[:80],
+        "part_length_cm": part_length,
+        "part_width_cm": part_width,
+        "part_height_cm": part_height,
         "production_rows": rows,
         "material_options": materials,
         "pricing_strategy": str(source.get("pricing_strategy") or "dynamic")[:30],

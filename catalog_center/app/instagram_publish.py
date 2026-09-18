@@ -104,13 +104,36 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
         raise RuntimeError("انتشار اینستاگرام فقط بعد از تأیید عمومی محصول روی سایت مجاز است.")
 
     media: list[str] = []
-    public_images = ack.get("public_images") or ack.get("images") or []
+    main = str(
+        ack.get("public_main_image_url")
+        or ((ack.get("public_http_checks") or {}).get("main_image_url") if isinstance(ack.get("public_http_checks"), dict) else "")
+        or ""
+    ).strip()
+
+    public_images = ack.get("public_images")
+    if not isinstance(public_images, list):
+        public_images = ack.get("images")
+    if not isinstance(public_images, list):
+        checks = ack.get("public_http_checks")
+        checked_images = checks.get("images") if isinstance(checks, dict) else []
+        checked_images = checked_images if isinstance(checked_images, list) else []
+        slug = urllib_parse.urlparse(product_url).path.rstrip("/").split("/")[-1].casefold()
+        owned = []
+        for item in checked_images:
+            url = str(item.get("url") if isinstance(item, dict) else item or "").strip()
+            ok = bool(item.get("ok", True)) if isinstance(item, dict) else True
+            if not ok or not url.startswith("https://"):
+                continue
+            path = urllib_parse.urlparse(url).path.casefold()
+            if url == main or (slug and slug in path):
+                owned.append(item)
+        public_images = owned or checked_images
+
     for item in public_images:
         url = str(item.get("url") if isinstance(item, dict) else item or "").strip()
         ok = bool(item.get("ok", True)) if isinstance(item, dict) else True
         if ok and url.startswith("https://") and url not in media:
             media.append(url)
-    main = str(ack.get("public_main_image_url") or "").strip()
     if main.startswith("https://"):
         media = [main, *[url for url in media if url != main]]
     if not media:

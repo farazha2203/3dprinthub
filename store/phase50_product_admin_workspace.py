@@ -232,16 +232,20 @@ def _product_admin_methods(admin_cls):
 
 
 def _rename_inlines(product_admin) -> None:
+    kept = []
     for inline in getattr(product_admin, "inlines", ()):
         model = getattr(inline, "model", None)
+        if model is ProductVariant:
+            # Large Variant/Profile inline sets make Product change pages explode
+            # in query count and HTML size. Variants remain fully editable from
+            # the dedicated ProductVariant admin linked by phase50_sales_profiles_admin.
+            continue
         if model is ProductImage:
             inline.verbose_name = "تصویر محصول"
             inline.verbose_name_plural = "تصاویر و گالری محصول"
             inline.extra = 0
-        elif model is ProductVariant:
-            inline.verbose_name = "پروفایل فروش / تنوع"
-            inline.verbose_name_plural = "پروفایل‌ها، سایز، وزن، قیمت و موجودی"
-            inline.extra = 0
+        kept.append(inline)
+    product_admin.inlines = kept
 
 
 def install() -> None:
@@ -330,7 +334,7 @@ def install() -> None:
                     "sales_profile_selector_label",
                     "phase50_sales_profiles_admin",
                 ),
-                "description": "روش انتخاب مشتری را تعیین کنید و پروفایل‌های فروش را از Inline پایین صفحه یا صفحه مدیریت پروفایل‌ها کپی/ویرایش کنید.",
+                "description": "روش انتخاب مشتری را تعیین کنید و پروفایل‌های فروش را از صفحه اختصاصی مدیریت پروفایل‌ها کپی/ویرایش کنید.",
             },
         ),
         (

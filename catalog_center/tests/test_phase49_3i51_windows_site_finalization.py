@@ -128,8 +128,10 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         self.assertTrue(result["fallback_used"])
         self.assertEqual(len(profiles), 1)
         profile = profiles[0]
-        self.assertEqual(profile["name"], "پیش‌فرض")
-        self.assertEqual(profile["size_label"], "پیش‌فرض")
+        self.assertEqual(profile["name"], "Standard")
+        self.assertEqual(profile["size_label"], "Standard")
+        self.assertTrue(profile["name"].isascii())
+        self.assertTrue(profile["size_label"].isascii())
         row = profile["production_rows"][0]
         self.assertEqual(float(row["weight_grams"]), 100.0)
         self.assertEqual(float(row["support_weight_grams"]), 50.0)

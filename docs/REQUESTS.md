@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner: site first / remove duplicate Filament cards / fix Product edit 504 / English Profile identity
+Status: `LOCAL_ACCEPTED / COMMIT+PUSH+DEPLOY NEXT`.
+
+Owner requires the public Product page to remove the duplicate “رنگ و Filament قابل سفارش” roll-price cards because the four-step selector is the ordering authority. Product Admin edit must stop returning 504. Windows Product Profile “نام پروفایل” and “سایز” must not be Persian/corrupt; use English/ASCII identity while preserving Product Material/Color data. Site publication has priority over further social work. After Site deploy, Product #152 must publish Site-first and then Instagram; existing #309/#301 Instagram posts must not be duplicated.
+
 ## 2026-09-18 - Owner image naming/scroll correction runtime status
 Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
 

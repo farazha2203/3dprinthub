@@ -1580,8 +1580,8 @@ class CommerceCore:
             raise RuntimeError("پروفایل انتخابی پیدا نشد.")
         clone = deepcopy(source)
         clone.pop("key", None)
-        clone["name"] = f"{source.get('name') or 'پروفایل'} - کپی"
-        clone["size_label"] = f"{source.get('size_label') or ''} - کپی".strip()
+        clone["name"] = f"{source.get('name') or 'Profile'} - Copy"
+        clone["size_label"] = f"{source.get('size_label') or 'Standard'} - Copy".strip()
         return self.upsert_profile(product_id, clone)
 
     def summary(self, profile: dict[str, Any]) -> dict[str, int]:
@@ -1919,8 +1919,8 @@ class CommerceCore:
             fallback_used = minutes <= 0 or not matched_offers
             profile_name = str(source_profile.get("name") or "").strip()
             profile: dict[str, Any] = {
-                "name": "پیش‌فرض" if fallback_used else (profile_name or "پروفایل منبع 1"),
-                "size_label": "پیش‌فرض" if fallback_used else profile_name,
+                "name": "Standard" if fallback_used else (profile_name or "Source Profile 1"),
+                "size_label": "Standard" if fallback_used else profile_name,
                 "production_rows": [
                     {
                         "weight_grams": weight if weight > 0 else (100 if fallback_used else 0),

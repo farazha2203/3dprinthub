@@ -65,6 +65,32 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         self.assertEqual(len(payload["alt_texts"]), len(payload["media_urls"]))
         self.assertEqual(payload["alt_texts"][0], "نمای اصلی محصول")
 
+    def test_real_site_ack_count_uses_verified_product_owned_http_images(self):
+        row = product_row()
+        ack = json.loads(row["server_ack_json"])
+        main = ack["public_main_image_url"]
+        ack["images"] = 4
+        ack["public_http_checks"] = {
+            "ok": True,
+            "main_image_url": main,
+            "images": [
+                {"ok": True, "url": main},
+                {"ok": True, "url": "https://3dprinthub.ir/media/store/products/gallery/test-product-02.webp"},
+                {"ok": True, "url": "https://3dprinthub.ir/media/store/products/unrelated-product.webp"},
+            ],
+        }
+        row["server_ack_json"] = json.dumps(ack, ensure_ascii=False)
+
+        payload = canonical_site_payload(row, site_url="https://3dprinthub.ir")
+
+        self.assertEqual(
+            payload["media_urls"],
+            [
+                main,
+                "https://3dprinthub.ir/media/store/products/gallery/test-product-02.webp",
+            ],
+        )
+
     def test_primary_public_image_is_always_first_instagram_media(self):
         row = product_row()
         ack = json.loads(row["server_ack_json"])

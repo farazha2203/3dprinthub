@@ -1,3 +1,10 @@
+## 2026-09-18 - Site-first Product/Admin/Profile/Instagram hotfix
+- Removed ProductVariant inline from Product change pages; dedicated ProductVariant admin remains the editing surface. Benchmark dropped a 37-Variant change page from 781 to 60 queries and 1.399s to 0.075s in the isolated comparison.
+- Reconfirmed current Product detail source already omits the obsolete Filament roll-price card block shown on older Production; updated the stale regression to require it absent.
+- Profile identity normalization now keeps name/size ASCII-only; corrupt/Persian identity falls back to Standard or numeric cm dimensions. Real Product #625 resolves to Standard/Standard while preserving 64 material options.
+- Instagram canonical media now supports real Site ACKs where images is a count and verified image URLs live under public_http_checks.images; product-slug filtering prevents unrelated verified images from entering a carousel.
+- Gates: 17/17 Site/Admin, 82/82 Catalog/Instagram/Qt, 27/27 Hero, compile/Node/check/no-drift/diff-check PASS. Production unchanged pending dedicated tunnel recovery.
+
 ## 2026-09-18 - Image filename/four-row runtime promotion
 - Pushed runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451`.
 - Took fresh integrity-checked Catalog backup `pre-image-seo-scroll-aaa5cb9-20260918-125436`.

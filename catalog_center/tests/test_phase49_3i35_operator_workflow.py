@@ -76,6 +76,23 @@ class Phase493I35OperatorWorkflowTests(unittest.TestCase):
         self.assertEqual(rows[1]["weight_grams"], 150)
         self.assertNotEqual(rows[0]["key"], rows[1]["key"])
 
+    def test_profile_identity_is_ascii_and_corrupt_or_persian_values_fall_back(self):
+        profile = normalize_ledger_profile({
+            "name": "???????",
+            "size_label": "سایز متوسط",
+            "part_length_cm": 20,
+            "part_width_cm": 15,
+            "part_height_cm": 8,
+            "production_rows": [{"weight_grams": 13, "print_time_minutes": 60}],
+            "material_options": [{"material": "PLA", "color": "سفید"}],
+        })
+        self.assertEqual(profile["name"], "Standard")
+        self.assertEqual(profile["size_label"], "20 x 15 x 8 cm")
+        self.assertTrue(profile["name"].isascii())
+        self.assertTrue(profile["size_label"].isascii())
+        self.assertEqual(profile["production_rows"][0]["weight_grams"], 13)
+        self.assertEqual(profile["material_options"][0]["color"], "سفید")
+
     def test_fixed_profile_has_one_explicit_price_authority(self):
         profile = normalize_ledger_profile({
             "key": "fixed-30",

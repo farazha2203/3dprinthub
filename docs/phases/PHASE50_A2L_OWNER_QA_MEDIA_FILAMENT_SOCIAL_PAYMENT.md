@@ -1,3 +1,12 @@
+## Site-first Product/Admin hotfix — 2026-09-18
+- Owner priority: deploy Site before additional Instagram publication.
+- Public Product detail current source intentionally has no standalone Filament roll-price cards; the four-step guided selector remains customer ordering authority.
+- Product change-page 504 root cause is the large ProductVariant inline. A 37-Variant Local page measured 781 queries / 892118 bytes with it versus 60 queries / 277103 bytes without it. Variant editing remains available in dedicated ProductVariant admin.
+- Profile name/size identity is now ASCII-only; Product #625 real read-only acceptance is Standard / Standard with all 64 material options preserved.
+- Real Site ACK media parser accepts numeric images count + public_http_checks.images and filters media to the current Product; #309/#301 real ACK acceptance PASS.
+- Local gates: 17/17 Site/Admin, 82/82 Catalog/Instagram/Qt, 27/27 Hero, compile/check/drift/diff-check PASS.
+- Production remains unchanged until the dedicated 3DPrintHub reverse tunnel is restored and Host gates pass.
+
 ## Image filename/four-row runtime — 2026-09-18
 - Runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451` is pushed and running from clean worktree `D:\projects\3dprinthub-runtime-aaa5cb9`.
 - Fresh Catalog backup passed integrity with 635 Products.
