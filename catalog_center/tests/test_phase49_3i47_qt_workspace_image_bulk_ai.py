@@ -13,7 +13,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
-from qt6.image_gallery import ImageCard
 from qt6.kernel import AICore, build_kernel
 from qt6.pages import OperationsPage, ProductsPage
 from qt6.parity_dialogs import ProfileEditorDialog
@@ -434,22 +433,6 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertIn("3", page.image_task_status.text())
         finally:
             page.close()
-
-    def test_image_card_displays_existing_seo_filename_before_raw_source_name(self):
-        card = ImageCard(
-            {
-                "url": "https://cdn.example.com/source.jpg",
-                "filename": "01.webp",
-                "planned_filename": "table-lamp-3d-print-01.webp",
-                "downloaded": True,
-            },
-            large=True,
-        )
-        try:
-            self.assertEqual(card.filename.text(), "table-lamp-3d-print-01.webp")
-            self.assertIn("فایل خام: 01.webp", card.filename.toolTip())
-        finally:
-            card.close()
 
     def test_source_urls_without_local_files_do_not_create_broken_gallery_cards(self):
         urls = [f"https://cdn.example.com/missing-{index:02d}.jpg" for index in range(1, 61)]

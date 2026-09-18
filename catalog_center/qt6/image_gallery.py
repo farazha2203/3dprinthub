@@ -107,21 +107,12 @@ class ImageCard(QFrame):
         top.addWidget(self.slider)
         root.addLayout(top)
 
-        source_filename = str(self.item.get("filename") or "").strip()
-        seo_filename = str(self.item.get("planned_filename") or "").strip()
-        filename = seo_filename or source_filename
+        filename = str(self.item.get("filename") or "")
         if not filename:
             filename = str(self.item.get("url") or "").rsplit("/", 1)[-1][:55]
         self.filename = QLabel(filename or "بدون نام فایل")
         self.filename.setWordWrap(False)
-        tooltip_parts = []
-        if seo_filename:
-            tooltip_parts.append(f"نام SEO: {seo_filename}")
-        if source_filename and source_filename != seo_filename:
-            tooltip_parts.append(f"فایل خام: {source_filename}")
-        if str(self.item.get("url") or "").strip():
-            tooltip_parts.append(str(self.item.get("url") or ""))
-        self.filename.setToolTip("\n".join(tooltip_parts))
+        self.filename.setToolTip(str(self.item.get("url") or ""))
         root.addWidget(self.filename)
 
         width = int(self.item.get("width") or 0)

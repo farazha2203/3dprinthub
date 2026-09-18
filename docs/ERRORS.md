@@ -2,8 +2,8 @@
 **Date:** 2026-09-18
 **Observed:** the attempted image-workspace repair also changed button labels/layout, recover-limit behavior, AI-bar visibility and restored-window geometry; owner also observed raw numbered filenames and loss of the expected screenshot workflow.
 **Root cause:** a visual-space request was implemented across unrelated Stage-3/window behavior instead of keeping the delta presentation-only.
-**Fix:** restore the mature control/screenshot/window behavior, keep the image workflow untouched, enlarge only image cards/previews, and display existing `planned_filename`/SEO filename before the raw local filename. Focused Qt/Gallery/Wizard/Screenshot suite: 61/61 PASS.
-**Prevention:** for owner UI sizing requests, define `Must-Not-Touch` as all existing button wiring, action order, persistence, screenshot/recovery logic and global window behavior unless separately requested.
+**Fix:** restore the mature control/screenshot/window behavior and the mature filename display exactly; keep image naming, screenshot naming/capture and SEO persistence untouched; enlarge only image cards/previews. The rejected `planned_filename` display override was removed.
+**Prevention:** for owner UI sizing requests, define `Must-Not-Touch` as all existing button wiring, action order, filename display/generation, persistence, screenshot/recovery logic and global window behavior unless separately requested.
 
 ## ERR-49-158 — Real Catalog full Filament sync exposed 63 legacy blank-Brand identities
 **Date:** 2026-09-18

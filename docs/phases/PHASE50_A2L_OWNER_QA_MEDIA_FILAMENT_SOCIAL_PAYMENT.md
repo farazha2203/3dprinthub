@@ -57,8 +57,8 @@ This phase is driven by the 2026-09-17 owner screenshots from Catalog Center v8.
 ## Owner correction — 2026-09-18
 - The owner explicitly rejected the recent Stage-3 control/workflow changes and required a sizing-only repair.
 - Corrective scope restores the mature button/action wiring, Screenshot route, recover-limit behavior, slider panel, AI visibility and normal saved window geometry.
-- Only the Product image review presentation changes: larger cards/previews with reachable scroll content. Image cards prefer the existing SEO/planned filename over raw numbered local filenames; SEO generation and persistence remain unchanged.
-- Focused Qt/Gallery/Wizard/Screenshot regression is 61/61 PASS. No migration, Catalog schema or Production change.
+- Only the Product image review presentation may change: larger cards/previews with reachable scroll content. Image filename display/generation and Screenshot capture/naming are explicitly frozen to the mature pre-change behavior; the rejected filename-display override was removed.
+- No migration, Catalog schema or Production change. Corrective focused Qt/Gallery/Wizard/Screenshot regression: 60/60 PASS.
 
 ## Remaining gates
 - Commit/push the Brand-repair follow-up and relaunch Qt from that exact SHA for owner use.

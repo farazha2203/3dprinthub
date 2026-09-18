@@ -1,8 +1,8 @@
 ## 2026-09-18 — Owner correction: preserve image workflow, enlarge review only
 - Owner rejected the `d564386` Stage-3 workflow/layout changes. The corrective Local candidate restores the prior image controls, prior screenshot action path, prior recover-limit behavior, prior slider panel and prior window-geometry behavior.
-- Requested delta is now intentionally narrow: enlarge only the Product image review cards/preview area and show the already-owned SEO filename before the raw numbered source filename. No image ordering, selection, delete, SEO persistence, screenshot capture, slider or recovery logic is rewritten.
-- SEO filename authority is unchanged: the mature image pipeline derives deterministic numbered WebP names from Product SEO/title facts; the card now displays that existing planned filename instead of `01.webp` when metadata exists.
-- Focused Qt/Gallery/Wizard/Screenshot regression: 61/61 PASS. Production and database schema are unchanged. Exact GitHub promotion and one-runtime relaunch remain next.
+- Requested delta is now intentionally narrow: enlarge only the Product image review cards/preview area. Image naming, screenshot capture/naming, image ordering, selection, delete, SEO persistence, slider and recovery behavior are restored byte-for-byte to the pre-`d564386` implementation where applicable.
+- The attempted gallery-label change was rejected and removed; filename display is again the mature pre-change behavior. Screenshot implementation and image SEO pipeline also have zero source diff from the verified pre-`d564386` baseline `bf87c11`.
+- Corrective focused Qt/Gallery/Wizard/Screenshot regression: 60/60 PASS. Production and database schema remain unchanged.
 
 ## 2026-09-18 — A2L exact runtime relaunched / real Filament identity debt isolated
 - Exact A2L candidate `4375c007874faa87c874f3806705532128814176` is on GitHub and the Windows Qt Catalog Center was closed/relaunched from that exact SHA after a fresh online Catalog backup (`pre-a2l-exact-launch-20260918-083025`, integrity `ok`, 635 Products).

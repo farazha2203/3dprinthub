@@ -1,10 +1,10 @@
 ## 2026-09-18 — Immediate owner correction: Stage-3 image review only
 - [x] Restore pre-`d564386` image button workflow, Screenshot action path, recover-limit behavior, slider panel, AI visibility and normal window geometry.
 - [x] Enlarge only Product image cards/previews and preserve vertical scrolling.
-- [x] Prefer existing SEO/planned filename over raw numbered local filename in the image card display.
-- [x] Focused Qt/Gallery/Wizard/Screenshot regression 61/61 PASS.
-- [ ] Commit/push exact corrective SHA, verify remote, back up canonical Catalog SQLite and relaunch exactly one Qt runtime from that SHA.
-- [ ] Owner visual smoke on the affected Product: large image surface, original controls, SEO filenames and Screenshot.
+- [x] Revert the rejected filename-display override; preserve mature image filename and Screenshot capture/naming behavior exactly.
+- [x] Rerun focused Qt/Gallery/Wizard/Screenshot regression with only sizing delta present: 60/60 PASS.
+- [ ] Commit/push exact corrective SHA, verify remote, and relaunch exactly one Qt runtime from that SHA.
+- [ ] Owner visual smoke on the affected Product: larger image surface with original controls, original filenames and original Screenshot behavior.
 
 ## 2026-09-18 — Active execution: Phase50.A.2L owner QA / Filament identity repair
 - [x] Push/relaunch exact A2L candidate `4375c00...`.

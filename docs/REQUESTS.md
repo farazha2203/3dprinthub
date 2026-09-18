@@ -1,6 +1,6 @@
 ## 2026-09-18 - Owner correction: only enlarge Product image display
 Status: `LOCAL_TESTED / GITHUB PROMOTION + EXACT-SHA RELAUNCH NEXT`.
-Owner explicitly requires all mature Stage-3 image button workflows to remain as they were. Revert the recent control/layout/recover-limit/AI-visibility/window-geometry changes, preserve Screenshot and all image actions, enlarge only the image review cards/preview surface, and show the Product-owned SEO/planned filename instead of a raw numeric filename when available. Focused regression is 61/61 PASS; Production is untouched.
+Owner explicitly requires all mature Stage-3 image workflows to remain exactly as they were, including image filename behavior and Screenshot capture/naming. Revert the recent control/layout/recover-limit/AI-visibility/window-geometry and filename-display changes; enlarge only the image review cards/preview surface. Production is untouched.
 
 ## 2026-09-18 - Owner continuation: real Windows image workspace + full Filament repair
 Status: `LOCAL_TESTED / FOLLOW-UP PUSH+RELAUNCH NEXT / PRODUCTION TUNNEL BLOCKED`.
