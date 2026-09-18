@@ -10,6 +10,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from app.openai_content import apply_storefront_sales_policy
 from app.phase49_3c_ai_recovery import _deterministic_fill, missing_commerce_fields
 from app.phase49_3c_image_pipeline import (
     MAX_SOURCE_IMAGES,
@@ -215,6 +216,49 @@ class Phase493CExtractorContractTests(unittest.TestCase):
 
 
 class Phase493CAICompletenessTests(unittest.TestCase):
+    def test_storefront_policy_removes_free_download_claims_from_public_seo(self):
+        pack = {
+            "title_fa": "اسکلتی مینی متحرک اسپینوزور",
+            "seo_title_fa": "اسکلت اسپینوزور - چاپ 3 بعدی رایگان | 3DPrintHub",
+            "seo_description_fa": "دانلود رایگان فایل STL اسپینوزور.",
+            "image_alt_texts": [
+                "اسکلت اسپینوزور - چاپ 3 بعدی رایگان | 3DPrintHub",
+                "نمای دوم اسپینوزور",
+            ],
+            "sales_bullets": ["دانلود رایگان", "مناسب دکور"],
+            "social_caption_fa": "Free download for Spinosaurus",
+            "target_keywords_fa": ["خرید اسپینوزور", "دانلود اسپینوزور"],
+            "tags_fa": ["اسپینوزور", "دانلود رایگان"],
+            "homepage_slider_seo": {
+                "title_fa": "اسپینوزور رایگان",
+                "description_fa": "دانلود رایگان فایل مدل",
+                "image_alt_fa": "free download spinosaurus",
+                "button_text_fa": "مشاهده محصول",
+                "focus_keyword_fa": "دانلود رایگان اسپینوزور",
+            },
+        }
+
+        result = apply_storefront_sales_policy(pack)
+        public_values = [
+            result["seo_title_fa"],
+            result["seo_description_fa"],
+            *result["image_alt_texts"],
+            *result["sales_bullets"],
+            result["social_caption_fa"],
+            *result["target_keywords_fa"],
+            *result["tags_fa"],
+            result["homepage_slider_seo"]["title_fa"],
+            result["homepage_slider_seo"]["description_fa"],
+            result["homepage_slider_seo"]["image_alt_fa"],
+            result["homepage_slider_seo"]["focus_keyword_fa"],
+        ]
+        joined = " ".join(public_values).casefold()
+        for forbidden in ("رایگان", "دانلود", "free download"):
+            self.assertNotIn(forbidden.casefold(), joined)
+        self.assertIn("3DPrintHub", result["seo_title_fa"])
+        self.assertIn("خرید و سفارش", result["seo_title_fa"])
+        self.assertIn("سفارش چاپ سه‌بعدی", result["image_alt_texts"][0])
+
     def test_commerce_fallback_restores_editorial_fields_without_faking_price_or_license(self):
         source = {
             "source_title": "Fanart Solidarity Bear",

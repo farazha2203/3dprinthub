@@ -798,7 +798,7 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
                     ensure_ascii=False,
                 ),
                 "primary_image_url": source_url,
-                "seo_title_fa": "خرید اسپینوزور مینی چاپ سه بعدی",
+                "seo_title_fa": "اسپینوزور مینی - چاپ 3 بعدی رایگان | 3DPrintHub",
                 "keywords_json": json.dumps(
                     ["اسپینوزور", "چاپ سه بعدی"],
                     ensure_ascii=False,
@@ -823,11 +823,11 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             try:
                 self.assertEqual(
                     dialog.alt.text(),
-                    "خرید اسپینوزور مینی چاپ سه بعدی",
+                    "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
                 )
                 self.assertEqual(
                     dialog.title.text(),
-                    "خرید اسپینوزور مینی چاپ سه بعدی",
+                    "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
                 )
                 self.assertTrue(dialog.caption.toPlainText().strip())
                 self.assertIn("اسپینوزور", dialog.keywords.toPlainText())
@@ -853,11 +853,11 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             screenshot_meta = metadata[screenshot_url]
             self.assertEqual(
                 screenshot_meta["alt_text"],
-                "خرید اسپینوزور مینی چاپ سه بعدی",
+                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
             )
             self.assertEqual(
                 screenshot_meta["title"],
-                "خرید اسپینوزور مینی چاپ سه بعدی",
+                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
             )
             self.assertFalse(screenshot_meta["metadata_ready"])
             self.assertFalse(
@@ -868,11 +868,11 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             refreshed_item = page.image_grid.item_for_url(screenshot_url)
             self.assertEqual(
                 refreshed_item["alt_text"],
-                "خرید اسپینوزور مینی چاپ سه بعدی",
+                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
             )
             self.assertEqual(
                 refreshed_item["seo_title"],
-                "خرید اسپینوزور مینی چاپ سه بعدی",
+                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
             )
         finally:
             page.close()

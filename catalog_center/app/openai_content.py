@@ -49,6 +49,16 @@ CONTENT_SCHEMA = {
     "required":["title_fa","short_description_fa","description_fa","use_description_fa","categories_fa","specs_fa","tags_fa","hashtags_fa","target_keywords_fa","suggested_category_slug","category_confidence","seo_title_fa","seo_description_fa","sales_bullets","social_caption_fa","image_alt_texts","content_notes","use_case_class","material_recommendations","homepage_slider_seo"]
 }
 
+_FORBIDDEN_STOREFRONT_CLAIM_RE = re.compile(
+    r"(?:"
+    r"دانلود\s*رایگان|رایگان|دانلود|"
+    r"فایل\s*(?:STL|مدل|سه[‌\s-]*بعدی)|"
+    r"free\s+download|download\s+free|free\s+stl|"
+    r"stl\s+file|model\s+file\s+download"
+    r")",
+    re.IGNORECASE,
+)
+
 _GENERIC_TITLE_KEYS = {
     "محصول چاپ سه بعدی",
     "محصول چاپ سه‌بعدی",
@@ -63,6 +73,80 @@ _GENERIC_TITLE_KEYS = {
 
 def _normalize_title(value: str) -> str:
     return " ".join(str(value or "").replace("ي", "ی").replace("ك", "ک").replace("‌", " ").split()).casefold()
+
+
+def _storefront_title(value: Any) -> str:
+    return " ".join(str(value or "").replace("ي", "ی").replace("ك", "ک").split()).strip()
+
+
+def _has_forbidden_storefront_claim(value: Any) -> bool:
+    return bool(_FORBIDDEN_STOREFRONT_CLAIM_RE.search(str(value or "")))
+
+
+def apply_storefront_sales_policy(pack: dict[str, Any]) -> dict[str, Any]:
+    """Keep public commerce copy about the physical Product and 3DPrintHub order flow.
+
+    Source/download facts may exist internally, but public SEO/Alt/marketing copy
+    must never advertise a free file/download because 3DPrintHub sells printed
+    Products/services rather than free model-file downloads.
+    """
+    result = dict(pack or {})
+    title = _storefront_title(result.get("title_fa"))
+    if not title:
+        return result
+
+    safe_title = f"خرید و سفارش {title} | 3DPrintHub"[:180]
+    safe_description = (
+        f"{title} را برای سفارش چاپ سه‌بعدی در 3DPrintHub بررسی کنید؛ "
+        "مشخصات محصول و گزینه‌های موجود برای سفارش را ببینید."
+    )[:320]
+    safe_alt = (
+        f"{title} | تصویر محصول برای سفارش چاپ سه‌بعدی از 3DPrintHub"
+    )[:220]
+
+    if _has_forbidden_storefront_claim(result.get("seo_title_fa")):
+        result["seo_title_fa"] = safe_title
+    if _has_forbidden_storefront_claim(result.get("seo_description_fa")):
+        result["seo_description_fa"] = safe_description
+
+    alts = list(result.get("image_alt_texts") or [])
+    if alts:
+        result["image_alt_texts"] = [
+            (
+                f"{safe_alt} - نمای {index}"[:220]
+                if _has_forbidden_storefront_claim(value)
+                else str(value or "").strip()
+            )
+            for index, value in enumerate(alts, start=1)
+        ]
+
+    for field in ("sales_bullets", "target_keywords_fa", "tags_fa"):
+        values = list(result.get(field) or [])
+        if values:
+            result[field] = [
+                str(value or "").strip()
+                for value in values
+                if str(value or "").strip()
+                and not _has_forbidden_storefront_claim(value)
+            ]
+
+    if _has_forbidden_storefront_claim(result.get("social_caption_fa")):
+        result["social_caption_fa"] = safe_description
+
+    slider = result.get("homepage_slider_seo")
+    if isinstance(slider, dict):
+        slider = dict(slider)
+        if _has_forbidden_storefront_claim(slider.get("title_fa")):
+            slider["title_fa"] = title[:120]
+        if _has_forbidden_storefront_claim(slider.get("description_fa")):
+            slider["description_fa"] = safe_description[:220]
+        if _has_forbidden_storefront_claim(slider.get("image_alt_fa")):
+            slider["image_alt_fa"] = safe_alt[:240]
+        if _has_forbidden_storefront_claim(slider.get("focus_keyword_fa")):
+            slider["focus_keyword_fa"] = f"خرید {title}"[:180]
+        result["homepage_slider_seo"] = slider
+
+    return result
 
 
 def validate_content_pack(result: dict[str, Any], source_title: str = "") -> dict[str, Any]:
@@ -129,6 +213,8 @@ class AIContentService:
             "use_description_fa must explain the real use of this exact product from source facts, not a generic 3D-printing description. "
             "Create a unique, descriptive and concise SEO title that leads with the real product/topic and reads naturally for a human. Do not keyword-stuff or repeat boilerplate across products. "
             "Create a page-specific SEO description that accurately summarizes this exact product and useful purchase/use context; do not output a comma-separated keyword list. "
+            "3DPrintHub does NOT offer free model-file downloads. Never advertise or imply 'رایگان', 'دانلود رایگان', 'free download', free STL/file access, or similar claims in any public product SEO, image alt, sales bullet, social caption, keyword/tag, or homepage slider copy. "
+            "Commercial copy should promote the real product identity, purchase/order intent, 3DPrintHub branding, and the physical 3D-print ordering flow only. "
             "When target_keywords_fa is supported, suggest 5 to 12 natural Persian commercial/search-intent phrases suitable for product SEO and internal content planning; prefer phrases containing buying, ordering, price, product type, use case, and only the selected_materials/selected_colors that are explicitly present in the input. Never use target_keywords_fa as obsolete HTML meta-keywords stuffing. "
             "similar_persian_keywords are editorial hints collected from previously reviewed products in the same local category. Reuse or adapt only phrases that are semantically relevant to this product; never treat them as product facts, never copy irrelevant phrases, and never let them override the current source facts. "
             "selected_materials and selected_colors are factual operator selections. You may use them in SEO phrases when relevant, but never add a material or color that is not present in those lists. "
@@ -141,6 +227,7 @@ class AIContentService:
             + ("Use faithful translation; do not add marketing claims. " if strict_translate else "Write persuasive but factual Persian ecommerce copy. ")
         )
         result,model=self.client.structured_response(instructions=instructions,input_content=content,schema=CONTENT_SCHEMA,schema_name="catalog_content_pack_v871",preferred_model=self.model)
+        result = apply_storefront_sales_policy(result)
         validate_content_pack(result, payload["source_title"])
         result["_ai_provider"]=self.provider; result["_ai_model"]=model
         return result

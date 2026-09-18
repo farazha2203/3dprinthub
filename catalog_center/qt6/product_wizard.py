@@ -1763,14 +1763,20 @@ class ProductWizardPage(QWidget):
         if self.product_id is None:
             return {}
         row = self.kernel.products.get(self.product_id) or {}
-        title = (
-            str(row.get("seo_title_fa") or "").strip()
-            or str(row.get("title_fa") or "").strip()
+        product_title = (
+            str(row.get("title_fa") or "").strip()
             or str(row.get("source_title") or "").strip()
+            or "محصول سه‌بعدی"
         )
+        title = (
+            f"{product_title} | سفارش چاپ سه‌بعدی در 3DPrintHub"
+        )[:220]
         caption = (
             str(row.get("short_description_fa") or "").strip()
-            or str(row.get("seo_description_fa") or "").strip()
+            or (
+                f"{product_title}؛ سفارش چاپ سه‌بعدی و بررسی گزینه‌های موجود "
+                "در 3DPrintHub."
+            )
         )
         keywords: list[str] = []
         for field in ("keywords_json", "tags_fa_json", "hashtags_fa_json"):

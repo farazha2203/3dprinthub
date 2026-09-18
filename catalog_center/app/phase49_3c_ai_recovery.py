@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import json
 
-from .openai_content import AIContentService, CONTENT_SCHEMA
+from .openai_content import (
+    AIContentService,
+    CONTENT_SCHEMA,
+    apply_storefront_sales_policy,
+)
 
 
 def _nonempty(value) -> bool:
@@ -235,6 +239,7 @@ def install() -> None:
                 pass
 
         result = _deterministic_fill(result, source, image_count)
+        result = apply_storefront_sales_policy(result)
         result["_ai_provider"] = self.provider
         result["_ai_model"] = result.get("_ai_model") or self.model
         result["_phase49_3c_missing_after_repair"] = missing_commerce_fields(result, image_count)
