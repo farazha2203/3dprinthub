@@ -1,3 +1,13 @@
+## 2026-09-18 — Stage-3 visible-height / wheel-scroll repair LOCAL_TESTED
+- Owner screenshot proved the lower image controls were still unreachable in the real Windows layout even though the internal gallery had a valid scroll range.
+- Root cause was two-part: the Stage-3 gallery minimum height of 720px forced the Product Wizard beyond the 1920x1080 desktop working area, while `ClickableImageLabel` consumed wheel events over the large image preview so the gallery did not move when the pointer was on the image itself.
+- Fix is presentation/input-only: keep large cards/previews and all image/SEO/Screenshot/selection logic unchanged; set the gallery minimum to 560px so the full Wizard stays inside the desktop, keep the gallery as the vertical-scroll owner, and explicitly forward wheel deltas from the image preview to the gallery scrollbar.
+- Real-copy Product #628 geometry probe after the fix: rendered page 981px high in the bounded probe, gallery 562px high, viewport 544px, content host 2424px, scrollbar range 0..1880. Wheel-over-preview probe changed scrollbar 0 -> 270; viewport wheel also 0 -> 270.
+- RTL probe on the real Product #628 copy rendered at 1000px with Stage-3 minimum hint 726px and visible internal scrolling. No DB/schema/media mutation is required by this repair.
+- Verification: dedicated regression PASS; maintained Qt/Gallery/Wizard/Screenshot suite 67/67 PASS; changed-file `py_compile`, scoped `git diff --check`, and `RUN_QT.ps1 -VerifyOnly` PASS.
+- Repository note: unrelated in-progress Instagram Story font/render changes were already present in the worktree and were explicitly preserved/excluded from this fix.
+- Exact next: commit/push only this Stage-3 repair and docs -> verify remote SHA -> fresh Catalog backup -> relaunch Qt -> owner visual smoke on the same Product.
+
 ## 2026-09-18 — Stage-3 image workspace runtime pushed and relaunched
 - Approved runtime commit: `91d4c188aa57c125e46d45f39a70d913085dcf6c` on `wip/phase50-a2l-owner-qa-20260917`; Local and live GitHub SHA match exactly.
 - Fresh canonical Catalog online backup before launch: `D:\projects\3dprinthub-backups\pre-image-workspace-91d4c18-20260918-105013\catalog.sqlite3`; source and backup `integrity_check=ok`, Product count 635.

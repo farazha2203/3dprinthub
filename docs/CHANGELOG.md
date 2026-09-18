@@ -1,3 +1,10 @@
+## 2026-09-18 - Stage-3 gallery visible-height and wheel-scroll repair
+- Kept the large two-column Product image cards and previews.
+- Reduced only the gallery container minimum height from 720px to 560px so the Product Wizard no longer overflows the 1920x1080 working area.
+- Added explicit wheel forwarding from the clickable image preview to the gallery scrollbar; one wheel notch now moves the gallery by the same 270px step as the viewport.
+- Product #628 copy geometry after the repair: 544px visible gallery viewport with full 0..1880 vertical range.
+- Regression 67/67 PASS; compile, scoped diff-check and Qt launcher verification PASS. No DB/schema/Production change.
+
 ## 2026-09-18 - Stage-3 image workspace runtime promotion
 - Pushed exact Windows runtime `91d4c188aa57c125e46d45f39a70d913085dcf6c`.
 - Took a fresh integrity-checked Catalog backup before launch and relaunched the canonical Qt application from the pushed source.

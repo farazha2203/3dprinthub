@@ -1,3 +1,11 @@
+## ERR-49-163 - Large image preview swallowed wheel scrolling and Stage-3 minimum height pushed controls off-screen
+**Date:** 2026-09-18
+**Observed:** owner could see the large Product images but could not reach filename / multi-select / SEO / delete controls below them. Dragging/scrolling while the pointer was on the image appeared to do nothing.
+**Root cause:** `ClickableImageLabel` handled the wheel event without forwarding it to the owning `QScrollArea`. Separately, `image_grid.setMinimumHeight(720)` made the Product Wizard exceed the real 1920x1080 desktop working height, so the lower gallery/action area could fall outside the visible application window even though the internal scrollbar itself had a non-zero range.
+**Fix:** keep card/preview size and image workflow unchanged; reduce only the gallery container minimum to 560px so the window remains screen-bounded, and forward preview wheel deltas into the gallery vertical scrollbar.
+**Verification:** real Product #628 copy: host 2424px, viewport 544px, scrollbar 0..1880; wheel on preview now moves 0 -> 270. Qt/Gallery/Wizard/Screenshot regression 67/67 PASS plus compile/diff-check/Qt VerifyOnly PASS.
+**Prevention:** when enlarging child cards, verify the top-level rendered window against the actual desktop working area and test wheel input on the child surface itself, not only direct scrollbar range or empty viewport scrolling.
+
 ## ERR-49-162 - Operator SEO renumber reused publish dedup and could shrink the selected image set
 **Date:** 2026-09-18
 **Observed:** isolated Product #628 acceptance initially entered `بازسازی نام‌های SEO` with 11 selected images and returned only 6 because the generic finalizer removed one perceptual duplicate Product image plus several visually-similar screenshots.

@@ -35,11 +35,20 @@ def human_bytes(value: int) -> str:
 
 class ClickableImageLabel(QLabel):
     clicked = Signal()
+    wheelRequested = Signal(int)
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(event)
+
+    def wheelEvent(self, event) -> None:
+        delta = int(event.pixelDelta().y() or event.angleDelta().y())
+        if delta:
+            self.wheelRequested.emit(delta)
+            event.accept()
+            return
+        event.ignore()
 
 
 class ImageCard(QFrame):
@@ -49,6 +58,7 @@ class ImageCard(QFrame):
     moveLaterRequested = Signal(str)
     selectionChanged = Signal()
     operationSelectionChanged = Signal()
+    scrollRequested = Signal(int)
     primaryChanged = Signal(str)
     sliderChanged = Signal(str)
 
@@ -205,8 +215,12 @@ class ImageCard(QFrame):
         root.addLayout(actions)
 
         self.preview.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.preview.setToolTip("برای انتخاب/لغو انتخاب این تصویر در عملیات گروهی کلیک کن")
+        self.preview.setToolTip(
+            "برای انتخاب/لغو انتخاب این تصویر در عملیات گروهی کلیک کن؛ "
+            "اسکرول ماوس روی خود عکس هم گالری را حرکت می‌دهد."
+        )
         self.preview.clicked.connect(self._toggle_operation_selection)
+        self.preview.wheelRequested.connect(self.scrollRequested.emit)
 
         if bool(self.item.get("display_only")):
             self.bulk_selected.setEnabled(False)
@@ -326,6 +340,7 @@ class ProductImageGrid(QWidget):
             card.moveLaterRequested.connect(self.moveLaterRequested.emit)
             card.selectionChanged.connect(self._selection_changed)
             card.operationSelectionChanged.connect(self._operation_selection_changed)
+            card.scrollRequested.connect(self._scroll_requested)
             card.primaryChanged.connect(self._primary_changed)
             card.sliderChanged.connect(self._slider_changed)
             self.cards.append(card)
@@ -358,6 +373,16 @@ class ProductImageGrid(QWidget):
     def _operation_selection_changed(self) -> None:
         self._update_summary()
         self.operationSelectionChanged.emit()
+
+    def _scroll_requested(self, delta: int) -> None:
+        bar = self.scroll.verticalScrollBar()
+        if not delta or bar.maximum() <= bar.minimum():
+            return
+        if abs(delta) >= 120:
+            distance = (float(delta) / 120.0) * max(1, bar.singleStep()) * 3
+        else:
+            distance = float(delta)
+        bar.setValue(bar.value() - int(round(distance)))
 
     def _refresh_move_controls(self) -> None:
         movable = [

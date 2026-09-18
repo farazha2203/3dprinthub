@@ -10,7 +10,8 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
@@ -426,7 +427,7 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(page.image_grid.cards[0].preview.minimumWidth(), 400)
             self.assertEqual(page.image_grid.cards[0].preview.minimumHeight(), 360)
             self.assertGreaterEqual(page.image_grid.host.minimumHeight(), 2 * 800)
-            self.assertGreaterEqual(page.image_grid.minimumHeight(), 720)
+            self.assertEqual(page.image_grid.minimumHeight(), 560)
             self.assertGreaterEqual(
                 page.image_grid.scroll.verticalScrollBar().width(),
                 18,
@@ -437,6 +438,39 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             )
             self.assertIn("60", page.image_task_status.text())
             self.assertIn("3", page.image_task_status.text())
+        finally:
+            page.close()
+
+    def test_wheel_over_large_preview_scrolls_gallery_and_window_stays_shrinkable(self):
+        product_id, _urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.resize(1800, 1000)
+            page.show()
+            page.load_product(product_id)
+            page._set_stage(2)
+            for _ in range(4):
+                self.app.processEvents()
+
+            grid = page.image_grid
+            bar = grid.scroll.verticalScrollBar()
+            self.assertGreater(bar.maximum(), 0)
+            self.assertEqual(grid.minimumHeight(), 560)
+
+            bar.setValue(0)
+            event = QWheelEvent(
+                QPointF(50, 50),
+                QPointF(50, 50),
+                QPoint(0, 0),
+                QPoint(0, -120),
+                Qt.MouseButton.NoButton,
+                Qt.KeyboardModifier.NoModifier,
+                Qt.ScrollPhase.ScrollUpdate,
+                False,
+            )
+            QApplication.sendEvent(grid.cards[0].preview, event)
+            self.app.processEvents()
+            self.assertGreater(bar.value(), 0)
         finally:
             page.close()
 

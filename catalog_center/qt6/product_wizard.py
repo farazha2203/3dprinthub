@@ -484,9 +484,13 @@ class ProductWizardPage(QWidget):
             columns=2,
             large_cards=True,
         )
-        self.image_grid.setMinimumHeight(720)
+        # Keep the Product Wizard inside the real desktop working area.
+        # The cards stay large; the gallery itself owns vertical scrolling.
+        # A larger minimum here previously forced the whole window beyond a
+        # 1920x1080 desktop and clipped the bottom controls off-screen.
+        self.image_grid.setMinimumHeight(560)
         self.image_grid.scroll.verticalScrollBar().setSingleStep(90)
-        self.image_grid.scroll.verticalScrollBar().setPageStep(600)
+        self.image_grid.scroll.verticalScrollBar().setPageStep(520)
         self.image_grid.deleteRequested.connect(self._delete_single_image)
         self.image_grid.seoRequested.connect(
             lambda url: self._edit_image_seo([url])

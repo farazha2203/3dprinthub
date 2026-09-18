@@ -1,3 +1,15 @@
+## 2026-09-18 — Stage-3 visibility/scroll hotfix
+- [x] Reproduce real geometry with Product #628 copy and prove internal scrollbar range exists.
+- [x] Prove wheel on preview fails before fix while wheel on viewport succeeds.
+- [x] Keep large cards/previews; reduce only gallery container minimum so the Wizard fits the 1920x1080 working area.
+- [x] Forward preview wheel delta into the gallery vertical scrollbar.
+- [x] Real-copy geometry/wheel probes PASS.
+- [x] Maintained Qt/Gallery/Wizard/Screenshot regression 67/67 PASS.
+- [x] Compile, scoped diff-check and Qt VerifyOnly PASS.
+- [ ] Commit/push exact hotfix without staging unrelated Instagram Story work.
+- [ ] Fresh Catalog backup and exact-SHA Qt relaunch.
+- [ ] Owner visual smoke on Product #628.
+
 ## 2026-09-18 — Stage-3 image runtime promotion
 - [x] Commit runtime/docs candidate `91d4c188aa57c125e46d45f39a70d913085dcf6c`.
 - [x] Push and verify Local/GitHub exact SHA match.

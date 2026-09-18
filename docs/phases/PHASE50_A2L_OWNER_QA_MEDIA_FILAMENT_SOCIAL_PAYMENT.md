@@ -1,3 +1,11 @@
+## Stage-3 visibility / wheel-scroll correction — 2026-09-18
+- Owner screenshot showed the large cards but lower filename/select/edit/delete controls were still unreachable.
+- Exact root cause: 720px gallery minimum pushed the Product Wizard beyond the real desktop working area; wheel events over `ClickableImageLabel` did not reach the gallery scrollbar.
+- Fix keeps large cards/previews and all image business logic unchanged, sets the gallery container minimum to 560px, and forwards image-preview wheel deltas to the gallery vertical scrollbar.
+- Real Product #628 copy: gallery viewport 544px, content host 2424px, scrollbar range 0..1880; preview wheel 0 -> 270.
+- Regression 67/67 PASS; compile/diff-check/Qt VerifyOnly PASS. No DB/schema/Production change.
+- Unrelated Instagram Story render/font work already present in the worktree is preserved and excluded from this hotfix.
+
 ## Stage-3 image runtime promotion — 2026-09-18
 - Exact runtime `91d4c188aa57c125e46d45f39a70d913085dcf6c` is pushed and Local/GitHub match.
 - Fresh pre-launch Catalog backup: `pre-image-workspace-91d4c18-20260918-105013`, source/backup integrity `ok`, 635 Products.

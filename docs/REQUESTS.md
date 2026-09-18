@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner screenshot: Stage-3 lower image controls still unreachable
+Status: `LOCAL_TESTED / COMMIT+PUSH+RELAUNCH NEXT`.
+
+Owner requires the image-review area to be visibly much larger in real use while keeping filename, selection, edit and delete controls reachable. The user screenshot shows large images but the lower controls are effectively off-screen and mouse-wheel scrolling over the image itself does not move the gallery. Acceptance is: keep image cards/previews large, keep existing image/SEO/Screenshot logic unchanged, fit the Product Wizard inside the real Windows working area, and make wheel scrolling work directly over the image surface.
+
 ## 2026-09-18 - Owner request: professional Stage-3 image workspace
 Status: `LOCAL_TESTED / COMMIT+PUSH / EXACT-SHA RELAUNCH NEXT`.
 
