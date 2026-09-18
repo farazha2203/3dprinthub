@@ -1,3 +1,10 @@
+## 2026-09-18 — Phase50.A.2L real Filament identity repair follow-up
+- Relaunched the exact pushed A2L Qt runtime and verified Product #628 now exposes all 10 local images through the large two-column scrollable Stage 3 workspace.
+- Audited the real 71-row Filament catalog: 63 historical rows have no factual Brand, explaining why a true full Site sync cannot honestly publish every row.
+- Added explicit selected-row registered-Brand repair; the app never guesses a missing Brand and rejects values outside the Brand registry.
+- After repair, affected rows immediately reuse the guarded Site sync path. Copy-of-real-Catalog validation repaired a known duplicate identity and preserved integrity.
+- Follow-up Windows focused gate 28/28 PASS; maintained A2L scoped Catalog gate 57/57 PASS.
+
 ## 2026-09-17 — Phase50.A.2K Tympanus Slicebox + Filament UX
 - Replaced the complete homepage Hero runtime with the official vendored Tympanus/Codrops Slicebox v1.1.0 engine and reference assets; removed superseded A2I/A2J runtime assets/runners.
 - Added explicit destructive Hero reset command guarded by confirmation and exact four-slide postcondition.

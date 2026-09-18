@@ -1,3 +1,15 @@
+## 2026-09-18 — Active execution: Phase50.A.2L owner QA / Filament identity repair
+- [x] Push/relaunch exact A2L candidate `4375c00...`.
+- [x] Verify real #628 image workspace: 10 local images, 2-column large-card grid, reachable vertical scroll.
+- [x] Audit real full Filament sync: 71 rows, 8 complete identities, 63 legacy rows missing Brand.
+- [x] Keep sync fail-soft; never invent Brand for incomplete legacy rows.
+- [x] Add selected-row registered-Brand repair workflow and verify copy-of-real-Catalog repair.
+- [x] Maintained A2L scoped Catalog gate 57/57 PASS after follow-up.
+- [ ] Commit/push follow-up exact SHA and relaunch Windows app from that SHA.
+- [ ] Owner/real-data repair of factual Brand values for remaining legacy rows, then full Site sync.
+- [ ] Recover dedicated 3DPrintHub reverse tunnel; Host read-only gate + backup/readiness.
+- [ ] Build Production release from verified Production/A2K lineage, deploy A2K+A2L from GitHub, apply guarded manual-payment seed, and verify public Hero/Store/receipt/notification paths.
+
 ## 2026-09-17 — Active execution: Phase50.A.2K
 `A2K SOURCE/RELEASE ACCEPTED -> RESTORE 3DPRINTHUB TUNNEL -> HOST MYSQL/READINESS GATE -> VERIFIED BACKUP -> GITHUB RELEASE DEPLOY -> DESTROY OLD HERO DATA + SEED 4 A2K SLIDES -> STATIC/RESTART -> PUBLIC VISUAL/DOM VERIFY -> DOC CLOSE`
 ## 2026-09-17 - Canonical Qt launch + empty Production Store handoff

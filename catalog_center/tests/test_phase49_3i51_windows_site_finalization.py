@@ -17,6 +17,7 @@ from qt6.image_gallery import ProductImageGrid
 from qt6.kernel import build_kernel
 from qt6.pages import FilamentsPage, OperationsPage
 from qt6.parity_dialogs import (
+    FilamentBulkIdentityDialog,
     FilamentBulkRatesDialog,
     FilamentEditorDialog,
     ProfileEditorDialog,
@@ -518,6 +519,11 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
         try:
             self.assertEqual(page.site_sync_selected_btn.text(), "Sync انتخابی با سایت")
             self.assertEqual(page.site_sync_all_btn.text(), "Sync همه با سایت")
+            button_texts = {
+                button.text()
+                for button in page.findChildren(type(page.site_sync_all_btn))
+            }
+            self.assertIn("تکمیل Brand انتخابی", button_texts)
             self.assertIsNotNone(page.site_sync_status)
         finally:
             page.close()
@@ -703,6 +709,49 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             self.assertNotIn("preheat_hours", values)
         finally:
             dialog.close()
+
+    def test_bulk_identity_dialog_requires_explicit_registered_brand(self):
+        dialog = FilamentBulkIdentityDialog(["Bambulab", "ESUN"], 5)
+        try:
+            self.assertEqual(dialog.selected_brand(), "")
+            index = dialog.brand.findData("Bambulab")
+            self.assertGreaterEqual(index, 0)
+            dialog.brand.setCurrentIndex(index)
+            self.assertEqual(dialog.selected_brand(), "Bambulab")
+        finally:
+            dialog.close()
+
+    def test_assign_registered_brand_repairs_blank_legacy_row_for_site_sync(self):
+        self.kernel.filaments.save_material("PLA")
+        self.kernel.filaments.save_brand("Bambulab")
+        legacy = self.kernel.filaments.save({
+            "material": "PLA",
+            "brand": "",
+            "color": "Legacy Black",
+            "color_type": "solid",
+            "palette_hexes": ["#111111"],
+            "roll_weight_grams": 1000,
+            "sale_price_per_roll": 4_500_000,
+        })
+        with self.assertRaisesRegex(ValueError, "هویت Filament"):
+            self.kernel.filaments.site_payload(legacy)
+
+        saved = self.kernel.filaments.assign_registered_brand(
+            [int(legacy["id"])],
+            "Bambulab",
+        )
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(str(saved[0].get("brand_name") or ""), "Bambulab")
+        payload = self.kernel.filaments.site_payload(saved[0])
+        self.assertEqual(payload["brand"], "Bambulab")
+        self.assertEqual(payload["material"], "PLA")
+        self.assertEqual(payload["color"], "Legacy Black")
+
+        with self.assertRaisesRegex(ValueError, "کتابخانه"):
+            self.kernel.filaments.assign_registered_brand(
+                [int(saved[0]["id"])],
+                "Invented Brand",
+            )
 
     def test_decorative_product_recommends_pla_petg_not_engineering_cf(self):
         product_id = self._make_product("3510003")

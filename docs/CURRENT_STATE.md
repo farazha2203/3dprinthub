@@ -1,3 +1,12 @@
+## 2026-09-18 — A2L exact runtime relaunched / real Filament identity debt isolated
+- Exact A2L candidate `4375c007874faa87c874f3806705532128814176` is on GitHub and the Windows Qt Catalog Center was closed/relaunched from that exact SHA after a fresh online Catalog backup (`pre-a2l-exact-launch-20260918-083025`, integrity `ok`, 635 Products).
+- Real Product #628 runtime probe resolves 10 local Product images. Stage 3 is 2 large columns, 560 px minimum height, content minimum 2508 px and vertical scroll range 1964 px, confirming the owner screenshot with only two visible cards came from the stale pre-A2L process.
+- Real Catalog audit found the remaining `Sync همه با سایت` blocker is data identity, not the sync transport: 71 Filament rows exist; 63 legacy rows have blank Brand, so fail-soft sync can send 8 valid rows and must reject 63 incomplete identities rather than invent Brand facts.
+- Follow-up LOCAL_TESTED patch adds `تکمیل Brand انتخابی`: selected/filterable legacy rows can be assigned only an explicitly registered Brand, then the same guarded Site sync runs. Unknown/unregistered Brand values fail closed. The operator can filter by Material/Search, select visible rows, apply the factual Brand, then Sync all again.
+- Copy-of-real-Catalog acceptance repaired legacy row #14 to registered `Bambulab` without touching canonical data; the old blank-Brand row was deactivated, the resulting ABS/Bambulab/color identity passed Site payload validation and SQLite integrity stayed `ok`.
+- Follow-up focused Windows suite is 28/28 PASS and the full maintained A2L scoped Catalog gate is now 57/57 PASS; compile and `git diff --check` PASS.
+- Canonical Catalog was not mutated by the repair acceptance; Production remains unchanged and dedicated `127.0.0.1:22024` tunnel is still down. Next: commit/push this follow-up -> relaunch exact SHA -> operator brand-repair UX smoke -> recover Host tunnel -> release/deploy/Production verification.
+
 ## 2026-09-18 — Phase50.A.2L owner QA local acceptance complete / exact candidate next
 - Current development branch: `wip/phase50-a2l-owner-qa-20260917`; this slice extends the accepted A2K baseline without changing Production.
 - Product Wizard Stage 3 now uses 2 large columns, always-on vertical scrolling and row-height expansion; canonical Product #628 resolves 10 real local Product images, so the owner screenshot showing only two cards is confirmed as an older running Qt process.

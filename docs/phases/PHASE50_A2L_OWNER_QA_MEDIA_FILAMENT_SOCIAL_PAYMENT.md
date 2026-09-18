@@ -44,9 +44,17 @@ This phase is driven by the 2026-09-17 owner screenshots from Catalog Center v8.
 - Approved gold/navy Instagram profile/Highlight base asset is installed at `assets/instagram/final/profile_logo_gold_navy.png`; actual Highlight assignment remains operator-required because the current Buffer path has no supported Highlight mutation.
 - Manual-payment flow uses the existing StorePayment receipt model: receipt -> `awaiting_review`/`payment_review` -> admin review. Operator alert fan-out attempts Telegram, WhatsApp and Email and cannot roll back a saved receipt.
 - Pasargad seed is dry-run by default, logs only a safe card suffix, and requires explicit `--apply` after Production backup/readiness gates.
-- Local gates: Django/Store payment 11/11 PASS, A2L payment 4/4 PASS, scoped Catalog 55/55 PASS, Qt launcher verify PASS, `git diff --check` PASS. Historical all-test discovery remains unsuitable as a release gate and is recorded in ERRORS.
+- Local gates: Django Store+manual-payment 11/11 PASS, scoped Catalog 57/57 PASS, Qt launcher verify PASS, changed-file compile and `git diff --check` PASS. Historical all-test discovery remains unsuitable as a release gate and is recorded in ERRORS.
+
+## Real Catalog reconciliation — 2026-09-18
+- Exact candidate `4375c007874faa87c874f3806705532128814176` was pushed and relaunched from GitHub after a fresh integrity-checked Catalog backup.
+- Product #628 real-data probe: 10 local Product images, two large columns, 560 px gallery minimum, 2508 px content minimum and 1964 px vertical scroll range.
+- Real Filament inventory has 71 rows. 63 legacy rows have blank Brand; only 8 currently have complete Material/Brand/Color Site identity. The program must not fabricate the missing Brand.
+- Follow-up adds selected/filterable registered-Brand repair. It changes Brand/Manufacturer only, preserves Material/Color/pricing/stock/print settings, rejects unregistered Brand values and reuses the guarded Site sync after repair.
+- Copy-of-real-Catalog repair of row #14 to an existing registered Bambulab identity passed Site-payload validation and SQLite integrity while leaving the canonical Catalog untouched.
+- Follow-up focused gate 28/28 PASS; full maintained A2L Catalog scope 57/57 PASS.
 
 ## Remaining gates
-- Commit/push exact A2L candidate and relaunch Qt from that pushed SHA for owner visual QA.
+- Commit/push the Brand-repair follow-up and relaunch Qt from that exact SHA for owner use.
 - Production deploy/manual-payment apply remain blocked until ERR-49-154 reverse-tunnel recovery plus Host identity, MySQL backup, rollback and readiness gates.
 - Later Podium/Farataz payment automation is intentionally deferred per owner request; do not guess/import it before a separate source/document audit.

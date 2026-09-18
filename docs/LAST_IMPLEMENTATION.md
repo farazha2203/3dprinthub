@@ -53,10 +53,11 @@ Production A2K release prepared earlier: `84d1a87c4ea632823743b9cc1c5fe3ba81b088
 - UTF-8 corruption discovered in new AI Preview/settings/test strings was repaired; changed-file scan now reports zero `???`/replacement-character defects.
 
 ## Exact next safe action update
-1. Row-height scroll-range regression for 5+ images at 2 columns is PASS; Product #628 resolves 10 local Product images under the current runtime.
-2. Instagram brand asset is classified durable; real Buffer connection using Windows Credential Store is PASS and connected/unlocked.
-3. A2L local acceptance is PASS: Catalog scoped 55/55, Store/checkout 11/11, manual-payment 4/4, Qt launcher verify, compile and diff-check. Historical full-discovery debt is ERR-49-157 and must not replace scoped release gates.
-4. Commit/push exact candidate, verify remote SHA, relaunch Qt from that exact SHA, then keep Production gated on reverse-tunnel recovery + Host backup/readiness.
+1. Exact A2L candidate `4375c007874faa87c874f3806705532128814176` is pushed and the stale Qt process was replaced by a fresh exact-SHA runtime; Product #628 real-data probe resolves 10 local images with a 1964 px scroll range.
+2. Real full-Filament audit found 71 rows: 8 complete Site identities and 63 historical blank-Brand rows. This is ERR-49-158 data debt, not a reason to invent Brand.
+3. Follow-up registered-Brand bulk repair is LOCAL_TESTED: selected rows only, registered Brand only, no Material/Color/price/stock/rate overwrite; real-copy #14 repair PASS and integrity stays ok.
+4. Follow-up A2L scoped Catalog gate is 57/57 PASS; Store/checkout 10/10 and manual-payment coverage remain PASS from the exact candidate; Qt launcher verify and diff-check PASS.
+5. Commit/push the Brand-repair follow-up, relaunch exact SHA, then keep Production gated on reverse-tunnel recovery + Host backup/readiness.
 
 ## 2026-09-18 regression reconciliation
 - Broad 109-test Catalog regression first exposed one stale 4-column assertion after the owner-required Stage 3 redesign. Runtime was correct (2 large columns); the old test contract was updated to require 2 columns, large cards, reachable row-height and always-on scroll. Focused rerun: PASS.

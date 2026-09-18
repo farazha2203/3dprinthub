@@ -716,6 +716,67 @@ class FilamentBulkRatesDialog(QDialog):
         return output
 
 
+class FilamentBulkIdentityDialog(QDialog):
+    """Repair only the explicit Brand identity for selected Filament rows."""
+
+    def __init__(
+        self,
+        brands: list[str],
+        count: int,
+        parent=None,
+    ) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("تکمیل برند Filamentهای انتخابی")
+        self.resize(620, 250)
+
+        root = QVBoxLayout(self)
+        hint = QLabel(
+            f"{max(0, int(count))} Filament انتخاب شده است. "
+            "این عملیات فقط Brand/Manufacturer را از کتابخانه ثبت‌شده اعمال می‌کند؛ "
+            "متریال، رنگ، قیمت، موجودی و تنظیمات چاپ تغییر نمی‌کنند."
+        )
+        hint.setWordWrap(True)
+        hint.setObjectName("Muted")
+        root.addWidget(hint)
+
+        form = QFormLayout()
+        self.brand = QComboBox()
+        self.brand.addItem("برند ثبت‌شده را انتخاب کن…", "")
+        for value in brands or []:
+            name = str(value or "").strip()
+            if name:
+                self.brand.addItem(name, name)
+        form.addRow("Brand", self.brand)
+        root.addLayout(form)
+
+        warning = QLabel(
+            "برای جلوگیری از ثبت اطلاعات نادرست، برنامه Brand را حدس نمی‌زند. "
+            "اگر برند موردنظر در فهرست نیست، ابتدا از تب «برندها» آن را بساز."
+        )
+        warning.setWordWrap(True)
+        warning.setObjectName("Muted")
+        root.addWidget(warning)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText("اعمال Brand")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("انصراف")
+        buttons.accepted.connect(self._accept)
+        buttons.rejected.connect(self.reject)
+        root.addWidget(buttons)
+
+    def _accept(self) -> None:
+        if not self.selected_brand():
+            QMessageBox.warning(self, "تکمیل Brand", "یک Brand ثبت‌شده را انتخاب کن.")
+            return
+        self.accept()
+
+    def selected_brand(self) -> str:
+        return str(self.brand.currentData() or "").strip()
+
+
 class ProfileEditorDialog(QDialog):
     """One size/profile owns many production rows and many reusable Filaments."""
 

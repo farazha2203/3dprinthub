@@ -1269,6 +1269,54 @@ class FilamentParityCore:
             deactivate_available_material_color(self.db, int(previous_row_id))
         return dict(saved)
 
+    def assign_registered_brand(
+        self,
+        row_ids: list[int],
+        brand_name: str,
+    ) -> list[dict[str, Any]]:
+        """Bulk-assign an explicit registered Brand without inventing identity facts."""
+        requested = str(brand_name or "").strip()
+        if not requested:
+            raise ValueError("برند برای تکمیل هویت Filament انتخاب نشده است.")
+
+        registry = {
+            str(item.get("name") or "").strip().casefold(): str(item.get("name") or "").strip()
+            for item in self.brand_records()
+            if str(item.get("name") or "").strip()
+        }
+        brand = registry.get(requested.casefold())
+        if not brand:
+            raise ValueError(
+                "برند باید از کتابخانه ثبت‌شده انتخاب شود؛ Brand جدید را ابتدا در تب برندها بساز."
+            )
+
+        current = {
+            int(item.get("id") or 0): dict(item)
+            for item in self.list(include_inactive=True)
+            if int(item.get("id") or 0) > 0
+        }
+        saved_rows: list[dict[str, Any]] = []
+        seen_saved_ids: set[int] = set()
+        for row_id in sorted({int(value) for value in (row_ids or []) if int(value) > 0}):
+            row = current.get(row_id)
+            if row is None:
+                continue
+            saved = self.save(
+                {
+                    **row,
+                    "brand": brand,
+                    "brand_name": brand,
+                    "manufacturer": brand,
+                    "manufacturer_name": brand,
+                },
+                previous_row_id=row_id,
+            )
+            saved_id = int(saved.get("id") or 0)
+            if saved_id > 0 and saved_id not in seen_saved_ids:
+                seen_saved_ids.add(saved_id)
+                saved_rows.append(dict(saved))
+        return saved_rows
+
     def site_payload(
         self,
         item: dict[str, Any],

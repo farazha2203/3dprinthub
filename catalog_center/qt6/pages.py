@@ -49,6 +49,7 @@ from .models import (
 )
 from .parity_dialogs import (
     ColorPresetDialog,
+    FilamentBulkIdentityDialog,
     FilamentBulkRatesDialog,
     FilamentEditorDialog,
 )
@@ -1335,14 +1336,20 @@ class FilamentsPage(QWidget):
         bulk_selected = QPushButton("ویرایش گروهی انتخابی")
         bulk_selected.setProperty("primary", True)
         bulk_all_active = QPushButton("ویرایش گروهی همه فعال‌ها")
+        bulk_brand = QPushButton("تکمیل Brand انتخابی")
+        bulk_brand.setToolTip(
+            "برای Filamentهای قدیمیِ بدون Brand، فقط روی ردیف‌های انتخاب‌شده یک Brand ثبت‌شده اعمال می‌کند."
+        )
         select_visible.clicked.connect(lambda: self.table.selectAll())
         clear_selection.clicked.connect(lambda: self.table.clearSelection())
         bulk_selected.clicked.connect(self._bulk_edit_selected_filaments)
         bulk_all_active.clicked.connect(self._bulk_edit_all_active_filaments)
+        bulk_brand.clicked.connect(self._bulk_assign_brand_selected)
         bulk_bar.addWidget(select_visible)
         bulk_bar.addWidget(clear_selection)
         bulk_bar.addWidget(bulk_selected)
         bulk_bar.addWidget(bulk_all_active)
+        bulk_bar.addWidget(bulk_brand)
         bulk_bar.addStretch(1)
         filament_layout.addLayout(bulk_bar)
 
@@ -1606,6 +1613,58 @@ class FilamentsPage(QWidget):
             "ویرایش گروهی همه Filamentهای فعال",
         )
 
+    def _bulk_assign_brand_selected(self) -> None:
+        rows = self._selected_rows()
+        if not rows:
+            QMessageBox.warning(
+                self,
+                "تکمیل Brand",
+                "Filamentهای موردنظر را انتخاب کن؛ می‌توانی ابتدا با Search/Material فیلتر و سپس «انتخاب همه ردیف‌های نمایش‌داده‌شده» را بزنی.",
+            )
+            return
+
+        brands = self.kernel.filaments.brands()
+        if not brands:
+            QMessageBox.warning(
+                self,
+                "تکمیل Brand",
+                "هیچ Brand ثبت‌شده‌ای وجود ندارد. ابتدا از تب «برندها» Brand واقعی را بساز.",
+            )
+            return
+
+        dialog = FilamentBulkIdentityDialog(
+            brands,
+            len(rows),
+            parent=self,
+        )
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+
+        row_ids = [
+            int(item.get("_row_id") or item.get("id") or 0)
+            for item in rows
+            if int(item.get("_row_id") or item.get("id") or 0) > 0
+        ]
+        try:
+            saved_rows = self.kernel.filaments.assign_registered_brand(
+                row_ids,
+                dialog.selected_brand(),
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "تکمیل Brand", str(exc))
+            return
+
+        self.refresh()
+        if saved_rows:
+            self._start_site_sync(
+                saved_rows,
+                "Brand رکوردهای انتخابی تکمیل شد؛ Sync سایت",
+            )
+        else:
+            self.site_sync_status.setText(
+                "هیچ Filament قابل‌تغییری برای تکمیل Brand پیدا نشد."
+            )
+
     def _add_filament(self) -> None:
         dialog = FilamentEditorDialog(
             parent=self,
@@ -1753,7 +1812,8 @@ class FilamentsPage(QWidget):
         suffix = f" • نمونه رکورد ناقص: {examples}" if examples else ""
         self.site_sync_status.setText(
             f"⚠️ Sync سایت: {synced} موفق • {failed} رد/خطا. "
-            "رکوردهای معتبر Sync شدند؛ Filamentهای هویت‌ناقص باید برند/متریال/رنگ کامل شوند."
+            "رکوردهای معتبر Sync شدند؛ Filamentهای هویت‌ناقص باید برند/متریال/رنگ کامل شوند. "
+            "برای رکوردهای قدیمیِ بدون Brand، آن‌ها را انتخاب کن و «تکمیل Brand انتخابی» را بزن."
             + suffix
         )
 

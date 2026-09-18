@@ -1,3 +1,10 @@
+## ERR-49-158 — Real Catalog full Filament sync exposed 63 legacy blank-Brand identities
+**Date:** 2026-09-18
+**Observed:** exact A2L runtime no longer aborts the whole batch, but a read-only simulation of the real 71-row Catalog could legitimately sync only 8 rows; 63 historical rows have Material+Color but blank Brand and therefore fail the Site identity contract.
+**Root cause:** old inventory rows predate the Brand-as-identity contract. This is data debt, not a Bridge/network defect and not a reason to invent a manufacturer.
+**Fix:** keep fail-soft per-row sync, add selected/filterable bulk `تکمیل Brand انتخابی` using only Brand values already registered in the Catalog, then immediately reuse the normal Site sync path. Unknown Brand input is rejected. Copy-of-real-Catalog acceptance repaired row #14 to registered Bambulab and produced a valid ABS/Bambulab/color Site payload while deactivating the superseded blank identity.
+**Prevention:** never auto-fill a missing Brand from material alone. Bulk identity repair must be an explicit operator choice from the registered Brand library; only evidence-backed exact duplicates may be suggested in future tooling.
+
 ## ERR-49-157 — Historical broad Catalog discovery is not a valid A2L release gate
 **Date:** 2026-09-18
 **Observed:** `unittest discover -s tests -p test_*.py` produced several legacy failures/errors and then remained blocked for more than three minutes without new output.

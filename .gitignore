@@ -98,3 +98,7 @@ transfer/
 /.instagram-cdp-profile/
 /instagram-assets/
 /_tmp_*
+
+# Generated Instagram Story HTML render intermediates; final PNG/JPG campaign assets
+# and the reusable renderer are tracked separately.
+/assets/instagram/stories/**/*.html
