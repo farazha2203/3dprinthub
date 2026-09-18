@@ -1,3 +1,6 @@
+## 2026-09-19 collectstatic permission rule
+Guarded runners may keep `umask 077` for private backup files, but public `collectstatic` creation must temporarily use `umask 022`. Any newly introduced nested static tree must be checked for web-traversable directories and verified through its real public URLs/MIME types before browser acceptance.
+
 ## Permanent execution topology
 Local implementation and testing are executed on the verified Windows machine via Remote Desktop. Production deployment is executed from GitHub through the dedicated 3DPrintHub reverse tunnel (`Windows 127.0.0.1:22024 -> Host 127.0.0.1:22224`). The one-minute Host cron watchdog must keep that reverse tunnel self-healing. Owner-side cPanel command entry is break-glass recovery only, not the normal deployment workflow.
 

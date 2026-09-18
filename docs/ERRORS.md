@@ -1,3 +1,14 @@
+## ERR-49-170 - New collectstatic vendor directories inherited private 0700 mode
+Date: 2026-09-19
+
+**Observed:** the first A2L site-priority deploy completed its source/MySQL/readiness/static-hash/HTTP gates, but real Chromium showed `data-p50k-ready` unset, hidden Slicebox controls, and 404 + `text/html` MIME responses for every `/static/vendor/slicebox/...` CSS/JS asset. Direct filesystem verification showed the files existed with mode `0644` while newly created parent directories `static/vendor` and `static/vendor/slicebox` were `0700`.
+
+**Root cause:** the guarded deploy runner starts with `umask 077`; `collectstatic` created brand-new vendor directories under that private umask. Existing top-level static directories were already web-traversable, so the earlier hash/HTTP checks of A2K wrapper CSS/JS passed and masked the new-directory traversal failure.
+
+**Fix:** keep the runner private by default, but run `collectstatic` under temporary `umask 022`, then normalize only the Slicebox vendor directory tree to directory mode `0755` and file mode `0644`. A dedicated GitHub-first permission hotfix records source/.env backup plus before/after mode manifest and byte hashes, then requires all four vendor CSS/JS assets to return HTTP 200 with correct MIME/body markers.
+
+**Prevention:** every deploy that introduces a new public static subdirectory while using restrictive umask must explicitly establish web-traversable directory permissions and verify the nested public URLs, not only source-vs-collected hashes.
+
 ## 2026-09-16 - ERR-49-147 A2J Hero seed exceeded persisted description length
 **Observed:** the first Production A2J four-slide seed stopped on MySQL `Data too long for column 'description'`; the Hero was not accepted live at that point.
 

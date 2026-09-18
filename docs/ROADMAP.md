@@ -3,10 +3,13 @@
 - [x] Build Production-based release containing only Example-4 Slicebox Hero + Product Admin 504 fix.
 - [x] Local syntax/check/no-drift and focused Hero/Admin 25/25 regression PASS.
 - [x] Add guarded no-migration deploy runner with source/.env/static rollback evidence and Production HTTP/runtime gates.
-- [ ] Commit/push exact release and verify live GitHub SHA.
-- [ ] Deploy ff-only from GitHub through the dedicated reverse tunnel.
-- [ ] Verify live Home/Store/Bridge/readiness, Example-4 transition markers and Product Admin runtime composition.
-- [ ] Record Production backup root/SHA and close A2L site-priority docs.
+- [x] Commit/push exact release `28cac45...` and verify live GitHub SHA.
+- [x] Deploy ff-only from GitHub through the dedicated reverse tunnel; backup/readiness/no-migration/static-wrapper gates PASS.
+- [x] Detect ERR-49-170 in real Chromium: nested Slicebox vendor assets 404 because new public directories inherited `0700`.
+- [x] Add repository-owned static permission prevention + dedicated guarded hotfix runner.
+- [ ] Push/deploy permission hotfix from current clean Production `28cac45...`.
+- [ ] Re-run nested asset HTTP/MIME + desktop/mobile real-browser Example-4 acceptance.
+- [ ] Verify Product Admin runtime composition remains Variant-inline-free and close Production docs.
 
 ## 2026-09-16 - Phase50.A.2J standalone Hero acceptance
 - [x] Recover and verify the dedicated 3DPrintHub reverse tunnel/watchdog path.

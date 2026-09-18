@@ -1,3 +1,6 @@
+## 2026-09-19 public static directory permission constraint
+Repository-owned deploy runners use `umask 077` for private rollback material, but `collectstatic` must not create new public static directories under that private mode. For newly introduced public trees, temporarily use `umask 022` and explicitly verify directory traversal (`0755`) plus public HTTP/MIME for nested assets. ERR-49-170 proved that readable `0644` files below a `0700` directory are still unreachable to LiteSpeed.
+
 ## 2026-09-15 permanent Host execution rule
 Production operations for 3DPrintHub must use the dedicated reverse-management path only: `127.0.0.1:22024` on Windows to authenticated Host bridge `127.0.0.1:22224`. Do not substitute Retoucher/Asal tunnels. The one-minute cPanel watchdog is mandatory persistence infrastructure and must run the repository-owned `phase50_reverse_tunnel_bootstrap.sh` under `flock`; if the tunnel disappears, repair/verify watchdog execution before asking the owner for routine Host commands.
 

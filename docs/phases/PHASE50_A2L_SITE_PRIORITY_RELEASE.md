@@ -1,7 +1,7 @@
 # Phase50.A.2L — Site Priority Release
 
 Date: 2026-09-19
-Status: `LOCAL_TESTED / GITHUB+PRODUCTION NEXT`
+Status: `PRODUCTION 28cac45 DEPLOYED / ERR-49-170 STATIC HOTFIX LOCAL_READY`
 
 ## Requested delta
 - Promote the owner-approved Tympanus Slicebox Example-4 homepage Hero from the Production-based A2K lineage.

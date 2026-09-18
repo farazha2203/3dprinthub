@@ -1,3 +1,9 @@
+## 2026-09-19 - ERR-49-170 A2L nested static permission hotfix
+- First Production promotion reached `28cac45...` cleanly with MySQL/readiness/migration/static wrapper gates PASS and rollback root `20260919-011903-phase50-a2l-site-priority`.
+- Real Chromium found Slicebox vendor CSS/JS 404 because new public `static/vendor` directories were created as `0700` under runner `umask 077`; files themselves were correct `0644`.
+- Deploy prevention now runs collectstatic under temporary `umask 022`, normalizes only the Slicebox vendor tree to `0755` directories / `0644` files, and verifies nested public URL MIME/body markers.
+- Dedicated permission-hotfix runner preserves GitHub-first/ff-only flow and records source/.env, before/after modes and content hashes before filesystem mutation.
+
 ## 2026-09-19 - Phase50.A.2L site-priority release candidate
 - Rebased site delivery on the verified Production-descendant A2K release instead of deploying the broader Windows WIP lineage.
 - Promoted owner-approved official Tympanus Slicebox Example-4 runtime: right orientation, random cuboids, disperseFactor 30, eager slide loading, arrows/dots/shadow and existing managed Hero data.

@@ -151,7 +151,13 @@ grep -Fq 'disperseFactor: 30' static/js/phase50-a2k-tympanus-slicebox.js || fail
 grep -Fq 'orientation: "r"' static/js/phase50-a2k-tympanus-slicebox.js || fail "example4_orientation_marker_missing"
 grep -Fq 'loading="eager"' templates/website/partials/hero.html || fail "hero_eager_load_fix_missing"
 
+OLD_UMASK="$(umask)"
+umask 022
 "$PY" manage.py collectstatic --noinput
+umask "$OLD_UMASK"
+chmod 755 "$STATIC_ROOT/vendor" "$STATIC_ROOT/vendor/slicebox"
+find "$STATIC_ROOT/vendor/slicebox" -type d -exec chmod 755 {} +
+find "$STATIC_ROOT/vendor/slicebox" -type f -exec chmod 644 {} +
 for rel in   css/phase50-a2k-tympanus-slicebox.css   js/phase50-a2k-tympanus-slicebox.js   vendor/slicebox/css/slicebox.css   vendor/slicebox/js/jquery.slicebox.js
 do
   [ -f "static/$rel" ] || fail "source_static_missing:$rel"
