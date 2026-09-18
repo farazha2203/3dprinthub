@@ -60,6 +60,84 @@ mutation CreateInstagramPost($input: CreatePostInput!) {
 """
 
 
+_ACCOUNT_ORGS_QUERY = """
+query BufferOrganizations {
+  account { organizations { id name } }
+}
+"""
+
+_RECENT_POSTS_QUERY = """
+query BufferRecentPosts($org: OrganizationId!, $channel: ChannelId!) {
+  posts(
+    first: 30
+    input: {
+      organizationId: $org
+      sort: [{field: createdAt, direction: desc}]
+      filter: {status: [sent, sending, error], channelIds: [$channel]}
+    }
+  ) {
+    edges {
+      node {
+        id status externalLink
+        assets { source thumbnail }
+      }
+    }
+  }
+}
+"""
+
+
+def _receipt_for_revision(db, product_id: int, fingerprint: str, statuses: set[str]) -> dict[str, Any] | None:
+    if not fingerprint:
+        return None
+    for receipt in db.sync_receipts(int(product_id), limit=160):
+        if str(receipt["status"] or "") not in statuses:
+            continue
+        try:
+            previous = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            previous = {}
+        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+            return dict(previous)
+    return None
+
+
+def _reconcile_recent_asset(token: str, cfg: BufferConfig, asset_url: str) -> dict[str, Any] | None:
+    try:
+        account = _request_graphql(token, _ACCOUNT_ORGS_QUERY, timeout=cfg.timeout).get("account") or {}
+        organizations = account.get("organizations") or []
+    except Exception:
+        return None
+    for organization in organizations:
+        org_id = str((organization or {}).get("id") or "").strip()
+        if not org_id:
+            continue
+        try:
+            data = _request_graphql(
+                token,
+                _RECENT_POSTS_QUERY,
+                variables={"org": org_id, "channel": cfg.channel_id},
+                timeout=cfg.timeout,
+            )
+        except Exception:
+            continue
+        for edge in (data.get("posts") or {}).get("edges") or []:
+            node = (edge or {}).get("node") or {}
+            urls = [
+                str((asset or {}).get("source") or (asset or {}).get("thumbnail") or "")
+                for asset in node.get("assets") or []
+            ]
+            if asset_url not in urls:
+                continue
+            status = str(node.get("status") or "").strip().lower()
+            if status in {"sent", "sending"}:
+                return {
+                    "id": str(node.get("id") or ""),
+                    "status": status,
+                    "externalLink": str(node.get("externalLink") or ""),
+                }
+    return None
+
 def _already_sent(db, product_id: int, fingerprint: str) -> bool:
     if not fingerprint:
         return False
@@ -104,8 +182,15 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
     data = dict(row)
     payload = canonical_site_payload(data, site_url=site_url)
     fingerprint = str(data.get("server_ack_json") or "").strip()
-    if _already_sent(db, int(product_id), fingerprint):
-        raise RuntimeError("This public Product revision was already submitted to Instagram.")
+    existing_feed = _receipt_for_revision(
+        db,
+        int(product_id),
+        fingerprint,
+        {"instagram_published", "instagram_submitted"},
+    )
+    if existing_feed is not None:
+        existing_feed["resume_status"] = "already_sent"
+        return existing_feed
     token = get_secret("buffer_api_key")
     if not token:
         raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
@@ -113,10 +198,13 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
     assets: list[dict[str, Any]] = []
     alt_texts = list(payload.get("alt_texts") or [])
     for index, url in enumerate(payload["media_urls"]):
-        image: dict[str, Any] = {"url": url}
         alt_text = alt_texts[index] if index < len(alt_texts) else ""
-        if alt_text:
-            image["metadata"] = {"altText": alt_text[:1000]}
+        if not str(alt_text or "").strip():
+            raise RuntimeError(f"Alt Text تصویر {index + 1} خالی است؛ انتشار Instagram متوقف شد.")
+        image: dict[str, Any] = {
+            "url": url,
+            "metadata": {"altText": str(alt_text)[:1000]},
+        }
         assets.append({"image": image})
 
     create_input = {
@@ -132,17 +220,36 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
             "instagram": {
                 "type": "post",
                 "shouldShareToFeed": True,
+                "isAiGenerated": False,
                 "link": payload["tracking_url"],
             }
         },
     }
-    response = _request_graphql(token, _CREATE_POST_MUTATION, variables={"input": create_input}, timeout=cfg.timeout)
-    result = response.get("createPost")
-    if not isinstance(result, dict):
-        raise RuntimeError("Buffer did not return createPost result")
-    post = result.get("post")
-    if not isinstance(post, dict):
-        raise RuntimeError(str(result.get("message") or "Buffer post creation failed"))
+    try:
+        response = _request_graphql(
+            token,
+            _CREATE_POST_MUTATION,
+            variables={"input": create_input},
+            timeout=cfg.timeout,
+        )
+    except RuntimeError as exc:
+        text = str(exc)
+        if "502" not in text and "UPSTREAM_SERVER_ERROR" not in text:
+            raise
+        post = _reconcile_recent_asset(
+            token,
+            cfg,
+            str(payload["media_urls"][0]),
+        )
+        if post is None:
+            raise
+    else:
+        result = response.get("createPost")
+        if not isinstance(result, dict):
+            raise RuntimeError("Buffer did not return createPost result")
+        post = result.get("post")
+        if not isinstance(post, dict):
+            raise RuntimeError(str(result.get("message") or "Buffer post creation failed"))
 
     post_id = str(post.get("id") or "").strip()
     if not post_id:
@@ -157,6 +264,9 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
         "tracking_url": payload["tracking_url"],
         "media_urls": list(payload["media_urls"]),
         "caption": payload["caption"],
+        "alt_texts": list(payload.get("alt_texts") or []),
+        "hashtags": list(payload.get("hashtags") or []),
+        "social_policy_version": str(payload.get("social_policy_version") or ""),
         "site_ack_fingerprint": fingerprint,
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": post_status,
@@ -184,7 +294,15 @@ def _story_already_sent(db, product_id: int, fingerprint: str) -> bool:
     return False
 
 
-def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) -> dict[str, Any]:
+def publish_story_for_product(
+    db,
+    product_id: int,
+    cfg: BufferConfig,
+    *,
+    site_url: str,
+    story_url_override: str = "",
+    story_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     row = db.product(int(product_id))
     if row is None:
         raise RuntimeError(f"Product {product_id} not found")
@@ -203,10 +321,14 @@ def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_ur
         ack = json.loads(data.get("server_ack_json") or "{}")
     except Exception:
         ack = {}
-    story_url = str(ack.get("instagram_story_url") or ack.get("social_story_url") or "").strip()
-    story_source = "branded_story_asset" if story_url.startswith("https://") else "product_media_fallback"
+    story_url = str(story_url_override or "").strip()
+    story_source = "generated_branded_story" if story_url.startswith("https://") else ""
+    if not story_url.startswith("https://"):
+        story_url = str(ack.get("instagram_story_url") or ack.get("social_story_url") or "").strip()
+        story_source = "branded_story_asset" if story_url.startswith("https://") else ""
     if not story_url.startswith("https://"):
         story_url = str((payload.get("media_urls") or [""])[0]).strip()
+        story_source = "product_media_fallback"
     if not story_url.startswith("https://"):
         raise RuntimeError("A public HTTPS Story asset is required for Buffer/Instagram.")
 
@@ -234,13 +356,27 @@ def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_ur
             }
         },
     }
-    response = _request_graphql(token, _CREATE_POST_MUTATION, variables={"input": create_input}, timeout=cfg.timeout)
-    result = response.get("createPost")
-    if not isinstance(result, dict):
-        raise RuntimeError("Buffer did not return createPost result for Story")
-    post = result.get("post")
-    if not isinstance(post, dict):
-        raise RuntimeError(str(result.get("message") or "Buffer Story creation failed"))
+    try:
+        response = _request_graphql(
+            token,
+            _CREATE_POST_MUTATION,
+            variables={"input": create_input},
+            timeout=cfg.timeout,
+        )
+    except RuntimeError as exc:
+        text = str(exc)
+        if "502" not in text and "UPSTREAM_SERVER_ERROR" not in text:
+            raise
+        post = _reconcile_recent_asset(token, cfg, story_url)
+        if post is None:
+            raise
+    else:
+        result = response.get("createPost")
+        if not isinstance(result, dict):
+            raise RuntimeError("Buffer did not return createPost result for Story")
+        post = result.get("post")
+        if not isinstance(post, dict):
+            raise RuntimeError(str(result.get("message") or "Buffer Story creation failed"))
     story_id = str(post.get("id") or "").strip()
     if not story_id:
         raise RuntimeError("Buffer did not return a Story post id")
@@ -254,6 +390,11 @@ def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_ur
         "tracking_url": payload.get("tracking_url") or payload["product_url"],
         "story_asset_url": story_url,
         "story_asset_source": story_source,
+        "story_style_id": str((story_meta or {}).get("style_id") or ""),
+        "story_font_family": str((story_meta or {}).get("font_family") or ""),
+        "story_width": int((story_meta or {}).get("width") or 0),
+        "story_height": int((story_meta or {}).get("height") or 0),
+        "social_policy_version": str(payload.get("social_policy_version") or ""),
         "site_ack_fingerprint": fingerprint,
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": provider_status,
@@ -265,7 +406,16 @@ def publish_story_for_product(db, product_id: int, cfg: BufferConfig, *, site_ur
     return receipt_payload
 
 
-def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, companion_story: bool | None = None) -> dict[str, Any]:
+def publish_product(
+    db,
+    product_id: int,
+    cfg: BufferConfig,
+    *,
+    site_url: str,
+    companion_story: bool | None = None,
+    story_asset_url: str = "",
+    story_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     feed = _publish_feed_product(db, product_id, cfg, site_url=site_url)
     if companion_story is None:
         if hasattr(db, "setting"):
@@ -276,17 +426,33 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, co
     if not companion_story:
         return feed
     try:
-        feed["companion_story"] = publish_story_for_product(db, product_id, cfg, site_url=site_url)
+        feed["companion_story"] = publish_story_for_product(
+            db,
+            product_id,
+            cfg,
+            site_url=site_url,
+            story_url_override=story_asset_url,
+            story_meta=story_meta,
+        )
     except Exception as exc:
-        feed["companion_story"] = {"status": "failed", "error": str(exc)}
+        error_payload = {
+            "provider": "buffer",
+            "error": str(exc),
+            "feed_post_id": feed.get("provider_post_id") or "",
+            "story_asset_url": story_asset_url,
+        }
         try:
             db.record_sync_receipt(
                 int(product_id),
                 f"instagram:buffer:story-failed:{feed.get('provider_post_id') or product_id}",
                 "instagram_story_failed",
                 server_id=str(feed.get("provider_post_id") or ""),
-                payload={"provider": "buffer", "error": str(exc), "feed_post_id": feed.get("provider_post_id") or ""},
+                payload=error_payload,
             )
         except Exception:
             pass
+        raise RuntimeError(
+            "Feed Instagram ثبت شد اما Story همراه کامل نشد؛ Retry فقط Story را تکمیل می‌کند: "
+            + str(exc)
+        ) from exc
     return feed

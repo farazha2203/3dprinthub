@@ -235,6 +235,14 @@ class SettingsPage(QWidget):
         self.instagram_secret_source = QLabel("")
         self.instagram_secret_source.setObjectName("Muted")
 
+        self.instagram_companion_story = QCheckBox(
+            "برای هر Product یک Story همراه استاندارد بساز"
+        )
+        self.instagram_companion_story.setChecked(True)
+        self.instagram_companion_story.setToolTip(
+            "Story با عکس واقعی Product، قالب 1080×1920، IRANSans و استایل Gold/Navy ساخته و بعد از HTTPS verify از طریق Buffer منتشر می‌شود."
+        )
+
         self.instagram_status = QLabel(
             "ابتدا Product روی سایت و رسانه‌های HTTPS آن تأیید می‌شوند؛ سپس انتشار در Instagram انجام می‌شود."
         )
@@ -250,6 +258,7 @@ class SettingsPage(QWidget):
         form.addRow("Login Mode", self.instagram_login_mode)
         form.addRow("Direct Access Token", self.instagram_token)
         form.addRow("منبع Direct Token", self.instagram_secret_source)
+        form.addRow("Companion Story", self.instagram_companion_story)
         layout.addLayout(form)
 
         actions = QHBoxLayout()
@@ -298,6 +307,12 @@ class SettingsPage(QWidget):
         self.buffer_channel_id.setText(
             str(self.db.setting("buffer_instagram_channel_id", "") or "")
         )
+        story_raw = str(
+            self.db.setting("instagram_companion_story_enabled", "1") or "1"
+        ).strip().lower()
+        self.instagram_companion_story.setChecked(
+            story_raw not in {"0", "false", "no", "off"}
+        )
         self.buffer_secret_source.setText(secret_source("buffer_api_key"))
         self.instagram_account_id.setText(
             str(self.db.setting("instagram_account_id", "") or "")
@@ -323,7 +338,10 @@ class SettingsPage(QWidget):
     def _instagram_provider_changed(self) -> None:
         is_buffer = self._instagram_provider_code() == "buffer"
         for widget in (
-            self.buffer_channel_id, self.buffer_api_key, self.buffer_secret_source
+            self.buffer_channel_id,
+            self.buffer_api_key,
+            self.buffer_secret_source,
+            self.instagram_companion_story,
         ):
             widget.setEnabled(is_buffer)
         for widget in (
@@ -357,6 +375,10 @@ class SettingsPage(QWidget):
             provider = self._instagram_provider_code()
             cfg = self._instagram_config()
             if provider == "buffer":
+                self.db.set_setting(
+                    "instagram_companion_story_enabled",
+                    "1" if self.instagram_companion_story.isChecked() else "0",
+                )
                 key = self.buffer_api_key.text().strip()
                 if key:
                     set_secret("buffer_api_key", key)

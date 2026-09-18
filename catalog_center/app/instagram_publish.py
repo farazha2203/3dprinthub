@@ -9,6 +9,7 @@ from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from .secure_secrets import get_secret
+from .social_content_policy import POLICY_VERSION, build_alt_texts, build_caption
 
 
 @dataclass(frozen=True)
@@ -116,28 +117,19 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
         raise RuntimeError("هیچ تصویر عمومی HTTPS تأییدشده‌ای برای Instagram وجود ندارد.")
 
     title = str(row.get("seo_title_fa") or row.get("title_fa") or row.get("source_title") or "").strip()
-    description = str(row.get("social_caption_fa") or row.get("seo_description_fa") or row.get("short_description_fa") or "").strip()
-    hashtags = []
-    for value in _json_list(row.get("hashtags_fa_json")) + _json_list(row.get("tags_fa_json")):
-        text = str(value or "").strip().replace(" ", "_")
-        if text:
-            tag = text if text.startswith("#") else f"#{text}"
-            if tag not in hashtags:
-                hashtags.append(tag)
     tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
-    caption_parts = [part for part in (title, description) if part]
-    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{tracking_url}")
-    if hashtags:
-        caption_parts.append(" ".join(hashtags[:24]))
-    caption = "\n\n".join(caption_parts).strip()[:2200]
-    alt_texts = [str(x or "").strip() for x in _json_list(row.get("image_alt_texts_json"))]
+    media_urls = media[:10]
+    caption, hashtags = build_caption(row, tracking_url)
+    alt_texts = build_alt_texts(row, media_urls)
     return {
         "product_url": product_url,
         "tracking_url": tracking_url,
-        "media_urls": media[:10],
+        "media_urls": media_urls,
         "caption": caption,
-        "alt_texts": alt_texts[:10],
+        "alt_texts": alt_texts,
+        "hashtags": hashtags,
         "title": title,
+        "social_policy_version": POLICY_VERSION,
     }
 
 

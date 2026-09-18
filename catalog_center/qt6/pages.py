@@ -283,9 +283,9 @@ class ProductsPage(QWidget):
         self.bulk_publish_btn.setToolTip(
             "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
         )
-        self.instagram_publish_btn = QPushButton("🚀 سایت → Instagram")
+        self.instagram_publish_btn = QPushButton("🚀 سایت → Instagram (Post + Story)")
         self.instagram_publish_btn.setToolTip(
-            "اول Product را روی سایت منتشر و لینک عمومی آن را تأیید می‌کند؛ سپس همان لینک و SEO Product را به Instagram می‌فرستد."
+            "برای هر Product: سایت و HTTPS را تأیید می‌کند، Feed Post استاندارد با Caption/Hashtag/Alt Text می‌سازد، Story برندشده 1080×1920 با IRANSans تولید می‌کند و هر دو را با receipt مستقل از طریق Buffer منتشر می‌کند."
         )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")

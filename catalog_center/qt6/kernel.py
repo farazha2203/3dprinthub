@@ -2311,12 +2311,42 @@ class InstagramCore:
             if progress:
                 progress(
                     int((index - 1) / total * 100),
-                    f"{label} {index}/{total} ? #{product_id}",
+                    f"{label} {index}/{total} • #{product_id}",
                 )
             try:
-                result = publish_product(
-                    self.db, product_id, cfg, site_url=settings.site_url
-                )
+                if provider == "buffer":
+                    companion_raw = str(
+                        self.db.setting("instagram_companion_story_enabled", "1") or "1"
+                    ).strip().lower()
+                    companion_enabled = companion_raw not in {"0", "false", "no", "off"}
+                    story_meta = None
+                    if companion_enabled:
+                        if progress:
+                            progress(
+                                int((index - 1) / total * 100),
+                                f"ساخت Story استاندارد محصول #{product_id}",
+                            )
+                        from app.instagram_story_asset import prepare_product_story_asset
+
+                        story_meta = prepare_product_story_asset(
+                            self.db,
+                            product_id,
+                            settings,
+                            self.preview(product_id),
+                        )
+                    result = publish_product(
+                        self.db,
+                        product_id,
+                        cfg,
+                        site_url=settings.site_url,
+                        companion_story=companion_enabled,
+                        story_asset_url=str((story_meta or {}).get("url") or ""),
+                        story_meta=story_meta,
+                    )
+                else:
+                    result = publish_product(
+                        self.db, product_id, cfg, site_url=settings.site_url
+                    )
                 results.append(
                     {"product_id": product_id, "provider": provider, **result}
                 )
