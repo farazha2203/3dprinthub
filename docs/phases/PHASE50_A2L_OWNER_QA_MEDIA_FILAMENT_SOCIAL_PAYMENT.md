@@ -1,3 +1,10 @@
+## Image filename/four-row runtime — 2026-09-18
+- Runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451` is pushed and running from clean worktree `D:\projects\3dprinthub-runtime-aaa5cb9`.
+- Fresh Catalog backup passed integrity with 635 Products.
+- Product #301 post-launch: English planned/final filename match; Persian Alt/SEO title/caption/12 keywords preserved.
+- Main worktree concurrent Instagram/Buffer changes were not touched.
+- Remaining Windows gate is owner visual smoke. Production unchanged.
+
 ## Image filename authority + four-row scroll correction — 2026-09-18
 - Product #301 read-only verification proved existing semantic image SEO is healthy: English finalized filename, Persian Alt/SEO title, caption, 12 keywords.
 - Restored only `planned_seo_filename()` to source-English-title-first ASCII naming.

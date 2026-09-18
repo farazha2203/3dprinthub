@@ -1,3 +1,8 @@
+## 2026-09-18 - Owner image naming/scroll correction runtime status
+Status: `GITHUB_UPDATED / QT_RELAUNCHED / OWNER_SMOKE NEXT`.
+
+The requested mature image naming rule (English source title) and four-row scroll reserve are now running from exact GitHub runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451`. Semantic image SEO/AI metadata remains unchanged and verified on Product #301.
+
 ## 2026-09-18 - Owner: restore prior image SEO naming; keep four-row scroll
 Status: `LOCAL_TESTED / COMMIT+PUSH NEXT`.
 

@@ -1,3 +1,12 @@
+## 2026-09-18 — Image filename/four-row-scroll runtime pushed and verified
+- Exact runtime commit `aaa5cb9f6d743becf3f1588501733ae835bd7451` is pushed to `wip/phase50-a2l-owner-qa-20260917`.
+- Main development worktree acquired unrelated concurrent Instagram/Buffer changes after this commit, so exact runtime was launched from a separate clean Git worktree: `D:\projects\3dprinthub-runtime-aaa5cb9` at detached HEAD `aaa5cb9...`. No reset/stash/delete was applied to concurrent work.
+- Fresh pre-launch Catalog backup: `D:\projects\3dprinthub-backups\pre-image-seo-scroll-aaa5cb9-20260918-125436\catalog.sqlite3`; source/backup integrity `ok`, 635 Products.
+- Exact-SHA Qt launch is live from the clean worktree. Launcher PID 42752 delegates to Python child PID 58680; visible window `3DPrintHub Catalog Center v8.9.10 - Qt 6` is responsive.
+- Post-launch read-only verification: Catalog integrity `ok`, 635 Products. Product #301 planned filename and stored finalized filename both equal `christmas-tree-minimalistic-japandi-decor-3d-print-01.webp`; Alt remains product-specific Persian, SEO title remains Persian, caption exists, keyword count remains 12.
+- Runtime Source after `aaa5cb9...` is unchanged. Production is unchanged; Host work remains fail-closed while dedicated reverse tunnel is down.
+- Exact next: owner visual smoke of Product #301/target Product for English filenames + four-row scroll reserve.
+
 ## 2026-09-18 — Restore English image filename authority + four-row scroll canvas LOCAL_TESTED
 - Owner reported mixed/incorrect image naming and inaccessible lower-row controls. Real Product #301 (`Christmas Tree Minimalistic Japandi Decor`) was inspected read-only before code changes.
 - Product #301 proves mature image SEO metadata is still healthy: existing final filename `christmas-tree-minimalistic-japandi-decor-3d-print-01.webp`, Persian product-specific Alt, Persian SEO title, non-empty caption, 12 keywords, and `metadata_ready=True`.

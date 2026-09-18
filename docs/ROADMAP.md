@@ -1,3 +1,12 @@
+## 2026-09-18 — Filename/four-row runtime promotion
+- [x] Commit/push runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451`.
+- [x] Fresh Catalog backup with source/backup integrity `ok`, 635 Products.
+- [x] Preserve concurrent Instagram/Buffer work by launching from clean exact-SHA worktree instead of reset/stash.
+- [x] Relaunch Qt from clean `aaa5cb9...` worktree; visible child responsive.
+- [x] Post-launch Product #301 read-only SEO verification PASS.
+- [ ] Owner visual smoke.
+- [ ] Production remains unchanged until dedicated reverse tunnel is healthy.
+
 ## 2026-09-18 — Image filename/scroll correction
 - [x] Verify Product #301 real metadata before changes.
 - [x] Restore source English title as filename authority only.

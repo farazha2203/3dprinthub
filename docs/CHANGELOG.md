@@ -1,3 +1,9 @@
+## 2026-09-18 - Image filename/four-row runtime promotion
+- Pushed runtime `aaa5cb9f6d743becf3f1588501733ae835bd7451`.
+- Took fresh integrity-checked Catalog backup `pre-image-seo-scroll-aaa5cb9-20260918-125436`.
+- Launched canonical Qt behavior from a clean detached Git worktree at the exact runtime SHA to avoid touching concurrent Instagram/Buffer edits in the main worktree.
+- Post-launch Product #301 confirms English filename + preserved Persian Alt/SEO title/caption/12 keywords.
+
 ## 2026-09-18 - Restore English image filenames and four-row gallery scroll
 - Restored Product image filename planning to the mature source-title-first rule: English `source_title` -> ASCII SEO slug -> numbered WebP.
 - Did not change image Alt, SEO title, caption, keywords, AI refresh, operator metadata overrides, Screenshot or image operations.
