@@ -143,8 +143,7 @@ class Command(BaseCommand):
             )
 
         if not apply_changes:
-            self.stdout.write(self.style.SUCCESS("A2R_MANUAL_PAYMENT_DRY_RUN=PASS"))
-            return
+            self.stdout.write(self.style.SUCCESS("A2L_MANUAL_PAYMENT_DRY_RUN=PASS"))\n            self.stdout.write(self.style.SUCCESS("A2R_MANUAL_PAYMENT_DRY_RUN=PASS"))\n            return
 
         if existing is None and not overrides:
             raise CommandError(

@@ -48,3 +48,6 @@ Historical Git commits may still contain previously committed payment destinatio
 - Reconciliation between StorePayment, Website PaymentLedgerEntry and finance dashboard summaries.
 - Admin review/audit trail for manual receipts.
 - Final Production payment/finance/admin acceptance and documentation closure.
+
+## Legacy deploy compatibility
+The existing A2L guarded deploy runner performs both a source grep and runtime grep for \`A2L_MANUAL_PAYMENT_DRY_RUN=PASS\`. A2R intentionally preserves that dry-run marker while also emitting the new A2R marker. This keeps the mature fail-closed runner compatible while configuration storage/logging is hardened.
