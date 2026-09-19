@@ -122,6 +122,62 @@ class Epic49PublicVerificationTests(unittest.TestCase):
         self.assertFalse(item["public_http_ok"])
         self.assertIn("PRODUCT_MEDIA_HTTP_FAILED", item["error"])
 
+    @patch("app.site_connection._public_get")
+    def test_public_verifier_accepts_legacy_and_canonical_product_media_only(self, public_get):
+        page_body = b"""
+        <html><body>
+          <img src="/media/p/625/cf6f0422f0cd/product-01.webp">
+          <img src="/media/store/products/gallery/legacy-02.webp">
+          <img src="/media/store/imported-models/gallery/private-working.webp">
+        </body></html>
+        """
+        public_get.side_effect = [
+            {
+                "ok": True,
+                "url": "https://3dprinthub.ir/store/product/test/",
+                "http_status": 200,
+                "content_type": "text/html",
+                "bytes_sampled": len(page_body),
+                "error": "",
+                "body": page_body,
+            },
+            {
+                "ok": True,
+                "url": "https://3dprinthub.ir/media/p/625/cf6f0422f0cd/product-01.webp",
+                "http_status": 200,
+                "content_type": "image/webp",
+                "bytes_sampled": 100,
+                "error": "",
+                "body": b"image-1",
+            },
+            {
+                "ok": True,
+                "url": "https://3dprinthub.ir/media/store/products/gallery/legacy-02.webp",
+                "http_status": 200,
+                "content_type": "image/webp",
+                "bytes_sampled": 100,
+                "error": "",
+                "body": b"image-2",
+            },
+        ]
+
+        result = site_connection.verify_publish_item(
+            self._cfg(),
+            {"product_url": "/store/product/test/"},
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(len(result["images"]), 2)
+        requested = [call.args[1] for call in public_get.call_args_list[1:]]
+        self.assertEqual(
+            requested,
+            [
+                "/media/p/625/cf6f0422f0cd/product-01.webp",
+                "/media/store/products/gallery/legacy-02.webp",
+            ],
+        )
+        self.assertTrue(all("imported-models" not in value for value in requested))
+
 
 class Epic49BulkImportTimeoutTests(unittest.TestCase):
     def _cfg(self):

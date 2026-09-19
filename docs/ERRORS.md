@@ -1,3 +1,11 @@
+## ERR-49-176 - Windows public verifier lagged compact Product media namespace
+**Date:** 2026-09-19
+**Observed:** real #625 receiver import passed full transactional Product parity and returned Product #39 revision 6, but Windows kept the Product in failed/dirty state because public verification first reported no Product media. After discovering the canonical paths, the Server-side URL issue was separately corrected so `/media/p/...` returns HTTP 200/image.
+**Root cause:** Windows `STORE_MEDIA_RE` still recognized only legacy `/media/store/products/...`, while ERR-49-173 intentionally moved canonical repeated-publish media to compact `/media/p/<desktop-id>/<sha12>/<seo-basename>`.
+**Correct fix:** recognize exactly legacy public Product media plus canonical `/media/p/`; do not widen acceptance to imported working-media.
+**Verification:** dedicated checker regression 3/3 PASS and maintained publish/social scope 40/40 PASS. Live Product HTML contains two canonical #625 media URLs.
+**Prevention:** any public media namespace change must update receiver storage, public route and Desktop post-publish verifier in one acceptance matrix.
+
 ## ERR-49-175 - Companion Story lacked deterministic Highlight target and final style evidence
 **Date:** 2026-09-19
 **Observed:** companion Story infrastructure and Buffer receipts existed, but Product rows such as #625 had no explicit `instagram_highlight`; receipt target could therefore be empty. Runtime Story used IRANSans but still reported an older `..._v2` style ID instead of the final documented IRANSans style ID.

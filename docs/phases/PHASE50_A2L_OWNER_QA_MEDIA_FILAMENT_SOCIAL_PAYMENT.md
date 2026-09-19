@@ -1,3 +1,10 @@
+## Canonical public media acceptance — 2026-09-19
+- Real #625 receiver import already passed full parity and preserved Site Product #39 at revision 6.
+- Compact canonical media is `/media/p/<desktop-id>/<sha12>/<seo-basename>`; Server public routing is Production-verified HTTP 200/image.
+- Windows public verifier now accepts legacy `/media/store/products/` and canonical `/media/p/` only; imported working-media remains excluded.
+- Verifier 3/3 and maintained publish/social 40/40 PASS.
+- Next: commit/push -> fresh Catalog backup -> exact-SHA Qt verification/relaunch -> local #625 ACK reconciliation without re-import -> Feed+Story.
+
 ## Pricing authority + Instagram companion Story/Highlight — 2026-09-19
 - Real Product #625 remains the acceptance identity. After ERR-49-173 media-path recovery, strict parity correctly stopped its resend on Windows/Site price-range divergence.
 - Owner-approved post-default Catalog preview is integrity-ok and establishes PLA defaults: 3.5m/4.5m purchase/sale, 150k print/hour, 50k supervision/hour; offer-specific preheat remains independent.

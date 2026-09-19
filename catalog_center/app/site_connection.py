@@ -20,7 +20,12 @@ from .batch_packaging import validate_batch_package
 Progress = Callable[[str], None]
 BATCH_NAME = re.compile(r"^desktop_catalog_v85_[0-9]{8}_[0-9]{6}$")
 STORE_MEDIA_RE = re.compile(
-    r"(?:src|href)=[\"']([^\"']*/media/store/products/[^\"']+)[\"']",
+    # Public Product media has two supported URL namespaces:
+    #   legacy:    /media/store/products/...
+    #   canonical: /media/p/<desktop-id>/<sha12>/<seo-basename>
+    # Imported working media (/media/store/imported-models/...) is intentionally
+    # excluded and must never satisfy public Product verification.
+    r"(?:src|href)=[\"']([^\"']*/media/(?:store/products/|p/)[^\"']+)[\"']",
     re.IGNORECASE,
 )
 

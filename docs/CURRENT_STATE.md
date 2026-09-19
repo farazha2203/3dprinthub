@@ -1,3 +1,10 @@
+## 2026-09-19 - Canonical public-media verifier LOCAL_TESTED
+Production receiver work is separately deployed at `9ce01fdc4c61ce58730e77bbb4d70b78de07e585`: Product #39 canonical `/media/p/625/<sha12>/<seo>.webp` URLs now return HTTP 200/image while imported working-media remains 404. Real #625 receiver import had already passed `republish_parity.ok=true`, Product identity #39 and revision 6; the Local Catalog remained dirty only because the Windows verifier still recognized legacy `/media/store/products/` URLs.
+
+Canonical Windows checker now accepts exactly two public Product namespaces: legacy `/media/store/products/` and content-addressed `/media/p/`. It intentionally does not accept `/media/store/imported-models/`. Dedicated public-verification regression 3/3 PASS; maintained publish/social scope 40/40 PASS. Rollback ref: `backup/pre-err49-176-public-media-verifier-20260919 @ 6b2536f...`.
+
+Exact next: commit/push this Windows correction -> fresh Catalog backup -> reconcile the already-successful #625 ACK/public HTTP locally without another Site import -> require `uploaded, needs_update=0, upload_ready=0` -> then Feed+Story acceptance. Manual card-transfer Source is already implemented; Production payment settings activation is tracked on the Server release after verified DB rollback evidence.
+
 ## 2026-09-19 - Phase50.A.2L pricing + Instagram Story/Highlight LOCAL_TESTED
 Status: `LOCAL_TESTED / TWO COMMITS + SERVER DEPLOY + DATA REPAIR NEXT`.
 

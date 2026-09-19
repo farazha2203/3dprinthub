@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner: make Product upload usable now
+Status: `PUBLIC ROUTE PRODUCTION_PASS / WINDOWS CHECKER LOCAL_TESTED`.
+
+Owner requires normal Product uploads to complete instead of remaining falsely failed after a successful receiver import. #625 proves the Site receiver and strict parity are healthy; Windows public verification must understand the compact canonical Product media namespace and must never treat private imported working-media as public. After this checker is promoted, #625 should be reconciled from its existing revision-6 ACK without sending the same Product to the receiver again.
+
 ## 2026-09-19 - Owner: finish #625 today and make every Product support Feed + Story + category Highlight queue
 Status: `LOCAL_TESTED / GITHUB+DEPLOY+REAL ACCEPTANCE NEXT`.
 

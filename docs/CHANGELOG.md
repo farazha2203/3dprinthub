@@ -1,3 +1,9 @@
+## 2026-09-19 - Public Product verifier supports compact canonical media
+- Windows post-publish HTTP verification now discovers both legacy `/media/store/products/...` and compact content-addressed `/media/p/...` Product images.
+- Private `/media/store/imported-models/...` working-media remains excluded from public acceptance.
+- Added regression containing all three namespaces and proving only the two public Product namespaces are requested.
+- Focused verifier 3/3 and maintained publish/social 40/40 PASS.
+
 ## 2026-09-19 - Unified Product pricing + Instagram Story category queue
 - Windows Site publish refreshes selected Filament/Profile snapshots from current inventory immediately before Ready/Publish and recalculates the Product price range from the canonical Catalog formula.
 - Flattened sales profiles now carry pricing strategy, support-cost multiplier and assembly fee into the Site payload.

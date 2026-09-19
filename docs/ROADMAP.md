@@ -1,3 +1,14 @@
+## 2026-09-19 - ERR-49-176 canonical public-media verifier
+- [x] Prove receiver strict parity already succeeded for #625 / Site Product #39 revision 6.
+- [x] Prove current public Product HTML uses canonical `/media/p/...` rather than only legacy `/media/store/products/...`.
+- [x] Accept legacy + canonical public Product media in Windows verification while excluding imported working-media.
+- [x] Public-verification focused 3/3 PASS; maintained publish/social regression 40/40 PASS.
+- [x] Create rollback `backup/pre-err49-176-public-media-verifier-20260919 @ 6b2536f...`.
+- [ ] Commit/push exact Windows checker SHA.
+- [ ] Fresh Catalog backup and exact-SHA runtime verification/relaunch.
+- [ ] Reconcile #625 Local receipt without another receiver import.
+- [ ] Verify Local uploaded/clean + Product #39 public media, then Feed+Story.
+
 ## 2026-09-19 - #625 pricing + Instagram Story/Highlight closure
 - [x] Reproduce #625 fail-closed pricing mismatch after media-path fix.
 - [x] Verify owner-approved PLA defaults from integrity-checked post-default preview: 3.5m/4.5m purchase/sale, 150k print, 50k supervision; preserve per-offer preheat.
