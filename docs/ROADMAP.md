@@ -1,3 +1,18 @@
+## 2026-09-19 - Phase50.A.2M authoritative re-publish replacement
+- [x] Reproduce owner regression against real #625 / Site #39.
+- [x] Prove revision-7 ACK succeeded while two stale EP49-3F Variants remained active beside three current CC rows.
+- [x] Make Windows sales-profile matrix the sole active commerce authority on re-publish; retain stale rows only inactive for history/rollback.
+- [x] Add fail-closed post-sync assertions for stale active non-CC Variants and active-profile count.
+- [x] Preserve exact-current ProductImage replacement behavior.
+- [x] Add explicit Windows local-image import/selection/dirty-state path; existing SEO finalization remains mandatory.
+- [x] Compile/check/no-drift + Server 15/15 + Windows image 25/25 PASS.
+- [ ] Commit/push exact A2M candidate and rollback refs.
+- [ ] Promote only required Site/server delta to Production release lineage.
+- [ ] Fresh Host DB/source rollback + guarded reverse-tunnel deploy.
+- [ ] Re-publish #625 once and verify exactly three active CC Variants, no stale active variants and current price/weight/material/time.
+- [ ] Verify current selected images/public Product media + desktop/mobile Browser QA.
+- [ ] Close A2M docs, then resume external Buffer media-ingestion investigation.
+
 ## 2026-09-19 - ERR-49-178 Buffer feed compatibility
 - [x] Run exactly one real #625 Buffer attempt after Story render fix; no prior social receipt existed.
 - [x] Confirm failure is provider media fetch/read: both canonical Product URLs remain public HTTP 200 image/webp.

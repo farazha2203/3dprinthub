@@ -1,3 +1,13 @@
+## ERR-49-179 - Successful re-publish left stale legacy Variants active
+**Date:** 2026-09-19
+**Observed:** Product #625 re-published successfully to the same Site Product #39 at revision 7 with `republish_parity.ok=true`, three current Desktop profiles and current media, but the public Store still exposed stale weight/material/price behavior.
+**Real Production evidence:** Product #39 had 190 historical Variant rows and five active rows. Three active `CC-P39-...` rows correctly carried current Windows values (60 g, material+support 110 g, 180 min, 1,095,000/1,215,000 Toman). Two stale `EP49-3F...` rows 5940/5945 were also active with 1 g, 60 min and 104,500 Toman.
+**Root cause:** Desktop profile synchronization only deactivated removed Desktop-managed rows; the older EP49-3F generator ran in another compatibility path and legacy/manual rows could survive as active. The ACK parity counted current Desktop profiles but did not reject unrelated active Store Variants.
+**Correct fix:** when a current Windows `sales_profiles_json` exists, treat it as the sole active commerce matrix. Upsert current CC rows, deactivate every Product Variant not in that exact active-code set, retain rows for historical FK/order rollback, and fail closed if a non-CC row remains active or active CC count differs from Windows.
+**Image boundary:** Site ProductImage sync already rebuilds exactly the current selected-image set. The reported new image did not appear because Local #625 still contains only two selected images; no third selected image is present to publish. Windows now exposes an explicit local-file add/select path so this cannot silently depend on an indirect image workflow.
+**Verification:** compile/check/no-drift PASS; Server profile/import/admin-sync 15/15 PASS; Windows image workspace 25/25 PASS.
+**Prevention:** a successful re-publish must verify *exclusive* active Variant authority, not only existence/count of expected CC rows. Never merge stale active commerce rows into a current Windows snapshot.
+
 ## ERR-49-178 - Buffer could not read canonical Product images despite public HTTP 200
 **Date:** 2026-09-19
 **Observed:** first real #625 Buffer Feed attempt after Story rendering was repaired submitted the two canonical Product image URLs and failed before a post id with `Invalid post: Image could not be read from its URL., Image could not be read from its URL.`. Both URLs independently returned HTTP 200, Content-Type image/webp and the expected byte sizes; no Feed receipt existed before or after the failed call.

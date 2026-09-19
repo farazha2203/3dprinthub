@@ -1,3 +1,12 @@
+## 2026-09-19 - Owner: re-send must completely update the existing Site Product
+Status: `A2M LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
+
+Owner reports that an already-published Product was edited in Windows (new image, weight, materials and price) and sent again, but the Site still showed the old configuration. Required permanent behavior: keep the same Site Product identity, but every current Windows field/setting becomes authoritative on re-publish; old active commerce choices must not coexist with the new snapshot.
+
+Real #625 / Site #39 evidence proves the defect: revision 7 updated successfully, but two stale EP49-3F Variants remained active next to three current CC profiles. A2M changes re-publish to active-state replacement, preserves old rows inactive for history, keeps exact selected-image replacement and adds an explicit local-image import/select action in Windows. Current #625 has only two selected images in Local data, so an untracked third image is not guessed or fabricated.
+
+Instagram remains unresolved externally: no successful #625 Buffer Feed/Story receipt exists yet.
+
 ## 2026-09-19 - Owner: finish Site, Desktop launcher and real Instagram acceptance
 Status: `SITE+PRODUCT PASS / WINDOWS STORY FIX LOCAL_TESTED / SOCIAL COMMIT+REAL PUBLISH NEXT`.
 

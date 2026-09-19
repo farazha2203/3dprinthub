@@ -1,3 +1,11 @@
+## 2026-09-19 - Authoritative existing-Product re-publish replacement
+- Existing Site Product identity remains stable, but the latest Windows `sales_profiles_json` now fully replaces the active Store Variant matrix.
+- Historical/manual/MW-FIX/EP49/EP49-3F/removed CC rows are retained but deactivated instead of remaining orderable.
+- Added fail-closed sync checks so stale active non-CC rows or profile-count divergence cannot return a false successful update.
+- Added explicit Windows local-file image addition that persists/selects the image and marks an uploaded Product dirty; normal SEO finalization/public-media gates still apply.
+- Real #625 root cause verified: revision 7 had three correct CC Variants plus two stale active EP49-3F Variants.
+- Local verification: Server 15/15, Windows image 25/25, compile/check/no-drift PASS.
+
 ## 2026-09-19 - Buffer-compatible feed media derivatives
 - Added Buffer-only PNG compatibility assets derived from verified canonical Product media and hosted at stable public URLs.
 - Original Product media remains the Site/SEO authority; social receipt keeps both provider URLs and canonical `source_media_urls`.
