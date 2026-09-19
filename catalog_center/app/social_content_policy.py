@@ -11,9 +11,21 @@ BRAND_ORDER_COPY = "سفارش این محصول از 3DPrintHub.ir"
 FORBIDDEN_FREE_CLAIMS = (
     "چاپ سه بعدی رایگان",
     "چاپ سه‌بعدی رایگان",
+    "چاپ 3 بعدی رایگان",
     "دانلود رایگان",
     "رایگان",
+    "مجانی",
 )
+_FORBIDDEN_FREE_PATTERNS = (
+    re.compile(
+        r"(?i)(?<!\w)#?free(?:[_\s-]+(?:3d[_\s-]*)?(?:print(?:ing)?|download|stl|model|file|product|shipping))(?!\w)"
+    ),
+    re.compile(
+        r"(?i)(?<!\w)(?:3d[_\s-]*)?(?:print(?:ing)?|download|stl|model|file|product|shipping)[_\s-]+(?:for[_\s-]+)?free(?!\w)"
+    ),
+    re.compile(r"(?i)(?<!\w)#free(?!\w)"),
+)
+
 MAX_CAPTION = 2200
 MAX_ALT_TEXT = 1000
 STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v2_iransans"
@@ -39,11 +51,20 @@ def _json_list(value: Any) -> list[Any]:
     return list(parsed) if isinstance(parsed, list) else []
 
 
+def _contains_false_free_claim(value: Any) -> bool:
+    text = str(value or "")
+    if any(re.search(re.escape(claim), text, flags=re.IGNORECASE) for claim in FORBIDDEN_FREE_CLAIMS):
+        return True
+    return any(pattern.search(text) for pattern in _FORBIDDEN_FREE_PATTERNS)
+
+
 def _strip_false_free_claims(value: Any) -> str:
     text = str(value or "")
     for claim in FORBIDDEN_FREE_CLAIMS:
         text = re.sub(re.escape(claim), " ", text, flags=re.IGNORECASE)
-    text = re.sub(r"[ \t]+([،,:؛;.!؟?])", r"\\1", text)
+    for pattern in _FORBIDDEN_FREE_PATTERNS:
+        text = pattern.sub(" ", text)
+    text = re.sub(r"[ \t]+([،,:؛;.!؟?])", r"\1", text)
     return re.sub(r"\s+", " ", text).strip(" -–—|،,:؛;")
 
 
@@ -77,7 +98,7 @@ def build_hashtags(row: dict[str, Any]) -> list[str]:
     )
     dynamic_limit = max(0, MAX_HASHTAGS - len(fixed_tags))
     tags = []
-    for item in _unique(raw):
+    for item in _unique([value for value in raw if not _contains_false_free_claim(value)]):
         text = item.lstrip("#").strip().replace(" ", "_")
         text = re.sub(r"[^\w\u0600-\u06FF_]+", "", text)
         if len(text) < 2:

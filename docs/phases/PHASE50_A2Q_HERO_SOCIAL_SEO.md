@@ -25,3 +25,10 @@ Instagram: policy/direct/Buffer regression -> exact GitHub SHA -> Qt VerifyOnly/
 
 ## Next phase
 Phase50.A.2R: payment/finance/admin closure, including already-implemented manual transfer activation through guarded Production backup/apply path and the remaining Store finance/admin acceptance backlog.
+
+## A2Q social sanitizer follow-up — 2026-09-20
+- Fixed the punctuation-normalization defect that could leave a literal \`\\1\` in social text after false-free cleanup.
+- Extended the fail-closed social boundary to Persian \`رایگان/مجانی\` and bounded English free-download/free-print/free-shipping forms, while preserving unrelated terms such as \`Freestyle\`.
+- False-free hashtag candidates are dropped as a whole instead of leaving malformed residual tags.
+- Added focused Caption/hashtag/ALT/Story regression. Canonical Windows full social/Qt regression is still required before release promotion.
+- Site release and Production are intentionally unchanged by this Windows/Social-only WIP commit.

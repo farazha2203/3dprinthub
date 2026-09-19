@@ -1,3 +1,9 @@
+## 2026-09-20 - A2Q Instagram SEO v4 sanitizer hardening
+- Corrected social punctuation normalization so removed false-free copy cannot leave a literal \`\\1\`.
+- Expanded false-free filtering across Caption/hashtags/ALT/Story for Persian \`رایگان/مجانی\` and bounded English free-download/free-print/free-shipping forms; malformed residual hashtags are dropped.
+- Added focused regressions while preserving unrelated words such as \`Freestyle\`.
+- This is a Windows/Social WIP change only; canonical Windows full regression is still required and Site/Production are unchanged.
+
 ## 2026-09-20 - Instagram Product SEO policy v4
 - Product focus keyword and Product-specific keywords now outrank generic tags in the bounded hashtag set; maximum remains eight.
 - Caption adds explicit 3DPrintHub.ir ordering copy while retaining Product SEO title/description, factual specs, nationwide-Iran shipping and UTM Product URL.
