@@ -1,3 +1,7 @@
+## 2026-09-19 - ERR-49-174 guarded pricing deploy runner
+- Added `scripts/host/phase50_a2l_pricing_engine_deploy.sh` with exact `ba05c7fc...` Production baseline, live GitHub SHA/FF-only, MySQL identity, readiness, no-migration, source/.env/MySQL backup, Product #39 managed-Variant pricing-authority and public HTTP gates.
+- Local Bash syntax and `git diff --check` PASS. Deployment remains blocked only on dedicated reverse tunnel recovery.
+
 ## 2026-09-19 - ERR-49-174 Catalog/Site pricing unification
 - Desktop-managed `CC-P...` Variants now use the Catalog formula inputs directly: material sale cost, print time/rate, supervision, preheat and assembly.
 - Profile sync now persists exact part weight and support multiplier/assembly inputs required by that formula.

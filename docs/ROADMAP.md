@@ -6,8 +6,10 @@
 - [x] Targeted pricing/mapping/API tests 5/5 PASS; compile/check/no-migration-drift PASS.
 - [x] Create rollback branch `backup/pre-phase50-a2l-pricing-engine-20260919 @ ba05c7fc...`.
 - [ ] Commit/push exact Server pricing candidate.
+- [x] Add guarded pricing deploy runner with baseline/live-GitHub/MySQL/readiness/no-drift/source+env+DB backup/runtime authority gates; Bash syntax/diff-check PASS.
+- [ ] Commit/push deploy runner.
 - [ ] Restore/verify dedicated tunnel and Production baseline.
-- [ ] Fresh source/.env/MySQL rollback backup + exact-SHA ff-only deploy.
+- [ ] Execute runner for exact GitHub SHA; require verified source/.env/MySQL rollback backup + ff-only deploy.
 - [ ] Real #625 republish after Windows owner-default PLA repair; require strict range parity/read-back.
 
 ## 2026-09-19 - ERR-49-173 #625 republish/media-path closure
