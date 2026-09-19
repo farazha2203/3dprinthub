@@ -1,3 +1,11 @@
+## 2026-09-19 verified current Production media paths
+- Production root: `/home/sfkilvrs/3dprinthub`.
+- Effective Django `MEDIA_ROOT` (verified from live settings): `/home/sfkilvrs/3dprinthub/media`.
+- Public canonical Product media storage namespace: `p/<desktop-product-id>/<sha12>/<seo-basename>`, exposed as `/media/p/...` only through the restricted public-media route.
+- Static root remains `/home/sfkilvrs/public_html/static`.
+- Private media remains `/home/sfkilvrs/3dprinthub/private_media`.
+- Older references to `/home/sfkilvrs/public_html/media` are historical/default documentation and are not the effective current runtime setting.
+
 ## 2026-09-16 A2J release/Production paths
 - Canonical Windows development root remains `D:\projects\3DPrintHub`.
 - Isolated Hero release worktree: `D:\projects\3DPrintHub-a2j-release`.

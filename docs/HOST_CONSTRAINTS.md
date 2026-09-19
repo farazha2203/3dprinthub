@@ -1,3 +1,6 @@
+## 2026-09-19 canonical Product media routing constraint
+Current live Django settings resolve `MEDIA_ROOT=/home/sfkilvrs/3dprinthub/media`, not the older public_html media default. Compact Product files use `p/<desktop-id>/<sha12>/<seo-basename>`. Production must expose only explicitly public prefixes through the restricted Django fallback route; adding `p/` is allowed, but imported working-media and arbitrary MEDIA_ROOT paths must remain unreachable. Do not move/copy Product media to public_html as a workaround.
+
 ## 2026-09-19 public static directory permission constraint
 Repository-owned deploy runners use `umask 077` for private rollback material, but `collectstatic` must not create new public static directories under that private mode. For newly introduced public trees, temporarily use `umask 022` and explicitly verify directory traversal (`0755`) plus public HTTP/MIME for nested assets. ERR-49-170 proved that readable `0644` files below a `0700` directory are still unreachable to LiteSpeed.
 

@@ -391,6 +391,12 @@ def manual_payment_view(request, order_number):
         order.payment_status = "awaiting_review"
         order.status = "payment_review"
         order.save(update_fields=["payment_status", "status", "updated_at"])
+        try:
+            from .operator_notifications import notify_payment_receipt
+            notify_payment_receipt(payment)
+        except Exception:
+            # Receipt persistence is authoritative; alert delivery is best-effort.
+            pass
         messages.success(request, "رسید پرداخت ثبت شد و پس از بررسی تأیید می‌شود.")
         return redirect("store:order_success", order_number=order.order_number)
     return render(request, "store/payment_manual.html", {"order": order, "payment": payment, "form": form})

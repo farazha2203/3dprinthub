@@ -33,8 +33,30 @@ class Phase491PublicMediaTests(SimpleTestCase):
                 # to delete the TemporaryDirectory while that handle is open.
                 response.close()
 
+    def test_canonical_content_addressed_product_image_is_served_from_media_root(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / "p" / "625" / "cf6f0422f0cd" / "product-01.webp"
+            target.parent.mkdir(parents=True)
+            target.write_bytes(b"RIFFcanonicalWEBP")
+            with override_settings(MEDIA_ROOT=root):
+                response = serve_public_store_media(
+                    RequestFactory().get("/media/p/625/cf6f0422f0cd/product-01.webp"),
+                    "p/625/cf6f0422f0cd/product-01.webp",
+                )
+            try:
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("max-age=86400", response["Cache-Control"])
+            finally:
+                response.close()
+
     def test_private_and_traversal_paths_are_rejected(self):
-        for path in ("store/private-models/secret.stl", "../.env", "website/orders/a.jpg"):
+        for path in (
+            "store/private-models/secret.stl",
+            "store/imported-models/gallery/private.webp",
+            "../.env",
+            "website/orders/a.jpg",
+        ):
             with self.subTest(path=path):
                 with self.assertRaises(Http404):
                     _safe_public_store_path(path)

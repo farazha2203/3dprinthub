@@ -72,7 +72,7 @@ if settings.DEBUG:
 else:
     urlpatterns += [
         re_path(
-            r"^media/(?P<path>store/(?:products|categories|seo)/.*)$",
+            r"^media/(?P<path>(?:store/(?:products|categories|seo)|p)/.*)$",
             serve_public_store_media,
             name="public_store_media",
         )

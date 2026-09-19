@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner: finish Product upload, enable card transfer, reclaim Host backup space
+Status: `LOCAL_TESTED / GITHUB+DEPLOY NEXT`.
+
+Owner requires Product upload to become usable now, verifies the sales/card-transfer path, and requests removal of unnecessary Host backups. Real #625 proves the receiver/Product parity path is healthy; the remaining blocker is canonical public `/media/p/` routing. Manual card-transfer checkout + receipt + admin review already exist; Production currently lacks the singleton payment configuration, so the approved settings are applied only after the route release is deployed and a fresh verified DB backup exists. Backup cleanup must retain the newest rollback plus selected milestone/recovery evidence and must report exact reclaimed space; Product media, private media, pending imports, database and environment files are never cleanup targets.
+
 ## 2026-09-19 - Owner: remove Hero frame line and prioritize mobile image
 Status: `LOCAL_TESTED / COMMIT+DEPLOY NEXT`.
 

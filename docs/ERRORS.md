@@ -1,3 +1,27 @@
+## ERR-49-175 - Compact canonical Product media existed on disk but Production URL returned 404
+Date: 2026-09-19
+
+**Observed:** real #625 batch `desktop_catalog_v85_20260919_153311` completed receiver import with `republish_parity.ok=true`, Product #39 revision 6 and two exact canonical Product media rows, yet Windows public verification first could not discover the new namespace and, after checker correction, both discovered `/media/p/625/<sha12>/<seo>.webp` URLs returned HTTP 404.
+
+**Root cause:** ERR-49-173 intentionally shortened persisted media names to `p/<desktop-id>/<sha12>/<seo-basename>`, but the Production DEBUG=False fallback route and `PUBLIC_STORE_MEDIA_PREFIXES` still allowlisted only `store/products|categories|seo`. The files physically exist under the effective Production `MEDIA_ROOT=/home/sfkilvrs/3dprinthub/media`; the URL namespace was not routed.
+
+**Correct fix:** explicitly allow only the canonical public `p/` namespace in the public media view and DEBUG=False route. Do not expose `store/imported-models/` or any arbitrary MEDIA_ROOT path. Windows public verification separately accepts the legacy Product namespace plus canonical `/media/p/` only.
+
+**Verification:** canonical media route test serves `p/625/cf6f0422f0cd/product-01.webp`; private imported-media/traversal remain rejected. Combined public-media/manual-payment/checkout/unified-import gate 18/18 PASS; Django check and no-migration-drift PASS.
+
+**Prevention:** a storage-path contract change is incomplete until persisted field length, physical storage, public route allowlist and Windows public-verification parser are tested together.
+
+## ERR-49-175B - Store checkout regressions used stale seeded-shipping test assumptions
+Date: 2026-09-19
+
+**Observed:** broader StoreCheckout tests initially failed before behavior execution because migration data already owned unique `ShippingMethod(code=post)`; after correcting that fixture, one old assertion called the now-wrapped shipping calculator without the required weight argument.
+
+**Root cause:** the tests lagged the current migration/runtime contracts, not Production commerce behavior.
+
+**Correct fix:** reuse/update the migration-seeded `post` row in test setup and call the current two-input shipping fee contract. Do not alter runtime shipping logic to satisfy stale tests.
+
+**Verification:** StoreCheckout 6/6 PASS; combined gate 18/18 PASS.
+
 ## ERR-49-174 - Active PLA rates drifted and Site dynamic pricing diverged from Catalog
 Date: 2026-09-19
 

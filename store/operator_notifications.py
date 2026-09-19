@@ -147,6 +147,29 @@ def send_operator_message(*, text: str, subject: str = "درخواست قیمت 
     return sent, " | ".join(errors)
 
 
+def notify_payment_receipt(payment) -> tuple[bool, str]:
+    """Notify operators after a customer uploads a bank-transfer receipt.
+
+    Notification failure must never roll back the customer receipt itself.
+    """
+    order = payment.order
+    base = _site_base_url()
+    admin_url = f"{base}/admin/store/storepayment/{payment.pk}/change/"
+    amount = int(getattr(payment, "amount", 0) or 0)
+    text = (
+        "\U0001f4b3 \u0631\u0633\u06cc\u062f \u067e\u0631\u062f\u0627\u062e\u062a \u062c\u062f\u06cc\u062f\n"
+        f"\u0633\u0641\u0627\u0631\u0634: {order.order_number}\n"
+        f"\u0645\u0634\u062a\u0631\u06cc: {order.full_name or '-'} / {order.phone or '-'}\n"
+        f"\u0645\u0628\u0644\u063a: {amount:,} \u062a\u0648\u0645\u0627\u0646\n"
+        "\u0648\u0636\u0639\u06cc\u062a: \u062f\u0631 \u0627\u0646\u062a\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06cc \u0627\u062f\u0645\u06cc\u0646\n"
+        f"\u0628\u0631\u0631\u0633\u06cc \u0631\u0633\u06cc\u062f: {admin_url}"
+    )
+    return send_operator_message(
+        text=text,
+        subject=f"\u0631\u0633\u06cc\u062f \u067e\u0631\u062f\u0627\u062e\u062a \u0633\u0641\u0627\u0631\u0634 {order.order_number}",
+    )
+
+
 def notify_manual_review(review) -> None:
     if review.operator_notification_sent_at:
         return

@@ -1,3 +1,16 @@
+## 2026-09-19 - Canonical media route + manual payment go-live
+- [x] Reverify tunnel/Host identity/head/worktree and effective Production MEDIA_ROOT.
+- [x] Prove #625 strict DB parity is already PASS and isolate public failure to `/media/p/` HTTP 404.
+- [x] Route only canonical public `p/` media in DEBUG=False while private imported working-media remains denied.
+- [x] Verify existing bank-transfer checkout/receipt/review flow and Production configuration state.
+- [x] Add approved dry-run payment seed + best-effort operator receipt notification to the release lineage.
+- [x] Compile/check/no-drift + media/payment/checkout/unified-import 18/18 PASS.
+- [ ] Commit/push exact release + rollback branch.
+- [ ] Guarded no-migration Production deploy and canonical media HTTP 200 verification.
+- [ ] Fresh verified DB rollback -> apply payment settings -> safe read-back.
+- [ ] Reconcile #625 Local ACK without another Site import; then real Feed+Story.
+- [ ] Retain current/milestone rollback evidence and delete redundant Host deploy backups; measure reclaimed bytes.
+
 ## 2026-09-19 - #625 stale Profile range finalization
 - [x] Execute one real #625 publish after pricing/Hero deploy; strict parity fails closed only on stale Profile range 705k-825k.
 - [x] Prove incoming Filament/Variant facts are fresh because parity reports no Variant/Offer mismatches.

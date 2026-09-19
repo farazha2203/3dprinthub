@@ -1,3 +1,10 @@
+## 2026-09-19 - Canonical public media route + manual payment activation source
+- Added DEBUG=False serving for the compact content-addressed Product namespace `/media/p/...` from the configured MEDIA_ROOT; legacy public Store media remains supported and imported working-media remains private.
+- Added regression coverage for canonical public media serving and private imported-media rejection.
+- Added the approved manual bank-transfer settings seed (dry-run unless `--apply`) and operator notification after receipt persistence; notification failures cannot roll back the receipt/order state.
+- Aligned two stale Store checkout fixtures with migration-seeded ShippingMethod identity and current weighted shipping fee signature.
+- Local gate 18/18 PASS with compile/check/no-migration-drift/diff-check.
+
 ## 2026-09-19 - ERR-49-174 post-matrix Profile range finalization
 - Real #625 batch `desktop_catalog_v85_20260919_151926` proved updated managed Variant/Filament inputs could coexist with a stale persisted ProductCatalogProfile range.
 - Extracted `finalize_product_variant_prices()` as the single managed-Variant range authority and invoke it directly after Desktop profile-matrix mutation as well as from the Catalog Profile wrapper.

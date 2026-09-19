@@ -11,6 +11,7 @@ PUBLIC_STORE_MEDIA_PREFIXES = (
     "store/products/",
     "store/categories/",
     "store/seo/",
+    "p/",
 )
 
 
