@@ -1,3 +1,14 @@
+## 2026-09-20 - Phase50.A.2Q Hero shadow/cache + Instagram SEO v4
+- [x] Reverify main Windows branch clean/pushed and Production baseline 36a69e76.
+- [x] Inspect owner screenshot and match the dark lower band to the retired Slicebox shadow strip.
+- [x] Keep current server template shadow-free; add explicit legacy #shadow CSS/runtime suppression and Hero cache 50.10.0 on release lineage.
+- [x] Start Instagram policy v4: Product focus-keyword-first hashtags, 3DPrintHub order copy, nationwide shipping, UTM URL, ALT preservation and false «رایگان» claim removal.
+- [x] Complete focused/broad Local regressions and diff-check on both lineages: social 32/32 + Qt VerifyOnly; Hero 19/19 + Django/no-drift/Node/Bash.
+- [ ] Commit/push release + Windows candidates and verify exact remote SHAs/rollback refs.
+- [ ] Guarded Production Hero deploy through dedicated reverse tunnel and desktop/mobile browser acceptance.
+- [ ] Exact-SHA Qt VerifyOnly/relaunch; never repost #625 revision 8.
+- [ ] Close A2Q docs and start A2R payment/finance/admin closure.
+
 ## 2026-09-19 - Phase50.A.2P Buffer provider-compatible media host
 - [x] Verify current Production Hero 50.9 has no legacy shadow/frame DOM/style on a fresh browser.
 - [x] Verify #625 / Site #39 revision 8: exactly 3 active CC rows, 0 active legacy rows, 2 current ProductImages.

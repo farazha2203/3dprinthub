@@ -1,3 +1,11 @@
+## ERR-49-183 - Instagram SEO v4 first regression run retained the old policy-version assertion
+**Date:** 2026-09-20
+**Observed:** the first A2Q social regression run executed 32 tests and failed exactly one stable-receipt assertion because it still expected instagram-product-v3-20260919 after the deliberate policy bump to v4.
+**Root cause:** test contract staleness caused by the intentional policy-version change; no provider, caption, media, receipt or runtime behavior failed.
+**Correct fix:** update only the version assertion to instagram-product-v4-20260920 and rerun the same social scope after the condition changed.
+**Verification:** changed-condition social suite 32/32 PASS; Qt VerifyOnly PASS.
+**Prevention:** whenever the persisted social policy version changes intentionally, update the receipt-stability test in the same commit; never weaken content/duplicate/media assertions to make a version bump pass.
+
 ## ERR-49-183 - Buffer could not ingest valid social PNGs from the current Site origin
 **Date:** 2026-09-19
 **Observed:** after the WebP-specific compatibility fix, #625 generated valid Buffer-only PNG derivatives. Direct owner-side HEAD/GET returned HTTP 200, Content-Type image/png, stable Content-Length and cache headers, including with a Buffer-like User-Agent, but Buffer createPost still rejected both images as unreadable. No Feed receipt/post was created by that failed attempt.

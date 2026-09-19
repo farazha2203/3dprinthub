@@ -1,3 +1,8 @@
+## 2026-09-20 - Owner: finish Hero line, Instagram SEO and remaining phases
+Status: `A2Q SOCIAL LOCAL_TESTED / HERO RELEASE LOCAL_TESTED / PUBLISH NEXT`.
+
+Owner requests immediate removal of the remaining lower Hero line plus Instagram SEO hardening and continuation of the remaining phases. Instagram SEO v4 now uses Product-specific keyword priority, explicit 3DPrintHub ordering copy, UTM link, nationwide shipping, per-image ALT and bounded hashtags, and removes false «رایگان» claims before provider submission. The already-sent #625 revision-8 Feed/Story is protected by duplicate-revision guards and will not be recreated.
+
 ## 2026-09-19 - Owner: finish homepage frame, Instagram SEO and remaining publish phases
 Status: `HERO PRODUCTION_PASS / A2O LOCAL_TESTED / PRODUCT+SOCIAL ACCEPTANCE NEXT`.
 

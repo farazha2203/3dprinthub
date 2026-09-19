@@ -1,3 +1,11 @@
+## 2026-09-20 - Instagram Product SEO policy v4
+- Product focus keyword and Product-specific keywords now outrank generic tags in the bounded hashtag set; maximum remains eight.
+- Caption adds explicit 3DPrintHub.ir ordering copy while retaining Product SEO title/description, factual specs, nationwide-Iran shipping and UTM Product URL.
+- Social-policy normalization removes false Persian free-print/free-download claims before caption, hashtag or ALT generation.
+- Direct Instagram receipts now persist ALT texts, hashtags and policy version like the Buffer receipt path.
+- Social regression 32/32 PASS and Qt VerifyOnly PASS. The first run exposed only the intentionally stale v3 policy-version assertion; the changed-condition rerun is green.
+- Product #625 revision 8 remains historical acceptance evidence and is not reposted.
+
 ## 2026-09-19 - Real Instagram launch + provider-compatible Buffer media hosting
 - Product #625 / Site #39 revision 8 passed authoritative same-identity acceptance with exactly 3 active CC profiles, zero active legacy Variants and 2 current ProductImages.
 - Fresh Production Chromium confirms Hero 50.9 has no legacy Slicebox shadow/frame element and no slider/wrapper/root box-shadow or border.

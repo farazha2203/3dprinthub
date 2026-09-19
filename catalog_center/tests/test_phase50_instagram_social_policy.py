@@ -91,7 +91,7 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         self.assertEqual(highlight_target_for_product(cake), "پایه کیک")
 
     def test_policy_version_is_stable_for_receipts(self):
-        self.assertEqual(POLICY_VERSION, "instagram-product-v3-20260919")
+        self.assertEqual(POLICY_VERSION, "instagram-product-v4-20260920")
 
 
 if __name__ == "__main__":

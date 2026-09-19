@@ -60,7 +60,8 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", payload["caption"])
         self.assertIn("#چاپ_سه_بعدی", payload["caption"])
         self.assertLessEqual(len(payload["hashtags"]), 8)
-        self.assertEqual(payload["social_policy_version"], "instagram-product-v3-20260919")
+        self.assertEqual(payload["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertIn("سفارش این محصول از 3DPrintHub.ir", payload["caption"])
         self.assertIn("ارسال سفارش به سراسر ایران", payload["caption"])
         self.assertIn("#ارسال_سراسری", payload["hashtags"])
         self.assertEqual(len(payload["media_urls"]), 2)
@@ -125,6 +126,8 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         result = publish_product(db, 42, cfg, site_url="https://3dprinthub.ir")
         self.assertEqual(result["media_id"], "media-1")
         self.assertEqual(result["site_product_url"], "https://3dprinthub.ir/store/product/test-product/")
+        self.assertEqual(result["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertEqual(result["alt_texts"], ["نمای اصلی محصول", "نمای دوم محصول"])
         self.assertEqual(db.receipts[-1]["status"], "instagram_published")
         calls = [call.args[0] for call in request_json.call_args_list]
         self.assertTrue(all("makerworld" not in value.lower() for value in calls))
@@ -150,6 +153,40 @@ class Phase50InstagramPublishTests(unittest.TestCase):
                 InstagramConfig(account_id="ig-123"),
                 site_url="https://3dprinthub.ir",
             )
+
+    def test_social_seo_v4_removes_false_free_claims_and_prefers_product_keyword(self):
+        row = product_row()
+        row["seo_title_fa"] = "چاپ سه بعدی رایگان اسکلتی اسپینوزور"
+        row["seo_description_fa"] = "دانلود رایگان مدل و سفارش محصول"
+        row["social_caption_fa"] = "چاپ سه‌بعدی رایگان برای همه"
+        row["seo_focus_keyword"] = "اسکلتی اسپینوزور"
+        row["keywords_json"] = json.dumps(
+            ["اسکلتی اسپینوزور", "دایناسور متحرک"],
+            ensure_ascii=False,
+        )
+        row["hashtags_fa_json"] = json.dumps(
+            ["#دانلود_رایگان", "#اسکلتی_اسپینوزور"],
+            ensure_ascii=False,
+        )
+        row["image_alt_texts_json"] = json.dumps(
+            ["چاپ سه بعدی رایگان اسکلتی اسپینوزور", "نمای دوم محصول"],
+            ensure_ascii=False,
+        )
+
+        payload = canonical_site_payload(row, site_url="https://3dprinthub.ir")
+
+        combined = " ".join(
+            [
+                payload["caption"],
+                *payload["hashtags"],
+                *payload["alt_texts"],
+            ]
+        )
+        self.assertNotIn("رایگان", combined)
+        self.assertIn("#اسکلتی_اسپینوزور", payload["hashtags"])
+        self.assertIn("3DPrintHub.ir", payload["caption"])
+        self.assertIn("utm_source=instagram", payload["tracking_url"])
+        self.assertLessEqual(len(payload["hashtags"]), 8)
 
     def test_non_public_product_fails_closed(self):
         row = product_row()

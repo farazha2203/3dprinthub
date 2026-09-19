@@ -4,9 +4,16 @@ import json
 import re
 from typing import Any
 
-POLICY_VERSION = "instagram-product-v3-20260919"
+POLICY_VERSION = "instagram-product-v4-20260920"
 MAX_HASHTAGS = 8
 NATIONWIDE_SHIPPING_COPY = "ارسال سفارش به سراسر ایران"
+BRAND_ORDER_COPY = "سفارش این محصول از 3DPrintHub.ir"
+FORBIDDEN_FREE_CLAIMS = (
+    "چاپ سه بعدی رایگان",
+    "چاپ سه‌بعدی رایگان",
+    "دانلود رایگان",
+    "رایگان",
+)
 MAX_CAPTION = 2200
 MAX_ALT_TEXT = 1000
 STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v2_iransans"
@@ -32,8 +39,16 @@ def _json_list(value: Any) -> list[Any]:
     return list(parsed) if isinstance(parsed, list) else []
 
 
+def _strip_false_free_claims(value: Any) -> str:
+    text = str(value or "")
+    for claim in FORBIDDEN_FREE_CLAIMS:
+        text = re.sub(re.escape(claim), " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"[ \t]+([،,:؛;.!؟?])", r"\\1", text)
+    return re.sub(r"\s+", " ", text).strip(" -–—|،,:؛;")
+
+
 def _plain(value: Any, limit: int = 0) -> str:
-    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    text = _strip_false_free_claims(value)
     return text[:limit].rstrip() if limit and len(text) > limit else text
 
 
@@ -49,14 +64,14 @@ def _unique(values):
     return out
 def build_hashtags(row: dict[str, Any]) -> list[str]:
     raw = []
-    raw += _json_list(row.get("hashtags_fa_json"))
-    raw += _json_list(row.get("tags_fa_json"))
+    raw += [row.get("seo_focus_keyword")]
     raw += _json_list(row.get("keywords_json"))
+    raw += _json_list(row.get("tags_fa_json"))
+    raw += _json_list(row.get("hashtags_fa_json"))
     raw += _json_list(row.get("categories_fa_json"))
     raw += [row.get("local_category_slug"), row.get("use_case_class")]
     fixed_tags = (
         "#چاپ_سه_بعدی",
-        "#طراحی_سه_بعدی",
         "#ارسال_سراسری",
         "#3DPrintHub",
     )
@@ -98,7 +113,14 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
     description = _description(row)
     bullets = _sales_bullets(row)
     hashtags = build_hashtags(row)
+    focus_keyword = _plain(
+        row.get("seo_focus_keyword")
+        or ((_json_list(row.get("keywords_json")) or [""])[0]),
+        120,
+    )
     parts = [title] if title else []
+    if focus_keyword and focus_keyword.casefold() not in (title or "").casefold():
+        parts.append(f"🔎 {focus_keyword}")
     if description and description.casefold() != title.casefold():
         parts.append(description)
     if bullets:
@@ -112,6 +134,7 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
         specs.append("متریال: " + "، ".join(materials[:3]))
     if specs:
         parts.append("مشخصات: " + " | ".join(specs))
+    parts.append(f"🛒 {BRAND_ORDER_COPY}")
     parts.append(f"🚚 {NATIONWIDE_SHIPPING_COPY}")
     parts.append(f"مشاهده محصول، انتخاب مشخصات و ثبت سفارش:\n{tracking_url}")
     if hashtags:

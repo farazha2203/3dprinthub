@@ -1,3 +1,10 @@
+## 2026-09-20 - Phase50.A.2Q Hero shadow cache closure + Instagram SEO v4 IN_PROGRESS
+Owner screenshot shows the historical Slicebox dark shadow strip under the Home Hero. Current Production is clean at 36a69e76f9cd553273862ee400f9391573f3dd01 and fresh Home HTML already serves 50.9.0 without id=shadow; A2Q therefore adds a cache-safe hard suppression/runtime removal contract and cache bump 50.10.0 rather than reintroducing or redesigning the slider.
+
+Instagram itself is now proven real from A2P: #625 revision 8 Feed and companion Story were sent successfully through Buffer using the dedicated GitHub-hosted provider media boundary. A2Q does not repost #625. The next social policy version prioritizes Product focus keywords before generic tags, keeps max 8 hashtags, adds explicit 3DPrintHub.ir order copy, keeps nationwide shipping + UTM Product URL + per-image ALT, and strips false «رایگان» claims from caption/hashtags/ALT before provider submission.
+
+Local A2Q social verification is now complete: 32/32 maintained Instagram/Buffer/Story/media-host tests PASS, changed files compile, diff-check PASS and Qt VerifyOnly PASS. Exact next: commit/push Windows and Site lineages -> guarded Hero deploy from GitHub through reverse tunnel -> Production browser acceptance -> exact-SHA Qt relaunch -> begin A2R payment/finance/admin closure.
+
 ## 2026-09-19 - Phase50.A.2P Buffer media-host automation + REAL Instagram acceptance
 Production Site is clean at 36a69e76f9cd553273862ee400f9391573f3dd01. Fresh public Chromium on Hero 50.9.0 proves the owner-reported old Slicebox frame/shadow is no longer present: no #shadow DOM, slider/wrapper/root border=0 and box-shadow=none. Product #625 has also completed the authoritative same-identity path as Site Product #39 revision 8. Production read-back is exactly 3 active CC-P39 Variants, 0 active legacy Variants, 2 ProductImages; current prices are 1,095,000 / 1,215,000 Toman with 60 g final weight and 180 min print time.
 
