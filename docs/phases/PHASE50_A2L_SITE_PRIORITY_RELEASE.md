@@ -1,7 +1,7 @@
 # Phase50.A.2L — Site Priority Release
 
 Date: 2026-09-19
-Status: `BASE ba05c7fc VERIFIED CLEAN / PRICING + HERO 50.8 LOCAL_TESTED / COMMIT+DEPLOY NEXT`
+Status: `PRODUCTION 8ec35d26 / ERR-49-174 POST-MATRIX RANGE FIX LOCAL_TESTED / COMMIT+DEPLOY+RETRY NEXT`
 
 ## Requested delta
 - Keep the owner-approved Tympanus Slicebox Example-4 engine but enlarge the public stage to a 1280px responsive Product presentation.

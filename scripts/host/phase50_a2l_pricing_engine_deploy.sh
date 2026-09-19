@@ -7,7 +7,7 @@ PY="/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python"
 EXPECTED_DB="sfkilvrs_EmiAdmin_3dprinthub"
 HOST_BRANCH="release/phase50-a2j-hero-20260915"
 TARGET_BRANCH="release/phase50-a2l-owner-qa-20260918"
-EXPECTED_BASELINE="ba05c7fc479ae94d4a85676442008e018dbbcc67"
+EXPECTED_BASELINE="8ec35d269ddab05bed5fab7d9c3fcc3fb6691fc7"
 STATIC_ROOT="/home/sfkilvrs/public_html/static"
 TARGET_SHA="${1:-}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
@@ -70,9 +70,11 @@ cat "$TMP_DELTA"
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings' "$TMP_DELTA"; then
   fail "migration_dependency_or_settings_delta_detected"
 fi
-for required in store/phase49_3f_pricing.py store/phase49_3f_pricing_finalize.py store/phase50_profile_matrix.py store/test_phase50_filament_offer_operations.py static/css/phase50-a2k-tympanus-slicebox.css templates/website/partials/hero.html; do
+for required in store/phase49_3f_pricing_finalize.py store/phase50_profile_matrix.py store/test_phase50_filament_offer_operations.py; do
   grep -Fxq "$required" "$TMP_DELTA" || fail "required_delta_missing:$required"
 done
+git cat-file -e "$FETCHED:static/css/phase50-a2k-tympanus-slicebox.css" || fail "hero_css_missing_from_target"
+git cat-file -e "$FETCHED:templates/website/partials/hero.html" || fail "hero_template_missing_from_target"
 mkdir -p "$BACKUP_ROOT/static-before"
 chmod 700 "$BACKUP_ROOT"
 git bundle create "$BACKUP_ROOT/source-before.bundle" HEAD

@@ -1,6 +1,65 @@
 from __future__ import annotations
 
 
+def finalize_product_variant_prices(product, *, profile=None):
+    """Recalculate the authoritative Product range after managed Variants mutate.
+
+    Desktop-managed CC-P rows are the price authority for Catalog Products.
+    This boundary is intentionally callable from both the Catalog Profile wrapper
+    and the profile-matrix synchronizer so a later Variant refresh cannot leave
+    ProductCatalogProfile.price_min/price_max stale.
+    """
+    if profile is None:
+        try:
+            profile = product.catalog_profile
+        except Exception:
+            return None
+
+    strategy = str(
+        getattr(profile, "pricing_strategy", "legacy") or "legacy"
+    ).strip().lower()
+    if strategy not in {"fixed", "dynamic"}:
+        return profile
+
+    active_qs = (
+        product.variants.filter(is_active=True)
+        .select_related("material", "quality", "color")
+        .order_by("id")
+    )
+    managed_prefix = f"CC-P{product.pk}-"
+    managed_qs = active_qs.filter(
+        code__startswith=managed_prefix,
+        sales_profile_key__gt="",
+    )
+    # Desktop-managed Catalog Products own their public variant range.
+    # Historical/manual variants may remain in the DB for rollback/admin,
+    # but must not dilute the published Catalog price range once CC-P rows exist.
+    active = list(managed_qs if managed_qs.exists() else active_qs)
+    prices: list[int] = []
+    for variant in active:
+        prices.append(int(variant.recalculate_price(save=True) or 0))
+    prices = [value for value in prices if value > 0]
+    if not prices:
+        return profile
+
+    minimum = min(prices)
+    maximum = max(prices)
+    changed: list[str] = []
+    if profile.price_min != minimum:
+        profile.price_min = minimum
+        changed.append("price_min")
+    if profile.price_max != maximum:
+        profile.price_max = maximum
+        changed.append("price_max")
+    wanted_mode = "fixed" if strategy == "fixed" else "variant"
+    if profile.price_mode != wanted_mode:
+        profile.price_mode = wanted_mode
+        changed.append("price_mode")
+    if changed:
+        profile.save(update_fields=[*changed, "updated_at"])
+    return profile
+
+
 def install() -> None:
     """Finalize Phase49.3F prices only after the catalog profile strategy is saved.
 
@@ -17,48 +76,7 @@ def install() -> None:
 
     def sync_catalog_profile(product, asset, data: dict, **kwargs):
         profile = original(product, asset, data, **kwargs)
-        strategy = str(getattr(profile, "pricing_strategy", "legacy") or "legacy").strip().lower()
-        if strategy not in {"fixed", "dynamic"}:
-            return profile
-
-        active_qs = (
-            product.variants.filter(is_active=True)
-            .select_related("material", "quality", "color")
-            .order_by("id")
-        )
-        managed_prefix = f"CC-P{product.pk}-"
-        managed_qs = active_qs.filter(
-            code__startswith=managed_prefix,
-            sales_profile_key__gt="",
-        )
-        # Desktop-managed Catalog Products own their public variant range.
-        # Historical/manual variants may remain in the DB for rollback/admin,
-        # but must not dilute the published Catalog price range once CC-P rows
-        # exist.
-        active = list(managed_qs if managed_qs.exists() else active_qs)
-        prices: list[int] = []
-        for variant in active:
-            prices.append(int(variant.recalculate_price(save=True) or 0))
-        prices = [value for value in prices if value > 0]
-        if not prices:
-            return profile
-
-        minimum = min(prices)
-        maximum = max(prices)
-        changed: list[str] = []
-        if profile.price_min != minimum:
-            profile.price_min = minimum
-            changed.append("price_min")
-        if profile.price_max != maximum:
-            profile.price_max = maximum
-            changed.append("price_max")
-        wanted_mode = "fixed" if strategy == "fixed" else "variant"
-        if profile.price_mode != wanted_mode:
-            profile.price_mode = wanted_mode
-            changed.append("price_mode")
-        if changed:
-            profile.save(update_fields=[*changed, "updated_at"])
-        return profile
+        return finalize_product_variant_prices(product, profile=profile)
 
     epic49_catalog_profile.sync_catalog_profile = sync_catalog_profile
     epic49_catalog_profile._phase49_3f_pricing_finalize_installed = True

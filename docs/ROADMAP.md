@@ -1,3 +1,16 @@
+## 2026-09-19 - #625 stale Profile range finalization
+- [x] Execute one real #625 publish after pricing/Hero deploy; strict parity fails closed only on stale Profile range 705k-825k.
+- [x] Prove incoming Filament/Variant facts are fresh because parity reports no Variant/Offer mismatches.
+- [x] Extract one reusable `finalize_product_variant_prices()` authority.
+- [x] Finalize Profile range immediately after `sync_desktop_profile_matrix` mutates CC-P Variants.
+- [x] Exact stale-range regression: 705k-825k -> 1.095m-1.215m PASS.
+- [x] Pricing/API + Unified Import E2E 12/12 PASS; compile/check/no-drift PASS.
+- [x] Rebase guarded deploy runner on exact Production `8ec35d...`.
+- [ ] Commit/push fix + rollback ref.
+- [ ] Guarded Production deploy with fresh source/.env/MySQL/static rollback evidence.
+- [ ] Re-mark #625 ready, fresh Catalog backup, one changed-condition republish retry.
+- [ ] Full Product #39 read-back/browser verification, then real Instagram Feed+Story and Highlight queue.
+
 ## 2026-09-19 - Hero frame/mobile image-priority hotfix
 - [x] Reverify recovered dedicated tunnel and exact clean Production baseline `ba05c7fc...`.
 - [x] Remove visible Slicebox outer border/outline/box-shadow without altering the vendored engine.

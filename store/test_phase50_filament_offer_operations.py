@@ -236,6 +236,10 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             public_slug="filament-offer-ops",
             pricing_strategy="dynamic",
             price_mode="variant",
+            # Reproduce the real #625 failure boundary: the persisted Profile
+            # still carried the pre-repair 0/70k service-rate range.
+            price_min=705_000,
+            price_max=825_000,
         )
         rows = [{
             "key": "spino-60-pla-white",
@@ -266,6 +270,34 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             "fixed_price": 0,
             "is_default": True,
             "is_active": True,
+        }, {
+            "key": "spino-60-pla-bambu",
+            "name": "60g PLA Bambu",
+            "size_label": "60g",
+            "weight_grams": 60,
+            "material_weight_grams": 110,
+            "support_weight_grams": 50,
+            "support_cost_multiplier": 1,
+            "print_time_minutes": 180,
+            "assembly_fee": 0,
+            "part_length_cm": 10,
+            "part_width_cm": 10,
+            "part_height_cm": 10,
+            "material": self.material.name,
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "صورتی پاستیلی",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 1,
+            "purchase_price_per_roll": 3_500_000,
+            "sale_price_per_roll": 4_500_000,
+            "print_hourly_rate": 150_000,
+            "supervision_hourly_rate": 50_000,
+            "preheat_hours": 0,
+            "preheat_temperature_c": 0,
+            "preheat_hourly_rate": 0,
+            "fixed_price": 0,
+            "is_active": True,
         }]
         sync_desktop_profile_matrix(self.product, self._asset(rows))
         variant = self.product.variants.get(sales_profile_key="spino-60-pla-white")
@@ -284,6 +316,13 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertEqual(Decimal(result["actual_material_grams"]), Decimal("110"))
         self.assertEqual(Decimal(result["chargeable_material_grams"]), Decimal("110"))
         self.assertEqual(result["billable_print_minutes"], 180)
+
+        # Matrix sync itself is the final mutable-Variant boundary. It must
+        # immediately replace the stale persisted Profile range using the fresh
+        # Desktop-managed rate facts, before parity verification can run.
+        profile.refresh_from_db()
+        self.assertEqual(profile.price_min, 1_095_000)
+        self.assertEqual(profile.price_max, 1_215_000)
 
         # Historical/manual variants are retained but may not contaminate the
         # public Catalog range once Desktop-managed CC-P variants exist.
@@ -317,7 +356,7 @@ class Phase50FilamentOfferOperationsTests(TestCase):
             bump_revision=False,
         )
         synced.refresh_from_db()
-        self.assertEqual(synced.price_min, 1_215_000)
+        self.assertEqual(synced.price_min, 1_095_000)
         self.assertEqual(synced.price_max, 1_215_000)
 
     def test_desktop_two_brands_same_material_color_create_distinct_fixed_variants(self):

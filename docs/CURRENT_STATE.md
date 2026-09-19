@@ -1,3 +1,10 @@
+## 2026-09-19 - #625 stale Profile range root cause fixed LOCAL_TESTED
+Production is clean and verified at `8ec35d269ddab05bed5fab7d9c3fcc3fb6691fc7`; Hero 50.8 and the shared Desktop pricing formula are live. Real #625 retry batch `desktop_catalog_v85_20260919_151926` correctly failed closed with only `profile.price_min/max` stale: expected 1095000-1215000, actual 705000-825000. The absence of Filament/Variant mismatches proved fresh 150k/50k Offer facts had reached the managed Variants while the persisted ProductCatalogProfile range had not been finalized after the last matrix mutation.
+
+Root cause is now closed at the actual mutable boundary: `sync_desktop_profile_matrix()` calls one reusable `finalize_product_variant_prices()` immediately after updating/deactivating CC-P Variants. The existing Catalog Profile wrapper uses the same finalizer, so there is one range authority and no dependency on post-save signal ordering. Exact #625 regression starts from stale 705k-825k and proves Bambu/no-preheat=1095000 plus eSUN/preheat=1215000 => Profile range 1095000-1215000.
+
+Verification: exact regression PASS; pricing/API + Unified Import E2E 12/12 PASS; Python compile/check/no-drift PASS. One unrelated stale UI assertion for removed `filament_visual_options` remains the already-documented Production-lineage contract and was not retried unchanged. Deploy runner baseline is now exact Production `8ec35d...`; next is commit/push -> guarded deploy with fresh rollback backup -> re-mark #625 ready -> fresh Local backup -> one changed-condition republish retry -> full Product #39 read-back/browser -> Instagram Feed+Story.
+
 ## 2026-09-19 - Hero border/mobile image-priority + pricing release LOCAL_TESTED
 Dedicated 3DPrintHub reverse tunnel is healthy again: Windows `127.0.0.1:22024=True`, authenticated bridge `ok=true`, base `/home/sfkilvrs/3dprinthub`. Production identity was reverified read-only as clean `release/phase50-a2j-hero-20260915 @ ba05c7fc479ae94d4a85676442008e018dbbcc67`.
 

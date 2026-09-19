@@ -1,13 +1,13 @@
 ## ERR-49-174 - Active PLA rates drifted and Site dynamic pricing diverged from Catalog
 Date: 2026-09-19
 
-**Observed:** after the media-path fix, real #625 import reached strict parity and rolled back with Windows range 705000-825000 versus Site 104500-675000.
+**Observed:** the first strict-parity failure exposed Local PLA drift and an incomplete Site formula. After deploying that formula fix and repairing Local PLA, real #625 batch `desktop_catalog_v85_20260919_151926` failed closed again with expected Profile range 1095000-1215000 but persisted Site Profile range 705000-825000. Import reported no Filament/Variant parity mismatch.
 
-**Root cause:** Local active PLA service rates had drifted, while the Site dynamic engine also did not consume the complete Desktop sales-profile formula and could include unrelated historical/manual Variant prices.
+**Root cause:** two boundaries were involved. First, active Local PLA service rates had drifted and the Site dynamic engine did not consume the complete Desktop formula. After those were fixed, a second stale-cache boundary remained: `sync_desktop_profile_matrix()` updated the CC-P Variants/Offer facts, but ProductCatalogProfile.price_min/price_max finalization depended on surrounding signal/wrapper ordering. The managed Variants were fresh while the persisted Profile range could remain from the pre-repair 0/70k service rates.
 
-**Correct fix:** Server Desktop-managed `CC-P...` Variants calculate material + print + supervision + preheat + assembly from exact Desktop profile/Filament inputs. Exact part/support weights, print time, support multiplier and assembly fee are synced. When managed Variants exist, they define the Catalog Product public range. Local Filament data repair remains a separate backed-up Windows operation using the owner-approved post-default Catalog evidence.
+**Correct fix:** Desktop-managed `CC-P...` Variants calculate material + print + supervision + preheat + assembly from exact Desktop inputs. One reusable `finalize_product_variant_prices()` now owns managed-range recalculation and is called both by the Catalog Profile wrapper and immediately after the profile-matrix mutation boundary. Historical/manual Variants cannot dilute the range once CC-P rows exist.
 
-**Verification:** targeted Server pricing/mapping/API suite 5/5 PASS; Django check PASS with known warning; no migration drift. Cross-runtime fixture returns 1,215,000 Toman from the same inputs on both engines.
+**Verification:** exact regression seeds stale 705000-825000, syncs Bambu 150k/50k without preheat plus eSUN 150k/50k with 4h×30k preheat, and requires Profile 1095000-1215000. Relevant pricing/API + Unified Import E2E 12/12 PASS; Django check PASS with known warning; no migration drift.
 
 **Prevention:** never weaken strict publish parity to hide price differences. Refresh mutable Filament data before Batch generation and require Site read-back range to match the same formula.
 

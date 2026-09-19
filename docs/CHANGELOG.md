@@ -1,3 +1,9 @@
+## 2026-09-19 - ERR-49-174 post-matrix Profile range finalization
+- Real #625 batch `desktop_catalog_v85_20260919_151926` proved updated managed Variant/Filament inputs could coexist with a stale persisted ProductCatalogProfile range.
+- Extracted `finalize_product_variant_prices()` as the single managed-Variant range authority and invoke it directly after Desktop profile-matrix mutation as well as from the Catalog Profile wrapper.
+- Added exact regression from stale 705k-825k to Bambu/eSUN range 1.095m-1.215m.
+- Relevant pricing/API and Unified Import E2E gate 12/12 PASS; no migration delta.
+
 ## 2026-09-19 - Slicebox frame cleanup + mobile image-priority
 - Removed the visible outer Slicebox border/outline/shadow contract while preserving the original Tympanus engine and desktop 3D behavior.
 - Mobile Hero now uses a taller 4:3 image presentation and removes long description, focus-keyword pill and CTA from the image overlay; only the compact Product title remains.

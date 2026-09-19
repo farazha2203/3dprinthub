@@ -459,4 +459,10 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             first.sales_profile_is_default = True
             first.save(update_fields=["sales_profile_is_default"])
 
+    # The matrix is the last mutation boundary for Desktop-managed CC-P rows.
+    # Re-finalize the Product range here instead of relying on signal ordering:
+    # a stale Profile range must never survive fresh Variant/Filament inputs.
+    from .phase49_3f_pricing_finalize import finalize_product_variant_prices
+    finalize_product_variant_prices(product)
+
     return created_or_updated
