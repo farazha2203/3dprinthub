@@ -1030,7 +1030,7 @@ def publish_many(
             }
 
         state = str(item.get("status") or "")
-        server_id = str(item.get("server_id") or "")
+        incoming_server_id = str(item.get("server_id") or "")
         payload = dict(item)
         payload["diagnostic_id"] = str(ack.get("diagnostic_id") or "")
         payload["bridge_status"] = str(ack.get("bridge_status") or "")
@@ -1039,31 +1039,51 @@ def publish_many(
             product_id,
             batch_uuid,
             state,
-            server_id,
+            incoming_server_id,
             payload,
         )
 
-        values = {
-            "server_id": server_id,
-            "server_status": state,
-            "server_ack_json": json.dumps(payload, ensure_ascii=False),
-            "last_synced_at": now,
-            "server_product_id": int(
-                item.get("server_product_id")
-                or item.get("product_id")
-                or 0
-            ),
-            "server_product_revision": int(item.get("product_revision") or 0),
-            "server_slider_id": int(item.get("slider_id") or 0),
-            "server_slider_revision": int(item.get("slider_revision") or 0),
-            "last_sync_conflict": "",
-        }
-
-        if ack_item_confirms_publish(
+        confirmed = ack_item_confirms_publish(
             item,
             row,
             require_store_visibility=True,
-        ):
+        )
+        values = {
+            "server_status": state,
+            "last_synced_at": now,
+            "last_sync_conflict": "",
+        }
+
+        if confirmed:
+            server_id = incoming_server_id
+            values.update({
+                "server_id": server_id,
+                "server_ack_json": json.dumps(payload, ensure_ascii=False),
+                "server_product_id": int(
+                    item.get("server_product_id")
+                    or item.get("product_id")
+                    or 0
+                ),
+                "server_product_revision": int(item.get("product_revision") or 0),
+                "server_slider_id": int(item.get("slider_id") or 0),
+                "server_slider_revision": int(item.get("slider_revision") or 0),
+            })
+        else:
+            # A failed re-publish transaction must not erase the last verified
+            # Site identity/ACK. The failure receipt above remains the complete
+            # diagnostic record, while these stable fields keep the next retry
+            # on the same Product instead of degrading into a create/unknown path.
+            server_id = str(row["server_id"] or "")
+            values.update({
+                "server_id": server_id,
+                "server_ack_json": str(row["server_ack_json"] or "{}"),
+                "server_product_id": int(row["server_product_id"] or 0),
+                "server_product_revision": int(row["server_product_revision"] or 0),
+                "server_slider_id": int(row["server_slider_id"] or 0),
+                "server_slider_revision": int(row["server_slider_revision"] or 0),
+            })
+
+        if confirmed:
             values.update({
                 "workflow_status": "uploaded",
                 "upload_ready": 0,

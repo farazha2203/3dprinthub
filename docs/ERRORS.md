@@ -1,3 +1,11 @@
+## ERR-49-182 - Failed re-publish erased the last verified Windows Site identity
+**Date:** 2026-09-19
+**Observed:** after a controlled #625 retry failed closed on a parity mismatch, Local Product #625 changed from the existing Site linkage (#39 / revision 7) to `server_product_id=0`, `server_product_revision=0`, and replaced its good public ACK with the failed ACK. The Site transaction itself had rolled back and Product #39 still existed.
+**Root cause:** the Windows bulk-publish ACK handler wrote incoming identity/revision fields unconditionally. A failed ACK normally contains no Product/slider ids, so zeros overwrote the last verified linkage.
+**Correct fix:** always record the failed receipt/error, but update Site identity/revisions and canonical `server_ack_json` only when `ack_item_confirms_publish()` succeeds. On failure preserve the previous verified asset/Product/slider identity and ACK so the next retry stays on the same Site Product.
+**Verification:** dedicated regression plus full Site-publish module 19/19 PASS; Instagram/social adjacent suite 27/27 PASS; diff-check PASS.
+**Prevention:** failure diagnostics belong in receipts/error state; never treat absent ids in a failed transaction as authoritative deletion of an existing remote identity.
+
 ## ERR-49-179 - Successful re-publish left stale legacy Variants active
 **Date:** 2026-09-19
 **Observed:** Product #625 re-published successfully to the same Site Product #39 at revision 7 with `republish_parity.ok=true`, three current Desktop profiles and current media, but the public Store still exposed stale weight/material/price behavior.

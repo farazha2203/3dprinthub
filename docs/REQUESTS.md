@@ -1,3 +1,10 @@
+## 2026-09-19 - Owner: finish homepage frame, Instagram SEO and remaining publish phases
+Status: `HERO PRODUCTION_PASS / A2O LOCAL_TESTED / PRODUCT+SOCIAL ACCEPTANCE NEXT`.
+
+Owner supplied a homepage screenshot marking the lower rectangular line under the Slicebox and asked to finish remaining phases quickly, including Instagram Feed/Story and Instagram SEO. Current Production `36a69e76...` already carries Hero 50.9 where the legacy raster shadow node/runtime is removed; browser verification confirms no shadow DOM and healthy desktop/mobile slider behavior.
+
+Before the social acceptance retry, Windows A2O closes a newly observed reliability gap: a failed same-Product republish must retain the last verified Site Product identity/ACK. After commit/push, restore #625 linkage from verified rollback evidence, re-publish exactly once, verify Product #39 current fields/media, then use only that current Site revision for Buffer-compatible Feed PNG + branded Story, Product SEO caption/ALT/bounded hashtags/UTM/nationwide shipping CTA and Highlight queue receipt.
+
 ## 2026-09-19 - Owner: re-send must completely update the existing Site Product
 Status: `A2M LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
 

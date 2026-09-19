@@ -1,3 +1,12 @@
+## 2026-09-19 - Phase50.A.2O failed-republish identity preservation LOCAL_TESTED
+The first changed-condition #625 retry after the A2M/A2N Production release exposed a Windows-side resilience defect, not another Host data bug. The receiver correctly rolled back on the then-stale parity rule, but Windows overwrote the last verified Site linkage/ACK with the failed ACK and reset `server_product_id/server_product_revision` to zero. That made the next retry lose the existing Product identity even though Site Product #39 still existed.
+
+A2O changes failed-republish handling: every failed attempt is still recorded as a receipt and `product_sync_error/server_status=failed`, but the last verified Site asset/Product/slider ids, revisions and successful `server_ack_json` remain intact until a later confirmed publish replaces them. Local regression proves a failed retry preserves Product #39 revision 7 linkage. Catalog Site-publish suite 19/19 PASS; Instagram feed/Story/social suite 27/27 PASS; diff-check PASS. Production is already clean at `36a69e76...`, where Hero 50.9 shadow-frame removal and corrected profile-driven parity are live.
+
+The owner screenshot issue is therefore fixed in current Production code: public HTML has cache key 50.9.0 and no `#shadow` element; real Chromium reports desktop Slicebox ready=1, 2 slides, 5 cuboids/30 sides on Next, and mobile ready=1 with nonzero 366x274.5 slider and zero document overflow. Exact next: commit/push A2O -> fresh Catalog backup -> restore only the verified #625 Site linkage from pre-failure evidence -> one official same-identity re-publish -> strict Product #39 read-back -> real Buffer compatibility PNG Feed+Story attempt and receipt verification.
+
+Instagram remains not yet externally complete until Buffer returns successful Feed/Story receipts.
+
 ## 2026-09-19 - Phase50.A.2M authoritative re-publish replacement LOCAL_TESTED
 Owner regression is reproduced on real Product #625 / Site Product #39. The 2026-09-19 revision-7 ACK is `status=updated`, `republish_parity.ok=true`, ProductImage count=2 and three current Windows sales profiles. Production read-only evidence nevertheless shows **5 active Variants**: three correct `CC-P39-...` rows plus stale `EP49-3F...` rows 5940/5945 carrying 1 g / 60 min / 104,500 Toman. That additive legacy state is why the public Product can still expose old weight/material/price after a successful Windows re-send.
 

@@ -1,3 +1,17 @@
+## 2026-09-19 - Phase50.A.2O re-publish resilience + Instagram acceptance
+- [x] Verify Production is exact clean `36a69e76...` and Hero 50.9/no-shadow is live.
+- [x] Browser-verify desktop Slicebox transition and mobile nonzero Hero/no document overflow.
+- [x] Reproduce #625 failed-retry linkage loss on Windows.
+- [x] Preserve last verified Site ids/revisions/ACK on failed publish while keeping failure receipt/error.
+- [x] Site-publish 19/19 + Instagram/social 27/27 + diff-check PASS.
+- [ ] Commit/push exact Windows A2O candidate and verify GitHub SHA.
+- [ ] Fresh Catalog rollback; restore only #625 verified Site linkage from pre-failure backup.
+- [ ] One official #625 same-identity re-publish against Production 36a69e76.
+- [ ] Require Product #39 strict parity, exactly 3 active CC rows, no stale active Variant, current media and public Browser/API PASS.
+- [ ] Generate Buffer compatibility PNGs from current verified Site media and submit one Feed+Story.
+- [ ] Require provider post ids/external links, ALT/SEO/hashtags/UTM/nationwide-shipping receipt audit and Highlight target queue.
+- [ ] Close A2O docs and proceed to the next remaining Phase50 backlog only after these acceptance gates.
+
 ## 2026-09-19 - Phase50.A.2M authoritative re-publish replacement
 - [x] Reproduce owner regression against real #625 / Site #39.
 - [x] Prove revision-7 ACK succeeded while two stale EP49-3F Variants remained active beside three current CC rows.

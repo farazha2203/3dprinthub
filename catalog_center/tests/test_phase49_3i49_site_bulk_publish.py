@@ -353,6 +353,80 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertTrue(str(row["published_at"]))
         self.assertEqual(self.db.product_count(filter_name="published"), 2)
 
+    def test_failed_republish_preserves_last_verified_site_identity_and_ack(self):
+        product_id = self._product("3491003")
+        previous_ack = {
+            "status": "updated",
+            "server_id": 143,
+            "product_id": 39,
+            "product_revision": 7,
+            "visible_on_store": True,
+            "public_http_ok": True,
+            "product_url": "/store/product/existing-product/",
+        }
+        self.db.update_product(
+            product_id,
+            {
+                "server_id": "143",
+                "server_status": "updated",
+                "server_ack_json": json.dumps(previous_ack, ensure_ascii=False),
+                "server_product_id": 39,
+                "server_product_revision": 7,
+                "server_slider_id": 12,
+                "server_slider_revision": 4,
+                "workflow_status": "uploaded",
+                "upload_ready": 0,
+            },
+        )
+        self.db.update_product(product_id, {"needs_update": 1})
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+
+        def fake_upload(_settings, _batch, callback=None):
+            return {"remote_batch": "/remote/fail", "uploaded_files": 1, "total_files": 1}
+
+        def fake_import(_settings, batch_name, batch_uuid):
+            return {
+                "status": "completed_with_errors",
+                "batch_uuid": batch_uuid,
+                "diagnostic_id": batch_name,
+                "items": [{
+                    "desktop_product_id": product_id,
+                    "status": "failed",
+                    "error": "REPUBLISH_PARITY_MISMATCH: test failure",
+                }],
+            }
+
+        result = publish_many(
+            self.db,
+            FakeStages(),
+            SimpleNamespace(),
+            [product_id],
+            batch_root=self.root / "failed-republish-batches",
+            uploader=fake_upload,
+            importer=fake_import,
+            server_getter=lambda _settings, _server_id: {
+                "profile": {"sync_revision": 7},
+            },
+            readiness_checker=lambda _settings: {"ready": True, "blockers": []},
+        )
+        self.assertEqual(result["published"], 0)
+        self.assertEqual(result["failed"], 1)
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(int(row["server_product_id"]), 39)
+        self.assertEqual(int(row["server_product_revision"]), 7)
+        self.assertEqual(int(row["server_slider_id"]), 12)
+        self.assertEqual(int(row["server_slider_revision"]), 4)
+        self.assertEqual(str(row["server_id"]), "143")
+        self.assertEqual(json.loads(row["server_ack_json"]), previous_ack)
+        self.assertEqual(row["server_status"], "failed")
+        self.assertIn("REPUBLISH_PARITY_MISMATCH", row["product_sync_error"])
+        failed_receipts = [
+            item for item in self.db.sync_receipts(product_id, limit=20)
+            if str(item["status"] or "") == "failed"
+        ]
+        self.assertEqual(len(failed_receipts), 1)
 
     def test_publish_ready_requires_current_final_seo_webp(self):
         product_id = self._product("3491012", finalize_images=False)

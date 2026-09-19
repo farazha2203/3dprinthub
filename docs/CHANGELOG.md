@@ -1,3 +1,10 @@
+## 2026-09-19 - Failed re-publish identity resilience
+- Failed Site imports no longer erase the last verified Windows Site Product/slider ids, revisions or successful ACK.
+- Failure receipts and `product_sync_error` remain complete, so diagnostics are preserved without degrading the next retry into a new/unknown Product path.
+- Added regression covering an existing Product #39/revision-7 style retry that fails parity and must retain its prior linkage.
+- Site-publish regression 19/19 and Instagram/social adjacent regression 27/27 PASS.
+- Production Hero 50.9 verification confirms the legacy Slicebox shadow DOM is absent and desktop/mobile runtime remains healthy.
+
 ## 2026-09-19 - Authoritative existing-Product re-publish replacement
 - Existing Site Product identity remains stable, but the latest Windows `sales_profiles_json` now fully replaces the active Store Variant matrix.
 - Historical/manual/MW-FIX/EP49/EP49-3F/removed CC rows are retained but deactivated instead of remaining orderable.
