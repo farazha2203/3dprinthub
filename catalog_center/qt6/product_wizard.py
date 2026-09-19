@@ -404,6 +404,7 @@ class ProductWizardPage(QWidget):
         self.image_name_seo_btn = QPushButton("اصلاح اسم و سئو")
         delete_selected = QPushButton("حذف انتخابی")
         delete_selected.setProperty("danger", True)
+        add_files = QPushButton("+ عکس از فایل")
         screenshot = QPushButton("اسکرین‌شات")
         recover = QPushButton("بازیابی از لینک")
         recover.setProperty("primary", True)
@@ -416,6 +417,9 @@ class ProductWizardPage(QWidget):
             "اگر انتخاب عملیاتی نداشته باشی، روی همه تصاویر انتخاب‌شده برای سایت اجرا می‌شود."
         )
         delete_selected.setToolTip("حذف فقط تصاویر انتخاب‌شده")
+        add_files.setToolTip(
+            "افزودن عکس از کامپیوتر؛ فایل جدید به‌صورت پیش‌فرض برای سایت انتخاب می‌شود."
+        )
         screenshot.setToolTip("دریافت اسکرین‌شات صفحه محصول")
         recover.setToolTip(
             "دریافت داده و عکس بیشتر از لینک محصول؛ تصمیم‌های اپراتور "
@@ -437,6 +441,7 @@ class ProductWizardPage(QWidget):
         edit_seo.clicked.connect(self._edit_selected_image_seo)
         self.image_name_seo_btn.clicked.connect(self._apply_product_image_seo)
         delete_selected.clicked.connect(self._delete_selected_images)
+        add_files.clicked.connect(self._add_local_images)
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
 
@@ -447,6 +452,7 @@ class ProductWizardPage(QWidget):
             edit_seo,
             self.image_name_seo_btn,
             delete_selected,
+            add_files,
             screenshot,
             recover,
         )
@@ -1711,6 +1717,30 @@ class ProductWizardPage(QWidget):
             QMessageBox.warning(self, "حذف تصویر", str(exc))
             return
         self.load_product(self.product_id)
+
+    def _add_local_images(self) -> None:
+        if self.product_id is None:
+            return
+        paths, _selected = QFileDialog.getOpenFileNames(
+            self,
+            "افزودن عکس به محصول",
+            "",
+            "Images (*.jpg *.jpeg *.png *.webp *.gif *.avif);;All files (*.*)",
+        )
+        if not paths:
+            return
+        try:
+            result = self.kernel.images.add_local_files(
+                self.product_id,
+                [str(path) for path in paths],
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "افزودن عکس", str(exc))
+            return
+        self.load_product(self.product_id)
+        self.image_task_status.setText(
+            f"✓ {len(result.get('added') or [])} عکس اضافه و برای سایت انتخاب شد"
+        )
 
     def _delete_selected_images(self) -> None:
         if self.product_id is None:

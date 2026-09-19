@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from dataclasses import dataclass
@@ -1303,6 +1304,84 @@ class ImageCore:
                 "مرحله تصاویر ثبت نهایی شده است؛ ابتدا «اصلاح مرحله» را بزن."
             )
         return row
+
+    def add_local_files(
+        self,
+        product_id: int,
+        paths: list[str],
+    ) -> dict[str, Any]:
+        """Copy owner-selected files into the Product and select them for publish."""
+        row = self._assert_images_editable(product_id)
+        data = dict(row)
+        raw_root = str(data.get("local_dir") or "").strip()
+        if raw_root:
+            local_dir = Path(raw_root).resolve()
+        else:
+            source_code = str(data.get("source_code") or "manual").strip() or "manual"
+            external_id = str(data.get("external_id") or product_id).strip() or str(product_id)
+            local_dir = (Path(self.db.path).parent / "collected" / source_code / external_id).resolve()
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+
+        allowed = {".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif"}
+        urls = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("images_json"))
+            if str(value or "").strip()
+        ]
+        selected = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        added: list[str] = []
+        for raw in paths or []:
+            source = Path(str(raw or "")).expanduser().resolve()
+            if not source.is_file() or source.suffix.lower() not in allowed:
+                continue
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
+            safe_stem = "".join(
+                char if char.isalnum() or char in {"-", "_"} else "-"
+                for char in source.stem
+            ).strip("-_") or "image"
+            name = f"manual-{safe_stem[:64]}-{digest}{source.suffix.lower()}"
+            target = (image_dir / name).resolve()
+            if target.parent != image_dir:
+                raise RuntimeError("Unsafe local image target.")
+            if not target.is_file():
+                shutil.copy2(source, target)
+            pseudo = f"local://{name}"
+            if pseudo not in urls:
+                urls.append(pseudo)
+            if pseudo not in selected:
+                selected.append(pseudo)
+            added.append(pseudo)
+
+        if not added:
+            raise ValueError("هیچ فایل تصویری معتبر برای افزودن انتخاب نشد.")
+
+        primary = str(data.get("primary_image_url") or "").strip()
+        if not primary:
+            primary = selected[0]
+        self.db.update_product(
+            int(product_id),
+            {
+                "local_dir": str(local_dir),
+                "images_json": json.dumps(urls, ensure_ascii=False),
+                "selected_images_json": json.dumps(selected, ensure_ascii=False),
+                "primary_image_url": primary,
+            },
+        )
+        _mark_published_product_dirty(
+            self.db,
+            int(product_id),
+            before=row,
+        )
+        return {
+            "added": added,
+            "selected_count": len(selected),
+            "primary_image_url": primary,
+        }
 
     def remove_urls(
         self,

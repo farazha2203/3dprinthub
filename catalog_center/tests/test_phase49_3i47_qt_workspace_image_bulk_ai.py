@@ -1048,6 +1048,37 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             },
         )
 
+    def test_add_local_file_is_persisted_and_selected_for_next_publish(self):
+        local_dir = self.root / "manual-add-product"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (400, 300), "white").save(
+            image_dir / "01.webp",
+            format="WEBP",
+        )
+        product_id = self._make_product(
+            "3147015",
+            local_dir=local_dir,
+            urls=["local://01.webp"],
+        )
+        source = self.root / "owner-added.png"
+        Image.new("RGB", (640, 480), "navy").save(source, format="PNG")
+
+        result = self.kernel.images.add_local_files(product_id, [str(source)])
+
+        self.assertEqual(len(result["added"]), 1)
+        added = result["added"][0]
+        self.assertTrue(added.startswith("local://manual-owner-added-"))
+        refreshed = dict(self.db.product(product_id))
+        self.assertIn(added, json.loads(refreshed["images_json"]))
+        self.assertIn(added, json.loads(refreshed["selected_images_json"]))
+        copied = local_dir / "images" / added.split("local://", 1)[1]
+        self.assertTrue(copied.is_file())
+        self.assertIn(
+            added,
+            [item["url"] for item in self.kernel.images.local_items(product_id)],
+        )
+
     def test_source_urls_without_local_files_do_not_create_broken_gallery_cards(self):
         urls = [f"https://cdn.example.com/missing-{index:02d}.jpg" for index in range(1, 61)]
         product_id = self._make_product(
