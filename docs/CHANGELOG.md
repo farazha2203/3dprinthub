@@ -1,3 +1,8 @@
+## 2026-09-19 - Profile-driven re-publish parity ownership hotfix
+- Corrected republish parity so explicit Windows sales profiles keep `Product.fixed_price=0`; authoritative range remains on ProductCatalogProfile/Variants.
+- Legacy products without an explicit profile matrix still compare Product.fixed_price to their fixed/range minimum.
+- Added a focused 1.095m-1.215m profile-driven parity regression and a guarded no-migration Production hotfix runner.
+
 ## 2026-09-19 - Hero 50.9 clean-frame fix
 - Removed the legacy Slicebox `shadow.png` runtime element that JS was re-showing after CSS hid it.
 - Eliminated the owner-visible dark shadow and rectangular lower raster edge without changing the Slicebox 3D cuboid engine, arrows or dots.

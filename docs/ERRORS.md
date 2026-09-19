@@ -1,3 +1,11 @@
+## ERR-49-181 - Profile-driven re-publish falsely required Product.fixed_price = price_min
+**Date:** 2026-09-19
+**Observed:** after A2M/A2N deployed successfully, the controlled #625 retry reached the Production receiver but rolled back with `REPUBLISH_PARITY_MISMATCH: product.fixed_price: expected=1095000 actual=0`. No Product revision was committed by the receiver.
+**Root cause:** `sync_desktop_profile_matrix()` correctly makes Profile/Variant rows the price authority and sets `Product.fixed_price=0`, while the republish verifier still applied the legacy fixed-Product rule and required `Product.fixed_price == price_min`. The persisted Catalog Profile range itself was current.
+**Correct fix:** compute the expected active sales-profile matrix before Product price verification. When profiles exist, require `Product.fixed_price=0` and verify the authoritative `ProductCatalogProfile.price_min/price_max` plus Variant inputs/prices; retain the old fixed-price comparison only for products without an explicit profile matrix.
+**Verification:** dedicated regression creates a profile-driven Product with range 1,095,000-1,215,000 and `Product.fixed_price=0`; parity must PASS. The failed acceptance was not retried unchanged.
+**Prevention:** parity must compare each field to its current ownership model. A range value owned by ProductCatalogProfile/Variants must never be duplicated into the legacy Product fixed-price field.
+
 ## ERR-49-180 - Slicebox reference shadow created the visible rectangular line under the Hero
 Date: 2026-09-19
 

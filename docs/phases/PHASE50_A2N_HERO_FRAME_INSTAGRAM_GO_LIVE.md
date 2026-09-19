@@ -30,5 +30,8 @@ Close the remaining homepage Hero visual defect, deploy A2M authoritative Produc
 - Successful Feed/Story provider receipts are mandatory before declaring Instagram complete.
 - Highlight target is recorded from the approved taxonomy; final Instagram Highlight placement remains operator-required because Buffer API has no Highlight mutation.
 
+## Acceptance incident / ERR-49-181
+The first post-deploy #625 retry safely rolled back because parity still treated Product.fixed_price as the range authority. Current profile-driven pricing intentionally keeps Product.fixed_price at zero and stores the range on ProductCatalogProfile/Variants. The corrected verifier follows that ownership model; do not retry until its exact GitHub hotfix is deployed.
+
 ## Safety
 No Production source edits outside GitHub-first runner. No duplicate social post for an already-receipted Site revision. Fresh Local Catalog + Host source/env/MySQL backups precede irreversible acceptance writes.

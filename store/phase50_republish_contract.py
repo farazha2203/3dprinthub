@@ -125,11 +125,21 @@ def verify_product_republish_contract(product, asset, data: dict) -> dict:
             _int(getattr(profile, "desktop_product_id", 0), 0),
         )
 
+    expected_profiles = _expected_profiles(data)
     expected_min = _int(data.get("price_min"), 0)
     expected_max = _int(data.get("price_max"), expected_min)
     if expected_min:
         _append(mismatches, "profile.price_min", expected_min, _int(getattr(profile, "price_min", 0), 0))
-        _append(mismatches, "product.fixed_price", expected_min, _int(getattr(product, "fixed_price", 0), 0))
+        # Profile-driven products intentionally keep Product.fixed_price at 0:
+        # each active Variant/Profile is the price authority. Requiring the
+        # public range minimum in Product.fixed_price creates a false parity
+        # failure after sync_desktop_profile_matrix correctly clears it.
+        _append(
+            mismatches,
+            "product.fixed_price",
+            0 if expected_profiles else expected_min,
+            _int(getattr(product, "fixed_price", 0), 0),
+        )
     if expected_max:
         _append(mismatches, "profile.price_max", expected_max, _int(getattr(profile, "price_max", 0), 0))
 
@@ -152,7 +162,6 @@ def verify_product_republish_contract(product, asset, data: dict) -> dict:
                 _append(mismatches, f"media.gallery[{index}].sha256", expected["sha256"], _field_sha256(row.image))
             if expected["alt"]:
                 _append(mismatches, f"media.gallery[{index}].alt", expected["alt"], _text(row.alt_text))
-    expected_profiles = _expected_profiles(data)
     prefix = f"CC-P{product.pk}-"
     actual_profiles = list(
         product.variants.filter(code__startswith=prefix, is_active=True)

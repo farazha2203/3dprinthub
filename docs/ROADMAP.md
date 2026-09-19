@@ -1,3 +1,14 @@
+## 2026-09-19 - ERR-49-181 profile-driven parity ownership
+- [x] Run first post-A2M controlled #625 retry from a fresh Catalog backup.
+- [x] Fail closed on `product.fixed_price expected=1095000 actual=0`; receiver transaction rolled back.
+- [x] Identify ownership mismatch: Product.fixed_price=0 is correct for explicit profile-driven pricing.
+- [x] Update parity to require zero Product fixed price when sales profiles exist while retaining Profile range/Variant checks.
+- [x] Add dedicated regression and guarded no-migration hotfix runner from Production `6f55e034...`.
+- [ ] Commit/push exact hotfix and rollback ref.
+- [ ] Deploy with verified source/env/MySQL backup.
+- [ ] Restore Windows #625 publish linkage from verified pre-attempt Catalog evidence and retry exactly once.
+- [ ] Require strict parity, same Site Product #39, current 3 active CC rows, current media and public Browser/API PASS.
+
 ## 2026-09-19 - Phase50.A.2N homepage Hero clean-frame closure
 - [x] Diagnose owner screenshot with real Production computed styles.
 - [x] Prove wrapper/slider border/shadow are zero and identify JS `onReady -> $shadow.show()` as the real source.
