@@ -1,3 +1,32 @@
+## 2026-09-19 - #625 final launch closure / ERR-49-177 Story render
+- [x] Reconcile existing #625 revision-6 ACK after canonical public-media fix; no FTP/Bridge re-import.
+- [x] Verify Local #625 is uploaded/clean with strict public HTTP confirmation.
+- [x] Create fresh integrity-checked pre-Instagram Catalog backup.
+- [x] Browser QA Home/Store/Product on desktop+mobile; canonical media/order UI/no-free-copy checks PASS.
+- [x] Create Desktop `.lnk` + `.cmd` launcher targeting tracked `RUN_QT.ps1`.
+- [x] Reproduce first social attempt failure before Feed submission: Story screenshot invalid/near-white.
+- [x] Isolate Windows Chrome launcher/headless-child race and stale temporary render workspace.
+- [x] Use isolated LocalAppData render workspace + PowerShell Start-Process -Wait + stale-PNG removal/poll.
+- [x] Real #625 Story 1080x1920 / 1,178,712 bytes / nonblank visual statistics PASS.
+- [x] Social/Story/publish regression 53/53 + Qt VerifyOnly + compile/diff-check PASS.
+- [ ] Commit/push exact ERR-49-177 candidate and rollback ref.
+- [ ] Fresh exact-SHA Catalog backup/runtime verification.
+- [ ] Publish exactly one real Buffer Feed + companion Story; verify receipts/external links/Highlight queue.
+- [ ] Apply manual-payment Production settings only through an allowed guarded mutation path.
+- [ ] Retain current/milestone Host rollback sets, delete redundant deploy backups and record reclaimed bytes.
+- [ ] Final CURRENT_STATE/ROADMAP/CHANGELOG/phase closure.
+
+## 2026-09-19 - #625 reconciliation + operator launcher + social closeout
+- [x] Reconcile #625 from existing revision-6 ACK/public HTTP without another Site import.
+- [x] Verify Local state is uploaded/clean and ACK has two canonical HTTP 200 images.
+- [x] Install Desktop .lnk + .cmd launchers pointing to repository-owned RUN_QT.ps1.
+- [x] Verify preserved Story renderer hardening; social/Story targeted 18/18 PASS.
+- [ ] Commit/push Story renderer + docs and relaunch exact tested SHA after fresh Catalog backup.
+- [ ] Publish real Buffer Feed + companion Story for #625 and verify idempotent receipts.
+- [ ] Browser QA Home/Store/Product/Cart/manual-payment page.
+- [ ] Activate approved Production manual-payment settings after verified rollback evidence.
+- [ ] Apply conservative Host backup retention and report reclaimed bytes.
+
 ## 2026-09-19 - ERR-49-176 canonical public-media verifier
 - [x] Prove receiver strict parity already succeeded for #625 / Site Product #39 revision 6.
 - [x] Prove current public Product HTML uses canonical `/media/p/...` rather than only legacy `/media/store/products/...`.

@@ -1,3 +1,14 @@
+## Final owner launch acceptance / Story render reliability — 2026-09-19
+- #625 existing revision-6 Site ACK is reconciled locally with strict public media verification; no re-import was repeated.
+- Local #625 is now uploaded/clean; fresh pre-Instagram Catalog backup integrity PASS.
+- Production Browser QA Home/Store/Product desktop+mobile and no-`رایگان` copy checks PASS.
+- Desktop launcher `.lnk` + `.cmd` now targets tracked `RUN_QT.ps1`.
+- First real Buffer action stopped before Feed creation on invalid Story render; no social duplicate was created.
+- ERR-49-177 fixes Windows Chrome launcher/headless-child completion with isolated LocalAppData profile/workspace + PowerShell wait + stale-output removal/poll.
+- Real #625 Story render PASS at 1080x1920 / 1,178,712 bytes / nonblank image statistics.
+- Social/Story/publish 53/53, Qt VerifyOnly, compile/diff-check PASS.
+- Next: commit/push exact candidate -> fresh backup -> one real Feed+Story -> receipt/Highlight queue verify -> backup cleanup/final docs.
+
 ## Canonical public media acceptance — 2026-09-19
 - Real #625 receiver import already passed full parity and preserved Site Product #39 at revision 6.
 - Compact canonical media is `/media/p/<desktop-id>/<sha12>/<seo-basename>`; Server public routing is Production-verified HTTP 200/image.

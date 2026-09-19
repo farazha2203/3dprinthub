@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from app.instagram_story_asset import prepare_product_story_asset
+from app.instagram_story_asset import _render_story, prepare_product_story_asset
 from app.site_connection import SiteConnection
 
 
@@ -29,6 +30,51 @@ class _DB:
 
 
 class InstagramStoryAssetTests(unittest.TestCase):
+    @patch("app.instagram_story_asset.subprocess.run")
+    @patch("app.instagram_story_asset._render_html", return_value="<html><body>story</body></html>")
+    def test_render_uses_isolated_headless_profile(self, _render_html, run):
+        with tempfile.TemporaryDirectory() as local_appdata:
+            def fake_run(command, **_kwargs):
+                direct = next(
+                    (item for item in command if item.startswith("--screenshot=")),
+                    "",
+                )
+                if direct:
+                    screenshot = direct.split("=", 1)[1]
+                else:
+                    script = str(command[-1])
+                    marker = "'--screenshot="
+                    screenshot = script.split(marker, 1)[1].split("'", 1)[0]
+                Path(screenshot).write_bytes(b"x" * 60000)
+
+            run.side_effect = fake_run
+            with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata}):
+                path = _render_story(
+                    {
+                        "id": 7,
+                        "server_ack_json": '{"revision": 3}',
+                        "title_fa": "آباژور",
+                        "short_description_fa": "دکور",
+                        "sales_bullets_json": "[]",
+                    },
+                    {
+                        "media_urls": ["https://3dprinthub.ir/media/p/7/demo.webp"],
+                        "product_url": "https://3dprinthub.ir/store/product/demo/",
+                    },
+                )
+
+            command = run.call_args.args[0]
+            rendered_command = " ".join(str(arg) for arg in command)
+            self.assertTrue(path.is_file())
+            self.assertIn("--user-data-dir=", rendered_command)
+            self.assertIn("--no-first-run", rendered_command)
+            self.assertIn("--no-default-browser-check", rendered_command)
+            self.assertIn("--run-all-compositor-stages-before-draw", rendered_command)
+            self.assertIn("--virtual-time-budget=4000", rendered_command)
+            if os.name == "nt":
+                self.assertIn("Start-Process", rendered_command)
+                self.assertIn("-Wait", rendered_command)
+
     @patch("app.instagram_story_asset._verify_public_image")
     @patch("app.instagram_story_asset._ensure_remote_dir")
     @patch("app.instagram_story_asset.connect_ftp")

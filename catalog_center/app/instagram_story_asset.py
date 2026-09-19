@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 import subprocess
-import tempfile
+import time
 from pathlib import Path, PurePosixPath
 from urllib import request as urllib_request
 
@@ -121,26 +121,71 @@ def _render_story(row: dict, payload: dict) -> Path:
         product_url=str(payload["product_url"]),
         copy=copy,
     )
-    with tempfile.TemporaryDirectory(prefix="3dprinthub-story-") as tmp:
-        html_path = Path(tmp) / "story.html"
-        html_path.write_text(html_text, encoding="utf-8")
+    render_dir = out_dir / f".render-{revision}"
+    shutil.rmtree(render_dir, ignore_errors=True)
+    render_dir.mkdir(parents=True, exist_ok=True)
+    html_path = render_dir / "story.html"
+    html_path.write_text(html_text, encoding="utf-8")
+    chrome_profile = render_dir / "chrome-profile"
+    chrome_profile.mkdir(parents=True, exist_ok=True)
+    # On Windows Chrome can return from its small launcher process before a
+    # headless child is done. Keep the render workspace under LOCALAPPDATA,
+    # wait through PowerShell Start-Process, and never accept a stale image.
+    png.unlink(missing_ok=True)
+    browser = _browser_path()
+    chrome_args = [
+        "--headless=new",
+        "--disable-gpu",
+        "--hide-scrollbars",
+        "--no-first-run",
+        "--no-default-browser-check",
+        f"--user-data-dir={chrome_profile}",
+        "--allow-file-access-from-files",
+        "--force-device-scale-factor=1",
+        "--run-all-compositor-stages-before-draw",
+        "--virtual-time-budget=4000",
+        f"--window-size={STORY_WIDTH},{STORY_HEIGHT}",
+        f"--screenshot={png}",
+        html_path.resolve().as_uri(),
+    ]
+    if os.name == "nt":
+        def _ps_quote(value: object) -> str:
+            return "'" + str(value).replace("'", "''") + "'"
+
+        argument_list = "@(" + ",".join(_ps_quote(arg) for arg in chrome_args) + ")"
+        ps_script = (
+            "$p=Start-Process -FilePath "
+            + _ps_quote(browser)
+            + " -ArgumentList "
+            + argument_list
+            + " -Wait -PassThru -NoNewWindow; exit $p.ExitCode"
+        )
+        render_command = [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            ps_script,
+        ]
+    else:
+        render_command = [browser, *chrome_args]
+    try:
         subprocess.run(
-            [
-                _browser_path(),
-                "--headless=new",
-                "--disable-gpu",
-                "--hide-scrollbars",
-                "--allow-file-access-from-files",
-                "--force-device-scale-factor=1",
-                f"--window-size={STORY_WIDTH},{STORY_HEIGHT}",
-                f"--screenshot={png}",
-                html_path.resolve().as_uri(),
-            ],
+            render_command,
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=60,
         )
+        deadline = time.monotonic() + 15.0
+        while time.monotonic() < deadline:
+            if png.is_file() and png.stat().st_size >= 50_000:
+                break
+            time.sleep(0.20)
+    finally:
+        shutil.rmtree(render_dir, ignore_errors=True)
     if not png.is_file() or png.stat().st_size < 50_000:
         raise RuntimeError("رندر Story خروجی معتبر تولید نکرد.")
     return png

@@ -1,3 +1,11 @@
+## ERR-49-177 - Windows Chrome launcher returned before companion Story screenshot was complete
+**Date:** 2026-09-19
+**Observed:** after #625 Site/public reconciliation and Buffer connectivity PASS, the first real social action stopped before Feed submission with `رندر Story خروجی معتبر تولید نکرد.`. Existing Story PNGs were 1080x1920 but only 18,240 bytes and sampled almost entirely white (mean RGB ~254.7).
+**Root cause:** on this Windows runtime, invoking `chrome.exe --headless ... --screenshot` directly from Python can return success from Chrome's launcher process before the actual headless child has written the screenshot. A system-temp Chrome profile/workspace could then be cleaned up before the child finished. The file-size guard correctly failed instead of publishing a blank Story.
+**Correct fix:** keep a per-Product/revision render workspace under LocalAppData, use an isolated Chrome `--user-data-dir`, remove any stale PNG before each render, invoke Chrome through PowerShell `Start-Process -Wait`, and bounded-poll for a >=50KB screenshot before workspace cleanup.
+**Verification:** real #625 render PASS at 1080x1920 / 1,178,712 bytes / 6,984 sampled colors / mean RGB ~65.8,60.1,56.1. Social/Story/publish 53/53 PASS; Qt VerifyOnly/compile/diff-check PASS.
+**Prevention:** never treat the Chrome launcher process exit as screenshot completion on Windows. Story publication must retain the existing size/content gate and use an isolated, waitable render process/workspace.
+
 ## ERR-49-176 - Windows public verifier lagged compact Product media namespace
 **Date:** 2026-09-19
 **Observed:** real #625 receiver import passed full transactional Product parity and returned Product #39 revision 6, but Windows kept the Product in failed/dirty state because public verification first reported no Product media. After discovering the canonical paths, the Server-side URL issue was separately corrected so `/media/p/...` returns HTTP 200/image.

@@ -1,3 +1,10 @@
+## 2026-09-19 - Owner: finish Site, Desktop launcher and real Instagram acceptance
+Status: `SITE+PRODUCT PASS / WINDOWS STORY FIX LOCAL_TESTED / SOCIAL COMMIT+REAL PUBLISH NEXT`.
+
+Owner requires the website publication to be finished and the Windows app to open from the Desktop. Product #625 is now reconciled from its existing revision-6 ACK without another Site import and Local state is clean/uploaded. Home/Store/Product Browser QA is green. Desktop now contains `3DPrintHub Catalog Center.lnk` and `3DPrintHub Catalog Center.cmd`, both launching the repository-owned Qt runner.
+
+The first real Buffer action correctly stopped before Feed creation because the branded Story render was invalid. The Windows Chrome race is now fixed and a real nonblank 1080x1920 #625 Story passes local acceptance. Next external action is one exact-SHA Feed+Story publish, with Highlight target `اسباب بازی` recorded as `operator_required`.
+
 ## 2026-09-19 - Owner: make Product upload usable now
 Status: `PUBLIC ROUTE PRODUCTION_PASS / WINDOWS CHECKER LOCAL_TESTED`.
 

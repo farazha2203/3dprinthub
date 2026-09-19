@@ -1,3 +1,15 @@
+## 2026-09-19 - ERR-49-177 reliable Windows Story headless rendering
+- Real #625 social acceptance exposed a Windows-only Chrome launcher race before any Feed submission: a direct Python Chrome process could exit while the headless child still owned screenshot generation.
+- Story rendering now uses an isolated Product/revision workspace under LocalAppData, a dedicated Chrome user-data directory, PowerShell `Start-Process -Wait`, stale-output removal and bounded output polling.
+- Real #625 standard Story now renders as a nonblank 1080x1920 PNG of 1,178,712 bytes; sampled image has 6,984 colors instead of the previous near-white 18,240-byte output.
+- Social/Story/publish gate 53/53 PASS; Qt VerifyOnly and diff-check PASS.
+
+## 2026-09-19 - Windows launcher + reliable Story renderer
+- Added owner-facing Desktop shortcut and CMD launcher outside the repository, both targeting the canonical repository RUN_QT.ps1.
+- Preserved and verified Story renderer hardening: isolated headless browser profile, process wait, fresh-output guard and delayed screenshot readiness check.
+- #625 is reconciled locally from its existing successful revision-6 ACK; no repeated receiver import was performed.
+- Social/Story focused regression 18/18 PASS.
+
 ## 2026-09-19 - Public Product verifier supports compact canonical media
 - Windows post-publish HTTP verification now discovers both legacy `/media/store/products/...` and compact content-addressed `/media/p/...` Product images.
 - Private `/media/store/imported-models/...` working-media remains excluded from public acceptance.
