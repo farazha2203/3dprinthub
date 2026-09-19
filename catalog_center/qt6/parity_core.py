@@ -1234,8 +1234,13 @@ class FilamentParityCore:
             )
         data = {**base, **dict(values or {})}
         brand = str(data.get("brand") or data.get("brand_name") or "").strip()
+        manufacturer = str(
+            data.get("manufacturer")
+            or data.get("manufacturer_name")
+            or brand
+        ).strip()
         data["brand"] = brand
-        data["manufacturer"] = brand
+        data["manufacturer"] = manufacturer
         data["_existing_image_path"] = str(base.get("filament_image_path") or "")
         image_path = self._materialize_image(data)
         saved = add_available_material_color(
@@ -1247,7 +1252,7 @@ class FilamentParityCore:
             data.get("secondary_hex") or "",
             data.get("tertiary_hex") or "",
             brand_name=brand,
-            manufacturer_name=brand,
+            manufacturer_name=manufacturer,
             roll_weight_grams=_integer(data.get("roll_weight_grams"), 1000),
             stock_roll_count=max(0.0, _number(data.get("stock_roll_count"), 0)),
             purchase_price_per_roll=max(0, _integer(data.get("purchase_price_per_roll"), 0)),
@@ -1332,6 +1337,11 @@ class FilamentParityCore:
             or row.get("manufacturer_name")
             or ""
         ).strip()
+        manufacturer = str(
+            row.get("manufacturer")
+            or row.get("manufacturer_name")
+            or brand
+        ).strip()
         color = str(row.get("color") or row.get("color_name") or "").strip()
         if not material or not brand or not color:
             raise ValueError("هویت Filament برای Sync سایت کامل نیست.")
@@ -1345,7 +1355,7 @@ class FilamentParityCore:
         payload: dict[str, Any] = {
             "material": material,
             "brand": brand,
-            "manufacturer": brand,
+            "manufacturer": manufacturer,
             "color": color,
             "description": str(
                 row.get("description") or row.get("filament_description") or ""

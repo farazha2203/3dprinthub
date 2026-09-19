@@ -1,3 +1,12 @@
+## 2026-09-19 - Owner: finish #625 today and make every Product support Feed + Story + category Highlight queue
+Status: `LOCAL_TESTED / GITHUB+DEPLOY+REAL ACCEPTANCE NEXT`.
+
+Owner requires today's acceptance to finish the real #625 Site update and then publish its Instagram Feed + Story. Every Product social publish must use the primary verified Site Product image first, Product SEO copy, ALT text, relevant bounded hashtags, direct tracked purchase URL and explicit nationwide shipping across Iran. Companion Story is required by default and must use the registered 1080x1920 Gold/Navy IRANSans style and Product URL.
+
+Story classification must follow the approved Highlight taxonomy. Product #625 is `toys-games` and therefore queues to Highlight `اسباب بازی`. Because the official Buffer API currently has no Add-to-Highlight mutation, the system must record the target automatically and queue the final Instagram UI operator step; it must not use private APIs or fabricate automatic Highlight completion.
+
+Before social publication, #625 Site republish must pass strict Product parity after fixing the pricing authority and repairing owner-approved active PLA service rates from verified project data.
+
 ## 2026-09-18 - Owner: finish Screenshot SEO and ensure edited image bytes replace the live Site image
 Status: `LOCAL_ACCEPTED / COMMIT+PUSH+REPUBLISH NEXT`.
 

@@ -1,3 +1,15 @@
+## Pricing authority + Instagram companion Story/Highlight — 2026-09-19
+- Real Product #625 remains the acceptance identity. After ERR-49-173 media-path recovery, strict parity correctly stopped its resend on Windows/Site price-range divergence.
+- Owner-approved post-default Catalog preview is integrity-ok and establishes PLA defaults: 3.5m/4.5m purchase/sale, 150k print/hour, 50k supervision/hour; offer-specific preheat remains independent.
+- Windows Ready/Publish now refreshes selected Filament/Profile snapshots from current inventory and recalculates price range without reopening Product UI.
+- Server Desktop-managed `CC-P...` pricing now mirrors Catalog material + print + supervision + preheat + assembly formula and uses managed Variants as public range authority.
+- Social policy v3 is Site-first: primary verified Site Product media first, ALT per media, SEO caption, bounded hashtags, Product tracking URL and nationwide-Iran shipping.
+- Companion Story is default; final evidence style is `3dprinthub_instagram_gold_navy_v2_iransans`, 1080x1920, IRANSans.
+- Highlight classifier follows approved taxonomy; #625 `toys-games` -> `اسباب بازی`. Official Buffer API cannot add a Story to a Highlight, so receipt queues `highlight_status=operator_required`.
+- Tests: Server targeted 5/5 PASS + no drift; Windows pricing/social/story 19/19 PASS; Manufacturer-vs-Brand regression PASS.
+- Rollback refs: Windows `backup/pre-phase50-a2l-pricing-social-20260919 @ 585e203...`; Server `backup/pre-phase50-a2l-pricing-engine-20260919 @ ba05c7fc...`.
+- Exact next: Commit/Push both candidates -> dedicated tunnel recovery -> Server deploy -> fresh backups -> owner-default PLA repair -> refresh/republish #625 -> Site #39 read-back/browser -> real Feed+Story -> receipt/Highlight queue closure.
+
 ## Screenshot SEO + changed-source real acceptance — 2026-09-18
 - Exact runtime `89931e8958b3a738fbfb4b8d65c099124aa24de0` is pushed and running.
 - Fresh Catalog backup `pre-republish-89931e8-20260918-191741` passed source/backup integrity with 635 Products.

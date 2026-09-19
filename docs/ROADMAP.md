@@ -1,3 +1,21 @@
+## 2026-09-19 - #625 pricing + Instagram Story/Highlight closure
+- [x] Reproduce #625 fail-closed pricing mismatch after media-path fix.
+- [x] Verify owner-approved PLA defaults from integrity-checked post-default preview: 3.5m/4.5m purchase/sale, 150k print, 50k supervision; preserve per-offer preheat.
+- [x] Refresh Windows Product Filament/Profile pricing snapshot before Ready/Publish without reopening Product UI.
+- [x] Make Site Desktop-managed pricing match Catalog formula and managed Variants authoritative for public Catalog range.
+- [x] Preserve distinct Manufacturer from Brand through Windows Filament save/site payload.
+- [x] Server targeted 5/5 PASS + no migration drift; Windows pricing/social/story 19/19 PASS + Manufacturer regression PASS.
+- [x] Require companion Story by default with primary verified Product image, IRANSans Gold/Navy 1080x1920, Product link and nationwide shipping.
+- [x] Derive approved Highlight target automatically; #625 toys-games -> اسباب بازی; keep Add-to-Highlight operator-required under official Buffer API.
+- [ ] Commit/push exact Windows and Server candidates.
+- [ ] Restore/verify dedicated reverse tunnel 22024 and deploy exact Server SHA.
+- [ ] Fresh Catalog + Production MySQL/Product-media backups.
+- [ ] Repair active PLA through Filament Core using owner-approved defaults while preserving other offer facts.
+- [ ] Refresh #625 and perform exactly one official mark_ready_many -> publish_many attempt.
+- [ ] Read back Product #39 full media/SHA/pricing/Profile/Variant/material/brand/manufacturer/color/weight/time/dimensions and browser verify.
+- [ ] Publish real Buffer Feed + companion Story; verify receipts/external links and Highlight target اسباب بازی.
+- [ ] Final docs + exact-SHA Qt relaunch.
+
 ## 2026-09-18 — Screenshot SEO + source-byte refresh closure
 - [x] Reproduce empty per-card SEO fields on manual Screenshot.
 - [x] Seed empty single-image SEO editor from Product SEO without changing Site selection.

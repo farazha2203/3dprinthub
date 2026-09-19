@@ -10,6 +10,7 @@ from app.social_content_policy import (
     build_caption,
     build_hashtags,
     build_story_copy,
+    highlight_target_for_product,
 )
 
 
@@ -39,6 +40,7 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         self.assertLessEqual(len(tags), MAX_HASHTAGS)
         self.assertEqual(len(tags), len(set(tags)))
         self.assertIn("#چاپ_سه_بعدی", tags)
+        self.assertIn("#ارسال_سراسری", tags)
         self.assertIn("#3DPrintHub", tags)
 
     def test_alt_text_is_present_for_every_media_asset(self):
@@ -55,21 +57,41 @@ class InstagramSocialPolicyTests(unittest.TestCase):
             "https://3dprinthub.ir/store/product/demo/?utm_source=instagram",
         )
         self.assertIn("چراغ رومیزی موج‌دار سه‌بعدی", caption)
-        self.assertIn("مشاهده محصول و انتخاب مشخصات", caption)
+        self.assertIn("ارسال سفارش به سراسر ایران", caption)
+        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", caption)
         self.assertIn("utm_source=instagram", caption)
         self.assertLessEqual(len(tags), MAX_HASHTAGS)
         self.assertTrue(all(tag in caption for tag in tags))
 
     def test_story_copy_is_generic_and_brand_consistent(self):
         copy = build_story_copy(row())
-        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v2")
+        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v2_iransans")
         self.assertEqual(copy["font_family"], "IRANSansWeb(FaNum)")
         self.assertEqual(len(copy["bullets"]), 4)
+        self.assertIn("ارسال سفارش به سراسر ایران", copy["bullets"])
         self.assertTrue(copy["title"])
         self.assertTrue(copy["subtitle"])
 
+    def test_highlight_target_uses_product_category_before_keyword_guessing(self):
+        spino = row()
+        spino.update({
+            "local_category_slug": "toys-games",
+            "title_fa": "اسکلتی مینی متحرک اسپینوزور",
+            "tags_fa_json": json.dumps(["دیناسور", "متحرک"], ensure_ascii=False),
+        })
+        self.assertEqual(highlight_target_for_product(spino), "اسباب بازی")
+
+        automotive = row()
+        automotive["local_category_slug"] = "automotive-clips"
+        self.assertEqual(highlight_target_for_product(automotive), "قطعات خودرو")
+
+        cake = row()
+        cake["local_category_slug"] = "home-decor"
+        cake["title_fa"] = "پایه کیک سه طبقه"
+        self.assertEqual(highlight_target_for_product(cake), "پایه کیک")
+
     def test_policy_version_is_stable_for_receipts(self):
-        self.assertEqual(POLICY_VERSION, "instagram-product-v2-20260918")
+        self.assertEqual(POLICY_VERSION, "instagram-product-v3-20260919")
 
 
 if __name__ == "__main__":

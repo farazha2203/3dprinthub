@@ -1,3 +1,12 @@
+## 2026-09-19 - Unified Product pricing + Instagram Story category queue
+- Windows Site publish refreshes selected Filament/Profile snapshots from current inventory immediately before Ready/Publish and recalculates the Product price range from the canonical Catalog formula.
+- Flattened sales profiles now carry pricing strategy, support-cost multiplier and assembly fee into the Site payload.
+- Windows Filament Core preserves Manufacturer independently from Brand in local save and Site sync payload.
+- Instagram policy v3 keeps the verified primary Site Product image first, per-image ALT, SEO caption, focused 3-8 hashtags, tracked Product URL and explicit nationwide-Iran shipping copy.
+- Companion Story remains on by default; runtime evidence now reports final IRANSans style ID `3dprinthub_instagram_gold_navy_v2_iransans`.
+- Added approved Highlight classifier: category first, semantic fallback second. #625/toys-games maps to `اسباب بازی`; receipts remain `operator_required` because Buffer public API does not support Add-to-Highlight.
+- Local gates: Windows pricing/social/story 19/19 PASS plus Manufacturer regression PASS; Server pricing/mapping 5/5 PASS and no migration drift.
+
 ## 2026-09-18 - Product #625 real re-publish acceptance
 - Promoted Screenshot SEO/source-byte refresh at exact GitHub SHA `89931e8958b3a738fbfb4b8d65c099124aa24de0`.
 - Fresh Catalog rollback backup passed integrity with 635 Products; Qt relaunched from the pushed source.

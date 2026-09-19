@@ -58,7 +58,7 @@ class InstagramStoryAssetTests(unittest.TestCase):
 
             result = prepare_product_story_asset(_DB(), 7, settings, payload)
 
-            self.assertEqual(result["style_id"], "3dprinthub_instagram_gold_navy_v2")
+            self.assertEqual(result["style_id"], "3dprinthub_instagram_gold_navy_v2_iransans")
             self.assertEqual(result["font_family"], "IRANSansWeb(FaNum)")
             self.assertEqual(result["width"], 1080)
             self.assertEqual(result["height"], 1920)

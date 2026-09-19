@@ -4,10 +4,22 @@ import json
 import re
 from typing import Any
 
-POLICY_VERSION = "instagram-product-v2-20260918"
+POLICY_VERSION = "instagram-product-v3-20260919"
 MAX_HASHTAGS = 8
+NATIONWIDE_SHIPPING_COPY = "ارسال سفارش به سراسر ایران"
 MAX_CAPTION = 2200
 MAX_ALT_TEXT = 1000
+STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v2_iransans"
+APPROVED_HIGHLIGHTS = (
+    "آباژور",
+    "پایه کیک",
+    "اکسسوری کریسمس",
+    "اکسسوری تولد",
+    "اسباب بازی",
+    "فلکسیبل",
+    "قطعات سفارشی",
+    "قطعات خودرو",
+)
 
 
 def _json_list(value: Any) -> list[Any]:
@@ -42,6 +54,13 @@ def build_hashtags(row: dict[str, Any]) -> list[str]:
     raw += _json_list(row.get("keywords_json"))
     raw += _json_list(row.get("categories_fa_json"))
     raw += [row.get("local_category_slug"), row.get("use_case_class")]
+    fixed_tags = (
+        "#چاپ_سه_بعدی",
+        "#طراحی_سه_بعدی",
+        "#ارسال_سراسری",
+        "#3DPrintHub",
+    )
+    dynamic_limit = max(0, MAX_HASHTAGS - len(fixed_tags))
     tags = []
     for item in _unique(raw):
         text = item.lstrip("#").strip().replace(" ", "_")
@@ -49,11 +68,11 @@ def build_hashtags(row: dict[str, Any]) -> list[str]:
         if len(text) < 2:
             continue
         tag = f"#{text}"
-        if tag not in tags:
+        if tag not in tags and tag not in fixed_tags:
             tags.append(tag)
-        if len(tags) >= MAX_HASHTAGS - 2:
+        if len(tags) >= dynamic_limit:
             break
-    for fixed in ("#چاپ_سه_بعدی", "#طراحی_سه_بعدی", "#3DPrintHub"):
+    for fixed in fixed_tags:
         if fixed not in tags:
             tags.append(fixed)
     return tags[:MAX_HASHTAGS]
@@ -93,7 +112,8 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
         specs.append("متریال: " + "، ".join(materials[:3]))
     if specs:
         parts.append("مشخصات: " + " | ".join(specs))
-    parts.append(f"مشاهده محصول و انتخاب مشخصات:\n{tracking_url}")
+    parts.append(f"🚚 {NATIONWIDE_SHIPPING_COPY}")
+    parts.append(f"مشاهده محصول، انتخاب مشخصات و ثبت سفارش:\n{tracking_url}")
     if hashtags:
         parts.append(" ".join(hashtags))
     caption = "\n\n".join(part for part in parts if part).strip()
@@ -120,6 +140,60 @@ def build_alt_texts(row: dict[str, Any], media_urls: list[str]) -> list[str]:
     return out
 
 
+def highlight_target_for_product(row: dict[str, Any]) -> str:
+    explicit = _plain(
+        row.get("instagram_highlight")
+        or row.get("social_highlight")
+    )
+    if explicit in APPROVED_HIGHLIGHTS:
+        return explicit
+
+    slug = _plain(row.get("local_category_slug")).casefold()
+    slug_map = {
+        "toys-games": "اسباب بازی",
+        "automotive": "قطعات خودرو",
+        "automotive-dashboard": "قطعات خودرو",
+        "automotive-clips": "قطعات خودرو",
+        "automotive-air-vents": "قطعات خودرو",
+        "replacement-parts": "قطعات سفارشی",
+        "gears": "قطعات سفارشی",
+        "industrial-parts": "قطعات سفارشی",
+        "tools-jigs": "قطعات سفارشی",
+        "electronics-cases": "قطعات سفارشی",
+        "workshop": "قطعات سفارشی",
+        "mounts-brackets": "قطعات سفارشی",
+        "adapters-couplers": "قطعات سفارشی",
+        "spare-parts": "قطعات سفارشی",
+    }
+    if slug in slug_map:
+        return slug_map[slug]
+
+    text_parts = [
+        row.get("title_fa"),
+        row.get("seo_title_fa"),
+        row.get("source_title"),
+        row.get("use_case_class"),
+        *_json_list(row.get("categories_fa_json")),
+        *_json_list(row.get("tags_fa_json")),
+        *_json_list(row.get("keywords_json")),
+    ]
+    text = " ".join(_plain(item).casefold() for item in text_parts if _plain(item))
+    keyword_groups = (
+        ("اکسسوری کریسمس", ("christmas", "کریسمس")),
+        ("اکسسوری تولد", ("birthday", "تولد")),
+        ("پایه کیک", ("cake stand", "cake", "پایه کیک", "استند کیک")),
+        ("آباژور", ("lamp", "lighting", "آباژور", "چراغ")),
+        ("فلکسیبل", ("flexible", "flexi", "انعطاف")),
+        ("قطعات خودرو", ("automotive", "vehicle", "خودرو", "ماشین")),
+        ("اسباب بازی", ("toy", "game", "اسباب بازی", "دیناسور", "فیگور")),
+    )
+    for target, terms in keyword_groups:
+        if any(term in text for term in terms):
+            return target
+
+    return "قطعات سفارشی"
+
+
 def build_story_copy(row: dict[str, Any]) -> dict[str, Any]:
     title = _plain(row.get("title_fa") or row.get("source_title") or row.get("seo_title_fa"), 90)
     subtitle = _plain(row.get("short_description_fa") or row.get("seo_description_fa"), 150)
@@ -127,16 +201,21 @@ def build_story_copy(row: dict[str, Any]) -> dict[str, Any]:
     if not bullets:
         fallback = _json_list(row.get("tags_fa_json")) + _json_list(row.get("categories_fa_json"))
         bullets = [_plain(x, 60) for x in fallback if _plain(x)][:4]
-    while len(bullets) < 4:
-        for default in ("طراحی دقیق", "چاپ سه‌بعدی باکیفیت", "قابل سفارش", "مناسب استفاده واقعی"):
+    while len(bullets) < 3:
+        for default in ("طراحی دقیق", "چاپ سه‌بعدی باکیفیت", "قابل سفارش"):
             if default not in bullets:
                 bullets.append(default)
-            if len(bullets) >= 4:
+            if len(bullets) >= 3:
                 break
+    bullets = [
+        item for item in bullets
+        if item and NATIONWIDE_SHIPPING_COPY not in item
+    ][:3]
+    bullets.append(NATIONWIDE_SHIPPING_COPY)
     return {
         "title": title or "محصول سه‌بعدی",
         "subtitle": subtitle or "طراحی و چاپ سه‌بعدی توسط 3DPrintHub",
         "bullets": bullets[:4],
-        "style_id": "3dprinthub_instagram_gold_navy_v2",
+        "style_id": STORY_STYLE_ID,
         "font_family": "IRANSansWeb(FaNum)",
     }

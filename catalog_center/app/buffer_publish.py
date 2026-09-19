@@ -8,6 +8,7 @@ from urllib import request as urllib_request
 
 from .instagram_publish import canonical_site_payload
 from .secure_secrets import get_secret
+from .social_content_policy import highlight_target_for_product
 
 BUFFER_GRAPHQL_URL = "https://api.buffer.com"
 
@@ -398,7 +399,7 @@ def publish_story_for_product(
         "site_ack_fingerprint": fingerprint,
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": provider_status,
-        "highlight_target": str(data.get("instagram_highlight") or data.get("social_highlight") or "").strip(),
+        "highlight_target": highlight_target_for_product(data),
         "highlight_status": "operator_required",
         "external_link": str(post.get("externalLink") or ""),
     }

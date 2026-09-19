@@ -21,6 +21,19 @@ from .crawler import download_public_file
 from .db import utc_now
 from .site_connection import import_batch, test_publish_readiness, upload_batch
 from .epic49_site_sync import BridgeNotFoundError, get_product as get_site_product
+from .epic49_desktop_schema import (
+    list_available_material_colors,
+    normalize_material_color_options,
+)
+from .phase49_3i35_operator_ledger import (
+    flatten_ledger_profiles,
+    normalize_ledger_profile,
+)
+from .phase49_3i39_professional_commerce import (
+    merge_global_offer,
+    offer_key,
+    pricing_summary_range,
+)
 from .v8_features import (
     ack_item_confirms_publish,
     new_batch_uuid,
@@ -72,6 +85,143 @@ def _json_list(value: Any) -> list:
     except Exception:
         return []
     return list(parsed) if isinstance(parsed, list) else []
+
+
+def _refresh_product_pricing_snapshot(db, product_id: int) -> dict[str, Any]:
+    """Refresh Product-owned Filament/Profile snapshots from current inventory.
+
+    Publishing must not depend on the owner reopening Stage 2 after global
+    Filament rates change. Exact Product selections are preserved by identity;
+    only their operational Offer facts are refreshed before a Batch is built.
+    """
+    row = db.product(int(product_id))
+    if row is None:
+        return {"product_id": int(product_id), "changed": False, "matched_offers": 0}
+
+    before = dict(row)
+    global_offers = normalize_material_color_options(
+        list_available_material_colors(db)
+    )
+    global_by_key = {offer_key(item): item for item in global_offers}
+
+    selected = normalize_material_color_options(
+        before.get("material_color_options_json") or "[]"
+    )
+    refreshed_selected: list[dict[str, Any]] = []
+    matched = 0
+    for item in selected:
+        current = global_by_key.get(offer_key(item))
+        if current is None:
+            refreshed_selected.append(item)
+            continue
+        refreshed_selected.append(merge_global_offer(item, current))
+        matched += 1
+
+    raw_ledger = _json_list(before.get("sales_profile_ledger_json"))
+    refreshed_ledger: list[dict[str, Any]] = []
+    ranges: list[dict[str, int]] = []
+    ledger_matches = 0
+    for index, raw_profile in enumerate(raw_ledger, 1):
+        if not isinstance(raw_profile, dict):
+            continue
+        profile = normalize_ledger_profile(raw_profile, index)
+        refreshed_profile_offers: list[dict[str, Any]] = []
+        for item in profile.get("material_options") or []:
+            current = global_by_key.get(offer_key(item))
+            if current is None:
+                refreshed_profile_offers.append(item)
+                continue
+            refreshed_profile_offers.append(merge_global_offer(item, current))
+            ledger_matches += 1
+        profile["material_options"] = refreshed_profile_offers
+        refreshed_ledger.append(profile)
+        if profile.get("is_active", True):
+            summary = pricing_summary_range(
+                refreshed_profile_offers,
+                profile.get("production_rows") or [],
+                profile.get("pricing_strategy") or "dynamic",
+                support_multiplier=profile.get("support_cost_multiplier") or 1,
+                assembly_fee=profile.get("assembly_fee") or 0,
+                price_min=profile.get("price_min") or 0,
+                price_max=profile.get("price_max") or 0,
+            )
+            if int(summary.get("count") or 0) > 0:
+                ranges.append({
+                    "min": int(summary.get("min") or 0),
+                    "max": int(summary.get("max") or 0),
+                })
+
+    total_matches = matched + ledger_matches
+    if total_matches <= 0:
+        return {
+            "product_id": int(product_id),
+            "changed": False,
+            "matched_offers": 0,
+        }
+
+    flattened = flatten_ledger_profiles(refreshed_ledger)
+    positive_min = [item["min"] for item in ranges if int(item.get("min") or 0) > 0]
+    positive_max = [item["max"] for item in ranges if int(item.get("max") or 0) > 0]
+    price_min = min(positive_min) if positive_min else int(before.get("price_min") or 0)
+    price_max = max(positive_max) if positive_max else int(before.get("price_max") or price_min)
+
+    materials = list(dict.fromkeys(
+        str(item.get("material") or "").strip()
+        for item in refreshed_selected
+        if str(item.get("material") or "").strip()
+    ))
+    colors = list(dict.fromkeys(
+        str(item.get("color") or "").strip()
+        for item in refreshed_selected
+        if str(item.get("color") or "").strip()
+    ))
+    updates = {
+        "material_color_options_json": json.dumps(refreshed_selected, ensure_ascii=False),
+        "sales_profile_ledger_json": json.dumps(refreshed_ledger, ensure_ascii=False),
+        "sales_profiles_json": json.dumps(flattened, ensure_ascii=False),
+        "materials_json": json.dumps(materials, ensure_ascii=False),
+        "colors_json": json.dumps(colors, ensure_ascii=False),
+        "price_min": int(price_min),
+        "price_max": int(price_max),
+    }
+    changed = any(str(before.get(key) or "") != str(value) for key, value in updates.items())
+    if changed:
+        db.update_product(int(product_id), updates)
+        try:
+            db.save_history(
+                int(product_id),
+                "qt_publish_pricing_snapshot_refresh",
+                before,
+                dict(db.product(int(product_id))),
+                (
+                    "Publish refreshed selected Filament facts and recalculated "
+                    f"price range {price_min}-{price_max} from current inventory."
+                ),
+            )
+        except Exception:
+            pass
+    return {
+        "product_id": int(product_id),
+        "changed": bool(changed),
+        "matched_offers": int(total_matches),
+        "price_min": int(price_min),
+        "price_max": int(price_max),
+    }
+
+
+def _refresh_publish_pricing_snapshots(db, product_ids) -> dict[str, Any]:
+    items = [
+        _refresh_product_pricing_snapshot(db, product_id)
+        for product_id in _ids(product_ids)
+    ]
+    return {
+        "items": items,
+        "changed_ids": [
+            int(item["product_id"])
+            for item in items
+            if item.get("changed")
+        ],
+    }
 
 
 def _sha256_file(path: Path) -> str:
@@ -418,6 +568,7 @@ def preflight_many(db, stage_core, product_ids, *, allow_already_public: bool = 
 
 def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
     requested_ids = _ids(product_ids)
+    pricing_refresh = _refresh_publish_pricing_snapshots(db, requested_ids)
     media_refresh = _refresh_changed_publish_media(db, requested_ids)
     preflight = preflight_many(
         db,
@@ -458,6 +609,10 @@ def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
     result = dict(preflight)
     result["marked_ids"] = marked
     result["marked"] = len(marked)
+    result["pricing_refreshed_ids"] = list(
+        pricing_refresh.get("changed_ids") or []
+    )
+    result["pricing_refresh"] = list(pricing_refresh.get("items") or [])
     result["media_refreshed_ids"] = list(
         media_refresh.get("refreshed_ids") or []
     )
@@ -762,6 +917,7 @@ def publish_many(
     readiness_checker=test_publish_readiness,
 ) -> dict[str, Any]:
     requested = _ids(product_ids)
+    _refresh_publish_pricing_snapshots(db, requested)
     preflight = preflight_many(db, stage_core, requested)
     queued = list(preflight["queued_ids"])
 

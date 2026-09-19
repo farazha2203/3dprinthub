@@ -1,3 +1,21 @@
+## ERR-49-175 - Companion Story lacked deterministic Highlight target and final style evidence
+**Date:** 2026-09-19
+**Observed:** companion Story infrastructure and Buffer receipts existed, but Product rows such as #625 had no explicit `instagram_highlight`; receipt target could therefore be empty. Runtime Story used IRANSans but still reported an older `..._v2` style ID instead of the final documented IRANSans style ID.
+**Root cause:** social policy had no approved category-to-Highlight classifier, and the runtime evidence constant lagged behind `STORY_STYLE_STANDARD.md`.
+**Correct fix:** add the approved eight-Highlight taxonomy, resolve explicit approved override first, then Product category slug, then semantic tags/title fallback. #625 `toys-games` deterministically resolves to `اسباب بازی`. Story runtime now reports `3dprinthub_instagram_gold_navy_v2_iransans`.
+**Verification:** Windows pricing/social/feed/story suite 19/19 PASS plus Story asset and retry-idempotency coverage. Product link remains in Buffer metadata and visibly rendered Story copy; nationwide shipping is present.
+**Platform limitation:** Buffer public API exposes Story creation but no Add-to-Highlight mutation. Receipt records `highlight_target` and `highlight_status=operator_required`; private Instagram APIs are prohibited.
+**Prevention:** every successful Product Story must have a non-empty approved Highlight target and final style ID before social closure.
+
+## ERR-49-174 - Active PLA service rates drifted and Site pricing diverged from Catalog formula
+**Date:** 2026-09-19
+**Observed:** real #625 republish reached the new strict parity gate and rolled back with Windows range 705000-825000 versus Site 104500-675000 instead of falsely succeeding.
+**Root cause A:** current active PLA inventory drifted to print_hourly_rate=0 and supervision_hourly_rate=70000. The integrity-checked post-default preview from 2026-09-14 proves the owner-approved PLA defaults are purchase 3500000, sale 4500000, print 150000/hour and supervision 50000/hour while preserving offer-specific preheat.
+**Root cause B:** Site dynamic pricing for Desktop-managed Variants did not consume the same complete sales-profile inputs as Catalog and public range could include unrelated historical/manual Variants.
+**Correct fix:** Windows refreshes selected Product Filament/Profile snapshots from current inventory before Ready/Publish. Server `CC-P...` Variants use the same Catalog formula: material sale cost + print + supervision + preheat + assembly, with exact part/support weights and profile inputs. If Desktop-managed Variants exist, they alone define the Catalog Product public range.
+**Verification:** Server targeted pricing/mapping/API 5/5 PASS with no migration drift; Windows Ready-refresh regression PASS. Owner-default data repair is intentionally deferred until a fresh Catalog backup is taken after the tested source is committed.
+**Prevention:** publish must refresh mutable Filament facts immediately before Batch creation and strict parity must compare the resulting Site range; never weaken parity to accept divergent pricing.
+
 ## ERR-49-172 - Screenshot SEO fields empty and edited source image could re-publish stale finalized WebP
 **Date:** 2026-09-18
 **Observed:** owner opened per-card SEO on a manually captured Screenshot and Alt/Title/Caption/Keywords were empty. Separately, editing a local image file and re-sending the already-published Product could leave the previous live image bytes on Site.

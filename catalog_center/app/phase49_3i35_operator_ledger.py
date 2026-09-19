@@ -241,6 +241,9 @@ def flatten_ledger_profiles(ledger: list[dict]) -> list[dict]:
                         "part_length_cm": profile["part_length_cm"],
                         "part_width_cm": profile["part_width_cm"],
                         "part_height_cm": profile["part_height_cm"],
+                        "pricing_strategy": profile["pricing_strategy"],
+                        "support_cost_multiplier": profile["support_cost_multiplier"],
+                        "assembly_fee": profile["assembly_fee"],
                         "fixed_price": (
                             (
                                 _integer(offer.get("fixed_product_price"), 0)

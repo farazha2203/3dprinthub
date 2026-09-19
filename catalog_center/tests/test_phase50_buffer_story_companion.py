@@ -23,7 +23,7 @@ class _DB:
             }),
             "title_fa": "Story demo",
             "image_alt_texts_json": json.dumps(["3D printed product"]),
-            "instagram_highlight": "آباژور",
+            "local_category_slug": "toys-games",
         }
 
     def product(self, product_id):
@@ -73,7 +73,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertIn("instagram_published", statuses)
         self.assertIn("instagram_story_published", statuses)
         story_receipt = json.loads(db.receipts[-1]["payload_json"])
-        self.assertEqual(story_receipt["highlight_target"], "آباژور")
+        self.assertEqual(story_receipt["highlight_target"], "اسباب بازی")
         self.assertEqual(story_receipt["highlight_status"], "operator_required")
 
     @patch("app.buffer_publish.get_secret", return_value="secret")

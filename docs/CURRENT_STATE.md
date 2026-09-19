@@ -1,3 +1,12 @@
+## 2026-09-19 - Phase50.A.2L pricing + Instagram Story/Highlight LOCAL_TESTED
+Status: `LOCAL_TESTED / TWO COMMITS + SERVER DEPLOY + DATA REPAIR NEXT`.
+
+Real #625 resend is now fail-closed on the remaining pricing mismatch instead of returning a false success. ERR-49-174 has two parts: active PLA Filament rows drifted away from the owner-approved 2026-09-14 defaults, and the Site dynamic price engine did not consume the complete Desktop sales-profile formula. The integrity-checked post-default preview `phase50-filament-defaults-20260914-175618/catalog-preview.sqlite3` proves PLA defaults: purchase 3.5m, sale 4.5m, print 150k/hour, supervision 50k/hour while preserving per-offer preheat facts.
+
+Windows publish now refreshes Product Filament/Profile snapshots from current inventory before Ready/Publish; Server Desktop-managed `CC-P...` Variants use the same material + print + supervision + preheat + assembly formula. Server targeted 5/5 PASS with no migration drift; Windows pricing/social/story 19/19 PASS plus Manufacturer-vs-Brand regression PASS. Companion Story remains default, final style ID is `3dprinthub_instagram_gold_navy_v2_iransans`, and #625 `toys-games` maps to Highlight target `اسباب بازی`. Official Buffer API has no Add-to-Highlight mutation, so the target is queued with `operator_required`.
+
+Rollback refs: Windows `backup/pre-phase50-a2l-pricing-social-20260919 @ 585e20357a4d9268fb5dee71318f314504d096a0`; Server `backup/pre-phase50-a2l-pricing-engine-20260919 @ ba05c7fc479ae94d4a85676442008e018dbbcc67`. Dedicated reverse tunnel check at this checkpoint returned `127.0.0.1:22024=False`; no alternate tunnel/direct Host path was used. Exact next: commit/push both lineages -> restore/verify dedicated tunnel -> deploy Server -> fresh backups -> repair owner-approved active PLA -> refresh/republish #625 -> Product #39 read-back/browser -> real Feed+Story receipts/Highlight queue.
+
 ## 2026-09-18 — Screenshot SEO + edited-source media refresh PRODUCTION_PRODUCT_VERIFIED
 - Runtime/source fix committed and pushed at exact GitHub SHA `89931e8958b3a738fbfb4b8d65c099124aa24de0`; Local and live GitHub matched exactly before runtime launch.
 - Fresh pre-republish Catalog backup: `D:\projects\3dprinthub-backups\pre-republish-89931e8-20260918-191741\catalog.sqlite3`; source and backup integrity both `ok`, 635 Products, SHA256 `3d9a25bf7a565caf490d50bbb6830eac229ab6993d5e80f1d9d82646e176cfd8`.

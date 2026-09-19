@@ -11,9 +11,9 @@ from pathlib import Path, PurePosixPath
 from urllib import request as urllib_request
 
 from .site_connection import SiteConnection, _ensure_remote_dir, connect_ftp
-from .social_content_policy import build_story_copy
+from .social_content_policy import STORY_STYLE_ID, build_story_copy
 
-STYLE_ID = "3dprinthub_instagram_gold_navy_v2"
+STYLE_ID = STORY_STYLE_ID
 STORY_WIDTH = 1080
 STORY_HEIGHT = 1920
 

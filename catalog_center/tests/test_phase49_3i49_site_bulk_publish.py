@@ -17,6 +17,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
 from app.phase49_3c_image_pipeline import finalize_selected_images
+from app.epic49_desktop_schema import add_available_material_color
 from app.phase49_3i49_site_publish import (
     _next_batch_name,
     build_publish_batch,
@@ -173,6 +174,51 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         if finalize_images:
             finalize_selected_images(self.db, product_id)
         return product_id
+
+    def test_ready_refreshes_filament_snapshot_and_price_range_without_opening_product(self):
+        product_id = self._product("3491097")
+        add_available_material_color(
+            self.db,
+            "PLA",
+            "Black",
+            roll_weight_grams=1000,
+            stock_roll_count=1,
+            purchase_price_per_roll=3_500_000,
+            sale_price_per_roll=4_500_000,
+            print_hourly_rate=150_000,
+            supervision_hourly_rate=50_000,
+            preheat_hours=4,
+            preheat_temperature_c=55,
+            preheat_hourly_rate=30_000,
+        )
+
+        before = dict(self.db.product(product_id))
+        before_profiles = json.loads(before["sales_profiles_json"])
+        self.assertNotIn("print_hourly_rate", before_profiles[0])
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        self.assertEqual(ready["pricing_refreshed_ids"], [product_id])
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(int(row["price_min"]), 770_000)
+        self.assertEqual(int(row["price_max"]), 770_000)
+        profiles = json.loads(row["sales_profiles_json"])
+        ledger = json.loads(row["sales_profile_ledger_json"])
+        self.assertEqual(profiles[0]["print_hourly_rate"], 150_000)
+        self.assertEqual(profiles[0]["supervision_hourly_rate"], 50_000)
+        self.assertEqual(profiles[0]["preheat_hours"], 4)
+        self.assertEqual(profiles[0]["preheat_hourly_rate"], 30_000)
+        self.assertEqual(profiles[0]["support_cost_multiplier"], 1)
+        self.assertEqual(profiles[0]["assembly_fee"], 0)
+        self.assertEqual(
+            ledger[0]["material_options"][0]["print_hourly_rate"],
+            150_000,
+        )
+        self.assertEqual(
+            ledger[0]["material_options"][0]["supervision_hourly_rate"],
+            50_000,
+        )
 
     def test_ready_refreshes_edited_source_bytes_before_republish(self):
         product_id = self._product("3491098")

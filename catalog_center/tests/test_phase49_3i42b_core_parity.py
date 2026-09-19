@@ -205,6 +205,26 @@ class Phase493I42BCoreParityTests(unittest.TestCase):
         active_ids = {int(item["id"]) for item in self.kernel.filaments.list()}
         self.assertNotIn(int(edited["id"]), active_ids)
 
+    def test_filament_core_preserves_distinct_manufacturer_from_brand(self):
+        saved = self.kernel.filaments.save({
+            "manufacturer": "Factory Co",
+            "brand": "Retail Brand",
+            "material": "PLA",
+            "color": "آبی",
+            "hex": "#3366CC",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 1,
+            "purchase_price_per_roll": 3_500_000,
+            "sale_price_per_roll": 4_500_000,
+            "print_hourly_rate": 150_000,
+            "supervision_hourly_rate": 50_000,
+        })
+        self.assertEqual(saved["brand_name"], "Retail Brand")
+        self.assertEqual(saved["manufacturer_name"], "Factory Co")
+        payload = self.kernel.filaments.site_payload(saved)
+        self.assertEqual(payload["brand"], "Retail Brand")
+        self.assertEqual(payload["manufacturer"], "Factory Co")
+
     def test_profile_matrix_persists_size_times_production_rows_times_filaments(self):
         pla, petg = self._add_filaments()
         product_id = self._product_id()
