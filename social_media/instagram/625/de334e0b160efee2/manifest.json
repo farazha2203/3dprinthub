@@ -1,9 +1,16 @@
-﻿{
-    "product_id":  625,
-    "site_product_id":  39,
-    "site_revision":  8,
-    "asset_revision":  "de334e0b160efee2",
-    "purpose":  "Buffer public media compatibility",
-    "source":  "verified 3DPrintHub Site media",
-    "created_at":  "2026-09-19T21:50:07.0271097+03:30"
+{
+  "asset_revision": "de334e0b160efee2",
+  "feed_sha256": [
+    "82507714e84a8361a5899c7e2d3d2a0f5d51e83ccff9c8c6f1fbdfe32b40336e",
+    "1c6e9558fad046c13b2b51f497235872d41f72c6092038a860818e53e448a67f"
+  ],
+  "product_id": 625,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 39,
+  "site_revision": 8,
+  "source_media_urls": [
+    "https://3dprinthub.ir/media/p/625/cf6f0422f0cd/mini-articulated-skeletal-spinosaurus-3d-print-01.webp",
+    "https://3dprinthub.ir/media/p/625/28d50b4b482e/mini-articulated-skeletal-spinosaurus-3d-print-02.webp"
+  ],
+  "story_sha256": "a7aed86d1cc945f735180efaf2261e0bb6b031238b0281d8fbfa643af636b50e"
 }
