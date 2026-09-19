@@ -1,3 +1,15 @@
+## 2026-09-19 - ERR-49-178 Buffer feed compatibility
+- [x] Run exactly one real #625 Buffer attempt after Story render fix; no prior social receipt existed.
+- [x] Confirm failure is provider media fetch/read: both canonical Product URLs remain public HTTP 200 image/webp.
+- [x] Add Buffer-only stable PNG derivative hosting under `/media/instagram/feed/products/<id>/<revision>/`.
+- [x] Preserve canonical Site media separately in receipt audit and never replace Product media.
+- [x] Normalize extreme aspect ratios without crop and cap width to 1440.
+- [x] Compile + Buffer/feed-asset/Story/Instagram focused regression 21/21 PASS.
+- [ ] Commit/push exact candidate + rollback ref.
+- [ ] Fresh Catalog backup and real #625 compatibility asset preparation.
+- [ ] Publish exactly one Feed + companion Story and verify receipts/external links/Highlight queue.
+- [ ] Final exact-SHA Qt relaunch + docs closure.
+
 ## 2026-09-19 - #625 final launch closure / ERR-49-177 Story render
 - [x] Reconcile existing #625 revision-6 ACK after canonical public-media fix; no FTP/Bridge re-import.
 - [x] Verify Local #625 is uploaded/clean with strict public HTTP confirmation.

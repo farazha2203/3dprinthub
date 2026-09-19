@@ -90,6 +90,26 @@ class BufferPublishTests(unittest.TestCase):
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
+    def test_buffer_feed_can_use_static_compatibility_media_without_losing_source_audit(self, request, _secret):
+        request.return_value = {"createPost": {"post": {
+            "id": "post-compat", "status": "sent",
+            "externalLink": "https://instagram.com/p/compat",
+        }}}
+        db = _DB()
+        source_url = "https://3dprinthub.ir/media/demo.webp"
+        compat_url = "https://3dprinthub.ir/media/instagram/feed/products/7/rev/01.png"
+        result = publish_product(
+            db, 7, BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            feed_asset_urls=[compat_url],
+        )
+        create_input = self._feed_input(request)
+        self.assertEqual(create_input["assets"][0]["image"]["url"], compat_url)
+        self.assertEqual(result["media_urls"], [compat_url])
+        self.assertEqual(result["source_media_urls"], [source_url])
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
     def test_five_public_images_remain_five_buffer_assets(self, request, _secret):
         request.return_value = {"createPost": {"post": {
             "id": "post-5", "status": "sent",

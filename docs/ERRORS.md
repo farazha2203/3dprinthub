@@ -1,3 +1,11 @@
+## ERR-49-178 - Buffer could not read canonical Product images despite public HTTP 200
+**Date:** 2026-09-19
+**Observed:** first real #625 Buffer Feed attempt after Story rendering was repaired submitted the two canonical Product image URLs and failed before a post id with `Invalid post: Image could not be read from its URL., Image could not be read from its URL.`. Both URLs independently returned HTTP 200, Content-Type image/webp and the expected byte sizes; no Feed receipt existed before or after the failed call.
+**Root cause boundary:** the Product media is valid for the Site, but Buffer's remote media ingestion did not accept/read those canonical WebP-through-application URLs reliably. This is a provider-ingestion compatibility boundary, not a reason to weaken Site media verification or rename the Product assets.
+**Correct fix:** generate Buffer-only PNG derivatives from the already-verified canonical images, normalize only when aspect/width requires it, host them as stable public static social assets, verify them over HTTPS, submit them to Buffer and retain canonical Product URLs separately as audit source media.
+**Verification:** compile + feed-asset/Buffer/Story/Instagram focused gate 21/21 PASS. No Product DB/media/SEO mutation is part of this fix.
+**Prevention:** external social providers must receive provider-compatible stable media URLs; Site media validity alone is not sufficient evidence of provider ingest compatibility.
+
 ## ERR-49-177 - Windows Chrome launcher returned before companion Story screenshot was complete
 **Date:** 2026-09-19
 **Observed:** after #625 Site/public reconciliation and Buffer connectivity PASS, the first real social action stopped before Feed submission with `رندر Story خروجی معتبر تولید نکرد.`. Existing Story PNGs were 1080x1920 but only 18,240 bytes and sampled almost entirely white (mean RGB ~254.7).

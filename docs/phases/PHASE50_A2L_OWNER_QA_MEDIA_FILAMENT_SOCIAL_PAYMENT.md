@@ -1,3 +1,10 @@
+## Buffer feed media compatibility — 2026-09-19
+- First real Feed attempt after Story repair failed before post creation because Buffer could not read the two canonical Product image URLs; no duplicate/social receipt was created.
+- Canonical Site media remains healthy HTTP 200 and untouched.
+- Buffer path now creates stable PNG provider derivatives under `/media/instagram/feed/products/<id>/<revision>/`, verifies them and preserves source Product URLs in receipt audit.
+- Focused social regression 21/21 PASS.
+- Next: commit/push -> fresh backup -> real Feed+Story once -> receipt/Highlight queue verify -> final runtime/docs.
+
 ## Final owner launch acceptance / Story render reliability — 2026-09-19
 - #625 existing revision-6 Site ACK is reconciled locally with strict public media verification; no re-import was repeated.
 - Local #625 is now uploaded/clean; fresh pre-Instagram Catalog backup integrity PASS.

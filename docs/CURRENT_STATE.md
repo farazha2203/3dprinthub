@@ -1,3 +1,10 @@
+## 2026-09-19 - ERR-49-178 Buffer feed media compatibility LOCAL_TESTED
+After ERR-49-177, the first real Buffer Feed submission for #625 reached Buffer with the two verified canonical Product images but Buffer rejected both with `Invalid post: Image could not be read from its URL.` before creating a Feed receipt. Local/browser checks still showed both source URLs HTTP 200, `image/webp`, stable HTTPS and exact expected bytes. No Feed/Story duplicate was created.
+
+The Buffer-specific compatibility boundary now derives PNG feed assets from the verified canonical Product images, preserves original aspect where already Instagram-safe, letterboxes extreme ratios into the accepted range without cropping, caps width at 1440, uploads under stable `/media/instagram/feed/products/<product>/<revision>/NN.png`, verifies each public image, and submits those provider media URLs while retaining the canonical Site URLs separately as `source_media_urls` in the receipt. Site Product media/SEO/public filenames are untouched.
+
+Local compile + feed-asset/Buffer/Story/Instagram regression 21/21 PASS. Rollback: `backup/pre-err49-178-buffer-feed-media-20260919 @ b3321041...`. Exact next: commit/push -> fresh Catalog backup -> prepare real #625 compatibility PNGs -> one real Buffer Feed+Story attempt -> verify provider receipts/external links + Highlight target queue -> final runtime relaunch/docs. Production card-transfer settings remain pending because the authorized remote execution safety boundary currently refuses that financial-settings mutation.
+
 ## 2026-09-19 - #625 reconciled + Story renderer Windows race fixed LOCAL_TESTED
 The already-successful #625 Site ACK was reconciled locally without FTP/Bridge re-import after re-running strict public verification against Production. Product #625 is now `uploaded, upload_ready=0, needs_update=0, server_product_id=39, server_product_revision=6, server_status=updated`, with `public_http_ok=true` and no sync error. A dedicated receipt/history event records `no_reimport=true`. Fresh pre-Instagram Catalog backup `pre-instagram-625-20260919-164751` is integrity-ok.
 

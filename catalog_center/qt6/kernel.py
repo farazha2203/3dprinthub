@@ -2456,6 +2456,20 @@ class InstagramCore:
                         self.db.setting("instagram_companion_story_enabled", "1") or "1"
                     ).strip().lower()
                     companion_enabled = companion_raw not in {"0", "false", "no", "off"}
+                    if progress:
+                        progress(
+                            int((index - 1) / total * 100),
+                            f"آماده‌سازی رسانه سازگار Buffer برای محصول #{product_id}",
+                        )
+                    from app.instagram_feed_asset import prepare_product_feed_assets
+
+                    canonical_payload = self.preview(product_id)
+                    feed_meta = prepare_product_feed_assets(
+                        self.db,
+                        product_id,
+                        settings,
+                        canonical_payload,
+                    )
                     story_meta = None
                     if companion_enabled:
                         if progress:
@@ -2469,7 +2483,7 @@ class InstagramCore:
                             self.db,
                             product_id,
                             settings,
-                            self.preview(product_id),
+                            canonical_payload,
                         )
                     result = publish_product(
                         self.db,
@@ -2479,6 +2493,7 @@ class InstagramCore:
                         companion_story=companion_enabled,
                         story_asset_url=str((story_meta or {}).get("url") or ""),
                         story_meta=story_meta,
+                        feed_asset_urls=list(feed_meta.get("urls") or []),
                     )
                 else:
                     result = publish_product(

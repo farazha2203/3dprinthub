@@ -176,7 +176,7 @@ def test_connection(cfg: BufferConfig) -> dict[str, Any]:
     }
 
 
-def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) -> dict[str, Any]:
+def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, media_urls_override: list[str] | None = None) -> dict[str, Any]:
     row = db.product(int(product_id))
     if row is None:
         raise RuntimeError(f"Product {product_id} not found")
@@ -196,9 +196,16 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
     if not token:
         raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
 
+    provider_media_urls = [
+        str(value or "").strip()
+        for value in (media_urls_override or payload["media_urls"])
+        if str(value or "").strip()
+    ]
+    if not provider_media_urls:
+        raise RuntimeError("No public media URLs are available for Buffer.")
     assets: list[dict[str, Any]] = []
     alt_texts = list(payload.get("alt_texts") or [])
-    for index, url in enumerate(payload["media_urls"]):
+    for index, url in enumerate(provider_media_urls):
         alt_text = alt_texts[index] if index < len(alt_texts) else ""
         if not str(alt_text or "").strip():
             raise RuntimeError(f"Alt Text تصویر {index + 1} خالی است؛ انتشار Instagram متوقف شد.")
@@ -263,7 +270,8 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str) ->
         "provider_post_id": post_id,
         "site_product_url": payload["product_url"],
         "tracking_url": payload["tracking_url"],
-        "media_urls": list(payload["media_urls"]),
+        "media_urls": list(provider_media_urls),
+        "source_media_urls": list(payload["media_urls"]),
         "caption": payload["caption"],
         "alt_texts": list(payload.get("alt_texts") or []),
         "hashtags": list(payload.get("hashtags") or []),
@@ -416,8 +424,15 @@ def publish_product(
     companion_story: bool | None = None,
     story_asset_url: str = "",
     story_meta: dict[str, Any] | None = None,
+    feed_asset_urls: list[str] | None = None,
 ) -> dict[str, Any]:
-    feed = _publish_feed_product(db, product_id, cfg, site_url=site_url)
+    feed = _publish_feed_product(
+        db,
+        product_id,
+        cfg,
+        site_url=site_url,
+        media_urls_override=feed_asset_urls,
+    )
     if companion_story is None:
         if hasattr(db, "setting"):
             raw = str(db.setting("instagram_companion_story_enabled", "1") or "1").strip().lower()

@@ -1,3 +1,10 @@
+## 2026-09-19 - Buffer-compatible feed media derivatives
+- Added Buffer-only PNG compatibility assets derived from verified canonical Product media and hosted at stable public URLs.
+- Original Product media remains the Site/SEO authority; social receipt keeps both provider URLs and canonical `source_media_urls`.
+- Feed preparation preserves normal aspect ratios, letterboxes extreme inputs without crop, and caps output width at 1440.
+- InstagramCore prepares verified feed assets before Buffer submission; direct Instagram path is unchanged.
+- Focused social regression 21/21 PASS.
+
 ## 2026-09-19 - ERR-49-177 reliable Windows Story headless rendering
 - Real #625 social acceptance exposed a Windows-only Chrome launcher race before any Feed submission: a direct Python Chrome process could exit while the headless child still owned screenshot generation.
 - Story rendering now uses an isolated Product/revision workspace under LocalAppData, a dedicated Chrome user-data directory, PowerShell `Start-Process -Wait`, stale-output removal and bounded output polling.
