@@ -1,3 +1,10 @@
+## 2026-09-20 - Phase50.A.2Q legacy-shadow cache hardening LOCAL_TESTED
+Owner's new screenshot still shows the historical dark band below the Slicebox. Production was reverified clean at `release/phase50-a2j-hero-20260915 @ 36a69e76f9cd553273862ee400f9391573f3dd01`; public Home is HTTP 200, serves Hero 50.9.0 and current server HTML contains no `id="shadow"`. This is therefore not a regression of the current template; it is the retired Example-4 shadow presentation surviving through stale/cached client markup/style.
+
+A2Q keeps the accepted 1280px Hero and native 3D cuboids, arrows/dots and Product SEO overlay. It adds an explicit `#shadow` hard-kill (display/visibility/background/box-shadow/size all disabled), removes any surviving legacy node before Slicebox boot, and bumps Hero CSS/JS cache keys to `50.10.0`. First local gate failed only because the existing no-shadow test correctly forbids the literal retired asset filename and that literal appeared in the new explanatory CSS comment; the comment was corrected and the changed-condition rerun passed.
+
+Local verification: Django check PASS with historical CKEditor warning; no migration drift; Hero/Home media 19/19 PASS; Node syntax, deploy-runner Bash syntax and diff-check PASS. Rollback ref `backup/pre-phase50-a2q-hero-shadow-cache-20260920 @ 36a69e76...` exists locally. Exact next: commit/push A2Q release -> guarded reverse-tunnel deploy -> fresh Production browser/computed-style acceptance on desktop/mobile.
+
 ## 2026-09-19 - ERR-49-181 profile-driven parity hotfix LOCAL_TESTED
 Production is already clean at `6f55e0341f3e2ed747421be85cbff218e4fc973e`; A2M authoritative variant code and A2N Hero 50.9 are live. The first changed-condition #625 acceptance retry did not expose another stale Variant bug: it rolled back on a verifier ownership error, `product.fixed_price expected=1095000 actual=0`. For profile-driven Products, zero is correct because active Variants/ProductCatalogProfile own pricing.
 

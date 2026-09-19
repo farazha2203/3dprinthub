@@ -60,7 +60,15 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertNotIn("navPlay", template)
         self.assertNotIn("navPause", template)
         self.assertIn(".sb-perspective", core)
-        self.assertNotIn('$shadow.show()', self.read("static/js/phase50-a2k-tympanus-slicebox.js"))
+        runtime = self.read("static/js/phase50-a2k-tympanus-slicebox.js")
+        self.assertNotIn('$shadow.show()', runtime)
+        self.assertIn('root.querySelector("#shadow")', runtime)
+        self.assertIn("legacyShadow.remove()", runtime)
+        self.assertIn(".p50k-slicebox #shadow", css)
+        self.assertIn("display: none !important", css)
+        self.assertIn("background: none !important", css)
+        self.assertIn("box-shadow: none !important", css)
+        self.assertIn("50.10.0", template)
         for relative in (
             "static/vendor/slicebox/images/nav.png",
         ):

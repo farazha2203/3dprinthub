@@ -30,6 +30,28 @@
   outline: 0;
   box-shadow: none !important;
 }
+/* A2Q owner screenshot hardening:
+ * older Slicebox Example-4 markup/CSS used a dedicated shadow-image strip under the
+ * slider. The current template no longer renders it, but explicitly suppress
+ * any legacy/cached node so a stale DOM/global .shadow utility can never draw
+ * the dark horizontal band again.
+ */
+.p50k-slicebox #shadow,
+.p50k-slicebox .shadow#shadow {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 .p50k-slicebox .sb-perspective,
 .p50k-slicebox .sb-perspective > div,
 .p50k-slicebox .sb-slider > li,

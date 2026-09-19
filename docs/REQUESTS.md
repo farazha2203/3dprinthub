@@ -1,3 +1,8 @@
+## 2026-09-20 - Owner: remove remaining lower slider line and publish remaining phases
+Status: A2Q HERO LOCAL_TESTED / DEPLOY NEXT.
+
+Owner screenshot marks the dark horizontal band below the Home Slicebox and requests immediate Site + Instagram SEO + remaining Phase50 delivery. Current server HTML already has no shadow node, so A2Q adds a cache-safe compatibility kill for any legacy #shadow presentation and bumps Hero assets to 50.10.0 before Production browser verification. Instagram Product publication is already externally proven on #625 revision 8 and must not be duplicated; subsequent SEO v4 work is on the Windows lineage.
+
 ## 2026-09-19 - Owner: same-identity resend must fully replace Product-owned state
 Status: `PHASE50.A.2M LOCAL_TESTED / PRODUCTION NEXT`.
 

@@ -1,3 +1,10 @@
+## 2026-09-20 - A2Q cache-safe removal of retired Slicebox shadow
+- Current Hero template remains free of the historical shadow DOM node.
+- Wrapper CSS now force-disables any legacy/cached #shadow presentation, including background raster and box shadow.
+- Runtime removes a surviving legacy node before Slicebox initialization.
+- Hero asset cache key advanced to 50.10.0 without changing Product SEO content, 1280px layout or 3D navigation.
+- Local Hero/Home regression 19/19, Django check/no-drift, Node, deploy-runner Bash syntax and diff-check PASS.
+
 ## 2026-09-19 - Profile-driven re-publish parity ownership hotfix
 - Corrected republish parity so explicit Windows sales profiles keep `Product.fixed_price=0`; authoritative range remains on ProductCatalogProfile/Variants.
 - Legacy products without an explicit profile matrix still compare Product.fixed_price to their fixed/range minimum.

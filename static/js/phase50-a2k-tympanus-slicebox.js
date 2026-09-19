@@ -6,6 +6,9 @@
     if (!root || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.slicebox) return;
 
     var $ = window.jQuery;
+    var legacyShadow = root.querySelector("#shadow");
+    if (legacyShadow) legacyShadow.remove();
+
     var $slider = $("#sb-slider");
     if (!$slider.length || $slider.children("li").length < 1) return;
 

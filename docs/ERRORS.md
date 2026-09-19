@@ -15,6 +15,14 @@ Date: 2026-09-19
 **Verification:** structural Hero tests updated to the accepted 1280px frame contract; 32/32 Hero/Profile/Import tests PASS after correcting the stale 840px test assertion. Node syntax and diff-check PASS.
 **Prevention:** presentation tests must distinguish the vendored reference asset from required runtime behavior; a hidden decorative reference element must never be re-enabled by JS after CSS disables it.
 
+## ERR-49-182 - Owner still saw historical Slicebox shadow band after no-shadow release
+**Date:** 2026-09-20
+**Observed:** owner screenshot shows a dark horizontal gradient band below the Home slider, with navigation dots over the band.
+**Evidence:** current Production Home source is HTTP 200, cache key 50.9.0 and has no id="shadow". Release CSS already has border=0 and box-shadow=none on slider/perspective. The screenshot shape matches the earlier Example-4 #shadow/shadow.png strip.
+**Root cause:** a legacy/cached Slicebox shadow node/style can survive client-side even though current server markup no longer renders it. Relying only on DOM removal in the current template does not hard-fail the historical visual artifact.
+**Correct fix:** keep the template shadow-free, explicitly force any #shadow descendant to display/visibility/background/box-shadow none in wrapper CSS, remove a legacy #shadow node at runtime before Slicebox initialization, and bump the Hero asset cache key.
+**Prevention:** visual retirement of a legacy third-party element requires both current-template removal and a cache-safe suppression contract until old markup/assets can no longer render.
+
 ## ERR-49-179 - Revision-7 republish ACK passed while stale active Variants survived
 Date: 2026-09-19
 

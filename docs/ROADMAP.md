@@ -1,3 +1,15 @@
+## 2026-09-20 - Phase50.A.2Q Hero shadow/cache hardening
+- [x] Reverify clean Production baseline `36a69e76...` and public Home 50.9.0 with no current `id="shadow"`.
+- [x] Match owner screenshot to the retired Example-4 lower shadow strip rather than slider border.
+- [x] Add cache-safe CSS hard-kill for any legacy `#shadow` node and runtime removal before Slicebox initialization.
+- [x] Bump Hero CSS/JS cache key to `50.10.0`.
+- [x] Preserve 1280px frame, Product SEO/link overlay, arrows/dots and native 3D cuboid transition.
+- [x] Django check/no-drift + Hero/Home 19/19 + Node + runner syntax + diff-check PASS.
+- [ ] Commit/push exact release and rollback ref; verify live GitHub SHA.
+- [ ] Guarded Production deploy through dedicated reverse tunnel with source/env/static rollback.
+- [ ] Fresh Chromium desktop/mobile acceptance: no lower dark strip, no legacy shadow DOM, transition/dots/arrows healthy and no overflow/errors.
+- [ ] Close release docs and continue A2R payment/finance/admin.
+
 ## 2026-09-19 - ERR-49-181 profile-driven parity ownership
 - [x] Run first post-A2M controlled #625 retry from a fresh Catalog backup.
 - [x] Fail closed on `product.fixed_price expected=1095000 actual=0`; receiver transaction rolled back.
