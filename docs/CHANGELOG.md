@@ -1,3 +1,10 @@
+## 2026-09-19 - Slicebox frame cleanup + mobile image-priority
+- Removed the visible outer Slicebox border/outline/shadow contract while preserving the original Tympanus engine and desktop 3D behavior.
+- Mobile Hero now uses a taller 4:3 image presentation and removes long description, focus-keyword pill and CTA from the image overlay; only the compact Product title remains.
+- Bumped Hero CSS cache key to `50.8.0`.
+- Guarded A2L pricing runner now includes collected Hero CSS rollback evidence, collectstatic under public-safe `umask 022`, source/collected SHA parity and public Home/CSS marker verification.
+- Combined Hero/pricing regression 16/16 PASS; no migration change.
+
 ## 2026-09-19 - ERR-49-174 guarded pricing deploy runner
 - Added `scripts/host/phase50_a2l_pricing_engine_deploy.sh` with exact `ba05c7fc...` Production baseline, live GitHub SHA/FF-only, MySQL identity, readiness, no-migration, source/.env/MySQL backup, Product #39 managed-Variant pricing-authority and public HTTP gates.
 - Local Bash syntax and `git diff --check` PASS. Deployment remains blocked only on dedicated reverse tunnel recovery.

@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner: remove Hero frame line and prioritize mobile image
+Status: `LOCAL_TESTED / COMMIT+DEPLOY NEXT`.
+
+Owner screenshot shows an unwanted thin outer frame around the top Slicebox and an over-large mobile caption covering too much of the Product image. Required correction: no visible outer border/outline around the Hero; mobile must prioritize the Product image. Accepted implementation keeps only the short Product title overlay on mobile, hides long description/focus keyword/CTA there, and gives the image a taller 4:3 stage. Desktop Product SEO copy and Product-detail navigation remain intact.
+
 ## 2026-09-19 - Owner: finish #625 today with one pricing authority before Instagram
 Status: `SERVER LOCAL_TESTED / COMMIT+DEPLOY NEXT`.
 

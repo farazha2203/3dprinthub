@@ -20,10 +20,22 @@ class Phase50MobileHeroContractTests(SimpleTestCase):
         self.assertNotIn("phase49_3b-hero-media.css", template)
     def test_mobile_caption_is_compact_and_description_is_hidden(self):
         css = (ROOT / "static" / "css" / "phase50-a2k-tympanus-slicebox.css").read_text(encoding="utf-8")
+        template = (ROOT / "templates" / "website" / "partials" / "hero.html").read_text(encoding="utf-8")
         self.assertIn("@media (max-width: 720px)", css)
         self.assertIn(".p50k-slicebox .sb-description p", css)
         self.assertIn("display: none", css)
         self.assertIn("padding: 0 12px", css)
+        self.assertIn("aspect-ratio: 4 / 3", css)
+        self.assertIn(".p50k-slicebox__keyword {\n    display: none;", css)
+        self.assertIn("font-size: 14px", css)
+        self.assertIn("v=50.8.0", template)
+
+    def test_public_hero_frame_has_no_visible_border_or_outline(self):
+        css = (ROOT / "static" / "css" / "phase50-a2k-tympanus-slicebox.css").read_text(encoding="utf-8")
+        self.assertIn(".p50k-slicebox .sb-perspective", css)
+        self.assertIn("border: 0 !important", css)
+        self.assertIn("outline: 0 !important", css)
+        self.assertIn("box-shadow: none !important", css)
 class Phase50HomepageSeoAdminTests(TestCase):
     def test_existing_site_setting_is_extended_not_replaced(self):
         model_admin = admin.site._registry[SiteSetting]

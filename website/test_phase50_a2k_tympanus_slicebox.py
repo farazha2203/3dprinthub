@@ -53,6 +53,8 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn("max-width: 1280px", css)
         self.assertIn("max-width: none !important", css)
         self.assertGreaterEqual(css.count("aspect-ratio: 16 / 9"), 2)
+        self.assertIn("aspect-ratio: 4 / 3", css)
+        self.assertIn("border: 0 !important", css)
         self.assertIn('id="nav-dots"', template)
         self.assertNotIn('id="nav-options"', template)
         self.assertNotIn("navPlay", template)

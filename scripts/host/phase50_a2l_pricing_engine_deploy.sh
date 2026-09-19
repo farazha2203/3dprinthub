@@ -8,12 +8,14 @@ EXPECTED_DB="sfkilvrs_EmiAdmin_3dprinthub"
 HOST_BRANCH="release/phase50-a2j-hero-20260915"
 TARGET_BRANCH="release/phase50-a2l-owner-qa-20260918"
 EXPECTED_BASELINE="ba05c7fc479ae94d4a85676442008e018dbbcc67"
+STATIC_ROOT="/home/sfkilvrs/public_html/static"
 TARGET_SHA="${1:-}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_ROOT="/home/sfkilvrs/3dprinthub-deploy-backups/${STAMP}-phase50-a2l-pricing-engine"
 TMP_DELTA="/tmp/3dprinthub-a2l-pricing-$$.txt"
+STATIC_LIST="/tmp/3dprinthub-a2l-pricing-static-$$.txt"
 
-cleanup(){ rm -f "$TMP_DELTA" 2>/dev/null || true; }
+cleanup(){ rm -f "$TMP_DELTA" "$STATIC_LIST" 2>/dev/null || true; }
 trap cleanup EXIT
 fail(){
   printf 'A2L_PRICING_DEPLOY_FAIL=%s\n' "$1" >&2
@@ -68,10 +70,10 @@ cat "$TMP_DELTA"
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings' "$TMP_DELTA"; then
   fail "migration_dependency_or_settings_delta_detected"
 fi
-for required in store/phase49_3f_pricing.py store/phase49_3f_pricing_finalize.py store/phase50_profile_matrix.py store/test_phase50_filament_offer_operations.py; do
+for required in store/phase49_3f_pricing.py store/phase49_3f_pricing_finalize.py store/phase50_profile_matrix.py store/test_phase50_filament_offer_operations.py static/css/phase50-a2k-tympanus-slicebox.css templates/website/partials/hero.html; do
   grep -Fxq "$required" "$TMP_DELTA" || fail "required_delta_missing:$required"
 done
-mkdir -p "$BACKUP_ROOT"
+mkdir -p "$BACKUP_ROOT/static-before"
 chmod 700 "$BACKUP_ROOT"
 git bundle create "$BACKUP_ROOT/source-before.bundle" HEAD
 git bundle verify "$BACKUP_ROOT/source-before.bundle"
@@ -80,6 +82,21 @@ printf '%s\n' "$HOST_BRANCH" > "$BACKUP_ROOT/source-branch.txt"
 if [ -f .env ]; then
   cp -p .env "$BACKUP_ROOT/.env"
   chmod 600 "$BACKUP_ROOT/.env"
+fi
+cat > "$STATIC_LIST" <<'EOF'
+css/phase50-a2k-tympanus-slicebox.css
+EOF
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  if [ -f "$STATIC_ROOT/$rel" ]; then
+    mkdir -p "$BACKUP_ROOT/static-before/$(dirname "$rel")"
+    cp -p "$STATIC_ROOT/$rel" "$BACKUP_ROOT/static-before/$rel"
+  else
+    printf '%s\n' "$rel" >> "$BACKUP_ROOT/static-absent-before.txt"
+  fi
+done < "$STATIC_LIST"
+if [ -f "$BACKUP_ROOT/static-before/css/phase50-a2k-tympanus-slicebox.css" ]; then
+  (cd "$BACKUP_ROOT" && sha256sum static-before/css/phase50-a2k-tympanus-slicebox.css > static-before.sha256 && sha256sum -c static-before.sha256)
 fi
 sha256sum "$BACKUP_ROOT/source-before.bundle" > "$BACKUP_ROOT/source-bundle.sha256"
 if [ -f "$BACKUP_ROOT/.env" ]; then sha256sum "$BACKUP_ROOT/.env" > "$BACKUP_ROOT/env.sha256"; fi
@@ -128,6 +145,20 @@ if breakdown.get("pricing_authority")!="desktop_sales_profile_formula_v1":
 print("POST_MERGE_PRICING_RUNTIME=PASS")
 PY
 
+grep -Fq 'v=50.8.0' templates/website/partials/hero.html || fail "hero_css_cache_version_missing"
+grep -Fq 'aspect-ratio: 4 / 3' static/css/phase50-a2k-tympanus-slicebox.css || fail "mobile_image_priority_marker_missing"
+grep -Fq 'border: 0 !important' static/css/phase50-a2k-tympanus-slicebox.css || fail "hero_border_reset_missing"
+
+OLD_UMASK="$(umask)"
+umask 022
+"$PY" manage.py collectstatic --noinput
+umask "$OLD_UMASK"
+[ -f "$STATIC_ROOT/css/phase50-a2k-tympanus-slicebox.css" ] || fail "collected_hero_css_missing"
+SRC_CSS_SHA="$(sha256sum static/css/phase50-a2k-tympanus-slicebox.css | awk '{print $1}')"
+DST_CSS_SHA="$(sha256sum "$STATIC_ROOT/css/phase50-a2k-tympanus-slicebox.css" | awk '{print $1}')"
+printf 'HERO_CSS_SHA source=%s collected=%s\n' "$SRC_CSS_SHA" "$DST_CSS_SHA"
+[ "$SRC_CSS_SHA" = "$DST_CSS_SHA" ] || fail "collected_hero_css_hash_mismatch"
+
 mkdir -p tmp
 touch tmp/restart.txt
 sleep 4
@@ -142,6 +173,17 @@ for url in (
         print(url+" HTTP="+str(r.status))
         if r.status!=200:
             raise SystemExit("A2L_PRICING_DEPLOY_FAIL=public_http_not_200")
+with request.urlopen(request.Request("https://3dprinthub.ir/",headers={"User-Agent":"3DPrintHub-A2L-Pricing/1.0","Cache-Control":"no-cache"}),timeout=20) as r:
+    home=r.read(2_000_000)
+    print("HOME HTTP="+str(r.status))
+    if r.status!=200 or b"phase50-a2k-tympanus-slicebox.css" not in home or b"v=50.8.0" not in home:
+        raise SystemExit("A2L_PRICING_DEPLOY_FAIL=home_hero_version_missing")
+with request.urlopen(request.Request("https://3dprinthub.ir/static/css/phase50-a2k-tympanus-slicebox.css?v=50.8.0",headers={"User-Agent":"3DPrintHub-A2L-Pricing/1.0","Cache-Control":"no-cache"}),timeout=20) as r:
+    css=r.read(1_000_000)
+    print("HERO_CSS HTTP="+str(r.status))
+    for marker in (b"aspect-ratio: 4 / 3", b"border: 0 !important", b".p50k-slicebox__keyword"):
+        if marker not in css:
+            raise SystemExit("A2L_PRICING_DEPLOY_FAIL=hero_css_marker_missing")
 print("PUBLIC_SMOKE=PASS")
 PY
 

@@ -1,3 +1,12 @@
+## 2026-09-19 - Hero border/mobile image-priority + pricing release LOCAL_TESTED
+Dedicated 3DPrintHub reverse tunnel is healthy again: Windows `127.0.0.1:22024=True`, authenticated bridge `ok=true`, base `/home/sfkilvrs/3dprinthub`. Production identity was reverified read-only as clean `release/phase50-a2j-hero-20260915 @ ba05c7fc479ae94d4a85676442008e018dbbcc67`.
+
+Owner screenshot acceptance adds a presentation-only Hero correction on top of the already-tested pricing release. The Slicebox outer runtime frame is explicitly border/outline/box-shadow free. Mobile <=720px is now image-priority: 4:3 media area, long description hidden, SEO keyword pill hidden, CTA hidden, and only a compact maximum-two-line white title remains over a low-height translucent strip. Desktop Product SEO copy/link behavior is unchanged. Hero CSS cache key is `50.8.0`.
+
+Combined focused gate: 16/16 Hero mobile/Slicebox + pricing tests PASS; Python compile PASS; Django check PASS with known CKEditor warning only; no migration drift; deploy runner Bash syntax and `git diff --check` PASS. Guarded runner now also backs up the current collected Hero CSS, runs collectstatic under temporary `umask 022`, requires exact source/collected SHA parity and verifies public Home/CSS `50.8.0` markers after restart.
+
+Exact next: docs/commit/push new release SHA -> execute guarded runner through recovered tunnel -> Production Home/CSS verify -> one official #625 publish from already-refreshed Windows snapshot -> strict Product #39 read-back/browser -> real Buffer Feed+Story and Highlight target `اسباب بازی`.
+
 ## 2026-09-19 - ERR-49-174 unified Desktop-managed pricing LOCAL_TESTED
 Production media-path baseline is the prior `ba05c7fc...` release pending fresh Host verification through the dedicated reverse tunnel. The next Server delta is pricing-only/no-migration: Desktop-managed `CC-P...` Variants now calculate from the same Catalog formula (material sale cost + print + supervision + preheat + assembly) using exact Desktop profile inputs, and when managed Variants exist they alone define the Product Catalog public price range.
 

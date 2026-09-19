@@ -1,3 +1,14 @@
+## 2026-09-19 - Hero frame/mobile image-priority hotfix
+- [x] Reverify recovered dedicated tunnel and exact clean Production baseline `ba05c7fc...`.
+- [x] Remove visible Slicebox outer border/outline/box-shadow without altering the vendored engine.
+- [x] Mobile <=720px: use 4:3 image-priority Hero, hide description/SEO keyword/CTA and keep only compact two-line title overlay.
+- [x] Bump Hero CSS cache version to `50.8.0`.
+- [x] Extend guarded pricing runner with static rollback backup, collectstatic `umask 022`, CSS SHA parity and public Home/CSS marker checks.
+- [x] Combined Hero+pricing gate 16/16 PASS; check/no-drift/runner syntax/diff-check PASS.
+- [ ] Commit/push exact combined release SHA.
+- [ ] Deploy through authenticated 22024 runner and verify Production desktop/mobile source markers.
+- [ ] Continue real #625 republish/read-back and Instagram Feed+Story acceptance.
+
 ## 2026-09-19 - ERR-49-174 shared pricing authority
 - [x] Reproduce strict #625 price parity failure after media-path recovery.
 - [x] Implement Desktop-managed Site formula parity: material + print + supervision + preheat + assembly.
