@@ -16,17 +16,6 @@
 - [ ] Retain current/milestone Host rollback sets, delete redundant deploy backups and record reclaimed bytes.
 - [ ] Final CURRENT_STATE/ROADMAP/CHANGELOG/phase closure.
 
-## 2026-09-19 - #625 reconciliation + operator launcher + social closeout
-- [x] Reconcile #625 from existing revision-6 ACK/public HTTP without another Site import.
-- [x] Verify Local state is uploaded/clean and ACK has two canonical HTTP 200 images.
-- [x] Install Desktop .lnk + .cmd launchers pointing to repository-owned RUN_QT.ps1.
-- [x] Verify preserved Story renderer hardening; social/Story targeted 18/18 PASS.
-- [ ] Commit/push Story renderer + docs and relaunch exact tested SHA after fresh Catalog backup.
-- [ ] Publish real Buffer Feed + companion Story for #625 and verify idempotent receipts.
-- [ ] Browser QA Home/Store/Product/Cart/manual-payment page.
-- [ ] Activate approved Production manual-payment settings after verified rollback evidence.
-- [ ] Apply conservative Host backup retention and report reclaimed bytes.
-
 ## 2026-09-19 - ERR-49-176 canonical public-media verifier
 - [x] Prove receiver strict parity already succeeded for #625 / Site Product #39 revision 6.
 - [x] Prove current public Product HTML uses canonical `/media/p/...` rather than only legacy `/media/store/products/...`.

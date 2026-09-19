@@ -7,13 +7,6 @@ First real Instagram attempt stopped before Feed submission because the standard
 
 Exact next: commit/push ERR-49-177 -> verify exact remote SHA -> fresh Catalog backup -> real Buffer Feed+Story once -> verify Feed/Story receipts and `highlight_target=اسباب بازی, highlight_status=operator_required` -> conservative Host backup cleanup -> final docs/runtime relaunch. Production card-transfer code is live but payment-settings activation remains pending because the remote execution safety layer blocks that financial-settings mutation.
 
-## 2026-09-19 - #625 reconciled / Windows launcher / Story renderer LOCAL_TESTED
-Real Catalog #625 is now reconciled without re-import: `workflow_status=uploaded, upload_ready=0, needs_update=0, server_product_id=39, server_product_revision=6, server_status=updated, product_sync_error=''`. Persisted ACK now contains `public_http_ok=true` with two canonical `/media/p/...` images at HTTP 200 and `republish_parity.ok=true`; reconciliation receipt is `desktop_public_http_reconciled`.
-
-Windows owner launcher is installed at `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` with fallback `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.cmd`; both launch repository-owned `D:\projects\3DPrintHub\catalog_center\RUN_QT.ps1`.
-
-Previously preserved Instagram Story render work is now regression-tested: Windows headless Chrome/Edge uses an isolated profile, waits for the real browser process and refuses stale/missing screenshot output. Social/Story targeted 18/18 PASS. Exact next: commit/push Story render fix + docs -> fresh Catalog backup -> exact-SHA Qt relaunch -> real Buffer Feed+Story for #625 -> receipt/read-back -> Browser QA -> Production payment-setting activation if the authorized Host execution layer permits the data-write -> conservative backup retention cleanup.
-
 ## 2026-09-19 - Canonical public-media verifier LOCAL_TESTED
 Production receiver work is separately deployed at `9ce01fdc4c61ce58730e77bbb4d70b78de07e585`: Product #39 canonical `/media/p/625/<sha12>/<seo>.webp` URLs now return HTTP 200/image while imported working-media remains 404. Real #625 receiver import had already passed `republish_parity.ok=true`, Product identity #39 and revision 6; the Local Catalog remained dirty only because the Windows verifier still recognized legacy `/media/store/products/` URLs.
 
