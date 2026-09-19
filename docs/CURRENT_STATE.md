@@ -1,3 +1,7 @@
+## 2026-09-20 - A2R payment readiness panel WIP
+
+The second A2R slice adds a read-only Payment Readiness panel to the existing Phase50 Admin Command Center. It reuses \`payment_gateway_status()\` plus the existing \`StorePaymentSettings\` singleton and exposes only booleans/non-secret provider metadata. Merchant ID and manual-payment destination values are never rendered. Treasury now links directly to the manual-payment singleton Admin. No migration or Production mutation.
+
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin WIP started
 
 Status: \`WIP SOURCE IMPLEMENTED / CANONICAL LOCAL TEST REQUIRED / PRODUCTION UNCHANGED\`.

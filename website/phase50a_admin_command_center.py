@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.contrib import admin
 from django.template.response import TemplateResponse
 from django.urls import NoReverseMatch, reverse
@@ -54,7 +55,9 @@ def phase50_admin_command_center(request):
         StoreOrder,
         StorePayment,
     )
-    from website.models import Payment
+    from store.phase50_commerce_policy import StorePaymentSettings
+    from website.models import Payment, SiteSetting
+    from website.payment_services import payment_gateway_status
 
     service_pending = Payment.objects.filter(status__in=["pending", "awaiting_review"]).count()
     store_pending = StorePayment.objects.filter(status__in=["pending", "awaiting_review"]).count()
@@ -64,6 +67,43 @@ def phase50_admin_command_center(request):
     draft_purchases = FilamentPurchase.objects.filter(status="draft").count()
     open_payouts = AffiliatePayout.objects.filter(status__in=["requested", "approved"]).count()
     open_cost_entries = CostEntry.objects.count()
+
+    site_setting = SiteSetting.objects.first()
+    gateway_ready, gateway_reason = payment_gateway_status(site_setting)
+    gateway_provider = str(
+        getattr(site_setting, "online_payment_provider", "")
+        or getattr(settings, "PAYMENT_GATEWAY_PROVIDER", "zarinpal")
+        or "zarinpal"
+    ).strip()
+    gateway_enabled = bool(getattr(settings, "PAYMENT_GATEWAY_ENABLED", False))
+    site_gateway_enabled = bool(
+        site_setting and getattr(site_setting, "online_payment_enabled", False)
+    )
+    merchant_configured = bool(
+        str(getattr(settings, "ZARINPAL_MERCHANT_ID", "") or "").strip()
+    )
+    gateway_currency = str(getattr(settings, "ZARINPAL_CURRENCY", "IRT") or "IRT").upper()
+    gateway_sandbox = bool(getattr(settings, "ZARINPAL_SANDBOX", False))
+
+    manual_settings = StorePaymentSettings.objects.order_by("pk").first()
+    manual_destination_configured = bool(
+        manual_settings
+        and (
+            str(getattr(manual_settings, "card_number", "") or "").strip()
+            or str(getattr(manual_settings, "sheba_number", "") or "").strip()
+            or str(getattr(manual_settings, "account_number", "") or "").strip()
+        )
+    )
+    manual_holder_configured = bool(
+        manual_settings
+        and str(getattr(manual_settings, "account_holder", "") or "").strip()
+    )
+    manual_configured = bool(manual_destination_configured and manual_holder_configured)
+    manual_active = bool(
+        manual_settings
+        and getattr(manual_settings, "is_active", False)
+        and manual_configured
+    )
 
     sections = [
         _section(
@@ -102,6 +142,7 @@ def phase50_admin_command_center(request):
             [
                 ("website.view_payment", "admin:website_payment_changelist", "دریافت‌های خدمات", "کارت‌به‌کارت، بیعانه، تسویه و درگاه"),
                 ("store.view_storepayment", "admin:store_storepayment_changelist", "پرداخت‌های فروشگاه", "پرداخت‌های متصل به سفارش فروشگاهی"),
+                ("store.view_storepaymentsettings", "admin:store_storepaymentsettings_changelist", "تنظیمات کارت‌به‌کارت", "مقصد واریز دستی، وضعیت فعال‌بودن و راهنمای مشتری"),
                 ("store.view_affiliatepayout", "admin:store_affiliatepayout_changelist", "تسویه همکاران فروش", "پرداخت پورسانت و شماره پیگیری"),
                 ("website.change_sitesetting", "admin:website_sitesetting_changelist", "تنظیمات پرداخت", "کارت دریافت وجه و درگاه آنلاین"),
             ],
@@ -144,6 +185,19 @@ def phase50_admin_command_center(request):
         **admin.site.each_context(request),
         "title": "مرکز مالی، فروش و عملیات 3DPrintHub",
         "phase50_sections": [section for section in sections if section["links"]],
+        "phase50_payment_readiness": {
+            "gateway_ready": bool(gateway_ready),
+            "gateway_reason": str(gateway_reason or ""),
+            "gateway_enabled": gateway_enabled,
+            "site_gateway_enabled": site_gateway_enabled,
+            "provider": gateway_provider,
+            "merchant_configured": merchant_configured,
+            "currency": gateway_currency,
+            "sandbox": gateway_sandbox,
+            "manual_exists": manual_settings is not None,
+            "manual_configured": manual_configured,
+            "manual_active": manual_active,
+        },
         "phase50_metrics": [
             ("پرداخت خدمات در انتظار", service_pending),
             ("پرداخت فروشگاه در انتظار", store_pending),

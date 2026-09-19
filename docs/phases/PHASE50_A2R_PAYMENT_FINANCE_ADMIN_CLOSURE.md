@@ -51,3 +51,11 @@ Historical Git commits may still contain previously committed payment destinatio
 
 ## Legacy deploy compatibility
 The existing A2L guarded deploy runner performs both a source grep and runtime grep for \`A2L_MANUAL_PAYMENT_DRY_RUN=PASS\`. A2R intentionally preserves that dry-run marker while also emitting the new A2R marker. This keeps the mature fail-closed runner compatible while configuration storage/logging is hardened.
+
+## A2R slice 2 — payment readiness in Command Center
+- Add a read-only readiness panel to the existing business Command Center.
+- Show only non-secret state: online gateway ready/enabled, provider, merchant-configured boolean, currency, sandbox boolean, manual-transfer configured/active.
+- Never render Merchant ID, card number, Sheba or account number.
+- Add the manual-transfer singleton to the Treasury links for direct operator access.
+- Reuse \`payment_gateway_status()\`; no second gateway-health authority is introduced.
+- Add secret-safety/status regression and include the Command Center test in A2R CI.

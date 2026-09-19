@@ -1,3 +1,8 @@
+## 2026-09-20 - A2R Payment Readiness Command Center
+- Added a secret-safe payment readiness panel using existing gateway/manual-payment authorities.
+- Added Treasury access to manual-transfer settings and regression coverage that forbids rendering payment destination values.
+- No schema/migration change; WIP requires canonical regression before promotion.
+
 ## 2026-09-20 - Phase50.A.2R secure manual-payment operations
 - Started isolated A2R WIP from the current Site release without migration or Production mutation.
 - Replaced repository-embedded manual-payment destination data with \`STORE_PAYMENT_*\` environment-only overrides.

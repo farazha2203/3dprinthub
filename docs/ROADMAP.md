@@ -1,3 +1,13 @@
+## 2026-09-20 - A2R payment readiness panel
+
+- [x] Reuse existing gateway status authority and manual-payment singleton.
+- [x] Add secret-safe Payment Readiness panel to Admin Command Center.
+- [x] Add direct Treasury link to manual-transfer settings.
+- [x] Add regression that verifies status and rejects rendering payment destination values.
+- [x] Extend A2R CI scope with Command Center tests.
+- [ ] Canonical Local/CI regression on exact WIP SHA.
+- [ ] Promote only after gates pass.
+
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
 
 - [x] Audit existing manual-transfer, ZarinPal, ledger, finance dashboard and Admin foundations.

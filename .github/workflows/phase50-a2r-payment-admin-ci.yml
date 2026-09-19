@@ -8,6 +8,9 @@ on:
       - store/management/commands/phase50_a2l_seed_manual_payment.py
       - store/test_phase50_a2l_manual_payment.py
       - website/templatetags/admin_console.py
+      - website/phase50a_admin_command_center.py
+      - website/test_phase50a_admin_command_center.py
+      - templates/admin/phase50_command_center.html
       - website/payment_gateways/**
       - website/payment_services.py
       - website/test_phase28_payment.py
@@ -53,6 +56,8 @@ jobs:
             store/management/commands/phase50_a2l_seed_manual_payment.py \
             store/test_phase50_a2l_manual_payment.py \
             website/templatetags/admin_console.py \
+            website/phase50a_admin_command_center.py \
+            website/test_phase50a_admin_command_center.py \
             website/payment_gateways/base.py \
             website/payment_gateways/registry.py \
             website/payment_gateways/zarinpal.py \
@@ -71,6 +76,7 @@ jobs:
         run: |
           python manage.py test \
             store.test_phase50_a2l_manual_payment \
+            website.test_phase50a_admin_command_center \
             website.test_phase28_payment \
             website.test_phase30_online_payment \
             website.test_phase30_zarinpal_provider
