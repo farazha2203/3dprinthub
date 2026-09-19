@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner: same-identity resend must fully replace Product-owned state
+Status: `PHASE50.A.2M LOCAL_TESTED / PRODUCTION NEXT`.
+
+When a Product already published from Windows is changed and sent again, keep the existing Site Product identity but replace all Windows-owned current fields/settings: selected/finalized images, active profile matrix, weight, material/brand/color, pricing inputs/range, dimensions, stock and related publish-owned metadata. Old Variant/media state must not remain active beside the new revision. Historical rows may remain only as inactive rollback/order evidence. ACK must fail closed if any stale active Product state survives.
+
 ## 2026-09-19 - Owner: finish Product upload, enable card transfer, reclaim Host backup space
 Status: `LOCAL_TESTED / GITHUB+DEPLOY NEXT`.
 

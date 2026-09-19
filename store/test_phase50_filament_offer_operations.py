@@ -488,5 +488,5 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertIn("resolveGuidedVariant", js)
         self.assertIn(".store-profile-color-swatch", css)
         self.assertIn(".store-profile-color-image", css)
-        self.assertIn("filament_visual_options", template)
-        self.assertIn("قیمت خودکار هر گرم", template)
+        self.assertNotIn("filament_visual_options", template)
+        self.assertNotIn("قیمت خودکار هر گرم", template)

@@ -307,10 +307,12 @@ def _integer(item: dict, key: str, default=0) -> int:
 
 
 def sync_desktop_profile_matrix(product: Product, asset) -> int:
-    """Upsert only Desktop-managed ProductVariant rows.
+    """Replace the active Store variant matrix with the current Desktop profiles.
 
-    Manual server-side variants are preserved. Missing Desktop profiles deactivate
-    only rows with this product's CC-P<id>- prefix.
+    Historical Variant rows are retained for rollback/order references, but once
+    Windows supplies a sales-profile matrix it is the sole active commerce
+    authority for the Product. Old manual/MW-FIX/EP49/EP49-3F rows must not stay
+    orderable beside the newly published CC-P rows.
     """
     rows = _profile_rows(asset)
     if not rows:
@@ -449,9 +451,13 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         variant.save()
         created_or_updated += 1
 
-    managed = ProductVariant.objects.filter(product=product, code__startswith=prefix)
-    managed.exclude(code__in=active_codes).update(is_active=False, sales_profile_is_default=False)
-    ProductVariant.objects.filter(product=product, code__startswith="MW-FIX-", sales_profile_key="").update(is_active=False)
+    # Re-publish is replacement, not an additive merge with stale Host
+    # commerce state. Preserve rows physically for historical FK/order safety,
+    # but only the exact current CC-P matrix may remain active/orderable.
+    ProductVariant.objects.filter(product=product).exclude(code__in=active_codes).update(
+        is_active=False,
+        sales_profile_is_default=False,
+    )
 
     if not default_seen:
         first = ProductVariant.objects.filter(product=product, code__in=active_codes, is_active=True).order_by("sales_profile_sort_order", "pk").first()

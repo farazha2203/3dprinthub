@@ -159,8 +159,10 @@ def verify_product_republish_contract(product, asset, data: dict) -> dict:
         .select_related("material", "color", "quality")
         .order_by("sales_profile_sort_order", "pk")
     )
+    active_total = product.variants.filter(is_active=True).count()
     if expected_profiles:
         _append(mismatches, "variants.active_count", len(expected_profiles), len(actual_profiles))
+        _append(mismatches, "variants.total_active_count", len(expected_profiles), active_total)
         actual_by_key = {
             _text(getattr(row, "sales_profile_key", "")): row
             for row in actual_profiles

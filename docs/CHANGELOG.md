@@ -1,3 +1,12 @@
+## 2026-09-19 - Authoritative existing-Product re-publish replacement
+- Current Windows sales_profiles_json is now the sole active ProductVariant authority when present.
+- Old manual/MW-FIX/EP49/EP49-3F/removed CC rows are retained for historical order/FK rollback safety but deactivated.
+- Explicit current sales profiles suppress the legacy EP49 material/color regeneration path.
+- Republish parity now rejects extra active legacy rows by comparing total active Product Variants with the Windows profile count.
+- Real incident evidence: #625 / Site #39 revision 7 had three correct current CC rows plus two stale active EP49-3F rows carrying 1 g / 60 min / 104,500-Toman state.
+- Product gallery replacement stays exact to the current selected/finalized Windows media set.
+- Focused Server gate 25/25 PASS; check/no migration drift/deploy-runner syntax/diff-check PASS.
+
 ## 2026-09-19 - Canonical public media route + manual payment activation source
 - Added DEBUG=False serving for the compact content-addressed Product namespace `/media/p/...` from the configured MEDIA_ROOT; legacy public Store media remains supported and imported working-media remains private.
 - Added regression coverage for canonical public media serving and private imported-media rejection.

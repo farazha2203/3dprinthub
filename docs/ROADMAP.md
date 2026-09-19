@@ -1,3 +1,17 @@
+## 2026-09-19 - Phase50.A.2M authoritative full re-publish
+- [x] Reproduce #625 / Site #39 false-success update: revision 7 ACK passed while two stale EP49-3F Variants remained active.
+- [x] Make explicit Windows sales_profiles_json the sole active commerce matrix; retain historical rows inactive.
+- [x] Suppress legacy EP49 regeneration when current Windows profiles exist.
+- [x] Extend republish parity to compare total active Variant count, not only current CC rows.
+- [x] Verify current ProductImage replacement remains exact to the selected/finalized Windows media set.
+- [x] Focused Server 25/25 PASS; Django check/no-drift/diff-check + deploy-runner syntax PASS.
+- [ ] Commit/push exact A2M release + rollback ref and verify live GitHub SHA.
+- [ ] Guarded no-migration Production deploy from exact 9ce01fdc baseline with source/env/MySQL rollback.
+- [ ] Fresh Catalog backup, exact tested Windows runtime, one controlled #625 same-identity re-publish.
+- [ ] Require exactly three active CC Variants, zero stale active rows, current weight/material/time/price and exact current media.
+- [ ] Desktop/mobile Browser + Variant API acceptance and final documentation closure.
+- [ ] Resume Instagram only after Site acceptance; current Buffer Feed/Story still has no successful receipt.
+
 ## 2026-09-19 - Canonical media route + manual payment go-live
 - [x] Reverify tunnel/Host identity/head/worktree and effective Production MEDIA_ROOT.
 - [x] Prove #625 strict DB parity is already PASS and isolate public failure to `/media/p/` HTTP 404.

@@ -39,6 +39,15 @@ def _desktop_data(asset) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def _authoritative_sales_profiles(data: dict) -> list[dict]:
+    """Return the current Windows commerce matrix when one is explicitly supplied."""
+    return [
+        dict(item)
+        for item in _safe_list(data.get("sales_profiles_json"))
+        if isinstance(item, dict) and str(item.get("key") or "").strip()
+    ]
+
+
 def _positive_int(value, default=0) -> int:
     try:
         return max(0, int(float(str(value or default).replace(",", ""))))
@@ -451,7 +460,49 @@ def sync_epic49_publish_options(asset) -> dict:
     minimum, maximum = apply_price_range(product, asset, data)
     profile = sync_catalog_profile(product, asset, data, price_min=minimum, price_max=maximum)
     sync_product_seo(product, asset, data)
-    variants = apply_material_color_variants(product, asset, data, minimum_price=minimum)
+
+    # When Windows supplies the explicit sales-profile matrix it is the
+    # complete commerce authority for this Product. Do not regenerate legacy
+    # EP49 material/color rows afterwards; that would re-activate stale
+    # pre-update weights, materials and prices beside the current CC-P rows.
+    profile_rows = _authoritative_sales_profiles(data)
+    if profile_rows:
+        from .models import ProductVariant
+        from .phase50_profile_matrix import sync_desktop_profile_matrix
+
+        sync_desktop_profile_matrix(product, asset)
+        current = (
+            ProductVariant.objects.filter(
+                product=product,
+                code__startswith=f"CC-P{product.pk}-",
+                is_active=True,
+            )
+            .select_related("material", "color", "quality")
+            .order_by("sales_profile_sort_order", "pk")
+        )
+        variants = [
+            {
+                "variant_id": item.pk,
+                "code": item.code,
+                "material": str(getattr(item.material, "name", "") or ""),
+                "brand": str(getattr(item.color, "brand_name", "") or ""),
+                "manufacturer": str(getattr(item.color, "manufacturer_name", "") or ""),
+                "color": str(getattr(item.color, "name", "") or ""),
+                "quality": str(getattr(item.quality, "name", "") or ""),
+                "final_weight_grams": str(item.final_weight_grams or 0),
+                "material_weight_grams": str(item.material_weight_grams or 0),
+                "support_weight_grams": str(getattr(item, "support_weight_grams", 0) or 0),
+                "unit_price": int(item.cached_unit_price or 0),
+            }
+            for item in current
+        ]
+    else:
+        variants = apply_material_color_variants(
+            product,
+            asset,
+            data,
+            minimum_price=minimum,
+        )
     slider = apply_homepage_slider(product, asset, data)
     return {
         "profile_id": profile.pk,

@@ -1,3 +1,18 @@
+## ERR-49-179 - Revision-7 republish ACK passed while stale active Variants survived
+Date: 2026-09-19
+
+**Observed:** Catalog #625 updated Site Product #39 to revision 7 and returned republish_parity.ok=true, yet Production still exposed five active Variants. Three CC-P rows matched the current Windows payload, while two old EP49-3F rows remained active with legacy 1g / 104500-Toman values. The public selector/API therefore mixed old and new weights/materials/prices.
+
+**Root cause:** Desktop profile sync deactivated only missing CC-P rows and preserved unrelated active variants; later legacy material/color sync could also regenerate EP49 rows. The parity verifier counted only active CC-P rows, so extra active legacy rows were invisible to the ACK gate.
+
+**Correct fix:** explicit sales_profiles_json is the sole active commerce authority; deactivate every ProductVariant not in the current matrix, skip legacy EP49 regeneration, and make parity fail when total active Variant count differs from the current Windows profile count.
+
+**Image finding:** the current #625 batch contained only two selected/finalized images. The newly captured screenshot existed locally but was not selected/finalized by the Qt screenshot button, so the receiver correctly kept only the two batch-authoritative Product images.
+
+**Verification:** focused Server gate 32/32 PASS; Django check/no migration drift/diff-check PASS. Production deploy and one changed-condition #625 republish remain required.
+
+**Prevention:** same-identity republish success requires complete active-state parity, not subset parity. Current Windows Product-owned fields/media are replacement authority; stale active state must make the transaction fail closed.
+
 ## ERR-49-175 - Compact canonical Product media existed on disk but Production URL returned 404
 Date: 2026-09-19
 
