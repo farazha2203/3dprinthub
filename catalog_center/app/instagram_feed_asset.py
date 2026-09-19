@@ -134,6 +134,10 @@ def prepare_product_feed_assets(
 
     return {
         "urls": public_urls,
+        "local_paths": [
+            str(local_root / f"{index:02d}.png")
+            for index in range(1, len(public_urls) + 1)
+        ],
         "source_urls": media_urls,
         "dimensions": dimensions,
         "format": "png",

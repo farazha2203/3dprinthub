@@ -57,6 +57,16 @@
 - Combined deploy runner: `scripts/host/phase50_a2i_bridge_hero_combined_deploy.sh`.
 - Verified rollback backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20260914-130234-phase50-a2i-bridge-hero`.
 - Production root/Python/MySQL/static/media paths are unchanged from the verified reverse-tunnel profile.
+## 2026-09-19 Buffer provider-media compatibility paths
+- Canonical source remains D:\projects\3DPrintHub; generated social binaries must not be committed to the canonical development branch.
+- Dedicated Buffer social-assets worktree: D:\projects\3DPrintHub-social-assets.
+- Dedicated public asset branch: social-assets-buffer.
+- Current accepted #625 derivative revision: social_media/instagram/625/de334e0b160efee2/.
+- Current verified social-assets remote head after deterministic manifest refresh: 6561dc3e2709ccc2d2651d576d1e744b35058891.
+- Canonical Product media remains under https://3dprinthub.ir/media/p/...; provider-delivery URLs are separate audit fields and must never replace Product media/SEO identity.
+- Local generated feed cache: %LOCALAPPDATA%\3DPrintHub\instagram\feed\<product>\<revision>\.
+- Local Story cache: %LOCALAPPDATA%\3DPrintHub\CatalogCenter\social\stories\<product>\<revision>.png.
+
 ## 2026-09-13 Reverse tunnel E2E verified paths
 - Current Production/Local/GitHub checkpoint at verification: `d7cf71dceca95e191a118336c7004683083278ee`.
 - Windows operator loopback: `127.0.0.1:22024`; Host bridge loopback: `127.0.0.1:22224`.

@@ -176,7 +176,15 @@ def test_connection(cfg: BufferConfig) -> dict[str, Any]:
     }
 
 
-def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, media_urls_override: list[str] | None = None) -> dict[str, Any]:
+def publish_product(
+    db,
+    product_id: int,
+    cfg: BufferConfig,
+    *,
+    site_url: str,
+    media_urls_override: list[str] | None = None,
+    media_host_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     row = db.product(int(product_id))
     if row is None:
         raise RuntimeError(f"Product {product_id} not found")
@@ -280,6 +288,9 @@ def publish_product(db, product_id: int, cfg: BufferConfig, *, site_url: str, me
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": post_status,
         "external_link": str(post.get("externalLink") or ""),
+        "media_host": str((media_host_meta or {}).get("host") or "site"),
+        "media_host_branch": str((media_host_meta or {}).get("branch") or ""),
+        "media_host_commit_sha": str((media_host_meta or {}).get("commit_sha") or ""),
     }
     db.record_sync_receipt(int(product_id), f"instagram:buffer:{post_id}", receipt_status, server_id=post_id, payload=receipt_payload)
     return receipt_payload
@@ -403,6 +414,10 @@ def publish_story_for_product(
         "story_font_family": str((story_meta or {}).get("font_family") or ""),
         "story_width": int((story_meta or {}).get("width") or 0),
         "story_height": int((story_meta or {}).get("height") or 0),
+        "media_host": str((story_meta or {}).get("provider_media_host") or "site"),
+        "media_host_commit_sha": str(
+            (story_meta or {}).get("provider_media_commit_sha") or ""
+        ),
         "social_policy_version": str(payload.get("social_policy_version") or ""),
         "site_ack_fingerprint": fingerprint,
         "buffer_channel_id": cfg.channel_id,
@@ -415,6 +430,107 @@ def publish_story_for_product(
     return receipt_payload
 
 
+def reconcile_product_receipts(
+    db,
+    product_id: int,
+    cfg: BufferConfig,
+) -> dict[str, Any]:
+    """Append final receipt evidence when Buffer has moved a submitted post to sent."""
+
+    row_obj = db.product(int(product_id))
+    if row_obj is None:
+        raise RuntimeError(f"Product {product_id} not found")
+    row = dict(row_obj)
+    fingerprint = str(row.get("server_ack_json") or "").strip()
+    token = get_secret("buffer_api_key")
+    if not token:
+        raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
+
+    receipts = list(db.sync_receipts(int(product_id), limit=160))
+    final_statuses = {
+        "instagram_submitted": "instagram_published",
+        "instagram_story_submitted": "instagram_story_published",
+    }
+    already_final: set[tuple[str, str]] = set()
+    parsed: list[tuple[Any, dict[str, Any]]] = []
+    for receipt in receipts:
+        try:
+            payload = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            payload = {}
+        parsed.append((receipt, payload))
+        status = str(receipt["status"] or "")
+        if status in final_statuses.values():
+            already_final.add((status, str(payload.get("site_ack_fingerprint") or "")))
+
+    reconciled: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
+    for receipt, payload in parsed:
+        status = str(receipt["status"] or "")
+        final_status = final_statuses.get(status)
+        if not final_status:
+            continue
+        if fingerprint and str(payload.get("site_ack_fingerprint") or "") != fingerprint:
+            continue
+        if (final_status, fingerprint) in already_final:
+            continue
+
+        if status == "instagram_submitted":
+            urls = [
+                str(value or "").strip()
+                for value in payload.get("media_urls") or []
+                if str(value or "").strip()
+            ]
+            asset_url = urls[0] if urls else ""
+        else:
+            asset_url = str(payload.get("story_asset_url") or "").strip()
+        if not asset_url:
+            pending.append({"status": status, "reason": "asset_url_missing"})
+            continue
+
+        post = _reconcile_recent_asset(token, cfg, asset_url)
+        if not post or str(post.get("status") or "").lower() != "sent":
+            pending.append(
+                {
+                    "status": status,
+                    "provider_post_id": str((post or {}).get("id") or ""),
+                    "provider_status": str((post or {}).get("status") or ""),
+                }
+            )
+            continue
+
+        final_payload = {
+            **payload,
+            "provider_post_id": str(post.get("id") or payload.get("provider_post_id") or ""),
+            "buffer_status": "sent",
+            "external_link": str(post.get("externalLink") or payload.get("external_link") or ""),
+            "reconciled_from_receipt_id": int(receipt["id"] or 0),
+            "reconciled_without_repost": True,
+        }
+        provider_id = str(final_payload.get("provider_post_id") or "")
+        db.record_sync_receipt(
+            int(product_id),
+            f"instagram:buffer:reconcile:{provider_id}",
+            final_status,
+            server_id=provider_id,
+            payload=final_payload,
+        )
+        already_final.add((final_status, fingerprint))
+        reconciled.append(
+            {
+                "status": final_status,
+                "provider_post_id": provider_id,
+                "external_link": final_payload["external_link"],
+            }
+        )
+
+    return {
+        "product_id": int(product_id),
+        "reconciled": reconciled,
+        "pending": pending,
+    }
+
+
 def publish_product(
     db,
     product_id: int,
@@ -425,6 +541,7 @@ def publish_product(
     story_asset_url: str = "",
     story_meta: dict[str, Any] | None = None,
     feed_asset_urls: list[str] | None = None,
+    media_host_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     feed = _publish_feed_product(
         db,
@@ -432,6 +549,7 @@ def publish_product(
         cfg,
         site_url=site_url,
         media_urls_override=feed_asset_urls,
+        media_host_meta=media_host_meta,
     )
     if companion_story is None:
         if hasattr(db, "setting"):

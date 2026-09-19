@@ -14,6 +14,15 @@ Real #625 / Site #39 evidence proves the defect: revision 7 updated successfully
 
 Instagram remains unresolved externally: no successful #625 Buffer Feed/Story receipt exists yet.
 
+## 2026-09-19 - Owner: remove homepage slider frame, finish Instagram/SEO, publish and continue phases
+Status: SITE PASS / #625 SITE REV8 PASS / REAL INSTAGRAM FEED+STORY SENT / A2P LOCAL_TESTED.
+
+The owner screenshot highlighted the old Slicebox lower frame/shadow and requested immediate completion of homepage, Instagram, Instagram SEO and remaining phases. Fresh Production Chromium now proves Hero 50.9 has no #shadow element and no slider/wrapper/root border or box-shadow. #625 remains the same Site Product #39 at revision 8 with exactly three current active profiles and no active legacy Variant.
+
+Real Instagram publication is complete for this revision: Feed https://www.instagram.com/p/DdepEh3if0N/ and Story https://www.instagram.com/stories/3dprinthub_ir/3989806967019651799. Feed carries two non-empty ALT texts, eight bounded relevant hashtags, factual Product copy/specs, nationwide shipping and direct UTM Product URL. Story uses the approved 1080x1920 Gold/Navy IRANSans style and records Highlight target اسباب بازی; Buffer cannot perform the final Highlight placement, so that one Instagram UI action remains operator_required.
+
+The remaining engineering request is now A2P repeatability: future Buffer posts must automatically mirror only generated social derivatives to the verified provider-compatible media host instead of depending on the current Site origin. After A2P exact-SHA runtime closure, continue Finance/Payment/Admin and bounded Product publication phases.
+
 ## 2026-09-19 - Owner: finish Site, Desktop launcher and real Instagram acceptance
 Status: `SITE+PRODUCT PASS / WINDOWS STORY FIX LOCAL_TESTED / SOCIAL COMMIT+REAL PUBLISH NEXT`.
 

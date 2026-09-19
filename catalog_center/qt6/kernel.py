@@ -2564,15 +2564,33 @@ class InstagramCore:
                             settings,
                             canonical_payload,
                         )
+                    from app.buffer_media_host import rehost_buffer_assets
+
+                    provider_media = rehost_buffer_assets(
+                        self.db,
+                        product_id,
+                        feed_meta,
+                        story_meta,
+                        timeout=max(10, int(settings.timeout)),
+                    )
+                    if story_meta is not None:
+                        story_meta = {
+                            **story_meta,
+                            "provider_media_host": str(provider_media.get("host") or ""),
+                            "provider_media_commit_sha": str(
+                                provider_media.get("commit_sha") or ""
+                            ),
+                        }
                     result = publish_product(
                         self.db,
                         product_id,
                         cfg,
                         site_url=settings.site_url,
                         companion_story=companion_enabled,
-                        story_asset_url=str((story_meta or {}).get("url") or ""),
+                        story_asset_url=str(provider_media.get("story_url") or ""),
                         story_meta=story_meta,
-                        feed_asset_urls=list(feed_meta.get("urls") or []),
+                        feed_asset_urls=list(provider_media.get("feed_urls") or []),
+                        media_host_meta=provider_media,
                     )
                 else:
                     result = publish_product(

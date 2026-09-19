@@ -4,7 +4,12 @@ import json
 import unittest
 from unittest.mock import patch
 
-from app.buffer_publish import BufferConfig, publish_product, test_connection
+from app.buffer_publish import (
+    BufferConfig,
+    publish_product,
+    reconcile_product_receipts,
+    test_connection,
+)
 from app.instagram_publish import canonical_site_payload
 
 
@@ -33,6 +38,7 @@ class _DB:
 
     def record_sync_receipt(self, product_id, key, status, *, server_id, payload):
         self.receipts.append({
+            "id": len(self.receipts) + 1,
             "status": status,
             "payload_json": json.dumps(payload),
             "server_id": server_id,
@@ -102,11 +108,19 @@ class BufferPublishTests(unittest.TestCase):
             db, 7, BufferConfig(channel_id="chan-1"),
             site_url="https://3dprinthub.ir",
             feed_asset_urls=[compat_url],
+            media_host_meta={
+                "host": "github_raw",
+                "branch": "social-assets-buffer",
+                "commit_sha": "abc123",
+            },
         )
         create_input = self._feed_input(request)
         self.assertEqual(create_input["assets"][0]["image"]["url"], compat_url)
         self.assertEqual(result["media_urls"], [compat_url])
         self.assertEqual(result["source_media_urls"], [source_url])
+        self.assertEqual(result["media_host"], "github_raw")
+        self.assertEqual(result["media_host_branch"], "social-assets-buffer")
+        self.assertEqual(result["media_host_commit_sha"], "abc123")
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
@@ -153,6 +167,46 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(len(payload["media_urls"]), 6)
         self.assertTrue(payload["tracking_url"].startswith("https://3dprinthub.ir/"))
         self.assertIn(payload["tracking_url"], payload["caption"])
+
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._reconcile_recent_asset")
+    def test_reconcile_submitted_feed_appends_published_receipt_without_repost(
+        self, reconcile, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:post-submitted",
+            "instagram_submitted",
+            server_id="post-submitted",
+            payload={
+                "provider_post_id": "post-submitted",
+                "site_ack_fingerprint": fingerprint,
+                "media_urls": ["https://raw.githubusercontent.com/demo/feed.png"],
+                "buffer_status": "sending",
+                "external_link": "",
+            },
+        )
+        reconcile.return_value = {
+            "id": "post-submitted",
+            "status": "sent",
+            "externalLink": "https://instagram.com/p/final",
+        }
+
+        result = reconcile_product_receipts(
+            db,
+            7,
+            BufferConfig(channel_id="chan-1"),
+        )
+
+        self.assertEqual(len(result["reconciled"]), 1)
+        self.assertEqual(result["reconciled"][0]["status"], "instagram_published")
+        final = json.loads(db.receipts[-1]["payload_json"])
+        self.assertTrue(final["reconciled_without_repost"])
+        self.assertEqual(final["external_link"], "https://instagram.com/p/final")
+        self.assertEqual(db.receipts[-1]["status"], "instagram_published")
 
     @patch("app.buffer_publish.get_secret", return_value="")
     def test_missing_key_fails_closed(self, _secret):

@@ -221,6 +221,19 @@ class SettingsPage(QWidget):
         self.buffer_api_key.setPlaceholderText("خالی = Windows Credential Store")
         self.buffer_secret_source = QLabel("")
         self.buffer_secret_source.setObjectName("Muted")
+        self.buffer_media_host = QComboBox()
+        self.buffer_media_host.addItem(
+            "GitHub Raw — سازگار با Buffer (پیشنهادی)",
+            "github_raw",
+        )
+        self.buffer_media_host.addItem(
+            "سایت مستقیم — فقط اگر Buffer بتواند Media را بخواند",
+            "site",
+        )
+        self.buffer_media_host.setToolTip(
+            "رسانه اصلی Product روی سایت تغییر نمی‌کند؛ فقط مشتق PNG مخصوص Buffer "
+            "در Host انتخابی منتشر می‌شود."
+        )
 
         self.instagram_account_id = QLineEdit()
         self.instagram_account_id.setPlaceholderText("Instagram Professional Account ID")
@@ -253,6 +266,7 @@ class SettingsPage(QWidget):
         form.addRow("Buffer Channel ID", self.buffer_channel_id)
         form.addRow("Buffer API Key", self.buffer_api_key)
         form.addRow("منبع Buffer Key", self.buffer_secret_source)
+        form.addRow("Media Host برای Buffer", self.buffer_media_host)
         form.addRow("Professional Account ID", self.instagram_account_id)
         form.addRow("Graph API Version", self.instagram_api_version)
         form.addRow("Login Mode", self.instagram_login_mode)
@@ -307,6 +321,13 @@ class SettingsPage(QWidget):
         self.buffer_channel_id.setText(
             str(self.db.setting("buffer_instagram_channel_id", "") or "")
         )
+        media_host = str(
+            self.db.setting("buffer_media_host", "github_raw") or "github_raw"
+        ).strip().lower()
+        media_host_index = self.buffer_media_host.findData(media_host)
+        self.buffer_media_host.setCurrentIndex(
+            media_host_index if media_host_index >= 0 else 0
+        )
         story_raw = str(
             self.db.setting("instagram_companion_story_enabled", "1") or "1"
         ).strip().lower()
@@ -341,6 +362,7 @@ class SettingsPage(QWidget):
             self.buffer_channel_id,
             self.buffer_api_key,
             self.buffer_secret_source,
+            self.buffer_media_host,
             self.instagram_companion_story,
         ):
             widget.setEnabled(is_buffer)

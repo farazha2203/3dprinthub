@@ -1,3 +1,21 @@
+## 2026-09-19 - Phase50.A.2P Buffer provider-compatible media host
+- [x] Verify current Production Hero 50.9 has no legacy shadow/frame DOM/style on a fresh browser.
+- [x] Verify #625 / Site #39 revision 8: exactly 3 active CC rows, 0 active legacy rows, 2 current ProductImages.
+- [x] Fresh integrity-checked Catalog backup before real Instagram acceptance.
+- [x] Verify SEO caption, 2/2 ALT, 8 hashtags, UTM Product URL, nationwide shipping and Highlight target.
+- [x] Reproduce Buffer failure with site-hosted compatibility PNG despite public HTTP 200 image/png.
+- [x] Prove provider-host boundary by publishing the exact same current PNG derivatives through public GitHub raw hosting.
+- [x] Real Feed sent: 6aaed28f6e039ccbc8221fa8 / https://www.instagram.com/p/DdepEh3if0N/
+- [x] Real Story sent: 6aaed29a7fcdd8931977c3f1 / https://www.instagram.com/stories/3dprinthub_ir/3989806967019651799
+- [x] Add deterministic dedicated social-assets-buffer worktree/branch automation; canonical Site media remains unchanged.
+- [x] Add Buffer media-host selector + receipt host/commit audit + append-only submitted->sent reconciliation.
+- [x] Reconcile current Feed to instagram_published without repost.
+- [x] Focused social 21/21 + Qt VerifyOnly PASS.
+- [x] Run broader social suite 31/31 + compile + diff-check + Qt VerifyOnly PASS.
+- [ ] Commit/push exact A2P candidate; verify live GitHub SHA and relaunch exact Qt runtime.
+- [ ] Close A2O/A2P docs; never recreate #625 revision-8 Feed/Story.
+- [ ] Continue remaining Phase50 payment/finance/admin closure and bounded Product/social workflow.
+
 ## 2026-09-19 - Phase50.A.2O re-publish resilience + Instagram acceptance
 - [x] Verify Production is exact clean `36a69e76...` and Hero 50.9/no-shadow is live.
 - [x] Browser-verify desktop Slicebox transition and mobile nonzero Hero/no document overflow.

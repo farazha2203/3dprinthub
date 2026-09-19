@@ -1,3 +1,11 @@
+## ERR-49-183 - Buffer could not ingest valid social PNGs from the current Site origin
+**Date:** 2026-09-19
+**Observed:** after the WebP-specific compatibility fix, #625 generated valid Buffer-only PNG derivatives. Direct owner-side HEAD/GET returned HTTP 200, Content-Type image/png, stable Content-Length and cache headers, including with a Buffer-like User-Agent, but Buffer createPost still rejected both images as unreadable. No Feed receipt/post was created by that failed attempt.
+**Boundary evidence:** 3dprinthub.ir resolves to 89.39.208.237 and the media response is fronted by BitNinja-WafPro via Caddy. The exact origin/WAF rule responsible is not proven because no provider request log was available. The exact same PNG bytes mirrored to public raw.githubusercontent.com were accepted immediately by Buffer; Feed and Story both reached sent.
+**Correct fix:** separate canonical Product media from provider-delivery media. Keep Product WebPs and SEO filenames on 3DPrintHub unchanged, and publish only generated social derivatives through a configurable Buffer media host. The verified launch host is a dedicated public GitHub branch/worktree, with deterministic per-revision paths, source URL/SHA manifest, clean-worktree guard, exact remote-head check and public image MIME verification.
+**Real verification:** Feed id 6aaed28f6e039ccbc8221fa8 -> https://www.instagram.com/p/DdepEh3if0N/; Story id 6aaed29a7fcdd8931977c3f1 -> https://www.instagram.com/stories/3dprinthub_ir/3989806967019651799. Feed receipt was later reconciled from sending to sent without repost.
+**Prevention:** Site HTTP validity is not sufficient evidence that an external social provider can ingest the URL. Provider-delivery assets require a provider-compatible public host and a real external acceptance gate. Never weaken canonical Site-media checks or duplicate the Product post to test status.
+
 ## ERR-49-182 - Failed re-publish erased the last verified Windows Site identity
 **Date:** 2026-09-19
 **Observed:** after a controlled #625 retry failed closed on a parity mismatch, Local Product #625 changed from the existing Site linkage (#39 / revision 7) to `server_product_id=0`, `server_product_revision=0`, and replaced its good public ACK with the failed ACK. The Site transaction itself had rolled back and Product #39 still existed.

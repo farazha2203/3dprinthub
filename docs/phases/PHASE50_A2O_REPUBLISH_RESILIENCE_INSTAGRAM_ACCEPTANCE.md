@@ -1,6 +1,6 @@
 # PHASE50.A.2O — Re-publish Resilience + Instagram Acceptance
 
-Status: LOCAL_TESTED / GITHUB+REAL ACCEPTANCE NEXT
+Status: ACCEPTED / SITE REV8 + REAL INSTAGRAM FEED/STORY PASS / A2P ACTIVE
 Date: 2026-09-19
 
 ## Goal
@@ -17,6 +17,8 @@ Restore only the stable Site linkage from verified pre-failure Catalog evidence,
 
 ## Instagram acceptance
 Site-first only. Derive Buffer-compatible PNG assets from current verified Site media; preserve canonical source URLs in audit. Feed requires Product SEO title/description, factual bullets/specs, non-empty per-image ALT, bounded relevant hashtags, direct UTM Product URL and nationwide shipping CTA. Companion Story requires the approved 1080x1920 Gold/Navy IRANSans style and Product link. Feed and Story provider receipts/external ids are mandatory. Highlight target is recorded; final Highlight placement remains operator-required because Buffer has no Highlight mutation.
+
+Acceptance is complete for Site revision 8. The Site-origin PNG attempt failed before post creation because Buffer could not read those URLs, while the exact same bytes on the dedicated public GitHub social-assets branch were accepted. Feed 6aaed28f6e039ccbc8221fa8 is sent at https://www.instagram.com/p/DdepEh3if0N/. Story 6aaed29a7fcdd8931977c3f1 is sent at https://www.instagram.com/stories/3dprinthub_ir/3989806967019651799. The submitted Feed receipt was reconciled to published after a read-only Buffer status check; no repost occurred. Highlight target is اسباب بازی and remains operator_required.
 
 ## Local gates
 - Site-publish module: 19/19 PASS.

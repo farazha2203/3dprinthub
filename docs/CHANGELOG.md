@@ -1,3 +1,13 @@
+## 2026-09-19 - Real Instagram launch + provider-compatible Buffer media hosting
+- Product #625 / Site #39 revision 8 passed authoritative same-identity acceptance with exactly 3 active CC profiles, zero active legacy Variants and 2 current ProductImages.
+- Fresh Production Chromium confirms Hero 50.9 has no legacy Slicebox shadow/frame element and no slider/wrapper/root box-shadow or border.
+- Real Instagram Feed and companion Story are sent through Buffer with Product SEO caption, 2/2 ALT texts, 8 bounded hashtags, UTM Product link and nationwide shipping copy.
+- Feed: https://www.instagram.com/p/DdepEh3if0N/ ; Story: https://www.instagram.com/stories/3dprinthub_ir/3989806967019651799
+- Site-hosted PNG derivatives remained unreadable to Buffer despite owner-side HTTP 200 image/png; identical GitHub-raw bytes were accepted, isolating the provider-to-origin media-host boundary.
+- Added deterministic github_raw Buffer media-host automation on the dedicated social-assets-buffer worktree/branch, SHA/source manifest, remote-head/public-MIME guards and Settings UI selection.
+- Added media-host/commit audit to social receipts and append-only submitted->sent reconciliation without reposting.
+- Canonical Site Product media and SEO filenames remain unchanged.
+
 ## 2026-09-19 - Failed re-publish identity resilience
 - Failed Site imports no longer erase the last verified Windows Site Product/slider ids, revisions or successful ACK.
 - Failure receipts and `product_sync_error` remain complete, so diagnostics are preserved without degrading the next retry into a new/unknown Product path.
