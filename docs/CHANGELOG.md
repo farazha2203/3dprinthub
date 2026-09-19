@@ -1,3 +1,10 @@
+## 2026-09-19 - Hero 50.9 clean-frame fix
+- Removed the legacy Slicebox `shadow.png` runtime element that JS was re-showing after CSS hid it.
+- Eliminated the owner-visible dark shadow and rectangular lower raster edge without changing the Slicebox 3D cuboid engine, arrows or dots.
+- Bumped Hero CSS/JS cache keys to `50.9.0`.
+- Corrected one stale 840px Hero test contract to the accepted 1280px frame.
+- Focused Hero/Profile/Import gate 32/32 PASS.
+
 ## 2026-09-19 - Authoritative existing-Product re-publish replacement
 - Current Windows sales_profiles_json is now the sole active ProductVariant authority when present.
 - Old manual/MW-FIX/EP49/EP49-3F/removed CC rows are retained for historical order/FK rollback safety but deactivated.

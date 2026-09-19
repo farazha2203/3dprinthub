@@ -1,3 +1,14 @@
+## 2026-09-19 - Phase50.A.2N homepage Hero clean-frame closure
+- [x] Diagnose owner screenshot with real Production computed styles.
+- [x] Prove wrapper/slider border/shadow are zero and identify JS `onReady -> $shadow.show()` as the real source.
+- [x] Remove legacy shadow DOM/runtime/CSS while preserving arrows, dots and native Slicebox cuboids.
+- [x] Bump Hero CSS/JS cache key to 50.9.0.
+- [x] Correct stale 840px test expectation to accepted 1280px Hero frame.
+- [x] Focused 32/32 PASS + Node syntax + diff-check.
+- [ ] Commit/push exact combined A2M+A2N release and rollback ref.
+- [ ] Guarded Production deploy with collectstatic/public marker/no-shadow checks.
+- [ ] Chromium desktop/mobile acceptance: no rectangular shadow edge, 3D transition still works, no page errors/overflow regression.
+
 ## 2026-09-19 - Phase50.A.2M authoritative full re-publish
 - [x] Reproduce #625 / Site #39 false-success update: revision 7 ACK passed while two stale EP49-3F Variants remained active.
 - [x] Make explicit Windows sales_profiles_json the sole active commerce matrix; retain historical rows inactive.

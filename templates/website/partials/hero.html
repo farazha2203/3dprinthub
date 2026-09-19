@@ -1,10 +1,10 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'vendor/slicebox/css/slicebox.css' %}?v=1.1.0">
-<link rel="stylesheet" href="{% static 'css/phase50-a2k-tympanus-slicebox.css' %}?v=50.8.0">
+<link rel="stylesheet" href="{% static 'css/phase50-a2k-tympanus-slicebox.css' %}?v=50.9.0">
 <script src="{% static 'vendor/slicebox/js/modernizr.custom.46884.js' %}" defer></script>
 <script src="{% static 'vendor/slicebox/js/jquery-3.7.1.min.js' %}" defer></script>
 <script src="{% static 'vendor/slicebox/js/jquery.slicebox.js' %}" defer></script>
-<script src="{% static 'js/phase50-a2k-tympanus-slicebox.js' %}?v=50.6.0" defer></script>
+<script src="{% static 'js/phase50-a2k-tympanus-slicebox.js' %}?v=50.9.0" defer></script>
 
 <section id="home" class="p50k-slicebox" data-p50k-slicebox aria-label="مدل‌های منتخب 3DPrintHub">
   <div class="p50k-slicebox__wrapper">
@@ -48,7 +48,6 @@
           {% endwith %}
         {% endfor %}
       </ul>
-      <div id="shadow" class="shadow" aria-hidden="true"></div>
       {% if homepage_hero_slides|length > 1 %}
         <div id="nav-arrows" class="nav-arrows" aria-label="کنترل اسلایدر">
           <a href="#" aria-label="اسلاید بعدی">Next</a>

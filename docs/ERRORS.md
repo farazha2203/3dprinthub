@@ -1,3 +1,12 @@
+## ERR-49-180 - Slicebox reference shadow created the visible rectangular line under the Hero
+Date: 2026-09-19
+
+**Observed:** the owner screenshot shows a dark Slicebox drop-shadow plus a faint rectangular bottom edge spanning the Hero frame, despite the wrapper/slider computed border and box-shadow being zero.
+**Root cause:** the local wrapper CSS already hid `.p50k-slicebox .shadow`, but the runtime `onReady` callback explicitly executed `$shadow.show()`. The reference `shadow.png` therefore became visible after Slicebox initialized; the raster shadow image itself produced the dark shadow and visible rectangular lower edge the owner circled.
+**Correct fix:** remove the legacy shadow DOM node from the Hero template and remove the runtime show path; keep arrows/dots and the original Slicebox 3D cuboid engine unchanged. Remove the unused wrapper shadow-image CSS. Bump Hero CSS/JS cache keys to `50.9.0`.
+**Verification:** structural Hero tests updated to the accepted 1280px frame contract; 32/32 Hero/Profile/Import tests PASS after correcting the stale 840px test assertion. Node syntax and diff-check PASS.
+**Prevention:** presentation tests must distinguish the vendored reference asset from required runtime behavior; a hidden decorative reference element must never be re-enabled by JS after CSS disables it.
+
 ## ERR-49-179 - Revision-7 republish ACK passed while stale active Variants survived
 Date: 2026-09-19
 

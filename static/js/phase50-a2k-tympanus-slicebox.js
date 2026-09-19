@@ -12,7 +12,6 @@
     var $navArrows = $("#nav-arrows").hide();
     var $navDots = $("#nav-dots").hide();
     var $nav = $navDots.children("span");
-    var $shadow = $("#shadow").hide();
 
     var slicebox = $slider.slicebox({
       orientation: "r",
@@ -21,7 +20,6 @@
       onReady: function () {
         $navArrows.show();
         $navDots.show();
-        $shadow.show();
       },
       onBeforeChange: function (position) {
         $nav.removeClass("nav-dot-current");

@@ -1,3 +1,8 @@
+## 2026-09-19 - Phase50.A.2N Hero frame cleanup LOCAL_TESTED
+Owner screenshot reproduced the remaining homepage visual defect: the apparent border was not a CSS border. Slicebox JS re-enabled the original `shadow.png` in `onReady` after wrapper CSS had hidden it, producing both the dark drop shadow and the rectangular raster edge beneath the slider. A2N removes the shadow DOM/runtime path entirely, keeps arrows/dots + 3D cuboids, and bumps public Hero cache keys to `50.9.0`. The accepted frame remains 1280px. A stale Phase45 test still expected 840px; that test contract was corrected before rerun rather than changing the accepted UI back.
+
+Hero/Profile/Import focused gate is 32/32 PASS; Node syntax and diff-check PASS. A2M authoritative re-publish remains bundled in the same release candidate. Production is still `9ce01fdc...` until this combined release is committed/pushed and deployed from GitHub through the dedicated reverse tunnel.
+
 ## 2026-09-19 - Phase50.A.2M authoritative full republish LOCAL_TESTED
 Real Catalog #625 reached Site Product #39 revision 7 with a nominal republish parity PASS, but read-only Production evidence exposed five active Variants: three current CC-P rows plus two stale EP49-3F rows carrying legacy 1g / 104500-Toman state. The current Windows authority contains exactly three profiles with 60g final weight, 110g material weight and current 1,095,000-1,215,000 Toman pricing. ProductImage currently contains two canonical images; the owner-added screenshot exists locally but was not selected/finalized into the publish batch.
 

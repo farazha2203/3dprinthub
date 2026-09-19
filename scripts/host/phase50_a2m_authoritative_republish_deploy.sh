@@ -11,6 +11,7 @@ EXPECTED_BASELINE="9ce01fdc4c61ce58730e77bbb4d70b78de07e585"
 TARGET_SHA="${1:-}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_ROOT="/home/sfkilvrs/3dprinthub-deploy-backups/${STAMP}-phase50-a2m-authoritative-republish"
+PUBLIC_STATIC="/home/sfkilvrs/public_html/static"
 TMP_DELTA="/tmp/3dprinthub-a2m-republish-$$.txt"
 
 cleanup(){ rm -f "$TMP_DELTA" 2>/dev/null || true; }
@@ -78,6 +79,14 @@ if [ -f .env ]; then
 fi
 sha256sum "$BACKUP_ROOT/source-before.bundle" > "$BACKUP_ROOT/source-bundle.sha256"
 if [ -f "$BACKUP_ROOT/.env" ]; then sha256sum "$BACKUP_ROOT/.env" > "$BACKUP_ROOT/env.sha256"; fi
+mkdir -p "$BACKUP_ROOT/static-before"
+for rel in css/phase50-a2k-tympanus-slicebox.css js/phase50-a2k-tympanus-slicebox.js; do
+  if [ -f "$PUBLIC_STATIC/$rel" ]; then
+    mkdir -p "$BACKUP_ROOT/static-before/$(dirname "$rel")"
+    cp -p "$PUBLIC_STATIC/$rel" "$BACKUP_ROOT/static-before/$rel"
+  fi
+done
+find "$BACKUP_ROOT/static-before" -type f -print0 | sort -z | xargs -0 -r sha256sum > "$BACKUP_ROOT/static-before.sha256"
 (cd "$BACKUP_ROOT" && sha256sum -c source-bundle.sha256 && if [ -f env.sha256 ]; then sha256sum -c env.sha256; fi)
 
 export PHASE49_PROJECT_ROOT="$ROOT"
@@ -97,6 +106,9 @@ git merge --ff-only "$FETCHED"
 grep -Fq 'variants.total_active_count' store/phase50_republish_contract.py || fail "total_active_parity_guard_missing"
 grep -Fq 'ProductVariant.objects.filter(product=product).exclude(code__in=active_codes)' store/phase50_profile_matrix.py || fail "authoritative_variant_deactivation_missing"
 grep -Fq '_authoritative_sales_profiles' store/epic49_publish_options.py || fail "authoritative_profile_boundary_missing"
+! grep -Fq 'id="shadow"' templates/website/partials/hero.html || fail "legacy_slicebox_shadow_dom_present"
+! grep -Fq '$shadow.show()' static/js/phase50-a2k-tympanus-slicebox.js || fail "legacy_slicebox_shadow_runtime_present"
+grep -Fq 'v=50.9.0' templates/website/partials/hero.html || fail "hero_cache_marker_missing"
 
 "$PY" - <<'PY'
 import os
@@ -117,21 +129,38 @@ if p is not None:
     print("PRODUCT39_CC_ACTIVE_PRE_REPUBLISH="+str(q.filter(is_active=True,code__startswith="CC-P39-").count()))
 print("A2M_RUNTIME_CONTRACT=PASS")
 PY
+OLD_UMASK="$(umask)"
+umask 022
+"$PY" manage.py collectstatic --noinput
+umask "$OLD_UMASK"
+find "$PUBLIC_STATIC/vendor/slicebox" -type d -exec chmod 755 {} + 2>/dev/null || true
+find "$PUBLIC_STATIC/vendor/slicebox" -type f -exec chmod 644 {} + 2>/dev/null || true
 mkdir -p tmp
 touch tmp/restart.txt
 sleep 4
 
 "$PY" - <<'PY'
 from urllib import request
-for url in (
-    "https://3dprinthub.ir/",
-    "https://3dprinthub.ir/store/",
-    "https://3dprinthub.ir/store/product/mini-articulated-skeletal-spinosaurus/",
-):
+checks = (
+    ("https://3dprinthub.ir/", "html"),
+    ("https://3dprinthub.ir/store/", "html"),
+    ("https://3dprinthub.ir/store/product/mini-articulated-skeletal-spinosaurus/", "html"),
+    ("https://3dprinthub.ir/static/css/phase50-a2k-tympanus-slicebox.css", "css"),
+    ("https://3dprinthub.ir/static/js/phase50-a2k-tympanus-slicebox.js", "js"),
+)
+home = ""
+for url, kind in checks:
     with request.urlopen(request.Request(url,headers={"User-Agent":"3DPrintHub-A2M/1.0","Cache-Control":"no-cache"}),timeout=20) as r:
-        print("HTTP",r.status,url)
+        body = r.read().decode("utf-8", "replace")
+        print("HTTP",r.status,url,r.headers.get("Content-Type",""))
         if r.status != 200:
             raise SystemExit("A2M_REPUBLISH_DEPLOY_FAIL=http_smoke_failed")
+        if kind == "html" and url.endswith("/") and "3dprinthub.ir/" in url and url.count("/") == 3:
+            home = body
+if "v=50.9.0" not in home:
+    raise SystemExit("A2M_REPUBLISH_DEPLOY_FAIL=hero_cache_marker_not_public")
+if 'id="shadow"' in home:
+    raise SystemExit("A2M_REPUBLISH_DEPLOY_FAIL=legacy_shadow_dom_public")
 print("PUBLIC_SMOKE=PASS")
 PY
 

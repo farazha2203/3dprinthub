@@ -19,7 +19,7 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn('id="nav-arrows"', template)
         self.assertIn('id="nav-dots"', template)
         self.assertNotIn('id="nav-options"', template)
-        self.assertIn('id="shadow"', template)
+        self.assertNotIn('id="shadow"', template)
         self.assertIn("jquery.slicebox.js v1.1.0", vendor)
         self.assertIn("Licensed under the MIT license", vendor)
         self.assertNotIn("data-p50j", template)
@@ -48,7 +48,7 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         template = self.read("templates/website/partials/hero.html")
         self.assertIn("background: #f6f9fc", css)
         self.assertNotIn("fancy_deboss.png", css)
-        self.assertIn("shadow.png", css)
+        self.assertNotIn("shadow.png", css)
         self.assertIn("nav.png", css)
         self.assertIn("max-width: 1280px", css)
         self.assertIn("max-width: none !important", css)
@@ -60,8 +60,8 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertNotIn("navPlay", template)
         self.assertNotIn("navPause", template)
         self.assertIn(".sb-perspective", core)
+        self.assertNotIn('$shadow.show()', self.read("static/js/phase50-a2k-tympanus-slicebox.js"))
         for relative in (
-            "static/vendor/slicebox/images/shadow.png",
             "static/vendor/slicebox/images/nav.png",
         ):
             self.assertTrue((ROOT / relative).is_file())

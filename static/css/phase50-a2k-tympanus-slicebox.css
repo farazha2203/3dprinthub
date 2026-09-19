@@ -105,17 +105,6 @@
   font-size: 13px;
   font-weight: 800;
 }
-.p50k-slicebox .shadow {
-  width: 100%;
-  height: 168px;
-  position: relative;
-  margin-top: -110px;
-  background: transparent url('../vendor/slicebox/images/shadow.png') no-repeat bottom center;
-  background-size: 100% 100%;
-  z-index: 1;
-  pointer-events: none;
-  display: none;
-}
 .p50k-slicebox .nav-arrows,
 .p50k-slicebox .nav-dots {
   display: none;
@@ -229,10 +218,6 @@
   }
   .p50k-slicebox__cta {
     display: none;
-  }
-  .p50k-slicebox .shadow {
-    height: 90px;
-    margin-top: -58px;
   }
   .p50k-slicebox .nav-arrows a {
     width: 38px;
