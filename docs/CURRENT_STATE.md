@@ -1,3 +1,19 @@
+## 2026-09-20 - A2Q Social SEO v4 sanitizer checkpoint
+
+Status: `WIP GITHUB COMMITTED / CANONICAL WINDOWS FULL REGRESSION REQUIRED`.
+
+- Windows/Social WIP branch is now `wip/phase50-a2l-owner-qa-20260917` at exact GitHub commit `1c77f671c8df1fcce716662339f3057378a96433`.
+- Rollback branch `backup/pre-phase50-a2q-social-v4-sanitizer-20260920` preserves pre-fix `21a1ae27c8f57ce7dbd6cd78bf6a3d548e9bd158`.
+- Fixed the social sanitizer punctuation defect that could emit a literal `\\1` after false-free cleanup.
+- Extended false-free filtering to Persian `رایگان/مجانی` and bounded English free-download/free-print/free-shipping claims; hashtag candidates carrying those claims are dropped as whole units.
+- Added focused regression coverage across Caption, hashtags, per-image ALT and Story copy, including a guard that preserves unrelated words such as `Freestyle`.
+- GitHub source read-back and rollback comparison PASS: one commit ahead, zero behind, exactly four files changed.
+- The canonical Windows full Social/Buffer/Story + Qt VerifyOnly gate has **not** been rerun on this new SHA because the paired Remote Desktop transport is temporarily unavailable due tool quota. Therefore this SHA is not promoted to release and no external Instagram post is sent.
+- #625 revision 8 remains historical real Feed/Story evidence and must not be reposted.
+- Site release remains separate at `65d42e40979830b306e92457093aefe068086f66`; Production is not mutated by this WIP change.
+
+Exact next: canonical Windows pull of `1c77f671...` -> focused + broad Social/Buffer/Story tests -> Qt VerifyOnly -> only then selective release promotion. In parallel A2R payment/finance/admin audit may proceed read-only.
+
 ## 2026-09-20 - Phase50.A.2Q Hero shadow cache closure + Instagram SEO v4 IN_PROGRESS
 Owner screenshot shows the historical Slicebox dark shadow strip under the Home Hero. Current Production is clean at 36a69e76f9cd553273862ee400f9391573f3dd01 and fresh Home HTML already serves 50.9.0 without id=shadow; A2Q therefore adds a cache-safe hard suppression/runtime removal contract and cache bump 50.10.0 rather than reintroducing or redesigning the slider.
 

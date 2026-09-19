@@ -1,3 +1,15 @@
+## 2026-09-20 - A2Q social sanitizer follow-up
+
+- [x] Preserve rollback branch at pre-fix Windows/Social WIP SHA `21a1ae27...`.
+- [x] Fix literal `\\1` punctuation-normalization defect.
+- [x] Extend false-free social filtering to Persian `رایگان/مجانی` and bounded English free download/print/shipping forms.
+- [x] Drop false-free hashtag candidates atomically and add Caption/hashtag/ALT/Story regressions.
+- [x] Commit/push WIP checkpoint `1c77f671c8df1fcce716662339f3057378a96433` and verify exact GitHub read-back/delta.
+- [ ] Pull exact WIP SHA on canonical Windows Local and rerun full Social/Buffer/Story regression + Qt VerifyOnly.
+- [ ] Promote only the tested selective Social delta to the release lineage; do not merge the divergent historical WIP branch wholesale.
+- [ ] Keep #625 revision 8 duplicate guard intact; no repost.
+- [ ] Continue A2R payment/finance/admin from existing manual-transfer/ZarinPal/finance foundations.
+
 ## 2026-09-20 - Phase50.A.2Q Hero shadow/cache + Instagram SEO v4
 - [x] Reverify main Windows branch clean/pushed and Production baseline 36a69e76.
 - [x] Inspect owner screenshot and match the dark lower band to the retired Slicebox shadow strip.

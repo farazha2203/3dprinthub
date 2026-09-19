@@ -1,3 +1,11 @@
+## ERR-49-184 - Social false-free sanitizer could emit literal backreference and malformed tags
+**Date:** 2026-09-20  
+**Observed:** A2Q source audit found that punctuation cleanup used a replacement equivalent to literal `\\1`, so text such as a removed free claim before Persian punctuation could leak `\\1` into social copy. Persian false-free removal could also leave malformed hashtag residue such as a truncated download tag, and English free-download/free-print forms were not covered.  
+**Root cause:** replacement escaping was wrong and the sanitizer treated hashtag fragments as ordinary prose after claim removal. The false-free vocabulary was also too narrow.  
+**Correct fix:** use the actual regex backreference `\1`; add bounded English claim patterns plus Persian `مجانی`; reject false-free hashtag candidates before normalization; keep unrelated terms such as `Freestyle` untouched.  
+**Verification:** exact GitHub WIP source read-back at `1c77f671...` and rollback diff PASS; focused logic was independently exercised before commit. Canonical Windows full Social/Buffer/Story + Qt regression is still required before promotion.  
+**Prevention:** social policy changes that touch claim filtering must carry Caption + hashtag + ALT + Story regression and a non-target-word preservation case in the same commit. Do not promote Social WIP without canonical Windows regression evidence.
+
 ## ERR-49-183 - Instagram SEO v4 first regression run retained the old policy-version assertion
 **Date:** 2026-09-20
 **Observed:** the first A2Q social regression run executed 32 tests and failed exactly one stable-receipt assertion because it still expected instagram-product-v3-20260919 after the deliberate policy bump to v4.
