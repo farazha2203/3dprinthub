@@ -5,6 +5,7 @@ import json
 from decimal import Decimal
 from urllib.parse import urljoin
 
+from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 
@@ -37,6 +38,15 @@ def _desktop_data(asset) -> dict:
     payload = asset.source_payload or {}
     data = payload.get("desktop_catalog_v85") if isinstance(payload, dict) else {}
     return data if isinstance(data, dict) else {}
+
+
+def _authoritative_sales_profiles(data: dict) -> list[dict]:
+    """Return the current Windows commerce matrix when one is explicitly supplied."""
+    return [
+        dict(item)
+        for item in _safe_list(data.get("sales_profiles_json"))
+        if isinstance(item, dict) and str(item.get("key") or "").strip()
+    ]
 
 
 def _positive_int(value, default=0) -> int:
@@ -451,7 +461,56 @@ def sync_epic49_publish_options(asset) -> dict:
     minimum, maximum = apply_price_range(product, asset, data)
     profile = sync_catalog_profile(product, asset, data, price_min=minimum, price_max=maximum)
     sync_product_seo(product, asset, data)
-    variants = apply_material_color_variants(product, asset, data, minimum_price=minimum)
+
+    # Newer Windows builds publish an explicit sales_profiles_json matrix. That
+    # matrix is authoritative and already carries material/brand/color, weight,
+    # time and pricing inputs. Never run the older EP49 material/color generator
+    # afterwards because it would reactivate stale legacy variants and make the
+    # Store show old weights/prices beside the newly published CC-P rows.
+    profile_rows = _authoritative_sales_profiles(data)
+    if profile_rows:
+        from .models import ProductVariant
+        from .phase50_profile_matrix import sync_desktop_profile_matrix
+
+        sync_desktop_profile_matrix(product, asset)
+        active_variants = ProductVariant.objects.filter(product=product, is_active=True)
+        stale_active = active_variants.exclude(code__startswith=f"CC-P{product.pk}-")
+        if stale_active.exists():
+            raise ValidationError(
+                "DESKTOP_REPUBLISH_REPLACEMENT_FAILED: stale non-CC variants remain active"
+            )
+        current = (
+            active_variants.filter(code__startswith=f"CC-P{product.pk}-")
+            .select_related("material", "color", "quality")
+            .order_by("sales_profile_sort_order", "pk")
+        )
+        if current.count() != len(profile_rows):
+            raise ValidationError(
+                "DESKTOP_REPUBLISH_REPLACEMENT_FAILED: active profile count differs from Windows snapshot"
+            )
+        variants = [
+            {
+                "variant_id": item.pk,
+                "code": item.code,
+                "material": str(getattr(item.material, "name", "") or ""),
+                "brand": str(getattr(item.color, "brand_name", "") or ""),
+                "manufacturer": str(getattr(item.color, "manufacturer_name", "") or ""),
+                "color": str(getattr(item.color, "name", "") or ""),
+                "quality": str(getattr(item.quality, "name", "") or ""),
+                "final_weight_grams": str(item.final_weight_grams or 0),
+                "material_weight_grams": str(item.material_weight_grams or 0),
+                "support_weight_grams": str(getattr(item, "support_weight_grams", 0) or 0),
+                "unit_price": int(item.cached_unit_price or 0),
+            }
+            for item in current
+        ]
+    else:
+        variants = apply_material_color_variants(
+            product,
+            asset,
+            data,
+            minimum_price=minimum,
+        )
     slider = apply_homepage_slider(product, asset, data)
     return {
         "profile_id": profile.pk,

@@ -189,9 +189,13 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(profiles[0].part_dimensions_label, "20 × 20 × 8 سانتی‌متر")
 
         self.manual_variant.refresh_from_db()
-        self.assertTrue(self.manual_variant.is_active)
+        self.assertFalse(self.manual_variant.is_active)
+        self.assertEqual(
+            self.product.variants.filter(is_active=True).count(),
+            4,
+        )
 
-    def test_republish_updates_existing_profiles_and_deactivates_only_removed_desktop_rows(self):
+    def test_republish_updates_existing_profiles_and_deactivates_all_stale_active_rows(self):
         sync_desktop_profile_matrix(self.product, self._asset(self._profiles()))
         original = self.product.variants.get(sales_profile_key="20-150")
         original_pk = original.pk
@@ -208,7 +212,62 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertFalse(self.product.variants.get(sales_profile_key="30-200").is_active)
         self.assertFalse(self.product.variants.get(sales_profile_key="30-300").is_active)
         self.manual_variant.refresh_from_db()
-        self.assertTrue(self.manual_variant.is_active)
+        self.assertFalse(self.manual_variant.is_active)
+        active = list(
+            self.product.variants.filter(is_active=True)
+            .order_by("sales_profile_sort_order", "pk")
+            .values_list(
+                "sales_profile_key",
+                "final_weight_grams",
+                "fixed_price_override",
+            )
+        )
+        self.assertEqual(
+            active,
+            [
+                ("20-100", Decimal("100.00"), 350000),
+                ("20-150", Decimal("155.00"), 475000),
+            ],
+        )
+
+    def test_authoritative_matrix_deactivates_legacy_ep49_variants(self):
+        legacy = []
+        for index, code in enumerate(
+            (
+                f"EP49-{self.product.pk}-M1-C1",
+                f"EP49-3F-{self.product.pk}-M1-C1-Q1",
+                "MW-FIX-0000001-DEFAULT",
+            ),
+            start=1,
+        ):
+            legacy.append(
+                ProductVariant.objects.create(
+                    product=self.product,
+                    material=self.material,
+                    quality=self.quality,
+                    code=code,
+                    material_weight_grams=Decimal("1"),
+                    final_weight_grams=Decimal("1"),
+                    print_time_minutes=1,
+                    cached_unit_price=100000 + index,
+                    is_active=True,
+                )
+            )
+
+        sync_desktop_profile_matrix(self.product, self._asset(self._profiles()[:1]))
+
+        for variant in legacy:
+            variant.refresh_from_db()
+            self.assertFalse(variant.is_active)
+        self.manual_variant.refresh_from_db()
+        self.assertFalse(self.manual_variant.is_active)
+        active = list(
+            self.product.variants.filter(is_active=True).values_list(
+                "sales_profile_key",
+                flat=True,
+            )
+        )
+        self.assertEqual(active, ["20-100"])
 
     def test_invalid_stock_status_is_rejected_without_silent_mapping(self):
         rows = self._profiles()[:1]
