@@ -1,0 +1,79 @@
+name: Phase50 A2R Payment Admin CI
+
+on:
+  push:
+    branches:
+      - wip/phase50-a2r-payment-finance-admin-20260920
+    paths:
+      - store/management/commands/phase50_a2l_seed_manual_payment.py
+      - store/test_phase50_a2l_manual_payment.py
+      - website/templatetags/admin_console.py
+      - website/payment_gateways/**
+      - website/payment_services.py
+      - website/test_phase28_payment.py
+      - website/test_phase30_online_payment.py
+      - website/test_phase30_zarinpal_provider.py
+      - .github/workflows/phase50-a2r-payment-admin-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  payment-admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SECRET_KEY: phase50-a2r-ci-only-not-production
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      PAYMENT_GATEWAY_ENABLED: "0"
+      ZARINPAL_SANDBOX: "0"
+      ZARINPAL_MERCHANT_ID: ""
+    steps:
+      - name: Checkout exact snapshot
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile touched payment surfaces
+        run: |
+          python -m py_compile \
+            store/management/commands/phase50_a2l_seed_manual_payment.py \
+            store/test_phase50_a2l_manual_payment.py \
+            website/templatetags/admin_console.py \
+            website/payment_gateways/base.py \
+            website/payment_gateways/registry.py \
+            website/payment_gateways/zarinpal.py \
+            website/payment_services.py \
+            website/test_phase28_payment.py \
+            website/test_phase30_online_payment.py \
+            website/test_phase30_zarinpal_provider.py
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: No unintended migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Focused payment and Admin regressions
+        run: |
+          python manage.py test \
+            store.test_phase50_a2l_manual_payment \
+            website.test_phase28_payment \
+            website.test_phase30_online_payment \
+            website.test_phase30_zarinpal_provider
+
+      - name: Diff hygiene
+        run: git diff --check
