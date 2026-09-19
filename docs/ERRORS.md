@@ -1,3 +1,11 @@
+## ERR-49-185 - Manual-payment bootstrap embedded payment destination data in repository source/tests
+**Date:** 2026-09-20  
+**Observed:** A2R audit found that the historical manual-payment seed command and its regression fixture carried real payment destination identity directly in tracked source rather than using secure runtime configuration. The Admin singleton itself already existed and did not require a new model.  
+**Root cause:** the earlier Production bootstrap optimized for one-time activation and froze operator data into code/test constants.  
+**Correct fix:** remove destination literals from current source/tests; read values only from \`STORE_PAYMENT_*\` runtime environment or the existing Admin singleton; keep dry-run default; require explicit write/state flags; never echo financial values; use dummy test data only.  
+**Verification required:** canonical Windows Local compile/Django/no-drift/payment regressions before release promotion, then Production backup + masked read-back before any settings activation.  
+**Prevention:** operator/payment identity must never be embedded in tracked bootstrap code or regression fixtures. Configuration commands may log only configured-state booleans/counts, never full card/Sheba/account values.
+
 ## ERR-49-181 - Profile-driven re-publish falsely required Product.fixed_price = price_min
 **Date:** 2026-09-19
 **Observed:** after A2M/A2N deployed successfully, the controlled #625 retry reached the Production receiver but rolled back with `REPUBLISH_PARITY_MISMATCH: product.fixed_price: expected=1095000 actual=0`. No Product revision was committed by the receiver.

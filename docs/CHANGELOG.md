@@ -1,3 +1,10 @@
+## 2026-09-20 - Phase50.A.2R secure manual-payment operations
+- Started isolated A2R WIP from the current Site release without migration or Production mutation.
+- Replaced repository-embedded manual-payment destination data with \`STORE_PAYMENT_*\` environment-only overrides.
+- Manual-payment command remains dry-run by default; write requires \`--apply\`, activation/deactivation is explicit, activation fails closed without a holder + destination, and command output never prints card/Sheba/account values.
+- Added Finance navigation placement for \`StorePaymentSettings\` and focused regressions with dummy data only.
+- Canonical Windows Local regression is required before release promotion.
+
 ## 2026-09-20 - A2Q cache-safe removal of retired Slicebox shadow
 - Current Hero template remains free of the historical shadow DOM node.
 - Wrapper CSS now force-disables any legacy/cached #shadow presentation, including background raster and box shadow.

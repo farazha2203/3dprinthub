@@ -1,3 +1,19 @@
+## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
+
+- [x] Audit existing manual-transfer, ZarinPal, ledger, finance dashboard and Admin foundations.
+- [x] Confirm \`StorePaymentSettings\` already exists in migration 0037 and is already Admin-registered.
+- [x] Isolate A2R WIP/rollback branches from the A2Q Site release.
+- [x] Remove payment destination literals from current bootstrap command/tests.
+- [x] Make manual-payment command env-only, dry-run by default, explicit apply + activate/deactivate, and value-redacted in output.
+- [x] Classify \`StorePaymentSettings\` in Finance Admin navigation.
+- [x] Add focused secure-command/navigation regressions.
+- [ ] Canonical Windows Local compile/check/no-drift/empty-plan + focused/full payment regression.
+- [ ] Promote tested A2R slice to release.
+- [ ] Production read-only identity/DB/migration verification.
+- [ ] Fresh MySQL/source/env backup then secure settings apply/read-back.
+- [ ] Browser manual-payment receipt/Admin-review smoke.
+- [ ] ZarinPal config/audit UI and finance reconciliation slices.
+
 ## 2026-09-20 - Phase50.A.2Q Hero shadow/cache hardening
 - [x] Reverify clean Production baseline `36a69e76...` and public Home 50.9.0 with no current `id="shadow"`.
 - [x] Match owner screenshot to the retired Example-4 lower shadow strip rather than slider border.

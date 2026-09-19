@@ -1,3 +1,8 @@
+## 2026-09-20 - Continue remaining phases: payment, finance and Admin
+Status: \`A2R WIP SOURCE IMPLEMENTED / LOCAL TEST NEXT\`.
+
+Owner requested continuation after Hero/Instagram work. A2R reuses the existing Store manual-payment, Website/ZarinPal payment ledger and Business Finance foundations. First slice hardens manual-payment configuration and Admin discoverability without introducing a new DB authority or touching Production.
+
 ## 2026-09-20 - Owner: remove remaining lower slider line and publish remaining phases
 Status: A2Q HERO LOCAL_TESTED / DEPLOY NEXT.
 

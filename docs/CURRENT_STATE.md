@@ -1,3 +1,11 @@
+## 2026-09-20 - Phase50.A.2R payment/finance/admin WIP started
+
+Status: \`WIP SOURCE IMPLEMENTED / CANONICAL LOCAL TEST REQUIRED / PRODUCTION UNCHANGED\`.
+
+A2R starts from Site release \`65d42e40979830b306e92457093aefe068086f66\` on isolated branch \`wip/phase50-a2r-payment-finance-admin-20260920\`. Audit confirmed that Store migration 0037 already owns the singleton \`StorePaymentSettings\` and \`phase50_commerce_policy_admin.py\` already registers it in Django Admin. The gap is operational: it is not classified in the Finance navigation group, and the historical seed command/tests embed payment destination data in repository source.
+
+The first A2R slice removes payment destination literals from current command/tests, makes the command environment-only + dry-run-by-default + explicit apply/activate/deactivate, suppresses financial values from logs, and places the singleton under Finance Admin. No model or migration change is introduced. Canonical Windows Local regression is still mandatory before any release promotion. Production DB/settings are untouched.
+
 ## 2026-09-20 - Phase50.A.2Q legacy-shadow cache hardening LOCAL_TESTED
 Owner's new screenshot still shows the historical dark band below the Slicebox. Production was reverified clean at `release/phase50-a2j-hero-20260915 @ 36a69e76f9cd553273862ee400f9391573f3dd01`; public Home is HTTP 200, serves Hero 50.9.0 and current server HTML contains no `id="shadow"`. This is therefore not a regression of the current template; it is the retired Example-4 shadow presentation surviving through stale/cached client markup/style.
 

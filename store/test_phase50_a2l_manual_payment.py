@@ -1,6 +1,7 @@
 from io import StringIO
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 
 from store.phase50_commerce_policy import StorePaymentSettings
@@ -10,19 +11,58 @@ class Phase50A2LManualPaymentTests(TestCase):
     def test_seed_command_is_dry_run_by_default(self):
         out = StringIO()
         call_command("phase50_a2l_seed_manual_payment", stdout=out)
-        self.assertIn("A2L_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())
+        self.assertIn("A2R_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())
         self.assertEqual(StorePaymentSettings.objects.count(), 0)
 
-    def test_seed_command_applies_approved_card_details(self):
+    def test_seed_command_requires_secure_config_before_activation(self):
         out = StringIO()
-        call_command("phase50_a2l_seed_manual_payment", "--apply", stdout=out)
-        self.assertIn("A2L_MANUAL_PAYMENT_APPLY=PASS", out.getvalue())
+        with self.assertRaises(CommandError):
+            call_command(
+                "phase50_a2l_seed_manual_payment",
+                "--apply",
+                "--activate",
+                stdout=out,
+            )
+        self.assertEqual(StorePaymentSettings.objects.count(), 0)
+
+    def test_seed_command_applies_secure_env_without_echoing_financial_values(self):
+        out = StringIO()
+        env = {
+            "STORE_PAYMENT_TITLE": "پرداخت دستی تست",
+            "STORE_PAYMENT_BANK_NAME": "Test Bank",
+            "STORE_PAYMENT_ACCOUNT_HOLDER": "Test Operator",
+            "STORE_PAYMENT_CARD_NUMBER": "0000-0000-0000-0000",
+            "STORE_PAYMENT_SHEBA_NUMBER": "IR000000000000000000000000",
+            "STORE_PAYMENT_ACCOUNT_NUMBER": "TEST-001",
+            "STORE_PAYMENT_TRANSFER_INSTRUCTIONS": "رسید را برای بررسی ثبت کنید.",
+        }
+        with patch.dict("os.environ", env, clear=False):
+            call_command(
+                "phase50_a2l_seed_manual_payment",
+                "--apply",
+                "--activate",
+                stdout=out,
+            )
+
         row = StorePaymentSettings.objects.get()
         self.assertTrue(row.is_active)
-        self.assertEqual(row.bank_name, "بانک پاسارگاد")
-        self.assertEqual(row.account_holder, "فراز حراجی")
-        self.assertEqual(row.card_number, "5022-2910-9403-4343")
-        self.assertIn("در انتظار بررسی", row.transfer_instructions)
+        self.assertEqual(row.bank_name, "Test Bank")
+        self.assertEqual(row.account_holder, "Test Operator")
+        self.assertEqual(row.card_number, "0000000000000000")
+        self.assertEqual(row.sheba_number, "IR000000000000000000000000")
+        self.assertEqual(row.account_number, "TEST-001")
+        output = out.getvalue()
+        self.assertIn("A2R_MANUAL_PAYMENT_APPLY=PASS", output)
+        self.assertNotIn(row.card_number, output)
+        self.assertNotIn(row.sheba_number, output)
+        self.assertNotIn(row.account_number, output)
+
+    def test_manual_payment_settings_are_visible_in_finance_navigation(self):
+        from website.templatetags.admin_console import GROUP_DEFINITIONS
+
+        finance = next(group for group in GROUP_DEFINITIONS if group[0] == "finance")
+        keys = [item[0] for item in finance[3]]
+        self.assertIn("store.storepaymentsettings", keys)
 
     def test_receipt_notification_targets_admin_review(self):
         from types import SimpleNamespace
