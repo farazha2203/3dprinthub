@@ -389,6 +389,12 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
                 f"وضعیت موجودی پروفایل «{stock_status}» معتبر نیست."
             )
 
+        has_print_hourly = "print_hourly_rate" in item
+        has_supervision_hourly = "supervision_hourly_rate" in item
+        support_multiplier = _number(item, "support_cost_multiplier", 1)
+        if support_multiplier <= 0:
+            support_multiplier = Decimal("1")
+
         defaults = {
             "product": product,
             "material": material,
@@ -403,7 +409,9 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "build_profile": build_profile,
             "material_weight_grams": material_weight,
             "final_weight_grams": weight,
+            "part_weight_grams": weight,
             "support_weight_grams": _number(item, "support_weight_grams", 0),
+            "support_cost_multiplier": support_multiplier,
             "shipping_weight_grams": _number(item, "shipping_weight_grams", 0),
             "packaging_weight_grams": _number(item, "packaging_weight_grams", 0),
             "part_length_cm": _number(item, "part_length_cm", 0),
@@ -415,9 +423,15 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "print_time_minutes": max(1, _integer(item, "print_time_minutes", 60)),
             "hourly_rate_override": (
                 _integer(item, "print_hourly_rate", 0)
-                if _integer(item, "print_hourly_rate", 0) > 0
+                if has_print_hourly
                 else None
             ),
+            "supervision_hourly_rate_override": (
+                _integer(item, "supervision_hourly_rate", 0)
+                if has_supervision_hourly
+                else None
+            ),
+            "assembly_fee_override": _integer(item, "assembly_fee", 0),
             "fixed_price_override": fixed_price,
             "cached_unit_price": fixed_price,
             "stock_status": stock_status,

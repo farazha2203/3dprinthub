@@ -1,3 +1,8 @@
+## 2026-09-19 - ERR-49-174 unified Desktop-managed pricing LOCAL_TESTED
+Production media-path baseline is the prior `ba05c7fc...` release pending fresh Host verification through the dedicated reverse tunnel. The next Server delta is pricing-only/no-migration: Desktop-managed `CC-P...` Variants now calculate from the same Catalog formula (material sale cost + print + supervision + preheat + assembly) using exact Desktop profile inputs, and when managed Variants exist they alone define the Product Catalog public price range.
+
+Targeted Server verification: Python compile PASS; Django check PASS with known CKEditor warning only; `makemigrations --check --dry-run` = no changes; five focused pricing/mapping/API regressions PASS. Rollback ref: `backup/pre-phase50-a2l-pricing-engine-20260919 @ ba05c7fc479ae94d4a85676442008e018dbbcc67`. Exact next: commit/push exact pricing candidate -> restore/verify dedicated reverse tunnel 22024 -> Host clean-head/MySQL/readiness/no-drift gates -> fresh rollback backup -> exact-SHA deploy -> owner-default PLA repair/refresh and real #625 republish.
+
 ## 2026-09-19 - ERR-49-173 real #625 Republish failure isolated / media-path hotfix LOCAL_TESTED
 Production is currently clean at `release/phase50-a2j-hero-20260915 @ c04539acfc6dd456699079edf206de019bf346e2`. The enlarged Product Hero/SEO/link and complete post-import parity contract are live. The dedicated reverse tunnel remains the only authorized Host path.
 

@@ -21,11 +21,21 @@ def install() -> None:
         if strategy not in {"fixed", "dynamic"}:
             return profile
 
-        active = list(
+        active_qs = (
             product.variants.filter(is_active=True)
             .select_related("material", "quality", "color")
             .order_by("id")
         )
+        managed_prefix = f"CC-P{product.pk}-"
+        managed_qs = active_qs.filter(
+            code__startswith=managed_prefix,
+            sales_profile_key__gt="",
+        )
+        # Desktop-managed Catalog Products own their public variant range.
+        # Historical/manual variants may remain in the DB for rollback/admin,
+        # but must not dilute the published Catalog price range once CC-P rows
+        # exist.
+        active = list(managed_qs if managed_qs.exists() else active_qs)
         prices: list[int] = []
         for variant in active:
             prices.append(int(variant.recalculate_price(save=True) or 0))

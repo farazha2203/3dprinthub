@@ -1,3 +1,9 @@
+## 2026-09-19 - ERR-49-174 Catalog/Site pricing unification
+- Desktop-managed `CC-P...` Variants now use the Catalog formula inputs directly: material sale cost, print time/rate, supervision, preheat and assembly.
+- Profile sync now persists exact part weight and support multiplier/assembly inputs required by that formula.
+- Public Product price range prefers the active Desktop-managed Variant set when present, preventing historical/manual Variant prices from contaminating Catalog republish parity.
+- Cross-runtime focused verification 5/5 PASS; no migration delta.
+
 ## 2026-09-19 - ERR-49-173 compact SEO-media storage hotfix
 - Real #625 resend exposed a Production-only persisted path limit: Gallery content-addressed SEO path was 106 chars while the ImageField/MySQL contract is 100.
 - Replaced long main/gallery directory prefixes with one compact Product namespace: `p/<desktop-id>/<sha12>/<exact-seo-basename>`.

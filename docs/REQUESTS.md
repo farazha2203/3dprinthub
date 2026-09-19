@@ -1,3 +1,8 @@
+## 2026-09-19 - Owner: finish #625 today with one pricing authority before Instagram
+Status: `SERVER LOCAL_TESTED / COMMIT+DEPLOY NEXT`.
+
+Owner requires the real #625 resend to update all Product facts and then proceed to Instagram Feed + Story. Strict parity exposed a true pricing divergence rather than accepting partial state. Server must therefore compute Desktop-managed Product pricing from the same sales-profile inputs/formula as Windows before the real republish is attempted. No parity weakening or manual price override is acceptable.
+
 ## 2026-09-19 - Owner real acceptance: #625 changes + Instagram must actually publish
 Status: `ROOT_CAUSE_FIXED_LOCAL / GITHUB+DEPLOY+REAL_REPUBLISH NEXT`.
 

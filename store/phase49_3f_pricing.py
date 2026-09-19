@@ -185,7 +185,148 @@ def _fixed_breakdown(variant, original_breakdown: dict, profile) -> dict:
     return output
 
 
+def _is_desktop_managed_variant(variant) -> bool:
+    key = str(getattr(variant, "sales_profile_key", "") or "").strip()
+    code = str(getattr(variant, "code", "") or "")
+    return bool(key and code.startswith("CC-P"))
+
+
+def _desktop_dynamic_breakdown(variant, profile) -> dict:
+    """Mirror the Catalog Center professional formula for CC-P variants.
+
+    Desktop owns the sales-profile production facts and the exact selected
+    filament Offer. Do not inject Site defaults/billing increments into this
+    path: the publish parity contract requires the Store/Cart price to be the
+    same value the owner reviewed in Catalog Center.
+    """
+    color = variant.color if getattr(variant, "color_id", None) else None
+    part = _decimal(
+        getattr(variant, "part_weight_grams", 0)
+        or getattr(variant, "final_weight_grams", 0)
+        or 0
+    )
+    support = _decimal(getattr(variant, "support_weight_grams", 0))
+    multiplier = _decimal(getattr(variant, "support_cost_multiplier", 1), "1")
+    if multiplier <= 0:
+        multiplier = Decimal("1")
+    actual_material_grams = part + support
+    chargeable_grams = part + (support * multiplier)
+
+    color_sale = getattr(color, "effective_sale_price_per_gram", None) if color is not None else None
+    material_sale_per_gram = Decimal(
+        getattr(variant, "material_price_per_gram_override", None)
+        or color_sale
+        or getattr(variant.material, "effective_sale_price_per_gram", 0)
+        or getattr(variant.material, "sale_price_per_gram", 0)
+        or getattr(variant.material, "price_per_gram", 0)
+        or 0
+    )
+    material_cost = _round_money(material_sale_per_gram * chargeable_grams)
+
+    actual_minutes = max(1, int(getattr(variant, "print_time_minutes", 1) or 1))
+    hourly_override = getattr(variant, "hourly_rate_override", None)
+    if hourly_override is not None:
+        print_hourly = int(hourly_override)
+    elif color is not None:
+        print_hourly = int(getattr(color, "print_hourly_rate", 0) or 0)
+    else:
+        print_hourly = int(getattr(variant.material, "print_hourly_rate_toman", 0) or 0)
+
+    supervision_override = getattr(variant, "supervision_hourly_rate_override", None)
+    if supervision_override is not None:
+        supervision_hourly = int(supervision_override)
+    elif color is not None:
+        supervision_hourly = int(getattr(color, "supervision_hourly_rate", 0) or 0)
+    else:
+        supervision_hourly = int(
+            getattr(variant.material, "supervision_hourly_rate_toman", 0) or 0
+        )
+
+    machine_cost = _round_money(
+        Decimal(print_hourly) * Decimal(actual_minutes) / Decimal("60")
+    )
+    supervision_cost = _round_money(
+        Decimal(supervision_hourly) * Decimal(actual_minutes) / Decimal("60")
+    )
+
+    preheat_hours = _decimal(getattr(color, "preheat_hours", 0) if color is not None else 0)
+    preheat_hourly = int(
+        getattr(color, "preheat_hourly_rate", 0) if color is not None else 0
+    )
+    preheat_cost = _round_money(preheat_hours * Decimal(preheat_hourly))
+    preheat_temperature = _decimal(
+        getattr(color, "preheat_temperature_c", 0) if color is not None else 0
+    )
+
+    assembly_override = getattr(variant, "assembly_fee_override", None)
+    assembly_cost = int(assembly_override if assembly_override is not None else 0)
+
+    subtotal = (
+        material_cost
+        + machine_cost
+        + supervision_cost
+        + preheat_cost
+        + assembly_cost
+    )
+
+    purchase_per_gram = Decimal("0")
+    if color is not None:
+        roll_weight = _decimal(getattr(color, "roll_weight_grams", 0))
+        roll_purchase = _decimal(getattr(color, "purchase_price_per_roll", 0))
+        if roll_weight > 0 and roll_purchase > 0:
+            purchase_per_gram = roll_purchase / roll_weight
+    if purchase_per_gram <= 0:
+        purchase_per_gram = Decimal(
+            getattr(variant.material, "purchase_cost_per_gram", 0) or 0
+        )
+    direct_material_cost = _round_money(purchase_per_gram * actual_material_grams)
+    estimated_cost = (
+        direct_material_cost
+        + machine_cost
+        + supervision_cost
+        + preheat_cost
+        + assembly_cost
+    )
+
+    return {
+        "pricing_strategy": "dynamic",
+        "pricing_authority": "desktop_sales_profile_formula_v1",
+        "material_cost": material_cost,
+        "machine_cost": machine_cost,
+        "labor_cost": supervision_cost,
+        "supervision_cost": supervision_cost,
+        "preheat_cost": preheat_cost,
+        "preheat_hours": str(preheat_hours),
+        "preheat_temperature_c": str(preheat_temperature),
+        "preheat_hourly_rate": preheat_hourly,
+        "post_processing_fee": 0,
+        "fixed_fee": 0,
+        "unit_price": int(subtotal),
+        "unit_price_before_discount": int(subtotal),
+        "accessory_sale": 0,
+        "accessory_cost": 0,
+        "assembly_cost": int(assembly_cost),
+        "color_price_adjustment": 0,
+        "estimated_cost": int(estimated_cost),
+        "gross_profit": int(subtotal) - int(estimated_cost),
+        "hourly_rate": print_hourly,
+        "supervision_hourly_rate": supervision_hourly,
+        "labor_percent": "0",
+        "actual_print_minutes": actual_minutes,
+        "billable_print_minutes": actual_minutes,
+        "part_weight_grams": str(part),
+        "support_weight_grams": str(support),
+        "support_cost_multiplier": str(multiplier),
+        "actual_material_grams": str(actual_material_grams),
+        "chargeable_material_grams": str(chargeable_grams),
+        "material_price_per_gram": str(material_sale_per_gram),
+    }
+
+
 def _dynamic_breakdown(variant, profile) -> dict:
+    if _is_desktop_managed_variant(variant):
+        return _desktop_dynamic_breakdown(variant, profile)
+
     from store.models import PricingSetting
 
     pricing = PricingSetting.load()

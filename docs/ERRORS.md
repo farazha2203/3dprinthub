@@ -1,3 +1,16 @@
+## ERR-49-174 - Active PLA rates drifted and Site dynamic pricing diverged from Catalog
+Date: 2026-09-19
+
+**Observed:** after the media-path fix, real #625 import reached strict parity and rolled back with Windows range 705000-825000 versus Site 104500-675000.
+
+**Root cause:** Local active PLA service rates had drifted, while the Site dynamic engine also did not consume the complete Desktop sales-profile formula and could include unrelated historical/manual Variant prices.
+
+**Correct fix:** Server Desktop-managed `CC-P...` Variants calculate material + print + supervision + preheat + assembly from exact Desktop profile/Filament inputs. Exact part/support weights, print time, support multiplier and assembly fee are synced. When managed Variants exist, they define the Catalog Product public range. Local Filament data repair remains a separate backed-up Windows operation using the owner-approved post-default Catalog evidence.
+
+**Verification:** targeted Server pricing/mapping/API suite 5/5 PASS; Django check PASS with known warning; no migration drift. Cross-runtime fixture returns 1,215,000 Toman from the same inputs on both engines.
+
+**Prevention:** never weaken strict publish parity to hide price differences. Refresh mutable Filament data before Batch generation and require Site read-back range to match the same formula.
+
 ## ERR-49-173 - SEO-preserving content-addressed media path exceeded ImageField max_length
 Date: 2026-09-19
 

@@ -1,3 +1,15 @@
+## 2026-09-19 - ERR-49-174 shared pricing authority
+- [x] Reproduce strict #625 price parity failure after media-path recovery.
+- [x] Implement Desktop-managed Site formula parity: material + print + supervision + preheat + assembly.
+- [x] Map exact Desktop part/support weights, print time, support multiplier and assembly fee into Variants.
+- [x] Make managed `CC-P...` Variants authoritative for Product public range when present.
+- [x] Targeted pricing/mapping/API tests 5/5 PASS; compile/check/no-migration-drift PASS.
+- [x] Create rollback branch `backup/pre-phase50-a2l-pricing-engine-20260919 @ ba05c7fc...`.
+- [ ] Commit/push exact Server pricing candidate.
+- [ ] Restore/verify dedicated tunnel and Production baseline.
+- [ ] Fresh source/.env/MySQL rollback backup + exact-SHA ff-only deploy.
+- [ ] Real #625 republish after Windows owner-default PLA repair; require strict range parity/read-back.
+
 ## 2026-09-19 - ERR-49-173 #625 republish/media-path closure
 - [x] Reproduce the owner's failed #625 resend from real Catalog receipts: three FTP PASS / receiver rollback attempts with MySQL `Data too long for column 'image'`.
 - [x] Prove the path boundary: real main path 98 chars, Gallery path 106 chars, persisted ImageField max 100.

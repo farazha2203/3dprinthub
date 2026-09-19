@@ -1,7 +1,7 @@
 # Phase50.A.2L — Site Priority Release
 
 Date: 2026-09-19
-Status: `PRODUCTION c04539a / ERR-49-173 MEDIA-PATH HOTFIX LOCAL_TESTED / DEPLOY+REAL #625 NEXT`
+Status: `ERR-49-173 MEDIA HOTFIX BASE ba05c7fc / ERR-49-174 PRICING LOCAL_TESTED / COMMIT+TUNNEL DEPLOY NEXT`
 
 ## Requested delta
 - Keep the owner-approved Tympanus Slicebox Example-4 engine but enlarge the public stage to a 1280px responsive Product presentation.
