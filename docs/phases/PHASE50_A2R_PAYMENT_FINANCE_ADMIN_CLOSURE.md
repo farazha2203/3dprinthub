@@ -1,6 +1,6 @@
 # Phase50.A.2R — Payment / Finance / Admin Closure
 
-Status: GITHUB CI TESTED / CANONICAL WINDOWS LOCAL TEST REQUIRED  
+Status: LOCAL_TESTED / RELEASE SHA FREEZE NEXT  
 Date: 2026-09-20  
 Base Site release: \`65d42e40979830b306e92457093aefe068086f66\`  
 WIP branch: \`wip/phase50-a2r-payment-finance-admin-20260920\`
@@ -67,3 +67,12 @@ The existing A2L guarded deploy runner performs both a source grep and runtime g
 - ERR-49-186 records the corrected test-fixture import failure from the preceding run.
 - Production was not changed.
 - Canonical Windows Local remains mandatory before freeze/release promotion.
+
+
+## 2026-09-20 Canonical Windows Local checkpoint
+- Clean isolated worktree: `D:\projects\3DPrintHub-a2r-local-fef8a27`.
+- Exact tested source: `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
+- Python 3.12.10.
+- PASS: compile, Django check, no model drift, canonical Local migration plan empty, focused payment/Admin tests 29/29, diff hygiene.
+- Empty-plan proof used a disposable copy of canonical Local SQLite so the primary Local DB/worktree remained unchanged.
+- Next boundary: freeze docs-only release SHA, then Production read-only preflight through the dedicated 3DPrintHub reverse tunnel.
