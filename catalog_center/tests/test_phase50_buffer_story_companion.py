@@ -64,17 +64,48 @@ class BufferStoryCompanionTests(unittest.TestCase):
         story_input = request.call_args_list[1].kwargs["variables"]["input"]
         self.assertEqual(story_input["metadata"]["instagram"]["type"], "story")
         self.assertFalse(story_input["metadata"]["instagram"]["shouldShareToFeed"])
+        self.assertEqual(story_input["schedulingType"], "notification")
         self.assertIn("/store/product/story-demo/", story_input["metadata"]["instagram"]["link"])
+        sticker = story_input["metadata"]["instagram"]["stickerFields"]
+        self.assertEqual(sticker["text"], "لینک محصول")
+        self.assertIn("utm_source=instagram", sticker["other"])
         self.assertEqual(
             story_input["assets"][0]["image"]["url"],
             "https://3dprinthub.ir/media/story-card.webp",
         )
         statuses = [row["status"] for row in db.receipts]
         self.assertIn("instagram_published", statuses)
-        self.assertIn("instagram_story_published", statuses)
+        self.assertIn("instagram_story_notification_ready", statuses)
+        self.assertNotIn("instagram_story_published", statuses)
         story_receipt = json.loads(db.receipts[-1]["payload_json"])
         self.assertEqual(story_receipt["highlight_target"], "اسباب بازی")
         self.assertEqual(story_receipt["highlight_status"], "operator_required")
+        self.assertEqual(story_receipt["story_publish_mode"], "notification")
+        self.assertTrue(story_receipt["link_sticker_required"])
+        self.assertEqual(story_receipt["link_sticker_label"], "لینک محصول")
+        self.assertFalse(story_receipt["instagram_live_confirmed"])
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_story_can_remain_fully_automatic_without_clickable_sticker(self, request, _secret):
+        request.side_effect = [
+            {"createPost": {"post": {"id": "feed-auto", "status": "sent", "externalLink": "feed-link"}}},
+            {"createPost": {"post": {"id": "story-auto", "status": "sent", "externalLink": "story-link"}}},
+        ]
+        db = _DB()
+        result = publish_product(
+            db,
+            11,
+            BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            story_link_notification=False,
+        )
+        story_input = request.call_args_list[1].kwargs["variables"]["input"]
+        self.assertEqual(story_input["schedulingType"], "automatic")
+        self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
+        self.assertEqual(result["companion_story"]["story_publish_mode"], "automatic")
+        self.assertFalse(result["companion_story"]["link_sticker_required"])
+        self.assertTrue(result["companion_story"]["instagram_live_confirmed"])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")

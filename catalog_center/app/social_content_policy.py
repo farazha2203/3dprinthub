@@ -4,8 +4,8 @@ import json
 import re
 from typing import Any
 
-POLICY_VERSION = "instagram-product-v4-20260920"
-MAX_HASHTAGS = 8
+POLICY_VERSION = "instagram-product-v5-20260920"
+MAX_HASHTAGS = 5
 NATIONWIDE_SHIPPING_COPY = "ارسال سفارش به سراسر ایران"
 BRAND_ORDER_COPY = "سفارش این محصول از 3DPrintHub.ir"
 FORBIDDEN_FREE_CLAIMS = (
@@ -157,7 +157,7 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
         parts.append("مشخصات: " + " | ".join(specs))
     parts.append(f"🛒 {BRAND_ORDER_COPY}")
     parts.append(f"🚚 {NATIONWIDE_SHIPPING_COPY}")
-    parts.append(f"مشاهده محصول، انتخاب مشخصات و ثبت سفارش:\n{tracking_url}")
+    parts.append("🔗 لینک محصول: از استوری «لینک محصول» یا لینک پروفایل وارد صفحه سفارش شوید.")
     if hashtags:
         parts.append(" ".join(hashtags))
     caption = "\n\n".join(part for part in parts if part).strip()

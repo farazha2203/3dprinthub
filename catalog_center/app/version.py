@@ -4,8 +4,8 @@ from pathlib import Path
 
 
 APP_NAME = "3DPrintHub Catalog Center"
-APP_VERSION = "8.9.10"
-BUILD_ID = "2026.09.02.1"
+APP_VERSION = "8.9.11"
+BUILD_ID = "2026.09.20.1"
 APP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 

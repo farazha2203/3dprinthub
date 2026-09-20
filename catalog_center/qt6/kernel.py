@@ -2535,6 +2535,10 @@ class InstagramCore:
                         self.db.setting("instagram_companion_story_enabled", "1") or "1"
                     ).strip().lower()
                     companion_enabled = companion_raw not in {"0", "false", "no", "off"}
+                    clickable_raw = str(
+                        self.db.setting("instagram_story_clickable_link_enabled", "1") or "1"
+                    ).strip().lower()
+                    story_link_notification = clickable_raw not in {"0", "false", "no", "off"}
                     if progress:
                         progress(
                             int((index - 1) / total * 100),
@@ -2587,6 +2591,7 @@ class InstagramCore:
                         cfg,
                         site_url=settings.site_url,
                         companion_story=companion_enabled,
+                        story_link_notification=story_link_notification,
                         story_asset_url=str(provider_media.get("story_url") or ""),
                         story_meta=story_meta,
                         feed_asset_urls=list(provider_media.get("feed_urls") or []),
@@ -2612,11 +2617,19 @@ class InstagramCore:
                     int(index / total * 100),
                     f"{label} {index}/{total} تمام شد",
                 )
+        story_notifications = sum(
+            1
+            for item in results
+            if isinstance(item.get("companion_story"), dict)
+            and bool(item["companion_story"].get("link_sticker_required"))
+            and not bool(item["companion_story"].get("instagram_live_confirmed"))
+        )
         return {
             "provider": provider,
             "requested": len(ids),
             "published": len(results),
             "failed": len(failures),
+            "story_notifications": story_notifications,
             "results": results,
             "failures": failures,
         }

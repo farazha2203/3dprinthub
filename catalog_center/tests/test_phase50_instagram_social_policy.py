@@ -58,8 +58,9 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         )
         self.assertIn("چراغ رومیزی موج‌دار سه‌بعدی", caption)
         self.assertIn("ارسال سفارش به سراسر ایران", caption)
-        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", caption)
-        self.assertIn("utm_source=instagram", caption)
+        self.assertIn("لینک محصول", caption)
+        self.assertNotIn("utm_source=instagram", caption)
+        self.assertLessEqual(len(tags), 5)
         self.assertLessEqual(len(tags), MAX_HASHTAGS)
         self.assertTrue(all(tag in caption for tag in tags))
 
@@ -147,7 +148,7 @@ class InstagramSocialPolicyTests(unittest.TestCase):
 
 
     def test_policy_version_is_stable_for_receipts(self):
-        self.assertEqual(POLICY_VERSION, "instagram-product-v4-20260920")
+        self.assertEqual(POLICY_VERSION, "instagram-product-v5-20260920")
 
 
 if __name__ == "__main__":
