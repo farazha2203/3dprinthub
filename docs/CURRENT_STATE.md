@@ -1,3 +1,11 @@
+## 2026-09-20 - A2R release freeze reached; Production preflight BLOCKED by dedicated tunnel
+
+After Canonical Windows Local PASS, the WIP lineage contains docs-only closure commits beyond tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`; runtime/source files are unchanged across those commits. Central gateway preflight exposed and corrected ERR-49-187 with rollback backup `D:\projects\.chatgpt-gateway\project-host.ps1.before-array-fix-20260920-1523.bak`.
+
+The dedicated 3DPrintHub transport itself is currently down: no listener exists on Windows `127.0.0.1:22024` and no active reverse-tunnel SSH process is present. Because project policy forbids cPanel/FTPS/another-project tunnel/alternate router fallback, Production read-only Host/DB/migration verification cannot legally proceed. No Production backup, settings write, deploy or restart has been attempted in A2R.
+
+Exact next: restore the existing dedicated 3DPrintHub reverse tunnel only -> authenticated router Health PASS -> Production read-only repository/branch/HEAD/clean worktree + DB identity + empty migration plan -> fresh source/env/MySQL rollback backup -> GitHub deploy -> masked Payment Readiness and browser checkout/receipt/Admin smoke.
+
 ## 2026-09-20 - A2R Canonical Windows Local Gate PASS
 
 Canonical Windows verification ran from isolated clean worktree `D:\projects\3DPrintHub-a2r-local-fef8a27` because the primary Local clone contains unrelated owner/workflow documentation changes and was intentionally left untouched. Exact tested commit: `fef8a27dfb66f367a3b383004e21dc7ca18e4659`; Python 3.12.10.
