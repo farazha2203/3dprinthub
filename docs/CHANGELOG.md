@@ -1,3 +1,8 @@
+## 2026-09-20 - A2R Production preflight transport gate
+- Fixed two local central-router compatibility defects with a pre-change backup: JSON-array selection and named PowerShell REST parameters.
+- Verified the router now selects 3DPrintHub correctly.
+- Dedicated loopback `127.0.0.1:22024` remains unavailable with no reverse SSH session, so Host preflight/deploy stays fail-closed and Production is unchanged.
+
 ## 2026-09-20 - A2R Canonical Windows Local PASS
 - Verified exact source `fef8a27dfb66f367a3b383004e21dc7ca18e4659` from an isolated clean Windows worktree without touching the primary dirty Local clone.
 - Python 3.12.10 compile/check/no-drift passed; payment/Admin regressions 29/29 passed; diff hygiene passed.
