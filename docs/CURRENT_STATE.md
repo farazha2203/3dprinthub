@@ -1,3 +1,17 @@
+## 2026-09-21 - Phase50.A.2V ACTIVE / image authority hardened, real Site selection pending
+
+A2V now continues from the accepted A2U v8.9.11 lineage, not the older A2T UI. Windows source is pushed on `wip/phase50-a2v-image-authority-20260920` at exact GitHub SHA `4e69ed6a5c0996c7249830fbe029cd01460ad5b1`. Exact-SHA Qt is running from `D:\projects\3DPrintHub-a2u-latest-windows\catalog_center\RUN_QT.ps1`.
+
+Root cause of the revision-10 image regression is proven: #625 persisted Site selections `04.webp/05.webp` while canonical `images_json` contained only the source-page screenshot; the old publish gate accepted the already-finalized old SEO WebPs and revision 10 therefore re-sent the same bytes. A2V separates bulk-edit `ویرایش` from persisted `ارسال سایت`, fails closed when selected media falls outside canonical authority, and preserves persisted Site-selected local images across refetch even when they use legacy numbered filenames.
+
+Fresh Catalog rollback: `D:\projects\3dprinthub-backups\phase50-a2v-image-authority-20260921-005619\catalog-before-a2v.sqlite3`, integrity PASS, SHA256 `20bd5c1d6b776c14e90d9aa91a9866b909121614d9e042faeb252cbac75c0e9e`. Evidence-based #625 repair changed only canonical image authority to include its already-persisted Site selections; selected set, primary, SEO metadata, Site identity/revision and `needs_update=0` remained unchanged. Post-repair gate PASS.
+
+Verification: stable Image/SEO/Packaging/Republish gate 72/72 PASS; diff-check PASS; py_compile PASS; RUN_QT VerifyOnly PASS. A broader legacy 80-test probe had 1 fail + 3 temp-SQLite teardown errors, and the exact clean A2U baseline reproduced those same four failures, so they are not A2V regressions.
+
+Production remains clean at `03042d0430ee6e688c992c875f12edc969df103d`; no A2V Host source deploy/migration/restart occurred. Site Product #39 is revision 10 with live image SHA256 `cf6f0422...c68fff` and `28d50b4b...efe67e5`, plus exactly 3 active current Variants.
+
+Remaining exact step: in the running A2V UI the owner must visually tick `ارسال سایت` on the intended new image(s). That old UI intent was never persisted, so no `phase49_3c_*` image will be guessed. After the real selection: verify Local selected set + SEO finalization → fresh rollback → one controlled republish → Local/Batch/Production SHA parity → public verification → A2V closure.
+
 ## 2026-09-20 - Phase50.A.2U ACCEPTED / latest Windows v8.9.11 restored
 
 The actual latest Windows lineage is now the operator source: `D:\projects\3DPrintHub-a2u-latest-windows` on `wip/phase50-a2u-latest-windows-a2t-20260920`. Source implementation is pushed at `d77dfd95f5d3a9a707f9ad03f2aacff9e69ac2e2`.

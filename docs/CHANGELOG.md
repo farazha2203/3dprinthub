@@ -1,3 +1,12 @@
+## 2026-09-21 - Phase50.A.2V image authority hardening
+- Hardened Windows Site-publish media authority: Site-selected media must be part of canonical Product images or publish fails closed.
+- Renamed Qt image controls to distinguish temporary bulk `ویرایش` from persisted `ارسال سایت`.
+- Preserved explicit Site-selected local images across source refetch, including legacy numbered image filenames; unselected numbered source-cache slots remain replaceable.
+- Added regression coverage for authority drift, refetch ownership and UI contract.
+- Repaired #625 canonical image authority from its persisted Site selections after an integrity-checked Catalog backup; no Site re-import was triggered.
+- Pushed exact A2V source `4e69ed6a5c0996c7249830fbe029cd01460ad5b1`; exact-SHA Qt relaunch and 72/72 stable Image/SEO/Packaging/Republish gate PASS.
+- Production source remains unchanged; controlled image republish waits only for the owner’s explicit visual `ارسال سایت` selection.
+
 ## 2026-09-20 - Phase50.A.2U latest Windows recovery
 - Restored the actual latest Windows lineage (`f1b58645...`) instead of continuing from the divergent A2T worktree.
 - Preserved all September 18 image/gallery/scroll/multiselect/SEO/screenshot fixes while porting only Social v5 / clickable Story notification behavior.

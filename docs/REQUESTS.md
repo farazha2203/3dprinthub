@@ -1,3 +1,10 @@
+## 2026-09-21 - Owner: new Product images sent from Windows must replace the live Site images
+Status: `A2V SOURCE PUSHED / EXACT-SHA QT RUNNING / REAL SITE-IMAGE SELECTION PENDING`.
+
+Owner reported that newly chosen images sent from the Windows Catalog Center still did not appear on the Site. Revision-10 forensic evidence proves the receiver updated Product #39 but Windows packaged the prior finalized image bytes because persisted Site selection and canonical image authority had drifted apart.
+
+A2V now makes `ارسال سایت` the explicit persisted publish choice, keeps bulk `ویرایش` separate, fails closed on image-authority drift and protects persisted Site-selected local images during refetch. #625 authority was repaired only from existing persisted evidence after a verified backup. No unrecorded new image is guessed. Exact next step is the owner’s visual `ارسال سایت` selection in the running A2V UI, followed by one controlled same-identity republish and three-way SHA proof.
+
 ## 2026-09-20 - Owner: restore the actual latest Windows Catalog Center
 Status: `A2U ACCEPTED / v8.9.11 WINDOWS VERIFIED`.
 

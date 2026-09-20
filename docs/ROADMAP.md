@@ -1,3 +1,20 @@
+## 2026-09-21 - Phase50.A.2V image authority hardening
+- [x] Continue from accepted A2U v8.9.11 ancestry.
+- [x] Reproduce #625 revision-10 stale-image path and prove unchanged Production image SHA values.
+- [x] Add fail-closed selected-image ⊆ canonical-image authority gate.
+- [x] Separate temporary `ویرایش` selection from persisted `ارسال سایت` selection in Qt.
+- [x] Preserve persisted Site-selected local images through refetch, including legacy numbered filenames.
+- [x] Take integrity-checked Catalog rollback and repair only #625 canonical image authority from persisted evidence.
+- [x] Stable Image/SEO/Packaging/Republish regression 72/72 PASS; compile/diff/Qt VerifyOnly PASS.
+- [x] Commit/push exact source `4e69ed6a5c0996c7249830fbe029cd01460ad5b1` and launch exact-SHA Qt.
+- [x] Capture Production #39 revision-10 baseline and live media SHA values.
+- [ ] Owner visually selects intended new image(s) using `ارسال سایت`; do not infer from ephemeral old bulk-edit state.
+- [ ] Verify selected set, primary and current finalized SEO bytes; create fresh pre-publish rollback.
+- [ ] Perform one controlled same-identity #625 → #39 republish.
+- [ ] Require Local → Batch → Production SHA equality and Product #39 revision increment once.
+- [ ] Verify public Product/media HTTP/browser state and exactly 3 active current Variants.
+- [ ] Close CURRENT_STATE / ROADMAP / CHANGELOG / ERRORS / REQUESTS / A2V phase and push closure docs.
+
 ## 2026-09-20 - Phase50.A.2U latest Windows recovery
 - [x] Identify actual latest Windows lineage at `f1b58645...`.
 - [x] Prove image/gallery/SEO/screenshot fix ancestry is present.
