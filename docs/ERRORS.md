@@ -1,3 +1,11 @@
+## ERR-49-187 - Central project router parsing/Invoke-RestMethod defects exposed before A2R Production preflight
+**Date:** 2026-09-20  
+**Observed:** after A2R Local PASS, `project-host.ps1 -Project 3dprinthub -Health` first treated the entire seven-project JSON array as one nested entry and emitted a combined display label, then after correcting array parsing reached a second PowerShell incompatibility where positional `Invoke-RestMethod GET URL` binding failed.  
+**Root cause:** PowerShell array wrapping `$reg=@(...ConvertFrom-Json)` preserved the top-level JSON array as one nested element in this runtime; the router also used positional REST arguments not accepted by the installed PowerShell web cmdlet.  
+**Correct fix:** outside repository source, back up the central gateway router to `D:\projects\.chatgpt-gateway\project-host.ps1.before-array-fix-20260920-1523.bak`; parse the JSON array directly; use named `-Method/-Uri` arguments for GET/POST; syntax-check before retry.  
+**Verification:** router syntax PASS and project selection now reaches the correct 3DPrintHub entry. The subsequent health request fails only because `127.0.0.1:22024` has no listener; no alternate project route was used.  
+**Prevention:** central router health must be smoke-tested on its installed PowerShell version after changes, including multi-entry JSON selection and authenticated GET/POST parameter binding.
+
 ## ERR-49-186 - A2R CI fixture missed module-level patch import
 **Date:** 2026-09-20  
 **Observed:** A2R CI compiled successfully, passed Django system check and no-migration-drift, then failed only in `store/test_phase50_a2l_manual_payment.py` with `NameError: name 'patch' is not defined`. A previous edit did not add the module-level import because an unrelated function-local `patch` import made a broad text-presence check falsely report that the import already existed.  
