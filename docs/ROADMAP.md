@@ -25,9 +25,11 @@
 - [x] Commit/push finance + receipt-audit source at `8fabbcd59e1b5526e96833238f4999fffc678aed`.
 - [x] Fresh authenticated Production preflight: clean `888af6b4...`, correct MySQL, empty migration plan, Phase30 audit OK.
 - [x] Build and Local-test guarded no-migration A2S deploy runner.
-- [ ] Commit/push exact runner checkpoint and execute it through the dedicated reverse tunnel.
-- [ ] Production read-only phase30 + phase50 finance reconciliation acceptance.
-- [ ] Mark A2S finance/receipt audit ACCEPTED after Production read-only PASS.
+- [x] Commit/push exact runner checkpoint `a8baf281f2a60cb4acbf301d9db32ef12a627811` and execute it through the dedicated reverse tunnel.
+- [x] Fresh source/.env/MySQL rollback verified before source promotion.
+- [x] Production read-only Phase30 + Phase50 finance reconciliation acceptance PASS.
+- [x] Home/Store HTTP smoke + final clean Host worktree PASS.
+- [x] Mark A2S finance/receipt audit ACCEPTED.
 
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
 

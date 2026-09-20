@@ -14,6 +14,15 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2S finance/receipt Production acceptance
+- Guarded runner deployed exact GitHub SHA `a8baf281f2a60cb4acbf301d9db32ef12a627811` from clean Production baseline `888af6b4...`.
+- Fresh rollback `20260920-180912-phase50-a2s-finance-receipt` passes source/.env/MySQL checksum and gzip verification.
+- Post-deploy `phase30_payment_audit` and `phase50_finance_reconciliation` both PASS; migration plan remains empty.
+- Manual-payment readiness remains configured/active; all current Store/Website payment, ledger and ProductionJob counts remain zero.
+- Home/Store HTTP 200, Passenger restarted, final Host worktree clean.
+- First attempt stopped safely before promotion on account quota; after verifying a newer same-phase rollback, exactly 15,600,484 bytes of redundant/incomplete backup data were reclaimed (ERR-49-193).
+- Finance/receipt scope is ACCEPTED; no financial correction write or migration occurred.
+
 ## 2026-09-20 - Phase50.A.2S guarded finance/receipt deploy runner
 - Production read-only preflight PASS at clean `888af6b4...`: correct branch/origin/MySQL, empty migration plan and Phase30 audit OK.
 - Added guarded no-migration A2S runner with exact baseline/target/delta checks and verified source/.env/MySQL rollback creation before source promotion.

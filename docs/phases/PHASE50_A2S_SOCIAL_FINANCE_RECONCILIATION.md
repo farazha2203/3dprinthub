@@ -1,6 +1,6 @@
 # Phase50.A.2S — Instagram/SEO Social + Finance Reconciliation
 
-Status: SOCIAL LOCAL_TESTED / REAL BUFFER CONNECTION VERIFIED / NO NEW PUBLICATION
+Status: SOCIAL WORKFLOW DEPLOYED / FINANCE_RECEIPT ACCEPTED / NO NEW PUBLICATION
 Date: 2026-09-20
 Base release: `1d602fcb221ba2e86204d2c18dbd4802df6166fc`
 Branch: `wip/phase50-a2s-social-finance-20260920`
@@ -55,5 +55,17 @@ First close the hardened Site-first Instagram/Buffer workflow, then reconcile St
   - post-merge compile/check/no-drift + Phase30 + Phase50 reconciliation;
   - Passenger restart + public Home/Store smoke.
 
-## Exact next
-Commit/push runner checkpoint -> execute exact GitHub runner through the dedicated reverse tunnel -> require verified backup, reconciliation PASS and clean final HEAD -> documentation closure / A2S finance-receipt ACCEPTED.
+## Production acceptance
+- First runner attempt stopped before promotion on Host account quota; ERR-49-193 records the checksum-verified redundant-backup cleanup and exact 15,600,484-byte reclaim.
+- Second runner created fresh verified rollback `20260920-180912-phase50-a2s-finance-receipt`.
+- Production ff-only promoted to exact `a8baf281f2a60cb4acbf301d9db32ef12a627811`.
+- Post-deploy compile/check/no-drift PASS.
+- `phase30_payment_audit` = OK.
+- `phase50_finance_reconciliation` = OK.
+- Manual payment remains configured + active.
+- Current finance authorities contain zero operational payment/ledger/job rows, so no correction write was performed.
+- Public Home/Store HTTP 200; final Host worktree clean.
+- Independent post-deploy read-only verification repeated SHA/DB/migration/audit/rollback checks and PASSed.
+
+## Closure
+Finance/reconciliation/receipt-audit scope is ACCEPTED. The Social workflow code is deployed in the same lineage, Buffer connection/policy/duplicate guards were already Local/real-connection verified, and this deploy intentionally did not create a new Instagram post.

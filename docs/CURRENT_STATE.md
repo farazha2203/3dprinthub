@@ -22,6 +22,18 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2S finance/receipt ACCEPTED / Production verified
+
+A2S finance/receipt runtime is live on Production at exact clean `a8baf281f2a60cb4acbf301d9db32ef12a627811` on Host branch `release/phase50-a2j-hero-20260915`. MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`; migration plan count is zero. Fresh rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-180912-phase50-a2s-finance-receipt` independently re-verifies source bundle, protected .env and MySQL gzip/checksum.
+
+Production acceptance PASS: `phase30_payment_audit` = OK; `phase50_finance_reconciliation` = OK; manual-payment readiness remains configured+active; StorePayment/paid StoreOrder/Website Payment/PaymentLedgerEntry/ProductionJob counts remain zero, so no financial correction write was required. Home and Store return HTTP 200 after Passenger restart; Host worktree is clean.
+
+ERR-49-193 records the first fail-closed deploy attempt that hit account quota before source promotion. Only a checksum-verified redundant A2L backup plus the incomplete 4KB A2S directory were removed, reclaiming exactly 15,600,484 bytes; the rerun then completed with verified rollback evidence.
+
+Manual-payment reviewer auditing is now durable without a schema change: Store Admin approval carries the authenticated reviewer into existing StoreOrderEvent.created_by; Website manual approval writes reviewer source/id into existing PaymentLedgerEntry metadata. The reconciliation command will fail closed if future paid manual receipts lack reviewer evidence or cross-authority integrity.
+
+A2S Social workflow is also present in this Production source lineage, but no new Instagram publication was triggered by this deploy; #625 current revision remains protected by duplicate Feed/Story receipts. Finance/receipt scope is ACCEPTED. Exact next project work is the next explicitly approved Phase50 slice, not additional financial reconciliation repair.
+
 ## 2026-09-20 - Phase50.A.2S finance/receipt deploy runner LOCAL_TESTED / Production preflight PASS
 
 Finance/receipt source is pushed at `8fabbcd59e1b5526e96833238f4999fffc678aed`. Dedicated reverse tunnel is currently healthy. Fresh authenticated Production read-only preflight proves Host branch `release/phase50-a2j-hero-20260915`, exact clean HEAD `888af6b4551b2e6b1e5681aab4c3d9610735474a`, correct GitHub origin, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, migration plan count 0 and `PHASE30_AUDIT=OK`.

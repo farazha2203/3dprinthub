@@ -1,3 +1,11 @@
+## ERR-49-193 - A2S guarded deploy initially hit Host account quota while creating source bundle
+**Date:** 2026-09-20
+**Observed:** the first exact-SHA A2S runner passed tunnel/Host/DB/migration/payment/Phase30/delta gates, then stopped before source promotion when `git bundle create` returned `Disk quota exceeded`. Production remained clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a`; the incomplete A2S backup directory contained only 4096 bytes.
+**Root cause:** account-level backup quota was exhausted even though filesystem free space was healthy; the backup set still retained two same-phase A2L pricing-engine rollbacks.
+**Correct fix:** verify the newer same-phase rollback `20260919-153143-phase50-a2l-pricing-engine` by database gzip + database/env/source/static SHA256, then remove only the older redundant `20260919-151741-phase50-a2l-pricing-engine` plus the incomplete A2S directory. Exactly 15,600,484 bytes were reclaimed. Current A2R rollback evidence was retained.
+**Verification:** rerun under the changed condition created and verified fresh rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-180912-phase50-a2s-finance-receipt`, then ff-only deployed exact `a8baf281f2a60cb4acbf301d9db32ef12a627811`. Post-deploy Phase30 audit, Phase50 finance reconciliation, migration-plan, public Home/Store and final clean-worktree checks PASS.
+**Prevention:** before payment/finance deploy backup creation, verify current rollback retention and account quota headroom; delete only checksum-verified, explicitly redundant same-phase backups and never Product/private media, current DB, env, or milestone recovery evidence.
+
 ## ERR-49-192 - A2S focused Local test first started without the required Django secret boundary
 **Date:** 2026-09-20
 **Observed:** touched-source compile passed, but the first focused A2S reconciliation test command exited before the Django test runner with `ImproperlyConfigured: DJANGO_SECRET_KEY must be configured in the environment.`
