@@ -1,6 +1,6 @@
 # Phase50.A.2R — Payment / Finance / Admin Closure
 
-Status: WIP SOURCE IMPLEMENTED / CANONICAL LOCAL TEST REQUIRED  
+Status: GITHUB CI TESTED / CANONICAL WINDOWS LOCAL TEST REQUIRED  
 Date: 2026-09-20  
 Base Site release: \`65d42e40979830b306e92457093aefe068086f66\`  
 WIP branch: \`wip/phase50-a2r-payment-finance-admin-20260920\`
@@ -59,3 +59,11 @@ The existing A2L guarded deploy runner performs both a source grep and runtime g
 - Add the manual-transfer singleton to the Treasury links for direct operator access.
 - Reuse \`payment_gateway_status()\`; no second gateway-health authority is introduced.
 - Add secret-safety/status regression and include the Command Center test in A2R CI.
+
+
+## 2026-09-20 CI checkpoint
+- GitHub Actions run `35499242459` completed SUCCESS on source SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8`.
+- Passed: Python compile, Django system check, no unintended migrations, focused manual-payment/Admin Command Center regressions, diff hygiene.
+- ERR-49-186 records the corrected test-fixture import failure from the preceding run.
+- Production was not changed.
+- Canonical Windows Local remains mandatory before freeze/release promotion.
