@@ -20,10 +20,11 @@
 - [x] Add focused secure-command/navigation regressions.
 - [x] Canonical Windows Local compile/check/no-drift/empty-plan + payment/Admin regression 29/29 PASS on tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [x] Prepare Local-tested guarded A2R release runner and release branch from exact tested WIP lineage.
-- [ ] Commit/push ERR-49-189 resume correction and execute fresh-backup Production resume from exact `0c9d328…` partial-promotion baseline.
+- [x] Commit/push ERR-49-189 resume correction and execute fresh-backup Production resume to exact `888af6b4551b2e6b1e5681aab4c3d9610735474a`.
 - [x] Production read-only identity/DB/migration verification PASS after dedicated `127.0.0.1:22024` tunnel recovery.
 - [ ] Fresh MySQL/source/env backup then secure settings apply/read-back.
-- [ ] Browser manual-payment receipt/Admin-review smoke.
+- [x] Payment Readiness + public Production Playwright smoke PASS (Home/Store/Product/Checkout/Admin route).
+- [ ] Authenticated manual-payment receipt upload/Admin-review UAT after secure destination configuration.
 - [ ] ZarinPal config/audit UI and finance reconciliation slices.
 
 ## 2026-09-20 - Phase50.A.2Q Hero shadow/cache hardening

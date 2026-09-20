@@ -1,3 +1,10 @@
+## ERR-49-190 - Chrome CLI dump-dom was not a reliable Production browser smoke on this Windows build
+**Date:** 2026-09-20
+**Observed:** first Chrome headless smoke returned exit 13 with `Multiple targets are not supported in headless mode`; after changing invocation, Chrome exited 0 but produced an empty dump-dom because the launcher/child behavior did not yield a reliable DOM artifact.
+**Correct fix:** use the already-installed Python Playwright browser harness with channel `chrome` for Production smoke instead of treating Chrome CLI dump-dom as acceptance evidence.
+**Verification:** Playwright Home/Store/Product #39/Checkout/Admin smoke PASS with HTTP/final-route checks, zero page errors, zero console errors and no server-error markers.
+**Prevention:** Production browser acceptance on this workstation should use Playwright or another process-aware browser harness; a zero Chrome CLI exit without browser assertions is not sufficient evidence.
+
 ## ERR-49-189 - A2R post-merge Admin smoke used mojibake Persian markers
 **Date:** 2026-09-20
 **Observed:** the guarded A2R deploy created verified source/env/MySQL backups and fast-forwarded Production from `65d42e40979830b306e92457093aefe068086f66` to `0c9d328299a77c26fdef9450d985276178ecc120`, then stopped before Passenger restart because the read-only Admin render smoke reported `admin_readiness_marker_missing`.

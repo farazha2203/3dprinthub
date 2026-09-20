@@ -22,6 +22,16 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - A2R PRODUCTION_VERIFIED / secure manual-payment configuration required
+
+A2R guarded resume completed successfully. Production is exact clean `888af6b4551b2e6b1e5681aab4c3d9610735474a` on Host branch `release/phase50-a2j-hero-20260915`; migration plan remains empty. Fresh verified resume rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-160219-phase50-a2r-resume`. The earlier pre-promotion rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-155814-phase50-a2r-payment-finance-admin` is also valid.
+
+Post-deploy Payment Readiness checks PASS: Admin read-only render contains the structural readiness panel, provider/merchant state and no secret identifiers. Manual-payment dry-run PASS. Public Home/Store HTTP smoke PASS after Passenger restart.
+
+Real Windows Playwright browser smoke PASS with zero page errors/console errors/server-error markers: Home 200, Store 200, Product #39 200, Checkout 200 after expected redirect to `/customer/login/?next=/store/checkout/`, and Admin Command Center 200 after expected redirect to `/admin/login/?next=/admin/command-center/`. Authenticated Admin readiness content was separately verified server-side against Production.
+
+Remaining A2R acceptance blocker is configuration, not code: `StorePaymentSettings` row is absent and every `STORE_PAYMENT_*` key is absent from Production `.env`; ZarinPal remains disabled with no merchant credential. No financial destination can be invented or recovered implicitly from historical Git. Exact next for A2R acceptance: provide/store the approved manual-payment destination through the protected environment/Admin path -> take a fresh DB rollback backup -> explicit apply/activate -> masked read-back -> authenticated checkout/manual receipt upload/Admin-review UAT. Only then mark A2R ACCEPTED and proceed to Instagram/SEO Social + finance reconciliation + receipt audit.
+
 ## 2026-09-20 - A2R partial promotion safely stopped; resume runner LOCAL_TESTED
 
 First guarded A2R Production execution completed all preflight and rollback gates, including verified source bundle, protected `.env` checksum and valid MySQL gzip backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-155814-phase50-a2r-payment-finance-admin`. It then ff-only promoted Source to `0c9d328299a77c26fdef9450d985276178ecc120` and stopped fail-closed before Passenger restart on ERR-49-189, a runner-only mojibake marker assertion.

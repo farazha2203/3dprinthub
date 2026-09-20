@@ -14,6 +14,12 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - A2R Production verification
+- Guarded resume deployed exact `888af6b4551b2e6b1e5681aab4c3d9610735474a` with fresh verified source/env/MySQL rollback evidence.
+- Post-deploy Admin readiness render, payment dry-run, Passenger restart and Home/Store HTTP smoke PASS.
+- Windows Playwright Production browser smoke PASS for Home/Store/Product #39/Checkout/Admin with zero page/console errors.
+- Manual-payment go-live remains configuration-blocked because no StorePaymentSettings row and no `STORE_PAYMENT_*` environment entries exist; ZarinPal remains disabled/unconfigured.
+
 ## 2026-09-20 - A2R fail-closed resume hardening
 - First Production run verified backup and fast-forwarded to `0c9d328…`, then stopped before restart on an encoding-sensitive Persian smoke marker.
 - Verified the actual Admin Payment Readiness HTML is healthy and secret-safe; DB/payment state remained unchanged.
