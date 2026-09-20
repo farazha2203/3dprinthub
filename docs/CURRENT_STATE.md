@@ -1,3 +1,11 @@
+## 2026-09-20 - A2R GitHub CI gate PASS; Canonical Windows Local next
+
+A2R GitHub Actions run `35499242459` completed SUCCESS on exact tested source SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8`. Compile, Django system check, no unintended migrations, focused payment/Admin regressions and diff hygiene passed. The preceding failed run was isolated to a test-fixture `patch` import error and is documented as ERR-49-186.
+
+The canonical Windows repository at `D:\projects\3DPrintHub` was verified before Local execution and is currently on unrelated branch `wip/phase50-a2l-owner-qa-20260917 @ 21a1ae27c8f57ce7dbd6cd78bf6a3d548e9bd158` with existing local documentation changes. It must not be reset or overwritten. A2R Local verification therefore proceeds from an isolated Windows worktree pulled from the exact GitHub WIP lineage. Production remains unchanged by A2R at this point.
+
+Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
+
 ## 2026-09-20 - A2R payment readiness panel WIP
 
 The second A2R slice adds a read-only Payment Readiness panel to the existing Phase50 Admin Command Center. It reuses \`payment_gateway_status()\` plus the existing \`StorePaymentSettings\` singleton and exposes only booleans/non-secret provider metadata. Merchant ID and manual-payment destination values are never rendered. Treasury now links directly to the manual-payment singleton Admin. No migration or Production mutation.
