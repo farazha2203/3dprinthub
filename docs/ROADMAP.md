@@ -6,7 +6,7 @@
 - [x] Add regression that verifies status and rejects rendering payment destination values.
 - [x] Extend A2R CI scope with Command Center tests.
 - [x] GitHub CI regression PASS on exact source SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8` (run `35499242459`).
-- [ ] Canonical Windows Local regression on exact documented WIP lineage.
+- [x] Canonical Windows Local regression PASS on exact tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [ ] Promote only after gates pass.
 
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
@@ -18,7 +18,7 @@
 - [x] Make manual-payment command env-only, dry-run by default, explicit apply + activate/deactivate, and value-redacted in output.
 - [x] Classify \`StorePaymentSettings\` in Finance Admin navigation.
 - [x] Add focused secure-command/navigation regressions.
-- [ ] Canonical Windows Local compile/check/no-drift/empty-plan + focused/full payment regression.
+- [x] Canonical Windows Local compile/check/no-drift/empty-plan + payment/Admin regression 29/29 PASS on tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [ ] Promote tested A2R slice to release.
 - [ ] Production read-only identity/DB/migration verification.
 - [ ] Fresh MySQL/source/env backup then secure settings apply/read-back.
