@@ -255,6 +255,14 @@ class SettingsPage(QWidget):
         self.instagram_companion_story.setToolTip(
             "Story با عکس واقعی Product، قالب 1080×1920، IRANSans و استایل Gold/Navy ساخته و بعد از HTTPS verify از طریق Buffer منتشر می‌شود."
         )
+        self.instagram_story_clickable_link = QCheckBox(
+            "Story Link Sticker / Notify Me (لینک محصول)"
+        )
+        self.instagram_story_clickable_link.setChecked(True)
+        self.instagram_story_clickable_link.setToolTip(
+            "برای Story لینک‌دار، Buffer حالت Notification می‌سازد تا در Instagram "
+            "Link Sticker با متن «لینک محصول» و URL همان محصول تکمیل شود."
+        )
 
         self.instagram_status = QLabel(
             "ابتدا Product روی سایت و رسانه‌های HTTPS آن تأیید می‌شوند؛ سپس انتشار در Instagram انجام می‌شود."
@@ -273,6 +281,7 @@ class SettingsPage(QWidget):
         form.addRow("Direct Access Token", self.instagram_token)
         form.addRow("منبع Direct Token", self.instagram_secret_source)
         form.addRow("Companion Story", self.instagram_companion_story)
+        form.addRow("Clickable Story Link", self.instagram_story_clickable_link)
         layout.addLayout(form)
 
         actions = QHBoxLayout()
@@ -334,6 +343,12 @@ class SettingsPage(QWidget):
         self.instagram_companion_story.setChecked(
             story_raw not in {"0", "false", "no", "off"}
         )
+        clickable_raw = str(
+            self.db.setting("instagram_story_clickable_link_enabled", "1") or "1"
+        ).strip().lower()
+        self.instagram_story_clickable_link.setChecked(
+            clickable_raw not in {"0", "false", "no", "off"}
+        )
         self.buffer_secret_source.setText(secret_source("buffer_api_key"))
         self.instagram_account_id.setText(
             str(self.db.setting("instagram_account_id", "") or "")
@@ -364,6 +379,7 @@ class SettingsPage(QWidget):
             self.buffer_secret_source,
             self.buffer_media_host,
             self.instagram_companion_story,
+            self.instagram_story_clickable_link,
         ):
             widget.setEnabled(is_buffer)
         for widget in (
@@ -400,6 +416,10 @@ class SettingsPage(QWidget):
                 self.db.set_setting(
                     "instagram_companion_story_enabled",
                     "1" if self.instagram_companion_story.isChecked() else "0",
+                )
+                self.db.set_setting(
+                    "instagram_story_clickable_link_enabled",
+                    "1" if self.instagram_story_clickable_link.isChecked() else "0",
                 )
                 key = self.buffer_api_key.text().strip()
                 if key:

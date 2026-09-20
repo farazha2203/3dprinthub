@@ -14,6 +14,15 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2T Windows/Social/Republish handoff
+- Added repository-owned Qt launcher `catalog_center/RUN_QT.ps1` for the current lineage.
+- Instagram policy v5 removes misleading raw Feed-caption URLs, caps hashtags at 5 and uses «لینک محصول» CTA.
+- Clickable Story mode uses Buffer notification publishing for native Instagram Link Sticker completion; notification receipts are not falsely marked live.
+- Settings exposes clickable Story link mode; Products page reports Story items needing mobile completion.
+- A2M authoritative republish remains the server authority; Windows 29/29 + Server 14/14 republish regressions PASS.
+- Social 33/33 + Qt 32/32 + launcher verify PASS; real Buffer connection PASS; #625 same-ACK Feed/Story duplicate guards remain true.
+- No Instagram publication and no Production DB mutation occurred in this Local slice.
+
 ## 2026-09-20 - Phase50.A.2S finance/receipt Production acceptance
 - Guarded runner deployed exact GitHub SHA `a8baf281f2a60cb4acbf301d9db32ef12a627811` from clean Production baseline `888af6b4...`.
 - Fresh rollback `20260920-180912-phase50-a2s-finance-receipt` passes source/.env/MySQL checksum and gzip verification.

@@ -837,9 +837,12 @@ class ProductsPage(QWidget):
         instagram = dict(data.get("instagram") or {})
         published = int(instagram.get("published") or 0)
         failed = int(instagram.get("failed") or 0)
+        story_notifications = int(instagram.get("story_notifications") or 0)
         site_blocked = list(data.get("site_blocked") or [])
         self.bulk_publish_status.setText(
-            f"✅ سایت {int(site.get('published') or 0)} • Instagram {published} • خطا {failed + len(site_blocked)}"
+            f"✅ سایت {int(site.get('published') or 0)} • Instagram {published}"
+            f" • Story موبایل {story_notifications}"
+            f" • خطا {failed + len(site_blocked)}"
         )
         lines = [
             f"#{item.get('product_id')}: {item.get('error')}"
@@ -851,9 +854,12 @@ class ProductsPage(QWidget):
             "نتیجه سایت → Instagram",
             (
                 f"انتشار جدید سایت: {int(site.get('published') or 0)}\n"
-                f"Instagram موفق: {published}\n"
+                f"Instagram workflow موفق: {published}\n"
+                f"Story لینک‌دار نیازمند تکمیل روی موبایل: {story_notifications}\n"
                 f"Instagram ناموفق: {failed}\n"
-                f"بدون لینک عمومی معتبر: {len(site_blocked)}"
+                f"بدون لینک عمومی معتبر: {len(site_blocked)}\n\n"
+                "اگر Story لینک‌دار فعال است، اعلان Buffer را روی موبایل باز کن، "
+                "Open in Instagram را بزن و Link Sticker را با متن «لینک محصول» تکمیل کن."
                 + detail
             ),
         )

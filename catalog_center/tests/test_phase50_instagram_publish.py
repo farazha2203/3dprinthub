@@ -57,10 +57,11 @@ class Phase50InstagramPublishTests(unittest.TestCase):
     def test_payload_uses_canonical_site_link_and_product_seo(self):
         payload = canonical_site_payload(product_row(), site_url="https://3dprinthub.ir")
         self.assertEqual(payload["product_url"], "https://3dprinthub.ir/store/product/test-product/")
-        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", payload["caption"])
+        self.assertIn("لینک محصول", payload["caption"])
+        self.assertNotIn(payload["tracking_url"], payload["caption"])
         self.assertIn("#چاپ_سه_بعدی", payload["caption"])
-        self.assertLessEqual(len(payload["hashtags"]), 8)
-        self.assertEqual(payload["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertLessEqual(len(payload["hashtags"]), 5)
+        self.assertEqual(payload["social_policy_version"], "instagram-product-v5-20260920")
         self.assertIn("سفارش این محصول از 3DPrintHub.ir", payload["caption"])
         self.assertIn("ارسال سفارش به سراسر ایران", payload["caption"])
         self.assertIn("#ارسال_سراسری", payload["hashtags"])
@@ -126,14 +127,15 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         result = publish_product(db, 42, cfg, site_url="https://3dprinthub.ir")
         self.assertEqual(result["media_id"], "media-1")
         self.assertEqual(result["site_product_url"], "https://3dprinthub.ir/store/product/test-product/")
-        self.assertEqual(result["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertEqual(result["social_policy_version"], "instagram-product-v5-20260920")
         self.assertEqual(result["alt_texts"], ["نمای اصلی محصول", "نمای دوم محصول"])
         self.assertEqual(db.receipts[-1]["status"], "instagram_published")
         calls = [call.args[0] for call in request_json.call_args_list]
         self.assertTrue(all("makerworld" not in value.lower() for value in calls))
         parent_payload = request_json.call_args_list[2].kwargs["payload"]
         self.assertEqual(parent_payload["media_type"], "CAROUSEL")
-        self.assertIn("3dprinthub.ir/store/product/test-product/", parent_payload["caption"])
+        self.assertIn("لینک محصول", parent_payload["caption"])
+        self.assertNotIn("utm_source=instagram", parent_payload["caption"])
 
     @patch("app.instagram_publish.get_secret", return_value="token")
     def test_same_site_ack_cannot_be_published_twice(self, _secret):
@@ -186,7 +188,7 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         self.assertIn("#اسکلتی_اسپینوزور", payload["hashtags"])
         self.assertIn("3DPrintHub.ir", payload["caption"])
         self.assertIn("utm_source=instagram", payload["tracking_url"])
-        self.assertLessEqual(len(payload["hashtags"]), 8)
+        self.assertLessEqual(len(payload["hashtags"]), 5)
 
     def test_non_public_product_fails_closed(self):
         row = product_row()

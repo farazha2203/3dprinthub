@@ -166,7 +166,8 @@ class BufferPublishTests(unittest.TestCase):
         payload = canonical_site_payload(db.row, site_url="https://3dprinthub.ir")
         self.assertEqual(len(payload["media_urls"]), 6)
         self.assertTrue(payload["tracking_url"].startswith("https://3dprinthub.ir/"))
-        self.assertIn(payload["tracking_url"], payload["caption"])
+        self.assertNotIn(payload["tracking_url"], payload["caption"])
+        self.assertIn("لینک محصول", payload["caption"])
 
 
     @patch("app.buffer_publish.get_secret", return_value="secret")

@@ -1,3 +1,10 @@
+## 2026-09-20 - Owner: finish Windows app access, Instagram link workflow and full republish behavior
+Status: `A2T LOCAL_TESTED / GITHUB+SHORTCUT NEXT`.
+
+Owner requested an exact way to open the Windows Catalog Center, a finished Feed/Story publishing workflow, diagnosis of the last unrecognized Product link, a visible «لینک محصول» CTA where Instagram supports it, and confirmation that resending a changed Product fully updates the existing Site Product.
+
+A2T preserves the live A2M authoritative server contract and re-verifies both Windows and Server republish suites. Instagram Feed stays automatic but no longer pretends a caption URL is clickable; Story clickable-link mode uses Buffer notification publishing so the owner completes the native Link Sticker in Instagram with label «لینک محصول». #625 revision 8 remains duplicate-protected and was not reposted. The stale Desktop shortcut will be retargeted only after exact GitHub push.
+
 ## 2026-09-20 - Owner: finish A2S finance reconciliation and receipt audit
 Status: `FINANCE/RECEIPT ACCEPTED / PRODUCTION VERIFIED @ a8baf281`.
 

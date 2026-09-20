@@ -1,3 +1,19 @@
+## ERR-49-195 - A2T Social full regression initially expected the retired v4 caption contract
+**Date:** 2026-09-20
+**Observed:** Windows republish 29/29 passed, while the first full Social regression had two failures because tests still required policy `instagram-product-v4-20260920` and the old raw-URL Feed CTA.
+**Root cause:** the deliberate A2T v5 behavior changed the contract: Feed captions no longer claim a clickable raw Product URL, Story handles the clickable-link handoff, and hashtags are capped at 5.
+**Correct fix:** update only the obsolete expectations to v5/«لینک محصول»/5 hashtags and keep tracking URL assertions on the canonical payload/Buffer metadata rather than Feed caption.
+**Verification:** full Social 33/33 PASS; no network publication was executed by these tests.
+**Prevention:** Social policy version, caption-link semantics and hashtag bounds must be asserted from the current explicit policy contract, not copied from a retired provider limitation.
+
+## ERR-49-194 - A2T launcher copy initially included a tool-render footer
+**Date:** 2026-09-20
+**Observed:** `qt_launch.py --verify-only` passed, but the first copied `RUN_QT.ps1 -VerifyOnly` failed PowerShell parsing because a non-source tool footer line had been appended to the copied file.
+**Root cause:** the source was copied from a rendered file-read response rather than written from clean repository text.
+**Correct fix:** rewrite `RUN_QT.ps1` from the exact clean launcher content and re-run the launcher gate under changed conditions.
+**Verification:** `RUN_QT.ps1 -VerifyOnly` PASS with `QT_OPERATOR_LAUNCHER_VERIFY=PASS`.
+**Prevention:** file-read UI/footer text must never be reused as source bytes; generated/copied scripts require syntax/verify gates before commit.
+
 ## ERR-49-193 - A2S guarded deploy initially hit Host account quota while creating source bundle
 **Date:** 2026-09-20
 **Observed:** the first exact-SHA A2S runner passed tunnel/Host/DB/migration/payment/Phase30/delta gates, then stopped before source promotion when `git bundle create` returned `Disk quota exceeded`. Production remained clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a`; the incomplete A2S backup directory contained only 4096 bytes.

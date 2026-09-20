@@ -9,6 +9,21 @@
 - [x] Canonical Windows Local regression PASS on exact tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [ ] Promote only after gates pass.
 
+## 2026-09-20 - Phase50.A.2T Windows launcher + Social link + republish handoff
+- [x] Verify stale Desktop shortcut target and preserve dirty primary clone.
+- [x] Add current-lineage Qt launcher and verify it.
+- [x] Confirm current Instagram/Buffer limitation from current provider behavior: Feed URL is not a clickable caption link; native Story Link Sticker requires notification/mobile completion.
+- [x] Introduce Instagram policy v5: «لینک محصول» CTA, max 5 hashtags, no misleading raw Feed URL.
+- [x] Add default clickable-Story notification mode + honest notification receipt state.
+- [x] Add Windows Settings toggle + UI mobile-completion count.
+- [x] Re-verify #625 same-ACK Feed/Story duplicate guards; no repost.
+- [x] Re-verify Windows republish 29/29 and Server authoritative republish 14/14.
+- [x] Social 33/33 + Qt 32/32 + launcher PASS.
+- [ ] Commit/push exact A2T candidate.
+- [ ] Guarded Host desktop/docs-only source alignment; no DB/migration/restart.
+- [ ] Back up and retarget Desktop shortcut/.cmd to exact A2T worktree.
+- [ ] Final launcher smoke + owner handoff.
+
 ## 2026-09-20 - Phase50.A.2S Social + finance reconciliation
 - [x] Create isolated A2S branch from accepted A2R.
 - [x] Port only final hardened Social services/config/tests from the parallel Social lineage.

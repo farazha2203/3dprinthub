@@ -22,6 +22,20 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2T Windows launcher + Social link handoff + republish LOCAL_TESTED
+
+A2T starts from accepted A2S `03042d0430ee6e688c992c875f12edc969df103d` in isolated worktree `D:\projects\3DPrintHub-a2t-windows`. The existing Desktop shortcut still pointed at the older primary clone `D:\projects\3DPrintHub @ 21a1ae27...`; that clone has unrelated documentation changes and was intentionally not reset.
+
+A repository-owned `catalog_center/RUN_QT.ps1` now exists in A2T. It uses the existing verified Python venv and shared Catalog data root, executes `qt_launch.py --verify-only`, then launches the Qt Catalog Center. Launcher verification PASS.
+
+Instagram policy is now v5: Feed caption no longer embeds the Product URL as if Instagram would make it clickable; it uses a clear «لینک محصول» CTA, keeps Product-specific ALT/SEO/nationwide-shipping copy and caps hashtags at 5. The Buffer metadata Product link is retained for Shop Grid continuity. Clickable Story mode defaults ON and uses notification publishing because native Instagram Story Link Stickers cannot be auto-attached through Buffer/API. The Story artwork CTA is «لینک محصول»; Buffer notification handoff carries the tracking URL/instruction, and the UI explicitly reports Story items that still require mobile completion in Instagram. Notification Story receipts are recorded as `instagram_story_notification_ready`, never falsely as Instagram-live.
+
+Product republish needs no new server rewrite: A2M authoritative replacement is already live. Current #625 read-only evidence: Local uploaded / needs_update=0 / Site Product #39 / server revision 8 / 3 sales Profiles; Site #39 revision 8 / 2 images / exactly 3 active Variants. Same-ACK Feed and Story duplicate guards are both true, so #625 is not reposted.
+
+Verification: Windows Catalog republish 29/29 PASS; Server authoritative/unified republish 14/14 PASS; Social 33/33 PASS; Qt regressions 32/32 PASS; Settings construction PASS; Django check/no migration drift PASS; `qt_launch.py --verify-only` PASS; `RUN_QT.ps1 -VerifyOnly` PASS; real Buffer connection read-only PASS. No Instagram publication was triggered during A2T testing.
+
+Exact next: docs/diff hygiene -> commit/push A2T -> guarded Host desktop/docs-only source alignment without DB/restart -> back up and retarget Desktop shortcut/.cmd to the exact A2T worktree -> launcher smoke -> owner handoff.
+
 ## 2026-09-20 - Phase50.A.2S finance/receipt ACCEPTED / Production verified
 
 A2S finance/receipt runtime is live on Production at exact clean `a8baf281f2a60cb4acbf301d9db32ef12a627811` on Host branch `release/phase50-a2j-hero-20260915`. MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`; migration plan count is zero. Fresh rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-180912-phase50-a2s-finance-receipt` independently re-verifies source bundle, protected .env and MySQL gzip/checksum.
