@@ -14,6 +14,12 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - A2R pre-activation rollback + quota cleanup
+- First fresh activation backup stopped safely on Host quota before any financial DB write.
+- Verified newest rollback, removed only the incomplete activation directory and one redundant older A2R deploy backup, reclaiming 15,669,731 bytes.
+- Fresh MySQL rollback `20260920-163425-phase50-a2r-manual-payment-activation` now passes gzip + SHA256 verification.
+- Manual-payment row remains absent; financial destination must be entered through authenticated Admin before masked verification/activation.
+
 ## 2026-09-20 - A2R Production verification
 - Guarded resume deployed exact `888af6b4551b2e6b1e5681aab4c3d9610735474a` with fresh verified source/env/MySQL rollback evidence.
 - Post-deploy Admin readiness render, payment dry-run, Passenger restart and Home/Store HTTP smoke PASS.

@@ -1,3 +1,12 @@
+## ERR-49-191 - Fresh manual-payment activation backup initially hit Host disk quota
+**Date:** 2026-09-20
+**Observed:** the first fresh MySQL backup attempt for manual-payment activation failed with `OSError: [Errno 122] Disk quota exceeded`; no payment-setting write had started.
+**Root cause:** accumulated deploy rollback directories exhausted the Host quota before the new gzip backup could complete.
+**Correct fix:** verify the newest A2R rollback `20260920-160219-phase50-a2r-resume` by MySQL gzip checksum and Git bundle verification, then delete only the incomplete activation directory plus the older redundant A2R rollback. Reclaimed exactly 15,669,731 bytes. Product media, private media, current DB, environment and milestone backups were not cleanup targets.
+**Verification:** a new rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-163425-phase50-a2r-manual-payment-activation` was created successfully; database gzip validation and SHA256 verification PASS.
+**Prevention:** before stateful payment configuration, verify quota/headroom and retain the newest valid rollback plus milestone evidence; remove only explicitly redundant deploy backups.
+**Security:** financial destination values are not written to Repository/docs/log output. If secure automation transport rejects raw financial data, enter it through the authenticated Admin form and continue with masked verification.
+
 ## ERR-49-190 - Chrome CLI dump-dom was not a reliable Production browser smoke on this Windows build
 **Date:** 2026-09-20
 **Observed:** first Chrome headless smoke returned exit 13 with `Multiple targets are not supported in headless mode`; after changing invocation, Chrome exited 0 but produced an empty dump-dom because the launcher/child behavior did not yield a reliable DOM artifact.

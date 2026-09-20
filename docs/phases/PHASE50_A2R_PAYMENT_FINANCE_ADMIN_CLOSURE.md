@@ -91,4 +91,5 @@ The existing A2L guarded deploy runner performs both a source grep and runtime g
 - Masked state: manual payment row absent/inactive/unconfigured; online gateway disabled and Merchant ID unconfigured.
 - Guarded A2R release runner added and Local-tested; it performs verified source/env/MySQL backup before ff-only promotion and never activates financial settings.
 - Release Local gate: compile/check/no-drift, canonical Local empty migration plan, payment/Admin 29/29, Git Bash syntax and diff hygiene PASS.
-- Next: commit/push exact release -> execute guarded runner from GitHub -> verify Production -> browser acceptance -> separate secure manual-payment configuration/activation only with fresh rollback evidence.
+- Next: secure manual-payment configuration/activation only with fresh rollback evidence.
+- Fresh pre-activation rollback `20260920-163425-phase50-a2r-manual-payment-activation` is verified after ERR-49-191 quota cleanup; owner Admin entry is the remaining configuration boundary before masked activation and receipt UAT.

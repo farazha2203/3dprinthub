@@ -22,6 +22,14 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - A2R manual-payment activation rollback READY / Admin entry required
+
+Before any payment-setting write, the first fresh MySQL backup attempt stopped fail-closed on Host quota (ERR-49-191). The newest existing A2R rollback was re-verified, only one older redundant A2R rollback plus the incomplete activation directory were removed, and exactly 15,669,731 bytes were reclaimed.
+
+Fresh pre-activation rollback is now verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-163425-phase50-a2r-manual-payment-activation`; MySQL gzip and SHA256 validation PASS. Production source remains clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a`, and no payment settings row currently exists.
+
+Raw financial destination values are not propagated through repository/logging paths. The owner must enter the approved destination once through authenticated Django Admin. After that, exact next is masked read-back -> explicit activation -> Checkout/manual receipt/Admin-review UAT -> A2R ACCEPTED.
+
 ## 2026-09-20 - A2R PRODUCTION_VERIFIED / secure manual-payment configuration required
 
 A2R guarded resume completed successfully. Production is exact clean `888af6b4551b2e6b1e5681aab4c3d9610735474a` on Host branch `release/phase50-a2j-hero-20260915`; migration plan remains empty. Fresh verified resume rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-160219-phase50-a2r-resume`. The earlier pre-promotion rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-155814-phase50-a2r-payment-finance-admin` is also valid.

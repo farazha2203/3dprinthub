@@ -22,7 +22,8 @@
 - [x] Prepare Local-tested guarded A2R release runner and release branch from exact tested WIP lineage.
 - [x] Commit/push ERR-49-189 resume correction and execute fresh-backup Production resume to exact `888af6b4551b2e6b1e5681aab4c3d9610735474a`.
 - [x] Production read-only identity/DB/migration verification PASS after dedicated `127.0.0.1:22024` tunnel recovery.
-- [ ] Fresh MySQL/source/env backup then secure settings apply/read-back.
+- [x] Fresh MySQL pre-activation backup verified after quota cleanup (`20260920-163425-phase50-a2r-manual-payment-activation`).
+- [ ] Owner enters approved manual-payment destination through authenticated Admin; then masked read-back + explicit activation.
 - [x] Payment Readiness + public Production Playwright smoke PASS (Home/Store/Product/Checkout/Admin route).
 - [ ] Authenticated manual-payment receipt upload/Admin-review UAT after secure destination configuration.
 - [ ] ZarinPal config/audit UI and finance reconciliation slices.
