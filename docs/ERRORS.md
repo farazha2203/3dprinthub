@@ -1,3 +1,11 @@
+## ERR-49-186 - A2R CI fixture missed module-level patch import
+**Date:** 2026-09-20  
+**Observed:** A2R CI compiled successfully, passed Django system check and no-migration-drift, then failed only in `store/test_phase50_a2l_manual_payment.py` with `NameError: name 'patch' is not defined`. A previous edit did not add the module-level import because an unrelated function-local `patch` import made a broad text-presence check falsely report that the import already existed.  
+**Root cause:** the regression fixture used `patch.dict("os.environ", ...)` without a module-scope `from unittest.mock import patch`, and the first repair guard inspected the entire file instead of the import section.  
+**Correct fix:** normalize the malformed literal-newline test/command text, add the module-level `patch` import explicitly, and rerun the changed-condition CI gate rather than repeating the failed run unchanged.  
+**Verification:** GitHub Actions run `35499242459` on exact SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8` completed SUCCESS. Compile, Django check, no unintended migrations, focused payment/Admin regressions and diff hygiene all passed.  
+**Prevention:** import-fix automation must inspect the module import section, not use a whole-file substring test that can be satisfied by nested imports.
+
 ## ERR-49-185 - Manual-payment bootstrap embedded payment destination data in repository source/tests
 **Date:** 2026-09-20  
 **Observed:** A2R audit found that the historical manual-payment seed command and its regression fixture carried real payment destination identity directly in tracked source rather than using secure runtime configuration. The Admin singleton itself already existed and did not require a new model.  
