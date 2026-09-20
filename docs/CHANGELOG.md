@@ -14,6 +14,13 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2S finance reconciliation + receipt reviewer evidence
+- Added read-only cross-authority reconciliation for Store payments/orders/jobs, Website payments/ledger/quotes, finance summary and manual receipt lifecycle.
+- Store manual-payment Admin approval now carries the authenticated reviewer into the existing order event; Website manual approval stores reviewer id/source in existing ledger metadata.
+- No new ledger, model or migration.
+- Focused reconciliation 7/7 PASS; broader payment/finance regression 39/39 PASS; Django check/no-drift/diff-check PASS.
+- Production baseline currently contains zero Store/Website payments, ledger entries and Production jobs, so no corrective financial write is required.
+
 ## 2026-09-20 - Phase50.A.2S Social hardening
 - Ported hardened Buffer Feed/Story, media-host, IRANSans Story and Instagram SEO-v4 policy onto the accepted A2R lineage without merging unrelated parallel-branch changes.
 - Wired Buffer/Direct provider selection into current `InstagramCore` and Settings; secrets remain in Windows Credential Store.

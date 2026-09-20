@@ -32,8 +32,16 @@ First close the hardened Site-first Instagram/Buffer workflow, then reconcile St
 - Current-ACK missing Feed/Story candidates are 628, 309, 301, 273, 303; no automatic publication was performed.
 - Product #625 current ACK duplicate guard is true for both Feed and Story, so revision 8 cannot be reposted by this workflow.
 
-## Finance next
-- Verify exact StorePayment, Website Payment/PaymentLedgerEntry and finance-dashboard authorities.
-- Add read-only reconciliation report first; no corrective ledger writes until discrepancies are classified.
-- Audit manual receipt lifecycle and Admin review evidence without exposing payment destinations.
-- Close with Local tests -> GitHub -> Production read-only verification; deploy only if runtime code requires it.
+## Finance / receipt audit
+- Authority audit complete: Store uses StorePayment/StoreOrder -> ProductionJob; custom orders use Website Payment/PaymentLedgerEntry/Quote -> ProductionJob; finance summary remains ProductionJob/CostEntry derived.
+- Added `phase50_finance_reconciliation` as a read-only integrity gate. It checks payment/order/ledger/job amount parity, manual receipt references/storage, active custom-order job coverage and finance summary metrics.
+- Admin reviewer evidence is additive on existing persistence only:
+  - Store: authenticated actor reaches the existing `StoreOrderEvent.created_by`.
+  - Website: existing PaymentLedgerEntry metadata stores `review_source=admin_manual` and reviewer user id.
+- No model/migration/new ledger and no destination value is logged.
+- Production baseline audit before deploy: StorePayment=0, paid StoreOrder=0, Website Payment=0, PaymentLedgerEntry=0, ProductionJob=0, Phase30 audit OK.
+- Local verification: compile PASS; focused 7/7; adjacent payment/finance 39/39; Django check PASS with known warnings; no migration drift; diff-check PASS.
+- ERR-49-192 records the first pre-run secret-boundary failure and CI-only environment correction.
+
+## Exact next
+Commit/push exact finance/receipt delta -> authenticated Host identity/DB/migration preflight -> fresh rollback evidence -> guarded no-migration GitHub deploy -> Production read-only `phase30_payment_audit` + `phase50_finance_reconciliation` -> A2S finance/receipt ACCEPTED if clean.

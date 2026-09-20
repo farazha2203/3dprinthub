@@ -22,6 +22,16 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2S finance reconciliation + receipt reviewer audit LOCAL_TESTED
+
+Finance authority remains single-source by domain: Store manual/gateway payments remain `StorePayment/StoreOrder`; custom-order payments remain `website.Payment/PaymentLedgerEntry`; profitability remains derived from `ProductionJob/CostEntry`. No new ledger/model/migration was introduced.
+
+New read-only `phase50_finance_reconciliation` checks Store payment/order/job parity, Website payment/ledger/quote parity, manual receipt presence/storage, ProductionJob coverage and finance-summary totals. Manual Admin approval now preserves reviewer evidence without schema changes: Store passes the authenticated actor into the existing `StoreOrderEvent.created_by`; Website records `review_source=admin_manual` + reviewer user id in the existing payment-ledger metadata.
+
+Verification: touched compile PASS; focused reconciliation 7/7 PASS; Store manual-payment/checkout + Phase8 finance + Phase30 payment/ledger regression 39/39 PASS; Django check PASS with known warnings; `makemigrations --check --dry-run` = no changes; diff-check PASS. First framework-test invocation failed before test execution because the isolated worktree lacked `DJANGO_SECRET_KEY`; ERR-49-192 documents the changed-condition CI-only test environment fix.
+
+Production baseline read-only evidence before this source change: StorePayment=0, Store paid orders=0, Website Payment=0, PaymentLedgerEntry=0, ProductionJob=0; existing `phase30_payment_audit` = OK. No financial data correction is needed. Exact next: documentation commit/push -> authenticated Production preflight -> guarded no-migration GitHub deploy -> Production read-only `phase30_payment_audit` + `phase50_finance_reconciliation` -> close A2S finance/receipt audit if both remain clean.
+
 ## 2026-09-20 - Phase50.A.2S Social LOCAL_TESTED / Buffer verified / no repost
 
 A2S starts from accepted A2R release `1d602fcb221ba2e86204d2c18dbd4802df6166fc` on isolated worktree `D:\projects\3DPrintHub-a2s-social-finance`. The historical Social line is parallel to the current release, so it is not merged wholesale. Only the final hardened Social service/config/tests plus the `InstagramCore` and Instagram Settings wiring are ported; unrelated Hero/Image/Product/payment changes are excluded.

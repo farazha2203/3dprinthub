@@ -529,7 +529,14 @@ class PaymentAdmin(admin.ModelAdmin):
     def mark_selected_paid(self, request, queryset):
         eligible = queryset.filter(method="bank_transfer").exclude(status="paid")
         for payment in eligible:
-            payment.mark_paid(ref_id=payment.ref_id, provider_message="تأیید دستی واحد مالی")
+            payment.mark_paid(
+                ref_id=payment.ref_id,
+                provider_message="تأیید دستی واحد مالی",
+                metadata={
+                    "review_source": "admin_manual",
+                    "reviewed_by_user_id": request.user.pk,
+                },
+            )
         skipped = queryset.exclude(method="bank_transfer").count()
         if skipped:
             self.message_user(request, "پرداخت آنلاین فقط از طریق Verify درگاه تأیید می‌شود و دستی تأیید نشد.", level=messages.WARNING)

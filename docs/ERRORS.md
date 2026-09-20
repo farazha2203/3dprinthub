@@ -1,3 +1,11 @@
+## ERR-49-192 - A2S focused Local test first started without the required Django secret boundary
+**Date:** 2026-09-20
+**Observed:** touched-source compile passed, but the first focused A2S reconciliation test command exited before the Django test runner with `ImproperlyConfigured: DJANGO_SECRET_KEY must be configured in the environment.`
+**Root cause:** the isolated A2S worktree intentionally has no Production/local secret file, while the first command did not reproduce the repository CI environment contract.
+**Correct fix:** inspect the current A2R CI workflow and rerun only after supplying CI-only test values for `DJANGO_SECRET_KEY`, allowed hosts, debug and disabled gateway state. No Production credential was copied into the worktree or logs.
+**Verification:** focused A2S reconciliation 7/7 PASS; broader payment/finance regression 39/39 PASS; Django check PASS with known warnings; migration drift none.
+**Prevention:** isolated Local worktrees must use explicit non-Production test-only Django environment variables before invoking framework tests; never copy Production secrets to satisfy a Local gate.
+
 ## ERR-49-191 - Fresh manual-payment activation backup initially hit Host disk quota
 **Date:** 2026-09-20
 **Observed:** the first fresh MySQL backup attempt for manual-payment activation failed with `OSError: [Errno 122] Disk quota exceeded`; no payment-setting write had started.

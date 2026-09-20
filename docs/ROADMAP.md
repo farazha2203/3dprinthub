@@ -17,10 +17,15 @@
 - [x] Real Buffer Instagram connection PASS.
 - [x] Real Catalog policy-v4 scan: 6 public-ready, zero forbidden-free violations.
 - [x] #625 current-ACK Feed + Story duplicate prevention verified; no repost.
-- [ ] Commit/push exact Social slice.
-- [ ] Audit and reconcile StorePayment / Website PaymentLedgerEntry / finance summary authorities.
-- [ ] Close manual receipt audit trail/reporting.
-- [ ] Production/runtime deployment only if reconciliation changes server runtime.
+- [x] Commit/push exact Social slice at `552fa79289fb051c5672ee3e893b9723979ec67a`.
+- [x] Audit StorePayment / Website PaymentLedgerEntry / ProductionJob finance authorities; Production baseline has zero financial rows and no current discrepancy.
+- [x] Implement read-only reconciliation command without creating a second ledger.
+- [x] Persist manual-payment reviewer evidence through existing StoreOrderEvent / PaymentLedgerEntry metadata.
+- [x] Focused 7/7 + adjacent payment/finance 39/39 + check/no-drift/diff-check PASS.
+- [ ] Commit/push finance + receipt-audit slice.
+- [ ] Guarded no-migration GitHub deploy because Admin reviewer runtime changed.
+- [ ] Production read-only phase30 + phase50 finance reconciliation acceptance.
+- [ ] Mark A2S finance/receipt audit ACCEPTED after Production read-only PASS.
 
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
 
