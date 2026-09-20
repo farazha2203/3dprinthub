@@ -387,8 +387,9 @@ class ProductWizardPage(QWidget):
     def _build_stage3(self) -> None:
         page, layout = _frame(
             "۳. تصاویر محصول",
-            "گالری بزرگ و اسکرول‌پذیر؛ «انتخاب» برای عملیات گروهی مستقل از «در سایت» است. "
-            "تصویر اصلی/اسلایدر، SEO تکی/گروهی و بازیابی تصاویر در همین مرحله انجام می‌شود.",
+            "گالری بزرگ و اسکرول‌پذیر؛ «ویرایش» فقط برای SEO/حذف گروهی است و «ارسال سایت» "
+            "تنها مرجع تصاویر Product در سایت است. تصویر اصلی/اسلایدر، SEO تکی/گروهی و بازیابی "
+            "تصاویر در همین مرحله انجام می‌شود.",
         )
 
         control = QFrame()
@@ -398,8 +399,8 @@ class ProductWizardPage(QWidget):
         control_layout.setSpacing(5)
         self.image_stage3_toolbar = control
 
-        select_all = QPushButton("انتخاب همه")
-        clear_all = QPushButton("لغو همه")
+        select_all = QPushButton("ویرایش همه")
+        clear_all = QPushButton("لغو ویرایش")
         edit_seo = QPushButton("SEO انتخابی")
         self.image_name_seo_btn = QPushButton("اصلاح اسم و سئو")
         delete_selected = QPushButton("حذف انتخابی")

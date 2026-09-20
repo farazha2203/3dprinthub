@@ -122,6 +122,47 @@ def diff_summary(diff: dict[str, dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _operator_owned_local_image_urls(old: Any) -> list[str]:
+    """Return local images whose ownership/selection comes from the operator.
+
+    Persisted Site selections are operator-owned regardless of legacy filename
+    shape; a selected 04.webp is still an explicit publish decision. Unselected
+    numbered local files remain source-cache slots and may be replaced by a
+    source refetch. Explicit manual-* additions and the saved source-page
+    screenshot also survive source recovery.
+    """
+    old_keys = set(old.keys()) if hasattr(old, "keys") else set()
+    old_all = _json(old["images_json"] if "images_json" in old_keys else "[]", [])
+    old_selected = _json(
+        old["selected_images_json"] if "selected_images_json" in old_keys else "[]",
+        [],
+    )
+    selected_set = {str(value or "").strip() for value in old_selected if str(value or "").strip()}
+    screenshot_name = str(
+        old["source_page_screenshot_path"]
+        if "source_page_screenshot_path" in old_keys
+        else ""
+    ).replace("\\", "/").rsplit("/", 1)[-1].casefold()
+
+    output: list[str] = []
+    for raw in [*old_all, *old_selected]:
+        value = str(raw or "").strip()
+        if not value.startswith("local://"):
+            continue
+        name = value.split("local://", 1)[1].replace("\\", "/").rsplit("/", 1)[-1]
+        if not name:
+            continue
+        operator_owned = (
+            name.casefold().startswith(("manual-", "manual_"))
+            or name.casefold().startswith("source-page-screenshot-")
+            or (screenshot_name and name.casefold() == screenshot_name)
+            or value in selected_set
+        )
+        if operator_owned and value not in output:
+            output.append(value)
+    return output
+
+
 def merge_refetch(old: Any, fresh: dict[str, Any]) -> dict[str, Any]:
     """Apply source-derived fields while preserving all human editorial decisions."""
     preserve = {
@@ -138,6 +179,7 @@ def merge_refetch(old: Any, fresh: dict[str, Any]) -> dict[str, Any]:
         "availability_status", "stock_quantity", "lead_time_min_days", "lead_time_max_days",
         "has_3d_file", "source_name", "technical_features_json", "keywords_json",
         "is_blocked", "blocked_at", "blocked_reason", "source_state",
+        "image_metadata_json", "source_page_screenshot_path",
     }
     result = dict(fresh)
     old_keys = set(old.keys()) if hasattr(old, "keys") else set()
@@ -145,15 +187,45 @@ def merge_refetch(old: Any, fresh: dict[str, Any]) -> dict[str, Any]:
         if key in old_keys:
             result[key] = old[key]
 
-    old_selected = _json(old["selected_images_json"] if "selected_images_json" in old_keys else "[]", [])
+    old_selected = _json(
+        old["selected_images_json"] if "selected_images_json" in old_keys else "[]",
+        [],
+    )
     new_all = _json(fresh.get("images_json"), [])
-    kept = [url for url in old_selected if url in new_all]
-    fresh_selected = _json(fresh.get("selected_images_json"), [])
+    operator_local = _operator_owned_local_image_urls(old)
+    merged_all = list(
+        dict.fromkeys(
+            [
+                *[str(url or "").strip() for url in new_all if str(url or "").strip()],
+                *operator_local,
+            ]
+        )
+    )
+    kept = [
+        str(url or "").strip()
+        for url in old_selected
+        if str(url or "").strip() in merged_all
+    ]
+    fresh_selected = [
+        str(url or "").strip()
+        for url in _json(fresh.get("selected_images_json"), [])
+        if str(url or "").strip()
+    ]
     if not kept:
-        kept = fresh_selected
-    result["selected_images_json"] = json.dumps(kept, ensure_ascii=False)
-    old_primary = old["primary_image_url"] if "primary_image_url" in old_keys else ""
-    result["primary_image_url"] = old_primary if old_primary in new_all else (kept[0] if kept else (new_all[0] if new_all else ""))
+        kept = [url for url in fresh_selected if url in merged_all]
+    result["images_json"] = json.dumps(merged_all, ensure_ascii=False)
+    result["selected_images_json"] = json.dumps(
+        list(dict.fromkeys(kept)),
+        ensure_ascii=False,
+    )
+    old_primary = str(
+        old["primary_image_url"] if "primary_image_url" in old_keys else ""
+    ).strip()
+    result["primary_image_url"] = (
+        old_primary
+        if old_primary in merged_all
+        else (kept[0] if kept else (merged_all[0] if merged_all else ""))
+    )
     return result
 
 

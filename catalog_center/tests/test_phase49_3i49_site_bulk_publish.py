@@ -262,6 +262,34 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertNotEqual(metadata_after[0]["final_sha256"], old_final_sha)
         self.assertTrue(publish_media_gate(refreshed)["ready"])
 
+    def test_publish_media_fails_closed_when_selected_images_are_outside_canonical_authority(self):
+        product_id = self._product("34910981")
+        row = dict(self.db.product(product_id))
+        selected = json.loads(row["selected_images_json"])
+        self.assertEqual(len(selected), 1)
+        self.db.update_product(
+            product_id,
+            {
+                "images_json": json.dumps(
+                    ["https://cdn.example.com/current-authority.jpg"]
+                )
+            },
+        )
+
+        gated = publish_media_gate(self.db.product(product_id))
+        self.assertFalse(gated["ready"])
+        self.assertTrue(
+            any(
+                "selected image authority drift" in item
+                and selected[0] in item
+                for item in gated["missing"]
+            )
+        )
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 0)
+        self.assertEqual(int(self.db.product(product_id)["upload_ready"]), 0)
+
     def test_product_without_canonical_sales_profile_never_becomes_ready(self):
         product_id = self._product("3491099", with_profiles=False)
         result = mark_ready_many(self.db, FakeStages(), [product_id])

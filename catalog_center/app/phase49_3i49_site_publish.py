@@ -339,6 +339,10 @@ def publish_media_gate(row) -> dict[str, Any]:
     selected = image_pipeline.cap_unique_urls(
         [str(item or "").strip() for item in _json_list(data.get("selected_images_json"))]
     )
+    canonical_images = image_pipeline.cap_unique_urls(
+        [str(item or "").strip() for item in _json_list(data.get("images_json"))]
+    )
+    canonical_set = set(canonical_images)
     primary = str(data.get("primary_image_url") or "").strip()
     missing: list[str] = []
     items: list[dict[str, Any]] = []
@@ -348,6 +352,14 @@ def publish_media_gate(row) -> dict[str, Any]:
         return {"product_id": product_id, "ready": False, "missing": missing, "items": []}
     if not primary or primary not in selected:
         missing.append("Publish media: primary image must be one of the selected images")
+    selected_outside_authority = [
+        source_url for source_url in selected if source_url not in canonical_set
+    ]
+    if selected_outside_authority:
+        missing.append(
+            "Publish media: selected image authority drift; selected images must also exist in images_json: "
+            + ", ".join(selected_outside_authority)
+        )
 
     raw_local_dir = str(data.get("local_dir") or "").strip()
     if not raw_local_dir:

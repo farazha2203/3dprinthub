@@ -118,9 +118,11 @@ class ImageCard(QFrame):
 
         top = QHBoxLayout()
         top.setSpacing(6)
-        self.bulk_selected = QCheckBox("انتخاب")
+        self.bulk_selected = QCheckBox("ویرایش")
+        self.bulk_selected.setToolTip("فقط برای عملیات گروهی مثل SEO/حذف؛ این تیک تصویر را به سایت نمی‌فرستد.")
         self.bulk_selected.setChecked(False)
-        self.selected = QCheckBox("در سایت")
+        self.selected = QCheckBox("ارسال سایت")
+        self.selected.setToolTip("این تیک مرجع واقعی تصاویر Product در سایت است.")
         self.selected.setChecked(bool(self.item.get("selected")))
         self.primary = QRadioButton("اصلی")
         self.primary.setAutoExclusive(False)
@@ -437,8 +439,8 @@ class ProductImageGrid(QWidget):
             1 for card in self.cards if card.bulk_selected.isChecked()
         )
         self.summary.setText(
-            f"{len(self.cards)} تصویر • {operation_selected} انتخاب عملیاتی • "
-            f"{site_selected} انتخاب‌شده در سایت • "
+            f"{len(self.cards)} تصویر • {operation_selected} برای ویرایش گروهی • "
+            f"{site_selected} برای ارسال به سایت • "
             f"{self._missing_count} بدون فایل محلی"
         )
 

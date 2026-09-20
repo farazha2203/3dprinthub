@@ -531,6 +531,11 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
                 str(card.item.get("url") or ""): card
                 for card in page.image_grid.cards
             }
+            first = cards[urls[0]]
+            self.assertEqual(first.bulk_selected.text(), "ویرایش")
+            self.assertEqual(first.selected.text(), "ارسال سایت")
+            self.assertIn("به سایت نمی‌فرستد", first.bulk_selected.toolTip())
+            self.assertIn("مرجع واقعی تصاویر Product", first.selected.toolTip())
             cards[urls[0]].bulk_selected.setChecked(True)
             cards[urls[2]].bulk_selected.setChecked(True)
 

@@ -14,6 +14,7 @@ from app.v8_features import (
     product_diff,
     product_fingerprint,
     source_payload_hash,
+    merge_refetch,
 )
 
 
@@ -78,6 +79,62 @@ class V8FeatureTests(unittest.TestCase):
         self.assertIn("gear", page.tags)
         self.assertEqual(page.specs["Material"], "PA12")
         self.assertIn("https://cdn.example.com/real.webp", [x.url for x in page.images])
+
+    def test_refetch_preserves_operator_owned_local_images(self):
+        old = {
+            "images_json": json.dumps([
+                "local://04.webp",
+                "local://05.webp",
+                "local://manual_custom_part.png",
+                "local://source-page-screenshot-20260918.png",
+            ]),
+            "selected_images_json": json.dumps([
+                "local://04.webp",
+                "local://manual_custom_part.png",
+            ]),
+            "primary_image_url": "local://manual_custom_part.png",
+            "source_page_screenshot_path": r"D:\\catalog\\images\\source-page-screenshot-20260918.png",
+            "image_metadata_json": json.dumps([{"source_url": "local://manual_custom_part.png"}]),
+        }
+        fresh = {
+            "images_json": json.dumps(["https://cdn.example/new.webp"]),
+            "selected_images_json": json.dumps(["https://cdn.example/new.webp"]),
+        }
+        merged = merge_refetch(old, fresh)
+        self.assertEqual(
+            json.loads(merged["images_json"]),
+            [
+                "https://cdn.example/new.webp",
+                "local://04.webp",
+                "local://manual_custom_part.png",
+                "local://source-page-screenshot-20260918.png",
+            ],
+        )
+        self.assertEqual(
+            json.loads(merged["selected_images_json"]),
+            ["local://04.webp", "local://manual_custom_part.png"],
+        )
+        self.assertEqual(merged["primary_image_url"], "local://manual_custom_part.png")
+        self.assertEqual(merged["image_metadata_json"], old["image_metadata_json"])
+        self.assertEqual(
+            merged["source_page_screenshot_path"],
+            old["source_page_screenshot_path"],
+        )
+
+    def test_refetch_replaces_unselected_numbered_source_cache_slots(self):
+        old = {
+            "images_json": json.dumps(["local://04.webp", "local://05.webp"]),
+            "selected_images_json": json.dumps([]),
+            "primary_image_url": "local://04.webp",
+        }
+        fresh = {
+            "images_json": json.dumps(["https://cdn.example/current.webp"]),
+            "selected_images_json": json.dumps(["https://cdn.example/current.webp"]),
+        }
+        merged = merge_refetch(old, fresh)
+        self.assertEqual(json.loads(merged["images_json"]), ["https://cdn.example/current.webp"])
+        self.assertEqual(json.loads(merged["selected_images_json"]), ["https://cdn.example/current.webp"])
+        self.assertEqual(merged["primary_image_url"], "https://cdn.example/current.webp")
 
     def test_openai_schema_and_output_parser(self):
         required = set(CONTENT_SCHEMA["required"])
