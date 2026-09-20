@@ -1,3 +1,15 @@
+## 2026-09-20 - Phase50.A.2U ACCEPTED / latest Windows v8.9.11 restored
+
+The actual latest Windows lineage is now the operator source: `D:\projects\3DPrintHub-a2u-latest-windows` on `wip/phase50-a2u-latest-windows-a2t-20260920`. Source implementation is pushed at `d77dfd95f5d3a9a707f9ad03f2aacff9e69ac2e2`.
+
+The prior Desktop handoff incorrectly pointed to A2T, which carried newer Social code but did not descend from the latest Windows image/gallery/SEO/screenshot lineage. This was a lineage-selection/shortcut error; the newer Windows history was already in GitHub. A2U starts from exact latest Windows `f1b58645...`, preserving the complete image workspace ancestry including `20f483af`, `91d4c188`, `00f16237`, `a52cd52a`, `aaa5cb9f` and `ea1a4a79`, then ports only Social v5/Story-link handoff behavior.
+
+Regression: Windows Image/SEO/Republish 74/74 PASS; Social/Buffer/Story 35/35 PASS; compile PASS; Qt verify PASS; repository RUN_QT VerifyOnly PASS. App reports v8.9.11 / build 2026.09.20.1. The Desktop .lnk/.cmd now target A2U and real launch smoke shows `3DPrintHub Catalog Center v8.9.11 - Qt 6`. Shortcut rollback: `D:\projects\3dprinthub-backups\phase50-a2u-shortcut-20260920-210723`.
+
+#625 recovery: the old app actually imported Site Product #39 revision 9 successfully, then falsely failed only on its stale public-media verifier. Fresh atomic Catalog backup `D:\projects\3dprinthub-backups\phase50-a2u-pre-reconcile-625-20260920-210357` integrity PASS / SHA256 `9304640D9A6D53BB5210FCFD4D1438A102E74D38F80B0C507D861A39D112B32E`. Latest verifier proved Product HTTP 200 plus 2/2 canonical media HTTP 200, so #625 was reconciled locally without re-import to uploaded / needs_update=0 / upload_ready=0 / Site #39 revision 9. Production read-only confirms revision 9, exactly three active Variants, two ProductImages, 60 g final weight, 110 g material weight, 180 min and prices 1,095,000 / 1,215,000 / 1,215,000 Toman.
+
+No Production source deploy, migration or restart occurred for A2U. A2U is now the current Windows operator lineage; future Windows work must start from A2U or a verified descendant.
+
 ## 2026-09-20 - A2Q Social SEO v4 sanitizer checkpoint
 
 Status: `WIP GITHUB COMMITTED / CANONICAL WINDOWS FULL REGRESSION REQUIRED`.

@@ -1,3 +1,15 @@
+## 2026-09-20 A2U current Windows operator paths
+- Current Windows operator worktree: `D:\projects\3DPrintHub-a2u-latest-windows`.
+- Branch: `wip/phase50-a2u-latest-windows-a2t-20260920`.
+- Pushed source candidate: `d77dfd95f5d3a9a707f9ad03f2aacff9e69ac2e2`.
+- Version: v8.9.11 / build 2026.09.20.1.
+- Shared Catalog authority: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+- Repository launcher: `D:\projects\3DPrintHub-a2u-latest-windows\catalog_center\RUN_QT.ps1`.
+- Desktop launchers: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` and `.cmd`.
+- Shortcut rollback: `D:\projects\3dprinthub-backups\phase50-a2u-shortcut-20260920-210723`.
+- Pre-reconcile Catalog rollback: `D:\projects\3dprinthub-backups\phase50-a2u-pre-reconcile-625-20260920-210357`.
+- Do not retarget operator shortcuts to `D:\projects\3DPrintHub-a2t-windows`; that lineage lacks the latest Windows image-workspace ancestry.
+
 ## 2026-09-15 Product #628 re-entry acceptance paths
 - Windows runtime/GitHub: `6e306e5353a6d6cd9d434894870839e533fa9622`.
 - Fresh Catalog rollback: `D:\projects\3dprinthub-backups\product628-prepublish-20260915-135143\catalog-before-product628.sqlite3`.

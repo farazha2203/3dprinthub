@@ -1,3 +1,13 @@
+## 2026-09-20 - Phase50.A.2U latest Windows recovery
+- Restored the actual latest Windows lineage (`f1b58645...`) instead of continuing from the divergent A2T worktree.
+- Preserved all September 18 image/gallery/scroll/multiselect/SEO/screenshot fixes while porting only Social v5 / clickable Story notification behavior.
+- Windows operator build is now v8.9.11 / build 2026.09.20.1.
+- Image/SEO/Republish 74/74 PASS; Social/Buffer/Story 35/35 PASS; Qt and RUN_QT verification PASS.
+- Pushed exact source candidate `d77dfd95f5d3a9a707f9ad03f2aacff9e69ac2e2`.
+- Took a fresh atomic Catalog backup and reconciled #625 revision 9 without another Bridge import after current public verifier returned Product 200 + two media 200.
+- Desktop .lnk/.cmd now launch `D:\projects\3DPrintHub-a2u-latest-windows\catalog_center\RUN_QT.ps1`; live window title verified as `3DPrintHub Catalog Center v8.9.11 - Qt 6`.
+- No Production source/DB/migration/restart was performed.
+
 ## 2026-09-20 - A2Q Instagram SEO v4 sanitizer hardening
 - Corrected social punctuation normalization so removed false-free copy cannot leave a literal \`\\1\`.
 - Expanded false-free filtering across Caption/hashtags/ALT/Story for Persian \`رایگان/مجانی\` and bounded English free-download/free-print/free-shipping forms; malformed residual hashtags are dropped.

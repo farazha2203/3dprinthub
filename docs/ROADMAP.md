@@ -1,3 +1,20 @@
+## 2026-09-20 - Phase50.A.2U latest Windows recovery
+- [x] Identify actual latest Windows lineage at `f1b58645...`.
+- [x] Prove image/gallery/SEO/screenshot fix ancestry is present.
+- [x] Preserve latest Windows UI while porting only Social v5/Story notification changes.
+- [x] Bump operator app to v8.9.11 / build 2026.09.20.1.
+- [x] Windows Image/SEO/Republish 74/74 PASS.
+- [x] Social/Buffer/Story 35/35 PASS.
+- [x] Qt and RUN_QT VerifyOnly PASS.
+- [x] Push source candidate `d77dfd95f5d3a9a707f9ad03f2aacff9e69ac2e2`.
+- [x] Take fresh atomic Catalog backup before #625 local reconciliation.
+- [x] Reverify Site Product #39 revision 9 public page + 2/2 media.
+- [x] Reconcile #625 locally without Bridge re-import; uploaded / needs_update=0.
+- [x] Retarget Desktop .lnk/.cmd to A2U with rollback backup.
+- [x] Real launcher smoke confirms v8.9.11 window.
+- [x] Production read-only confirms revision 9, 3 active Variants and 2 images.
+- [x] Final documentation commit/push closure prepared on the accepted A2U branch.
+
 ## 2026-09-20 - A2Q social sanitizer follow-up
 
 - [x] Preserve rollback branch at pre-fix Windows/Social WIP SHA `21a1ae27...`.

@@ -1,3 +1,12 @@
+## ERR-49-197 - Desktop launcher selected a newer Social branch that was older in Windows UI history
+**Date:** 2026-09-20
+**Observed:** owner opened the Desktop Catalog Center and saw the older image-workspace layout again; the repaired image display/SEO/screenshot controls were missing. Sending #625 then surfaced `PRODUCT_MEDIA_NOT_FOUND_IN_PUBLIC_HTML` again.
+**Root cause:** the shortcut was retargeted to `D:\projects\3DPrintHub-a2t-windows`. That worktree had newer A2T Social changes but did not descend from the actual latest Windows lineage. The latest Windows fixes were already in GitHub under `f1b58645...`, including `20f483af/91d4c188/00f16237/a52cd52a/aaa5cb9f/ea1a4a79`.
+**Correct fix:** build A2U from `f1b58645...`, preserve its UI, port only bounded Social v5 changes, run explicit Gallery/SEO/Republish/Social/Qt gates, push the exact source, and only then retarget the Desktop launcher.
+**#625 recovery:** the old app had already imported Site Product #39 revision 9. The stale verifier rejected canonical media afterward. Fresh backup was taken; latest verifier returned Product 200 plus 2/2 media 200; Local state was reconciled without re-import.
+**Verification:** Image/SEO/Republish 74/74 PASS; Social 35/35 PASS; Qt/RUN_QT verify PASS; running A2U window title v8.9.11; Production read-only revision 9 with 3 active Variants and 2 ProductImages.
+**Prevention:** Windows operator worktree selection must be based on ancestry against the latest accepted Windows UI fixes, not commit date alone. Never retarget the Desktop launcher until gallery/image/SEO/screenshot regression gates pass on the exact pushed SHA.
+
 ## ERR-49-184 - Social false-free sanitizer could emit literal backreference and malformed tags
 **Date:** 2026-09-20  
 **Observed:** A2Q source audit found that punctuation cleanup used a replacement equivalent to literal `\\1`, so text such as a removed free claim before Persian punctuation could leak `\\1` into social copy. Persian false-free removal could also leave malformed hashtag residue such as a truncated download tag, and English free-download/free-print forms were not covered.  

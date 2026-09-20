@@ -1,3 +1,10 @@
+## 2026-09-20 - Owner: restore the actual latest Windows Catalog Center
+Status: `A2U ACCEPTED / v8.9.11 WINDOWS VERIFIED`.
+
+Owner reported that the Desktop launcher reopened an older UI where the repaired Product image workspace/SEO behavior had regressed, and #625 again showed `PRODUCT_MEDIA_NOT_FOUND_IN_PUBLIC_HTML`. Repository history proved the latest Windows code already existed in GitHub on the `f1b58645...` lineage; the error came from selecting the wrong operator lineage, not from missing Git history.
+
+A2U preserves the latest gallery/image/SEO/screenshot fixes, ports only the newer Social v5 handoff, and is pushed at `d77dfd95...`. #625 Site Product #39 revision 9 was already updated by the failed-looking attempt; latest verification found Product HTTP 200 and 2/2 canonical media HTTP 200, so Local state was reconciled to uploaded/clean without re-import. Desktop launchers now open the A2U v8.9.11 worktree.
+
 ## 2026-09-20 - Owner: finish Hero line, Instagram SEO and remaining phases
 Status: `A2Q SOCIAL LOCAL_TESTED / HERO RELEASE LOCAL_TESTED / PUBLISH NEXT`.
 
