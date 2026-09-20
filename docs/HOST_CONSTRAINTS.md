@@ -1,3 +1,9 @@
+## 2026-09-20 A2R Production preflight transport block
+- Central Windows router selection/REST invocation was locally repaired with a verified backup; this did not change application source or Production.
+- Dedicated 3DPrintHub route remains unavailable: Windows loopback `127.0.0.1:22024` has no listener and no active `ssh.exe` reverse-tunnel process was observed.
+- Therefore authenticated Host identity/DB/migration preflight, backup and deploy are fail-closed.
+- Do not use Retoucher/Asal/Farataz/IRWiFi routes, FTPS, browser/cPanel or the unrelated WinBox/router as a fallback. Resume Host work only when the dedicated 3DPrintHub reverse tunnel is healthy.
+
 ## 2026-09-19 canonical Product media routing constraint
 Current live Django settings resolve `MEDIA_ROOT=/home/sfkilvrs/3dprinthub/media`, not the older public_html media default. Compact Product files use `p/<desktop-id>/<sha12>/<seo-basename>`. Production must expose only explicitly public prefixes through the restricted Django fallback route; adding `p/` is allowed, but imported working-media and arbitrary MEDIA_ROOT paths must remain unreachable. Do not move/copy Product media to public_html as a workaround.
 
