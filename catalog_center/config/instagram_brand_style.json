@@ -1,0 +1,39 @@
+{
+  "style_id": "3dprinthub_instagram_gold_navy_v1",
+  "status": "owner_approved",
+  "approved_at": "2026-09-17",
+  "brand": "3DPrintHub",
+  "palette": {
+    "background": [
+      "#061522",
+      "#0A0D10",
+      "#17110B"
+    ],
+    "gold": [
+      "#D9A441",
+      "#F2C96D",
+      "#A86B14"
+    ],
+    "text": [
+      "#FFFFFF",
+      "#F4E6C3"
+    ]
+  },
+  "visual_language": [
+    "metallic gold 3D details",
+    "deep navy/black background",
+    "warm cinematic rim light",
+    "premium product photography",
+    "circular highlight badges",
+    "clean Persian-first typography"
+  ],
+  "story_ratio": "1080x1920",
+  "highlight_ratio": "1080x1080",
+  "profile_logo_ratio": "1080x1080",
+  "story_cta": "مشاهده محصول",
+  "site": "https://3dprinthub.ir",
+  "profile_logo_asset": "assets/instagram/final/profile_logo_gold_navy.png",
+  "highlight_cover_base_asset": "assets/instagram/final/profile_logo_gold_navy.png",
+  "feed_link_policy": "canonical public Product URL through Buffer Instagram Shop Grid link",
+  "story_link_policy": "canonical public Product URL through Buffer Instagram metadata link when supported"
+}

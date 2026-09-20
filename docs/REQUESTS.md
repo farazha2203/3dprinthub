@@ -1,3 +1,8 @@
+## 2026-09-20 - Owner: continue after A2R through Social, reconciliation and receipt audit
+Status: `A2R ACCEPTED / A2S SOCIAL LOCAL_TESTED`.
+
+Owner sequence is now: Instagram/SEO Social -> financial reconciliation -> receipt audit. Social work must preserve Site-first publication, Feed+Story, ALT/UTM/SEO, no unsupported free claims, and duplicate prevention; #625 revision 8 must not be reposted. Finance work must reconcile existing authorities rather than create a second ledger.
+
 ## 2026-09-20 - Owner: restore tunnel and continue A2R through Production
 Status: `A2R RELEASE LOCAL_TESTED / AUTHENTICATED PRODUCTION PREFLIGHT PASS / GITHUB DEPLOY NEXT`.
 

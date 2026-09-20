@@ -9,6 +9,7 @@ from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from .secure_secrets import get_secret
+from .social_content_policy import POLICY_VERSION, build_alt_texts, build_caption
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,40 @@ def _json_list(value: Any) -> list:
     except Exception:
         return []
     return list(parsed) if isinstance(parsed, list) else []
+
+
+def _tracking_url(product_url: str, product_id: int) -> str:
+    parsed = urllib_parse.urlsplit(product_url)
+    blocked = {"utm_source", "utm_medium", "utm_campaign", "utm_content"}
+    query = [
+        (key, value)
+        for key, value in urllib_parse.parse_qsl(parsed.query, keep_blank_values=True)
+        if key.lower() not in blocked
+    ]
+    query.extend([
+        ("utm_source", "instagram"),
+        ("utm_medium", "social"),
+        ("utm_campaign", "product_catalog"),
+        ("utm_content", f"product-{int(product_id)}"),
+    ])
+    return urllib_parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, urllib_parse.urlencode(query), parsed.fragment)
+    )
+
+
+def same_public_revision_already_published(db, product_id: int, fingerprint: str) -> bool:
+    if not fingerprint:
+        return False
+    for receipt in db.sync_receipts(int(product_id), limit=80):
+        if str(receipt["status"] or "") not in {"instagram_published", "instagram_submitted"}:
+            continue
+        try:
+            previous = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            previous = {}
+        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+            return True
+    return False
 
 
 def _request_json(url: str, token: str, *, payload: dict | None = None, timeout: int = 30) -> dict:
@@ -69,39 +104,55 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
         raise RuntimeError("انتشار اینستاگرام فقط بعد از تأیید عمومی محصول روی سایت مجاز است.")
 
     media: list[str] = []
-    public_images = ack.get("public_images") or ack.get("images") or []
+    main = str(
+        ack.get("public_main_image_url")
+        or ((ack.get("public_http_checks") or {}).get("main_image_url") if isinstance(ack.get("public_http_checks"), dict) else "")
+        or ""
+    ).strip()
+
+    public_images = ack.get("public_images")
+    if not isinstance(public_images, list):
+        public_images = ack.get("images")
+    if not isinstance(public_images, list):
+        checks = ack.get("public_http_checks")
+        checked_images = checks.get("images") if isinstance(checks, dict) else []
+        checked_images = checked_images if isinstance(checked_images, list) else []
+        slug = urllib_parse.urlparse(product_url).path.rstrip("/").split("/")[-1].casefold()
+        owned = []
+        for item in checked_images:
+            url = str(item.get("url") if isinstance(item, dict) else item or "").strip()
+            ok = bool(item.get("ok", True)) if isinstance(item, dict) else True
+            if not ok or not url.startswith("https://"):
+                continue
+            path = urllib_parse.urlparse(url).path.casefold()
+            if url == main or (slug and slug in path):
+                owned.append(item)
+        public_images = owned or checked_images
+
     for item in public_images:
         url = str(item.get("url") if isinstance(item, dict) else item or "").strip()
         ok = bool(item.get("ok", True)) if isinstance(item, dict) else True
         if ok and url.startswith("https://") and url not in media:
             media.append(url)
-    main = str(ack.get("public_main_image_url") or "").strip()
-    if main.startswith("https://") and main not in media:
-        media.insert(0, main)
+    if main.startswith("https://"):
+        media = [main, *[url for url in media if url != main]]
     if not media:
         raise RuntimeError("هیچ تصویر عمومی HTTPS تأییدشده‌ای برای Instagram وجود ندارد.")
 
     title = str(row.get("seo_title_fa") or row.get("title_fa") or row.get("source_title") or "").strip()
-    description = str(row.get("social_caption_fa") or row.get("seo_description_fa") or row.get("short_description_fa") or "").strip()
-    hashtags = []
-    for value in _json_list(row.get("hashtags_fa_json")) + _json_list(row.get("tags_fa_json")):
-        text = str(value or "").strip().replace(" ", "_")
-        if text:
-            tag = text if text.startswith("#") else f"#{text}"
-            if tag not in hashtags:
-                hashtags.append(tag)
-    caption_parts = [part for part in (title, description) if part]
-    caption_parts.append(f"خرید و انتخاب مشخصات از سایت:\n{product_url}")
-    if hashtags:
-        caption_parts.append(" ".join(hashtags[:24]))
-    caption = "\n\n".join(caption_parts).strip()[:2200]
-    alt_texts = [str(x or "").strip() for x in _json_list(row.get("image_alt_texts_json"))]
+    tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
+    media_urls = media[:10]
+    caption, hashtags = build_caption(row, tracking_url)
+    alt_texts = build_alt_texts(row, media_urls)
     return {
         "product_url": product_url,
-        "media_urls": media[:10],
+        "tracking_url": tracking_url,
+        "media_urls": media_urls,
         "caption": caption,
-        "alt_texts": alt_texts[:10],
+        "alt_texts": alt_texts,
+        "hashtags": hashtags,
         "title": title,
+        "social_policy_version": POLICY_VERSION,
     }
 
 
@@ -190,8 +241,12 @@ def publish_product(db, product_id: int, cfg: InstagramConfig, *, site_url: str)
         "media_id": media_id,
         "creation_id": creation_id,
         "site_product_url": payload["product_url"],
+        "tracking_url": payload["tracking_url"],
         "media_urls": media_urls,
         "caption": payload["caption"],
+        "alt_texts": list(payload.get("alt_texts") or []),
+        "hashtags": list(payload.get("hashtags") or []),
+        "social_policy_version": str(payload.get("social_policy_version") or ""),
         "site_ack_fingerprint": fingerprint,
         "api_version": cfg.api_version,
         "login_mode": cfg.login_mode,

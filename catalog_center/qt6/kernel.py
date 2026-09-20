@@ -1741,15 +1741,41 @@ class InstagramCore:
         self.connection = connection
         self.publish_core = publish_core
 
+    def provider(self) -> str:
+        code = str(
+            self.db.setting("instagram_publish_provider", "buffer") or "buffer"
+        ).strip().lower()
+        return code if code in {"direct", "buffer"} else "buffer"
+
     def config(self):
+        if self.provider() == "buffer":
+            from app.buffer_publish import BufferConfig
+
+            channel_id = str(
+                self.db.setting("buffer_instagram_channel_id", "") or ""
+            ).strip()
+            if not channel_id:
+                raise RuntimeError(
+                    "شناسه Channel اینستاگرام در Buffer هنوز تنظیم نشده است."
+                )
+            return BufferConfig(channel_id=channel_id)
+
         from app.instagram_publish import InstagramConfig
-        account_id = str(self.db.setting("instagram_account_id", "") or "").strip()
+        account_id = str(
+            self.db.setting("instagram_account_id", "") or ""
+        ).strip()
         if not account_id:
-            raise RuntimeError("شناسه Instagram Professional Account هنوز تنظیم نشده است.")
+            raise RuntimeError(
+                "شناسه Instagram Professional Account هنوز تنظیم نشده است."
+            )
         return InstagramConfig(
             account_id=account_id,
-            api_version=str(self.db.setting("instagram_api_version", "v26.0") or "v26.0"),
-            login_mode=str(self.db.setting("instagram_login_mode", "instagram") or "instagram"),
+            api_version=str(
+                self.db.setting("instagram_api_version", "v26.0") or "v26.0"
+            ),
+            login_mode=str(
+                self.db.setting("instagram_login_mode", "instagram") or "instagram"
+            ),
         )
 
     def preview(self, product_id: int) -> dict[str, Any]:
@@ -1761,22 +1787,116 @@ class InstagramCore:
         return canonical_site_payload(dict(row), site_url=settings.site_url)
 
     def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
-        from app.instagram_publish import publish_product
+        provider = self.provider()
         cfg = self.config()
         settings = self.connection.settings(require_bridge=False)
+        if provider == "buffer":
+            from app.buffer_publish import publish_product
+            label = "Buffer/Instagram"
+        else:
+            from app.instagram_publish import publish_product
+            label = "Instagram Direct"
+
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         results, failures = [], []
         total = max(1, len(ids))
         for index, product_id in enumerate(ids, 1):
             if progress:
-                progress(int((index - 1) / total * 100), f"Instagram {index}/{total} • #{product_id}")
+                progress(
+                    int((index - 1) / total * 100),
+                    f"{label} {index}/{total} • #{product_id}",
+                )
             try:
-                results.append({"product_id": product_id, **publish_product(self.db, product_id, cfg, site_url=settings.site_url)})
+                if provider == "buffer":
+                    companion_raw = str(
+                        self.db.setting("instagram_companion_story_enabled", "1") or "1"
+                    ).strip().lower()
+                    companion_enabled = companion_raw not in {"0", "false", "no", "off"}
+                    if progress:
+                        progress(
+                            int((index - 1) / total * 100),
+                            f"آماده‌سازی رسانه سازگار Buffer برای محصول #{product_id}",
+                        )
+                    from app.instagram_feed_asset import prepare_product_feed_assets
+
+                    canonical_payload = self.preview(product_id)
+                    feed_meta = prepare_product_feed_assets(
+                        self.db,
+                        product_id,
+                        settings,
+                        canonical_payload,
+                    )
+                    story_meta = None
+                    if companion_enabled:
+                        if progress:
+                            progress(
+                                int((index - 1) / total * 100),
+                                f"ساخت Story استاندارد محصول #{product_id}",
+                            )
+                        from app.instagram_story_asset import prepare_product_story_asset
+
+                        story_meta = prepare_product_story_asset(
+                            self.db,
+                            product_id,
+                            settings,
+                            canonical_payload,
+                        )
+                    from app.buffer_media_host import rehost_buffer_assets
+
+                    provider_media = rehost_buffer_assets(
+                        self.db,
+                        product_id,
+                        feed_meta,
+                        story_meta,
+                        timeout=max(10, int(settings.timeout)),
+                    )
+                    if story_meta is not None:
+                        story_meta = {
+                            **story_meta,
+                            "provider_media_host": str(provider_media.get("host") or ""),
+                            "provider_media_commit_sha": str(
+                                provider_media.get("commit_sha") or ""
+                            ),
+                        }
+                    result = publish_product(
+                        self.db,
+                        product_id,
+                        cfg,
+                        site_url=settings.site_url,
+                        companion_story=companion_enabled,
+                        story_asset_url=str(provider_media.get("story_url") or ""),
+                        story_meta=story_meta,
+                        feed_asset_urls=list(provider_media.get("feed_urls") or []),
+                        media_host_meta=provider_media,
+                    )
+                else:
+                    result = publish_product(
+                        self.db, product_id, cfg, site_url=settings.site_url
+                    )
+                results.append(
+                    {"product_id": product_id, "provider": provider, **result}
+                )
             except Exception as exc:
-                failures.append({"product_id": product_id, "error": str(exc)})
+                failures.append(
+                    {
+                        "product_id": product_id,
+                        "provider": provider,
+                        "error": str(exc),
+                    }
+                )
             if progress:
-                progress(int(index / total * 100), f"Instagram {index}/{total} تمام شد")
-        return {"requested": len(ids), "published": len(results), "failed": len(failures), "results": results, "failures": failures}
+                progress(
+                    int(index / total * 100),
+                    f"{label} {index}/{total} تمام شد",
+                )
+        return {
+            "provider": provider,
+            "requested": len(ids),
+            "published": len(results),
+            "failed": len(failures),
+            "results": results,
+            "failures": failures,
+        }
 
     def publish_site_then_instagram(self, product_ids, *, progress=None) -> dict[str, Any]:
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})

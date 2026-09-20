@@ -14,6 +14,13 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2S Social hardening
+- Ported hardened Buffer Feed/Story, media-host, IRANSans Story and Instagram SEO-v4 policy onto the accepted A2R lineage without merging unrelated parallel-branch changes.
+- Wired Buffer/Direct provider selection into current `InstagramCore` and Settings; secrets remain in Windows Credential Store.
+- Social 32/32 + Qt 32/32 + Settings construction 1/1 PASS.
+- Real Buffer connection PASS; Catalog policy scan reports zero forbidden-free claims.
+- Product #625 same-ACK Feed/Story duplicate guards are both true; no new Instagram publication was sent.
+
 ## 2026-09-20 - Phase50.A.2R accepted
 - Manual-payment configuration is active and masked-readiness PASS.
 - Production rollback-only UAT PASS: Cart -> Checkout -> manual payment -> receipt upload -> Admin review -> Admin approve.

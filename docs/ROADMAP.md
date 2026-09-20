@@ -9,6 +9,19 @@
 - [x] Canonical Windows Local regression PASS on exact tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [ ] Promote only after gates pass.
 
+## 2026-09-20 - Phase50.A.2S Social + finance reconciliation
+- [x] Create isolated A2S branch from accepted A2R.
+- [x] Port only final hardened Social services/config/tests from the parallel Social lineage.
+- [x] Wire Buffer/Direct provider, secure Buffer key, companion Story and media host into current Qt app without importing unrelated Image/Product changes.
+- [x] Social 32/32 + Qt 32/32 + Settings construction 1/1 + compile/diff-check PASS.
+- [x] Real Buffer Instagram connection PASS.
+- [x] Real Catalog policy-v4 scan: 6 public-ready, zero forbidden-free violations.
+- [x] #625 current-ACK Feed + Story duplicate prevention verified; no repost.
+- [ ] Commit/push exact Social slice.
+- [ ] Audit and reconcile StorePayment / Website PaymentLedgerEntry / finance summary authorities.
+- [ ] Close manual receipt audit trail/reporting.
+- [ ] Production/runtime deployment only if reconciliation changes server runtime.
+
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
 
 - [x] Audit existing manual-transfer, ZarinPal, ledger, finance dashboard and Admin foundations.

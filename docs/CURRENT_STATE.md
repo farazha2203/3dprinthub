@@ -22,6 +22,16 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2S Social LOCAL_TESTED / Buffer verified / no repost
+
+A2S starts from accepted A2R release `1d602fcb221ba2e86204d2c18dbd4802df6166fc` on isolated worktree `D:\projects\3DPrintHub-a2s-social-finance`. The historical Social line is parallel to the current release, so it is not merged wholesale. Only the final hardened Social service/config/tests plus the `InstagramCore` and Instagram Settings wiring are ported; unrelated Hero/Image/Product/payment changes are excluded.
+
+Verification: Social tests 32/32 PASS; existing Qt regressions 32/32 PASS; SettingsPage construction 1/1 PASS; compile/diff-check PASS. Real Buffer credential/channel connection succeeds and resolves to Instagram. Real Catalog scan finds 6 public-social-ready Products and zero policy-v4 forbidden-free violations.
+
+Current-ACK Feed/Story-missing candidates are 628, 309, 301, 273, 303. No new post was sent. Product #625 current ACK fingerprint is already represented by both Feed and Story receipts, and the new duplicate guards return true for each; revision 8 remains protected from repost.
+
+Exact next: commit/push this Social slice -> audit StorePayment vs Website Payment/PaymentLedgerEntry vs finance summaries -> implement read-only reconciliation and manual-receipt audit if a reporting gap exists.
+
 ## 2026-09-20 - Phase50.A.2R ACCEPTED / Production payment flow verified
 
 Manual-payment configuration is now present and active on Production; masked checks confirm holder + destination configured without printing financial values. Fresh pre-activation rollback remains verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-163425-phase50-a2r-manual-payment-activation`.

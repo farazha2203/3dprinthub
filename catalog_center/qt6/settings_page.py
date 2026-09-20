@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.buffer_publish import BufferConfig, test_connection as test_buffer_connection
 from app.instagram_publish import InstagramConfig, test_connection as test_instagram_connection
 from app.secure_secrets import get_secret, secret_source, set_secret
 
@@ -202,9 +203,38 @@ class SettingsPage(QWidget):
         return box
 
     def _build_instagram_box(self) -> QGroupBox:
-        box = QGroupBox("Instagram / انتشار از مسیر سایت")
+        box = QGroupBox("Instagram / انتشار از مسیر امن")
         layout = QVBoxLayout(box)
         form = QFormLayout()
+
+        self.instagram_publish_provider = QComboBox()
+        self.instagram_publish_provider.addItem("Buffer / Instagram (پیشنهادی)", "buffer")
+        self.instagram_publish_provider.addItem("Instagram Direct / Meta", "direct")
+        self.instagram_publish_provider.currentIndexChanged.connect(
+            self._instagram_provider_changed
+        )
+
+        self.buffer_channel_id = QLineEdit()
+        self.buffer_channel_id.setPlaceholderText("Buffer Instagram Channel ID")
+        self.buffer_api_key = QLineEdit()
+        self.buffer_api_key.setEchoMode(QLineEdit.EchoMode.Password)
+        self.buffer_api_key.setPlaceholderText("خالی = Windows Credential Store")
+        self.buffer_secret_source = QLabel("")
+        self.buffer_secret_source.setObjectName("Muted")
+        self.buffer_media_host = QComboBox()
+        self.buffer_media_host.addItem(
+            "GitHub Raw — سازگار با Buffer (پیشنهادی)",
+            "github_raw",
+        )
+        self.buffer_media_host.addItem(
+            "سایت مستقیم — فقط اگر Buffer بتواند Media را بخواند",
+            "site",
+        )
+        self.buffer_media_host.setToolTip(
+            "رسانه اصلی Product روی سایت تغییر نمی‌کند؛ فقط مشتق PNG مخصوص Buffer "
+            "در Host انتخابی منتشر می‌شود."
+        )
+
         self.instagram_account_id = QLineEdit()
         self.instagram_account_id.setPlaceholderText("Instagram Professional Account ID")
         self.instagram_api_version = QLineEdit()
@@ -217,17 +247,36 @@ class SettingsPage(QWidget):
         self.instagram_token.setPlaceholderText("خالی = Windows Credential Store")
         self.instagram_secret_source = QLabel("")
         self.instagram_secret_source.setObjectName("Muted")
-        self.instagram_status = QLabel("اول Product روی سایت منتشر می‌شود؛ بعد لینک عمومی همان Product به Instagram می‌رود.")
+
+        self.instagram_companion_story = QCheckBox(
+            "برای هر Product یک Story همراه استاندارد بساز"
+        )
+        self.instagram_companion_story.setChecked(True)
+        self.instagram_companion_story.setToolTip(
+            "Story با عکس واقعی Product، قالب 1080×1920، IRANSans و استایل Gold/Navy ساخته و بعد از HTTPS verify از طریق Buffer منتشر می‌شود."
+        )
+
+        self.instagram_status = QLabel(
+            "ابتدا Product روی سایت و رسانه‌های HTTPS آن تأیید می‌شوند؛ سپس انتشار در Instagram انجام می‌شود."
+        )
         self.instagram_status.setObjectName("Muted")
         self.instagram_status.setWordWrap(True)
+
+        form.addRow("Provider انتشار", self.instagram_publish_provider)
+        form.addRow("Buffer Channel ID", self.buffer_channel_id)
+        form.addRow("Buffer API Key", self.buffer_api_key)
+        form.addRow("منبع Buffer Key", self.buffer_secret_source)
+        form.addRow("Media Host برای Buffer", self.buffer_media_host)
         form.addRow("Professional Account ID", self.instagram_account_id)
         form.addRow("Graph API Version", self.instagram_api_version)
         form.addRow("Login Mode", self.instagram_login_mode)
-        form.addRow("Access Token", self.instagram_token)
-        form.addRow("منبع Token", self.instagram_secret_source)
+        form.addRow("Direct Access Token", self.instagram_token)
+        form.addRow("منبع Direct Token", self.instagram_secret_source)
+        form.addRow("Companion Story", self.instagram_companion_story)
         layout.addLayout(form)
+
         actions = QHBoxLayout()
-        self.save_instagram_btn = QPushButton("ذخیره امن Instagram")
+        self.save_instagram_btn = QPushButton("ذخیره تنظیمات Instagram")
         self.save_instagram_btn.setProperty("primary", True)
         self.test_instagram_btn = QPushButton("تست اتصال Instagram")
         self.save_instagram_btn.clicked.connect(self._save_instagram)
@@ -262,6 +311,30 @@ class SettingsPage(QWidget):
             f"FTP: {values.get('ftp_password_source') or '—'}   •   "
             f"Bridge: {values.get('bridge_token_source') or '—'}"
         )
+        provider_code = str(
+            self.db.setting("instagram_publish_provider", "buffer") or "buffer"
+        ).strip().lower()
+        provider_index = self.instagram_publish_provider.findData(provider_code)
+        self.instagram_publish_provider.setCurrentIndex(
+            provider_index if provider_index >= 0 else 0
+        )
+        self.buffer_channel_id.setText(
+            str(self.db.setting("buffer_instagram_channel_id", "") or "")
+        )
+        media_host = str(
+            self.db.setting("buffer_media_host", "github_raw") or "github_raw"
+        ).strip().lower()
+        media_host_index = self.buffer_media_host.findData(media_host)
+        self.buffer_media_host.setCurrentIndex(
+            media_host_index if media_host_index >= 0 else 0
+        )
+        story_raw = str(
+            self.db.setting("instagram_companion_story_enabled", "1") or "1"
+        ).strip().lower()
+        self.instagram_companion_story.setChecked(
+            story_raw not in {"0", "false", "no", "off"}
+        )
+        self.buffer_secret_source.setText(secret_source("buffer_api_key"))
         self.instagram_account_id.setText(
             str(self.db.setting("instagram_account_id", "") or "")
         )
@@ -277,11 +350,39 @@ class SettingsPage(QWidget):
         self.instagram_secret_source.setText(
             secret_source("instagram_access_token")
         )
+        self._instagram_provider_changed()
 
-    def _instagram_config(self) -> InstagramConfig:
+    def _instagram_provider_code(self) -> str:
+        code = str(self.instagram_publish_provider.currentData() or "buffer")
+        return code if code in {"buffer", "direct"} else "buffer"
+
+    def _instagram_provider_changed(self) -> None:
+        is_buffer = self._instagram_provider_code() == "buffer"
+        for widget in (
+            self.buffer_channel_id,
+            self.buffer_api_key,
+            self.buffer_secret_source,
+            self.buffer_media_host,
+            self.instagram_companion_story,
+        ):
+            widget.setEnabled(is_buffer)
+        for widget in (
+            self.instagram_account_id, self.instagram_api_version,
+            self.instagram_login_mode, self.instagram_token,
+            self.instagram_secret_source,
+        ):
+            widget.setEnabled(not is_buffer)
+
+    def _instagram_config(self):
+        if self._instagram_provider_code() == "buffer":
+            channel_id = self.buffer_channel_id.text().strip()
+            if not channel_id:
+                raise ValueError("Buffer Instagram Channel ID الزامی است.")
+            return BufferConfig(channel_id=channel_id)
+
         account_id = self.instagram_account_id.text().strip()
         if not account_id:
-            raise ValueError("Instagram Professional Account ID خالی است.")
+            raise ValueError("Instagram Professional Account ID الزامی است.")
         version = self.instagram_api_version.text().strip() or "v26.0"
         if not version.startswith("v"):
             version = "v" + version
@@ -293,37 +394,74 @@ class SettingsPage(QWidget):
 
     def _save_instagram(self) -> None:
         try:
+            provider = self._instagram_provider_code()
             cfg = self._instagram_config()
-            token = self.instagram_token.text().strip()
-            if token:
-                set_secret("instagram_access_token", token)
-                self.instagram_token.clear()
-            elif not get_secret("instagram_access_token"):
-                raise ValueError("Access Token خالی است و Token امن هم ذخیره نشده است.")
-            self.db.set_setting("instagram_account_id", cfg.account_id)
-            self.db.set_setting("instagram_api_version", cfg.api_version)
-            self.db.set_setting("instagram_login_mode", cfg.login_mode)
-            self.instagram_secret_source.setText(secret_source("instagram_access_token"))
-            self.instagram_status.setText("✅ تنظیمات Instagram به‌صورت امن ذخیره شد.")
+            if provider == "buffer":
+                self.db.set_setting(
+                    "instagram_companion_story_enabled",
+                    "1" if self.instagram_companion_story.isChecked() else "0",
+                )
+                key = self.buffer_api_key.text().strip()
+                if key:
+                    set_secret("buffer_api_key", key)
+                    self.buffer_api_key.clear()
+                elif not get_secret("buffer_api_key"):
+                    raise ValueError(
+                        "Buffer API Key وارد نشده و در Credential Store هم موجود نیست."
+                    )
+                self.db.set_setting("buffer_instagram_channel_id", cfg.channel_id)
+                self.db.set_setting("instagram_publish_provider", "buffer")
+                self.buffer_secret_source.setText(secret_source("buffer_api_key"))
+            else:
+                token = self.instagram_token.text().strip()
+                if token:
+                    set_secret("instagram_access_token", token)
+                    self.instagram_token.clear()
+                elif not get_secret("instagram_access_token"):
+                    raise ValueError(
+                        "Access Token وارد نشده و Token امن در Credential Store هم موجود نیست."
+                    )
+                self.db.set_setting("instagram_account_id", cfg.account_id)
+                self.db.set_setting("instagram_api_version", cfg.api_version)
+                self.db.set_setting("instagram_login_mode", cfg.login_mode)
+                self.db.set_setting("instagram_publish_provider", "direct")
+                self.instagram_secret_source.setText(
+                    secret_source("instagram_access_token")
+                )
+            self.instagram_status.setText(
+                "✅ تنظیمات Instagram با موفقیت ذخیره شد."
+            )
         except Exception as exc:
             QMessageBox.warning(self, "Instagram", str(exc))
 
     def _test_instagram(self) -> None:
         try:
+            provider = self._instagram_provider_code()
             cfg = self._instagram_config()
-            token = self.instagram_token.text().strip()
-            if token:
-                set_secret("instagram_access_token", token)
-                self.instagram_token.clear()
-            self.db.set_setting("instagram_account_id", cfg.account_id)
-            self.db.set_setting("instagram_api_version", cfg.api_version)
-            self.db.set_setting("instagram_login_mode", cfg.login_mode)
+            if provider == "buffer":
+                key = self.buffer_api_key.text().strip()
+                if key:
+                    set_secret("buffer_api_key", key)
+                    self.buffer_api_key.clear()
+                self.db.set_setting("buffer_instagram_channel_id", cfg.channel_id)
+                self.db.set_setting("instagram_publish_provider", "buffer")
+                tester = lambda: test_buffer_connection(cfg)
+            else:
+                token = self.instagram_token.text().strip()
+                if token:
+                    set_secret("instagram_access_token", token)
+                    self.instagram_token.clear()
+                self.db.set_setting("instagram_account_id", cfg.account_id)
+                self.db.set_setting("instagram_api_version", cfg.api_version)
+                self.db.set_setting("instagram_login_mode", cfg.login_mode)
+                self.db.set_setting("instagram_publish_provider", "direct")
+                tester = lambda: test_instagram_connection(cfg)
         except Exception as exc:
             QMessageBox.warning(self, "Instagram", str(exc))
             return
         self.test_instagram_btn.setEnabled(False)
         self._start_worker(
-            lambda: test_instagram_connection(cfg),
+            tester,
             status_label=self.instagram_status,
             start_text="در حال تست Instagram…",
             done=self._instagram_test_done,
@@ -332,10 +470,22 @@ class SettingsPage(QWidget):
     def _instagram_test_done(self, result) -> None:
         data = dict(result or {})
         self.test_instagram_btn.setEnabled(True)
-        self.instagram_secret_source.setText(secret_source("instagram_access_token"))
-        self.instagram_status.setText(
-            f"✅ @{data.get('username') or '—'} • {data.get('account_type') or 'Professional'} • ID {data.get('id') or '—'}"
-        )
+        provider = self._instagram_provider_code()
+        if provider == "buffer":
+            self.buffer_secret_source.setText(secret_source("buffer_api_key"))
+            self.instagram_status.setText(
+                "✅ تنظیمات Instagram با موفقیت ذخیره شد."
+                f"{data.get('name') or '?'} ? ID {data.get('id') or '?'}"
+            )
+        else:
+            self.instagram_secret_source.setText(
+                secret_source("instagram_access_token")
+            )
+            self.instagram_status.setText(
+                "✅ تنظیمات Instagram با موفقیت ذخیره شد."
+                f"{data.get('account_type') or 'Professional'} ? "
+                f"ID {data.get('id') or '?'}"
+            )
 
     def _provider_changed(self) -> None:
         code = str(self.provider.currentData() or "")
