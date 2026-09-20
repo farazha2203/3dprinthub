@@ -19,10 +19,10 @@
 - [x] Re-verify #625 same-ACK Feed/Story duplicate guards; no repost.
 - [x] Re-verify Windows republish 29/29 and Server authoritative republish 14/14.
 - [x] Social 33/33 + Qt 32/32 + launcher PASS.
-- [ ] Commit/push exact A2T candidate.
-- [ ] Guarded Host desktop/docs-only source alignment; no DB/migration/restart.
-- [ ] Back up and retarget Desktop shortcut/.cmd to exact A2T worktree.
-- [ ] Final launcher smoke + owner handoff.
+- [x] Commit/push exact A2T candidate at `df38414e63aa4214313d018a456f6a7360293548`.
+- [x] Confirm Host deploy is not required for this Windows-only runtime slice; Production A2S remains untouched.
+- [x] Back up Desktop shortcut/.cmd at `D:\projects\3dprinthub-backups\phase50-a2t-shortcut-20260920-201004` and retarget both to A2T.
+- [x] Real Desktop launcher smoke PASS; A2T accepted for operator use.
 
 ## 2026-09-20 - Phase50.A.2S Social + finance reconciliation
 - [x] Create isolated A2S branch from accepted A2R.

@@ -1,3 +1,11 @@
+## ERR-49-196 - First A2T Desktop CMD retarget wrote literal newline escape text
+**Date:** 2026-09-20
+**Observed:** the new `.lnk` target was correct, but read-back of `3DPrintHub Catalog Center.cmd` showed literal \`r\`n text instead of separate command lines.
+**Root cause:** the first PowerShell write used a single-quoted string, so backtick newline sequences were not expanded.
+**Correct fix:** preserve the pre-change backup, rewrite the CMD from an explicit array with `[IO.File]::WriteAllLines`, then read it back line-by-line before launch.
+**Verification:** CMD read-back contains four real lines; Desktop `.lnk` points to A2T; real shortcut launch produced A2T `pythonw.exe ...\qt_launch.py` processes successfully.
+**Prevention:** launcher/shortcut mutation requires immediate read-back of both CMD content and LNK target/arguments before any launch smoke.
+
 ## ERR-49-195 - A2T Social full regression initially expected the retired v4 caption contract
 **Date:** 2026-09-20
 **Observed:** Windows republish 29/29 passed, while the first full Social regression had two failures because tests still required policy `instagram-product-v4-20260920` and the old raw-URL Feed CTA.

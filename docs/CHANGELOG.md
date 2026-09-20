@@ -14,6 +14,14 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2T Windows operator acceptance
+- A2T implementation pushed at exact GitHub SHA `df38414e63aa4214313d018a456f6a7360293548`.
+- Backed up stale Desktop launchers to `D:\projects\3dprinthub-backups\phase50-a2t-shortcut-20260920-201004`.
+- Retargeted both Desktop `.lnk` and `.cmd` to the repository-owned A2T `RUN_QT.ps1`.
+- Real launcher smoke PASS against the A2T `qt_launch.py`.
+- Production intentionally unchanged; no DB/migration/restart was needed for this Windows-only operator slice.
+- Closed ERR-49-196 after verification caught literal newline escapes in the first generated `.cmd`; corrected with line-based write before launch.
+
 ## 2026-09-20 - Phase50.A.2T Windows/Social/Republish handoff
 - Added repository-owned Qt launcher `catalog_center/RUN_QT.ps1` for the current lineage.
 - Instagram policy v5 removes misleading raw Feed-caption URLs, caps hashtags at 5 and uses «لینک محصول» CTA.

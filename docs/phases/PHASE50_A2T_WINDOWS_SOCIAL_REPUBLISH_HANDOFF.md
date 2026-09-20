@@ -1,6 +1,6 @@
 # Phase50.A.2T — Windows Launcher + Instagram Link Handoff + Republish Closure
 
-Status: LOCAL_TESTED / GITHUB NEXT
+Status: ACCEPTED / WINDOWS OPERATOR VERIFIED
 Date: 2026-09-20
 Base: `03042d0430ee6e688c992c875f12edc969df103d`
 Branch: `wip/phase50-a2t-windows-social-republish-20260920`
@@ -58,5 +58,13 @@ No new server rewrite is required: Phase50.A.2M authoritative republish is alrea
 - Real Buffer credential/channel connection read-only PASS.
 - #625 Feed duplicate guard=true and Story duplicate guard=true; no publication performed.
 
+## Final acceptance
+- Source/docs commit pushed to GitHub at `df38414e63aa4214313d018a456f6a7360293548`; Local and remote branch matched exactly before shortcut promotion.
+- Existing Desktop `.cmd` and `.lnk` were backed up under `D:\projects\3dprinthub-backups\phase50-a2t-shortcut-20260920-201004`.
+- Both Desktop launchers now target `D:\projects\3DPrintHub-a2t-windows\catalog_center\RUN_QT.ps1`.
+- Real shortcut launch smoke PASS: the A2T `qt_launch.py` is running through the verified project venv and its child Python runtime.
+- Production was intentionally not deployed or restarted: A2T runtime changes are Windows Catalog/Social operator code only; Production Django/DB/migrations are not part of this slice.
+- Product #625 revision 8 was not reposted.
+
 ## Exact next
-Documentation + diff hygiene -> commit/push exact A2T -> guarded Host desktop/docs-only fast-forward (no DB/migration/restart) -> back up and retarget Windows Desktop shortcut to this exact worktree -> launcher smoke -> handoff to owner.
+Owner can open **3DPrintHub Catalog Center** directly from the Windows Desktop and use the tested Site-first republish / Site→Instagram workflow. The next engineering phase starts only from a new approved request.

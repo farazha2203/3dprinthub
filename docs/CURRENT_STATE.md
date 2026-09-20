@@ -22,6 +22,16 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2T ACCEPTED / Windows operator launcher verified
+
+A2T implementation was committed and pushed at exact GitHub SHA `df38414e63aa4214313d018a456f6a7360293548` on `wip/phase50-a2t-windows-social-republish-20260920`; Local and remote refs matched before operator promotion.
+
+The stale Desktop launchers were backed up at `D:\projects\3dprinthub-backups\phase50-a2t-shortcut-20260920-201004`. Both `3DPrintHub Catalog Center.lnk` and `.cmd` now target `D:\projects\3DPrintHub-a2t-windows\catalog_center\RUN_QT.ps1`. Real launch smoke PASS: A2T `qt_launch.py` started successfully under the verified project venv/child runtime. ERR-49-196 records and closes the one local `.cmd` newline-writing mistake caught before handoff.
+
+A2T remains Windows-only from an operational deployment perspective: no Production source promotion, DB write, migration, collectstatic or Passenger restart was required or performed. Production remains on the accepted A2S runtime. Product #625 current revision remains duplicate-protected and was not reposted.
+
+Owner entry point is now the Windows Desktop shortcut **3DPrintHub Catalog Center**. Current Site-first republish and Site→Instagram/Story-notification workflow are ready for operator use.
+
 ## 2026-09-20 - Phase50.A.2T Windows launcher + Social link handoff + republish LOCAL_TESTED
 
 A2T starts from accepted A2S `03042d0430ee6e688c992c875f12edc969df103d` in isolated worktree `D:\projects\3DPrintHub-a2t-windows`. The existing Desktop shortcut still pointed at the older primary clone `D:\projects\3DPrintHub @ 21a1ae27...`; that clone has unrelated documentation changes and was intentionally not reset.

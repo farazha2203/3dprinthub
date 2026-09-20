@@ -1,3 +1,11 @@
+## 2026-09-20 A2T Windows operator paths
+- Accepted A2T worktree: `D:\projects\3DPrintHub-a2t-windows`.
+- Repository launcher: `D:\projects\3DPrintHub-a2t-windows\catalog_center\RUN_QT.ps1`.
+- Shared Catalog authority remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+- Windows Desktop launchers: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` and `.cmd`, both retargeted to the A2T launcher.
+- Pre-retarget launcher rollback: `D:\projects\3dprinthub-backups\phase50-a2t-shortcut-20260920-201004`.
+- Exact pushed A2T source before final docs closure: `df38414e63aa4214313d018a456f6a7360293548`.
+
 ## 2026-09-19 verified current Production media paths
 - Production root: `/home/sfkilvrs/3dprinthub`.
 - Effective Django `MEDIA_ROOT` (verified from live settings): `/home/sfkilvrs/3dprinthub/media`.
