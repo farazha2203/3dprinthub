@@ -1,3 +1,12 @@
+## ERR-49-189 - A2R post-merge Admin smoke used mojibake Persian markers
+**Date:** 2026-09-20
+**Observed:** the guarded A2R deploy created verified source/env/MySQL backups and fast-forwarded Production from `65d42e40979830b306e92457093aefe068086f66` to `0c9d328299a77c26fdef9450d985276178ecc120`, then stopped before Passenger restart because the read-only Admin render smoke reported `admin_readiness_marker_missing`.
+**Evidence:** Production HEAD/worktree remained clean at `0c9d328…`; direct read-only render proved the Payment Readiness panel exists, `Merchant credential` exists, UTF-8 Persian content renders correctly, and no payment/merchant secret identifier is present. Inspection of the generated runner showed the two Persian marker literals had been transformed to mojibake during Windows file generation.
+**Root cause:** non-ASCII assertion literals in a shell/Python runner generated through the Windows command path were encoding-sensitive even though the application template itself remained valid UTF-8.
+**Correct fix:** replace runner assertions with stable ASCII structural markers (`id="phase50-payment-readiness-title"`, `Merchant credential`, `Provider:`) and use a dedicated resume runner from exact partial-promotion baseline `0c9d328…`. The resume runner takes a fresh verified source/env/MySQL backup before its own ff-only promotion.
+**Safety:** no migration, payment settings write, gateway enable or Passenger restart occurred before the fail-closed stop. First verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-155814-phase50-a2r-payment-finance-admin`.
+**Prevention:** deployment smoke assertions generated on Windows should prefer ASCII DOM ids/keys for transport-stable checks; localized copy is verified separately by application tests/browser acceptance.
+
 ## ERR-49-188 - A2R release-runner Local Bash validation initially hit Windows WSL shim and generated quote doubling
 **Date:** 2026-09-20
 **Observed:** the first Local `bash -n` resolved `C:\Windows\System32\bash.exe`, which is the WSL launcher and had no distro; after switching to Git Bash, syntax validation correctly exposed doubled single quotes introduced by the PowerShell here-string writer.

@@ -22,6 +22,14 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - A2R partial promotion safely stopped; resume runner LOCAL_TESTED
+
+First guarded A2R Production execution completed all preflight and rollback gates, including verified source bundle, protected `.env` checksum and valid MySQL gzip backup at `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-155814-phase50-a2r-payment-finance-admin`. It then ff-only promoted Source to `0c9d328299a77c26fdef9450d985276178ecc120` and stopped fail-closed before Passenger restart on ERR-49-189, a runner-only mojibake marker assertion.
+
+Read-only diagnosis proves Production source/worktree is clean, the new Payment Readiness template renders, Merchant/provider state is visible, and no secret environment identifiers are present in rendered HTML. DB/payment settings remain unchanged: manual payment row absent and online gateway disabled/unconfigured.
+
+The original runner now uses ASCII structural markers. A dedicated `phase50_a2r_payment_finance_admin_resume.sh` is Local Bash-tested from exact Production baseline `0c9d328…`; it creates a fresh second source/env/MySQL backup before promoting only the runner/docs correction, then completes post-merge checks, dry-run, Passenger restart and public HTTP smoke.
+
 ## 2026-09-20 - A2R release candidate LOCAL_TESTED / Production preflight PASS
 
 Dedicated 3DPrintHub reverse management is restored and authenticated from Windows: `127.0.0.1:22024` -> Host bridge PID 775486 returned `ok=true`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. Owner-side break-glass bootstrap returned `REVERSE_TUNNEL_BOOTSTRAP=PASS` with tunnel PID 3898571; the one-minute `flock` watchdog remains installed.

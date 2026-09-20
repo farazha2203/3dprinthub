@@ -14,6 +14,11 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - A2R fail-closed resume hardening
+- First Production run verified backup and fast-forwarded to `0c9d328…`, then stopped before restart on an encoding-sensitive Persian smoke marker.
+- Verified the actual Admin Payment Readiness HTML is healthy and secret-safe; DB/payment state remained unchanged.
+- Replaced localized runner markers with ASCII structural markers and added a fresh-backup resume runner from exact `0c9d328…` baseline.
+
 ## 2026-09-20 - A2R release runner + restored Production transport
 - Restored dedicated 3DPrintHub reverse tunnel and authenticated bridge Health; no alternate project tunnel was used.
 - Production read-only preflight PASS at clean `65d42e40979830b306e92457093aefe068086f66`, correct MySQL and empty migration plan.

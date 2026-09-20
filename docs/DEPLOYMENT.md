@@ -4,6 +4,7 @@ Verified Production baseline before this release is clean `release/phase50-a2j-h
 
 Target release branch: `release/phase50-a2r-payment-finance-admin-20260920`.
 Runner: `scripts/host/phase50_a2r_payment_finance_admin_deploy.sh`.
+Fail-closed resume for exact partial-promotion baseline `0c9d328299a77c26fdef9450d985276178ecc120`: `scripts/host/phase50_a2r_payment_finance_admin_resume.sh`. The resume runner takes a new source/`.env`/MySQL verified backup before any further promotion.
 
 The runner must be executed from the exact live GitHub target. It requires exact baseline/branch/clean worktree, correct repository and MySQL identity, empty migration plan, receiver readiness, target SHA equality and fast-forward ancestry, and an explicit allowlist of A2R files. It rejects migration, dependency, settings or unrelated source changes.
 
