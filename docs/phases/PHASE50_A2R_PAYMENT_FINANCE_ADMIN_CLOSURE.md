@@ -1,8 +1,8 @@
 # Phase50.A.2R — Payment / Finance / Admin Closure
 
-Status: LOCAL_TESTED / RELEASE FROZEN / PRODUCTION PREFLIGHT BLOCKED  
-Date: 2026-09-20  
-Base Site release: \`65d42e40979830b306e92457093aefe068086f66\`  
+Status: LOCAL_TESTED / PRODUCTION PREFLIGHT PASS / RELEASE DEPLOY NEXT
+Date: 2026-09-20
+Base Site release: \`65d42e40979830b306e92457093aefe068086f66\`
 WIP branch: \`wip/phase50-a2r-payment-finance-admin-20260920\`
 
 ## Goal
@@ -82,3 +82,13 @@ The existing A2L guarded deploy runner performs both a source grep and runtime g
 - Central gateway router compatibility was repaired outside application source under ERR-49-187 with a retained local backup.
 - The dedicated 3DPrintHub reverse tunnel remains down: no Windows listener on `127.0.0.1:22024`, no active reverse-tunnel SSH process.
 - Production remains unchanged. Backup/deploy/browser acceptance must not start until authenticated dedicated-tunnel Health passes.
+
+
+## 2026-09-20 transport recovery + Production preflight
+- Dedicated reverse tunnel restored with repository bootstrap; authenticated Windows router Health is `ok=true`, bridge version 1.0.0, base `/home/sfkilvrs/3dprinthub`.
+- Production read-only baseline: clean `release/phase50-a2j-hero-20260915 @ 65d42e40979830b306e92457093aefe068086f66`.
+- Python 3.12.13, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, empty migration plan.
+- Masked state: manual payment row absent/inactive/unconfigured; online gateway disabled and Merchant ID unconfigured.
+- Guarded A2R release runner added and Local-tested; it performs verified source/env/MySQL backup before ff-only promotion and never activates financial settings.
+- Release Local gate: compile/check/no-drift, canonical Local empty migration plan, payment/Admin 29/29, Git Bash syntax and diff hygiene PASS.
+- Next: commit/push exact release -> execute guarded runner from GitHub -> verify Production -> browser acceptance -> separate secure manual-payment configuration/activation only with fresh rollback evidence.

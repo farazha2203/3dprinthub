@@ -1,3 +1,18 @@
+## 2026-09-20 Phase50.A.2R payment/finance/admin guarded release
+
+Verified Production baseline before this release is clean `release/phase50-a2j-hero-20260915 @ 65d42e40979830b306e92457093aefe068086f66`. The only authorized Host transport is the dedicated authenticated 3DPrintHub reverse tunnel on Windows `127.0.0.1:22024`.
+
+Target release branch: `release/phase50-a2r-payment-finance-admin-20260920`.
+Runner: `scripts/host/phase50_a2r_payment_finance_admin_deploy.sh`.
+
+The runner must be executed from the exact live GitHub target. It requires exact baseline/branch/clean worktree, correct repository and MySQL identity, empty migration plan, receiver readiness, target SHA equality and fast-forward ancestry, and an explicit allowlist of A2R files. It rejects migration, dependency, settings or unrelated source changes.
+
+Before merge it creates and checksum-verifies a Git source bundle, protected `.env` copy when present, and a real MySQL gzip backup with `gzip -t` plus SHA256 verification. Promotion is `git merge --ff-only` from GitHub.
+
+Post-merge gates include compile/check/no-drift/empty migration plan, masked Payment Readiness state, read-only Admin Command Center render smoke with secret identifiers forbidden, manual-payment dry-run marker, Passenger restart and Home/Store HTTP 200. The runner does not apply/activate manual payment, enable ZarinPal, run migrations or print financial destination/credential values.
+
+Manual-transfer configuration/activation is a separate stateful operation after a fresh DB rollback boundary and must use only protected `STORE_PAYMENT_*` runtime environment values or the existing Admin singleton. ZarinPal stays disabled until legitimate merchant configuration is separately verified.
+
 ## 2026-09-19 collectstatic permission rule
 Guarded runners may keep `umask 077` for private backup files, but public `collectstatic` creation must temporarily use `umask 022`. Any newly introduced nested static tree must be checked for web-traversable directories and verified through its real public URLs/MIME types before browser acceptance.
 

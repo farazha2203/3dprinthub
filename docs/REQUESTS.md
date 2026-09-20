@@ -1,3 +1,8 @@
+## 2026-09-20 - Owner: restore tunnel and continue A2R through Production
+Status: `A2R RELEASE LOCAL_TESTED / AUTHENTICATED PRODUCTION PREFLIGHT PASS / GITHUB DEPLOY NEXT`.
+
+Owner requested restoration of the dedicated 3DPrintHub tunnel followed by Production read-only verification, rollback backup, GitHub deployment, Payment Readiness/browser smoke, A2R closure, then Instagram/SEO Social + financial reconciliation + receipt audit. Tunnel Health and read-only Production identity/DB/migration gates now PASS. A guarded no-migration/no-payment-write A2R release runner is Local-tested; exact GitHub release SHA and rollback-backed deployment are next.
+
 ## 2026-09-20 - Continue remaining phases: payment, finance and Admin
 Status: \`A2R WIP SOURCE IMPLEMENTED / LOCAL TEST NEXT\`.
 

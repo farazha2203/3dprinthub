@@ -1,25 +1,33 @@
+## ERR-49-188 - A2R release-runner Local Bash validation initially hit Windows WSL shim and generated quote doubling
+**Date:** 2026-09-20
+**Observed:** the first Local `bash -n` resolved `C:\Windows\System32\bash.exe`, which is the WSL launcher and had no distro; after switching to Git Bash, syntax validation correctly exposed doubled single quotes introduced by the PowerShell here-string writer.
+**Root cause:** generic `Get-Command bash.exe` selected the wrong Windows shim, and the first file-generation step escaped single quotes unnecessarily inside a single-quoted here-string.
+**Correct fix:** use verified `C:\Program Files\Git\bin\bash.exe` for repository Bash syntax on this Windows workstation, inspect the generated file, normalize the accidental doubled quotes, and rerun `bash -n` under the changed condition.
+**Verification:** Git Bash `bash -n` PASS, `git diff --check` PASS, payment/Admin regression 29/29 PASS. No Host or Production mutation occurred during this failure.
+**Prevention:** Windows Local Bash gates must use the verified Git Bash path when WSL is not installed; generated shell scripts must be syntax-checked before commit/push.
+
 ## ERR-49-187 - Central project router parsing/Invoke-RestMethod defects exposed before A2R Production preflight
-**Date:** 2026-09-20  
-**Observed:** after A2R Local PASS, `project-host.ps1 -Project 3dprinthub -Health` first treated the entire seven-project JSON array as one nested entry and emitted a combined display label, then after correcting array parsing reached a second PowerShell incompatibility where positional `Invoke-RestMethod GET URL` binding failed.  
-**Root cause:** PowerShell array wrapping `$reg=@(...ConvertFrom-Json)` preserved the top-level JSON array as one nested element in this runtime; the router also used positional REST arguments not accepted by the installed PowerShell web cmdlet.  
-**Correct fix:** outside repository source, back up the central gateway router to `D:\projects\.chatgpt-gateway\project-host.ps1.before-array-fix-20260920-1523.bak`; parse the JSON array directly; use named `-Method/-Uri` arguments for GET/POST; syntax-check before retry.  
-**Verification:** router syntax PASS and project selection now reaches the correct 3DPrintHub entry. The subsequent health request fails only because `127.0.0.1:22024` has no listener; no alternate project route was used.  
+**Date:** 2026-09-20
+**Observed:** after A2R Local PASS, `project-host.ps1 -Project 3dprinthub -Health` first treated the entire seven-project JSON array as one nested entry and emitted a combined display label, then after correcting array parsing reached a second PowerShell incompatibility where positional `Invoke-RestMethod GET URL` binding failed.
+**Root cause:** PowerShell array wrapping `$reg=@(...ConvertFrom-Json)` preserved the top-level JSON array as one nested element in this runtime; the router also used positional REST arguments not accepted by the installed PowerShell web cmdlet.
+**Correct fix:** outside repository source, back up the central gateway router to `D:\projects\.chatgpt-gateway\project-host.ps1.before-array-fix-20260920-1523.bak`; parse the JSON array directly; use named `-Method/-Uri` arguments for GET/POST; syntax-check before retry.
+**Verification:** router syntax PASS and project selection now reaches the correct 3DPrintHub entry. The subsequent health request fails only because `127.0.0.1:22024` has no listener; no alternate project route was used.
 **Prevention:** central router health must be smoke-tested on its installed PowerShell version after changes, including multi-entry JSON selection and authenticated GET/POST parameter binding.
 
 ## ERR-49-186 - A2R CI fixture missed module-level patch import
-**Date:** 2026-09-20  
-**Observed:** A2R CI compiled successfully, passed Django system check and no-migration-drift, then failed only in `store/test_phase50_a2l_manual_payment.py` with `NameError: name 'patch' is not defined`. A previous edit did not add the module-level import because an unrelated function-local `patch` import made a broad text-presence check falsely report that the import already existed.  
-**Root cause:** the regression fixture used `patch.dict("os.environ", ...)` without a module-scope `from unittest.mock import patch`, and the first repair guard inspected the entire file instead of the import section.  
-**Correct fix:** normalize the malformed literal-newline test/command text, add the module-level `patch` import explicitly, and rerun the changed-condition CI gate rather than repeating the failed run unchanged.  
-**Verification:** GitHub Actions run `35499242459` on exact SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8` completed SUCCESS. Compile, Django check, no unintended migrations, focused payment/Admin regressions and diff hygiene all passed.  
+**Date:** 2026-09-20
+**Observed:** A2R CI compiled successfully, passed Django system check and no-migration-drift, then failed only in `store/test_phase50_a2l_manual_payment.py` with `NameError: name 'patch' is not defined`. A previous edit did not add the module-level import because an unrelated function-local `patch` import made a broad text-presence check falsely report that the import already existed.
+**Root cause:** the regression fixture used `patch.dict("os.environ", ...)` without a module-scope `from unittest.mock import patch`, and the first repair guard inspected the entire file instead of the import section.
+**Correct fix:** normalize the malformed literal-newline test/command text, add the module-level `patch` import explicitly, and rerun the changed-condition CI gate rather than repeating the failed run unchanged.
+**Verification:** GitHub Actions run `35499242459` on exact SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8` completed SUCCESS. Compile, Django check, no unintended migrations, focused payment/Admin regressions and diff hygiene all passed.
 **Prevention:** import-fix automation must inspect the module import section, not use a whole-file substring test that can be satisfied by nested imports.
 
 ## ERR-49-185 - Manual-payment bootstrap embedded payment destination data in repository source/tests
-**Date:** 2026-09-20  
-**Observed:** A2R audit found that the historical manual-payment seed command and its regression fixture carried real payment destination identity directly in tracked source rather than using secure runtime configuration. The Admin singleton itself already existed and did not require a new model.  
-**Root cause:** the earlier Production bootstrap optimized for one-time activation and froze operator data into code/test constants.  
-**Correct fix:** remove destination literals from current source/tests; read values only from \`STORE_PAYMENT_*\` runtime environment or the existing Admin singleton; keep dry-run default; require explicit write/state flags; never echo financial values; use dummy test data only.  
-**Verification required:** canonical Windows Local compile/Django/no-drift/payment regressions before release promotion, then Production backup + masked read-back before any settings activation.  
+**Date:** 2026-09-20
+**Observed:** A2R audit found that the historical manual-payment seed command and its regression fixture carried real payment destination identity directly in tracked source rather than using secure runtime configuration. The Admin singleton itself already existed and did not require a new model.
+**Root cause:** the earlier Production bootstrap optimized for one-time activation and froze operator data into code/test constants.
+**Correct fix:** remove destination literals from current source/tests; read values only from \`STORE_PAYMENT_*\` runtime environment or the existing Admin singleton; keep dry-run default; require explicit write/state flags; never echo financial values; use dummy test data only.
+**Verification required:** canonical Windows Local compile/Django/no-drift/payment regressions before release promotion, then Production backup + masked read-back before any settings activation.
 **Prevention:** operator/payment identity must never be embedded in tracked bootstrap code or regression fixtures. Configuration commands may log only configured-state booleans/counts, never full card/Sheba/account values.
 
 ## ERR-49-181 - Profile-driven re-publish falsely required Product.fixed_price = price_min
@@ -472,7 +480,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 
 **Prevention:** repository commands may use `Set-Location` for Git/PowerShell cmdlets, but direct .NET/Python helper paths must be explicitly repository-rooted and fail-fast.
 ### ERR-49-112 — MySQL recovery CI initially crossed unrelated historical migrations and had probe harness import errors
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Actions while adding real-MySQL coverage for ERR-49-111.
 
 **Observed:**
@@ -493,7 +501,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 
 
 ### ERR-49-111 — MySQL 0039 duplicated ProductVariant.support_weight_grams and left a partial migration
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Production MySQL `sfkilvrs_EmiAdmin_3dprinthub`, Phase49.3I.53F resume.
 
 **Observed:** exact migration plan was accepted. Website 0024, Store 0037 and Store 0038 applied successfully. Store 0039 then stopped with:
@@ -516,7 +524,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 **Prevention:** before adding a field in a later migration, search all historical migrations for the same physical model/column. Production MySQL migration gates must include a real-MySQL operation probe for recovery-sensitive custom schema operations. A failed MySQL migration must be treated as possible partial DDL until recorder and table schema are both inspected.
 
 ### ERR-49-110 — lazy transport refactor temporarily removed mature AIProviderClient patch seam
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Product Admin CI `33663092964`.
 
 **Observed:** after fixing Host startup import safety, mature test `test_auto_policy_prefers_exact_verified_free_persian_structured_model` failed because it patches `ai.model_policy.AIProviderClient`, but the first lazy-import implementation had removed that module attribute.
@@ -533,7 +541,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 
 
 ### ERR-49-109 — target source promoted before required httpx dependency was installed
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Production Host third Phase49.3I.53 deploy attempt.
 
 **Observed:** valid source/MySQL/.env/pending backups were fully verified and source fast-forwarded from `198fa8e...` to `b372586a...`. The first post-merge `manage.py check` then failed:
@@ -557,7 +565,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 **Prevention:** Production deploys must treat requirements/runtime dependency delta as a first-class gate between verified rollback backup and execution of target Django code. Optional operator AI transport must not be imported during normal Site bootstrap.
 
 ### ERR-49-108 — extracted MySQL backup helper could not import Production Django config
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Production Host second Phase49.3I.53 deploy attempt.
 
 **Observed:** gzip helper execution stopped with `ModuleNotFoundError: No module named 'config'` while running from the timestamped backup directory.
@@ -575,7 +583,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 **Prevention:** any repository helper copied/executed outside the repository must receive its project root explicitly; never rely on current working directory to define Python import semantics.
 
 ### ERR-49-107 — MySQL gzip helper self-test exceeded Linux argv limit
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Product Admin CI `33659570675`.
 
 **Symptom:** the newly added backup helper self-test failed with `OSError: [Errno 7] Argument list too long`.
@@ -592,7 +600,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 
 
 ### ERR-49-106 — mysqldump was written raw through a GzipFile descriptor
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Production Host first Phase49.3I.53C deploy attempt.
 
 **Observed:** all predeploy gates passed and mysqldump reported a 17,469,650-byte file at `.../20260902-203857-phase49-3i53/database-before-3i53.sql.gz`, then `gzip -t` failed with `not in gzip format`.
@@ -610,7 +618,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 **Prevention:** never pass compression wrapper objects directly to subprocess stdout/stderr expecting the child process to execute the wrapper's codec. Child-process output must be piped through the parent codec or written plain then compressed in a separate verified step.
 
 ### ERR-49-105 — Host forensic helper used unavailable system python3 and stale audit baseline
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** cPanel Host `/home/sfkilvrs/3dprinthub`.
 
 **Observed:** the first read-only deploy audit stopped on a dirty worktree because of untracked `ls-output.txt`. Follow-up forensics proved tracked files/index were clean and actual Host HEAD was `198fa8e41ea4f4d87eb287ba69c91076acc78d62`, but the helper then stopped at `bash: python3: command not found` before secret-marker scanning, ancestry and live-target checks completed.
@@ -628,7 +636,7 @@ Several local test-fixture edit attempts used Unicode/line-ending-sensitive exac
 **Prevention:** Host operational scripts must use the verified project venv interpreter and must accept a read-only verified baseline rather than freezing an old Production SHA in source.
 
 ### ERR-49-104 — Bridge-only Windows fixture crossed the new Site readiness boundary
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** first Phase49.3I.53 Windows Qt run `33652583946` on code `bca8aceee9b08935e82aea36f82d3f331e079d83`.
 
 **Symptom:** 3I.51 finalization parity failed in `test_bridge_only_settings_and_test_do_not_require_ftp_credentials`. The fixture mocked mature Bridge health only; `ConnectionCore.test_bridge()` now also queried the new publish-readiness endpoint, so the test unintentionally made a live request to the currently older Production Site and received HTTP 404.
@@ -671,85 +679,85 @@ Fix: compare the exact pre-change runtime and restore all four helpers unchanged
 Prevention: before/after top-level function inventories are required for broad region edits; prefer smaller Extend/Patch/Wrap boundaries.
 
 ## ERR-49-101 — bulk recovery test mock expired before captured Worker execution
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Windows Portable regression for Phase49.3I.52F.
 
-**Observed:**  
+**Observed:**
 After fixing the missing QMessageBox import, the incomplete-existing-Product recovery test still reported `recovered=0`.
 
-**Root cause:**  
+**Root cause:**
 The test patched `AcquisitionCore.run_single`, queued the Worker, exited the patch context, and only then executed the captured Worker function. The real recovery path therefore ran outside the mock boundary.
 
-**Correct fix:**  
+**Correct fix:**
 Execute the captured Worker while the `run_single` patch is still active.
 
-**Verification:**  
+**Verification:**
 Final runtime `cf73f841418aac2eec1b78e0dbd682ceb2d3fef5`: dedicated visual/recovery suite 19 tests PASS; Qt `33637452385` PASS; Portable `33637452243` PASS with 227 release regressions.
 
-**Prevention:**  
+**Prevention:**
 For deferred Worker tests, mock lifetime must cover Worker execution, not merely Worker construction.
 
 ---
 
 ## ERR-49-100 — new bulk recovery tests omitted QMessageBox import
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** Windows Portable regression for Phase49.3I.52F.
 
-**Observed:**  
+**Observed:**
 The first 3I.52F portable regression stopped with `NameError: QMessageBox is not defined` in the two new recovery-confirmation tests.
 
-**Root cause:**  
+**Root cause:**
 The test module used `QMessageBox.question` but its QtWidgets import list had not been extended.
 
-**Correct fix:**  
+**Correct fix:**
 Add `QMessageBox` to the explicit PySide6.QtWidgets test import.
 
-**Verification:**  
+**Verification:**
 The next run crossed that boundary and exposed ERR-49-101; after both conditions were corrected, final Qt/Portable gates passed.
 
-**Prevention:**  
+**Prevention:**
 New concrete Qt widgets referenced by tests must be imported explicitly and exercised in the same Windows suite.
 
 ---
 
 ## ERR-49-099 — Preview recovery raw JavaScript string temporarily lost its closing triple quote
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub source edit during Phase49.3I.52E.
 
-**Observed:**  
+**Observed:**
 While extending the listing Preview DOM payload, an intermediate edit to `phase49_3i_preview_recovery.py` omitted the closing Python raw-string delimiter around `PREVIEW_CARD_EVAL_JS`.
 
-**Root cause:**  
+**Root cause:**
 The file update replaced the JavaScript block by text slicing and consumed the original closing triple quote.
 
-**Response:**  
+**Response:**
 The malformed condition was inspected immediately and corrected before the final CI run. The broken condition was not used for owner Local QA and was not deployed.
 
-**Correct fix:**  
+**Correct fix:**
 Restore the explicit closing `"""` and keep the JavaScript newline represented as escaped `\n` inside the raw Python string.
 
-**Verification:**  
+**Verification:**
 Final runtime `016e84ab98d2e5577633833cbc87cb96824dbbf0`: compile/full Qt parity `33632062812` PASS; Portable `33632062880` PASS; 223 release regressions PASS.
 
-**Prevention:**  
+**Prevention:**
 Any future edit of embedded JavaScript in Python must be covered by compileall plus the existing Windows Preview regression before acceptance.
 
 ---
 
 ## ERR-49-098 — Qt Crawl inventory ignored mature downloaded images when Product linkage was missing
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** owner foreground Windows QA, Catalog Center 8.9.10 / Qt6.
 
-**Observed evidence:**  
+**Observed evidence:**
 The Crawl inventory showed rows such as MakerWorld external ids with `Preview تصویر ندارد` even though the mature Catalog Center had already downloaded image files. The same owner screenshot also showed the requested-count and image-limit QSpinBox digits colliding with RTL arrow controls.
 
-**Verified mature storage contract:**  
+**Verified mature storage contract:**
 The retained Tk runtime stores persistent data in `D:\projects\3dprinthub-catalog-manager`, and Product downloads in `collected\<source_code>\<external_id>\images` with optional finalized `seo_images`. The old installed application target `D:\projects\3dprinthub_catalog_center` is not the canonical active SQLite data root.
 
-**Root cause:**  
+**Root cause:**
 The Qt queue image path was gated by `product_id`. If a `discovered_urls` row was old/unlinked, Qt skipped the mature Product image resolver and only checked the newer `discovery_previews` cache. Therefore real files could exist under the mature collected tree while the UI still claimed no Preview. Product resolution also compared `source_code` case-sensitively, so legacy `MakerWorld` vs current `makerworld` could keep a valid Product row unlinked. Separately, global RTL layout + generic QSpinBox padding caused Windows arrow/text overlap.
 
-**Correct fix:**  
+**Correct fix:**
 - add read-only ImageCore identity resolution rooted at the actual Catalog SQLite parent;
 - scan mature `seo_images` then `images` for `<source>/<external_id>` even before Product linkage;
 - preserve DB `local_dir` as first authority;
@@ -758,12 +766,12 @@ The Qt queue image path was gated by `product_id`. If a `discovered_urls` row wa
 - use actual local-file count/icon in queue/current-search cards regardless of Product linkage;
 - make the two receive spinboxes explicitly LTR, centered, width-bounded and padded away from the arrow subcontrol.
 
-**Failed attempts / prevention:**  
+**Failed attempts / prevention:**
 Do not solve this by downloading the same images again or moving/deleting old folders. The existing mature files are authoritative evidence. UI image lookup must resolve the existing storage contract before triggering acquisition.
 
 **Implementation:** `a18b6f3036d41271cf3e8c1d9a0dfd8c271a53ce`.
 
-**Verification:**  
+**Verification:**
 - `33628825851` Qt full parity PASS;
 - dedicated 3I.52C/52D suite: 13 tests PASS, including mature-folder-without-Product-link, source-code case mismatch and non-cramped numeric controls;
 - `33628825772` Single Active AI PASS;
@@ -776,26 +784,26 @@ Do not solve this by downloading the same images again or moving/deleting old fo
 ---
 
 ## ERR-49-097 — 3I.52C Qt regression was added to Portable release gate without the Qt runtime dependency
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Actions `Catalog Center Windows Portable Release`, run `33624135587`.
 
-**Observed evidence:**  
+**Observed evidence:**
 The new 3I.52C regression was intentionally added to the portable release regression gate. The job installed only `catalog_center/requirements.txt`, then failed while importing `test_phase49_3i52c_crawl_review_recovery` with `ModuleNotFoundError: No module named 'PySide6'`. Compile had already passed; packaging did not start.
 
-**Root cause:**  
+**Root cause:**
 The release regression set crossed the Qt test boundary but its dependency install step still described the older non-Qt portable environment. The dedicated Qt workflow already installed `requirements-qt6.txt`; the portable regression workflow did not.
 
-**Failed condition was not repeated unchanged.**  
+**Failed condition was not repeated unchanged.**
 The workflow dependency boundary was changed before rerun.
 
-**Correct fix:**  
+**Correct fix:**
 - cache both `catalog_center/requirements.txt` and `catalog_center/requirements-qt6.txt`;
 - install `catalog_center/requirements-qt6.txt` in the portable regression environment so the explicit Qt regression can import the same PySide6 runtime used by the dedicated Qt gate;
 - do not weaken or remove the new 3I.52C regression.
 
 **Implementation:** `b43880a763d00bfda52dc29c4bf080cb428b1230`.
 
-**Verification:**  
+**Verification:**
 - `33625043651` — Windows Portable — PASS;
 - release regression gate: 215 tests PASS;
 - EXE self-verify PASS;
@@ -803,126 +811,126 @@ The workflow dependency boundary was changed before rerun.
 - artifact id `9844568575`;
 - EXE SHA256 `97bbb9bd485b2b82da2d83fe9e8c193d62dd47210233626772afee5f36e58a8f`.
 
-**Prevention:**  
+**Prevention:**
 Whenever a shared release regression gate imports a framework-specific test suite, that job must install the dependency contract required by that suite. Do not solve dependency drift by deleting the regression that exposed it.
 
 ---
 
 ## ERR-49-096 — New 3I.52B Site-pull regression missed one import and the isolated test crossed the real Bridge settings boundary
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Windows Qt CI during Phase49.3I.52B.
 
-**Observed evidence:**  
+**Observed evidence:**
 - run `33619483446` reached the new 3I.52B test only after all mature Qt regressions through 3I.51 passed;
 - `apply_server_product_to_local()` raised `NameError: utc_now is not defined`;
 - Site-pull orchestration tests then raised the existing ConnectionCore validation that Site URL + Bridge token must be configured;
 - after importing `utc_now`, run `33619558541` proved the runtime mapping test passed and only the three Site-pull fixture cases still crossed the real Bridge settings boundary.
 
-**Root cause:**  
-1. the newly expanded Site→Local helper called the mature Catalog timestamp helper without importing it;  
+**Root cause:**
+1. the newly expanded Site→Local helper called the mature Catalog timestamp helper without importing it;
 2. the new orchestration tests mocked the remote Product list but still called the real `ConnectionCore.bridge_settings()`, which correctly refuses an unconfigured Bridge token.
 
-**Failed attempts / rule:**  
+**Failed attempts / rule:**
 - the first failed test was not rerun unchanged;
 - after the import fix, the remaining failure was reclassified as a test-isolation/configuration-boundary issue rather than weakening the production Bridge credential guard.
 
-**Correct fix:**  
+**Correct fix:**
 - commit `d6450ca2d9016bbdb75b37b7a31d20d8c2b6d111` imports `utc_now`;
 - commit `6d19bed7659b9ca4cd54ff1ffd1323ec423bea6a` provides an isolated `bridge_settings` fixture while keeping the remote Product list mocked;
 - no fake secret is persisted and the real Bridge settings validation remains unchanged.
 
-**Verification:**  
+**Verification:**
 - `33619876564` final Qt full parity PASS, including 3I.52B plus all mature acquisition/Filament/Profile/Stage/launcher regressions;
 - `33619876317` Single Active AI PASS;
 - `33619876411` Windows Portable PASS;
 - `33619558467` Product Admin/Bridge/migration CI PASS on runtime-equivalent source.
 
-**Prevention:**  
+**Prevention:**
 Cross-boundary Qt orchestration tests must provide the complete local configuration boundary they intentionally traverse, even when the remote transport function itself is mocked. Production credential validation must never be weakened merely to make an isolated test pass.
 
 # PROJECT ERROR KNOWLEDGE BASE
 
 ## ERR-49-095 — Filament Bridge v3 palette normalization overwrote explicit legacy HEX slots
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Product Admin/Bridge CI during Phase49.3I.51.
 
-**Observed CI evidence:**  
+**Observed CI evidence:**
 Run `33610330120` failed only in `test_invalid_color_type_is_normalized_and_inactive_sync_updates_same_row`: expected legacy `secondary_hex=#112233` but the Bridge persisted `#445566`.
 
-**Root cause:**  
+**Root cause:**
 The v3 Bridge normalized `palette_hexes` correctly for the modern palette contract, but then reused palette positions to overwrite explicit compatibility fields `secondary_hex`/`tertiary_hex`. Those compatibility slots are independently supplied by mature callers and must not be silently remapped.
 
-**Failed condition was not repeated unchanged.**  
+**Failed condition was not repeated unchanged.**
 The Bridge parsing/persistence boundary was changed before rerun.
 
-**Correct fix:**  
+**Correct fix:**
 Normalize explicit single HEX fields separately; keep `palette_hexes` authoritative for the modern palette while preserving valid explicit compatibility slots when supplied.
 
 **Implementation:** `ca89533d6d4546a008c04b31efa56c8cf6efe3a1`.
 
-**Verification:**  
+**Verification:**
 Final Site/Admin/Bridge run `33611936196` PASS, including Bridge v3 regressions.
 
-**Prevention rule:**  
+**Prevention rule:**
 When modernizing a payload, do not infer that a compatibility field is merely an alias of a new aggregate field unless the mature contract explicitly says so.
 
 ---
 
 ## ERR-49-094 — Phase49.3I.51 Filament editor description field crashed because QPlainTextEdit was not imported
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Windows Qt CI.
 
-**Observed CI evidence:**  
+**Observed CI evidence:**
 Run `33610057719` reached the real offscreen Filament editor construction and failed with:
 `NameError: name 'QPlainTextEdit' is not defined` in `catalog_center/qt6/parity_dialogs.py`.
 
-**Root cause:**  
+**Root cause:**
 Phase49.3I.51 added the optional Filament description editor but omitted `QPlainTextEdit` from the PySide6 QtWidgets import list. Compile-only validation could not detect the runtime symbol lookup.
 
-**Failed condition was not repeated unchanged.**  
+**Failed condition was not repeated unchanged.**
 The import was added before the next full Qt run.
 
-**Correct fix:**  
+**Correct fix:**
 Import the concrete Qt widget and keep offscreen dialog construction in the regression suite.
 
 **Implementation:** `ca89533d6d4546a008c04b31efa56c8cf6efe3a1`.
 
-**Verification:**  
+**Verification:**
 Final Windows Qt run `33611776817` PASS, including 3I.48 and 3I.51 Filament editor construction/behavior.
 
-**Prevention rule:**  
+**Prevention rule:**
 Every newly introduced concrete Qt widget must be exercised by offscreen construction; compileall alone is not a sufficient GUI dependency test.
 
 ---
 
 ## ERR-49-093 — Phase49.3I.51 fallback regression referenced a helper that does not exist in that test class
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Windows Qt CI / Phase49.3I.51 regression alignment.
 
-**Observed CI evidence:**  
+**Observed CI evidence:**
 The first updated source-profile fallback regression attempted to call a Product helper that belongs to a different test class and stopped before testing the actual owner fallback contract.
 
-**Root cause:**  
+**Root cause:**
 The test contract changed from “do not create a fallback Profile” to the owner-requested explicit default Profile, but the rewritten fixture accidentally reused a helper unavailable in that class.
 
-**Failed condition was not repeated unchanged.**  
+**Failed condition was not repeated unchanged.**
 The fixture was corrected before rerun.
 
-**Correct fix:**  
+**Correct fix:**
 Create the Product through the same `Database.upsert_product` path already used by the suite, then resolve its id from the kernel Product list.
 
 **Implementation:** `f3dd80bd7fc6293c73aa4f9353aad6e40eb9dc9d`.
 
-**Verification:**  
+**Verification:**
 Dedicated 3I.51 regression and final Qt run `33611776817` PASS.
 
-**Prevention rule:**  
+**Prevention rule:**
 When an acceptance contract changes, keep fixture construction local to the test class or use a shared verified fixture helper; do not copy helper calls across suites without resolving ownership.
 
 ---
 
 ## ERR-49-092 — Phase49.3I.50 Crawl technical-fact regression used a bare test schema and failed on a pre-existing image metadata column
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Windows Qt CI / exact code checkpoint `7aadf4830061c2104cda6b4164e0f9b1351f8893`.
 
 **Observed CI evidence:**
@@ -952,7 +960,7 @@ Initialize the regression through the same `ensure_qt_parity_schema()` compositi
 ---
 
 ## ERR-49-091 — Phase49.3I.50 Color registry crashed in CI because the canonical palette normalizer was not imported
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** GitHub Windows Qt CI / early 3I.50 Brand/Color registry implementation.
 
 **Observed CI evidence:**
@@ -981,7 +989,7 @@ The canonical import was added before rerun.
 ---
 
 ## ERR-49-090 — Hybrid Listing HTTP 403 stopped before the existing robots-gated Browser fallback
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** owner Local Windows Qt6 / GrabCAD public library URL.
 
 **Observed owner evidence:**
@@ -1010,7 +1018,7 @@ Hybrid discovery re-raised `AccessDeniedError` together with fail-closed robots/
 ---
 
 ## ERR-49-089 — Filament editor crashed because QWidget was used but not imported
-**Date:** 2026-09-02  
+**Date:** 2026-09-02
 **Environment:** owner Local Windows Qt6 / Filament Library.
 
 **Observed owner evidence:**
@@ -1034,7 +1042,7 @@ Repeated traceback from `FilamentEditorDialog`:
 
 
 ## ERR-49-088 — Phase49.3I.47 owner Local gate broke on Windows PowerShell 5.1 because a non-ASCII QA label violated the established ASCII-only runner contract
-**Date:** 2026-09-01  
+**Date:** 2026-09-01
 **Environment:** owner Local Windows PowerShell 5.1 / canonical branch / exact head `946b8594f0ee001bd9833973e23eb47803c98bac`.
 
 **Observed owner evidence:**
@@ -1082,7 +1090,7 @@ The stale command against `946b8594...` was not rerun. The runner and CI boundar
 ---
 
 ## ERR-49-087 — Phase49.3I.46 stabilized Catalog paging/acquisition but owner workflow presentation parity was still incomplete
-**Date:** 2026-09-01  
+**Date:** 2026-09-01
 **Environment:** owner Local/visual QA request after Phase49.3I.46.
 
 **Observed owner requirements/regressions:**
@@ -1117,7 +1125,7 @@ Phase49.3I.46 correctly fixed bounded data loading and restored acquisition Core
 
 
 ## ERR-49-085 — Qt Product AI JSON-mode/TLS, semantic translation, final SEO WebP and hidden Crawl/Product lifecycle parity
-**Date:** 2026-09-01  
+**Date:** 2026-09-01
 **Environment:** owner Local Windows Qt6 screenshots/traces + GitHub Windows CI.
 
 **Observed owner evidence:**
@@ -1183,7 +1191,7 @@ Runs `33488612681`, `33488612733`, `33488612771` and Qt run `33488612672` failed
 
 
 ## ERR-49-084 — Product AI Link mode failed on MakerWorld 403 before Provider execution and apply success was not persistence-verified
-**Date:** 2026-08-31  
+**Date:** 2026-08-31
 **Environment:** owner Local Windows Qt6 / Product #309 / Stage 1 `quick`.
 
 **Observed owner evidence:**
@@ -1229,7 +1237,7 @@ Runs `33488612681`, `33488612733`, `33488612771` and Qt run `33488612672` failed
 **Prevention rule:** a source acquisition failure must never be presented as an AI-model failure. Link-mode AI must distinguish requested source from effective evidence source, must not retry a known blocked request unchanged, and must never report a field as applied until the persisted database value has been re-read and verified.
 
 ## ERR-49-082 — OpenRouter Product AI accepted media/tools-only models and could fall back to unconstrained text
-**Date:** 2026-08-31  
+**Date:** 2026-08-31
 **Environment:** owner Local Windows Qt6 foreground QA after Phase49.3I.42C3.
 
 **Observed owner evidence:**
@@ -1370,7 +1378,7 @@ every Local/Host runbook that pins a commit must compare its expected SHA to the
 
 
 ### ERR-49-078 — robots.txt unreachable policy was incorrectly treated as unavailable
-**Date:** 2026-08-30  
+**Date:** 2026-08-30
 **Environment:** Catalog Center 8.9.9 / Phase49.3I.43–45 public acquisition.
 
 **Symptom/Risk:** the pre-fix `robots_policy()` generic exception path returned `allowed=True`. A robots 5xx/network failure could therefore be treated the same as a genuine robots 4xx-unavailable resource and allow acquisition while policy was temporarily unreachable.
@@ -1394,7 +1402,7 @@ Existing conditional-cache, Retry-After/cooldown and robots pacing behavior rema
 **Prevention:** acquisition policy code must model unavailable, unreachable, rate-limited and explicitly denied states separately. A temporary network/server failure must never silently become permission.
 
 ### ERR-49-077 — Qt6 workflow referenced runner context before a runner/job existed
-**Date:** 2026-08-30  
+**Date:** 2026-08-30
 **Environment:** new Phase49.3I.42 GitHub Actions workflow.
 
 **Symptom:** run `33299686593` failed immediately and contained zero jobs.
@@ -1411,7 +1419,7 @@ Existing conditional-cache, Retry-After/cooldown and robots pacing behavior rema
 
 
 ### ERR-49-076 — Stage-2 multi-Filament selection was technically possible but operationally ambiguous
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** Catalog Center 8.9.8 / Stage 2 after ERR-49-075.
 
 **Symptom:** an inventory with many Filaments could only be managed through an extended Treeview selection whose multi-select behavior depended on Ctrl/Shift. The operator could not clearly see the complete Product selection set, global Filament definition was mixed into Product editing, and repeated Products encouraged repeated manufacturer/material typing.
@@ -1438,7 +1446,7 @@ Existing conditional-cache, Retry-After/cooldown and robots pacing behavior rema
 
 
 ### ERR-49-075 — saved Filament hidden after save and price preview used stale/zero facts
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after ERR-49-074 owner visual QA.
 
 **Owner visual evidence:**
@@ -1475,7 +1483,7 @@ Existing conditional-cache, Retry-After/cooldown and robots pacing behavior rema
 
 
 ### ERR-49-074 — final Stage-2 price/rate calculation disappeared from the visible operator surface
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** Catalog Center 8.9.8 / Phase49.3I.40 after owner acceptance of ERR-49-073.
 
 **Owner evidence before change:** exact ERR-49-073 regressions 2/2 PASS, OpenRouter-only 4/4 PASS, full Windows stage regression 73/73 PASS, foreground launch PASS. The image Metadata refresh issue cleared and the owner reported the Product ready for publication. Remaining Stage-2 usability regression: the mature calculation logic still existed, but the always-visible final amount/rate result had been removed from the final 3I.39/3I.40 composition. The visible buttons also still said `Offer`, while the operator terminology requested is `Filament`.
@@ -1502,7 +1510,7 @@ Existing conditional-cache, Retry-After/cooldown and robots pacing behavior rema
 
 
 ### ERR-50-017 — Store 0040 CI froze Decimal string presentation instead of numeric value
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** GitHub Actions `Phase50 Variant2 + Profile Matrix CI`, migration `store.0040_phase50_filament_offer_operations`.
 
 **Symptoms:** compile, Storefront JavaScript, Django check, `makemigrations --check --dry-run`, migration plan and full CI SQLite migration all passed, but the regression step had two failures:
@@ -1583,7 +1591,7 @@ Correct fix: delegate with named arguments matching the mature signature.
 Correct fix: public Hero uses Product-owned gallery/main media or safe remote fallback; never widen public routing to imported working-media.
 
 ### ERR-49-052 — Product Save/AI rebuilt the entire Products gallery and thumbnails
-**Date:** 2026-08-26  
+**Date:** 2026-08-26
 **Environment:** Windows Catalog Center with a large Product catalog.
 
 **Symptoms:** pressing AI or editing a Product visibly refreshed the Products page; repeated actions became expensive with many cards/images.
@@ -1595,7 +1603,7 @@ Correct fix: public Hero uses Product-owned gallery/main media or safe remote fa
 **Prevention:** Product-scoped Save/AI must not rebuild the global Products Explorer. Batch may refresh once at completion.
 
 ### ERR-49-053 — Generic/silent Product Save could erase the canonical source URL
-**Date:** 2026-08-26  
+**Date:** 2026-08-26
 **Environment:** Windows Catalog Center Product Workspace.
 
 **Symptom:** after pressing an apparently unrelated Product action, the saved Product source link disappeared.
@@ -1619,7 +1627,7 @@ Correct fix: public Hero uses Product-owned gallery/main media or safe remote fa
 **Prevention:** generic Save, silent Save, AI, close, refetch, image or publish-related flows are never destructive unlink operations. Clearing a canonical source URL requires a future explicit separately confirmed unlink action.
 
 ### ERR-49-054 — First Catalog Center 8.8.2 Windows release gate retained stale `8.8.1` test literal
-**Date:** 2026-08-26  
+**Date:** 2026-08-26
 **Environment:** GitHub Actions `Catalog Center Windows Portable Release`, run `32996526842`.
 
 **Symptom:** Windows compile passed and all new Phase49.3I.32 source-link tests passed, but the regression stage failed after 112 tests with one failure: `Epic49OperatorUIContractTests.test_current_release_and_resilient_staged_exe_build_are_enabled` asserted `APP_VERSION == "8.8.1"` while runtime version was correctly `8.8.2`. Launcher/build/artifact steps were skipped because the gate stopped correctly.
@@ -1636,7 +1644,7 @@ Correct fix: public Hero uses Product-owned gallery/main media or safe remote fa
 
 
 ### ERR-49-055 — Generated portable release output made the Local gate block its own next run
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** canonical Windows checkout `D:\projects\3DPrintHub`.
 
 **Symptom:** after a successful `-BuildExe` run, `catalog_center/release/` appeared as an untracked path. The next Phase49.3I.31-32 gate stopped at `WORKTREE DIRTY` before reaching `-LaunchApp`, so the new head was never actually launched.
@@ -1673,10 +1681,10 @@ Extend final mature ModelAdmin composition; preserve dependent list/edit/link in
 Correct fix: preserve mature Product list and assert current boundary-owned invariants. CI run `32941662288` PASS.
 
 ### ERR-50-007 — Production `git fetch --prune origin` left active branch remote-tracking ref stale
-**Date:** 2026-08-26  
-**Environment:** `/home/sfkilvrs/3dprinthub`.  
-**Root Cause:** host `remote.origin.fetch` tracked only `+refs/tags/v0.33.0:refs/tags/v0.33.0`; normal fetch did not advance branch refs.  
-**Correct Fix:** verify `git ls-remote`, explicitly fetch active branch to `FETCH_HEAD`, verify exact SHA/ancestry, ff-only merge.  
+**Date:** 2026-08-26
+**Environment:** `/home/sfkilvrs/3dprinthub`.
+**Root Cause:** host `remote.origin.fetch` tracked only `+refs/tags/v0.33.0:refs/tags/v0.33.0`; normal fetch did not advance branch refs.
+**Correct Fix:** verify `git ls-remote`, explicitly fetch active branch to `FETCH_HEAD`, verify exact SHA/ancestry, ff-only merge.
 **Prevention:** never trust `origin/<branch>` on this host without checking refspec/upstream.
 
 ### ERR-50-008 — Legacy permanent Django filter column crushed modern Admin changelists
@@ -1692,7 +1700,7 @@ Use Production Python or portable temp-file/pipeline enumeration; do not depend 
 Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads are arguments/data, never executable source.
 
 ### ERR-50-012 — Profile Variant API treated `price_breakdown` callable as a dict
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Phase50 Profile Matrix CI.
 
 **Symptom:** `/store/api/variant-commerce-options/` raised `AttributeError: 'function' object has no attribute 'get'` when the Profile Matrix test requested the selected Variant price.
@@ -1708,7 +1716,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** API serializers must execute mature no-argument domain contracts before reading their returned mapping; do not treat bound methods as data.
 
 ### ERR-50-013 — Saved-address checkout was rejected by the new shipping policy wrapper
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Phase50 Checkout regression.
 
 **Symptom:** checkout using a valid saved address returned HTTP 200 with form errors instead of the expected 302 success. Two immutable-checkout tests failed.
@@ -1722,7 +1730,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** wrappers around mature forms must honor the mature form's alternate data source/early-return semantics instead of assuming every field is populated in `cleaned_data`.
 
 ### ERR-50-014 — Downstream Profile state hid valid size/weight choices and could show another size's price
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Storefront dependent Profile selector.
 
 **Risk/Symptom:** after a customer changed size, the currently selected downstream weight/build could constrain the option list for an upstream dimension. Price badges for a weight were also calculated from every Product Variant with that weight, so a 150 g price from size 20 could appear while viewing size 30.
@@ -1736,7 +1744,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** dependent option matrices are prefix trees: later selections never determine the availability or price of earlier-level options.
 
 ### ERR-50-015 — Windows portable workflow did not watch mature Product studio publish-gate files
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** GitHub Actions Windows portable release.
 
 **Risk:** Profile Matrix publish-readiness fixes in `catalog_center/app/product_studio.py` and `catalog_center/app/epic49_product_studio.py` could pass targeted CI without automatically producing a fresh immutable Windows artifact.
@@ -1751,7 +1759,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-50-016 — `support_weight_grams` runtime metadata drifted from migration 0039
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** GitHub Actions `Phase50 Variant2 + Profile Matrix CI`, failed run `33059803005`.
 
 **Symptom:** `python manage.py makemigrations --check --dry-run` proposed an unapproved `0040_alter_productvariant_support_weight_grams.py`.
@@ -1767,7 +1775,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** when a later formal migration owns a field that an older runtime layer may dynamically contribute first, field metadata (`type/max_digits/decimal_places/default/null/blank/verbose_name`) must remain identical. Always gate with `makemigrations --check --dry-run` before Production.
 
 ### ERR-49-056 — Catalog Center 8.9.1 Windows gate retained stale quick-price and package-version expectations
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** GitHub Actions `Catalog Center Windows Portable Release`, failed run `33059799929`.
 
 **Symptoms:**
@@ -1786,7 +1794,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-057 — PowerShell multiline `python -c` DB probe stripped Python quotes in Local owner gate
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** canonical Windows checkout `D:\projects\3DPrintHub`, owner Local QA wrapper at branch HEAD `35ab63105f30fdca42518d5273a424a3200977e3`.
 
 **Symptom:** Local owner gate passed repository verification, live GitHub verification and Catalog SQLite backup, then failed before any new migration with:
@@ -1804,7 +1812,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-058 — Local gate `CATALOG_CENTER_LAUNCHED=YES` did not prove visible owner UI launch
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Windows owner Local QA, Catalog Center 8.9.1.
 
 **Symptom:** automated gate ended with `CATALOG_CENTER_LAUNCHED=YES`, but the owner did not see the new UI and could not perform visual acceptance.
@@ -1817,7 +1825,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-059 — 3I.35 AI resilience panel mixed `grid` into the pack-managed Settings parent
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** owner foreground Local launch of Catalog Center 8.9.1 on `D:\projects\3DPrintHub`.
 
 **Symptom:** foreground `launch.py --debug` reached real application initialization and then aborted before any window became usable with:
@@ -1837,7 +1845,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-060 — Profile Matrix selection callback called an unbound short-name helper
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** owner foreground Local QA of Catalog Center 8.9.2 after `ERR-49-059` startup geometry fix.
 
 **Symptom:** Catalog Center 8.9.2 itself started successfully, but opening real Products 305 and 303 emitted repeated Tk callback failures and prevented the Profile/Order workspace from becoming usable:
@@ -1860,7 +1868,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** nested UI helper methods must be called through the exact namespaced attribute actually installed on the final wrapped class. Static presence tests are insufficient for wrapped callback binding; execute callback contracts on a minimal installed class.
 
 ### ERR-49-061 — Commerce lock protected ledger JSON but missed legacy plural Profile transport
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Phase49.3I.36/3I.37 Catalog Center regression gate.
 
 **Symptom:** the finalized-Commerce regression showed `sales_profile_ledger_json` stayed protected while the mature legacy transport `sales_profiles_json` could still be overwritten to `[]` after the Commerce stage was locked. This matched the owner-visible risk that a later AI/Save path could make previously registered Profiles disappear.
@@ -1878,7 +1886,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** write-scope/lock mappings must cover every mature alias/transport that can persist the same business object, not only the newest authoritative field name.
 
 ### ERR-49-062 — Rejected/blocked Direct Link identity was checked only after acquisition
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Catalog Center Direct Link import.
 
 **Symptom/Risk:** a Product that was already blocked/rejected could still enter `extract_direct_link()` and reopen browser/HTTP/image acquisition. The later DB upsert guard could prevent the Product record from becoming active, but local images/files might already have been downloaded again.
@@ -1894,7 +1902,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 **Prevention:** any permanent skip/block/reject decision must be evaluated before browser, HTTP, image or file acquisition—not only before DB persistence.
 
 ### ERR-49-063 — Category/site crawl repeatedly exposed the same fixed first discovery window
-**Date:** 2026-08-27  
+**Date:** 2026-08-27
 **Environment:** Catalog Center category/site crawl.
 
 **Symptom/Risk:** `category/site_crawl` used one discovery pass with a fixed `scroll_rounds=8`. Although `discovered_urls` correctly rejected already-known Product identities, re-running the same Listing could repeatedly rediscover the first visible set instead of moving deeper to new Products.
@@ -1911,7 +1919,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-064 — 3I.35 legacy material actions aborted ProductWorkspace before 3I.39/3I.40 UI
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Local QA, Catalog Center 8.9.8 / build 2026.08.29.2, canonical checkout `D:\\projects\\3DPrintHub`.
 
 **Symptom:** the owner opened a real Product Workspace and still saw the older Stage-2/SEO surface even though launcher verification printed every 3I.39/3I.40 feature marker. Foreground diagnostics then raised:
@@ -1935,7 +1943,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-065 — AI filled SEO fields but stale readiness/UI still showed them as missing
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Local QA after ERR-49-064, Catalog Center 8.9.8 / Phase49.3I.40.
 
 **Symptom:** the seven-stage AI completed and persisted Persian/SEO fields, but the Product Workspace still showed red/missing SEO items and stale stage icons. The owner correctly observed that the Product appeared to need a post-AI refresh before publish readiness reflected the saved fields.
@@ -1958,7 +1966,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-066 — Readiness checker, stage ownership and AI repair disagreed
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Local QA on `c679c66d8c6554ff14e5705b7eb3aada24495990`, Catalog Center 8.9.8 / Phase49.3I.40.
 
 **Owner evidence:** Local fast-forward and 12 targeted tests passed, then the real Product 63 run proved the remaining defect. The first visible full-AI action still executed the older 3I.31 path and persisted title/content/SEO/image fields. The later 3I.39 readiness loop reported `7` data defects / `5` AI-fixable defects, scoped only Stage 4, accepted a fallback AvalAI response, then reported `0` defects fixed and stalled with the same `5` AI-fixable defects.
@@ -1999,7 +2007,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-067 — Locked-stage regression fixture violated the new Persian SEO contract
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner Local ERR-49-066 focused gate on `9f3b765e28f9b9adda1e7713dbc48c1255a52c1c`.
 
 **Symptom:** compile passed, then the 43-test focused suite stopped with exactly one error in `test_locked_quick_and_content_are_not_rewritten_by_orchestrator`. The exception occurred before the lock assertion path:
@@ -2021,7 +2029,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-068 — Windows stage confirmation deadlock + stale Tk callbacks + AI fallback identity mismatch
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Windows QA on exact Local head `0191a07f980d3cf5ba48ed1379a1c9da98c39e1b`, Catalog Center 8.9.8 / build 2026.08.29.2 / Product 63.
 
 **Owner evidence:** the corrected ERR-49-067 gate passed the previously failing test and then all 43 focused tests. The canonical source launched successfully. In the real Product Workspace, Stage 1 fields could be visibly complete or manually edited but the Stage stayed unconfirmed/red, the expected bottom confirmation control was not available in the visible workflow, and the operator could not naturally advance. The same runtime trace also showed:
@@ -2073,7 +2081,7 @@ Invoke `python - <json-path> ...` and parse data with `json.load`; JSON payloads
 
 
 ### ERR-49-069 — late Wizard repaint, incomplete stage ownership UI and AvalAI fallback after 60/60 Local PASS
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Windows QA on exact Local head `3f43260db669b458a682f594b5d50eb5221b9ef3`, Catalog Center 8.9.8 / build 2026.08.29.2.
 
 **Owner evidence:** the ERR-49-068 Local gate verified the canonical checkout, created backup `D:\projects\3dprinthub-backups\err49-068-20260829-174512\catalog-before-err49-068-qa.sqlite3` with SHA256 `5A6DB948ADACA81014DEDFA7FF117A0C4AF26364936575ACB15D21D632D4C321`, passed compile and 60/60 focused tests, then launched the exact 8.9.8 source. Real Product 63/295 QA still showed:
@@ -2150,7 +2158,7 @@ Prevention: a new Stage-owned field must land together in clean schema, upgrade 
 ### ERR-49-071 — 67/67 PASS but Stage confirmation UX still broken and false missing count exploded
 **Executable checkpoint:** `6085ea70d1075c5a1abaca4b4b2efdebe1254829`. Stage-2 confirmation persists visible Product type/dimensions before locking. No current-head Actions run is attached; owner Local verification remains pending.
 
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner foreground Windows QA on exact Local head `d4da99744659d06ebe5c04fd69532cd0e03db3e8`, Catalog Center 8.9.8 / build 2026.08.29.2.
 
 **Owner evidence:** repository/branch/head verification PASS; fresh Catalog backup `D:\projects\3dprinthub-backups\err49-070-20260829-185545\catalog-before-err49-070-qa.sqlite3` with SHA256 `C1538C91C9F9E2173E7CA4E28B3F60DFCC1E38449A276F96845BC065CE689033`; compile PASS; exact two ERR-49-070 regressions PASS; OpenRouter-only 4/4 PASS; full Windows stage contract 67/67 PASS; foreground launch PASS. Visual QA nevertheless failed.
@@ -2197,7 +2205,7 @@ Observed UI/runtime:
 
 
 ### ERR-49-072 — new Stage-2 regression fixture used an incomplete clean Catalog schema
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner Local Windows, exact branch/head `34c65bc9e39d851b4fd3f7e0d2d4ec9627aed5b9`, ERR-49-071 gate.
 
 **Owner evidence:** canonical repo/branch/head PASS; fresh real Catalog SQLite backup created at `D:\projects\3dprinthub-backups\err49-071-20260829-193034\catalog-before-err49-071-qa.sqlite3` with SHA256 `0FA06AF7884F005A8820A420DBDC6C42B883E836A554F9C315E1D559854362F0`; changed-source compile PASS. The exact 7-test ERR-49-071 set stopped on one deterministic error before OpenRouter/full-suite/foreground launch:
@@ -2223,7 +2231,7 @@ The real ProductWorkspace initializes those schemas before Stage-2 editing, so t
 
 
 ### ERR-49-073 — image Stage confirms, then downstream Content/Source makes Metadata look stale while lock blocks refresh
-**Date:** 2026-08-29  
+**Date:** 2026-08-29
 **Environment:** owner Windows foreground QA on exact `6d5897ecefc427c940c690daabc311f85cc6e044`, Catalog Center 8.9.8 / build 2026.08.29.2.
 
 **Owner verification before defect:** exact ERR-49-071/072 regressions 7/7 PASS, OpenRouter-only 4/4 PASS, full Windows stage suite 71/71 PASS, foreground launch PASS. Stage 1/Content/Source/Slider confirmation worked. Owner intentionally left Stage-2 price/profile incomplete.
@@ -2250,7 +2258,7 @@ The real ProductWorkspace initializes those schemas before Stage-2 editing, so t
 **Prevention:** distinguish immutable operator choices from deterministic derived artifacts. A Stage lock may block editing the approved inputs, but must not prevent the system from refreshing derived fingerprints/files when downstream authoritative metadata changes.
 
 ### ERR-49-086 — eager Product/Crawl reads and missing pre-Qt acquisition parity made the new Qt surface slower/incomplete on real Catalog data
-**Date:** 2026-09-01  
+**Date:** 2026-09-01
 **Environment:** Qt Catalog Center branch `agent/phase49-3i18-operator-bulk-ai-rebuild`.
 
 **Owner evidence / symptom:**

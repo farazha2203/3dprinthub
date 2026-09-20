@@ -22,6 +22,18 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - A2R release candidate LOCAL_TESTED / Production preflight PASS
+
+Dedicated 3DPrintHub reverse management is restored and authenticated from Windows: `127.0.0.1:22024` -> Host bridge PID 775486 returned `ok=true`, version `1.0.0`, base `/home/sfkilvrs/3dprinthub`. Owner-side break-glass bootstrap returned `REVERSE_TUNNEL_BOOTSTRAP=PASS` with tunnel PID 3898571; the one-minute `flock` watchdog remains installed.
+
+Authenticated read-only Production preflight PASS: Host `nphost4.parsblog.com`, account `sfkilvrs`, repository `/home/sfkilvrs/3dprinthub`, branch `release/phase50-a2j-hero-20260915`, exact clean HEAD `65d42e40979830b306e92457093aefe068086f66`, Python 3.12.13, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, and `No planned migration operations`.
+
+Masked payment state before A2R deploy: `StorePaymentSettings` row absent; manual payment inactive/unconfigured; ZarinPal provider selected but environment/site enable are false and Merchant ID is not configured. No payment destination or credential value was printed.
+
+New guarded release runner `scripts/host/phase50_a2r_payment_finance_admin_deploy.sh` is Local-tested. It requires the exact clean Production baseline, live GitHub target equality and fast-forward ancestry, rejects migrations/dependencies/settings/unexpected delta, creates checksum-verified source + `.env` + MySQL gzip rollback evidence before source promotion, performs no migration or payment-settings write, verifies payment dry-run/readiness and a read-only Admin render smoke, restarts Passenger, and checks public Home/Store HTTP.
+
+Release Local gate PASS on Windows: compile, Django check, no model drift, canonical Local migration plan empty, focused payment/Admin regression 29/29, Git Bash syntax and diff hygiene. Exact next: commit/push release branch -> verify live GitHub SHA -> execute guarded runner from fetched GitHub commit -> verify backup + final Production HEAD -> browser Payment Readiness/checkout/receipt/Admin-review smoke -> only then configure/activate manual payment through the secure environment/Admin path after a fresh DB rollback boundary.
+
 ## 2026-09-20 - A2R payment readiness panel WIP
 
 The second A2R slice adds a read-only Payment Readiness panel to the existing Phase50 Admin Command Center. It reuses \`payment_gateway_status()\` plus the existing \`StorePaymentSettings\` singleton and exposes only booleans/non-secret provider metadata. Merchant ID and manual-payment destination values are never rendered. Treasury now links directly to the manual-payment singleton Admin. No migration or Production mutation.

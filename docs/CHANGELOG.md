@@ -14,6 +14,13 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - A2R release runner + restored Production transport
+- Restored dedicated 3DPrintHub reverse tunnel and authenticated bridge Health; no alternate project tunnel was used.
+- Production read-only preflight PASS at clean `65d42e40979830b306e92457093aefe068086f66`, correct MySQL and empty migration plan.
+- Added guarded A2R deploy runner with verified source/env/MySQL backup before ff-only GitHub promotion and no migration/payment-settings write.
+- Release Local gate PASS: payment/Admin 29/29, compile/check/no-drift/empty-plan, Bash syntax and diff hygiene.
+- Current masked state remains manual payment unconfigured/inactive and ZarinPal disabled/unconfigured.
+
 ## 2026-09-20 - A2R Payment Readiness Command Center
 - Added a secret-safe payment readiness panel using existing gateway/manual-payment authorities.
 - Added Treasury access to manual-transfer settings and regression coverage that forbids rendering payment destination values.
