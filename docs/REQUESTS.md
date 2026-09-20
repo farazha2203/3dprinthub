@@ -1,5 +1,5 @@
 ## 2026-09-20 - Owner: finish A2S finance reconciliation and receipt audit
-Status: `FINANCE/RECEIPT LOCAL_TESTED / GITHUB+PRODUCTION NEXT`.
+Status: `FINANCE/RECEIPT GITHUB_UPDATED / PRODUCTION PREFLIGHT PASS / GUARDED DEPLOY NEXT`.
 
 The requested remaining A2S slice now has a read-only reconciliation command and reviewer audit evidence on the existing authorities only. No second financial ledger or migration is introduced. Store Admin approval records reviewer through the existing order event; Website manual-payment approval records reviewer source/id in the existing immutable payment-ledger metadata. Production baseline is financially empty, so no correction write is needed. Remaining boundary is GitHub commit/push -> guarded no-migration deploy -> Production read-only audit acceptance.
 

@@ -14,6 +14,12 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2S guarded finance/receipt deploy runner
+- Production read-only preflight PASS at clean `888af6b4...`: correct branch/origin/MySQL, empty migration plan and Phase30 audit OK.
+- Added guarded no-migration A2S runner with exact baseline/target/delta checks and verified source/.env/MySQL rollback creation before source promotion.
+- Runner post-merge gate executes compile, Django check, no-drift, Phase30 audit, Phase50 reconciliation, masked payment readiness, Passenger restart and Home/Store HTTP smoke.
+- Git Bash syntax + diff-check PASS; Production remains unchanged until exact GitHub runner execution.
+
 ## 2026-09-20 - Phase50.A.2S finance reconciliation + receipt reviewer evidence
 - Added read-only cross-authority reconciliation for Store payments/orders/jobs, Website payments/ledger/quotes, finance summary and manual receipt lifecycle.
 - Store manual-payment Admin approval now carries the authenticated reviewer into the existing order event; Website manual approval stores reviewer id/source in existing ledger metadata.

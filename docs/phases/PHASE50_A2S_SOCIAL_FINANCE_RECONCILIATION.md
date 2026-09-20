@@ -43,5 +43,17 @@ First close the hardened Site-first Instagram/Buffer workflow, then reconcile St
 - Local verification: compile PASS; focused 7/7; adjacent payment/finance 39/39; Django check PASS with known warnings; no migration drift; diff-check PASS.
 - ERR-49-192 records the first pre-run secret-boundary failure and CI-only environment correction.
 
+## Deploy gate
+- Finance/receipt source pushed at `8fabbcd59e1b5526e96833238f4999fffc678aed`.
+- Authenticated reverse-tunnel Production preflight PASS at clean Host `888af6b4551b2e6b1e5681aab4c3d9610735474a`, correct MySQL and empty migration plan.
+- Existing Phase30 Production audit remains OK with zero payment/ledger rows.
+- Dedicated `scripts/host/phase50_a2s_finance_receipt_deploy.sh` is Local Git-Bash syntax tested and fail-closed:
+  - exact baseline/live target/fast-forward/delta;
+  - no migration/dependency/settings/env changes;
+  - masked manual-payment readiness;
+  - checksum-verified source/.env/MySQL rollback before promotion;
+  - post-merge compile/check/no-drift + Phase30 + Phase50 reconciliation;
+  - Passenger restart + public Home/Store smoke.
+
 ## Exact next
-Commit/push exact finance/receipt delta -> authenticated Host identity/DB/migration preflight -> fresh rollback evidence -> guarded no-migration GitHub deploy -> Production read-only `phase30_payment_audit` + `phase50_finance_reconciliation` -> A2S finance/receipt ACCEPTED if clean.
+Commit/push runner checkpoint -> execute exact GitHub runner through the dedicated reverse tunnel -> require verified backup, reconciliation PASS and clean final HEAD -> documentation closure / A2S finance-receipt ACCEPTED.

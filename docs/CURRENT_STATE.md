@@ -22,6 +22,14 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2S finance/receipt deploy runner LOCAL_TESTED / Production preflight PASS
+
+Finance/receipt source is pushed at `8fabbcd59e1b5526e96833238f4999fffc678aed`. Dedicated reverse tunnel is currently healthy. Fresh authenticated Production read-only preflight proves Host branch `release/phase50-a2j-hero-20260915`, exact clean HEAD `888af6b4551b2e6b1e5681aab4c3d9610735474a`, correct GitHub origin, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, migration plan count 0 and `PHASE30_AUDIT=OK`.
+
+A dedicated `phase50_a2s_finance_receipt_deploy.sh` is Local-tested with verified Git Bash syntax and diff hygiene. It requires the exact Production baseline/live GitHub target, rejects migration/dependency/settings/env or unexpected file deltas, requires manual-payment readiness, creates checksum-verified source/.env/MySQL rollback evidence before ff-only promotion, runs post-merge compile/check/no-drift + Phase30 + Phase50 reconciliation, restarts Passenger and verifies public Home/Store HTTP.
+
+Production has not yet been mutated by A2S finance/receipt. Exact next: commit/push runner+docs -> execute the exact GitHub runner through the authenticated reverse tunnel -> require backup PASS + reconciliation PASS + clean final HEAD -> update closure docs.
+
 ## 2026-09-20 - Phase50.A.2S finance reconciliation + receipt reviewer audit LOCAL_TESTED
 
 Finance authority remains single-source by domain: Store manual/gateway payments remain `StorePayment/StoreOrder`; custom-order payments remain `website.Payment/PaymentLedgerEntry`; profitability remains derived from `ProductionJob/CostEntry`. No new ledger/model/migration was introduced.

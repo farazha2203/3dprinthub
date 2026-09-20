@@ -22,8 +22,10 @@
 - [x] Implement read-only reconciliation command without creating a second ledger.
 - [x] Persist manual-payment reviewer evidence through existing StoreOrderEvent / PaymentLedgerEntry metadata.
 - [x] Focused 7/7 + adjacent payment/finance 39/39 + check/no-drift/diff-check PASS.
-- [ ] Commit/push finance + receipt-audit slice.
-- [ ] Guarded no-migration GitHub deploy because Admin reviewer runtime changed.
+- [x] Commit/push finance + receipt-audit source at `8fabbcd59e1b5526e96833238f4999fffc678aed`.
+- [x] Fresh authenticated Production preflight: clean `888af6b4...`, correct MySQL, empty migration plan, Phase30 audit OK.
+- [x] Build and Local-test guarded no-migration A2S deploy runner.
+- [ ] Commit/push exact runner checkpoint and execute it through the dedicated reverse tunnel.
 - [ ] Production read-only phase30 + phase50 finance reconciliation acceptance.
 - [ ] Mark A2S finance/receipt audit ACCEPTED after Production read-only PASS.
 
