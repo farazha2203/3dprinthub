@@ -1,3 +1,8 @@
+## 2026-09-20 - A2R Canonical Windows Local PASS
+- Verified exact source `fef8a27dfb66f367a3b383004e21dc7ca18e4659` from an isolated clean Windows worktree without touching the primary dirty Local clone.
+- Python 3.12.10 compile/check/no-drift passed; payment/Admin regressions 29/29 passed; diff hygiene passed.
+- Empty migration plan was proven against a disposable copy of the canonical Local SQLite state (Store 0042 / Website 0024); no Local or Production database mutation occurred.
+
 ## 2026-09-20 - A2R CI gate PASS
 - GitHub Actions A2R gate run `35499242459` completed SUCCESS on exact SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8`.
 - Compile, Django system check, no unintended migrations, focused payment/Admin regressions and diff hygiene passed.
