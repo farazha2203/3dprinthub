@@ -1,6 +1,6 @@
 # Phase50.A.2R — Payment / Finance / Admin Closure
 
-Status: LOCAL_TESTED / RELEASE SHA FREEZE NEXT  
+Status: LOCAL_TESTED / RELEASE FROZEN / PRODUCTION PREFLIGHT BLOCKED  
 Date: 2026-09-20  
 Base Site release: \`65d42e40979830b306e92457093aefe068086f66\`  
 WIP branch: \`wip/phase50-a2r-payment-finance-admin-20260920\`
@@ -76,3 +76,9 @@ The existing A2L guarded deploy runner performs both a source grep and runtime g
 - PASS: compile, Django check, no model drift, canonical Local migration plan empty, focused payment/Admin tests 29/29, diff hygiene.
 - Empty-plan proof used a disposable copy of canonical Local SQLite so the primary Local DB/worktree remained unchanged.
 - Next boundary: freeze docs-only release SHA, then Production read-only preflight through the dedicated 3DPrintHub reverse tunnel.
+
+
+## 2026-09-20 Production preflight boundary
+- Central gateway router compatibility was repaired outside application source under ERR-49-187 with a retained local backup.
+- The dedicated 3DPrintHub reverse tunnel remains down: no Windows listener on `127.0.0.1:22024`, no active reverse-tunnel SSH process.
+- Production remains unchanged. Backup/deploy/browser acceptance must not start until authenticated dedicated-tunnel Health passes.
