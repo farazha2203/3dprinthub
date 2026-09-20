@@ -5,7 +5,8 @@
 - [x] Add direct Treasury link to manual-transfer settings.
 - [x] Add regression that verifies status and rejects rendering payment destination values.
 - [x] Extend A2R CI scope with Command Center tests.
-- [ ] Canonical Local/CI regression on exact WIP SHA.
+- [x] GitHub CI regression PASS on exact source SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8` (run `35499242459`).
+- [ ] Canonical Windows Local regression on exact documented WIP lineage.
 - [ ] Promote only after gates pass.
 
 ## 2026-09-20 - Phase50.A.2R payment/finance/admin closure
