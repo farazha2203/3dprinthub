@@ -1,3 +1,9 @@
+## 2026-09-20 - A2R CI gate PASS
+- GitHub Actions A2R gate run `35499242459` completed SUCCESS on exact SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8`.
+- Compile, Django system check, no unintended migrations, focused payment/Admin regressions and diff hygiene passed.
+- Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
+- Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
+
 ## 2026-09-20 - A2R Payment Readiness Command Center
 - Added a secret-safe payment readiness panel using existing gateway/manual-payment authorities.
 - Added Treasury access to manual-transfer settings and regression coverage that forbids rendering payment destination values.
