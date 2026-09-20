@@ -20,7 +20,7 @@
 - [x] Add focused secure-command/navigation regressions.
 - [x] Canonical Windows Local compile/check/no-drift/empty-plan + payment/Admin regression 29/29 PASS on tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`.
 - [ ] Promote tested A2R slice to release.
-- [ ] Production read-only identity/DB/migration verification.
+- [ ] Production read-only identity/DB/migration verification — BLOCKED until dedicated `127.0.0.1:22024` reverse tunnel Health passes.
 - [ ] Fresh MySQL/source/env backup then secure settings apply/read-back.
 - [ ] Browser manual-payment receipt/Admin-review smoke.
 - [ ] ZarinPal config/audit UI and finance reconciliation slices.
