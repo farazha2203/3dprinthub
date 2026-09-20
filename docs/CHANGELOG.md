@@ -14,6 +14,13 @@
 - Fixed the CI-only fixture error caused by a missing module-level `unittest.mock.patch` import; no Production mutation was performed.
 - Next required boundary is Canonical Windows Local on the exact documented WIP lineage before release promotion.
 
+## 2026-09-20 - Phase50.A.2R accepted
+- Manual-payment configuration is active and masked-readiness PASS.
+- Production rollback-only UAT PASS: Cart -> Checkout -> manual payment -> receipt upload -> Admin review -> Admin approve.
+- UAT receipt file was deleted, DB transaction rolled back and Product inventory returned to the exact pre-UAT state; no UAT user/order remains.
+- Production remains clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a` with empty migration plan.
+- Next workstream: Instagram/SEO Social, finance reconciliation and receipt audit.
+
 ## 2026-09-20 - A2R pre-activation rollback + quota cleanup
 - First fresh activation backup stopped safely on Host quota before any financial DB write.
 - Verified newest rollback, removed only the incomplete activation directory and one redundant older A2R deploy backup, reclaiming 15,669,731 bytes.

@@ -22,6 +22,16 @@ The canonical Windows repository at `D:\projects\3DPrintHub` was verified before
 
 Exact next: isolated Canonical Windows Local gate -> freeze tested SHA -> Production read-only Host/DB/migration preflight through the dedicated reverse tunnel -> fresh verified source/env/MySQL rollback backup -> GitHub-based deploy -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
 
+## 2026-09-20 - Phase50.A.2R ACCEPTED / Production payment flow verified
+
+Manual-payment configuration is now present and active on Production; masked checks confirm holder + destination configured without printing financial values. Fresh pre-activation rollback remains verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20260920-163425-phase50-a2r-manual-payment-activation`.
+
+A rollback-only Production UAT used real Product #39 and the current Store views/forms with HTTPS Test Client behavior. PASS: Cart add, Checkout redirect to manual payment, destination render, receipt upload -> awaiting_review, authenticated Admin payment review page, Admin approve action -> paid, receipt file cleanup, DB rollback and inventory rollback. No UAT user/order remains in Production; notification side effects were suppressed during the controlled test.
+
+Post-UAT Production remains clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a`, migration plan empty, manual payment ready/active and zero A2R UAT residue. Phase50.A.2R is ACCEPTED.
+
+Exact next: Instagram/SEO Social bounded audit + changed-revision-only publication -> finance reconciliation across StorePayment / Website PaymentLedgerEntry / finance summaries -> receipt audit trail closure.
+
 ## 2026-09-20 - A2R manual-payment activation rollback READY / Admin entry required
 
 Before any payment-setting write, the first fresh MySQL backup attempt stopped fail-closed on Host quota (ERR-49-191). The newest existing A2R rollback was re-verified, only one older redundant A2R rollback plus the incomplete activation directory were removed, and exactly 15,669,731 bytes were reclaimed.
