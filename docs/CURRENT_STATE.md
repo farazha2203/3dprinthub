@@ -1,3 +1,11 @@
+## 2026-09-20 - A2R Canonical Windows Local Gate PASS
+
+Canonical Windows verification ran from isolated clean worktree `D:\projects\3DPrintHub-a2r-local-fef8a27` because the primary Local clone contains unrelated owner/workflow documentation changes and was intentionally left untouched. Exact tested commit: `fef8a27dfb66f367a3b383004e21dc7ca18e4659`; Python 3.12.10.
+
+PASS evidence: touched-surface compile; Django system check (only known Google-credential and CKEditor warnings); `makemigrations --check --dry-run` with no changes; focused payment/Admin regression 29/29; `git diff --check`. The isolated worktree's checkout SQLite has no operational migration history, so its first `migrate --plan` correctly listed the full graph. The required empty-plan check was then run against a disposable copy of the verified canonical Local `db.sqlite3` (133 migration rows; latest Store 0042 / Website 0024) and returned `No planned migration operations`. Original Local DB and primary dirty worktree were not modified.
+
+Production remains unchanged by A2R. Exact next: freeze docs-only release SHA -> reverse-tunnel Production read-only identity/branch/HEAD/worktree/DB/migration preflight -> fresh source/env/MySQL rollback backup -> deploy from GitHub -> masked Payment Readiness + browser checkout/receipt/Admin-review smoke.
+
 ## 2026-09-20 - A2R GitHub CI gate PASS; Canonical Windows Local next
 
 A2R GitHub Actions run `35499242459` completed SUCCESS on exact tested source SHA `22437cbbfe263db9134c74fb1ed65b04eab015f8`. Compile, Django system check, no unintended migrations, focused payment/Admin regressions and diff hygiene passed. The preceding failed run was isolated to a test-fixture `patch` import error and is documented as ERR-49-186.
