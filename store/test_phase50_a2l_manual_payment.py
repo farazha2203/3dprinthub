@@ -11,7 +11,9 @@ class Phase50A2LManualPaymentTests(TestCase):
     def test_seed_command_is_dry_run_by_default(self):
         out = StringIO()
         call_command("phase50_a2l_seed_manual_payment", stdout=out)
-        self.assertIn("A2L_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())\n        self.assertIn("A2R_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())\n        self.assertEqual(StorePaymentSettings.objects.count(), 0)
+        self.assertIn("A2L_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())
+        self.assertIn("A2R_MANUAL_PAYMENT_DRY_RUN=PASS", out.getvalue())
+        self.assertEqual(StorePaymentSettings.objects.count(), 0)
 
     def test_seed_command_requires_secure_config_before_activation(self):
         out = StringIO()
