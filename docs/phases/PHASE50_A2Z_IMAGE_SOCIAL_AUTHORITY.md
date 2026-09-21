@@ -25,8 +25,15 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - Two historical UI assertions first failed broad gate and reproduced identically on clean baseline `f5f40116...`; assertions were aligned to the already-accepted Site-selection/source-refresh UI contract.
 - `git diff --check`, touched Python compile (7 files), and Qt VerifyOnly PASS.
 
+## Real #609 checkpoint
+- Fresh rollback: `phase50-a2z-609-pre-repair-20260921-194148`; SQLite integrity OK + full media manifest.
+- Application-level repair completed: selected=5, canonical=5, physical SEO names `-01..-05.webp`, original selected bytes archived.
+- Site Product remains #42 revision 1; no Site publish yet.
+- ERR-49-218 fixes false source drift introduced by the new physical SEO boundary.
+- Source-drift/promotion/Batch 3/3 and Image+Site Publish 51/51 PASS.
+
 ## Exact next
-Commit/push exact A2Z source -> verify Local=GitHub -> launch exact-SHA Qt -> fresh integrity-checked Catalog + #609 media backup -> repair #609 through application authority -> verify selected/canonical/final SEO media -> one same-identity Site republish -> strict public media/filename parity -> changed-revision Instagram Feed+Story acceptance -> update docs.
+Compile/diff/Qt VerifyOnly -> commit/push ERR-49-218 fix -> verify Local=GitHub -> exact-SHA Qt -> explicit mark-ready #609 -> verify five-image Batch -> verify tunnel/Host/Production + fresh rollback -> one same-identity Site #42 republish -> strict five-image filename/SHA/HTTP parity -> changed-revision Instagram Feed+Story acceptance -> update docs.
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.

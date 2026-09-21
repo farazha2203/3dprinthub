@@ -1,3 +1,19 @@
+## 2026-09-21 - Phase50.A.2Z #609 Real Media Repair + Publish Gate
+- [x] Fresh integrity-checked Catalog + full #609 media rollback.
+- [x] Repair real #609 through application ImageCore; no SQL/direct DB hand-edit.
+- [x] Real selected=5 and canonical=5 with physical SEO `-01..-05.webp`.
+- [x] Preserve old selected source bytes under `source_originals/`.
+- [x] Detect and fix false source-drift between archived original and active SEO WebP (ERR-49-218).
+- [x] Focused source-drift/promotion/Batch 3/3 PASS.
+- [x] Image + Site Publish 51/51 PASS.
+- [ ] Compile/diff/Qt VerifyOnly + commit/push exact drift-fix SHA.
+- [ ] Exact-SHA Qt relaunch and explicit mark-ready #609.
+- [ ] Verify reverse tunnel/Host identity + fresh Production rollback.
+- [ ] Same-identity Site Product #42 republish with all five images.
+- [ ] Verify five ProductImages, SEO basenames, SHA/public HTTP parity.
+- [ ] Changed-revision Instagram Feed + Story; prevent duplicate revision.
+- [ ] Resume A2Z Slider completeness/backfill.
+
 ## 2026-09-21 - Phase50.A.2Z Physical SEO Filename + Image/Social Authority Hotfix
 - [x] Preserve earlier A2Z selected/canonical media + Buffer worktree fixes.
 - [x] Make «اصلاح اسم و سئو» rename/promote real Product-local files to unique numbered SEO WebPs under `images/`.

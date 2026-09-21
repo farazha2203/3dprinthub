@@ -1,3 +1,11 @@
+## ERR-49-218 - Physical SEO promotion caused false source-drift at publish gate
+**Date:** 2026-09-21
+**Observed:** after backup-backed real #609 physical SEO repair, all five selected/canonical media and physical SEO filenames were correct, but Site preflight rejected all five as `source image changed after finalization`.
+**Root cause:** physical promotion intentionally makes `source_local_file` point to the active SEO WebP, whose encoded/embedded-metadata bytes differ from the original source SHA. The mature source-drift checker still compared this active SEO file against `original_sha256`.
+**Correct fix:** when `original_local_file` exists, source-drift compares that preserved source/archive file to `original_sha256`; only pre-promotion records fall back to the legacy source resolver. The actual SEO WebP remains governed independently by `final_sha256`.
+**Verification:** changed-source + physical-promotion + multi-image Batch focused 3/3 PASS; complete Image + Site Publish regression 51/51 PASS. Real #609 media gate no longer has media-drift blockers; before queuing, the only remaining state issue was the ordinary same-identity re-publish readiness transition.
+**Prevention:** source provenance SHA and active Product-local SEO SHA are distinct authorities after physical promotion and must never be compared as if they were the same byte stream.
+
 ## ERR-49-217 - SEO action updated metadata/derivative name but not Product-local physical filename
 **Date:** 2026-09-21
 **Observed:** owner correctly reported that after «اصلاح اسم و سئو» the card/metadata could show SEO names while Product-local files still remained as names such as `01.webp`, `04.webp`, cache hashes or screenshot names. This also allowed confusing duplicate-looking local filenames even though `seo_images` derivatives were unique.

@@ -1,3 +1,13 @@
+## 2026-09-21 - Phase50.A.2Z #609 REAL LOCAL MEDIA REPAIR COMPLETE / PUBLISH-GATE DRIFT FIX LOCAL_TESTED
+
+Fresh rollback before #609 mutation: `D:\projects\3dprinthub-backups\phase50-a2z-609-pre-repair-20260921-194148`; SQLite quick_check=`ok`, SHA256 `eaa0ea055e8ba30bb05c1434ffda06874fbc5f93129ce2bf45d58303f123edf4`, full Product #609 media backup 36 files + manifest.
+
+Using exact pushed Windows runtime `5336b6b71eac9758152814e8bf678b802926540f`, application-level `ImageCore.finalize(609)` repaired real #609 without SQL: selected 5, canonical 5, deterministic physical SEO names `goth-baroque-necklace-display-bust-3d-print-01.webp` through `-05.webp`; local screenshot/04/05 identities remapped to SEO basenames; selected source/cache bytes archived under `source_originals/`; DB quick_check remained ok. Site identity remains Product #42 revision 1; no Site publish has occurred yet.
+
+First post-repair preflight correctly exposed ERR-49-218: all five were falsely tagged source-drift because active `source_local_file` SEO bytes were compared to original source SHA. Fix now prefers preserved `original_local_file` for source-drift. Focused changed-source/promotion/Batch 3/3 PASS and Image+Site Publish 51/51 PASS.
+
+Exact next: compile/diff/Qt VerifyOnly -> commit/push ERR-49-218 fix -> Local=GitHub -> exact-SHA relaunch -> explicit `mark_ready_many([609])` -> verify five-media publish package -> verify reverse tunnel/Host/Production identity and fresh rollback -> same-identity Site #42 republish -> ProductImage count/name/SHA/public HTTP parity -> changed-revision Instagram Feed+Story with duplicate protection.
+
 ## 2026-09-21 - Phase50.A.2Z PHYSICAL SEO FILENAME + MULTI-IMAGE + SOCIAL HOTFIX LOCAL_TESTED
 
 Owner clarified the required image contract beyond the first A2Z fix: «اصلاح اسم و سئو» must rename the actual Product-local physical files, not only metadata/cards and `seo_images`. The implementation now promotes each selected Product-local image to the deterministic SEO WebP basename in `images/`, archives the old source/cache bytes in `source_originals/`, persists the exact physical path, remaps local identities, and prevents duplicate SEO basenames. Removal remains recoverable for the new SEO-named local files.

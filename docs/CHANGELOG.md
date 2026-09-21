@@ -1,3 +1,10 @@
+## 2026-09-21 - A2Z #609 physical repair + source-drift boundary
+- Took fresh integrity-checked Catalog and full #609 media rollback before real mutation.
+- Repaired #609 via ImageCore: five selected/canonical media now use five unique physical SEO WebP identities; original selected source/cache files preserved.
+- Fixed publish source-drift to compare preserved original bytes against original SHA after physical SEO promotion.
+- Focused 3/3 and Image+Site Publish 51/51 PASS.
+- Site #42 remains revision 1 pending exact-SHA commit/push and guarded same-identity republish.
+
 ## 2026-09-21 - A2Z image/social authority hotfix Local-tested
 - Fixed exact-URL image metadata lookup so query-variant cards keep distinct numbered SEO filenames.
 - Trusted Local media checked for Site now joins canonical Product media at Stage-3 save.

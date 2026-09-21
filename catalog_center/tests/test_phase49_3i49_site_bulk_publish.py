@@ -16,7 +16,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
-from app.phase49_3c_image_pipeline import finalize_selected_images
+from app.phase49_3c_image_pipeline import (
+    finalize_selected_images,
+    promote_selected_product_local_seo_files,
+)
 from app.epic49_desktop_schema import add_available_material_color
 from app.phase49_3i49_site_publish import (
     _next_batch_name,
@@ -261,6 +264,41 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(metadata_after[0]["original_sha256"], new_source_sha)
         self.assertNotEqual(metadata_after[0]["final_sha256"], old_final_sha)
         self.assertTrue(publish_media_gate(refreshed)["ready"])
+
+    def test_physical_seo_promotion_does_not_create_false_source_drift(self):
+        product_id = self._product("3491098p")
+        before = dict(self.db.product(product_id))
+        metadata_before = json.loads(before["image_metadata_json"])
+        self.assertEqual(len(metadata_before), 1)
+        original_sha = metadata_before[0]["original_sha256"]
+
+        promoted = promote_selected_product_local_seo_files(
+            self.db,
+            product_id,
+        )
+        self.assertEqual(promoted["selected"], 1)
+        self.assertEqual(promoted["renamed_local"], 1)
+
+        after = dict(self.db.product(product_id))
+        metadata_after = json.loads(after["image_metadata_json"])
+        self.assertEqual(
+            hashlib.sha256(
+                Path(metadata_after[0]["original_local_file"]).read_bytes()
+            ).hexdigest(),
+            original_sha,
+        )
+        self.assertEqual(
+            Path(metadata_after[0]["source_local_file"]).name,
+            metadata_after[0]["seo_filename"],
+        )
+        self.assertNotEqual(
+            hashlib.sha256(
+                Path(metadata_after[0]["source_local_file"]).read_bytes()
+            ).hexdigest(),
+            original_sha,
+        )
+        gate = publish_media_gate(after)
+        self.assertTrue(gate["ready"], gate["missing"])
 
     def test_publish_media_fails_closed_when_selected_images_are_outside_canonical_authority(self):
         product_id = self._product("34910981")

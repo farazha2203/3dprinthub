@@ -273,13 +273,26 @@ def _selected_source_media_drift(row) -> dict[str, Any]:
         if not final_path.is_file():
             continue
 
-        source_value = image_pipeline.strict_source_local_image(
-            data,
-            source_url,
-        )
-        if not str(source_value or "").strip():
-            continue
-        source_path = Path(str(source_value)).resolve()
+        # Physical Product-local SEO promotion keeps the original source
+        # bytes under source_originals/ and makes source_local_file point to
+        # the active SEO-named WebP. Source-drift detection must compare the
+        # preserved original bytes to original_sha256; comparing the active
+        # SEO WebP would report a false change because encoding/embedded
+        # metadata intentionally changes its bytes.
+        source_value = str(meta.get("original_local_file") or "").strip()
+        if source_value:
+            try:
+                source_path = Path(source_value).resolve()
+            except Exception:
+                source_path = Path()
+        else:
+            fallback = image_pipeline.strict_source_local_image(
+                data,
+                source_url,
+            )
+            if not str(fallback or "").strip():
+                continue
+            source_path = Path(str(fallback)).resolve()
         if not source_path.is_file():
             continue
         actual = _sha256_file(source_path)
