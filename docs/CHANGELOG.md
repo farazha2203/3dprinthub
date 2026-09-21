@@ -1,3 +1,11 @@
+## 2026-09-21 - A2Z-S real #609 Feed live + notification-device recovery hardening
+- Executed one guarded current-revision Social send after exact-SHA/pre-backup/public-media gates.
+- Feed Buffer id `6ab16b897465bdab83a3fe40` is live at https://www.instagram.com/p/DdjtyiMG8RC/ with all five expected github_raw assets; submitted receipt reconciled to published without repost.
+- Story notification id `6ab16b959d554f7b28a44302` failed at Buffer because no eligible linked mobile reminder device exists; media and Link Sticker metadata are valid.
+- Added provider-error Post read-back, fail-closed Story handling and retry-safe duplicate semantics. Historical notification-ready receipts with `buffer_status=error` no longer suppress recovery.
+- Social 37/37 PASS; compile/diff/Qt VerifyOnly PASS.
+- Feed is permanently protected for this ACK; after Buffer mobile linking, retry is Story-only.
+
 ## 2026-09-21 - A2Z-S github_raw Social transport decoupled from Site FTP
 - Real #609 Social preflight reproduced WinError 10054 during mandatory Story FTP upload before any Buffer post.
 - `github_raw` now renders Feed/Story derivatives locally and publishes provider assets only through the dedicated GitHub social-assets worktree; canonical Site Product media are unchanged.

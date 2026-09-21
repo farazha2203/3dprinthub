@@ -87,6 +87,15 @@ query BufferRecentPosts($org: OrganizationId!, $channel: ChannelId!) {
 }
 """
 
+_POST_STATE_QUERY = """
+query BufferPostState($id: PostId!) {
+  post(input: {id: $id}) {
+    id status externalLink notificationStatus
+    error { message rawError supportUrl }
+  }
+}
+"""
+
 
 def _receipt_for_revision(db, product_id: int, fingerprint: str, statuses: set[str]) -> dict[str, Any] | None:
     if not fingerprint:
@@ -101,6 +110,23 @@ def _receipt_for_revision(db, product_id: int, fingerprint: str, statuses: set[s
         if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
             return dict(previous)
     return None
+
+
+def _read_post_state(token: str, cfg: BufferConfig, post_id: str) -> dict[str, Any]:
+    post_id = str(post_id or "").strip()
+    if not post_id:
+        return {}
+    try:
+        data = _request_graphql(
+            token,
+            _POST_STATE_QUERY,
+            variables={"id": post_id},
+            timeout=cfg.timeout,
+        )
+    except Exception:
+        return {}
+    post = data.get("post")
+    return dict(post) if isinstance(post, dict) else {}
 
 
 def _reconcile_recent_asset(token: str, cfg: BufferConfig, asset_url: str) -> dict[str, Any] | None:
@@ -313,8 +339,14 @@ def _story_already_sent(db, product_id: int, fingerprint: str) -> bool:
             previous = json.loads(receipt["payload_json"] or "{}")
         except Exception:
             previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
-            return True
+        if str(previous.get("site_ack_fingerprint") or "") != fingerprint:
+            continue
+        if (
+            str(receipt["status"] or "") == "instagram_story_notification_ready"
+            and str(previous.get("buffer_status") or "").strip().lower() == "error"
+        ):
+            continue
+        return True
     return False
 
 
@@ -418,6 +450,16 @@ def publish_story_for_product(
     if not story_id:
         raise RuntimeError("Buffer did not return a Story post id")
     provider_status = str(post.get("status") or "").strip().lower()
+    if provider_status == "error":
+        state = _read_post_state(token, cfg, story_id)
+        provider_error = state.get("error") if isinstance(state, dict) else {}
+        provider_error = provider_error if isinstance(provider_error, dict) else {}
+        message = str(provider_error.get("message") or "").strip()
+        raw_error = str(provider_error.get("rawError") or "").strip()
+        detail = message or raw_error or "Buffer returned error status for Story notification."
+        raise RuntimeError(
+            f"Buffer Story notification failed for post {story_id}: {detail}"
+        )
     if link_notification:
         receipt_status = "instagram_story_notification_ready"
     else:

@@ -130,6 +130,79 @@ class BufferStoryCompanionTests(unittest.TestCase):
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
+    def test_provider_error_story_is_failure_and_retry_does_not_duplicate_feed(
+        self, request, _secret
+    ):
+        db = _DB()
+        request.side_effect = [
+            {"createPost": {"post": {"id": "feed-err", "status": "sent", "externalLink": "feed-link"}}},
+            {"createPost": {"post": {"id": "story-err", "status": "error", "externalLink": ""}}},
+            {
+                "post": {
+                    "id": "story-err",
+                    "status": "error",
+                    "externalLink": None,
+                    "notificationStatus": None,
+                    "error": {
+                        "message": "No mobile reminder device is linked.",
+                        "rawError": "No devices found.",
+                        "supportUrl": "",
+                    },
+                }
+            },
+        ]
+        with self.assertRaisesRegex(RuntimeError, "No mobile reminder device"):
+            publish_product(
+                db,
+                11,
+                BufferConfig(channel_id="chan-1"),
+                site_url="https://3dprinthub.ir",
+            )
+        statuses = [row["status"] for row in db.receipts]
+        self.assertIn("instagram_published", statuses)
+        self.assertIn("instagram_story_failed", statuses)
+        self.assertNotIn("instagram_story_notification_ready", statuses)
+
+        # A historical false-ready/error receipt must not block a corrected retry.
+        fingerprint = db.row["server_ack_json"]
+        db.receipts.append(
+            {
+                "status": "instagram_story_notification_ready",
+                "payload_json": json.dumps(
+                    {
+                        "site_ack_fingerprint": fingerprint,
+                        "buffer_status": "error",
+                    }
+                ),
+                "server_id": "story-old-error",
+            }
+        )
+        request.reset_mock()
+        request.side_effect = None
+        request.return_value = {
+            "createPost": {
+                "post": {
+                    "id": "story-after-device",
+                    "status": "sent",
+                    "externalLink": "",
+                }
+            }
+        }
+        result = publish_product(
+            db,
+            11,
+            BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+        )
+        self.assertEqual(request.call_count, 1)
+        self.assertEqual(result["provider_post_id"], "feed-err")
+        self.assertEqual(
+            result["companion_story"]["provider_post_id"],
+            "story-after-device",
+        )
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
     def test_retry_after_story_failure_does_not_duplicate_feed(self, request, _secret):
         db = _DB()
         request.side_effect = [

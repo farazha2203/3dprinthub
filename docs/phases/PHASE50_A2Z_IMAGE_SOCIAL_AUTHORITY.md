@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z-S SOCIAL TRANSPORT FIX LOCAL_TESTED / COMMIT-PUSH + REAL #609 BUFFER FEED+STORY ACCEPTANCE NEXT
+Status: A2Z-S FEED PRODUCTION_VERIFIED / STORY BLOCKED ON BUFFER MOBILE REMINDER DEVICE / ERR-49-220 LOCAL_TESTED
 Date: 2026-09-21
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
@@ -44,8 +44,15 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - Transport fix is GitHub exact at `d6b0de52...`. Real #609 rehost committed as `3294d817...`; current `social-assets-buffer` is clean/remote-exact at `2cc87108...`, #609 commit is retained as ancestor, and all 6 provider assets are public HTTP 200 image/png with exact manifest SHA.
 - Final Story-link compliance delta is Local-tested: clickable Story uses Buffer notification-mode + explicit Link Sticker UTM handoff, records `instagram_story_notification_ready`, and remains duplicate guarded; fully automatic Story remains available only when clickable-sticker handoff is disabled. Expanded Social regression 36/36 PASS; compile/diff/Qt VerifyOnly PASS.
 
+## Real external acceptance
+- Exact-SHA `bc96c52f...` ran with fresh pre-send Catalog backup `pre-instagram-send-609-20260921-210748`, quick_check OK, revision 2 and zero pre-send Instagram receipts.
+- Feed Buffer id `6ab16b897465bdab83a3fe40` reached `sent`; live link https://www.instagram.com/p/DdjtyiMG8RC/; exact five provider assets retained. Reconciliation appended published evidence without repost.
+- Story notification id `6ab16b959d554f7b28a44302` is `error`; Buffer Post error says no allowed reminder-recipient mobile devices are linked. No Story external link exists.
+- ERR-49-220 hardening is Local-tested 37/37: provider error is failure, not notification-ready; historical false-ready/error receipt is retryable; existing Feed remains deduplicated.
+- External prerequisite remains owner-side Buffer mobile linking/sign-in + notification enablement. Automatic/no-sticker downgrade is prohibited by this phase contract.
+
 ## Exact next
-Commit/push the Story Link Sticker handoff delta -> verify Local=GitHub -> exact-SHA Qt -> fresh integrity Catalog backup + recheck current Site ACK receipts=0 -> publish exactly one Feed + companion notification Story for #609 -> reconcile Feed submitted->sent read-only without repost -> verify provider ids/external links/policy/media/ALT/Highlight/Story-handoff receipt facts -> docs closure.
+Commit/push ERR-49-220 -> verify Local=GitHub -> exact-SHA Qt -> wait for changed external condition (Buffer mobile reminder device linked) -> read-only provider gate + fresh Catalog backup -> Story-only recovery through normal Product Social action, proving Feed createPost is skipped -> require non-error notification status -> operator completes Link Sticker handoff in Instagram -> record truthful Story/Highlight result -> A2Z-S closure.
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.

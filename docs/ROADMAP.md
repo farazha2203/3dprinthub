@@ -13,10 +13,15 @@
 - [x] Real github_raw rehost -> #609 social-assets commit `3294d817...`; current branch remote exact at `2cc87108...`; public MIME/SHA 6/6 PASS.
 - [x] Local-test truthful clickable Story handoff: notification-mode + Link Sticker UTM metadata + notification-ready receipt; Social 36/36 PASS.
 - [ ] Commit/push Story handoff delta -> exact-SHA Qt.
-- [ ] Exactly one current-ACK Feed+Story Buffer publish.
-- [ ] Reconcile submitted->sent read-only; never repost.
-- [ ] Verify external links/ids + receipt policy/media/ALT/Highlight audit.
-- [ ] Relaunch exact-SHA Qt and close A2Z Social acceptance.
+- [x] Execute exactly one current-ACK Social attempt: Feed post created once; Story notification post created once.
+- [x] Reconcile Feed submitted->sent read-only; no repost. Live Feed: https://www.instagram.com/p/DdjtyiMG8RC/
+- [x] Diagnose Story provider error from Buffer Post read-back: no eligible linked mobile reminder device.
+- [x] Local-test ERR-49-220 recovery: provider error != ready; historical false-ready/error does not block Story-only retry; Feed stays deduplicated. Social 37/37 PASS.
+- [ ] Commit/push ERR-49-220 -> exact-SHA Qt.
+- [ ] External prerequisite: link/sign in Buffer mobile + enable reminder notifications for this account.
+- [ ] Changed-condition Story-only retry; require provider notification accepted, no Feed recreation.
+- [ ] Operator completes Instagram Link Sticker handoff; record truthful Story/Highlight receipt state.
+- [ ] Close A2Z-S docs and continue A2Z Catalog completion.
 
 ## 2026-09-21 - Phase50.A.2Z #609 Real Media Repair + Publish Gate
 - [x] Fresh integrity-checked Catalog + full #609 media rollback.
