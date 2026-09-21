@@ -87,6 +87,19 @@ def _append(mismatches: list[str], key: str, expected, actual) -> None:
         mismatches.append(f"{key}: expected={expected!r} actual={actual!r}")
 
 
+def _append_material(mismatches: list[str], key: str, expected, actual) -> None:
+    """Compare material identity the same way Store sync resolves it.
+
+    Material rows are resolved case-insensitively (for example pla and PLA
+    refer to the same Material). Republish parity must not roll back solely
+    because the persisted canonical Material.name uses different case.
+    """
+    expected_text = _text(expected)
+    actual_text = _text(actual)
+    if expected_text.casefold() != actual_text.casefold():
+        mismatches.append(f"{key}: expected={expected!r} actual={actual!r}")
+
+
 def verify_product_republish_contract(product, asset, data: dict) -> dict:
     """Verify the imported Store Product mirrors the current Desktop batch.
 
@@ -200,8 +213,13 @@ def verify_product_republish_contract(product, asset, data: dict) -> dict:
                 "stock_status": (_text(item.get("stock_status") or "made_to_order"), _text(getattr(row, "stock_status", ""))),
             }
             for field, (expected, actual) in scalar_checks.items():
-                if expected:
-                    _append(mismatches, f"variant[{key}].{field}", expected, actual)
+                if not expected:
+                    continue
+                mismatch_key = f"variant[{key}].{field}"
+                if field == "material":
+                    _append_material(mismatches, mismatch_key, expected, actual)
+                else:
+                    _append(mismatches, mismatch_key, expected, actual)
 
             numeric_checks = {
                 "final_weight_grams": (

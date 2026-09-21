@@ -1,3 +1,13 @@
+## 2026-09-21 - A2X Server material-parity hotfix LOCAL_TESTED / deploy next
+
+Owner retry for Catalog Product #620 reached Production in batch desktop_catalog_v85_20260921_160339 / UUID 8be482aa-5469-439d-bad3-6dcab3f9f8de and rolled back with REPUBLISH_PARITY_MISMATCH. Every mismatch is case-only material identity: Desktop pla/petg versus canonical Store PLA/PETG.
+
+Production is clean on release/phase50-a2j-hero-20260915 at exact 03042d0430ee6e688c992c875f12edc969df103d. Hotfix branch wip/phase50-a2x-server-parity-20260921 starts from that exact live SHA. Parity now compares only the material field case-insensitively, matching the Store's existing material-resolution semantics; all other parity fields remain strict. A2X authoritative SEO assignment is also carried onto this release lineage. No migration/schema change.
+
+Local verification: new material-case regression PASS, retained stale-active-Variant parity failure PASS, retained profile-price parity PASS, unified sync 3/3 PASS; focused total 6/6 PASS; compile/diff-check/Django/no-drift PASS. Production is not yet changed by this hotfix.
+
+Exact next: commit/push exact hotfix SHA -> reverse-tunnel Host preflight -> fresh rollback backup -> explicit branch fetch + ff-only deploy -> Passenger restart/HTTP/readiness -> controlled #620 retry under changed condition -> Product/media/Profile/Slider parity verification.
+
 ## 2026-09-20 - A2R release freeze reached; Production preflight BLOCKED by dedicated tunnel
 
 After Canonical Windows Local PASS, the WIP lineage contains docs-only closure commits beyond tested source `fef8a27dfb66f367a3b383004e21dc7ca18e4659`; runtime/source files are unchanged across those commits. Central gateway preflight exposed and corrected ERR-49-187 with rollback backup `D:\projects\.chatgpt-gateway\project-host.ps1.before-array-fix-20260920-1523.bak`.

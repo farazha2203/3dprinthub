@@ -295,6 +295,26 @@ class Phase50ProfileMatrixTests(TestCase):
             any("variants.total_active_count" in item for item in result["mismatches"])
         )
 
+    def test_republish_contract_accepts_material_case_only_difference(self):
+        rows = self._profiles()[:1]
+        rows[0]["material"] = self.material.name.lower()
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+
+        variant = self.product.variants.get(sales_profile_key="20-100")
+        self.assertEqual(variant.material.name, self.material.name)
+        self.assertNotEqual(rows[0]["material"], variant.material.name)
+
+        result = verify_product_republish_contract(
+            self.product,
+            SimpleNamespace(),
+            {"sales_profiles_json": rows},
+        )
+        self.assertTrue(result["ok"], result["mismatches"])
+        self.assertFalse(
+            any(".material:" in item for item in result["mismatches"]),
+            result["mismatches"],
+        )
+
     def test_republish_contract_accepts_profile_range_with_zero_product_fixed_price(self):
         rows = self._profiles()[:1]
         rows[0]["fixed_price"] = 0

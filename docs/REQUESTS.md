@@ -1,3 +1,8 @@
+## 2026-09-21 - Owner: Product #620 publish failed; continue A2X
+Status: SERVER HOTFIX LOCAL_TESTED / DEPLOY + CONTROLLED RETRY NEXT.
+
+Owner reports the attempted Site publish failed. Real receipt proves the receiver rolled back only because Local material labels pla/petg differed in letter case from canonical Store PLA/PETG. Required behavior is to accept case-only material identity while preserving every other strict republish-parity gate, deploy only from GitHub through the dedicated reverse tunnel, then retry #620 after the changed condition and continue the interrupted A2X Slider/backfill acceptance.
+
 ## 2026-09-20 - Owner: finish A2S finance reconciliation and receipt audit
 Status: `FINANCE/RECEIPT ACCEPTED / PRODUCTION VERIFIED @ a8baf281`.
 

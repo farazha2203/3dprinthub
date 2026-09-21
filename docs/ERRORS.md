@@ -1,3 +1,11 @@
+## ERR-49-211 - Republish parity treated material-name case as a real mismatch
+**Date:** 2026-09-21
+**Observed:** real Product #620 batch desktop_catalog_v85_20260921_160339 / UUID 8be482aa-5469-439d-bad3-6dcab3f9f8de reached Production but rolled back with only material mismatches such as expected pla vs actual PLA and expected petg vs actual PETG.
+**Root cause:** Store sync resolves material rows case-insensitively, but the fail-closed republish verifier compared the raw Desktop material string to canonical Material.name with exact case-sensitive equality.
+**Correct fix:** normalize only material identity with Unicode casefold() inside parity. Keep Brand, Manufacturer, Color, stock status, profile keys, media filename/SHA and all numeric commerce checks unchanged and strict.
+**Verification:** dedicated mixed-case material regression PASS; retained stale-active-Variant rejection PASS; retained profile-price parity PASS; unified sync 3/3 PASS; focused 6/6 total; compile/diff/Django/no-drift PASS.
+**Prevention:** equality semantics in post-import parity must match the resolver semantics for the same identity field. Do not mutate Catalog material names merely to satisfy casing in a verifier.
+
 ## ERR-49-193 - A2S guarded deploy initially hit Host account quota while creating source bundle
 **Date:** 2026-09-20
 **Observed:** the first exact-SHA A2S runner passed tunnel/Host/DB/migration/payment/Phase30/delta gates, then stopped before source promotion when `git bundle create` returned `Disk quota exceeded`. Production remained clean at `888af6b4551b2e6b1e5681aab4c3d9610735474a`; the incomplete A2S backup directory contained only 4096 bytes.

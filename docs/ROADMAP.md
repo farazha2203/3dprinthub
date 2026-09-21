@@ -1,3 +1,15 @@
+## 2026-09-21 - Phase50.A.2X Server parity hotfix
+- [x] Reproduce real #620 case-only REPUBLISH_PARITY_MISMATCH.
+- [x] Verify Production exact clean baseline 03042d... through dedicated reverse tunnel.
+- [x] Patch material-only parity to case-insensitive semantic equality; retain all other strict parity gates.
+- [x] Carry authoritative SEO assignment onto the Production release lineage.
+- [x] Focused Server 6/6 + compile/diff/Django/no-drift PASS.
+- [ ] Commit/push exact hotfix SHA and verify remote equality.
+- [ ] Fresh Host source/env/MySQL rollback backup.
+- [ ] Explicit fetch + ff-only Production deploy from GitHub.
+- [ ] Controlled #620 retry and Production parity/HTTP verification.
+- [ ] Close A2X Server incident docs.
+
 ## 2026-09-20 - A2R payment readiness panel
 
 - [x] Reuse existing gateway status authority and manual-payment singleton.

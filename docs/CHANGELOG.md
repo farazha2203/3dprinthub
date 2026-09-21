@@ -1,3 +1,10 @@
+## 2026-09-21 - A2X Server material parity + authoritative SEO hotfix
+- Material-only republish parity now treats case-only names as the same resolved Store material, preventing false pla/PLA and petg/PETG rollbacks.
+- All non-material parity fields remain unchanged and strict.
+- Server SEO sync now assigns the current Desktop-derived SEO values instead of retaining stale previous Site values.
+- Added regression for case-only material parity; focused Server 6/6 PASS plus compile/diff/Django/no-drift.
+- No migration or Production mutation yet.
+
 ## 2026-09-20 - A2R Production preflight transport gate
 - Fixed two local central-router compatibility defects with a pre-change backup: JSON-array selection and named PowerShell REST parameters.
 - Verified the router now selects 3DPrintHub correctly.
