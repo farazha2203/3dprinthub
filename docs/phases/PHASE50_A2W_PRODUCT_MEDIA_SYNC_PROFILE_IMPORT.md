@@ -1,6 +1,6 @@
 # Phase50.A.2W — Product Media Truth Sync + Source Profile Import
 
-Status: **W1/W2 WINDOWS_RUNTIME_ACCEPTED — W3 WINDOWS_RUNTIME_ACCEPTED / REAL #625 IMPORT PASS — W4 NEXT**
+Status: **W1/W2/W3 WINDOWS_RUNTIME_ACCEPTED — W4 LOCAL_TESTED / GITHUB + REAL PREVIEW NEXT**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2V `PRODUCTION_VERIFIED`
 
@@ -49,8 +49,14 @@ Source refresh only updates source-fact authority. Explicit Ledger import uses d
 
 W3 verification: focused 5/5 PASS; corrected retained A2V/W1/W2/bidirectional 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Fresh pre-real-W3 rollback is `phase50-a2w-w3-pre-real-625-20260921-102142`, SHA256 `ba7d70b04cf5b084bd7922bd0f93f321a55cc4c7c241795f32c6840235764401`.
 
-## W4 — Smart material-family mapping (planned)
-A factual source material hint such as PLA maps to all compatible Local PLA offers for operator review. Brand/manufacturer/color are never invented when the source does not establish them.
+## W4 — Smart material-family mapping (LOCAL_TESTED)
+W4 is intentionally read-only. Factual Source material slots map to compatible active Local Filament offers for operator review; no Source fact, Sales Ledger, Stage lock, Site identity or publish state is mutated by Preview.
+
+Material-family matching is exact/case-insensitive. Color authority uses only explicit Local HEX/Palette values. Localized color names are never interpreted into a HEX value. Real Local inspection currently finds 16 active PLA offers, but neither #625 Source color `#FECC66` nor `#804003` has an exact Local HEX match; therefore exact HEX count must remain zero and no named color may be auto-selected.
+
+The Multicolor Profile remains two simultaneous factual slots (11g `#804003` + 39g `#FECC66`) instead of being flattened into alternative `material_options`. W4 reports per-slot material cost and real Local pricing facts. For single-slot Profiles, full-price preview reuses the mature `formula_price_breakdown()` authority. No combined Multicolor Ledger price is fabricated before concrete Local offers are chosen.
+
+Stage 2 exposes `W4 تطبیق Filament محلی` and a read-only review dialog. W4 focused regression 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 gate 49/49 PASS; retained media/site gate 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Rollback ref is `backup/pre-phase50-a2w-w4-material-mapping-20260921` at `eda42e84b0bf39052fb76aa3c74e35b7dd0a85e5`.
 
 ## W5 — Manual Product creation (planned)
 Add a first-class manual/self-produced Product flow with operator title/notes/media, optional video and normal Profile/Filament controls. AI may generate SEO/content from operator-provided description and images, but must not invent technical production facts.
@@ -89,5 +95,19 @@ Before and after Truth Sync, #625 remains Site Product #39 revision 11, `workflo
 - [x] Site identity remains #39 revision 11; no publish event; Commerce intentionally remains unlocked/ready for W4.
 - [x] Post-import integrity/snapshot PASS: `phase50-a2w-w3-post-ledger-import-20260921-103507`, SHA256 `fbeeca44c9ebb46be75c1dc6a70ab2eaa6a34aa719483808578c56fb3be05a9d`; Qt Stage-2 readback shows exactly three Profiles.
 
+## W4 acceptance gates
+- [x] Read-only mapping core + Stage-2 review action implemented.
+- [x] Real Local inventory inspected: 16 active PLA offers; exact Source color HEX matches = 0.
+- [x] Multicolor Source slots remain distinct; no fake combined Ledger mapping/price.
+- [x] W4 focused 5/5 PASS.
+- [x] Corrected mature Filament/Profile/Commerce + W3/W4 gate 49/49 PASS.
+- [x] Retained A2V/W1/W2 media/site gate 83/83 PASS.
+- [x] py_compile / diff-check / RUN_QT VerifyOnly PASS.
+- [ ] Commit/push W4 candidate and verify GitHub exact SHA.
+- [ ] Fresh pre-preview Catalog backup integrity PASS.
+- [ ] Exact-SHA Qt real #625 W4 Preview: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0.
+- [ ] Prove Source facts + Ledger + Stage locks + Site #39 revision 11 are unchanged before/after Preview.
+- [ ] Keep #625 unpublished throughout W4.
+
 ## Next exact task
-W4: map factual Source material/color evidence (PLA, #FECC66, #804003) to compatible real Local Filament offers and pricing for operator review. Preserve Source facts, preserve the manual Profile, keep Commerce unlocked until reviewed, and do not publish #625 as part of W4 bootstrap.
+Commit/push the tested W4 candidate, verify Local=GitHub exact SHA, take a fresh integrity-checked Catalog backup, relaunch Qt from that exact SHA, run the real #625 W4 review action, and prove 2 Profiles / 3 Source slots / 48 PLA candidates / exact HEX=0 with byte-for-byte unchanged Source/Ledger/locks/Site identity and no publish.

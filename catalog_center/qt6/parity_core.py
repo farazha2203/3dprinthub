@@ -1891,6 +1891,50 @@ class CommerceCore:
             "profiles": saved_source,
         }
 
+    def preview_source_filament_mapping(
+        self,
+        product_id: int,
+        filament_rows: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Read-only W4 Source slot -> Local Filament/pricing preview."""
+        from app.phase50_a2w_material_mapping import (
+            build_source_filament_mapping_preview,
+        )
+
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        source_profiles = [
+            dict(item)
+            for item in _json_list(
+                _row_dict(row).get("source_print_profiles_json", "[]")
+            )
+            if isinstance(item, dict)
+        ]
+        if not source_profiles:
+            raise RuntimeError("ابتدا «دریافت پروفایل از محصول» را اجرا کن.")
+
+        before_ledger = str(
+            _row_dict(row).get("sales_profile_ledger_json") or "[]"
+        )
+        preview = build_source_filament_mapping_preview(
+            source_profiles,
+            self.profiles(product_id),
+            filament_rows,
+        )
+        after = self.db.product(product_id)
+        after_ledger = str(
+            _row_dict(after).get("sales_profile_ledger_json") or "[]"
+        )
+        if before_ledger != after_ledger:
+            raise RuntimeError(
+                "W4 Preview نباید Sales Profile Ledger را تغییر دهد."
+            )
+        preview["product_id"] = product_id
+        preview["commerce_locked"] = bool(is_stage_locked(after, "commerce"))
+        return preview
+
     def bootstrap_from_source(
         self,
         product_id: int,

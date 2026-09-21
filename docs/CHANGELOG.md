@@ -1,3 +1,13 @@
+## 2026-09-21 - Phase50.A.2W W4 Smart Local Filament mapping — Local tested
+- Added read-only Source material/color slot -> active Local Filament offer/pricing preview; Preview never mutates Source facts, Sales Ledger, Stage locks or Site identity.
+- Material family matching is exact/case-insensitive. Color matching uses only explicit Local HEX/Palette evidence; localized color names are never converted into inferred HEX.
+- Preserved #625 Multicolor as two simultaneous Source slots (11g #804003 + 39g #FECC66) instead of flattening them into alternative material choices.
+- Reused the existing mature commerce pricing formula for single-slot full-price preview; Multicolor reports per-slot material cost until real Local offers are chosen.
+- Real Local inventory inspection found 16 active PLA offers; current Source colors #FECC66/#804003 have exact Local HEX match count zero.
+- Added Stage-2 action `W4 تطبیق Filament محلی` and a read-only review dialog with Brand/color/HEX/stock/roll price/material-cost evidence.
+- W4 focused 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 49/49 PASS; retained media/site 83/83 PASS; py_compile/diff-check/Qt VerifyOnly PASS.
+- Clean-baseline reproduction proved two broader 51-test failures are pre-existing stale assertions, not W4 regressions; ERR-49-203 records the evidence.
+
 ## 2026-09-21 - Phase50.A.2W W3 factual Source Print Profiles — Windows runtime accepted
 - Added deterministic MakerWorld `__NEXT_DATA__` Print Profile extraction into existing `source_print_profiles_json`; no AI/inference is used for these production facts.
 - Preserves multiple source Profiles separately and records exact source instance/profile ids, seconds/minutes, weight, plate count, material families, per-filament source color/usage, printer compatibility, nozzle, layer, walls and infill.

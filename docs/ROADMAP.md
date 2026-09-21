@@ -24,7 +24,13 @@
 - [x] Relaunch Qt from exact W3 source SHA and perform real #625 `دریافت پروفایل از محصول` smoke: fresh capture, exactly two factual profiles, no publish/revision/Ledger change.
 - [x] Take second pre-import integrity backup, controlled Commerce unlock, import exactly two deterministic source Profiles while preserving manual Profile and zero/blank local commerce facts.
 - [x] Verify post-import DB integrity + snapshot and Qt Stage-2 readback: exactly 3 Ledger Profiles, Source count 2, Site #39 revision 11 unchanged, no publish event.
-- [ ] W4: map factual Source PLA/color hints to compatible real Local Filament offers/pricing for operator review; keep Commerce unlocked and do not publish during bootstrap.
+- [x] W4 Local implementation: read-only Source slot → real Local Filament/pricing preview; material family exact-match, explicit HEX/Palette-only color evidence, no localized-name color inference.
+- [x] W4 preserves Multicolor factual slots separately; no fake combined Ledger mapping/price before real Local offer selection.
+- [x] W4 focused 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 49/49 PASS; retained A2V/W1/W2 media/site 83/83 PASS.
+- [x] W4 py_compile / diff-check / RUN_QT VerifyOnly PASS; rollback ref `backup/pre-phase50-a2w-w4-material-mapping-20260921` -> `eda42e84...`.
+- [ ] Commit/push W4 candidate and verify GitHub exact SHA.
+- [ ] Fresh pre-preview Catalog backup → exact-SHA Qt relaunch → real #625 W4 Preview; require 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0 and byte-for-byte unchanged Source/Ledger/locks/Site identity.
+- [ ] Operator review must explicitly choose/repair Local HEX identities before any Source-slot mapping can become commerce authority; #625 must not publish in W4.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.

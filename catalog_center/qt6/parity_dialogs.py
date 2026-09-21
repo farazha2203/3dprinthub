@@ -777,6 +777,156 @@ class FilamentBulkIdentityDialog(QDialog):
         return str(self.brand.currentData() or "").strip()
 
 
+class SourceFilamentMappingDialog(QDialog):
+    """Read-only W4 Source-slot to real Local Filament/pricing review."""
+
+    MATCH_LABELS = {
+        "exact_hex": "Exact HEX",
+        "distance_only": "HEX فاصله‌ای - فقط Review",
+        "no_local_hex": "HEX محلی ثبت نشده",
+    }
+
+    def __init__(self, preview: dict[str, Any], parent=None) -> None:
+        super().__init__(parent)
+        self.preview = dict(preview or {})
+        self.setWindowTitle("W4 - تطبیق Source Filament با موجودی محلی")
+        self.resize(1480, 880)
+        self.setMinimumSize(1080, 680)
+
+        root = QVBoxLayout(self)
+        summary = QLabel(
+            "این صفحه فقط Preview است؛ هیچ Profile، قیمت، Stage Lock یا Site state "
+            "را تغییر نمی‌دهد. تطبیق رنگ فقط از HEX/Palette ثبت‌شده محلی استفاده می‌کند."
+        )
+        summary.setWordWrap(True)
+        summary.setStyleSheet("font-size:14px;font-weight:700;padding:8px;")
+        root.addWidget(summary)
+
+        stats = QLabel(
+            f"{int(self.preview.get('profile_count') or 0)} Profile • "
+            f"{int(self.preview.get('slot_count') or 0)} Source slot • "
+            f"{int(self.preview.get('candidate_count') or 0)} Local candidate • "
+            f"Exact HEX: {int(self.preview.get('exact_hex_candidate_count') or 0)} • "
+            f"HEX قابل مقایسه: {int(self.preview.get('distance_only_candidate_count') or 0)} • "
+            f"بدون HEX محلی: {int(self.preview.get('no_local_hex_candidate_count') or 0)}"
+        )
+        stats.setObjectName("Muted")
+        stats.setWordWrap(True)
+        root.addWidget(stats)
+
+        note = QLabel(
+            "برای Profile چندرنگ، ردیف‌ها به ازای هر Source slot جدا هستند. "
+            "هزینه material هر slot با وزن factual همان slot محاسبه می‌شود؛ "
+            "قیمت نهایی ترکیبی تا انتخاب واقعی offerها تولید نمی‌شود. "
+            "نام فارسی رنگ هرگز به HEX حدس زده نمی‌شود."
+        )
+        note.setObjectName("Muted")
+        note.setWordWrap(True)
+        root.addWidget(note)
+
+        self.table = QTableWidget(0, 13)
+        self.table.setHorizontalHeaderLabels(
+            (
+                "Source Profile",
+                "Slot",
+                "Source",
+                "HEX Source",
+                "مصرف g",
+                "برند Local",
+                "رنگ Local",
+                "HEX Local",
+                "وضعیت رنگ",
+                "موجودی kg",
+                "فروش رول",
+                "هزینه material slot",
+                "قیمت کل Single",
+            )
+        )
+        self.table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.table.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.table.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.table.setHorizontalScrollMode(
+            QAbstractItemView.ScrollMode.ScrollPerPixel
+        )
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(False)
+        widths = (220, 60, 95, 105, 85, 130, 190, 105, 170, 95, 120, 150, 150)
+        for column, width in enumerate(widths):
+            header.resizeSection(column, width)
+        self.table.verticalHeader().setDefaultSectionSize(38)
+        root.addWidget(self.table, 1)
+
+        rows: list[tuple] = []
+        for profile in self.preview.get("profiles") or []:
+            if not isinstance(profile, dict):
+                continue
+            profile_name = str(profile.get("profile_name") or "")
+            single_slot = bool(profile.get("single_slot"))
+            for slot in profile.get("slots") or []:
+                if not isinstance(slot, dict):
+                    continue
+                for candidate in slot.get("candidates") or []:
+                    if not isinstance(candidate, dict):
+                        continue
+                    offer = dict(candidate.get("offer") or {})
+                    palette = [
+                        str(value)
+                        for value in (offer.get("explicit_palette_hexes") or [])
+                        if str(value)
+                    ]
+                    stock_kg = (
+                        float(offer.get("stock_roll_count") or 0)
+                        * float(offer.get("roll_weight_grams") or 0)
+                        / 1000.0
+                    )
+                    total = candidate.get("single_slot_profile_total")
+                    rows.append(
+                        (
+                            profile_name,
+                            int(slot.get("slot_index") or 0),
+                            str(slot.get("source_material") or ""),
+                            str(slot.get("source_hex") or "—"),
+                            f"{float(slot.get('used_grams') or 0):g}",
+                            str(offer.get("brand") or "—"),
+                            str(offer.get("color") or "—"),
+                            ", ".join(palette) if palette else "—",
+                            self.MATCH_LABELS.get(
+                                str(candidate.get("color_match") or ""),
+                                str(candidate.get("color_match") or "—"),
+                            ),
+                            f"{stock_kg:g}",
+                            f"{int(float(offer.get('sale_price_per_roll') or 0)):,}",
+                            f"{int(candidate.get('slot_material_cost') or 0):,}",
+                            (
+                                f"{int(total):,}"
+                                if single_slot and total
+                                else "—"
+                            ),
+                        )
+                    )
+
+        self.table.setRowCount(len(rows))
+        for row_index, values in enumerate(rows):
+            for column, value in enumerate(values):
+                self.table.setItem(
+                    row_index,
+                    column,
+                    _readonly_item(value),
+                )
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.clicked.connect(self.close)
+        root.addWidget(buttons)
+
+
 class ProfileEditorDialog(QDialog):
     """One size/profile owns many production rows and many reusable Filaments."""
 

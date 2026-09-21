@@ -41,7 +41,7 @@ from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
 from .diagnostics import show_diagnostic_error
 from .image_gallery import ImageSeoDialog, ProductImageGrid
-from .parity_dialogs import ProfileEditorDialog
+from .parity_dialogs import ProfileEditorDialog, SourceFilamentMappingDialog
 from .widgets import StageStepper, WizardFooter
 from .workers import TaskPool, Worker
 
@@ -384,6 +384,15 @@ class ProductWizardPage(QWidget):
         )
         self.source_profile_btn.clicked.connect(self._fetch_source_profiles)
         profile_actions.addWidget(self.source_profile_btn)
+        self.source_filament_map_btn = QPushButton("W4 تطبیق Filament محلی")
+        self.source_filament_map_btn.setToolTip(
+            "Source material/color slotها را فقط برای Review با Filamentهای واقعی Local "
+            "و قیمت‌های فعلی مقایسه می‌کند. نام رنگ به HEX حدس زده نمی‌شود و Ledger تغییر نمی‌کند."
+        )
+        self.source_filament_map_btn.clicked.connect(
+            self._review_source_filament_mapping
+        )
+        profile_actions.addWidget(self.source_filament_map_btn)
         ai_estimate = QPushButton("AI تخمین تولید (Preview)")
         ai_estimate.setToolTip("Source/Link و عکس‌های محصول برای تخمین تقریبی ابعاد، وزن و زمان چاپ خوانده می‌شوند؛ Preview بدون تأیید شما چیزی را ذخیره نمی‌کند.")
         ai_estimate.clicked.connect(self._estimate_production_ai)
@@ -1670,6 +1679,44 @@ class ProductWizardPage(QWidget):
     def _source_profiles_finished(self) -> None:
         self._source_profile_worker = None
         self.source_profile_btn.setEnabled(True)
+
+    def _review_source_filament_mapping(self) -> None:
+        if self.product_id is None:
+            QMessageBox.warning(
+                self,
+                "W4 Filament Mapping",
+                "ابتدا یک محصول را انتخاب کن.",
+            )
+            return
+        product_id = int(self.product_id)
+        try:
+            preview = self.kernel.commerce.preview_source_filament_mapping(
+                product_id,
+                self.kernel.filaments.list(),
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "W4 Filament Mapping", str(exc))
+            return
+
+        self._last_source_filament_mapping_preview = dict(preview)
+        profile_count = int(preview.get("profile_count") or 0)
+        slot_count = int(preview.get("slot_count") or 0)
+        candidate_count = int(preview.get("candidate_count") or 0)
+        exact_count = int(preview.get("exact_hex_candidate_count") or 0)
+        self.source_profile_status.setText(
+            f"W4 Preview: {profile_count} Profile • {slot_count} slot • "
+            f"{candidate_count} Local candidate • Exact HEX={exact_count}"
+        )
+        if candidate_count <= 0:
+            QMessageBox.warning(
+                self,
+                "W4 Filament Mapping",
+                "برای material familyهای Source هیچ Filament فعال Local پیدا نشد.",
+            )
+            return
+
+        dialog = SourceFilamentMappingDialog(preview, parent=self)
+        dialog.exec()
 
     def _estimate_production_ai(self) -> None:
         if self.product_id is None:
