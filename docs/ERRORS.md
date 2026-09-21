@@ -1,3 +1,12 @@
+## ERR-49-219 - github_raw Social path still depended on mandatory Site FTP derivative upload
+**Date:** 2026-09-21
+**Observed:** real #609 Social preflight had Buffer connected, five verified Site media, zero Instagram receipts and a clean exact `social-assets-buffer` worktree. Feed preparation completed, but Story preparation failed before any Buffer createPost with Windows `ConnectionResetError [WinError 10054]` while `ftp.storbinary` tried to upload the generated Story PNG to the Site origin.
+**Root cause:** A2P established `github_raw` as the verified provider-delivery host after Buffer/origin incompatibility, but the mature Feed/Story preparation functions still required an intermediate FTP upload + Site-public verification before `rehost_buffer_assets`. Therefore the supposedly GitHub-hosted provider path could still be blocked by unrelated Site FTP/origin transport.
+**Failed condition:** do not retry the same Story FTP upload unchanged. No Instagram Feed/Story receipt or provider post was created by the failed attempt.
+**Correct fix:** preparation now always renders verified derivatives locally first. Site FTP/public derivative upload remains unchanged only when `buffer_media_host=site`; with `github_raw`, Feed/Story skip Site FTP entirely and the dedicated clean `social-assets-buffer` worktree becomes the only provider-delivery publication path. Canonical Product media remain Site-owned and unchanged.
+**Verification:** Social regression 35/35 PASS. Real #609 local-only acceptance generated exactly 5 Feed PNGs plus one nonblank 1080x1920 Story using style `3dprinthub_instagram_gold_navy_v2_iransans`; Instagram receipt count remained 0 before/after. Fresh pre-social Catalog backup: `pre-instagram-a2z-609-20260921-201631`, quick_check=`ok`.
+**Prevention:** provider-host selection must control derivative transport as well as final Buffer URLs. A `github_raw` provider path must not require Site FTP/WAF/origin success for generated social derivatives.
+
 ## ERR-49-218 - Physical SEO promotion caused false source-drift at publish gate
 **Date:** 2026-09-21
 **Observed:** after backup-backed real #609 physical SEO repair, all five selected/canonical media and physical SEO filenames were correct, but Site preflight rejected all five as `source image changed after finalization`.

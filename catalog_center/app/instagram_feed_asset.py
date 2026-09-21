@@ -68,6 +68,8 @@ def prepare_product_feed_assets(
     product_id: int,
     settings: SiteConnection,
     payload: dict,
+    *,
+    publish_to_site: bool = True,
 ) -> dict:
     row_obj = db.product(int(product_id))
     if row_obj is None:
@@ -85,61 +87,72 @@ def prepare_product_feed_assets(
     ) / "3DPrintHub" / "instagram" / "feed" / str(int(product_id)) / revision
     local_root.mkdir(parents=True, exist_ok=True)
 
-    remote_root = str(
-        db.setting(
-            "instagram_feed_remote_root",
-            "/public_html/media/instagram/feed/products",
-        )
-        or "/public_html/media/instagram/feed/products"
-    ).strip()
-    remote_dir = str(PurePosixPath(remote_root) / str(int(product_id)) / revision)
-
-    ftp = connect_ftp(settings)
-    public_urls: list[str] = []
+    local_paths: list[str] = []
     dimensions: list[dict[str, int]] = []
-    try:
-        _ensure_remote_dir(ftp, remote_dir)
-        for index, source_url in enumerate(media_urls, 1):
-            request = urllib_request.Request(
-                source_url,
-                headers={"User-Agent": "3DPrintHub-Social/3.0"},
+    for index, source_url in enumerate(media_urls, 1):
+        request = urllib_request.Request(
+            source_url,
+            headers={"User-Agent": "3DPrintHub-Social/3.0"},
+        )
+        with urllib_request.urlopen(
+            request,
+            timeout=max(10, int(settings.timeout)),
+        ) as response:
+            source_bytes = response.read(12 * 1024 * 1024 + 1)
+        if len(source_bytes) > 12 * 1024 * 1024:
+            raise RuntimeError(f"Instagram source image {index} is unexpectedly large.")
+
+        with Image.open(BytesIO(source_bytes)) as opened:
+            rendered = _instagram_canvas(opened)
+        local_file = local_root / f"{index:02d}.png"
+        rendered.save(local_file, format="PNG", optimize=True)
+        local_paths.append(str(local_file))
+        width, height = rendered.size
+        dimensions.append({"width": int(width), "height": int(height)})
+
+    public_urls: list[str] = []
+    if publish_to_site:
+        remote_root = str(
+            db.setting(
+                "instagram_feed_remote_root",
+                "/public_html/media/instagram/feed/products",
             )
-            with urllib_request.urlopen(request, timeout=max(10, int(settings.timeout))) as response:
-                source_bytes = response.read(12 * 1024 * 1024 + 1)
-            if len(source_bytes) > 12 * 1024 * 1024:
-                raise RuntimeError(f"Instagram source image {index} is unexpectedly large.")
-
-            with Image.open(BytesIO(source_bytes)) as opened:
-                rendered = _instagram_canvas(opened)
-            local_file = local_root / f"{index:02d}.png"
-            rendered.save(local_file, format="PNG", optimize=True)
-            width, height = rendered.size
-            dimensions.append({"width": int(width), "height": int(height)})
-
-            remote_file = str(PurePosixPath(remote_dir) / local_file.name)
-            with local_file.open("rb") as handle:
-                ftp.storbinary(f"STOR {remote_file}", handle, blocksize=128 * 1024)
-
-            public_url = (
-                settings.site_url.rstrip("/")
-                + f"/media/instagram/feed/products/{int(product_id)}/{revision}/{local_file.name}"
-            )
-            _verify_public_image(public_url, timeout=max(10, int(settings.timeout)))
-            public_urls.append(public_url)
-    finally:
+            or "/public_html/media/instagram/feed/products"
+        ).strip()
+        remote_dir = str(PurePosixPath(remote_root) / str(int(product_id)) / revision)
+        ftp = connect_ftp(settings)
         try:
-            ftp.quit()
-        except Exception:
-            ftp.close()
+            _ensure_remote_dir(ftp, remote_dir)
+            for index, local_value in enumerate(local_paths, 1):
+                local_file = Path(local_value)
+                remote_file = str(PurePosixPath(remote_dir) / local_file.name)
+                with local_file.open("rb") as handle:
+                    ftp.storbinary(
+                        f"STOR {remote_file}",
+                        handle,
+                        blocksize=128 * 1024,
+                    )
+                public_url = (
+                    settings.site_url.rstrip("/")
+                    + f"/media/instagram/feed/products/{int(product_id)}/{revision}/{local_file.name}"
+                )
+                _verify_public_image(
+                    public_url,
+                    timeout=max(10, int(settings.timeout)),
+                )
+                public_urls.append(public_url)
+        finally:
+            try:
+                ftp.quit()
+            except Exception:
+                ftp.close()
 
     return {
         "urls": public_urls,
-        "local_paths": [
-            str(local_root / f"{index:02d}.png")
-            for index in range(1, len(public_urls) + 1)
-        ],
+        "local_paths": local_paths,
         "source_urls": media_urls,
         "dimensions": dimensions,
         "format": "png",
         "revision": revision,
+        "published_to_site": bool(publish_to_site),
     }

@@ -140,15 +140,17 @@ class BufferMediaHostTests(unittest.TestCase):
                 db,
                 625,
                 {
-                    "urls": ["https://3dprinthub.ir/media/instagram/feed/a.png"],
+                    "urls": [],
                     "local_paths": [str(feed)],
                     "source_urls": ["https://3dprinthub.ir/media/p/source.webp"],
                     "revision": "rev12345",
+                    "published_to_site": False,
                 },
                 {
-                    "url": "https://3dprinthub.ir/media/instagram/stories/a.png",
+                    "url": "",
                     "local_path": str(story),
                     "revision": "rev12345",
+                    "published_to_site": False,
                 },
             )
 

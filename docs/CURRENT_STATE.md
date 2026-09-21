@@ -1,3 +1,17 @@
+## 2026-09-21 - Phase50.A.2Z-S #609 INSTAGRAM TRANSPORT FIX LOCAL_TESTED / REAL SEND NEXT
+
+Repository/worktree verified clean before change on `wip/phase50-a2z-image-social-authority-20260921 @ 16257767c3783472d69f770789f2c4889f0cb25b`. Production Site read-back is already newer than the stale section below: Desktop #609 maps to Site Product #42 / `ProductCatalogProfile.sync_revision=2`, exactly five ProductImages exist, and all five public `/media/p/609/<sha12>/...-01..05.webp` URLs are HTTP 200 with SHA256 exactly matching current Windows final SEO authority. Therefore no second Site re-publish was performed.
+
+Social rules re-read from A2N/A2O/A2P/A2Q/A2S + master A2Z-S: Site-first; exact Site-selected set Primary first; Feed+companion Story; per-image ALT; Product-specific factual caption; max 8 relevant hashtags; UTM Product URL; nationwide-Iran shipping; no false free/download claims; 1080x1920 Gold/Navy IRANSans Story; duplicate-revision guard; approved Highlight target recorded with final Add-to-Highlight operator_required. Real #609 policy preflight passes: Buffer channel `3dprinthub_ir` connected, provider=buffer, host=`github_raw`, media=5, ALT=5, hashtags=8, forbidden-free=false, policy `instagram-product-v4-20260920`, Highlight target `قطعات سفارشی`, and zero Instagram receipts for current Site ACK/revision 2.
+
+Fresh pre-social Catalog rollback: `D:\projects\3dprinthub-backups\pre-instagram-a2z-609-20260921-201631\catalog-before-instagram.sqlite3`; quick_check=`ok`, SHA256 `b80515a1776ccd7e1fae10ab25a66e60c0172f52b25529ae3e24f7175aa6cd6f`, revision 2, Instagram receipts 0.
+
+Real preflight exposed ERR-49-219 before any Buffer post: Story's unnecessary intermediate Site FTP upload reset with WinError 10054. This is now corrected so `github_raw` renders Feed/Story locally and bypasses Site FTP; `site` mode preserves the old FTP path. Rehost still requires the clean dedicated `D:\projects\3DPrintHub-social-assets` worktree / `social-assets-buffer`, exact remote-head equality and public image MIME verification.
+
+Verification: complete Social regression 35/35 PASS. Real #609 local-only render produced five Feed PNGs (all valid Instagram aspect sizes) and one 1,461,858-byte 1080x1920 Story in approved IRANSans style; receipt count remained 0. No Buffer createPost has been called after this fix yet.
+
+**Exact next:** compile/diff/Qt VerifyOnly -> docs commit/push -> Local=GitHub exact SHA -> exact-SHA runtime -> real `github_raw` rehost of 5 Feed + Story with remote-head/public-MIME verification -> recheck zero same-ACK receipts -> exactly one Buffer Feed+Story publish -> reconcile submitted->sent without repost -> verify external ids/links, ALT/hashtags/policy/source-media audit, Highlight target/status -> docs closure.
+
 ## 2026-09-21 - Phase50.A.2Z #609 REAL LOCAL MEDIA REPAIR COMPLETE / PUBLISH-GATE DRIFT FIX LOCAL_TESTED
 
 Fresh rollback before #609 mutation: `D:\projects\3dprinthub-backups\phase50-a2z-609-pre-repair-20260921-194148`; SQLite quick_check=`ok`, SHA256 `eaa0ea055e8ba30bb05c1434ffda06874fbc5f93129ce2bf45d58303f123edf4`, full Product #609 media backup 36 files + manifest.

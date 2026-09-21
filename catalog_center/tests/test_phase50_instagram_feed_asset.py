@@ -100,6 +100,54 @@ class InstagramFeedAssetTests(unittest.TestCase):
     @patch("app.instagram_feed_asset._ensure_remote_dir")
     @patch("app.instagram_feed_asset.connect_ftp")
     @patch("app.instagram_feed_asset.urllib_request.urlopen")
+    def test_github_raw_preparation_stays_local_and_skips_site_ftp(
+        self, urlopen, connect_ftp, ensure_remote_dir, verify_public
+    ):
+        urlopen.side_effect = [
+            _Response(self._webp_bytes()),
+            _Response(self._webp_bytes((800, 1000))),
+        ]
+        settings = SiteConnection(
+            ftp_host="ftp.3dprinthub.ir",
+            ftp_port=21,
+            ftp_user="demo",
+            ftp_password="secret",
+            remote_root="/3dprinthub",
+            site_url="https://3dprinthub.ir",
+            bridge_token="",
+        )
+        payload = {
+            "media_urls": [
+                "https://3dprinthub.ir/media/p/7/a/demo-01.webp",
+                "https://3dprinthub.ir/media/p/7/b/demo-02.webp",
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as local_appdata:
+            with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata}):
+                result = prepare_product_feed_assets(
+                    _DB(),
+                    7,
+                    settings,
+                    payload,
+                    publish_to_site=False,
+                )
+                self.assertEqual(len(result["local_paths"]), 2)
+                self.assertTrue(
+                    all(Path(value).is_file() for value in result["local_paths"])
+                )
+
+        self.assertEqual(result["urls"], [])
+        self.assertFalse(result["published_to_site"])
+        self.assertEqual(result["source_urls"], payload["media_urls"])
+        connect_ftp.assert_not_called()
+        ensure_remote_dir.assert_not_called()
+        verify_public.assert_not_called()
+
+    @patch("app.instagram_feed_asset._verify_public_image")
+    @patch("app.instagram_feed_asset._ensure_remote_dir")
+    @patch("app.instagram_feed_asset.connect_ftp")
+    @patch("app.instagram_feed_asset.urllib_request.urlopen")
     def test_extreme_aspect_ratio_is_letterboxed_into_instagram_range(
         self, urlopen, connect_ftp, _ensure_remote_dir, _verify_public
     ):

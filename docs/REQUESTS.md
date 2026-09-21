@@ -1,3 +1,10 @@
+## 2026-09-21 - Owner: Instagram is broken; real Feed+Story must follow repository policy exactly
+Status: `A2Z-S TRANSPORT FIX LOCAL_TESTED / REAL BUFFER SEND NEXT`.
+
+Owner requires the broken Instagram path to be repaired and the written project Social rules to be mandatory for every real send. For #609 this means Site-first revision 2, exact five Site-selected images Primary first, per-image ALT, Product-specific factual caption, bounded hashtags, UTM Product link, nationwide shipping, no false free/download claims, approved 1080x1920 Gold/Navy IRANSans Story, duplicate-ACK protection, provider receipts/external ids and approved Highlight target recording. Final Add-to-Highlight remains operator-required because the documented Buffer path cannot mutate Highlights.
+
+Real diagnosis: no current #609 Instagram receipt/post exists. Buffer is connected and github_raw is configured. The failure occurs before provider submission because Story preparation still required an unnecessary Site FTP derivative upload and received WinError 10054. ERR-49-219 removes that dependency only for github_raw while retaining Site mode.
+
 ## 2026-09-21 - Owner: fix #609 multi-image SEO filenames and Instagram delivery
 Status: `A2Z LOCAL_TESTED / REAL ACCEPTANCE NEXT`.
 

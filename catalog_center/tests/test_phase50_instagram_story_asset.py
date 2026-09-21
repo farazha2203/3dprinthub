@@ -126,6 +126,50 @@ class InstagramStoryAssetTests(unittest.TestCase):
                 timeout=30,
             )
 
+    @patch("app.instagram_story_asset._verify_public_image")
+    @patch("app.instagram_story_asset._ensure_remote_dir")
+    @patch("app.instagram_story_asset.connect_ftp")
+    @patch("app.instagram_story_asset._render_story")
+    def test_github_raw_preparation_renders_locally_without_site_ftp(
+        self, render_story, connect_ftp, ensure_remote_dir, verify_public
+    ):
+        with tempfile.TemporaryDirectory() as tmp:
+            rendered = Path(tmp) / "story.png"
+            rendered.write_bytes(b"png" * 20000)
+            render_story.return_value = rendered
+            settings = SiteConnection(
+                ftp_host="ftp.3dprinthub.ir",
+                ftp_port=21,
+                ftp_user="demo",
+                ftp_password="secret",
+                remote_root="/3dprinthub",
+                site_url="https://3dprinthub.ir",
+                bridge_token="",
+            )
+            payload = {
+                "media_urls": ["https://3dprinthub.ir/media/product.webp"],
+                "product_url": "https://3dprinthub.ir/store/product/demo/",
+            }
+
+            result = prepare_product_story_asset(
+                _DB(),
+                7,
+                settings,
+                payload,
+                publish_to_site=False,
+            )
+
+            self.assertEqual(result["url"], "")
+            self.assertEqual(result["local_path"], str(rendered))
+            self.assertFalse(result["published_to_site"])
+            self.assertEqual(
+                result["style_id"],
+                "3dprinthub_instagram_gold_navy_v2_iransans",
+            )
+            connect_ftp.assert_not_called()
+            ensure_remote_dir.assert_not_called()
+            verify_public.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

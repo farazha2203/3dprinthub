@@ -1,3 +1,21 @@
+## 2026-09-21 - Phase50.A.2Z-S #609 Instagram transport/acceptance
+- [x] Re-read A2N/A2O/A2P/A2Q/A2S + master A2Z-S Social rules.
+- [x] Verify Site #42 revision 2 already owns exactly five #609 SEO ProductImages; public HTTP/SHA parity 5/5 PASS.
+- [x] Verify Buffer channel connected, provider=Buffer, media host=github_raw, current-ACK Instagram receipts=0.
+- [x] Verify policy v4: Primary first, five ALT, 8 bounded hashtags, UTM, nationwide shipping, no false free claims.
+- [x] Verify Story policy: 1080x1920 Gold/Navy IRANSans; Highlight target=قطعات سفارشی / final placement operator_required.
+- [x] Fresh integrity-checked pre-social Catalog backup.
+- [x] Reproduce ERR-49-219 before provider post: Story FTP WinError 10054.
+- [x] Remove mandatory Site FTP derivative dependency from github_raw mode while preserving site mode.
+- [x] Social regression 35/35 PASS.
+- [x] Real #609 local-only render: Feed PNG 5/5 + valid nonblank Story; receipts unchanged at 0.
+- [ ] Compile/diff/Qt VerifyOnly -> commit/push exact fix SHA -> Local=GitHub.
+- [ ] Real github_raw rehost -> social-assets remote exact + public MIME 6/6.
+- [ ] Exactly one current-ACK Feed+Story Buffer publish.
+- [ ] Reconcile submitted->sent read-only; never repost.
+- [ ] Verify external links/ids + receipt policy/media/ALT/Highlight audit.
+- [ ] Relaunch exact-SHA Qt and close A2Z Social acceptance.
+
 ## 2026-09-21 - Phase50.A.2Z #609 Real Media Repair + Publish Gate
 - [x] Fresh integrity-checked Catalog + full #609 media rollback.
 - [x] Repair real #609 through application ImageCore; no SQL/direct DB hand-edit.

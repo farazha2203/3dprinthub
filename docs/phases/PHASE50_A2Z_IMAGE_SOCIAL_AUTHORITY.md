@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: LOCAL_TESTED / PHYSICAL SEO RENAME ADDED / COMMIT-PUSH + EXACT-SHA RUNTIME + REAL #609 ACCEPTANCE NEXT
+Status: A2Z-S SOCIAL TRANSPORT FIX LOCAL_TESTED / COMMIT-PUSH + REAL #609 BUFFER FEED+STORY ACCEPTANCE NEXT
 Date: 2026-09-21
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
@@ -32,8 +32,18 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - ERR-49-218 fixes false source drift introduced by the new physical SEO boundary.
 - Source-drift/promotion/Batch 3/3 and Image+Site Publish 51/51 PASS.
 
+## A2Z-S real Instagram checkpoint
+- Production #42 / Desktop #609 is already revision 2 with exactly five ProductImages; public HTTP + SHA parity is 5/5, so no duplicate Site re-publish is permitted.
+- Current Site ACK has zero Instagram receipts.
+- Buffer connection is healthy for `3dprinthub_ir`; provider host is `github_raw`; social-assets worktree/remote were clean/exact before the new fix.
+- Policy v4 preflight passes all written rules: 5 media/5 ALT, 8 bounded hashtags, UTM, nationwide shipping, no free claim, approved Story style, Highlight target `قطعات سفارشی`.
+- Fresh Catalog rollback: `pre-instagram-a2z-609-20260921-201631` / integrity OK.
+- ERR-49-219: real dry-run failed before createPost because the github_raw path still forced a Story FTP upload to Site and hit WinError 10054.
+- Fix: github_raw creates derivatives locally and uses only the dedicated GitHub provider-media path; site mode keeps FTP.
+- Social regression 35/35 PASS; real local-only #609 render is 5 Feed PNGs + valid 1080x1920 Story, receipts unchanged at 0.
+
 ## Exact next
-Compile/diff/Qt VerifyOnly -> commit/push ERR-49-218 fix -> verify Local=GitHub -> exact-SHA Qt -> explicit mark-ready #609 -> verify five-image Batch -> verify tunnel/Host/Production + fresh rollback -> one same-identity Site #42 republish -> strict five-image filename/SHA/HTTP parity -> changed-revision Instagram Feed+Story acceptance -> update docs.
+Compile/diff/Qt VerifyOnly -> commit/push ERR-49-219 fix -> verify Local=GitHub -> exact-SHA Qt -> real github_raw rehost + remote/public-MIME verification -> confirm same-ACK receipts still zero -> publish exactly one Feed+Story -> reconcile status read-only -> verify external ids/links/policy/media/ALT/Highlight receipt facts -> docs closure.
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.

@@ -174,8 +174,20 @@ def rehost_buffer_assets(
         }
     if host != "github_raw":
         raise RuntimeError(f"Unsupported Buffer media host: {host}")
-    if not feed_local or len(feed_local) != len(feed_urls):
-        raise RuntimeError("Buffer GitHub media host requires every generated feed file locally.")
+    source_feed_urls = [
+        str(value or "").strip()
+        for value in feed_meta.get("source_urls") or []
+        if str(value or "").strip()
+    ]
+    expected_feed_count = len(source_feed_urls) or len(feed_urls)
+    if (
+        not feed_local
+        or expected_feed_count <= 0
+        or len(feed_local) != expected_feed_count
+    ):
+        raise RuntimeError(
+            "Buffer GitHub media host requires every generated feed file locally."
+        )
     for path in feed_local:
         if not path.is_file() or path.suffix.lower() != ".png":
             raise RuntimeError(f"Buffer feed derivative is missing or not PNG: {path}")

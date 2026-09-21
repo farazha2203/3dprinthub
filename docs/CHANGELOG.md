@@ -1,3 +1,11 @@
+## 2026-09-21 - A2Z-S github_raw Social transport decoupled from Site FTP
+- Real #609 Social preflight reproduced WinError 10054 during mandatory Story FTP upload before any Buffer post.
+- `github_raw` now renders Feed/Story derivatives locally and publishes provider assets only through the dedicated GitHub social-assets worktree; canonical Site Product media are unchanged.
+- `site` provider-media mode retains its existing FTP/public verification behavior.
+- Buffer media host accepts local-only derivative metadata while preserving canonical source-media audit.
+- Social 35/35 PASS; real #609 local-only render generated 5 Feed PNGs + approved 1080x1920 Story with zero receipt mutation.
+- Fresh rollback: `pre-instagram-a2z-609-20260921-201631`.
+
 ## 2026-09-21 - A2Z #609 physical repair + source-drift boundary
 - Took fresh integrity-checked Catalog and full #609 media rollback before real mutation.
 - Repaired #609 via ImageCore: five selected/canonical media now use five unique physical SEO WebP identities; original selected source/cache files preserved.

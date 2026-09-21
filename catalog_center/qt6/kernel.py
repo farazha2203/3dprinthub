@@ -2631,11 +2631,17 @@ class InstagramCore:
                     from app.instagram_feed_asset import prepare_product_feed_assets
 
                     canonical_payload = self.preview(product_id)
+                    media_host = str(
+                        self.db.setting("buffer_media_host", "github_raw")
+                        or "github_raw"
+                    ).strip().lower()
+                    publish_social_derivatives_to_site = media_host == "site"
                     feed_meta = prepare_product_feed_assets(
                         self.db,
                         product_id,
                         settings,
                         canonical_payload,
+                        publish_to_site=publish_social_derivatives_to_site,
                     )
                     story_meta = None
                     if companion_enabled:
@@ -2651,6 +2657,7 @@ class InstagramCore:
                             product_id,
                             settings,
                             canonical_payload,
+                            publish_to_site=publish_social_derivatives_to_site,
                         )
                     from app.buffer_media_host import rehost_buffer_assets
 

@@ -197,39 +197,57 @@ def _verify_public_image(url: str, timeout: int = 20) -> None:
         content_type = str(response.headers.get("Content-Type") or "").lower()
         if int(response.status) != 200 or not content_type.startswith("image/"):
             raise RuntimeError(f"Story public verification failed: HTTP {response.status} {content_type}")
-def prepare_product_story_asset(db, product_id: int, settings: SiteConnection, payload: dict) -> dict:
+def prepare_product_story_asset(
+    db,
+    product_id: int,
+    settings: SiteConnection,
+    payload: dict,
+    *,
+    publish_to_site: bool = True,
+) -> dict:
     row_obj = db.product(int(product_id))
     if row_obj is None:
         raise RuntimeError(f"Product {product_id} not found")
     row = dict(row_obj)
     png = _render_story(row, payload)
     revision = _revision_key(row)
-    remote_root = str(
-        db.setting(
-            "instagram_story_remote_root",
-            "/public_html/media/instagram/stories/products",
-        )
-        or "/public_html/media/instagram/stories/products"
-    ).strip()
-    remote_dir = str(PurePosixPath(remote_root) / str(int(product_id)))
-    remote_file = str(PurePosixPath(remote_dir) / f"{revision}.png")
+    public_url = ""
 
-    ftp = connect_ftp(settings)
-    try:
-        _ensure_remote_dir(ftp, remote_dir)
-        with png.open("rb") as handle:
-            ftp.storbinary(f"STOR {remote_file}", handle, blocksize=128 * 1024)
-    finally:
+    if publish_to_site:
+        remote_root = str(
+            db.setting(
+                "instagram_story_remote_root",
+                "/public_html/media/instagram/stories/products",
+            )
+            or "/public_html/media/instagram/stories/products"
+        ).strip()
+        remote_dir = str(PurePosixPath(remote_root) / str(int(product_id)))
+        remote_file = str(PurePosixPath(remote_dir) / f"{revision}.png")
+
+        ftp = connect_ftp(settings)
         try:
-            ftp.quit()
-        except Exception:
-            ftp.close()
+            _ensure_remote_dir(ftp, remote_dir)
+            with png.open("rb") as handle:
+                ftp.storbinary(
+                    f"STOR {remote_file}",
+                    handle,
+                    blocksize=128 * 1024,
+                )
+        finally:
+            try:
+                ftp.quit()
+            except Exception:
+                ftp.close()
 
-    public_url = (
-        settings.site_url.rstrip("/")
-        + f"/media/instagram/stories/products/{int(product_id)}/{revision}.png"
-    )
-    _verify_public_image(public_url, timeout=max(10, int(settings.timeout)))
+        public_url = (
+            settings.site_url.rstrip("/")
+            + f"/media/instagram/stories/products/{int(product_id)}/{revision}.png"
+        )
+        _verify_public_image(
+            public_url,
+            timeout=max(10, int(settings.timeout)),
+        )
+
     return {
         "url": public_url,
         "local_path": str(png),
@@ -238,4 +256,5 @@ def prepare_product_story_asset(db, product_id: int, settings: SiteConnection, p
         "width": STORY_WIDTH,
         "height": STORY_HEIGHT,
         "revision": revision,
+        "published_to_site": bool(publish_to_site),
     }
