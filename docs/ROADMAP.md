@@ -9,8 +9,10 @@
 - [x] Remove mandatory Site FTP derivative dependency from github_raw mode while preserving site mode.
 - [x] Social regression 35/35 PASS.
 - [x] Real #609 local-only render: Feed PNG 5/5 + valid nonblank Story; receipts unchanged at 0.
-- [ ] Compile/diff/Qt VerifyOnly -> commit/push exact fix SHA -> Local=GitHub.
-- [ ] Real github_raw rehost -> social-assets remote exact + public MIME 6/6.
+- [x] Compile/diff/Qt VerifyOnly + first github_raw transport fix commit/push exact SHA `d6b0de52...` -> Local=GitHub.
+- [x] Real github_raw rehost -> #609 social-assets commit `3294d817...`; current branch remote exact at `2cc87108...`; public MIME/SHA 6/6 PASS.
+- [x] Local-test truthful clickable Story handoff: notification-mode + Link Sticker UTM metadata + notification-ready receipt; Social 36/36 PASS.
+- [ ] Commit/push Story handoff delta -> exact-SHA Qt.
 - [ ] Exactly one current-ACK Feed+Story Buffer publish.
 - [ ] Reconcile submitted->sent read-only; never repost.
 - [ ] Verify external links/ids + receipt policy/media/ALT/Highlight audit.

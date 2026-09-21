@@ -4,6 +4,8 @@
 - `site` provider-media mode retains its existing FTP/public verification behavior.
 - Buffer media host accepts local-only derivative metadata while preserving canonical source-media audit.
 - Social 35/35 PASS; real #609 local-only render generated 5 Feed PNGs + approved 1080x1920 Story with zero receipt mutation.
+- Real #609 GitHub rehost is public and exact: social-assets commit `3294d817...`; 5 Feed PNG + Story all HTTP 200 image/png and SHA-equal to manifest.
+- Clickable Story handoff is now truthful: Buffer notification scheduling + explicit Link Sticker UTM metadata, `instagram_story_notification_ready` receipt, no false live-published state; automatic no-sticker mode remains supported. Expanded Social regression 36/36 PASS.
 - Fresh rollback: `pre-instagram-a2z-609-20260921-201631`.
 
 ## 2026-09-21 - A2Z #609 physical repair + source-drift boundary

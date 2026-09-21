@@ -41,9 +41,11 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - ERR-49-219: real dry-run failed before createPost because the github_raw path still forced a Story FTP upload to Site and hit WinError 10054.
 - Fix: github_raw creates derivatives locally and uses only the dedicated GitHub provider-media path; site mode keeps FTP.
 - Social regression 35/35 PASS; real local-only #609 render is 5 Feed PNGs + valid 1080x1920 Story, receipts unchanged at 0.
+- Transport fix is GitHub exact at `d6b0de52...`. Real #609 rehost committed as `3294d817...`; current `social-assets-buffer` is clean/remote-exact at `2cc87108...`, #609 commit is retained as ancestor, and all 6 provider assets are public HTTP 200 image/png with exact manifest SHA.
+- Final Story-link compliance delta is Local-tested: clickable Story uses Buffer notification-mode + explicit Link Sticker UTM handoff, records `instagram_story_notification_ready`, and remains duplicate guarded; fully automatic Story remains available only when clickable-sticker handoff is disabled. Expanded Social regression 36/36 PASS; compile/diff/Qt VerifyOnly PASS.
 
 ## Exact next
-Compile/diff/Qt VerifyOnly -> commit/push ERR-49-219 fix -> verify Local=GitHub -> exact-SHA Qt -> real github_raw rehost + remote/public-MIME verification -> confirm same-ACK receipts still zero -> publish exactly one Feed+Story -> reconcile status read-only -> verify external ids/links/policy/media/ALT/Highlight receipt facts -> docs closure.
+Commit/push the Story Link Sticker handoff delta -> verify Local=GitHub -> exact-SHA Qt -> fresh integrity Catalog backup + recheck current Site ACK receipts=0 -> publish exactly one Feed + companion notification Story for #609 -> reconcile Feed submitted->sent read-only without repost -> verify provider ids/external links/policy/media/ALT/Highlight/Story-handoff receipt facts -> docs closure.
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.
