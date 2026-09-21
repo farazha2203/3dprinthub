@@ -1,5 +1,5 @@
 ## 2026-09-21 - Owner: Product media truth refresh + Site/source recovery + future Profile/video/manual Product import
-Status: `A2W W1/W2 LOCAL_TESTED / REAL #625 TRUTH SYNC PASS / GITHUB NEXT`.
+Status: `A2W W1/W2 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / W3 ACTIVE`.
 
 Owner reports Product #625 shows three media cards in Windows while the live Site Product has one image after re-publish. Required immediate behavior: add a Stage-3 `رفرش رسانه و وضعیت` action that compares Local DB authority, persisted `ارسال سایت`, physical Local files, current Site Product media and source media without silently changing operator Site membership. Public Site media missing locally must be recoverable into the trusted Product workspace as idempotent candidates.
 

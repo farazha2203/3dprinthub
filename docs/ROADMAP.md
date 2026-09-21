@@ -11,9 +11,11 @@
 - [x] Verify Production receiver already enforces exact media count + filename/SHA parity; no Server delta required.
 - [x] Take fresh integrity-checked Catalog backup before real #625 Truth Sync.
 - [x] Real #625 Truth Sync PASS without publish: DB=2, Local=3, Site-selected=1, live Site=1, mismatch=0, identity unchanged.
-- [ ] Commit/push exact A2W SHA and verify GitHub remote.
-- [ ] Relaunch Qt from exact pushed SHA and smoke the new Stage-3 button on #625.
-- [ ] Mark W1/W2 GITHUB_UPDATED/runtime accepted, then begin W3 factual multi-Profile import from source Product.
+- [x] Commit/push exact A2W SHA `ab1e9d1051aba6ff12a8b3c8b1f9bf04fb22be17` and verify GitHub remote exact match.
+- [x] Relaunch Qt from exact pushed SHA and smoke the new Stage-3 button on #625; button-level real Bridge truth sync PASS.
+- [x] Mark W1/W2 `GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED`.
+- [ ] W3: inspect factual source-profile evidence for #625 and existing extractor boundaries.
+- [ ] W3: add `دریافت پروفایل از محصول` with multiple factual Profile preservation and no invented material/brand/color facts.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.
