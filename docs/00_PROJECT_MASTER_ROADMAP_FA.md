@@ -1,3 +1,11 @@
+## 2026-09-21 - Authoritative forward plan after reconciliation audit
+
+Forward development is now governed by `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. Latest Windows `c86c66a1...` and current Production/Server `e03bdd2b...` diverge from common `b1caeba...`; A2Y must converge them before permanent feature work.
+
+Forward order: A2Y convergence -> A2Z Catalog/Windows data completion -> A2Z-S Social -> A2Z-W5 manual Product -> A2Z-W6 source video/Reel -> A2Z-C dynamic carriers -> A3 secure Store ZarinPal -> A4 Torob -> B1 Auth/Customer -> B2 Product Engagement -> B3 customer Telegram Bot/Mini App -> C1-C5 accounting/treasury/purchasing/sales/reports -> D1 final release/UAT.
+
+Real Catalog audit on 2026-09-21: 635 Products; 50 have all six core Slider fields and 585 are incomplete. Slider membership remains manual and is never bulk-enabled by completeness backfill. Historical unchecked roadmap items are evidence only unless the A2Y master plan carries them forward.
+
 ## 2026-09-19 - A2O/A2P Site + Instagram real launch
 Hero 50.9 is live without the old Slicebox shadow/frame. #625 is accepted in-place as Site Product #39 revision 8 with three current active CC profiles and no active legacy commerce rows. Real Instagram Feed + companion Story are sent with Product SEO/ALT/hashtags/UTM/shipping policy. Buffer could not ingest even valid site-hosted PNG derivatives, while the identical GitHub-raw media was accepted; A2P therefore makes provider-compatible derivative hosting explicit and auditable without changing canonical Site media. Finish A2P exact-SHA Windows runtime, then continue Phase50 Finance/Payment/Admin and bounded Product rollout.
 

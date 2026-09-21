@@ -1,3 +1,11 @@
+## ERR-49-214 - Latest Windows and Production Server fixes exist on divergent forward lineages
+**Date:** 2026-09-21
+**Observed:** Repository audit after A2X closure found latest Windows/Product work at `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd` while the Production Server parity/Hero closure is `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`. Neither head is an ancestor of the other; merge-base is `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
+**Impact:** no current Production or Catalog corruption was found, but starting future features from either branch alone can silently drop accepted behavior from the other lineage and repeat the previously observed old-runtime regression class.
+**Root cause:** urgent Server/Production hotfix work branched from the live release lineage while Windows A2V/A2W/A2X Slider work continued independently from the latest operator lineage.
+**Correct fix:** Phase50.A.2Y must reconcile the two heads into one tested GitHub forward baseline before new permanent feature work. Do not solve this by replacing the latest Windows tree with the Server tree or vice versa; integrate only verified deltas and run both Windows/Qt and Django/Server regressions.
+**Prevention:** `AGENTS.md` now requires a forward-lineage check before each new feature phase and requires lineage convergence whenever latest Windows and current Production/Server fixes do not share one accepted forward head.
+
 ## ERR-49-210 - A2X first integration gates exposed wiring gaps before any data mutation
 **Date:** 2026-09-21
 **Observed:** the first A2X focused run failed because the base readiness label map did not yet contain the new `slider` stage and two new fallback paths referenced helper names that did not exist in those modules. The first Django gate also hit the already-documented isolated-worktree missing-`.env` condition from ERR-49-155.

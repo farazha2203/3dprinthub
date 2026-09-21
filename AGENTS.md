@@ -35,6 +35,10 @@ A feature is not complete because code was written. Run relevant syntax/compile,
 ## Documentation
 After meaningful work update relevant docs: CURRENT_STATE, ROADMAP, CHANGELOG, ERRORS, REQUESTS and active phase. Update PATHS, DATABASE, DEPLOYMENT or HOST_CONSTRAINTS whenever those areas change.
 
+The authoritative remaining-work index is the newest master reconciliation phase under `docs/phases/`; historical unchecked ROADMAP boxes are evidence snapshots unless the current master phase explicitly carries them forward.
+Every development/status reply to the owner must end with: current phase/status, what passed, what remains, exact next phase, ordered operations for that next phase, required test/backup/deploy/Production gates, and the immediately following phase. Do not report only a vague “next step”.
+Before starting a new feature phase, verify that the latest Windows lineage and current Production/Server lineage share one accepted forward GitHub head; if they diverge, lineage convergence is the blocking phase.
+
 ## Phase status
 Use PLANNED, IN_PROGRESS, IMPLEMENTED, LOCAL_TESTED, GITHUB_UPDATED, DEPLOYED, PRODUCTION_VERIFIED, ACCEPTED, BLOCKED. Do not mark ACCEPTED before required tests pass.
 

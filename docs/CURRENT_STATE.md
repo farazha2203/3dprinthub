@@ -1,3 +1,17 @@
+## 2026-09-21 - Phase50.A.2Y MASTER RECONCILIATION / DOCUMENTATION TRUTH FROZEN
+
+Repository/chat-archive audit found a real split forward state. Latest Windows/Product work is clean and remote-exact at `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd` in `D:\projects\3DPrintHub-a2u-latest-windows`; the Desktop shortcut already points to that worktree. Current Production/Server closure is `e03bdd2b718fae3ce030df789c8b9db958d8d8ed` on Host branch `release/phase50-a2j-hero-20260915`. Neither head is an ancestor of the other; merge-base is `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Therefore permanent feature work is blocked on A2Y convergence rather than choosing either lineage and risking regression.
+
+The old primary clone `D:\projects\3DPrintHub` remains intentionally untouched because it has pre-existing local documentation changes and is behind its remote branch. A clean isolated planning worktree `D:\projects\3DPrintHub-a2y-plan` was created from exact latest Windows `c86c66a1...`; rollback ref `backup/pre-phase50-a2y-master-plan-20260921` points to the same baseline.
+
+Real canonical Catalog read-only audit: SQLite integrity `ok`, 635 Products. Slider core fields are image/title/description/ALT/button/focus. Only 50 Products currently have all six; 585 have at least one missing field. This is a real data-completion task, not only a code task. #620/#625/#628 themselves currently show populated core Slider data, and W4.1 accepted dimension/PLA state remains recorded: #628 12x12x12 / 18x18x18 with all 16 active exact PLA offers; #625 5x5x5 + owner-estimated 4x4x4 with all 16 active exact PLA offers.
+
+Full remaining-work sequence is now frozen in `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`: A2Y convergence -> A2Z Catalog/Windows completion -> A2Z-S Social -> A2Z-W5 manual Product -> A2Z-W6 video/Reel -> A2Z-C dynamic carriers -> A3 ZarinPal -> A4 Torob -> B1 Auth/Customer -> B2 Engagement -> B3 customer Telegram Bot/Mini App -> C1-C5 accounting stack -> D1 final release/UAT.
+
+Historical Roadmap unchecked boxes are no longer treated mechanically as pending. Store Reset, manual card-transfer acceptance, finance/receipt audit, latest Windows recovery, image authority, A2W W1-W4.1 and A2X Server/Hero are completed milestones and must not be rerun merely because an older section still contains `[ ]`.
+
+**Exact next phase: Phase50.A.2Y — Lineage Convergence.** Operations: merge current Windows `c86c66a1...` with current Server/Production fixes `e03bdd2b...` on the isolated A2Y lineage -> run Windows/Qt and Django parity/Hero regression -> no-drift/diff-check -> push exact merged SHA -> launch exact-SHA Qt -> only then make it the sole forward baseline. No Catalog mutation and no Production deployment are required merely for source convergence.
+
 ## 2026-09-21 - Phase50.A.2X Slider SEO + authoritative re-publish LOCAL_TESTED / GitHub promotion next
 
 A2X is active on `wip/phase50-a2x-slider-authoritative-republish-20260921` from exact W4.1 baseline `7f2280eafe7a3293008a6dc7a4559b0ef92f114c`. Slider SEO/media completeness is now independent of homepage membership: every Product must carry Slider title/description/ALT/button/focus/image data, while only the operator checkbox controls actual homepage membership. Single-Product completion and multi-select SEO completion both fill Slider data without enabling the checkbox.

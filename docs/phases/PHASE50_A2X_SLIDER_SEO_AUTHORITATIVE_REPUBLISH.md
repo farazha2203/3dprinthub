@@ -1,6 +1,6 @@
 # Phase50.A.2X — Slider SEO Readiness + Authoritative Re-publish
 
-Status: **LOCAL_TESTED / GITHUB PROMOTION NEXT**
+Status: **GITHUB_UPDATED / SPLIT-LINEAGE ACCEPTANCE SUPERSEDED BY A2Y**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2W W4.1 exact GitHub SHA `7f2280eafe7a3293008a6dc7a4559b0ef92f114c`
 Branch: `wip/phase50-a2x-slider-authoritative-republish-20260921`
@@ -34,6 +34,8 @@ W4.1 real-data state was reverified before A2X: #628 has Source Profiles at 12×
 - No Production source, Production DB or live Site Product has been mutated by A2X yet.
 
 ## Remaining acceptance
+
+A2X Slider code is already pushed at `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd`. Its real-data backfill/controlled republish acceptance is intentionally moved under A2Y/A2Z because the Server/Production fixes live on the divergent `e03bdd2b...` lineage. Do not finish this list on the split branch.
 - [ ] Commit/push A2X and verify exact GitHub SHA.
 - [ ] Launch Qt from the exact pushed A2X SHA.
 - [ ] Take a fresh integrity-checked Catalog SQLite backup.

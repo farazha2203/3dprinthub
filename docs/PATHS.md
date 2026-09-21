@@ -1,3 +1,14 @@
+## 2026-09-21 A2Y reconciliation paths
+- Clean isolated planning/convergence worktree: `D:\projects\3DPrintHub-a2y-plan`.
+- Branch: `wip/phase50-a2y-master-reconciliation-20260921`.
+- Planning baseline / latest Windows head: `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd`.
+- Planning rollback ref: `backup/pre-phase50-a2y-master-plan-20260921` -> `c86c66a1...`.
+- Current Production/Server docs head to reconcile: `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`.
+- Verified merge-base: `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
+- Shared Catalog authority remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`; A2Y documentation/convergence must not mutate it until A2Z backup/data gates.
+- Existing owner Desktop launchers still target `D:\projects\3DPrintHub-a2u-latest-windows\catalog_center\RUN_QT.ps1`; do not retarget them until the unified A2Y SHA passes exact-SHA Qt acceptance.
+- Old primary clone `D:\projects\3DPrintHub` remains dirty/behind with pre-existing owner documentation work; do not reset, clean or use it as the A2Y merge worktree.
+
 ## 2026-09-20 A2U current Windows operator paths
 - Current Windows operator worktree: `D:\projects\3DPrintHub-a2u-latest-windows`.
 - Branch: `wip/phase50-a2u-latest-windows-a2t-20260920`.

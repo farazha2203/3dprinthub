@@ -1,3 +1,28 @@
+## 2026-09-21 - AUTHORITATIVE REMAINING WORK — Phase50.A.2Y+
+
+The authoritative remaining-work plan is `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. Historical unchecked boxes below are retained as evidence and are not automatically pending; only items explicitly carried into the master plan remain active.
+
+Current blocking fact: latest Windows `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd` and current Server/Production docs head `e03bdd2b718fae3ce030df789c8b9db958d8d8ed` are divergent descendants of merge-base `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
+
+Remaining sequence:
+- [ ] **A2Y** — converge Windows + Server lineages into one tested GitHub head; launch exact-SHA Qt; freeze one forward baseline.
+- [ ] **A2Z** — Catalog Slider data completion + Windows operator acceptance; 635 Products total, only 50 currently core-complete, 585 incomplete.
+- [ ] **A2Z-S** — changed-revision Site-first Instagram Feed+Story automation + Highlight queue acceptance.
+- [ ] **A2Z-W5** — manual/self-produced Product creation.
+- [ ] **A2Z-W6** — source video + Site video + Reel/Story handoff.
+- [ ] **A2Z-C** — dynamic Post/Tipax/Mahex provider activation on top of existing shipping fallback.
+- [ ] **A3** — canonical StorePayment -> secure ZarinPal wiring, Sandbox UAT, then explicitly approved Live activation.
+- [ ] **A4** — Torob official Product API integration using real Product/Profile availability and price.
+- [ ] **B1** — Google OAuth/local login + Customer account/order-history closure.
+- [ ] **B2** — Product Like/Favorite/Comment/verified-buyer Review package.
+- [ ] **B3** — customer Telegram Bot/Mini App tied to the same account/order authority; operator notification alone does not count as this feature.
+- [ ] **C1-C5** — Accounting Core -> Treasury -> Purchasing/Payables -> Sales/Receivables -> Reports/Close.
+- [ ] **D1** — final Windows package/shortcut + large-catalog soak + full Production UAT/release closure.
+
+Completed items that must not be rerun as pending: A2R manual transfer, A2S finance/receipt audit, A2U latest Windows recovery, A2V image authority, A2W W1-W4.1 real data repair, A2X Server parity/Hero persistence, 2026-09-15 Store Reset, and the already-receipted #625 Feed+Story revision.
+
+Exact next: **A2Y lineage convergence**. No new feature or Production mutation before that gate.
+
 ## 2026-09-21 - Phase50.A.2X Slider SEO Readiness + Authoritative Re-publish
 - [x] Verify exact W4.1 baseline `7f2280e...` and real repaired #628/#625 state.
 - [x] Make Slider SEO/media data required for all Products independent of membership checkbox.
