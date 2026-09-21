@@ -1,11 +1,15 @@
-## 2026-09-21 - Phase50.A.2V image authority hardening
+## 2026-09-21 - Phase50.A.2V image authority hardening — Production verified
 - Hardened Windows Site-publish media authority: Site-selected media must be part of canonical Product images or publish fails closed.
 - Renamed Qt image controls to distinguish temporary bulk `ویرایش` from persisted `ارسال سایت`.
 - Preserved explicit Site-selected local images across source refetch, including legacy numbered image filenames; unselected numbered source-cache slots remain replaceable.
-- Added regression coverage for authority drift, refetch ownership and UI contract.
-- Repaired #625 canonical image authority from its persisted Site selections after an integrity-checked Catalog backup; no Site re-import was triggered.
-- Pushed exact A2V source `4e69ed6a5c0996c7249830fbe029cd01460ad5b1`; exact-SHA Qt relaunch and 72/72 stable Image/SEO/Packaging/Republish gate PASS.
-- Production source remains unchanged; controlled image republish waits only for the owner’s explicit visual `ارسال سایت` selection.
+- Added regression coverage for authority drift, refetch ownership and UI contract; stable Image/SEO/Packaging/Republish gate 72/72 PASS plus compile/diff/Qt VerifyOnly PASS.
+- Repaired #625 canonical image authority from persisted evidence after verified revision-10 rollback; no unrecorded `phase49_3c_*` media was guessed.
+- Pushed exact source `4e69ed6a5c0996c7249830fbe029cd01460ad5b1` and ran the accepted A2V Qt runtime.
+- Real acceptance persisted exactly one Site image, `local://04.webp`, and republished #625 in place to Site Product #39 revision 11 using batch `desktop_catalog_v85_20260921_081158` / `cb51fb28-acd2-45a7-8a86-40ea5268614c`.
+- Local final SEO, Batch, Production stored media and fresh public HTTPS bytes are all 36,162 bytes with SHA256 `cf6f0422f0cde915e9203ddbca6564df694fb4b6a97320e1af0e7f4117c68fff`.
+- Public Product/image verification is HTTP 200 and Production retains exactly 3 active current CC Variants with current weight/time/prices.
+- Production source remains clean at `03042d0430ee6e688c992c875f12edc969df103d`; no Host source deploy/migration/restart was needed.
+- The planned immediate pre-republish backup was missed before revision 11 completed; no duplicate revision was created. Existing verified revision-10 rollback was retained and a post-rev11 integrity-checked snapshot `phase50-a2v-post-rev11-20260921-081557` was created.
 
 ## 2026-09-20 - Phase50.A.2U latest Windows recovery
 - Restored the actual latest Windows lineage (`f1b58645...`) instead of continuing from the divergent A2T worktree.

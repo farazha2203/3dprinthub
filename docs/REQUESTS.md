@@ -1,9 +1,11 @@
 ## 2026-09-21 - Owner: new Product images sent from Windows must replace the live Site images
-Status: `A2V SOURCE PUSHED / EXACT-SHA QT RUNNING / REAL SITE-IMAGE SELECTION PENDING`.
+Status: `A2V PRODUCTION_VERIFIED / CLOSED`.
 
-Owner reported that newly chosen images sent from the Windows Catalog Center still did not appear on the Site. Revision-10 forensic evidence proves the receiver updated Product #39 but Windows packaged the prior finalized image bytes because persisted Site selection and canonical image authority had drifted apart.
+The revision-10 stale-image path was traced to split Local image authority, not Site cache. A2V makes `ارسال سایت` the persisted Product-image authority, keeps bulk `ویرایش` independent, fails closed on authority drift and preserves persisted Site-selected local images across refetch.
 
-A2V now makes `ارسال سایت` the explicit persisted publish choice, keeps bulk `ویرایش` separate, fails closed on image-authority drift and protects persisted Site-selected local images during refetch. #625 authority was repaired only from existing persisted evidence after a verified backup. No unrecorded new image is guessed. Exact next step is the owner’s visual `ارسال سایت` selection in the running A2V UI, followed by one controlled same-identity republish and three-way SHA proof.
+Real acceptance is complete without guessing any unrecorded `phase49_3c_*` file. At publish time #625 persisted exactly `local://04.webp` as the Site image and Primary. Batch `desktop_catalog_v85_20260921_081158` / UUID `cb51fb28-acd2-45a7-8a86-40ea5268614c` updated the same Site Product #39 from revision 10 to 11 exactly once. Local final SEO, Batch, Production storage and public HTTPS image all match SHA256 `cf6f0422f0cde915e9203ddbca6564df694fb4b6a97320e1af0e7f4117c68fff`; public Product/image HTTP checks are 200 and exactly three current CC Variants remain active.
+
+The requested fresh snapshot immediately before this publish was not captured before revision 11 completed. This is documented rather than hidden: the verified revision-10 A2V rollback remains available, a fresh post-revision-11 integrity-checked snapshot was created, and no unnecessary revision 12 was produced. A2V needs no further #625 publication.
 
 ## 2026-09-20 - Owner: restore the actual latest Windows Catalog Center
 Status: `A2U ACCEPTED / v8.9.11 WINDOWS VERIFIED`.

@@ -1,19 +1,21 @@
-## 2026-09-21 - Phase50.A.2V image authority hardening
+## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.
 - [x] Reproduce #625 revision-10 stale-image path and prove unchanged Production image SHA values.
 - [x] Add fail-closed selected-image ⊆ canonical-image authority gate.
 - [x] Separate temporary `ویرایش` selection from persisted `ارسال سایت` selection in Qt.
 - [x] Preserve persisted Site-selected local images through refetch, including legacy numbered filenames.
-- [x] Take integrity-checked Catalog rollback and repair only #625 canonical image authority from persisted evidence.
+- [x] Take integrity-checked revision-10 Catalog rollback and repair only #625 canonical image authority from persisted evidence.
 - [x] Stable Image/SEO/Packaging/Republish regression 72/72 PASS; compile/diff/Qt VerifyOnly PASS.
 - [x] Commit/push exact source `4e69ed6a5c0996c7249830fbe029cd01460ad5b1` and launch exact-SHA Qt.
 - [x] Capture Production #39 revision-10 baseline and live media SHA values.
-- [ ] Owner visually selects intended new image(s) using `ارسال سایت`; do not infer from ephemeral old bulk-edit state.
-- [ ] Verify selected set, primary and current finalized SEO bytes; create fresh pre-publish rollback.
-- [ ] Perform one controlled same-identity #625 → #39 republish.
-- [ ] Require Local → Batch → Production SHA equality and Product #39 revision increment once.
-- [ ] Verify public Product/media HTTP/browser state and exactly 3 active current Variants.
-- [ ] Close CURRENT_STATE / ROADMAP / CHANGELOG / ERRORS / REQUESTS / A2V phase and push closure docs.
+- [x] Persisted Site selection at acceptance is explicit and non-inferred: exactly `local://04.webp`; Primary is the same image.
+- [x] Verify selected-set SEO metadata/current bytes: metadata ready, 36,162 bytes, SHA256 `cf6f0422...c68fff`.
+- [x] Perform one same-identity #625 → #39 republish: batch `desktop_catalog_v85_20260921_081158`, UUID `cb51fb28-acd2-45a7-8a86-40ea5268614c`, revision 10 → 11 once.
+- [x] Require Local → Batch → Production stored → public-download SHA equality: exact `cf6f0422f0cde915e9203ddbca6564df694fb4b6a97320e1af0e7f4117c68fff`.
+- [x] Verify public Product HTTP 200, public image 200/image-webp, one authoritative ProductImage and exactly 3 active current CC Variants.
+- [x] Preserve Production source unchanged/clean at `03042d0430ee6e688c992c875f12edc969df103d`; no A2V Host source deploy/migration/restart.
+- [x] Record backup-ordering exception instead of creating a duplicate revision: the fresh pre-republish snapshot was missed; verified revision-10 rollback remains available and a fresh integrity-checked post-rev11 snapshot was taken.
+- [x] Close CURRENT_STATE / ROADMAP / CHANGELOG / ERRORS / REQUESTS / A2V phase and push closure docs.
 
 ## 2026-09-20 - Phase50.A.2U latest Windows recovery
 - [x] Identify actual latest Windows lineage at `f1b58645...`.
