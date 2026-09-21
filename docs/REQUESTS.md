@@ -1,5 +1,5 @@
 ## 2026-09-21 - Owner: Instagram is broken; real Feed+Story must follow repository policy exactly
-Status: `A2Z-S TRANSPORT FIX LOCAL_TESTED / REAL BUFFER SEND NEXT`.
+Status: `A2Z-S FEED LIVE / STORY BLOCKED ON BUFFER MOBILE DEVICE / RECOVERY HARDENING GITHUB_UPDATED`.
 
 Owner requires the broken Instagram path to be repaired and the written project Social rules to be mandatory for every real send. For #609 this means Site-first revision 2, exact five Site-selected images Primary first, per-image ALT, Product-specific factual caption, bounded hashtags, UTM Product link, nationwide shipping, no false free/download claims, approved 1080x1920 Gold/Navy IRANSans Story, duplicate-ACK protection, provider receipts/external ids and approved Highlight target recording. Final Add-to-Highlight remains operator-required because the documented Buffer path cannot mutate Highlights.
 

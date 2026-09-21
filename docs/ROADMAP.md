@@ -12,12 +12,12 @@
 - [x] Compile/diff/Qt VerifyOnly + first github_raw transport fix commit/push exact SHA `d6b0de52...` -> Local=GitHub.
 - [x] Real github_raw rehost -> #609 social-assets commit `3294d817...`; current branch remote exact at `2cc87108...`; public MIME/SHA 6/6 PASS.
 - [x] Local-test truthful clickable Story handoff: notification-mode + Link Sticker UTM metadata + notification-ready receipt; Social 36/36 PASS.
-- [ ] Commit/push Story handoff delta -> exact-SHA Qt.
+- [x] Commit/push Story handoff delta at `bc96c52f...`; exact-SHA Qt acceptance PASS before real send.
 - [x] Execute exactly one current-ACK Social attempt: Feed post created once; Story notification post created once.
 - [x] Reconcile Feed submitted->sent read-only; no repost. Live Feed: https://www.instagram.com/p/DdjtyiMG8RC/
 - [x] Diagnose Story provider error from Buffer Post read-back: no eligible linked mobile reminder device.
 - [x] Local-test ERR-49-220 recovery: provider error != ready; historical false-ready/error does not block Story-only retry; Feed stays deduplicated. Social 37/37 PASS.
-- [ ] Commit/push ERR-49-220 -> exact-SHA Qt.
+- [x] Commit/push ERR-49-220 exact at `c064c36f...`; post-send Catalog backup integrity PASS.
 - [ ] External prerequisite: link/sign in Buffer mobile + enable reminder notifications for this account.
 - [ ] Changed-condition Story-only retry; require provider notification accepted, no Feed recreation.
 - [ ] Operator completes Instagram Link Sticker handoff; record truthful Story/Highlight receipt state.

@@ -51,8 +51,10 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - ERR-49-220 hardening is Local-tested 37/37: provider error is failure, not notification-ready; historical false-ready/error receipt is retryable; existing Feed remains deduplicated.
 - External prerequisite remains owner-side Buffer mobile linking/sign-in + notification enablement. Automatic/no-sticker downgrade is prohibited by this phase contract.
 
+ERR-49-220 is GitHub-updated exact at `c064c36f2d389bb0114489f958c9026b8573316b`. Fresh post-send rollback: `post-instagram-feed-609-20260921-211603`, integrity OK; revision 2 unchanged; Feed final receipt is published/reconciled without repost while the historical Story receipt explicitly carries `buffer_status=error`.
+
 ## Exact next
-Commit/push ERR-49-220 -> verify Local=GitHub -> exact-SHA Qt -> wait for changed external condition (Buffer mobile reminder device linked) -> read-only provider gate + fresh Catalog backup -> Story-only recovery through normal Product Social action, proving Feed createPost is skipped -> require non-error notification status -> operator completes Link Sticker handoff in Instagram -> record truthful Story/Highlight result -> A2Z-S closure.
+Wait for changed external condition: owner links/signs in to Buffer mobile and enables reminder notifications -> read-only provider gate + fresh Catalog backup -> Story-only recovery through normal Product Social action, proving Feed createPost is skipped -> require non-error notification state -> operator completes Link Sticker handoff in Instagram -> record truthful Story/Highlight result -> A2Z-S closure.
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.
