@@ -1,14 +1,21 @@
-## 2026-09-21 - Phase50.A.2X Server parity hotfix
+## 2026-09-21 - Phase50.A.2X Server parity + Hero public-media closure
 - [x] Reproduce real #620 case-only REPUBLISH_PARITY_MISMATCH.
 - [x] Verify Production exact clean baseline 03042d... through dedicated reverse tunnel.
 - [x] Patch material-only parity to case-insensitive semantic equality; retain all other strict parity gates.
 - [x] Carry authoritative SEO assignment onto the Production release lineage.
 - [x] Focused Server 6/6 + compile/diff/Django/no-drift PASS.
-- [ ] Commit/push exact hotfix SHA and verify remote equality.
-- [ ] Fresh Host source/env/MySQL rollback backup.
-- [ ] Explicit fetch + ff-only Production deploy from GitHub.
-- [ ] Controlled #620 retry and Production parity/HTTP verification.
-- [ ] Close A2X Server incident docs.
+- [x] Commit/push exact hotfix SHA 143848ee... and verify remote equality.
+- [x] Fresh Host source/env/MySQL rollback backup 20260921-163018-phase50-a2x-server-parity.
+- [x] Explicit fetch + ff-only Production deploy from GitHub.
+- [x] Controlled #620 retry: Product #41 / Slider #17 / parity PASS / Product+media HTTP 200.
+- [x] Prove #620 160 active Variants are authoritative (64 + six times 16), with stale_active_count=0.
+- [x] Isolate Hero #17 stored private-media URL while effective/rendered Product-owned media remains healthy.
+- [x] Implement Product-owned Hero URL persistence and local regressions (11/11 + 16/16 PASS).
+- [ ] Commit/push Hero persistence follow-up and verify remote equality.
+- [ ] Fresh Host rollback backup + exact-SHA no-migration deploy.
+- [ ] Normalize existing Hero #17 stored URL to canonical Product media without re-publishing #620.
+- [ ] Verify Home DOM/browser, Hero media HTTP 200, no imported-models public URL, final clean Host.
+- [ ] Close A2X docs.
 
 ## 2026-09-20 - A2R payment readiness panel
 

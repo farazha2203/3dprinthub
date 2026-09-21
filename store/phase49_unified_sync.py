@@ -112,6 +112,56 @@ def _selected_image(asset, requested: str):
     return None
 
 
+def _field_url(field_file) -> str:
+    if not field_file:
+        return ""
+    try:
+        return str(field_file.url or "").strip()
+    except Exception:
+        return ""
+
+
+def _media_basename(field_file) -> str:
+    try:
+        return str(field_file.name or "").replace("\\", "/").rsplit("/", 1)[-1]
+    except Exception:
+        return ""
+
+
+def _product_owned_slider_image_url(product, asset, selected) -> str:
+    """Resolve the persisted Hero URL from Product-owned public media only."""
+    gallery = list(product.images.all().order_by("sort_order", "id"))
+
+    if selected is not None and gallery:
+        selected_name = _media_basename(getattr(selected, "image", None))
+        if selected_name:
+            for row in gallery:
+                if _media_basename(row.image) == selected_name:
+                    url = _field_url(row.image)
+                    if url:
+                        return publish._absolute_internal_media_url(url)
+
+        selected_ids = list(
+            asset.images.filter(is_selected=True)
+            .exclude(image="")
+            .order_by("sort_order", "id")
+            .values_list("pk", flat=True)
+        )
+        try:
+            selected_index = selected_ids.index(selected.pk)
+        except ValueError:
+            selected_index = -1
+        if 0 <= selected_index < len(gallery):
+            url = _field_url(gallery[selected_index].image)
+            if url:
+                return publish._absolute_internal_media_url(url)
+
+    main_url = _field_url(getattr(product, "main_image", None))
+    if main_url:
+        return publish._absolute_internal_media_url(main_url)
+    return ""
+
+
 def _slide_state(slide) -> tuple:
     if slide is None:
         return ()
@@ -158,13 +208,17 @@ def apply_homepage_slider(product, asset, data: dict) -> dict:
 
     requested = str(data.get("homepage_slider_image_url") or "").strip()
     selected = _selected_image(asset, requested)
-    image_url = ""
-    if selected is not None and selected.image:
-        image_url = publish._absolute_internal_media_url(selected.image.url)
-    elif requested.startswith(("http://", "https://")):
+    image_url = _product_owned_slider_image_url(product, asset, selected)
+    if not image_url and selected is not None:
+        remote = str(getattr(selected, "remote_url", "") or "").strip()
+        if remote.startswith(("http://", "https://")):
+            image_url = remote
+    if not image_url and requested.startswith(("http://", "https://")):
         image_url = requested
-    elif asset.preview_image:
-        image_url = publish._absolute_internal_media_url(asset.preview_image.url)
+    if not image_url:
+        remote = str(getattr(asset, "remote_image_url", "") or "").strip()
+        if remote.startswith(("http://", "https://")):
+            image_url = remote
 
     slider_seo = publish._homepage_slider_seo(data, product)
     effect = str(data.get("homepage_slider_transition_effect") or "cinematic_fade").strip()

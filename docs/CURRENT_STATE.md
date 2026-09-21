@@ -1,4 +1,14 @@
-## 2026-09-21 - A2X Server material-parity hotfix LOCAL_TESTED / deploy next
+## 2026-09-21 - A2X Hero public-media persistence LOCAL_TESTED / deploy next
+
+Production is clean on release/phase50-a2j-hero-20260915 at exact 143848eeeeac7be8ec64c33ab7aa4c95c9f42165. The material-parity hotfix is already live: controlled Product #620 retry batch desktop_catalog_v85_20260921_163452 / UUID 2cb55e9e-35fa-40b0-8901-2606e7a4118c published successfully as Site Product #41 revision 1 with Slider #17 revision 1, republish_parity.ok=true, media_count=1, profile_count=160 and zero mismatches. Public Product and canonical /media/p/ image are HTTP 200 and byte-SHA exact; active CC variants are exactly 160 with stale_active_count=0.
+
+Final A2X verification exposed one persistence-only Hero defect: HomepageHeroSlide #17 stored image_url still pointed at the intentionally private /media/store/imported-models/gallery/... namespace and returned HTTP 404, while its runtime effective_image_url correctly resolved Product #41 canonical /media/p/620/... media and Home rendered the healthy Product-owned image. This is the same public/private media-boundary family as ERR-49-125, not a broken Product publish.
+
+Local follow-up changes the unified Desktop->Hero persistence boundary: selected Product gallery media is persisted first when it maps to the selected source image; otherwise Product.main_image is persisted; private ImportedPrintAsset working-media is never persisted as the public Hero URL. HTTP(S) source media remains fallback only when the Product has no public-owned media. No migration/schema change and no #620 re-publish is required.
+
+Verification: Unified Sync + Hero ownership + import E2E 11/11 PASS; Home/Slicebox/Hero regression 16/16 PASS; touched-source compile, git diff --check, Django check and makemigrations --check --dry-run PASS. Exact next: document/commit/push follow-up -> Host exact-SHA preflight -> fresh rollback backup -> ff-only deploy from GitHub -> targeted #17 stored-URL normalization without changing Product/Slider semantic revision -> Home DOM/browser/public-image verification -> A2X closure.
+
+## 2026-09-21 - A2X Server material-parity hotfix DEPLOYED / Product #620 retry PASS
 
 Owner retry for Catalog Product #620 reached Production in batch desktop_catalog_v85_20260921_160339 / UUID 8be482aa-5469-439d-bad3-6dcab3f9f8de and rolled back with REPUBLISH_PARITY_MISMATCH. Every mismatch is case-only material identity: Desktop pla/petg versus canonical Store PLA/PETG.
 

@@ -1,3 +1,11 @@
+## ERR-49-212 - Hero record persisted private imported-media URL although runtime rendered Product media
+**Date:** 2026-09-21
+**Observed:** after successful Product #620 publish, HomepageHeroSlide #17 was active and Home rendered canonical Product media, but the persisted slide.image_url was https://3dprinthub.ir/media/store/imported-models/gallery/... and that direct URL correctly returned HTTP 404. Product #41 canonical /media/p/620/... image returned HTTP 200 with exact Windows SHA.
+**Root cause:** the unified Desktop->Hero persistence function wrote selected ImportedPrintAssetImage.image.url into HomepageHeroSlide.image_url. The later ERR-49-125 runtime ownership patch protected effective_image_url at render time, but did not normalize the persisted field itself.
+**Correct fix:** at the unified persistence boundary resolve selected media to Product-owned ProductImage by selected ordering/basename; otherwise use Product.main_image. Persist source HTTP(S) only when no Product-owned public media exists. Never persist the private store/imported-models namespace as a public Hero URL.
+**Verification:** Unified Sync/Hero ownership/import E2E 11/11 PASS; Home/Slicebox/Hero regression 16/16 PASS; compile/diff/Django/no-drift PASS. Production deployment and one-time #17 normalization remain the final gates.
+**Prevention:** public media ownership must be correct both in stored Hero state and at render/serializer boundaries; runtime fallback alone is not sufficient acceptance.
+
 ## ERR-49-211 - Republish parity treated material-name case as a real mismatch
 **Date:** 2026-09-21
 **Observed:** real Product #620 batch desktop_catalog_v85_20260921_160339 / UUID 8be482aa-5469-439d-bad3-6dcab3f9f8de reached Production but rolled back with only material mismatches such as expected pla vs actual PLA and expected petg vs actual PETG.

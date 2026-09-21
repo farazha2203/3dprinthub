@@ -1,34 +1,51 @@
-# Phase50.A.2X — Server material parity hotfix
+# Phase50.A.2X — Server parity + Hero public-media closure
 
-Status: **LOCAL_TESTED / GITHUB PROMOTION NEXT**
+Status: **HERO_FIX_LOCAL_TESTED / GITHUB PROMOTION NEXT**
 Date: 2026-09-21
-Production baseline: `03042d0430ee6e688c992c875f12edc969df103d`
+Current Production source: `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`
 Branch: `wip/phase50-a2x-server-parity-20260921`
 
-## Incident
-Catalog Product #620 reached the Production receiver in batch `desktop_catalog_v85_20260921_160339` / UUID `8be482aa-5469-439d-bad3-6dcab3f9f8de`, but the transaction rolled back with `REPUBLISH_PARITY_MISMATCH`. Every reported mismatch was material-name case only: Desktop `pla/petg` versus canonical Store `PLA/PETG`.
+## Completed server incident
+Catalog Product #620 first reached Production in batch `desktop_catalog_v85_20260921_160339` / UUID `8be482aa-5469-439d-bad3-6dcab3f9f8de` and rolled back only because material-name casing differed (`pla/petg` vs canonical `PLA/PETG`).
 
-The Store material resolver is already case-insensitive. Therefore parity must compare material identity with the same semantic rule while keeping Brand, Manufacturer, Color, stock state, numeric commerce fields, profile keys, media names/SHA and all other parity checks strict.
+Hotfix `143848eeeeac7be8ec64c33ab7aa4c95c9f42165` makes only material identity case-insensitive while keeping Brand, Manufacturer, Color, stock state, profile keys, media names/SHA and numeric commerce parity strict. A2X authoritative SEO assignment is also live. No migration/schema change.
 
-## Delta
-- Add a material-only case-insensitive parity comparator.
-- Keep all non-material scalar parity checks unchanged and strict.
-- Carry the A2X authoritative SEO assignment onto the Production release lineage so stale Site SEO is not retained across Desktop re-publish.
-- No migration and no schema change.
+Controlled retry used a new batch, not the failed batch:
+- Batch `desktop_catalog_v85_20260921_163452`
+- UUID `2cb55e9e-35fa-40b0-8901-2606e7a4118c`
+- Site Product #41 revision 1
+- Slider #17 revision 1
+- republish parity OK, zero mismatches
+- media count 1
+- active profile/Variant rows 160, stale active rows 0
+- public Product and canonical Product media HTTP 200
 
-## Verification
-- New regression proves lowercase expected material and canonical uppercase Store material pass parity.
-- Existing extra-active-Variant failure regression still fails closed as intended.
-- Existing profile-price parity regression remains green.
-- Unified sync regression remains green.
-- Focused Server gate: 6/6 PASS.
-- Python compile, `git diff --check`, Django check and `makemigrations --check --dry-run`: PASS.
+## Final Hero persistence defect
+Hero #17 is active and Home already renders the canonical Product-owned image through the ERR-49-125 runtime ownership fallback. However, the stored `HomepageHeroSlide.image_url` still contains the private `/media/store/imported-models/gallery/...` URL, which correctly returns 404 because imported working media is intentionally not public.
 
-## Deployment gates
-- [ ] Commit/push exact hotfix SHA and verify GitHub remote equality.
-- [ ] Reverse-tunnel Host preflight: exact root/branch/HEAD/clean state/MySQL identity/no migration plan.
-- [ ] Fresh source/env + MySQL rollback backup.
-- [ ] Explicit fetch of the hotfix branch and ff-only deploy from GitHub.
-- [ ] Passenger restart and HTTP/readiness verification.
-- [ ] Controlled retry of #620 only after changed condition is live.
-- [ ] Verify Product/media/Profile/Slider parity and close the incident.
+The follow-up changes the unified Desktop -> Hero persistence boundary:
+- persist matching ProductImage media first;
+- otherwise persist Product.main_image;
+- never persist private ImportedPrintAsset working-media as the public Hero URL;
+- only use source HTTP(S) as fallback when no Product-owned public media exists;
+- keep `selected_asset_image` for audit/edit identity;
+- no Product #620 re-publish is required.
+
+## Local verification
+- Unified Sync + Hero media ownership + unified import E2E: 11/11 PASS.
+- Home/Slicebox/Hero presentation regression: 16/16 PASS.
+- Python compile: PASS.
+- Django check: PASS with known warnings only.
+- `makemigrations --check --dry-run`: no changes.
+- `git diff --check`: PASS.
+
+## Remaining deployment gates
+- [ ] Commit/push exact Hero follow-up SHA; verify Local=GitHub.
+- [ ] Reverse-tunnel Host exact baseline/branch/worktree/MySQL/migration preflight.
+- [ ] Fresh checksum-verified source/env/MySQL rollback backup.
+- [ ] Explicit fetch + ff-only deploy from GitHub; no migration.
+- [ ] Targeted one-time normalization of Hero #17 stored URL using the deployed resolver; do not change Product #41 or republish #620.
+- [ ] Verify Hero #17 stored and effective URLs are Product-owned canonical media.
+- [ ] Verify Home DOM/browser uses canonical media, Product link is present, all Hero images load and no public `store/imported-models` URL appears.
+- [ ] Verify Home/Store/Product HTTP 200 and final Host worktree clean.
+- [ ] Update closure docs and mark A2X PRODUCTION_VERIFIED.

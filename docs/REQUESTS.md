@@ -1,3 +1,8 @@
+## 2026-09-21 - Owner: continue A2X Hero #17 closure
+Status: HERO PUBLIC-MEDIA PERSISTENCE LOCAL_TESTED / DEPLOY NEXT.
+
+Product #620 has already published successfully and must not be sent again for this fix. Remaining A2X work is to make the stored Hero #17 URL obey the same Product-owned public-media boundary already used by runtime rendering, deploy the source follow-up from GitHub, normalize only the existing Hero URL with rollback protection, verify Home/Slider media in a real browser, then close A2X.
+
 ## 2026-09-21 - Owner: Product #620 publish failed; continue A2X
 Status: SERVER HOTFIX LOCAL_TESTED / DEPLOY + CONTROLLED RETRY NEXT.
 

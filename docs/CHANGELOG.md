@@ -1,3 +1,10 @@
+## 2026-09-21 - A2X Hero public-media persistence follow-up
+- Unified Desktop->Hero sync now persists Product-owned gallery/main media instead of private ImportedPrintAsset working-media.
+- Selected gallery ordering is preserved when a corresponding ProductImage exists; Product.main_image is the safe public fallback.
+- HTTP(S) source image is only a fallback when the Product has no public-owned media.
+- Added direct persistence regression; Unified Sync/Hero ownership/import E2E 11/11 and Home/Slicebox/Hero 16/16 PASS.
+- No migration and no Product #620 re-publish is required.
+
 ## 2026-09-21 - A2X Server material parity + authoritative SEO hotfix
 - Material-only republish parity now treats case-only names as the same resolved Store material, preventing false pla/PLA and petg/PETG rollbacks.
 - All non-material parity fields remain unchanged and strict.

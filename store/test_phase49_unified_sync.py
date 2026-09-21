@@ -7,7 +7,7 @@ from django.test import RequestFactory, TestCase
 
 from store.epic49_catalog_profile import ProductCatalogProfile
 from store.epic49_publish_options import sync_epic49_publish_options
-from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource, Product
+from store.models import Category, ImportedPrintAsset, ImportedPrintAssetImage, PrintCatalogSource, Product, ProductImage
 from website.models import HomepageHeroSlide
 
 
@@ -107,6 +107,11 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
         self.assertEqual(profile.sync_revision, 1)
         self.assertEqual(slide.sync_revision, 1)
         self.assertEqual(slide.selected_asset_image_id, self.image.pk)
+        self.assertEqual(
+            slide.image_url,
+            "https://3dprinthub.ir/media/store/products/epic49-unified.jpg",
+        )
+        self.assertNotIn("/media/store/imported-models/", slide.image_url)
         self.assertEqual(slide.transition_effect, "wedding_dissolve")
         self.assertEqual(slide.transition_duration_ms, 1800)
         self.assertEqual(slide.display_duration_ms, 8500)
@@ -137,6 +142,32 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
         self.assertEqual(slide.title_override, "عنوان اسلایدر ب")
         self.assertEqual(third["product_revision"], 2)
         self.assertEqual(third["slider_revision"], 2)
+
+    def test_slider_persists_selected_product_gallery_url_when_available(self):
+        Product.objects.filter(pk=self.product.pk).update(
+            main_image="p/77/main/product-main.webp"
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            image="p/77/hero/epic49-hero.webp",
+            alt_text="Hero public copy",
+            sort_order=0,
+        )
+        self.product.refresh_from_db()
+        self._set_payload(self._payload())
+
+        sync_epic49_publish_options(self.asset)
+        slide = HomepageHeroSlide.objects.get(asset=self.asset)
+
+        self.assertEqual(
+            slide.image_url,
+            "https://3dprinthub.ir/media/p/77/hero/epic49-hero.webp",
+        )
+        self.assertEqual(
+            slide.effective_image_url,
+            "/media/p/77/hero/epic49-hero.webp",
+        )
+        self.assertNotIn("/media/store/imported-models/", slide.image_url)
 
     def test_admin_product_edit_blocks_stale_desktop_batch(self):
         self._set_payload(self._payload())
