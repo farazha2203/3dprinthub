@@ -1,3 +1,21 @@
+## 2026-09-21 - Phase50.A.2Z Physical SEO Filename + Image/Social Authority Hotfix
+- [x] Preserve earlier A2Z selected/canonical media + Buffer worktree fixes.
+- [x] Make «اصلاح اسم و سئو» rename/promote real Product-local files to unique numbered SEO WebPs under `images/`.
+- [x] Archive prior source/cache bytes under `source_originals/` for rollback/provenance.
+- [x] Persist exact physical `source_local_file` and remap `local://` identity to SEO basename.
+- [x] Update page-extract exact file mappings and make removal/recovery support SEO-named files.
+- [x] Enforce duplicate SEO basename fail-closed.
+- [x] Direct rename/query-variant/recovery 3/3 PASS.
+- [x] Combined Image/Publish/Windows/Social 109/109 PASS.
+- [x] Compile/diff/Qt VerifyOnly PASS.
+- [ ] Commit/push exact physical-rename SHA and verify Local=GitHub.
+- [ ] Relaunch exact-SHA Qt.
+- [ ] Fresh Catalog + #609 media backup.
+- [ ] Repair real #609 through application authority; verify `images/` physical SEO names and five selected canonical media.
+- [ ] Same-identity Site #42 republish; verify every selected public image and basename.
+- [ ] Changed-revision Instagram Feed+Story acceptance; no duplicate feed/story.
+- [ ] Resume A2Z Slider completeness/backfill after #609 acceptance.
+
 ## 2026-09-21 - Phase50.A.2Z Image + Social Authority Hotfix
 - [x] Reproduce #609 selected/canonical media drift and duplicate displayed SEO filename.
 - [x] Verify 5 unique finalized physical SEO WebPs already exist for #609.

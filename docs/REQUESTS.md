@@ -3,6 +3,11 @@ Status: `A2Z LOCAL_TESTED / REAL ACCEPTANCE NEXT`.
 
 Owner requires every selected Product image to be physically finalized with a unique SEO filename and carried to Site, not merely mapped in the UI; duplicate final filenames are forbidden. The raw source/cache may keep provenance names, but publishable Local files, Batch files and Site media must use the unique SEO WebP filenames. Product #609 must publish all selected images, preserve the same Site identity, then send the changed Site revision to Instagram Feed+Story. The existing `social-assets-buffer` worktree must be reused rather than recreated.
 
+## 2026-09-21 - Owner: physical SEO rename, all Product images to Site, Instagram must actually send
+Status: `A2Z PHYSICAL-RENAME LOCAL_TESTED / REAL #609 ACCEPTANCE NEXT`.
+
+Owner requires «اصلاح اسم و سئو» to change the actual Product-local file names, reject/avoid duplicate basenames, and send the same unique SEO filenames to Site. If a Product has four/five selected Site images, all selected images must be carried to the same Site Product rather than only one. Instagram Post+Story must complete from the changed Site revision; Buffer Git worktree collision must not block publish and duplicate receipts/posts must remain prohibited.
+
 ## 2026-09-21 - Owner: execute A2Y lineage convergence before A2Z
 Status: `ACCEPTED / CLOSED / A2Z NEXT`.
 

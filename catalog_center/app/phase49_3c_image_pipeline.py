@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import unicodedata
 from pathlib import Path
 from urllib import request as urllib_request
@@ -184,6 +185,26 @@ def strict_source_local_image(row, url: str) -> str:
     url = str(url or "").strip()
     if not url:
         return ""
+
+    # After the operator applies Product image SEO, the Product-local physical
+    # file itself is promoted to the unique SEO WebP name. Preserve source URL
+    # provenance, but resolve the exact persisted Product-local file first so a
+    # later refresh never falls back to the historical 01.webp/cache filename.
+    for raw in _json_list(_row_value(row, IMAGE_METADATA_COLUMN, "[]")):
+        if not isinstance(raw, dict):
+            continue
+        if str(raw.get("source_url") or "").strip() != url:
+            continue
+        mapped = str(raw.get("source_local_file") or "").strip()
+        if not mapped:
+            continue
+        try:
+            candidate = Path(mapped).resolve()
+            candidate.relative_to(local_dir.resolve())
+        except Exception:
+            continue
+        if candidate.is_file():
+            return str(candidate)
 
     if url.startswith("local://"):
         candidate = local_dir / "images" / url.split("local://", 1)[1]
@@ -751,6 +772,203 @@ def finalize_selected_images(
         "duplicates": duplicate_count,
         "items": items,
         "primary": primary,
+    }
+
+
+def promote_selected_product_local_seo_files(db, product_id: int) -> dict:
+    """Promote selected Product-local media to unique physical SEO filenames.
+
+    Source URLs stay as provenance for remote media. Local Product URLs are
+    rewritten to local://<seo-filename>. Historical source/cache bytes are
+    moved into source_originals/ so rollback/audit remains possible.
+    """
+    ensure_schema(db)
+    row = db.product(int(product_id))
+    if row is None:
+        raise RuntimeError(f"Product {product_id} not found")
+    data = dict(row)
+    local_dir = Path(str(_row_value(data, "local_dir", "") or "")).resolve()
+    if not local_dir.is_dir():
+        raise RuntimeError("پوشه محلی محصول پیدا نشد.")
+    image_dir = (local_dir / "images").resolve()
+    image_dir.mkdir(parents=True, exist_ok=True)
+    archive_dir = (local_dir / "source_originals").resolve()
+
+    selected = [
+        str(value or "").strip()
+        for value in _json_list(_row_value(data, "selected_images_json", "[]"))
+        if str(value or "").strip()
+    ]
+    metadata = [
+        dict(item)
+        for item in _json_list(_row_value(data, IMAGE_METADATA_COLUMN, "[]"))
+        if isinstance(item, dict)
+    ]
+    by_url = {
+        str(item.get("source_url") or "").strip(): item
+        for item in metadata
+        if str(item.get("source_url") or "").strip()
+    }
+
+    plans: list[dict] = []
+    target_names: set[str] = set()
+    for index, source_url in enumerate(selected, start=1):
+        meta = by_url.get(source_url)
+        if not meta:
+            raise RuntimeError(f"SEO metadata missing for selected image {index}")
+        seo_name = _indexed_seo_filename(
+            str(meta.get("seo_filename") or ""),
+            index,
+            fallback=planned_seo_filename(data, index),
+        )
+        folded = seo_name.casefold()
+        if folded in target_names:
+            raise RuntimeError(f"Duplicate Product-local SEO filename: {seo_name}")
+        target_names.add(folded)
+
+        final_raw = str(meta.get("final_local_file") or "").strip()
+        if not final_raw:
+            raise RuntimeError(f"Final SEO file missing for selected image {index}")
+        final_path = Path(final_raw).resolve()
+        if not final_path.is_file():
+            raise RuntimeError(f"Final SEO file missing on disk: {seo_name}")
+
+        source_raw = strict_source_local_image(data, source_url)
+        if not source_raw:
+            raise RuntimeError(f"Product-local source file missing for selected image {index}")
+        source_path = Path(source_raw).resolve()
+        try:
+            source_path.relative_to(local_dir)
+        except ValueError as exc:
+            raise RuntimeError("Selected Product image escaped local_dir") from exc
+        target_path = (image_dir / seo_name).resolve()
+        if target_path.parent != image_dir:
+            raise RuntimeError("Unsafe Product-local SEO target")
+        plans.append({
+            "index": index,
+            "source_url": source_url,
+            "source_path": source_path,
+            "target_path": target_path,
+            "final_path": final_path,
+            "meta": meta,
+        })
+
+    # Archive each distinct pre-SEO Product-local source exactly once.
+    archived_by_source: dict[str, Path] = {}
+    for plan in plans:
+        source_path = plan["source_path"]
+        key = str(source_path).casefold()
+        if source_path == plan["target_path"]:
+            existing_archive = str(plan["meta"].get("original_local_file") or "").strip()
+            if existing_archive:
+                archived_by_source.setdefault(key, Path(existing_archive))
+            continue
+        if key in archived_by_source:
+            continue
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        digest = _sha256(source_path)[:12]
+        archive_target = archive_dir / source_path.name
+        if archive_target.exists() and _sha256(archive_target) != _sha256(source_path):
+            archive_target = archive_dir / (
+                f"{source_path.stem}-{digest}{source_path.suffix.lower()}"
+            )
+        if not archive_target.exists():
+            shutil.move(str(source_path), str(archive_target))
+        else:
+            source_path.unlink(missing_ok=True)
+        archived_by_source[key] = archive_target
+
+    replacements: dict[str, str] = {}
+    for plan in plans:
+        source_url = plan["source_url"]
+        target_path = plan["target_path"]
+        final_path = plan["final_path"]
+        meta = plan["meta"]
+
+        if target_path.exists() and _sha256(target_path) != _sha256(final_path):
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            stale_digest = _sha256(target_path)[:12]
+            stale_target = archive_dir / (
+                f"{target_path.stem}-stale-{stale_digest}{target_path.suffix}"
+            )
+            if not stale_target.exists():
+                shutil.move(str(target_path), str(stale_target))
+            else:
+                target_path.unlink(missing_ok=True)
+        if not target_path.exists():
+            shutil.copy2(final_path, target_path)
+
+        old_source_key = str(plan["source_path"]).casefold()
+        archived = archived_by_source.get(old_source_key)
+        if archived and str(archived):
+            meta["original_local_file"] = str(archived)
+        meta["source_local_file"] = str(target_path)
+        meta["product_local_filename"] = target_path.name
+        meta["seo_filename"] = target_path.name
+
+        if source_url.startswith("local://"):
+            new_url = f"local://{target_path.name}"
+            replacements[source_url] = new_url
+            meta["source_url"] = new_url
+
+    def remap(value: str) -> str:
+        raw = str(value or "").strip()
+        return replacements.get(raw, raw)
+
+    new_selected = [remap(value) for value in selected]
+    new_images = []
+    for value in _json_list(_row_value(data, "images_json", "[]")):
+        mapped = remap(str(value or ""))
+        if mapped and mapped not in new_images:
+            new_images.append(mapped)
+    for value in new_selected:
+        if value and value not in new_images:
+            new_images.append(value)
+
+    primary = remap(str(_row_value(data, "primary_image_url", "") or ""))
+    slider = remap(str(_row_value(data, "homepage_slider_image_url", "") or ""))
+
+    # Keep page_extract source URL provenance, but point exact matched rows at
+    # the promoted physical SEO file so every reader converges on one file.
+    extract_path = local_dir / "page_extract.json"
+    if extract_path.is_file():
+        try:
+            payload = json.loads(extract_path.read_text(encoding="utf-8"))
+        except Exception:
+            payload = {}
+        changed_extract = False
+        for item in payload.get("images") or []:
+            if not isinstance(item, dict):
+                continue
+            raw_url = str(item.get("url") or "").strip()
+            for plan in plans:
+                if raw_url == plan["source_url"]:
+                    item["local_file"] = str(plan["target_path"])
+                    changed_extract = True
+                    break
+        if changed_extract:
+            extract_path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+    db.update_product(
+        int(product_id),
+        {
+            "images_json": json.dumps(new_images, ensure_ascii=False),
+            "selected_images_json": json.dumps(new_selected, ensure_ascii=False),
+            "primary_image_url": primary,
+            "homepage_slider_image_url": slider,
+            IMAGE_METADATA_COLUMN: json.dumps(metadata, ensure_ascii=False),
+        },
+    )
+    return {
+        "selected": len(new_selected),
+        "renamed_local": sum(
+            1 for plan in plans if plan["source_path"] != plan["target_path"]
+        ),
+        "filenames": [plan["target_path"].name for plan in plans],
+        "replacements": replacements,
     }
 
 

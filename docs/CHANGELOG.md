@@ -6,6 +6,14 @@
 - Focused 9/9 and broad Image/Publish/Windows/Social 113/113 PASS; compile/diff/Qt VerifyOnly PASS.
 - Real #609 has 5 finalized unique SEO WebPs; no Catalog/Production write has been performed by this code slice yet.
 
+## 2026-09-21 - A2Z physical Product-local SEO filenames
+- Extended A2Z image authority so applying Product image SEO renames/promotes the real Product-local physical media, not only metadata or publish derivatives.
+- Historical source/cache bytes move to `source_originals/`; active Product media in `images/` uses deterministic unique `-01/-02/...` SEO WebP basenames.
+- Exact physical path is persisted and local identities/page-extract mappings converge on the new filename.
+- Removal/recovery now supports SEO-named local media, not just legacy numeric names.
+- Verification: direct 3/3 + combined Image/Publish/Windows/Social 109/109 + compile/diff/Qt VerifyOnly PASS.
+- Real #609 has not yet been mutated in this slice; backup-backed repair and Site/Instagram acceptance remain next.
+
 ## 2026-09-21 - A2Y lineage convergence accepted
 - Created/pushed unified merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` with latest Windows/A2Y and accepted Server/Production closure as its two parents.
 - Exact-SHA Qt VerifyOnly + real runtime smoke PASS; running Qt points to the unified worktree and left the shared Catalog Product/history counts unchanged.

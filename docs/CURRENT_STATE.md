@@ -1,3 +1,13 @@
+## 2026-09-21 - Phase50.A.2Z PHYSICAL SEO FILENAME + MULTI-IMAGE + SOCIAL HOTFIX LOCAL_TESTED
+
+Owner clarified the required image contract beyond the first A2Z fix: «اصلاح اسم و سئو» must rename the actual Product-local physical files, not only metadata/cards and `seo_images`. The implementation now promotes each selected Product-local image to the deterministic SEO WebP basename in `images/`, archives the old source/cache bytes in `source_originals/`, persists the exact physical path, remaps local identities, and prevents duplicate SEO basenames. Removal remains recoverable for the new SEO-named local files.
+
+#609 read-only evidence before real repair remains: five unique finalized SEO WebPs already exist `-01..-05`, while Product-local `images/` still contains legacy names such as `01.webp/02.webp/04.webp/05.webp` and hash-cache files. No real Catalog write has yet been made by this new physical-rename slice.
+
+Verification after owner correction: direct rename/query-variant/recovery 3/3 PASS; combined Image/Publish/Windows/Social 109/109 PASS; 3 touched Python files compile; diff-check and Qt VerifyOnly PASS. The first broad run had exactly one stale assertion expecting `local://02.webp` to survive SEO; the new accepted contract correctly changes it to `local://table-lamp-3d-print-02.webp`, and the changed-condition rerun passed.
+
+Exact next: docs -> commit/push exact A2Z physical-rename SHA -> Local=GitHub -> exact-SHA Qt relaunch -> fresh integrity-checked Catalog + full #609 local-media backup -> application-level SEO/authority repair for #609 -> prove physical `images/` names, canonical/selected metadata and publish gate -> same-identity Site #42 republish with all selected media -> Production media/filename parity -> changed-revision Instagram Feed+Story using reused social worktree and no duplicate receipt.
+
 ## 2026-09-21 - Phase50.A.2Z IMAGE + SOCIAL AUTHORITY HOTFIX LOCAL_TESTED
 
 Owner screenshots on real Product #609 exposed three linked defects. Site publish failed closed because selected Local media `local://04.webp` and `local://05.webp` were not in canonical `images_json`; Instagram failed because `social-assets-buffer` was already registered to `D:\projects\3DPrintHub-social-assets`; and two query-variant source URLs could display the same SEO filename because UI metadata lookup collapsed exact URL identity.

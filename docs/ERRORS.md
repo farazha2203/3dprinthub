@@ -1,3 +1,11 @@
+## ERR-49-217 - SEO action updated metadata/derivative name but not Product-local physical filename
+**Date:** 2026-09-21
+**Observed:** owner correctly reported that after «اصلاح اسم و سئو» the card/metadata could show SEO names while Product-local files still remained as names such as `01.webp`, `04.webp`, cache hashes or screenshot names. This also allowed confusing duplicate-looking local filenames even though `seo_images` derivatives were unique.
+**Root cause:** the mature finalizer treated `seo_images` as publish authority but deliberately kept `images/` as source/cache provenance. That contract no longer matches the owner requirement that the Product-local physical file itself becomes the unique SEO-named WebP when SEO is applied.
+**Correct fix:** after finalization, promote every selected Product-local image to a unique numbered SEO WebP in `images/`; archive the pre-SEO source under `source_originals/`; persist exact `source_local_file` / `product_local_filename`; remap `local://` identities to the new basename; update exact page-extract local-file mapping; make removal/recovery work for SEO-named local files as well as legacy numeric names.
+**Verification:** direct rename/query-variant/recovery gate 3/3 PASS; complete Image/Publish/Windows/Social gate 109/109 PASS; 3 touched Python files compile; `git diff --check` and Qt VerifyOnly PASS.
+**Prevention:** SEO filename is now a physical Product-local identity, not only display metadata or a publish derivative. Duplicate Product-local SEO basenames must fail closed and all selected filenames remain deterministic `-01, -02, ...`.
+
 ## ERR-49-216 - #609 selected media drift, duplicate displayed SEO filename and Buffer worktree collision
 **Date:** 2026-09-21
 **Observed:** Product #609 Site readiness failed because `local://04.webp` and `local://05.webp` were selected but absent from `images_json`; two query-variant image cards displayed the same `...-01.webp` SEO name; Instagram/Buffer failed with `social-assets-buffer is already used by worktree D:/projects/3DPrintHub-social-assets`.

@@ -1538,7 +1538,6 @@ class ImageCore:
                 candidate_name = Path(local_name)
                 if (
                     candidate_name.name != local_name
-                    or not candidate_name.stem.isdigit()
                     or not image_dir.is_dir()
                 ):
                     continue
@@ -1825,6 +1824,10 @@ class ImageCore:
                     ),
                 },
             )
+            image_pipeline.promote_selected_product_local_seo_files(
+                self.db,
+                int(product_id),
+            )
         _mark_published_product_dirty(
             self.db,
             int(product_id),
@@ -1854,13 +1857,20 @@ class ImageCore:
         return result
 
     def finalize(self, product_id: int) -> dict[str, Any]:
-        return dict(
+        result = dict(
             image_pipeline.finalize_selected_images(
                 self.db,
                 int(product_id),
             )
             or {}
         )
+        result["physical_rename"] = (
+            image_pipeline.promote_selected_product_local_seo_files(
+                self.db,
+                int(product_id),
+            )
+        )
+        return result
 
 
 class AcquisitionCore:

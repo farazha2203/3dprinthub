@@ -154,6 +154,26 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
 
         for filename in filenames:
             self.assertTrue((local_dir / "seo_images" / filename).is_file())
+            self.assertTrue((local_dir / "images" / filename).is_file())
+        self.assertEqual(
+            sorted(path.name for path in (local_dir / "images").glob("*.webp")),
+            filenames,
+        )
+        self.assertEqual(
+            sorted(path.name for path in (local_dir / "source_originals").iterdir()),
+            ["source-1.jpg", "source-2.jpg", "source-3.jpg"],
+        )
+        extract = json.loads(
+            (local_dir / "page_extract.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [Path(item["local_file"]).name for item in extract["images"]],
+            filenames,
+        )
+        self.assertEqual(
+            [Path(item["source_local_file"]).name for item in metadata],
+            filenames,
+        )
 
         self.assertEqual(
             {item["alt_text"] for item in metadata},
@@ -223,6 +243,17 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             items[urls[1]]["planned_filename"],
             "goth-baroque-necklace-display-bust-3d-print-02.webp",
         )
+        self.assertEqual(
+            sorted(path.name for path in image_dir.glob("*.webp")),
+            [
+                "goth-baroque-necklace-display-bust-3d-print-01.webp",
+                "goth-baroque-necklace-display-bust-3d-print-02.webp",
+            ],
+        )
+        self.assertFalse((image_dir / "01.webp").exists())
+        self.assertFalse((image_dir / "02.webp").exists())
+        self.assertTrue((local_dir / "source_originals" / "01.webp").is_file())
+        self.assertTrue((local_dir / "source_originals" / "02.webp").is_file())
         self.assertEqual(
             items[urls[0]]["metadata"]["source_url"],
             urls[0],
@@ -1155,20 +1186,27 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         )
         seo_row = dict(self.db.product(product_id))
         seo_selected = json.loads(seo_row["selected_images_json"])
-        self.assertIn("local://02.webp", seo_selected)
+        renamed_url = "local://table-lamp-3d-print-02.webp"
+        self.assertIn(renamed_url, seo_selected)
+        self.assertNotIn("local://02.webp", seo_selected)
         self.assertNotIn(legacy_alias, seo_selected)
         seo_metadata = {
             str(item.get("source_url") or ""): item
             for item in json.loads(seo_row["image_metadata_json"])
         }
         self.assertTrue(
-            Path(seo_metadata["local://02.webp"]["final_local_file"]).is_file()
+            Path(seo_metadata[renamed_url]["final_local_file"]).is_file()
         )
         self.assertTrue(
-            seo_metadata["local://02.webp"]["seo_filename"].endswith("-02.webp")
+            Path(seo_metadata[renamed_url]["source_local_file"]).is_file()
         )
+        self.assertEqual(
+            Path(seo_metadata[renamed_url]["source_local_file"]).name,
+            "table-lamp-3d-print-02.webp",
+        )
+        self.assertTrue((local_dir / "source_originals" / "02.webp").is_file())
 
-        self.kernel.images.remove_urls(product_id, ["local://02.webp"])
+        self.kernel.images.remove_urls(product_id, [renamed_url])
 
         refreshed = dict(self.db.product(product_id))
         self.assertNotIn(
@@ -1176,9 +1214,18 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             json.loads(refreshed["selected_images_json"]),
         )
         self.assertFalse((image_dir / "02.webp").exists())
-        self.assertTrue((local_dir / "removed_images" / "02.webp").is_file())
+        self.assertFalse(
+            (image_dir / "table-lamp-3d-print-02.webp").exists()
+        )
+        self.assertTrue(
+            (
+                local_dir
+                / "removed_images"
+                / "table-lamp-3d-print-02.webp"
+            ).is_file()
+        )
         self.assertNotIn(
-            "02.webp",
+            "table-lamp-3d-print-02.webp",
             {
                 item["filename"]
                 for item in self.kernel.images.local_items(product_id)
