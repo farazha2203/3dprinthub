@@ -47,7 +47,12 @@ class Phase493I18OperatorEditingTests(unittest.TestCase):
         self.assertFalse(metadata[0]["metadata_ready"])
 
     def test_ai_rebuild_forces_operator_title_across_generated_pack(self):
-        row = {"title_fa": "عنوان اشتباه", "homepage_slider_enabled": 1}
+        row = {
+            "title_fa": "عنوان اشتباه",
+            "homepage_slider_enabled": 0,
+            "primary_image_url": "local://hero.webp",
+            "selected_images_json": json.dumps(["local://hero.webp"], ensure_ascii=False),
+        }
         pack = {
             "title_fa": "نام حدسی AI",
             "short_description_fa": "نام حدسی AI برای پذیرایی",
@@ -76,6 +81,8 @@ class Phase493I18OperatorEditingTests(unittest.TestCase):
         self.assertIn("استند کیک", updates["seo_title_fa"])
         self.assertNotIn("نام حدسی AI", updates["seo_description_fa"])
         self.assertIn("استند کیک", updates["homepage_slider_title_fa"])
+        self.assertEqual(updates["homepage_slider_image_url"], "local://hero.webp")
+        self.assertNotIn("homepage_slider_enabled", updates)
         self.assertIn("استند کیک", json.loads(updates["image_alt_texts_json"])[0])
 
 

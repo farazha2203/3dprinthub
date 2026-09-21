@@ -1214,7 +1214,7 @@ def install_app(app_class) -> None:
         )
         dialog.event(
             "queue",
-            "هر محصول مستقل: Readiness قبل → Stage 4 repair → Readiness بعد. هیچ موتور AI جداگانه‌ای وجود ندارد.",
+            "هر محصول مستقل: Readiness قبل → محتوای SEO + سئوی اسلایدر → Readiness بعد. تیک عضویت اسلایدر دست اپراتور می‌ماند.",
         )
 
         def worker():
@@ -1235,7 +1235,7 @@ def install_app(app_class) -> None:
                             product_id,
                             dialog,
                             mode=mode,
-                            target_stages={"content"},
+                            target_stages={"content", "slider"},
                             refresh_existing=True,
                             max_passes=3,
                         )

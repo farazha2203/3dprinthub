@@ -354,8 +354,11 @@ def sync_product_seo(product, asset, data: dict) -> None:
     title = str(data.get("seo_title_fa") or product.title or "").strip()[:180]
     description = str(data.get("seo_description_fa") or product.short_description or "").replace("\n", " ").strip()[:320]
     focus = next((str(x).strip() for x in [*keywords, *tags_fa] if str(x).strip()), product.title)[:180]
-    product.meta_title = title or product.meta_title
-    product.meta_description = description or product.meta_description
+    # Desktop batch is authoritative on every re-publish. Do not preserve
+    # stale Site SEO values merely because an incoming field changed to blank.
+    # Current-batch visible Product text remains the deterministic fallback.
+    product.meta_title = title
+    product.meta_description = description
     product.seo_focus_keyword = focus
     product.og_title = title or product.title
     product.og_description = description or product.short_description

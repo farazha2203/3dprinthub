@@ -1,3 +1,11 @@
+## ERR-49-210 - A2X first integration gates exposed wiring gaps before any data mutation
+**Date:** 2026-09-21
+**Observed:** the first A2X focused run failed because the base readiness label map did not yet contain the new `slider` stage and two new fallback paths referenced helper names that did not exist in those modules. The first Django gate also hit the already-documented isolated-worktree missing-`.env` condition from ERR-49-155.
+**Impact:** none to Catalog data, Site Product, Host or Production. Failures occurred in Local tests before any real Product mutation.
+**Correct fix:** add the Slider label to the base seven-stage readiness map; reuse each module's existing JSON helper instead of introducing an undefined helper; for Django tests temporarily copy the canonical ignored Local `.env` exactly as documented by ERR-49-155 and remove it immediately afterward.
+**Verification:** failed subset rerun 6/6 PASS; focused A2X gate 33/33 PASS; Server gate 9/9 PASS; broad current gate 115/116 with only the separately documented baseline ERR-49-203 failure; compile/diff/Django/no-drift/Qt VerifyOnly PASS.
+**Prevention:** when adding a canonical stage, update label/order/readiness contracts together; reuse local helper contracts rather than assuming shared helper names; isolated worktrees must follow the documented temporary ignored-`.env` test procedure without committing secrets.
+
 ## ERR-49-209 - W4.1 first accepted UI still left unknown axes and Source Profiles without Local Filaments
 **Date:** 2026-09-21
 **Observed:** owner runtime on pushed W4.1 commit `436d34f2...` showed Hydra Small with Height=12cm but Length/Width as `نامشخص`, and saving failed because the Source Profile had no concrete Local Filament selected.

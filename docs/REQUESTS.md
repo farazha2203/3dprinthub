@@ -1,5 +1,14 @@
+## 2026-09-21 - Owner: Slider data must always be complete; membership remains manual; every Windows send fully refreshes Site Product
+Status: `A2X LOCAL_TESTED / GITHUB PROMOTION + NO-AI BACKFILL + DEPLOY NEXT`.
+
+Owner requires Slider title/description/ALT/focus/button/image data to be populated for every Product whether or not the homepage Slider checkbox is enabled. The checkbox itself must remain an explicit operator choice. The same rule applies to single-Product “complete all” and multi-select SEO completion.
+
+Owner also requires every Windows → Site send to update the existing Site Product as the current Windows-owned snapshot: changed or unchanged fields are applied again, current selected images replace Site-managed Product images, current Profile/Variant state replaces active stale choices, SEO is current, and Slider membership/data follows Windows. Same Site identity must be preserved rather than creating a duplicate.
+
+Real #620 proves saved AI Slider content already exists despite empty persisted Slider fields, so the first repair must backfill from existing content packs without spending another AI request and without changing membership checkboxes.
+
 ## 2026-09-21 - Owner: Product media truth refresh + Site/source recovery + future Profile/video/manual Product import
-Status: `A2W W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED / W4.1 OWNER CORRECTION LOCAL_TESTED / EXACT-SHA REAL PROFILE REPAIR NEXT`.
+Status: `A2W W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED / W4.1 REAL_DATA_PATCHED / A2X ACTIVE`.
 
 Owner reports Product #625 shows three media cards in Windows while the live Site Product has one image after re-publish. Required immediate behavior: add a Stage-3 `رفرش رسانه و وضعیت` action that compares Local DB authority, persisted `ارسال سایت`, physical Local files, current Site Product media and source media without silently changing operator Site membership. Public Site media missing locally must be recoverable into the trusted Product workspace as idempotent candidates.
 

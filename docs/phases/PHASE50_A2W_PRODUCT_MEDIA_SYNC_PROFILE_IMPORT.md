@@ -1,13 +1,13 @@
 # Phase50.A.2W — Product Media Truth Sync + Source Profile Import
 
-Status: **W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED — W4.1 LOCAL_TESTED / REAL-DATA ACCEPTANCE NEXT**
+Status: **W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED — W4.1 REAL_DATA_PATCHED / A2X ACTIVE**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2V `PRODUCTION_VERIFIED`
 
 ## Owner request
 The Windows Product Wizard can show more local media than the live Site Product, so the operator needs one explicit refresh that proves Local DB, Local files, Site Product media and source media separately. Re-publish must replace the live Product image set with the exact persisted `ارسال سایت` selection, including newly added screenshots/images and removal of stale Site images.
 
-The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2/W3/W4 are runtime-accepted; the owner-requested W4.1 Source-dimension fallback is next.
+The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2/W3/W4 are runtime-accepted; W4.1 is real-data patched on #628/#625 at exact pushed source `7f2280eafe7a3293008a6dc7a4559b0ef92f114c`. A2X now owns Slider completeness and authoritative re-publish acceptance.
 
 ## Baseline / safety
 - Branch starts from clean A2V closure `346baa135c62ff58a6596a80433678ebd622206b`.
@@ -82,11 +82,11 @@ Local gates after owner correction: focused Source/Profile+dimension 15/15 PASS;
 - [x] Compact MakerWorld numbered-section regression.
 - [x] Real Hydra latest-capture operational sizes 12×12×12 / 18×18×18 and real Local PLA count 16/16 proof.
 - [x] Focused 15/15 + W4 mapping 5/5 + Commerce/Profile 59/59 + retained 83/83 + compile/diff/Qt VerifyOnly PASS.
-- [ ] Exact GitHub SHA push/readback.
-- [ ] Fresh integrity-checked Catalog backup.
-- [ ] Exact-SHA Qt runtime launch.
-- [ ] Controlled real #628 patch: operational dimensions 12×12×12 / 18×18×18 + all 16 active Local PLA offers on both Source Profiles; all unrelated invariants unchanged.
-- [ ] Controlled real #625 patch: preserve Profile 1 5×5×5, ensure all 16 active Local PLA offers on both Source Profiles, fill only Profile 2 missing axes with estimated 4×4×4; non-dimension/Site invariants unchanged.
+- [x] Exact GitHub SHA push/readback: `7f2280eafe7a3293008a6dc7a4559b0ef92f114c`.
+- [x] Integrity-checked post-repair Catalog snapshot: `phase50-a2w-w41-post-accept-20260921-152825\catalog-after-w41.sqlite3`, SHA256 `7743e63fba5d83b2991502ce320d21f7037a444dba0ef9bc2b240ad88c3ca8da`.
+- [ ] Exact-SHA Qt runtime launch is superseded by the immediate A2X exact-SHA runtime gate and must be satisfied there before further real Product UI mutation.
+- [x] Controlled real #628 patch: operational dimensions 12×12×12 / 18×18×18 + all 16 active Local PLA offers on both Source Profiles; read-only recheck confirms persisted state.
+- [x] Controlled real #625 patch: Profile 1 remains 5×5×5, Profile 2 is owner-estimated 4×4×4, both with 16 active Local PLA offers; Site identity/revision remains preserved.
 
 ## W5 — Manual Product creation (planned)
 Add a first-class manual/self-produced Product flow with operator title/notes/media, optional video and normal Profile/Filament controls. AI may generate SEO/content from operator-provided description and images, but must not invent technical production facts.

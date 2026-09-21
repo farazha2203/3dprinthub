@@ -138,6 +138,64 @@ class Epic49UnifiedSyncBehaviorTests(TestCase):
         self.assertEqual(third["product_revision"], 2)
         self.assertEqual(third["slider_revision"], 2)
 
+    def test_slider_membership_republish_updates_same_product_and_exact_current_copy(self):
+        original_product_id = self.product.pk
+        first_data = self._payload()
+        self._set_payload(first_data)
+        sync_epic49_publish_options(self.asset)
+
+        profile = ProductCatalogProfile.objects.get(product=self.product)
+        slide = HomepageHeroSlide.objects.get(asset=self.asset)
+        self.assertTrue(profile.homepage_slider_enabled)
+        self.assertTrue(slide.is_active)
+
+        second_data = self._payload(
+            batch="batch-slider-off",
+            source_hash="hash-slider-off",
+            product_revision=1,
+            slider_revision=1,
+            title="عنوان جدید در حالت خاموش",
+        )
+        second_data["homepage_slider_enabled"] = False
+        second_data["homepage_slider_description_fa"] = "توضیح جدیدی که حتی در حالت خاموش باید ذخیره شود."
+        second_data["seo_title_fa"] = "سئوی دقیق ارسال دوم"
+        second_data["seo_description_fa"] = "توضیح سئوی دقیق ارسال دوم"
+        self._set_payload(second_data)
+        sync_epic49_publish_options(self.asset)
+
+        self.product.refresh_from_db()
+        profile.refresh_from_db()
+        slide.refresh_from_db()
+        self.assertEqual(self.product.pk, original_product_id)
+        self.assertFalse(profile.homepage_slider_enabled)
+        self.assertEqual(profile.homepage_slider_title_fa, "عنوان جدید در حالت خاموش")
+        self.assertEqual(
+            profile.homepage_slider_description_fa,
+            second_data["homepage_slider_description_fa"],
+        )
+        self.assertFalse(slide.is_active)
+        self.assertEqual(self.product.meta_title, "سئوی دقیق ارسال دوم")
+        self.assertEqual(self.product.meta_description, "توضیح سئوی دقیق ارسال دوم")
+
+        third_data = self._payload(
+            batch="batch-slider-on-again",
+            source_hash="hash-slider-on-again",
+            product_revision=2,
+            slider_revision=2,
+            title="عنوان نهایی اسلایدر",
+        )
+        third_data["homepage_slider_enabled"] = True
+        self._set_payload(third_data)
+        sync_epic49_publish_options(self.asset)
+
+        self.product.refresh_from_db()
+        profile.refresh_from_db()
+        slide.refresh_from_db()
+        self.assertEqual(self.product.pk, original_product_id)
+        self.assertTrue(profile.homepage_slider_enabled)
+        self.assertTrue(slide.is_active)
+        self.assertEqual(slide.title_override, "عنوان نهایی اسلایدر")
+
     def test_admin_product_edit_blocks_stale_desktop_batch(self):
         self._set_payload(self._payload())
         sync_epic49_publish_options(self.asset)

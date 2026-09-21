@@ -568,14 +568,19 @@ class StageCore:
         before = _row_dict(row)
         changed = any(before.get(key) != value for key, value in allowed.items())
         self.db.update_product(int(product_id), allowed)
+        server_linked = any(
+            str(before.get(key) or "").strip()
+            for key in ("server_id", "server_product_id")
+        )
         if (
             changed
-            and str(before.get("server_id") or "").strip()
+            and server_linked
             and str(before.get("workflow_status") or "").strip().lower() == "uploaded"
         ):
             # Editing a published Product is an update, not a duplicate publish.
+            # Slider membership/content changes use the same same-identity path.
             # Clear the prior ready tick and require the guarded publish flow to
-            # resend the same source identity/server-linked Product.
+            # resend the complete current Windows snapshot.
             self.db.update_product(
                 int(product_id),
                 {"needs_update": 1, "upload_ready": 0},

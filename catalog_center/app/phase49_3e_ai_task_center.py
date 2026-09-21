@@ -139,24 +139,23 @@ def evaluate_ai_tasks(row) -> list[dict]:
         "missing": material_missing,
     })
 
-    slider_enabled = bool(int(_row_value(row, "homepage_slider_enabled", 0) or 0))
     slider_missing = []
-    if slider_enabled:
-        for label, key in (
-            ("عنوان اسلایدر", "homepage_slider_title_fa"),
-            ("توضیح اسلایدر", "homepage_slider_description_fa"),
-            ("Alt اسلایدر", "homepage_slider_alt_text"),
-            ("عبارت هدف اسلایدر", "homepage_slider_focus_keyword"),
-        ):
-            if not has_persian_editorial_text(_row_value(row, key, "")):
-                slider_missing.append(label)
-        if not str(_row_value(row, "homepage_slider_image_url", "") or "").strip():
-            slider_missing.append("عکس اسلایدر")
+    for label, key in (
+        ("عنوان اسلایدر", "homepage_slider_title_fa"),
+        ("توضیح اسلایدر", "homepage_slider_description_fa"),
+        ("Alt اسلایدر", "homepage_slider_alt_text"),
+        ("متن دکمه اسلایدر", "homepage_slider_button_text"),
+        ("عبارت هدف اسلایدر", "homepage_slider_focus_keyword"),
+    ):
+        if not has_persian_editorial_text(_row_value(row, key, "")):
+            slider_missing.append(label)
+    if not str(_row_value(row, "homepage_slider_image_url", "") or "").strip():
+        slider_missing.append("عکس اسلایدر")
     tasks.append({
         "key": "slider_seo",
         "label": "سئو اسلایدر",
         "stage": "slider",
-        "status": "skipped" if not slider_enabled else ("done" if not slider_missing else "missing"),
+        "status": "done" if not slider_missing else "missing",
         "missing": slider_missing,
     })
     return tasks
@@ -200,9 +199,8 @@ def build_ai_updates(row, pack: dict, *, scope: str = "all") -> dict:
     put_list("hashtags_fa_json", "hashtags_fa")
     put_list("image_alt_texts_json", "image_alt_texts")
 
-    slider_enabled = bool(int(_row_value(row, "homepage_slider_enabled", 0) or 0))
     slider = pack.get("homepage_slider_seo") if isinstance(pack.get("homepage_slider_seo"), dict) else {}
-    if not image_scope and slider_enabled:
+    if not image_scope:
         for db_key, pack_key in (
             ("homepage_slider_title_fa", "title_fa"),
             ("homepage_slider_description_fa", "description_fa"),

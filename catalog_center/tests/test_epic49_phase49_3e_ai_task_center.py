@@ -51,11 +51,12 @@ class Phase493EAITaskCenterTests(unittest.TestCase):
         self.assertIn("Alt فارسی همه تصاویر", tasks["image_seo"]["missing"])
         self.assertTrue(any("نام SEO تصویر 1" == item for item in tasks["image_seo"]["missing"]))
 
-    def test_slider_task_is_skipped_when_slider_is_disabled(self):
+    def test_slider_task_is_required_even_when_slider_is_disabled(self):
         row = self.base_row()
         tasks = {item["key"]: item for item in task_center.evaluate_ai_tasks(row)}
-        self.assertEqual(tasks["slider_seo"]["status"], "skipped")
-        self.assertEqual(tasks["slider_seo"]["missing"], [])
+        self.assertEqual(tasks["slider_seo"]["status"], "missing")
+        self.assertIn("عنوان اسلایدر", tasks["slider_seo"]["missing"])
+        self.assertIn("عکس اسلایدر", tasks["slider_seo"]["missing"])
 
     def test_slider_task_becomes_required_when_enabled(self):
         row = self.base_row()
@@ -64,6 +65,23 @@ class Phase493EAITaskCenterTests(unittest.TestCase):
         self.assertEqual(tasks["slider_seo"]["status"], "missing")
         self.assertIn("عنوان اسلایدر", tasks["slider_seo"]["missing"])
         self.assertIn("عکس اسلایدر", tasks["slider_seo"]["missing"])
+
+    def test_ai_updates_fill_slider_payload_without_enabling_membership(self):
+        row = self.base_row()
+        row["primary_image_url"] = "https://example.com/a.jpg"
+        pack = {
+            "homepage_slider_seo": {
+                "title_fa": "خرس همبستگی برای صفحه اول",
+                "description_fa": "معرفی کوتاه فارسی محصول برای اسلایدر صفحه اول.",
+                "image_alt_fa": "خرس همبستگی چاپ سه بعدی",
+                "button_text_fa": "مشاهده محصول",
+                "focus_keyword_fa": "خرس همبستگی سه بعدی",
+            }
+        }
+        updates = task_center.build_ai_updates(row, pack, scope="all")
+        self.assertEqual(updates["homepage_slider_title_fa"], pack["homepage_slider_seo"]["title_fa"])
+        self.assertEqual(updates["homepage_slider_image_url"], "https://example.com/a.jpg")
+        self.assertNotIn("homepage_slider_enabled", updates)
 
     def test_ai_updates_never_overwrite_existing_manual_seo(self):
         row = self.base_row()

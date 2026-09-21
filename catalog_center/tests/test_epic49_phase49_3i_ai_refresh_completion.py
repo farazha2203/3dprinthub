@@ -57,6 +57,34 @@ class Phase493IAIRefreshCompletionTests(unittest.TestCase):
         updates = build_refresh_updates(manual, pack, scope="all", base_updates={})
         self.assertNotIn("title_fa", updates)
 
+    def test_slider_refresh_is_independent_of_membership_checkbox(self):
+        row = {
+            "homepage_slider_enabled": 0,
+            "homepage_slider_title_fa": "",
+            "homepage_slider_description_fa": "",
+            "homepage_slider_alt_text": "",
+            "homepage_slider_button_text": "",
+            "homepage_slider_focus_keyword": "",
+            "homepage_slider_image_url": "",
+            "primary_image_url": "https://img/hero.webp",
+            "selected_images_json": json.dumps(["https://img/hero.webp"], ensure_ascii=False),
+            "content_pack_json": "{}",
+            "ai_provenance_json": "{}",
+        }
+        pack = {
+            "homepage_slider_seo": {
+                "title_fa": "عنوان اسلایدر تازه",
+                "description_fa": "توضیح فارسی تازه برای اسلایدر.",
+                "image_alt_fa": "نمای محصول در اسلایدر",
+                "button_text_fa": "مشاهده محصول",
+                "focus_keyword_fa": "محصول سه بعدی",
+            }
+        }
+        updates = build_refresh_updates(row, pack, scope="all", base_updates={})
+        self.assertEqual(updates["homepage_slider_title_fa"], "عنوان اسلایدر تازه")
+        self.assertEqual(updates["homepage_slider_image_url"], "https://img/hero.webp")
+        self.assertNotIn("homepage_slider_enabled", updates)
+
     def test_completion_defaults_fill_factual_source_category_images_price_and_real_inventory(self):
         row = {
             "source_code": "makerworld",

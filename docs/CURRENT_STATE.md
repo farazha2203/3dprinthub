@@ -1,4 +1,16 @@
-## 2026-09-21 - Phase50.A.2W W4.1 Source dimensions LOCAL_TESTED / real-data patch next
+## 2026-09-21 - Phase50.A.2X Slider SEO + authoritative re-publish LOCAL_TESTED / GitHub promotion next
+
+A2X is active on `wip/phase50-a2x-slider-authoritative-republish-20260921` from exact W4.1 baseline `7f2280eafe7a3293008a6dc7a4559b0ef92f114c`. Slider SEO/media completeness is now independent of homepage membership: every Product must carry Slider title/description/ALT/button/focus/image data, while only the operator checkbox controls actual homepage membership. Single-Product completion and multi-select SEO completion both fill Slider data without enabling the checkbox.
+
+Published-Product edits now recognize either preserved Site linkage field and force same-identity re-publish. Server SEO sync no longer keeps stale Site SEO through old-value fallback. Existing Desktop media replacement and active Profile/Variant replacement remain authoritative and are regression-protected.
+
+Real #620 evidence: membership is disabled and persisted Slider fields are empty, but its existing content pack already contains complete Slider SEO, so backfill can reuse saved AI output with zero new AI request. W4.1 real state is also verified before A2X: #628 = 12×12×12 / 18×18×18 with 16 PLA each; #625 = 5×5×5 preserved + owner-estimated 4×4×4, both with 16 PLA. Post-W4.1 snapshot: `D:\projects\3dprinthub-backups\phase50-a2w-w41-post-accept-20260921-152825\catalog-after-w41.sqlite3`, SHA256 `7743e63fba5d83b2991502ce320d21f7037a444dba0ef9bc2b240ad88c3ca8da`.
+
+A2X Local verification: focused readiness/AI/Qt media 33/33 PASS; Server same-identity Slider/SEO/import 9/9 PASS; broad Catalog current run has one failure out of 116, exactly the previously proven baseline Manufacturer-vs-Brand assertion tracked by ERR-49-203. `git diff --check`, touched Python compile, Django check, migration drift check and `RUN_QT.ps1 -VerifyOnly` PASS. No migration or Production mutation has occurred.
+
+Exact next: documentation checkpoint -> commit/push exact A2X SHA -> GitHub readback -> exact-SHA Qt -> fresh Catalog backup -> no-AI Slider backfill preserving membership -> real UI verification -> guarded Host deploy from GitHub through reverse tunnel -> one controlled same-identity re-publish proving full current Windows snapshot replacement.
+
+## 2026-09-21 - Phase50.A.2W W4.1 Source dimensions REAL_DATA_PATCHED / A2X supersedes next acceptance
 
 W4.1 extends the Source Profile contract for operator-ready dimensions and Filament defaults. MakerWorld Description evidence is parsed in source order and bound to Source Profiles only when the number of unambiguous size records equals the number of Source Profiles. Full L×W×H values are normalized to cm. Owner rule now requires a single factual dimension such as Height=12cm to populate all three operational Profile axes as 12×12×12; provenance still records Height as factual and Length/Width as `owner_equal_dimension_rule`. Manual Profiles still require complete positive dimensions.
 
@@ -8,7 +20,7 @@ Filament defaults are also owner-authoritative: if Source declares material fami
 
 Rollback ref before the owner correction is `backup/pre-phase50-a2w-w41-owner-dimension-filament-correction-20260921` -> `436d34f2e62532ea5890b44400d1d236ed3b53a1`. Owner-correction verification: focused Source Profile/Dimension 15/15 PASS; mature Commerce/Profile + W3/W4/W4.1 corrected gate 59/59 PASS; retained media/site 83/83 PASS; py_compile, git diff-check and RUN_QT VerifyOnly PASS. Real read-only simulation gives #628 12³/18³ + 16 PLA each and #625 5³/16 PLA preserved + 4³/16 PLA on Profile 2.
 
-No real Catalog Product row, Site Product, Host source, migration or Production state has been changed by this owner correction yet. Exact next: commit/push the correction, verify remote SHA exact, take a new fresh integrity-checked Catalog SQLite backup, launch Qt from the exact pushed SHA, then controlled #628/#625 Profile repair with before/after invariants. The failed publish batch `26aa571c-...` remains separate and must not be retried during this repair.
+W4.1 correction is pushed at exact GitHub SHA `7f2280eafe7a3293008a6dc7a4559b0ef92f114c` and the controlled Local Catalog repairs are persisted: #628 = 12×12×12 / 18×18×18 with 16 PLA per Profile; #625 keeps 5×5×5 on Profile 1 and has owner-estimated 4×4×4 on Profile 2, both with 16 PLA. Post-repair integrity snapshot is `phase50-a2w-w41-post-accept-20260921-152825\catalog-after-w41.sqlite3`, SHA256 `7743e63fba5d83b2991502ce320d21f7037a444dba0ef9bc2b240ad88c3ca8da`. Site Product identity/revisions were not changed by W4.1. A2X now supersedes the next runtime/deploy acceptance; failed batch `26aa571c-...` remains separate and must not be silently retried.
 
 ## 2026-09-21 - Phase50.A.2W W4 WINDOWS_RUNTIME_ACCEPTED / real #625 Preview PASS
 

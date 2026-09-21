@@ -40,11 +40,12 @@ def ready_row(**overrides):
         "keywords_json": '["خرید گکو مفصلی سه بعدی","سفارش گکو سه بعدی","قیمت گکو مفصلی"]',
         "image_alt_texts_json": '["گکو مفصلی سه بعدی چاپ شده"]',
         "homepage_slider_enabled": 0,
-        "homepage_slider_title_fa": "",
-        "homepage_slider_description_fa": "",
-        "homepage_slider_alt_text": "",
-        "homepage_slider_focus_keyword": "",
-        "homepage_slider_image_url": "",
+        "homepage_slider_title_fa": "گکو مفصلی برای اسلایدر صفحه اول",
+        "homepage_slider_description_fa": "معرفی کوتاه فارسی گکو مفصلی برای صفحه اول.",
+        "homepage_slider_alt_text": "گکو مفصلی سه بعدی در اسلایدر صفحه اول",
+        "homepage_slider_button_text": "مشاهده محصول",
+        "homepage_slider_focus_keyword": "گکو مفصلی سه بعدی",
+        "homepage_slider_image_url": "https://example.com/a.jpg",
         "approved_for_sale": 1,
         "publish_as_product": 1,
         "commercial_status": "allowed",
@@ -84,26 +85,29 @@ class Phase493AReadinessWizardTests(unittest.TestCase):
         self.assertIn("SEO Description فارسی", state["stages"]["content"]["missing"])
         self.assertIn("عبارت‌های هدف SEO", state["stages"]["content"]["missing"])
 
-    def test_slider_fields_are_required_only_when_slider_enabled(self):
-        without_slider = evaluate_readiness(ready_row(homepage_slider_enabled=0))
-        self.assertTrue(without_slider["production_ready"])
-
-        with_slider = evaluate_readiness(ready_row(homepage_slider_enabled=1))
-        self.assertFalse(with_slider["production_ready"])
-        self.assertIn("عنوان اسلایدر", with_slider["stages"]["publish"]["missing"])
-        self.assertIn("عکس اسلایدر", with_slider["stages"]["publish"]["missing"])
-
-        completed = evaluate_readiness(
+    def test_slider_payload_is_required_even_when_membership_is_disabled(self):
+        missing = evaluate_readiness(
             ready_row(
-                homepage_slider_enabled=1,
-                homepage_slider_title_fa="خرید گکو مفصلی سه بعدی",
-                homepage_slider_description_fa="معرفی کوتاه فارسی برای اسلایدر.",
-                homepage_slider_alt_text="گکو مفصلی سه بعدی",
-                homepage_slider_focus_keyword="خرید گکو مفصلی",
-                homepage_slider_image_url="https://example.com/a.jpg",
+                homepage_slider_enabled=0,
+                homepage_slider_title_fa="",
+                homepage_slider_description_fa="",
+                homepage_slider_alt_text="",
+                homepage_slider_button_text="",
+                homepage_slider_focus_keyword="",
+                homepage_slider_image_url="",
             )
         )
-        self.assertTrue(completed["production_ready"])
+        self.assertFalse(missing["production_ready"])
+        self.assertIn("عنوان اسلایدر", missing["stages"]["slider"]["missing"])
+        self.assertIn("عکس اسلایدر", missing["stages"]["slider"]["missing"])
+        self.assertNotIn("عنوان اسلایدر", missing["stages"]["publish"]["missing"])
+
+        disabled_ready = evaluate_readiness(ready_row(homepage_slider_enabled=0))
+        enabled_ready = evaluate_readiness(ready_row(homepage_slider_enabled=1))
+        self.assertTrue(disabled_ready["production_ready"])
+        self.assertTrue(enabled_ready["production_ready"])
+        self.assertEqual([], disabled_ready["stages"]["slider"]["missing"])
+        self.assertEqual([], enabled_ready["stages"]["slider"]["missing"])
 
     def test_materials_and_colors_come_from_real_operator_options(self):
         row = ready_row()
@@ -147,7 +151,7 @@ class Phase493AReadinessWizardTests(unittest.TestCase):
 
     def test_wizard_maps_every_workspace_section(self):
         self.assertEqual(
-            {"quick", "commerce", "images", "content", "specs", "publish"},
+            {"quick", "commerce", "images", "content", "specs", "slider", "publish"},
             set(STAGE_LABELS),
         )
 

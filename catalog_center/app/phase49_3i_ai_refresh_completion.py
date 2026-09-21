@@ -160,16 +160,22 @@ def build_refresh_updates(row, pack: dict, *, scope: str, base_updates: dict | N
             updates[db_key] = json.dumps(value, ensure_ascii=False)
 
     slider = pack.get("homepage_slider_seo") if isinstance(pack.get("homepage_slider_seo"), dict) else {}
-    if bool(int(_row_value(row, "homepage_slider_enabled", 0) or 0)):
-        for db_key, pack_key in SLIDER_FIELDS.items():
-            value = str(slider.get(pack_key) or "").strip()
-            if not value:
-                continue
-            current = str(_row_value(row, db_key, "") or "").strip()
-            previous_slider = _previous_pack(row).get("homepage_slider_seo")
-            previous_slider = previous_slider if isinstance(previous_slider, dict) else {}
-            if not current or _same_scalar(current, previous_slider.get(pack_key)):
-                updates[db_key] = value
+    for db_key, pack_key in SLIDER_FIELDS.items():
+        value = str(slider.get(pack_key) or "").strip()
+        if not value:
+            continue
+        current = str(_row_value(row, db_key, "") or "").strip()
+        previous_slider = _previous_pack(row).get("homepage_slider_seo")
+        previous_slider = previous_slider if isinstance(previous_slider, dict) else {}
+        if not current or _same_scalar(current, previous_slider.get(pack_key)):
+            updates[db_key] = value
+
+    if not str(_row_value(row, "homepage_slider_image_url", "") or "").strip():
+        primary = str(_row_value(row, "primary_image_url", "") or "").strip()
+        selected = _json_value(_row_value(row, "selected_images_json", "[]"), [])
+        image_url = primary or (str(selected[0]).strip() if selected else "")
+        if image_url:
+            updates["homepage_slider_image_url"] = image_url
 
     # The latest pack is always the provenance anchor for the next refresh.
     updates["content_pack_json"] = json.dumps(pack, ensure_ascii=False)

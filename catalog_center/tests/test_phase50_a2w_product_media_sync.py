@@ -79,6 +79,25 @@ class Phase50A2WProductMediaSyncTests(unittest.TestCase):
             ],
             "profile": {"desktop_product_id": 625, "sync_revision": 11},
         }
+    def test_slider_membership_edit_marks_server_product_id_linked_product_for_republish(self):
+        product_id = self._product()
+        before = dict(self.db.product(product_id))
+        self.assertEqual(str(before.get("server_id") or ""), "")
+        self.assertEqual(int(before["server_product_id"]), 39)
+
+        self.kernel.stages.update(
+            product_id,
+            "slider",
+            {"homepage_slider_enabled": 1},
+        )
+
+        after = dict(self.db.product(product_id))
+        self.assertEqual(int(after["server_product_id"]), 39)
+        self.assertEqual(int(after["server_product_revision"]), 11)
+        self.assertEqual(int(after["homepage_slider_enabled"]), 1)
+        self.assertEqual(int(after["needs_update"]), 1)
+        self.assertEqual(int(after["upload_ready"]), 0)
+
     def test_refresh_recovers_missing_site_media_without_changing_site_selection(self):
         product_id = self._product()
         server = self._server_payload()

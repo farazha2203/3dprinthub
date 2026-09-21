@@ -1,3 +1,15 @@
+## 2026-09-21 - Phase50.A.2X Slider completeness + same-identity authoritative re-publish
+- Slider SEO/media readiness is now independent of the homepage membership checkbox.
+- Added Slider title/description/ALT/button/focus/image to mandatory Product data completeness while leaving membership operator-controlled.
+- Single-Product AI refresh/rebuild and selected-Product bulk SEO now persist Slider data without toggling membership.
+- Missing Slider image can use current Primary/selected Product media.
+- Published Product Slider edits now mark the same preserved Site identity for update even when only `server_product_id` is populated.
+- Server Product SEO sync no longer preserves stale old Site values when the current Desktop snapshot should win.
+- Added regressions for disabled-membership Slider fill, bulk content+slider scope, same-identity dirty marking and Slider on/off/on Server synchronization.
+- Verification: focused 33/33, Server 9/9, broad 115/116 with only documented baseline ERR-49-203, plus compile/diff/Django/no-drift/Qt VerifyOnly PASS.
+- Real #620 content pack already carries complete Slider SEO; no-AI backfill is the next data step.
+- No Production mutation or migration yet.
+
 ## 2026-09-21 - Phase50.A.2W W4.1 owner correction — dimensions + PLA defaults Local tested
 - Owner correction changes operational size behavior: when a Source Size exposes exactly one factual dimension (for example Height=12cm), the created Source Profile uses that same numeric value for all three operational axes, so Hydra Small becomes 12×12×12cm and Large becomes 18×18×18cm. Provenance still records Height as factual and Length/Width as `owner_equal_dimension_rule`.
 - Source material-family defaults now hydrate real Local Filaments during Source Profile import/repair. If Source says PLA, every active exact-family Local PLA offer is selected/added; PLA-CF/HT-PLA-GF/PETG are excluded by exact family matching.
@@ -5,7 +17,7 @@
 - #625 safety is preserved: Profile 1 keeps existing 5×5×5cm and receives/retains 16 PLA; Profile 2 receives 16 PLA and only its still-missing dimensions are eligible for the explicit owner 4×4×4 estimated fallback.
 - Source placeholders without Brand are removed when concrete compatible Local offers exist; operator-owned concrete Filament choices are preserved/deduplicated.
 - Verification: Source/Profile+dimension focused 15/15 PASS, W4 mapping 5/5 PASS, mature Commerce/Profile+W3/W4/W4.1 59/59 PASS, retained media/site 83/83 PASS, py_compile/diff-check/Qt VerifyOnly PASS.
-- Rollback ref: `backup/pre-phase50-a2w-w41-owner-dimension-filament-correction-20260921` -> `436d34f2...`. No real Catalog/Host/Production mutation yet.
+- Rollback ref: `backup/pre-phase50-a2w-w41-owner-dimension-filament-correction-20260921` -> `436d34f2...`; source is pushed at `7f2280e...`. Real Local Catalog repair is accepted for #628/#625 with Site identity/revision unchanged; post snapshot SHA256 is `7743e63f...c3ca8da`.
 
 ## 2026-09-21 - Phase50.A.2W W4.1 Source dimension evidence — Local tested
 - Added deterministic Description dimension extraction for labeled Source sizes and generic L×W×H values, with unit normalization to cm and no AI/inference.

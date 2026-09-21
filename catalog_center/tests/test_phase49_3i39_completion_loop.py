@@ -355,7 +355,7 @@ class Phase493I39CompletionLoopTests(unittest.TestCase):
         source = (ROOT / "app" / "phase49_3i39_completion_loop.py").read_text(encoding="utf-8")
         core = (ROOT / "app" / "phase49_3i37_seven_stage_ai.py").read_text(encoding="utf-8")
         self.assertIn("repair_until_stable(", source)
-        self.assertIn('target_stages={"content"}', source)
+        self.assertIn('target_stages={"content", "slider"}', source)
         self.assertIn("run_resilient_orchestrator(", source)
         self.assertNotIn("AIProviderClient(", source)
         self.assertIn('"request_payload"', core)

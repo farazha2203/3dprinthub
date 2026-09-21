@@ -1,3 +1,20 @@
+## 2026-09-21 - Phase50.A.2X Slider SEO Readiness + Authoritative Re-publish
+- [x] Verify exact W4.1 baseline `7f2280e...` and real repaired #628/#625 state.
+- [x] Make Slider SEO/media data required for all Products independent of membership checkbox.
+- [x] Keep membership operator-only; AI/bulk completion must never enable it.
+- [x] Extend multi-select SEO completion from content-only to content + slider.
+- [x] Make Slider edits on server-linked Products requeue the same Site identity.
+- [x] Remove stale Site SEO preservation fallback; retain exact Desktop media/Profile replacement contracts.
+- [x] Focused 33/33 + Server 9/9 + compile/diff/check/no-drift/Qt VerifyOnly PASS.
+- [x] Broad current gate reduced to sole known baseline ERR-49-203 failure.
+- [ ] Commit/push exact A2X SHA and verify GitHub remote equality.
+- [ ] Launch exact-SHA Qt and take fresh integrity-checked Catalog backup.
+- [ ] Backfill saved Slider data without AI while preserving all membership checkboxes.
+- [ ] Verify #620 and sampled bulk Products in Qt.
+- [ ] Guarded Server deploy from GitHub via dedicated reverse tunnel.
+- [ ] One controlled same-identity re-publish + Production parity verification.
+- [ ] Close A2X docs and continue remaining Phase50 backlog.
+
 ## 2026-09-21 - Phase50.A.2W Product Media Truth Sync + Source Profile Import
 - [x] Open A2W from A2V closure with rollback ref.
 - [x] Define W1 Refresh/Media truth contract and W2 authoritative Site-media contract.
@@ -37,7 +54,7 @@
 - [x] Real Local inventory=16 active PLA; read-only real-state simulation proves #628 gets 16 PLA on both Profiles and #625 Profile 2 repairs to 16 while Profile 1 remains unchanged.
 - [x] #625 fallback remains scoped: preserve Profile 1 5×5×5; fill only Profile 2 missing dimensions with estimated 4×4×4.
 - [x] Focused 15/15; corrected Commerce/Profile+W3/W4/W4.1 59/59; retained media/site 83/83; py_compile/diff-check/Qt VerifyOnly PASS.
-- [ ] GitHub exact-SHA correction promotion + fresh SQLite backup + controlled real #628/#625 Profile repair + invariants.
+- [x] W4.1 exact GitHub SHA `7f2280e...` + controlled real #628/#625 Profile repair + integrity-checked post snapshot; A2X now owns next runtime/deploy acceptance.
 - [ ] After W4.1 real-data acceptance, investigate failed batch `26aa571c-...` as a separate publish-recovery task; do not auto-retry it.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED

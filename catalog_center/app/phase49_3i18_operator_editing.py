@@ -205,14 +205,21 @@ def ai_updates(row, pack, title):
         "content_pack_json": json.dumps(pack, ensure_ascii=False),
     }
     slider = pack.get("homepage_slider_seo") if isinstance(pack.get("homepage_slider_seo"), dict) else {}
-    if bool(int(_v(row, "homepage_slider_enabled", 0) or 0)) and slider:
+    if slider:
         out.update({
             "homepage_slider_title_fa": str(slider.get("title_fa") or title).strip(),
             "homepage_slider_description_fa": str(slider.get("description_fa") or "").strip(),
             "homepage_slider_alt_text": str(slider.get("image_alt_fa") or "").strip(),
-            "homepage_slider_button_text": str(slider.get("button_text_fa") or "").strip(),
+            "homepage_slider_button_text": str(slider.get("button_text_fa") or "مشاهده محصول").strip(),
             "homepage_slider_focus_keyword": str(slider.get("focus_keyword_fa") or "").strip(),
         })
+    primary = str(_v(row, "primary_image_url", "") or "").strip()
+    selected = _list(_v(row, "selected_images_json", "[]"))
+    slider_image = str(_v(row, "homepage_slider_image_url", "") or "").strip()
+    if not slider_image:
+        slider_image = primary or (str(selected[0]).strip() if selected else "")
+    if slider_image:
+        out["homepage_slider_image_url"] = slider_image
     return out
 
 

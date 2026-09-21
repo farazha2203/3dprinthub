@@ -13,7 +13,8 @@ STAGE_LABELS = {
     "images": "۳. تصاویر",
     "content": "۴. محتوا و SEO",
     "specs": "۵. منبع و مجوز",
-    "publish": "۶. بررسی و انتشار",
+    "slider": "۶. اسلایدر صفحه اول",
+    "publish": "۷. بررسی و انتشار",
 }
 
 
@@ -125,6 +126,7 @@ def evaluate_readiness(row) -> dict:
         "عنوان اسلایدر": str(_value(row, "homepage_slider_title_fa", "") or "").strip(),
         "توضیح اسلایدر": str(_value(row, "homepage_slider_description_fa", "") or "").strip(),
         "Alt اسلایدر": str(_value(row, "homepage_slider_alt_text", "") or "").strip(),
+        "متن دکمه اسلایدر": str(_value(row, "homepage_slider_button_text", "") or "").strip(),
         "عبارت هدف اسلایدر": str(_value(row, "homepage_slider_focus_keyword", "") or "").strip(),
         "عکس اسلایدر": str(_value(row, "homepage_slider_image_url", "") or "").strip(),
     }
@@ -171,14 +173,16 @@ def evaluate_readiness(row) -> dict:
         "specs": [
             ("تأیید سراسری مالک برای منبع/مجوز", owner_license_approved),
         ],
+        "slider": [
+            (label, bool(value)) for label, value in slider_fields.items()
+        ],
         "publish": [
             ("تأیید برای فروش", approved or product_type == "portfolio"),
             ("نوع انتشار محصول", publish_product),
         ],
     }
-    if slider_enabled:
-        stage_checks["publish"].extend((label, bool(value)) for label, value in slider_fields.items())
-
+    # Slider membership is an operator choice, not a data-completeness switch.
+    # Its SEO/media payload must be ready for every Product even while disabled.
     stages = {}
     missing_all: list[str] = []
     for key, checks in stage_checks.items():
