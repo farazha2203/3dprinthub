@@ -1,3 +1,11 @@
+## 2026-09-21 - A2Y lineage convergence accepted
+- Created/pushed unified merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` with latest Windows/A2Y and accepted Server/Production closure as its two parents.
+- Exact-SHA Qt VerifyOnly + real runtime smoke PASS; running Qt points to the unified worktree and left the shared Catalog Product/history counts unchanged.
+- Desktop LNK/CMD were backed up and retargeted from A2U to the unified launcher only after runtime acceptance.
+- Shortcut rollback root: `phase50-a2y-shortcut-20260921-183438`.
+- No Catalog backfill, Product publish, Host source deploy or Production DB write occurred in A2Y.
+- A2Y is closed; A2Z now owns Catalog Slider completion and final Windows operator acceptance.
+
 ## 2026-09-21 - A2Y lineage convergence Local-tested
 - Merged latest Windows/A2W/A2X Slider lineage with Production Server/A2X Hero/republish/finance lineage in a clean isolated worktree.
 - Kept Windows operator/UI authority while retaining hardened A2S Social and current Server authoritative-republish/Hero public-media boundaries.

@@ -1,8 +1,8 @@
-## 2026-09-21 - Authoritative forward plan after reconciliation audit
+## 2026-09-21 - A2Y convergence accepted / A2Z is active next
 
-Forward development is now governed by `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. Latest Windows `c86c66a1...` and current Production/Server `e03bdd2b...` diverge from common `b1caeba...`; A2Y must converge them before permanent feature work.
+Forward development is governed by `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. A2Y has converged latest Windows and accepted Production/Server histories at runtime-bearing merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`. Exact-SHA Qt and Desktop shortcut cutover passed without Catalog or Production mutation. The authoritative forward worktree is `D:\projects\3DPrintHub-a2y-converge`.
 
-Forward order: A2Y convergence -> A2Z Catalog/Windows data completion -> A2Z-S Social -> A2Z-W5 manual Product -> A2Z-W6 source video/Reel -> A2Z-C dynamic carriers -> A3 secure Store ZarinPal -> A4 Torob -> B1 Auth/Customer -> B2 Product Engagement -> B3 customer Telegram Bot/Mini App -> C1-C5 accounting/treasury/purchasing/sales/reports -> D1 final release/UAT.
+Forward order: A2Z Catalog/Windows data completion -> A2Z-S Social -> A2Z-W5 manual Product -> A2Z-W6 source video/Reel -> A2Z-C dynamic carriers -> A3 secure Store ZarinPal -> A4 Torob -> B1 Auth/Customer -> B2 Product Engagement -> B3 customer Telegram Bot/Mini App -> C1-C5 accounting/treasury/purchasing/sales/reports -> D1 final release/UAT.
 
 Real Catalog audit on 2026-09-21: 635 Products; 50 have all six core Slider fields and 585 are incomplete. Slider membership remains manual and is never bulk-enabled by completeness backfill. Historical unchecked roadmap items are evidence only unless the A2Y master plan carries them forward.
 

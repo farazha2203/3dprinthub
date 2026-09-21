@@ -1,3 +1,19 @@
+## 2026-09-21 - Phase50.A.2Y Lineage Convergence ACCEPTED / CLOSED
+- [x] Create clean isolated convergence worktree from A2Y planning head / latest Windows lineage.
+- [x] Merge Server/Production closure lineage `e03bdd2b...` with evidence-backed conflict resolution.
+- [x] Preserve A2W Source Profiles/dimensions/material mapping, A2X Slider/Image authority, hardened Social, Store authoritative republish, payment/finance and Hero public-media behavior.
+- [x] Windows focused A2W/Slider/Image/Social 94/94 PASS.
+- [x] Server unified/republish/payment/finance/Hero 52/52 PASS.
+- [x] Broad Windows 115/116 with only documented baseline ERR-49-203.
+- [x] Compile 46 changed Python files + Django check/no-drift + diff-check + Qt VerifyOnly PASS.
+- [x] Correct stale pre-existing mobile Hero test cache assertion to accepted 50.10.0 contract (ERR-49-215).
+- [x] Create/push exact convergence merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`; Local=GitHub.
+- [x] Launch Qt from exact pushed unified SHA; process path and responsiveness PASS; Catalog Products/history unchanged.
+- [x] Backup and retarget Desktop LNK/CMD to unified worktree after runtime smoke.
+- [x] Freeze unified worktree/branch as sole forward development baseline.
+- [x] Close A2Y without Catalog or Production mutation.
+- [ ] Begin A2Z with fresh Catalog backup and read-only completeness inventory.
+
 ## 2026-09-21 - Phase50.A.2Y Lineage Convergence LOCAL_TESTED
 - [x] Create clean isolated convergence worktree from A2Y planning head / latest Windows lineage.
 - [x] Merge Server/Production closure lineage `e03bdd2b...` with evidence-backed conflict resolution.

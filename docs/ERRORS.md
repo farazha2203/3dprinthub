@@ -4,6 +4,7 @@
 **Impact:** no current Production or Catalog corruption was found, but starting future features from either branch alone can silently drop accepted behavior from the other lineage and repeat the previously observed old-runtime regression class.
 **Root cause:** urgent Server/Production hotfix work branched from the live release lineage while Windows A2V/A2W/A2X Slider work continued independently from the latest operator lineage.
 **Correct fix:** Phase50.A.2Y must reconcile the two heads into one tested GitHub forward baseline before new permanent feature work. Do not solve this by replacing the latest Windows tree with the Server tree or vice versa; integrate only verified deltas and run both Windows/Qt and Django/Server regressions.
+**Verification:** accepted merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` has the A2Y/Windows planning lineage and Server/Production closure as its two parents. Windows focused 94/94 and Server focused 52/52 PASS; broad Windows 115/116 has only baseline ERR-49-203; compile/check/no-drift/diff/Qt VerifyOnly PASS; exact-SHA Qt runtime and Desktop shortcut cutover PASS with Catalog read-only counts unchanged.
 **Prevention:** `AGENTS.md` now requires a forward-lineage check before each new feature phase and requires lineage convergence whenever latest Windows and current Production/Server fixes do not share one accepted forward head.
 
 ## ERR-49-215 - A2Y convergence exposed a stale mobile-Hero cache-version assertion

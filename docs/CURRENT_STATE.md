@@ -1,3 +1,19 @@
+## 2026-09-21 - Phase50.A.2Y PRODUCTION-SOURCE CONVERGENCE ACCEPTED / WINDOWS RUNTIME ACCEPTED / CLOSED
+
+Authoritative forward worktree: `D:\projects\3DPrintHub-a2y-converge`, branch `wip/phase50-a2y-lineage-convergence-20260921`. Runtime-bearing merge commit is `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` with parents `c593eaf4b9f23652986231ee1c5581bfee9a7d70` (latest Windows/A2Y planning lineage) and `e03bdd2b718fae3ce030df789c8b9db958d8d8ed` (accepted Server/Production closure). GitHub branch read-back matched the merge SHA exactly before runtime launch.
+
+Exact-SHA Qt acceptance PASS from that unified SHA. `RUN_QT.ps1 -VerifyOnly` passed, and the live process tree is `pythonw.exe -> D:\projects\3DPrintHub-a2y-converge\catalog_center\qt_launch.py`. Both runtime processes were responsive. Shared Catalog stayed read-only through the launch: Products=635, product_history=2536, max history id=2536 and `PRAGMA quick_check=ok` before and after.
+
+Desktop launchers are now intentionally cut over to the unified worktree only after runtime acceptance. Fresh shortcut rollback: `D:\projects\3dprinthub-backups\phase50-a2y-shortcut-20260921-183438`; pre-cutover SHA256 values: LNK `d37705a7bbb14c18d6ef6d4f2ce3144ec1817a63db612be685c5ec2153f0a7c3`, CMD `789346af71068279f523b6bbf86268b5d37fa0f895ec425903bcc51873aab02e`. Both Desktop launchers now resolve `D:\projects\3DPrintHub-a2y-converge\catalog_center\RUN_QT.ps1`.
+
+A2Y acceptance evidence remains: Windows A2W/Slider/Image/Social 94/94 PASS; Server unified import/Profile/republish/payment/finance/Hero 52/52 PASS; broad Windows 115/116 with the sole known baseline ERR-49-203 Manufacturer-vs-Brand assertion; 46 changed Python files compile; Django check/no-drift, diff-check and Qt VerifyOnly PASS. Static Hero/template bytes equal the accepted Server `e03bdd2b...` versions, and there is no migration/dependency delta. ERR-49-215 records the stale 50.8.0 test assertion corrected to accepted 50.10.0.
+
+No Catalog data backfill, Site re-publish, Host source promotion or Production DB write was performed for A2Y. Existing Production Server functionality remains accepted; convergence was a source-baseline and Windows-runtime operation.
+
+**Exact next phase: Phase50.A.2Z — Catalog Data Completion + Windows Final Operator Acceptance.** Ordered operations: fresh integrity-checked Catalog backup -> inventory/recount all Slider gaps -> no-AI backfill from saved content packs while preserving every membership checkbox -> AI only for genuinely missing editorial fields -> verify all Products complete or explicitly blocked -> real Qt acceptance of #620/#625/#628 and Filament/Image flows -> fresh backup -> one controlled same-identity republish -> strict Site media/Profile/Variant/Slider parity + browser verification -> A2Z docs closure.
+
+**Phase after A2Z:** A2Z-S changed-revision Site-first Instagram Feed+Story/Highlight queue acceptance.
+
 ## 2026-09-21 - Phase50.A.2Y LINEAGE CONVERGENCE LOCAL_TESTED / MERGE COMMIT + EXACT-SHA QT NEXT
 
 Clean convergence worktree: `D:\projects\3DPrintHub-a2y-converge` on branch `wip/phase50-a2y-lineage-convergence-20260921`. It starts from A2Y planning head `c593eaf4b9f23652986231ee1c5581bfee9a7d70` (latest Windows parent `c86c66a1...`) and merges Production/Server closure `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`. The pre-existing dirty planning worktree was deliberately left untouched.

@@ -1,13 +1,18 @@
+## 2026-09-21 A2Y accepted unified paths
+- Authoritative forward Local worktree: `D:\projects\3DPrintHub-a2y-converge`.
+- Forward branch: `wip/phase50-a2y-lineage-convergence-20260921`.
+- Accepted runtime-bearing merge SHA: `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`.
+- Merge parents: Windows/A2Y `c593eaf4...` + Server/Production closure `e03bdd2b...`; original merge-base `b1caeba0...`.
+- Shared Catalog authority: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+- Repository launcher: `D:\projects\3DPrintHub-a2y-converge\catalog_center\RUN_QT.ps1`.
+- Desktop launchers: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` and `.cmd`, both now target the unified launcher.
+- Pre-cutover shortcut rollback: `D:\projects\3dprinthub-backups\phase50-a2y-shortcut-20260921-183438`.
+- Old A2U worktree remains historical/rollback evidence; do not use it as the new forward launcher after A2Y acceptance.
+- Dirty planning worktree `D:\projects\3DPrintHub-a2y-plan` remains untouched evidence and is not the forward runtime.
+- Old primary clone `D:\projects\3DPrintHub` remains dirty/behind with pre-existing owner documentation work; do not reset/clean or silently promote it.
+- A2Z may mutate Catalog only after a fresh integrity-checked backup under the normal backup root.
+
 ## 2026-09-21 A2Y reconciliation paths
-- Clean isolated planning/convergence worktree: `D:\projects\3DPrintHub-a2y-plan`.
-- Branch: `wip/phase50-a2y-master-reconciliation-20260921`.
-- Planning baseline / latest Windows head: `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd`.
-- Planning rollback ref: `backup/pre-phase50-a2y-master-plan-20260921` -> `c86c66a1...`.
-- Current Production/Server docs head to reconcile: `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`.
-- Verified merge-base: `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.
-- Shared Catalog authority remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`; A2Y documentation/convergence must not mutate it until A2Z backup/data gates.
-- Existing owner Desktop launchers still target `D:\projects\3DPrintHub-a2u-latest-windows\catalog_center\RUN_QT.ps1`; do not retarget them until the unified A2Y SHA passes exact-SHA Qt acceptance.
-- Old primary clone `D:\projects\3DPrintHub` remains dirty/behind with pre-existing owner documentation work; do not reset, clean or use it as the A2Y merge worktree.
 
 ## 2026-09-20 A2U current Windows operator paths
 - Current Windows operator worktree: `D:\projects\3DPrintHub-a2u-latest-windows`.

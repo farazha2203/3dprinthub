@@ -1,11 +1,13 @@
 # Phase50.A.2Y — Master Reconciliation + Remaining Work Plan
 
-Status: **LOCAL_TESTED / CONVERGENCE MERGE COMMIT + EXACT-SHA QT NEXT**
+Status: **ACCEPTED / CLOSED — A2Z NEXT**
 Date: 2026-09-21
-Planning baseline (latest Windows lineage): `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd`
-Current Production/docs lineage: `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`
-Latest Windows worktree/shortcut source: `D:\projects\3DPrintHub-a2u-latest-windows`
-Production Host source branch: `release/phase50-a2j-hero-20260915`
+Accepted unified runtime-bearing baseline: `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`
+Windows parent / planning lineage: `c593eaf4b9f23652986231ee1c5581bfee9a7d70` (parent of latest Windows `c86c66a1...`)
+Server/Production closure parent: `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`
+Authoritative forward worktree/shortcut source: `D:\projects\3DPrintHub-a2y-converge`
+Forward branch: `wip/phase50-a2y-lineage-convergence-20260921`
+Production Host source branch remains: `release/phase50-a2j-hero-20260915`
 
 ## Why A2Y exists
 The project currently has two valid descendants of the same earlier baseline:
@@ -52,7 +54,16 @@ The two heads must be converged before additional permanent feature work.
 ## Remaining phase order
 
 ### Phase50.A.2Y — Lineage Convergence + Truth Freeze
-Status: **LOCAL_TESTED / MERGE COMMIT NEXT**
+Status: **ACCEPTED / CLOSED**
+
+Closure evidence:
+- unified runtime-bearing merge SHA `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`, Local=GitHub;
+- exact-SHA Qt VerifyOnly + real runtime process smoke PASS;
+- runtime points to `D:\projects\3DPrintHub-a2y-converge\catalog_center\qt_launch.py`;
+- Catalog Products/history/quick-check identical before and after runtime launch;
+- Desktop LNK/CMD backup + cutover PASS;
+- no migration/dependency delta and no A2Y Production deployment;
+- next active phase is A2Z.
 
 Local acceptance evidence:
 - convergence worktree `D:\projects\3DPrintHub-a2y-converge`;
