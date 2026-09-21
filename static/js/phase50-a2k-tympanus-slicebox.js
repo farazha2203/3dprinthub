@@ -6,13 +6,15 @@
     if (!root || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.slicebox) return;
 
     var $ = window.jQuery;
+    var legacyShadow = root.querySelector("#shadow");
+    if (legacyShadow) legacyShadow.remove();
+
     var $slider = $("#sb-slider");
     if (!$slider.length || $slider.children("li").length < 1) return;
 
     var $navArrows = $("#nav-arrows").hide();
     var $navDots = $("#nav-dots").hide();
     var $nav = $navDots.children("span");
-    var $shadow = $("#shadow").hide();
 
     var slicebox = $slider.slicebox({
       orientation: "r",
@@ -21,7 +23,6 @@
       onReady: function () {
         $navArrows.show();
         $navDots.show();
-        $shadow.show();
       },
       onBeforeChange: function (position) {
         $nav.removeClass("nav-dot-current");

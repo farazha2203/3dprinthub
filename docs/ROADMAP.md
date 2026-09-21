@@ -1,3 +1,18 @@
+## 2026-09-21 - Phase50.A.2Y Lineage Convergence LOCAL_TESTED
+- [x] Create clean isolated convergence worktree from A2Y planning head / latest Windows lineage.
+- [x] Merge Server/Production closure lineage `e03bdd2b...` with evidence-backed conflict resolution.
+- [x] Preserve A2W Source Profiles/dimensions/material mapping, A2X Slider/Image authority, hardened Social, Store authoritative republish, payment/finance and Hero public-media behavior.
+- [x] Windows focused A2W/Slider/Image/Social 94/94 PASS.
+- [x] Server unified/republish/payment/finance/Hero 52/52 PASS.
+- [x] Broad Windows 115/116 with only documented baseline ERR-49-203.
+- [x] Compile 46 changed Python files + Django check/no-drift + diff-check + Qt VerifyOnly PASS.
+- [x] Correct stale pre-existing mobile Hero test cache assertion to accepted 50.10.0 contract (ERR-49-215).
+- [ ] Create/push exact convergence merge commit and verify Local=GitHub.
+- [ ] Launch Qt from exact pushed unified SHA.
+- [ ] Retarget Desktop shortcut to unified worktree only after runtime smoke.
+- [ ] Close A2Y docs and make unified SHA the only forward development baseline.
+- [ ] Begin A2Z only after A2Y closure; no Catalog backfill before then.
+
 ## 2026-09-21 - AUTHORITATIVE REMAINING WORK — Phase50.A.2Y+
 
 The authoritative remaining-work plan is `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. Historical unchecked boxes below are retained as evidence and are not automatically pending; only items explicitly carried into the master plan remain active.

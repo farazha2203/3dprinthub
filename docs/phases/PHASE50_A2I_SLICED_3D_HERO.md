@@ -5,8 +5,10 @@ Current Production is exact clean `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Re
 
 Date: 2026-09-13
 Branch: `agent/phase49-3i18-operator-bulk-ai-rebuild`
-Status: `PRODUCTION_VERIFIED / CONTROLLED_PRODUCT_ACCEPTANCE_PASS / OWNER_VISUAL_REVIEW`
+Status: `SUPERSEDED_BY_PHASE50.A.2J / HISTORICAL_PRODUCTION_VERIFIED`
 Baseline: `ae8df27764b4452e2858429f3ee5759b0613e173`
+
+> 2026-09-16: the public top Hero no longer uses the A2I optional-hook architecture. The owner requested a full engine replacement, delivered and Production-verified as `docs/phases/PHASE50_A2J_STANDALONE_SLICED_3D_HERO.md`. Keep this document as historical evidence only; do not reintroduce the A2I + mature-Phase49 public runtime stack.
 
 ## Goal
 Bring the visual idea of Codrops Slicebox to the existing 3DPrintHub Hero without importing its old jQuery runtime or replacing the mature Django Hero/SEO/Admin contracts.

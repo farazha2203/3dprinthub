@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -34,12 +35,63 @@ def ensure_persian_draft(asset: ImportedPrintAsset) -> ImportedPrintAsset:
     return asset
 
 
-def _copy_image(field_file, target_field, filename: str) -> None:
+def _copy_image(
+    field_file,
+    target_field,
+    filename: str,
+    *,
+    canonical_dir: str = "",
+) -> None:
+    """Copy media without filename churn.
+
+    Desktop-managed Product media is stored below a content-addressed directory
+    while preserving the exact SEO basename. Existing identical bytes are
+    reused; old physical files are never deleted here.
+    """
     field_file.open("rb")
     try:
-        target_field.save(filename, ContentFile(field_file.read()), save=False)
+        raw = field_file.read()
     finally:
         field_file.close()
+
+    clean_name = Path(str(filename or "")).name
+    if not clean_name:
+        raise ValidationError("نام فایل رسانه خالی است.")
+
+    if not canonical_dir:
+        target_field.save(clean_name, ContentFile(raw), save=False)
+        return
+
+    digest = hashlib.sha256(raw).hexdigest()
+    storage = target_field.storage
+    max_length = int(getattr(getattr(target_field, "field", None), "max_length", 100) or 100)
+    base_dir = canonical_dir.strip("/")
+    desired = f"{base_dir}/{digest[:12]}/{clean_name}"
+
+    if len(desired) > max_length:
+        raise ValidationError(
+            f"مسیر نهایی تصویر ({len(desired)}) از حد فیلد ({max_length}) بیشتر است؛ "
+            "نام SEO تصویر حفظ شد اما مسیر عمومی باید کوتاه‌تر باشد."
+        )
+
+    if storage.exists(desired):
+        existing = hashlib.sha256()
+        with storage.open(desired, "rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                existing.update(block)
+        if existing.hexdigest() != digest:
+            raise ValidationError(
+                "برخورد هش در مسیر محتوایی تصویر رخ داد؛ انتشار برای جلوگیری از overwrite نادرست متوقف شد."
+            )
+
+    if not storage.exists(desired):
+        saved = storage.save(desired, ContentFile(raw))
+        if Path(str(saved)).name != clean_name:
+            raise ValidationError(
+                "ذخیره‌سازی نام SEO تصویر را تغییر داد؛ انتشار برای جلوگیری از نام نادرست متوقف شد."
+            )
+        desired = str(saved)
+    target_field.name = desired
 
 
 def _desktop_payload(asset: ImportedPrintAsset) -> dict:
@@ -73,6 +125,30 @@ def _resolved_category(asset: ImportedPrintAsset) -> Category | None:
     return category
 
 
+def _canonical_media_filename(asset: ImportedPrintAsset, index: int, row=None) -> str:
+    desktop = _desktop_payload(asset)
+    metadata = _json_list(desktop.get("image_metadata_json"))
+    if index < len(metadata) and isinstance(metadata[index], dict):
+        value = Path(str(metadata[index].get("seo_filename") or "")).name
+        if value:
+            return value
+    mapped = _json_list(desktop.get("local_image_files_json"))
+    if index < len(mapped):
+        value = Path(str(mapped[index] or "")).name
+        if value:
+            return value
+    if row is not None:
+        value = Path(str(getattr(getattr(row, "image", None), "name", "") or "")).name
+        if value:
+            return value
+    return f"product-image-{index + 1}.webp"
+
+
+def _desktop_media_key(asset: ImportedPrintAsset) -> str:
+    desktop_id = str(_desktop_payload(asset).get("desktop_product_id") or "").strip()
+    return desktop_id if desktop_id.isdigit() else f"asset-{asset.pk}"
+
+
 def _selected_asset_images(asset: ImportedPrintAsset) -> list:
     """Return exactly the images selected in the current desktop batch, in order.
 
@@ -94,21 +170,37 @@ def _selected_asset_images(asset: ImportedPrintAsset) -> list:
 
 
 def _sync_product_images(product: Product, asset: ImportedPrintAsset) -> int:
-    if not asset.preview_image:
+    selected = _selected_asset_images(asset)
+    if not selected and not asset.preview_image:
         raise ValidationError("قبل از انتشار، تصویر اصلی باید در Media ذخیره شده باشد.")
 
-    _copy_image(asset.preview_image, product.main_image, Path(asset.preview_image.name).name)
-    # Imported catalog products are desktop-managed. Rebuild only their ProductImage
-    # rows so the Store mirrors the *current* Windows selection. Django does not
-    # delete the historical physical files here; this avoids destructive media loss.
+    media_key = _desktop_media_key(asset)
+    primary_row = selected[0] if selected else None
+    primary_source = primary_row.image if primary_row is not None else asset.preview_image
+    primary_name = _canonical_media_filename(asset, 0, primary_row)
+    _copy_image(
+        primary_source,
+        product.main_image,
+        primary_name,
+        canonical_dir=f"p/{media_key}",
+    )
+
+    # Imported catalog Products are Desktop-managed. Rebuild only ProductImage
+    # database rows so public gallery order exactly mirrors the current Batch.
+    # Historical physical files remain untouched for rollback/audit.
     product.images.all().delete()
     count = 0
-    for index, row in enumerate(_selected_asset_images(asset)):
+    for index, row in enumerate(selected):
         target = product.images.create(
             alt_text=row.alt_text or product.title,
             sort_order=index,
         )
-        _copy_image(row.image, target.image, Path(row.image.name).name)
+        _copy_image(
+            row.image,
+            target.image,
+            _canonical_media_filename(asset, index, row),
+            canonical_dir=f"p/{media_key}",
+        )
         target.save()
         count += 1
     return count
@@ -246,18 +338,30 @@ def convert_to_fixed_product(asset: ImportedPrintAsset) -> Product:
         price_note=asset.pricing_note,
         consultation_required=not asset.price_is_final,
     )
-    _copy_image(asset.preview_image, product.main_image, Path(asset.preview_image.name).name)
+    selected = _selected_asset_images(asset)
+    primary_row = selected[0] if selected else None
+    _copy_image(
+        primary_row.image if primary_row is not None else asset.preview_image,
+        product.main_image,
+        _canonical_media_filename(asset, 0, primary_row),
+        canonical_dir=f"p/{_desktop_media_key(asset)}",
+    )
     product.save()
     _ensure_default_variant(product, asset)
     from .phase50_profile_matrix import sync_desktop_profile_matrix
     sync_desktop_profile_matrix(product, asset)
 
-    for index, row in enumerate(_selected_asset_images(asset)):
+    for index, row in enumerate(selected):
         target = product.images.create(
             alt_text=row.alt_text or product.title,
             sort_order=index,
         )
-        _copy_image(row.image, target.image, Path(row.image.name).name)
+        _copy_image(
+            row.image,
+            target.image,
+            _canonical_media_filename(asset, index, row),
+            canonical_dir=f"p/{_desktop_media_key(asset)}",
+        )
         target.save()
 
     asset.product = product

@@ -74,9 +74,11 @@ def variant_commerce_options_view(request):
             "color_name": str(getattr(color_option, "name", "") or ""),
             "color": str(getattr(variant, "color", "") or ""),
             "filament_brand_name": str(getattr(color_option, "brand_name", "") or ""),
-            # Brand is the public identity authority. Keep the manufacturer key
-            # as a compatibility alias for older selector clients.
-            "filament_manufacturer_name": str(getattr(color_option, "brand_name", "") or ""),
+            "filament_manufacturer_name": str(
+                getattr(color_option, "manufacturer_name", "")
+                or getattr(color_option, "brand_name", "")
+                or ""
+            ),
             "color_hex": str(getattr(color_option, "hex_code", "") or ""),
             "color_secondary_hex": str(getattr(color_option, "secondary_hex", "") or ""),
             "color_tertiary_hex": str(getattr(color_option, "tertiary_hex", "") or ""),

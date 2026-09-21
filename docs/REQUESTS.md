@@ -1,3 +1,8 @@
+## 2026-09-21 - Owner: execute A2Y lineage convergence before A2Z
+Status: `LOCAL_TESTED / MERGE COMMIT + EXACT-SHA QT NEXT`.
+
+The latest Windows and Server/Production branches have now been reconciled in a clean isolated worktree without touching Catalog or Production. Required retained behavior passes both Windows and Server focused suites. Remaining A2Y work is exact merge commit/push, exact-SHA Qt launch, shortcut cutover after runtime smoke, then A2Y documentation closure. A2Z Slider backfill remains blocked until that exact unified runtime is accepted.
+
 ## 2026-09-21 - Owner: audit all project chats, freeze remaining phases and always report the next phase
 Status: `RECORDED / A2Y MASTER PLAN CREATED`.
 

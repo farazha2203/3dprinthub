@@ -58,9 +58,8 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         )
         self.assertIn("چراغ رومیزی موج‌دار سه‌بعدی", caption)
         self.assertIn("ارسال سفارش به سراسر ایران", caption)
-        self.assertIn("لینک محصول", caption)
-        self.assertNotIn("utm_source=instagram", caption)
-        self.assertLessEqual(len(tags), 5)
+        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", caption)
+        self.assertIn("utm_source=instagram", caption)
         self.assertLessEqual(len(tags), MAX_HASHTAGS)
         self.assertTrue(all(tag in caption for tag in tags))
 
@@ -91,64 +90,8 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         cake["title_fa"] = "پایه کیک سه طبقه"
         self.assertEqual(highlight_target_for_product(cake), "پایه کیک")
 
-    def test_false_free_claims_are_removed_across_social_surfaces(self):
-        dirty = row()
-        dirty.update({
-            "seo_title_fa": "چاپ 3 بعدی مجانی دایناسور متحرک",
-            "seo_description_fa": "free download model ، قابل سفارش از سایت",
-            "sales_bullets_json": json.dumps(
-                ["چاپ رایگان", "قابل سفارش", "ارسال سراسری"],
-                ensure_ascii=False,
-            ),
-            "hashtags_fa_json": json.dumps(
-                ["#free_download", "#دانلود_رایگان", "دایناسور"],
-                ensure_ascii=False,
-            ),
-            "image_alt_texts_json": json.dumps(
-                ["free 3d print dinosaur", "دانلود مجانی مدل"],
-                ensure_ascii=False,
-            ),
-            "local_category_slug": "toys-games",
-        })
-
-        caption, tags = build_caption(
-            dirty,
-            "https://3dprinthub.ir/store/product/dino/?utm_source=instagram",
-        )
-        alts = build_alt_texts(dirty, ["https://x/1.webp", "https://x/2.webp"])
-        story = build_story_copy(dirty)
-        combined = " ".join(
-            [caption, *tags, *alts, story["title"], story["subtitle"], *story["bullets"]]
-        ).casefold()
-
-        for forbidden in (
-            "رایگان",
-            "مجانی",
-            "free_download",
-            "free download",
-            "free 3d print",
-            "3d print for free",
-        ):
-            self.assertNotIn(forbidden, combined)
-        self.assertFalse(any("دانلود" in tag for tag in tags))
-        self.assertNotIn(r"\1", combined)
-        self.assertIn("قابل سفارش", combined)
-        self.assertIn("دایناسور", combined)
-        self.assertEqual(highlight_target_for_product(dirty), "اسباب بازی")
-
-    def test_free_sanitizer_does_not_damage_unrelated_freestyle_word(self):
-        clean = row()
-        clean["seo_description_fa"] = "Freestyle geometric decor ، قابل سفارش"
-        caption, _tags = build_caption(
-            clean,
-            "https://3dprinthub.ir/store/product/freestyle/?utm_source=instagram",
-        )
-        self.assertIn("Freestyle", caption)
-        self.assertNotIn(r"\1", caption)
-
-
     def test_policy_version_is_stable_for_receipts(self):
-        self.assertEqual(POLICY_VERSION, "instagram-product-v5-20260920")
+        self.assertEqual(POLICY_VERSION, "instagram-product-v4-20260920")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Phase50.A.2Y — Master Reconciliation + Remaining Work Plan
 
-Status: **IN_PROGRESS / DOCUMENTATION TRUTH FREEZE COMPLETE / CODE LINEAGE CONVERGENCE NEXT**
+Status: **LOCAL_TESTED / CONVERGENCE MERGE COMMIT + EXACT-SHA QT NEXT**
 Date: 2026-09-21
 Planning baseline (latest Windows lineage): `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd`
 Current Production/docs lineage: `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`
@@ -52,7 +52,17 @@ The two heads must be converged before additional permanent feature work.
 ## Remaining phase order
 
 ### Phase50.A.2Y — Lineage Convergence + Truth Freeze
-Status: **NEXT / IN_PROGRESS**
+Status: **LOCAL_TESTED / MERGE COMMIT NEXT**
+
+Local acceptance evidence:
+- convergence worktree `D:\projects\3DPrintHub-a2y-converge`;
+- Windows focused A2W/Slider/Image/Social: 94/94 PASS;
+- Server unified import/Profile/republish/payment/finance/Hero: 52/52 PASS;
+- broad Windows: 115/116, sole failure = documented baseline ERR-49-203;
+- 46 changed Python files compile;
+- Django check/no migration drift, diff-check and Qt VerifyOnly PASS;
+- stale mobile Hero cache assertion corrected from historical 50.8.0 to accepted 50.10.0 contract (ERR-49-215);
+- Catalog/SQLite/Production touched = NO.
 
 Required operations:
 1. Create one convergence branch from the latest Windows lineage.

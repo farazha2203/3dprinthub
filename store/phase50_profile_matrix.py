@@ -196,7 +196,7 @@ def _resolve_color(material, item: dict):
     ).strip()[:160]
     if not brand:
         brand = legacy_manufacturer[:120]
-    manufacturer = brand
+    manufacturer = legacy_manufacturer or brand
 
     raw_palette = item.get("palette_hexes")
     if not isinstance(raw_palette, list):
@@ -309,10 +309,10 @@ def _integer(item: dict, key: str, default=0) -> int:
 def sync_desktop_profile_matrix(product: Product, asset) -> int:
     """Replace the active Store variant matrix with the current Desktop profiles.
 
-    Product/Variant rows are retained for rollback and historical order references,
-    but once a Windows sales-profile matrix exists it is the sole active commerce
-    authority for that Product. Any older manual, MW-FIX, EP49 or EP49-3F variant
-    not represented by the current CC-P<id>- matrix is deactivated in-place.
+    Historical Variant rows are retained for rollback/order references, but once
+    Windows supplies a sales-profile matrix it is the sole active commerce
+    authority for the Product. Old manual/MW-FIX/EP49/EP49-3F rows must not stay
+    orderable beside the newly published CC-P rows.
     """
     rows = _profile_rows(asset)
     if not rows:
@@ -391,6 +391,12 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
                 f"وضعیت موجودی پروفایل «{stock_status}» معتبر نیست."
             )
 
+        has_print_hourly = "print_hourly_rate" in item
+        has_supervision_hourly = "supervision_hourly_rate" in item
+        support_multiplier = _number(item, "support_cost_multiplier", 1)
+        if support_multiplier <= 0:
+            support_multiplier = Decimal("1")
+
         defaults = {
             "product": product,
             "material": material,
@@ -405,7 +411,9 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "build_profile": build_profile,
             "material_weight_grams": material_weight,
             "final_weight_grams": weight,
+            "part_weight_grams": weight,
             "support_weight_grams": _number(item, "support_weight_grams", 0),
+            "support_cost_multiplier": support_multiplier,
             "shipping_weight_grams": _number(item, "shipping_weight_grams", 0),
             "packaging_weight_grams": _number(item, "packaging_weight_grams", 0),
             "part_length_cm": _number(item, "part_length_cm", 0),
@@ -417,9 +425,15 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
             "print_time_minutes": max(1, _integer(item, "print_time_minutes", 60)),
             "hourly_rate_override": (
                 _integer(item, "print_hourly_rate", 0)
-                if _integer(item, "print_hourly_rate", 0) > 0
+                if has_print_hourly
                 else None
             ),
+            "supervision_hourly_rate_override": (
+                _integer(item, "supervision_hourly_rate", 0)
+                if has_supervision_hourly
+                else None
+            ),
+            "assembly_fee_override": _integer(item, "assembly_fee", 0),
             "fixed_price_override": fixed_price,
             "cached_unit_price": fixed_price,
             "stock_status": stock_status,
@@ -437,10 +451,9 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         variant.save()
         created_or_updated += 1
 
-    # A re-publish from Windows is a replacement of the Product's active
-    # commerce configuration, not an additive merge with stale Host variants.
-    # Keep historical rows for FK/order rollback safety, but only the exact
-    # current CC-P matrix may remain orderable after this point.
+    # Re-publish is replacement, not an additive merge with stale Host
+    # commerce state. Preserve rows physically for historical FK/order safety,
+    # but only the exact current CC-P matrix may remain active/orderable.
     ProductVariant.objects.filter(product=product).exclude(code__in=active_codes).update(
         is_active=False,
         sales_profile_is_default=False,
@@ -451,5 +464,11 @@ def sync_desktop_profile_matrix(product: Product, asset) -> int:
         if first is not None:
             first.sales_profile_is_default = True
             first.save(update_fields=["sales_profile_is_default"])
+
+    # The matrix is the last mutation boundary for Desktop-managed CC-P rows.
+    # Re-finalize the Product range here instead of relying on signal ordering:
+    # a stale Profile range must never survive fresh Variant/Filament inputs.
+    from .phase49_3f_pricing_finalize import finalize_product_variant_prices
+    finalize_product_variant_prices(product)
 
     return created_or_updated

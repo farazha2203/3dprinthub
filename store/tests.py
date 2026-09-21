@@ -104,7 +104,7 @@ class StoreCheckoutTests(TestCase):
             shipping_weight_grams=Decimal("15"),
             print_time_minutes=60,
         )
-        self.shipping, _created = ShippingMethod.objects.update_or_create(
+        self.shipping, _ = ShippingMethod.objects.update_or_create(
             code="post",
             defaults={"title": "پست", "flat_fee": 30_000, "is_active": True},
         )

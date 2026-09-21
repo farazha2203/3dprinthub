@@ -48,6 +48,7 @@ GROUP_DEFINITIONS = (
         (
             ("store.businessfinancedashboard", "داشبورد مالی"),
             ("store.storepayment", "پرداخت‌های فروشگاه"),
+            ("store.storepaymentsettings", "اطلاعات کارت‌به‌کارت"),
             ("website.payment", "پرداخت خدمات"),
             ("store.storeinvoice", "فاکتورهای فروشگاه"),
             ("store.coupon", "کدهای تخفیف"),

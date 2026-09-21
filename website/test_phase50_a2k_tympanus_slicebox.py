@@ -19,7 +19,7 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn('id="nav-arrows"', template)
         self.assertIn('id="nav-dots"', template)
         self.assertNotIn('id="nav-options"', template)
-        self.assertIn('id="shadow"', template)
+        self.assertNotIn('id="shadow"', template)
         self.assertIn("jquery.slicebox.js v1.1.0", vendor)
         self.assertIn("Licensed under the MIT license", vendor)
         self.assertNotIn("data-p50j", template)
@@ -48,22 +48,33 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         template = self.read("templates/website/partials/hero.html")
         self.assertIn("background: #f6f9fc", css)
         self.assertNotIn("fancy_deboss.png", css)
-        self.assertIn("shadow.png", css)
+        self.assertNotIn("shadow.png", css)
         self.assertIn("nav.png", css)
-        self.assertIn("max-width: 840px", css)
-        self.assertIn("aspect-ratio: 16 / 9", css)
+        self.assertIn("max-width: 1280px", css)
+        self.assertIn("max-width: none !important", css)
+        self.assertGreaterEqual(css.count("aspect-ratio: 16 / 9"), 2)
+        self.assertIn("aspect-ratio: 4 / 3", css)
+        self.assertIn("border: 0 !important", css)
         self.assertIn('id="nav-dots"', template)
         self.assertNotIn('id="nav-options"', template)
         self.assertNotIn("navPlay", template)
         self.assertNotIn("navPause", template)
         self.assertIn(".sb-perspective", core)
+        runtime = self.read("static/js/phase50-a2k-tympanus-slicebox.js")
+        self.assertNotIn('$shadow.show()', runtime)
+        self.assertIn('root.querySelector("#shadow")', runtime)
+        self.assertIn("legacyShadow.remove()", runtime)
+        self.assertIn(".p50k-slicebox #shadow", css)
+        self.assertIn("display: none !important", css)
+        self.assertIn("background: none !important", css)
+        self.assertIn("box-shadow: none !important", css)
+        self.assertIn("50.10.0", template)
         for relative in (
-            "static/vendor/slicebox/images/shadow.png",
             "static/vendor/slicebox/images/nav.png",
         ):
             self.assertTrue((ROOT / relative).is_file())
 
-    def test_ssr_product_copy_and_media_remain_authoritative(self):
+    def test_ssr_product_copy_media_seo_and_link_remain_authoritative(self):
         template = self.read("templates/website/partials/hero.html")
         for token in (
             "slide.effective_title",
@@ -71,8 +82,16 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
             "slide.effective_alt_text",
             "slide.effective_image_url",
             "slide.target_url",
+            "product.meta_title",
+            "product.meta_description",
+            "product.short_description",
+            "product.seo_focus_keyword",
+            "p50k-slicebox__product-copy",
+            'itemtype="https://schema.org/Product"',
+            'itemprop="description"',
         ):
             self.assertIn(token, template)
+        self.assertIn('href="{{ slide.target_url }}"', template)
 
     def test_superseded_runtime_assets_are_deleted(self):
         self.assertFalse((ROOT / "static/css/phase50-a2j-slicebox-hero.css").exists())
@@ -84,3 +103,10 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn("asset__product__is_active=True", source)
         self.assertIn("asset__commercial_license_status__in", source)
         self.assertIn("asset__editorial_status__in", source)
+
+    def test_public_query_prefers_product_backed_slides_before_source_fallback(self):
+        source = self.read("website/views.py")
+        self.assertIn("product_homepage_hero_slides = list(", source)
+        self.assertIn("if product_homepage_hero_slides:", source)
+        self.assertIn("homepage_hero_slides = product_homepage_hero_slides", source)
+        self.assertIn("asset__product__isnull=True", source)

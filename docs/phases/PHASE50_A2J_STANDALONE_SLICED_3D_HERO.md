@@ -1,8 +1,3 @@
-## 2026-09-17 Production re-acceptance after final Store cleanup
-Status: `PRODUCTION_REVERIFIED / STORE_EMPTY / FOUR_SAFE_SLIDES`.
-
-Fresh verified rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260917-090106-final-store-product-reset` preceded canonical `phase50-store-reset-v2`. Store changed from 8 Product / 2011 Variant / 29 Image to 0 / 0 / 0 with zero Orders and Inventory movements; 37 Product-owned media files were removed while source/master/Portfolio data stayed intact. `phase50_a2j_seed_hero --apply` PASS with exactly four active safe source-backed assets `119,120,135,136`. Public Home and the A2J CSS/JS are HTTP 200; UTF-8 decode PASS and rendered HTML exposes four Slicebox slides and four dots with the `01/04` counter. Production remains on clean `release/phase50-a2j-hero-20260915 @ 12e319ace1eb55c114d7117e1b5a2fa170b410ab` with no pending migrations.
-
 # Phase50.A.2J - Standalone Sliced 3D Hero
 
 Date: 2026-09-16

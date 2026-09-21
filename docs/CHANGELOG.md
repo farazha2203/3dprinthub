@@ -1,3 +1,11 @@
+## 2026-09-21 - A2Y lineage convergence Local-tested
+- Merged latest Windows/A2W/A2X Slider lineage with Production Server/A2X Hero/republish/finance lineage in a clean isolated worktree.
+- Kept Windows operator/UI authority while retaining hardened A2S Social and current Server authoritative-republish/Hero public-media boundaries.
+- Regression: Windows focused 94/94; Server focused 52/52; broad Windows 115/116 with only historical ERR-49-203.
+- Static gates: 46 changed Python files compile; Django check/no-drift, diff-check and Qt VerifyOnly PASS.
+- Corrected one stale baseline test that still asserted Hero asset cache 50.8.0 while accepted Production contract is 50.10.0.
+- No Catalog, DB, Host or Production write was performed by A2Y convergence.
+
 ## 2026-09-21 - A2Y master reconciliation and remaining-work truth freeze
 - Audited Repository phase docs, owner request ledger, available project chat archives, current Git branches/worktrees and canonical Catalog state.
 - Recorded the split forward lineage: latest Windows `c86c66a1...` versus current Production/Server closure `e03bdd2b...`, merge-base `b1caeba...`; A2Y convergence is now the blocking next phase.

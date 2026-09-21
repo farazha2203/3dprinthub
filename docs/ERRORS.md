@@ -6,6 +6,39 @@
 **Correct fix:** Phase50.A.2Y must reconcile the two heads into one tested GitHub forward baseline before new permanent feature work. Do not solve this by replacing the latest Windows tree with the Server tree or vice versa; integrate only verified deltas and run both Windows/Qt and Django/Server regressions.
 **Prevention:** `AGENTS.md` now requires a forward-lineage check before each new feature phase and requires lineage convergence whenever latest Windows and current Production/Server fixes do not share one accepted forward head.
 
+## ERR-49-215 - A2Y convergence exposed a stale mobile-Hero cache-version assertion
+**Date:** 2026-09-21
+**Observed:** the first merged Server regression ran 52 tests and only `website.test_phase50_mobile_hero_seo` failed because it still required cache marker `v=50.8.0`, while the accepted Server template and A2Q Production contract are already `50.10.0`.
+**Impact:** no runtime, Catalog, DB or Production defect. The merged template matched current Production behavior.
+**Root cause:** the mobile-Hero test was last updated during the older 50.8.0 presentation slice and was not advanced when A2N/A2Q moved the public Slicebox assets through 50.9.0 to 50.10.0.
+**Correct fix:** update only the stale test assertion to the documented accepted `50.10.0` marker; do not roll runtime assets back to satisfy the historical assertion.
+**Verification:** changed-condition test 1/1 PASS; full Server unified/profile/republish/payment/finance/Hero gate 52/52 PASS; Windows focused gate 94/94 PASS; broad Windows remains 115/116 with only independently documented ERR-49-203.
+**Prevention:** presentation/cache assertions must track the latest accepted Production contract in CURRENT_STATE/ROADMAP, and a merge-time failure must be reproduced against its source baseline before being classified as a new regression.
+
+## ERR-49-213 - Full fresh Hero follow-up rollback hit Host quota after source bundle creation
+**Date:** 2026-09-21
+**Observed:** final A2X Hero follow-up pre-deploy backup created a valid ~13 MB source bundle and `.env`, then the required MySQL gzip stopped with `OSError: [Errno 122] Disk quota exceeded`. Source promotion had not started; Production remained clean at `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`.
+**Root cause:** the shared Host account quota did not have enough remaining headroom for another full Git bundle plus a fresh MySQL dump, even though filesystem capacity itself was healthy.
+**Correct fix:** delete only the incomplete current attempt after proving it contained no database backup, leave every valid prior rollback intact, and create a fresh scoped rollback for this one-runtime-file delta. `/home/sfkilvrs/3dprinthub-deploy-backups/20260921-165608-phase50-a2x-hero-media-minimal` records the exact pre-change HEAD, exact pre-change `store/phase49_unified_sync.py`, protected `.env`, and a complete MySQL gzip; all recorded SHA256 values and gzip validation PASS.
+**Verification:** after the changed backup strategy passed, exact GitHub SHA `94e53831be67368ec199c1ea5b3ab728cbfff445` deployed ff-only; migration plan stayed empty; Home/Store/Product HTTP 200; final Host worktree clean.
+**Prevention:** for very small no-migration runtime deltas on a quota-constrained shared Host, a fresh checksum-verified changed-file + env + full-DB rollback may be used when the exact pre-change commit is retained in Git; never weaken the full MySQL backup requirement.
+
+## ERR-49-212 - Hero record persisted private imported-media URL although runtime rendered Product media
+**Date:** 2026-09-21
+**Observed:** after successful Product #620 publish, HomepageHeroSlide #17 was active and Home rendered canonical Product media, but persisted `slide.image_url` pointed at the private `/media/store/imported-models/gallery/...` namespace and returned HTTP 404. Product #41 canonical `/media/p/620/...` image returned HTTP 200 with exact Windows SHA.
+**Root cause:** unified Desktop->Hero persistence wrote ImportedPrintAssetImage working-media into the stored public Hero URL. Runtime ownership fallback protected rendering but did not normalize stored state.
+**Correct fix:** resolve selected media to Product-owned ProductImage when possible, otherwise Product.main_image; persist source HTTP(S) only when no Product-owned public media exists.
+**Verification:** Unified Sync/Hero ownership/import E2E 11/11 PASS; Home/Slicebox/Hero 16/16 PASS; Production `94e53831...` stored canonical Product media, revisions remained 1, and Playwright found 3 healthy Hero images with zero private imported refs/broken/page/console errors.
+**Prevention:** public-media ownership must be correct both in persisted Hero state and at render/serializer boundaries.
+
+## ERR-49-211 - Republish parity treated material-name case as a real mismatch
+**Date:** 2026-09-21
+**Observed:** Product #620 batch `desktop_catalog_v85_20260921_160339` / UUID `8be482aa-5469-439d-bad3-6dcab3f9f8de` rolled back only on material case mismatches such as expected `pla` vs actual `PLA` and `petg` vs `PETG`.
+**Root cause:** Store resolves material rows case-insensitively, but the fail-closed republish verifier compared the raw Desktop material string with exact case-sensitive equality.
+**Correct fix:** normalize only material identity with Unicode `casefold()`; keep Brand, Manufacturer, Color, stock, profile keys, media filename/SHA and numeric commerce checks strict.
+**Verification:** mixed-case material regression PASS; stale-active-Variant rejection PASS; profile-price parity PASS; unified sync PASS; focused Server gate 6/6.
+**Prevention:** post-import parity equality semantics must match resolver semantics for the same identity field.
+
 ## ERR-49-210 - A2X first integration gates exposed wiring gaps before any data mutation
 **Date:** 2026-09-21
 **Observed:** the first A2X focused run failed because the base readiness label map did not yet contain the new `slider` stage and two new fallback paths referenced helper names that did not exist in those modules. The first Django gate also hit the already-documented isolated-worktree missing-`.env` condition from ERR-49-155.

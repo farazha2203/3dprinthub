@@ -7,6 +7,9 @@ from .models import HomepageHeroSlide
 from . import phase49_2b_hero_hotfix as legacy
 
 
+HERO_DESCRIPTION_MAX = int(HomepageHeroSlide._meta.get_field("description").max_length or 480)
+
+
 def _resolved_copy(asset) -> dict:
     if asset is None:
         return build_slider_sales_copy({}, product=None, asset=None)
@@ -20,7 +23,10 @@ def _asset_title(asset) -> str:
 
 
 def _asset_description(asset) -> str:
-    return _resolved_copy(asset)["description_fa"]
+    return safe_persian_text(
+        _resolved_copy(asset)["description_fa"],
+        limit=HERO_DESCRIPTION_MAX,
+    )
 
 
 def _asset_group(asset) -> str:
@@ -53,7 +59,7 @@ def hero_suggestions(asset) -> dict:
     preview_url = legacy._asset_image(asset)
     return {
         "title": title[:220],
-        "description": copy["description_fa"],
+        "description": _asset_description(asset),
         "group_title": group[:160],
         "image_alt_text": copy["image_alt_fa"][:240],
         "button_text": copy["button_text_fa"][:80],
@@ -71,8 +77,8 @@ def _effective_title(self: HomepageHeroSlide) -> str:
 
 
 def _effective_description(self: HomepageHeroSlide) -> str:
-    explicit = safe_persian_text(self.description, limit=1200)
-    return explicit or _resolved_copy(getattr(self, "asset", None))["description_fa"]
+    explicit = safe_persian_text(self.description, limit=HERO_DESCRIPTION_MAX)
+    return explicit or _asset_description(getattr(self, "asset", None))
 
 
 def _effective_group_title(self: HomepageHeroSlide) -> str:
@@ -97,8 +103,11 @@ def _repair_slide_before_save(sender, instance: HomepageHeroSlide, **_kwargs):
 
     if not safe_persian_text(instance.title_override, limit=220):
         instance.title_override = data["title"]
-    if not safe_persian_text(instance.description, limit=1200):
-        instance.description = data["description"]
+    bounded_description = safe_persian_text(
+        instance.description,
+        limit=HERO_DESCRIPTION_MAX,
+    )
+    instance.description = bounded_description or data["description"]
     if not safe_persian_text(instance.group_title, limit=160):
         instance.group_title = data["group_title"]
     if not safe_persian_text(instance.image_alt_text, limit=240):

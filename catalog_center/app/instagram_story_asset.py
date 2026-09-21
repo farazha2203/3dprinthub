@@ -88,7 +88,7 @@ body{{font-family:IRANSans,Tahoma,sans-serif;color:#fff;position:relative}}
 <div class="header"><div class="brandbox"><img class="logo" src="{logo}"><div><div class="brand">3DPRINTHUB</div><div class="tag">IDEAS INTO REALITY</div></div></div><div class="micro">ORIGINAL<br>PRODUCT<br>DESIGN</div></div>
 <div class="copy"><div class="kicker">محصول 3DPrintHub</div><div class="title">{title}</div><div class="subtitle">{subtitle}</div></div>
 <div class="features">{bullets}</div><div class="hero"><img src="{html.escape(image_url)}"></div>
-<div class="cta">لینک محصول <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
+<div class="cta">مشاهده محصول <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
 <div class="url">{url}</div>
 <div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div>
 </body></html>"""

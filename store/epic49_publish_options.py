@@ -5,7 +5,6 @@ import json
 from decimal import Decimal
 from urllib.parse import urljoin
 
-from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 
@@ -462,32 +461,25 @@ def sync_epic49_publish_options(asset) -> dict:
     profile = sync_catalog_profile(product, asset, data, price_min=minimum, price_max=maximum)
     sync_product_seo(product, asset, data)
 
-    # Newer Windows builds publish an explicit sales_profiles_json matrix. That
-    # matrix is authoritative and already carries material/brand/color, weight,
-    # time and pricing inputs. Never run the older EP49 material/color generator
-    # afterwards because it would reactivate stale legacy variants and make the
-    # Store show old weights/prices beside the newly published CC-P rows.
+    # When Windows supplies the explicit sales-profile matrix it is the
+    # complete commerce authority for this Product. Do not regenerate legacy
+    # EP49 material/color rows afterwards; that would re-activate stale
+    # pre-update weights, materials and prices beside the current CC-P rows.
     profile_rows = _authoritative_sales_profiles(data)
     if profile_rows:
         from .models import ProductVariant
         from .phase50_profile_matrix import sync_desktop_profile_matrix
 
         sync_desktop_profile_matrix(product, asset)
-        active_variants = ProductVariant.objects.filter(product=product, is_active=True)
-        stale_active = active_variants.exclude(code__startswith=f"CC-P{product.pk}-")
-        if stale_active.exists():
-            raise ValidationError(
-                "DESKTOP_REPUBLISH_REPLACEMENT_FAILED: stale non-CC variants remain active"
-            )
         current = (
-            active_variants.filter(code__startswith=f"CC-P{product.pk}-")
+            ProductVariant.objects.filter(
+                product=product,
+                code__startswith=f"CC-P{product.pk}-",
+                is_active=True,
+            )
             .select_related("material", "color", "quality")
             .order_by("sales_profile_sort_order", "pk")
         )
-        if current.count() != len(profile_rows):
-            raise ValidationError(
-                "DESKTOP_REPUBLISH_REPLACEMENT_FAILED: active profile count differs from Windows snapshot"
-            )
         variants = [
             {
                 "variant_id": item.pk,

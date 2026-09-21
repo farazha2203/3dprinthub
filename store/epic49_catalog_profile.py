@@ -354,9 +354,9 @@ def sync_product_seo(product, asset, data: dict) -> None:
     title = str(data.get("seo_title_fa") or product.title or "").strip()[:180]
     description = str(data.get("seo_description_fa") or product.short_description or "").replace("\n", " ").strip()[:320]
     focus = next((str(x).strip() for x in [*keywords, *tags_fa] if str(x).strip()), product.title)[:180]
-    # Desktop batch is authoritative on every re-publish. Do not preserve
-    # stale Site SEO values merely because an incoming field changed to blank.
-    # Current-batch visible Product text remains the deterministic fallback.
+    # Desktop is authoritative on every re-publish. The current Product
+    # title/short description above are deterministic fallbacks, so keeping an
+    # older Site SEO value here would preserve stale data from a prior revision.
     product.meta_title = title
     product.meta_description = description
     product.seo_focus_keyword = focus

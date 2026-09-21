@@ -272,7 +272,10 @@ class StorePaymentAdmin(admin.ModelAdmin):
     def approve_payments(self, request, queryset):
         for payment in queryset.select_related("order"):
             if payment.status != "paid":
-                payment.mark_paid(payment.ref_id or f"ADMIN-{payment.pk}")
+                payment.mark_paid(
+                    payment.ref_id or f"ADMIN-{payment.pk}",
+                    actor=request.user,
+                )
 
     @admin.action(description="رد پرداخت‌های انتخاب‌شده")
     def reject_payments(self, request, queryset):

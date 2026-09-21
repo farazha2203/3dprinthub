@@ -989,7 +989,7 @@ class StorePayment(models.Model):
     def __str__(self):
         return f"{self.order.order_number} - {self.get_status_display()}"
 
-    def mark_paid(self, ref_id=""):
+    def mark_paid(self, ref_id="", *, actor=None):
         self.status = "paid"
         if ref_id:
             self.ref_id = ref_id
@@ -997,7 +997,7 @@ class StorePayment(models.Model):
         self.save(update_fields=["status", "ref_id", "paid_at", "updated_at"])
         self.order.mark_paid(ref_id=ref_id)
         from .services import finalize_paid_order
-        finalize_paid_order(self.order)
+        finalize_paid_order(self.order, actor=actor)
 # END STORE COMMERCE PHASE 2
 
 # BEGIN STORE OPERATIONS PHASE 6

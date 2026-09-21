@@ -303,11 +303,7 @@ def _story_already_sent(db, product_id: int, fingerprint: str) -> bool:
     if not fingerprint:
         return False
     for receipt in db.sync_receipts(int(product_id), limit=120):
-        if str(receipt["status"] or "") not in {
-            "instagram_story_published",
-            "instagram_story_submitted",
-            "instagram_story_notification_ready",
-        }:
+        if str(receipt["status"] or "") not in {"instagram_story_published", "instagram_story_submitted"}:
             continue
         try:
             previous = json.loads(receipt["payload_json"] or "{}")
@@ -326,7 +322,6 @@ def publish_story_for_product(
     site_url: str,
     story_url_override: str = "",
     story_meta: dict[str, Any] | None = None,
-    link_notification: bool = True,
 ) -> dict[str, Any]:
     row = db.product(int(product_id))
     if row is None:
@@ -363,32 +358,23 @@ def publish_story_for_product(
         image["metadata"] = {"altText": str(alt_texts[0])[:1000]}
 
     ai_generated = bool(data.get("instagram_story_ai_generated") or data.get("social_ai_generated"))
-    tracking_url = str(payload.get("tracking_url") or payload["product_url"])
-    instagram_metadata: dict[str, Any] = {
-        "type": "story",
-        "shouldShareToFeed": False,
-        "isAiGenerated": ai_generated,
-        # Buffer documents this as its Product/Shop Grid link; a native
-        # Instagram Story Link Sticker still requires the mobile handoff.
-        "link": tracking_url,
-    }
-    scheduling_type = "automatic"
-    if link_notification:
-        scheduling_type = "notification"
-        instagram_metadata["stickerFields"] = {
-            "text": "لینک محصول",
-            "other": f'Link Sticker: "لینک محصول" → {tracking_url}',
-        }
     create_input = {
         "text": "",
         "channelId": cfg.channel_id,
-        "schedulingType": scheduling_type,
+        "schedulingType": "automatic",
         "mode": "shareNow",
         "needsApproval": False,
         "saveToDraft": False,
         "source": "3dprinthub-windows-companion-story",
         "assets": [{"image": image}],
-        "metadata": {"instagram": instagram_metadata},
+        "metadata": {
+            "instagram": {
+                "type": "story",
+                "shouldShareToFeed": False,
+                "isAiGenerated": ai_generated,
+                "link": payload.get("tracking_url") or payload["product_url"],
+            }
+        },
     }
     try:
         response = _request_graphql(
@@ -415,24 +401,13 @@ def publish_story_for_product(
     if not story_id:
         raise RuntimeError("Buffer did not return a Story post id")
     provider_status = str(post.get("status") or "").strip().lower()
-    if link_notification:
-        receipt_status = "instagram_story_notification_ready"
-    else:
-        receipt_status = (
-            "instagram_story_published"
-            if provider_status == "sent"
-            else "instagram_story_submitted"
-        )
+    receipt_status = "instagram_story_published" if provider_status == "sent" else "instagram_story_submitted"
     receipt_payload = {
         "channel": "instagram_story",
         "provider": "buffer",
         "provider_post_id": story_id,
         "site_product_url": payload["product_url"],
-        "tracking_url": tracking_url,
-        "story_publish_mode": "notification" if link_notification else "automatic",
-        "link_sticker_required": bool(link_notification),
-        "link_sticker_label": "لینک محصول" if link_notification else "",
-        "instagram_live_confirmed": False if link_notification else provider_status == "sent",
+        "tracking_url": payload.get("tracking_url") or payload["product_url"],
         "story_asset_url": story_url,
         "story_asset_source": story_source,
         "story_style_id": str((story_meta or {}).get("style_id") or ""),
@@ -563,7 +538,6 @@ def publish_product(
     *,
     site_url: str,
     companion_story: bool | None = None,
-    story_link_notification: bool | None = None,
     story_asset_url: str = "",
     story_meta: dict[str, Any] | None = None,
     feed_asset_urls: list[str] | None = None,
@@ -585,14 +559,6 @@ def publish_product(
             companion_story = False
     if not companion_story:
         return feed
-    if story_link_notification is None:
-        if hasattr(db, "setting"):
-            raw = str(
-                db.setting("instagram_story_clickable_link_enabled", "1") or "1"
-            ).strip().lower()
-            story_link_notification = raw not in {"0", "false", "no", "off"}
-        else:
-            story_link_notification = True
     try:
         feed["companion_story"] = publish_story_for_product(
             db,
@@ -601,7 +567,6 @@ def publish_product(
             site_url=site_url,
             story_url_override=story_asset_url,
             story_meta=story_meta,
-            link_notification=bool(story_link_notification),
         )
     except Exception as exc:
         error_payload = {

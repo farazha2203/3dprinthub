@@ -5,23 +5,60 @@
 .p50k-slicebox {
   position: relative;
   width: 100%;
-  padding: 96px 0 72px;
+  padding: 88px 0 44px;
   overflow: hidden;
   background: #f6f9fc;
   color: #444;
 }
 .p50k-slicebox__wrapper {
   position: relative;
-  max-width: 840px;
-  width: 100%;
-  padding: 0 50px;
+  width: min(100%, 1280px);
+  max-width: 1280px;
+  padding: 0 52px;
   margin: 0 auto;
+  box-sizing: border-box;
   direction: ltr;
 }
 .p50k-slicebox .sb-slider {
   margin: 0 auto;
   position: relative;
   z-index: 2;
+  width: 100%;
+  max-width: none !important;
+  aspect-ratio: 16 / 9;
+  border: 0 !important;
+  outline: 0;
+  box-shadow: none !important;
+}
+/* A2Q owner screenshot hardening:
+ * older Slicebox Example-4 markup/CSS used a dedicated shadow-image strip under the
+ * slider. The current template no longer renders it, but explicitly suppress
+ * any legacy/cached node so a stale DOM/global .shadow utility can never draw
+ * the dark horizontal band again.
+ */
+.p50k-slicebox #shadow,
+.p50k-slicebox .shadow#shadow {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.p50k-slicebox .sb-perspective,
+.p50k-slicebox .sb-perspective > div,
+.p50k-slicebox .sb-slider > li,
+.p50k-slicebox .sb-slider > li > a {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
 }
 .p50k-slicebox .sb-slider img {
   width: 100%;
@@ -32,36 +69,63 @@
 .p50k-slicebox .sb-description {
   direction: rtl;
   text-align: right;
-  padding: 18px 20px;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
-  background: rgba(190, 176, 155, 0.44);
-  border-left: 4px solid rgba(255,255,255,0.7);
+  padding: 18px 22px 17px;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(190, 176, 155, 0.72);
+  border-left: 4px solid rgba(255,255,255,0.78);
+  backdrop-filter: blur(8px);
+}
+.p50k-slicebox__product-copy {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.p50k-slicebox__product-copy:hover,
+.p50k-slicebox__product-copy:focus-visible {
+  color: inherit;
+  text-decoration: none;
 }
 .p50k-slicebox .sb-description h3 {
   margin: 0;
-  font-size: 20px;
-  line-height: 1.5;
-  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+  font-size: clamp(20px, 1.8vw, 28px);
+  line-height: 1.45;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.45);
 }
 .p50k-slicebox .sb-description h3 a {
-  color: #4a3c27;
-  text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+  color: #352b1d;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.55);
 }
 .p50k-slicebox .sb-description p {
-  display: none;
+  display: -webkit-box;
+  margin: 7px 0 0;
+  max-width: 920px;
+  overflow: hidden;
+  color: #403626;
+  font-size: 14px;
+  line-height: 1.9;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
-.p50k-slicebox .shadow {
-  width: 100%;
-  height: 168px;
-  position: relative;
-  margin-top: -110px;
-  background: transparent url('../vendor/slicebox/images/shadow.png') no-repeat bottom center;
-  background-size: 100% 100%;
-  z-index: 1;
-  pointer-events: none;
-  display: none;
+.p50k-slicebox__keyword {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 7px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  color: #5b4b34;
+  font-size: 12px;
+  font-weight: 700;
+}
+.p50k-slicebox__cta {
+  display: inline-flex;
+  margin-top: 9px;
+  color: #352b1d;
+  font-size: 13px;
+  font-weight: 800;
 }
 .p50k-slicebox .nav-arrows,
 .p50k-slicebox .nav-dots {
@@ -127,23 +191,55 @@
 }
 @media (max-width: 720px) {
   .p50k-slicebox {
-    padding: 84px 0 48px;
+    padding: 78px 0 30px;
   }
   .p50k-slicebox__wrapper {
+    width: 100%;
+    max-width: none;
     padding: 0 12px;
   }
+  .p50k-slicebox .sb-slider {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+  .p50k-slicebox .sb-slider img {
+    aspect-ratio: 4 / 3;
+    object-position: center center;
+  }
   .p50k-slicebox .sb-description {
-    padding: 10px 12px;
-    bottom: 6px;
-    left: 6px;
-    right: 6px;
+    padding: 8px 10px;
+    bottom: 8px;
+    left: 10px;
+    right: 10px;
+    min-height: 0;
+    background: rgba(42, 35, 26, 0.58);
+    border: 0;
+    backdrop-filter: none;
   }
   .p50k-slicebox .sb-description h3 {
-    font-size: 15px;
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.45;
+    text-shadow: 0 1px 3px rgba(0,0,0,.45);
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
-  .p50k-slicebox .shadow {
-    height: 90px;
-    margin-top: -58px;
+  .p50k-slicebox .sb-description h3 a,
+  .p50k-slicebox .sb-description h3 span {
+    color: #fff;
+  }
+  .p50k-slicebox .sb-description p {
+    display: none;
+  }
+  .p50k-slicebox__keyword {
+    display: none;
+  }
+  .p50k-slicebox__cta {
+    display: none;
   }
   .p50k-slicebox .nav-arrows a {
     width: 38px;

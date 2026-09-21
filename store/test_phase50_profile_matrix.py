@@ -11,8 +11,10 @@ from django.urls import reverse
 
 from website.models import Material
 
+from .epic49_catalog_profile import ProductCatalogProfile
 from .models import Category, PrintQuality, Product, ProductVariant, StoreOrderItem
 from .phase50_profile_matrix import PROFILE_SELECTION_CHOICES, sync_desktop_profile_matrix
+from .phase50_republish_contract import verify_product_republish_contract
 
 
 class Phase50ProfileMatrixTests(TestCase):
@@ -269,6 +271,79 @@ class Phase50ProfileMatrixTests(TestCase):
         )
         self.assertEqual(active, ["20-100"])
 
+    def test_republish_contract_rejects_any_extra_active_legacy_variant(self):
+        rows = self._profiles()[:1]
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+        ProductVariant.objects.create(
+            product=self.product,
+            material=self.material,
+            quality=self.quality,
+            code=f"EP49-3F-{self.product.pk}-STALE",
+            material_weight_grams=Decimal("1"),
+            final_weight_grams=Decimal("1"),
+            print_time_minutes=1,
+            cached_unit_price=104500,
+            is_active=True,
+        )
+        result = verify_product_republish_contract(
+            self.product,
+            SimpleNamespace(),
+            {"sales_profiles_json": rows},
+        )
+        self.assertFalse(result["ok"])
+        self.assertTrue(
+            any("variants.total_active_count" in item for item in result["mismatches"])
+        )
+
+    def test_republish_contract_accepts_material_case_only_difference(self):
+        rows = self._profiles()[:1]
+        rows[0]["material"] = self.material.name.lower()
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+
+        variant = self.product.variants.get(sales_profile_key="20-100")
+        self.assertEqual(variant.material.name, self.material.name)
+        self.assertNotEqual(rows[0]["material"], variant.material.name)
+
+        result = verify_product_republish_contract(
+            self.product,
+            SimpleNamespace(),
+            {"sales_profiles_json": rows},
+        )
+        self.assertTrue(result["ok"], result["mismatches"])
+        self.assertFalse(
+            any(".material:" in item for item in result["mismatches"]),
+            result["mismatches"],
+        )
+
+    def test_republish_contract_accepts_profile_range_with_zero_product_fixed_price(self):
+        rows = self._profiles()[:1]
+        rows[0]["fixed_price"] = 0
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+        ProductCatalogProfile.objects.create(
+            product=self.product,
+            public_slug="profile-matrix-parity",
+            price_min=1095000,
+            price_max=1215000,
+            price_mode="range",
+        )
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.fixed_price, 0)
+
+        result = verify_product_republish_contract(
+            self.product,
+            SimpleNamespace(),
+            {
+                "sales_profiles_json": rows,
+                "price_min": 1095000,
+                "price_max": 1215000,
+            },
+        )
+
+        self.assertTrue(result["ok"], result["mismatches"])
+        self.assertFalse(
+            any("product.fixed_price" in item for item in result["mismatches"])
+        )
+
     def test_invalid_stock_status_is_rejected_without_silent_mapping(self):
         rows = self._profiles()[:1]
         rows[0]["stock_status"] = "invented-state"
@@ -300,7 +375,7 @@ class Phase50ProfileMatrixTests(TestCase):
             "fixed_price": 0,
             "material": self.material.name,
             "brand": "Bambu Lab",
-            "manufacturer": "Bambu Lab",
+            "manufacturer": "Bambu Lab Factory",
             "color": "سفید مات",
             "support_weight_grams": 20,
             "roll_weight_grams": 1000,
@@ -315,7 +390,7 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(variant.support_weight_grams, Decimal("20.00"))
         self.assertIsNotNone(variant.color)
         self.assertEqual(variant.color.brand_name, "Bambu Lab")
-        self.assertEqual(variant.color.manufacturer_name, "Bambu Lab")
+        self.assertEqual(variant.color.manufacturer_name, "Bambu Lab Factory")
         self.assertEqual(variant.color.sale_price_per_roll, 3_600_000)
         self.assertEqual(variant.color.effective_sale_price_per_gram, Decimal("3600"))
 
@@ -326,7 +401,7 @@ class Phase50ProfileMatrixTests(TestCase):
         self.assertEqual(response.status_code, 200)
         meta = response.json()["variants"][str(variant.pk)]
         self.assertEqual(meta["filament_brand_name"], "Bambu Lab")
-        self.assertEqual(meta["filament_manufacturer_name"], "Bambu Lab")
+        self.assertEqual(meta["filament_manufacturer_name"], "Bambu Lab Factory")
         self.assertEqual(meta["support_weight_grams"], "20.00")
 
     def test_storefront_marks_profile_as_single_price_authority(self):

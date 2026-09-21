@@ -195,7 +195,7 @@ def _asset_target(asset: ImportedPrintAsset | None) -> str:
             return product.get_absolute_url()
         except Exception:
             pass
-    return reverse("store:product_list")
+    return reverse("website:home") + "#order"
 
 
 def _candidate_urls(asset: ImportedPrintAsset | None) -> list[str]:

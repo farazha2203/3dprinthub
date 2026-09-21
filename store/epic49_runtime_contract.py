@@ -14,8 +14,8 @@ def install() -> None:
         Catalog Center may replace a legacy/unicode slug with the ASCII public slug in
         the same request that creates/updates a homepage slide.  Read Product by id so
         a cached relation cannot emit the previous slug.  Phase 49.2A retired the
-        external ready-model detail route, therefore a legacy slide without an active
-        Product falls back to the live Store list instead of a removed route.
+        external ready-model detail route, therefore a curated slide without an active
+        Product falls back to the homepage order intake instead of an empty Store or removed route.
         """
         try:
             product_id = getattr(self.asset, "product_id", None)

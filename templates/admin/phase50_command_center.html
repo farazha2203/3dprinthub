@@ -26,6 +26,51 @@
         {% endfor %}
     </div>
 
+    <section class="phase50-card mb-4" aria-labelledby="phase50-payment-readiness-title">
+        <div class="phase50-card-title">
+            <i class="ri-shield-check-line"></i>
+            <h2 id="phase50-payment-readiness-title">آمادگی پرداخت</h2>
+        </div>
+        <div class="phase50-future-grid">
+            <div class="phase50-future-item">
+                <i class="{% if phase50_payment_readiness.gateway_ready %}ri-checkbox-circle-line text-success{% else %}ri-error-warning-line text-warning{% endif %}"></i>
+                <span>درگاه آنلاین:
+                    <strong>{% if phase50_payment_readiness.gateway_ready %}آماده{% else %}غیرفعال / نیازمند تنظیم{% endif %}</strong>
+                </span>
+            </div>
+            <div class="phase50-future-item">
+                <i class="ri-bank-card-line"></i>
+                <span>کارت‌به‌کارت:
+                    <strong>{% if phase50_payment_readiness.manual_active %}فعال و آماده{% elif phase50_payment_readiness.manual_configured %}تنظیم‌شده ولی غیرفعال{% else %}تنظیم نشده{% endif %}</strong>
+                </span>
+            </div>
+            <div class="phase50-future-item">
+                <i class="ri-route-line"></i>
+                <span>Provider: <strong>{{ phase50_payment_readiness.provider|default:"—" }}</strong></span>
+            </div>
+            <div class="phase50-future-item">
+                <i class="ri-key-2-line"></i>
+                <span>Merchant credential:
+                    <strong>{% if phase50_payment_readiness.merchant_configured %}تنظیم شده{% else %}تنظیم نشده{% endif %}</strong>
+                </span>
+            </div>
+            <div class="phase50-future-item">
+                <i class="ri-money-dollar-circle-line"></i>
+                <span>واحد درگاه: <strong>{{ phase50_payment_readiness.currency }}</strong></span>
+            </div>
+            <div class="phase50-future-item">
+                <i class="ri-flask-line"></i>
+                <span>حالت Sandbox:
+                    <strong>{% if phase50_payment_readiness.sandbox %}روشن{% else %}خاموش{% endif %}</strong>
+                </span>
+            </div>
+        </div>
+        {% if not phase50_payment_readiness.gateway_ready and phase50_payment_readiness.gateway_reason %}
+        <p class="text-muted mb-0 mt-3">{{ phase50_payment_readiness.gateway_reason }}</p>
+        {% endif %}
+        <p class="text-muted mb-0 mt-2">این پنل فقط وضعیت پیکربندی را نشان می‌دهد و هیچ Merchant ID، شماره کارت، شبا یا شماره حسابی نمایش نمی‌دهد.</p>
+    </section>
+
     <div class="phase50-grid">
         {% for section in phase50_sections %}
         <section class="phase50-card">

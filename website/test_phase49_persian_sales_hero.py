@@ -69,6 +69,16 @@ class Phase49PersianSalesHeroTests(SimpleTestCase):
         self.assertNotIn("Vesper – Sculptural Bedside Lamp", suggested["title"])
         self.assertNotIn("Cookie Settings", suggested["description"])
 
+    def test_hero_description_is_bounded_to_persisted_model_limit(self):
+        asset = self._asset()
+        data = asset.source_payload["desktop_catalog_v85"]
+        data["homepage_slider_description_fa"] = "توضیح فارسی بلند برای اسلایدر و سفارش چاپ سه‌بعدی. " * 80
+        suggested = hero_suggestions(asset)
+        limit = HomepageHeroSlide._meta.get_field("description").max_length
+        self.assertLessEqual(len(suggested["description"]), limit)
+        slide = HomepageHeroSlide(asset=asset, description=data["homepage_slider_description_fa"])
+        self.assertLessEqual(len(slide.effective_description), limit)
+
     def test_legacy_english_slide_override_cannot_beat_persian_windows_copy(self):
         asset = self._asset()
         slide = HomepageHeroSlide(

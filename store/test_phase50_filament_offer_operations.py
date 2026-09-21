@@ -16,6 +16,7 @@ from django.urls import reverse
 
 from website.models import Material
 
+from .epic49_catalog_profile import ProductCatalogProfile
 from .models import Category, PrintQuality, Product, ProductVariant
 from .phase39_models import MaterialColorOption
 from .phase50_profile_matrix import sync_desktop_profile_matrix
@@ -228,6 +229,135 @@ class Phase50FilamentOfferOperationsTests(TestCase):
         self.assertGreaterEqual(breakdown["estimated_cost"], 1_170_000)
         self.assertEqual(color.current_stock_grams, Decimal("3000"))
         self.assertTrue(variant.color_stock_sufficient)
+
+    def test_desktop_dynamic_profile_matches_catalog_formula_including_preheat(self):
+        profile = ProductCatalogProfile.objects.create(
+            product=self.product,
+            public_slug="filament-offer-ops",
+            pricing_strategy="dynamic",
+            price_mode="variant",
+            # Reproduce the real #625 failure boundary: the persisted Profile
+            # still carried the pre-repair 0/70k service-rate range.
+            price_min=705_000,
+            price_max=825_000,
+        )
+        rows = [{
+            "key": "spino-60-pla-white",
+            "name": "60g PLA White",
+            "size_label": "60g",
+            "weight_grams": 60,
+            "material_weight_grams": 110,
+            "support_weight_grams": 50,
+            "support_cost_multiplier": 1,
+            "print_time_minutes": 180,
+            "assembly_fee": 0,
+            "part_length_cm": 10,
+            "part_width_cm": 10,
+            "part_height_cm": 10,
+            "material": self.material.name,
+            "brand": "eSUN",
+            "manufacturer": "eSUN",
+            "color": "سفید",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 1,
+            "purchase_price_per_roll": 3_500_000,
+            "sale_price_per_roll": 4_500_000,
+            "print_hourly_rate": 150_000,
+            "supervision_hourly_rate": 50_000,
+            "preheat_hours": 4,
+            "preheat_temperature_c": 55,
+            "preheat_hourly_rate": 30_000,
+            "fixed_price": 0,
+            "is_default": True,
+            "is_active": True,
+        }, {
+            "key": "spino-60-pla-bambu",
+            "name": "60g PLA Bambu",
+            "size_label": "60g",
+            "weight_grams": 60,
+            "material_weight_grams": 110,
+            "support_weight_grams": 50,
+            "support_cost_multiplier": 1,
+            "print_time_minutes": 180,
+            "assembly_fee": 0,
+            "part_length_cm": 10,
+            "part_width_cm": 10,
+            "part_height_cm": 10,
+            "material": self.material.name,
+            "brand": "Bambu Lab",
+            "manufacturer": "Bambu Lab",
+            "color": "صورتی پاستیلی",
+            "roll_weight_grams": 1000,
+            "stock_roll_count": 1,
+            "purchase_price_per_roll": 3_500_000,
+            "sale_price_per_roll": 4_500_000,
+            "print_hourly_rate": 150_000,
+            "supervision_hourly_rate": 50_000,
+            "preheat_hours": 0,
+            "preheat_temperature_c": 0,
+            "preheat_hourly_rate": 0,
+            "fixed_price": 0,
+            "is_active": True,
+        }]
+        sync_desktop_profile_matrix(self.product, self._asset(rows))
+        variant = self.product.variants.get(sales_profile_key="spino-60-pla-white")
+        self.assertEqual(variant.part_weight_grams, Decimal("60.00"))
+        self.assertEqual(variant.support_weight_grams, Decimal("50.00"))
+        self.assertEqual(variant.support_cost_multiplier, Decimal("1.00"))
+        self.assertEqual(variant.hourly_rate_override, 150_000)
+        self.assertEqual(variant.supervision_hourly_rate_override, 50_000)
+        result = variant.price_breakdown()
+        self.assertEqual(result["pricing_authority"], "desktop_sales_profile_formula_v1")
+        self.assertEqual(result["material_cost"], 495_000)
+        self.assertEqual(result["machine_cost"], 450_000)
+        self.assertEqual(result["supervision_cost"], 150_000)
+        self.assertEqual(result["preheat_cost"], 120_000)
+        self.assertEqual(result["unit_price"], 1_215_000)
+        self.assertEqual(Decimal(result["actual_material_grams"]), Decimal("110"))
+        self.assertEqual(Decimal(result["chargeable_material_grams"]), Decimal("110"))
+        self.assertEqual(result["billable_print_minutes"], 180)
+
+        # Matrix sync itself is the final mutable-Variant boundary. It must
+        # immediately replace the stale persisted Profile range using the fresh
+        # Desktop-managed rate facts, before parity verification can run.
+        profile.refresh_from_db()
+        self.assertEqual(profile.price_min, 1_095_000)
+        self.assertEqual(profile.price_max, 1_215_000)
+
+        # Historical/manual variants are retained but may not contaminate the
+        # public Catalog range once Desktop-managed CC-P variants exist.
+        ProductVariant.objects.create(
+            product=self.product,
+            material=self.material,
+            quality=self.quality,
+            code="MANUAL-LOW-PRICE",
+            material_weight_grams=Decimal("1"),
+            final_weight_grams=Decimal("1"),
+            print_time_minutes=1,
+            is_active=True,
+        )
+        from . import epic49_catalog_profile
+        asset = SimpleNamespace(
+            commercial_license_status="allowed",
+            license_name="Commercial",
+            license_url="https://example.com/license",
+        )
+        synced = epic49_catalog_profile.sync_catalog_profile(
+            self.product,
+            asset,
+            {
+                "desktop_product_id": 625,
+                "pricing_strategy": "dynamic",
+                "availability_status": "made_to_order",
+                "material_color_options_json": json.dumps([{"material": self.material.name}]),
+            },
+            price_min=1,
+            price_max=2,
+            bump_revision=False,
+        )
+        synced.refresh_from_db()
+        self.assertEqual(synced.price_min, 1_095_000)
+        self.assertEqual(synced.price_max, 1_215_000)
 
     def test_desktop_two_brands_same_material_color_create_distinct_fixed_variants(self):
         base = {

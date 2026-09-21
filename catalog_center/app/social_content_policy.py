@@ -4,28 +4,16 @@ import json
 import re
 from typing import Any
 
-POLICY_VERSION = "instagram-product-v5-20260920"
-MAX_HASHTAGS = 5
+POLICY_VERSION = "instagram-product-v4-20260920"
+MAX_HASHTAGS = 8
 NATIONWIDE_SHIPPING_COPY = "ارسال سفارش به سراسر ایران"
 BRAND_ORDER_COPY = "سفارش این محصول از 3DPrintHub.ir"
 FORBIDDEN_FREE_CLAIMS = (
     "چاپ سه بعدی رایگان",
     "چاپ سه‌بعدی رایگان",
-    "چاپ 3 بعدی رایگان",
     "دانلود رایگان",
     "رایگان",
-    "مجانی",
 )
-_FORBIDDEN_FREE_PATTERNS = (
-    re.compile(
-        r"(?i)(?<!\w)#?free(?:[_\s-]+(?:3d[_\s-]*)?(?:print(?:ing)?|download|stl|model|file|product|shipping))(?!\w)"
-    ),
-    re.compile(
-        r"(?i)(?<!\w)(?:3d[_\s-]*)?(?:print(?:ing)?|download|stl|model|file|product|shipping)[_\s-]+(?:for[_\s-]+)?free(?!\w)"
-    ),
-    re.compile(r"(?i)(?<!\w)#free(?!\w)"),
-)
-
 MAX_CAPTION = 2200
 MAX_ALT_TEXT = 1000
 STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v2_iransans"
@@ -51,20 +39,11 @@ def _json_list(value: Any) -> list[Any]:
     return list(parsed) if isinstance(parsed, list) else []
 
 
-def _contains_false_free_claim(value: Any) -> bool:
-    text = str(value or "")
-    if any(re.search(re.escape(claim), text, flags=re.IGNORECASE) for claim in FORBIDDEN_FREE_CLAIMS):
-        return True
-    return any(pattern.search(text) for pattern in _FORBIDDEN_FREE_PATTERNS)
-
-
 def _strip_false_free_claims(value: Any) -> str:
     text = str(value or "")
     for claim in FORBIDDEN_FREE_CLAIMS:
         text = re.sub(re.escape(claim), " ", text, flags=re.IGNORECASE)
-    for pattern in _FORBIDDEN_FREE_PATTERNS:
-        text = pattern.sub(" ", text)
-    text = re.sub(r"[ \t]+([،,:؛;.!؟?])", r"\1", text)
+    text = re.sub(r"[ \t]+([،,:؛;.!؟?])", r"\\1", text)
     return re.sub(r"\s+", " ", text).strip(" -–—|،,:؛;")
 
 
@@ -98,7 +77,7 @@ def build_hashtags(row: dict[str, Any]) -> list[str]:
     )
     dynamic_limit = max(0, MAX_HASHTAGS - len(fixed_tags))
     tags = []
-    for item in _unique([value for value in raw if not _contains_false_free_claim(value)]):
+    for item in _unique(raw):
         text = item.lstrip("#").strip().replace(" ", "_")
         text = re.sub(r"[^\w\u0600-\u06FF_]+", "", text)
         if len(text) < 2:
@@ -157,7 +136,7 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
         parts.append("مشخصات: " + " | ".join(specs))
     parts.append(f"🛒 {BRAND_ORDER_COPY}")
     parts.append(f"🚚 {NATIONWIDE_SHIPPING_COPY}")
-    parts.append("🔗 لینک محصول: از استوری «لینک محصول» یا لینک پروفایل وارد صفحه سفارش شوید.")
+    parts.append(f"مشاهده محصول، انتخاب مشخصات و ثبت سفارش:\n{tracking_url}")
     if hashtags:
         parts.append(" ".join(hashtags))
     caption = "\n\n".join(part for part in parts if part).strip()

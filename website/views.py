@@ -952,23 +952,15 @@ def home_view(request):
         newest_first=True,
     )
     # PHASE45_MANAGED_HERO_QUERY
-    # Public Hero is slide-authoritative, not Store-count-authoritative. Curated
-    # source-backed slides remain valid while the Store is intentionally empty;
-    # active Product-backed slides still deep-link to their Product. Rejected or
-    # archived source assets remain fail-closed.
-    from django.db.models import Q as _phase50_hero_Q
-
-    homepage_hero_slides = list(
+    # Prefer curated Product-backed slides whenever at least one active Product
+    # is available. This keeps the customer-facing Slicebox on Site-owned
+    # Product media and avoids making its first-image sizing depend on an
+    # external source hotlink. Approved source-only slides remain the fallback
+    # for the intentionally empty-Store state.
+    homepage_hero_base = (
         HomepageHeroSlide.objects.filter(
             is_active=True,
             asset__isnull=False,
-        )
-        .filter(
-            _phase50_hero_Q(asset__product__is_active=True)
-            | _phase50_hero_Q(
-                asset__product__isnull=True,
-                asset__commercial_license_status__in=("allowed", "owned", "public_domain"),
-            )
         )
         .exclude(asset__editorial_status__in=("rejected", "archived", "license_review"))
         .select_related(
@@ -980,6 +972,18 @@ def home_view(request):
         )
         .order_by("sort_order", "id")
     )
+    product_homepage_hero_slides = list(
+        homepage_hero_base.filter(asset__product__is_active=True)
+    )
+    if product_homepage_hero_slides:
+        homepage_hero_slides = product_homepage_hero_slides
+    else:
+        homepage_hero_slides = list(
+            homepage_hero_base.filter(
+                asset__product__isnull=True,
+                asset__commercial_license_status__in=("allowed", "owned", "public_domain"),
+            )
+        )
     catalog_groups, catalog_preview = categorized_presentation(
         limit=presentation_setting.catalog_preview_count,
     )

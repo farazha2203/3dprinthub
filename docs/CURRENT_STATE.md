@@ -1,3 +1,15 @@
+## 2026-09-21 - Phase50.A.2Y LINEAGE CONVERGENCE LOCAL_TESTED / MERGE COMMIT + EXACT-SHA QT NEXT
+
+Clean convergence worktree: `D:\projects\3DPrintHub-a2y-converge` on branch `wip/phase50-a2y-lineage-convergence-20260921`. It starts from A2Y planning head `c593eaf4b9f23652986231ee1c5581bfee9a7d70` (latest Windows parent `c86c66a1...`) and merges Production/Server closure `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`. The pre-existing dirty planning worktree was deliberately left untouched.
+
+Conflict policy was evidence-based: latest Windows/Qt/A2W/Slider workspace remained authoritative for Desktop conflicts; hardened A2S Social provider/policy deltas were retained; Store authoritative republish/payment/finance and Production Hero/public-media code came from the Server lineage. No Catalog/SQLite/Production mutation occurred.
+
+Verification on the merged tree: Windows A2W/Slider/Image/Social focused gate **94/94 PASS**; Server unified import/Profile/republish/payment/finance/Hero gate **52/52 PASS** after correcting one stale baseline mobile-Hero cache assertion from 50.8.0 to accepted Production 50.10.0; broad Windows gate **115/116** with only the already-proven baseline ERR-49-203 Manufacturer-vs-Brand assertion; 46 changed Python files compile; Django check and no-migration-drift PASS; `git diff --check` PASS; Qt `RUN_QT.ps1 -VerifyOnly` PASS.
+
+Production A2X closure behavior is present in the unified tree: material parity uses case-insensitive identity, Hero persistence uses Product-owned public media, authoritative Desktop SEO/re-publish remains fail-closed, A2S finance/reviewer code is retained, and current Slicebox cache contract is 50.10.0. No migration/dependency delta was introduced by conflict resolution.
+
+Exact next in A2Y: create the convergence merge commit -> push and verify Local=GitHub -> launch Qt from that exact unified SHA -> retarget Desktop shortcut only after runtime smoke -> re-run final clean status/launcher proof -> documentation closure. Production deploy is not required merely for lineage convergence because Server runtime changes are already live; Catalog backfill remains A2Z.
+
 ## 2026-09-21 - Phase50.A.2Y MASTER RECONCILIATION / DOCUMENTATION TRUTH FROZEN
 
 Repository/chat-archive audit found a real split forward state. Latest Windows/Product work is clean and remote-exact at `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd` in `D:\projects\3DPrintHub-a2u-latest-windows`; the Desktop shortcut already points to that worktree. Current Production/Server closure is `e03bdd2b718fae3ce030df789c8b9db958d8d8ed` on Host branch `release/phase50-a2j-hero-20260915`. Neither head is an ancestor of the other; merge-base is `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`. Therefore permanent feature work is blocked on A2Y convergence rather than choosing either lineage and risking regression.

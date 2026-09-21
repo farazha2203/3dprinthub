@@ -30,7 +30,7 @@ class Phase45HomepageHeroContractTests(SimpleTestCase):
     def test_reference_slicebox_component_and_mobile_contract_is_current(self):
         css = self.read("static/css/phase50-a2k-tympanus-slicebox.css")
         vendor = self.read("static/vendor/slicebox/css/slicebox.css")
-        self.assertIn("max-width: 840px", css)
+        self.assertIn("max-width: 1280px", css)
         self.assertIn("background: #f6f9fc", css)
         self.assertNotIn("fancy_deboss.png", css)
         self.assertIn("@media (max-width: 720px)", css)

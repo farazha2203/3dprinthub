@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from store.models import AffiliatePayout, CostEntry, FilamentPurchase, ProductionJob, StoreOrder, StorePayment
@@ -33,9 +33,40 @@ class Phase50AAdminCommandCenterTests(TestCase):
         self.assertContains(response, "انبار و تولید")
         self.assertContains(response, "دریافت‌های خدمات")
         self.assertContains(response, "پرداخت‌های فروشگاه")
+        self.assertContains(response, "تنظیمات کارت‌به‌کارت")
+        self.assertContains(response, "آمادگی پرداخت")
         self.assertContains(response, "دفتر رخدادهای پرداخت خدمات")
         self.assertContains(response, "خریدهای فیلامنت")
         self.assertContains(response, "کدینگ حساب‌ها: کل / معین / تفصیلی")
+
+    @override_settings(
+        PAYMENT_GATEWAY_ENABLED=False,
+        ZARINPAL_MERCHANT_ID="",
+        ZARINPAL_SANDBOX=False,
+        ZARINPAL_CURRENCY="IRT",
+    )
+    def test_payment_readiness_panel_is_secret_safe_and_reports_manual_state(self):
+        from store.phase50_commerce_policy import StorePaymentSettings
+
+        StorePaymentSettings.objects.create(
+            title="پرداخت دستی تست",
+            account_holder="Test Operator",
+            card_number="0000000000000000",
+            is_active=True,
+        )
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("phase50_admin_command_center"))
+
+        self.assertEqual(response.status_code, 200)
+        readiness = response.context["phase50_payment_readiness"]
+        self.assertFalse(readiness["gateway_ready"])
+        self.assertFalse(readiness["merchant_configured"])
+        self.assertTrue(readiness["manual_configured"])
+        self.assertTrue(readiness["manual_active"])
+        self.assertEqual(readiness["currency"], "IRT")
+        self.assertContains(response, "آمادگی پرداخت")
+        self.assertContains(response, "فعال و آماده")
+        self.assertNotContains(response, "0000000000000000")
 
     def test_phase50a_admin_navigation_contract_has_no_new_models(self):
         contracts = {
