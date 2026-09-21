@@ -59,31 +59,34 @@ The Multicolor Profile remains two simultaneous factual slots (11g `#804003` + 3
 Stage 2 exposes `W4 تطبیق Filament محلی` and a read-only review dialog. W4 focused regression 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 gate 49/49 PASS; retained media/site gate 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Rollback ref is `backup/pre-phase50-a2w-w4-material-mapping-20260921` at `eda42e84b0bf39052fb76aa3c74e35b7dd0a85e5`.
 
 ## W4.1 — Source Profile dimensions (LOCAL_TESTED)
-W4.1 preserves dimensional evidence without fabricating missing axes. MakerWorld Description text is parsed deterministically for labeled size/version dimensions and generic L×W×H values, normalized to cm, and attached to Source Profiles only when ordered size evidence and Profile counts match unambiguously.
+W4.1 preserves factual dimensional evidence while applying the owner-approved operational Profile rule. MakerWorld Description text is parsed deterministically for labeled size/version dimensions and generic L×W×H values, normalized to cm, and attached to Source Profiles only when ordered size evidence and Profile counts match unambiguously. If exactly one factual dimension exists for a size, that numeric value is copied to all three operational Profile axes; the factual axis remains `source_description` and the derived axes are marked `owner_equal_dimension_rule`.
 
-Partial Source facts stay partial. For example, real Hydra Product #628 / MakerWorld 3179519 exposes exactly:
-- Profile 3595936 -> Small Version -> Height 120mm = 12cm;
-- Profile 3596024 -> Large Version -> Height 180mm = 18cm.
+Real Hydra Product #628 / MakerWorld 3179519 exposes exactly:
+- Profile 3595936 -> Small Version -> factual Height 120mm = 12cm -> operational size 12×12×12cm;
+- Profile 3596024 -> Large Version -> factual Height 180mm = 18cm -> operational size 18×18×18cm.
 
-The latest captured MakerWorld meta concatenates the second unit with the next numbered heading as `180 mm2. Support...`; the parser explicitly accepts this numbered-section boundary while retaining strict unit matching. Length and width remain unknown because the Source did not provide them, and the Qt Profile editor renders those axes as `نامشخص` rather than pretending they are factual zero/full dimensions.
+The latest captured MakerWorld meta concatenates the second unit with the next numbered heading as `180 mm2. Support...`; the parser explicitly accepts this numbered-section boundary while retaining strict unit matching. Source provenance still records only Height as factual, while the owner rule supplies matching Length/Width operational values.
 
-Owner-estimated fallback is separate provenance. For #625, existing Profile 1 5×5×5cm is preserved. Only still-missing axes on Profile 2 may receive the explicit owner-approved 4×4×4cm fallback, marked `owner_estimated`. Factual Source axes always win only for the same axis. Dimension-only reconciliation must preserve operator Filaments, pricing, production weight/time, manual Profiles, Site Product identity/revision and publish state.
+Owner-estimated fallback is separate provenance. For #625, existing Profile 1 5×5×5cm is preserved. Only still-missing axes on Profile 2 may receive the explicit owner-approved 4×4×4cm fallback, marked `owner_estimated`. Factual Source axes always win the same axis.
 
-Local gates: focused 10/10 PASS; corrected Commerce/Profile + W3/W4/W4.1 59/59 PASS; retained media/site 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Real latest-capture Hydra parse proves exact 12/18cm binding. Rollback ref: `backup/pre-phase50-a2w-w41-source-dimensions-20260921` -> `f8a23ab0e903912a3e67c2829f53ceacd1b3c376`.
+Material-family hydration is now part of operator-ready Source Profile creation/repair: if Source declares PLA, every active exact-family Local PLA offer is selected/added automatically. Real Catalog currently has 16 active PLA offers. Exact matching excludes PLA-CF/HT-PLA-GF/PETG; concrete operator Filament choices are preserved and brandless Source placeholders are removed once real Local offers exist. Reconciliation must preserve pricing, production weight/time, manual Profiles, Site Product identity/revision and publish state.
+
+Local gates after owner correction: focused Source/Profile+dimension 15/15 PASS; W4 mapping 5/5 PASS; corrected Commerce/Profile + W3/W4/W4.1 59/59 PASS; retained media/site 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Real-Catalog read-only simulation proves #628 Small=12×12×12 + 16 PLA and Large=18×18×18 + 16 PLA; #625 Profile 1 remains 5×5×5 + 16 PLA and Profile 2 receives 16 PLA before its explicit 4×4×4 fallback. Owner-correction rollback ref: `backup/pre-phase50-a2w-w41-owner-dimension-filament-correction-20260921` -> `436d34f2e62532ea5890b44400d1d236ed3b53a1`.
 
 ### W4.1 acceptance gates
 - [x] Exact/partial dimension parser with cm normalization and provenance.
 - [x] Fail-closed ordered binding on count mismatch.
-- [x] Qt `نامشخص` display for unknown Source axes; manual Profile full-dimension validation preserved.
-- [x] Dimension-only Ledger patch preserves commerce and non-dimension fields.
+- [x] Owner equal-dimension rule: one factual Source dimension populates all three operational axes with explicit provenance; manual Profile full-dimension validation preserved.
+- [x] Source=PLA automatically hydrates every active exact-family Local PLA offer; non-PLA families excluded and concrete operator choices preserved.
+- [x] Profile repair preserves non-dimension commerce/production/Site fields.
 - [x] Compact MakerWorld numbered-section regression.
-- [x] Real Hydra latest-capture Small=12cm / Large=18cm proof.
-- [x] Focused 10/10 + Commerce/Profile 59/59 + retained 83/83 + compile/diff/Qt VerifyOnly PASS.
+- [x] Real Hydra latest-capture operational sizes 12×12×12 / 18×18×18 and real Local PLA count 16/16 proof.
+- [x] Focused 15/15 + W4 mapping 5/5 + Commerce/Profile 59/59 + retained 83/83 + compile/diff/Qt VerifyOnly PASS.
 - [ ] Exact GitHub SHA push/readback.
 - [ ] Fresh integrity-checked Catalog backup.
 - [ ] Exact-SHA Qt runtime launch.
-- [ ] Controlled real #628 patch: height 12/18cm, length/width unknown, all non-dimension invariants unchanged.
-- [ ] Controlled real #625 patch: preserve Profile 1 5×5×5; fill only Profile 2 missing axes with estimated 4×4×4; non-dimension/Site invariants unchanged.
+- [ ] Controlled real #628 patch: operational dimensions 12×12×12 / 18×18×18 + all 16 active Local PLA offers on both Source Profiles; all unrelated invariants unchanged.
+- [ ] Controlled real #625 patch: preserve Profile 1 5×5×5, ensure all 16 active Local PLA offers on both Source Profiles, fill only Profile 2 missing axes with estimated 4×4×4; non-dimension/Site invariants unchanged.
 
 ## W5 — Manual Product creation (planned)
 Add a first-class manual/self-produced Product flow with operator title/notes/media, optional video and normal Profile/Filament controls. AI may generate SEO/content from operator-provided description and images, but must not invent technical production facts.

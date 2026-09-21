@@ -1867,9 +1867,13 @@ class CommerceCore:
             raise RuntimeError("ابتدا «دریافت پروفایل از محصول» را اجرا کن.")
 
         current = self.profiles(product_id)
+        filament_rows = FilamentParityCore(self.db).list()
         candidate_keys = {
             str(item.get("key") or "")
-            for item in ledger_candidates(source_profiles)
+            for item in ledger_candidates(
+                source_profiles,
+                filament_rows=filament_rows,
+            )
             if str(item.get("key") or "")
         }
         previous_source_keys = {
@@ -1877,7 +1881,11 @@ class CommerceCore:
             for item in current
             if str(item.get("key") or "") in candidate_keys
         }
-        merged = merge_source_ledger_profiles(current, source_profiles)
+        merged = merge_source_ledger_profiles(
+            current,
+            source_profiles,
+            filament_rows=filament_rows,
+        )
         saved = self.save_profiles(product_id, merged)
         saved_source = [
             item for item in saved
@@ -1888,6 +1896,10 @@ class CommerceCore:
             "imported_profile_count": len(saved_source),
             "added": max(0, len(candidate_keys - previous_source_keys)),
             "updated": len(candidate_keys & previous_source_keys),
+            "local_filament_count": sum(
+                len(item.get("material_options") or [])
+                for item in saved_source
+            ),
             "profiles": saved_source,
         }
 

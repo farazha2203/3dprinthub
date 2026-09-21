@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from .epic49_desktop_schema import normalize_material_color_options
+
 
 def _walk(node: Any):
     yield node
@@ -375,16 +377,97 @@ def profiles_from_latest_capture(row: dict[str, Any]) -> tuple[list[dict[str, An
     return profiles, capture
 
 
+def _profile_dimension_payload(source: dict[str, Any]) -> dict[str, Any]:
+    """Build operational Profile dimensions while preserving factual provenance.
+
+    Owner rule: when Source provides exactly one dimensional axis for a Size,
+    use that numeric value for all three Profile axes. The supplied axis remains
+    factual; the other two axes are explicitly marked as owner-rule estimates.
+    """
+    raw_dims = {
+        axis: max(0.0, _float((source.get("dimensions_cm") or {}).get(axis), 0))
+        for axis in ("length", "width", "height")
+    }
+    factual_axes = [
+        axis
+        for axis in (source.get("dimension_known_axes") or [])
+        if axis in {"length", "width", "height"} and raw_dims.get(axis, 0) > 0
+    ]
+    if not factual_axes:
+        factual_axes = [
+            axis for axis in ("length", "width", "height")
+            if raw_dims.get(axis, 0) > 0
+        ]
+
+    dims = dict(raw_dims)
+    axis_sources = {
+        axis: "source_description"
+        for axis in factual_axes
+    }
+    owner_equal_fill = False
+    if len(factual_axes) == 1:
+        scalar = raw_dims[factual_axes[0]]
+        if scalar > 0:
+            for axis in ("length", "width", "height"):
+                if dims.get(axis, 0) <= 0:
+                    dims[axis] = scalar
+                    axis_sources[axis] = "owner_equal_dimension_rule"
+                    owner_equal_fill = True
+
+    known_axes = [
+        axis for axis in ("length", "width", "height")
+        if dims.get(axis, 0) > 0
+    ]
+    if not known_axes:
+        return {
+            "dimensions_cm": {},
+            "dimension_axis_sources": {},
+            "dimension_known_axes": [],
+            "dimension_factual_axes": [],
+            "dimension_source": "",
+            "dimension_is_estimated": False,
+        }
+
+    if owner_equal_fill:
+        dimension_source = "mixed"
+    else:
+        dimension_source = str(
+            source.get("dimension_source") or "source_description"
+        )
+    return {
+        "dimensions_cm": {
+            axis: dims[axis]
+            for axis in ("length", "width", "height")
+            if dims.get(axis, 0) > 0
+        },
+        "dimension_axis_sources": axis_sources,
+        "dimension_known_axes": known_axes,
+        "dimension_factual_axes": factual_axes,
+        "dimension_source": dimension_source,
+        "dimension_is_estimated": bool(
+            owner_equal_fill or source.get("dimension_is_estimated", False)
+        ),
+    }
+
+
 def _source_dimension_size_label(
     source: dict[str, Any],
     instance_id: int,
 ) -> str:
-    dims = dict(source.get("dimensions_cm") or {})
+    payload = _profile_dimension_payload(source)
+    dims = dict(payload.get("dimensions_cm") or {})
     label = re.sub(
         r"(?i)\s+(?:version|size)\b",
         "",
         str(source.get("dimension_label") or ""),
     ).strip()
+    if all(_float(dims.get(axis), 0) > 0 for axis in ("length", "width", "height")):
+        prefix = f"{label} " if label else ""
+        return (
+            f"{prefix}{_float(dims['length']):g} x "
+            f"{_float(dims['width']):g} x "
+            f"{_float(dims['height']):g} cm"
+        )[:80]
     tokens = []
     for axis, short in (("length", "L"), ("width", "W"), ("height", "H")):
         value = _float(dims.get(axis), 0)
@@ -397,7 +480,8 @@ def _source_dimension_size_label(
 
 
 def _source_dimension_fields(source: dict[str, Any]) -> dict[str, Any]:
-    dims = dict(source.get("dimensions_cm") or {})
+    payload = _profile_dimension_payload(source)
+    dims = dict(payload.get("dimensions_cm") or {})
     output: dict[str, Any] = {}
     for axis, field in (
         ("length", "part_length_cm"),
@@ -409,26 +493,25 @@ def _source_dimension_fields(source: dict[str, Any]) -> dict[str, Any]:
             output[field] = value
     if output:
         output.update({
-            "dimension_source": str(
-                source.get("dimension_source") or "source_description"
-            ),
+            "dimension_source": str(payload.get("dimension_source") or ""),
             "dimension_is_estimated": bool(
-                source.get("dimension_is_estimated", False)
+                payload.get("dimension_is_estimated", False)
             ),
             "dimension_label": str(source.get("dimension_label") or ""),
             "dimension_evidence": str(source.get("dimension_evidence") or ""),
             "dimension_known_axes": list(
-                source.get("dimension_known_axes") or []
+                payload.get("dimension_known_axes") or []
+            ),
+            "dimension_factual_axes": list(
+                payload.get("dimension_factual_axes") or []
             ),
             "dimension_binding": str(
                 source.get("dimension_binding")
                 or "ordered_description_to_profile"
             ),
-            "dimension_axis_sources": {
-                axis: "source_description"
-                for axis in (source.get("dimension_known_axes") or [])
-                if axis in {"length", "width", "height"}
-            },
+            "dimension_axis_sources": dict(
+                payload.get("dimension_axis_sources") or {}
+            ),
         })
     return output
 
@@ -477,16 +560,28 @@ def patch_source_ledger_dimensions(
 
         before = deepcopy(item)
         exact_fields = _source_dimension_fields(source)
-        exact_axes = set(source.get("dimension_known_axes") or [])
+        source_axis_sources = dict(
+            exact_fields.get("dimension_axis_sources") or {}
+        )
         axis_sources = dict(item.get("dimension_axis_sources") or {})
         for axis, field in (
             ("length", "part_length_cm"),
             ("width", "part_width_cm"),
             ("height", "part_height_cm"),
         ):
-            if axis in exact_axes and _float(exact_fields.get(field), 0) > 0:
-                item[field] = _float(exact_fields[field], 0)
-                axis_sources[axis] = "source_description"
+            value = _float(exact_fields.get(field), 0)
+            if value <= 0:
+                continue
+            authority = str(source_axis_sources.get(axis) or "")
+            if authority == "source_description":
+                item[field] = value
+                axis_sources[axis] = authority
+            elif (
+                authority == "owner_equal_dimension_rule"
+                and _float(item.get(field), 0) <= 0
+            ):
+                item[field] = value
+                axis_sources[axis] = authority
 
         fallback = _fallback_dimensions(fallbacks.get(key))
         used_fallback = False
@@ -505,7 +600,8 @@ def patch_source_ledger_dimensions(
             value == "source_description" for value in axis_sources.values()
         )
         estimated_used = any(
-            value == "owner_estimated" for value in axis_sources.values()
+            value in {"owner_estimated", "owner_equal_dimension_rule"}
+            for value in axis_sources.values()
         )
         if exact_used or estimated_used:
             item["dimension_axis_sources"] = axis_sources
@@ -519,6 +615,11 @@ def patch_source_ledger_dimensions(
             item["dimension_known_axes"] = [
                 axis for axis in ("length", "width", "height")
                 if axis in axis_sources
+            ]
+            item["dimension_factual_axes"] = [
+                axis
+                for axis in (exact_fields.get("dimension_factual_axes") or [])
+                if axis in {"length", "width", "height"}
             ]
             if exact_used:
                 item["dimension_label"] = str(
@@ -569,7 +670,140 @@ def patch_source_ledger_dimensions(
     }
 
 
-def ledger_candidates(source_profiles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _source_material_families(source: dict[str, Any]) -> set[str]:
+    families = {
+        str(value or "").strip().casefold()
+        for value in (source.get("material_families") or [])
+        if str(value or "").strip()
+    }
+    for filament in source.get("filaments") or []:
+        if not isinstance(filament, dict):
+            continue
+        material = str(filament.get("material") or "").strip()
+        if material:
+            families.add(material.casefold())
+    return families
+
+
+def _source_placeholder_options(source: dict[str, Any]) -> list[dict[str, Any]]:
+    output: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for filament in source.get("filaments") or []:
+        if not isinstance(filament, dict):
+            continue
+        material = str(filament.get("material") or "").strip()
+        color_hex = str(filament.get("color_hex") or "").strip().upper()
+        if not material:
+            continue
+        key = (material.casefold(), color_hex.casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append({
+            "material": material,
+            "brand": "",
+            "manufacturer": "",
+            "color": color_hex or "Source color",
+            "hex": color_hex,
+            "description": (
+                "Source-declared material/color; local Filament mapping pending."
+            ),
+        })
+    return output
+
+
+def local_filament_options_for_source(
+    source: dict[str, Any],
+    filament_rows: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    families = _source_material_families(source)
+    if not families or not filament_rows:
+        return []
+    output: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str, str]] = set()
+    for raw in filament_rows:
+        if not isinstance(raw, dict):
+            continue
+        material = str(
+            raw.get("material")
+            or raw.get("material_name")
+            or ""
+        ).strip()
+        if material.casefold() not in families:
+            continue
+        normalized = normalize_material_color_options([raw])
+        if not normalized:
+            continue
+        item = dict(normalized[0])
+        item["local_offer_id"] = _int(
+            raw.get("id") or raw.get("_row_id"),
+            0,
+        )
+        key = (
+            str(item.get("material") or "").strip().casefold(),
+            str(item.get("brand") or "").strip().casefold(),
+            str(item.get("color") or "").strip().casefold(),
+            str(item.get("color_type") or "").strip().casefold(),
+            str(item.get("color_finish") or "").strip().casefold(),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(item)
+    return output
+
+
+def _material_option_key(item: dict[str, Any]) -> tuple[str, str, str, str, str]:
+    return (
+        str(item.get("material") or item.get("material_name") or "")
+        .strip().casefold(),
+        str(item.get("brand") or item.get("brand_name") or "")
+        .strip().casefold(),
+        str(item.get("color") or item.get("color_name") or "")
+        .strip().casefold(),
+        str(item.get("color_type") or item.get("type") or "solid")
+        .strip().casefold(),
+        str(item.get("color_finish") or item.get("finish") or "matte")
+        .strip().casefold(),
+    )
+
+
+def _merge_local_filament_options(
+    existing: list[dict[str, Any]],
+    local_options: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    normalized_existing = normalize_material_color_options(existing or [])
+    output: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str, str]] = set()
+
+    for item in normalized_existing:
+        description = str(item.get("description") or "")
+        is_source_placeholder = (
+            not str(item.get("brand") or "").strip()
+            and "local Filament mapping pending" in description
+        )
+        if is_source_placeholder:
+            continue
+        key = _material_option_key(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(dict(item))
+
+    for item in local_options:
+        key = _material_option_key(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(dict(item))
+    return output
+
+
+def ledger_candidates(
+    source_profiles: list[dict[str, Any]],
+    *,
+    filament_rows: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
     for index, source in enumerate(source_profiles, 1):
         if not isinstance(source, dict):
@@ -577,22 +811,12 @@ def ledger_candidates(source_profiles: list[dict[str, Any]]) -> list[dict[str, A
         instance_id = _int(source.get("instance_id"), 0)
         if instance_id <= 0:
             continue
-        options = []
-        for filament in source.get("filaments") or []:
-            if not isinstance(filament, dict):
-                continue
-            material = str(filament.get("material") or "").strip()
-            color_hex = str(filament.get("color_hex") or "").strip().upper()
-            if not material:
-                continue
-            options.append({
-                "material": material,
-                "brand": "",
-                "manufacturer": "",
-                "color": color_hex or "Source color",
-                "hex": color_hex,
-                "description": "Source-declared material/color; local Filament mapping pending.",
-            })
+        options = local_filament_options_for_source(
+            source,
+            filament_rows,
+        )
+        if not options:
+            options = _source_placeholder_options(source)
         candidate = {
             "key": f"source-mw-{instance_id}",
             "name": str(source.get("name") or f"Source Profile {index}")[:120],
@@ -621,12 +845,22 @@ def ledger_candidates(source_profiles: list[dict[str, Any]]) -> list[dict[str, A
 def merge_source_ledger_profiles(
     current_profiles: list[dict[str, Any]],
     source_profiles: list[dict[str, Any]],
+    *,
+    filament_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    candidates = ledger_candidates(source_profiles)
+    candidates = ledger_candidates(
+        source_profiles,
+        filament_rows=filament_rows,
+    )
     candidate_map = {
         str(item.get("key") or ""): deepcopy(item)
         for item in candidates
         if str(item.get("key") or "")
+    }
+    source_map = {
+        f"source-mw-{_int(item.get('instance_id'), 0)}": dict(item)
+        for item in (source_profiles or [])
+        if isinstance(item, dict) and _int(item.get("instance_id"), 0) > 0
     }
     current = [
         deepcopy(item)
@@ -634,6 +868,26 @@ def merge_source_ledger_profiles(
         if isinstance(item, dict)
     ]
     existing_keys = {str(item.get("key") or "") for item in current}
+
+    for item in current:
+        key = str(item.get("key") or "")
+        source = source_map.get(key)
+        if source is None:
+            continue
+        local_options = local_filament_options_for_source(
+            source,
+            filament_rows,
+        )
+        if local_options:
+            item["material_options"] = _merge_local_filament_options(
+                [
+                    dict(option)
+                    for option in (item.get("material_options") or [])
+                    if isinstance(option, dict)
+                ],
+                local_options,
+            )
+
     for key, candidate in candidate_map.items():
         if key not in existing_keys:
             current.append(candidate)

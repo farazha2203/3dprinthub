@@ -1,3 +1,11 @@
+## ERR-49-209 - W4.1 first accepted UI still left unknown axes and Source Profiles without Local Filaments
+**Date:** 2026-09-21
+**Observed:** owner runtime on pushed W4.1 commit `436d34f2...` showed Hydra Small with Height=12cm but Length/Width as `نامشخص`, and saving failed because the Source Profile had no concrete Local Filament selected.
+**Root cause:** the first W4.1 contract deliberately preserved only factual axes and kept W4 Local Filament mapping as a separate preview. The owner clarified the operational rule: a single Source size dimension should be copied to all three Profile axes, and a Source material family such as PLA should preselect every compatible active Local PLA offer in the created Profile.
+**Correct fix:** derive operational dimensions through an explicit owner equal-dimension rule while preserving factual-axis provenance; hydrate Source Ledger Profiles with all active exact-family Local Filament offers during import/repair; replace brandless Source placeholders only when concrete Local matches exist; preserve operator concrete choices.
+**Verification:** focused Source/Profile+dimension 15/15 PASS, W4 mapping 5/5 PASS, mature Commerce/Profile+W3/W4/W4.1 59/59 PASS, retained media/site 83/83 PASS, compile/diff/Qt VerifyOnly PASS. Read-only real-Catalog simulation gives #628 Small=12×12×12 + 16 PLA, Large=18×18×18 + 16 PLA, #625 Profile 1=5×5×5 +16 PLA preserved, Profile 2=16 PLA ready for 4×4×4 fallback.
+**Prevention:** Source-fact storage and operator-ready Profile defaults are separate contracts. Owner-approved operational derivation must carry explicit provenance, and material-family Source imports must be regression-tested against the real Local Filament registry before runtime acceptance.
+
 ## ERR-49-208 - W4.1 real Hydra meta used compact numbered-section text after the unit
 **Date:** 2026-09-21
 **Observed:** synthetic Description tests passed, but the first real latest-capture Hydra gate returned two Source Profiles with no dimension enrichment.

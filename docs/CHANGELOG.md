@@ -1,3 +1,12 @@
+## 2026-09-21 - Phase50.A.2W W4.1 owner correction — dimensions + PLA defaults Local tested
+- Owner correction changes operational size behavior: when a Source Size exposes exactly one factual dimension (for example Height=12cm), the created Source Profile uses that same numeric value for all three operational axes, so Hydra Small becomes 12×12×12cm and Large becomes 18×18×18cm. Provenance still records Height as factual and Length/Width as `owner_equal_dimension_rule`.
+- Source material-family defaults now hydrate real Local Filaments during Source Profile import/repair. If Source says PLA, every active exact-family Local PLA offer is selected/added; PLA-CF/HT-PLA-GF/PETG are excluded by exact family matching.
+- Real Local Catalog currently has 16 active PLA offers across Bambulab, E-Sun/ESUN and PolyGround. Read-only simulation proves both #628 Source Profiles receive 16/16 PLA offers.
+- #625 safety is preserved: Profile 1 keeps existing 5×5×5cm and receives/retains 16 PLA; Profile 2 receives 16 PLA and only its still-missing dimensions are eligible for the explicit owner 4×4×4 estimated fallback.
+- Source placeholders without Brand are removed when concrete compatible Local offers exist; operator-owned concrete Filament choices are preserved/deduplicated.
+- Verification: Source/Profile+dimension focused 15/15 PASS, W4 mapping 5/5 PASS, mature Commerce/Profile+W3/W4/W4.1 59/59 PASS, retained media/site 83/83 PASS, py_compile/diff-check/Qt VerifyOnly PASS.
+- Rollback ref: `backup/pre-phase50-a2w-w41-owner-dimension-filament-correction-20260921` -> `436d34f2...`. No real Catalog/Host/Production mutation yet.
+
 ## 2026-09-21 - Phase50.A.2W W4.1 Source dimension evidence — Local tested
 - Added deterministic Description dimension extraction for labeled Source sizes and generic L×W×H values, with unit normalization to cm and no AI/inference.
 - Added fail-closed ordered binding: Description size records map to Source Profiles only when counts match, preventing ambiguous multi-size guessing.

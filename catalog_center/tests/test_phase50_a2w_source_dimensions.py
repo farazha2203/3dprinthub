@@ -131,16 +131,43 @@ class Phase50A2WSourceDimensionTests(unittest.TestCase):
             {"length": 5.08, "width": 7.62, "height": 10.16},
         )
 
-    def test_ledger_candidates_keep_partial_source_dimension(self):
+    def test_ledger_candidates_expand_single_source_dimension_to_all_axes(self):
         profiles = enrich_source_profiles_with_description_dimensions(
             hydra_profiles(),
             HYDRA_DESCRIPTION,
         )
         candidates = ledger_candidates(profiles)
-        self.assertEqual(candidates[0]["part_height_cm"], 12.0)
-        self.assertNotIn("part_length_cm", candidates[0])
-        self.assertEqual(candidates[0]["size_label"], "Small H=12 cm")
-        self.assertEqual(candidates[1]["size_label"], "Large H=18 cm")
+        self.assertEqual(
+            (
+                candidates[0]["part_length_cm"],
+                candidates[0]["part_width_cm"],
+                candidates[0]["part_height_cm"],
+            ),
+            (12.0, 12.0, 12.0),
+        )
+        self.assertEqual(
+            (
+                candidates[1]["part_length_cm"],
+                candidates[1]["part_width_cm"],
+                candidates[1]["part_height_cm"],
+            ),
+            (18.0, 18.0, 18.0),
+        )
+        self.assertEqual(candidates[0]["size_label"], "Small 12 x 12 x 12 cm")
+        self.assertEqual(candidates[1]["size_label"], "Large 18 x 18 x 18 cm")
+        self.assertEqual(
+            candidates[0]["dimension_axis_sources"],
+            {
+                "length": "owner_equal_dimension_rule",
+                "width": "owner_equal_dimension_rule",
+                "height": "source_description",
+            },
+        )
+        self.assertEqual(
+            candidates[0]["dimension_factual_axes"],
+            ["height"],
+        )
+        self.assertTrue(candidates[0]["dimension_is_estimated"])
 
     def test_dimension_patch_preserves_local_commerce_and_applies_exact_height(self):
         source = enrich_source_profiles_with_description_dimensions(
@@ -219,45 +246,46 @@ class Phase50A2WSourceDimensionTests(unittest.TestCase):
             "dimension_is_estimated": False,
             "dimension_label": "Small Version",
             "dimension_evidence": "Small Version: Height = 120 mm",
-            "dimension_known_axes": ["height"],
+            "dimension_known_axes": ["length", "width", "height"],
+            "dimension_factual_axes": ["height"],
             "dimension_binding": "ordered_description_to_profile",
-            "dimension_axis_sources": {"height": "source_description"},
+            "dimension_axis_sources": {
+                "length": "owner_equal_dimension_rule",
+                "width": "owner_equal_dimension_rule",
+                "height": "source_description",
+            },
         })
         self.assertEqual(profile["dimension_source"], "source_description")
-        self.assertEqual(profile["dimension_known_axes"], ["height"])
+        self.assertEqual(
+            profile["dimension_known_axes"],
+            ["length", "width", "height"],
+        )
+        self.assertEqual(profile["dimension_factual_axes"], ["height"])
         self.assertEqual(
             profile["dimension_axis_sources"],
-            {"height": "source_description"},
+            {
+                "length": "owner_equal_dimension_rule",
+                "width": "owner_equal_dimension_rule",
+                "height": "source_description",
+            },
         )
 
-    def test_source_partial_dimensions_show_unknown_and_can_save(self):
-        profile = {
-            "key": "source-mw-3595936",
-            "name": "Source Profile",
-            "size_label": "Small H=12 cm",
-            "part_length_cm": 0,
-            "part_width_cm": 0,
-            "part_height_cm": 12,
-            "production_rows": [{
-                "weight_grams": 113,
-                "support_weight_grams": 0,
-                "print_time_minutes": 511,
-            }],
-            "material_options": [local_offer()],
-            "dimension_source": "source_description",
-            "dimension_label": "Small Version",
-            "dimension_evidence": "Small Version: Height = 120 mm",
-            "dimension_known_axes": ["height"],
-            "dimension_axis_sources": {"height": "source_description"},
-        }
+    def test_source_single_dimension_profile_shows_all_three_equal_and_can_save(self):
+        source = enrich_source_profiles_with_description_dimensions(
+            hydra_profiles(),
+            HYDRA_DESCRIPTION,
+        )
+        profile = ledger_candidates(source)[0]
+        profile["material_options"] = [local_offer()]
         dialog = ProfileEditorDialog([local_offer()], profile)
         warnings = []
         original_warning = QMessageBox.warning
         try:
-            self.assertEqual(dialog.length.specialValueText(), "نامشخص")
-            self.assertEqual(dialog.width.specialValueText(), "نامشخص")
-            self.assertEqual(dialog.length.value(), 0)
+            self.assertEqual(dialog.length.value(), 12)
+            self.assertEqual(dialog.width.value(), 12)
             self.assertEqual(dialog.height.value(), 12)
+            self.assertIn("تکمیل", dialog.dimension_hint.text())
+            self.assertIn("ارتفاع", dialog.dimension_hint.text())
             QMessageBox.warning = lambda *args, **kwargs: warnings.append(args)
             dialog._accept()
             self.assertEqual(warnings, [])

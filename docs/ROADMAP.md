@@ -31,11 +31,13 @@
 - [x] Commit/push W4 source `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0` and verify GitHub exact SHA.
 - [x] Fresh pre-preview Catalog backup + exact-SHA Qt relaunch + real #625 W4 Preview PASS: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0; Source/Ledger/locks/Site #39 revision 11/history unchanged.
 - [x] Keep #625 unpublished by W4; preserve failed batch `26aa571c-...` separately with no revision advance.
-- [x] W4.1 Local implementation: parse factual Source Description dimensions, bind ordered size evidence only when unambiguous, preserve partial factual axes, and label unknown axes instead of inventing zero/full dimensions.
-- [x] W4.1 real Hydra latest-capture proof: Profile 3595936 Small height=12cm; Profile 3596024 Large height=18cm; length/width remain unknown.
-- [x] W4.1 owner fallback contract: fill only still-missing #625 axes with explicit estimated 4.0cm × 4.0cm × 4.0cm; never overwrite existing 5×5×5 Profile 1 or factual Source axes.
-- [x] W4.1 focused 10/10; corrected Commerce/Profile+W3/W4/W4.1 59/59; retained media/site 83/83; py_compile/diff-check/Qt VerifyOnly PASS.
-- [ ] W4.1 GitHub exact-SHA promotion + fresh SQLite backup + controlled real #628/#625 dimension-only patch + invariants.
+- [x] W4.1 parse factual Source Description dimensions and bind ordered size evidence only when unambiguous.
+- [x] Owner correction: when Source gives exactly one size dimension, copy that numeric value to all three operational Profile axes while preserving factual-vs-owner-rule provenance; Hydra becomes 12×12×12 and 18×18×18.
+- [x] Owner correction: Source material family PLA auto-selects/adds every active Local PLA Filament; exact-family matching excludes PLA-CF/HT-PLA-GF/PETG.
+- [x] Real Local inventory=16 active PLA; read-only real-state simulation proves #628 gets 16 PLA on both Profiles and #625 Profile 2 repairs to 16 while Profile 1 remains unchanged.
+- [x] #625 fallback remains scoped: preserve Profile 1 5×5×5; fill only Profile 2 missing dimensions with estimated 4×4×4.
+- [x] Focused 15/15; corrected Commerce/Profile+W3/W4/W4.1 59/59; retained media/site 83/83; py_compile/diff-check/Qt VerifyOnly PASS.
+- [ ] GitHub exact-SHA correction promotion + fresh SQLite backup + controlled real #628/#625 Profile repair + invariants.
 - [ ] After W4.1 real-data acceptance, investigate failed batch `26aa571c-...` as a separate publish-recovery task; do not auto-retry it.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED

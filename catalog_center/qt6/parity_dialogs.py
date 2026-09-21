@@ -1152,6 +1152,12 @@ class ProfileEditorDialog(QDialog):
             for axis in (p.get("dimension_known_axes") or [])
             if axis in {"length", "width", "height"}
         ]
+        factual_axes = [
+            axis
+            for axis in (p.get("dimension_factual_axes") or [])
+            if axis in {"length", "width", "height"}
+        ]
+        axis_sources = dict(p.get("dimension_axis_sources") or {})
         if dimension_source:
             axis_labels = {
                 "length": "طول",
@@ -1161,17 +1167,31 @@ class ProfileEditorDialog(QDialog):
             known_text = "، ".join(
                 axis_labels[axis] for axis in known_axes
             ) or "—"
+            factual_text = "، ".join(
+                axis_labels[axis] for axis in factual_axes
+            ) or "—"
             label = str(p.get("dimension_label") or "").strip()
             evidence = str(p.get("dimension_evidence") or "").strip()
-            source_label = (
-                "تخمینی اپراتور"
-                if bool(p.get("dimension_is_estimated"))
-                else "Source factual"
-            )
+            equal_rule_axes = [
+                axis_labels[axis]
+                for axis in ("length", "width", "height")
+                if axis_sources.get(axis) == "owner_equal_dimension_rule"
+            ]
+            if equal_rule_axes:
+                source_label = (
+                    "Source factual + تکمیل "
+                    + "، ".join(equal_rule_axes)
+                    + " با همان عدد"
+                )
+            elif bool(p.get("dimension_is_estimated")):
+                source_label = "تخمینی اپراتور"
+            else:
+                source_label = "Source factual"
             self.dimension_hint.setText(
                 f"ابعاد: {source_label}"
                 f"{' • ' + label if label else ''}"
-                f" • محورهای ثبت‌شده: {known_text}"
+                f" • محور factual: {factual_text}"
+                f" • محورهای Profile: {known_text}"
                 f"{' • ' + evidence if evidence else ''}"
             )
         else:

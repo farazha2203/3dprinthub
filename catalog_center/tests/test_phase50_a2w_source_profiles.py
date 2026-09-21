@@ -9,6 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
+from app.epic49_desktop_schema import add_available_material_color
 from app.page_extractor import parse_page_snapshot
 from app.phase50_a2w_source_profiles import (
     extract_makerworld_print_profiles,
@@ -16,6 +17,7 @@ from app.phase50_a2w_source_profiles import (
 )
 from qt6.kernel import build_kernel
 from qt6.product_wizard import ProductWizardPage
+from qt6.parity_dialogs import ProfileEditorDialog
 
 
 def makerworld_next_data():
@@ -150,6 +152,47 @@ class Phase50A2WSourceProfileTests(unittest.TestCase):
         ).fetchone()
         return int(row["id"])
 
+    def _seed_local_filaments(self):
+        add_available_material_color(
+            self.db,
+            "PLA",
+            "White",
+            "#FFFFFF",
+            brand_name="Bambulab",
+            manufacturer_name="Bambulab",
+            stock_roll_count=1,
+            purchase_price_per_roll=3_500_000,
+            sale_price_per_roll=4_500_000,
+            print_hourly_rate=150_000,
+            supervision_hourly_rate=50_000,
+        )
+        add_available_material_color(
+            self.db,
+            "PLA",
+            "Black",
+            "#111111",
+            brand_name="E-Sun",
+            manufacturer_name="E-Sun",
+            stock_roll_count=2,
+            purchase_price_per_roll=3_500_000,
+            sale_price_per_roll=4_500_000,
+            print_hourly_rate=150_000,
+            supervision_hourly_rate=50_000,
+        )
+        add_available_material_color(
+            self.db,
+            "PETG",
+            "Clear",
+            "#DDDDDD",
+            brand_name="E-Sun",
+            manufacturer_name="E-Sun",
+            stock_roll_count=1,
+            purchase_price_per_roll=4_500_000,
+            sale_price_per_roll=5_500_000,
+            print_hourly_rate=150_000,
+            supervision_hourly_rate=50_000,
+        )
+
     def test_exact_next_data_profiles_do_not_collapse(self):
         profiles = extract_makerworld_print_profiles(
             makerworld_next_data(),
@@ -229,6 +272,7 @@ class Phase50A2WSourceProfileTests(unittest.TestCase):
         )
     def test_import_preserves_manual_profile_and_is_idempotent(self):
         product_id = self._product()
+        self._seed_local_filaments()
         self.kernel.commerce.save_profiles(product_id, [{
             "key": "manual-standard",
             "name": "Standard",
@@ -264,10 +308,30 @@ class Phase50A2WSourceProfileTests(unittest.TestCase):
             by_key["source-mw-3609488"]["production_rows"][0]["print_time_minutes"],
             262,
         )
+        single_options = by_key["source-mw-3609481"]["material_options"]
+        multi_options = by_key["source-mw-3609488"]["material_options"]
+        self.assertEqual(len(single_options), 2)
+        self.assertEqual(len(multi_options), 2)
         self.assertEqual(
-            [x["color"] for x in by_key["source-mw-3609488"]["material_options"]],
-            ["#804003", "#FECC66"],
+            {x["material"] for x in single_options},
+            {"PLA"},
         )
+        self.assertEqual(
+            {x["brand"] for x in single_options},
+            {"Bambulab", "E-Sun"},
+        )
+        self.assertNotIn("PETG", {x["material"] for x in single_options})
+        self.assertEqual(first["local_filament_count"], 4)
+
+        dialog = ProfileEditorDialog(
+            self.kernel.filaments.list(),
+            by_key["source-mw-3609481"],
+            filament_core=self.kernel.filaments,
+        )
+        try:
+            self.assertEqual(len(dialog._selected_filaments()), 2)
+        finally:
+            dialog.close()
 
         second = self.kernel.commerce.import_source_profiles(product_id)
         profiles_again = self.kernel.commerce.profiles(product_id)

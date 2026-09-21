@@ -154,6 +154,11 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
             for axis in (source.get("dimension_known_axes") or [])
             if axis in {"length", "width", "height"}
         ],
+        "dimension_factual_axes": [
+            axis
+            for axis in (source.get("dimension_factual_axes") or [])
+            if axis in {"length", "width", "height"}
+        ],
         "dimension_axis_sources": {
             axis: str(value or "")[:40]
             for axis, value in dict(
@@ -165,6 +170,7 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
     if (
         dimension_metadata["dimension_source"]
         or dimension_metadata["dimension_known_axes"]
+        or dimension_metadata["dimension_factual_axes"]
         or dimension_metadata["dimension_axis_sources"]
     ):
         result.update(dimension_metadata)
