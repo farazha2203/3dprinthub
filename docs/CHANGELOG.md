@@ -1,4 +1,4 @@
-## 2026-09-21 - Phase50.A.2W W4 Smart Local Filament mapping — Local tested
+## 2026-09-21 - Phase50.A.2W W4 Smart Local Filament mapping — Windows runtime accepted
 - Added read-only Source material/color slot -> active Local Filament offer/pricing preview; Preview never mutates Source facts, Sales Ledger, Stage locks or Site identity.
 - Material family matching is exact/case-insensitive. Color matching uses only explicit Local HEX/Palette evidence; localized color names are never converted into inferred HEX.
 - Preserved #625 Multicolor as two simultaneous Source slots (11g #804003 + 39g #FECC66) instead of flattening them into alternative material choices.
@@ -7,6 +7,11 @@
 - Added Stage-2 action `W4 تطبیق Filament محلی` and a read-only review dialog with Brand/color/HEX/stock/roll price/material-cost evidence.
 - W4 focused 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 49/49 PASS; retained media/site 83/83 PASS; py_compile/diff-check/Qt VerifyOnly PASS.
 - Clean-baseline reproduction proved two broader 51-test failures are pre-existing stale assertions, not W4 regressions; ERR-49-203 records the evidence.
+- Pushed exact W4 source `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0`, verified Local=remote and relaunched Qt from that exact SHA.
+- Fresh pre-preview Catalog backup `phase50-a2w-w4-pre-preview-20260921-114901` integrity PASS / SHA256 `a38f78d346e2b367eaaeed540837ff5e076dea890c26808ddc0437106f239f7e`.
+- Real #625 W4 button-level Preview PASS: 2 Profiles / 3 Source slots / 48 Local PLA candidates / exact HEX=0, with Source facts, Sales Ledger, Stage locks, Site #39 revision 11 and history count unchanged.
+- W4 made no publish attempt. A separate pre-W4 failed batch `26aa571c-...` remains on Local state `batched / needs_update=1 / upload_ready=1` with Site revision 11; ERR-49-206 tracks it.
+- Next owner follow-up W4.1 will replace missing #625 dimensions of zero with an explicit estimated 4.0cm × 4.0cm × 4.0cm fallback while preserving exact dimensions whenever available.
 
 ## 2026-09-21 - Phase50.A.2W W3 factual Source Print Profiles — Windows runtime accepted
 - Added deterministic MakerWorld `__NEXT_DATA__` Print Profile extraction into existing `source_print_profiles_json`; no AI/inference is used for these production facts.

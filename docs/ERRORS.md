@@ -1,3 +1,21 @@
+## ERR-49-206 - Product #625 had a failed publish attempt before W4 acceptance; Site revision stayed 11
+**Date:** 2026-09-21
+**Observed:** Product history and the owner screenshot show batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` with `qt_bulk_site_publish ok=0`. The dialog reports the ACK was received but the Product was not confirmed in the public Store.
+**State impact:** Local #625 is now `workflow_status=batched`, `needs_update=1`, `upload_ready=1`; Site identity remains Product #39 revision 11. No successful revision advance occurred.
+**Boundary:** this failed attempt predates W4 real Preview and is not caused by W4. W4 is read-only and preserved the exact pre-preview Product state byte-for-byte.
+**Correct response:** do not silently retry/publish during W4. Preserve the failed batch evidence and keep Site revision 11 until a separate publish-recovery gate explicitly investigates the public-Store confirmation failure.
+**Verification:** W4 real Preview kept Source facts, Ledger, Stage locks, Product identity/revision and product-history count unchanged; exact preview result is 2 Profiles / 3 Source slots / 48 PLA candidates / exact HEX=0.
+**Prevention:** a failed public Store confirmation must remain a separate publish-recovery task; review/mapping phases must never auto-retry it.
+
+## ERR-49-205 - First W4 real-preview probe reported false FAIL because zero was treated as missing
+**Date:** 2026-09-21
+**Observed:** the first exact-SHA W4 Preview printed the correct values (2 Profiles / 3 slots / 48 candidates / exact HEX=0, unchanged snapshots) but the probe summary printed `PASS=False`.
+**Root cause:** the temporary assertion used `value or -1`; the valid value `0` for exact HEX was therefore replaced by `-1`.
+**Impact:** none. The W4 application code, Catalog DB and Product state were not mutated.
+**Correct fix:** distinguish `None` from numeric zero explicitly in the probe and rerun under the changed condition.
+**Verification:** corrected button-level probe returns `W4_REAL_PREVIEW_PASS=True` with exact HEX=0 and byte-for-byte unchanged Source/Ledger/locks/Site identity/history count.
+**Prevention:** operational probes must not use truthiness fallbacks for counters where zero is a valid acceptance value.
+
 ## ERR-49-204 - W4 rollback-ref bootstrap PowerShell parser typo before Git mutation
 **Date:** 2026-09-21
 **Observed:** the first rollback-ref helper command used an invalid PowerShell expression around `git show-ref` and stopped before creating/changing any Git ref.

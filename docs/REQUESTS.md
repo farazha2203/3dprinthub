@@ -1,11 +1,11 @@
 ## 2026-09-21 - Owner: Product media truth refresh + Site/source recovery + future Profile/video/manual Product import
-Status: `A2W W1/W2/W3 WINDOWS_RUNTIME_ACCEPTED / W4 LOCAL_TESTED / GITHUB + REAL PREVIEW NEXT`.
+Status: `A2W W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED / REAL #625 W4 PREVIEW PASS / W4.1 DIMENSION FALLBACK NEXT`.
 
 Owner reports Product #625 shows three media cards in Windows while the live Site Product has one image after re-publish. Required immediate behavior: add a Stage-3 `رفرش رسانه و وضعیت` action that compares Local DB authority, persisted `ارسال سایت`, physical Local files, current Site Product media and source media without silently changing operator Site membership. Public Site media missing locally must be recoverable into the trusted Product workspace as idempotent candidates.
 
 Re-publish must continue using the exact persisted `ارسال سایت` set as authoritative replacement: selected new images/screenshots are added, deselected stale Site images disappear, order/Primary are preserved, SEO WebPs are current, and post-publish Site media count must match the Batch/ACK. Visible local cards alone must never imply Site selection.
 
-Follow-up A2W scope records source video import for Site/Instagram, factual multi-Profile extraction from the Product link, material-family mapping and a manual/self-produced Product flow. W3 is runtime-accepted on real #625. W4 is now Local-tested as a read-only review: factual PLA/source color slots are compared with real active Local Filament offers/pricing, names never become inferred HEX, Multicolor slots stay separate, and #625 must remain unpublished until exact-SHA real Preview is accepted.
+Follow-up A2W scope records source video import for Site/Instagram, factual multi-Profile extraction from the Product link, material-family mapping and a manual/self-produced Product flow. W3 and W4 are runtime-accepted on real #625. W4 real Preview returned 2 Profiles / 3 Source slots / 48 Local PLA candidates / exact HEX=0 without mutating Source/Ledger/locks/Site identity. Owner follow-up W4.1 requires missing #625 dimensions to use an explicit estimated 4.0cm × 4.0cm × 4.0cm fallback instead of zero while preserving exact dimensions whenever available.
 
 ## 2026-09-21 - Owner: new Product images sent from Windows must replace the live Site images
 Status: `A2V PRODUCTION_VERIFIED / CLOSED`.

@@ -1,13 +1,13 @@
 # Phase50.A.2W — Product Media Truth Sync + Source Profile Import
 
-Status: **W1/W2/W3 WINDOWS_RUNTIME_ACCEPTED — W4 LOCAL_TESTED / GITHUB + REAL PREVIEW NEXT**
+Status: **W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED — W5 / W4.1 OWNER FOLLOW-UP NEXT**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2V `PRODUCTION_VERIFIED`
 
 ## Owner request
 The Windows Product Wizard can show more local media than the live Site Product, so the operator needs one explicit refresh that proves Local DB, Local files, Site Product media and source media separately. Re-publish must replace the live Product image set with the exact persisted `ارسال سایت` selection, including newly added screenshots/images and removal of stale Site images.
 
-The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2/W3 are runtime-accepted; W4 material-family mapping is next.
+The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2/W3/W4 are runtime-accepted; the owner-requested W4.1 Source-dimension fallback is next.
 
 ## Baseline / safety
 - Branch starts from clean A2V closure `346baa135c62ff58a6596a80433678ebd622206b`.
@@ -40,7 +40,7 @@ Before a Product is marked ready or published:
 Site import already rebuilds desktop-managed `ProductImage` rows from the current batch. A2W must add regression proof that adding, removing and reordering selected images produces exact replacement rather than additive stale media.
 After successful publish, the current Site media count must agree with the Batch/ACK selected-media count; a mismatch is a verification failure, not a success.
 
-## W3 — Source Print Profile Import (LOCAL_TESTED)
+## W3 — Source Print Profile Import (WINDOWS_RUNTIME_ACCEPTED)
 Stage 2 now has `دریافت پروفایل از محصول`. MakerWorld `__NEXT_DATA__` is parsed deterministically into existing `source_print_profiles_json`; AI is not used. Multiple source Profiles remain separate, exact seconds/fractional minutes are retained in Source facts, and factual material/color/nozzle/layer evidence is preserved without inventing Brand or local price.
 
 #625 evidence is exact: Single Color instance 3609481/profile 943581967 = 4814s / 13g / PLA #FECC66; Multicolor instance 3609488/profile 943610448 = 15748s / 50g / PLA 11g #804003 + 39g #FECC66. Both are A1/N2S, nozzle 0.4mm, layer 0.16mm, walls 2, infill 5%. Current integer Sales Ledger maps factual time to nearest minute 80/262.
@@ -49,7 +49,7 @@ Source refresh only updates source-fact authority. Explicit Ledger import uses d
 
 W3 verification: focused 5/5 PASS; corrected retained A2V/W1/W2/bidirectional 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Fresh pre-real-W3 rollback is `phase50-a2w-w3-pre-real-625-20260921-102142`, SHA256 `ba7d70b04cf5b084bd7922bd0f93f321a55cc4c7c241795f32c6840235764401`.
 
-## W4 — Smart material-family mapping (LOCAL_TESTED)
+## W4 — Smart material-family mapping (WINDOWS_RUNTIME_ACCEPTED)
 W4 is intentionally read-only. Factual Source material slots map to compatible active Local Filament offers for operator review; no Source fact, Sales Ledger, Stage lock, Site identity or publish state is mutated by Preview.
 
 Material-family matching is exact/case-insensitive. Color authority uses only explicit Local HEX/Palette values. Localized color names are never interpreted into a HEX value. Real Local inspection currently finds 16 active PLA offers, but neither #625 Source color `#FECC66` nor `#804003` has an exact Local HEX match; therefore exact HEX count must remain zero and no named color may be auto-selected.
@@ -103,11 +103,11 @@ Before and after Truth Sync, #625 remains Site Product #39 revision 11, `workflo
 - [x] Corrected mature Filament/Profile/Commerce + W3/W4 gate 49/49 PASS.
 - [x] Retained A2V/W1/W2 media/site gate 83/83 PASS.
 - [x] py_compile / diff-check / RUN_QT VerifyOnly PASS.
-- [ ] Commit/push W4 candidate and verify GitHub exact SHA.
-- [ ] Fresh pre-preview Catalog backup integrity PASS.
-- [ ] Exact-SHA Qt real #625 W4 Preview: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0.
-- [ ] Prove Source facts + Ledger + Stage locks + Site #39 revision 11 are unchanged before/after Preview.
-- [ ] Keep #625 unpublished throughout W4.
+- [x] Commit/push W4 source `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0` and verify GitHub exact SHA.
+- [x] Fresh pre-preview Catalog backup integrity PASS: `phase50-a2w-w4-pre-preview-20260921-114901`, SHA256 `a38f78d346e2b367eaaeed540837ff5e076dea890c26808ddc0437106f239f7e`.
+- [x] Exact-SHA Qt real #625 W4 Preview PASS: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0.
+- [x] Source facts + Ledger + Stage locks + Site #39 revision 11 + product-history count are unchanged before/after Preview.
+- [x] #625 was not published by W4. A separate pre-W4 failed publish attempt remains preserved at batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` with Site revision still 11.
 
 ## Next exact task
-Commit/push the tested W4 candidate, verify Local=GitHub exact SHA, take a fresh integrity-checked Catalog backup, relaunch Qt from that exact SHA, run the real #625 W4 review action, and prove 2 Profiles / 3 Source slots / 48 PLA candidates / exact HEX=0 with byte-for-byte unchanged Source/Ledger/locks/Site identity and no publish.
+Do not return to W1/W2/W3. Continue from current state with the owner follow-up on Source Profile dimensions (W4.1): preserve exact Source dimensions when available; when a dimension is absent and the operator/source evidence provides an approximate size for #625, store the explicit owner-approved 4.0cm fallback for length/width/height as estimated data rather than leaving zero. Test that fallback separately before any further publish recovery. The failed batch `26aa571c-...` remains a separate publish-recovery task and must not be auto-retried.

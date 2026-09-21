@@ -1,4 +1,4 @@
-## 2026-09-21 - Phase50.A.2W W4 LOCAL_TESTED / GitHub + exact-SHA real Preview next
+## 2026-09-21 - Phase50.A.2W W4 WINDOWS_RUNTIME_ACCEPTED / real #625 Preview PASS
 
 W4 implements a strictly read-only Source material/color -> real Local Filament/pricing review path. It does not write `sales_profile_ledger_json`, `source_print_profiles_json`, Stage locks, Site identity or publish state. Stage 2 adds `W4 تطبیق Filament محلی`; the review dialog shows each factual Source filament slot separately against active Local material-family-compatible offers, including Brand, Local color, explicit Local HEX/Palette evidence, stock, roll sale price, Source-slot material cost and—only for single-slot Profiles—the mature formula total. Localized color names are never converted to HEX for W4 authority.
 
@@ -8,7 +8,11 @@ The Multicolor Source Profile is deliberately not flattened into ordinary altern
 
 Rollback ref before source work: `backup/pre-phase50-a2w-w4-material-mapping-20260921` -> `eda42e84b0bf39052fb76aa3c74e35b7dd0a85e5`. Verification: W4 focused 5/5 PASS; current mature Filament/Profile/Commerce + W3/W4 corrected gate 49/49 PASS; retained A2V/W1/W2 media/site gate 83/83 PASS; py_compile, diff-check and RUN_QT VerifyOnly PASS. Two tests in the broader 51-test commerce probe fail identically on the clean `eda42e84...` baseline and are not W4 regressions; ERR-49-203 records them. ERR-49-202 records the changed-condition read-only inventory probe correction, and ERR-49-204 records the pre-mutation PowerShell rollback-ref parser typo.
 
-No real #625 W4 Preview has been accepted yet; #625 must not publish in W4. Exact next: commit/push tested W4 source, verify Local=GitHub exact SHA, take fresh Catalog backup, relaunch Qt from that exact SHA, execute the real #625 W4 review action, and prove before/after Source/Ledger/locks/Site #39 revision 11 state is unchanged while the preview returns 2 Profiles / 3 Source slots / 48 PLA candidates / exact HEX=0.
+Real #625 W4 Preview is accepted. W4 source is pushed at exact GitHub SHA `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0`; Local and remote matched exactly and Qt was launched from that SHA. Fresh pre-preview rollback `D:\projects\3dprinthub-backups\phase50-a2w-w4-pre-preview-20260921-114901\catalog-before-w4-preview.sqlite3` has integrity `ok` and SHA256 `a38f78d346e2b367eaaeed540837ff5e076dea890c26808ddc0437106f239f7e`. Real button-level W4 Preview PASS: 2 Profiles / 3 Source slots / 48 PLA candidates / exact HEX=0. Source facts, Sales Ledger, Stage locks, Site Product #39 revision 11 and product-history count were unchanged before/after Preview.
+
+Current real #625 state is `workflow_status=batched`, `needs_update=1`, `upload_ready=1`, with Commerce currently locked. History proves this comes from an operator publish attempt before W4 acceptance: batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` recorded `qt_bulk_site_publish ok=0`; Site remained Product #39 revision 11. A later operator Commerce edit/finalize re-locked Commerce. W4 did not change or retry that publish state; ERR-49-206 tracks it separately.
+
+Exact next: W4.1 owner follow-up on Source Profile dimensions. Preserve exact Source dimensions when available; for #625, when dimensions are absent, use the explicit owner-approved estimated fallback `4.0cm × 4.0cm × 4.0cm` instead of zero and mark it as estimated. Test this fallback before any publish recovery. Do not return to W1/W2/W3 and do not auto-retry the failed batch.
 
 ## 2026-09-21 - Phase50.A.2W W3 WINDOWS_RUNTIME_ACCEPTED / real #625 import PASS
 

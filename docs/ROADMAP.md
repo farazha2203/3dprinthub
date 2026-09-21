@@ -28,9 +28,11 @@
 - [x] W4 preserves Multicolor factual slots separately; no fake combined Ledger mapping/price before real Local offer selection.
 - [x] W4 focused 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 49/49 PASS; retained A2V/W1/W2 media/site 83/83 PASS.
 - [x] W4 py_compile / diff-check / RUN_QT VerifyOnly PASS; rollback ref `backup/pre-phase50-a2w-w4-material-mapping-20260921` -> `eda42e84...`.
-- [ ] Commit/push W4 candidate and verify GitHub exact SHA.
-- [ ] Fresh pre-preview Catalog backup → exact-SHA Qt relaunch → real #625 W4 Preview; require 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0 and byte-for-byte unchanged Source/Ledger/locks/Site identity.
-- [ ] Operator review must explicitly choose/repair Local HEX identities before any Source-slot mapping can become commerce authority; #625 must not publish in W4.
+- [x] Commit/push W4 source `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0` and verify GitHub exact SHA.
+- [x] Fresh pre-preview Catalog backup + exact-SHA Qt relaunch + real #625 W4 Preview PASS: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0; Source/Ledger/locks/Site #39 revision 11/history unchanged.
+- [x] Keep #625 unpublished by W4; preserve failed batch `26aa571c-...` separately with no revision advance.
+- [ ] W4.1: fill missing #625 Source Profile dimensions with the explicit owner-approved estimated fallback 4.0cm × 4.0cm × 4.0cm; preserve exact Source dimensions whenever available and mark fallback values as estimated.
+- [ ] After W4.1 tests/acceptance, keep the failed publish batch as a separate recovery task; do not auto-retry it.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.
