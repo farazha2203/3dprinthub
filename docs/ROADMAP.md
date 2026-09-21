@@ -1,3 +1,18 @@
+## 2026-09-21 - Phase50.A.2Z Image + Social Authority Hotfix
+- [x] Reproduce #609 selected/canonical media drift and duplicate displayed SEO filename.
+- [x] Verify 5 unique finalized physical SEO WebPs already exist for #609.
+- [x] Make trusted Local Site selection enter canonical Product media.
+- [x] Preserve exact URL identity for per-image metadata/SEO slot before canonical fallback.
+- [x] Reuse existing registered `social-assets-buffer` worktree.
+- [x] Add multi-image Batch regression proving all selected media use unique SEO filenames.
+- [x] Focused 9/9 + broad 113/113 + compile/diff/Qt VerifyOnly PASS.
+- [ ] Commit/push exact source and verify Local=GitHub.
+- [ ] Launch exact-SHA Qt.
+- [ ] Fresh Catalog + #609 media backup; repair real #609 through application APIs.
+- [ ] Same-identity Site #42 republish; verify all selected public media/SEO filenames.
+- [ ] Changed-revision Instagram Feed+Story acceptance with no duplicate post.
+- [ ] Resume A2Z Slider completeness/backfill.
+
 ## 2026-09-21 - Phase50.A.2Y Lineage Convergence ACCEPTED / CLOSED
 - [x] Create clean isolated convergence worktree from A2Y planning head / latest Windows lineage.
 - [x] Merge Server/Production closure lineage `e03bdd2b...` with evidence-backed conflict resolution.

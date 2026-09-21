@@ -1112,6 +1112,23 @@ class ImageCore:
             )
             if isinstance(item, dict)
         ]
+        exact_metadata_by_url = {
+            str(item.get("source_url") or item.get("url") or "").strip(): item
+            for item in metadata
+            if str(item.get("source_url") or item.get("url") or "").strip()
+        }
+        exact_selected_position = {
+            str(value or "").strip(): index
+            for index, value in enumerate(selected_urls, 1)
+            if str(value or "").strip()
+        }
+        exact_alt_by_url = {
+            str(url or "").strip(): (
+                alts[index] if index < len(alts) else ""
+            )
+            for index, url in enumerate(selected_urls)
+            if str(url or "").strip()
+        }
 
         exact_by_path: dict[str, tuple[int, str]] = {}
         for slot, url in enumerate(urls, 1):
@@ -1207,17 +1224,29 @@ class ImageCore:
             url_key = self._url_asset_key(url)
             legacy_key = self._url_asset_key(legacy_alias)
             candidate_keys = {key for key in (url_key, legacy_key) if key}
-            meta = next(
-                (
-                    item
-                    for item in metadata
-                    if self._url_asset_key(
-                        str(item.get("source_url") or item.get("url") or "")
-                    ) in candidate_keys
-                ),
-                {},
-            )
-            alt = alt_by_key.get(url_key, "")
+            # Exact source identity must win before canonical asset-key
+            # fallback. Query variants can intentionally represent separate
+            # selected Product images with different SEO slots; collapsing
+            # them here makes two cards display the same filename/metadata.
+            meta = exact_metadata_by_url.get(url)
+            if meta is None and legacy_alias:
+                meta = exact_metadata_by_url.get(legacy_alias)
+            if meta is None:
+                meta = next(
+                    (
+                        item
+                        for item in metadata
+                        if self._url_asset_key(
+                            str(item.get("source_url") or item.get("url") or "")
+                        ) in candidate_keys
+                    ),
+                    {},
+                )
+            alt = exact_alt_by_url.get(url, "")
+            if not alt and legacy_alias:
+                alt = exact_alt_by_url.get(legacy_alias, "")
+            if not alt:
+                alt = alt_by_key.get(url_key, "")
             if not alt and legacy_key:
                 alt = alt_by_key.get(legacy_key, "")
             if not alt:
@@ -1228,14 +1257,24 @@ class ImageCore:
                 or meta.get("planned_filename")
                 or ""
             ).strip()
-            seo_index = next(
-                (
-                    selected_position_by_key[key]
-                    for key in candidate_keys
-                    if key in selected_position_by_key
-                ),
-                0,
+            seo_index = int(
+                exact_selected_position.get(url)
+                or (
+                    exact_selected_position.get(legacy_alias)
+                    if legacy_alias
+                    else 0
+                )
+                or 0
             )
+            if not seo_index:
+                seo_index = next(
+                    (
+                        selected_position_by_key[key]
+                        for key in candidate_keys
+                        if key in selected_position_by_key
+                    ),
+                    0,
+                )
             if not display_only and url:
                 try:
                     filename_index = max(
@@ -1552,12 +1591,13 @@ class ImageCore:
     ) -> dict[str, Any]:
         row = self._assert_images_editable(product_id)
         data = dict(row)
-        targets = {
-            str(url or "").strip()
-            for url in urls or []
-            if str(url or "").strip()
-        }
-        if not targets:
+        ordered_targets: list[str] = []
+        for raw in urls or []:
+            value = str(raw or "").strip()
+            if value and value not in ordered_targets:
+                ordered_targets.append(value)
+        targets = set(ordered_targets)
+        if not ordered_targets:
             raise ValueError("حداقل یک تصویر انتخاب کن.")
 
         target_local_by_name = {
@@ -1590,6 +1630,23 @@ class ImageCore:
         normalized_primary = normalize_legacy_alias(
             str(data.get("primary_image_url") or "")
         )
+
+        # Any real trusted local Product image explicitly included in the
+        # operator SEO action becomes canonical Product media. This does not
+        # change Site membership; it only prevents a later selected-image
+        # authority drift where a real local card exists but images_json does
+        # not know about it.
+        for url in ordered_targets:
+            if url in normalized_images:
+                continue
+            source_value = image_pipeline.strict_source_local_image(data, url)
+            if str(source_value or "").strip():
+                try:
+                    source_path = Path(str(source_value)).resolve()
+                except Exception:
+                    source_path = None
+                if source_path is not None and source_path.is_file():
+                    normalized_images.append(url)
 
         existing = [
             dict(item)

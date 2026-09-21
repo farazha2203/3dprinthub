@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from app.buffer_media_host import _github_identity, rehost_buffer_assets
+from app.buffer_media_host import _ensure_worktree, _github_identity, rehost_buffer_assets
 
 
 class _DB:
@@ -51,6 +51,47 @@ class BufferMediaHostTests(unittest.TestCase):
             ["https://3dprinthub.ir/media/instagram/feed/a.png"],
         )
 
+    @patch("app.buffer_media_host._run_git")
+    def test_existing_registered_social_branch_worktree_is_reused(self, run_git):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            preferred = Path(tmp) / "new-social-assets"
+            registered = Path(tmp) / "existing-social-assets"
+            root.mkdir()
+            registered.mkdir()
+
+            def git_result(repo, args, **kwargs):
+                result = MagicMock()
+                result.returncode = 0
+                result.stderr = ""
+                if args == ["worktree", "list", "--porcelain"]:
+                    result.stdout = (
+                        f"worktree {registered}\n"
+                        "HEAD abc123\n"
+                        "branch refs/heads/social-assets-buffer\n\n"
+                    )
+                elif args == ["rev-parse", "--is-inside-work-tree"]:
+                    result.stdout = "true\n"
+                elif args == ["branch", "--show-current"]:
+                    result.stdout = "social-assets-buffer\n"
+                else:
+                    result.stdout = ""
+                return result
+
+            run_git.side_effect = git_result
+            resolved = _ensure_worktree(
+                root,
+                preferred,
+                "social-assets-buffer",
+            )
+            self.assertEqual(resolved, registered.resolve())
+            self.assertFalse(
+                any(
+                    call.args[1][:2] == ["worktree", "add"]
+                    for call in run_git.call_args_list
+                )
+            )
+
     @patch("app.buffer_media_host._verify_public_image")
     @patch("app.buffer_media_host._run_git")
     @patch("app.buffer_media_host._ensure_worktree")
@@ -63,6 +104,7 @@ class BufferMediaHostTests(unittest.TestCase):
             root.mkdir()
             (root / ".git").mkdir()
             worktree.mkdir()
+            ensure_worktree.return_value = worktree
             feed = Path(tmp) / "01.png"
             story = Path(tmp) / "story.png"
             feed.write_bytes(b"png-feed")

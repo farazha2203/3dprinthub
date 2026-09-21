@@ -547,13 +547,13 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             self.assertGreaterEqual(page.image_grid.scroll.verticalScrollBar().pageStep(), 420)
             buttons = page.findChildren(type(page.product_source_btn))
             button_texts = {button.text() for button in buttons}
-            self.assertIn("بازیابی از لینک", button_texts)
+            self.assertIn("دریافت جدید از منبع", button_texts)
             self.assertIn("حذف انتخابی", button_texts)
             recovery = next(
                 button for button in buttons
-                if button.text() == "بازیابی از لینک"
+                if button.text() == "دریافت جدید از منبع"
             )
-            self.assertIn("دریافت داده و عکس بیشتر", recovery.toolTip())
+            self.assertIn("دریافت داده و عکس جدید از لینک منبع", recovery.toolTip())
         finally:
             page.close()
 
@@ -569,10 +569,10 @@ class Phase493I51WindowsSiteFinalizationTests(unittest.TestCase):
             )
             grid.set_all_selected(True)
             self.assertEqual(len(grid.selected_urls()), 3)
-            self.assertIn("3 انتخاب‌شده", grid.summary.text())
+            self.assertIn("3 برای ارسال به سایت", grid.summary.text())
             grid.set_all_selected(False)
             self.assertEqual(grid.selected_urls(), [])
-            self.assertIn("0 انتخاب‌شده", grid.summary.text())
+            self.assertIn("0 برای ارسال به سایت", grid.summary.text())
         finally:
             grid.close()
 

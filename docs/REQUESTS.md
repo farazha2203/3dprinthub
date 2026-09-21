@@ -1,3 +1,8 @@
+## 2026-09-21 - Owner: fix #609 multi-image SEO filenames and Instagram delivery
+Status: `A2Z LOCAL_TESTED / REAL ACCEPTANCE NEXT`.
+
+Owner requires every selected Product image to be physically finalized with a unique SEO filename and carried to Site, not merely mapped in the UI; duplicate final filenames are forbidden. The raw source/cache may keep provenance names, but publishable Local files, Batch files and Site media must use the unique SEO WebP filenames. Product #609 must publish all selected images, preserve the same Site identity, then send the changed Site revision to Instagram Feed+Story. The existing `social-assets-buffer` worktree must be reused rather than recreated.
+
 ## 2026-09-21 - Owner: execute A2Y lineage convergence before A2Z
 Status: `ACCEPTED / CLOSED / A2Z NEXT`.
 

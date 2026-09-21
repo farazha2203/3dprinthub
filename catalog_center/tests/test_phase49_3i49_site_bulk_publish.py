@@ -546,6 +546,100 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(seen["name"], expected_name)
         self.assertEqual(seen["sha"], expected_sha)
 
+    def test_publish_batch_carries_every_selected_image_with_unique_seo_filename(self):
+        product_id = self._product("3491014m", finalize_images=False)
+        row = dict(self.db.product(product_id))
+        local_dir = Path(row["local_dir"])
+        image_dir = local_dir / "images"
+        selected = json.loads(row["selected_images_json"])
+        canonical = json.loads(row["images_json"])
+        for index, rgb in enumerate(
+            [(20, 40, 60), (80, 100, 120), (140, 160, 180)],
+            start=2,
+        ):
+            path = image_dir / f"{index:02d}.webp"
+            Image.new("RGB", (720 + index, 540 + index), rgb).save(
+                path,
+                "WEBP",
+                quality=90,
+            )
+            pseudo = f"local://{index:02d}.webp"
+            canonical.append(pseudo)
+            selected.append(pseudo)
+        self.db.update_product(
+            product_id,
+            {
+                "images_json": json.dumps(canonical, ensure_ascii=False),
+                "selected_images_json": json.dumps(selected, ensure_ascii=False),
+                "image_alt_texts_json": json.dumps(
+                    [f"ALT {index}" for index in range(1, len(selected) + 1)],
+                    ensure_ascii=False,
+                ),
+            },
+        )
+        finalized = finalize_selected_images(
+            self.db,
+            product_id,
+            deduplicate=False,
+            image_limit=len(selected),
+        )
+        self.assertEqual(finalized["kept"], 4)
+        gate = publish_media_gate(self.db.product(product_id))
+        self.assertTrue(gate["ready"], gate["missing"])
+        self.assertEqual(len(gate["items"]), 4)
+        seo_names = [item["seo_filename"] for item in gate["items"]]
+        self.assertEqual(len(set(name.casefold() for name in seo_names)), 4)
+        self.assertTrue(all(name.endswith(".webp") for name in seo_names))
+
+        mark_ready_many(self.db, FakeStages(), [product_id])
+        captured = {}
+
+        def fake_upload(_settings, batch, callback=None):
+            packaged = sorted(Path(batch).rglob("images/*.webp"))
+            captured["names"] = [path.name for path in packaged]
+            return {
+                "remote_batch": "/remote/test",
+                "uploaded_files": len(packaged),
+                "total_files": len(packaged),
+            }
+
+        def fake_import(_settings, batch_name, batch_uuid):
+            return {
+                "status": "ok",
+                "batch_uuid": batch_uuid,
+                "diagnostic_id": batch_name,
+                "items": [{
+                    "desktop_product_id": product_id,
+                    "status": "created",
+                    "server_id": "asset-multi-media",
+                    "product_id": 1515,
+                    "product_revision": 1,
+                    "visible_on_store": True,
+                    "public_http_ok": True,
+                    "product_url": "/shop/multi-media/",
+                    "source_hash": "source-multi-media",
+                }],
+            }
+
+        result = publish_many(
+            self.db,
+            FakeStages(),
+            SimpleNamespace(),
+            [product_id],
+            batch_root=self.root / "multi-media-batches",
+            uploader=fake_upload,
+            importer=fake_import,
+            readiness_checker=lambda _settings: {
+                "ready": True,
+                "blockers": [],
+            },
+        )
+        self.assertEqual(result["published"], 1)
+        self.assertEqual(
+            sorted(captured["names"]),
+            sorted(seo_names),
+        )
+
     def test_site_receiver_readiness_blocks_before_ftp(self):
         product_id = self._product("3491011")
         mark_ready_many(self.db, FakeStages(), [product_id])

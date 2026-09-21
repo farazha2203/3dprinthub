@@ -1,3 +1,11 @@
+## 2026-09-21 - A2Z image/social authority hotfix Local-tested
+- Fixed exact-URL image metadata lookup so query-variant cards keep distinct numbered SEO filenames.
+- Trusted Local media checked for Site now joins canonical Product media at Stage-3 save.
+- Social Git media hosting now reuses the worktree already registered for `social-assets-buffer`.
+- Added regressions proving unique physical SEO WebPs and multi-image Batch packaging.
+- Focused 9/9 and broad Image/Publish/Windows/Social 113/113 PASS; compile/diff/Qt VerifyOnly PASS.
+- Real #609 has 5 finalized unique SEO WebPs; no Catalog/Production write has been performed by this code slice yet.
+
 ## 2026-09-21 - A2Y lineage convergence accepted
 - Created/pushed unified merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` with latest Windows/A2Y and accepted Server/Production closure as its two parents.
 - Exact-SHA Qt VerifyOnly + real runtime smoke PASS; running Qt points to the unified worktree and left the shared Catalog Product/history counts unchanged.

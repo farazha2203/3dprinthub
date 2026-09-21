@@ -1,3 +1,11 @@
+## ERR-49-216 - #609 selected media drift, duplicate displayed SEO filename and Buffer worktree collision
+**Date:** 2026-09-21
+**Observed:** Product #609 Site readiness failed because `local://04.webp` and `local://05.webp` were selected but absent from `images_json`; two query-variant image cards displayed the same `...-01.webp` SEO name; Instagram/Buffer failed with `social-assets-buffer is already used by worktree D:/projects/3DPrintHub-social-assets`.
+**Root cause:** trusted Local Site-selection did not always join canonical media at the same save boundary; image-card metadata matched canonicalized asset keys before exact URL identity, collapsing two URL variants; Buffer helper always attempted the configured worktree path instead of reusing an already-registered worktree for the branch.
+**Correct fix:** promote trusted Local Site media into canonical `images_json`; exact URL/alias metadata and selected-position lookup precedes canonical fallback; reuse the Git-registered branch worktree. Keep source/cache provenance filenames intact while final `seo_images`, Batch and Site media use unique numbered SEO WebP filenames.
+**Verification:** real #609 read-only audit shows five unique finalized SEO files `-01..-05.webp`; focused regression 9/9 PASS; broad Image/Publish/Windows/Social 113/113 PASS; touched compile/diff/Qt VerifyOnly PASS. Two broad UI assertions were proven stale by identical failure on clean baseline `f5f40116...` before their test expectations were aligned.
+**Prevention:** Site selection and canonical media authority must be synchronized at one boundary; per-image identity must never be inferred only from URL canonicalization; a named Git branch may have only one registered worktree and provider code must discover/reuse it.
+
 ## ERR-49-214 - Latest Windows and Production Server fixes exist on divergent forward lineages
 **Date:** 2026-09-21
 **Observed:** Repository audit after A2X closure found latest Windows/Product work at `c86c66a11e2c62f8ca219bcb76abc19e5bfdcdbd` while the Production Server parity/Hero closure is `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`. Neither head is an ancestor of the other; merge-base is `b1caeba0f20e711b29dfa9e0ff92a2f5186fb08d`.

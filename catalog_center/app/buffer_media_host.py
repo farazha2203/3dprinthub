@@ -74,17 +74,48 @@ def _verify_public_image(url: str, timeout: int = 20) -> None:
             )
 
 
-def _ensure_worktree(repo_root: Path, worktree: Path, branch: str) -> None:
-    if worktree.exists():
-        probe = _run_git(worktree, ["rev-parse", "--is-inside-work-tree"])
+def _registered_worktree_for_branch(repo_root: Path, branch: str) -> Path | None:
+    result = _run_git(
+        repo_root,
+        ["worktree", "list", "--porcelain"],
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+
+    wanted = f"refs/heads/{branch}"
+    current: Path | None = None
+    for raw in str(result.stdout or "").splitlines():
+        line = raw.strip()
+        if line.startswith("worktree "):
+            value = line.split(" ", 1)[1].strip()
+            current = Path(value).expanduser().resolve() if value else None
+            continue
+        if line.startswith("branch ") and current is not None:
+            ref = line.split(" ", 1)[1].strip()
+            if ref == wanted and current.exists():
+                return current
+    return None
+
+
+def _ensure_worktree(repo_root: Path, worktree: Path, branch: str) -> Path:
+    def validate(candidate: Path) -> Path:
+        probe = _run_git(candidate, ["rev-parse", "--is-inside-work-tree"])
         if probe.stdout.strip().lower() != "true":
-            raise RuntimeError(f"Buffer media worktree is invalid: {worktree}")
-        active = _run_git(worktree, ["branch", "--show-current"]).stdout.strip()
+            raise RuntimeError(f"Buffer media worktree is invalid: {candidate}")
+        active = _run_git(candidate, ["branch", "--show-current"]).stdout.strip()
         if active != branch:
             raise RuntimeError(
                 f"Buffer media worktree branch mismatch: expected {branch}, got {active or '(detached)'}"
             )
-        return
+        return candidate
+
+    if worktree.exists():
+        return validate(worktree)
+
+    registered = _registered_worktree_for_branch(repo_root, branch)
+    if registered is not None:
+        return validate(registered)
 
     worktree.parent.mkdir(parents=True, exist_ok=True)
     local = _run_git(
@@ -94,7 +125,7 @@ def _ensure_worktree(repo_root: Path, worktree: Path, branch: str) -> None:
     )
     if local.returncode == 0:
         _run_git(repo_root, ["worktree", "add", str(worktree), branch], timeout=90)
-        return
+        return validate(worktree)
 
     remote = _run_git(
         repo_root,
@@ -106,9 +137,10 @@ def _ensure_worktree(repo_root: Path, worktree: Path, branch: str) -> None:
         _run_git(repo_root, ["fetch", "--no-tags", "origin", f"refs/heads/{branch}"], timeout=90)
         _run_git(repo_root, ["branch", branch, "FETCH_HEAD"])
         _run_git(repo_root, ["worktree", "add", str(worktree), branch], timeout=90)
-        return
+        return validate(worktree)
 
     _run_git(repo_root, ["worktree", "add", "-b", branch, str(worktree), "HEAD"], timeout=90)
+    return validate(worktree)
 
 
 def rehost_buffer_assets(
@@ -174,7 +206,7 @@ def rehost_buffer_assets(
         if worktree_value
         else (repo_root.parent / f"{repo_root.name}-social-assets").resolve()
     )
-    _ensure_worktree(repo_root, worktree, branch)
+    worktree = _ensure_worktree(repo_root, worktree, branch)
 
     dirty = _run_git(worktree, ["status", "--porcelain", "--untracked-files=all"]).stdout.strip()
     if dirty:

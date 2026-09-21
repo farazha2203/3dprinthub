@@ -1,3 +1,15 @@
+## 2026-09-21 - Phase50.A.2Z IMAGE + SOCIAL AUTHORITY HOTFIX LOCAL_TESTED
+
+Owner screenshots on real Product #609 exposed three linked defects. Site publish failed closed because selected Local media `local://04.webp` and `local://05.webp` were not in canonical `images_json`; Instagram failed because `social-assets-buffer` was already registered to `D:\projects\3DPrintHub-social-assets`; and two query-variant source URLs could display the same SEO filename because UI metadata lookup collapsed exact URL identity.
+
+Real #609 read-only audit: 5 selected media and 5 finalized physical SEO WebPs exist under `seo_images`, uniquely numbered `...-01.webp` through `...-05.webp`. The source/cache `images` directory intentionally retains provenance names such as `01.webp/02.webp/04.webp/05.webp`; public Batch/Site authority is the finalized `seo_images` set. Product #609 currently maps to Site Product #42 revision 1.
+
+Local fix: Stage-3 Site selection promotes trusted Product-local media into canonical `images_json`; exact source URL metadata/SEO-slot identity wins before canonical-key fallback; Buffer media hosting reuses an existing registered worktree for `social-assets-buffer`. Batch regression proves four selected media become four uniquely named SEO WebPs in the publish package.
+
+Verification: new focused gate 9/9 PASS; broad Image/Publish/Windows/Social gate 113/113 PASS; 7 touched Python files compile; diff-check and Qt VerifyOnly PASS. Two unrelated UI assertions reproduced identically on clean baseline `f5f40116...` and were aligned to the already-accepted separated Site-selection/source-refresh UI contract. No real Catalog or Production mutation has occurred yet.
+
+Exact next: commit/push A2Z source -> exact-SHA Qt -> fresh Catalog + #609 local-media backup -> application-level #609 authority repair -> same-identity Site republish -> verify all selected public images and SEO filenames -> changed-revision Instagram Feed+Story acceptance. After this hotfix, continue A2Z Slider completeness/backfill.
+
 ## 2026-09-21 - Phase50.A.2Y PRODUCTION-SOURCE CONVERGENCE ACCEPTED / WINDOWS RUNTIME ACCEPTED / CLOSED
 
 Authoritative forward worktree: `D:\projects\3DPrintHub-a2y-converge`, branch `wip/phase50-a2y-lineage-convergence-20260921`. Runtime-bearing merge commit is `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` with parents `c593eaf4b9f23652986231ee1c5581bfee9a7d70` (latest Windows/A2Y planning lineage) and `e03bdd2b718fae3ce030df789c8b9db958d8d8ed` (accepted Server/Production closure). GitHub branch read-back matched the merge SHA exactly before runtime launch.

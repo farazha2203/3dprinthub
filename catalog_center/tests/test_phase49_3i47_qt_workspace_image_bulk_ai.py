@@ -172,6 +172,138 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             {("چراغ رومیزی", "چاپ سه بعدی")},
         )
 
+    def test_query_variant_cards_keep_exact_unique_seo_filename_identity(self):
+        local_dir = self.root / "query-variant-product"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        first = image_dir / "01.webp"
+        second = image_dir / "02.webp"
+        Image.new("RGB", (640, 480), "white").save(first, format="WEBP")
+        Image.new("RGB", (641, 481), "black").save(second, format="WEBP")
+        urls = [
+            "https://cdn.example.com/product.png?resize=1200",
+            "https://cdn.example.com/product.png",
+        ]
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {"url": urls[0], "local_file": str(first)},
+                        {"url": urls[1], "local_file": str(second)},
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147002q",
+            source_title="Goth Baroque Necklace Display Bust",
+            local_dir=local_dir,
+            urls=urls,
+        )
+
+        self.kernel.images.update_metadata(
+            product_id,
+            urls,
+            {
+                "seo_filename": "goth-baroque-necklace-display-bust-3d-print.webp",
+                "alt_text": "مجسمه نمایش گردنبند گوتیک باروک",
+            },
+        )
+        items = {
+            str(item.get("url") or ""): item
+            for item in self.kernel.images.local_items(product_id)
+        }
+        self.assertEqual(
+            items[urls[0]]["planned_filename"],
+            "goth-baroque-necklace-display-bust-3d-print-01.webp",
+        )
+        self.assertEqual(
+            items[urls[1]]["planned_filename"],
+            "goth-baroque-necklace-display-bust-3d-print-02.webp",
+        )
+        self.assertEqual(
+            items[urls[0]]["metadata"]["source_url"],
+            urls[0],
+        )
+        self.assertEqual(
+            items[urls[1]]["metadata"]["source_url"],
+            urls[1],
+        )
+        metadata = json.loads(
+            self.db.product(product_id)["image_metadata_json"]
+        )
+        final_names = [
+            Path(item["final_local_file"]).name
+            for item in metadata
+        ]
+        self.assertEqual(
+            final_names,
+            [
+                "goth-baroque-necklace-display-bust-3d-print-01.webp",
+                "goth-baroque-necklace-display-bust-3d-print-02.webp",
+            ],
+        )
+        self.assertEqual(len(set(final_names)), 2)
+        self.assertTrue(
+            all(
+                (local_dir / "seo_images" / name).is_file()
+                for name in final_names
+            )
+        )
+
+    def test_stage3_site_selection_promotes_trusted_local_card_to_canonical_media(self):
+        local_dir = self.root / "site-selection-canonical"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        first = image_dir / "01.webp"
+        second = image_dir / "02.webp"
+        Image.new("RGB", (400, 300), "white").save(first, format="WEBP")
+        Image.new("RGB", (420, 320), "black").save(second, format="WEBP")
+        source_url = "https://cdn.example.com/source-01.jpg"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {"url": source_url, "local_file": str(first)}
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147002s",
+            local_dir=local_dir,
+            urls=[source_url],
+        )
+        legacy_alias = "local-display://makerworld/3147002s/02.webp"
+        self.db.update_product(
+            product_id,
+            {
+                "selected_images_json": json.dumps(
+                    [source_url, legacy_alias],
+                    ensure_ascii=False,
+                ),
+            },
+        )
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertIn("local://02.webp", page.image_grid.selected_urls())
+            page._save_stage3()
+        finally:
+            page.close()
+
+        row = dict(self.db.product(product_id))
+        canonical = json.loads(row["images_json"])
+        selected = json.loads(row["selected_images_json"])
+        self.assertIn("local://02.webp", canonical)
+        self.assertIn("local://02.webp", selected)
+        self.assertNotIn(legacy_alias, selected)
+
     def test_image_reorder_preserves_url_owned_facts_and_rebuilds_numbered_seo(self):
         product_id, urls, _local_dir = self._mapped_image_product()
         for index, url in enumerate(urls, start=1):

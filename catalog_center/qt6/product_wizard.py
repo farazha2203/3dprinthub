@@ -1099,6 +1099,23 @@ class ProductWizardPage(QWidget):
         if primary and primary not in selected:
             selected.insert(0, primary)
 
+        row = self.kernel.products.get(self.product_id) or {}
+        canonical = [
+            str(value or "").strip()
+            for value in _json_list(row.get("images_json"))
+            if str(value or "").strip()
+        ]
+        canonical = list(dict.fromkeys(canonical))
+        for url in selected:
+            if url in canonical:
+                continue
+            item = self.image_grid.item_for_url(url) or {}
+            # A real Product-local card explicitly checked for Site becomes
+            # canonical Product media at the same save boundary. Display-only
+            # compatibility aliases remain non-authoritative.
+            if bool(item.get("downloaded")) and not bool(item.get("display_only")):
+                canonical.append(url)
+
         alts: list[str] = []
         for url in selected:
             item = self.image_grid.item_for_url(url) or {}
@@ -1108,6 +1125,10 @@ class ProductWizardPage(QWidget):
             self.product_id,
             "images",
             {
+                "images_json": json.dumps(
+                    canonical,
+                    ensure_ascii=False,
+                ),
                 "selected_images_json": json.dumps(
                     selected,
                     ensure_ascii=False,
