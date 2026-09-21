@@ -1,3 +1,13 @@
+## 2026-09-21 - Phase50.A.2W W1/W2 media truth sync — Local tested
+- Added Stage-3 `رفرش رسانه و وضعیت` to compare canonical DB media, persisted `ارسال سایت`, local displayable files and current live Site Product media.
+- Added checksum-aware/idempotent recovery of Site media as local candidates without silently changing Site membership.
+- Renamed source refresh action to `دریافت جدید از منبع` so Site truth refresh and source refetch are not conflated.
+- Closed the pending-selection timer race by flushing current Stage-3 selection/Primary before Ready/Publish.
+- Ready now auto-finalizes only newly selected/unfinalized media such as a fresh screenshot, while stale SEO signatures or missing finalized media remain fail-closed.
+- Added A2W regressions; focused 49/49 and broader A2V+A2W+bidir 83/83 PASS; compile/diff/Qt VerifyOnly PASS.
+- Fresh pre-Truth-Sync Catalog backup integrity PASS; real #625 Truth Sync reports DB=2, Local=3, Site-selected=1, Site=1, mismatch=0 with revision 11/identity/dirty state unchanged.
+- Verified read-only that current Production receiver already enforces exact media gallery count + filename/SHA parity and transaction rollback on mismatch; no Host delta is required for W1/W2.
+
 ## 2026-09-21 - Phase50.A.2V image authority hardening — Production verified
 - Hardened Windows Site-publish media authority: Site-selected media must be part of canonical Product images or publish fails closed.
 - Renamed Qt image controls to distinguish temporary bulk `ویرایش` from persisted `ارسال سایت`.

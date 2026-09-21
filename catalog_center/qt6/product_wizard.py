@@ -407,8 +407,9 @@ class ProductWizardPage(QWidget):
         delete_selected.setProperty("danger", True)
         add_files = QPushButton("+ عکس از فایل")
         screenshot = QPushButton("اسکرین‌شات")
-        recover = QPushButton("بازیابی از لینک")
-        recover.setProperty("primary", True)
+        truth_refresh = QPushButton("رفرش رسانه و وضعیت")
+        truth_refresh.setProperty("primary", True)
+        recover = QPushButton("دریافت جدید از منبع")
 
         select_all.setToolTip("انتخاب همه تصاویر برای عملیات گروهی")
         clear_all.setToolTip("لغو انتخاب عملیاتی همه تصاویر")
@@ -422,8 +423,13 @@ class ProductWizardPage(QWidget):
             "افزودن عکس از کامپیوتر؛ فایل جدید به‌صورت پیش‌فرض برای سایت انتخاب می‌شود."
         )
         screenshot.setToolTip("دریافت اسکرین‌شات صفحه محصول")
+        truth_refresh.setToolTip(
+            "DB و فایل‌های Local را با رسانه فعلی Site Product مقایسه می‌کند؛ "
+            "رسانه Site که Local نیست به‌صورت candidate بازیابی می‌شود، بدون اینکه "
+            "تیک‌های «ارسال سایت» خودکار عوض شوند."
+        )
         recover.setToolTip(
-            "دریافت داده و عکس بیشتر از لینک محصول؛ تصمیم‌های اپراتور "
+            "دریافت داده و عکس جدید از لینک منبع محصول؛ تصمیم‌های اپراتور "
             "مثل قیمت/Profile/Filament/SEO/انتشار حفظ می‌شوند."
         )
 
@@ -444,6 +450,7 @@ class ProductWizardPage(QWidget):
         delete_selected.clicked.connect(self._delete_selected_images)
         add_files.clicked.connect(self._add_local_images)
         screenshot.clicked.connect(self._capture_product_screenshot)
+        truth_refresh.clicked.connect(self._refresh_product_media_truth)
         recover.clicked.connect(self._recover_product_images)
 
         recover_count_label = QLabel("تعداد")
@@ -455,6 +462,7 @@ class ProductWizardPage(QWidget):
             delete_selected,
             add_files,
             screenshot,
+            truth_refresh,
             recover,
         )
         compact_widgets = (
@@ -874,12 +882,21 @@ class ProductWizardPage(QWidget):
         )
         self.image_slider_enabled.blockSignals(False)
         local_count = len(items)
-        source_count = self.kernel.images.source_image_count(row)
-        source_only = max(0, source_count - local_count)
+        canonical_count = len(_json_list(row.get("images_json")))
+        selected_urls = [
+            str(value or "").strip()
+            for value in _json_list(row.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        missing_selected = sum(
+            1
+            for value in selected_urls
+            if not str(self.kernel.images.local_path_for_url(row, value) or "").strip()
+        )
         self.image_task_status.setText(
-            f"{local_count} فایل محلی قابل نمایش • "
-            f"{source_count} لینک تصویر منبع • "
-            f"{source_only} بدون فایل Local"
+            f"{local_count} فایل Local • {canonical_count} رسانه DB • "
+            f"{len(selected_urls)} برای ارسال سایت • "
+            f"{missing_selected} انتخاب بدون فایل"
         )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
@@ -1172,7 +1189,23 @@ class ProductWizardPage(QWidget):
         if not self.publish_product.isChecked():
             QMessageBox.warning(self, "انتشار محصول", "برای ارسال فروشگاهی، «انتشار به عنوان Product» را فعال کن.")
             return False
+        if hasattr(self, "_image_selection_save_timer") and self._image_selection_save_timer.isActive():
+            self._image_selection_save_timer.stop()
         row = self.kernel.products.get(int(self.product_id)) or {}
+        ui_selected = list(self.image_grid.selected_urls())
+        ui_primary = str(self.image_grid.primary_url() or "").strip()
+        if ui_primary and ui_primary not in ui_selected:
+            ui_selected.insert(0, ui_primary)
+        db_selected = [
+            str(value or "").strip()
+            for value in _json_list(row.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        db_primary = str(row.get("primary_image_url") or "").strip()
+        if ui_selected != db_selected or ui_primary != db_primary:
+            if not self._save_stage3_safely():
+                return False
+            row = self.kernel.products.get(int(self.product_id)) or {}
         desired = {
             "approved_for_sale": 1 if self.approved_for_sale.isChecked() else 0,
             "publish_as_product": 1 if self.publish_product.isChecked() else 0,
@@ -1921,6 +1954,19 @@ class ProductWizardPage(QWidget):
         worker.signals.finished.connect(self._image_task_finished)
         self.task_pool.start(worker)
 
+    def _refresh_product_media_truth(self) -> None:
+        if self.product_id is None:
+            return
+        product_id = int(self.product_id)
+        self._start_image_task(
+            "رفرش DB / فایل Local / رسانه Site…",
+            lambda progress: self.kernel.refresh_product_media_truth(
+                product_id,
+                recover_site_media=True,
+                progress=progress,
+            ),
+        )
+
     def _recover_product_images(self) -> None:
         if self.product_id is None:
             return
@@ -1955,6 +2001,39 @@ class ProductWizardPage(QWidget):
         data = dict(result or {}) if isinstance(result, dict) else {}
         if self.product_id is not None:
             self.load_product(self.product_id)
+        if bool(data.get("truth_sync")):
+            canonical = int(data.get("canonical_count") or 0)
+            selected = int(data.get("selected_count") or 0)
+            local_files = int(data.get("local_file_count") or 0)
+            site_media = int(data.get("site_media_count") or 0)
+            recovered = len(data.get("recovered") or [])
+            mismatches = [str(value) for value in (data.get("mismatches") or []) if str(value).strip()]
+            site_error = str(data.get("site_error") or "").strip()
+            self.image_task_status.setText(
+                f"✅ Truth Sync • DB {canonical} • ارسال سایت {selected} • "
+                f"Local {local_files} • Site {site_media}"
+                + (f" • {recovered} candidate بازیابی شد" if recovered else "")
+                + (f" • ⚠ {len(mismatches)} اختلاف" if mismatches else " • parity")
+            )
+            lines = [
+                f"رسانه DB: {canonical}",
+                f"انتخاب «ارسال سایت»: {selected}",
+                f"فایل Local قابل نمایش: {local_files}",
+                f"رسانه فعلی Site Product: {site_media}",
+                f"لینک Source ثبت‌شده در DB: {int(data.get('source_link_count') or 0)}",
+                f"candidate بازیابی‌شده از Site: {recovered}",
+            ]
+            if mismatches:
+                lines.append("\nاختلاف‌ها:")
+                lines.extend(f"• {value}" for value in mismatches[:8])
+            if site_error:
+                lines.append("\nSite Bridge: " + site_error)
+            lines.append("\nرفرش هیچ تیک «ارسال سایت» را خودکار تغییر نمی‌دهد.")
+            if mismatches or site_error:
+                QMessageBox.warning(self, "Truth Sync رسانه محصول", "\n".join(lines))
+            else:
+                QMessageBox.information(self, "Truth Sync رسانه محصول", "\n".join(lines))
+            return
         visible = len(self.image_grid.cards)
         saved = int(data.get("images_saved") or 0)
         found = int(data.get("images_found") or 0)

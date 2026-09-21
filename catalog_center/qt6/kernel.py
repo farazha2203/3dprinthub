@@ -8,7 +8,7 @@ from pathlib import Path
 from threading import Lock
 from types import SimpleNamespace
 from typing import Any, Callable, TypeVar
-from urllib.parse import quote_plus, urlsplit
+from urllib.parse import quote_plus, urljoin, urlsplit
 
 from app import phase49_3c_image_pipeline as image_pipeline
 from app.db import normalize_url, utc_now
@@ -3043,6 +3043,62 @@ class ApplicationKernel:
 
         result["failed"] = len(result["failures"])
         result["conflict_count"] = len(result["conflicts"])
+        return result
+
+    def refresh_product_media_truth(
+        self,
+        product_id: int,
+        *,
+        recover_site_media: bool = True,
+        progress=None,
+    ) -> dict[str, Any]:
+        """Compare Local/DB/Site media and recover missing Site bytes as candidates."""
+        from app.epic49_site_sync import get_product as get_site_product
+        from app.phase50_a2w_media_sync import (
+            media_truth_snapshot,
+            recover_site_media_candidates,
+        )
+
+        row = self.db.product(int(product_id))
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        data = dict(row)
+        server_id = int(data.get("server_product_id") or 0)
+        settings = self.connection.bridge_settings()
+        server: dict[str, Any] | None = None
+        site_error = ""
+        recovery: dict[str, Any] = {}
+        if callable(progress):
+            progress(5, "خواندن authority محلی رسانه‌ها")
+        if server_id > 0:
+            try:
+                if callable(progress):
+                    progress(15, f"خواندن Site Product #{server_id}")
+                server = get_site_product(settings, server_id)
+            except Exception as exc:
+                site_error = f"{type(exc).__name__}: {exc}"
+        if server is not None and recover_site_media:
+            recovery = recover_site_media_candidates(
+                self.db,
+                self.images,
+                int(product_id),
+                server,
+                settings.site_url,
+                progress=progress,
+            )
+        if callable(progress):
+            progress(90, "محاسبه اختلاف Local / Site")
+        result = media_truth_snapshot(
+            self.db,
+            self.images,
+            int(product_id),
+            server=server,
+            site_url=settings.site_url,
+            site_error=site_error,
+            recovery=recovery,
+        )
+        if callable(progress):
+            progress(100, "Truth Sync رسانه کامل شد")
         return result
 
     def sync_filaments_with_site(

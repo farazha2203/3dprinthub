@@ -332,6 +332,56 @@ def _refresh_changed_publish_media(db, product_ids) -> dict[str, Any]:
     }
 
 
+def _prepare_authoritative_publish_media(db, product_ids) -> dict[str, Any]:
+    """Finalize the exact persisted Site selection before factual publish gates."""
+    prepared: list[int] = []
+    failed: list[dict[str, Any]] = []
+    for product_id in _ids(product_ids):
+        row = db.product(product_id)
+        if row is None:
+            continue
+        selected = image_pipeline.cap_unique_urls(
+            [str(item or "").strip() for item in _json_list(row["selected_images_json"])]
+        )
+        if not selected:
+            continue
+        metadata = [
+            dict(item)
+            for item in _json_list(row["image_metadata_json"])
+            if isinstance(item, dict)
+        ]
+        by_url = {
+            str(item.get("source_url") or ""): item
+            for item in metadata
+            if str(item.get("source_url") or "")
+        }
+        has_prior_finalized_media = any(bool(item.get("metadata_ready")) for item in metadata)
+        has_new_unfinalized_selection = any(
+            not bool((by_url.get(source_url) or {}).get("metadata_ready"))
+            for source_url in selected
+        )
+        if not (has_prior_finalized_media and has_new_unfinalized_selection):
+            continue
+        try:
+            image_pipeline.finalize_selected_images(
+                db,
+                product_id,
+                deduplicate=False,
+                image_limit=len(selected),
+            )
+            prepared.append(product_id)
+        except Exception as exc:
+            failed.append({
+                "product_id": product_id,
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+    return {
+        "prepared_ids": prepared,
+        "prepared": len(prepared),
+        "failed": failed,
+    }
+
+
 def publish_media_gate(row) -> dict[str, Any]:
     """Fail closed unless every selected Product image is current final SEO WebP."""
     data = _row_dict(row)
@@ -582,6 +632,7 @@ def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
     requested_ids = _ids(product_ids)
     pricing_refresh = _refresh_publish_pricing_snapshots(db, requested_ids)
     media_refresh = _refresh_changed_publish_media(db, requested_ids)
+    media_prepare = _prepare_authoritative_publish_media(db, requested_ids)
     preflight = preflight_many(
         db,
         stage_core,
@@ -630,6 +681,12 @@ def mark_ready_many(db, stage_core, product_ids) -> dict[str, Any]:
     )
     result["media_refresh_failed"] = list(
         media_refresh.get("failed") or []
+    )
+    result["media_prepared_ids"] = list(
+        media_prepare.get("prepared_ids") or []
+    )
+    result["media_prepare_failed"] = list(
+        media_prepare.get("failed") or []
     )
     return result
 

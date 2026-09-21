@@ -1,3 +1,15 @@
+## 2026-09-21 - Phase50.A.2W W1/W2 LOCAL_TESTED / real #625 Truth Sync PASS
+
+A2W is active on `wip/phase50-a2w-product-media-sync-20260921`, based on clean A2V closure `346baa135c62ff58a6596a80433678ebd622206b`; rollback ref is `backup/pre-phase50-a2w-product-media-sync-20260921`. W1 adds Product-specific `رفرش رسانه و وضعیت` truth sync/recovery in Stage 3. W2 flushes pending `ارسال سایت` UI state before Ready/Publish and only auto-finalizes newly selected, previously-unfinalized media while keeping stale SEO/final-file gates fail-closed.
+
+Local verification: focused W1/W2 + publish/image regression 49/49 PASS; broader A2V Image/SEO/Packaging/Republish + bidirectional Site sync + A2W 83/83 PASS; py_compile, `git diff --check` and `RUN_QT.ps1 -VerifyOnly` PASS. Production release code was inspected read-only and already enforces exact `media.gallery_count`, filename and SHA parity with `REPUBLISH_PARITY_MISMATCH` rollback, so W1/W2 require no Host source delta, migration or restart.
+
+Fresh Catalog rollback: `D:\projects\3dprinthub-backups\phase50-a2w-pre-truth-sync-20260921-093455\catalog-before-a2w-truth-sync.sqlite3`, integrity `ok`, SHA256 `0470eb8d64573b7e252756d2bb9f449ddd2b08b6f50e1eb39e39343b704320cb`.
+
+Real #625 Truth Sync completed without FTP/import/publish. Product remains Site #39 revision 11, uploaded/clean, `needs_update=0`, `upload_ready=0`. Truth result: canonical DB media=2, locally displayable files=3, persisted `ارسال سایت`=1, live Site media=1, source-link count=0, recovered=0, mismatch=0. Selection/Primary remained exactly `local://04.webp`; Site identity/revision and dirty state were unchanged. This proves the current 3-card Windows view is not three Site-authoritative images.
+
+Two temporary probe invocations failed before DB mutation (`PYTHONPATH` missing, then `Database` received `str` instead of `Path`); both causes were corrected before the successful run and are recorded in ERR-49-200. Production remains unchanged at `03042d0430ee6e688c992c875f12edc969df103d`. Exact next: document checkpoint -> commit/push A2W -> verify remote exact SHA -> launch Qt from that SHA -> Stage-3 button smoke on #625 -> then start W3 factual source Profile import.
+
 ## 2026-09-21 - Phase50.A.2V PRODUCTION_VERIFIED / closed
 
 A2V is closed on Windows branch `wip/phase50-a2v-image-authority-20260920`. The tested source implementation remains exact commit `4e69ed6a5c0996c7249830fbe029cd01460ad5b1`; the prior documentation checkpoint was `318fb410c063df660767a9e8ff66d0847a765f03`. The operator runtime is A2U-derived v8.9.11 and the stable Image/SEO/Packaging/Republish gate is 72/72 PASS, with diff-check, py_compile and RUN_QT VerifyOnly PASS.

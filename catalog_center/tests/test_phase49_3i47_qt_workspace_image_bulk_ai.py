@@ -1165,6 +1165,31 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         self.assertEqual(calls, [7, 8, 9])
         self.assertTrue(all(item["ok"] for item in result))
 
+    def test_publish_intent_flushes_current_site_selection_before_ready(self):
+        product_id, urls, _local_dir = self._mapped_image_product()
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            page.approved_for_sale.setChecked(True)
+            page.publish_product.setChecked(True)
+            labels = [button.text() for button in page.image_stage3_toolbar_buttons]
+            self.assertIn("رفرش رسانه و وضعیت", labels)
+            cards = {
+                str(card.item.get("url") or ""): card
+                for card in page.image_grid.cards
+            }
+            cards[urls[2]].selected.setChecked(False)
+            self.assertEqual(page.image_grid.selected_urls(), urls[:2])
+
+            with patch.object(QMessageBox, "warning"):
+                self.assertTrue(page._publish_intent_ready())
+
+            row = dict(self.db.product(product_id))
+            self.assertEqual(json.loads(row["selected_images_json"]), urls[:2])
+            self.assertEqual(row["primary_image_url"], urls[0])
+        finally:
+            page.close()
+
     def test_products_page_exposes_lifecycle_tabs_and_bulk_ai_action(self):
         self._make_product("3147004")
         page = ProductsPage(

@@ -1,3 +1,20 @@
+## 2026-09-21 - Phase50.A.2W Product Media Truth Sync + Source Profile Import
+- [x] Open A2W from A2V closure with rollback ref.
+- [x] Define W1 Refresh/Media truth contract and W2 authoritative Site-media contract.
+- [x] Add Stage-3 `رفرش رسانه و وضعیت` and separate `دریافت جدید از منبع` action.
+- [x] Preserve `ارسال سایت` as the only Site membership authority; refresh never auto-selects visible candidates.
+- [x] Add checksum-aware, idempotent Site-media candidate recovery.
+- [x] Flush pending Site-selection UI before Ready/Publish to close the timer race.
+- [x] Auto-finalize only newly selected/unfinalized media; preserve stale SEO/final-file fail-closed behavior.
+- [x] Focused regression 49/49 PASS; broader A2V+A2W+bidirectional gate 83/83 PASS.
+- [x] py_compile / diff-check / RUN_QT VerifyOnly PASS.
+- [x] Verify Production receiver already enforces exact media count + filename/SHA parity; no Server delta required.
+- [x] Take fresh integrity-checked Catalog backup before real #625 Truth Sync.
+- [x] Real #625 Truth Sync PASS without publish: DB=2, Local=3, Site-selected=1, live Site=1, mismatch=0, identity unchanged.
+- [ ] Commit/push exact A2W SHA and verify GitHub remote.
+- [ ] Relaunch Qt from exact pushed SHA and smoke the new Stage-3 button on #625.
+- [ ] Mark W1/W2 GITHUB_UPDATED/runtime accepted, then begin W3 factual multi-Profile import from source Product.
+
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.
 - [x] Reproduce #625 revision-10 stale-image path and prove unchanged Production image SHA values.

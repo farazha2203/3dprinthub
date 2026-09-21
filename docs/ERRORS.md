@@ -1,3 +1,13 @@
+## ERR-49-200 - A2W standalone Truth-Sync probe bootstrap failed twice before DB access
+**Date:** 2026-09-21
+**Observed:** the first standalone #625 Truth-Sync probe failed with `ModuleNotFoundError: app`; after correcting import-path context, the second failed because `Database(...)` received a `str` instead of the repository contract `Path` object.
+**Impact:** none to Product/Site state. Both failures occurred before the Truth Sync method could run; no FTP, Bridge import, publish, revision change or DB mutation occurred. The already-created integrity-checked Catalog rollback remained valid.
+**Root cause:** the temporary probe lived outside `catalog_center`, so Python did not inherit the application package path; the follow-up invocation then used the wrong constructor type for `app.db.Database`.
+**Failed attempts:** external probe without explicit `PYTHONPATH`; then explicit `PYTHONPATH` but `Database(str_path)`.
+**Correct fix:** set `PYTHONPATH` explicitly to the canonical `catalog_center` root and construct `Database(Path(...))`. Do not repeat either failed command unchanged.
+**Verification:** corrected probe completed real #625 Truth Sync successfully: DB=2, Local=3, selected=1, Site=1, mismatch=0, recovered=0; Site Product #39 revision 11, selection, Primary and dirty flags were unchanged.
+**Prevention:** standalone operational probes must import through the verified repository package root and must follow actual constructor contracts from source instead of assuming generic string-path APIs.
+
 ## ERR-49-199 - Revision 11 completed before the planned fresh pre-republish Catalog snapshot
 **Date:** 2026-09-21
 **Observed:** the controlled #625 same-identity publish completed successfully as Product #39 revision 11 before the planned fresh Catalog snapshot immediately preceding that publish had been captured.

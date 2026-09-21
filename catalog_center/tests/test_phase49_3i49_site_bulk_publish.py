@@ -788,6 +788,38 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_ready_finalizes_newly_selected_screenshot_before_publish_gate(self):
+        product_id = self._product("3491100")
+        row = dict(self.db.product(product_id))
+        image_dir = Path(row["local_dir"]) / "images"
+        screenshot = image_dir / "source-page-screenshot-a2w.png"
+        Image.new("RGB", (640, 480), (35, 140, 210)).save(screenshot, "PNG")
+        pseudo = "local://source-page-screenshot-a2w.png"
+        canonical = json.loads(row["images_json"])
+        selected = json.loads(row["selected_images_json"])
+        canonical.append(pseudo)
+        selected.append(pseudo)
+        self.db.update_product(product_id, {
+            "images_json": json.dumps(canonical),
+            "selected_images_json": json.dumps(selected),
+        })
+
+        stale = publish_media_gate(self.db.product(product_id))
+        self.assertFalse(stale["ready"])
+        self.assertTrue(any("SEO metadata is missing" in value for value in stale["missing"]))
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        self.assertIn(product_id, ready["media_prepared_ids"])
+        self.assertEqual(ready["media_prepare_failed"], [])
+        gate = publish_media_gate(self.db.product(product_id))
+        self.assertTrue(gate["ready"], gate["missing"])
+        after = dict(self.db.product(product_id))
+        self.assertEqual(json.loads(after["selected_images_json"]), selected)
+        metadata = json.loads(after["image_metadata_json"])
+        self.assertEqual({item["source_url"] for item in metadata}, set(selected))
+        self.assertEqual(len(gate["items"]), 2)
+
     def test_products_page_exposes_explicit_ready_and_bulk_publish_actions(self):
         page = ProductsPage(
             self.db,
