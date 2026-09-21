@@ -1,11 +1,11 @@
 ## 2026-09-21 - Owner: Product media truth refresh + Site/source recovery + future Profile/video/manual Product import
-Status: `A2W W1/W2 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / W3 LOCAL_TESTED / GITHUB NEXT`.
+Status: `A2W W1/W2/W3 WINDOWS_RUNTIME_ACCEPTED / REAL #625 SOURCE PROFILE IMPORT PASS / W4 NEXT`.
 
 Owner reports Product #625 shows three media cards in Windows while the live Site Product has one image after re-publish. Required immediate behavior: add a Stage-3 `رفرش رسانه و وضعیت` action that compares Local DB authority, persisted `ارسال سایت`, physical Local files, current Site Product media and source media without silently changing operator Site membership. Public Site media missing locally must be recoverable into the trusted Product workspace as idempotent candidates.
 
 Re-publish must continue using the exact persisted `ارسال سایت` set as authoritative replacement: selected new images/screenshots are added, deselected stale Site images disappear, order/Primary are preserved, SEO WebPs are current, and post-publish Site media count must match the Batch/ACK. Visible local cards alone must never imply Site selection.
 
-Follow-up A2W scope records source video import for Site/Instagram, factual multi-Profile extraction from the Product link (including weight/time/material/nozzle facts), mapping a factual material family such as PLA to compatible Local offers, and a manual/self-produced Product flow with operator media/description plus AI SEO. These are planned after W1/W2.
+Follow-up A2W scope records source video import for Site/Instagram, factual multi-Profile extraction from the Product link, material-family mapping and a manual/self-produced Product flow. W3 factual multi-Profile extraction/import is now runtime-accepted on real #625; W4 mapping of factual PLA/source colors to compatible Local offers/pricing is next.
 
 ## 2026-09-21 - Owner: new Product images sent from Windows must replace the live Site images
 Status: `A2V PRODUCTION_VERIFIED / CLOSED`.

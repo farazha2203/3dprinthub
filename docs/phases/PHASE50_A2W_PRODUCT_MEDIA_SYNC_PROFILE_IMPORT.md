@@ -1,13 +1,13 @@
 # Phase50.A.2W — Product Media Truth Sync + Source Profile Import
 
-Status: **W1/W2 WINDOWS_RUNTIME_ACCEPTED — W3 LOCAL_TESTED / GITHUB NEXT**
+Status: **W1/W2 WINDOWS_RUNTIME_ACCEPTED — W3 WINDOWS_RUNTIME_ACCEPTED / REAL #625 IMPORT PASS — W4 NEXT**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2V `PRODUCTION_VERIFIED`
 
 ## Owner request
 The Windows Product Wizard can show more local media than the live Site Product, so the operator needs one explicit refresh that proves Local DB, Local files, Site Product media and source media separately. Re-publish must replace the live Product image set with the exact persisted `ارسال سایت` selection, including newly added screenshots/images and removal of stale Site images.
 
-The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2 are runtime-accepted; W3 is the current Local-tested deliverable.
+The same phase also records follow-up work for source videos, factual source Print Profile import, material-family mapping and manual self-produced Products. W1/W2/W3 are runtime-accepted; W4 material-family mapping is next.
 
 ## Baseline / safety
 - Branch starts from clean A2V closure `346baa135c62ff58a6596a80433678ebd622206b`.
@@ -82,9 +82,12 @@ Before and after Truth Sync, #625 remains Site Product #39 revision 11, `workflo
 - [x] Correct retained W1/W2/A2V/bidirectional gate 83/83 PASS.
 - [x] py_compile / diff-check / RUN_QT VerifyOnly PASS.
 - [x] Fresh pre-real-W3 Catalog backup integrity PASS with SHA256 recorded.
-- [ ] Commit/push W3 and verify remote exact SHA.
-- [ ] Exact-SHA Qt real #625 Source Profile fetch smoke: exactly two facts, no FTP/Bridge publish, Site Product #39 revision 11 unchanged.
-- [ ] Controlled Commerce unlock + import after Source smoke; preserve existing manual Profile and create exactly two source Profiles, no duplicates.
+- [x] Commit/push W3 source `36dbf3cf283fc1e5697091549e930416c671cbe7` and verify remote exact SHA.
+- [x] Exact-SHA Qt real #625 Source Profile fetch smoke: fresh MakerWorld capture, exactly two facts, no FTP/Bridge publish, Site Product #39 revision 11 and Sales Ledger unchanged.
+- [x] Fresh pre-import backup integrity PASS: `phase50-a2w-w3-pre-ledger-import-20260921-103253`, SHA256 `bbf3614285b79da354505775a3750db57257a8ab790171a953168895443f055e`.
+- [x] Controlled StageCore Commerce unlock + real import preserved manual `ledger-dcff93fba1e9` and created exactly `source-mw-3609481` + `source-mw-3609488`; no duplicates or invented Brand/local prices.
+- [x] Site identity remains #39 revision 11; no publish event; Commerce intentionally remains unlocked/ready for W4.
+- [x] Post-import integrity/snapshot PASS: `phase50-a2w-w3-post-ledger-import-20260921-103507`, SHA256 `fbeeca44c9ebb46be75c1dc6a70ab2eaa6a34aa719483808578c56fb3be05a9d`; Qt Stage-2 readback shows exactly three Profiles.
 
 ## Next exact task
-Commit/push the tested W3 delta, verify GitHub exact SHA, relaunch Qt only from that SHA, execute real #625 `دریافت پروفایل از محصول` without publish, verify the two factual Source Profiles and unchanged Site identity, then perform controlled Commerce unlock/import only if that smoke passes.
+W4: map factual Source material/color evidence (PLA, #FECC66, #804003) to compatible real Local Filament offers and pricing for operator review. Preserve Source facts, preserve the manual Profile, keep Commerce unlocked until reviewed, and do not publish #625 as part of W4 bootstrap.

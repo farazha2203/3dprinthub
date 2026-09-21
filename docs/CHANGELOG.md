@@ -1,4 +1,4 @@
-## 2026-09-21 - Phase50.A.2W W3 factual Source Print Profiles — Local tested
+## 2026-09-21 - Phase50.A.2W W3 factual Source Print Profiles — Windows runtime accepted
 - Added deterministic MakerWorld `__NEXT_DATA__` Print Profile extraction into existing `source_print_profiles_json`; no AI/inference is used for these production facts.
 - Preserves multiple source Profiles separately and records exact source instance/profile ids, seconds/minutes, weight, plate count, material families, per-filament source color/usage, printer compatibility, nozzle, layer, walls and infill.
 - Stage 2 now exposes `دریافت پروفایل از محصول`; Source refresh does not alter the Sales Ledger. Operator-confirmed import uses deterministic source keys, preserves manual Profiles and is idempotent.
@@ -7,6 +7,11 @@
 - W3 focused 5/5 PASS; corrected retained A2V/W1/W2/bidirectional gate 83/83 PASS; py_compile, diff-check and Qt VerifyOnly PASS.
 - Fresh pre-real-W3 Catalog rollback `phase50-a2w-w3-pre-real-625-20260921-102142` integrity PASS / SHA256 `ba7d70b04cf5b084bd7922bd0f93f321a55cc4c7c241795f32c6840235764401`.
 - Read-only history proves current #625 `needs_update=1` came from later source recovery images 2→5, not W3; Site Product remains #39 revision 11 and W3 has not published anything.
+- Pushed exact W3 source `36dbf3cf283fc1e5697091549e930416c671cbe7`, verified Local=remote and launched Qt from that SHA.
+- Real Stage-2 button smoke used a fresh MakerWorld capture, persisted exactly two Source Profiles and left Site #39/rev11 plus the existing Ledger unchanged when import confirmation was declined.
+- Took a second pre-import integrity backup `phase50-a2w-w3-pre-ledger-import-20260921-103253` / SHA256 `bbf3614285b79da354505775a3750db57257a8ab790171a953168895443f055e`.
+- Controlled StageCore Commerce unlock + real import preserved manual `ledger-dcff93fba1e9`, added exactly `source-mw-3609481` and `source-mw-3609488`, introduced no local Brand/pricing, and created no publish event.
+- Post-import integrity/readback PASS; accepted snapshot `phase50-a2w-w3-post-ledger-import-20260921-103507` / SHA256 `fbeeca44c9ebb46be75c1dc6a70ab2eaa6a34aa719483808578c56fb3be05a9d`; Qt Stage 2 shows exactly three Profiles. Commerce remains intentionally unlocked for W4.
 
 ## 2026-09-21 - Phase50.A.2W W1/W2 media truth sync — Local tested
 - Added Stage-3 `رفرش رسانه و وضعیت` to compare canonical DB media, persisted `ارسال سایت`, local displayable files and current live Site Product media.

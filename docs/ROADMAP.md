@@ -20,9 +20,11 @@
 - [x] W3 py_compile / diff-check / RUN_QT VerifyOnly PASS.
 - [x] Fresh pre-real-W3 Catalog backup integrity PASS: `phase50-a2w-w3-pre-real-625-20260921-102142`, SHA256 `ba7d70b0...64401`.
 - [x] Prove #625 `needs_update=1` predates W3 and came from source recovery images 2→5; preserve it.
-- [ ] Commit/push W3 and verify GitHub exact SHA.
-- [ ] Relaunch Qt from exact W3 SHA and perform real #625 `دریافت پروفایل از محصول` smoke with no publish/revision change.
-- [ ] After Source Profile smoke PASS, controlled Commerce unlock + import two deterministic source profiles while preserving the manual Profile; leave W4 local Filament mapping separate.
+- [x] Commit/push W3 source `36dbf3cf283fc1e5697091549e930416c671cbe7` and verify GitHub exact SHA.
+- [x] Relaunch Qt from exact W3 source SHA and perform real #625 `دریافت پروفایل از محصول` smoke: fresh capture, exactly two factual profiles, no publish/revision/Ledger change.
+- [x] Take second pre-import integrity backup, controlled Commerce unlock, import exactly two deterministic source Profiles while preserving manual Profile and zero/blank local commerce facts.
+- [x] Verify post-import DB integrity + snapshot and Qt Stage-2 readback: exactly 3 Ledger Profiles, Source count 2, Site #39 revision 11 unchanged, no publish event.
+- [ ] W4: map factual Source PLA/color hints to compatible real Local Filament offers/pricing for operator review; keep Commerce unlocked and do not publish during bootstrap.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.
