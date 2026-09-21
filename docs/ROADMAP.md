@@ -11,11 +11,11 @@
 - [x] Prove #620 160 active Variants are authoritative (64 + six times 16), with stale_active_count=0.
 - [x] Isolate Hero #17 stored private-media URL while effective/rendered Product-owned media remains healthy.
 - [x] Implement Product-owned Hero URL persistence and local regressions (11/11 + 16/16 PASS).
-- [ ] Commit/push Hero persistence follow-up and verify remote equality.
-- [ ] Fresh Host rollback backup + exact-SHA no-migration deploy.
-- [ ] Normalize existing Hero #17 stored URL to canonical Product media without re-publishing #620.
-- [ ] Verify Home DOM/browser, Hero media HTTP 200, no imported-models public URL, final clean Host.
-- [ ] Close A2X docs.
+- [x] Commit/push Hero persistence follow-up `94e53831...` and verify remote equality.
+- [x] Fresh Host rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260921-165608-phase50-a2x-hero-media-minimal` + exact-SHA no-migration deploy.
+- [x] Normalize existing Hero #17 stored URL to canonical Product media without re-publishing #620; Hero/Product revisions remain 1.
+- [x] Verify Home DOM/browser, Hero media HTTP 200, no imported-models public URL, final clean Host.
+- [x] Close A2X as PRODUCTION_VERIFIED.
 
 ## 2026-09-20 - A2R payment readiness panel
 

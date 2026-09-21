@@ -3,14 +3,15 @@
 - Selected gallery ordering is preserved when a corresponding ProductImage exists; Product.main_image is the safe public fallback.
 - HTTP(S) source image is only a fallback when the Product has no public-owned media.
 - Added direct persistence regression; Unified Sync/Hero ownership/import E2E 11/11 and Home/Slicebox/Hero 16/16 PASS.
-- No migration and no Product #620 re-publish is required.
+- No migration and no Product #620 re-publish was required.
+- Follow-up `94e53831be67368ec199c1ea5b3ab728cbfff445` is Production-verified; Hero #17 was normalized in place to canonical `/media/p/620/...` with revisions unchanged, and real browser Hero acceptance passed.
 
 ## 2026-09-21 - A2X Server material parity + authoritative SEO hotfix
 - Material-only republish parity now treats case-only names as the same resolved Store material, preventing false pla/PLA and petg/PETG rollbacks.
 - All non-material parity fields remain unchanged and strict.
 - Server SEO sync now assigns the current Desktop-derived SEO values instead of retaining stale previous Site values.
 - Added regression for case-only material parity; focused Server 6/6 PASS plus compile/diff/Django/no-drift.
-- No migration or Production mutation yet.
+- Hotfix `143848eeeeac7be8ec64c33ab7aa4c95c9f42165` was deployed GitHub-first with no migration; controlled #620 retry then passed and created Product #41 / Slider #17.
 
 ## 2026-09-20 - A2R Production preflight transport gate
 - Fixed two local central-router compatibility defects with a pre-change backup: JSON-array selection and named PowerShell REST parameters.

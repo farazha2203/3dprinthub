@@ -1,12 +1,12 @@
 ## 2026-09-21 - Owner: continue A2X Hero #17 closure
-Status: HERO PUBLIC-MEDIA PERSISTENCE LOCAL_TESTED / DEPLOY NEXT.
+Status: `A2X PRODUCTION_VERIFIED / CLOSED`.
 
-Product #620 has already published successfully and must not be sent again for this fix. Remaining A2X work is to make the stored Hero #17 URL obey the same Product-owned public-media boundary already used by runtime rendering, deploy the source follow-up from GitHub, normalize only the existing Hero URL with rollback protection, verify Home/Slider media in a real browser, then close A2X.
+Product #620 remains successfully published as Site Product #41 / Slider #17 without any additional re-publish. Hero #17 now stores canonical Product-owned `/media/p/620/...` media, revisions remain 1, and Home/Slider passed real browser acceptance with no private imported-media URL or broken image. A2X is closed; continue only with the next explicitly approved Phase50 slice.
 
-## 2026-09-21 - Owner: Product #620 publish failed; continue A2X
-Status: SERVER HOTFIX LOCAL_TESTED / DEPLOY + CONTROLLED RETRY NEXT.
+## 2026-09-21 - Owner incident history: Product #620 publish failure
+Status: `CLOSED BY A2X`.
 
-Owner reports the attempted Site publish failed. Real receipt proves the receiver rolled back only because Local material labels pla/petg differed in letter case from canonical Store PLA/PETG. Required behavior is to accept case-only material identity while preserving every other strict republish-parity gate, deploy only from GitHub through the dedicated reverse tunnel, then retry #620 after the changed condition and continue the interrupted A2X Slider/backfill acceptance.
+The failed attempt was caused only by Local material labels `pla/petg` differing in letter case from canonical Store `PLA/PETG`. The Server parity fix was deployed with all non-material checks still strict, and a new controlled batch successfully published #620 as Product #41 / Slider #17. No further retry is pending for this incident.
 
 ## 2026-09-20 - Owner: finish A2S finance reconciliation and receipt audit
 Status: `FINANCE/RECEIPT ACCEPTED / PRODUCTION VERIFIED @ a8baf281`.

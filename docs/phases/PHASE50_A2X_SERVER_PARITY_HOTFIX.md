@@ -1,8 +1,8 @@
 # Phase50.A.2X — Server parity + Hero public-media closure
 
-Status: **HERO_FIX_LOCAL_TESTED / GITHUB PROMOTION NEXT**
+Status: **PRODUCTION_VERIFIED / CLOSED**
 Date: 2026-09-21
-Current Production source: `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`
+Accepted runtime-bearing Production source: `94e53831be67368ec199c1ea5b3ab728cbfff445`
 Branch: `wip/phase50-a2x-server-parity-20260921`
 
 ## Completed server incident
@@ -39,13 +39,15 @@ The follow-up changes the unified Desktop -> Hero persistence boundary:
 - `makemigrations --check --dry-run`: no changes.
 - `git diff --check`: PASS.
 
-## Remaining deployment gates
-- [ ] Commit/push exact Hero follow-up SHA; verify Local=GitHub.
-- [ ] Reverse-tunnel Host exact baseline/branch/worktree/MySQL/migration preflight.
-- [ ] Fresh checksum-verified source/env/MySQL rollback backup.
-- [ ] Explicit fetch + ff-only deploy from GitHub; no migration.
-- [ ] Targeted one-time normalization of Hero #17 stored URL using the deployed resolver; do not change Product #41 or republish #620.
-- [ ] Verify Hero #17 stored and effective URLs are Product-owned canonical media.
-- [ ] Verify Home DOM/browser uses canonical media, Product link is present, all Hero images load and no public `store/imported-models` URL appears.
-- [ ] Verify Home/Store/Product HTTP 200 and final Host worktree clean.
-- [ ] Update closure docs and mark A2X PRODUCTION_VERIFIED.
+## Production closure
+- [x] Commit/push exact Hero follow-up `94e53831be67368ec199c1ea5b3ab728cbfff445`; Local=GitHub exact.
+- [x] Reverse-tunnel Host exact baseline/branch/worktree/MySQL/migration preflight.
+- [x] Fresh scoped rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260921-165608-phase50-a2x-hero-media-minimal`; runtime-before/env/MySQL SHA256 + gzip PASS. ERR-49-213 records the quota-driven scoped-bundle choice.
+- [x] Explicit fetch + ff-only deploy from GitHub; no migration.
+- [x] Targeted one-time normalization of Hero #17 stored URL; exactly one row updated, Product #41 not republished.
+- [x] Hero #17 stored/effective URLs are Product-owned canonical media; Hero and Product Profile revisions remain 1.
+- [x] Home DOM and real Chrome/Playwright use canonical media, Product link is present, all 3 Hero images load, and public `store/imported-models` refs are zero.
+- [x] Home/Store/Product/canonical Hero media HTTP 200; final Host worktree clean; migration plan empty.
+- [x] Windows #620 remains on successful batch UUID `2cb55e9e-35fa-40b0-8901-2606e7a4118c` with no later publish receipts.
+
+A2X is closed. Do not re-publish #620 for this phase.
