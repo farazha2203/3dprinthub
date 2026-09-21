@@ -1,0 +1,22 @@
+{
+  "asset_revision": "5179f025e2e30692",
+  "feed_sha256": [
+    "d5f46187ff2e3f0f33bc2a3206f5eefc5e26bab08574a688925f47257ada5bc7",
+    "d79bd22cb7850e5012a5824dd0c94388b2c038c114ac23fca862d2089598658a",
+    "07565baf0ef834367ccdb62bc20d1d5e4fd68a2d2fb8990a64a36c0fbf2ee613",
+    "f402e0ba1cad100b198dd685db817da9fa0b2ca8abb10e164e73ba94c198b958",
+    "e96a2d82db6cbd38ad9bbb8849caa125448251002c1dcdc65a03ebed2ad92f2b"
+  ],
+  "product_id": 609,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 42,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://3dprinthub.ir/media/p/609/d00a3b793092/goth-baroque-necklace-display-bust-3d-print-01.webp",
+    "https://3dprinthub.ir/media/p/609/d8471ed60489/goth-baroque-necklace-display-bust-3d-print-02.webp",
+    "https://3dprinthub.ir/media/p/609/8fb8c25a3881/goth-baroque-necklace-display-bust-3d-print-03.webp",
+    "https://3dprinthub.ir/media/p/609/de36d829ea33/goth-baroque-necklace-display-bust-3d-print-04.webp",
+    "https://3dprinthub.ir/media/p/609/ee707e327d10/goth-baroque-necklace-display-bust-3d-print-05.webp"
+  ],
+  "story_sha256": "1d8482c73c183d65b5a5370e4aca772b45b4b25f0aed74a4812befa3a274fc19"
+}
