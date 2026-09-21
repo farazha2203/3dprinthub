@@ -1,3 +1,13 @@
+## ERR-49-201 - Named 83-test A2W regression gate was initially reconstructed with two obsolete legacy modules
+**Date:** 2026-09-21
+**Observed:** the first W3 retained-regression run executed 83 tests but produced one legacy image-limit assertion (`DEFAULT_IMAGE_LIMIT` expected 10 while current runtime is 5) plus three Windows `WinError 32` temp-SQLite cleanup errors from the old SEO-execution module.
+**Impact:** no Product/DB/Host mutation. All W3 focused tests were already green, and the four failures match the exact wider legacy pattern previously reproduced on clean A2U and documented under ERR-49-198.
+**Root cause:** the named historical gate was documented by count/purpose but not by an explicit module manifest. During reconstruction, two obsolete modules (`test_epic49_phase49_3h_seo_execution`, `test_epic49_phase49_3h_image_limits`) were substituted for the actual stable A2V runtime/slider contract modules.
+**Failed attempt:** the incorrect 83-module set was run once. It was not repeated unchanged after the mismatch was identified.
+**Correct fix:** reconstruct the historical A2V gate from commit/test counts: current stable Image/SEO/Packaging/Republish core is 74 tests after the two W1/W2 additions; add `test_phase49_3i52b_bidirectional_site_sync` (7) and `test_phase50_a2w_product_media_sync` (2). The stable core uses `test_v871_slider_seo` and `test_v8_runtime_contract`, not the two obsolete modules above.
+**Verification:** corrected retained gate ran exactly 83 tests and passed 83/83. W3 focused 5/5, py_compile, diff-check and RUN_QT VerifyOnly also PASS.
+**Prevention:** every named/count-based regression gate must record its exact test-module manifest alongside the count so a later continuation never reconstructs it by semantic guesswork.
+
 ## ERR-49-200 - A2W standalone Truth-Sync probe bootstrap failed twice before DB access
 **Date:** 2026-09-21
 **Observed:** the first standalone #625 Truth-Sync probe failed with `ModuleNotFoundError: app`; after correcting import-path context, the second failed because `Database(...)` received a `str` instead of the repository contract `Path` object.

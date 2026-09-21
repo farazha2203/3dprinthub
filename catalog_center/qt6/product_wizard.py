@@ -142,6 +142,7 @@ class ProductWizardPage(QWidget):
         self._pending_ai_quote: dict[str, Any] | None = None
         self._image_worker: Worker | None = None
         self._production_estimate_worker: Worker | None = None
+        self._source_profile_worker: Worker | None = None
         self._publish_worker: Worker | None = None
 
         root = QVBoxLayout(self)
@@ -376,12 +377,23 @@ class ProductWizardPage(QWidget):
                 button.setProperty("primary", True)
             button.clicked.connect(callback)
             profile_actions.addWidget(button)
+        self.source_profile_btn = QPushButton("دریافت پروفایل از محصول")
+        self.source_profile_btn.setToolTip(
+            "Print Profileهای factual را مستقیم از Source/NextData می‌خواند؛ "
+            "تا قبل از تأیید شما Profileهای فروش فعلی را تغییر نمی‌دهد."
+        )
+        self.source_profile_btn.clicked.connect(self._fetch_source_profiles)
+        profile_actions.addWidget(self.source_profile_btn)
         ai_estimate = QPushButton("AI تخمین تولید (Preview)")
         ai_estimate.setToolTip("Source/Link و عکس‌های محصول برای تخمین تقریبی ابعاد، وزن و زمان چاپ خوانده می‌شوند؛ Preview بدون تأیید شما چیزی را ذخیره نمی‌کند.")
         ai_estimate.clicked.connect(self._estimate_production_ai)
         profile_actions.addWidget(ai_estimate)
         profile_actions.addStretch(1)
         layout.addLayout(profile_actions)
+        self.source_profile_status = QLabel("Source Profile: هنوز دریافت نشده")
+        self.source_profile_status.setObjectName("Muted")
+        self.source_profile_status.setWordWrap(True)
+        layout.addWidget(self.source_profile_status)
         self.stack.addWidget(page)
 
     def _build_stage3(self) -> None:
@@ -871,6 +883,22 @@ class ProductWizardPage(QWidget):
         self.product_type.setCurrentIndex(index if index >= 0 else 0)
         self.dimensions.setText(str(row.get("dimensions") or ""))
         self.use_case_class.setText(str(row.get("use_case_class") or ""))
+        source_profiles = [
+            dict(item)
+            for item in _json_list(row.get("source_print_profiles_json"))
+            if isinstance(item, dict)
+        ]
+        if source_profiles:
+            summary = " • ".join(
+                f"{item.get('name') or 'Source'}: {float(item.get('weight_grams') or 0):g}g / "
+                f"{float(item.get('print_minutes') or 0):.1f}min"
+                for item in source_profiles[:4]
+            )
+            self.source_profile_status.setText(
+                f"Source Profile: {len(source_profiles)} مورد • {summary}"
+            )
+        else:
+            self.source_profile_status.setText("Source Profile: هنوز دریافت نشده")
         self._reload_profiles()
 
     def _load_stage3(self, row: dict[str, Any]) -> None:
@@ -1550,6 +1578,98 @@ class ProductWizardPage(QWidget):
             return
         self._reload_profiles()
         self._refresh_stage_statuses()
+
+    def _fetch_source_profiles(self) -> None:
+        if self.product_id is None:
+            QMessageBox.warning(self, "Source Profile", "ابتدا یک محصول را انتخاب کن.")
+            return
+        if self._source_profile_worker is not None:
+            QMessageBox.information(self, "Source Profile", "دریافت Profile در حال اجراست.")
+            return
+        product_id = int(self.product_id)
+        self.source_profile_btn.setEnabled(False)
+        self.source_profile_status.setText("در حال خواندن Print Profileهای factual از Source…")
+        worker = Worker(
+            lambda progress: self.kernel.acquisition.refresh_source_profiles(
+                product_id,
+                fresh_capture=True,
+                progress=progress,
+            )
+        )
+        self._source_profile_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.source_profile_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._source_profiles_ready)
+        worker.signals.error.connect(self._source_profiles_error)
+        worker.signals.finished.connect(self._source_profiles_finished)
+        self.task_pool.start(worker)
+
+    def _source_profiles_ready(self, result=None) -> None:
+        data = dict(result or {})
+        product_id = int(data.get("product_id") or 0)
+        profiles = [
+            dict(item)
+            for item in (data.get("profiles") or [])
+            if isinstance(item, dict)
+        ]
+        lines = []
+        for item in profiles:
+            minutes = float(item.get("print_minutes") or 0)
+            materials = ", ".join(str(x) for x in (item.get("material_families") or [])) or "—"
+            nozzle = item.get("nozzle_diameter_mm")
+            layer = item.get("layer_height_mm")
+            lines.append(
+                f"• {item.get('name') or 'Source Profile'} — "
+                f"{float(item.get('weight_grams') or 0):g}g — "
+                f"{minutes / 60.0:.2f}h ({minutes:.1f}min) — "
+                f"{materials} — nozzle {nozzle or '—'}mm — layer {layer or '—'}mm"
+            )
+        self.source_profile_status.setText(
+            f"✅ {len(profiles)} Source Profile factual ذخیره شد"
+            + (" • cached fallback" if data.get("used_cached_capture") else "")
+        )
+        if not profiles:
+            QMessageBox.warning(self, "Source Profile", "هیچ Print Profile factual پیدا نشد.")
+            return
+        detail = "\n".join(lines)
+        answer = QMessageBox.question(
+            self,
+            "دریافت پروفایل از محصول",
+            detail
+            + "\n\nاین فکت‌ها در Source Profile ذخیره شدند. "
+              "Profileهای دستی فعلی حذف نمی‌شوند. "
+              "آیا همین Profileها به Ledger فروش اضافه/به‌روزرسانی شوند؟"
+              "\nBrand و قیمت محلی حدس زده نمی‌شود؛ mapping کامل در W4 انجام می‌شود.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            try:
+                imported = self.kernel.commerce.import_source_profiles(product_id)
+            except Exception as exc:
+                QMessageBox.warning(self, "Import Source Profile", str(exc))
+            else:
+                QMessageBox.information(
+                    self,
+                    "Import Source Profile",
+                    f"{int(imported.get('imported_profile_count') or 0)} Profile وارد Ledger شد • "
+                    f"جدید {int(imported.get('added') or 0)} • "
+                    f"به‌روزشده {int(imported.get('updated') or 0)}",
+                )
+        if self.product_id == product_id:
+            self.load_product(product_id)
+
+    def _source_profiles_error(self, detail: str) -> None:
+        self.source_profile_status.setText("❌ دریافت Source Profile ناموفق")
+        message = str(detail or "").splitlines()[-1] if detail else "خطای ناشناخته"
+        QMessageBox.warning(self, "Source Profile", message)
+
+    def _source_profiles_finished(self) -> None:
+        self._source_profile_worker = None
+        self.source_profile_btn.setEnabled(True)
 
     def _estimate_production_ai(self) -> None:
         if self.product_id is None:

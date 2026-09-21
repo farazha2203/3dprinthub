@@ -2406,6 +2406,23 @@ class AcquisitionCore:
             )
         return summary
 
+    def refresh_source_profiles(
+        self,
+        product_id: int,
+        *,
+        fresh_capture: bool = True,
+        progress=None,
+    ) -> dict[str, Any]:
+        from app.phase50_a2w_source_profiles import refresh_product_source_profiles
+
+        self.reset_stop()
+        return refresh_product_source_profiles(
+            self.db,
+            int(product_id),
+            fresh_capture=bool(fresh_capture),
+            progress=progress,
+        )
+
     def recover_product_images(
         self,
         product_id: int,

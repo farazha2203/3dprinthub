@@ -1843,6 +1843,54 @@ class CommerceCore:
             "source_declared": False,
         }
 
+    def import_source_profiles(self, product_id: int) -> dict[str, Any]:
+        """Merge factual Source Profiles into the operator ledger without replacing manual profiles."""
+        from app.phase50_a2w_source_profiles import (
+            ledger_candidates,
+            merge_source_ledger_profiles,
+        )
+
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        if is_stage_locked(row, "commerce"):
+            raise RuntimeError(
+                "مرحله Filament/Price/Profile قفل است؛ ابتدا «اصلاح مرحله» را بزن."
+            )
+        source_profiles = [
+            dict(item)
+            for item in _json_list(_row_dict(row).get("source_print_profiles_json", "[]"))
+            if isinstance(item, dict)
+        ]
+        if not source_profiles:
+            raise RuntimeError("ابتدا «دریافت پروفایل از محصول» را اجرا کن.")
+
+        current = self.profiles(product_id)
+        candidate_keys = {
+            str(item.get("key") or "")
+            for item in ledger_candidates(source_profiles)
+            if str(item.get("key") or "")
+        }
+        previous_source_keys = {
+            str(item.get("key") or "")
+            for item in current
+            if str(item.get("key") or "") in candidate_keys
+        }
+        merged = merge_source_ledger_profiles(current, source_profiles)
+        saved = self.save_profiles(product_id, merged)
+        saved_source = [
+            item for item in saved
+            if str(item.get("key") or "") in candidate_keys
+        ]
+        return {
+            "source_profile_count": len(source_profiles),
+            "imported_profile_count": len(saved_source),
+            "added": max(0, len(candidate_keys - previous_source_keys)),
+            "updated": len(candidate_keys & previous_source_keys),
+            "profiles": saved_source,
+        }
+
     def bootstrap_from_source(
         self,
         product_id: int,

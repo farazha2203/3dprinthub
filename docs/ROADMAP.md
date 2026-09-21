@@ -14,8 +14,15 @@
 - [x] Commit/push exact A2W SHA `ab1e9d1051aba6ff12a8b3c8b1f9bf04fb22be17` and verify GitHub remote exact match.
 - [x] Relaunch Qt from exact pushed SHA and smoke the new Stage-3 button on #625; button-level real Bridge truth sync PASS.
 - [x] Mark W1/W2 `GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED`.
-- [ ] W3: inspect factual source-profile evidence for #625 and existing extractor boundaries.
-- [ ] W3: add `دریافت پروفایل از محصول` with multiple factual Profile preservation and no invented material/brand/color facts.
+- [x] W3: inspect factual source-profile evidence for #625 and existing extractor boundaries; exact MakerWorld `__NEXT_DATA__` proves two distinct factual profiles.
+- [x] W3: implement `دریافت پروفایل از محصول` with separate Source-fact authority, operator-confirmed deterministic Ledger merge and no invented Brand/price facts.
+- [x] W3 focused regression 5/5 PASS; corrected retained W1/W2/A2V/bidirectional regression 83/83 PASS.
+- [x] W3 py_compile / diff-check / RUN_QT VerifyOnly PASS.
+- [x] Fresh pre-real-W3 Catalog backup integrity PASS: `phase50-a2w-w3-pre-real-625-20260921-102142`, SHA256 `ba7d70b0...64401`.
+- [x] Prove #625 `needs_update=1` predates W3 and came from source recovery images 2→5; preserve it.
+- [ ] Commit/push W3 and verify GitHub exact SHA.
+- [ ] Relaunch Qt from exact W3 SHA and perform real #625 `دریافت پروفایل از محصول` smoke with no publish/revision change.
+- [ ] After Source Profile smoke PASS, controlled Commerce unlock + import two deterministic source profiles while preserving the manual Profile; leave W4 local Filament mapping separate.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.

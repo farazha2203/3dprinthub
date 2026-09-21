@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlsplit
 from PIL import Image
 
 from .public_web_capture import build_public_capture_summary, same_site
+from .phase50_a2w_source_profiles import extract_makerworld_print_profiles
 
 MODEL_EXTENSIONS = {
     ".stl", ".3mf", ".obj", ".step", ".stp", ".iges", ".igs", ".dxf", ".zip", ".rar", ".7z"
@@ -263,6 +264,7 @@ class ExtractedPage:
     file_links: list[str]
     specs: dict[str, Any]
     body_text: str
+    source_print_profiles: list[dict[str, Any]] = field(default_factory=list)
     capture_summary: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
@@ -428,6 +430,16 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
             continue
     network_roots = [p.get("data") for p in (snapshot.get("network_json") or []) if isinstance(p, dict) and p.get("data") is not None]
     rich_roots = [json_ld, embedded_json, network_roots]
+    source_print_profiles: list[dict[str, Any]] = []
+    for embedded in embedded_json:
+        if not isinstance(embedded, dict):
+            continue
+        source_print_profiles = extract_makerworld_print_profiles(
+            embedded,
+            source_url=final_url,
+        )
+        if source_print_profiles:
+            break
 
     source_title = (_clean_text(_first(products, "name")) or _clean_text(metas.get("og:title"))
                     or _candidate_text_from_json(rich_roots,{"productname","modelname","title","name"},min_len=3,max_len=300)
@@ -655,6 +667,7 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
         file_links=links,
         specs=specs,
         body_text=body_text,
+        source_print_profiles=source_print_profiles,
     )
 
 
@@ -1039,6 +1052,7 @@ async def extract_direct_link(
         "file_links_json": json.dumps(page.file_links, ensure_ascii=False),
         "selected_file_links_json": json.dumps(page.file_links, ensure_ascii=False),
         "source_specs_json": json.dumps(page.specs, ensure_ascii=False),
+        "source_print_profiles_json": json.dumps(page.source_print_profiles, ensure_ascii=False),
         "source_snapshot_json": json.dumps(page.as_dict(), ensure_ascii=False),
         "source_price": page.source_price,
         "source_currency": page.source_currency,

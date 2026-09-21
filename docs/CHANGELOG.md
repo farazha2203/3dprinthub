@@ -1,3 +1,13 @@
+## 2026-09-21 - Phase50.A.2W W3 factual Source Print Profiles — Local tested
+- Added deterministic MakerWorld `__NEXT_DATA__` Print Profile extraction into existing `source_print_profiles_json`; no AI/inference is used for these production facts.
+- Preserves multiple source Profiles separately and records exact source instance/profile ids, seconds/minutes, weight, plate count, material families, per-filament source color/usage, printer compatibility, nozzle, layer, walls and infill.
+- Stage 2 now exposes `دریافت پروفایل از محصول`; Source refresh does not alter the Sales Ledger. Operator-confirmed import uses deterministic source keys, preserves manual Profiles and is idempotent.
+- #625 factual proof: Single Color 3609481/943581967 = 4814s/13g/PLA #FECC66; Multicolor 3609488/943610448 = 15748s/50g/PLA 11g #804003 + 39g #FECC66; both A1/N2S, 0.4mm nozzle, 0.16mm layer.
+- Source facts retain exact time; integer Sales Ledger uses nearest minute 80/262. Brand/local pricing are intentionally not invented; W4 owns real Local Filament mapping.
+- W3 focused 5/5 PASS; corrected retained A2V/W1/W2/bidirectional gate 83/83 PASS; py_compile, diff-check and Qt VerifyOnly PASS.
+- Fresh pre-real-W3 Catalog rollback `phase50-a2w-w3-pre-real-625-20260921-102142` integrity PASS / SHA256 `ba7d70b04cf5b084bd7922bd0f93f321a55cc4c7c241795f32c6840235764401`.
+- Read-only history proves current #625 `needs_update=1` came from later source recovery images 2→5, not W3; Site Product remains #39 revision 11 and W3 has not published anything.
+
 ## 2026-09-21 - Phase50.A.2W W1/W2 media truth sync — Local tested
 - Added Stage-3 `رفرش رسانه و وضعیت` to compare canonical DB media, persisted `ارسال سایت`, local displayable files and current live Site Product media.
 - Added checksum-aware/idempotent recovery of Site media as local candidates without silently changing Site membership.
