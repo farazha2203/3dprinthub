@@ -12,7 +12,10 @@ from urllib.parse import urljoin, urlsplit
 from PIL import Image
 
 from .public_web_capture import build_public_capture_summary, same_site
-from .phase50_a2w_source_profiles import extract_makerworld_print_profiles
+from .phase50_a2w_source_profiles import (
+    enrich_source_profiles_with_description_dimensions,
+    extract_makerworld_print_profiles,
+)
 
 MODEL_EXTENSIONS = {
     ".stl", ".3mf", ".obj", ".step", ".stp", ".iges", ".igs", ".dxf", ".zip", ".rar", ".7z"
@@ -448,7 +451,16 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
         _clean_text(_first(products, "description"))
         or _clean_text(metas.get("og:description"))
         or _clean_text(metas.get("description"))
-        or _candidate_text_from_json(rich_roots,{"description","productdescription","modeldescription","summary","details"},min_len=20,max_len=100000)
+        or _candidate_text_from_json(
+            rich_roots,
+            {"description","productdescription","modeldescription","summary","details"},
+            min_len=20,
+            max_len=100000,
+        )
+    )
+    source_print_profiles = enrich_source_profiles_with_description_dimensions(
+        source_print_profiles,
+        source_description,
     )
     author = _first(products, "brand") or _first(products, "manufacturer") or _first(products, "author")
     if isinstance(author, dict):

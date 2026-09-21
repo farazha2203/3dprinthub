@@ -31,8 +31,12 @@
 - [x] Commit/push W4 source `27bb00a1d8a8dd34e033af9cfaba27f37384a0a0` and verify GitHub exact SHA.
 - [x] Fresh pre-preview Catalog backup + exact-SHA Qt relaunch + real #625 W4 Preview PASS: 2 Profiles / 3 slots / 48 PLA candidates / exact HEX=0; Source/Ledger/locks/Site #39 revision 11/history unchanged.
 - [x] Keep #625 unpublished by W4; preserve failed batch `26aa571c-...` separately with no revision advance.
-- [ ] W4.1: fill missing #625 Source Profile dimensions with the explicit owner-approved estimated fallback 4.0cm × 4.0cm × 4.0cm; preserve exact Source dimensions whenever available and mark fallback values as estimated.
-- [ ] After W4.1 tests/acceptance, keep the failed publish batch as a separate recovery task; do not auto-retry it.
+- [x] W4.1 Local implementation: parse factual Source Description dimensions, bind ordered size evidence only when unambiguous, preserve partial factual axes, and label unknown axes instead of inventing zero/full dimensions.
+- [x] W4.1 real Hydra latest-capture proof: Profile 3595936 Small height=12cm; Profile 3596024 Large height=18cm; length/width remain unknown.
+- [x] W4.1 owner fallback contract: fill only still-missing #625 axes with explicit estimated 4.0cm × 4.0cm × 4.0cm; never overwrite existing 5×5×5 Profile 1 or factual Source axes.
+- [x] W4.1 focused 10/10; corrected Commerce/Profile+W3/W4/W4.1 59/59; retained media/site 83/83; py_compile/diff-check/Qt VerifyOnly PASS.
+- [ ] W4.1 GitHub exact-SHA promotion + fresh SQLite backup + controlled real #628/#625 dimension-only patch + invariants.
+- [ ] After W4.1 real-data acceptance, investigate failed batch `26aa571c-...` as a separate publish-recovery task; do not auto-retry it.
 
 ## 2026-09-21 - Phase50.A.2V image authority hardening — PRODUCTION_VERIFIED / CLOSED
 - [x] Continue from accepted A2U v8.9.11 ancestry.

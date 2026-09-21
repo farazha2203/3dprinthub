@@ -969,6 +969,11 @@ class ProfileEditorDialog(QDialog):
         self.length = _float_spin(100_000, 2, 0.1)
         self.width = _float_spin(100_000, 2, 0.1)
         self.height = _float_spin(100_000, 2, 0.1)
+        for widget in (self.length, self.width, self.height):
+            widget.setSpecialValueText("نامشخص")
+            widget.setToolTip(
+                "صفر یعنی این محور هنوز از Source یا اپراتور مشخص نشده است."
+            )
         self.strategy = QComboBox()
         self.strategy.addItem("فرمولی / داینامیک", "dynamic")
         self.strategy.addItem("قیمت قطعی برای هر فیلامنت", "fixed")
@@ -995,6 +1000,10 @@ class ProfileEditorDialog(QDialog):
             col = (index % 2) * 2
             form.addWidget(QLabel(label), row, col)
             form.addWidget(widget, row, col + 1)
+        self.dimension_hint = QLabel()
+        self.dimension_hint.setObjectName("Muted")
+        self.dimension_hint.setWordWrap(True)
+        form.addWidget(self.dimension_hint, 5, 0, 1, 4)
         self.profile_tabs.addTab(identity, "پروفایل و روش قیمت")
 
         production_group = QGroupBox("وزن‌های تولید همین سایز")
@@ -1137,6 +1146,38 @@ class ProfileEditorDialog(QDialog):
         self.length.setValue(float(p.get("part_length_cm") or 0))
         self.width.setValue(float(p.get("part_width_cm") or 0))
         self.height.setValue(float(p.get("part_height_cm") or 0))
+        dimension_source = str(p.get("dimension_source") or "").strip()
+        known_axes = [
+            axis
+            for axis in (p.get("dimension_known_axes") or [])
+            if axis in {"length", "width", "height"}
+        ]
+        if dimension_source:
+            axis_labels = {
+                "length": "طول",
+                "width": "عرض",
+                "height": "ارتفاع",
+            }
+            known_text = "، ".join(
+                axis_labels[axis] for axis in known_axes
+            ) or "—"
+            label = str(p.get("dimension_label") or "").strip()
+            evidence = str(p.get("dimension_evidence") or "").strip()
+            source_label = (
+                "تخمینی اپراتور"
+                if bool(p.get("dimension_is_estimated"))
+                else "Source factual"
+            )
+            self.dimension_hint.setText(
+                f"ابعاد: {source_label}"
+                f"{' • ' + label if label else ''}"
+                f" • محورهای ثبت‌شده: {known_text}"
+                f"{' • ' + evidence if evidence else ''}"
+            )
+        else:
+            self.dimension_hint.setText(
+                "برای پروفایل دستی، طول/عرض/ارتفاع باید کامل ثبت شوند."
+            )
         index = self.strategy.findData(
             str(p.get("pricing_strategy") or "dynamic")
         )
@@ -1481,15 +1522,33 @@ class ProfileEditorDialog(QDialog):
                 "سایز پروفایل الزامی است.",
             )
             return
-        if min(
-            self.length.value(),
-            self.width.value(),
-            self.height.value(),
-        ) <= 0:
+        dimension_values = {
+            "length": float(self.length.value()),
+            "width": float(self.width.value()),
+            "height": float(self.height.value()),
+        }
+        dimension_source = str(
+            self.original.get("dimension_source") or ""
+        ).strip()
+        known_axes = {
+            axis
+            for axis in (self.original.get("dimension_known_axes") or [])
+            if axis in {"length", "width", "height"}
+        }
+        partial_source_allowed = (
+            dimension_source in {"source_description", "mixed"}
+            and bool(known_axes)
+            and all(dimension_values[axis] > 0 for axis in known_axes)
+        )
+        if (
+            not partial_source_allowed
+            and min(dimension_values.values()) <= 0
+        ):
             QMessageBox.warning(
                 self,
                 "پروفایل",
-                "طول، عرض و ارتفاع واقعی باید بیشتر از صفر باشند.",
+                "برای پروفایل دستی طول، عرض و ارتفاع باید بیشتر از صفر باشند. "
+                "در پروفایل Source فقط محورهای factual می‌توانند ناقص بمانند.",
             )
             return
         if not self._production_rows():

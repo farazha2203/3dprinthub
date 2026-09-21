@@ -1,3 +1,14 @@
+## 2026-09-21 - Phase50.A.2W W4.1 Source dimension evidence — Local tested
+- Added deterministic Description dimension extraction for labeled Source sizes and generic L×W×H values, with unit normalization to cm and no AI/inference.
+- Added fail-closed ordered binding: Description size records map to Source Profiles only when counts match, preventing ambiguous multi-size guessing.
+- Preserved partial factual dimensions. Unknown axes remain zero in storage but render as `نامشخص` in the Qt Profile editor; manual Profiles still require complete positive dimensions.
+- Added dimension provenance fields including factual vs owner-estimated source, known axes, evidence text and per-axis authority.
+- Added dimension-only Ledger patching that preserves existing pricing, Filament choices, weight/time, manual Profile data and Site identity.
+- Real latest MakerWorld capture for Hydra #628 proves Small height 120mm -> 12cm and Large height 180mm -> 18cm. Fixed compact meta boundary `180 mm2. Support...` without loosening unrelated unit parsing.
+- #625 fallback contract is protected by regression: existing 5×5×5 Profile 1 is preserved; only missing Profile 2 receives owner-approved estimated 4×4×4.
+- Verification: focused 10/10, Commerce/Profile+W3/W4/W4.1 59/59, retained media/site 83/83, py_compile/diff-check/Qt VerifyOnly PASS.
+- Rollback ref: `backup/pre-phase50-a2w-w41-source-dimensions-20260921` -> `f8a23ab0...`. No real DB/Host/Production mutation yet.
+
 ## 2026-09-21 - Phase50.A.2W W4 Smart Local Filament mapping — Windows runtime accepted
 - Added read-only Source material/color slot -> active Local Filament offer/pricing preview; Preview never mutates Source facts, Sales Ledger, Stage locks or Site identity.
 - Material family matching is exact/case-insensitive. Color matching uses only explicit Local HEX/Palette evidence; localized color names are never converted into inferred HEX.

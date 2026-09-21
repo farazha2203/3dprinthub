@@ -1891,6 +1891,54 @@ class CommerceCore:
             "profiles": saved_source,
         }
 
+    def sync_source_profile_dimensions(
+        self,
+        product_id: int,
+        *,
+        owner_fallback_by_key: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Patch only dimensions/metadata on existing Source Profiles."""
+        from app.phase50_a2w_source_profiles import (
+            patch_source_ledger_dimensions,
+        )
+
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        if is_stage_locked(row, "commerce"):
+            raise RuntimeError(
+                "مرحله Filament/Price/Profile قفل است؛ ابتدا «اصلاح مرحله» را بزن."
+            )
+        source_profiles = [
+            dict(item)
+            for item in _json_list(
+                _row_dict(row).get("source_print_profiles_json", "[]")
+            )
+            if isinstance(item, dict)
+        ]
+        if not source_profiles:
+            raise RuntimeError("ابتدا «دریافت پروفایل از محصول» را اجرا کن.")
+
+        current = self.profiles(product_id)
+        patched, report = patch_source_ledger_dimensions(
+            current,
+            source_profiles,
+            owner_fallback_by_key=owner_fallback_by_key,
+        )
+        if report.get("changed_count"):
+            saved = self.save_profiles(product_id, patched)
+        else:
+            saved = current
+        report = dict(report)
+        report.update({
+            "product_id": product_id,
+            "source_profile_count": len(source_profiles),
+            "profile_count": len(saved),
+            "profiles": saved,
+        })
+        return report
+
     def preview_source_filament_mapping(
         self,
         product_id: int,

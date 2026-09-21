@@ -1,6 +1,6 @@
 # Phase50.A.2W — Product Media Truth Sync + Source Profile Import
 
-Status: **W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED — W5 / W4.1 OWNER FOLLOW-UP NEXT**
+Status: **W1/W2/W3/W4 WINDOWS_RUNTIME_ACCEPTED — W4.1 LOCAL_TESTED / REAL-DATA ACCEPTANCE NEXT**
 Date: 2026-09-21
 Parent baseline: Phase50.A.2V `PRODUCTION_VERIFIED`
 
@@ -58,6 +58,33 @@ The Multicolor Profile remains two simultaneous factual slots (11g `#804003` + 3
 
 Stage 2 exposes `W4 تطبیق Filament محلی` and a read-only review dialog. W4 focused regression 5/5 PASS; corrected mature Filament/Profile/Commerce + W3/W4 gate 49/49 PASS; retained media/site gate 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Rollback ref is `backup/pre-phase50-a2w-w4-material-mapping-20260921` at `eda42e84b0bf39052fb76aa3c74e35b7dd0a85e5`.
 
+## W4.1 — Source Profile dimensions (LOCAL_TESTED)
+W4.1 preserves dimensional evidence without fabricating missing axes. MakerWorld Description text is parsed deterministically for labeled size/version dimensions and generic L×W×H values, normalized to cm, and attached to Source Profiles only when ordered size evidence and Profile counts match unambiguously.
+
+Partial Source facts stay partial. For example, real Hydra Product #628 / MakerWorld 3179519 exposes exactly:
+- Profile 3595936 -> Small Version -> Height 120mm = 12cm;
+- Profile 3596024 -> Large Version -> Height 180mm = 18cm.
+
+The latest captured MakerWorld meta concatenates the second unit with the next numbered heading as `180 mm2. Support...`; the parser explicitly accepts this numbered-section boundary while retaining strict unit matching. Length and width remain unknown because the Source did not provide them, and the Qt Profile editor renders those axes as `نامشخص` rather than pretending they are factual zero/full dimensions.
+
+Owner-estimated fallback is separate provenance. For #625, existing Profile 1 5×5×5cm is preserved. Only still-missing axes on Profile 2 may receive the explicit owner-approved 4×4×4cm fallback, marked `owner_estimated`. Factual Source axes always win only for the same axis. Dimension-only reconciliation must preserve operator Filaments, pricing, production weight/time, manual Profiles, Site Product identity/revision and publish state.
+
+Local gates: focused 10/10 PASS; corrected Commerce/Profile + W3/W4/W4.1 59/59 PASS; retained media/site 83/83 PASS; py_compile/diff-check/RUN_QT VerifyOnly PASS. Real latest-capture Hydra parse proves exact 12/18cm binding. Rollback ref: `backup/pre-phase50-a2w-w41-source-dimensions-20260921` -> `f8a23ab0e903912a3e67c2829f53ceacd1b3c376`.
+
+### W4.1 acceptance gates
+- [x] Exact/partial dimension parser with cm normalization and provenance.
+- [x] Fail-closed ordered binding on count mismatch.
+- [x] Qt `نامشخص` display for unknown Source axes; manual Profile full-dimension validation preserved.
+- [x] Dimension-only Ledger patch preserves commerce and non-dimension fields.
+- [x] Compact MakerWorld numbered-section regression.
+- [x] Real Hydra latest-capture Small=12cm / Large=18cm proof.
+- [x] Focused 10/10 + Commerce/Profile 59/59 + retained 83/83 + compile/diff/Qt VerifyOnly PASS.
+- [ ] Exact GitHub SHA push/readback.
+- [ ] Fresh integrity-checked Catalog backup.
+- [ ] Exact-SHA Qt runtime launch.
+- [ ] Controlled real #628 patch: height 12/18cm, length/width unknown, all non-dimension invariants unchanged.
+- [ ] Controlled real #625 patch: preserve Profile 1 5×5×5; fill only Profile 2 missing axes with estimated 4×4×4; non-dimension/Site invariants unchanged.
+
 ## W5 — Manual Product creation (planned)
 Add a first-class manual/self-produced Product flow with operator title/notes/media, optional video and normal Profile/Filament controls. AI may generate SEO/content from operator-provided description and images, but must not invent technical production facts.
 
@@ -110,4 +137,4 @@ Before and after Truth Sync, #625 remains Site Product #39 revision 11, `workflo
 - [x] #625 was not published by W4. A separate pre-W4 failed publish attempt remains preserved at batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` with Site revision still 11.
 
 ## Next exact task
-Do not return to W1/W2/W3. Continue from current state with the owner follow-up on Source Profile dimensions (W4.1): preserve exact Source dimensions when available; when a dimension is absent and the operator/source evidence provides an approximate size for #625, store the explicit owner-approved 4.0cm fallback for length/width/height as estimated data rather than leaving zero. Test that fallback separately before any further publish recovery. The failed batch `26aa571c-...` remains a separate publish-recovery task and must not be auto-retried.
+Do not return to W1/W2/W3. W4.1 source is Local-tested. Exact next is GitHub exact-SHA promotion -> fresh integrity-checked Catalog backup -> exact-SHA Qt runtime -> controlled dimension-only real patch for #628 and #625 with invariant proof. Only after W4.1 real-data acceptance, investigate failed batch `26aa571c-...` as a separate publish-recovery task; never auto-retry it during dimension work.

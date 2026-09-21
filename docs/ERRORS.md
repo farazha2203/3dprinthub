@@ -1,3 +1,19 @@
+## ERR-49-208 - W4.1 real Hydra meta used compact numbered-section text after the unit
+**Date:** 2026-09-21
+**Observed:** synthetic Description tests passed, but the first real latest-capture Hydra gate returned two Source Profiles with no dimension enrichment.
+**Root cause:** MakerWorld compacted the second value as `Large Version: Height = 180 mm2. Support Removal Tips`. The initial dimension regex required a word boundary after `mm`; because the next character was digit `2`, the Large match was rejected. With only one size record for two Profiles, ordered binding correctly failed closed.
+**Correct fix:** keep strict unit parsing but allow an immediately-following numbered-list marker such as `2.`/`2)` as a valid unit terminator. Add the exact compact MakerWorld string as a regression.
+**Verification:** focused W4.1 10/10 PASS and the exact latest Hydra capture returns Profile 3595936 -> Small height 12cm and Profile 3596024 -> Large height 18cm.
+**Prevention:** Source parsers must regression-test minified/concatenated metadata boundaries, not only clean rendered Description text; ambiguous count mismatches continue to fail closed.
+
+## ERR-49-207 - W4.1 temporary Windows python -c probes lost quoting before application execution
+**Date:** 2026-09-21
+**Observed:** two temporary read-only/test harness invocations embedded Windows paths/module names inside PowerShell `python -c`; shell quoting stripped Python string quotes and produced SyntaxError/NameError before DB/application execution.
+**Impact:** none. No Catalog DB, Git source, Host or Production mutation occurred.
+**Correct fix:** move multi-line operational probes/test manifests into short temporary UTF-8 Python files outside the repository, set verified `PYTHONPATH`, execute them, then delete them.
+**Verification:** real Hydra parse and Commerce/Profile gates run successfully from temporary files; W4.1 focused/59-test/83-test gates all PASS.
+**Prevention:** do not use PowerShell `python -c` for complex Windows paths or multi-module manifests; use temporary scripts after the first quoting failure and never repeat the unchanged failed form.
+
 ## ERR-49-206 - Product #625 had a failed publish attempt before W4 acceptance; Site revision stayed 11
 **Date:** 2026-09-21
 **Observed:** Product history and the owner screenshot show batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` with `qt_bulk_site_publish ok=0`. The dialog reports the ACK was received but the Product was not confirmed in the public Store.

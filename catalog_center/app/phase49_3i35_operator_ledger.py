@@ -114,7 +114,7 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
         else "Standard"
     )
     default_name = "Standard" if index == 1 else f"Profile {index}"
-    return {
+    result = {
         "key": str(source.get("key") or f"ledger-{uuid4().hex[:12]}")[:80],
         "name": _ascii_profile_identity(source.get("name"), default_name)[:120],
         "size_label": _ascii_profile_identity(source.get("size_label"), dimensional_size)[:80],
@@ -137,6 +137,38 @@ def normalize_ledger_profile(item: dict | None, index: int = 1) -> dict:
         "is_active": bool(source.get("is_active", True)),
         "sort_order": _integer(source.get("sort_order"), index * 10),
     }
+    dimension_metadata = {
+        "dimension_source": str(source.get("dimension_source") or "")[:40],
+        "dimension_is_estimated": bool(
+            source.get("dimension_is_estimated", False)
+        ),
+        "dimension_label": str(source.get("dimension_label") or "")[:120],
+        "dimension_evidence": str(
+            source.get("dimension_evidence") or ""
+        )[:1000],
+        "dimension_binding": str(
+            source.get("dimension_binding") or ""
+        )[:80],
+        "dimension_known_axes": [
+            axis
+            for axis in (source.get("dimension_known_axes") or [])
+            if axis in {"length", "width", "height"}
+        ],
+        "dimension_axis_sources": {
+            axis: str(value or "")[:40]
+            for axis, value in dict(
+                source.get("dimension_axis_sources") or {}
+            ).items()
+            if axis in {"length", "width", "height"}
+        },
+    }
+    if (
+        dimension_metadata["dimension_source"]
+        or dimension_metadata["dimension_known_axes"]
+        or dimension_metadata["dimension_axis_sources"]
+    ):
+        result.update(dimension_metadata)
+    return result
 
 
 def legacy_profiles_to_ledger(flat_profiles: list[dict]) -> list[dict]:
