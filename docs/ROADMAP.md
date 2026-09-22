@@ -1,3 +1,16 @@
+## 2026-09-22 - Phase50.A.2Z-S Instagram Post + linked Story readiness
+- [x] Re-verify provider from live Catalog: Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, media host `github_raw`.
+- [x] Preserve accepted Feed contract: Site-first current revision, Product caption/SEO, per-image ALT, bounded hashtags, UTM, nationwide shipping, no false free claims.
+- [x] Preserve accepted Story contract: branded 1080×1920 Gold/Navy + IRANSans, Product link, independent receipt, Highlight target recorded/operator placement.
+- [x] Add global Buffer delivery readiness before Site mutation, media render/rehost or provider createPost.
+- [x] Require `hasActiveMemberDevice=True` when clickable Story/Link Sticker is enabled.
+- [x] Keep lower-level Buffer guard + current-revision Feed duplicate protection.
+- [x] Update Products action to **Post + Story لینک‌دار** and block Worker creation when readiness fails.
+- [x] Focused 22/22 + full Site/Social 69/69 + compile/diff/Qt VerifyOnly PASS; Server delta 0.
+- [ ] Commit/push exact Social-readiness SHA and relaunch exact-SHA Qt.
+- [ ] External: link same Buffer account on mobile, enable/reset push and pass Test Notification until API reports `hasActiveMemberDevice=True`.
+- [ ] Then perform one bounded real Product Social acceptance: current Site revision -> Feed (or reuse existing Feed) -> linked Story notification -> Instagram Link Sticker -> truthful receipts -> Highlight operator step.
+
 ## 2026-09-22 - Phase50.A.2Z-C3 Full Registration + FTP Quota Recovery
 - [x] Verify clean Local=GitHub baseline `7d6f738a...`; rollback ref `backup/pre-a2z-confirm-all-quota-20260922`.
 - [x] Add top Product **«✅ ثبت کامل»** beside Full Edit.

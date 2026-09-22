@@ -283,9 +283,11 @@ class ProductsPage(QWidget):
         self.bulk_publish_btn.setToolTip(
             "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
         )
-        self.instagram_publish_btn = QPushButton("🚀 سایت → Instagram (Post + Story)")
+        self.instagram_publish_btn = QPushButton(
+            "🚀 سایت → Instagram (Post + Story لینک‌دار)"
+        )
         self.instagram_publish_btn.setToolTip(
-            "برای هر Product: سایت و HTTPS را تأیید می‌کند، Feed Post استاندارد با Caption/Hashtag/Alt Text می‌سازد، Story برندشده 1080×1920 با IRANSans تولید می‌کند و هر دو را با receipt مستقل از طریق Buffer منتشر می‌کند."
+            "برای هر Product: ابتدا Social readiness را بررسی می‌کند؛ سپس سایت/HTTPS، Feed استاندارد با Caption/Hashtag/Alt Text، Story برندشده 1080×1920 با IRANSans و receiptهای مستقل را اجرا می‌کند. Story دارای Link Sticker از مسیر Buffer Notify Me است و فقط وقتی Buffer mobile فعال باشد شروع می‌شود."
         )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
@@ -777,6 +779,36 @@ class ProductsPage(QWidget):
             )
             return
 
+        try:
+            social_readiness = dict(
+                self.kernel.instagram.delivery_readiness() or {}
+            )
+        except Exception as exc:
+            show_diagnostic_error(
+                self,
+                "Instagram readiness",
+                str(exc),
+                context={"operation": "instagram-delivery-readiness"},
+            )
+            return
+        if social_readiness.get("ready") is not True:
+            blockers = [
+                str(value).strip()
+                for value in (social_readiness.get("blockers") or [])
+                if str(value).strip()
+            ]
+            QMessageBox.warning(
+                self,
+                "Instagram Post + Story هنوز آماده نیست",
+                (
+                    "برای جلوگیری از تکرار حالت «Post رفت ولی Story نرفت»، "
+                    "هیچ انتشار جدیدی شروع نشد.\n\n"
+                    + ("\n".join(blockers) or "Provider آماده نیست.")
+                    + "\n\nبعد از دریافت Test Notification روی Buffer mobile دوباره همین دکمه را بزن."
+                ),
+            )
+            return
+
         preflight = self.kernel.publish.preflight(product_ids)
         queued = set(preflight.get("queued_ids") or [])
         already_public = []
@@ -803,8 +835,11 @@ class ProductsPage(QWidget):
                 f"محصول انتخاب‌شده: {len(product_ids)}\n"
                 f"آماده انتشار سایت: {len(queued)}\n"
                 f"از قبل عمومی و HTTP-تأییدشده: {len(already_public)}\n"
-                f"رد Gate / بدون تیک آماده: {blocked_count}\n\n"
-                "ترتیب اجباری است: ابتدا سایت، سپس تأیید لینک عمومی Product و بعد Instagram. "
+                f"رد Gate / بدون تیک آماده: {blocked_count}\n"
+                f"Provider: {social_readiness.get('provider') or '-'}\n"
+                f"Buffer mobile آماده: {'بله' if social_readiness.get('has_active_member_device') else 'نیاز ندارد/نامشخص'}\n\n"
+                "ترتیب اجباری است: readiness → سایت → تأیید لینک عمومی Product → Feed → Story لینک‌دار. "
+                "Story لینک‌دار در Buffer با Notify Me به موبایل تحویل می‌شود؛ Feed همان Revision هرگز دوباره ساخته نمی‌شود. "
                 "قیمت و انتخاب Variant همچنان فقط در صفحه محصول سایت انجام می‌شود."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,

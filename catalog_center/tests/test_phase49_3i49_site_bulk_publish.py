@@ -1099,6 +1099,33 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertIn("باز کردن صفحه محصول", page.open_source_btn.text())
             self.assertIn("انتشار", page.bulk_publish_btn.text())
             self.assertIn("سایت", page.bulk_publish_btn.text())
+            self.assertIn("Post + Story لینک‌دار", page.instagram_publish_btn.text())
+        finally:
+            page.close()
+
+    def test_products_page_blocks_social_before_worker_when_buffer_mobile_missing(self):
+        product_id = self._product("3491101")
+        page = ProductsPage(
+            self.db,
+            open_product=lambda _product_id: None,
+            kernel=self.kernel,
+        )
+        try:
+            page._selected_product_ids = lambda: [product_id]
+            page.kernel.instagram.delivery_readiness = lambda: {
+                "provider": "buffer",
+                "ready": False,
+                "has_active_member_device": False,
+                "blockers": ["Story لینک‌دار نیازمند Buffer mobile فعال است."],
+            }
+            with patch.object(QMessageBox, "warning") as warning:
+                page._publish_instagram_selected()
+            self.assertIsNone(page._instagram_worker)
+            warning.assert_called_once()
+            self.assertIn(
+                "Post رفت ولی Story نرفت",
+                str(warning.call_args.args[2]),
+            )
         finally:
             page.close()
 

@@ -1,3 +1,9 @@
+## 2026-09-22 - A2Z-S Instagram Post + linked Story readiness checkpoint
+
+Real Social provider/config is Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, provider-media host `github_raw`. Feed is automatic and revision-deduplicated; Story is the approved 1080×1920 Gold/Navy/IRANSans render. A clickable Product Link Sticker requires Buffer notification publishing plus the final native Instagram mobile handoff.
+
+New A2Z-S readiness hardening blocks before Site mutation, media render/rehost, Worker creation and Buffer createPost whenever linked Story is required but `hasActiveMemberDevice=False`. Lower-level Buffer guard remains. Focused 22/22 + full Site/Social 69/69 + static/Qt gates PASS; no Server delta. Live Buffer remains mobile-device false, so no real send should be attempted until Buffer mobile same account/push/Test Notification succeeds.
+
 ## 2026-09-22 - A2Z-C3 Full Registration/quota accepted / Hero+Social preflight checkpoint
 
 Current Windows C3 is accepted at runtime-bearing SHA `ac094945901cfd612dd6069fdd473a995c8a204a`, Local=GitHub exact and running in Qt. It adds **«✅ ثبت کامل»** beside Full Edit, saves the current editable Stage and explicitly approves every complete canonical Stage through the existing fail-closed StageCore validator; it never queues or sends Site/Social work. Focused 3/3 + related 82/82 + exact-SHA widget smoke 4/4 + compile/diff/Qt VerifyOnly PASS; no Server delta.

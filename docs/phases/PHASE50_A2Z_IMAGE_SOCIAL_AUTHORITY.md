@@ -1,9 +1,22 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z ERR-49-221 PUBLISH-READINESS WAF HOTFIX LOCAL_TESTED / #588 EXACT-SHA RETRY NEXT; A2Z-S FEED PRODUCTION_VERIFIED / STORY EXTERNAL-BLOCKED
+Status: A2Z-S SOCIAL DELIVERY READINESS LOCAL_TESTED / GITHUB NEXT / BUFFER MOBILE EXTERNAL-BLOCKED
 Date: 2026-09-22
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
+
+## 2026-09-22 — Post + linked Story readiness hardening
+
+- Live Catalog provider is `buffer`; Buffer GraphQL endpoint is `https://api.buffer.com`; channel `6aabb3a8ea19ca0bde6694d5 / 3dprinthub_ir`; provider-media host `github_raw`.
+- Feed remains automatic Buffer `createPost` with current Site Product revision, exact selected media, Product caption/hashtags/per-image ALT/UTM and existing Social SEO v4 policy.
+- Companion Story remains the approved 1080×1920 Gold/Navy + IRANSans asset. Clickable Product link requires Buffer `notification` scheduling + `stickerFields` and final native Instagram Link Sticker handoff.
+- New `InstagramCore.delivery_readiness()` checks connected/unlocked Buffer channel + `hasActiveMemberDevice` before Site mutation, provider-media generation/rehost or createPost.
+- `publish_site_then_instagram()` and `publish_many()` both fail closed; `buffer_publish.publish_product()` retains its lower-level guard.
+- Products UI action is now **«Instagram (Post + Story لینک‌دار)»** and checks readiness before starting a Worker. When mobile is missing, nothing new is Site-published/rehosted/submitted.
+- Same-Site-ACK Feed receipt remains duplicate authority; retry after a Story failure reuses Feed and attempts only Story once readiness is restored.
+- Focused readiness/Core/UI/Buffer gate **22/22 PASS**; full Site+Social gate **69/69 PASS**; 4 Python compile + diff + Qt VerifyOnly PASS; Server/migration delta=0.
+- Rollback ref: `backup/pre-a2z-social-readiness-ui-20260922 @ 5dec164d14511bfd37adbc4ac69f146dc71eca7e`.
+- Live Buffer still reports `hasActiveMemberDevice=False`; no real send was attempted. External owner action remains: Buffer mobile same account -> push enabled/reset -> Test Notification -> API true -> bounded real Social acceptance.
 
 ## Owner-reported failures
 - Product #609 selected Local media `local://04.webp` and `local://05.webp` were outside canonical `images_json`, so Site publish failed closed.

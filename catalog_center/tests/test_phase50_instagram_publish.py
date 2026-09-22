@@ -12,6 +12,19 @@ class FakeDB:
     def __init__(self, row):
         self.row = dict(row)
         self.receipts = []
+        self.settings = {
+            "instagram_publish_provider": "buffer",
+            "buffer_instagram_channel_id": "chan-1",
+            "instagram_companion_story_enabled": "1",
+            "instagram_story_clickable_link_enabled": "1",
+            "buffer_media_host": "github_raw",
+        }
+
+    def setting(self, key, default=None):
+        return self.settings.get(key, default)
+
+    def set_setting(self, key, value):
+        self.settings[key] = value
 
     def product(self, product_id):
         return self.row if int(product_id) == int(self.row["id"]) else None
@@ -221,6 +234,66 @@ class _PublishStub:
         return {"published": 0, "failed": len(product_ids), "items": []}
 
 
+class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
+    def _core(self):
+        db = FakeDB(product_row())
+        return InstagramCore(db, _ConnectionStub(), _PublishStub(db))
+
+    @patch("app.buffer_publish.test_connection")
+    def test_clickable_story_blocks_before_any_site_or_social_work_without_mobile(
+        self, connection
+    ):
+        connection.return_value = {
+            "id": "chan-1",
+            "name": "3dprinthub_ir",
+            "service": "instagram",
+            "external_link": "https://instagram.com/3dprinthub_ir",
+            "has_active_member_device": False,
+        }
+        core = self._core()
+
+        state = core.delivery_readiness()
+        self.assertFalse(state["ready"])
+        self.assertTrue(state["requires_mobile_handoff"])
+        self.assertFalse(state["has_active_member_device"])
+        self.assertTrue(any("Buffer mobile" in value for value in state["blockers"]))
+
+        with self.assertRaisesRegex(RuntimeError, "Buffer mobile"):
+            core.publish_site_then_instagram([42])
+        self.assertEqual(core.publish_core.calls, [])
+
+    @patch("app.buffer_publish.test_connection")
+    def test_mobile_ready_allows_clickable_story_workflow(self, connection):
+        connection.return_value = {
+            "id": "chan-1",
+            "name": "3dprinthub_ir",
+            "service": "instagram",
+            "external_link": "https://instagram.com/3dprinthub_ir",
+            "has_active_member_device": True,
+        }
+        core = self._core()
+        state = core.delivery_readiness()
+        self.assertTrue(state["ready"])
+        self.assertTrue(state["requires_mobile_handoff"])
+        self.assertTrue(state["has_active_member_device"])
+
+    @patch("app.buffer_publish.test_connection")
+    def test_automatic_story_mode_does_not_require_mobile_handoff(self, connection):
+        connection.return_value = {
+            "id": "chan-1",
+            "name": "3dprinthub_ir",
+            "service": "instagram",
+            "external_link": "https://instagram.com/3dprinthub_ir",
+            "has_active_member_device": False,
+        }
+        core = self._core()
+        core.db.set_setting("instagram_story_clickable_link_enabled", "0")
+        state = core.delivery_readiness()
+        self.assertTrue(state["ready"])
+        self.assertFalse(state["requires_mobile_handoff"])
+        self.assertFalse(state["has_active_member_device"])
+
+
 class Phase50SiteThenInstagramOrderTests(unittest.TestCase):
     def _core(self, *, public=False, site_success=True):
         row = product_row()
@@ -245,6 +318,11 @@ class Phase50SiteThenInstagramOrderTests(unittest.TestCase):
             return {"requested": len(ids), "published": len(ids), "failed": 0, "results": [], "failures": []}
 
         core.publish_many = instagram_publish
+        core.require_delivery_readiness = lambda: {
+            "ready": True,
+            "provider": "buffer",
+            "has_active_member_device": True,
+        }
         return core, site, events
     def test_site_publish_runs_before_instagram_for_unpublished_product(self):
         core, site, events = self._core(public=False, site_success=True)

@@ -1,3 +1,11 @@
+## 2026-09-22 - A2Z-S Post + linked Story early-readiness hardening
+- Reconfirmed real Instagram provider as Buffer GraphQL (`https://api.buffer.com`) on channel `3dprinthub_ir`; current media derivatives remain `github_raw`.
+- Added `InstagramCore.delivery_readiness()` / `require_delivery_readiness()` so clickable Story mobile capability is verified before Site publication, Story/Feed rendering, GitHub rehost or Buffer createPost.
+- Products UI now says **Post + Story لینک‌دار** and stops before starting its Worker when Buffer mobile is not active.
+- Existing revision-scoped Feed duplicate protection and lower-level Buffer guard remain intact.
+- Focused 22/22 and full Site+Social 69/69 PASS; 4 Python compile + diff + Qt VerifyOnly PASS; no Server/migration delta.
+- Live provider still reports `hasActiveMemberDevice=False`; no real external send was attempted by this change.
+
 ## 2026-09-22 - A2Z-C3 HERO RECOVERY ACCEPTED / SOCIAL MOBILE PREFLIGHT GITHUB_UPDATED
 - Hardening source is exact at `bed7b27a7851a925af6756f70f7bbc5b71ab1845` and running in Qt.
 - Fresh Catalog + Production MySQL rollbacks were verified before real retry.

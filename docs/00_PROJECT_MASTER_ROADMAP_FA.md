@@ -1,3 +1,9 @@
+## 2026-09-22 - A2Z-S Instagram Post + linked Story readiness hardening active
+
+Instagram path is reverified from source/live settings: Windows uses Buffer GraphQL on `api.buffer.com` for channel `3dprinthub_ir`; current Social media compatibility host is `github_raw`. Feed is automatic and current-revision duplicate guarded. Story uses the approved 1080×1920 Gold/Navy/IRANSans asset; clickable Product Link requires Buffer notification publishing and native Instagram Link Sticker completion on mobile.
+
+A2Z-S now checks `hasActiveMemberDevice` before any Site mutation, Social asset render/rehost, Worker creation or Buffer Feed createPost. Focused 22/22 + complete Site/Social 69/69 + compile/diff/Qt PASS, no Server delta. Live Buffer still reports no active mobile device; next external gate is same-account Buffer mobile + push reset/test. After API becomes true, run one bounded real Post+Story acceptance, then continue A2Z Catalog Data Completion and later changed-revision Social rollout.
+
 ## 2026-09-22 - A2Z-C3 Full Registration/quota accepted; Hero+Social preflight hardening active
 
 Full Registration is accepted at `ac094945...`. Host quota recovery is Production-verified: official PrintHubTunnel/Bridge/write-test/exact FTP path pass and real Batch uploaded 31/31 files. #140/#151/#210 updated and #536/#588 were created/public.

@@ -2585,6 +2585,72 @@ class InstagramCore:
             ),
         )
 
+    def delivery_readiness(self) -> dict[str, Any]:
+        """Return fail-closed provider readiness before any irreversible Social work."""
+        provider = self.provider()
+        companion_raw = str(
+            self.db.setting("instagram_companion_story_enabled", "1") or "1"
+        ).strip().lower()
+        companion_enabled = companion_raw not in {"0", "false", "no", "off"}
+        clickable_raw = str(
+            self.db.setting("instagram_story_clickable_link_enabled", "1") or "1"
+        ).strip().lower()
+        clickable_enabled = clickable_raw not in {"0", "false", "no", "off"}
+
+        state: dict[str, Any] = {
+            "provider": provider,
+            "ready": True,
+            "blockers": [],
+            "companion_story_enabled": companion_enabled,
+            "clickable_story_enabled": clickable_enabled,
+            "requires_mobile_handoff": bool(
+                provider == "buffer" and companion_enabled and clickable_enabled
+            ),
+        }
+        if provider != "buffer":
+            return state
+
+        from app.buffer_publish import test_connection
+
+        channel = dict(test_connection(self.config()) or {})
+        state.update(
+            {
+                "channel_id": str(channel.get("id") or ""),
+                "channel_name": str(channel.get("name") or ""),
+                "external_link": str(channel.get("external_link") or ""),
+                "has_active_member_device": bool(
+                    channel.get("has_active_member_device")
+                ),
+            }
+        )
+        if (
+            state["requires_mobile_handoff"]
+            and not state["has_active_member_device"]
+        ):
+            state["ready"] = False
+            state["blockers"] = [
+                (
+                    "Story لینک‌دار نیازمند Buffer mobile فعال است. "
+                    "با همان حساب Buffer روی گوشی وارد شو، Push Notification را فعال/Reset کن "
+                    "و Test Notification را بگیر؛ تا آن زمان Post+Story جدید شروع نمی‌شود."
+                )
+            ]
+        return state
+
+    def require_delivery_readiness(self) -> dict[str, Any]:
+        state = self.delivery_readiness()
+        if state.get("ready") is True:
+            return state
+        blockers = [
+            str(value).strip()
+            for value in (state.get("blockers") or [])
+            if str(value).strip()
+        ]
+        raise RuntimeError(
+            "Instagram Post + Story readiness failed: "
+            + (" | ".join(blockers) or "provider_not_ready")
+        )
+
     def preview(self, product_id: int) -> dict[str, Any]:
         from app.instagram_publish import canonical_site_payload
         row = self.db.product(int(product_id))
@@ -2597,6 +2663,7 @@ class InstagramCore:
         provider = self.provider()
         cfg = self.config()
         settings = self.connection.settings(require_bridge=False)
+        readiness = self.require_delivery_readiness()
         if provider == "buffer":
             from app.buffer_publish import publish_product
             label = "Buffer/Instagram"
@@ -2615,14 +2682,12 @@ class InstagramCore:
                 )
             try:
                 if provider == "buffer":
-                    companion_raw = str(
-                        self.db.setting("instagram_companion_story_enabled", "1") or "1"
-                    ).strip().lower()
-                    companion_enabled = companion_raw not in {"0", "false", "no", "off"}
-                    clickable_raw = str(
-                        self.db.setting("instagram_story_clickable_link_enabled", "1") or "1"
-                    ).strip().lower()
-                    story_link_notification = clickable_raw not in {"0", "false", "no", "off"}
+                    companion_enabled = bool(
+                        readiness.get("companion_story_enabled")
+                    )
+                    story_link_notification = bool(
+                        readiness.get("clickable_story_enabled")
+                    )
                     if progress:
                         progress(
                             int((index - 1) / total * 100),
@@ -2726,6 +2791,11 @@ class InstagramCore:
         }
 
     def publish_site_then_instagram(self, product_ids, *, progress=None) -> dict[str, Any]:
+        # Global Social delivery readiness must pass before Site mutation, asset
+        # rendering/rehosting or any provider createPost call. This prevents the
+        # historical partial outcome where Feed/Site succeeded but linked Story
+        # could not be handed off to Buffer mobile.
+        self.require_delivery_readiness()
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         already_public, site_needed = [], []
         for product_id in ids:

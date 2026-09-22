@@ -1,3 +1,19 @@
+## 2026-09-22 - Phase50.A.2Z-S SOCIAL DELIVERY READINESS LOCAL_TESTED / GITHUB NEXT / BUFFER MOBILE EXTERNAL
+
+Owner reconfirmed the Instagram contract and requested that the Windows action reliably create **Post + companion Story** under the already-accepted Social policy, without repeating the 2026-09-22 partial outcome where Feed succeeded and Story notification later failed.
+
+Verified live provider/config from the real Catalog: `instagram_publish_provider=buffer`; Buffer GraphQL endpoint is `https://api.buffer.com`; channel id `6aabb3a8ea19ca0bde6694d5` / `3dprinthub_ir`; provider media host is `github_raw`; companion Story is enabled; clickable Story is enabled by default. Feed uses Buffer `createPost` with `schedulingType=automatic`, `mode=shareNow`, Product-specific caption/hashtags/per-image ALT and current Site-first Product URL/UTM. Companion Story uses the accepted 1080×1920 Gold/Navy + IRANSans renderer and Buffer `createPost` with `type=story`. When the Product Link Sticker is required, Story uses `schedulingType=notification` plus `stickerFields`; final Link Sticker completion therefore occurs in Instagram mobile. Existing Feed/Story receipts remain revision-scoped duplicate authority; Highlight target is recorded and final Highlight placement remains operator-required.
+
+New hardening on rollback baseline `backup/pre-a2z-social-readiness-ui-20260922 @ 5dec164d14511bfd37adbc4ac69f146dc71eca7e`: `InstagramCore.delivery_readiness()` now checks Buffer channel health and `hasActiveMemberDevice` before any Site mutation, provider-media render/rehost or Feed createPost. `publish_site_then_instagram()` and `publish_many()` both retain fail-closed readiness, while `buffer_publish.publish_product()` keeps its lower-level duplicate/mobile guard. Products UI now labels the action **«Instagram (Post + Story لینک‌دار)»**, runs readiness before Worker creation and clearly refuses to start when linked Story delivery is impossible. This prevents a new partial state where Post succeeds while required Story cannot be handed to mobile.
+
+Verification: focused readiness/Core/UI/Buffer gate **22/22 PASS**; complete Site+Social regression **69/69 PASS**; 4 changed Python files compile; `git diff --check` + Qt VerifyOnly PASS; Server/migration/template/static delta=0. No real Product/Site/Instagram mutation occurred during this hardening.
+
+Live Buffer still reports `hasActiveMemberDevice=False`. Therefore software is ready but **new Post+linked-Story delivery remains externally blocked** until the same Buffer account is connected in Buffer mobile with push notifications enabled/reset/tested. Product #536 Feed remains live and duplicate-protected; do not recreate it.
+
+**Exact next:** docs -> commit/push exact Social-readiness SHA -> Local=GitHub exact -> exact-SHA Qt relaunch -> live Buffer readiness recheck. If `hasActiveMemberDevice=False`, stop before all provider/media work and wait for owner mobile setup. When it becomes `True`: fresh integrity Catalog backup -> retry only the intended Product Social action -> for existing Feed revisions require zero Feed createPost and Story notification only -> owner opens notification in Instagram, applies prepared Product Link Sticker and publishes -> reconcile truthful provider receipt -> record Highlight target/operator step.
+
+**Following development phase after Story acceptance:** resume A2Z Catalog Data Completion, then changed-revision Social rollout and W5 manual Product creation.
+
 ## 2026-09-22 - Phase50.A.2Z-C3 ACCEPTED / HERO CONFLICTS PRODUCTION_VERIFIED / SOCIAL APP HARDENING GITHUB_UPDATED / STORY EXTERNAL_MOBILE_BLOCKED
 
 Owner reported real Site publish failure with FTP `550 Can't create directory: Disk quota exceeded` and requested a one-click **«✅ ثبت کامل»** beside **«✏ ویرایش کامل»** so current edits can be saved and all seven complete Stages approved without seven separate confirmations.
