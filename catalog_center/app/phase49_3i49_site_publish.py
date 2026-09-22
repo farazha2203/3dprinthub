@@ -20,7 +20,11 @@ from .batch_packaging import (
 from .crawler import download_public_file
 from .db import utc_now
 from .site_connection import import_batch, test_publish_readiness, upload_batch
-from .epic49_site_sync import BridgeNotFoundError, get_product as get_site_product
+from .epic49_site_sync import (
+    BridgeNotFoundError,
+    get_hero_slide,
+    get_product as get_site_product,
+)
 from .epic49_desktop_schema import (
     list_available_material_colors,
     normalize_material_color_options,
@@ -985,6 +989,95 @@ def guard_site_revisions(
     return {"safe_ids": safe, "conflicts": conflicts}
 
 
+def refresh_hero_revision_authority(
+    db,
+    settings,
+    product_ids,
+    *,
+    hero_getter=get_hero_slide,
+) -> dict[str, Any]:
+    """Refresh only Site Hero revision authority before packaging.
+
+    Product/editorial fields and Slider membership remain Local/operator-owned.
+    This prevents a stale expected Hero revision from creating a Bridge conflict
+    while preserving the exact Product payload that the operator approved.
+    """
+    safe: list[int] = []
+    refreshed: list[int] = []
+    conflicts: list[dict[str, Any]] = []
+
+    for product_id in _ids(product_ids):
+        row = db.product(product_id)
+        if row is None:
+            continue
+        slide_id = int(row["server_slider_id"] or 0)
+        local_revision = int(row["server_slider_revision"] or 0)
+        if slide_id <= 0:
+            safe.append(product_id)
+            continue
+
+        try:
+            server = dict(hero_getter(settings, slide_id) or {})
+            server_id = int(server.get("id") or 0)
+            server_revision = int(server.get("sync_revision") or 0)
+            if server_id != slide_id or server_revision <= 0:
+                raise RuntimeError(
+                    f"Hero truth is invalid for slide {slide_id}: "
+                    f"id={server_id} revision={server_revision}"
+                )
+        except Exception as exc:
+            detail = (
+                "Hero revision verification failed; publish stopped closed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            db.update_product(product_id, {"last_sync_conflict": detail})
+            conflicts.append(
+                {
+                    "product_id": product_id,
+                    "server_slider_id": slide_id,
+                    "local_revision": local_revision,
+                    "server_revision": None,
+                    "missing": [detail],
+                }
+            )
+            continue
+
+        if server_revision != local_revision:
+            before = dict(row)
+            db.update_product(
+                product_id,
+                {
+                    "server_slider_revision": server_revision,
+                    "last_sync_conflict": "",
+                },
+            )
+            after = dict(db.product(product_id))
+            try:
+                db.save_history(
+                    product_id,
+                    "qt_site_hero_revision_refreshed",
+                    before,
+                    after,
+                    (
+                        "Refreshed only accepted Site Hero revision before publish: "
+                        f"{slide_id} rev {local_revision}->{server_revision}. "
+                        "No Product/Slider content or membership changed."
+                    ),
+                )
+            except Exception:
+                pass
+            refreshed.append(product_id)
+        else:
+            db.update_product(product_id, {"last_sync_conflict": ""})
+        safe.append(product_id)
+
+    return {
+        "safe_ids": safe,
+        "refreshed_ids": refreshed,
+        "conflicts": conflicts,
+    }
+
+
 def publish_many(
     db,
     stage_core,
@@ -996,6 +1089,7 @@ def publish_many(
     uploader=upload_batch,
     importer=import_batch,
     server_getter=get_site_product,
+    hero_getter=get_hero_slide,
     readiness_checker=test_publish_readiness,
 ) -> dict[str, Any]:
     requested = _ids(product_ids)
@@ -1017,6 +1111,14 @@ def publish_many(
                 + detail
             )
 
+    hero_guard = refresh_hero_revision_authority(
+        db,
+        settings,
+        queued,
+        hero_getter=hero_getter,
+    )
+    queued = list(hero_guard["safe_ids"])
+
     revision_guard = guard_site_revisions(
         db,
         settings,
@@ -1026,6 +1128,7 @@ def publish_many(
     queued = list(revision_guard["safe_ids"])
     not_checked = sorted(set(preflight["publishable_ids"]) - set(preflight["queued_ids"]))
     skipped = list(preflight["blocked"])
+    skipped.extend(list(hero_guard["conflicts"]))
     skipped.extend(list(revision_guard["conflicts"]))
     skipped.extend(
         {

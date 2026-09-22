@@ -83,14 +83,23 @@
 **Verification:** changed-condition test 1/1 PASS; full Server unified/profile/republish/payment/finance/Hero gate 52/52 PASS; Windows focused gate 94/94 PASS; broad Windows remains 115/116 with only independently documented ERR-49-203.
 **Prevention:** presentation/cache assertions must track the latest accepted Production contract in CURRENT_STATE/ROADMAP, and a merge-time failure must be reproduced against its source baseline before being classified as a new regression.
 
+## ERR-49-227 - Clickable Story failure was discoverable before Feed but Buffer mobile prerequisite was not preflighted
+**Date:** 2026-09-22
+**Observed:** Product #536 Feed published successfully, then companion Story notification failed because Buffer had no active mobile reminder device. Direct channel truth now reports `hasActiveMemberDevice=False`. #536 Feed is live at `https://www.instagram.com/p/DdmXo5QlMEd/`; its github_raw branded Story asset is valid 1080×1920 and not the cause.
+**Root cause:** clickable Instagram Story links in the accepted Buffer path use notification/Link-Sticker handoff. The Windows flow previously discovered the missing reminder device only after Feed createPost, allowing partial Feed success.
+**Correct fix:** include `hasActiveMemberDevice` in Buffer channel health; when companion clickable Story is required, verify the mobile prerequisite before any new Feed createPost. If missing and no Feed exists, fail before Feed. If current-ACK Feed already exists, preserve/deduplicate it and report Story-only blocker. Keep ERR-49-220 truthful provider-error handling for any later notification failure.
+**Verification:** real Buffer state false; focused contracts prove no new Feed request when device missing and no duplicate when Feed exists; Site+Social regression 65/65 PASS; compile/diff/Qt VerifyOnly PASS.
+**External prerequisite:** sign in/link Buffer mobile for the same account/channel and enable notifications. Do not downgrade to automatic/no-link Story because owner requires a clickable Product link.
+**Prevention:** Social preflight must validate all required external delivery capabilities before the first irreversible provider action.
+
 ## ERR-49-226 - Post-quota batch exposed stale Hero revision conflicts for #152 and #178
 **Date:** 2026-09-22
 **Observed:** after Host quota recovery, real Batch `desktop_catalog_v85_20260922_181511` successfully uploaded 31/31 files and Bridge processed seven Products. Five succeeded, but #152 failed with `EPIC49_SYNC_CONFLICT entity=hero:2 expected=1 current=2` and #178 failed with `EPIC49_SYNC_CONFLICT entity=hero:4 expected=3 current=5`.
 **Root cause class:** local Hero revision authority for these two Products is stale relative to current Site Hero state. This is independent of the resolved Host quota incident.
 **Do not do:** do not repeat the same Batch unchanged; do not overwrite current Hero rows or force revisions; do not resend the whole queue.
-**Correct recovery:** read current Site/Hero truth for #152/#178, reconcile only the local revision/ACK authority without changing operator-owned Product/Slider membership data, take fresh Catalog backup, then bounded retry of only these two Products and require terminal ACK/public verification.
-**Verification so far:** quota path itself is healthy: official tunnel authenticated; Host write-test PASS; exact FTP pending path MKD/STOR/DELETE/RMD PASS; same Batch successfully created #536/#588 and updated #140/#151/#210.
-**Prevention:** every multi-Product publish should refresh current Hero/Slider revision authority before packaging previously published Slider-enabled Products and should report per-Product conflict separately from transport failures.
+**Correct recovery:** read current Site/Hero truth for #152/#178 and refresh only local accepted Hero revision authority before packaging; never overwrite operator-owned Product/Slider content or membership. Then take fresh Catalog backup, bounded retry only these two Products and require terminal ACK/public verification.
+**Implementation/verification:** #152 Site Hero #2 rev2 and #178 Hero #4 rev5 were read read-only and match operator titles. New `refresh_hero_revision_authority()` changes only `server_slider_revision`/conflict metadata before Batch. Dedicated revision-only contract + publish integration PASS; full Site+Social regression 65/65 PASS; quota transport itself remains healthy.
+**Prevention:** every queued Product carrying a prior Hero ID must refresh current Hero revision authority before packaging and report verification failure per Product instead of deferring conflict detection to Bridge import.
 
 ## ERR-49-225 - Full Registration focused test initially missed stage_locks import
 **Date:** 2026-09-22

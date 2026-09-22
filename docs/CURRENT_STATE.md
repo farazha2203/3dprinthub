@@ -1,4 +1,4 @@
-## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION ACCEPTED / QUOTA RECOVERY PRODUCTION_VERIFIED / HERO CONFLICT RECONCILIATION NEXT
+## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION + QUOTA ACCEPTED / HERO RECONCILIATION + SOCIAL MOBILE PREFLIGHT LOCAL_TESTED / GITHUB NEXT
 
 Owner reported real Site publish failure with FTP `550 Can't create directory: Disk quota exceeded` and requested a one-click **«✅ ثبت کامل»** beside **«✏ ویرایش کامل»** so current edits can be saved and all seven complete Stages approved without seven separate confirmations.
 
@@ -8,7 +8,7 @@ Verification: focused Full Registration/Full Edit **3/3 PASS**; related Stage Fi
 
 Publish incident evidence is bounded: batch `desktop_catalog_v85_20260922_171201` / UUID `32a25891-282c-498a-bed1-4498b4303059` contains **Product #536 only**, 7 local files, and receipt chain `batch_ready -> publish_started -> publish_failed`; there is no `desktop_ftp_uploaded` and no Bridge import. Product #588 had already failed earlier with the same quota class. Current local queue inventory is 15 Products; recovery must never blindly send the full queue.
 
-Official 3DPrintHub reverse tunnel is currently unavailable: `127.0.0.1:22024` absent. Windows OpenSSH is Running/Automatic and port 22 is healthy. Host IP `89.39.208.237` currently has an SSH session, but OpenSSH audit identifies it as **RetoucherTunnel**, not **PrintHubTunnel**; last observed PrintHubTunnel acceptance is 2026-09-20. Project rules prohibit using another project's tunnel. No FTP/cPanel/manual Host cleanup has been performed.
+Historical pre-recovery tunnel evidence: during the quota incident `127.0.0.1:22024` was absent and the only visible Host-IP session was **RetoucherTunnel**, which was correctly not reused. This condition is superseded by the verified PrintHubTunnel recovery below; another project's tunnel remains permanently prohibited.
 
 Active phase: `docs/phases/PHASE50_A2Z_C3_FULL_REGISTRATION_QUOTA_RECOVERY.md`.
 
@@ -18,7 +18,13 @@ Quota recovery is now Production-verified. Owner freed Host account space; contr
 
 Real post-recovery Batch `desktop_catalog_v85_20260922_181511` / UUID `fd336bc1-4a04-416f-a6ea-8526dddfb4b2` uploaded all 31 files. Results: #140 updated, #151 updated, #210 updated, #536 created as Site Product #48, #588 created as Site Product #49; #152 and #178 failed only on stale Hero revision conflicts. #536 public Product HTTP 200 and main image HTTP 200/image-webp with SHA256 `6b264047f956c485047b9afe55b61f551ed01a63a0e5c8b8f79a7fb25952f58d`; republish parity is `ok=true`, media_count=1, profile_count=64. Local publish queue has fallen to 10.
 
-**Exact next:** reconcile only #152 and #178 stale Hero revisions read-only against current Site truth -> refresh local Hero revision authority without changing Product data -> fresh Catalog backup -> bounded retry of #152/#178 only -> require terminal ACK/public parity -> then resume A2Z Catalog Data Completion.
+Hardening rollback ref `backup/pre-a2z-c4-hero-social-preflight-20260922` points to exact clean baseline `cbec63e9b007a20b7e3070eece74b0328afc212a`.
+
+Hero truth has now been read-only verified: #152 Local Hero #2 rev1 vs Site rev2; #178 Local Hero #4 rev3 vs Site rev5. Titles match operator intent, so the conflict is revision authority only. Windows publish now refreshes only `server_slider_revision` from current Site Hero truth before packaging; Product text, Slider SEO/image, Slider membership and Publish selection are not overwritten. Focused changed contracts 16/16 PASS; full Site+Social regression 65/65 PASS; 5 changed Python files compile; diff-check + Qt VerifyOnly PASS; Server/migration/template/static delta=0.
+
+Instagram hardening is also Local-tested. Buffer channel `3dprinthub_ir` is connected/unlocked but currently reports `hasActiveMemberDevice=False`. New clickable-Link Story preflight reads this before any new Feed is created. If no mobile device exists, a new Product Social send stops before Feed creation; if the current Site ACK already has a Feed receipt, that Feed remains duplicate-protected and only Story remains blocked. Product #536 Feed is already live at `https://www.instagram.com/p/DdmXo5QlMEd/`. Its github_raw Story asset is exact at social-assets revision `eb33bf7ebb1835a6`, 1080×1920 PNG, SHA256 `d2ca7066f6970c90521a9580908d229c12f695f87dffc3427f0f1d92869e74c6`, rendered by the accepted Gold-Navy/IRANSans Story pipeline. A clickable Instagram Link Sticker cannot be delivered through Buffer notification until the same Buffer account has an active mobile reminder device; automatic/no-link fallback remains prohibited by owner contract.
+
+**Exact next:** docs/source commit-push -> Local=GitHub exact SHA -> exact-SHA Qt -> fresh integrity Catalog backup -> automatic revision-only reconcile + bounded retry of #152/#178 -> terminal ACK/public parity -> close C3. In parallel Social stays fail-closed until Buffer reports `hasActiveMemberDevice=True`; after that changed condition, fresh backup -> #536 Social retry once -> existing Feed reused/no createPost -> Story notification only -> operator Link Sticker handoff -> truthful Story receipt.
 
 **Following phase:** resume A2Z Catalog Data Completion: Slider inventory/backfill with membership preserved -> #620/#625/#628 acceptance -> final Profile/Filament/Image gates -> controlled same-identity republish -> browser/public parity.
 

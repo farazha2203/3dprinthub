@@ -1,8 +1,8 @@
-## 2026-09-22 - A2Z-C3 Full Registration active / Host quota recovery blocked on project tunnel
+## 2026-09-22 - A2Z-C3 Full Registration/quota accepted; Hero+Social preflight hardening active
 
-Windows C3 adds a one-click **«✅ ثبت کامل»** beside Full Edit: save current editable Stage, then explicitly approve all complete seven Stages through the existing validator without automatic Site publish. Focused 3/3 and related 82/82 PASS; static/Qt gates pass.
+Full Registration is accepted at `ac094945...`. Host quota recovery is Production-verified: official PrintHubTunnel/Bridge/write-test/exact FTP path pass and real Batch uploaded 31/31 files. #140/#151/#210 updated and #536/#588 were created/public.
 
-Real #536 publish is blocked before FTP upload/Bridge import by shared-account `Disk quota exceeded`; #588 shows the same class. Official PrintHub reverse tunnel is currently absent, and another project's active tunnel is not an allowed fallback. C3 is GitHub/exact-SHA Windows accepted at `ac094945...`; Host quota cleanup/retry remains blocked until the correct tunnel is restored.
+Remaining C3 Site issue is bounded to stale Hero revisions #152/#178. Current Site Hero truth was read-only verified and Windows now refreshes revision authority only before packaging, preserving Product/Slider content and membership. Social hardening also preflights Buffer `hasActiveMemberDevice` before any new Feed when clickable Story is mandatory. #536 Feed is already live and duplicate-protected; branded Story asset is healthy, but Buffer currently reports no active mobile reminder device, so Link-Sticker Story remains externally blocked until the same account is linked in Buffer mobile.
 
 ## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics ACCEPTED / A2Z Catalog Completion active next
 

@@ -1,9 +1,9 @@
 # Phase50.A.2Z-C3 — Full Registration + Host Quota Recovery
 
-Status: **FULL REGISTRATION ACCEPTED / HOST QUOTA RECOVERY PRODUCTION_VERIFIED / HERO CONFLICT RECONCILIATION NEXT**
+Status: **FULL REGISTRATION + QUOTA ACCEPTED / HERO REVISION + SOCIAL MOBILE PREFLIGHT LOCAL_TESTED / GITHUB NEXT**
 Date: 2026-09-22
 Baseline: `7d6f738a05abf7de8b53905dcf755563ab9d09de`
-Rollback ref: `backup/pre-a2z-confirm-all-quota-20260922`
+Rollback refs: C3 baseline `backup/pre-a2z-confirm-all-quota-20260922`; Hero/Social hardening `backup/pre-a2z-c4-hero-social-preflight-20260922 @ cbec63e9b007a20b7e3070eece74b0328afc212a`
 Worktree: `D:\projects\3DPrintHub-a2y-converge`
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 
@@ -51,7 +51,7 @@ The same quota class already failed Product #588 earlier on 2026-09-22. Current 
 
 ## Host-management gate
 
-- Project reverse tunnel `127.0.0.1:22024` is currently absent.
+- Historical pre-recovery evidence: project reverse tunnel `127.0.0.1:22024` was absent during the quota incident; it is superseded by the Production recovery evidence below.
 - Windows `sshd` is Running/Automatic and listens on port 22.
 - OpenSSH shows an established connection from Host IP `89.39.208.237`, but current log identity for that connection is **RetoucherTunnel**, not **PrintHubTunnel**.
 - Last observed accepted **PrintHubTunnel** event is 2026-09-20.
@@ -71,14 +71,24 @@ The same quota class already failed Product #588 earlier on 2026-09-22. Current 
 - Failed independently: #152 Hero 2 revision expected 1/current 2; #178 Hero 4 expected 3/current 5.
 - #536 public page/image HTTP 200; parity ok; queue now 10.
 
+## Hero + Social hardening checkpoint
+
+- Read-only Site truth: #152 Hero #2 rev2 vs Local rev1; #178 Hero #4 rev5 vs Local rev3. Titles match; conflict is revision authority only.
+- Windows publish now refreshes only `server_slider_revision` before Batch; no Product/Slider content or membership is pulled from Site.
+- Buffer channel health now includes `hasActiveMemberDevice`; current real state is false.
+- Clickable-Story Social send now blocks before any new Feed when mobile reminder delivery is unavailable. Existing Feed remains deduplicated and Story-only retryable.
+- #536 Feed is live at `https://www.instagram.com/p/DdmXo5QlMEd/`; Story asset revision `eb33bf7ebb1835a6` is 1080×1920 Gold-Navy/IRANSans pipeline and SHA `d2ca7066f6970c90521a9580908d229c12f695f87dffc3427f0f1d92869e74c6`.
+- Focused changed contracts 16/16 and complete Site+Social regression 65/65 PASS; 5 Python compile, diff-check and Qt VerifyOnly PASS; no Server delta.
+
 ## Exact next
 
-1. read current Site Hero truth for #152/#178 only;
-2. reconcile local revision/ACK authority without overwriting Product/Slider membership;
-3. fresh integrity-checked Catalog backup;
-4. retry only #152/#178;
-5. require terminal ACK + public parity for both;
-6. close C3 and resume A2Z Catalog Data Completion.
+1. commit/push Hero+Social preflight hardening and verify Local=GitHub exact SHA;
+2. exact-SHA Qt relaunch;
+3. fresh integrity Catalog backup;
+4. bounded Site retry only #152/#178 using automatic revision-only preflight;
+5. require terminal ACK + public Product/media parity for both;
+6. close C3 and resume A2Z Catalog Data Completion;
+7. Social remains blocked only on external Buffer mobile prerequisite; once `hasActiveMemberDevice=True`, fresh backup -> retry #536 Social once -> Feed reused/no createPost -> Story notification only -> operator Link Sticker completion -> truthful receipt.
 
 ## Following phase
 

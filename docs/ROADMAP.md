@@ -17,9 +17,15 @@
 - [x] Verify Host write headroom and exact FTP pending-path MKD/STOR/DELETE/RMD PASS.
 - [x] Production-verify quota recovery with real Batch `desktop_catalog_v85_20260922_181511` / 31 uploaded files.
 - [x] Verify #140/#151/#210 updated, #536/#588 created and public; queue reduced to 10.
-- [ ] Reconcile stale Hero revisions for #152 (`hero:2 expected=1 current=2`) and #178 (`hero:4 expected=3 current=5`).
+- [x] Read current Site Hero truth for #152/#178; conflicts are revision-only (2:1→2 and 4:3→5).
+- [x] Local-test pre-publish Hero revision refresh that changes only `server_slider_revision`; focused + integration contracts PASS.
+- [x] Local-test Buffer clickable-Story mobile prerequisite before Feed; no partial new Feed when device missing; existing Feed stays deduplicated.
+- [x] Verify real #536 Feed live and branded Story asset 1080×1920; Buffer currently `hasActiveMemberDevice=False`.
+- [x] Site+Social regression 65/65 + compile/diff/Qt VerifyOnly PASS.
+- [ ] Commit/push exact hardening SHA and exact-SHA Qt.
 - [ ] Fresh Catalog backup and bounded retry of #152/#178 only.
-- [ ] Verify terminal ACK/public parity for both before resuming A2Z Catalog Completion.
+- [ ] Verify terminal ACK/public parity for both and close C3.
+- [ ] After owner links Buffer mobile + enables notifications, retry #536 Story only; never recreate Feed.
 
 ## 2026-09-22 - Phase50.A.2Z-C1/C2 Full Edit + Unified Bulk Completion
 - [x] Verify exact clean baseline `494a222b...`; create rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922`.

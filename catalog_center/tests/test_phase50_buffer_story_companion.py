@@ -46,6 +46,71 @@ class _DB:
 
 
 class BufferStoryCompanionTests(unittest.TestCase):
+    def setUp(self):
+        self.device_patcher = patch(
+            "app.buffer_publish.require_clickable_story_device",
+            return_value={"has_active_member_device": True},
+        )
+        self.device_patcher.start()
+
+    def tearDown(self):
+        self.device_patcher.stop()
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_missing_mobile_device_blocks_before_new_feed(self, request, _secret):
+        db = _DB()
+        with patch(
+            "app.buffer_publish.require_clickable_story_device",
+            side_effect=RuntimeError("No mobile reminder device"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "هیچ Feed جدیدی ساخته نشد"):
+                publish_product(
+                    db,
+                    11,
+                    BufferConfig(channel_id="chan-1"),
+                    site_url="https://3dprinthub.ir",
+                )
+        request.assert_not_called()
+        self.assertEqual(db.receipts, [])
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_missing_mobile_device_keeps_existing_feed_and_blocks_story_only(
+        self, request, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.receipts.append(
+            {
+                "status": "instagram_published",
+                "payload_json": json.dumps(
+                    {
+                        "site_ack_fingerprint": fingerprint,
+                        "provider_post_id": "feed-live",
+                        "external_link": "https://instagram.com/p/live",
+                    }
+                ),
+                "server_id": "feed-live",
+            }
+        )
+        with patch(
+            "app.buffer_publish.require_clickable_story_device",
+            side_effect=RuntimeError("No mobile reminder device"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "قبلاً ثبت شده"):
+                publish_product(
+                    db,
+                    11,
+                    BufferConfig(channel_id="chan-1"),
+                    site_url="https://3dprinthub.ir",
+                )
+        request.assert_not_called()
+        self.assertEqual(
+            len([r for r in db.receipts if r["status"] == "instagram_published"]),
+            1,
+        )
+
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
     def test_feed_publish_creates_companion_story(self, request, _secret):

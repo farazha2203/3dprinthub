@@ -47,6 +47,7 @@ _CHANNEL_QUERY = """
 query BufferInstagramChannel($id: ChannelId!) {
   channel(input: {id: $id}) {
     id name displayName service externalLink isDisconnected isLocked
+    hasActiveMemberDevice
   }
 }
 """
@@ -199,7 +200,19 @@ def test_connection(cfg: BufferConfig) -> dict[str, Any]:
         "name": str(channel.get("displayName") or channel.get("name") or ""),
         "service": "instagram",
         "external_link": str(channel.get("externalLink") or ""),
+        "has_active_member_device": bool(channel.get("hasActiveMemberDevice")),
     }
+
+
+def require_clickable_story_device(cfg: BufferConfig) -> dict[str, Any]:
+    state = test_connection(cfg)
+    if not bool(state.get("has_active_member_device")):
+        raise RuntimeError(
+            "Story لینک‌دار در Buffer به یک mobile device فعال برای reminder نیاز دارد. "
+            "در Buffer mobile با همین حساب وارد شو و Notification را فعال کن؛ "
+            "تا آن زمان Feed/Story جدید ارسال نمی‌شود."
+        )
+    return state
 
 
 def publish_product(
@@ -616,22 +629,12 @@ def publish_product(
     feed_asset_urls: list[str] | None = None,
     media_host_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    feed = _publish_feed_product(
-        db,
-        product_id,
-        cfg,
-        site_url=site_url,
-        media_urls_override=feed_asset_urls,
-        media_host_meta=media_host_meta,
-    )
     if companion_story is None:
         if hasattr(db, "setting"):
             raw = str(db.setting("instagram_companion_story_enabled", "1") or "1").strip().lower()
             companion_story = raw not in {"0", "false", "no", "off"}
         else:
             companion_story = False
-    if not companion_story:
-        return feed
     if story_link_notification is None:
         if hasattr(db, "setting"):
             raw = str(
@@ -640,6 +643,45 @@ def publish_product(
             story_link_notification = raw not in {"0", "false", "no", "off"}
         else:
             story_link_notification = True
+
+    if companion_story and story_link_notification:
+        try:
+            require_clickable_story_device(cfg)
+        except Exception as exc:
+            row = db.product(int(product_id))
+            fingerprint = (
+                str(row["server_ack_json"] or "").strip()
+                if row is not None
+                else ""
+            )
+            existing_feed = _receipt_for_revision(
+                db,
+                int(product_id),
+                fingerprint,
+                {"instagram_published", "instagram_submitted"},
+            )
+            if existing_feed is not None:
+                raise RuntimeError(
+                    "Feed Instagram این Revision قبلاً ثبت شده و دوباره ارسال نمی‌شود؛ "
+                    "فقط Story لینک‌دار منتظر اتصال Buffer mobile است: "
+                    + str(exc)
+                ) from exc
+            raise RuntimeError(
+                "پیش‌نیاز Story لینک‌دار آماده نیست؛ برای جلوگیری از ارسال ناقص، "
+                "هیچ Feed جدیدی ساخته نشد: "
+                + str(exc)
+            ) from exc
+
+    feed = _publish_feed_product(
+        db,
+        product_id,
+        cfg,
+        site_url=site_url,
+        media_urls_override=feed_asset_urls,
+        media_host_meta=media_host_meta,
+    )
+    if not companion_story:
+        return feed
     try:
         feed["companion_story"] = publish_story_for_product(
             db,

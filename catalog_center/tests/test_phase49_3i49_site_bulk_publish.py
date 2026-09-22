@@ -27,6 +27,7 @@ from app.phase49_3i49_site_publish import (
     mark_ready_many,
     publish_many,
     publish_media_gate,
+    refresh_hero_revision_authority,
 )
 from app.epic49_site_sync import BridgeNotFoundError
 from qt6.kernel import build_kernel
@@ -419,6 +420,137 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertTrue(str(row["published_at"]))
         self.assertEqual(self.db.product_count(filter_name="published"), 2)
 
+    def test_hero_revision_refresh_updates_only_revision_authority(self):
+        product_id = self._product("3491099hero")
+        self.db.update_product(
+            product_id,
+            {
+                "server_slider_id": 4,
+                "server_slider_revision": 3,
+                "homepage_slider_enabled": 1,
+                "homepage_slider_title_fa": "عنوان اسلایدر اپراتور",
+                "homepage_slider_description_fa": "توضیح اسلایدر اپراتور",
+                "homepage_slider_image_url": "https://example.com/operator-slider.webp",
+                "upload_ready": 1,
+                "workflow_status": "approved",
+            },
+        )
+        before = dict(self.db.product(product_id))
+
+        result = refresh_hero_revision_authority(
+            self.db,
+            SimpleNamespace(),
+            [product_id],
+            hero_getter=lambda _settings, slide_id: {
+                "id": slide_id,
+                "sync_revision": 5,
+                "is_active": False,
+                "title_override": "نسخه قدیمی روی سایت",
+                "image_url": "https://example.com/site-old.webp",
+            },
+        )
+
+        self.assertEqual(result["safe_ids"], [product_id])
+        self.assertEqual(result["refreshed_ids"], [product_id])
+        self.assertEqual(result["conflicts"], [])
+        after = dict(self.db.product(product_id))
+        self.assertEqual(int(after["server_slider_id"]), 4)
+        self.assertEqual(int(after["server_slider_revision"]), 5)
+        self.assertEqual(
+            int(after["homepage_slider_enabled"]),
+            int(before["homepage_slider_enabled"]),
+        )
+        self.assertEqual(
+            after["homepage_slider_title_fa"],
+            before["homepage_slider_title_fa"],
+        )
+        self.assertEqual(
+            after["homepage_slider_description_fa"],
+            before["homepage_slider_description_fa"],
+        )
+        self.assertEqual(
+            after["homepage_slider_image_url"],
+            before["homepage_slider_image_url"],
+        )
+        self.assertEqual(int(after["upload_ready"]), 1)
+        self.assertEqual(after["workflow_status"], "approved")
+
+    def test_publish_refreshes_stale_hero_revision_before_batch(self):
+        product_id = self._product("3491099batch")
+        self.db.update_product(
+            product_id,
+            {
+                "server_slider_id": 2,
+                "server_slider_revision": 1,
+                "homepage_slider_enabled": 1,
+            },
+        )
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+        seen_revision = {}
+
+        def fake_upload(_settings, batch, callback=None):
+            manifest = json.loads(
+                (Path(batch) / "batch_manifest.json").read_text(encoding="utf-8")
+            )
+            model = (manifest.get("models") or [])[0]
+            editorial = json.loads(
+                (Path(batch) / str(model["editorial"])).read_text(
+                    encoding="utf-8"
+                )
+            )
+            seen_revision["value"] = int(
+                editorial.get("server_slider_revision") or 0
+            )
+            return {
+                "remote_batch": "/remote/hero-refresh",
+                "uploaded_files": 1,
+                "total_files": 1,
+            }
+
+        def fake_import(_settings, batch_name, batch_uuid):
+            return {
+                "status": "completed",
+                "batch_uuid": batch_uuid,
+                "diagnostic_id": batch_name,
+                "items": [
+                    {
+                        "desktop_product_id": product_id,
+                        "status": "created",
+                        "server_id": "hero-refresh-asset",
+                        "product_id": 5001,
+                        "product_revision": 1,
+                        "slider_id": 2,
+                        "slider_revision": 3,
+                        "visible_on_store": True,
+                        "public_http_ok": True,
+                        "product_url": "/store/product/hero-refresh/",
+                    }
+                ],
+            }
+
+        result = publish_many(
+            self.db,
+            FakeStages(),
+            SimpleNamespace(),
+            [product_id],
+            batch_root=self.root / "hero-refresh-batches",
+            uploader=fake_upload,
+            importer=fake_import,
+            hero_getter=lambda _settings, slide_id: {
+                "id": slide_id,
+                "sync_revision": 2,
+            },
+            readiness_checker=lambda _settings: {
+                "ready": True,
+                "blockers": [],
+            },
+        )
+        self.assertEqual(seen_revision["value"], 2)
+        self.assertEqual(result["published"], 1)
+        row = dict(self.db.product(product_id))
+        self.assertEqual(int(row["server_slider_revision"]), 3)
+
     def test_failed_republish_preserves_last_verified_site_identity_and_ack(self):
         product_id = self._product("3491003")
         previous_ack = {
@@ -473,6 +605,10 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             importer=fake_import,
             server_getter=lambda _settings, _server_id: {
                 "profile": {"sync_revision": 7},
+            },
+            hero_getter=lambda _settings, slide_id: {
+                "id": slide_id,
+                "sync_revision": 4,
             },
             readiness_checker=lambda _settings: {"ready": True, "blockers": []},
         )

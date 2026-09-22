@@ -1,3 +1,11 @@
+## 2026-09-22 - A2Z-C3 Hero revision + clickable-Story preflight hardening
+- Added pre-publish Site Hero revision refresh using current Bridge truth; only local `server_slider_revision` changes, never Product/Slider editorial data or membership.
+- Added Buffer `hasActiveMemberDevice` to channel health and fail-closed clickable-Story prerequisite before new Feed creation.
+- Existing successful Feed receipt remains duplicate authority; when mobile reminder device is absent only Story stays blocked.
+- Real #536 Feed is live at `https://www.instagram.com/p/DdmXo5QlMEd/`; branded Story asset is 1080×1920 github_raw, Gold-Navy/IRANSans pipeline, SHA `d2ca7066...`.
+- Buffer currently reports `hasActiveMemberDevice=False`; automatic no-link Story is intentionally not substituted.
+- Focused 16/16, Site+Social 65/65, py_compile/diff/Qt VerifyOnly PASS; no Server delta.
+
 ## 2026-09-22 - A2Z-C3 Full Registration + quota incident
 - Added **«✅ ثبت کامل»** next to Full Edit in Product Wizard.
 - The action saves the current editable Stage, then explicitly approves every complete canonical Stage through the existing StageCore validator; incomplete Stages remain blocked.

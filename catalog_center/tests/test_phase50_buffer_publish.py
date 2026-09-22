@@ -8,6 +8,7 @@ from app.buffer_publish import (
     BufferConfig,
     publish_product,
     reconcile_product_receipts,
+    require_clickable_story_device,
     test_connection,
 )
 from app.instagram_publish import canonical_site_payload
@@ -61,11 +62,27 @@ class BufferPublishTests(unittest.TestCase):
         request.return_value = {"channel": {
             "id": "chan-1", "displayName": "3DPrintHub", "service": "instagram",
             "isDisconnected": False, "isLocked": False,
+            "hasActiveMemberDevice": True,
             "externalLink": "https://instagram.com/demo",
         }}
         result = test_connection(BufferConfig(channel_id="chan-1"))
         self.assertEqual(result["service"], "instagram")
         self.assertEqual(result["id"], "chan-1")
+        self.assertTrue(result["has_active_member_device"])
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_clickable_story_requires_active_buffer_mobile_device(
+        self, request, _secret
+    ):
+        request.return_value = {"channel": {
+            "id": "chan-1", "displayName": "3DPrintHub", "service": "instagram",
+            "isDisconnected": False, "isLocked": False,
+            "hasActiveMemberDevice": False,
+            "externalLink": "https://instagram.com/demo",
+        }}
+        with self.assertRaisesRegex(RuntimeError, "mobile device"):
+            require_clickable_story_device(BufferConfig(channel_id="chan-1"))
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")

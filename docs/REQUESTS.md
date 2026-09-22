@@ -1,3 +1,8 @@
+## 2026-09-22 - Owner: finish #152/#178 and make Instagram Feed+linked Story reliable
+Status: `A2Z-C3 HERO+SOCIAL PREFLIGHT LOCAL_TESTED / GITHUB + REAL HERO RETRY NEXT / STORY WAITS FOR BUFFER MOBILE DEVICE`.
+
+Owner requires final recovery of Hero conflicts #152/#178 and requires every Instagram Product send to include the branded IRANSans/Gold-Navy Story with a clickable Product link, without duplicate Feed. Current evidence: #536 Feed is already live and must never be recreated; its branded 1080×1920 Story asset is valid. Buffer itself reports `hasActiveMemberDevice=False`, so Link-Sticker notification cannot currently be handed to Instagram. Windows now checks this prerequisite before any new Feed and keeps existing Feed duplicate-safe. Once Buffer mobile is linked and notifications are enabled, normal retry must create only the Story notification.
+
 ## 2026-09-22 - Owner: one-click Full Registration + fix failed Site send
 Status: `A2Z-C3 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED`.
 
