@@ -1,3 +1,8 @@
+## 2026-09-22 - Owner: Product #588 Site publish failed with Bridge HTTP 403 anti-robot page
+Status: `A2Z ERR-49-221 LOCAL_TESTED / GITHUB + EXACT-SHA #588 RETRY NEXT`.
+
+Owner attempted a real Site publish from the current unified Windows runtime and received BitNinja `Visitor anti-robot validation` HTML instead of Catalog Bridge publish-readiness JSON. Product #588 is the bounded acceptance target. The failed attempt occurred before Batch/FTP/import and must not be counted as a partial Site send. The Windows client must tolerate only narrowly identified transient WAF challenges on idempotent Bridge GET preflights; import POST must never be blindly retried. After exact-SHA promotion and a fresh Catalog backup, retry only #588 and verify one complete Batch/FTP/ACK/public parity chain. Do not publish the other queued Products as part of this recovery.
+
 ## 2026-09-21 - Owner: Instagram is broken; real Feed+Story must follow repository policy exactly
 Status: `A2Z-S FEED LIVE / STORY BLOCKED ON BUFFER MOBILE DEVICE / RECOVERY HARDENING GITHUB_UPDATED`.
 

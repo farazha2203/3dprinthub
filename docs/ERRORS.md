@@ -1,3 +1,20 @@
+## ERR-49-222 - Initial ERR-49-221 broad regression referenced a nonexistent test module
+**Date:** 2026-09-22
+**Observed:** the first broad Publish/SiteConnection regression command referenced `tests.test_phase49_3i49_site_publish`, while the repository module is `tests.test_phase49_3i49_site_bulk_publish`.
+**Impact:** no application/DB/Site mutation. 63 real tests in the same run passed; only unittest module discovery failed.
+**Correct fix:** do not repeat the unchanged command. Replace only the incorrect module name and rerun the same intended scope.
+**Verification:** corrected Publish/SiteConnection regression passes 86/86.
+**Prevention:** derive regression module names from the verified `catalog_center/tests` inventory instead of reconstructing names from feature terminology.
+
+## ERR-49-221 - Transient BitNinja anti-robot 403 blocked Product #588 at publish-readiness before Batch/FTP
+**Date:** 2026-09-22
+**Observed:** owner attempted to publish real Product #588 from the current unified Windows runtime. `test_publish_readiness()` received HTTP 403 HTML titled `Visitor anti-robot validation` / BitNinja-WafPro instead of Catalog Bridge JSON. The large WAF HTML was surfaced in the Qt error dialog.
+**Boundary evidence:** Product #588 was explicitly publish-ready in history, but there is no new `desktop_batch_ready`, `desktop_publish_started` or `desktop_ftp_uploaded` receipt for this failed attempt. Therefore the failure happened before Batch construction/FTP/import and produced no partial Site publish. A later read-only probe using the same configured Site URL and secure Bridge token returned HTTP 200 for both `/health/` and `/publish-readiness/`, with `ready=true`, under the current request shape, Catalog User-Agent and browser User-Agent. This proves a transient public WAF challenge rather than a bad token or missing receiver endpoint.
+**Correct fix:** harden only idempotent Bridge GETs. Catalog Bridge JSON requests now send the bounded Catalog User-Agent + no-cache header; GET requests may retry an exact anti-robot/WAF 403 up to three total attempts with short backoff. POST import remains single-attempt and is never blindly retried. A persistent WAF challenge is summarized as a concise RuntimeError instead of dumping the full HTML page.
+**Verification:** focused `test_epic49_final` 13/13 PASS including GET-retry and POST-no-retry assertions; corrected Publish/SiteConnection regression 86/86 PASS; py_compile, git diff-check and Qt VerifyOnly PASS. Live read-only Bridge health/readiness are currently HTTP 200 and readiness is true.
+**Related infrastructure:** dedicated Host-management reverse tunnel `127.0.0.1:22024` is currently down. That does not cause this public Catalog Bridge readiness failure, but Host deploy/source mutation remains blocked by the permanent reverse-tunnel rule.
+**Prevention:** classify public WAF challenges separately from Bridge authentication/readiness failures; safe GET preflight may retry only a narrowly identified transient WAF page, while import POST continues to use the existing non-duplicate timeout/diagnostic contract.
+
 ## ERR-49-220 - Buffer Story notification had no linked mobile reminder device and false-ready receipt could block recovery
 **Date:** 2026-09-21
 **Observed:** the one guarded #609 Social send successfully created Feed post `6ab16b897465bdab83a3fe40`; read-only Buffer reconciliation proves it reached `sent` at https://www.instagram.com/p/DdjtyiMG8RC/. Companion Story post `6ab16b959d554f7b28a44302` used the required notification/Link-Sticker mode but Buffer returned `status=error`. Direct Buffer Post read-back reports: `No devices found for allowed reminder recipients to send push notification to!` / user-facing message asking to link a mobile device.

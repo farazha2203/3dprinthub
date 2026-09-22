@@ -1,7 +1,7 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z-S FEED PRODUCTION_VERIFIED / STORY BLOCKED ON BUFFER MOBILE REMINDER DEVICE / ERR-49-220 LOCAL_TESTED
-Date: 2026-09-21
+Status: A2Z ERR-49-221 PUBLISH-READINESS WAF HOTFIX LOCAL_TESTED / #588 EXACT-SHA RETRY NEXT; A2Z-S FEED PRODUCTION_VERIFIED / STORY EXTERNAL-BLOCKED
+Date: 2026-09-22
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 
@@ -53,8 +53,20 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 
 ERR-49-220 is GitHub-updated exact at `c064c36f2d389bb0114489f958c9026b8573316b`. Fresh post-send rollback: `post-instagram-feed-609-20260921-211603`, integrity OK; revision 2 unchanged; Feed final receipt is published/reconciled without repost while the historical Story receipt explicitly carries `buffer_status=error`.
 
+## ERR-49-221 — Product #588 transient WAF readiness recovery
+- Owner's real #588 publish attempt was rejected at `publish-readiness` by transient BitNinja anti-robot HTML before any Batch/FTP/import receipt existed.
+- Changed-condition authenticated read-only probes now return Bridge health 200 and publish-readiness 200/`ready=true`.
+- Windows Bridge JSON transport retries only an exact anti-robot 403 on idempotent GET requests, max three total attempts with short backoff.
+- Import POST remains single-attempt; no blind repost/reimport is introduced.
+- Persistent WAF challenge produces a concise operator error rather than raw HTML.
+- Rollback ref: `backup/pre-err49-221-waf-readiness-retry-20260922` -> `0202bdcafc252b1d409310838831bb0ea35100ee`.
+- Verification: focused 13/13 PASS; corrected Publish/SiteConnection 86/86 PASS; py_compile/diff-check/Qt VerifyOnly PASS.
+- Dedicated Host-management reverse tunnel 22024 is currently down. Host source deployment is blocked, but this Windows-only hotfix does not require Host deployment.
+
 ## Exact next
-Wait for changed external condition: owner links/signs in to Buffer mobile and enables reminder notifications -> read-only provider gate + fresh Catalog backup -> Story-only recovery through normal Product Social action, proving Feed createPost is skipped -> require non-error notification state -> operator completes Link Sticker handoff in Instagram -> record truthful Story/Highlight result -> A2Z-S closure.
+Commit/push ERR-49-221 -> verify Local=GitHub exact SHA -> fresh integrity-checked Catalog backup -> exact-SHA Qt relaunch -> require live readiness 200/`ready=true` -> retry **only Product #588** once through the canonical Product publish action -> require exactly one new Batch/start/FTP/terminal ACK chain -> verify Site identity/revision + Profile/Variant/media parity + public Product/media HTTP. Do not include the other queued Products.
+
+After #588 Site acceptance, return to the already-open A2Z-S external prerequisite: owner links/signs in to Buffer mobile and enables reminder notifications -> Story-only recovery for #609 with Feed duplicate protection -> Link Sticker handoff -> truthful Story/Highlight receipt.
 
 ## Phase after this hotfix
-Continue A2Z Catalog Slider completeness/backfill and final Windows operator acceptance; then A2Z-S changed-revision Social rollout.
+Continue A2Z Catalog Slider completeness/backfill + final Windows operator acceptance, then A2Z-S changed-revision Social rollout and the remaining master A2Z plan.

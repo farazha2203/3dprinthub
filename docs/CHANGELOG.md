@@ -1,3 +1,13 @@
+## 2026-09-22 - ERR-49-221 transient WAF readiness hardening
+- Real Product #588 Site publish was blocked before Batch/FTP by a transient BitNinja `Visitor anti-robot validation` HTTP 403 on Catalog Bridge publish-readiness.
+- Read-only changed-condition probes with the real secure Bridge token now return health 200 and readiness 200/`ready=true`, confirming receiver/token health.
+- Added bounded Catalog User-Agent/no-cache headers and up to three total retries only for idempotent GET requests positively identified as the WAF anti-robot page.
+- Import POST remains single-attempt and is never blindly retried; existing timeout diagnostics/idempotency remain authoritative.
+- Persistent WAF HTML is summarized into a concise operator error.
+- Verification: focused 13/13; corrected Publish/SiteConnection 86/86; py_compile/diff-check/Qt VerifyOnly PASS.
+- No new #588 Batch/FTP/import receipt exists from the failed attempt; no Site mutation occurred.
+- Host-management reverse tunnel 22024 is currently down, so any future Host deployment remains blocked; no Host deploy is required for this Windows-only hotfix.
+
 ## 2026-09-21 - A2Z-S real #609 Feed live + notification-device recovery hardening
 - Executed one guarded current-revision Social send after exact-SHA/pre-backup/public-media gates.
 - Feed Buffer id `6ab16b897465bdab83a3fe40` is live at https://www.instagram.com/p/DdjtyiMG8RC/ with all five expected github_raw assets; submitted receipt reconciled to published without repost.

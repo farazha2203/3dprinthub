@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from io import BytesIO
 from pathlib import Path
+from urllib.error import HTTPError
 from unittest.mock import patch
 
 from app import site_connection
@@ -22,6 +24,21 @@ def _repo_server_file(relative: str) -> Path | None:
     """
     candidate = REPO / Path(relative)
     return candidate if candidate.is_file() else None
+
+
+class _FakeJSONResponse:
+    def __init__(self, payload: dict, status: int = 200):
+        self._body = __import__("json").dumps(payload).encode("utf-8")
+        self.status = status
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
 
 
 class Epic49StrictAckTests(unittest.TestCase):
@@ -177,6 +194,65 @@ class Epic49PublicVerificationTests(unittest.TestCase):
             ],
         )
         self.assertTrue(all("imported-models" not in value for value in requested))
+
+
+class Epic49BridgeWafRetryTests(unittest.TestCase):
+    def _anti_robot_error(self):
+        return HTTPError(
+            "https://3dprinthub.ir/api/catalog-bridge/v1/publish-readiness/",
+            403,
+            "Forbidden",
+            {},
+            BytesIO(
+                b"<html><title>Visitor anti-robot validation</title>"
+                b"<div class='bn403-page'>BitNinja-WafPro</div></html>"
+            ),
+        )
+
+    @patch("app.site_connection.time.sleep")
+    @patch("app.site_connection.urllib_request.urlopen")
+    def test_get_retries_transient_waf_challenge_then_succeeds(self, urlopen, sleep):
+        urlopen.side_effect = [
+            self._anti_robot_error(),
+            _FakeJSONResponse({"ready": True, "status": "ready"}),
+        ]
+
+        result = site_connection._json_request(
+            "https://3dprinthub.ir/api/catalog-bridge/v1/publish-readiness/",
+            "x" * 32,
+            None,
+            5,
+        )
+
+        self.assertTrue(result["ready"])
+        self.assertEqual(result["http_status"], 200)
+        self.assertEqual(urlopen.call_count, 2)
+        sleep.assert_called_once()
+        first_request = urlopen.call_args_list[0].args[0]
+        self.assertEqual(first_request.get_method(), "GET")
+        self.assertEqual(
+            first_request.get_header("User-agent"),
+            "3DPrintHub-Catalog-Epic49/1.0",
+        )
+
+    @patch("app.site_connection.time.sleep")
+    @patch("app.site_connection.urllib_request.urlopen")
+    def test_post_does_not_retry_waf_challenge(self, urlopen, sleep):
+        urlopen.side_effect = self._anti_robot_error()
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "public WAF anti-robot challenge",
+        ):
+            site_connection._json_request(
+                "https://3dprinthub.ir/api/catalog-bridge/v1/import/",
+                "x" * 32,
+                {"batch_name": "x"},
+                5,
+            )
+
+        self.assertEqual(urlopen.call_count, 1)
+        sleep.assert_not_called()
 
 
 class Epic49BulkImportTimeoutTests(unittest.TestCase):

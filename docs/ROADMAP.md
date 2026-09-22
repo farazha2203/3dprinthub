@@ -1,3 +1,19 @@
+## 2026-09-22 - Phase50.A.2Z ERR-49-221 Product #588 publish-readiness recovery
+- [x] Verify current unified worktree/branch/HEAD and clean baseline `0202bdca...`.
+- [x] Prove real #588 failure occurred before Batch/FTP/import; no partial Site mutation from this attempt.
+- [x] Changed-condition real Bridge probe: health HTTP 200 and publish-readiness HTTP 200 / ready=true.
+- [x] Add bounded WAF-challenge retry only for idempotent GET requests; keep POST import single-attempt.
+- [x] Add concise persistent-WAF operator error instead of raw HTML dump.
+- [x] Focused 13/13 PASS.
+- [x] Corrected Publish/SiteConnection regression 86/86 PASS.
+- [x] py_compile / diff-check / Qt VerifyOnly PASS.
+- [ ] Commit/push ERR-49-221 and verify Local=GitHub exact SHA.
+- [ ] Fresh integrity-checked Catalog SQLite backup.
+- [ ] Exact-SHA Qt relaunch and live readiness 200/ready=true.
+- [ ] Retry only Product #588 once; require one new Batch/start/FTP/terminal ACK chain.
+- [ ] Verify Site Product identity/revision, media/Profile/Variant parity and public Product/media HTTP.
+- [ ] Keep Host deployment blocked until dedicated reverse tunnel 22024 is healthy; this Windows hotfix needs no Host deploy.
+
 ## 2026-09-21 - Phase50.A.2Z-S #609 Instagram transport/acceptance
 - [x] Re-read A2N/A2O/A2P/A2Q/A2S + master A2Z-S Social rules.
 - [x] Verify Site #42 revision 2 already owns exactly five #609 SEO ProductImages; public HTTP/SHA parity 5/5 PASS.

@@ -156,33 +156,71 @@ def upload_batch(settings: SiteConnection, batch: Path, progress: Progress | Non
     }
 
 
+def _is_transient_waf_challenge(status: int, raw: str) -> bool:
+    if int(status or 0) != 403:
+        return False
+    text = str(raw or "").casefold()
+    return any(
+        marker in text
+        for marker in (
+            "visitor anti-robot validation",
+            "bn403-page",
+            "bitninja",
+            "wafpro",
+        )
+    )
+
+
 def _json_request(url: str, token: str, payload: dict | None, timeout: int) -> dict:
     body = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
+    method = "GET" if body is None else "POST"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}",
+        "User-Agent": "3DPrintHub-Catalog-Epic49/1.0",
+        "Cache-Control": "no-cache",
+    }
     if body is not None:
         headers["Content-Type"] = "application/json"
-    req = urllib_request.Request(
-        url,
-        data=body,
-        headers=headers,
-        method="GET" if body is None else "POST",
-    )
     context = ssl.create_default_context()
-    try:
-        with urllib_request.urlopen(req, timeout=timeout, context=context) as response:
-            raw = response.read().decode("utf-8", errors="replace")
-            parsed = json.loads(raw or "{}")
-            if not isinstance(parsed, dict):
-                raise RuntimeError("Bridge response is not a JSON object")
-            parsed.setdefault("http_status", response.status)
-            return parsed
-    except urllib_error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", errors="replace")
+    max_attempts = 3 if method == "GET" else 1
+
+    for attempt in range(max_attempts):
+        req = urllib_request.Request(
+            url,
+            data=body,
+            headers=headers,
+            method=method,
+        )
         try:
-            detail = json.loads(raw)
-        except Exception:
-            detail = {"detail": raw[:2000]}
-        raise RuntimeError(f"Bridge HTTP {exc.code}: {detail}") from exc
+            with urllib_request.urlopen(req, timeout=timeout, context=context) as response:
+                raw = response.read().decode("utf-8", errors="replace")
+                parsed = json.loads(raw or "{}")
+                if not isinstance(parsed, dict):
+                    raise RuntimeError("Bridge response is not a JSON object")
+                parsed.setdefault("http_status", response.status)
+                return parsed
+        except urllib_error.HTTPError as exc:
+            raw = exc.read().decode("utf-8", errors="replace")
+            if (
+                method == "GET"
+                and _is_transient_waf_challenge(exc.code, raw)
+                and attempt + 1 < max_attempts
+            ):
+                time.sleep(0.75 * (attempt + 1))
+                continue
+            if _is_transient_waf_challenge(exc.code, raw):
+                raise RuntimeError(
+                    "Bridge HTTP 403: transient public WAF anti-robot challenge "
+                    "did not clear after safe GET retries"
+                ) from exc
+            try:
+                detail = json.loads(raw)
+            except Exception:
+                detail = {"detail": raw[:2000]}
+            raise RuntimeError(f"Bridge HTTP {exc.code}: {detail}") from exc
+
+    raise RuntimeError("Bridge request retry loop exhausted unexpectedly")
 
 
 def _timeout_error(exc: BaseException) -> bool:
