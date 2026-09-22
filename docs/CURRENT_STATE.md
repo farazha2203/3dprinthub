@@ -1,4 +1,4 @@
-## 2026-09-22 - Phase50.A.2Z-C1/C2 FULL EDIT + UNIFIED BULK COMPLETION LOCAL_TESTED / GITHUB + EXACT-SHA QT NEXT
+## 2026-09-22 - Phase50.A.2Z-C1/C2 FULL EDIT + UNIFIED BULK COMPLETION GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / CLOSED
 
 Owner-requested Windows Catalog completion slice is implemented on clean baseline `494a222b64908563c5d6b953b4ef96f9782c8e0d`; rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922` preserves that exact baseline. No real Catalog, Site, Host or Production mutation has been performed by this slice.
 
@@ -8,13 +8,15 @@ C2 extends only the Products multi-select **«AI تکمیل همه موارد»*
 
 Integration also exposed ERR-49-223: the old ASCII-only Category fold reduced Persian names to empty strings, allowing a Persian Source Category to match `external-other` before its real taxonomy row. Folded matching now requires non-empty folded values; direct Unicode name/slug equality remains first-class.
 
-Verification: new focused contracts **3/3 PASS**; related Stage/Image/Profile/Filament/Site regression **148/149 effective PASS**, with the sole failure exactly the previously documented baseline ERR-49-203 Manufacturer-vs-Brand assertion; unchanged AI/completion/Unified Desktop/Slider cycles **38/38 PASS**; 6 changed Python files compile; `git diff --check` and Qt VerifyOnly PASS; migration/dependency/Server/website/template/static delta = 0.
+Accepted runtime-bearing SHA is `8629f8b72c416b364a618a5aeebe2dda8a81d440`, pushed exact Local=GitHub on `wip/phase50-a2z-image-social-authority-20260921`. Exact-SHA `RUN_QT.ps1 -VerifyOnly` PASS and real Qt runtime points to `D:\projects\3DPrintHub-a2y-converge\catalog_center\qt_launch.py`. Widget-level exact-SHA smoke PASS 2/2: Product Wizard exposes/enables «✏ ویرایش کامل» on a loaded Product; Products page retains the multi-select Bulk AI action and source selector. Idle real Catalog remained unchanged while Qt was running: Products 635, history/max_history 2646, quick_check `ok` before/after.
 
-Active phase file: `docs/phases/PHASE50_A2Z_FULL_EDIT_BULK_COMPLETION.md`.
+Verification retained: new focused contracts **3/3 PASS**; broader Stage/Image/Profile/Filament/Site rerun **129/130 PASS** with the sole failure exactly the historical ERR-49-203 Manufacturer-vs-Brand assertion; prior related gate **148/149 effective PASS** with the same sole baseline; unchanged AI/completion/Unified Desktop/Slider rerun **40/40 PASS**; 6 changed Python files compile; `git diff --check` and Qt VerifyOnly PASS; migration/dependency/Server/website/template/static delta = 0.
 
-**Exact next:** final docs/diff review -> commit/push C1/C2 -> verify Local=GitHub exact SHA -> exact-SHA Qt relaunch -> smoke top «ویرایش کامل» button and Products Bulk AI availability without real Product mutation -> close C1/C2.
+C1/C2 is closed. No Production deploy is required because this slice changes only Windows Catalog Center behavior; no real Product, Site, Host or Production data was mutated for acceptance.
 
-**Following phase:** return to A2Z Catalog Data Completion: fresh Catalog backup -> official six-field Slider inventory/backfill -> real #620/#625/#628 operator acceptance -> final Filament/Image gates -> one controlled same-identity re-publish -> public parity/browser verification.
+**Exact next active phase: Phase50.A.2Z Catalog Data Completion.** Ordered operations: fresh integrity-checked Catalog backup -> authoritative six-field Slider inventory -> deterministic/no-AI backfill from saved content where possible while preserving every `homepage_slider_enabled` checkbox -> AI only for genuinely missing editorial fields -> real #620/#625/#628 operator acceptance including the new Full Edit/Bulk completion surfaces -> final Filament/Image/Profile gates -> fresh backup -> one controlled same-identity re-publish -> strict public Product/media/Profile/Variant/Slider parity + browser verification -> docs closure.
+
+**Following phase:** A2Z-S changed-revision Instagram rollout/Story recovery under the already-recorded Social policy and duplicate guards.
 
 ## 2026-09-22 - Phase50.A.2Z ERR-49-221 PUBLISH-READINESS WAF HOTFIX LOCAL_TESTED / GITHUB + REAL #588 RETRY NEXT
 

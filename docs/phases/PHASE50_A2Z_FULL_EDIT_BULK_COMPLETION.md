@@ -1,6 +1,6 @@
 # Phase50.A.2Z-C1/C2 — Full Product Edit + Unified Bulk Completion
 
-Status: **LOCAL_TESTED / GITHUB PROMOTION + EXACT-SHA QT NEXT**
+Status: **GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / CLOSED — A2Z CATALOG DATA COMPLETION NEXT**
 Date: 2026-09-22
 Baseline: `494a222b64908563c5d6b953b4ef96f9782c8e0d`
 Rollback ref: `backup/pre-a2z-full-edit-bulk-completion-20260922`
@@ -89,20 +89,27 @@ ERR-49-223: the legacy ASCII-only fold helper turned Persian Category names into
 - `RUN_QT.ps1 -VerifyOnly`: PASS.
 - Migration/dependency/Server/website/template/static delta: **0**.
 
-## Exact next
+## Closure
 
-1. update repository docs and final diff review;
-2. commit/push this source slice;
-3. verify Local=GitHub exact SHA;
-4. stop prior Catalog Center process if it is from an older SHA;
-5. launch Qt from the exact pushed SHA;
-6. smoke Product Wizard: button visible/enabled and no Catalog mutation on simple page load;
-7. smoke Products page: Bulk AI action text/availability intact;
-8. close C1/C2 docs.
+- Runtime-bearing source commit: `8629f8b72c416b364a618a5aeebe2dda8a81d440`, Local=GitHub exact.
+- Exact-SHA Qt VerifyOnly + real runtime launch PASS.
+- Exact-SHA widget smoke 2/2 PASS for Full Edit + Products Bulk AI surface.
+- Idle real Catalog remained Products=635 / history=2646 / quick_check=ok before and after.
+- Focused 3/3; broad rerun 129/130 with only historical ERR-49-203; prior 148/149 effective gate confirms the same sole baseline; unchanged AI/completion rerun 40/40; compile/diff PASS.
+- No Production deploy is required for this Windows-only slice.
 
-No Production deploy is required for this Windows-only slice.
+## Exact next — Phase50.A.2Z Catalog Data Completion
+
+1. fresh integrity-checked Catalog backup;
+2. authoritative six-field Slider completeness inventory;
+3. deterministic/no-AI backfill from stored content packs and Product data while preserving every Slider membership checkbox;
+4. AI only for genuinely missing editorial fields;
+5. real operator acceptance on #620/#625/#628 using the new Full Edit/Bulk completion surfaces;
+6. final Profile/Filament/Image gates;
+7. fresh backup and one guarded same-identity Site re-publish;
+8. strict public Product/media/Profile/Variant/Slider parity + browser verification;
+9. documentation closure.
 
 ## Following phase
 
-Return to **Phase50.A.2Z Catalog Data Completion**:
-fresh Catalog backup -> Slider completeness inventory/backfill across remaining Products -> real operator acceptance (#620/#625/#628 samples) -> Filament/Image final acceptance -> one guarded same-identity re-publish -> strict public parity/browser verification.
+A2Z-S changed-revision Social rollout / Story recovery under the existing Site-first, duplicate-safe Instagram policy.

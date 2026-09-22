@@ -1,9 +1,9 @@
 ## 2026-09-22 - Owner: Full Edit button + bring later completion capabilities into Products Bulk AI
-Status: `A2Z-C1/C2 LOCAL_TESTED / GITHUB + EXACT-SHA QT NEXT`.
+Status: `A2Z-C1/C2 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / CLOSED — A2Z CATALOG COMPLETION NEXT`.
 
 Owner requires one top Product button that opens every Product stage/options for editing together, without changing the existing stage/publish cycles. Owner also requires Products multi-select «AI تکمیل همه موارد» to include capabilities added later: factual Source Profile construction from source weight/time/print data, exact-family Local Filaments, complete Slider page SEO data, physical unique filename/SEO repair and correct local Category. Existing Publish, Site-media authority, Slider membership and Social flows must not be altered.
 
-Implementation composes the already accepted A2W/A2X/Image authorities rather than creating parallel logic. Bulk AI opens Commerce only because this explicit full-completion action needs factual Profile/Filament merge; Publish remains locked. Slider membership remains manual. Focused 3/3, related 148/149 effective PASS (only baseline ERR-49-203), unchanged-cycle 38/38 and static/Qt gates PASS.
+Implementation composes the already accepted A2W/A2X/Image authorities rather than creating parallel logic. Bulk AI opens Commerce only because this explicit full-completion action needs factual Profile/Filament merge; Publish remains locked. Slider membership remains manual. Runtime-bearing SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440` is GitHub-exact and running; focused 3/3, widget smoke 2/2, broad 129/130 with only baseline ERR-49-203, unchanged-cycle 40/40 and static/Qt gates PASS. C1/C2 is closed.
 
 ## 2026-09-22 - Owner: Product #588 Site publish failed with Bridge HTTP 403 anti-robot page
 Status: `A2Z ERR-49-221 LOCAL_TESTED / GITHUB + EXACT-SHA #588 RETRY NEXT`.

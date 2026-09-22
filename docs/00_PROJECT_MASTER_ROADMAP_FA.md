@@ -1,6 +1,6 @@
-## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics active
+## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics ACCEPTED / A2Z Catalog Completion active next
 
-Current A2Z Windows slice adds a top Full Edit action and reconnects later accepted Product-completion capabilities to the Products multi-select Bulk AI command. It reuses, rather than replaces, A2W Source Profile/Filament logic, A2X Slider completeness and A2Z physical SEO image authority. Publish and Slider membership remain manual. Local gates pass; no Production change is part of this slice. After exact GitHub/Qt acceptance, continue the frozen A2Z Catalog-wide Slider completeness/backfill sequence.
+C1/C2 is closed at runtime-bearing SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440`, Local=GitHub exact and accepted in real Qt. Product Wizard has the top Full Edit action; Products multi-select Bulk AI composes factual Source Profiles, exact-family Filaments, validated Category, physical SEO filenames and six-field Slider completeness while preserving Publish and Slider membership authority. Exact-SHA widget smoke 2/2 and idle-Catalog no-mutation proof pass. No Production deploy was required. The active forward slice returns to the frozen A2Z Catalog-wide Slider completeness/backfill and final Windows operator acceptance sequence.
 
 ## 2026-09-21 - A2Y convergence accepted / A2Z is active next
 

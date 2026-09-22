@@ -1,8 +1,8 @@
-## 2026-09-22 - A2Z-C1/C2 Full Edit + unified Products Bulk completion checkpoint
+## 2026-09-22 - A2Z-C1/C2 Full Edit + unified Products Bulk completion ACCEPTED
 
-Windows-only source slice is Local-tested from baseline `494a222b...` with rollback `backup/pre-a2z-full-edit-bulk-completion-20260922`. Product Wizard now has a top Full Edit action that opens all stage locks without publishing or mutating Product values. Products multi-select Bulk AI now composes the accepted Source Profile, exact-family Filament, Category, physical image SEO and six-field Slider completion authorities after the existing AI content run, while Publish and Slider membership remain operator-owned. ERR-49-223 fixes a Persian taxonomy exact-match bug. New focused 3/3 + unchanged-cycle 38/38 PASS; related 148/149 effective PASS with only historical ERR-49-203; static/Qt gates PASS. No real Catalog/Production mutation.
+Windows-only C1/C2 is closed at runtime-bearing SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440` with rollback `backup/pre-a2z-full-edit-bulk-completion-20260922`. Product Wizard exposes top Full Edit without publishing or dirtying Product values; Products multi-select Bulk AI composes the accepted Source Profile, exact-family Filament, validated Category, physical image SEO and six-field Slider completion authorities after the existing AI content run while Publish and Slider membership remain operator-owned. ERR-49-223 fixes Persian taxonomy exact matching. Focused 3/3, exact-SHA widget smoke 2/2, broad 129/130 with only historical ERR-49-203, unchanged-cycle 40/40, compile/diff/Qt VerifyOnly and idle-Catalog no-mutation proof all pass. No Production deploy was required.
 
-Exact next: commit/push -> Local=GitHub -> exact-SHA Qt UI smoke -> resume A2Z Catalog Slider completeness/backfill.
+Exact next: **A2Z Catalog Data Completion** -> fresh integrity backup -> Slider completeness inventory/backfill with membership preserved -> #620/#625/#628 real operator acceptance -> final Profile/Filament/Image gates -> one guarded same-identity re-publish -> strict public parity/browser verification. Following phase: A2Z-S bounded changed-revision Social/Story recovery.
 
 ## 2026-09-21 - A2Y accepted / A2Z continuation checkpoint
 

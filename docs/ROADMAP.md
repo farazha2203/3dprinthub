@@ -14,9 +14,9 @@
 - [x] Related Stage/Image/Profile/Filament/Site 148/149 effective PASS; sole failure = known ERR-49-203 baseline.
 - [x] Existing AI/completion/Unified Desktop/Slider 38/38 PASS.
 - [x] 6 changed Python files compile; diff-check + Qt VerifyOnly PASS; migration/dependency/Server delta 0.
-- [ ] Commit/push exact C1/C2 SHA; verify Local=GitHub.
-- [ ] Exact-SHA Qt relaunch and non-mutating UI smoke.
-- [ ] Close C1/C2 docs and resume A2Z Catalog Data Completion.
+- [x] Commit/push exact C1/C2 SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440`; Local=GitHub exact.
+- [x] Exact-SHA Qt relaunch + widget smoke 2/2 + idle Catalog no-mutation proof.
+- [x] Close C1/C2; resume A2Z Catalog Data Completion.
 
 ## 2026-09-22 - Phase50.A.2Z ERR-49-221 Product #588 publish-readiness recovery
 - [x] Verify current unified worktree/branch/HEAD and clean baseline `0202bdca...`.
