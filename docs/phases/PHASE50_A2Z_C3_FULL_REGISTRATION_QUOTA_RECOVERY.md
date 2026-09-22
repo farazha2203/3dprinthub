@@ -1,6 +1,6 @@
 # Phase50.A.2Z-C3 — Full Registration + Host Quota Recovery
 
-Status: **GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED ON PRINTHUB TUNNEL**
+Status: **FULL REGISTRATION ACCEPTED / HOST QUOTA RECOVERY PRODUCTION_VERIFIED / HERO CONFLICT RECONCILIATION NEXT**
 Date: 2026-09-22
 Baseline: `7d6f738a05abf7de8b53905dcf755563ab9d09de`
 Rollback ref: `backup/pre-a2z-confirm-all-quota-20260922`
@@ -60,17 +60,25 @@ The same quota class already failed Product #588 earlier on 2026-09-22. Current 
 - ERR-49-213 already proves shared-account quota can be exhausted even when filesystem capacity itself is healthy.
 - Whether current quota also prevented the PrintHub watchdog from reconnecting is not yet verified and must not be asserted until the official tunnel is restored.
 
+## Production quota recovery evidence
+
+- Owner freed Host account space; control-panel usage ~1.44 GB / 1.95 GB.
+- Official PrintHubTunnel recovered with expected key fingerprint; Windows 22024 + authenticated bridge PASS.
+- Host Git lock absent/worktree clean/write-test PASS.
+- Exact FTP publication path passed MKD + 1KB STOR + DELETE + RMD.
+- Real Batch `desktop_catalog_v85_20260922_181511` / `fd336bc1-4a04-416f-a6ea-8526dddfb4b2`: 31/31 files uploaded.
+- Successful: #140/#151/#210 updated; #536/#588 created and public.
+- Failed independently: #152 Hero 2 revision expected 1/current 2; #178 Hero 4 expected 3/current 5.
+- #536 public page/image HTTP 200; parity ok; queue now 10.
+
 ## Exact next
 
-1. runtime-bearing C3 commit `ac094945901cfd612dd6069fdd473a995c8a204a` is Local=GitHub exact;
-2. exact-SHA Qt relaunch and widget smoke 4/4 PASS;
-3. recover the official PrintHub reverse tunnel only through the documented project path;
-4. read-only Host quota inventory through `22024`;
-5. remove only verified disposable/incomplete/cache artifacts if required; preserve valid rollback/media;
-6. prove account write headroom and FTP pending-directory creation;
-7. fresh Catalog backup;
-8. retry only the bounded failed Product, not the whole queue;
-9. require one complete Batch -> FTP -> Bridge -> terminal ACK chain and public parity.
+1. read current Site Hero truth for #152/#178 only;
+2. reconcile local revision/ACK authority without overwriting Product/Slider membership;
+3. fresh integrity-checked Catalog backup;
+4. retry only #152/#178;
+5. require terminal ACK + public parity for both;
+6. close C3 and resume A2Z Catalog Data Completion.
 
 ## Following phase
 

@@ -1,4 +1,4 @@
-## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED
+## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION ACCEPTED / QUOTA RECOVERY PRODUCTION_VERIFIED / HERO CONFLICT RECONCILIATION NEXT
 
 Owner reported real Site publish failure with FTP `550 Can't create directory: Disk quota exceeded` and requested a one-click **«✅ ثبت کامل»** beside **«✏ ویرایش کامل»** so current edits can be saved and all seven complete Stages approved without seven separate confirmations.
 
@@ -14,7 +14,11 @@ Active phase: `docs/phases/PHASE50_A2Z_C3_FULL_REGISTRATION_QUOTA_RECOVERY.md`.
 
 Runtime-bearing C3 SHA is `ac094945901cfd612dd6069fdd473a995c8a204a`, Local=GitHub exact and running in Qt from `D:\projects\3DPrintHub-a2y-converge\catalog_center\qt_launch.py`. Exact-SHA widget smoke **4/4 PASS** for Full Edit, Full Registration, seven-stage explicit approval without send, and Products Bulk AI presence.
 
-**Exact next:** restore official PrintHub tunnel through documented break-glass project path -> read-only Host quota inventory -> free only verified disposable/incomplete/cache artifacts while preserving valid rollback/media -> prove write headroom/FTP pending mkdir -> fresh Catalog backup -> retry only the bounded failed Product -> require full Batch/FTP/Bridge/ACK/public parity.
+Quota recovery is now Production-verified. Owner freed Host account space; control-panel usage is ~1.44 GB / 1.95 GB. Official PrintHubTunnel recovered with expected fingerprint `SHA256:vzNCviwq432S+qQXPsCIjvVuHN8xYYqOiHSqZEPVfnY`; Windows `127.0.0.1:22024` is reachable and authenticated bridge health passes. Host `.git/index.lock` is absent, Git worktree is clean, Host write-test passes, and the exact FTP publication path `/3dprinthub/imports/desktop_catalog/pending` passed `MKD + 1KB STOR + DELETE + RMD` using the real configured FTP account.
+
+Real post-recovery Batch `desktop_catalog_v85_20260922_181511` / UUID `fd336bc1-4a04-416f-a6ea-8526dddfb4b2` uploaded all 31 files. Results: #140 updated, #151 updated, #210 updated, #536 created as Site Product #48, #588 created as Site Product #49; #152 and #178 failed only on stale Hero revision conflicts. #536 public Product HTTP 200 and main image HTTP 200/image-webp with SHA256 `6b264047f956c485047b9afe55b61f551ed01a63a0e5c8b8f79a7fb25952f58d`; republish parity is `ok=true`, media_count=1, profile_count=64. Local publish queue has fallen to 10.
+
+**Exact next:** reconcile only #152 and #178 stale Hero revisions read-only against current Site truth -> refresh local Hero revision authority without changing Product data -> fresh Catalog backup -> bounded retry of #152/#178 only -> require terminal ACK/public parity -> then resume A2Z Catalog Data Completion.
 
 **Following phase:** resume A2Z Catalog Data Completion: Slider inventory/backfill with membership preserved -> #620/#625/#628 acceptance -> final Profile/Filament/Image gates -> controlled same-identity republish -> browser/public parity.
 

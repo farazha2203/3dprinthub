@@ -181,6 +181,12 @@ A passing script means only **read-only pre-deploy evidence is complete**. It do
 
 The Desktop receiver-readiness endpoint is a second fail-closed gate: even after Bridge health succeeds, Product FTP/upload must not start unless the live Site reports `ready=true`.
 
+## 2026-09-22 - Shared-account quota incident recovered and verified
+
+Owner freed account space; reported control-panel usage is ~1.44 GB / 1.95 GB. Official PrintHubTunnel recovered with the expected project fingerprint. Authenticated Host bridge, Git status, write-test and exact FTP publication-path `MKD/STOR/DELETE/RMD` now pass. Real post-recovery Batch `desktop_catalog_v85_20260922_181511` uploaded 31/31 files, proving account write headroom is restored.
+
+Keep the existing prevention rules below: treat future `550 Disk quota exceeded` as account write-headroom failure, do not blindly retry unchanged, and never substitute another project's tunnel.
+
 ## 2026-09-22 - Shared-account quota can block Product FTP before Bridge import
 
 Real Windows batch #536 failed at remote pending-directory creation with FTP `550 Disk quota exceeded`. No FTP-upload receipt or Bridge import was produced. The same class also affected #588.

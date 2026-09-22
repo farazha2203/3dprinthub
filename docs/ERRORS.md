@@ -83,6 +83,15 @@
 **Verification:** changed-condition test 1/1 PASS; full Server unified/profile/republish/payment/finance/Hero gate 52/52 PASS; Windows focused gate 94/94 PASS; broad Windows remains 115/116 with only independently documented ERR-49-203.
 **Prevention:** presentation/cache assertions must track the latest accepted Production contract in CURRENT_STATE/ROADMAP, and a merge-time failure must be reproduced against its source baseline before being classified as a new regression.
 
+## ERR-49-226 - Post-quota batch exposed stale Hero revision conflicts for #152 and #178
+**Date:** 2026-09-22
+**Observed:** after Host quota recovery, real Batch `desktop_catalog_v85_20260922_181511` successfully uploaded 31/31 files and Bridge processed seven Products. Five succeeded, but #152 failed with `EPIC49_SYNC_CONFLICT entity=hero:2 expected=1 current=2` and #178 failed with `EPIC49_SYNC_CONFLICT entity=hero:4 expected=3 current=5`.
+**Root cause class:** local Hero revision authority for these two Products is stale relative to current Site Hero state. This is independent of the resolved Host quota incident.
+**Do not do:** do not repeat the same Batch unchanged; do not overwrite current Hero rows or force revisions; do not resend the whole queue.
+**Correct recovery:** read current Site/Hero truth for #152/#178, reconcile only the local revision/ACK authority without changing operator-owned Product/Slider membership data, take fresh Catalog backup, then bounded retry of only these two Products and require terminal ACK/public verification.
+**Verification so far:** quota path itself is healthy: official tunnel authenticated; Host write-test PASS; exact FTP pending path MKD/STOR/DELETE/RMD PASS; same Batch successfully created #536/#588 and updated #140/#151/#210.
+**Prevention:** every multi-Product publish should refresh current Hero/Slider revision authority before packaging previously published Slider-enabled Products and should report per-Product conflict separately from transport failures.
+
 ## ERR-49-225 - Full Registration focused test initially missed stage_locks import
 **Date:** 2026-09-22
 **Observed:** first focused C3 test failed inside Product Wizard `_finalize_all()` with `NameError: stage_locks is not defined`.

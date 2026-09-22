@@ -13,11 +13,13 @@
 - [x] Prove official PrintHub tunnel 22024 absent; current Host-IP session is RetoucherTunnel and must not be reused.
 - [x] Commit/push C3 exact at `ac094945901cfd612dd6069fdd473a995c8a204a`; Local=GitHub exact.
 - [x] Exact-SHA Qt relaunch + widget smoke 4/4 PASS.
-- [ ] Restore official PrintHub tunnel through documented project path.
-- [ ] Read-only Host quota inventory and safe disposable-artifact cleanup only.
-- [ ] Prove FTP write headroom.
-- [ ] Fresh Catalog backup and retry only bounded failed Product.
-- [ ] Verify full Batch -> FTP -> Bridge -> ACK -> public parity.
+- [x] Restore official PrintHub tunnel; expected key fingerprint and authenticated bridge PASS.
+- [x] Verify Host write headroom and exact FTP pending-path MKD/STOR/DELETE/RMD PASS.
+- [x] Production-verify quota recovery with real Batch `desktop_catalog_v85_20260922_181511` / 31 uploaded files.
+- [x] Verify #140/#151/#210 updated, #536/#588 created and public; queue reduced to 10.
+- [ ] Reconcile stale Hero revisions for #152 (`hero:2 expected=1 current=2`) and #178 (`hero:4 expected=3 current=5`).
+- [ ] Fresh Catalog backup and bounded retry of #152/#178 only.
+- [ ] Verify terminal ACK/public parity for both before resuming A2Z Catalog Completion.
 
 ## 2026-09-22 - Phase50.A.2Z-C1/C2 Full Edit + Unified Bulk Completion
 - [x] Verify exact clean baseline `494a222b...`; create rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922`.

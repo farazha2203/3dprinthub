@@ -1,8 +1,8 @@
-## 2026-09-22 - A2Z-C3 Full Registration + quota recovery checkpoint
+## 2026-09-22 - A2Z-C3 Full Registration accepted / quota recovered / Hero reconciliation checkpoint
 
 Current Windows C3 is accepted at runtime-bearing SHA `ac094945901cfd612dd6069fdd473a995c8a204a`, Local=GitHub exact and running in Qt. It adds **«✅ ثبت کامل»** beside Full Edit, saves the current editable Stage and explicitly approves every complete canonical Stage through the existing fail-closed StageCore validator; it never queues or sends Site/Social work. Focused 3/3 + related 82/82 + exact-SHA widget smoke 4/4 + compile/diff/Qt VerifyOnly PASS; no Server delta.
 
-Real Product #536 Site attempt `desktop_catalog_v85_20260922_171201` failed before any FTP-upload/Bridge receipt with shared-account quota exhaustion; #588 previously failed the same class. Current queue is 15 Products but #536 batch contains only #536. Official PrintHub tunnel 22024 is down; current Host-IP OpenSSH session is RetoucherTunnel and is not an authorized fallback. Next: restore official PrintHub tunnel -> read-only quota inventory/safe cleanup -> prove write headroom -> fresh backup -> bounded one-Product retry.
+Quota recovery is now Production-verified. Owner freed Host account space; official PrintHubTunnel recovered with expected fingerprint; Windows `127.0.0.1:22024` and authenticated bridge pass; Host write-test and exact FTP pending-path MKD/STOR/DELETE/RMD pass. Real Batch `desktop_catalog_v85_20260922_181511` uploaded 31/31 files: #140/#151/#210 updated, #536/#588 created and public; local queue is now 10. #152 and #178 failed independently on stale Hero revision conflicts and must not be retried unchanged. Next: read current Site Hero truth for only #152/#178 -> reconcile local Hero revision/ACK authority -> fresh Catalog backup -> bounded retry of those two -> require terminal ACK/public parity -> resume A2Z Catalog Data Completion.
 
 ## 2026-09-22 - A2Z-C1/C2 Full Edit + unified Products Bulk completion ACCEPTED
 
