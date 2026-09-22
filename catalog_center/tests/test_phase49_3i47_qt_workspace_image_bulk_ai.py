@@ -1419,6 +1419,95 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         self.assertEqual(int(row["needs_update"] or 0), 0)
         self.assertEqual(row["workflow_status"], "uploaded")
 
+    def test_stage_core_full_registration_explicitly_approves_all_seven_without_publish(self):
+        product_id = self._make_product("3147007")
+        called = []
+
+        def finalize(product_id_arg, stage, *, manual_approval=True, event_type=""):
+            called.append(
+                (
+                    int(product_id_arg),
+                    str(stage),
+                    bool(manual_approval),
+                    str(event_type),
+                )
+            )
+            return {}
+
+        with patch.object(self.kernel.stages, "finalize", side_effect=finalize):
+            result = self.kernel.stages.finalize_all_ready(product_id)
+
+        expected = [
+            "quick",
+            "commerce",
+            "images",
+            "content",
+            "specs",
+            "slider",
+            "publish",
+        ]
+        self.assertEqual([item[1] for item in called], expected)
+        self.assertTrue(all(item[2] for item in called))
+        self.assertTrue(
+            all(item[3] == "qt_all_stages_finalized" for item in called)
+        )
+        self.assertEqual(result["finalized"], expected)
+        self.assertEqual(result["blocked"], {})
+        self.assertTrue(result["all_finalized"])
+
+    def test_product_page_full_registration_saves_current_then_confirms_all_without_send(self):
+        product_id = self._make_product("3147008")
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(page.finalize_all_btn.text(), "✅ ثبت کامل")
+            self.assertTrue(page.finalize_all_btn.isEnabled())
+            result = {
+                "product_id": product_id,
+                "finalized": [
+                    "quick",
+                    "commerce",
+                    "images",
+                    "content",
+                    "specs",
+                    "slider",
+                    "publish",
+                ],
+                "already_finalized": [],
+                "blocked": {},
+                "all_finalized": True,
+            }
+            with (
+                patch.object(
+                    QMessageBox,
+                    "question",
+                    return_value=QMessageBox.StandardButton.Yes,
+                ),
+                patch.object(QMessageBox, "information"),
+                patch.object(page, "_save_current", return_value=True) as save,
+                patch.object(
+                    self.kernel.stages,
+                    "finalize_all_ready",
+                    return_value=result,
+                ) as finalize_all,
+                patch.object(
+                    self.kernel.publish,
+                    "mark_ready_many",
+                ) as mark_ready,
+                patch.object(
+                    self.kernel.publish,
+                    "publish_many",
+                ) as publish_many,
+            ):
+                page._finalize_all()
+
+            save.assert_called_once_with(notify=False)
+            finalize_all.assert_called_once_with(product_id)
+            mark_ready.assert_not_called()
+            publish_many.assert_not_called()
+        finally:
+            page.close()
+
     def test_bulk_ai_preparation_opens_commerce_but_not_publish(self):
         product_id = self._make_product("3147006")
         self.db.update_product(

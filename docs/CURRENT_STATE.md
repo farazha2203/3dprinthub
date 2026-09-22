@@ -1,3 +1,21 @@
+## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION LOCAL_TESTED / FTP QUOTA BLOCKER / GITHUB NEXT
+
+Owner reported real Site publish failure with FTP `550 Can't create directory: Disk quota exceeded` and requested a one-click **«✅ ثبت کامل»** beside **«✏ ویرایش کامل»** so current edits can be saved and all seven complete Stages approved without seven separate confirmations.
+
+C3 implementation is Windows-only: Product Wizard now exposes **«✅ ثبت کامل»**. It saves the current unlocked Stage first, then `StageCore.finalize_all_ready()` reuses the existing fail-closed `finalize()` validation with explicit manual approval across canonical `STAGE_ORDER`, including Publish Stage only as an approval state. Incomplete Stages remain blocked and are reported. The action never calls readiness queueing, Site publish, FTP/Bridge or Instagram.
+
+Verification: focused Full Registration/Full Edit **3/3 PASS**; related Stage Finalization + Product Wizard + Site Publish + Unified Desktop + Slider **82/82 PASS**; 3 changed Python files compile; diff-check and Qt VerifyOnly PASS; Server/migration/template/static delta=0. The first focused run failed only because the new UI method omitted the existing `stage_locks` import; no real Catalog mutation occurred, import was added, and changed-condition rerun passed 3/3.
+
+Publish incident evidence is bounded: batch `desktop_catalog_v85_20260922_171201` / UUID `32a25891-282c-498a-bed1-4498b4303059` contains **Product #536 only**, 7 local files, and receipt chain `batch_ready -> publish_started -> publish_failed`; there is no `desktop_ftp_uploaded` and no Bridge import. Product #588 had already failed earlier with the same quota class. Current local queue inventory is 15 Products; recovery must never blindly send the full queue.
+
+Official 3DPrintHub reverse tunnel is currently unavailable: `127.0.0.1:22024` absent. Windows OpenSSH is Running/Automatic and port 22 is healthy. Host IP `89.39.208.237` currently has an SSH session, but OpenSSH audit identifies it as **RetoucherTunnel**, not **PrintHubTunnel**; last observed PrintHubTunnel acceptance is 2026-09-20. Project rules prohibit using another project's tunnel. No FTP/cPanel/manual Host cleanup has been performed.
+
+Active phase: `docs/phases/PHASE50_A2Z_C3_FULL_REGISTRATION_QUOTA_RECOVERY.md`.
+
+**Exact next:** final docs/diff -> commit/push C3 -> Local=GitHub exact SHA -> exact-SHA Qt/widget smoke -> restore official PrintHub tunnel through documented path -> read-only Host quota inventory -> free only verified disposable/incomplete/cache artifacts while preserving valid rollback/media -> prove write headroom/FTP pending mkdir -> fresh Catalog backup -> retry only the bounded failed Product -> require full Batch/FTP/Bridge/ACK/public parity.
+
+**Following phase:** resume A2Z Catalog Data Completion: Slider inventory/backfill with membership preserved -> #620/#625/#628 acceptance -> final Profile/Filament/Image gates -> controlled same-identity republish -> browser/public parity.
+
 ## 2026-09-22 - Phase50.A.2Z-C1/C2 FULL EDIT + UNIFIED BULK COMPLETION GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / CLOSED
 
 Owner-requested Windows Catalog completion slice is implemented on clean baseline `494a222b64908563c5d6b953b4ef96f9782c8e0d`; rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922` preserves that exact baseline. No real Catalog, Site, Host or Production mutation has been performed by this slice.

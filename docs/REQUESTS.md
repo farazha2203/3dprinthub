@@ -1,3 +1,10 @@
+## 2026-09-22 - Owner: one-click Full Registration + fix failed Site send
+Status: `A2Z-C3 LOCAL_TESTED / FTP QUOTA BLOCKED / GITHUB NEXT`.
+
+Owner requires a **«✅ ثبت کامل»** button next to **«✏ ویرایش کامل»** so, after edits such as price/Profile changes, one action saves the current Stage and approves every complete Stage instead of requiring seven confirmation clicks. Existing validation must remain fail-closed and the button must not publish automatically.
+
+Owner also reported Site send failure. Exact evidence: Product #536 only, batch `desktop_catalog_v85_20260922_171201`, failed before any FTP-upload receipt/Bridge import with `550 Disk quota exceeded`; #588 previously failed the same way. Queue inventory is 15 Products and must not be blindly retried. Official PrintHub tunnel 22024 is down and another project's RetoucherTunnel must not be used for Host cleanup.
+
 ## 2026-09-22 - Owner: Full Edit button + bring later completion capabilities into Products Bulk AI
 Status: `A2Z-C1/C2 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / CLOSED — A2Z CATALOG COMPLETION NEXT`.
 

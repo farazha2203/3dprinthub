@@ -1,3 +1,24 @@
+## 2026-09-22 - Phase50.A.2Z-C3 Full Registration + FTP Quota Recovery
+- [x] Verify clean Local=GitHub baseline `7d6f738a...`; rollback ref `backup/pre-a2z-confirm-all-quota-20260922`.
+- [x] Add top Product **«✅ ثبت کامل»** beside Full Edit.
+- [x] Save current editable Stage before all-stage approval.
+- [x] Reuse existing StageCore `finalize()` validation for all seven canonical Stages with explicit manual approval.
+- [x] Keep incomplete Stages blocked; summarize blockers.
+- [x] Prove Full Registration does not call mark-ready/publish/FTP/Bridge/Social.
+- [x] Focused 3/3 PASS.
+- [x] Related Stage/Product/Site/Slider regression 82/82 PASS.
+- [x] 3 Python files compile; diff-check + Qt VerifyOnly PASS; Server delta 0.
+- [x] Prove failed 17:12 batch targets only Product #536 and stopped before FTP upload/Bridge import.
+- [x] Prove same quota class also affected #588; current queue inventory is 15 but must not be bulk retried.
+- [x] Prove official PrintHub tunnel 22024 absent; current Host-IP session is RetoucherTunnel and must not be reused.
+- [ ] Commit/push C3 and verify exact SHA.
+- [ ] Exact-SHA Qt/widget smoke.
+- [ ] Restore official PrintHub tunnel through documented project path.
+- [ ] Read-only Host quota inventory and safe disposable-artifact cleanup only.
+- [ ] Prove FTP write headroom.
+- [ ] Fresh Catalog backup and retry only bounded failed Product.
+- [ ] Verify full Batch -> FTP -> Bridge -> ACK -> public parity.
+
 ## 2026-09-22 - Phase50.A.2Z-C1/C2 Full Edit + Unified Bulk Completion
 - [x] Verify exact clean baseline `494a222b...`; create rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922`.
 - [x] Add top Product Wizard **«✏ ویرایش کامل»** action using mature StageCore unlock authority.

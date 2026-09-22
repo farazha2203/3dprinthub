@@ -1,3 +1,11 @@
+## 2026-09-22 - A2Z-C3 Full Registration + quota incident
+- Added **«✅ ثبت کامل»** next to Full Edit in Product Wizard.
+- The action saves the current editable Stage, then explicitly approves every complete canonical Stage through the existing StageCore validator; incomplete Stages remain blocked.
+- Full Registration never marks ready, publishes, starts FTP/Bridge or sends Social content.
+- Focused 3/3 and related regression 82/82 PASS; compile/diff/Qt VerifyOnly PASS; no Server/migration delta.
+- Real Product #536 batch `desktop_catalog_v85_20260922_171201` failed at FTP directory creation with shared-account quota before any file-upload receipt or Bridge import; earlier #588 shows the same class.
+- Official PrintHub reverse tunnel is down; current Host-IP SSH is RetoucherTunnel and is intentionally not used for 3DPrintHub cleanup.
+
 ## 2026-09-22 - A2Z-C1/C2 Full Edit + Unified Bulk Completion ACCEPTED
 - Added top Product Wizard «✏ ویرایش کامل» using the existing audited stage-unlock authority; entering edit mode alone does not publish or mark Product data dirty.
 - Products multi-select Bulk AI now composes accepted later-stage capabilities after its existing AI content run: factual Source Profiles, multi-profile Local Filament mapping, validated Category, physical SEO filenames and six-field Slider completeness.

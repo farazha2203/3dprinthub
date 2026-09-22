@@ -1,3 +1,9 @@
+## 2026-09-22 - A2Z-C3 Full Registration active / Host quota recovery blocked on project tunnel
+
+Windows C3 adds a one-click **«✅ ثبت کامل»** beside Full Edit: save current editable Stage, then explicitly approve all complete seven Stages through the existing validator without automatic Site publish. Focused 3/3 and related 82/82 PASS; static/Qt gates pass.
+
+Real #536 publish is blocked before FTP upload/Bridge import by shared-account `Disk quota exceeded`; #588 shows the same class. Official PrintHub reverse tunnel is currently absent, and another project's active tunnel is not an allowed fallback. C3 GitHub/exact-SHA acceptance can proceed independently; Host quota cleanup/retry remains blocked until the correct tunnel is restored.
+
 ## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics ACCEPTED / A2Z Catalog Completion active next
 
 C1/C2 is closed at runtime-bearing SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440`, Local=GitHub exact and accepted in real Qt. Product Wizard has the top Full Edit action; Products multi-select Bulk AI composes factual Source Profiles, exact-family Filaments, validated Category, physical SEO filenames and six-field Slider completeness while preserving Publish and Slider membership authority. Exact-SHA widget smoke 2/2 and idle-Catalog no-mutation proof pass. No Production deploy was required. The active forward slice returns to the frozen A2Z Catalog-wide Slider completeness/backfill and final Windows operator acceptance sequence.

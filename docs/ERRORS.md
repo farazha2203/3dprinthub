@@ -83,6 +83,24 @@
 **Verification:** changed-condition test 1/1 PASS; full Server unified/profile/republish/payment/finance/Hero gate 52/52 PASS; Windows focused gate 94/94 PASS; broad Windows remains 115/116 with only independently documented ERR-49-203.
 **Prevention:** presentation/cache assertions must track the latest accepted Production contract in CURRENT_STATE/ROADMAP, and a merge-time failure must be reproduced against its source baseline before being classified as a new regression.
 
+## ERR-49-225 - Full Registration focused test initially missed stage_locks import
+**Date:** 2026-09-22
+**Observed:** first focused C3 test failed inside Product Wizard `_finalize_all()` with `NameError: stage_locks is not defined`.
+**Root cause:** C3 reused the existing lock reader but the Product Wizard import list still imported only `STAGE_ORDER`.
+**Correct fix:** import `stage_locks` from the existing stage-finalization authority. No runtime contract or database schema changed.
+**Verification:** changed-condition focused rerun 3/3 PASS; related regression 82/82 PASS; compile/diff/Qt VerifyOnly PASS.
+**Prevention:** UI wrappers around mature StageCore helpers must import their existing lock/readiness helpers explicitly and be exercised at widget level before GitHub promotion.
+
+## ERR-49-224 - Site FTP batch mkdir blocked by shared-account quota; no upload/import occurred
+**Date:** 2026-09-22
+**Observed:** Product #536 batch `desktop_catalog_v85_20260922_171201` / UUID `32a25891-282c-498a-bed1-4498b4303059` failed in `_ensure_remote_dir()` while creating the remote pending batch directory: `550 Can't create directory: Disk quota exceeded`. Receipt chain is `desktop_batch_ready -> desktop_publish_started -> desktop_publish_failed`; there is no `desktop_ftp_uploaded` and no Bridge import. Product #588 had already failed earlier the same day with the same quota class.
+**Scope:** #536 attempt contains only Product #536 and 7 local batch files. Current local queue inventory is 15 Products; the queue count is not evidence that all 15 were sent.
+**Root cause:** shared Host account quota has no write headroom for the FTP pending directory. This is consistent with historical ERR-49-213, where account quota was exhausted while filesystem capacity remained healthy.
+**Host-management blocker:** official 3DPrintHub reverse tunnel `127.0.0.1:22024` is absent. Windows OpenSSH is healthy and Host IP `89.39.208.237` has an established session, but current OpenSSH audit identifies it as `RetoucherTunnel`; last observed `PrintHubTunnel` acceptance is 2026-09-20. Project rules forbid using another project's tunnel. No FTP/cPanel/manual cleanup was performed.
+**Correct recovery:** restore official PrintHub tunnel; inventory Host quota read-only; remove only verified disposable/incomplete/cache artifacts while preserving valid backups/media; prove write headroom; then fresh Catalog backup and retry only the bounded failed Product. Do not blindly retry the full queue and do not repeat the same mkdir while quota is unchanged.
+**Unverified hypothesis:** quota may also interfere with watchdog log/lock writes, but this is not yet proven and must not be stated as root cause of the tunnel outage until Host evidence is available.
+**Prevention:** Site publish diagnostics must distinguish local queue size from actual batch membership and treat quota errors as Host-capacity blockers rather than Product failures.
+
 ## ERR-49-213 - Full fresh Hero follow-up rollback hit Host quota after source bundle creation
 **Date:** 2026-09-21
 **Observed:** final A2X Hero follow-up pre-deploy backup created a valid ~13 MB source bundle and `.env`, then the required MySQL gzip stopped with `OSError: [Errno 122] Disk quota exceeded`. Source promotion had not started; Production remained clean at `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`.

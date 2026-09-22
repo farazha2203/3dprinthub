@@ -1,3 +1,9 @@
+## 2026-09-22 - A2Z-C3 Full Registration + quota recovery checkpoint
+
+Current Windows slice adds **«✅ ثبت کامل»** beside Full Edit. It saves the current editable Stage and explicitly approves every complete canonical Stage through the existing fail-closed StageCore validator; it never queues or sends Site/Social work. Focused 3/3 + related 82/82 + compile/diff/Qt VerifyOnly PASS; no Server delta.
+
+Real Product #536 Site attempt `desktop_catalog_v85_20260922_171201` failed before any FTP-upload/Bridge receipt with shared-account quota exhaustion; #588 previously failed the same class. Current queue is 15 Products but #536 batch contains only #536. Official PrintHub tunnel 22024 is down; current Host-IP OpenSSH session is RetoucherTunnel and is not an authorized fallback. Next: GitHub/exact-SHA Windows acceptance -> restore official PrintHub tunnel -> read-only quota inventory/safe cleanup -> prove write headroom -> bounded one-Product retry.
+
 ## 2026-09-22 - A2Z-C1/C2 Full Edit + unified Products Bulk completion ACCEPTED
 
 Windows-only C1/C2 is closed at runtime-bearing SHA `8629f8b72c416b364a618a5aeebe2dda8a81d440` with rollback `backup/pre-a2z-full-edit-bulk-completion-20260922`. Product Wizard exposes top Full Edit without publishing or dirtying Product values; Products multi-select Bulk AI composes the accepted Source Profile, exact-family Filament, validated Category, physical image SEO and six-field Slider completion authorities after the existing AI content run while Publish and Slider membership remain operator-owned. ERR-49-223 fixes Persian taxonomy exact matching. Focused 3/3, exact-SHA widget smoke 2/2, broad 129/130 with only historical ERR-49-203, unchanged-cycle 40/40, compile/diff/Qt VerifyOnly and idle-Catalog no-mutation proof all pass. No Production deploy was required.

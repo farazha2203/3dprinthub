@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 
 from app.ai_model_catalog import format_cost_quote
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
-from app.phase49_3i36_stage_finalization import STAGE_ORDER
+from app.phase49_3i36_stage_finalization import STAGE_ORDER, stage_locks
 from .diagnostics import show_diagnostic_error
 from .image_gallery import ImageSeoDialog, ProductImageGrid
 from .parity_dialogs import ProfileEditorDialog, SourceFilamentMappingDialog
@@ -175,6 +175,16 @@ class ProductWizardPage(QWidget):
         self.edit_all_btn.setEnabled(False)
         self.edit_all_btn.clicked.connect(self._unlock_all_for_edit)
         identity_row.addWidget(self.edit_all_btn)
+
+        self.finalize_all_btn = QPushButton("✅ ثبت کامل")
+        self.finalize_all_btn.setToolTip(
+            "تغییرات مرحله فعلی را ذخیره می‌کند و همه مراحل کامل را یکجا "
+            "تأیید نهایی می‌کند؛ هیچ ارسال سایت یا انتشار خودکاری انجام نمی‌شود."
+        )
+        self.finalize_all_btn.setProperty("success", True)
+        self.finalize_all_btn.setEnabled(False)
+        self.finalize_all_btn.clicked.connect(self._finalize_all)
+        identity_row.addWidget(self.finalize_all_btn)
 
         self.product_source_btn = QPushButton("🌐 باز کردن صفحه محصول")
         self.product_source_btn.setEnabled(False)
@@ -852,12 +862,14 @@ class ProductWizardPage(QWidget):
         if row is None:
             self.product_id = None
             self.edit_all_btn.setEnabled(False)
+            self.finalize_all_btn.setEnabled(False)
             self.product_source_btn.setEnabled(False)
             self.product_label.setText("محصول پیدا نشد.")
             return
 
         self.product_id = int(product_id)
         self.edit_all_btn.setEnabled(True)
+        self.finalize_all_btn.setEnabled(True)
         title = row.get("title_fa") or row.get("source_title") or "بدون عنوان"
         self.product_label.setText(f"#{product_id} — {title}")
         self.product_meta.setText(
@@ -1407,6 +1419,66 @@ class ProductWizardPage(QWidget):
             return
         self.load_product(self.product_id)
         QMessageBox.information(self, "تأیید مرحله", "مرحله ثبت نهایی شد.")
+
+    def _finalize_all(self) -> None:
+        if self.product_id is None:
+            return
+        answer = QMessageBox.question(
+            self,
+            "ثبت کامل محصول",
+            "تغییرات مرحله فعلی ذخیره شود و همه مراحل کامل این محصول یکجا "
+            "تأیید نهایی شوند؟\n\n"
+            "مرحله ناقص سبز نمی‌شود و این کار هیچ ارسال سایت یا Publish خودکاری "
+            "انجام نمی‌دهد.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        current_code = STAGE_CODES[self.stack.currentIndex()]
+        row = self.kernel.products.get(int(self.product_id)) or {}
+        locks = stage_locks(row)
+        if current_code not in locks and not self._save_current(notify=False):
+            QMessageBox.warning(
+                self,
+                "ثبت کامل محصول",
+                "ذخیره تغییرات مرحله فعلی ناموفق بود؛ ثبت کامل متوقف شد.",
+            )
+            return
+
+        try:
+            result = self.kernel.stages.finalize_all_ready(int(self.product_id))
+        except Exception as exc:
+            QMessageBox.warning(self, "ثبت کامل محصول", str(exc))
+            self._refresh_stage_statuses()
+            return
+
+        finalized = list(result.get("finalized") or [])
+        already = list(result.get("already_finalized") or [])
+        blocked = dict(result.get("blocked") or {})
+        self.load_product(int(self.product_id))
+        if not blocked:
+            QMessageBox.information(
+                self,
+                "ثبت کامل محصول",
+                f"همه مراحل تأیید شدند. جدید: {len(finalized)} • قبلاً تأیید: {len(already)}",
+            )
+            return
+
+        lines = []
+        for stage, detail in blocked.items():
+            label = STAGE_NAMES[STAGE_CODES.index(stage)] if stage in STAGE_CODES else stage
+            lines.append(f"• {label}: {detail}")
+        QMessageBox.warning(
+            self,
+            "ثبت کامل محصول",
+            (
+                f"{len(finalized)} مرحله جدید تأیید شد؛ "
+                f"{len(blocked)} مرحله هنوز ناقص است.\n\n"
+                + "\n".join(lines[:12])
+            ),
+        )
 
     def _unlock_all_for_edit(self) -> None:
         if self.product_id is None:

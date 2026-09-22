@@ -181,6 +181,21 @@ A passing script means only **read-only pre-deploy evidence is complete**. It do
 
 The Desktop receiver-readiness endpoint is a second fail-closed gate: even after Bridge health succeeds, Product FTP/upload must not start unless the live Site reports `ready=true`.
 
+## 2026-09-22 - Shared-account quota can block Product FTP before Bridge import
+
+Real Windows batch #536 failed at remote pending-directory creation with FTP `550 Disk quota exceeded`. No FTP-upload receipt or Bridge import was produced. The same class also affected #588.
+
+Rules:
+- treat this as account write-headroom failure, not Product-data failure;
+- do not retry unchanged while quota remains full;
+- do not retry the whole local publish queue because one Product failed;
+- recover/inventory Host only through the official 3DPrintHub reverse tunnel;
+- never use another project's tunnel as fallback;
+- preserve valid rollback/media and delete only verified disposable/incomplete/cache artifacts;
+- after cleanup, prove write headroom before bounded Product retry.
+
+Current incident also has official `127.0.0.1:22024` tunnel absent. Windows OpenSSH itself is healthy, but the active Host-IP session is RetoucherTunnel rather than PrintHubTunnel. The relationship between quota exhaustion and PrintHub watchdog failure is not yet proven.
+
 # HOST / PRODUCTION CONSTRAINTS
 
 Last Verified From Project Source of Truth: 2026-08-26.

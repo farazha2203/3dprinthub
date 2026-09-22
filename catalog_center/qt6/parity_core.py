@@ -815,6 +815,46 @@ class StageCore:
             pass
         return self.state(product_id)
 
+    def finalize_all_ready(self, product_id: int) -> dict[str, Any]:
+        """Explicit operator approval for every currently complete stage.
+
+        Unlike auto_finalize_ready(), this includes Publish because the owner
+        explicitly pressed the all-stage approval action. It never publishes;
+        every stage still passes the existing finalize() readiness contract.
+        """
+        product_id = int(product_id)
+        if self.db.product(product_id) is None:
+            raise RuntimeError("محصول پیدا نشد.")
+
+        finalized: list[str] = []
+        already_finalized: list[str] = []
+        blocked: dict[str, str] = {}
+        for stage in STAGE_ORDER:
+            row = self.db.product(product_id)
+            if row is None:
+                raise RuntimeError("محصول پیدا نشد.")
+            if is_stage_locked(row, stage):
+                already_finalized.append(stage)
+                continue
+            try:
+                self.finalize(
+                    product_id,
+                    stage,
+                    manual_approval=True,
+                    event_type="qt_all_stages_finalized",
+                )
+                finalized.append(stage)
+            except Exception as exc:
+                blocked[stage] = str(exc)
+
+        return {
+            "product_id": product_id,
+            "finalized": finalized,
+            "already_finalized": already_finalized,
+            "blocked": blocked,
+            "all_finalized": not blocked,
+        }
+
     def auto_finalize_ready(
         self,
         product_id: int,
