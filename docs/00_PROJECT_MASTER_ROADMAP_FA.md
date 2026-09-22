@@ -2,7 +2,7 @@
 
 Windows C3 adds a one-click **«✅ ثبت کامل»** beside Full Edit: save current editable Stage, then explicitly approve all complete seven Stages through the existing validator without automatic Site publish. Focused 3/3 and related 82/82 PASS; static/Qt gates pass.
 
-Real #536 publish is blocked before FTP upload/Bridge import by shared-account `Disk quota exceeded`; #588 shows the same class. Official PrintHub reverse tunnel is currently absent, and another project's active tunnel is not an allowed fallback. C3 GitHub/exact-SHA acceptance can proceed independently; Host quota cleanup/retry remains blocked until the correct tunnel is restored.
+Real #536 publish is blocked before FTP upload/Bridge import by shared-account `Disk quota exceeded`; #588 shows the same class. Official PrintHub reverse tunnel is currently absent, and another project's active tunnel is not an allowed fallback. C3 is GitHub/exact-SHA Windows accepted at `ac094945...`; Host quota cleanup/retry remains blocked until the correct tunnel is restored.
 
 ## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics ACCEPTED / A2Z Catalog Completion active next
 

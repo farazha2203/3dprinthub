@@ -1,4 +1,4 @@
-## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION LOCAL_TESTED / FTP QUOTA BLOCKER / GITHUB NEXT
+## 2026-09-22 - Phase50.A.2Z-C3 FULL REGISTRATION GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED
 
 Owner reported real Site publish failure with FTP `550 Can't create directory: Disk quota exceeded` and requested a one-click **«✅ ثبت کامل»** beside **«✏ ویرایش کامل»** so current edits can be saved and all seven complete Stages approved without seven separate confirmations.
 
@@ -12,7 +12,9 @@ Official 3DPrintHub reverse tunnel is currently unavailable: `127.0.0.1:22024` a
 
 Active phase: `docs/phases/PHASE50_A2Z_C3_FULL_REGISTRATION_QUOTA_RECOVERY.md`.
 
-**Exact next:** final docs/diff -> commit/push C3 -> Local=GitHub exact SHA -> exact-SHA Qt/widget smoke -> restore official PrintHub tunnel through documented path -> read-only Host quota inventory -> free only verified disposable/incomplete/cache artifacts while preserving valid rollback/media -> prove write headroom/FTP pending mkdir -> fresh Catalog backup -> retry only the bounded failed Product -> require full Batch/FTP/Bridge/ACK/public parity.
+Runtime-bearing C3 SHA is `ac094945901cfd612dd6069fdd473a995c8a204a`, Local=GitHub exact and running in Qt from `D:\projects\3DPrintHub-a2y-converge\catalog_center\qt_launch.py`. Exact-SHA widget smoke **4/4 PASS** for Full Edit, Full Registration, seven-stage explicit approval without send, and Products Bulk AI presence.
+
+**Exact next:** restore official PrintHub tunnel through documented break-glass project path -> read-only Host quota inventory -> free only verified disposable/incomplete/cache artifacts while preserving valid rollback/media -> prove write headroom/FTP pending mkdir -> fresh Catalog backup -> retry only the bounded failed Product -> require full Batch/FTP/Bridge/ACK/public parity.
 
 **Following phase:** resume A2Z Catalog Data Completion: Slider inventory/backfill with membership preserved -> #620/#625/#628 acceptance -> final Profile/Filament/Image gates -> controlled same-identity republish -> browser/public parity.
 

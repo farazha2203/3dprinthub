@@ -11,8 +11,8 @@
 - [x] Prove failed 17:12 batch targets only Product #536 and stopped before FTP upload/Bridge import.
 - [x] Prove same quota class also affected #588; current queue inventory is 15 but must not be bulk retried.
 - [x] Prove official PrintHub tunnel 22024 absent; current Host-IP session is RetoucherTunnel and must not be reused.
-- [ ] Commit/push C3 and verify exact SHA.
-- [ ] Exact-SHA Qt/widget smoke.
+- [x] Commit/push C3 exact at `ac094945901cfd612dd6069fdd473a995c8a204a`; Local=GitHub exact.
+- [x] Exact-SHA Qt relaunch + widget smoke 4/4 PASS.
 - [ ] Restore official PrintHub tunnel through documented project path.
 - [ ] Read-only Host quota inventory and safe disposable-artifact cleanup only.
 - [ ] Prove FTP write headroom.

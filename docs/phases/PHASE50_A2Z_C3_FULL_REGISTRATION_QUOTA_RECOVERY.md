@@ -1,6 +1,6 @@
 # Phase50.A.2Z-C3 — Full Registration + Host Quota Recovery
 
-Status: **LOCAL_TESTED / GITHUB PROMOTION NEXT / HOST QUOTA RECOVERY BLOCKED ON PRINTHUB TUNNEL**
+Status: **GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED ON PRINTHUB TUNNEL**
 Date: 2026-09-22
 Baseline: `7d6f738a05abf7de8b53905dcf755563ab9d09de`
 Rollback ref: `backup/pre-a2z-confirm-all-quota-20260922`
@@ -62,16 +62,15 @@ The same quota class already failed Product #588 earlier on 2026-09-22. Current 
 
 ## Exact next
 
-1. final docs/diff review;
-2. commit/push C3 and verify Local=GitHub exact SHA;
-3. exact-SHA Qt relaunch and widget smoke for Full Edit + Full Registration;
-4. recover the official PrintHub reverse tunnel only through the documented project path;
-5. read-only Host quota inventory through `22024`;
-6. remove only verified disposable/incomplete/cache artifacts if required; preserve valid rollback/media;
-7. prove account write headroom and FTP pending-directory creation;
-8. fresh Catalog backup;
-9. retry only the bounded failed Product, not the whole queue;
-10. require one complete Batch -> FTP -> Bridge -> terminal ACK chain and public parity.
+1. runtime-bearing C3 commit `ac094945901cfd612dd6069fdd473a995c8a204a` is Local=GitHub exact;
+2. exact-SHA Qt relaunch and widget smoke 4/4 PASS;
+3. recover the official PrintHub reverse tunnel only through the documented project path;
+4. read-only Host quota inventory through `22024`;
+5. remove only verified disposable/incomplete/cache artifacts if required; preserve valid rollback/media;
+6. prove account write headroom and FTP pending-directory creation;
+7. fresh Catalog backup;
+8. retry only the bounded failed Product, not the whole queue;
+9. require one complete Batch -> FTP -> Bridge -> terminal ACK chain and public parity.
 
 ## Following phase
 

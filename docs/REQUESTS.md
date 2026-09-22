@@ -1,5 +1,5 @@
 ## 2026-09-22 - Owner: one-click Full Registration + fix failed Site send
-Status: `A2Z-C3 LOCAL_TESTED / FTP QUOTA BLOCKED / GITHUB NEXT`.
+Status: `A2Z-C3 GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / HOST QUOTA RECOVERY BLOCKED`.
 
 Owner requires a **«✅ ثبت کامل»** button next to **«✏ ویرایش کامل»** so, after edits such as price/Profile changes, one action saves the current Stage and approves every complete Stage instead of requiring seven confirmation clicks. Existing validation must remain fail-closed and the button must not publish automatically.
 
