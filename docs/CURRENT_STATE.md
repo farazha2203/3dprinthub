@@ -1,4 +1,4 @@
-## 2026-09-22 - Phase50.A.2Z-S SOCIAL DELIVERY READINESS LOCAL_TESTED / GITHUB NEXT / BUFFER MOBILE EXTERNAL
+## 2026-09-22 - Phase50.A.2Z-S SOCIAL DELIVERY READINESS GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL
 
 Owner reconfirmed the Instagram contract and requested that the Windows action reliably create **Post + companion Story** under the already-accepted Social policy, without repeating the 2026-09-22 partial outcome where Feed succeeded and Story notification later failed.
 
@@ -10,7 +10,9 @@ Verification: focused readiness/Core/UI/Buffer gate **22/22 PASS**; complete Sit
 
 Live Buffer still reports `hasActiveMemberDevice=False`. Therefore software is ready but **new Post+linked-Story delivery remains externally blocked** until the same Buffer account is connected in Buffer mobile with push notifications enabled/reset/tested. Product #536 Feed remains live and duplicate-protected; do not recreate it.
 
-**Exact next:** docs -> commit/push exact Social-readiness SHA -> Local=GitHub exact -> exact-SHA Qt relaunch -> live Buffer readiness recheck. If `hasActiveMemberDevice=False`, stop before all provider/media work and wait for owner mobile setup. When it becomes `True`: fresh integrity Catalog backup -> retry only the intended Product Social action -> for existing Feed revisions require zero Feed createPost and Story notification only -> owner opens notification in Instagram, applies prepared Product Link Sticker and publishes -> reconcile truthful provider receipt -> record Highlight target/operator step.
+Runtime-bearing Social-readiness SHA is `ec05b77fec0d3316d8ee9663fb50b333cf437658`, Local=GitHub exact and running in Qt from the authoritative A2Y worktree. Exact-SHA Qt VerifyOnly/launch PASS. Live `InstagramCore.delivery_readiness()` on this SHA returns `provider=buffer`, `companion_story_enabled=true`, `clickable_story_enabled=true`, `requires_mobile_handoff=true`, channel `3dprinthub_ir`, and `has_active_member_device=false`; therefore the new guard correctly returns `ready=false` before all Site/provider/media work.
+
+**Exact next external gate:** owner links/signs in to Buffer mobile with the same account, enables Buffer push notifications, uses Account Settings -> Push Notifications -> Reset Push Notifications, then sends a Test Notification from the Instagram channel settings. Re-run live readiness; only when `hasActiveMemberDevice=True`: fresh integrity Catalog backup -> one bounded intended Product Social action -> if Feed already exists for the current Site ACK, require zero new Feed createPost and Story notification only -> owner taps Buffer notification, opens Instagram, applies the prepared Product Link Sticker and publishes -> reconcile truthful provider receipt -> record Highlight target/operator step.
 
 **Following development phase after Story acceptance:** resume A2Z Catalog Data Completion, then changed-revision Social rollout and W5 manual Product creation.
 

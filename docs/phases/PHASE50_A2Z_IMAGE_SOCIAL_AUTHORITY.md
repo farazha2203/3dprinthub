@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z-S SOCIAL DELIVERY READINESS LOCAL_TESTED / GITHUB NEXT / BUFFER MOBILE EXTERNAL-BLOCKED
+Status: A2Z-S SOCIAL DELIVERY READINESS GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL-BLOCKED
 Date: 2026-09-22
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
@@ -16,7 +16,8 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - Same-Site-ACK Feed receipt remains duplicate authority; retry after a Story failure reuses Feed and attempts only Story once readiness is restored.
 - Focused readiness/Core/UI/Buffer gate **22/22 PASS**; full Site+Social gate **69/69 PASS**; 4 Python compile + diff + Qt VerifyOnly PASS; Server/migration delta=0.
 - Rollback ref: `backup/pre-a2z-social-readiness-ui-20260922 @ 5dec164d14511bfd37adbc4ac69f146dc71eca7e`.
-- Live Buffer still reports `hasActiveMemberDevice=False`; no real send was attempted. External owner action remains: Buffer mobile same account -> push enabled/reset -> Test Notification -> API true -> bounded real Social acceptance.
+- Runtime-bearing SHA `ec05b77fec0d3316d8ee9663fb50b333cf437658` is Local=GitHub exact and running in Qt; exact-SHA VerifyOnly/launch PASS.
+- Live Core readiness on this SHA still reports `hasActiveMemberDevice=False` and `ready=false`; no real send was attempted. External owner action remains: Buffer mobile same account -> push enabled/reset -> Test Notification -> API true -> bounded real Social acceptance.
 
 ## Owner-reported failures
 - Product #609 selected Local media `local://04.webp` and `local://05.webp` were outside canonical `images_json`, so Site publish failed closed.

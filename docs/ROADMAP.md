@@ -7,7 +7,7 @@
 - [x] Keep lower-level Buffer guard + current-revision Feed duplicate protection.
 - [x] Update Products action to **Post + Story لینک‌دار** and block Worker creation when readiness fails.
 - [x] Focused 22/22 + full Site/Social 69/69 + compile/diff/Qt VerifyOnly PASS; Server delta 0.
-- [ ] Commit/push exact Social-readiness SHA and relaunch exact-SHA Qt.
+- [x] Commit/push exact Social-readiness SHA `ec05b77fec0d3316d8ee9663fb50b333cf437658`; exact-SHA Qt VerifyOnly/launch PASS.
 - [ ] External: link same Buffer account on mobile, enable/reset push and pass Test Notification until API reports `hasActiveMemberDevice=True`.
 - [ ] Then perform one bounded real Product Social acceptance: current Site revision -> Feed (or reuse existing Feed) -> linked Story notification -> Instagram Link Sticker -> truthful receipts -> Highlight operator step.
 

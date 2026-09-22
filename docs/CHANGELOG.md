@@ -4,7 +4,8 @@
 - Products UI now says **Post + Story لینک‌دار** and stops before starting its Worker when Buffer mobile is not active.
 - Existing revision-scoped Feed duplicate protection and lower-level Buffer guard remain intact.
 - Focused 22/22 and full Site+Social 69/69 PASS; 4 Python compile + diff + Qt VerifyOnly PASS; no Server/migration delta.
-- Live provider still reports `hasActiveMemberDevice=False`; no real external send was attempted by this change.
+- Runtime-bearing SHA `ec05b77fec0d3316d8ee9663fb50b333cf437658` is Local=GitHub exact and running in Qt.
+- Live provider on the accepted SHA still reports `hasActiveMemberDevice=False`; the new Core returns `ready=false` before Site/provider/media work, and no real external send was attempted by this change.
 
 ## 2026-09-22 - A2Z-C3 HERO RECOVERY ACCEPTED / SOCIAL MOBILE PREFLIGHT GITHUB_UPDATED
 - Hardening source is exact at `bed7b27a7851a925af6756f70f7bbc5b71ab1845` and running in Qt.

@@ -1,9 +1,9 @@
 ## 2026-09-22 - Owner: confirm exact Instagram API and make Post + linked Story reliable
-Status: `A2Z-S LOCAL_TESTED / GITHUB NEXT / BUFFER MOBILE EXTERNAL`.
+Status: `A2Z-S GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL`.
 
 Owner asked to reconfirm the exact Instagram path because the previous real attempt published Feed but did not complete Story. Required behavior remains the previously accepted contract: Windows action is one Product Social workflow; Site revision must be current/public first; Feed uses exact current Product media + Product-specific caption/hashtags/ALT/UTM; companion Story is branded 1080×1920 Gold/Navy/IRANSans and must carry the Product Link Sticker; same Site revision must never duplicate Feed; Highlight target is recorded and final Highlight placement is operator-required.
 
-Verified provider is **Buffer GraphQL API**, not Meta Graph direct: channel `3dprinthub_ir`, endpoint `https://api.buffer.com`. Feed is automatic. Linked Story uses Buffer notification publishing because native Story Link Sticker is a mobile Instagram feature. New readiness hardening blocks the entire Site/Social action before any irreversible work when Buffer has no active mobile device, preventing another Feed-only partial success.
+Verified provider is **Buffer GraphQL API**, not Meta Graph direct: channel `3dprinthub_ir`, endpoint `https://api.buffer.com`. Feed is automatic. Linked Story uses Buffer notification publishing because native Story Link Sticker is a mobile Instagram feature. New readiness hardening blocks the entire Site/Social action before any irreversible work when Buffer has no active mobile device, preventing another Feed-only partial success. Accepted runtime SHA is `ec05b77fec0d3316d8ee9663fb50b333cf437658`; live readiness on that exact SHA is currently blocked only by `hasActiveMemberDevice=False`.
 
 ## 2026-09-22 - Owner: finish #152/#178 and make Instagram Feed+linked Story reliable
 Status: `A2Z-C3 ACCEPTED / HERO 2-OF-2 PRODUCTION_VERIFIED / SOCIAL CODE GITHUB_UPDATED / STORY WAITS ONLY FOR BUFFER MOBILE DEVICE`.
