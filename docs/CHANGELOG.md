@@ -1,3 +1,12 @@
+## 2026-09-22 - A2Z-C3 HERO RECOVERY ACCEPTED / SOCIAL MOBILE PREFLIGHT GITHUB_UPDATED
+- Hardening source is exact at `bed7b27a7851a925af6756f70f7bbc5b71ab1845` and running in Qt.
+- Fresh Catalog + Production MySQL rollbacks were verified before real retry.
+- Bounded #152/#178 Batch `desktop_catalog_v85_20260922_221736` completed 2/2 with no failures.
+- #152 -> Site #50 / Hero #2 rev3 / 3 media / 48 profiles; #178 -> Site #51 / Hero #4 rev6 / 2 media / 64 profiles.
+- Operator-owned Product/Slider digests remained unchanged; both Hero rows are active/desktop-owned; Product and all canonical media HTTP 200.
+- Queue reduced to 8; post-accept Catalog backup quick_check PASS.
+- Buffer clickable-Story preflight remains correct; live channel still has no active member mobile device, so #536 Feed remains live/deduplicated while Story waits for mobile Link-Sticker handoff.
+
 ## 2026-09-22 - A2Z-C3 Hero revision + clickable-Story preflight hardening
 - Added pre-publish Site Hero revision refresh using current Bridge truth; only local `server_slider_revision` changes, never Product/Slider editorial data or membership.
 - Added Buffer `hasActiveMemberDevice` to channel health and fail-closed clickable-Story prerequisite before new Feed creation.

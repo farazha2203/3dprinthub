@@ -2,7 +2,7 @@
 
 Full Registration is accepted at `ac094945...`. Host quota recovery is Production-verified: official PrintHubTunnel/Bridge/write-test/exact FTP path pass and real Batch uploaded 31/31 files. #140/#151/#210 updated and #536/#588 were created/public.
 
-Remaining C3 Site issue is bounded to stale Hero revisions #152/#178. Current Site Hero truth was read-only verified and Windows now refreshes revision authority only before packaging, preserving Product/Slider content and membership. Social hardening also preflights Buffer `hasActiveMemberDevice` before any new Feed when clickable Story is mandatory. #536 Feed is already live and duplicate-protected; branded Story asset is healthy, but Buffer currently reports no active mobile reminder device, so Link-Sticker Story remains externally blocked until the same account is linked in Buffer mobile.
+C3 is now ACCEPTED: bounded #152/#178 retry completed 2/2 with public parity and unchanged operator data; queue=8. Runtime hardening is exact at `bed7b27a...`. Social hardening preflights Buffer `hasActiveMemberDevice` before any new Feed when clickable Story is mandatory. #536 Feed is already live and duplicate-protected; branded Story asset is healthy. The only remaining Social prerequisite is external: Buffer currently reports no active mobile reminder device, so the same account must be linked in Buffer mobile and push notifications enabled before Story Link-Sticker handoff. After that one Story-only acceptance, continue A2Z Catalog Data Completion.
 
 ## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics ACCEPTED / A2Z Catalog Completion active next
 

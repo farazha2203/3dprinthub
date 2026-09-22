@@ -1,6 +1,6 @@
 # Phase50.A.2Z-C3 — Full Registration + Host Quota Recovery
 
-Status: **FULL REGISTRATION + QUOTA ACCEPTED / HERO REVISION + SOCIAL MOBILE PREFLIGHT LOCAL_TESTED / GITHUB NEXT**
+Status: **ACCEPTED / HERO 2-OF-2 PRODUCTION_VERIFIED / SOCIAL CODE GITHUB_UPDATED / STORY EXTERNAL_MOBILE_BLOCKED**
 Date: 2026-09-22
 Baseline: `7d6f738a05abf7de8b53905dcf755563ab9d09de`
 Rollback refs: C3 baseline `backup/pre-a2z-confirm-all-quota-20260922`; Hero/Social hardening `backup/pre-a2z-c4-hero-social-preflight-20260922 @ cbec63e9b007a20b7e3070eece74b0328afc212a`
@@ -80,16 +80,31 @@ The same quota class already failed Product #588 earlier on 2026-09-22. Current 
 - #536 Feed is live at `https://www.instagram.com/p/DdmXo5QlMEd/`; Story asset revision `eb33bf7ebb1835a6` is 1080×1920 Gold-Navy/IRANSans pipeline and SHA `d2ca7066f6970c90521a9580908d229c12f695f87dffc3427f0f1d92869e74c6`.
 - Focused changed contracts 16/16 and complete Site+Social regression 65/65 PASS; 5 Python compile, diff-check and Qt VerifyOnly PASS; no Server delta.
 
-## Exact next
+## Acceptance closure
 
-1. commit/push Hero+Social preflight hardening and verify Local=GitHub exact SHA;
-2. exact-SHA Qt relaunch;
-3. fresh integrity Catalog backup;
-4. bounded Site retry only #152/#178 using automatic revision-only preflight;
-5. require terminal ACK + public Product/media parity for both;
-6. close C3 and resume A2Z Catalog Data Completion;
-7. Social remains blocked only on external Buffer mobile prerequisite; once `hasActiveMemberDevice=True`, fresh backup -> retry #536 Social once -> Feed reused/no createPost -> Story notification only -> operator Link Sticker completion -> truthful receipt.
+- Runtime hardening: `bed7b27a7851a925af6756f70f7bbc5b71ab1845`, Local=GitHub exact, Qt running.
+- Pre-retry Catalog backup: `pre-a2z-c3-hero-retry-20260922-221533`, quick_check OK, SHA `31ef9ff9...`.
+- Pre-retry Production MySQL backup: `20260922-221700-phase50-a2z-c3-hero-retry`, gzip valid, SHA `a6e5b74b...`.
+- Real Batch `desktop_catalog_v85_20260922_221736` / UUID `1dfaddfc-976e-42ca-b7a2-1d9464353c1a`: published 2, failed 0.
+- #152: Site Product #50, Hero #2 rev3 active, 3 media, 48 profiles, parity OK.
+- #178: Site Product #51, Hero #4 rev6 active, 2 media, 64 profiles, parity OK.
+- Operator-owned digests unchanged for both; all Product/media public checks independently HTTP 200.
+- Queue=8. Post-accept Catalog backup `post-a2z-c3-hero-accept-20260922-221907`, quick_check OK, SHA `712d54b0...`.
+- C3 is ACCEPTED/CLOSED.
 
-## Following phase
+## Exact next — Social external prerequisite
 
-Resume **Phase50.A.2Z Catalog Data Completion**: Slider completeness/backfill with membership preserved -> #620/#625/#628 operator acceptance -> final Profile/Filament/Image gates -> one controlled same-identity re-publish -> public/browser parity.
+1. owner installs/opens Buffer mobile using the same account;
+2. enable Buffer push notifications and use Account Settings -> Push Notifications -> Reset Push Notifications;
+3. use Buffer channel Settings -> Test Notifications until the device receives a test;
+4. verify API `hasActiveMemberDevice=True`;
+5. fresh Catalog backup;
+6. retry #536 Social once: existing Feed receipt must be reused, zero Feed createPost, Story notification only;
+7. tap Buffer notification, open Instagram, apply prepared Product Link Sticker and publish;
+8. read Buffer/Instagram receipt state and record truthful Story completion.
+
+## Following development phases
+
+After Story acceptance, resume **Phase50.A.2Z Catalog Data Completion**: Slider completeness/backfill with membership preserved -> #620/#625/#628 operator acceptance -> final Profile/Filament/Image gates -> one controlled same-identity re-publish -> public/browser parity.
+
+Immediately after that: **A2Z-S changed-revision Social rollout**, then **A2Z-W5 manual Product creation** under the master roadmap.

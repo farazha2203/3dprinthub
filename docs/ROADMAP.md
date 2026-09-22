@@ -22,10 +22,13 @@
 - [x] Local-test Buffer clickable-Story mobile prerequisite before Feed; no partial new Feed when device missing; existing Feed stays deduplicated.
 - [x] Verify real #536 Feed live and branded Story asset 1080×1920; Buffer currently `hasActiveMemberDevice=False`.
 - [x] Site+Social regression 65/65 + compile/diff/Qt VerifyOnly PASS.
-- [ ] Commit/push exact hardening SHA and exact-SHA Qt.
-- [ ] Fresh Catalog backup and bounded retry of #152/#178 only.
-- [ ] Verify terminal ACK/public parity for both and close C3.
-- [ ] After owner links Buffer mobile + enables notifications, retry #536 Story only; never recreate Feed.
+- [x] Commit/push hardening exact at `bed7b27a7851a925af6756f70f7bbc5b71ab1845`; exact-SHA Qt PASS/running.
+- [x] Fresh Catalog + Production MySQL rollback verified before retry.
+- [x] Bounded Batch `desktop_catalog_v85_20260922_221736` published #152/#178 2/2, failed 0.
+- [x] Verify active Hero truth + operator digest unchanged + public Product/media HTTP 200 for both; queue=8.
+- [x] Close C3 Site/Full-Registration/quota/Hero recovery.
+- [ ] External: owner links Buffer mobile + enables/resets push notifications until `hasActiveMemberDevice=True`.
+- [ ] Then retry #536 Social Story only; Feed must remain existing/no createPost; finish Link Sticker in Instagram and record truthful Story receipt.
 
 ## 2026-09-22 - Phase50.A.2Z-C1/C2 Full Edit + Unified Bulk Completion
 - [x] Verify exact clean baseline `494a222b...`; create rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922`.
