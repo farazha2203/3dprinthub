@@ -17,7 +17,7 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - Focused readiness/Core/UI/Buffer gate **22/22 PASS**; full Site+Social gate **69/69 PASS**; 4 Python compile + diff + Qt VerifyOnly PASS; Server/migration delta=0.
 - Rollback ref: `backup/pre-a2z-social-readiness-ui-20260922 @ 5dec164d14511bfd37adbc4ac69f146dc71eca7e`.
 - Runtime-bearing SHA `ec05b77fec0d3316d8ee9663fb50b333cf437658` is Local=GitHub exact and running in Qt; exact-SHA VerifyOnly/launch PASS.
-- Live Core readiness on this SHA still reports `hasActiveMemberDevice=False` and `ready=false`; no real send was attempted. External owner action remains: Buffer mobile same account -> push enabled/reset -> Test Notification -> API true -> bounded real Social acceptance.
+- Live Core readiness on this SHA still reports `hasActiveMemberDevice=False` and `ready=false`; no real send was attempted. Buffer public API exposes this device capability read-only and has no documented device-registration/Test-Notification mutation; one introspection probe failed and must not be repeated unchanged. External owner action remains: Buffer mobile same account -> push enabled/reset -> Test Notification in Buffer UI -> API true -> bounded real Social acceptance.
 
 ## Owner-reported failures
 - Product #609 selected Local media `local://04.webp` and `local://05.webp` were outside canonical `images_json`, so Site publish failed closed.

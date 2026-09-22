@@ -2,7 +2,7 @@
 
 Real Social provider/config is Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, provider-media host `github_raw`. Feed is automatic and revision-deduplicated; Story is the approved 1080×1920 Gold/Navy/IRANSans render. A clickable Product Link Sticker requires Buffer notification publishing plus the final native Instagram mobile handoff.
 
-New A2Z-S readiness hardening blocks before Site mutation, media render/rehost, Worker creation and Buffer createPost whenever linked Story is required but `hasActiveMemberDevice=False`. Lower-level Buffer guard remains. Focused 22/22 + full Site/Social 69/69 + static/Qt gates PASS; no Server delta. Runtime `ec05b77fec0d3316d8ee9663fb50b333cf437658` is Local=GitHub exact/running; live Core readiness returns ready=false because Buffer mobile is still not active. No real send should be attempted until Buffer mobile same account/push/Test Notification succeeds.
+New A2Z-S readiness hardening blocks before Site mutation, media render/rehost, Worker creation and Buffer createPost whenever linked Story is required but `hasActiveMemberDevice=False`. Lower-level Buffer guard remains. Focused 22/22 + full Site/Social 69/69 + static/Qt gates PASS; no Server delta. Runtime `ec05b77fec0d3316d8ee9663fb50b333cf437658` is Local=GitHub exact/running; live Core readiness returns ready=false because Buffer mobile is still not active. Buffer's public API only exposes the device capability read-only; mobile registration/Test Notification are external Buffer mobile/UI steps. No real send should be attempted until same-account push registration/Test Notification succeeds.
 
 ## 2026-09-22 - A2Z-C3 Full Registration/quota accepted / Hero+Social preflight checkpoint
 
