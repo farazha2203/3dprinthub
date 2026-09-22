@@ -1,0 +1,14 @@
+{
+  "asset_revision": "eb33bf7ebb1835a6",
+  "feed_sha256": [
+    "e473cd863b705e07819b9375490f807b4f5f29752b0517c70cd76237b29bc020"
+  ],
+  "product_id": 536,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 48,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://3dprinthub.ir/media/p/536/6b264047f956/little-ballerina-3d-print-01.webp"
+  ],
+  "story_sha256": "d2ca7066f6970c90521a9580908d229c12f695f87dffc3427f0f1d92869e74c6"
+}
