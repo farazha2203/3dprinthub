@@ -1080,8 +1080,12 @@ class ProductsPage(QWidget):
                 f"Model: {active.get('model') or '—'}\n"
                 f"منبع: {self.bulk_ai_source.currentText()}\n"
                 f"برآورد کل: {cost_text}\n\n"
-                "همان «AI همه مراحل محتوایی» به‌صورت ترتیبی و با یک هسته "
-                "واحد روی همه انتخاب‌ها اجرا شود؟"
+                "همان تکمیل کامل Product با یک هسته واحد اجرا شود؟\n\n"
+                "بعد از محتوای AI، مسیرهای قطعی پروژه هم اجرا می‌شوند: دسته‌بندی معتبر، "
+                "Source Profileهای factual (وزن/زمان/ابعاد)، تمام Filamentهای exact-family "
+                "موجود برای هر Profile، شش فیلد SEO اسلایدر، و نام/SEO فیزیکی یکتای تصاویر.\n\n"
+                "عضویت محصول در اسلایدر صفحه اول و Publish همچنان فقط با تصمیم اپراتور "
+                "تغییر می‌کنند."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,

@@ -167,6 +167,15 @@ class ProductWizardPage(QWidget):
         self.product_meta.setWordWrap(True)
         identity_row = QHBoxLayout()
         identity_row.addWidget(self.product_label, 1)
+        self.edit_all_btn = QPushButton("✏ ویرایش کامل")
+        self.edit_all_btn.setToolTip(
+            "همه مراحل ثبت‌نهایی‌شده این محصول را برای اصلاح باز می‌کند؛ "
+            "صرفاً ورود به حالت ویرایش هیچ Publish یا تغییر داده‌ای انجام نمی‌دهد."
+        )
+        self.edit_all_btn.setEnabled(False)
+        self.edit_all_btn.clicked.connect(self._unlock_all_for_edit)
+        identity_row.addWidget(self.edit_all_btn)
+
         self.product_source_btn = QPushButton("🌐 باز کردن صفحه محصول")
         self.product_source_btn.setEnabled(False)
         self.product_source_btn.clicked.connect(self._open_current_source)
@@ -842,10 +851,13 @@ class ProductWizardPage(QWidget):
         row = self.kernel.products.get(int(product_id))
         if row is None:
             self.product_id = None
+            self.edit_all_btn.setEnabled(False)
+            self.product_source_btn.setEnabled(False)
             self.product_label.setText("محصول پیدا نشد.")
             return
 
         self.product_id = int(product_id)
+        self.edit_all_btn.setEnabled(True)
         title = row.get("title_fa") or row.get("source_title") or "بدون عنوان"
         self.product_label.setText(f"#{product_id} — {title}")
         self.product_meta.setText(
@@ -1395,6 +1407,37 @@ class ProductWizardPage(QWidget):
             return
         self.load_product(self.product_id)
         QMessageBox.information(self, "تأیید مرحله", "مرحله ثبت نهایی شد.")
+
+    def _unlock_all_for_edit(self) -> None:
+        if self.product_id is None:
+            return
+        answer = QMessageBox.question(
+            self,
+            "ویرایش کامل محصول",
+            "همه مراحل ثبت‌نهایی‌شده برای اصلاح باز شوند؟\n\n"
+            "این کار فقط قفل‌های ویرایش را باز می‌کند؛ انتشار، عضویت اسلایدر، "
+            "تصاویر سایت و سایر داده‌ها خودکار تغییر نمی‌کنند.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            result = self.kernel.stages.unlock_all_for_edit(int(self.product_id))
+        except Exception as exc:
+            QMessageBox.warning(self, "ویرایش کامل محصول", str(exc))
+            return
+        opened = list(result.get("opened_stages") or [])
+        self.load_product(int(self.product_id))
+        QMessageBox.information(
+            self,
+            "ویرایش کامل محصول",
+            (
+                f"{len(opened)} مرحله برای ویرایش باز شد."
+                if opened
+                else "همه مراحل از قبل در حالت قابل ویرایش بودند."
+            ),
+        )
 
     def _unlock_current(self) -> None:
         if self.product_id is None:

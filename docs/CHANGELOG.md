@@ -1,3 +1,10 @@
+## 2026-09-22 - A2Z-C1/C2 Full Edit + Unified Bulk Completion
+- Added top Product Wizard «✏ ویرایش کامل» using the existing audited stage-unlock authority; entering edit mode alone does not publish or mark Product data dirty.
+- Products multi-select Bulk AI now composes accepted later-stage capabilities after its existing AI content run: factual Source Profiles, multi-profile Local Filament mapping, validated Category, physical SEO filenames and six-field Slider completeness.
+- Bulk completion preserves manual Profiles, Site-image membership, Slider membership and Publish authority.
+- Corrected Persian Category exact matching (ERR-49-223): empty ASCII folds can no longer falsely select the first Persian category.
+- Verification: new 3/3; related 148/149 effective PASS with only historical ERR-49-203; unchanged-cycle 38/38; compile/diff/Qt VerifyOnly PASS; no Server/migration/dependency delta.
+
 ## 2026-09-22 - ERR-49-221 transient WAF readiness hardening
 - Real Product #588 Site publish was blocked before Batch/FTP by a transient BitNinja `Visitor anti-robot validation` HTTP 403 on Catalog Bridge publish-readiness.
 - Read-only changed-condition probes with the real secure Bridge token now return health 200 and readiness 200/`ready=true`, confirming receiver/token health.

@@ -1,3 +1,23 @@
+## 2026-09-22 - Phase50.A.2Z-C1/C2 Full Edit + Unified Bulk Completion
+- [x] Verify exact clean baseline `494a222b...`; create rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922`.
+- [x] Add top Product Wizard **«✏ ویرایش کامل»** action using mature StageCore unlock authority.
+- [x] Full Edit opens all finalized stages without Publish/data mutation or automatic dirty-state change.
+- [x] Keep existing per-stage correction path unchanged.
+- [x] Extend only Products multi-select Bulk AI preparation to open Commerce in addition to editorial stages; keep Publish locked.
+- [x] Reuse factual MakerWorld Source Profile refresh/cached fallback.
+- [x] Reuse A2W multi-profile import and preserve manual Profiles.
+- [x] Reuse exact-family Filament mapping so Source PLA selects every current Local PLA offer and excludes PETG/PLA-CF families.
+- [x] Reuse physical Product-local image SEO rename/finalizer.
+- [x] Fill only missing official six Slider core fields; preserve `homepage_slider_enabled`.
+- [x] Repair ERR-49-223 Persian Category exact-match bug without weakening ambiguous-category fail-closed behavior.
+- [x] New focused 3/3 PASS.
+- [x] Related Stage/Image/Profile/Filament/Site 148/149 effective PASS; sole failure = known ERR-49-203 baseline.
+- [x] Existing AI/completion/Unified Desktop/Slider 38/38 PASS.
+- [x] 6 changed Python files compile; diff-check + Qt VerifyOnly PASS; migration/dependency/Server delta 0.
+- [ ] Commit/push exact C1/C2 SHA; verify Local=GitHub.
+- [ ] Exact-SHA Qt relaunch and non-mutating UI smoke.
+- [ ] Close C1/C2 docs and resume A2Z Catalog Data Completion.
+
 ## 2026-09-22 - Phase50.A.2Z ERR-49-221 Product #588 publish-readiness recovery
 - [x] Verify current unified worktree/branch/HEAD and clean baseline `0202bdca...`.
 - [x] Prove real #588 failure occurred before Batch/FTP/import; no partial Site mutation from this attempt.

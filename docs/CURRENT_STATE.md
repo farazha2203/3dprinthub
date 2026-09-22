@@ -1,3 +1,21 @@
+## 2026-09-22 - Phase50.A.2Z-C1/C2 FULL EDIT + UNIFIED BULK COMPLETION LOCAL_TESTED / GITHUB + EXACT-SHA QT NEXT
+
+Owner-requested Windows Catalog completion slice is implemented on clean baseline `494a222b64908563c5d6b953b4ef96f9782c8e0d`; rollback ref `backup/pre-a2z-full-edit-bulk-completion-20260922` preserves that exact baseline. No real Catalog, Site, Host or Production mutation has been performed by this slice.
+
+C1 adds a top Product Wizard button **«✏ ویرایش کامل»**. It reuses the existing StageCore unlock authority/history to open every finalized stage together. Entering Full Edit only changes stage-lock state: it does not publish, toggle Slider membership, change Site-image membership, or mark an uploaded Product dirty merely by entering edit mode. Existing per-stage «اصلاح مرحله» remains unchanged.
+
+C2 extends only the Products multi-select **«AI تکمیل همه موارد»** preparation/post-processing path. The single configured Product AI engine remains authoritative; after AI content, deterministic accepted project capabilities now run in sequence: validated Category repair for blank/`external-other`; MakerWorld factual Source Profile refresh with cached fallback; A2W multi-profile import preserving manual profiles; every current exact-family Local Filament for each Source material (e.g. all PLA offers for Source PLA); accepted physical Product-local SEO filename finalization; and A2X six-field Slider completeness from existing content-pack/Product data. `homepage_slider_enabled` and Publish remain operator-owned and are never toggled by this command.
+
+Integration also exposed ERR-49-223: the old ASCII-only Category fold reduced Persian names to empty strings, allowing a Persian Source Category to match `external-other` before its real taxonomy row. Folded matching now requires non-empty folded values; direct Unicode name/slug equality remains first-class.
+
+Verification: new focused contracts **3/3 PASS**; related Stage/Image/Profile/Filament/Site regression **148/149 effective PASS**, with the sole failure exactly the previously documented baseline ERR-49-203 Manufacturer-vs-Brand assertion; unchanged AI/completion/Unified Desktop/Slider cycles **38/38 PASS**; 6 changed Python files compile; `git diff --check` and Qt VerifyOnly PASS; migration/dependency/Server/website/template/static delta = 0.
+
+Active phase file: `docs/phases/PHASE50_A2Z_FULL_EDIT_BULK_COMPLETION.md`.
+
+**Exact next:** final docs/diff review -> commit/push C1/C2 -> verify Local=GitHub exact SHA -> exact-SHA Qt relaunch -> smoke top «ویرایش کامل» button and Products Bulk AI availability without real Product mutation -> close C1/C2.
+
+**Following phase:** return to A2Z Catalog Data Completion: fresh Catalog backup -> official six-field Slider inventory/backfill -> real #620/#625/#628 operator acceptance -> final Filament/Image gates -> one controlled same-identity re-publish -> public parity/browser verification.
+
 ## 2026-09-22 - Phase50.A.2Z ERR-49-221 PUBLISH-READINESS WAF HOTFIX LOCAL_TESTED / GITHUB + REAL #588 RETRY NEXT
 
 Current authoritative Windows worktree is `D:\projects\3DPrintHub-a2y-converge` on `wip/phase50-a2z-image-social-authority-20260921`. Baseline before this hotfix is clean/exact Local=GitHub `0202bdcafc252b1d409310838831bb0ea35100ee`; rollback ref `backup/pre-err49-221-waf-readiness-retry-20260922` points to the same SHA.

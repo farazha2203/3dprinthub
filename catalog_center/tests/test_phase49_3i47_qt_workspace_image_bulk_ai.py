@@ -1369,6 +1369,113 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_product_page_full_edit_unlocks_all_stages_without_marking_publish_dirty(self):
+        product_id = self._make_product("3147005")
+        locks = {
+            stage: {"locked": True, "locked_at": "2026-09-22T12:00:00Z"}
+            for stage in (
+                "quick",
+                "commerce",
+                "images",
+                "content",
+                "specs",
+                "slider",
+                "publish",
+            )
+        }
+        self.db.update_product(
+            product_id,
+            {
+                "operator_stage_locks_json": json.dumps(
+                    locks,
+                    ensure_ascii=False,
+                ),
+                "workflow_status": "uploaded",
+                "server_id": "site:3147005",
+                "needs_update": 0,
+                "upload_ready": 0,
+            },
+        )
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            self.assertEqual(page.edit_all_btn.text(), "✏ ویرایش کامل")
+            self.assertTrue(page.edit_all_btn.isEnabled())
+            with patch.object(
+                QMessageBox,
+                "question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ), patch.object(QMessageBox, "information"):
+                page._unlock_all_for_edit()
+        finally:
+            page.close()
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(
+            json.loads(row["operator_stage_locks_json"]),
+            {},
+        )
+        self.assertEqual(int(row["needs_update"] or 0), 0)
+        self.assertEqual(row["workflow_status"], "uploaded")
+
+    def test_bulk_ai_preparation_opens_commerce_but_not_publish(self):
+        product_id = self._make_product("3147006")
+        self.db.update_product(
+            product_id,
+            {
+                "operator_stage_locks_json": json.dumps(
+                    {
+                        "quick": {"locked": True},
+                        "commerce": {"locked": True},
+                        "slider": {"locked": True},
+                        "publish": {"locked": True},
+                    },
+                    ensure_ascii=False,
+                )
+            },
+        )
+        self.kernel.ai.bind_executor(
+            lambda product_id, mode, **kwargs: {
+                "product_id": int(product_id),
+                "requested_source_mode": str(mode),
+            }
+        )
+        seen = []
+        extended_flags = []
+
+        def postprocess(
+            _kernel,
+            product_id,
+            result,
+            *,
+            extended_bulk=False,
+        ):
+            seen.append(int(product_id))
+            extended_flags.append(bool(extended_bulk))
+            return dict(result or {})
+
+        with patch.object(
+            type(self.kernel),
+            "postprocess_full_product_ai",
+            new=postprocess,
+        ):
+            result = self.kernel.complete_products_with_ai(
+                [product_id],
+                "link",
+            )
+
+        self.assertEqual(result["completed"], 1)
+        self.assertEqual(seen, [product_id])
+        self.assertEqual(extended_flags, [True])
+        locks = json.loads(
+            self.db.product(product_id)["operator_stage_locks_json"]
+        )
+        self.assertNotIn("quick", locks)
+        self.assertNotIn("commerce", locks)
+        self.assertNotIn("slider", locks)
+        self.assertIn("publish", locks)
+
     def test_products_page_exposes_lifecycle_tabs_and_bulk_ai_action(self):
         self._make_product("3147004")
         page = ProductsPage(

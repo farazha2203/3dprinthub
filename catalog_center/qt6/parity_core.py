@@ -311,12 +311,24 @@ class CategoryCore:
         source_category_folded = fold(source_category_text)
         for item in categories:
             slug = str(item.get("slug") or "")
-            if (
-                source_category_text.casefold()
-                == str(item.get("name") or "").casefold()
-                or source_category_folded == fold(slug)
-                or source_category_folded == fold(item.get("name") or "")
-            ):
+            name = str(item.get("name") or "")
+            slug_folded = fold(slug)
+            name_folded = fold(name)
+            direct_match = (
+                source_category_text.casefold() == name.casefold()
+                or source_category_text.casefold() == slug.casefold()
+            )
+            folded_match = bool(
+                source_category_folded
+                and (
+                    source_category_folded == slug_folded
+                    or (
+                        name_folded
+                        and source_category_folded == name_folded
+                    )
+                )
+            )
+            if direct_match or folded_match:
                 return slug
 
         aliases: dict[str, tuple[str, ...]] = {
@@ -632,6 +644,46 @@ class StageCore:
         except Exception:
             pass
         return after
+
+    def unlock_all_for_edit(self, product_id: int) -> dict[str, Any]:
+        """Open every finalized operator stage without publishing or changing data."""
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        before_locks = stage_locks(row)
+        opened: list[str] = []
+        for stage in STAGE_ORDER:
+            if stage not in before_locks:
+                continue
+            self.unlock(product_id, stage)
+            opened.append(stage)
+        return {
+            "product_id": product_id,
+            "opened_stages": opened,
+            "stage_count": len(opened),
+            "row": _row_dict(self.db.product(product_id)),
+        }
+
+    def prepare_full_product_completion(self, product_id: int) -> dict[str, Any]:
+        """Open only stages owned by explicit full Product completion.
+
+        Publish remains operator-owned. Images keep their mature derived-state
+        refresh path; Commerce is opened here so factual Source Profiles and
+        current Local Filaments can be merged by the same completion command.
+        """
+        product_id = int(product_id)
+        result = dict(self.prepare_ai_content_repair(product_id))
+        opened = list(result.get("opened_stages") or [])
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        if is_stage_locked(row, "commerce"):
+            self.unlock(product_id, "commerce")
+            opened.append("commerce")
+        result["opened_stages"] = list(dict.fromkeys(opened))
+        result["commerce_opened"] = "commerce" in result["opened_stages"]
+        return result
 
     def prepare_ai_content_repair(self, product_id: int) -> dict[str, Any]:
         """Open only AI/content-owned finalized stages for explicit full repair."""

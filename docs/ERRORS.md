@@ -1,3 +1,11 @@
+## ERR-49-223 - Persian Category names could falsely match external-other through an empty ASCII fold
+**Date:** 2026-09-22
+**Observed:** A2Z-C2 integration fed an exact configured Persian Category name (for example the configured automotive label) into `CategoryCore.infer_slug`, but the result could be `external-other` instead of the exact taxonomy row.
+**Root cause:** legacy `fold()` intentionally retained only `[a-z0-9]`. Persian names therefore folded to an empty string. During the exact-match loop, `source_category_folded == fold(item.name)` became empty==empty and the first Persian row, `external-other`, won before direct comparison reached the intended row.
+**Correct fix:** direct Unicode Category name/slug equality remains authoritative. Folded equality is evaluated only when the source folded value is non-empty, and folded-name equality additionally requires a non-empty target fold. Existing English/slug alias scoring and ambiguous-tie fail-closed behavior remain unchanged.
+**Verification:** end-to-end full-completion test now resolves the exact configured Category while also proving Source Profiles, Filaments, Slider and physical SEO rename. New focused 3/3 PASS; related broad regression has no new failure.
+**Prevention:** normalization helpers that intentionally discard non-Latin characters must never treat two empty normalized strings as an identity match.
+
 ## ERR-49-222 - Initial ERR-49-221 broad regression referenced a nonexistent test module
 **Date:** 2026-09-22
 **Observed:** the first broad Publish/SiteConnection regression command referenced `tests.test_phase49_3i49_site_publish`, while the repository module is `tests.test_phase49_3i49_site_bulk_publish`.

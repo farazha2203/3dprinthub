@@ -6,6 +6,7 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PIL import Image
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
@@ -338,6 +339,159 @@ class Phase50A2WSourceProfileTests(unittest.TestCase):
         self.assertEqual(second["added"], 0)
         self.assertEqual(second["updated"], 2)
         self.assertEqual(len(profiles_again), 3)
+    def test_full_completion_reuses_source_profiles_filaments_slider_category_and_physical_seo(self):
+        product_id = self._product()
+        self._seed_local_filaments()
+        row = dict(self.db.product(product_id))
+        local_dir = Path(row["local_dir"])
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        source_image = image_dir / "01.jpg"
+        Image.new("RGB", (640, 640), "orange").save(
+            source_image,
+            "JPEG",
+        )
+        image_url = "https://cdn.example.com/spinosaurus-main.jpg"
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {
+                            "url": image_url,
+                            "local_file": str(source_image),
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        valid_category = next(
+            item
+            for item in self.kernel.categories.list()
+            if item["slug"] != "external-other"
+        )
+        self.db.update_product(
+            product_id,
+            {
+                "source_category": valid_category["name"],
+                "local_category_slug": "external-other",
+                "images_json": json.dumps([image_url]),
+                "selected_images_json": json.dumps([image_url]),
+                "primary_image_url": image_url,
+                "image_alt_texts_json": "[]",
+                "content_pack_json": json.dumps(
+                    {
+                        "homepage_slider_seo": {
+                            "title_fa": "اسپینوزور مفصلی چاپ سه‌بعدی",
+                            "description_fa": "مدل مفصلی دکوراتیو با امکان سفارش رنگ.",
+                            "image_alt_fa": "اسپینوزور مفصلی چاپ سه‌بعدی",
+                            "button_text_fa": "مشاهده محصول",
+                            "focus_keyword_fa": "اسپینوزور چاپ سه‌بعدی",
+                        }
+                    },
+                    ensure_ascii=False,
+                ),
+                "homepage_slider_enabled": 0,
+                "homepage_slider_image_url": "",
+                "homepage_slider_title_fa": "",
+                "homepage_slider_description_fa": "",
+                "homepage_slider_alt_text": "",
+                "homepage_slider_button_text": "",
+                "homepage_slider_focus_keyword": "",
+                "operator_stage_locks_json": json.dumps(
+                    {
+                        "quick": {"locked": True},
+                        "commerce": {"locked": True},
+                        "content": {"locked": True},
+                        "specs": {"locked": True},
+                        "slider": {"locked": True},
+                        "publish": {"locked": True},
+                    },
+                    ensure_ascii=False,
+                ),
+            },
+        )
+
+        self.kernel.stages.prepare_full_product_completion(product_id)
+        self.kernel.acquisition.refresh_source_profiles = (
+            lambda product_id, fresh_capture=True, progress=None:
+            refresh_product_source_profiles(
+                self.db,
+                product_id,
+                fresh_capture=False,
+            )
+        )
+        self.kernel.providers.active = lambda: {
+            "provider": "test-provider",
+            "model": "test-model",
+        }
+
+        result = self.kernel.postprocess_full_product_ai(
+            product_id,
+            {"requested_source_mode": "link"},
+            extended_bulk=True,
+        )
+        after = dict(self.db.product(product_id))
+        profiles = {
+            item["key"]: item
+            for item in self.kernel.commerce.profiles(product_id)
+        }
+
+        self.assertEqual(
+            set(profiles),
+            {"source-mw-3609481", "source-mw-3609488"},
+        )
+        for profile in profiles.values():
+            options = profile["material_options"]
+            self.assertEqual(len(options), 2)
+            self.assertEqual(
+                {item["material"] for item in options},
+                {"PLA"},
+            )
+            self.assertEqual(
+                {item["brand"] for item in options},
+                {"Bambulab", "E-Sun"},
+            )
+
+        self.assertEqual(
+            after["local_category_slug"],
+            valid_category["slug"],
+        )
+        self.assertEqual(int(after["homepage_slider_enabled"] or 0), 0)
+        for field in (
+            "homepage_slider_image_url",
+            "homepage_slider_title_fa",
+            "homepage_slider_description_fa",
+            "homepage_slider_alt_text",
+            "homepage_slider_button_text",
+            "homepage_slider_focus_keyword",
+        ):
+            self.assertTrue(str(after[field] or "").strip(), field)
+
+        physical = dict(result["physical_image_rename"])
+        self.assertEqual(physical["selected"], 1)
+        self.assertEqual(len(physical["filenames"]), 1)
+        physical_name = physical["filenames"][0]
+        self.assertTrue(physical_name.endswith("-01.webp"))
+        self.assertTrue((image_dir / physical_name).is_file())
+        self.assertTrue((local_dir / "source_originals" / "01.jpg").is_file())
+        self.assertTrue(result["slider_backfill"]["complete"])
+        self.assertFalse(result["slider_backfill"]["membership"])
+        self.assertEqual(result["source_profile_import"]["added"], 2)
+
+        locks = json.loads(after["operator_stage_locks_json"])
+        self.assertIn("publish", locks)
+
+        standard_result = self.kernel.postprocess_full_product_ai(
+            product_id,
+            {"requested_source_mode": "link"},
+        )
+        self.assertNotIn("source_profile_refresh", standard_result)
+        self.assertNotIn("source_profile_import", standard_result)
+        self.assertNotIn("slider_backfill", standard_result)
+
     def test_stage2_exposes_source_profile_action(self):
         product_id = self._product()
         refresh_product_source_profiles(self.db, product_id, fresh_capture=False)

@@ -1,3 +1,7 @@
+## 2026-09-22 - A2Z-C1/C2 Product edit/completion ergonomics active
+
+Current A2Z Windows slice adds a top Full Edit action and reconnects later accepted Product-completion capabilities to the Products multi-select Bulk AI command. It reuses, rather than replaces, A2W Source Profile/Filament logic, A2X Slider completeness and A2Z physical SEO image authority. Publish and Slider membership remain manual. Local gates pass; no Production change is part of this slice. After exact GitHub/Qt acceptance, continue the frozen A2Z Catalog-wide Slider completeness/backfill sequence.
+
 ## 2026-09-21 - A2Y convergence accepted / A2Z is active next
 
 Forward development is governed by `docs/phases/PHASE50_A2Y_MASTER_RECONCILIATION_AND_REMAINING_WORK.md`. A2Y has converged latest Windows and accepted Production/Server histories at runtime-bearing merge `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b`. Exact-SHA Qt and Desktop shortcut cutover passed without Catalog or Production mutation. The authoritative forward worktree is `D:\projects\3DPrintHub-a2y-converge`.

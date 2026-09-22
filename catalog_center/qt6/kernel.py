@@ -3266,25 +3266,172 @@ class ApplicationKernel:
             "failures": failures,
         }
 
+    @staticmethod
+    def _json_object(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return dict(value)
+        try:
+            parsed = json.loads(value or "{}")
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
+
+    @staticmethod
+    def _json_array(value: Any) -> list[Any]:
+        if isinstance(value, list):
+            return list(value)
+        try:
+            parsed = json.loads(value or "[]")
+        except Exception:
+            return []
+        return list(parsed) if isinstance(parsed, list) else []
+
+    def _backfill_slider_core(self, product_id: int) -> dict[str, Any]:
+        """Fill only missing A2X Slider core data; membership stays operator-owned."""
+        product_id = int(product_id)
+        row = self.products.get(product_id) or {}
+        if not row:
+            raise RuntimeError(f"Product {product_id} not found")
+
+        before_membership = int(row.get("homepage_slider_enabled") or 0)
+        pack = self._json_object(row.get("content_pack_json"))
+        slider = self._json_object(pack.get("homepage_slider_seo"))
+
+        alts = [
+            str(value or "").strip()
+            for value in self._json_array(row.get("image_alt_texts_json"))
+            if str(value or "").strip()
+        ]
+        keywords = [
+            str(value or "").strip()
+            for value in (
+                self._json_array(row.get("keywords_json"))
+                or self._json_array(row.get("keywords_fa_json"))
+            )
+            if str(value or "").strip()
+        ]
+        selected = [
+            str(value or "").strip()
+            for value in self._json_array(row.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        primary = str(row.get("primary_image_url") or "").strip()
+        slider_image = str(row.get("homepage_slider_image_url") or "").strip()
+        if not slider_image:
+            if primary and primary in selected:
+                slider_image = primary
+            elif selected:
+                slider_image = selected[0]
+
+        candidates = {
+            "homepage_slider_title_fa": (
+                str(slider.get("title_fa") or "").strip()
+                or str(row.get("seo_title_fa") or "").strip()
+                or str(row.get("title_fa") or "").strip()
+                or str(row.get("source_title") or "").strip()
+            ),
+            "homepage_slider_description_fa": (
+                str(slider.get("description_fa") or "").strip()
+                or str(row.get("short_description_fa") or "").strip()
+                or str(row.get("seo_description_fa") or "").strip()
+                or str(row.get("description_fa") or "").strip()
+            ),
+            "homepage_slider_alt_text": (
+                str(slider.get("image_alt_fa") or "").strip()
+                or (alts[0] if alts else "")
+                or str(row.get("title_fa") or "").strip()
+                or str(row.get("source_title") or "").strip()
+            ),
+            "homepage_slider_button_text": (
+                str(slider.get("button_text_fa") or "").strip()
+                or "مشاهده محصول"
+            ),
+            "homepage_slider_focus_keyword": (
+                str(slider.get("focus_keyword_fa") or "").strip()
+                or (keywords[0] if keywords else "")
+                or str(row.get("title_fa") or "").strip()
+            ),
+            "homepage_slider_image_url": slider_image,
+        }
+        updates = {
+            key: value
+            for key, value in candidates.items()
+            if value and not str(row.get(key) or "").strip()
+        }
+        if updates:
+            self.stages.update(
+                product_id,
+                "slider",
+                updates,
+                event_type="qt_full_completion_slider_backfill",
+            )
+
+        after = self.products.get(product_id) or {}
+        after_membership = int(after.get("homepage_slider_enabled") or 0)
+        if before_membership != after_membership:
+            raise RuntimeError(
+                "Slider completion must not change homepage membership."
+            )
+        complete = all(
+            str(after.get(key) or "").strip()
+            for key in (
+                "homepage_slider_image_url",
+                "homepage_slider_title_fa",
+                "homepage_slider_description_fa",
+                "homepage_slider_alt_text",
+                "homepage_slider_button_text",
+                "homepage_slider_focus_keyword",
+            )
+        )
+        return {
+            "changed": bool(updates),
+            "changed_fields": sorted(updates),
+            "complete": bool(complete),
+            "membership": bool(after_membership),
+        }
+
     def postprocess_full_product_ai(
         self,
         product_id: int,
         result: dict[str, Any] | None = None,
+        *,
+        extended_bulk: bool = False,
     ) -> dict[str, Any]:
-        """Apply the same deterministic post-AI completion used by one Product."""
+        """Apply mature post-AI completion; later capabilities are Bulk-only."""
         product_id = int(product_id)
         payload = dict(result or {})
         payload.setdefault("product_id", product_id)
 
         try:
             row = self.products.get(product_id) or {}
-            if not str(row.get("local_category_slug") or "").strip():
+            current_category = str(
+                row.get("local_category_slug") or ""
+            ).strip()
+            category_needs_repair = (
+                not current_category
+                or (
+                    bool(extended_bulk)
+                    and current_category == "external-other"
+                )
+            )
+            if category_needs_repair:
                 inferred = self.categories.infer_slug(
                     str(row.get("source_category") or ""),
                     str(row.get("source_title") or ""),
                     str(row.get("source_description") or ""),
                 )
-                if inferred:
+                if extended_bulk and not inferred:
+                    pack = self._json_object(row.get("content_pack_json"))
+                    suggested = str(
+                        pack.get("suggested_category_slug") or ""
+                    ).strip()
+                    valid = {
+                        str(item.get("slug") or "")
+                        for item in self.categories.list()
+                    }
+                    if suggested in valid and suggested != "external-other":
+                        inferred = suggested
+                if inferred and inferred != current_category:
                     self.stages.update(
                         product_id,
                         "quick",
@@ -3299,23 +3446,78 @@ class ApplicationKernel:
         except Exception as exc:
             payload["source_category_infer_error"] = str(exc)
 
-        try:
-            bootstrap = self.commerce.bootstrap_from_source(
-                product_id,
-                self.filaments.list(),
-            )
-            payload["source_profile_bootstrap"] = bootstrap
-            if bootstrap.get("changed"):
-                payload.setdefault("changed_fields", [])
-                payload["changed_fields"] = list(
-                    payload["changed_fields"]
-                ) + [
-                    "sales_profile_ledger_json",
-                    "sales_profiles_json",
-                    "material_color_options_json",
+        source_refresh_error = ""
+        if extended_bulk:
+            try:
+                row = self.products.get(product_id) or {}
+                source_url = str(row.get("source_url") or "").strip()
+                if "makerworld.com" in urlsplit(source_url).netloc.casefold():
+                    payload["source_profile_refresh"] = (
+                        self.acquisition.refresh_source_profiles(
+                            product_id,
+                            fresh_capture=True,
+                        )
+                    )
+            except Exception as exc:
+                source_refresh_error = str(exc)
+                payload["source_profile_refresh_error"] = source_refresh_error
+
+            try:
+                row = self.products.get(product_id) or {}
+                source_profiles = [
+                    item
+                    for item in self._json_array(
+                        row.get("source_print_profiles_json")
+                    )
+                    if isinstance(item, dict)
                 ]
-        except Exception as exc:
-            payload["source_profile_bootstrap_error"] = str(exc)
+                if source_profiles:
+                    imported = self.commerce.import_source_profiles(product_id)
+                    payload["source_profile_import"] = imported
+                    profile_changed = bool(
+                        int(imported.get("added") or 0)
+                        or int(imported.get("updated") or 0)
+                    )
+                else:
+                    imported = self.commerce.bootstrap_from_source(
+                        product_id,
+                        self.filaments.list(),
+                    )
+                    payload["source_profile_bootstrap"] = imported
+                    profile_changed = bool(imported.get("changed"))
+                if profile_changed:
+                    payload.setdefault("changed_fields", [])
+                    payload["changed_fields"] = list(
+                        payload["changed_fields"]
+                    ) + [
+                        "sales_profile_ledger_json",
+                        "sales_profiles_json",
+                        "material_color_options_json",
+                    ]
+            except Exception as exc:
+                payload["source_profile_completion_error"] = str(exc)
+                if source_refresh_error:
+                    payload["source_profile_completion_fallback"] = (
+                        "fresh Source Profile failed; persisted/source facts kept"
+                    )
+        else:
+            try:
+                bootstrap = self.commerce.bootstrap_from_source(
+                    product_id,
+                    self.filaments.list(),
+                )
+                payload["source_profile_bootstrap"] = bootstrap
+                if bootstrap.get("changed"):
+                    payload.setdefault("changed_fields", [])
+                    payload["changed_fields"] = list(
+                        payload["changed_fields"]
+                    ) + [
+                        "sales_profile_ledger_json",
+                        "sales_profiles_json",
+                        "material_color_options_json",
+                    ]
+            except Exception as exc:
+                payload["source_profile_bootstrap_error"] = str(exc)
 
         try:
             row = self.products.get(product_id) or {}
@@ -3323,14 +3525,39 @@ class ApplicationKernel:
                 finalized = self.images.finalize(product_id)
                 payload["image_finalize"] = dict(finalized or {})
                 payload.setdefault("changed_fields", [])
-                payload["changed_fields"] = list(
-                    payload["changed_fields"]
-                ) + [
+                image_fields = [
                     "image_alt_texts_json",
                     "image_metadata_json",
                 ]
+                if extended_bulk:
+                    physical = dict(
+                        (finalized or {}).get("physical_rename") or {}
+                    )
+                    payload["physical_image_rename"] = physical
+                    image_fields.extend(
+                        [
+                            "images_json",
+                            "selected_images_json",
+                            "primary_image_url",
+                        ]
+                    )
+                payload["changed_fields"] = list(
+                    payload["changed_fields"]
+                ) + image_fields
         except Exception as exc:
             payload["image_finalize_error"] = str(exc)
+
+        if extended_bulk:
+            try:
+                slider = self._backfill_slider_core(product_id)
+                payload["slider_backfill"] = slider
+                if slider.get("changed"):
+                    payload.setdefault("changed_fields", [])
+                    payload["changed_fields"] = list(
+                        payload["changed_fields"]
+                    ) + list(slider.get("changed_fields") or [])
+            except Exception as exc:
+                payload["slider_backfill_error"] = str(exc)
 
         try:
             payload["auto_finalize"] = self.stages.auto_finalize_ready(
@@ -3393,7 +3620,7 @@ class ApplicationKernel:
         failures: list[dict[str, Any]] = []
         for product_id in ids:
             try:
-                self.stages.prepare_ai_content_repair(product_id)
+                self.stages.prepare_full_product_completion(product_id)
                 prepared.append(product_id)
             except Exception as exc:
                 failures.append({
@@ -3429,6 +3656,7 @@ class ApplicationKernel:
                     self.postprocess_full_product_ai(
                         product_id,
                         result_payload,
+                        extended_bulk=True,
                     )
                 )
             except Exception as exc:

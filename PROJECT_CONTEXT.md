@@ -1,3 +1,9 @@
+## 2026-09-22 - A2Z-C1/C2 Full Edit + unified Products Bulk completion checkpoint
+
+Windows-only source slice is Local-tested from baseline `494a222b...` with rollback `backup/pre-a2z-full-edit-bulk-completion-20260922`. Product Wizard now has a top Full Edit action that opens all stage locks without publishing or mutating Product values. Products multi-select Bulk AI now composes the accepted Source Profile, exact-family Filament, Category, physical image SEO and six-field Slider completion authorities after the existing AI content run, while Publish and Slider membership remain operator-owned. ERR-49-223 fixes a Persian taxonomy exact-match bug. New focused 3/3 + unchanged-cycle 38/38 PASS; related 148/149 effective PASS with only historical ERR-49-203; static/Qt gates PASS. No real Catalog/Production mutation.
+
+Exact next: commit/push -> Local=GitHub -> exact-SHA Qt UI smoke -> resume A2Z Catalog Slider completeness/backfill.
+
 ## 2026-09-21 - A2Y accepted / A2Z continuation checkpoint
 
 A2Y lineage convergence is closed. Authoritative runtime-bearing forward merge: `f9a9c203ae3a0a5665dbf884ce0c3e4bf761110b` on `wip/phase50-a2y-lineage-convergence-20260921`, worktree `D:\projects\3DPrintHub-a2y-converge`. Exact-SHA Qt runtime and Desktop shortcut cutover passed; Catalog remained 635 Products / 2536 history rows with integrity OK; no Production deployment was required.
