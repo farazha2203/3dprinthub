@@ -8,10 +8,13 @@
 - [x] Preserve current-revision Feed/Story duplicate receipts and Story-only recovery semantics.
 - [x] Focused 27/27 PASS; complete Site+Social 70/70 PASS after one documented stale-link assertion update.
 - [x] 11 Python compile + diff-check + Qt VerifyOnly PASS; Server delta 0.
-- [ ] Commit/push exact S2 SHA and relaunch exact-SHA Qt.
-- [ ] Live readiness proof: default bio_shop_grid must be ready without Buffer mobile.
-- [ ] Fresh Catalog backup + bounded #536 Story-only real acceptance; zero duplicate Feed.
-- [ ] Reconcile live Story receipt/URL and close A2Z-S2.
+- [x] Commit/push exact S2 runtime `447e81306a19d816042530f3d00989305a84bd2c`; exact-SHA Qt PASS/running.
+- [x] Live readiness proof: `bio_shop_grid`, `buffer_shop_grid`, mobile handoff false, ready=true despite Buffer mobile false.
+- [x] Fresh Catalog backup + bounded #536 Story-only real acceptance; existing Feed reused, zero duplicate Feed.
+- [x] Story `6ab383f9497d7707d81648c8` Buffer sent/live; Instagram Story URL verified; v3 asset 1080×1920 public SHA parity PASS.
+- [x] Buffer Shop Grid public page HTTP 200 and #536 tile points to exact tracked Product URL.
+- [x] Post-accept Catalog backup quick_check PASS; A2Z-S2 CLOSED/ACCEPTED.
+- [ ] Historical #536 Feed caption visual cleanup, if desired, must be edited directly in Instagram; future v5 captions are already corrected.
 
 ## 2026-09-22 - Phase50.A.2Z-S Instagram Post + linked Story readiness
 - [x] Re-verify provider from live Catalog: Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, media host `github_raw`.

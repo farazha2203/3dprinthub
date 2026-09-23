@@ -1,9 +1,9 @@
 ## 2026-09-23 - Owner: restore the previously working Post+Story route and fix Instagram links
-Status: `A2Z-S2 LOCAL_TESTED / GITHUB + REAL #536 STORY ACCEPTANCE NEXT`.
+Status: `A2Z-S2 PRODUCTION_VERIFIED / ACCEPTED — REAL #536 FEED+STORY COMPLETE, FUTURE LINKS CORRECTED`.
 
 Owner explicitly challenged the mobile-notification-only assumption because the project had already published real Stories successfully. Repository/receipt evidence confirms this: #625 had a real Buffer-sent/live automatic Story. Owner also reported that links placed below Feed posts and on Story artwork were being handled incorrectly.
 
-Requested/implemented contract: normal Product Social action must publish Feed + Story automatically; Feed gets its Product-specific clickable destination through Buffer Shop Grid metadata rather than a raw caption URL; Caption and Story artwork use a truthful «لینک بیو» CTA; Story remains branded 1080×1920 Gold/Navy/IRANSans. Native Link Sticker notification remains an optional mode but is no longer the default and may require Buffer mobile. Existing Feed receipts must prevent repost during Story recovery.
+Requested/implemented contract is now Production-proven: normal Product Social action publishes Feed + Story automatically; Feed Product destination is stored through Buffer Shop Grid metadata rather than a raw caption URL; Caption and Story artwork use truthful Bio/Shop-Grid CTA; Story remains branded 1080×1920 Gold/Navy/IRANSans. Native Link Sticker notification is optional only. Real #536 recovery reused its existing Feed and published one automatic Story successfully with no Feed duplicate. Future v5 captions contain no raw URL. The historical #536 Feed caption is unchanged only because Buffer cannot edit an already-published Instagram post.
 
 ## 2026-09-22 - Owner: confirm exact Instagram API and make Post + linked Story reliable
 Status: `A2Z-S GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL`.

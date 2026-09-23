@@ -1,4 +1,4 @@
-## 2026-09-23 - Phase50.A.2Z-S2 AUTOMATIC STORY + SHOP GRID LINK LOCAL_TESTED / GITHUB NEXT
+## 2026-09-23 - Phase50.A.2Z-S2 AUTOMATIC STORY + SHOP GRID LINK PRODUCTION_VERIFIED / ACCEPTED
 
 Owner correctly reported two regressions in the newer Social route: real Story publication had worked before, while the newer mandatory Link-Sticker notification path made Story depend on Buffer mobile; and raw Product URLs shown in Instagram captions/Story artwork were being treated as if they were clickable links.
 
@@ -19,9 +19,23 @@ Rollback: `backup/pre-a2z-s2-auto-story-shop-grid-20260923 @ 02be495fbf0f2cb48c5
 
 Verification: focused Social/Story/link gate **27/27 PASS**. First full Site+Social run was 69/70 with one intentionally stale assertion that still required the tracking URL inside Caption; changed-condition assertion was updated to require UTM in tracking metadata but not Caption. Full Site+Social rerun **70/70 PASS**. All 11 changed Python files compile; `git diff --check` + Qt VerifyOnly PASS; Server/migration/template/static delta=0.
 
-**Exact next:** docs/source commit-push -> verify Local=GitHub exact SHA -> exact-SHA Qt -> live readiness must show `story_link_mode=bio_shop_grid`, `feed_link_mode=buffer_shop_grid`, `requires_mobile_handoff=false`, `ready=true` even if Buffer mobile remains false -> fresh integrity Catalog backup -> verify #536 current Feed receipt + Site ACK -> one bounded #536 Social retry -> require zero new Feed createPost and one automatic Story createPost -> reconcile provider status/live Story URL -> verify new v3 Story asset 1080×1920 + public SHA -> record no-duplicate Feed proof -> close A2Z-S2.
+Runtime-bearing A2Z-S2 source is GitHub-exact at `447e81306a19d816042530f3d00989305a84bd2c` and running in Qt. Live readiness on that exact SHA returns `provider=buffer`, `story_link_mode=bio_shop_grid`, `feed_link_mode=buffer_shop_grid`, `requires_mobile_handoff=false`, `ready=true` while `has_active_member_device=false`; therefore default Social no longer depends on Buffer mobile.
 
-**Following development phase:** A2Z Catalog Data Completion -> Slider completeness/backfill with membership preserved -> #620/#625/#628 operator acceptance -> Profile/Filament/Image gates -> one controlled same-identity republish -> browser/public parity; then changed-revision Social rollout and W5 manual Product.
+Fresh pre-send Catalog rollback: `D:\projects\3dprinthub-backups\pre-a2z-s2-story536-20260923-111601\catalog-before-story536.sqlite3`, quick_check=`ok`, SHA256 `486d5c50d78f8e17e8e15ce173aa9b3d35400d0014147a5c3a96bd5a038f5b34`. Pre-state proved exactly one successful Feed receipt for #536 and no successful Story receipt.
+
+Real bounded retry of Product #536 from exact SHA completed `published=1 / failed=0`. Existing Feed provider id `6ab2c7781259e27877f070c7` was reused with `resume_status=already_sent`; **zero duplicate Feed createPost** occurred. New automatic Story provider id `6ab383f9497d7707d81648c8` reached Buffer `sent` and live Instagram URL `https://www.instagram.com/stories/3dprinthub_ir/3992386891974821993`. Story receipt is `instagram_story_published`, `story_publish_mode=automatic`, `story_link_strategy=bio_shop_grid`, policy `instagram-product-v5-20260923`, style `3dprinthub_instagram_gold_navy_v3_iransans_bio`, IRANSans, 1080×1920.
+
+Provider-media authority is GitHub branch `social-assets-buffer` exact at `3fedd69e2b1d107c3b05c24d50fdf9444235f8a7`; public Story asset `.../social_media/instagram/536/bc790a3a9f7af09b/story.png` is HTTP 200 image/png with SHA256 `ae9cf18bab82a9d40b963be92f28238bc308f038a73e6c839dd08c718eb7c729`, matching Local bytes. Buffer Shop Grid public page is HTTP 200 and its #536 tile carries the exact tracked Product destination `https://3dprinthub.ir/store/product/little-ballerina/?utm_source=instagram&utm_medium=social&utm_campaign=product_catalog&utm_content=product-536`.
+
+Post-accept Catalog rollback: `D:\projects\3dprinthub-backups\post-a2z-s2-story536-20260923-111942\catalog-after-story536.sqlite3`, quick_check=`ok`, SHA256 `de20ec0cf04f46533a4bd4bc1fb2638c6cd96d276f7286f23faab63849c95964`.
+
+Existing #536 Feed intentionally remains the historical v4 caption because duplicate safety reused the already-live post. That caption still contains the old raw URL; Buffer cannot edit a published Instagram post after send, so cleaning that one historical caption requires a direct Instagram edit. All **future** v5 Feed sends omit raw caption URLs and carry Product click-through only in Buffer Shop Grid metadata; new v3 Story artwork likewise contains no fake/raw URL.
+
+A2Z-S2 is ACCEPTED.
+
+**Exact next phase:** A2Z Catalog Data Completion -> Slider completeness/backfill with membership preserved -> #620/#625/#628 operator acceptance -> final Profile/Filament/Image gates -> one controlled same-identity republish -> browser/public parity.
+
+**Immediately following phase:** changed-revision Social rollout using the accepted v5 Feed + automatic Story contract, then W5 manual Product.
 
 ## 2026-09-22 - Phase50.A.2Z-S SOCIAL DELIVERY READINESS GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL
 

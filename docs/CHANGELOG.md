@@ -1,3 +1,12 @@
+## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid PRODUCTION ACCEPTED
+- Runtime source exact at `447e81306a19d816042530f3d00989305a84bd2c`; exact-SHA Qt running.
+- Live readiness passes without Buffer mobile under default `bio_shop_grid` / `buffer_shop_grid` contract.
+- Real #536 retry reused existing Feed `6ab2c778...` and created **no duplicate Feed**.
+- New Story `6ab383f9497d7707d81648c8` is Buffer `sent` and live at `https://www.instagram.com/stories/3dprinthub_ir/3992386891974821993`.
+- Story is automatic, v5 policy, v3 Gold/Navy/IRANSans, 1080×1920; provider asset public SHA parity passes on social-assets commit `3fedd69e...`.
+- Public Shop Grid already maps #536 to its exact Product UTM URL.
+- Historical #536 Feed remains v4 because dedupe reused the live post; future v5 captions omit raw URLs. Buffer cannot edit already-published Instagram posts.
+
 ## 2026-09-23 - A2Z-S2 automatic Story + correct Instagram link semantics
 - Historical #625 receipt proves automatic Buffer Story publication is the accepted working baseline.
 - Default Story route restored to automatic Buffer publishing; mobile-dependent native Link Sticker is now optional only.

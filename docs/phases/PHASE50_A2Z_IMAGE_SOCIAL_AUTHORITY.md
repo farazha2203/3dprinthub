@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z-S2 AUTOMATIC STORY + SHOP GRID LINK LOCAL_TESTED / GITHUB NEXT
+Status: A2Z-S2 AUTOMATIC STORY + SHOP GRID LINK PRODUCTION_VERIFIED / ACCEPTED
 Date: 2026-09-22
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
@@ -17,7 +17,15 @@ Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
 - Policy `instagram-product-v5-20260923`; Story style/cache identity `3dprinthub_instagram_gold_navy_v3_iransans_bio`.
 - Rollback ref: `backup/pre-a2z-s2-auto-story-shop-grid-20260923 @ 02be495fbf0f2cb48c527c280cf8b62edfeb2f38`.
 - Focused gate 27/27 PASS; complete Site+Social 70/70 PASS after one intentional stale-link assertion correction; 11 Python compile + diff + Qt VerifyOnly PASS; Server delta 0.
-- No real Instagram mutation occurred before GitHub promotion.
+- Runtime exact at `447e81306a19d816042530f3d00989305a84bd2c`; exact-SHA Qt PASS/running.
+- Live readiness: `bio_shop_grid`, `buffer_shop_grid`, `requires_mobile_handoff=false`, `ready=true` while mobile remains false.
+- Fresh pre-send Catalog backup `pre-a2z-s2-story536-20260923-111601`, quick_check OK.
+- Real #536 retry reused Feed `6ab2c7781259e27877f070c7` and created no duplicate Feed.
+- Automatic Story `6ab383f9497d7707d81648c8` reached Buffer sent and live Instagram URL `https://www.instagram.com/stories/3dprinthub_ir/3992386891974821993`.
+- v3 Story asset is 1080×1920 IRANSans/Gold-Navy, social-assets commit `3fedd69e...`, public HTTP 200 and SHA `ae9cf18b...` exact.
+- Shop Grid public page is HTTP 200 and #536 tile targets the exact Product UTM URL.
+- Post-accept Catalog backup `post-a2z-s2-story536-20260923-111942`, quick_check OK.
+- Existing #536 Feed remains historical v4 only because duplicate protection correctly reused it; future v5 captions are corrected.
 
 ## 2026-09-22 — Post + linked Story readiness hardening
 

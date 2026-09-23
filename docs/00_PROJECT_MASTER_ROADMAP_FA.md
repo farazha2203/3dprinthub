@@ -1,6 +1,6 @@
-## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid link correction active
+## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid ACCEPTED
 
-Historical Production evidence (#625) proves Buffer automatic Story publication works. The later native Link Sticker default introduced an avoidable Buffer-mobile dependency and is now demoted to an optional mode. Normal Social flow is Feed automatic + Product-specific Buffer Shop Grid link + automatic branded Story. Raw Product URLs are removed from Caption/Story artwork; CTA is «خرید از لینک بیو». Current-revision duplicate receipts remain authoritative. Local gates: 27/27 focused, 70/70 full Site+Social, 11 Python compile, diff/Qt PASS, Server delta 0. Next: GitHub exact -> exact-SHA Qt -> fresh Catalog backup -> bounded #536 Story-only real acceptance with zero Feed repost.
+Automatic Story + Shop Grid is now Production-proven on #536 from exact runtime `447e8130...`: existing Feed reused/no duplicate, new automatic Story Buffer-sent/live, v3 1080×1920 Gold/Navy/IRANSans asset public-SHA exact, Shop Grid tile mapped to exact Product UTM URL, pre/post Catalog backups quick_check PASS. Mobile-dependent native Link Sticker remains optional only. Future v5 captions/Story artwork contain no fake/raw clickable URL; Feed Product click-through is Shop Grid metadata. A2Z-S2 is closed. Next: A2Z Catalog Data Completion -> #620/#625/#628 operator acceptance -> final Profile/Filament/Image + controlled same-identity republish -> then changed-revision Social rollout.
 
 ## 2026-09-22 - A2Z-S Instagram Post + linked Story readiness hardening active
 
