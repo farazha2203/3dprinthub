@@ -1,3 +1,28 @@
+## 2026-09-23 - Phase50.A.2Z-S2 AUTOMATIC STORY + SHOP GRID LINK LOCAL_TESTED / GITHUB NEXT
+
+Owner correctly reported two regressions in the newer Social route: real Story publication had worked before, while the newer mandatory Link-Sticker notification path made Story depend on Buffer mobile; and raw Product URLs shown in Instagram captions/Story artwork were being treated as if they were clickable links.
+
+Historical real evidence resolves the ambiguity: Product #625 successfully published both Buffer Feed `6aaed28f6e039ccbc8221fa8` and Buffer Story `6aaed29a7fcdd8931977c3f1`; the Story reached `sent` and live Instagram Story without the later notification/mobile contract. Therefore automatic Story publication itself is proven.
+
+A2Z-S2 restores that proven path as the default while preserving the newer native Link Sticker path as an optional mode:
+- Provider remains Buffer GraphQL / channel `3dprinthub_ir`; media host remains `github_raw`.
+- Feed remains `schedulingType=automatic` and keeps `metadata.instagram.link=<tracked Product URL>`, which is the Buffer Shop Grid Product link authority.
+- Feed Caption no longer prints the raw tracked URL. CTA is now **«خرید این محصول: لینک بیو...»** because Instagram caption URLs are not clickable.
+- Default Story link mode is now `bio_shop_grid`; Story is again `schedulingType=automatic`, matching the proven #625 path and requiring no Buffer mobile device.
+- Native Instagram Link Sticker remains available only when `instagram_story_link_mode=native_sticker_notification`; only that optional mode requires Buffer mobile notification handoff.
+- Story artwork remains 1080×1920 Gold/Navy + IRANSans, but no longer displays a raw Product URL as if clickable. CTA is **«خرید از لینک بیو»** with `@3dprinthub_ir`.
+- Social policy becomes `instagram-product-v5-20260923`; Story style becomes `3dprinthub_instagram_gold_navy_v3_iransans_bio`.
+- Story cache identity now includes Story style ID, so an old cached v2 Story image cannot be reused after the CTA/link correction.
+- Existing Feed/Story receipt dedupe remains unchanged; a failed Story retry for an already-live Feed creates no new Feed.
+
+Rollback: `backup/pre-a2z-s2-auto-story-shop-grid-20260923 @ 02be495fbf0f2cb48c527c280cf8b62edfeb2f38`.
+
+Verification: focused Social/Story/link gate **27/27 PASS**. First full Site+Social run was 69/70 with one intentionally stale assertion that still required the tracking URL inside Caption; changed-condition assertion was updated to require UTM in tracking metadata but not Caption. Full Site+Social rerun **70/70 PASS**. All 11 changed Python files compile; `git diff --check` + Qt VerifyOnly PASS; Server/migration/template/static delta=0.
+
+**Exact next:** docs/source commit-push -> verify Local=GitHub exact SHA -> exact-SHA Qt -> live readiness must show `story_link_mode=bio_shop_grid`, `feed_link_mode=buffer_shop_grid`, `requires_mobile_handoff=false`, `ready=true` even if Buffer mobile remains false -> fresh integrity Catalog backup -> verify #536 current Feed receipt + Site ACK -> one bounded #536 Social retry -> require zero new Feed createPost and one automatic Story createPost -> reconcile provider status/live Story URL -> verify new v3 Story asset 1080×1920 + public SHA -> record no-duplicate Feed proof -> close A2Z-S2.
+
+**Following development phase:** A2Z Catalog Data Completion -> Slider completeness/backfill with membership preserved -> #620/#625/#628 operator acceptance -> Profile/Filament/Image gates -> one controlled same-identity republish -> browser/public parity; then changed-revision Social rollout and W5 manual Product.
+
 ## 2026-09-22 - Phase50.A.2Z-S SOCIAL DELIVERY READINESS GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL
 
 Owner reconfirmed the Instagram contract and requested that the Windows action reliably create **Post + companion Story** under the already-accepted Social policy, without repeating the 2026-09-22 partial outcome where Feed succeeded and Story notification later failed.

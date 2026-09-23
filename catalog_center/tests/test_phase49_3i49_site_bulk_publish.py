@@ -1099,7 +1099,7 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
             self.assertIn("باز کردن صفحه محصول", page.open_source_btn.text())
             self.assertIn("انتشار", page.bulk_publish_btn.text())
             self.assertIn("سایت", page.bulk_publish_btn.text())
-            self.assertIn("Post + Story لینک‌دار", page.instagram_publish_btn.text())
+            self.assertIn("Post + Story خودکار", page.instagram_publish_btn.text())
         finally:
             page.close()
 

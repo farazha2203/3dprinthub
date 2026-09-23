@@ -16,6 +16,7 @@ class FakeDB:
             "instagram_publish_provider": "buffer",
             "buffer_instagram_channel_id": "chan-1",
             "instagram_companion_story_enabled": "1",
+            "instagram_story_link_mode": "bio_shop_grid",
             "instagram_story_clickable_link_enabled": "1",
             "buffer_media_host": "github_raw",
         }
@@ -70,10 +71,12 @@ class Phase50InstagramPublishTests(unittest.TestCase):
     def test_payload_uses_canonical_site_link_and_product_seo(self):
         payload = canonical_site_payload(product_row(), site_url="https://3dprinthub.ir")
         self.assertEqual(payload["product_url"], "https://3dprinthub.ir/store/product/test-product/")
-        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", payload["caption"])
+        self.assertIn("خرید این محصول: لینک بیو", payload["caption"])
+        self.assertNotIn("utm_source=instagram", payload["caption"])
+        self.assertIn("utm_source=instagram", payload["tracking_url"])
         self.assertIn("#چاپ_سه_بعدی", payload["caption"])
         self.assertLessEqual(len(payload["hashtags"]), 8)
-        self.assertEqual(payload["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertEqual(payload["social_policy_version"], "instagram-product-v5-20260923")
         self.assertIn("سفارش این محصول از 3DPrintHub.ir", payload["caption"])
         self.assertIn("ارسال سفارش به سراسر ایران", payload["caption"])
         self.assertIn("#ارسال_سراسری", payload["hashtags"])
@@ -139,14 +142,15 @@ class Phase50InstagramPublishTests(unittest.TestCase):
         result = publish_product(db, 42, cfg, site_url="https://3dprinthub.ir")
         self.assertEqual(result["media_id"], "media-1")
         self.assertEqual(result["site_product_url"], "https://3dprinthub.ir/store/product/test-product/")
-        self.assertEqual(result["social_policy_version"], "instagram-product-v4-20260920")
+        self.assertEqual(result["social_policy_version"], "instagram-product-v5-20260923")
         self.assertEqual(result["alt_texts"], ["نمای اصلی محصول", "نمای دوم محصول"])
         self.assertEqual(db.receipts[-1]["status"], "instagram_published")
         calls = [call.args[0] for call in request_json.call_args_list]
         self.assertTrue(all("makerworld" not in value.lower() for value in calls))
         parent_payload = request_json.call_args_list[2].kwargs["payload"]
         self.assertEqual(parent_payload["media_type"], "CAROUSEL")
-        self.assertIn("3dprinthub.ir/store/product/test-product/", parent_payload["caption"])
+        self.assertIn("لینک بیو", parent_payload["caption"])
+        self.assertNotIn("utm_source=instagram", parent_payload["caption"])
 
     @patch("app.instagram_publish.get_secret", return_value="token")
     def test_same_site_ack_cannot_be_published_twice(self, _secret):
@@ -240,7 +244,24 @@ class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
         return InstagramCore(db, _ConnectionStub(), _PublishStub(db))
 
     @patch("app.buffer_publish.test_connection")
-    def test_clickable_story_blocks_before_any_site_or_social_work_without_mobile(
+    def test_default_shop_grid_story_is_ready_without_mobile(self, connection):
+        connection.return_value = {
+            "id": "chan-1",
+            "name": "3dprinthub_ir",
+            "service": "instagram",
+            "external_link": "https://instagram.com/3dprinthub_ir",
+            "has_active_member_device": False,
+        }
+        core = self._core()
+        state = core.delivery_readiness()
+        self.assertTrue(state["ready"])
+        self.assertFalse(state["requires_mobile_handoff"])
+        self.assertEqual(state["story_link_mode"], "bio_shop_grid")
+        self.assertEqual(state["feed_link_mode"], "buffer_shop_grid")
+        self.assertFalse(state["has_active_member_device"])
+
+    @patch("app.buffer_publish.test_connection")
+    def test_native_sticker_mode_blocks_before_any_work_without_mobile(
         self, connection
     ):
         connection.return_value = {
@@ -251,6 +272,9 @@ class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
             "has_active_member_device": False,
         }
         core = self._core()
+        core.db.set_setting(
+            "instagram_story_link_mode", "native_sticker_notification"
+        )
 
         state = core.delivery_readiness()
         self.assertFalse(state["ready"])
@@ -263,7 +287,7 @@ class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
         self.assertEqual(core.publish_core.calls, [])
 
     @patch("app.buffer_publish.test_connection")
-    def test_mobile_ready_allows_clickable_story_workflow(self, connection):
+    def test_mobile_ready_allows_optional_native_sticker_workflow(self, connection):
         connection.return_value = {
             "id": "chan-1",
             "name": "3dprinthub_ir",
@@ -272,26 +296,13 @@ class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
             "has_active_member_device": True,
         }
         core = self._core()
+        core.db.set_setting(
+            "instagram_story_link_mode", "native_sticker_notification"
+        )
         state = core.delivery_readiness()
         self.assertTrue(state["ready"])
         self.assertTrue(state["requires_mobile_handoff"])
         self.assertTrue(state["has_active_member_device"])
-
-    @patch("app.buffer_publish.test_connection")
-    def test_automatic_story_mode_does_not_require_mobile_handoff(self, connection):
-        connection.return_value = {
-            "id": "chan-1",
-            "name": "3dprinthub_ir",
-            "service": "instagram",
-            "external_link": "https://instagram.com/3dprinthub_ir",
-            "has_active_member_device": False,
-        }
-        core = self._core()
-        core.db.set_setting("instagram_story_clickable_link_enabled", "0")
-        state = core.delivery_readiness()
-        self.assertTrue(state["ready"])
-        self.assertFalse(state["requires_mobile_handoff"])
-        self.assertFalse(state["has_active_member_device"])
 
 
 class Phase50SiteThenInstagramOrderTests(unittest.TestCase):

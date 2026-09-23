@@ -1,3 +1,18 @@
+## 2026-09-23 - Phase50.A.2Z-S2 automatic Story + Shop Grid Product links
+- [x] Prove historical #625 Story was genuinely Buffer-sent/live without the later mobile-notification contract.
+- [x] Restore default companion Story to Buffer automatic publication; keep native Link Sticker notification as optional mode only.
+- [x] Preserve Feed `metadata.instagram.link` as Product-specific Buffer Shop Grid link.
+- [x] Remove raw Product URL from Feed Caption; use Bio/Shop-Grid CTA instead.
+- [x] Remove raw Product URL from Story artwork; use «خرید از لینک بیو» + @3dprinthub_ir.
+- [x] Bump Social policy to v5 and Story style/cache identity to v3 so old URL-bearing cached Story cannot be reused.
+- [x] Preserve current-revision Feed/Story duplicate receipts and Story-only recovery semantics.
+- [x] Focused 27/27 PASS; complete Site+Social 70/70 PASS after one documented stale-link assertion update.
+- [x] 11 Python compile + diff-check + Qt VerifyOnly PASS; Server delta 0.
+- [ ] Commit/push exact S2 SHA and relaunch exact-SHA Qt.
+- [ ] Live readiness proof: default bio_shop_grid must be ready without Buffer mobile.
+- [ ] Fresh Catalog backup + bounded #536 Story-only real acceptance; zero duplicate Feed.
+- [ ] Reconcile live Story receipt/URL and close A2Z-S2.
+
 ## 2026-09-22 - Phase50.A.2Z-S Instagram Post + linked Story readiness
 - [x] Re-verify provider from live Catalog: Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, media host `github_raw`.
 - [x] Preserve accepted Feed contract: Site-first current revision, Product caption/SEO, per-image ALT, bounded hashtags, UTM, nationwide shipping, no false free claims.

@@ -1,3 +1,7 @@
+## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid link correction active
+
+Historical Production evidence (#625) proves Buffer automatic Story publication works. The later native Link Sticker default introduced an avoidable Buffer-mobile dependency and is now demoted to an optional mode. Normal Social flow is Feed automatic + Product-specific Buffer Shop Grid link + automatic branded Story. Raw Product URLs are removed from Caption/Story artwork; CTA is «خرید از لینک بیو». Current-revision duplicate receipts remain authoritative. Local gates: 27/27 focused, 70/70 full Site+Social, 11 Python compile, diff/Qt PASS, Server delta 0. Next: GitHub exact -> exact-SHA Qt -> fresh Catalog backup -> bounded #536 Story-only real acceptance with zero Feed repost.
+
 ## 2026-09-22 - A2Z-S Instagram Post + linked Story readiness hardening active
 
 Instagram path is reverified from source/live settings: Windows uses Buffer GraphQL on `api.buffer.com` for channel `3dprinthub_ir`; current Social media compatibility host is `github_raw`. Feed is automatic and current-revision duplicate guarded. Story uses the approved 1080×1920 Gold/Navy/IRANSans asset; clickable Product Link requires Buffer notification publishing and native Instagram Link Sticker completion on mobile.

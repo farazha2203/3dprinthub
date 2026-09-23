@@ -32,6 +32,8 @@ class _DB:
     def setting(self, key, default=""):
         if key == "instagram_companion_story_enabled":
             return "1"
+        if key == "instagram_story_link_mode":
+            return "bio_shop_grid"
         return default
 
     def sync_receipts(self, product_id, limit=120):
@@ -70,6 +72,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
                     11,
                     BufferConfig(channel_id="chan-1"),
                     site_url="https://3dprinthub.ir",
+                    story_link_notification=True,
                 )
         request.assert_not_called()
         self.assertEqual(db.receipts, [])
@@ -104,6 +107,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
                     11,
                     BufferConfig(channel_id="chan-1"),
                     site_url="https://3dprinthub.ir",
+                    story_link_notification=True,
                 )
         request.assert_not_called()
         self.assertEqual(
@@ -129,26 +133,28 @@ class BufferStoryCompanionTests(unittest.TestCase):
         story_input = request.call_args_list[1].kwargs["variables"]["input"]
         self.assertEqual(story_input["metadata"]["instagram"]["type"], "story")
         self.assertFalse(story_input["metadata"]["instagram"]["shouldShareToFeed"])
-        self.assertEqual(story_input["schedulingType"], "notification")
-        self.assertIn("/store/product/story-demo/", story_input["metadata"]["instagram"]["link"])
-        sticker = story_input["metadata"]["instagram"]["stickerFields"]
-        self.assertEqual(sticker["text"], "لینک محصول")
-        self.assertIn("utm_source=instagram", sticker["other"])
+        self.assertEqual(story_input["schedulingType"], "automatic")
+        self.assertNotIn("link", story_input["metadata"]["instagram"])
+        self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
+        feed_input = request.call_args_list[0].kwargs["variables"]["input"]
+        self.assertIn("utm_source=instagram", feed_input["metadata"]["instagram"]["link"])
+        self.assertNotIn("utm_source=instagram", feed_input["text"])
         self.assertEqual(
             story_input["assets"][0]["image"]["url"],
             "https://3dprinthub.ir/media/story-card.webp",
         )
         statuses = [row["status"] for row in db.receipts]
         self.assertIn("instagram_published", statuses)
-        self.assertIn("instagram_story_notification_ready", statuses)
-        self.assertNotIn("instagram_story_published", statuses)
+        self.assertIn("instagram_story_published", statuses)
+        self.assertNotIn("instagram_story_notification_ready", statuses)
         story_receipt = json.loads(db.receipts[-1]["payload_json"])
         self.assertEqual(story_receipt["highlight_target"], "اسباب بازی")
         self.assertEqual(story_receipt["highlight_status"], "operator_required")
-        self.assertEqual(story_receipt["story_publish_mode"], "notification")
-        self.assertTrue(story_receipt["link_sticker_required"])
-        self.assertEqual(story_receipt["link_sticker_label"], "لینک محصول")
-        self.assertFalse(story_receipt["instagram_live_confirmed"])
+        self.assertEqual(story_receipt["story_publish_mode"], "automatic")
+        self.assertEqual(story_receipt["story_link_strategy"], "bio_shop_grid")
+        self.assertFalse(story_receipt["link_sticker_required"])
+        self.assertEqual(story_receipt["link_sticker_label"], "")
+        self.assertTrue(story_receipt["instagram_live_confirmed"])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
@@ -191,6 +197,10 @@ class BufferStoryCompanionTests(unittest.TestCase):
             "automatic",
         )
         self.assertFalse(result["companion_story"]["link_sticker_required"])
+        self.assertEqual(
+            result["companion_story"]["story_link_strategy"],
+            "bio_shop_grid",
+        )
         self.assertTrue(result["companion_story"]["instagram_live_confirmed"])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
@@ -222,6 +232,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
                 11,
                 BufferConfig(channel_id="chan-1"),
                 site_url="https://3dprinthub.ir",
+                story_link_notification=True,
             )
         statuses = [row["status"] for row in db.receipts]
         self.assertIn("instagram_published", statuses)
@@ -258,6 +269,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
             11,
             BufferConfig(channel_id="chan-1"),
             site_url="https://3dprinthub.ir",
+            story_link_notification=True,
         )
         self.assertEqual(request.call_count, 1)
         self.assertEqual(result["provider_post_id"], "feed-err")

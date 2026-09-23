@@ -57,7 +57,8 @@ def _render_html(*, image_url: str, product_url: str, copy: dict) -> str:
     )
     title = html.escape(str(copy["title"]))
     subtitle = html.escape(str(copy["subtitle"]))
-    url = html.escape(product_url.replace("https://", "").rstrip("/"))
+    purchase_cta = "خرید از لینک بیو"
+    purchase_hint = "@3dprinthub_ir • همین محصول را در فروشگاه پروفایل باز کنید"
     logo = _logo_uri()
     font_regular = _font_uri("IRANSansWeb(FaNum).ttf")
     font_medium = _font_uri("IRANSansWeb(FaNum)_Medium.ttf")
@@ -88,12 +89,18 @@ body{{font-family:IRANSans,Tahoma,sans-serif;color:#fff;position:relative}}
 <div class="header"><div class="brandbox"><img class="logo" src="{logo}"><div><div class="brand">3DPRINTHUB</div><div class="tag">IDEAS INTO REALITY</div></div></div><div class="micro">ORIGINAL<br>PRODUCT<br>DESIGN</div></div>
 <div class="copy"><div class="kicker">محصول 3DPrintHub</div><div class="title">{title}</div><div class="subtitle">{subtitle}</div></div>
 <div class="features">{bullets}</div><div class="hero"><img src="{html.escape(image_url)}"></div>
-<div class="cta">مشاهده محصول <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
-<div class="url">{url}</div>
+<div class="cta">{purchase_cta} <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
+<div class="url">{purchase_hint}</div>
 <div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div>
 </body></html>"""
 def _revision_key(row: dict) -> str:
-    raw = str(row.get("server_ack_json") or row.get("fingerprint") or row.get("updated_at") or "")
+    authority = str(
+        row.get("server_ack_json")
+        or row.get("fingerprint")
+        or row.get("updated_at")
+        or ""
+    )
+    raw = f"{authority}|story-style={STYLE_ID}"
     return hashlib.sha256(raw.encode("utf-8", errors="ignore")).hexdigest()[:16]
 
 

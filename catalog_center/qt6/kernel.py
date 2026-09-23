@@ -2592,19 +2592,26 @@ class InstagramCore:
             self.db.setting("instagram_companion_story_enabled", "1") or "1"
         ).strip().lower()
         companion_enabled = companion_raw not in {"0", "false", "no", "off"}
-        clickable_raw = str(
-            self.db.setting("instagram_story_clickable_link_enabled", "1") or "1"
+        link_mode = str(
+            self.db.setting("instagram_story_link_mode", "bio_shop_grid")
+            or "bio_shop_grid"
         ).strip().lower()
-        clickable_enabled = clickable_raw not in {"0", "false", "no", "off"}
+        native_sticker_enabled = link_mode in {
+            "native_sticker_notification",
+            "native_sticker",
+            "notification",
+        }
 
         state: dict[str, Any] = {
             "provider": provider,
             "ready": True,
             "blockers": [],
             "companion_story_enabled": companion_enabled,
-            "clickable_story_enabled": clickable_enabled,
+            "story_link_mode": link_mode,
+            "clickable_story_enabled": native_sticker_enabled,
+            "feed_link_mode": "buffer_shop_grid" if provider == "buffer" else "direct",
             "requires_mobile_handoff": bool(
-                provider == "buffer" and companion_enabled and clickable_enabled
+                provider == "buffer" and companion_enabled and native_sticker_enabled
             ),
         }
         if provider != "buffer":
@@ -2686,7 +2693,7 @@ class InstagramCore:
                         readiness.get("companion_story_enabled")
                     )
                     story_link_notification = bool(
-                        readiness.get("clickable_story_enabled")
+                        readiness.get("requires_mobile_handoff")
                     )
                     if progress:
                         progress(

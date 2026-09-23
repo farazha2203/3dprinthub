@@ -284,10 +284,10 @@ class ProductsPage(QWidget):
             "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
         )
         self.instagram_publish_btn = QPushButton(
-            "🚀 سایت → Instagram (Post + Story لینک‌دار)"
+            "🚀 سایت → Instagram (Post + Story خودکار)"
         )
         self.instagram_publish_btn.setToolTip(
-            "برای هر Product: ابتدا Social readiness را بررسی می‌کند؛ سپس سایت/HTTPS، Feed استاندارد با Caption/Hashtag/Alt Text، Story برندشده 1080×1920 با IRANSans و receiptهای مستقل را اجرا می‌کند. Story دارای Link Sticker از مسیر Buffer Notify Me است و فقط وقتی Buffer mobile فعال باشد شروع می‌شود."
+            "برای هر Product: ابتدا Social readiness را بررسی می‌کند؛ سپس سایت/HTTPS، Feed استاندارد با Caption/Hashtag/Alt Text و Shop Grid Link اختصاصی محصول، و Story برندشده 1080×1920 با IRANSans را خودکار منتشر می‌کند. CTA Story مسیر خرید از لینک بیو/Shop Grid است و به Buffer mobile وابسته نیست."
         )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
@@ -837,10 +837,11 @@ class ProductsPage(QWidget):
                 f"از قبل عمومی و HTTP-تأییدشده: {len(already_public)}\n"
                 f"رد Gate / بدون تیک آماده: {blocked_count}\n"
                 f"Provider: {social_readiness.get('provider') or '-'}\n"
-                f"Buffer mobile آماده: {'بله' if social_readiness.get('has_active_member_device') else 'نیاز ندارد/نامشخص'}\n\n"
-                "ترتیب اجباری است: readiness → سایت → تأیید لینک عمومی Product → Feed → Story لینک‌دار. "
-                "Story لینک‌دار در Buffer با Notify Me به موبایل تحویل می‌شود؛ Feed همان Revision هرگز دوباره ساخته نمی‌شود. "
-                "قیمت و انتخاب Variant همچنان فقط در صفحه محصول سایت انجام می‌شود."
+                f"لینک Feed: {social_readiness.get('feed_link_mode') or '-'}\n"
+                f"حالت Story: {social_readiness.get('story_link_mode') or '-'}\n\n"
+                "ترتیب اجباری است: readiness → سایت → تأیید لینک عمومی Product → Feed خودکار + Shop Grid Link → Story خودکار. "
+                "Caption و Story URL خامِ غیرقابل‌کلیک نمایش نمی‌دهند؛ CTA خرید از لینک بیو/Shop Grid است. "
+                "Feed همان Revision هرگز دوباره ساخته نمی‌شود. قیمت و انتخاب Variant همچنان فقط در صفحه محصول سایت انجام می‌شود."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,

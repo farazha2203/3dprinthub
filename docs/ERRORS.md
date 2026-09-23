@@ -83,6 +83,15 @@
 **Verification:** changed-condition test 1/1 PASS; full Server unified/profile/republish/payment/finance/Hero gate 52/52 PASS; Windows focused gate 94/94 PASS; broad Windows remains 115/116 with only independently documented ERR-49-203.
 **Prevention:** presentation/cache assertions must track the latest accepted Production contract in CURRENT_STATE/ROADMAP, and a merge-time failure must be reproduced against its source baseline before being classified as a new regression.
 
+## ERR-49-228 - Mandatory native Link Sticker regressed the proven automatic Story route; raw caption/Story URLs were not valid click targets
+**Date:** 2026-09-23
+**Observed:** owner reported that Stories had previously published successfully, but newer sends were blocked on Buffer mobile; also the Product URL shown under Feed captions/on Story artwork did not behave as a clickable link.
+**Evidence:** real #625 receipts show Buffer Feed `6aaed28f6e039ccbc8221fa8` and Story `6aaed29a7fcdd8931977c3f1` both sent/live before native Link-Sticker notification became mandatory. Current Buffer Feed payload already carries `metadata.instagram.link=<tracked Product URL>`, the Buffer Shop Grid link authority. Instagram caption raw URLs are not clickable; Story artwork text is also not a native link.
+**Root cause:** the later clickable-Story change replaced a proven automatic Story path with notification-only native Link Sticker as the default. This added an unnecessary Buffer mobile prerequisite. Separately, presentation copy treated raw URLs in caption/artwork as if they were clickable.
+**Correct fix:** default `instagram_story_link_mode=bio_shop_grid`; keep Feed automatic + Product-specific Shop Grid metadata link; remove raw URL from Caption and use Bio/Shop-Grid CTA; return Story to automatic publication with branded «خرید از لینک بیو» CTA. Preserve `native_sticker_notification` only as an explicit optional mode. Include Story style ID in cached render identity so corrected artwork cannot reuse v2 cached bytes.
+**Verification:** focused 27/27 PASS. First full gate 69/70 failed only the stale assertion requiring tracking URL in Caption; changed-condition assertion now requires UTM metadata and no raw Caption URL. Full Site+Social rerun 70/70 PASS; 11 Python compile, diff-check and Qt VerifyOnly PASS; Server delta=0.
+**Prevention:** distinguish clickable provider metadata from visual/raw text. A new convenience feature must not silently replace a Production-proven automatic Social route; optional native stickers remain additive.
+
 ## ERR-49-227 - Clickable Story failure was discoverable before Feed but Buffer mobile prerequisite was not preflighted
 **Date:** 2026-09-22
 **Observed:** Product #536 Feed published successfully, then companion Story notification failed because Buffer had no active mobile reminder device. Direct channel truth now reports `hasActiveMemberDevice=False`. #536 Feed is live at `https://www.instagram.com/p/DdmXo5QlMEd/`; its github_raw branded Story asset is valid 1080×1920 and not the cause.

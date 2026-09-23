@@ -58,14 +58,15 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         )
         self.assertIn("چراغ رومیزی موج‌دار سه‌بعدی", caption)
         self.assertIn("ارسال سفارش به سراسر ایران", caption)
-        self.assertIn("مشاهده محصول، انتخاب مشخصات و ثبت سفارش", caption)
-        self.assertIn("utm_source=instagram", caption)
+        self.assertIn("خرید این محصول: لینک بیو", caption)
+        self.assertNotIn("utm_source=instagram", caption)
+        self.assertNotIn("https://3dprinthub.ir/store/product/demo/", caption)
         self.assertLessEqual(len(tags), MAX_HASHTAGS)
         self.assertTrue(all(tag in caption for tag in tags))
 
     def test_story_copy_is_generic_and_brand_consistent(self):
         copy = build_story_copy(row())
-        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v2_iransans")
+        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v3_iransans_bio")
         self.assertEqual(copy["font_family"], "IRANSansWeb(FaNum)")
         self.assertEqual(len(copy["bullets"]), 4)
         self.assertIn("ارسال سفارش به سراسر ایران", copy["bullets"])
@@ -91,7 +92,7 @@ class InstagramSocialPolicyTests(unittest.TestCase):
         self.assertEqual(highlight_target_for_product(cake), "پایه کیک")
 
     def test_policy_version_is_stable_for_receipts(self):
-        self.assertEqual(POLICY_VERSION, "instagram-product-v4-20260920")
+        self.assertEqual(POLICY_VERSION, "instagram-product-v5-20260923")
 
 
 if __name__ == "__main__":

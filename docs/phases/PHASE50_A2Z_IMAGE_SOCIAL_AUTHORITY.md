@@ -1,9 +1,23 @@
 # Phase50.A.2Z — Image + Social Authority Hotfix
 
-Status: A2Z-S SOCIAL DELIVERY READINESS GITHUB_UPDATED / WINDOWS_RUNTIME_ACCEPTED / BUFFER MOBILE EXTERNAL-BLOCKED
+Status: A2Z-S2 AUTOMATIC STORY + SHOP GRID LINK LOCAL_TESTED / GITHUB NEXT
 Date: 2026-09-22
 Branch: `wip/phase50-a2z-image-social-authority-20260921`
 Baseline: `f5f401167d14e560e53fc9cdc292024c67174459`
+
+## 2026-09-23 — Automatic Story + Shop Grid link correction
+
+- Real #625 receipts prove the pre-notification Buffer Story path was sent/live; automatic Story is a proven Production behavior.
+- Default Social link strategy is now `bio_shop_grid`.
+- Feed remains automatic and sends the tracked Product URL only in Buffer `metadata.instagram.link` for Shop Grid; raw URL is removed from Caption.
+- Caption CTA is now «خرید این محصول: لینک بیو...».
+- Companion Story returns to Buffer `schedulingType=automatic`; it no longer requires Buffer mobile by default.
+- Story remains 1080×1920 Gold/Navy/IRANSans; v3 artwork says «خرید از لینک بیو» + @3dprinthub_ir and does not print the raw Product URL.
+- Native Link Sticker remains optional as `native_sticker_notification`; only that explicit mode uses notification/mobile readiness.
+- Policy `instagram-product-v5-20260923`; Story style/cache identity `3dprinthub_instagram_gold_navy_v3_iransans_bio`.
+- Rollback ref: `backup/pre-a2z-s2-auto-story-shop-grid-20260923 @ 02be495fbf0f2cb48c527c280cf8b62edfeb2f38`.
+- Focused gate 27/27 PASS; complete Site+Social 70/70 PASS after one intentional stale-link assertion correction; 11 Python compile + diff + Qt VerifyOnly PASS; Server delta 0.
+- No real Instagram mutation occurred before GitHub promotion.
 
 ## 2026-09-22 — Post + linked Story readiness hardening
 

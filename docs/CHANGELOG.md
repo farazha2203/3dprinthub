@@ -1,3 +1,11 @@
+## 2026-09-23 - A2Z-S2 automatic Story + correct Instagram link semantics
+- Historical #625 receipt proves automatic Buffer Story publication is the accepted working baseline.
+- Default Story route restored to automatic Buffer publishing; mobile-dependent native Link Sticker is now optional only.
+- Feed Product click-through remains in Buffer Shop Grid via `metadata.instagram.link`; raw URLs were removed from Caption because they are not clickable Instagram caption links.
+- Story artwork no longer prints a raw Product URL; CTA now points users to the Bio/Shop Grid and keeps Gold/Navy + IRANSans branding.
+- Policy bumped to `instagram-product-v5-20260923`; Story style/cache key bumped to `...v3_iransans_bio`.
+- Focused 27/27 and complete Site+Social 70/70 PASS; 11 Python compile, diff and Qt VerifyOnly PASS; no Server delta.
+
 ## 2026-09-22 - A2Z-S Post + linked Story early-readiness hardening
 - Reconfirmed real Instagram provider as Buffer GraphQL (`https://api.buffer.com`) on channel `3dprinthub_ir`; current media derivatives remain `github_raw`.
 - Added `InstagramCore.delivery_readiness()` / `require_delivery_readiness()` so clickable Story mobile capability is verified before Site publication, Story/Feed rendering, GitHub rehost or Buffer createPost.

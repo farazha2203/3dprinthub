@@ -1,3 +1,7 @@
+## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid link checkpoint
+
+Real #625 evidence proves automatic Buffer Story was already Production-successful. Current S2 restores that route as default and corrects link semantics: Feed Product click-through stays in Buffer Shop Grid metadata; raw tracked URL is removed from Caption; Story returns to automatic and artwork uses «خرید از لینک بیو» rather than a fake/raw URL. Native Link Sticker notification remains optional only. Policy v5 + Story style v3 invalidate old cached artwork. Focused 27/27 + full Site/Social 70/70 + compile/diff/Qt PASS; no Server delta. Rollback `backup/pre-a2z-s2-auto-story-shop-grid-20260923 @ 02be495f...`. Next: commit/push/exact-SHA Qt -> fresh Catalog backup -> #536 Story-only acceptance, no Feed repost.
+
 ## 2026-09-22 - A2Z-S Instagram Post + linked Story readiness checkpoint
 
 Real Social provider/config is Buffer GraphQL `https://api.buffer.com`, channel `3dprinthub_ir`, provider-media host `github_raw`. Feed is automatic and revision-deduplicated; Story is the approved 1080×1920 Gold/Navy/IRANSans render. A clickable Product Link Sticker requires Buffer notification publishing plus the final native Instagram mobile handoff.

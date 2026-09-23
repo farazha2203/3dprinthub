@@ -327,6 +327,8 @@ def publish_product(
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": post_status,
         "external_link": str(post.get("externalLink") or ""),
+        "feed_link_mode": "buffer_shop_grid",
+        "shop_grid_link": str(payload.get("tracking_url") or ""),
         "media_host": str((media_host_meta or {}).get("host") or "site"),
         "media_host_branch": str((media_host_meta or {}).get("branch") or ""),
         "media_host_commit_sha": str((media_host_meta or {}).get("commit_sha") or ""),
@@ -416,9 +418,6 @@ def publish_story_for_product(
         "type": "story",
         "shouldShareToFeed": False,
         "isAiGenerated": ai_generated,
-        # Buffer can carry the tracked Product link, while the native
-        # Instagram Story Link Sticker still requires notification handoff.
-        "link": tracking_url,
     }
     scheduling_type = "automatic"
     if link_notification:
@@ -488,6 +487,9 @@ def publish_story_for_product(
         "site_product_url": payload["product_url"],
         "tracking_url": tracking_url,
         "story_publish_mode": "notification" if link_notification else "automatic",
+        "story_link_strategy": (
+            "native_sticker_notification" if link_notification else "bio_shop_grid"
+        ),
         "link_sticker_required": bool(link_notification),
         "link_sticker_label": "لینک محصول" if link_notification else "",
         "instagram_live_confirmed": (
@@ -637,12 +639,30 @@ def publish_product(
             companion_story = False
     if story_link_notification is None:
         if hasattr(db, "setting"):
-            raw = str(
-                db.setting("instagram_story_clickable_link_enabled", "1") or "1"
+            link_mode = str(
+                db.setting("instagram_story_link_mode", "bio_shop_grid")
+                or "bio_shop_grid"
             ).strip().lower()
-            story_link_notification = raw not in {"0", "false", "no", "off"}
+            if link_mode in {
+                "native_sticker_notification",
+                "native_sticker",
+                "notification",
+            }:
+                story_link_notification = True
+            elif link_mode in {
+                "bio_shop_grid",
+                "shop_grid",
+                "bio",
+                "automatic",
+            }:
+                story_link_notification = False
+            else:
+                legacy = str(
+                    db.setting("instagram_story_clickable_link_enabled", "0") or "0"
+                ).strip().lower()
+                story_link_notification = legacy not in {"0", "false", "no", "off"}
         else:
-            story_link_notification = True
+            story_link_notification = False
 
     if companion_story and story_link_notification:
         try:
