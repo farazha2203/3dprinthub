@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 from io import StringIO
@@ -280,6 +281,71 @@ class Epic49UnifiedImportE2ETests(TestCase):
         self.assertEqual(product.fixed_price, 650000)
         self.assertEqual(Product.objects.filter(pk=product.pk).count(), 1)
         self.assertEqual(HomepageHeroSlide.objects.filter(asset=asset).count(), 1)
+
+    def test_unicode_desktop_media_filename_uses_ascii_safe_server_name(self):
+        batch = self._build_batch()
+        model = batch / "models" / "makerworld_EP49-E2E-001"
+        images = model / "images"
+        unicode_name = (
+            "\u0645\u062c\u0633\u0645\u0647-\u0647\u0646\u0631\u06cc-"
+            "\u0647\u06cc\u062f\u0631\u0627-\u0634\u06a9\u0648\u0647\u0645\u0646\u062f-"
+            "\u0648\u0648\u0631\u0648\u0646\u0648\u06cc-3dprinthub-01.webp"
+        )
+        source_image = images / unicode_name
+        Image.new("RGB", (6, 4), (31, 87, 144)).save(
+            source_image,
+            "WEBP",
+            quality=92,
+        )
+        source_sha = hashlib.sha256(source_image.read_bytes()).hexdigest()
+
+        editorial_path = model / "desktop_editorial.json"
+        editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
+        editorial["local_image_files_json"] = [unicode_name]
+        editorial["image_metadata_json"] = [{
+            "seo_filename": unicode_name,
+            "final_sha256": source_sha,
+            "alt_text": "Unicode media regression",
+        }]
+        editorial["publish_as_portfolio"] = True
+        editorial_path.write_text(
+            json.dumps(editorial, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        out = StringIO()
+        call_command("phase37_import_catalog_center", str(batch), stdout=out)
+        self.assertIn("FAILED_COUNT=0", out.getvalue())
+        self.assertIn('"republish_parity":{"ok":true', out.getvalue())
+
+        asset = ImportedPrintAsset.objects.get(external_id="EP49-E2E-001")
+        product = Product.objects.get(pk=asset.product_id)
+        gallery = list(product.images.order_by("sort_order", "id"))
+        self.assertEqual(len(gallery), 1)
+        expected = "epic49-e2e-gear-3d-print-01.webp"
+
+        names = [
+            Path(asset.preview_image.name).name,
+            Path(asset.images.get(remote_url="https://example.com/media/hero.gif").image.name).name,
+            Path(product.main_image.name).name,
+            Path(gallery[0].image.name).name,
+            Path(asset.portfolio_item.image.name).name,
+        ]
+        self.assertEqual(names, [expected] * len(names))
+        self.assertTrue(all(name.isascii() for name in names))
+
+        for field_file in (
+            asset.preview_image,
+            asset.images.get(remote_url="https://example.com/media/hero.gif").image,
+            product.main_image,
+            gallery[0].image,
+            asset.portfolio_item.image,
+        ):
+            digest = hashlib.sha256()
+            with field_file.storage.open(field_file.name, "rb") as handle:
+                for block in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(block)
+            self.assertEqual(digest.hexdigest(), source_sha)
 
     def test_republish_parity_failure_rolls_back_all_product_mutation(self):
         batch = self._build_batch()

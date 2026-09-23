@@ -5,6 +5,8 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
+from .phase50_public_media_name import canonical_server_media_filename
+
 
 def _json_list(value) -> list:
     if isinstance(value, list):
@@ -61,10 +63,11 @@ def _expected_media(data: dict) -> list[dict]:
     output = []
     for index in range(len(selected)):
         meta = metadata[index] if index < len(metadata) and isinstance(metadata[index], dict) else {}
-        filename = (
+        raw_filename = (
             _text(meta.get("seo_filename"))
             or (Path(_text(local_names[index])).name if index < len(local_names) else "")
         )
+        filename = canonical_server_media_filename(data, index, raw_filename)
         output.append({
             "filename": filename,
             "sha256": _text(meta.get("final_sha256")).lower(),

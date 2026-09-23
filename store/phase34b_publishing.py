@@ -11,6 +11,7 @@ from django.utils.text import slugify
 
 from .models import Category, ImportedPrintAsset, Product, ProductVariant, PrintQuality
 from .phase34b_translation import draft_persian_description, draft_persian_title
+from .phase50_public_media_name import canonical_server_media_filename
 
 
 def ensure_persian_draft(asset: ImportedPrintAsset) -> ImportedPrintAsset:
@@ -127,21 +128,23 @@ def _resolved_category(asset: ImportedPrintAsset) -> Category | None:
 
 def _canonical_media_filename(asset: ImportedPrintAsset, index: int, row=None) -> str:
     desktop = _desktop_payload(asset)
+    candidate = ""
     metadata = _json_list(desktop.get("image_metadata_json"))
     if index < len(metadata) and isinstance(metadata[index], dict):
-        value = Path(str(metadata[index].get("seo_filename") or "")).name
-        if value:
-            return value
-    mapped = _json_list(desktop.get("local_image_files_json"))
-    if index < len(mapped):
-        value = Path(str(mapped[index] or "")).name
-        if value:
-            return value
-    if row is not None:
-        value = Path(str(getattr(getattr(row, "image", None), "name", "") or "")).name
-        if value:
-            return value
-    return f"product-image-{index + 1}.webp"
+        candidate = Path(str(metadata[index].get("seo_filename") or "")).name
+    if not candidate:
+        mapped = _json_list(desktop.get("local_image_files_json"))
+        if index < len(mapped):
+            candidate = Path(str(mapped[index] or "")).name
+    if not candidate and row is not None:
+        candidate = Path(
+            str(getattr(getattr(row, "image", None), "name", "") or "")
+        ).name
+    return canonical_server_media_filename(
+        desktop,
+        index,
+        candidate or f"product-image-{index + 1}.webp",
+    )
 
 
 def _desktop_media_key(asset: ImportedPrintAsset) -> str:

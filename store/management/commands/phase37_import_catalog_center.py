@@ -18,6 +18,7 @@ from store.phase49_catalog_visibility import (
     publish_catalog_product_to_store,
 )
 from store.phase49_3i52_site_identity import reconcile_asset_product_identity
+from store.phase50_public_media_name import canonical_server_media_filename
 from store.phase50_republish_contract import verify_product_republish_contract
 
 ALLOWED_LICENSES = {"allowed", "owned", "public_domain"}
@@ -336,10 +337,17 @@ def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int
         # SEO WebP even when this remote URL already has an older image row.
         # FileField storage may retain historical physical files; no destructive
         # media deletion is performed here.
+        server_name = canonical_server_media_filename(
+            data,
+            index,
+            local_file.name if local_file is not None else "",
+        )
+        row_name = Path(str(getattr(row.image, "name", "") or "")).name
         should_refresh_row = bool(
             local_file is not None
             and (
                 not row.image
+                or row_name != server_name
                 or (
                     has_explicit_mapping
                     and not _stored_file_matches_local(row.image, local_file)
@@ -348,15 +356,21 @@ def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int
         )
         if should_refresh_row:
             with local_file.open("rb") as handle:
-                row.image.save(local_file.name, File(handle), save=False)
+                row.image.save(server_name, File(handle), save=False)
         row.save()
+        preview_name = Path(
+            str(getattr(asset.preview_image, "name", "") or "")
+        ).name
         if (
             index == 0
             and local_file is not None
-            and not _stored_file_matches_local(asset.preview_image, local_file)
+            and (
+                preview_name != server_name
+                or not _stored_file_matches_local(asset.preview_image, local_file)
+            )
         ):
             with local_file.open("rb") as handle:
-                asset.preview_image.save(local_file.name, File(handle), save=False)
+                asset.preview_image.save(server_name, File(handle), save=False)
             primary_saved = True
         imported += 1
     if primary_saved:
