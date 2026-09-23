@@ -1,3 +1,22 @@
+## 2026-09-23 - Phase50.A.2Z-LC A2R lineage convergence
+- [x] Stop A2Z feature mutation when post-A2Y Windows/Production divergence is proven.
+- [x] Preserve dirty A2Z Data Completion worktree with external rollback patch + status evidence.
+- [x] Create clean convergence worktree from newest accepted A2Z head `3de2af09...`.
+- [x] Port only evidence-backed A2R motion-media deltas; preserve newer A2Z Social v5 and operator flows.
+- [x] Establish one canonical video authority: `video_links_json / selected_video_links_json / local_video_files_json`.
+- [x] Preserve MakerWorld animated GIF motion media and safe provider-CDN download boundary.
+- [x] Integrate Site Batch/import/render/public verification for motion media.
+- [x] Keep Source re-crawl operator-safe; discovery may refresh source video links without silently replacing selected/local video.
+- [x] Prove Buffer Social remains image-based; do not claim Reel/video completion.
+- [x] Catalog video 8/8 + Social 41/41 + Crawl/V84 40/40 + Publish 55/55 + Server 12/12 PASS.
+- [x] Compile/check/no-drift/diff/runner-syntax/Qt VerifyOnly PASS.
+- [x] Source commit `be00cc73d7745406b7219d323890f05222f17494`.
+- [x] Record Git ancestry from Windows A2R `03808add...` and Production A2R `103f559c...` without replacing tested A2Z tree.
+- [x] Unified merge head `05f29ba3a4de53fcf8b0a6fd73427a3653bb0ed3`; Local=GitHub exact.
+- [x] Production read-only verification healthy on `103f559c...`; #536 public motion GIF HTTP 200.
+- [x] Audit unified-vs-Production Server delta; migration/dependency delta 0, unrelated settings/ZarinPal delta exists -> no broad deploy.
+- [ ] Resume A2Z Catalog Data Completion only from unified forward head; port preserved dirty work selectively and test before Catalog mutation.
+
 ## 2026-09-23 - Phase50.A.2Z-S2 automatic Story + Shop Grid Product links
 - [x] Prove historical #625 Story was genuinely Buffer-sent/live without the later mobile-notification contract.
 - [x] Restore default companion Story to Buffer automatic publication; keep native Link Sticker notification as optional mode only.

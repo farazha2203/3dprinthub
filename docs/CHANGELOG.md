@@ -1,3 +1,14 @@
+## 2026-09-23 - A2Z-LC A2R lineage convergence ACCEPTED
+- Detected and blocked post-A2Y divergence between newest A2Z Windows development, Windows A2R motion-media and selective Production A2R.
+- Preserved the dirty A2Z Data Completion worktree; convergence ran in a separate clean worktree/branch.
+- Unified Product motion-media discovery/download/Site publish/import/render/public verification using the proven canonical A2R fields, including MakerWorld animated GIF media.
+- Source re-crawl preserves operator video selection/local media; no parallel video authority is introduced.
+- Current Buffer Feed/Story remains image-based; motion metadata is available but Reel/video Social delivery is still a separate future capability.
+- Verification: 8 video + 41 Social + 40 Crawl/V84 + 55 Publish + 12 Server tests PASS; compile/check/no-drift/diff/runner/Qt gates PASS.
+- Runtime-bearing source commit: `be00cc73d7745406b7219d323890f05222f17494`.
+- Accepted Git ancestry merge: `05f29ba3a4de53fcf8b0a6fd73427a3653bb0ed3`, Local=GitHub exact; Windows A2R `03808add...` and Production A2R `103f559c...` are both ancestors.
+- Production remains unchanged on healthy `103f559c...`; broad unified deployment is intentionally blocked because unrelated Server settings/ZarinPal deltas are present despite zero migration/dependency delta.
+
 ## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid PRODUCTION ACCEPTED
 - Runtime source exact at `447e81306a19d816042530f3d00989305a84bd2c`; exact-SHA Qt running.
 - Live readiness passes without Buffer mobile under default `bio_shop_grid` / `buffer_shop_grid` contract.

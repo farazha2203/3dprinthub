@@ -1,6 +1,6 @@
 # Phase50.A.2Z-LC — A2Z / A2R Lineage Convergence
 
-Status: LOCAL_TESTED / GITHUB PENDING
+Status: GITHUB_VERIFIED / ACCEPTED
 Date: 2026-09-23
 Forward baseline: `3de2af09f25458a3d94904dac50818f97091a8cd`
 Windows A2R heads: `d6799cc1...` + `03808add...`
@@ -71,14 +71,17 @@ Store=200, valid scoped source/env + full MySQL rollback backup.
 Product #536 already has Site Product #48 revision 2 with public GIF motion media HTTP 200.
 No duplicate Site publish or Social send is required by this convergence phase.
 
-## Exit gate
+## Closure
 
-1. Commit/push the runtime-bearing convergence source and verify Local=GitHub.
-2. Update CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS/REQUESTS with the exact source SHA.
-3. Audit unified-head vs current Production delta read-only.
-4. Do not deploy unless that audit proves a required Server delta beyond the already-live
-   `103f559c...` behavior.
-5. Resume A2Z Catalog Data Completion only from the accepted unified forward head.
+- Runtime-bearing source commit: `be00cc73d7745406b7219d323890f05222f17494`.
+- Accepted ancestry merge: `05f29ba3a4de53fcf8b0a6fd73427a3653bb0ed3`.
+- Local=GitHub exact on `wip/phase50-a2z-a2r-lineage-convergence-20260923`.
+- Merge parents include Windows A2R `03808add...` and Production A2R `103f559c...`;
+  both are ancestors of the accepted forward head and the merge tree equals the tested source tree.
+- Unified-vs-Production audit: migration delta=0, dependency delta=0; unrelated Server
+  settings/ZarinPal deltas exist, so a broad unified deploy is intentionally not performed.
+- Production remains healthy and unchanged on `103f559c...`.
+- Resume A2Z Catalog Data Completion only from this accepted unified forward head.
 
 ## Exact next phase after closure
 

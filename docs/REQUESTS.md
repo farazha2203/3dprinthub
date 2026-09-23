@@ -1,3 +1,12 @@
+## 2026-09-23 - Owner: continue latest development directly on the Windows machine; split long execution into three bounded parts
+Status: `A2Z-LC GITHUB_VERIFIED / ACCEPTED — A2Z DATA COMPLETION NEXT`.
+
+Owner requested continuation from the latest development state, preferring direct Windows filesystem/shell access over GUI Remote Desktop, and asked that long work be split into three bounded execution parts. Direct filesystem/terminal access to `Emad-NewCom` was used; no GUI Remote Desktop was needed.
+
+Repository truth exposed a post-A2Y lineage divergence, so feature work was stopped and a blocking micro-convergence was completed first. Dirty A2Z work was preserved; A2R motion-media was converged into newest A2Z without replacing Social v5 or newer operator behavior. Source commit is `be00cc73...`; accepted unified GitHub head is `05f29ba3...`. Production is healthy on selective `103f559c...` and was not broadly redeployed because unrelated Server deltas exist in the unified history.
+
+Next requested execution is A2Z Catalog Data Completion from the unified head, carrying forward the preserved incomplete-product/re-crawl/video/Slider work only after local regression proof.
+
 ## 2026-09-23 - Owner: restore the previously working Post+Story route and fix Instagram links
 Status: `A2Z-S2 PRODUCTION_VERIFIED / ACCEPTED — REAL #536 FEED+STORY COMPLETE, FUTURE LINKS CORRECTED`.
 

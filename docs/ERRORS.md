@@ -1,3 +1,12 @@
+## ERR-49-229 - Post-A2Y A2R work reintroduced lineage divergence; one Crawl assertion also retained a historical Stage-3 label
+**Date:** 2026-09-23
+**Observed:** newest A2Z Windows head `3de2af09...` was not an ancestor/descendant of Windows A2R `03808add...` or selective Production A2R `103f559c...`. During convergence regression, one Crawl test still required the historical Stage-3 button label «دریافت داده و عکس بیشتر از لینک محصول» although accepted A2Z UI already says «دریافت جدید از منبع».
+**Impact:** no Catalog, DB, Site or Social corruption. Feature mutation was stopped before continuation. The stale assertion caused one local test failure only.
+**Root cause:** A2R was developed/deployed after A2Y through separate Windows and selective Server branches. Separately, the UI label changed in accepted A2Z work while one historical assertion was not advanced with that contract.
+**Correct fix:** preserve dirty A2Z work; function-level port the proven A2R motion-media deltas onto newest A2Z; create an explicit ancestry merge whose parents include Windows A2R and Production A2R while keeping the tested A2Z tree. Align only the stale UI assertion to the already-accepted current label.
+**Verification:** unified merge `05f29ba3a4de53fcf8b0a6fd73427a3653bb0ed3` has both A2R heads as ancestors and identical tree to tested source commit `be00cc73...`. Catalog video 8/8, Social 41/41, changed-condition Crawl/V84 40/40, Publish 55/55 and Server 12/12 PASS; compile/check/no-drift/diff/runner/Qt gates PASS.
+**Prevention:** after every selective Production hotfix/release, rerun the AGENTS forward-lineage gate before resuming Windows feature work. A merge-time UI test failure must be compared against the accepted current UI contract before runtime is changed to satisfy historical wording.
+
 ## ERR-49-223 - Persian Category names could falsely match external-other through an empty ASCII fold
 **Date:** 2026-09-22
 **Observed:** A2Z-C2 integration fed an exact configured Persian Category name (for example the configured automotive label) into `CategoryCore.infer_slug`, but the result could be `external-other` instead of the exact taxonomy row.

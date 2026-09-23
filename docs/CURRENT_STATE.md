@@ -1,3 +1,23 @@
+## 2026-09-23 - Phase50.A.2Z-LC A2R LINEAGE CONVERGENCE GITHUB_VERIFIED / ACCEPTED
+
+A post-A2Y lineage gate found that the newest A2Z Windows head `3de2af09...`, Windows A2R `03808add...` and Production A2R `103f559c...` had diverged again. Per `AGENTS.md`, new A2Z feature work was stopped before any further Catalog/Social mutation.
+
+The dirty A2Z Data Completion worktree was preserved unchanged. Rollback evidence: `D:\projects\3dprinthub-backups\pre-a2z-lineage-convergence-20260923-1821`; dirty patch SHA256 `d7b4fce25373a4427cf8d06db917da0e85bc9c5a41f8ec7d4f5807943c49e673`.
+
+Runtime-bearing source convergence: `be00cc73d7745406b7219d323890f05222f17494`.
+Accepted forward merge head: `05f29ba3a4de53fcf8b0a6fd73427a3653bb0ed3` on `wip/phase50-a2z-a2r-lineage-convergence-20260923`, Local=GitHub exact. Merge parents are source convergence + Windows A2R `03808add...` + Production A2R `103f559c...`; both accepted A2R heads are now ancestors of the unified forward head and the merge tree is identical to the tested source commit.
+
+Canonical motion-media authority is now one path: `video_links_json / selected_video_links_json / local_video_files_json`. MakerWorld animated GIF motion media is supported, safe Source re-crawl preserves operator video selection/local media, Site Batch/import/public verification carry motion media, and Product detail renders public motion media. Buffer remains image-based for Feed/Story; Social Reel/video is not falsely claimed complete.
+
+Verification: Catalog video 8/8, Social 41/41, Crawl/V84 40/40, Publish/Bridge 55/55, Django Server 12/12 PASS; Python compile, Django check/no-drift, diff-check, Host runner syntax and Qt VerifyOnly PASS. One stale historical Stage-3 button assertion was corrected after changed-condition proof; runtime was not rolled back.
+
+Production remains clean and healthy on selective Server head `103f559c8a11c35495b4ac2a290d578c31c2a023`: MySQL correct, migration plan empty, readiness=true, Home/Store 200. Product #536 is Site Product #48 revision 2 with public GIF motion media HTTP 200. Unified-vs-Production audit shows no migration/dependency delta but does include unrelated Server settings/ZarinPal deltas, so no full unified deploy is permitted in this convergence phase.
+
+**Current Production:** `103f559c...` (unchanged, verified healthy).
+**Current forward development baseline:** `05f29ba3...`.
+**Remaining:** carry the preserved A2Z Data Completion work onto this unified head without parallel video authority, then run its own local gates before any Catalog mutation.
+**Exact next:** Phase50.A.2Z Catalog Data Completion on the unified branch -> incomplete-product truth/recovery -> canonical video UI -> Slider completeness preserving membership -> #620/#625/#628 operator acceptance -> Profile/Filament/Image gates -> fresh Catalog backup -> one controlled same-identity republish -> public/browser parity.
+
 ## 2026-09-23 - Phase50.A.2Z-S2 AUTOMATIC STORY + SHOP GRID LINK PRODUCTION_VERIFIED / ACCEPTED
 
 Owner correctly reported two regressions in the newer Social route: real Story publication had worked before, while the newer mandatory Link-Sticker notification path made Story depend on Buffer mobile; and raw Product URLs shown in Instagram captions/Story artwork were being treated as if they were clickable links.
