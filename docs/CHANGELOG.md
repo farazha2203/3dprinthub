@@ -1202,3 +1202,10 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Opened 12 Commerce locks through StageCore so dimensions can be edited; 19 prior uploads now carry `needs_update=1` for republish/update.
 - Focused Filament/Profile tests 34/34 PASS, Qt verify-only PASS, Catalog integrity `ok`.
 - Relaunched Windows Catalog Center v8.9.10. No Production publish/deploy was performed.
+
+## 2026-09-23 — A2R Product motion media selective Server release
+- Based a new release candidate on exact clean Production `e03bdd2b...`, not the stale remote A2J branch head.
+- Selectively ported only the Server receiver video persistence, Product Detail motion-media rendering and dedicated regression from Windows A2R commit `03808add...`.
+- Release Local gate: 12/12 tests PASS, Django check PASS with known warnings, no migration drift, compile/diff-check PASS.
+- Added `phase50_a2r_video_media_deploy.sh` with exact baseline/target/allowlist/readiness guards and quota-aware scoped source/env + full MySQL rollback verification.
+- Production remains unchanged until release candidate is committed/pushed and the guarded runner passes through the dedicated project router.

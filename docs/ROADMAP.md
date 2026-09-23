@@ -823,3 +823,15 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - [x] Focused Filament/Profile tests 34/34 + Qt verification PASS; relaunch Windows Catalog Center.
 - [ ] Owner manually adjusts Product dimensions/finalizes required stages and publishes selected Products from Windows.
 - [ ] Continue the separate Store Reset feature before claiming the Production Store is empty; do not conflate that pending source work with this Local data policy.
+
+## 2026-09-23 - Phase50.A2R Product motion media release
+- [x] Windows Catalog/Product video acquisition and social manifest tested and GitHub-updated through `03808add...`.
+- [x] Verify real Product #536 motion media in canonical Catalog SQLite.
+- [x] Audit actual Production Host/HEAD/worktree/runtime through dedicated 3DPrintHub router.
+- [x] Build selective Server release from exact Production SHA `e03bdd2b...`; do not merge divergent Windows WIP wholesale.
+- [x] Server focused/related Local release regression 12/12 + check/no-drift/compile/diff-check PASS.
+- [x] Add quota-aware guarded no-migration deploy runner with scoped runtime/env + full MySQL rollback evidence.
+- [ ] Commit/push release candidate and prove Local=Remote.
+- [ ] Guarded GitHub-first Production deploy + public/readiness verification.
+- [ ] Same-identity Product #536 republish with public Product video HTTP verification and image/variant/pricing parity preserved.
+- [ ] Duplicate-safe Instagram Feed/Story acceptance only after Site receipt and only if current revision has no existing social receipt.

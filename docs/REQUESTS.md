@@ -1028,3 +1028,8 @@ Acceptance: retain the managed Django Hero/SEO/Admin contract while adding a Sli
 Owner requested that every Local Filament have nonzero pricing and exactly one 1 kg roll of stock, and that all Filaments be preselected for every Product so manual preparation focuses mainly on dimensions. This is a Local Catalog policy only; ChatGPT must not auto-publish Products.
 
 Implemented and verified: 66 active inventory rows, 64 unique selectable Filament identities, 635/635 Products with canonical Profiles, all Profiles preselected, and prior uploaded Products marked for same-identity update. Windows Catalog Center was relaunched for owner-driven publication.
+
+## REQ-50-034 — Direct command execution and shorter phase checkpoints
+Date: 2026-09-23
+Status: `ACTIVE`.
+Owner requests direct authorized Windows filesystem/shell work instead of GUI Remote Desktop whenever available, and asks long phases to be split into short independently testable/committable checkpoints to reduce timeout loss. All GitHub-first, backup, reverse-tunnel, no-direct-Production-edit and verification gates remain mandatory.

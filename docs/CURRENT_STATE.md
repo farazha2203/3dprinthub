@@ -1511,3 +1511,13 @@ All 66 active Filament rows now have 1000 g roll weight, stock_roll_count=1, non
 Every one of 635 Local Products now has a canonical Sales Profile; 636 Profiles total. Every Profile contains all 64 unique selectable Filament identities (66 inventory rows include two duplicate identities that the mature Core intentionally deduplicates). Twelve Commerce locks were opened through StageCore so dimensions can be edited. Nineteen previously uploaded Products are marked `needs_update=1` for same-identity republish.
 
 Verification: Filament/Profile focused suites 34/34 PASS; Qt verify-only PASS; Catalog integrity `ok`; zero invalid/zero-price active Filament rows; zero Products without Profile. Catalog Center v8.9.10 Qt6 relaunched and responsive. No Product was published and Production DB/source was not changed by this Local policy update.
+
+## 2026-09-23 - Phase50.A2R video/media selective release LOCAL_TESTED
+
+Direct router audit proves actual Production is clean at `e03bdd2b718fae3ce030df789c8b9db958d8d8ed`, branch label `release/phase50-a2j-hero-20260915`, Python 3.12.13, Store migrations through 0042 applied, filesystem 39% blocks / 15% inodes. The remote branch with the exact current Production commit is `wip/phase50-a2x-server-parity-20260921`; the older `release/phase50-a2j-hero-20260915` remote head is stale and must not be used as the release base.
+
+Windows A2R is GitHub-updated through `03808add798da6629c73d4c9bdba71b322a52a14`. A new clean selective Server worktree `D:\projects\3DPrintHub-a2r-video-release-20260923` branches from exact Production SHA and carries only the Server receiver/template/test delta plus release documentation and guarded deploy runner. Local release gate: 12/12 focused+related Store tests PASS; Django check PASS with known Google/CKEditor warnings; migration drift none; compile/diff-check PASS; runner Git-Bash syntax PASS.
+
+The first isolated-worktree test attempt reproduced existing `ERR-49-192` because no private `.env` is present; no test ran. The documented fix was applied: CI-only test secret/debug/allowed-hosts/test Bridge token and temporary media roots, with no Production secret copied. The rerun passed.
+
+Production mutation at this checkpoint: NO. Exact next task: commit/push `release/phase50-a2r-video-social-20260923`, verify Local=Remote, then execute only `scripts/host/phase50_a2r_video_media_deploy.sh <exact-sha>` through the dedicated 3DPrintHub project router. After deployment, verify public runtime and then republish Product #536 same identity to introduce its canonical motion media.

@@ -35,6 +35,19 @@
             {% consultation_links product.title product.get_absolute_url as consult %}
             {% if consult.has_any and product.consultation_required %}<div class="p28-store-consult p28-store-consult--detail">{% if consult.whatsapp %}<a class="p28-store-consult__wa" href="{{ consult.whatsapp }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در واتساپ</a>{% endif %}{% if consult.telegram %}<a class="p28-store-consult__tg" href="{{ consult.telegram_support|default:consult.telegram }}" target="_blank" rel="noopener nofollow">مشاوره درباره این محصول در تلگرام</a>{% endif %}{% if consult.support %}<a class="p28-store-consult__site" href="{{ consult.support }}">ارسال محصول برای پشتیبانی سایت</a>{% endif %}</div>{% endif %}
             {% if product.images.all %}<div class="grid grid-cols-4 gap-3 mt-3">{% for image in product.images.all %}<img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" loading="lazy" class="rounded-xl aspect-square object-cover border border-slate-200">{% endfor %}</div>{% endif %}
+            {% with product_videos=product.imported_source_asset.technical_specs.desktop_catalog_public_videos %}
+            {% if product_videos %}
+            <div class="mt-4 space-y-3" data-product-motion-media>
+                {% for media in product_videos %}
+                    {% if media.kind == "animated_image" %}
+                    <img src="{{ media.url }}" alt="نمای متحرک {{ product.title }}" loading="lazy" class="w-full rounded-2xl border border-slate-200 bg-white object-contain">
+                    {% else %}
+                    <video src="{{ media.url }}" controls preload="metadata" playsinline class="w-full rounded-2xl border border-slate-200 bg-black" aria-label="ویدیوی {{ product.title }}"></video>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
         </div>
 
         <div class="store-product-panel phase493f-product-panel">
