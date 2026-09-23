@@ -1,3 +1,16 @@
+## 2026-09-23 - A2Z exact-SHA local acceptance / Production gate
+- [x] Commit/push A2Z checkpoint fde86e23... and verify Local=GitHub exact.
+- [x] Launch Qt from exact pushed SHA.
+- [x] Reconcile #625 revision 11->12 from exact receipt proof; operator digest unchanged.
+- [x] Re-run #625 Ready core; preserve profiles/16 PLA/media/pricing.
+- [x] Mark #628 Ready; preserve 12/18cm profiles, 16 PLA/profile and two selected media; refresh current pricing.
+- [x] Capture post-local integrity rollback phase50-a2z-post-local-gates-20260923-215515.
+- [ ] Restore official 3DPrintHub reverse tunnel; no alternate Host path.
+- [ ] Fresh Production DB/media rollback.
+- [ ] Republish #625 alone and verify strict replacement parity/public HTTP.
+- [ ] Fresh rollback, republish #628 alone and verify strict replacement parity/public HTTP.
+- [ ] Desktop/Mobile browser acceptance and A2Z closure.
+
 ## 2026-09-23 - Phase50.A.2Z Catalog Data Completion
 - [x] Start from clean unified A2Z/A2R head `56c569...`; preserve dirty precursor untouched.
 - [x] Re-read required docs and verify real Local/GitHub/Catalog/Site state.

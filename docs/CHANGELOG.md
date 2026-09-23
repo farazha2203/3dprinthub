@@ -1,3 +1,11 @@
+## 2026-09-23 - A2Z exact-SHA local acceptance and tunnel-safe stop
+- Pushed exact A2Z source/docs checkpoint fde86e23...; Local=GitHub exact and Qt launched from that SHA.
+- Reconciled #625 revision authority 11->12 from exact local publish_incomplete receipt only; operator digest unchanged.
+- Re-ran #625 Ready core with no Profile/Filament/Image or price-range drift.
+- Marked #628 Ready; preserved 12cm/18cm profile geometry, 16 PLA offers/profile and two selected media; refreshed pricing to 3,063,500-6,479,000.
+- Captured post-local Catalog rollback phase50-a2z-post-local-gates-20260923-215515, quick_check=ok.
+- Stopped before Production write because official 22024 reverse tunnel is down and therefore fresh Production DB/media rollback cannot be verified.
+
 ## 2026-09-23 - A2Z Catalog Data Completion local-tested checkpoint
 - Opened `wip/phase50-a2z-catalog-data-completion-20260923` from clean unified head `56c569...`.
 - Current Catalog is 771 Products; six-field Slider completeness is 61/771; only enabled Product #40 is missing a Slider image.

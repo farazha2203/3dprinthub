@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Catalog Data Completion + Site Truth
 
-Status: LOCAL_TESTED / GITHUB PROMOTION NEXT
+Status: EXACT_SHA_LOCAL_ACCEPTED / PRODUCTION_REPUBLISH_BLOCKED_TUNNEL
 Date: 2026-09-23
 Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
 Branch: `wip/phase50-a2z-catalog-data-completion-20260923`
@@ -46,3 +46,11 @@ Close Catalog/Site truth without duplicate Product identities or silent operator
 7. Controlled same-identity republish, strict ACK replacement parity, public Product/media/Profile/Variant/Slider verification.
 8. Real Desktop/Mobile browser acceptance.
 9. Update CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS and close only after all gates PASS.
+
+## Exact-SHA local acceptance extension
+- GitHub-exact source: fde86e23ba6b0a1d5f578279289328708184baf9; Qt launched from this SHA.
+- #625 revision-only reconcile 11->12 PASS from receipt #316; operator-owned digest unchanged.
+- #625 Ready refresh preserves 5x5x5 + 4x4x4 profiles, 16 PLA each, selected media and 458500-1655000 range.
+- #628 Ready PASS: 12x12x12 / 18x18x18, 16 PLA each, two selected Local-backed images; current pricing refreshed to 3063500-6479000.
+- Post-local rollback: phase50-a2z-post-local-gates-20260923-215515, quick_check=ok, SHA256 1c5b0439...848e8.
+- Production write remains blocked because official Windows loopback 22024 is down. No Production DB/media rollback can be verified until the documented PrintHub tunnel is restored.

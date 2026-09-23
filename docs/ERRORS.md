@@ -1,3 +1,11 @@
+## ERR-49-233 - Official PrintHub reverse tunnel dropped before A2Z Production republish
+**Date:** 2026-09-23
+**Observed:** after exact-SHA Local acceptance, authenticated bridge health on Windows loopback 127.0.0.1:22024 failed because no listener exists. Windows sshd remains Running/Automatic. Last accepted PrintHubTunnel authentication is 2026-09-23 14:19:41 from 89.39.208.237 with the expected key fingerprint; current public-IP probe reports 5.188.190.59.
+**Impact:** no Production Product/DB/media mutation was attempted. #625/#628 remain locally Ready and rollback-backed.
+**Root cause status:** transport endpoint/session is absent; the evidence does not justify changing sshd or using another project tunnel/cPanel/direct Host access.
+**Correct action:** restore only the documented 3DPrintHub reverse tunnel/watchdog path, then verify Host identity/worktree/DB/migrations/readiness and create fresh Production DB/media rollback before republish.
+**Prevention:** Production-affecting Product import must fail closed whenever the official management tunnel is unavailable and no fresh Production rollback can be verified, even if the public Catalog Bridge itself reports ready.
+
 ## ERR-49-232 - Regression wrapper executed zero tests because CMD caret continuation was not preserved
 **Date:** 2026-09-23
 **Observed:** the first multi-module related regression returned `Ran 0 tests` when a CMD command used caret continuation across wrapper lines.

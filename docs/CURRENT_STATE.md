@@ -1,3 +1,17 @@
+## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
+
+Source checkpoint fde86e23ba6b0a1d5f578279289328708184baf9 is committed, pushed and Local=GitHub exact on wip/phase50-a2z-catalog-data-completion-20260923. Qt is running from that exact SHA.
+
+Real Catalog mutation gates are accepted. Product #625 Site revision authority reconciled 11 -> 12 only from exact publish_incomplete receipt #316 / Batch 26aa571c-1a0c-4ad4-9431-65e74c27d94f; operator-owned digest remained byte-identical (6ba4929d...f7ab6) and SQLite quick_check stayed ok. Re-running the official Ready core preserved #625 profiles (5x5x5 and 4x4x4), 16 PLA options per profile, selected media and current 458,500-1,655,000 price range.
+
+Product #628 was marked Ready through the exact-SHA PublishCore. Its two canonical profiles remain 12x12x12 / 113g / 511min and 18x18x18 / 312g / 991min, with exactly 16 PLA offers each; two selected images and their Local files are unchanged. The official pricing refresh advanced current range from 2,211,833-4,827,333 to 3,063,500-6,479,000 based on current Filament inventory. SQLite quick_check remains ok.
+
+Fresh post-local rollback: D:\projectsdprinthub-backups\phase50-a2z-post-local-gates-20260923-215515\catalog-after-local-gates.sqlite3, quick_check=ok, SHA256 1c5b0439ea938d6b19af65fa07bedb08dbe80ac962efd772e6bf1e4c904848e8.
+
+Production republish is intentionally blocked, not failed. Dedicated Windows loopback 127.0.0.1:22024 is not listening while sshd is Running/Automatic. The last accepted PrintHubTunnel authentication was 2026-09-23 14:19:41 from Host source 89.39.208.237 with the expected ED25519 fingerprint; current Windows public IP probe is 5.188.190.59. Public Catalog Bridge health/readiness still returns healthy/ready, but it exposes no Production backup endpoint. Per project policy, no Product DB/media write is allowed until the official reverse tunnel is restored and a fresh Production DB/media rollback is verified.
+
+Exact next: restore only the documented PrintHub reverse tunnel -> read-only Host identity/worktree/DB/migration/readiness gate -> fresh Production DB+media rollback -> publish #625 alone -> strict ACK/public parity -> fresh rollback -> publish #628 alone -> strict Product/media/Profile/Variant/Slider parity -> Desktop/Mobile browser acceptance -> final docs closure.
+
 ## 2026-09-23 - Phase50.A.2Z CATALOG DATA COMPLETION LOCAL_TESTED / GITHUB PROMOTION NEXT
 
 Active branch is `wip/phase50-a2z-catalog-data-completion-20260923` from clean accepted baseline `56c569145eead7cd0a35eb63c382f14dfe71c80e`. The preserved dirty A2Z precursor remains untouched; only evidence-backed Crawl incompleteness/recovery was ported, and the accepted canonical A2R video authority was preserved.
