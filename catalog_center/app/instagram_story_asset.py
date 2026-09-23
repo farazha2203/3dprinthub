@@ -10,6 +10,7 @@ import time
 from pathlib import Path, PurePosixPath
 from urllib import request as urllib_request
 
+from .instagram_feed_asset import resolve_local_product_media
 from .site_connection import SiteConnection, _ensure_remote_dir, connect_ftp
 from .social_content_policy import STORY_STYLE_ID, build_story_copy
 
@@ -216,7 +217,21 @@ def prepare_product_story_asset(
     if row_obj is None:
         raise RuntimeError(f"Product {product_id} not found")
     row = dict(row_obj)
-    png = _render_story(row, payload)
+    render_payload = dict(payload)
+    if not publish_to_site:
+        media_urls = [
+            str(value or "").strip()
+            for value in (payload.get("media_urls") or [])
+            if str(value or "").strip()
+        ]
+        if not media_urls:
+            raise RuntimeError("Story requires one canonical Product media URL.")
+        local_source = resolve_local_product_media(row, media_urls[0])
+        render_payload["media_urls"] = [
+            local_source.as_uri(),
+            *media_urls[1:],
+        ]
+    png = _render_story(row, render_payload)
     revision = _revision_key(row)
     public_url = ""
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -100,13 +101,9 @@ class InstagramFeedAssetTests(unittest.TestCase):
     @patch("app.instagram_feed_asset._ensure_remote_dir")
     @patch("app.instagram_feed_asset.connect_ftp")
     @patch("app.instagram_feed_asset.urllib_request.urlopen")
-    def test_github_raw_preparation_stays_local_and_skips_site_ftp(
+    def test_github_raw_preparation_uses_exact_local_final_bytes_and_skips_site_http(
         self, urlopen, connect_ftp, ensure_remote_dir, verify_public
     ):
-        urlopen.side_effect = [
-            _Response(self._webp_bytes()),
-            _Response(self._webp_bytes((800, 1000))),
-        ]
         settings = SiteConnection(
             ftp_host="ftp.3dprinthub.ir",
             ftp_port=21,
@@ -116,17 +113,38 @@ class InstagramFeedAssetTests(unittest.TestCase):
             site_url="https://3dprinthub.ir",
             bridge_token="",
         )
-        payload = {
-            "media_urls": [
-                "https://3dprinthub.ir/media/p/7/a/demo-01.webp",
-                "https://3dprinthub.ir/media/p/7/b/demo-02.webp",
-            ]
-        }
-
         with tempfile.TemporaryDirectory() as local_appdata:
+            root = Path(local_appdata)
+            source1 = root / "demo-01.webp"
+            source2 = root / "demo-02.webp"
+            source1.write_bytes(self._webp_bytes())
+            source2.write_bytes(self._webp_bytes((800, 1000)))
+            sha1 = hashlib.sha256(source1.read_bytes()).hexdigest()
+            sha2 = hashlib.sha256(source2.read_bytes()).hexdigest()
+            payload = {
+                "media_urls": [
+                    f"https://3dprinthub.ir/media/p/7/{sha1[:12]}/demo-01.webp",
+                    f"https://3dprinthub.ir/media/p/7/{sha2[:12]}/demo-02.webp",
+                ]
+            }
+            db = _DB()
+            db.row["image_metadata_json"] = json.dumps(
+                [
+                    {
+                        "seo_filename": source1.name,
+                        "final_local_file": str(source1),
+                        "final_sha256": sha1,
+                    },
+                    {
+                        "seo_filename": source2.name,
+                        "final_local_file": str(source2),
+                        "final_sha256": sha2,
+                    },
+                ]
+            )
             with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata}):
                 result = prepare_product_feed_assets(
-                    _DB(),
+                    db,
                     7,
                     settings,
                     payload,
@@ -140,6 +158,7 @@ class InstagramFeedAssetTests(unittest.TestCase):
         self.assertEqual(result["urls"], [])
         self.assertFalse(result["published_to_site"])
         self.assertEqual(result["source_urls"], payload["media_urls"])
+        urlopen.assert_not_called()
         connect_ftp.assert_not_called()
         ensure_remote_dir.assert_not_called()
         verify_public.assert_not_called()

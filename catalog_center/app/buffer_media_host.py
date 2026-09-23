@@ -227,7 +227,14 @@ def rehost_buffer_assets(
         )
 
     product_id = int(product_id)
-    revision = str(feed_meta.get("revision") or (story_meta or {}).get("revision") or "").strip()
+    # Story artwork revisions include the accepted Story style contract. When a
+    # companion Story exists, use that revision for the provider-media directory
+    # so a new style/CTA can never reuse a previously cached story.png URL.
+    revision = str(
+        (story_meta or {}).get("revision")
+        or feed_meta.get("revision")
+        or ""
+    ).strip()
     if not revision or not re.fullmatch(r"[A-Za-z0-9._-]{4,80}", revision):
         raise RuntimeError("Buffer media revision key is missing or invalid.")
 

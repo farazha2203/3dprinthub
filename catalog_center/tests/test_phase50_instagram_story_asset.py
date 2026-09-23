@@ -147,14 +147,23 @@ class InstagramStoryAssetTests(unittest.TestCase):
     @patch("app.instagram_story_asset._verify_public_image")
     @patch("app.instagram_story_asset._ensure_remote_dir")
     @patch("app.instagram_story_asset.connect_ftp")
+    @patch("app.instagram_story_asset.resolve_local_product_media")
     @patch("app.instagram_story_asset._render_story")
-    def test_github_raw_preparation_renders_locally_without_site_ftp(
-        self, render_story, connect_ftp, ensure_remote_dir, verify_public
+    def test_github_raw_preparation_renders_from_local_product_media_without_site_ftp(
+        self,
+        render_story,
+        resolve_local,
+        connect_ftp,
+        ensure_remote_dir,
+        verify_public,
     ):
         with tempfile.TemporaryDirectory() as tmp:
             rendered = Path(tmp) / "story.png"
             rendered.write_bytes(b"png" * 20000)
             render_story.return_value = rendered
+            source = Path(tmp) / "product.webp"
+            source.write_bytes(b"local-product-bytes")
+            resolve_local.return_value = source
             settings = SiteConnection(
                 ftp_host="ftp.3dprinthub.ir",
                 ftp_port=21,
@@ -183,6 +192,12 @@ class InstagramStoryAssetTests(unittest.TestCase):
             self.assertEqual(
                 result["style_id"],
                 "3dprinthub_instagram_gold_navy_v3_iransans_bio",
+            )
+            resolve_local.assert_called_once()
+            rendered_payload = render_story.call_args.args[1]
+            self.assertEqual(
+                rendered_payload["media_urls"][0],
+                source.resolve().as_uri(),
             )
             connect_ftp.assert_not_called()
             ensure_remote_dir.assert_not_called()

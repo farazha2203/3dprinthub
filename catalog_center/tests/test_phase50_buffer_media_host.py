@@ -149,7 +149,7 @@ class BufferMediaHostTests(unittest.TestCase):
                 {
                     "url": "",
                     "local_path": str(story),
-                    "revision": "rev12345",
+                    "revision": "storyv3rev",
                     "published_to_site": False,
                 },
             )
@@ -166,7 +166,8 @@ class BufferMediaHostTests(unittest.TestCase):
             )
             ensure_worktree.assert_called_once()
             self.assertGreaterEqual(verify_public.call_count, 2)
-            self.assertTrue((worktree / "social_media/instagram/625/rev12345/feed-01.png").is_file())
+            self.assertTrue((worktree / "social_media/instagram/625/storyv3rev/feed-01.png").is_file())
+            self.assertIn("/storyv3rev/story.png", result["story_url"])
 
 
 if __name__ == "__main__":

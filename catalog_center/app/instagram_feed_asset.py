@@ -3,8 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from io import BytesIO
 from pathlib import Path, PurePosixPath
+from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from PIL import Image
@@ -16,6 +18,72 @@ MAX_WIDTH = 1440
 MIN_WIDTH = 320
 MIN_RATIO = 3 / 4
 MAX_RATIO = 1.91
+
+
+def _json_list(raw) -> list:
+    if isinstance(raw, list):
+        return raw
+    try:
+        parsed = json.loads(raw or "[]")
+    except Exception:
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def resolve_local_product_media(row: dict, public_url: str) -> Path:
+    """Resolve one public Site Product image to its exact finalized Local file.
+
+    github_raw Social delivery must be independent from Site/WAF HTTP. Matching
+    therefore uses the canonical public SEO basename plus the server SHA-prefix
+    when present, and re-verifies the full finalized SHA before returning bytes.
+    """
+    public_url = str(public_url or "").strip()
+    parsed = urllib_parse.urlparse(public_url)
+    basename = urllib_parse.unquote(PurePosixPath(parsed.path).name)
+    parts = [urllib_parse.unquote(value) for value in PurePosixPath(parsed.path).parts]
+    sha_prefix = ""
+    if len(parts) >= 2 and re.fullmatch(r"[0-9a-fA-F]{8,64}", parts[-2] or ""):
+        sha_prefix = parts[-2].lower()
+
+    matches: list[Path] = []
+    for item in _json_list(row.get("image_metadata_json")):
+        if not isinstance(item, dict):
+            continue
+        final_value = str(item.get("final_local_file") or "").strip()
+        if not final_value:
+            continue
+        path = Path(final_value).expanduser().resolve()
+        seo_name = str(item.get("seo_filename") or path.name or "").strip()
+        if basename and seo_name and basename != seo_name:
+            continue
+        final_sha = str(item.get("final_sha256") or "").strip().lower()
+        if sha_prefix and final_sha and not final_sha.startswith(sha_prefix):
+            continue
+        if not path.is_file():
+            continue
+        actual_sha = _sha256(path)
+        if final_sha and actual_sha != final_sha:
+            raise RuntimeError(
+                f"Finalized Local Social media SHA drift for {path.name}: "
+                f"expected={final_sha} actual={actual_sha}"
+            )
+        matches.append(path)
+
+    unique = list(dict.fromkeys(matches))
+    if len(unique) != 1:
+        raise RuntimeError(
+            "Exact finalized Local Social media could not be resolved for "
+            f"{public_url}: matches={len(unique)}"
+        )
+    return unique[0]
 
 
 def _revision_key(row: dict) -> str:
@@ -90,15 +158,19 @@ def prepare_product_feed_assets(
     local_paths: list[str] = []
     dimensions: list[dict[str, int]] = []
     for index, source_url in enumerate(media_urls, 1):
-        request = urllib_request.Request(
-            source_url,
-            headers={"User-Agent": "3DPrintHub-Social/3.0"},
-        )
-        with urllib_request.urlopen(
-            request,
-            timeout=max(10, int(settings.timeout)),
-        ) as response:
-            source_bytes = response.read(12 * 1024 * 1024 + 1)
+        if not publish_to_site:
+            local_source = resolve_local_product_media(row, source_url)
+            source_bytes = local_source.read_bytes()
+        else:
+            request = urllib_request.Request(
+                source_url,
+                headers={"User-Agent": "3DPrintHub-Social/3.0"},
+            )
+            with urllib_request.urlopen(
+                request,
+                timeout=max(10, int(settings.timeout)),
+            ) as response:
+                source_bytes = response.read(12 * 1024 * 1024 + 1)
         if len(source_bytes) > 12 * 1024 * 1024:
             raise RuntimeError(f"Instagram source image {index} is unexpectedly large.")
 
