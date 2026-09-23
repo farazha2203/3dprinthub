@@ -820,7 +820,7 @@ def _download_public_model_files(
     target_dir = Path(local_dir) / "files"
     for index, url in enumerate(_iter_public_file_urls(payload)[: max(1, int(limit))], 1):
         parsed = urlsplit(url)
-        if same_domain_only and referer_host and parsed.netloc.lower() != referer_host:
+        if same_domain_only and referer_host and not _allowed_public_media_host(referer_host, parsed.netloc.lower()):
             continue
         raw_name = unquote(Path(parsed.path).name) or f"file-{index:02d}.bin"
         safe_name = re.sub(r"[^A-Za-z0-9._-]+", "-", raw_name).strip(".-")
@@ -841,6 +841,54 @@ def _download_public_model_files(
         except Exception:
             # Optional public file download must never invalidate an otherwise
             # healthy Product acquisition. The source file links stay persisted.
+            continue
+    return saved
+
+
+def _iter_public_video_urls(payload: dict[str, Any]) -> list[str]:
+    output: list[str] = []
+    try:
+        raw = json.loads(payload.get("selected_video_links_json") or payload.get("video_links_json") or "[]")
+    except Exception:
+        raw = []
+    for item in raw if isinstance(raw, list) else []:
+        value = str(item.get("url") if isinstance(item, dict) else item or "").strip()
+        if value.startswith(("http://", "https://")) and value not in output:
+            output.append(value)
+    return output
+
+
+def _allowed_public_media_host(referer_host: str, media_host: str) -> bool:
+    """Allow a provider's documented CDN host without opening cross-site fetches."""
+    referer_host = str(referer_host or "").lower()
+    media_host = str(media_host or "").lower()
+    if media_host == referer_host:
+        return True
+    return {referer_host, media_host} == {"makerworld.com", "makerworld.bblmw.com"}
+
+
+def _download_public_videos(
+    payload: dict[str, Any],
+    local_dir: Path,
+    *,
+    referer: str,
+    same_domain_only: bool = True,
+    limit: int = 5,
+) -> list[str]:
+    saved: list[str] = []
+    referer_host = urlsplit(str(referer or "")).netloc.lower()
+    target_dir = Path(local_dir) / "videos"
+    for index, url in enumerate(_iter_public_video_urls(payload)[: max(1, int(limit))], 1):
+        parsed = urlsplit(url)
+        if same_domain_only and referer_host and not _allowed_public_media_host(referer_host, parsed.netloc.lower()):
+            continue
+        suffix = Path(parsed.path).suffix.lower()
+        if suffix not in {".mp4", ".webm", ".mov", ".m4v", ".gif"}:
+            suffix = ".mp4"
+        target = target_dir / f"product-video-{index:02d}{suffix}"
+        try:
+            saved.append(str(download_public_file(url, target, max_bytes=80_000_000, referer=referer)))
+        except Exception:
             continue
     return saved
 
@@ -953,6 +1001,18 @@ async def _collect_one(
         if download_files and persist
         else []
     )
+    downloaded_videos = (
+        _download_public_videos(
+            payload,
+            local_dir,
+            referer=payload["source_url"],
+            same_domain_only=bool(same_domain_only),
+        )
+        if download_files and persist
+        else []
+    )
+    if downloaded_videos:
+        payload["local_video_files_json"] = json.dumps(downloaded_videos, ensure_ascii=False)
 
     product_id = 0
     if persist:
@@ -992,6 +1052,7 @@ async def _collect_one(
         "images_found": int(metrics.get("image_urls_found") or len(ordered)),
         "images_saved": min(len(saved_files), image_limit),
         "files_saved": len(downloaded_model_files),
+        "videos_saved": len(downloaded_videos),
         "acquisition_method": "qt42c-rich-page-extractor",
         "selected_method": "rich",
         "image_fallback_method": str(image_fallback.get("method") or ""),

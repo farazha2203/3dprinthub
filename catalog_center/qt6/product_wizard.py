@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from PySide6.QtCore import QTimer, Qt, QUrl
 from PySide6.QtGui import QDesktopServices, QPixmap
@@ -37,6 +39,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.ai_model_catalog import format_cost_quote
+from app.crawler import download_public_file
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
 from .diagnostics import show_diagnostic_error
@@ -408,6 +411,8 @@ class ProductWizardPage(QWidget):
         screenshot = QPushButton("اسکرین‌شات")
         recover = QPushButton("بازیابی از لینک")
         recover.setProperty("primary", True)
+        video = QPushButton("دریافت ویدیوی محصول")
+        video.setProperty("success", True)
 
         select_all.setToolTip("انتخاب همه تصاویر برای عملیات گروهی")
         clear_all.setToolTip("لغو انتخاب عملیاتی همه تصاویر")
@@ -425,6 +430,7 @@ class ProductWizardPage(QWidget):
             "دریافت داده و عکس بیشتر از لینک محصول؛ تصمیم‌های اپراتور "
             "مثل قیمت/Profile/Filament/SEO/انتشار حفظ می‌شوند."
         )
+        video.setToolTip("ویدیوی عمومی صفحه محصول را در پوشه videos محصول ذخیره می‌کند؛ انتشار خودکار انجام نمی‌شود.")
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
@@ -444,6 +450,7 @@ class ProductWizardPage(QWidget):
         add_files.clicked.connect(self._add_local_images)
         screenshot.clicked.connect(self._capture_product_screenshot)
         recover.clicked.connect(self._recover_product_images)
+        video.clicked.connect(self._download_product_video)
 
         recover_count_label = QLabel("تعداد")
         self.image_stage3_toolbar_buttons = (
@@ -455,6 +462,7 @@ class ProductWizardPage(QWidget):
             add_files,
             screenshot,
             recover,
+            video,
         )
         compact_widgets = (
             *self.image_stage3_toolbar_buttons,
@@ -468,11 +476,12 @@ class ProductWizardPage(QWidget):
             widget.setMinimumHeight(26)
             widget.setMaximumHeight(26)
 
-        for button in self.image_stage3_toolbar_buttons[:-1]:
+        for button in self.image_stage3_toolbar_buttons[:-2]:
             control_layout.addWidget(button)
         control_layout.addWidget(recover_count_label)
         control_layout.addWidget(self.image_recover_limit)
         control_layout.addWidget(recover)
+        control_layout.addWidget(video)
         control_layout.addStretch(1)
         layout.addWidget(control)
 
@@ -875,10 +884,13 @@ class ProductWizardPage(QWidget):
         local_count = len(items)
         source_count = self.kernel.images.source_image_count(row)
         source_only = max(0, source_count - local_count)
+        video_links = _json_list(row.get("selected_video_links_json") or row.get("video_links_json"))
+        local_videos = _json_list(row.get("local_video_files_json"))
         self.image_task_status.setText(
             f"{local_count} فایل محلی قابل نمایش • "
             f"{source_count} لینک تصویر منبع • "
-            f"{source_only} بدون فایل Local"
+            f"{source_only} بدون فایل Local • "
+            f"ویدیو: {len(local_videos)} ذخیره / {len(video_links)} لینک"
         )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
@@ -1933,6 +1945,49 @@ class ProductWizardPage(QWidget):
             ),
         )
 
+    def _download_product_video(self) -> None:
+        if self.product_id is None:
+            return
+        row = self.kernel.products.get(self.product_id) or {}
+        try:
+            links = _json_list(row.get("selected_video_links_json") or row.get("video_links_json"))
+        except Exception:
+            links = []
+        urls = [
+            str(item.get("url") if isinstance(item, dict) else item or "").strip()
+            for item in links
+        ]
+        urls = [url for url in urls if url.startswith(("http://", "https://"))]
+        if not urls:
+            QMessageBox.information(self, "ویدیوی محصول", "در داده‌ی فعلی صفحه محصول لینک ویدیوی عمومی پیدا نشد.")
+            return
+
+        def task(progress):
+            raw_dir = str(row.get("local_dir") or "").strip()
+            local_dir = Path(raw_dir).resolve() if raw_dir else (
+                Path(self.db.path).resolve().parent
+                / "collected"
+                / str(row.get("source_code") or "unknown")
+                / str(row.get("external_id") or self.product_id)
+            )
+            host = urlsplit(str(row.get("source_url") or "")).netloc.lower()
+            target_dir = local_dir / "videos"
+            saved: list[str] = []
+            for index, url in enumerate(urls[:5], 1):
+                media_host = urlsplit(url).netloc.lower()
+                if host and media_host != host and {host, media_host} != {"makerworld.com", "makerworld.bblmw.com"}:
+                    continue
+                suffix = Path(urlsplit(url).path).suffix.lower()
+                if suffix not in {".mp4", ".webm", ".mov", ".m4v", ".gif"}:
+                    suffix = ".mp4"
+                progress(int((index - 1) * 100 / max(1, min(5, len(urls)))), f"دریافت ویدیو {index}")
+                target = target_dir / f"product-video-{index:02d}{suffix}"
+                saved.append(str(download_public_file(url, target, max_bytes=80_000_000, referer=str(row.get("source_url") or url))))
+            self.db.update_product(self.product_id, {"local_video_files_json": json.dumps(saved, ensure_ascii=False)})
+            return {"videos_saved": len(saved), "video_paths": saved}
+
+        self._start_image_task("دریافت ویدیوی محصول…", task)
+
     def _capture_product_screenshot(self) -> None:
         if self.product_id is None:
             return
@@ -1958,8 +2013,11 @@ class ProductWizardPage(QWidget):
         saved = int(data.get("images_saved") or 0)
         found = int(data.get("images_found") or 0)
         mapped = int(data.get("mapped_image_urls") or 0)
+        videos = int(data.get("videos_saved") or 0)
         method = str(data.get("selected_method") or "").strip()
-        if found or saved or mapped:
+        if videos:
+            self.image_task_status.setText(f"✅ {videos} ویدیوی محصول ذخیره شد • آماده‌ی بررسی و خروجی اجتماعی")
+        elif found or saved or mapped:
             self.image_task_status.setText(
                 f"✅ بازیابی تصویر: {found} پیدا شد • {saved} ذخیره شد • "
                 f"{mapped} نگاشت معتبر • {visible} اکنون در گالری قابل مشاهده"
