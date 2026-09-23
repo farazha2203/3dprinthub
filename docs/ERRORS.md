@@ -1,3 +1,29 @@
+## ERR-49-232 - Regression wrapper executed zero tests because CMD caret continuation was not preserved
+**Date:** 2026-09-23
+**Observed:** the first multi-module related regression returned `Ran 0 tests` when a CMD command used caret continuation across wrapper lines.
+**Impact:** no false PASS was accepted and no Product/Catalog/Site mutation occurred.
+**Root cause:** command transport did not preserve CMD continuation semantics as intended.
+**Correct fix:** do not reuse the failed command; execute unittest modules as an explicit PowerShell argument array and require nonzero test count/exit-code success.
+**Verification:** corrected related run executed 144/144 PASS; after revision-reconcile hardening the final related run executed 153/153 PASS.
+**Prevention:** long Windows test manifests must use explicit argument arrays; never treat exit code 0 with zero tests as a valid regression gate.
+
+## ERR-49-231 - Selected Crawl row falsely looked incomplete because bounded query carried Product ID but not Product projection
+**Date:** 2026-09-23
+**Observed:** changed-condition test for a complete collected Product expected no refetch but received `already_collected_count=0`.
+**Impact:** test-only discovery before real Catalog mutation; no Product data was changed.
+**Root cause:** `queue_rows_by_ids()` attached only `product_id`, while `_queue_product_row()` expected the richer `product_*` projection supplied by paged inventory. Title/description therefore appeared blank even when canonical Product data existed.
+**Correct fix:** when a selected queue row has Product ID but lacks the richer projection, resolve canonical Product facts read-only from DB; normal paged rows keep their existing projection path.
+**Verification:** targeted 3/3 PASS; Crawl/V84 41/41 PASS; final related regression 153/153 PASS.
+**Prevention:** bounded selection queries and paginated inventory must share one factual completeness contract or explicitly resolve canonical Product facts.
+
+## ERR-49-230 - Native git apply failure was masked by a PowerShell success message
+**Date:** 2026-09-23
+**Observed:** `git apply --check`/apply of the preserved dirty pages patch failed on context/encoding, but the wrapper still printed `PAGES_PORT=APPLIED`.
+**Impact:** no file changed; immediate `git status`/diff verification proved the worktree was still clean.
+**Root cause:** `$ErrorActionPreference='Stop'` does not automatically throw on every native process nonzero exit.
+**Correct fix:** do not repeat the failed patch command; switch to surgical `edit_block` changes and verify diff explicitly.
+**Prevention:** every native Git command used as a gate must check `$LASTEXITCODE`; never trust a following success echo without state verification.
+
 ## ERR-49-229 - Post-A2Y A2R work reintroduced lineage divergence; one Crawl assertion also retained a historical Stage-3 label
 **Date:** 2026-09-23
 **Observed:** newest A2Z Windows head `3de2af09...` was not an ancestor/descendant of Windows A2R `03808add...` or selective Production A2R `103f559c...`. During convergence regression, one Crawl test still required the historical Stage-3 button label «دریافت داده و عکس بیشتر از لینک محصول» although accepted A2Z UI already says «دریافت جدید از منبع».

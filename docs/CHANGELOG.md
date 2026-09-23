@@ -1,3 +1,15 @@
+## 2026-09-23 - A2Z Catalog Data Completion local-tested checkpoint
+- Opened `wip/phase50-a2z-catalog-data-completion-20260923` from clean unified head `56c569...`.
+- Current Catalog is 771 Products; six-field Slider completeness is 61/771; only enabled Product #40 is missing a Slider image.
+- Confirmed #152/#178 are already Site-reconciled and clean; no retry is warranted.
+- Confirmed #620 is already public/clean; #625/#628 are the current `needs_update=1` bounded candidates.
+- Added incomplete Crawl visibility/reasons and same-identity forced recovery while preserving complete Product no-refetch behavior.
+- Fixed selected-row completeness false-negative by resolving canonical Product facts when queue selection carries only Product ID.
+- Added exact-receipt revision-only reconciliation for an unabsorbed `publish_incomplete` Site revision; all other stale revisions stay fail-closed.
+- #625 evidence: receipt #316 / Batch `26aa571c...` created Site Product #39 rev12 with `publish_incomplete`; Local content is not pulled or overwritten.
+- Final related regression 153/153 PASS; Server 12/12 PASS; compile/check/no-drift/diff/Qt gates PASS.
+- Fresh pre-mutation Catalog snapshot quick_check=ok with 771 Products at `phase50-a2z-data-completion-pre-mutation-20260923-202714`.
+
 ## 2026-09-23 - A2Z-LC A2R lineage convergence ACCEPTED
 - Detected and blocked post-A2Y divergence between newest A2Z Windows development, Windows A2R motion-media and selective Production A2R.
 - Preserved the dirty A2Z Data Completion worktree; convergence ran in a separate clean worktree/branch.

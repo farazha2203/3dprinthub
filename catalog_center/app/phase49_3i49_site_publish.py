@@ -946,6 +946,54 @@ def _record_failed(
         })
 
 
+def _matching_incomplete_revision_receipt(
+    db,
+    product_id: int,
+    row: dict[str, Any],
+    server_revision: int,
+) -> dict[str, Any] | None:
+    """Return proven Desktop-import evidence for one unabsorbed Site revision.
+
+    Only a terminal publish_incomplete receipt from this exact Desktop Product,
+    Site Product and source identity may reconcile revision authority. The
+    receipt does not make parity successful; it only proves who created the
+    Site revision so current Local operator data can be retried safely.
+    """
+    server_product_id = int(row.get("server_product_id") or 0)
+    source_code = str(row.get("source_code") or "")
+    external_id = str(row.get("external_id") or "")
+    for receipt in db.sync_receipts(int(product_id), limit=50):
+        if str(receipt["status"] or "") != "publish_incomplete":
+            continue
+        try:
+            payload = json.loads(receipt["payload_json"] or "{}")
+        except Exception:
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if int(payload.get("desktop_product_id") or 0) != int(product_id):
+            continue
+        if int(payload.get("product_revision") or 0) != int(server_revision):
+            continue
+        if int(
+            payload.get("server_product_id")
+            or payload.get("product_id")
+            or 0
+        ) != server_product_id:
+            continue
+        if str(payload.get("source_code") or "") != source_code:
+            continue
+        if str(payload.get("external_id") or "") != external_id:
+            continue
+        return {
+            "receipt_id": int(receipt["id"]),
+            "batch_uuid": str(receipt["batch_uuid"] or ""),
+            "status": str(receipt["status"] or ""),
+            "payload": payload,
+        }
+    return None
+
+
 def guard_site_revisions(
     db,
     settings,
@@ -954,6 +1002,7 @@ def guard_site_revisions(
     server_getter=get_site_product,
 ) -> dict[str, Any]:
     safe: list[int] = []
+    reconciled: list[int] = []
     conflicts: list[dict[str, Any]] = []
     for product_id in _ids(product_ids):
         row = db.product(product_id)
@@ -973,6 +1022,39 @@ def guard_site_revisions(
             )
             server_revision = int(profile.get("sync_revision") or 0)
             if server_revision != local_revision:
+                row_data = _row_dict(row)
+                evidence = _matching_incomplete_revision_receipt(
+                    db,
+                    product_id,
+                    row_data,
+                    server_revision,
+                )
+                if evidence is not None:
+                    before = dict(row_data)
+                    db.update_product(product_id, {
+                        "server_product_revision": server_revision,
+                        "last_sync_conflict": "",
+                    })
+                    after = dict(db.product(product_id))
+                    try:
+                        db.save_history(
+                            product_id,
+                            "qt_site_product_revision_reconciled",
+                            before,
+                            after,
+                            (
+                                "Reconciled only Site Product revision from exact "
+                                "Desktop publish_incomplete receipt "
+                                f"#{evidence['receipt_id']} batch={evidence['batch_uuid']} "
+                                f"rev {local_revision}->{server_revision}; Local Product "
+                                "content/media/Profile/Slider ownership was preserved."
+                            ),
+                        )
+                    except Exception:
+                        pass
+                    reconciled.append(product_id)
+                    safe.append(product_id)
+                    continue
                 detail = (
                     f"Site revision {server_revision} != Local accepted revision "
                     f"{local_revision}. Pull Site changes before publishing."
@@ -1024,7 +1106,7 @@ def guard_site_revisions(
                 "server_revision": None,
                 "missing": [detail],
             })
-    return {"safe_ids": safe, "conflicts": conflicts}
+    return {"safe_ids": safe, "reconciled_ids": reconciled, "conflicts": conflicts}
 
 
 def refresh_hero_revision_authority(

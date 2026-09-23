@@ -1,3 +1,25 @@
+## 2026-09-23 - Phase50.A.2Z Catalog Data Completion
+- [x] Start from clean unified A2Z/A2R head `56c569...`; preserve dirty precursor untouched.
+- [x] Re-read required docs and verify real Local/GitHub/Catalog/Site state.
+- [x] Inventory real Catalog: 771 Products; Slider complete 61 / incomplete 710; enabled incomplete exactly #40 image.
+- [x] Verify #152/#178 already reconciled on Site; no duplicate retry.
+- [x] Verify #620 already public/clean with current complete Slider data.
+- [x] Make incomplete Crawl Products visible/actionable and same-identity recoverable without refetching complete Products.
+- [x] Preserve canonical A2R video authority; do not port obsolete parallel video fields.
+- [x] Add fail-closed revision-only reconciliation from exact matching local `publish_incomplete` receipt.
+- [x] Prove #625 Site rev12 is from exact Desktop Batch `26aa571c...`; unknown revision remains blocked.
+- [x] Catalog/Profile/Filament/Image/Slider/Site related 153/153 PASS; Server 12/12 PASS; static/Qt gates PASS.
+- [x] Fresh integrity Catalog rollback before mutation: `phase50-a2z-data-completion-pre-mutation-20260923-202714`.
+- [ ] Commit/push tested source/docs and verify Local=GitHub exact.
+- [ ] Relaunch exact-SHA Qt.
+- [ ] Reconcile #625 revision authority only; prove Product/operator digest unchanged.
+- [ ] Real #620/#625/#628 operator acceptance; preserve Profile/Filament/Image authority.
+- [ ] Mark #628 Ready only after exact-SHA acceptance; do not send broad queue.
+- [ ] Fresh pre-republish rollback and bounded same-identity republish.
+- [ ] Strict Site Product/media/Profile/Variant/Slider parity + public HTTP.
+- [ ] Real Desktop/Mobile browser acceptance.
+- [ ] Final docs closure.
+
 ## 2026-09-23 - Phase50.A.2Z-LC A2R lineage convergence
 - [x] Stop A2Z feature mutation when post-A2Y Windows/Production divergence is proven.
 - [x] Preserve dirty A2Z Data Completion worktree with external rollback patch + status evidence.

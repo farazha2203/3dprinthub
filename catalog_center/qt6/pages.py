@@ -2291,7 +2291,7 @@ class OperationsPage(QWidget):
         queue_header = QHBoxLayout()
         queue_header.addWidget(QLabel("موجودی دائمی Crawl / همه رکوردهای دیتابیس"))
         self.queue_filter = QComboBox()
-        self.queue_filter.addItem("همه", "all")
+        self.queue_filter.addItem("همه — ناقص‌ها هم نمایش داده می‌شوند", "all")
         self.queue_filter.addItem("جدید", "new")
         self.queue_filter.addItem("Failed", "failed")
         self.queue_filter.addItem("دریافت‌شده", "collected")
@@ -3493,32 +3493,58 @@ class OperationsPage(QWidget):
         self.refresh()
 
     def _queue_product_row(self, row: dict) -> dict:
+        product_id = int(row.get("product_id") or 0)
+        canonical: dict[str, Any] = {}
+        if product_id > 0 and "product_title_fa" not in row:
+            stored = self.db.product(product_id)
+            if stored is not None:
+                canonical = dict(stored)
+
+        def projected(name: str, direct_name: str, default):
+            if name in row:
+                return row.get(name) or default
+            return canonical.get(direct_name) or default
+
         return {
-            "id": row.get("product_id"),
-            "source_code": row.get("source_code") or "",
-            "external_id": row.get("external_id") or "",
-            "title_fa": row.get("product_title_fa") or "",
-            "source_title": row.get("product_source_title") or "",
-            "short_description_fa": row.get("product_short_description_fa") or "",
-            "description_fa": row.get("product_description_fa") or "",
-            "source_short_description": (
-                row.get("product_source_short_description") or ""
+            "id": product_id or None,
+            "source_code": row.get("source_code") or canonical.get("source_code") or "",
+            "external_id": row.get("external_id") or canonical.get("external_id") or "",
+            "title_fa": projected("product_title_fa", "title_fa", ""),
+            "source_title": projected("product_source_title", "source_title", ""),
+            "short_description_fa": projected(
+                "product_short_description_fa", "short_description_fa", ""
             ),
-            "source_description": row.get("product_source_description") or "",
-            "primary_image_url": row.get("product_primary_image_url") or "",
-            "local_dir": row.get("product_local_dir") or "",
-            "selected_images_json": (
-                row.get("product_selected_images_json") or "[]"
+            "description_fa": projected(
+                "product_description_fa", "description_fa", ""
             ),
-            "images_json": row.get("product_images_json") or "[]",
-            "image_metadata_json": (
-                row.get("product_image_metadata_json") or "[]"
+            "source_short_description": projected(
+                "product_source_short_description", "source_short_description", ""
             ),
-            "source_specs_json": row.get("product_source_specs_json") or "{}",
-            "tags_json": row.get("product_tags_json") or "[]",
-            "dimensions": row.get("product_dimensions") or "",
-            "estimated_weight_grams": row.get("product_estimated_weight_grams") or 0,
-            "estimated_print_minutes": row.get("product_estimated_print_minutes") or 0,
+            "source_description": projected(
+                "product_source_description", "source_description", ""
+            ),
+            "primary_image_url": projected(
+                "product_primary_image_url", "primary_image_url", ""
+            ),
+            "local_dir": projected("product_local_dir", "local_dir", ""),
+            "selected_images_json": projected(
+                "product_selected_images_json", "selected_images_json", "[]"
+            ),
+            "images_json": projected("product_images_json", "images_json", "[]"),
+            "image_metadata_json": projected(
+                "product_image_metadata_json", "image_metadata_json", "[]"
+            ),
+            "source_specs_json": projected(
+                "product_source_specs_json", "source_specs_json", "{}"
+            ),
+            "tags_json": projected("product_tags_json", "tags_json", "[]"),
+            "dimensions": projected("product_dimensions", "dimensions", ""),
+            "estimated_weight_grams": projected(
+                "product_estimated_weight_grams", "estimated_weight_grams", 0
+            ),
+            "estimated_print_minutes": projected(
+                "product_estimated_print_minutes", "estimated_print_minutes", 0
+            ),
         }
 
     def _queue_description(self, row: dict) -> str:
@@ -3659,6 +3685,30 @@ class OperationsPage(QWidget):
             or not has_description
             or self._queue_image_count(row) <= 0
         )
+
+    def _queue_incomplete_reasons(self, row: dict) -> list[str]:
+        reasons: list[str] = []
+        if not int(row.get("product_id") or 0):
+            reasons.append("Product هنوز دریافت نشده")
+            if self._queue_image_count(row) <= 0:
+                reasons.append("Preview/عکس محلی ندارد")
+            return reasons
+        product = self._queue_product_row(row)
+        if not (
+            str(product.get("title_fa") or "").strip()
+            or str(product.get("source_title") or "").strip()
+        ):
+            reasons.append("عنوان ندارد")
+        if not (
+            str(product.get("short_description_fa") or "").strip()
+            or str(product.get("description_fa") or "").strip()
+            or str(product.get("source_short_description") or "").strip()
+            or str(product.get("source_description") or "").strip()
+        ):
+            reasons.append("توضیح ندارد")
+        if self._queue_image_count(row) <= 0:
+            reasons.append("فایل عکس محلی قابل نمایش ندارد")
+        return reasons
 
     def _queue_icon(self, row: dict) -> QIcon:
         if row.get("product_id"):
@@ -4076,6 +4126,9 @@ class OperationsPage(QWidget):
                         )
                     ),
                 ]
+                incomplete_reasons = self._queue_incomplete_reasons(row)
+                if incomplete_reasons:
+                    gallery_lines.append("⚠ ناقص: " + " • ".join(incomplete_reasons))
                 if technical_summary:
                     gallery_lines.append(technical_summary)
                 if short_description:
@@ -4500,13 +4553,21 @@ class OperationsPage(QWidget):
                 queue_id = int(row.get("id") or 0)
                 status = str(row.get("status") or "")
                 existing_product_id = int(row.get("product_id") or 0)
-                if status == "collected" and existing_product_id > 0:
+                existing_incomplete = (
+                    existing_product_id > 0
+                    and self._queue_is_incomplete(dict(row))
+                )
+                if (
+                    status == "collected"
+                    and existing_product_id > 0
+                    and not existing_incomplete
+                ):
                     if existing_product_id not in product_ids:
                         product_ids.append(existing_product_id)
                     already += 1
                     progress(
                         int(index / total * 100),
-                        f"#{queue_id}: قبلاً داخل محصولات است.",
+                        f"#{queue_id}: Product کامل است و قبلاً داخل محصولات است.",
                     )
                     continue
                 if status == "rejected":
@@ -4542,6 +4603,8 @@ class OperationsPage(QWidget):
                         image_limit=image_limit,
                         download_images=download_images,
                         progress=child_progress,
+                        force_recover=bool(existing_incomplete),
+                        adaptive_fallback=bool(existing_incomplete),
                     )
                     self.kernel.acquisition.mark_queue_collected([queue_id])
                     product_id = int(result.get("product_id") or 0)

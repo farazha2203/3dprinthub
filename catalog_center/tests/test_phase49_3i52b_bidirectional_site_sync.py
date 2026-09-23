@@ -211,6 +211,76 @@ class Phase493I52BBidirectionalSiteSyncTests(unittest.TestCase):
             self.db.product(local_id)["last_sync_conflict"],
         )
 
+    def test_publish_guard_reconciles_only_revision_from_matching_incomplete_desktop_receipt(self):
+        local_id = self._local_product(revision=2, dirty=True)
+        before = dict(self.db.product(local_id))
+        self.db.record_sync_receipt(
+            local_id,
+            "batch-proof-52b",
+            "publish_incomplete",
+            "asset-501",
+            {
+                "desktop_product_id": local_id,
+                "source_code": "makerworld",
+                "external_id": "phase52b-1",
+                "product_id": 501,
+                "server_product_id": 501,
+                "product_revision": 3,
+                "status": "publish_incomplete",
+            },
+        )
+        result = guard_site_revisions(
+            self.db,
+            object(),
+            [local_id],
+            server_getter=lambda _settings, _server_id: server_product(
+                product_id=501,
+                revision=3,
+            ),
+        )
+        after = dict(self.db.product(local_id))
+        self.assertEqual(result["safe_ids"], [local_id])
+        self.assertEqual(result["reconciled_ids"], [local_id])
+        self.assertEqual(result["conflicts"], [])
+        self.assertEqual(after["server_product_revision"], 3)
+        self.assertEqual(after["title_fa"], before["title_fa"])
+        self.assertEqual(after["needs_update"], before["needs_update"])
+        history = self.db.conn.execute(
+            "SELECT event_type FROM product_history WHERE product_id=? ORDER BY id DESC LIMIT 1",
+            (local_id,),
+        ).fetchone()
+        self.assertEqual(history["event_type"], "qt_site_product_revision_reconciled")
+
+    def test_publish_guard_keeps_conflict_when_incomplete_receipt_identity_does_not_match(self):
+        local_id = self._local_product(revision=2, dirty=True)
+        self.db.record_sync_receipt(
+            local_id,
+            "batch-wrong-identity",
+            "publish_incomplete",
+            "asset-501",
+            {
+                "desktop_product_id": local_id,
+                "source_code": "makerworld",
+                "external_id": "different-source-id",
+                "product_id": 501,
+                "server_product_id": 501,
+                "product_revision": 3,
+            },
+        )
+        result = guard_site_revisions(
+            self.db,
+            object(),
+            [local_id],
+            server_getter=lambda _settings, _server_id: server_product(
+                product_id=501,
+                revision=3,
+            ),
+        )
+        self.assertEqual(result["safe_ids"], [])
+        self.assertEqual(result["reconciled_ids"], [])
+        self.assertEqual(len(result["conflicts"]), 1)
+        self.assertEqual(self.db.product(local_id)["server_product_revision"], 2)
+
     def test_publish_guard_allows_exact_accepted_revision(self):
         local_id = self._local_product(revision=3, dirty=True)
         result = guard_site_revisions(
@@ -223,6 +293,7 @@ class Phase493I52BBidirectionalSiteSyncTests(unittest.TestCase):
             ),
         )
         self.assertEqual(result["safe_ids"], [local_id])
+        self.assertEqual(result["reconciled_ids"], [])
         self.assertEqual(result["conflicts"], [])
 
     def test_products_page_exposes_site_pull_action(self):

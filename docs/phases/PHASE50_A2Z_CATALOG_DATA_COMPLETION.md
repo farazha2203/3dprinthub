@@ -1,0 +1,48 @@
+# Phase50.A.2Z — Catalog Data Completion + Site Truth
+
+Status: LOCAL_TESTED / GITHUB PROMOTION NEXT
+Date: 2026-09-23
+Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
+Branch: `wip/phase50-a2z-catalog-data-completion-20260923`
+
+## Objective
+Close Catalog/Site truth without duplicate Product identities or silent operator-data loss. Incomplete Crawl Products stay visible and can safely recover the same identity. Same-identity Site republish must replace current media/Profile/Variant/pricing state while preserving Product identity and explicit Slider membership.
+
+## Verified current truth
+- Catalog quick_check=ok; current inventory is 771 Products, not the older documented 635.
+- Six-field Slider completeness: 61 complete / 710 incomplete; 13 memberships enabled and exactly one enabled Product (#40) lacks a Slider image.
+- #152 = Site #50 / Hero #2 rev3; Local clean; Site truth matches accepted revision.
+- #178 = Site #51 / Hero #4 rev6; Local clean; Site truth matches accepted revision.
+- #620 = Site #41 / Hero #17 rev1; already public/clean; Slider fields currently complete and membership enabled.
+- #625 = Site #39; Local rev11/needs_update=1 while Site profile rev12. Receipt #316 proves rev12 came from exact local Batch `26aa571c...` with status `publish_incomplete`.
+- #628 = Site #38 rev1; Local needs_update=1 and factual publish preflight passes.
+
+## Implemented source slice
+- Crawl inventory label makes incomplete visibility explicit.
+- Incomplete Product cards show actionable missing-data reasons.
+- Selected collected Products are not skipped when incomplete; canonical same-identity recovery runs with force/adaptive fallback.
+- Complete collected Products remain no-refetch/idempotent.
+- Selected-row completeness falls back read-only to canonical Product facts when the bounded queue query only carries Product ID.
+- Product revision guard can reconcile revision-only from an exact matching local `publish_incomplete` receipt; Product/media/Profile/Slider data are never pulled or overwritten by this reconciliation.
+- Unknown or mismatching Site revision remains fail-closed and still requires Site Pull/review.
+- Canonical motion authority remains `video_links_json / selected_video_links_json / local_video_files_json`; obsolete dirty precursor video authority was not ported.
+
+## Verification
+- Baseline Crawl/V84 40/40 and Video 8/8 PASS before changes.
+- Changed Crawl/V84 41/41 and Video 8/8 PASS.
+- Revision-only reconciliation targeted 4/4 PASS.
+- Final related Catalog/Profile/Filament/Image/Slider/Site regression 153/153 PASS.
+- Server related regression 12/12 PASS; Django check PASS; migration drift none.
+- Python compile, git diff-check and Qt VerifyOnly PASS before final docs checkpoint.
+- Fresh pre-mutation Catalog rollback: `D:\projects\3dprinthub-backups\phase50-a2z-data-completion-pre-mutation-20260923-202714\catalog-before-a2z-data-completion.sqlite3`; source+backup quick_check=ok, both 771 Products.
+
+## Remaining ordered gates
+1. Commit/push this Local-tested source/docs and verify Local=GitHub exact SHA.
+2. Relaunch Qt from exact pushed SHA.
+3. Reconcile #625 revision 11→12 through receipt proof only; verify operator-owned digest unchanged.
+4. Real operator acceptance for #620/#625/#628; preserve #620 clean state and #625/#628 Profile/Filament/Image facts.
+5. Mark #628 Ready only after exact-SHA gate; publish no broad queue.
+6. Fresh rollback immediately before each Production-affecting republish.
+7. Controlled same-identity republish, strict ACK replacement parity, public Product/media/Profile/Variant/Slider verification.
+8. Real Desktop/Mobile browser acceptance.
+9. Update CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS and close only after all gates PASS.

@@ -632,6 +632,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertEqual(page.queue_select_incomplete_btn.text(), "انتخاب ناقص‌ها")
             self.assertEqual(page.queue_recover_btn.text(), "بازیابی دیتا + عکس")
             self.assertEqual(page.queue_restore_btn.text(), "بازگردانی به صف")
+            self.assertIn("ناقص‌ها هم نمایش داده می‌شوند", page.queue_filter.itemText(0))
             self.assertEqual(page.queue_recover_image_limit.currentData(), 5)
             for button in (
                 page.start_btn,
@@ -725,7 +726,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_existing_collected_selection_is_preserved_and_routes_to_products(self):
+    def test_existing_collected_but_incomplete_product_is_force_recovered(self):
         external_id = "520030"
         product_id = self._create_product(external_id, status="uploaded")
         url = f"https://makerworld.com/en/models/{external_id}-preview-test"
@@ -742,23 +743,62 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         queue_id = int(queue["id"])
         self.db.mark_url(queue_id, "collected")
 
-        routes = []
-        page = OperationsPage(
-            self.db,
-            kernel=self.kernel,
-            navigate=routes.append,
-        )
+        page = OperationsPage(self.db, kernel=self.kernel)
         captured = []
+        calls = []
         try:
             page.pool.start = lambda worker: captured.append(worker)
             page._collect_queue_ids([queue_id])
             self.assertEqual(len(captured), 1)
-            result = captured[0].fn(lambda _value, _message: None)
+            with patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=lambda **kwargs: (
+                    calls.append(kwargs)
+                    or {
+                        "product_id": product_id,
+                        "recovered_existing": True,
+                        "collected": 1,
+                    }
+                ),
+            ):
+                result = captured[0].fn(lambda _value, _message: None)
+            self.assertEqual(result["already_collected_count"], 0)
+            self.assertIn(product_id, result["product_ids"])
+            self.assertEqual(len(calls), 1)
+            self.assertTrue(calls[0]["force_recover"])
+            self.assertTrue(calls[0]["adaptive_fallback"])
+        finally:
+            page.close()
+
+    def test_existing_collected_complete_product_is_not_refetched(self):
+        external_id = "520031"
+        product_id = self._create_product(external_id, status="uploaded")
+        image_dir = self.root / "collected" / "makerworld" / external_id / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (400, 300), "white").save(image_dir / "001.jpg")
+        url = f"https://makerworld.com/en/models/{external_id}-preview-test"
+        self.db.add_discovered("makerworld", external_id, url, "phase49-3i52c-test")
+        queue = self.db.conn.execute(
+            "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
+            ("makerworld", external_id),
+        ).fetchone()
+        queue_id = int(queue["id"])
+        self.db.mark_url(queue_id, "collected")
+
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        try:
+            page.pool.start = lambda worker: captured.append(worker)
+            page._collect_queue_ids([queue_id])
+            with patch.object(
+                self.kernel.acquisition,
+                "run_single",
+                side_effect=AssertionError("complete Product must not be refetched"),
+            ):
+                result = captured[0].fn(lambda _value, _message: None)
             self.assertEqual(result["already_collected_count"], 1)
             self.assertIn(product_id, result["product_ids"])
-            page._done(result)
-            self.app.processEvents()
-            self.assertIn("products", routes)
         finally:
             page.close()
 

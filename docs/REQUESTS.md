@@ -1,3 +1,10 @@
+## 2026-09-23 - Owner: Phase 1 A2Z Catalog / Site Truth
+Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
+
+Owner requested Phase 1 to close #152/#178 Site truth, take a fresh Catalog rollback, stabilize same-identity full replacement, complete Profile/Filament/Image gates for #620/#625/#628, and finish only with Site/Public + Desktop/Mobile parity.
+
+Verified truth changes the execution plan safely: #152/#178 are already correctly reconciled and clean, so they must not be retried. #620 is also already public/clean. #625 and #628 are the current bounded `needs_update=1` candidates. #625 Site rev12 is proven by exact local `publish_incomplete` receipt evidence, allowing revision-only reconciliation without pulling/overwriting operator Product data. No broad queue publish is permitted.
+
 ## 2026-09-23 - Owner: continue latest development directly on the Windows machine; split long execution into three bounded parts
 Status: `A2Z-LC GITHUB_VERIFIED / ACCEPTED — A2Z DATA COMPLETION NEXT`.
 

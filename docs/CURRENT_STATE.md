@@ -1,3 +1,19 @@
+## 2026-09-23 - Phase50.A.2Z CATALOG DATA COMPLETION LOCAL_TESTED / GITHUB PROMOTION NEXT
+
+Active branch is `wip/phase50-a2z-catalog-data-completion-20260923` from clean accepted baseline `56c569145eead7cd0a35eb63c382f14dfe71c80e`. The preserved dirty A2Z precursor remains untouched; only evidence-backed Crawl incompleteness/recovery was ported, and the accepted canonical A2R video authority was preserved.
+
+Current real Catalog truth is newer than the prior 635-Product snapshot: SQLite quick_check=`ok`, Products=771. Six-field Slider inventory is 61 complete / 710 incomplete; membership enabled=13 and exactly one enabled Product (#40) lacks `homepage_slider_image_url`. #152/#178 Site truth is already reconciled and must not be retried: #152 -> Site #50 / Hero #2 rev3; #178 -> Site #51 / Hero #4 rev6. #620 is already public/clean at Site #41 / Hero #17 rev1 and its current six Slider fields are complete.
+
+#625 is the bounded stale-revision case: Local Site Product #39 rev11, `needs_update=1`, current Local price range 458,500–1,655,000; Site profile rev12. Sync receipt #316 proves Site rev12 was created by exact Desktop Product #625 Batch `26aa571c-1a0c-4ad4-9431-65e74c27d94f` with terminal `publish_incomplete`, not by an unknown Site edit. Source hardening now permits revision-only reconciliation only from such exact receipt proof; Product/media/Profile/Slider content remains Local-owned and unchanged. Unknown/mismatching revision evidence remains fail-closed. #628 remains Site #38 rev1 with Local `needs_update=1`; factual publish preflight passes.
+
+Crawl recovery hardening is Local-tested: incomplete collected Products no longer get silently skipped, cards expose missing-data reasons, selected-row completeness can resolve canonical Product facts, and complete Products remain idempotent/no-refetch. Canonical video remains `video_links_json / selected_video_links_json / local_video_files_json`.
+
+Verification: changed Crawl/V84 41/41 + Video 8/8 PASS; revision reconcile targeted 4/4 PASS; final related Catalog/Profile/Filament/Image/Slider/Site regression 153/153 PASS; Server 12/12 PASS; Django check and no migration drift PASS; Python compile/diff-check/Qt VerifyOnly PASS. Fresh pre-mutation rollback: `D:\projects\3dprinthub-backups\phase50-a2z-data-completion-pre-mutation-20260923-202714\catalog-before-a2z-data-completion.sqlite3`, backup/source quick_check=`ok`, both 771 Products.
+
+**Current Production:** selective Server head `103f559c...` remains unchanged.
+**Current local development HEAD:** baseline `56c569...` plus tested uncommitted A2Z Data Completion delta; commit/push is next.
+**Exact next:** docs/static final check -> commit/push -> Local=GitHub exact -> exact-SHA Qt -> receipt-backed #625 revision-only reconcile -> #620/#625/#628 operator gates -> fresh rollback -> bounded same-identity republish -> strict public/Desktop/Mobile parity.
+
 ## 2026-09-23 - Phase50.A.2Z-LC A2R LINEAGE CONVERGENCE GITHUB_VERIFIED / ACCEPTED
 
 A post-A2Y lineage gate found that the newest A2Z Windows head `3de2af09...`, Windows A2R `03808add...` and Production A2R `103f559c...` had diverged again. Per `AGENTS.md`, new A2Z feature work was stopped before any further Catalog/Social mutation.
