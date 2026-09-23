@@ -265,6 +265,7 @@ class ExtractedPage:
     source_updated_at: str
     images: list[ExtractedImage]
     file_links: list[str]
+    video_links: list[str]
     specs: dict[str, Any]
     body_text: str
     source_print_profiles: list[dict[str, Any]] = field(default_factory=list)
@@ -640,6 +641,31 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
                 if Path(urlsplit(node).path).suffix.lower() in MODEL_EXTENSIONS:
                     links.append(node)
     links = list(dict.fromkeys(links))[:150]
+    video_links: list[str] = []
+    for item in snapshot.get("video_links") or []:
+        value = item.get("src") if isinstance(item, dict) else str(item)
+        absolute = _absolute(value or "", final_url)
+        if absolute.startswith(("http://", "https://")) and absolute not in video_links:
+            video_links.append(absolute)
+
+    video_extensions = {".mp4", ".mov", ".webm", ".m4v", ".m3u8", ".gif"}
+    for root in rich_roots:
+        for node in _walk(root):
+            if not isinstance(node, dict):
+                continue
+            name = _clean_text(node.get("name") or node.get("fileName") or node.get("filename"))
+            for key in ("url", "src", "videoUrl", "video_url", "playbackUrl", "playback_url"):
+                value = node.get(key)
+                absolute = _absolute(value or "", final_url)
+                if not absolute.startswith(("http://", "https://")):
+                    continue
+                suffix = Path(urlsplit(absolute).path).suffix.lower()
+                explicitly_animated = bool(
+                    re.search(r"(?:^|[_-])(gif|video|motion|animated)(?:[_-]|\.)", name, re.I)
+                )
+                if suffix in video_extensions and (suffix != ".gif" or explicitly_animated) and absolute not in video_links:
+                    video_links.append(absolute)
+                break
 
     license_name = ""
     license_url = ""
@@ -677,6 +703,7 @@ def parse_page_snapshot(snapshot: dict[str, Any]) -> ExtractedPage:
         source_updated_at=social["updated_at"],
         images=images,
         file_links=links,
+        video_links=video_links[:20],
         specs=specs,
         body_text=body_text,
         source_print_profiles=source_print_profiles,
@@ -873,6 +900,7 @@ class RichPageExtractor:
                         const links = Array.from(document.querySelectorAll('a[href]')).map(a => ({
                             href: a.href || '', text: (a.innerText || a.textContent || '').trim().slice(0, 300), download: a.getAttribute('download') || ''
                         }));
+                        const video_links = Array.from(document.querySelectorAll('video, video source, source[type^="video/"]')).map(el => ({src: el.currentSrc || el.src || el.getAttribute('src') || '', type: el.getAttribute('type') || ''})).filter(x => x.src);
                         const json_ld = Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map(s => s.textContent || '');
                         const embedded_json = Array.from(document.querySelectorAll('script[type="application/json"], script#__NEXT_DATA__, script[id*="__NEXT"], script[id*="NUXT"]')).map(s => s.textContent || '').filter(x => x && x.length < 2500000).slice(0, 40);
                         const breadcrumbs = Array.from(document.querySelectorAll(
@@ -894,7 +922,7 @@ class RichPageExtractor:
                         return {
                             final_url: location.href,
                             title: document.title || '',
-                            metas, dom_images, picture_sources, links, json_ld, embedded_json, breadcrumbs, spec_rows: spec_rows.slice(0, 120),
+                            metas, dom_images, picture_sources, links, video_links, json_ld, embedded_json, breadcrumbs, spec_rows: spec_rows.slice(0, 120),
                             labeled_sections: Array.from(document.querySelectorAll('h1,h2,h3,h4')).slice(0,60).map(h => ({heading:(h.innerText||h.textContent||'').trim(), text:(h.nextElementSibling ? (h.nextElementSibling.innerText||h.nextElementSibling.textContent||'').trim() : '').slice(0,1600)})).filter(x=>x.heading&&x.text),
                             body_text: (document.body ? document.body.innerText : '').slice(0, 400000)
                         };
@@ -1063,6 +1091,8 @@ async def extract_direct_link(
         "primary_image_url": selected_urls[0] if selected_urls else (all_urls[0] if all_urls else ""),
         "file_links_json": json.dumps(page.file_links, ensure_ascii=False),
         "selected_file_links_json": json.dumps(page.file_links, ensure_ascii=False),
+        "video_links_json": json.dumps(page.video_links, ensure_ascii=False),
+        "selected_video_links_json": json.dumps(page.video_links, ensure_ascii=False),
         "source_specs_json": json.dumps(page.specs, ensure_ascii=False),
         "source_print_profiles_json": json.dumps(page.source_print_profiles, ensure_ascii=False),
         "source_snapshot_json": json.dumps(page.as_dict(), ensure_ascii=False),

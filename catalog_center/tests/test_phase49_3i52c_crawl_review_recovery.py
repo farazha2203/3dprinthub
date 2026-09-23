@@ -849,7 +849,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 for button in page.findChildren(type(page.product_source_btn))
             }
             self.assertIn(
-                "دریافت داده و عکس بیشتر از لینک محصول",
+                "دریافت جدید از منبع",
                 labels,
             )
             self.assertNotIn(

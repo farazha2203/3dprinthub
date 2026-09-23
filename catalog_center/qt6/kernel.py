@@ -2507,6 +2507,21 @@ class AcquisitionCore:
             progress=progress,
         )
 
+    def download_product_video(
+        self,
+        product_id: int,
+        *,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import download_product_video_from_source
+
+        self.reset_stop()
+        return download_product_video_from_source(
+            self.db,
+            int(product_id),
+            progress=progress,
+        )
+
 
 class PublishCore:
     def __init__(self, db, stages, connection) -> None:

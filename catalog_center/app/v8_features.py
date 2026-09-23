@@ -41,6 +41,7 @@ def source_payload_hash(payload: dict[str, Any]) -> str:
         "tags": _json(payload.get("tags_json"), []),
         "images": _json(payload.get("images_json"), []),
         "files": _json(payload.get("file_links_json"), []),
+        "videos": _json(payload.get("video_links_json"), []),
         "specs": _json(payload.get("source_specs_json"), {}),
         "source_price": payload.get("source_price"),
         "source_currency": payload.get("source_currency") or "",
@@ -70,7 +71,7 @@ def product_diff(old: dict[str, Any] | Any, new: dict[str, Any]) -> dict[str, di
     keys = [
         "source_title", "source_description", "author_name", "license_name", "license_url",
         "source_category", "source_categories_json", "tags_json", "images_json", "file_links_json",
-        "source_specs_json", "source_price", "source_currency", "estimated_weight_grams",
+        "video_links_json", "source_specs_json", "source_price", "source_currency", "estimated_weight_grams",
         "estimated_print_minutes", "source_rating", "source_rating_count", "source_like_count",
         "source_download_count", "source_view_count", "source_published_at", "source_updated_at",
     ]
@@ -93,7 +94,8 @@ def diff_summary(diff: dict[str, dict[str, Any]]) -> str:
         "source_title": "عنوان اصلی", "source_description": "توضیحات", "author_name": "طراح/سازنده",
         "license_name": "مجوز", "license_url": "لینک مجوز", "source_category": "دسته منبع",
         "source_categories_json": "مسیر دسته‌بندی", "tags_json": "تگ‌ها", "images_json": "تصاویر",
-        "file_links_json": "فایل‌ها", "source_specs_json": "مشخصات", "source_price": "قیمت منبع",
+        "file_links_json": "فایل‌ها", "video_links_json": "ویدئوهای منبع",
+        "source_specs_json": "مشخصات", "source_price": "قیمت منبع",
         "source_currency": "ارز", "estimated_weight_grams": "وزن", "estimated_print_minutes": "زمان چاپ",
         "source_rating": "امتیاز", "source_rating_count": "تعداد رأی", "source_like_count": "پسند",
         "source_download_count": "دانلود", "source_view_count": "بازدید",
@@ -103,7 +105,7 @@ def diff_summary(diff: dict[str, dict[str, Any]]) -> str:
         return "هیچ تغییر محتوایی نسبت به آخرین دریافت پیدا نشد."
     lines = []
     for key, change in diff.items():
-        if key in {"images_json", "file_links_json", "tags_json", "source_categories_json"}:
+        if key in {"images_json", "file_links_json", "video_links_json", "tags_json", "source_categories_json"}:
             before = _json(change["before"], [])
             after = _json(change["after"], [])
             lines.append(f"• {labels.get(key,key)}: {len(before)} ← {len(after)}")
@@ -180,6 +182,7 @@ def merge_refetch(old: Any, fresh: dict[str, Any]) -> dict[str, Any]:
         "has_3d_file", "source_name", "technical_features_json", "keywords_json",
         "is_blocked", "blocked_at", "blocked_reason", "source_state",
         "image_metadata_json", "source_page_screenshot_path",
+        "selected_video_links_json", "local_video_files_json",
     }
     result = dict(fresh)
     old_keys = set(old.keys()) if hasattr(old, "keys") else set()

@@ -450,6 +450,8 @@ class ProductWizardPage(QWidget):
         truth_refresh = QPushButton("رفرش رسانه و وضعیت")
         truth_refresh.setProperty("primary", True)
         recover = QPushButton("دریافت جدید از منبع")
+        self.product_video_btn = QPushButton("🎬 دریافت ویدئو از محصول")
+        self.product_video_btn.setProperty("success", True)
 
         select_all.setToolTip("انتخاب همه تصاویر برای عملیات گروهی")
         clear_all.setToolTip("لغو انتخاب عملیاتی همه تصاویر")
@@ -472,6 +474,10 @@ class ProductWizardPage(QWidget):
             "دریافت داده و عکس جدید از لینک منبع محصول؛ تصمیم‌های اپراتور "
             "مثل قیمت/Profile/Filament/SEO/انتشار حفظ می‌شوند."
         )
+        self.product_video_btn.setToolTip(
+            "Source همین Product را تازه می‌خواند، ویدئوی عمومی مستقیم یا GIF متحرک "
+            "را در مرز امن دانلود می‌کند و در authority همان Product ثبت می‌کند."
+        )
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
@@ -492,6 +498,7 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         truth_refresh.clicked.connect(self._refresh_product_media_truth)
         recover.clicked.connect(self._recover_product_images)
+        self.product_video_btn.clicked.connect(self._download_product_video)
 
         recover_count_label = QLabel("تعداد")
         self.image_stage3_toolbar_buttons = (
@@ -503,6 +510,7 @@ class ProductWizardPage(QWidget):
             add_files,
             screenshot,
             truth_refresh,
+            self.product_video_btn,
             recover,
         )
         compact_widgets = (
@@ -559,6 +567,11 @@ class ProductWizardPage(QWidget):
         status_font.setPointSize(7)
         self.image_task_status.setFont(status_font)
         layout.addWidget(self.image_task_status)
+        self.product_video_status = QLabel("ویدئو: هنوز دریافت نشده")
+        self.product_video_status.setObjectName("Muted")
+        self.product_video_status.setFont(status_font)
+        self.product_video_status.setWordWrap(True)
+        layout.addWidget(self.product_video_status)
 
         self.image_grid = ProductImageGrid(
             columns=3,
@@ -959,6 +972,20 @@ class ProductWizardPage(QWidget):
             f"{len(selected_urls)} برای ارسال سایت • "
             f"{missing_selected} انتخاب بدون فایل"
         )
+        video_links = _json_list(
+            row.get("selected_video_links_json") or row.get("video_links_json")
+        )
+        local_videos = _json_list(row.get("local_video_files_json"))
+        if local_videos:
+            self.product_video_status.setText(
+                f"ویدئو: ✅ {len(local_videos)} فایل Local • {len(video_links)} لینک Source"
+            )
+        elif video_links:
+            self.product_video_status.setText(
+                f"ویدئو: {len(video_links)} لینک Source کشف شده • فایل هنوز دریافت نشده"
+            )
+        else:
+            self.product_video_status.setText("ویدئو: هنوز در Source کشف/دریافت نشده")
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
         self.content_source_title.setText(str(row.get("source_title") or ""))
@@ -2283,6 +2310,17 @@ class ProductWizardPage(QWidget):
             ),
         )
 
+    def _download_product_video(self) -> None:
+        if self.product_id is None:
+            return
+        self._start_image_task(
+            "کشف و دریافت ویدئوی محصول از Source…",
+            lambda progress: self.kernel.acquisition.download_product_video(
+                self.product_id,
+                progress=progress,
+            ),
+        )
+
     def _capture_product_screenshot(self) -> None:
         if self.product_id is None:
             return
@@ -2304,6 +2342,17 @@ class ProductWizardPage(QWidget):
         data = dict(result or {}) if isinstance(result, dict) else {}
         if self.product_id is not None:
             self.load_product(self.product_id)
+        if bool(data.get("video_download")):
+            saved = int(data.get("videos_saved") or 0)
+            self.product_video_status.setText(
+                f"ویدئو: ✅ {saved} فایل دریافت شد و آماده‌ی انتشار کنترل‌شده است"
+            )
+            QMessageBox.information(
+                self,
+                "ویدئوی محصول",
+                "ویدئوی Source در Catalog همین Product ثبت شد. انتشار سایت/Instagram خودکار انجام نشد.",
+            )
+            return
         if bool(data.get("truth_sync")):
             canonical = int(data.get("canonical_count") or 0)
             selected = int(data.get("selected_count") or 0)

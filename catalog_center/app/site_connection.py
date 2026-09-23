@@ -25,7 +25,11 @@ STORE_MEDIA_RE = re.compile(
     #   canonical: /media/p/<desktop-id>/<sha12>/<seo-basename>
     # Imported working media (/media/store/imported-models/...) is intentionally
     # excluded and must never satisfy public Product verification.
-    r"(?:src|href)=[\"']([^\"']*/media/(?:store/products/|p/)[^\"']+)[\"']",
+    r"(?:src|href)=[\"']([^\"']*/media/(?:store/products/(?!videos/)|p/)[^\"']+)[\"']",
+    re.IGNORECASE,
+)
+STORE_VIDEO_RE = re.compile(
+    r"(?:src|href)=[\"']([^\"']*/media/store/products/videos/[^\"']+)[\"']",
     re.IGNORECASE,
 )
 
@@ -316,7 +320,14 @@ def _absolute_public_url(cfg: SiteConnection, value: str) -> str:
     return url
 
 
-def _public_get(cfg: SiteConnection, value: str, *, expect_image: bool = False, attempts: int = 3) -> dict:
+def _public_get(
+    cfg: SiteConnection,
+    value: str,
+    *,
+    expect_image: bool = False,
+    expect_video: bool = False,
+    attempts: int = 3,
+) -> dict:
     url = _absolute_public_url(cfg, value)
     if not url:
         return {"ok": False, "url": "", "http_status": 0, "content_type": "", "error": "empty URL", "body": b""}
@@ -326,7 +337,15 @@ def _public_get(cfg: SiteConnection, value: str, *, expect_image: bool = False, 
         req = urllib_request.Request(
             url,
             headers={
-                "Accept": "image/avif,image/webp,image/*,*/*;q=0.8" if expect_image else "text/html,application/xhtml+xml,*/*;q=0.8",
+                "Accept": (
+                    "video/*,image/gif,*/*;q=0.8"
+                    if expect_video
+                    else (
+                        "image/avif,image/webp,image/*,*/*;q=0.8"
+                        if expect_image
+                        else "text/html,application/xhtml+xml,*/*;q=0.8"
+                    )
+                ),
                 "User-Agent": "3DPrintHub-Catalog-Epic49/1.0",
                 "Cache-Control": "no-cache",
             },
@@ -334,12 +353,14 @@ def _public_get(cfg: SiteConnection, value: str, *, expect_image: bool = False, 
         )
         try:
             with urllib_request.urlopen(req, timeout=max(10, cfg.timeout), context=ssl.create_default_context()) as response:
-                body = response.read(2_000_000 if not expect_image else 64_000)
+                body = response.read(64_000 if (expect_image or expect_video) else 2_000_000)
                 status = int(response.status)
                 content_type = str(response.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
                 ok = status == 200 and bool(body)
                 if expect_image:
                     ok = ok and content_type.startswith("image/")
+                elif expect_video:
+                    ok = ok and (content_type.startswith("video/") or content_type == "image/gif")
                 else:
                     ok = ok and (content_type in {"text/html", "application/xhtml+xml"} or body.lstrip().startswith(b"<"))
                 return {
@@ -384,6 +405,7 @@ def verify_publish_item(settings: SiteConnection, item: dict, *, max_images: int
         "ok": False,
         "product": page,
         "images": [],
+        "videos": [],
         "main_image_url": "",
         "error": "",
     }
@@ -410,10 +432,44 @@ def verify_publish_item(settings: SiteConnection, item: dict, *, max_images: int
         checks.append(check)
     result["images"] = checks
     result["main_image_url"] = checks[0].get("url") if checks else ""
-    result["ok"] = bool(checks and all(check.get("ok") for check in checks))
-    if not result["ok"]:
+
+    rendered_videos = []
+    for raw in STORE_VIDEO_RE.findall(text):
+        candidate = html.unescape(str(raw or "").strip())
+        if candidate and candidate not in rendered_videos:
+            rendered_videos.append(candidate)
+        if len(rendered_videos) >= 5:
+            break
+    video_checks = []
+    for candidate in rendered_videos:
+        check = _public_get(cfg, candidate, expect_video=True)
+        check.pop("body", None)
+        video_checks.append(check)
+    result["videos"] = video_checks
+
+    declared_video_paths = set()
+    for entry in item.get("public_videos") or []:
+        value = entry.get("url") if isinstance(entry, dict) else entry
+        value = str(value or "").strip()
+        if value:
+            declared_video_paths.add(urlsplit(_absolute_public_url(cfg, value)).path)
+    rendered_video_paths = {
+        urlsplit(str(check.get("url") or "")).path
+        for check in video_checks
+        if check.get("url")
+    }
+    missing_declared = sorted(declared_video_paths - rendered_video_paths)
+    images_ok = bool(checks and all(check.get("ok") for check in checks))
+    videos_ok = all(check.get("ok") for check in video_checks)
+    result["ok"] = bool(images_ok and videos_ok and not missing_declared)
+    if not images_ok:
         bad = next((check for check in checks if not check.get("ok")), {})
         result["error"] = f"PRODUCT_MEDIA_HTTP_FAILED: {bad.get('url') or '-'} {bad.get('error') or bad.get('http_status')}"
+    elif missing_declared:
+        result["error"] = "PRODUCT_VIDEO_NOT_RENDERED: " + ", ".join(missing_declared)
+    elif not videos_ok:
+        bad = next((check for check in video_checks if not check.get("ok")), {})
+        result["error"] = f"PRODUCT_VIDEO_HTTP_FAILED: {bad.get('url') or '-'} {bad.get('error') or bad.get('http_status')}"
     return result
 
 
@@ -428,6 +484,7 @@ def _augment_ack_with_public_verification(cfg: SiteConnection, ack: dict) -> dic
         item["public_http_ok"] = bool(verification.get("ok"))
         item["public_product_http_status"] = int((verification.get("product") or {}).get("http_status") or 0)
         item["public_main_image_url"] = str(verification.get("main_image_url") or "")
+        item["public_videos"] = list(verification.get("videos") or [])
         main_check = (verification.get("images") or [{}])[0] if verification.get("images") else {}
         item["public_main_image_http_status"] = int(main_check.get("http_status") or 0)
         if not item["public_http_ok"] and not item.get("error"):
