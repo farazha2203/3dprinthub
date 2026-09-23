@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from django.core.files import File
+from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -116,6 +117,8 @@ def upsert_asset(source: PrintCatalogSource, data: dict):
         "ai_provider": data.get("ai_provider") or "",
         "ai_model": data.get("ai_model") or "",
         "desktop_catalog_file_links": safe_json(data.get("selected_file_links_json") or data.get("file_links_json"), []),
+        "desktop_catalog_video_links": safe_json(data.get("video_links_json"), []),
+        "desktop_catalog_selected_video_links": safe_json(data.get("selected_video_links_json"), []),
         "source_price": data.get("source_price"),
         "source_currency": data.get("source_currency") or "",
         "source_rating": data.get("source_rating"),
@@ -359,6 +362,45 @@ def import_images(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> int
     return imported
 
 
+def import_videos(asset: ImportedPrintAsset, model_dir: Path, data: dict) -> list[dict]:
+    local_dir = model_dir / "videos"
+    mapped_names = safe_json(data.get("local_video_files_json"), [])
+    public_videos: list[dict] = []
+    for raw_name in mapped_names[:5]:
+        name = Path(str(raw_name or "")).name
+        candidate = (local_dir / name).resolve()
+        if candidate.parent != local_dir.resolve() or not candidate.is_file():
+            raise CommandError(f"Mapped Product video is missing or unsafe: {name}")
+        suffix = candidate.suffix.lower()
+        if suffix not in {".mp4", ".webm", ".mov", ".m4v", ".gif"}:
+            raise CommandError(f"Unsupported Product video type: {name}")
+        size = candidate.stat().st_size
+        if size < 512 or size > 80_000_000:
+            raise CommandError(f"Product video size is outside the import boundary: {name}")
+        digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        storage_name = f"store/products/videos/{asset.pk}/{digest[:16]}{suffix}"
+        if not default_storage.exists(storage_name):
+            with candidate.open("rb") as handle:
+                saved_name = default_storage.save(storage_name, File(handle))
+            if saved_name != storage_name:
+                storage_name = saved_name
+        public_videos.append({
+            "url": default_storage.url(storage_name),
+            "sha256": digest,
+            "bytes": size,
+            "kind": "animated_image" if suffix == ".gif" else "video",
+        })
+
+    specs = dict(asset.technical_specs or {})
+    specs["desktop_catalog_public_videos"] = public_videos
+    payload = dict(asset.source_payload or {})
+    payload["public_videos"] = public_videos
+    asset.technical_specs = specs
+    asset.source_payload = payload
+    asset.save(update_fields=["technical_specs", "source_payload", "updated_at"])
+    return public_videos
+
+
 class Command(BaseCommand):
     help = "Import a v8.5 batch created by 3DPrintHub Catalog Intelligence and emit machine-readable ACK."
 
@@ -403,6 +445,7 @@ class Command(BaseCommand):
                         desktop_product_id=desktop_product_id,
                     )
                     image_count = import_images(asset, editorial_path.parent, data)
+                    public_videos = import_videos(asset, editorial_path.parent, data)
                     product = portfolio = None
                     visibility = None
                     license_ok = catalog_license_allows_publish(
@@ -442,6 +485,7 @@ class Command(BaseCommand):
                     "product_id": product.pk if product else None,
                     "portfolio_id": portfolio.pk if portfolio else None,
                     "images": image_count,
+                    "public_videos": public_videos,
                     "visible_on_store": bool(visibility.visible) if visibility else False,
                     "product_url": visibility.product_url if visibility else "",
                     "visibility_checks": visibility.checks if visibility else {},

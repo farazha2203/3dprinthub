@@ -1,6 +1,6 @@
 # Phase50.A2R — Catalog completion, Product video and Instagram set/Story
 
-Status: `IN_PROGRESS / SLICE 1 LOCAL_TESTED`
+Status: `IN_PROGRESS / SLICE 1 GITHUB_UPDATED / SLICE 2 LOCAL_TESTED`
 Date: 2026-09-23
 
 ## Requested Delta
@@ -67,3 +67,16 @@ To keep long execution bounded, A2R is delivered in two independently testable s
 
 ### Slice 2 - Site/social acceptance
 Pending after Slice 1 GitHub checkpoint: Site receiver/video rendering regressions, social manifest/Story regression, Qt VerifyOnly, commit/push, reverse-tunnel Host gate, bounded Site-first acceptance and final docs closure.
+
+### Slice 2 - Site/social local acceptance
+- Site receiver stores bounded Product motion media without a Django schema change and Product Detail renders GIF/video from the imported asset.
+- Windows public verification separates image and motion-media HTTP checks and requires declared Product videos to be rendered publicly.
+- Instagram payload preserves canonical images/ALT and adds bounded verified video entries in `media_manifest`; Story artwork does not print a raw non-clickable URL.
+- Site/receiver focused tests: 6/6 PASS.
+- Mature Product Detail/import related regression: 5/5 PASS.
+- Buffer/Instagram/Story regression: 34/34 PASS; no external post was created.
+- Django check PASS with only known CKEditor warning; migration drift: none.
+- Slice-2 Python compile and `git diff --check`: PASS.
+- Qt VerifyOnly: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`, `QT_OPERATOR_LAUNCHER_VERIFY=PASS`.
+
+Next gate: commit/push Slice 2 with exact Local=Remote proof, then use only the dedicated `3dprinthub` project router for Host read-only audit and release-lineage verification before any Production mutation.

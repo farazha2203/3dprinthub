@@ -466,6 +466,40 @@ def _copy_publish_media(items: list[dict[str, Any]], model_dir: Path) -> list[st
     return names
 
 
+def _copy_publish_videos(row: dict[str, Any], source_dir: Path | None, model_dir: Path) -> list[str]:
+    try:
+        raw = json.loads(str(row.get("local_video_files_json") or "[]"))
+    except Exception:
+        raw = []
+    if not isinstance(raw, list) or not raw:
+        return []
+
+    video_root = (Path(source_dir).resolve() / "videos") if source_dir is not None else None
+    target = Path(model_dir) / "videos"
+    names: list[str] = []
+    for index, value in enumerate(raw[:5], 1):
+        source = Path(str(value or "")).resolve()
+        if video_root is None or not source.is_file():
+            raise RuntimeError(f"Publish video is missing: {source}")
+        try:
+            source.relative_to(video_root)
+        except ValueError as exc:
+            raise RuntimeError(f"Publish video escapes Product video root: {source}") from exc
+        suffix = source.suffix.lower()
+        if suffix not in {".mp4", ".webm", ".mov", ".m4v", ".gif"}:
+            raise RuntimeError(f"Unsupported Product video type: {source.name}")
+        if source.stat().st_size < 512 or source.stat().st_size > 80_000_000:
+            raise RuntimeError(f"Product video size is outside the publish boundary: {source.name}")
+        target.mkdir(parents=True, exist_ok=True)
+        name = f"product-video-{index:02d}{suffix}"
+        destination = target / name
+        shutil.copy2(source, destination)
+        if destination.stat().st_size != source.stat().st_size or _sha256_file(destination) != _sha256_file(source):
+            raise RuntimeError(f"Publish video copy verification failed: {name}")
+        names.append(name)
+    return names
+
+
 def publish_gate(db, stage_core, product_id: int, *, allow_already_public: bool = False) -> dict[str, Any]:
     product_id = int(product_id)
     row = db.product(product_id)
@@ -711,6 +745,7 @@ def build_publish_batch(
                 )
             selected_urls = [str(item["source_url"]) for item in media_state["items"]]
             local_image_files = _copy_publish_media(media_state["items"], target)
+            local_video_files = _copy_publish_videos(dict(row), source_dir, target)
 
             editorial = {
                 key: row[key]
@@ -738,8 +773,10 @@ def build_publish_batch(
             editorial["selected_images_json"] = json.dumps(selected_urls, ensure_ascii=False)
             editorial["primary_image_url"] = selected_urls[0] if selected_urls else ""
             editorial["local_image_files_json"] = json.dumps(local_image_files, ensure_ascii=False)
+            editorial["local_video_files_json"] = json.dumps(local_video_files, ensure_ascii=False)
             editorial["workflow_status"] = "batched"
             editorial["batch_local_image_count"] = len(local_image_files)
+            editorial["batch_local_video_count"] = len(local_video_files)
 
             editorial_rel = f"models/{target.name}/desktop_editorial.json"
             (target / "desktop_editorial.json").write_text(
@@ -753,6 +790,7 @@ def build_publish_batch(
                 "editorial": editorial_rel,
                 "selected_images": len(selected_urls),
                 "local_images": len(local_image_files),
+                "local_videos": len(local_video_files),
                 "fingerprint": editorial["fingerprint"],
                 "source_hash": editorial["source_hash"],
             })

@@ -89,7 +89,9 @@ body{{font-family:IRANSans,Tahoma,sans-serif;color:#fff;position:relative}}
 <div class="copy"><div class="kicker">محصول 3DPrintHub</div><div class="title">{title}</div><div class="subtitle">{subtitle}</div></div>
 <div class="features">{bullets}</div><div class="hero"><img src="{html.escape(image_url)}"></div>
 <div class="cta">مشاهده محصول <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
-<div class="url">{url}</div>
+<!-- The clickable Product URL is attached by the Buffer Story link metadata.
+     Do not print a raw URL on the artwork: Instagram treats that text as
+     non-clickable and it caused the previous Story-link confusion. -->
 <div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div>
 </body></html>"""
 def _revision_key(row: dict) -> str:

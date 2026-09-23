@@ -139,15 +139,31 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
     if not media:
         raise RuntimeError("هیچ تصویر عمومی HTTPS تأییدشده‌ای برای Instagram وجود ندارد.")
 
+    public_videos = ack.get("public_videos")
+    if not isinstance(public_videos, list):
+        public_videos = ack.get("videos")
+    video_urls = []
+    for item in public_videos if isinstance(public_videos, list) else []:
+        url = str(item.get("url") if isinstance(item, dict) else item or "").strip()
+        ok = bool(item.get("ok", True)) if isinstance(item, dict) else True
+        if ok and url.startswith("https://") and url not in video_urls:
+            video_urls.append(url)
+
     title = str(row.get("seo_title_fa") or row.get("title_fa") or row.get("source_title") or "").strip()
     tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
     media_urls = media[:10]
     caption, hashtags = build_caption(row, tracking_url)
     alt_texts = build_alt_texts(row, media_urls)
+    media_manifest = ([{"type": "image", "url": url, "alt_text": alt_texts[index] if index < len(alt_texts) else ""}
+                      for index, url in enumerate(media_urls)]
+                     + [{"type": "video", "url": url, "alt_text": ""} for url in video_urls[:5]])
     return {
+        "product_code": str(row.get("external_id") or row.get("sku") or row.get("id") or "").strip(),
         "product_url": product_url,
         "tracking_url": tracking_url,
         "media_urls": media_urls,
+        "video_urls": video_urls[:5],
+        "media_manifest": media_manifest,
         "caption": caption,
         "alt_texts": alt_texts,
         "hashtags": hashtags,

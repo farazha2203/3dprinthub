@@ -1269,3 +1269,28 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Added `docs/مستندات اتصال به اینستاگرام/` containing architecture, API contract, security rules, official Buffer references and safe GraphQL examples.
 - Added focused Buffer provider tests: healthy Instagram channel, `shareNow` public-media post input, and fail-closed missing-secret behavior.
 - Buffer-side Instagram login is owner-confirmed; live API transport remains pending because the local handoff file and Credential Store currently contain no Buffer API key.
+## 2026-09-23 — Phase50.A2R planned / implementation started
+- Registered the next phase for incomplete Crawl visibility, URL-owned source/image refetch, Product video receipt and Instagram Feed/Carousel + companion Story handoff.
+- Preserved the existing `discovered_urls`, adaptive acquisition, safe merge, Site-first publication and Buffer provider-media contracts.
+- Recorded the verified project Router/Bridge transport and the unresolved Host FTP quota boundary.
+
+### A2R local implementation slice
+- Rich acquisition now extracts public Product video sources and persists them separately from 3D/model file links.
+- Optional file acquisition downloads bounded same-domain video files into the Product-local `videos` directory and records local paths for later Site/Instagram handoff.
+- Compile and diff-check pass; baseline-only test contracts remain separately classified.
+- Stage 3 Product UI now exposes bounded `دریافت ویدیوی محصول` with visible detected/local video counts and Worker-backed same-domain download.
+- A2R video/acquisition focused tests pass 14/14.
+- Canonical Catalog backup `pre-a2r-video-schema-20260923-122000` passed SQLite integrity; real Catalog received additive video columns and Qt `RUN_QT.ps1 -VerifyOnly` plus local relaunch passed.
+## 2026-09-23 - A2R animated product media discovery and social manifest
+- Fixed MakerWorld-style media detection where the visible product motion asset is an explicitly named animated GIF in embedded `design_pictures`, not a `<video>` element and not `design_video`.
+- Added bounded JSON discovery for `.mp4/.mov/.webm/.m4v/.m3u8` and explicitly animated `.gif` URLs; ordinary product images remain image media.
+- Added social payload `media_manifest`/`video_urls` and Product external-code inclusion in captions for later Site/Instagram Feed+Story preparation.
+- Focused verification: 15/15 acquisition/video tests and 29/29 Instagram/Buffer/Story/social tests PASS. No external post or Host/Production mutation performed.
+- Corrected Story artwork: the raw Product URL is no longer rendered as non-clickable text; Buffer's Story link metadata remains the only clickable-link channel. MakerWorld CDN media host and animated GIF downloads are now allowed within the bounded provider exception. A headless live refresh was blocked by MakerWorld HTTP 403/profile lock and remains pending through the attached/foreground browser path.
+- A2R.1 foreground Refresh completed for Product #536: 50 images received and animated GIF saved as `product-video-01.gif` (12,778,636 bytes; SHA256 `6F980225578D6AFC94375FFC53848CA95440119F060F97F84DD3B2702FB056C6`). Catalog video fields are persisted; final social scope 31/31 and Qt VerifyOnly PASS. No external publication performed.
+
+## 2026-09-23 — A2R split checkpoint: Product motion media
+- Split A2R into two independently testable checkpoints per owner request; direct Windows shell/filesystem execution is preferred over GUI Remote Desktop where authorized.
+- Slice 1 Product video acquisition is GitHub-updated at `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2` with Local=Remote proof and a fresh integrity-checked Catalog rollback.
+- Slice 2 Site receiver/public verifier/Product Detail/social manifest changes are Local-tested: receiver 6/6, related Product/import 5/5, Buffer/Instagram/Story 34/34, compile/check/no-drift/diff-check/Qt VerifyOnly PASS.
+- No external social publication or Production mutation occurred at this checkpoint; Host/release-lineage audit remains the next gate.

@@ -1010,3 +1010,15 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - Windows Publisher exact-SHA runtime: PASS and foreground UI launched.
 - Production test-product reset: still pending solely because the automation safety layer blocked the destructive write; verified rollback backup already exists.
 
+## 2026-09-23 - Phase50.A2R Catalog completion, Product video and Instagram set/story
+- [x] Preserve the canonical `discovered_urls` / Product identity ledger and extend the existing incomplete-row recovery path.
+- [x] Keep incomplete Crawl rows visible with truthful local-image/video/data status and legacy `collected`/`seo_images` fallback resolution.
+- [x] Preserve the mature URL-owned recovery path with safe source-data merge and operator/pricing/publish preservation.
+- [x] Add Product-detail bounded video receipt with local evidence and no false publish readiness.
+- [x] Add canonical Product video handoff preparation for Site and Instagram media manifests.
+- [x] Preserve Buffer GitHub-raw provider-media boundary, receipt fingerprints and no-duplicate Feed/Story reconciliation.
+- [x] Complete focused Crawl/video/social regressions, compile/diff-check and Qt VerifyOnly; real Product #536 video state verified.
+- [x] Split long execution into two independent checkpoints; Slice 1 GitHub commit is `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2`.
+- [ ] Commit/push Slice 2 exact candidate and verify Local=Remote.
+- [ ] Verify release lineage + Host identity/worktree/quota/migration/rollback read-only through the dedicated 3DPrintHub router.
+- [ ] Production acceptance: same-identity Product #536 video handoff, public media verification, then duplicate-safe Feed/Story acceptance only if no current social receipt exists.

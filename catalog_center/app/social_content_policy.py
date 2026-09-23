@@ -155,6 +155,9 @@ def build_caption(row: dict[str, Any], tracking_url: str) -> tuple[str, list[str
         specs.append("متریال: " + "، ".join(materials[:3]))
     if specs:
         parts.append("مشخصات: " + " | ".join(specs))
+    product_code = _plain(row.get("external_id") or row.get("sku") or row.get("id"), 80)
+    if product_code:
+        parts.append(f"کد محصول: {product_code}")
     parts.append(f"🛒 {BRAND_ORDER_COPY}")
     parts.append(f"🚚 {NATIONWIDE_SHIPPING_COPY}")
     parts.append(f"مشاهده محصول، انتخاب مشخصات و ثبت سفارش:\n{tracking_url}")

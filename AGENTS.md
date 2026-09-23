@@ -41,3 +41,13 @@ Use PLANNED, IN_PROGRESS, IMPLEMENTED, LOCAL_TESTED, GITHUB_UPDATED, DEPLOYED, P
 At session end `docs/CURRENT_STATE.md` must show what changed, what passed/failed, current branch/approved commit, production status, known issues, remaining work and exact next task.
 
 READ DOCS -> VERIFY STATE -> CHECK PREVIOUS ERRORS -> IMPLEMENT -> TEST LOCAL/CI -> DOCUMENT -> COMMIT/PUSH -> DEPLOY FROM GITHUB -> VERIFY PRODUCTION
+
+## Central Windows-MCP / Host Access Workflow
+
+- Gateway project ID: 3dprinthub.
+- Dedicated access route: Windows loopback 127.0.0.1:22024, belonging only to 3DPrintHub.
+- Windows local development -> local test -> project router -> correct Host -> backup -> transfer/deploy -> verify -> documentation.
+- Use D:\projects\.chatgpt-gateway\project-host.ps1 with -Project 3dprinthub for this project's Host access. Never use another project's tunnel, SSH alias, credential, Host, or deploy command as fallback.
+- If the dedicated loopback route is unavailable, stop and report the blocked gate; do not broaden exposure or invent a direct Windows-to-Host path.
+- Do not store secrets or token values in this repository or its documentation.
+- For the full backup, verification, secret-handling, and documentation-closure contract, read docs\CENTRAL_WINDOWS_MCP_WORKFLOW.md.

@@ -1662,3 +1662,53 @@ Status: `BUFFER_CHANNEL_CONNECTED / API_TRANSPORT_PENDING_CREDENTIAL`.
 - `buffer-ker.txt` is explicitly Git-ignored and must never be committed.
 - Current workstation verification found `buffer-ker.txt` empty (0 bytes) and no `BUFFER_API_KEY` in the secure store; therefore no live API/channel probe or real Instagram post is claimed yet.
 - Publish order remains fail-closed: Site publish -> public HTTPS Product/media verification -> Buffer -> Instagram, with duplicate-public-revision protection.
+
+## Central Windows-MCP / Host Access Workflow
+
+The canonical project route is documented in docs\CENTRAL_WINDOWS_MCP_WORKFLOW.md and the central registry at D:\projects\.chatgpt-gateway\projects.json. Gateway project ID: 3dprinthub. Route: 127.0.0.1:22024. The project-specific rule is Windows local development -> local test -> project router -> correct Host or local-only execution -> backup -> transfer/deploy where applicable -> verify -> documentation. Another project's tunnel is never a fallback. No credentials or token values are documented here.
+## 2026-09-23 — Phase50.A2R PLANNED / LOCAL WORK STARTED
+
+The next implementation phase is now formally registered in `docs/phases/PHASE50_A2R_CATALOG_VIDEO_INSTAGRAM.md`. Scope is limited to extending the existing Crawl ledger/recovery path, adding Product video acquisition and completing Site/Instagram Feed-Carousel/Story handoff without introducing parallel identity, pricing or social architecture.
+
+Verified transport before implementation: project Router Health `ok=true`; Host `sfkilvrs@nphost4.parsblog.com`; Host root `/home/sfkilvrs/3dprinthub`; Windows `127.0.0.1:22024` TCP reachable. Host filesystem reports 39% block and 15% inode usage; historical FTP `Disk quota exceeded` is not explained by filesystem fullness and remains an account/FTP quota gate. No Host/Production mutation has been performed.
+
+Current Local branch is `wip/phase50-a2l-owner-qa-20260917`. The initial A2R session baseline was `f1b586457f91e229e7928688766d5cb6f13dddc6`; Slice 1 is now committed and pushed as `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2`, with Local=Remote verified. Pre-existing workflow/documentation WIP is preserved and is reconciled separately rather than reset/stashed.
+
+Exact next task: inspect current A2R code seams, implement incomplete-row/video state locally, run focused gates, then create a fresh Catalog backup before any publish or Host write test.
+
+### A2R implementation checkpoint — 2026-09-23
+
+The first local code slice is implemented: rich page extraction now observes public `<video>`, `<video><source>` and video source elements; Product payloads persist `video_links_json` and `selected_video_links_json`; optional file acquisition stores bounded same-domain video files under the Product `videos` directory and records `local_video_files_json`. Existing model-file download behavior remains intact.
+
+Verification: changed Python files compile and `git diff --check` passes. Canonical focused run reached 41 tests: 39 passed; one pre-existing `exportable()` baseline contract failed because `source_license_owner_approved=1` keeps the seeded row exportable after commercial status changes, and one pre-existing Stage-3 text assertion failed against the current accepted UI wording. The latter test is stale relative to the existing `بازیابی از لینک` control and neither failure is caused by video extraction. No Catalog canonical DB, Host or Production was mutated.
+
+Next exact task: connect Product detail UI to show detected/local video state and provide an explicit bounded `دریافت ویدیوی محصول` action, then add focused video regression coverage before broader Crawl/Instagram gates.
+
+### A2R UI/video checkpoint — 2026-09-23
+
+Stage 3 Product UI now shows `ویدیو: ذخیره / لینک` counts and exposes `دریافت ویدیوی محصول`. The action uses the existing image-task Worker boundary, reads canonical stored video links, accepts only same-domain public URLs, downloads at most five files with an 80MB per-file cap into `local_dir/videos`, records `local_video_files_json`, and reports success without marking Site/Instagram publication complete.
+
+Verification: A2R video + existing acquisition tests `14/14 PASS`; changed Python compile PASS; `git diff --check` PASS. No Product/Catalog canonical data, Host or Production mutation occurred.
+
+Next exact task: add/verify Site and Instagram derivative preparation from the recorded local video manifest, then run the focused Crawl visibility/recovery suite and Qt VerifyOnly/foreground UI smoke.
+
+### A2R Windows runtime gate — 2026-09-23
+
+The canonical Catalog Center data root was initially blocked by an open/readonly SQLite state. After the owner closed the Windows app, a checksum-backed SQLite online backup was created at `D:\projects\3dprinthub-backups\pre-a2r-video-schema-20260923-122000`; SQLite integrity is `ok`. Additive video columns are now present in the real Catalog, `RUN_QT.ps1 -VerifyOnly` passes with `QT_FOUNDATION_VERIFY=OK`, `QT_42B2_FULL_PARITY_VERIFY=OK` and `QT_OPERATOR_LAUNCHER_VERIFY=PASS`, and the current Qt runtime was relaunched locally.
+
+The A2R focused suite remains `14/14 PASS`. Production/Host were not mutated and no publish was attempted. Slice 1 has since been promoted to GitHub as `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2`; remaining Site/Social work is isolated as Slice 2 and must pass its own Local and Host gates before Production mutation.
+## 2026-09-23 - Phase50.A2R MakerWorld animated media + social manifest LOCAL_TESTED
+The reported Product #536 video mismatch was reproduced against the live MakerWorld payload. The page does not expose a `<video>` element; its motion media is an animated GIF in `designExtension.design_pictures` (`GIF_...gif`) while `design_video` is empty. The extractor now promotes explicitly named animated media/video extensions from embedded/network JSON into the bounded video-link contract without moving ordinary product photographs out of the image pipeline.
+
+Social preparation now also returns a `media_manifest` containing verified public images with per-item ALT text plus public videos when the Site ACK provides them, and the caption includes the searchable source/external Product code. Existing Buffer Feed/companion Story publishing, provider-media hosting, duplicate guards and operator-required Highlight behavior are unchanged; no external post was sent.
+
+Verification: A2R/acquisition 15/15 PASS; Instagram/Buffer/Story/social policy 29/29 PASS; focused Story/GIF compatibility 18/18 PASS; final social scope 31/31 PASS; `RUN_QT.ps1 -VerifyOnly` PASS; `git diff --check` PASS. Foreground Refresh for Product #536 succeeded: 50 local images were received and the animated GIF was stored at `D:\projects\3dprinthub-catalog-manager\collected\makerworld\3190632\videos\product-video-01.gif` (12,778,636 bytes, SHA256 `6F980225578D6AFC94375FFC53848CA95440119F060F97F84DD3B2702FB056C6`). The Catalog row now persists both video-link fields and the local GIF file. The Story artwork no longer prints a raw non-clickable URL; the clickable Product URL remains only in Buffer Story link metadata. Site/Instagram output is prepared but no external post or Host/Production mutation was performed. Exact next: inspect the refreshed #536 row in foreground Qt, prepare/verify Site derivatives and social provider assets, then commit/push through the documented GitHub-first gate.
+
+## 2026-09-23 - A2R split execution: Slice 1 GitHub / Slice 2 Local PASS
+Owner requested direct Windows shell/filesystem execution where possible and shorter execution slices to avoid delivery timeout. The active A2R phase is therefore split into independently testable checkpoints rather than one long mutation chain.
+
+Slice 1 is committed/pushed at `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2`; Local=Remote was verified. Fresh Catalog rollback is `D:\projects\3dprinthub-backups\pre-a2r-slice1-20260923-171036\catalog.sqlite3`, SHA256 `716FEE336369273381884CC078CD02D8E0538E44021DAFCD295FDBFCF30F2D26`, 624,951,296 bytes. Source/backup `quick_check`, page count, Product count and Product #536 video state match. A live-source `Get-FileHash` attempt was blocked by the open Catalog process; the condition was changed to SQLite online-backup logical verification instead of repeating the failed read.
+
+Slice 2 Local acceptance is complete: receiver/site 6/6 PASS; mature Product Detail/import regression 5/5 PASS; Buffer/Instagram/Story 34/34 PASS; changed Python compile PASS; Django check PASS with the known CKEditor warning; `makemigrations --check --dry-run` reports no changes; diff-check PASS; Qt VerifyOnly PASS (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`, `QT_OPERATOR_LAUNCHER_VERIFY=PASS`). No external Instagram post, Host source mutation, Production DB mutation or deploy has occurred in this split checkpoint.
+
+Exact next task: commit/push the isolated Slice-2 Site/Social delta and documentation, verify Local=Remote, then perform read-only Host/release-lineage audit through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`. Only after an accepted exact GitHub release candidate and fresh Production rollback evidence may Product #536 be republished same-identity for public video acceptance.

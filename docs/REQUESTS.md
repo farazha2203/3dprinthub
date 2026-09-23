@@ -1098,3 +1098,9 @@ Implemented and verified: 66 active inventory rows, 64 unique selectable Filamen
 ## REQ-50-011 - Final Windows publisher resend/update + empty Store handoff
 Requested behavior: clear old/test Store products; keep the professional standalone 3D Slicebox Hero; allow previously sent Windows Catalog products to be explicitly resent; update existing Site products in place when present; recreate safely when the old Site product was deleted; carry changed Profile, Filament, print time and other current product fields on republish.
 Status 2026-09-17: source behavior locally accepted; Production reset preflight/backup ready; destructive reset not yet executed due automation safety guard.
+
+## REQ-50-034 — Direct Windows execution and bounded phase slices
+Date: 2026-09-23
+Status: `ACTIVE EXECUTION RULE`.
+
+Owner requests that project work use direct Windows filesystem/shell execution instead of GUI Remote Desktop whenever the authorized direct command path is available. Long implementation/deploy phases must be split into short independently testable/committable slices so a message/tool timeout does not lose the accepted checkpoint. This does not relax the GitHub-first, backup, reverse-tunnel, test or Production verification gates.
