@@ -1,12 +1,21 @@
 # Phase50.A.2Z — Catalog Data Completion + Site Truth
 
-Status: PRODUCT_628_ASCII_BATCH_SOURCE_FIX_GITHUB_EXACT / BOUNDED_RETRY_NEXT
-Date: 2026-09-23
+Status: ACCEPTED / PRODUCTION_VERIFIED / CLOSED
+Date: 2026-09-24
 Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
 Branch: `wip/phase50-a2z-catalog-data-completion-20260923`
 
 ## Objective
 Close Catalog/Site truth without duplicate Product identities or silent operator-data loss. Incomplete Crawl Products stay visible and can safely recover the same identity. Same-identity Site republish must replace current media/Profile/Variant/pricing state while preserving Product identity and explicit Slider membership.
+
+## Final closure truth — 2026-09-24
+- #625 is Site Product #39 revision 13 with one active ProductImage and 32 active Variants; strict public media parity passed.
+- #628 final successful receipt is #433 / Batch UUID `4976dd73-7d1d-44c5-8440-3e0eb142194c`; Site Product #38 advanced to revision 2 with `republish_parity.ok=true`, media_count=2, profile_count=32 and public_http_ok=true.
+- Independent Production DB readback confirms #628 price 3,063,500–6,479,000, two current images, 32 active / 190 inactive historical variants, exact 12×12×12 / 113g / 511min and 18×18×18 / 312g / 991min profiles, and Slider disabled.
+- #152/#178/#620/#625 collateral readback passed without republishing them.
+- Real Playwright browser acceptance passed at Desktop 1440×1000 and Mobile 390×844: HTTP 200, no horizontal overflow, both #628 media healthy, current ASCII public paths only, no stale Unicode/encoded path, no pageerror or console error.
+- Production selective Server head remains clean at `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`.
+- Phase50.A.2Z is CLOSED; successor is `PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md`.
 
 ## Verified current truth
 - Catalog quick_check=ok; current inventory is 771 Products, not the older documented 635.

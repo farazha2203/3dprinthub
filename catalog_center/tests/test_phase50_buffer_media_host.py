@@ -169,6 +169,79 @@ class BufferMediaHostTests(unittest.TestCase):
             self.assertTrue((worktree / "social_media/instagram/625/storyv3rev/feed-01.png").is_file())
             self.assertIn("/storyv3rev/story.png", result["story_url"])
 
+    @patch("app.buffer_media_host._verify_public_image")
+    @patch("app.buffer_media_host._run_git")
+    @patch("app.buffer_media_host._ensure_worktree")
+    def test_github_raw_mode_supports_story_only_without_feed_assets(
+        self, ensure_worktree, run_git, verify_public
+    ):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            worktree = Path(tmp) / "repo-social-assets"
+            root.mkdir()
+            (root / ".git").mkdir()
+            worktree.mkdir()
+            ensure_worktree.return_value = worktree
+            story = Path(tmp) / "story.png"
+            story.write_bytes(b"png-story-only")
+            db = _DB({
+                "buffer_media_host": "github_raw",
+                "buffer_github_repo_root": str(root),
+                "buffer_github_media_worktree": str(worktree),
+                "buffer_github_media_branch": "social-assets-buffer",
+            })
+
+            def git_result(repo, args, **kwargs):
+                result = MagicMock()
+                result.returncode = 0
+                result.stderr = ""
+                if args[:3] == ["remote", "get-url", "origin"]:
+                    result.stdout = "https://github.com/farazha2203/3dprinthub.git\n"
+                elif args[:2] == ["status", "--porcelain"]:
+                    result.stdout = ""
+                elif args[:3] == ["diff", "--cached", "--quiet"]:
+                    result.returncode = 1
+                    result.stdout = ""
+                elif args[:2] == ["rev-parse", "HEAD"]:
+                    result.stdout = "story123\n"
+                elif args[:2] == ["ls-remote", "origin"]:
+                    result.stdout = "story123\trefs/heads/social-assets-buffer\n"
+                else:
+                    result.stdout = ""
+                return result
+
+            run_git.side_effect = git_result
+            result = rehost_buffer_assets(
+                db,
+                625,
+                {
+                    "urls": [],
+                    "local_paths": [],
+                    "source_urls": [],
+                    "revision": "storyonlyrev",
+                    "published_to_site": False,
+                },
+                {
+                    "url": "",
+                    "local_path": str(story),
+                    "revision": "storyonlyrev",
+                    "published_to_site": False,
+                },
+            )
+
+            self.assertEqual(result["feed_urls"], [])
+            self.assertTrue(result["story_url"].endswith("/story.png"))
+            self.assertTrue(
+                (worktree / "social_media/instagram/625/storyonlyrev/story.png").is_file()
+            )
+            self.assertFalse(
+                (worktree / "social_media/instagram/625/storyonlyrev/feed-01.png").exists()
+            )
+            verify_public.assert_called_once_with(
+                result["story_url"],
+                timeout=25,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,17 @@
+## 2026-09-24 - Phase50.A.2Z-O1 Product Filters + Split Instagram LOCAL_TESTED / GITHUB_PROMOTION NEXT
+
+Active branch is `wip/phase50-a2z-o1-catalog-controls-20260924`. The blocking Windows/Production lineage divergence was closed first with no tree delta at `82862b4569b537406618523f7350cd3514c4c03f`; both Windows `740bfe6e...` and selective Production `2b48a593...` are ancestors.
+
+O1 implements the owner-requested Product controls without Product/Site mutation: operational filters for 7/7 ready, AI-completed 6/7, Site sent, Instagram Post sent and Instagram Story sent; Feed/Post and Story are now separate buttons, readiness scopes and worker paths. Feed-only never creates Story and is not blocked by native-Story mobile readiness. Story-only never creates Feed/Post and uses independent Buffer media hosting; Direct provider fails closed for Story-only.
+
+Real Catalog truth after implementation: quick_check=ok; ready_7=2, ai_6=19, published=14, instagram_posted=4, instagram_story=2. Focused changed-condition 1/1 PASS; focused Product/Social/Buffer 24/24 PASS; broader Product/Qt/Social 136/136 PASS; py_compile, diff-check and Qt VerifyOnly PASS. No Production deploy is required for this Windows-only O1 delta.
+
+Phase plan is now six bounded slices in `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md`: O1 filters/split Social -> O2 Crawl complete/incomplete + missing reasons -> O3 deep reset/refetch/remap repair -> O4 delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated closure.
+
+Phase50.A.2Z is now factually CLOSED/ACCEPTED: Product #628 successfully published as Site #38 revision 2 with ACK parity ok=true, 2 media, 32 active variants, exact 12cm/18cm profiles, Slider disabled and public HTTP=true. Independent Production DB readback and real Playwright Desktop 1440x1000 + Mobile 390x844 acceptance passed with no stale Unicode media path, no overflow and no page/console errors. #625/#620/#152/#178 collateral readback remained stable.
+
+Exact next: final docs/diff review -> commit/push O1 -> verify Local=Remote -> Qt VerifyOnly from pushed SHA -> close the running Catalog Center once -> relaunch from that exact branch/SHA -> runtime smoke -> mark O1 ACCEPTED -> start O2.
+
 ## 2026-09-24 - Phase50.A.2Z #628 ASCII BATCH SOURCE FIX GITHUB_EXACT / BOUNDED RETRY NEXT
 
 Current branch `wip/phase50-a2z-catalog-data-completion-20260923` contains the final Windows Batch-source fix at GitHub-exact code commit `7b1b447ab772e15f3ecdc1345e69e2e8771573f8`. Earlier Server destination canonicalization remains deployed on Production `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`.

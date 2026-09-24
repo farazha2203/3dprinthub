@@ -1,3 +1,12 @@
+## 2026-09-24 - A2Z CLOSED / A2Z-O Operator Controls active
+
+Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revision 2 with strict Product/Image/Profile/Variant/Slider parity and real Desktop/Mobile Playwright acceptance; #625/#620/#152/#178 collateral truth is stable. Selective Production Server remains clean at `2b48a593...`.
+
+The active bounded successor is `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md` with six slices:
+O1 Product status filters + split Instagram Post/Story -> O2 Crawl complete/incomplete + missing reasons -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
+
+O1 is Local-tested on branch `wip/phase50-a2z-o1-catalog-controls-20260924`: focused 24/24 and broader Product/Qt/Social 136/136 PASS; Catalog quick_check=ok. Exact next is commit/push -> Local=Remote -> exact-SHA Qt restart/runtime acceptance -> O2.
+
 ## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid ACCEPTED
 
 Automatic Story + Shop Grid is now Production-proven on #536 from exact runtime `447e8130...`: existing Feed reused/no duplicate, new automatic Story Buffer-sent/live, v3 1080×1920 Gold/Navy/IRANSans asset public-SHA exact, Shop Grid tile mapped to exact Product UTM URL, pre/post Catalog backups quick_check PASS. Mobile-dependent native Link Sticker remains optional only. Future v5 captions/Story artwork contain no fake/raw clickable URL; Feed Product click-through is Shop Grid metadata. A2Z-S2 is closed. Next: A2Z Catalog Data Completion -> #620/#625/#628 operator acceptance -> final Profile/Filament/Image + controlled same-identity republish -> then changed-revision Social rollout.

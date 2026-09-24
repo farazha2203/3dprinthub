@@ -1,3 +1,15 @@
+## 2026-09-24 - Phase50.A.2Z-O Catalog Operator Controls — six bounded phases
+- [x] O1: converge Windows/Production lineage with no tree regression.
+- [x] O1: Product filters for 7/7 ready, AI-completed 6/7, Site sent, Instagram Post sent and Instagram Story sent.
+- [x] O1: split Instagram Post and Story into independent buttons/readiness/workers; Story-only does not create Feed and Feed-only does not create Story.
+- [x] O1: focused 24/24 + broader Product/Qt/Social 136/136 + compile/diff/Qt VerifyOnly; real Catalog filter counts and quick_check pass.
+- [ ] O1: commit/push exact source/docs, Local=Remote, restart Catalog Center once from exact pushed SHA and runtime-smoke.
+- [ ] O2: Crawl complete/incomplete filters and per-card missing reasons.
+- [ ] O3: guarded deep repair — backup, bounded derived-data purge, full source refetch and same-identity remap.
+- [ ] O4: fix Delete semantics and prove visible removal/tombstone/restore behavior.
+- [ ] O5: independent Social receipt reconciliation and operator acceptance for Post vs Story.
+- [ ] O6: integrated regression, any required GitHub-first Production gates, final docs and closure.
+
 ## 2026-09-24 - A2Z final Production closure gate
 - [x] Restore/authenticate dedicated 3DPrintHub reverse tunnel and pass Host read-only identity/DB/migration gate.
 - [x] Fresh Production DB + full-media rollback before #625.
@@ -11,10 +23,10 @@
 - [x] Run rollback-only stage tracer and exact ASCII-filesystem reproduction: importer stages/parity all pass; raw Unicode Batch source path reproduces the exact Production positions 127-131 error.
 - [x] Harden Windows Batch packaging so physical FTP/local-image source names are ASCII-safe while Unicode SEO metadata and media SHA remain unchanged; real #628 clone dry-run PASS. No new Server deploy required because `2b48a593...` already owns destination canonicalization.
 - [x] Commit/push Windows packaging fix as GitHub-exact `7b1b447a...`; Local=Remote verified.
-- [ ] Exact-SHA runtime gate + fresh Local/Production rollback, then retry only #628 once.
-- [ ] Verify #628 Product/Image/Profile/Variant/Slider parity and public HTTP/no stale media.
-- [ ] Recheck #152/#178/#620/#625 for collateral changes without republishing them.
-- [ ] Complete real Desktop/Mobile browser acceptance and close Phase50.A.2Z.
+- [x] Exact-SHA runtime gate + changed-condition bounded retry only #628; final Batch succeeded as Site Product #38 revision 2.
+- [x] Verify #628 Product/Image/Profile/Variant/Slider parity and public HTTP/no stale media.
+- [x] Recheck #152/#178/#620/#625 for collateral changes without republishing them.
+- [x] Complete real Desktop/Mobile Playwright acceptance and close Phase50.A.2Z as ACCEPTED.
 
 ## 2026-09-23 - A2Z exact-SHA local acceptance / Production gate
 - [x] Commit/push A2Z checkpoint fde86e23... and verify Local=GitHub exact.

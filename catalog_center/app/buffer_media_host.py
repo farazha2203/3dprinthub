@@ -180,18 +180,21 @@ def rehost_buffer_assets(
         if str(value or "").strip()
     ]
     expected_feed_count = len(source_feed_urls) or len(feed_urls)
-    if (
-        not feed_local
-        or expected_feed_count <= 0
-        or len(feed_local) != expected_feed_count
-    ):
-        raise RuntimeError(
-            "Buffer GitHub media host requires every generated feed file locally."
-        )
-    for path in feed_local:
-        if not path.is_file() or path.suffix.lower() != ".png":
-            raise RuntimeError(f"Buffer feed derivative is missing or not PNG: {path}")
     story_local = Path(story_local_value).resolve() if story_local_value else None
+    if expected_feed_count > 0:
+        if not feed_local or len(feed_local) != expected_feed_count:
+            raise RuntimeError(
+                "Buffer GitHub media host requires every generated feed file locally."
+            )
+        for path in feed_local:
+            if not path.is_file() or path.suffix.lower() != ".png":
+                raise RuntimeError(
+                    f"Buffer feed derivative is missing or not PNG: {path}"
+                )
+    elif story_meta is None:
+        raise RuntimeError(
+            "Buffer GitHub media host requires Feed media or one Story derivative."
+        )
     if story_meta is not None and (story_local is None or not story_local.is_file()):
         raise RuntimeError("Buffer Story derivative is missing locally.")
 

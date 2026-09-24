@@ -1,3 +1,20 @@
+## 2026-09-24 - A2Z-O1 Product operational filters + independent Instagram Post/Story
+- Closed the mandatory Windows/Production lineage gate first: merge head `82862b4569b537406618523f7350cd3514c4c03f` contains both accepted lineages and preserves the Windows tree byte-for-byte.
+- Added Product filters backed by canonical stage locks/receipts: ready 7/7, AI-completed 6/7, Site sent, Instagram Post published and Instagram Story published.
+- Split the previous combined Social action into separate «ارسال پست Instagram» and «ارسال استوری Instagram» buttons with independent readiness/workers/results.
+- Feed-only calls Buffer with `companion_story=False`; native Story mobile readiness cannot block Post-only.
+- Story-only calls `publish_story_for_product` directly and the GitHub media host accepts a Story derivative without Feed derivatives; no Feed/Post is created.
+- Verification: filter changed-condition 1/1, focused Product/Social/Buffer 24/24 and broader Product/Qt/Social 136/136 PASS; compile, diff-check and Qt VerifyOnly PASS.
+- Real Catalog read-only counts: ready_7=2, ai_6=19, published=14, instagram_posted=4, instagram_story=2; quick_check=ok.
+- No Product/Site/Social production mutation was performed by O1 tests.
+
+## 2026-09-24 - A2Z final acceptance
+- #628 final successful Batch is receipt #433 / UUID `4976dd73-7d1d-44c5-8440-3e0eb142194c`: Site Product #38 revision 2, republish parity ok=true, media_count=2, profile_count=32 and public_http_ok=true.
+- Independent Production readback confirms two active images, 32 active / 190 inactive historical variants, exact 12×12×12 113g/511min and 18×18×18 312g/991min profiles, price 3,063,500–6,479,000 and Slider disabled.
+- #625/#620/#152/#178 collateral state remained unchanged.
+- Real Playwright acceptance passed at Desktop 1440×1000 and Mobile 390×844: HTTP 200, two healthy #628 media, no stale Unicode path, no horizontal overflow and no page/console errors.
+- Phase50.A.2Z is CLOSED / ACCEPTED. Production remains on selective Server head `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`.
+
 ## 2026-09-24 - A2Z #628 exact Unicode root cause: Batch source path
 - Rollback-only Production trace proved every importer stage, Product parity and Portfolio pass for failed Batch `desktop_catalog_v85_20260924_105415`; Site #38 stayed revision 1.
 - Forced ASCII filesystem reproduction on that exact Batch produced the same `UnicodeEncodeError` at positions 127-131 when opening the Persian `local_image_files_json[0]`.

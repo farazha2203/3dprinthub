@@ -720,17 +720,47 @@ class Database:
                 "(source_title LIKE ? OR title_fa LIKE ? OR external_id LIKE ? OR source_url LIKE ?)"
             )
             args += [q, q, q, q]
+        stage_lock_count = " + ".join(
+            (
+                "CASE WHEN COALESCE("
+                f"json_extract(operator_stage_locks_json,'$.{stage}.locked'),0"
+                ")=1 THEN 1 ELSE 0 END"
+            )
+            for stage in (
+                "quick",
+                "commerce",
+                "images",
+                "content",
+                "specs",
+                "slider",
+                "publish",
+            )
+        )
         filters = {
             "untranslated": "(title_fa='' OR description_fa='')",
             "unapproved": "approved_for_sale=0",
             "not_priced": "price_is_final=0",
             "ready": "approved_for_sale=1 AND publish_as_product=1 AND title_fa<>'' AND needs_update=0",
+            "ready_7": (
+                f"({stage_lock_count})=7 AND "
+                "(server_id='' OR workflow_status<>'uploaded' "
+                "OR needs_update=1 OR upload_ready=1)"
+            ),
+            "ai_6": f"ai_completed_once=1 AND ({stage_lock_count})=6",
             "portfolio": "publish_as_portfolio=1",
             "reference": "reference_only=1",
             "upload_queue": "upload_ready=1",
             "review": "workflow_status='review'",
             "work_queue": "(server_id='' OR needs_update=1 OR upload_ready=1 OR workflow_status<>'uploaded')",
             "published": "(server_id<>'' AND workflow_status='uploaded')",
+            "instagram_posted": (
+                "EXISTS(SELECT 1 FROM sync_receipts sr "
+                "WHERE sr.product_id=products.id AND sr.status='instagram_published')"
+            ),
+            "instagram_story": (
+                "EXISTS(SELECT 1 FROM sync_receipts sr "
+                "WHERE sr.product_id=products.id AND sr.status='instagram_story_published')"
+            ),
             "needs_update": "needs_update=1",
             "without_images": "(images_json='[]' OR images_json='' OR images_json IS NULL)",
             "without_content": "(title_fa='' OR description_fa='' OR content_status<>'ready')",

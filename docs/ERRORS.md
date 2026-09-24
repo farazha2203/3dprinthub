@@ -1,3 +1,21 @@
+## ERR-49-237 - O1 UI block shell replacement corrupted Persian text and escaped newlines
+**Date:** 2026-09-24
+**Observed:** first O1 py_compile stopped at `qt6/pages.py:843` with an unterminated string literal. Readback showed the large shell/Python replacement had converted source `\n` sequences into literal line breaks and Persian literals inside that replacement into `?`.
+**Impact:** the failure was caught before commit/push or app restart; no Catalog/Product/Site/Social mutation occurred.
+**Root cause:** a large Unicode source block was routed through a PowerShell-to-Python stdin replacement layer instead of the direct text edit boundary.
+**Correct fix:** do not retry the same shell replacement. Read the exact damaged method block and replace it through Remote Desktop Commander's direct `edit_block`, preserving Unicode and literal `\n` sequences. A separate focused test fixture failure (`operator_stage_locks_json` absent in a temp base Database) was corrected by installing the official Stage schema with `ensure_schema()`, not by weakening runtime SQL.
+**Verification:** py_compile PASS; changed-condition filter 1/1 PASS; focused Product/Social/Buffer 24/24 PASS; broader Product/Qt/Social 136/136 PASS; Qt VerifyOnly PASS.
+**Prevention:** source containing Persian or escape-sensitive multiline strings must be edited through a Unicode-safe direct file/edit tool; temp DB tests that exercise runtime extension columns must install the same repository-owned schema extension before inserting data.
+
+## ERR-49-236 - O1 feature work was blocked by Windows/Production Git lineage divergence
+**Date:** 2026-09-24
+**Observed:** before new Product/Crawl feature work, Windows head `740bfe6e...` and Production selective head `2b48a593...` shared `103f559c...` but neither was ancestor of the other.
+**Impact:** per AGENTS.md, O1 feature implementation was stopped before source changes.
+**Root cause:** A2Z Windows Batch-source work and the selective Production Unicode Server release were accepted on separate descendants of the same Production baseline.
+**Correct fix:** compare the Production delta first. All four runtime files were already byte-identical in the Windows head; only the Windows test carried stronger assertions. A no-tree-delta merge was created on `wip/phase50-a2z-o1-catalog-controls-20260924` and committed as `82862b4569b537406618523f7350cd3514c4c03f`.
+**Verification:** merge had no conflict/staged/worktree delta, merge tree equals the pre-merge Windows tree, Local=Remote exact, and both `740bfe6e...` and `2b48a593...` are ancestors of `82862b45...`.
+**Prevention:** before every new feature phase, enforce the existing lineage gate and converge selective Production history even when runtime bytes already match.
+
 ## ERR-49-235 - #628 Batch source filename crossed an ASCII filesystem boundary before Server canonicalization
 **Date:** 2026-09-24
 **Observed:** selective Server release `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9` deployed cleanly from exact Production `103f559c...`. Rollback, no-drift, receiver readiness, Unicode basename probe and Home/Store HTTP gates all passed. A fresh post-deploy/prepublish rollback was verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20260924-105351-a2z-628-postdeploy-prepublish`. Changed-condition retry of only #628 (Batch `desktop_catalog_v85_20260924_105415`, UUID `bc40a728-5b26-453d-ba27-e74608ed8a7a`) still failed with the same `UnicodeEncodeError: 'ascii' codec can't encode characters in position 127-131`.

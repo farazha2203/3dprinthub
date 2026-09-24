@@ -2600,8 +2600,11 @@ class InstagramCore:
             ),
         )
 
-    def delivery_readiness(self) -> dict[str, Any]:
-        """Return fail-closed provider readiness before any irreversible Social work."""
+    def delivery_readiness(self, *, scope: str = "both") -> dict[str, Any]:
+        """Return fail-closed provider readiness for Feed, Story or combined work."""
+        scope = str(scope or "both").strip().lower()
+        if scope not in {"feed", "story", "both"}:
+            raise RuntimeError(f"Unsupported Instagram delivery scope: {scope}")
         provider = self.provider()
         companion_raw = str(
             self.db.setting("instagram_companion_story_enabled", "1") or "1"
@@ -2619,17 +2622,30 @@ class InstagramCore:
 
         state: dict[str, Any] = {
             "provider": provider,
+            "scope": scope,
             "ready": True,
             "blockers": [],
             "companion_story_enabled": companion_enabled,
             "story_link_mode": link_mode,
             "clickable_story_enabled": native_sticker_enabled,
+            "story_supported": provider == "buffer",
             "feed_link_mode": "buffer_shop_grid" if provider == "buffer" else "direct",
             "requires_mobile_handoff": bool(
-                provider == "buffer" and companion_enabled and native_sticker_enabled
+                provider == "buffer"
+                and native_sticker_enabled
+                and (
+                    scope == "story"
+                    or (scope == "both" and companion_enabled)
+                )
             ),
         }
         if provider != "buffer":
+            if scope == "story":
+                state["ready"] = False
+                state["blockers"] = [
+                    "ارسال مستقل Story در مسیر Instagram Direct پیاده نشده است؛ "
+                    "Provider را روی Buffer بگذار یا فقط Post را ارسال کن."
+                ]
             return state
 
         from app.buffer_publish import test_connection
@@ -2659,8 +2675,12 @@ class InstagramCore:
             ]
         return state
 
-    def require_delivery_readiness(self) -> dict[str, Any]:
-        state = self.delivery_readiness()
+    def require_delivery_readiness(
+        self,
+        *,
+        scope: str = "both",
+    ) -> dict[str, Any]:
+        state = self.delivery_readiness(scope=scope)
         if state.get("ready") is True:
             return state
         blockers = [
@@ -2668,8 +2688,13 @@ class InstagramCore:
             for value in (state.get("blockers") or [])
             if str(value).strip()
         ]
+        label = {
+            "feed": "Instagram Post",
+            "story": "Instagram Story",
+            "both": "Instagram Post + Story",
+        }.get(str(scope or "both").strip().lower(), "Instagram")
         raise RuntimeError(
-            "Instagram Post + Story readiness failed: "
+            f"{label} readiness failed: "
             + (" | ".join(blockers) or "provider_not_ready")
         )
 
@@ -2680,6 +2705,308 @@ class InstagramCore:
             raise RuntimeError("محصول پیدا نشد.")
         settings = self.connection.settings(require_bridge=False)
         return canonical_site_payload(dict(row), site_url=settings.site_url)
+
+    def publish_feed_many(self, product_ids, *, progress=None) -> dict[str, Any]:
+        """Publish only Instagram Feed/Post. Never creates a Story."""
+        provider = self.provider()
+        readiness = self.require_delivery_readiness(scope="feed")
+        cfg = self.config()
+        settings = self.connection.settings(require_bridge=False)
+        if provider == "buffer":
+            from app.buffer_publish import publish_product as publish_feed
+            label = "Buffer/Instagram Post"
+        else:
+            from app.instagram_publish import publish_product as publish_feed
+            label = "Instagram Direct Post"
+
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        results, failures = [], []
+        total = max(1, len(ids))
+        for index, product_id in enumerate(ids, 1):
+            if progress:
+                progress(
+                    int((index - 1) / total * 100),
+                    f"{label} {index}/{total} • #{product_id}",
+                )
+            try:
+                if provider == "buffer":
+                    from app.instagram_feed_asset import prepare_product_feed_assets
+                    from app.buffer_media_host import rehost_buffer_assets
+
+                    canonical_payload = self.preview(product_id)
+                    media_host = str(
+                        self.db.setting("buffer_media_host", "github_raw")
+                        or "github_raw"
+                    ).strip().lower()
+                    feed_meta = prepare_product_feed_assets(
+                        self.db,
+                        product_id,
+                        settings,
+                        canonical_payload,
+                        publish_to_site=media_host == "site",
+                    )
+                    provider_media = rehost_buffer_assets(
+                        self.db,
+                        product_id,
+                        feed_meta,
+                        None,
+                        timeout=max(10, int(settings.timeout)),
+                    )
+                    result = publish_feed(
+                        self.db,
+                        product_id,
+                        cfg,
+                        site_url=settings.site_url,
+                        companion_story=False,
+                        feed_asset_urls=list(provider_media.get("feed_urls") or []),
+                        media_host_meta=provider_media,
+                    )
+                else:
+                    result = publish_feed(
+                        self.db,
+                        product_id,
+                        cfg,
+                        site_url=settings.site_url,
+                    )
+                results.append(
+                    {"product_id": product_id, "provider": provider, **result}
+                )
+            except Exception as exc:
+                failures.append(
+                    {
+                        "product_id": product_id,
+                        "provider": provider,
+                        "error": str(exc),
+                    }
+                )
+            if progress:
+                progress(
+                    int(index / total * 100),
+                    f"{label} {index}/{total} تمام شد",
+                )
+        return {
+            "provider": provider,
+            "scope": "feed",
+            "readiness": readiness,
+            "requested": len(ids),
+            "published": len(results),
+            "failed": len(failures),
+            "story_notifications": 0,
+            "results": results,
+            "failures": failures,
+        }
+
+    def publish_story_many(self, product_ids, *, progress=None) -> dict[str, Any]:
+        """Publish only Instagram Story. Never creates a Feed/Post."""
+        provider = self.provider()
+        readiness = self.require_delivery_readiness(scope="story")
+        if provider != "buffer":
+            raise RuntimeError(
+                "ارسال مستقل Story فقط در مسیر Buffer پشتیبانی می‌شود."
+            )
+        cfg = self.config()
+        settings = self.connection.settings(require_bridge=False)
+        from app.buffer_publish import publish_story_for_product
+        from app.buffer_media_host import rehost_buffer_assets
+        from app.instagram_story_asset import prepare_product_story_asset
+
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        results, failures = [], []
+        total = max(1, len(ids))
+        for index, product_id in enumerate(ids, 1):
+            if progress:
+                progress(
+                    int((index - 1) / total * 100),
+                    f"Buffer/Instagram Story {index}/{total} • #{product_id}",
+                )
+            try:
+                canonical_payload = self.preview(product_id)
+                media_host = str(
+                    self.db.setting("buffer_media_host", "github_raw")
+                    or "github_raw"
+                ).strip().lower()
+                story_meta = prepare_product_story_asset(
+                    self.db,
+                    product_id,
+                    settings,
+                    canonical_payload,
+                    publish_to_site=media_host == "site",
+                )
+                empty_feed_meta = {
+                    "urls": [],
+                    "local_paths": [],
+                    "source_urls": [],
+                    "revision": str(story_meta.get("revision") or ""),
+                    "published_to_site": media_host == "site",
+                }
+                provider_media = rehost_buffer_assets(
+                    self.db,
+                    product_id,
+                    empty_feed_meta,
+                    story_meta,
+                    timeout=max(10, int(settings.timeout)),
+                )
+                story_meta = {
+                    **story_meta,
+                    "provider_media_host": str(provider_media.get("host") or ""),
+                    "provider_media_commit_sha": str(
+                        provider_media.get("commit_sha") or ""
+                    ),
+                }
+                result = publish_story_for_product(
+                    self.db,
+                    product_id,
+                    cfg,
+                    site_url=settings.site_url,
+                    story_url_override=str(provider_media.get("story_url") or ""),
+                    story_meta=story_meta,
+                    link_notification=bool(
+                        readiness.get("requires_mobile_handoff")
+                    ),
+                )
+                results.append(
+                    {"product_id": product_id, "provider": provider, **result}
+                )
+            except Exception as exc:
+                failures.append(
+                    {
+                        "product_id": product_id,
+                        "provider": provider,
+                        "error": str(exc),
+                    }
+                )
+            if progress:
+                progress(
+                    int(index / total * 100),
+                    f"Buffer/Instagram Story {index}/{total} تمام شد",
+                )
+        story_notifications = sum(
+            1
+            for item in results
+            if bool(item.get("link_sticker_required"))
+            and not bool(item.get("instagram_live_confirmed"))
+        )
+        return {
+            "provider": provider,
+            "scope": "story",
+            "readiness": readiness,
+            "requested": len(ids),
+            "published": len(results),
+            "failed": len(failures),
+            "story_notifications": story_notifications,
+            "results": results,
+            "failures": failures,
+        }
+
+    def _publish_site_then_social(
+        self,
+        product_ids,
+        *,
+        scope: str,
+        progress=None,
+    ) -> dict[str, Any]:
+        """Ensure Site truth first, then execute exactly one Social scope."""
+        scope = str(scope or "").strip().lower()
+        if scope not in {"feed", "story"}:
+            raise RuntimeError(f"Unsupported social scope: {scope}")
+        self.require_delivery_readiness(scope=scope)
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        already_public, site_needed = [], []
+        for product_id in ids:
+            try:
+                self.preview(product_id)
+                already_public.append(product_id)
+            except Exception:
+                site_needed.append(product_id)
+
+        site_result = {"published": 0, "failed": 0, "items": []}
+        if site_needed:
+            if progress:
+                progress(5, f"انتشار سایت برای {len(site_needed)} محصول")
+            site_result = self.publish_core.publish_many(
+                site_needed,
+                progress=(
+                    (
+                        lambda value, message: progress(
+                            min(65, 5 + int(value * 0.6)),
+                            message,
+                        )
+                    )
+                    if progress
+                    else None
+                ),
+            )
+
+        social_ready, site_blocked = [], []
+        for product_id in ids:
+            try:
+                self.preview(product_id)
+                social_ready.append(product_id)
+            except Exception as exc:
+                site_blocked.append(
+                    {"product_id": product_id, "error": str(exc)}
+                )
+
+        if not social_ready:
+            return {
+                "social_kind": scope,
+                "requested": len(ids),
+                "already_public": already_public,
+                "site": site_result,
+                "site_blocked": site_blocked,
+                "instagram": {
+                    "scope": scope,
+                    "requested": 0,
+                    "published": 0,
+                    "failed": 0,
+                    "results": [],
+                    "failures": [],
+                },
+            }
+
+        if progress:
+            label = "Post" if scope == "feed" else "Story"
+            progress(68, f"لینک عمومی سایت تأیید شد؛ شروع Instagram {label}")
+        publisher = (
+            self.publish_feed_many
+            if scope == "feed"
+            else self.publish_story_many
+        )
+        social_result = publisher(
+            social_ready,
+            progress=(
+                (
+                    lambda value, message: progress(
+                        68 + int(value * 0.32),
+                        message,
+                    )
+                )
+                if progress
+                else None
+            ),
+        )
+        return {
+            "social_kind": scope,
+            "requested": len(ids),
+            "already_public": already_public,
+            "site": site_result,
+            "site_blocked": site_blocked,
+            "instagram": social_result,
+        }
+
+    def publish_site_then_feed(self, product_ids, *, progress=None) -> dict[str, Any]:
+        return self._publish_site_then_social(
+            product_ids,
+            scope="feed",
+            progress=progress,
+        )
+
+    def publish_site_then_story(self, product_ids, *, progress=None) -> dict[str, Any]:
+        return self._publish_site_then_social(
+            product_ids,
+            scope="story",
+            progress=progress,
+        )
 
     def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:
         provider = self.provider()

@@ -200,12 +200,31 @@ class ProductsPage(QWidget):
 
         self.filter_combo = QComboBox()
         self.filter_combo.addItem("فعال‌ها", "all")
+        self.filter_combo.addItem("آماده انتشار — ۷/۷ تیک", "ready_7")
+        self.filter_combo.addItem("تکمیل هوش مصنوعی — ۶/۷ تیک", "ai_6")
+        self.filter_combo.addItem("ارسال شده‌ها — سایت", "published")
+        self.filter_combo.addItem("ارسال پست Instagram", "instagram_posted")
+        self.filter_combo.addItem("ارسال استوری Instagram", "instagram_story")
         self.filter_combo.addItem("جدید", "new")
         self.filter_combo.addItem("درحال انجام", "work_queue")
-        self.filter_combo.addItem("ارسال/منتشرشده", "published")
         self.filter_combo.addItem("خطادار", "error")
         self.filter_combo.addItem("آرشیو", "archived")
         self.filter_combo.addItem("رد/حذف‌شده", "blocked")
+        filter_help = {
+            "ready_7": "محصولاتی که هر هفت مرحله ثبت و تأیید شده‌اند.",
+            "ai_6": "محصولاتی که AI اجرا شده و دقیقاً شش مرحله از هفت مرحله ثبت نهایی شده‌اند.",
+            "published": "محصولاتی که با هویت معتبر روی سایت ارسال و ثبت شده‌اند.",
+            "instagram_posted": "محصولاتی که receipt نهایی Instagram Post با وضعیت published دارند.",
+            "instagram_story": "محصولاتی که receipt نهایی Instagram Story با وضعیت published دارند.",
+        }
+        for index in range(self.filter_combo.count()):
+            code = str(self.filter_combo.itemData(index) or "")
+            if code in filter_help:
+                self.filter_combo.setItemData(
+                    index,
+                    filter_help[code],
+                    Qt.ItemDataRole.ToolTipRole,
+                )
 
         refresh_btn = QPushButton("بروزرسانی")
         refresh_btn.clicked.connect(self.refresh)
@@ -283,20 +302,28 @@ class ProductsPage(QWidget):
         self.bulk_publish_btn.setToolTip(
             "فقط Productهای تیک‌خورده و آماده Batch می‌شوند؛ موفقیت بعد از Bridge و بررسی عمومی سایت ثبت می‌شود."
         )
-        self.instagram_publish_btn = QPushButton(
-            "🚀 سایت → Instagram (Post + Story خودکار)"
+        self.instagram_post_btn = QPushButton("📸 ارسال پست Instagram")
+        self.instagram_post_btn.setToolTip(
+            "فقط Post/Feed اینستاگرام را ارسال می‌کند. اگر Product هنوز عمومی نباشد ابتدا همان Product را روی سایت منتشر و HTTP آن را تأیید می‌کند. Story ساخته نمی‌شود."
         )
-        self.instagram_publish_btn.setToolTip(
-            "برای هر Product: ابتدا Social readiness را بررسی می‌کند؛ سپس سایت/HTTPS، Feed استاندارد با Caption/Hashtag/Alt Text و Shop Grid Link اختصاصی محصول، و Story برندشده 1080×1920 با IRANSans را خودکار منتشر می‌کند. CTA Story مسیر خرید از لینک بیو/Shop Grid است و به Buffer mobile وابسته نیست."
+        self.instagram_story_btn = QPushButton("📱 ارسال استوری Instagram")
+        self.instagram_story_btn.setToolTip(
+            "فقط Story اینستاگرام را ارسال می‌کند. اگر Product هنوز عمومی نباشد ابتدا همان Product را روی سایت منتشر می‌کند. Feed/Post جدید ساخته نمی‌شود."
         )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
         self.ready_publish_btn.clicked.connect(self._mark_ready_selected)
         self.bulk_publish_btn.clicked.connect(self._publish_selected)
-        self.instagram_publish_btn.clicked.connect(self._publish_instagram_selected)
+        self.instagram_post_btn.clicked.connect(
+            self._publish_instagram_post_selected
+        )
+        self.instagram_story_btn.clicked.connect(
+            self._publish_instagram_story_selected
+        )
         publish_bar.addWidget(self.ready_publish_btn)
         publish_bar.addWidget(self.bulk_publish_btn)
-        publish_bar.addWidget(self.instagram_publish_btn)
+        publish_bar.addWidget(self.instagram_post_btn)
+        publish_bar.addWidget(self.instagram_story_btn)
         publish_bar.addWidget(self.bulk_publish_status, 1)
         root.addLayout(publish_bar)
 
@@ -762,11 +789,21 @@ class ProductsPage(QWidget):
         worker.signals.finished.connect(self._bulk_publish_finished)
         self.publish_pool.start(worker)
 
-    def _publish_instagram_selected(self) -> None:
+    def _publish_instagram_post_selected(self) -> None:
+        self._publish_instagram_scope_selected("feed")
+
+    def _publish_instagram_story_selected(self) -> None:
+        self._publish_instagram_scope_selected("story")
+
+    def _publish_instagram_scope_selected(self, scope: str) -> None:
+        scope = str(scope or "").strip().lower()
+        if scope not in {"feed", "story"}:
+            raise RuntimeError(f"Unsupported Instagram UI scope: {scope}")
+        label = "Post" if scope == "feed" else "Story"
         if self._instagram_worker is not None or self._bulk_publish_worker is not None:
             QMessageBox.information(
                 self,
-                "سایت → Instagram",
+                f"Instagram {label}",
                 "یک عملیات انتشار در حال اجرا است.",
             )
             return
@@ -774,21 +811,24 @@ class ProductsPage(QWidget):
         if not product_ids:
             QMessageBox.warning(
                 self,
-                "سایت → Instagram",
+                f"Instagram {label}",
                 "حداقل یک محصول را انتخاب کن.",
             )
             return
 
         try:
             social_readiness = dict(
-                self.kernel.instagram.delivery_readiness() or {}
+                self.kernel.instagram.delivery_readiness(scope=scope) or {}
             )
         except Exception as exc:
             show_diagnostic_error(
                 self,
-                "Instagram readiness",
+                f"Instagram {label} readiness",
                 str(exc),
-                context={"operation": "instagram-delivery-readiness"},
+                context={
+                    "operation": "instagram-delivery-readiness",
+                    "scope": scope,
+                },
             )
             return
         if social_readiness.get("ready") is not True:
@@ -799,13 +839,8 @@ class ProductsPage(QWidget):
             ]
             QMessageBox.warning(
                 self,
-                "Instagram Post + Story هنوز آماده نیست",
-                (
-                    "برای جلوگیری از تکرار حالت «Post رفت ولی Story نرفت»، "
-                    "هیچ انتشار جدیدی شروع نشد.\n\n"
-                    + ("\n".join(blockers) or "Provider آماده نیست.")
-                    + "\n\nبعد از دریافت Test Notification روی Buffer mobile دوباره همین دکمه را بزن."
-                ),
+                f"Instagram {label} هنوز آماده نیست",
+                "\n".join(blockers) or "Provider آماده نیست.",
             )
             return
 
@@ -823,25 +858,35 @@ class ProductsPage(QWidget):
         if not actionable:
             QMessageBox.warning(
                 self,
-                "سایت → Instagram",
-                "هیچ محصولی لینک عمومی تأییدشده یا تیک آماده انتشار ندارد. ابتدا Gateهای Product را کامل و آماده انتشار کن.",
+                f"Instagram {label}",
+                "هیچ محصولی لینک عمومی تأییدشده یا تیک آماده انتشار ندارد. "
+                "ابتدا Gateهای Product را کامل و آماده انتشار کن.",
             )
             return
 
+        if scope == "feed":
+            workflow_text = (
+                "ترتیب: readiness پست → سایت در صورت نیاز → تأیید HTTPS Product → "
+                "Post/Feed با Caption/Hashtag/Alt Text و Shop Grid Link. "
+                "در این عملیات هیچ Story جدیدی ساخته نمی‌شود."
+            )
+        else:
+            workflow_text = (
+                "ترتیب: readiness استوری → سایت در صورت نیاز → تأیید HTTPS Product → "
+                "Story برندشده 1080×1920. "
+                "در این عملیات هیچ Post/Feed جدیدی ساخته نمی‌شود."
+            )
         answer = QMessageBox.question(
             self,
-            "تأیید سایت → Instagram",
+            f"تأیید Instagram {label}",
             (
                 f"محصول انتخاب‌شده: {len(product_ids)}\n"
                 f"آماده انتشار سایت: {len(queued)}\n"
                 f"از قبل عمومی و HTTP-تأییدشده: {len(already_public)}\n"
                 f"رد Gate / بدون تیک آماده: {blocked_count}\n"
                 f"Provider: {social_readiness.get('provider') or '-'}\n"
-                f"لینک Feed: {social_readiness.get('feed_link_mode') or '-'}\n"
-                f"حالت Story: {social_readiness.get('story_link_mode') or '-'}\n\n"
-                "ترتیب اجباری است: readiness → سایت → تأیید لینک عمومی Product → Feed خودکار + Shop Grid Link → Story خودکار. "
-                "Caption و Story URL خامِ غیرقابل‌کلیک نمایش نمی‌دهند؛ CTA خرید از لینک بیو/Shop Grid است. "
-                "Feed همان Revision هرگز دوباره ساخته نمی‌شود. قیمت و انتخاب Variant همچنان فقط در صفحه محصول سایت انجام می‌شود."
+                f"Scope: {label}\n\n"
+                + workflow_text
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -849,14 +894,21 @@ class ProductsPage(QWidget):
         if answer != QMessageBox.StandardButton.Yes:
             return
 
-        self.instagram_publish_btn.setEnabled(False)
+        self._instagram_scope = scope
+        self.instagram_post_btn.setEnabled(False)
+        self.instagram_story_btn.setEnabled(False)
         self.bulk_publish_btn.setEnabled(False)
         self.ready_publish_btn.setEnabled(False)
         self.bulk_publish_status.setText(
-            f"شروع سایت → Instagram برای {len(actionable)} محصول…"
+            f"شروع Instagram {label} برای {len(actionable)} محصول…"
+        )
+        publisher = (
+            self.kernel.instagram.publish_site_then_feed
+            if scope == "feed"
+            else self.kernel.instagram.publish_site_then_story
         )
         worker = Worker(
-            lambda progress: self.kernel.instagram.publish_site_then_instagram(
+            lambda progress: publisher(
                 actionable,
                 progress=progress,
             )
@@ -874,6 +926,12 @@ class ProductsPage(QWidget):
 
     def _instagram_done(self, result=None) -> None:
         data = dict(result or {})
+        scope = str(
+            data.get("social_kind")
+            or getattr(self, "_instagram_scope", "")
+            or "feed"
+        ).strip().lower()
+        label = "Post" if scope == "feed" else "Story"
         site = dict(data.get("site") or {})
         instagram = dict(data.get("instagram") or {})
         published = int(instagram.get("published") or 0)
@@ -881,43 +939,59 @@ class ProductsPage(QWidget):
         story_notifications = int(instagram.get("story_notifications") or 0)
         site_blocked = list(data.get("site_blocked") or [])
         self.bulk_publish_status.setText(
-            f"✅ سایت {int(site.get('published') or 0)} • Instagram {published}"
-            f" • Story موبایل {story_notifications}"
+            f"✅ سایت {int(site.get('published') or 0)} • Instagram {label} {published}"
             f" • خطا {failed + len(site_blocked)}"
         )
         lines = [
             f"#{item.get('product_id')}: {item.get('error')}"
-            for item in (site_blocked + list(instagram.get("failures") or []))[:8]
+            for item in (
+                site_blocked + list(instagram.get("failures") or [])
+            )[:8]
         ]
         detail = ("\n\n" + "\n".join(lines)) if lines else ""
+        mobile_note = ""
+        if scope == "story" and story_notifications:
+            mobile_note = (
+                f"\nStory نیازمند تکمیل روی موبایل: {story_notifications}"
+            )
         QMessageBox.information(
             self,
-            "نتیجه سایت → Instagram",
+            f"نتیجه Instagram {label}",
             (
                 f"انتشار جدید سایت: {int(site.get('published') or 0)}\n"
-                f"Instagram workflow موفق: {published}\n"
-                f"Story لینک‌دار نیازمند تکمیل روی موبایل: {story_notifications}\n"
-                f"Instagram ناموفق: {failed}\n"
-                f"بدون لینک عمومی معتبر: {len(site_blocked)}\n\n"
-                "اگر Story لینک‌دار فعال است، اعلان Buffer را روی موبایل باز کن، "
-                "Open in Instagram را بزن و Link Sticker را با متن «لینک محصول» تکمیل کن."
+                f"Instagram {label} موفق: {published}\n"
+                f"Instagram {label} ناموفق: {failed}\n"
+                f"بدون لینک عمومی معتبر: {len(site_blocked)}"
+                + mobile_note
                 + detail
             ),
         )
         self.refresh()
 
     def _instagram_error(self, detail: str) -> None:
-        self.bulk_publish_status.setText("❌ سایت → Instagram ناموفق")
+        scope = str(
+            getattr(self, "_instagram_scope", "")
+            or "feed"
+        ).strip().lower()
+        label = "Post" if scope == "feed" else "Story"
+        self.bulk_publish_status.setText(
+            f"❌ Instagram {label} ناموفق"
+        )
         show_diagnostic_error(
             self,
-            "خطای سایت → Instagram",
+            f"خطای Instagram {label}",
             detail,
-            context={"operation": "site-then-instagram-publish"},
+            context={
+                "operation": "site-then-instagram-publish",
+                "scope": scope,
+            },
         )
 
     def _instagram_finished(self) -> None:
         self._instagram_worker = None
-        self.instagram_publish_btn.setEnabled(True)
+        self._instagram_scope = ""
+        self.instagram_post_btn.setEnabled(True)
+        self.instagram_story_btn.setEnabled(True)
         self.bulk_publish_btn.setEnabled(True)
         self.ready_publish_btn.setEnabled(True)
 
