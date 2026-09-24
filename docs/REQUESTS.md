@@ -1,11 +1,11 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `SIX-PHASE PLAN REGISTERED / O1 LOCAL_TESTED`.
+Status: `SIX-PHASE PLAN REGISTERED / O1 ACCEPTED / O2 NEXT`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
 Owner also reported Crawl cards without images, Repair doing nothing, Delete not removing items, and requested complete/incomplete Crawl filters with missing reasons. Repair intent is a full local reset/refetch/remap for the selected Source identity so corrupted/mis-mapped local data cannot survive a repair.
 
-Work is split into six bounded phases: O1 Product filters + split Social; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is locally verified and awaiting commit/push + exact-SHA app restart.
+Work is split into six bounded phases: O1 Product filters + split Social; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is accepted at GitHub-exact source `22bb0fb1...`; exact-SHA Qt VerifyOnly, integrity backup, one app restart and runtime smoke all passed. O2 is next.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

@@ -1,16 +1,18 @@
-## 2026-09-24 - Phase50.A.2Z-O1 Product Filters + Split Instagram LOCAL_TESTED / GITHUB_PROMOTION NEXT
+## 2026-09-24 - Phase50.A.2Z-O1 Product Filters + Split Instagram ACCEPTED / O2 NEXT
 
 Active branch is `wip/phase50-a2z-o1-catalog-controls-20260924`. The blocking Windows/Production lineage divergence was closed first with no tree delta at `82862b4569b537406618523f7350cd3514c4c03f`; both Windows `740bfe6e...` and selective Production `2b48a593...` are ancestors.
 
 O1 implements the owner-requested Product controls without Product/Site mutation: operational filters for 7/7 ready, AI-completed 6/7, Site sent, Instagram Post sent and Instagram Story sent; Feed/Post and Story are now separate buttons, readiness scopes and worker paths. Feed-only never creates Story and is not blocked by native-Story mobile readiness. Story-only never creates Feed/Post and uses independent Buffer media hosting; Direct provider fails closed for Story-only.
 
-Real Catalog truth after implementation: quick_check=ok; ready_7=2, ai_6=19, published=14, instagram_posted=4, instagram_story=2. Focused changed-condition 1/1 PASS; focused Product/Social/Buffer 24/24 PASS; broader Product/Qt/Social 136/136 PASS; py_compile, diff-check and Qt VerifyOnly PASS. No Production deploy is required for this Windows-only O1 delta.
+Real Catalog truth after implementation: quick_check=ok; ready_7=2, ai_6=19, published=14, instagram_posted=4, instagram_story=2. Focused changed-condition 1/1 PASS; focused Product/Social/Buffer 24/24 PASS; broader Product/Qt/Social 136/136 PASS; final O1 37/37 PASS; py_compile, diff-check and Qt VerifyOnly PASS. No Production deploy is required for this Windows-only O1 delta.
+
+GitHub-exact O1 source commit is `22bb0fb1ecca2f894e34bcbd7dda8b7d424b394e`. Before runtime cutover, Catalog backup `D:\projects\3dprinthub-backups\phase50-a2z-o1-pre-runtime-20260924-121549\catalog-before-runtime.sqlite3` passed quick_check with 771 Products (SHA256 `6afd42e6d6fea4dc034f3b32361dc179b2ceedce3ec74703a6bf38c757ebb5a3`). The previous Catalog Center instance was closed exactly once and relaunched from that source SHA; live window title is `3DPrintHub Catalog Center v8.9.11 - Qt 6`, post-restart Catalog quick_check remains ok / 771 Products.
 
 Phase plan is now six bounded slices in `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md`: O1 filters/split Social -> O2 Crawl complete/incomplete + missing reasons -> O3 deep reset/refetch/remap repair -> O4 delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated closure.
 
 Phase50.A.2Z is now factually CLOSED/ACCEPTED: Product #628 successfully published as Site #38 revision 2 with ACK parity ok=true, 2 media, 32 active variants, exact 12cm/18cm profiles, Slider disabled and public HTTP=true. Independent Production DB readback and real Playwright Desktop 1440x1000 + Mobile 390x844 acceptance passed with no stale Unicode media path, no overflow and no page/console errors. #625/#620/#152/#178 collateral readback remained stable.
 
-Exact next: final docs/diff review -> commit/push O1 -> verify Local=Remote -> Qt VerifyOnly from pushed SHA -> close the running Catalog Center once -> relaunch from that exact branch/SHA -> runtime smoke -> mark O1 ACCEPTED -> start O2.
+Exact next: O2 Crawl Completeness Views -> define one factual complete/incomplete contract -> add complete/incomplete filters to the Crawl inventory -> show per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows only after O2 is accepted.
 
 ## 2026-09-24 - Phase50.A.2Z #628 ASCII BATCH SOURCE FIX GITHUB_EXACT / BOUNDED RETRY NEXT
 

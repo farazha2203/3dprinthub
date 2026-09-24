@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O2_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o1-catalog-controls-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -65,5 +65,12 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Production source `2b48a593...` was not changed.
 - Destructive Crawl repair/delete are deferred to O3/O4.
 
+## O1 runtime acceptance
+- Source commit `22bb0fb1ecca2f894e34bcbd7dda8b7d424b394e` is GitHub-exact.
+- Pre-runtime Catalog backup quick_check=ok with 771 Products; SHA256 `6afd42e6d6fea4dc034f3b32361dc179b2ceedce3ec74703a6bf38c757ebb5a3`.
+- Catalog Center was closed exactly once and relaunched from the pushed source SHA.
+- Live main window title: `3DPrintHub Catalog Center v8.9.11 - Qt 6`.
+- Post-restart Catalog quick_check=ok / Products=771.
+
 ## Exact next
-Commit/push O1 source+docs -> Local=Remote -> Qt VerifyOnly from pushed SHA -> close the currently running Catalog Center exactly once -> relaunch from pushed branch/SHA -> runtime smoke -> mark O1 ACCEPTED -> start O2 Crawl Completeness Views.
+O2 Crawl Completeness Views -> one factual complete/incomplete contract -> filters -> per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows.

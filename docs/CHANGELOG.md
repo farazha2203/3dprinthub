@@ -7,6 +7,7 @@
 - Verification: filter changed-condition 1/1, focused Product/Social/Buffer 24/24 and broader Product/Qt/Social 136/136 PASS; compile, diff-check and Qt VerifyOnly PASS.
 - Real Catalog read-only counts: ready_7=2, ai_6=19, published=14, instagram_posted=4, instagram_story=2; quick_check=ok.
 - No Product/Site/Social production mutation was performed by O1 tests.
+- O1 source is GitHub-exact at `22bb0fb1ecca2f894e34bcbd7dda8b7d424b394e`; pre-runtime Catalog backup passed quick_check/771 Products, Catalog Center was closed exactly once and relaunched from that SHA, and live window/runtime smoke passed with post-restart quick_check=ok.
 
 ## 2026-09-24 - A2Z final acceptance
 - #628 final successful Batch is receipt #433 / UUID `4976dd73-7d1d-44c5-8440-3e0eb142194c`: Site Product #38 revision 2, republish parity ok=true, media_count=2, profile_count=32 and public_http_ok=true.

@@ -3,7 +3,7 @@
 - [x] O1: Product filters for 7/7 ready, AI-completed 6/7, Site sent, Instagram Post sent and Instagram Story sent.
 - [x] O1: split Instagram Post and Story into independent buttons/readiness/workers; Story-only does not create Feed and Feed-only does not create Story.
 - [x] O1: focused 24/24 + broader Product/Qt/Social 136/136 + compile/diff/Qt VerifyOnly; real Catalog filter counts and quick_check pass.
-- [ ] O1: commit/push exact source/docs, Local=Remote, restart Catalog Center once from exact pushed SHA and runtime-smoke.
+- [x] O1: source/docs commit `22bb0fb1...`, Local=Remote, exact-SHA VerifyOnly, integrity backup, one Catalog Center restart and runtime smoke PASS.
 - [ ] O2: Crawl complete/incomplete filters and per-card missing reasons.
 - [ ] O3: guarded deep repair — backup, bounded derived-data purge, full source refetch and same-identity remap.
 - [ ] O4: fix Delete semantics and prove visible removal/tombstone/restore behavior.
