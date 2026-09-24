@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_CORRECTIVE_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o2e-media-truth-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -175,7 +175,7 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Product Wizard Refresh is local-truth/compare-only and no longer injects Site media into Product DB; explicit Source recovery remains separate.
 - Social public media is aligned one-to-one to selected Local images by SEO/final basename or finalized SHA path and fails closed on stale/missing/ambiguous ACK media.
 - Truth Sync reports selected-local count and SHA/mapping errors.
-- Tests: direct baseline 10/10; O2E changed/direct 14/14; fixture/legacy-contract 20/20; broad Image/Product/Social 99/99 PASS; compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
+- Tests: initial direct baseline 10/10; initial O2E changed/direct 14/14; fixture/legacy-contract 20/20; first broad 99/99 PASS. After real #625 runtime exposed ERR-49-246, corrective omitted-card regression + focused 15/15 + direct Instagram publish 13/13 + expanded Image/Product/Social 130/130 PASS; compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
 - Real read-only audit: 543 Products have selected images; 93 exact selected-local mappings PASS; 450 legacy Products lack exact Local files and were not bulk-mutated. #625 and #628 exact selected Local/Social parity PASS. Audit digest unchanged at `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
 - Windows/Catalog-only delta; no Server migration or Production deploy is required.
 

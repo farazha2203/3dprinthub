@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -119,6 +120,52 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
         self.assertTrue(items[0]["selected"])
         self.assertFalse(
             any("refetch_20260924" in str(item["path"]) for item in items)
+        )
+
+    def test_current_gallery_synthesizes_selected_exact_card_when_legacy_reader_omits_it(self):
+        product_id, url1, url2, final1, final2 = self._product()
+        legacy_only = [{
+            "slot": 2,
+            "url": url2,
+            "path": str(final2),
+            "filename": final2.name,
+            "downloaded": True,
+            "display_only": False,
+            "primary": False,
+            "slider": False,
+            "selected": False,
+            "width": 320,
+            "height": 240,
+            "format": "WEBP",
+            "bytes": final2.stat().st_size,
+            "alt_text": "",
+            "seo_title": "",
+            "caption": "",
+            "keywords": [],
+            "planned_filename": final2.name,
+            "metadata": {},
+        }]
+        with patch.object(
+            self.kernel.images,
+            "local_items",
+            return_value=legacy_only,
+        ):
+            items = self.kernel.images.current_local_items(product_id)
+
+        selected_items = [
+            item for item in items
+            if item.get("selected")
+        ]
+        self.assertEqual(len(selected_items), 1)
+        self.assertEqual(selected_items[0]["url"], url1)
+        self.assertEqual(
+            Path(selected_items[0]["path"]).resolve(),
+            final1.resolve(),
+        )
+        self.assertTrue(selected_items[0]["primary"])
+        self.assertEqual(
+            {item["url"] for item in items},
+            {url1, url2},
         )
 
     def test_social_payload_keeps_only_public_media_matching_selected_local_authority(self):

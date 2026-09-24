@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `O1+O1B+O2+O2D ACCEPTED / O2E LOCAL_TESTED -> O2G -> O2H -> O2F -> O3`.
+Status: `O1+O1B+O2+O2D ACCEPTED / O2E CORRECTIVE_LOCAL_TESTED -> O2G -> O2H -> O2F -> O3`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 

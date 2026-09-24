@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import tempfile
 import unittest
+from pathlib import Path
+from urllib.parse import urlparse
 from unittest.mock import patch
+
+from PIL import Image
 
 from app.instagram_publish import InstagramConfig, canonical_site_payload, publish_product
 from qt6.kernel import InstagramCore
@@ -43,6 +49,45 @@ class FakeDB:
         })
 
 
+def configure_selected_media(row, public_urls):
+    local_dir = Path(tempfile.mkdtemp(prefix="phase50-instagram-media-"))
+    image_dir = local_dir / "images"
+    seo_dir = local_dir / "seo_images"
+    image_dir.mkdir(parents=True)
+    seo_dir.mkdir(parents=True)
+    selected = []
+    metadata = []
+    for index, public_url in enumerate(public_urls, 1):
+        name = Path(urlparse(public_url).path).name or f"image-{index}.webp"
+        source_url = f"local://{name}"
+        source = image_dir / name
+        final = seo_dir / name
+        Image.new(
+            "RGB",
+            (320 + index, 240 + index),
+            (60 + index, 100, 140),
+        ).save(source, "WEBP")
+        Image.new(
+            "RGB",
+            (320 + index, 240 + index),
+            (60 + index, 100, 140),
+        ).save(final, "WEBP")
+        digest = hashlib.sha256(final.read_bytes()).hexdigest()
+        selected.append(source_url)
+        metadata.append({
+            "source_url": source_url,
+            "seo_filename": name,
+            "final_local_file": str(final),
+            "final_sha256": digest,
+        })
+    row["local_dir"] = str(local_dir)
+    row["images_json"] = json.dumps(selected)
+    row["selected_images_json"] = json.dumps(selected)
+    row["primary_image_url"] = selected[0] if selected else ""
+    row["image_metadata_json"] = json.dumps(metadata)
+    return row
+
+
 def product_row():
     ack = {
         "visible_on_store": True,
@@ -54,7 +99,7 @@ def product_row():
             {"url": "https://3dprinthub.ir/media/store/products/test-02.webp", "ok": True},
         ],
     }
-    return {
+    row = {
         "id": 42,
         "title_fa": "محصول سه‌بعدی تست",
         "seo_title_fa": "خرید محصول سه‌بعدی تست",
@@ -65,6 +110,13 @@ def product_row():
         "image_alt_texts_json": json.dumps(["نمای اصلی محصول", "نمای دوم محصول"], ensure_ascii=False),
         "server_ack_json": json.dumps(ack, ensure_ascii=False),
     }
+    return configure_selected_media(
+        row,
+        [
+            ack["public_main_image_url"],
+            ack["images"][1]["url"],
+        ],
+    )
 
 
 class Phase50InstagramPublishTests(unittest.TestCase):
@@ -99,6 +151,13 @@ class Phase50InstagramPublishTests(unittest.TestCase):
             ],
         }
         row["server_ack_json"] = json.dumps(ack, ensure_ascii=False)
+        configure_selected_media(
+            row,
+            [
+                main,
+                "https://3dprinthub.ir/media/store/products/gallery/test-product-02.webp",
+            ],
+        )
 
         payload = canonical_site_payload(row, site_url="https://3dprinthub.ir")
 
@@ -120,6 +179,14 @@ class Phase50InstagramPublishTests(unittest.TestCase):
             {"url": "https://3dprinthub.ir/media/store/products/test-03.webp", "ok": True},
         ]
         row["server_ack_json"] = json.dumps(ack, ensure_ascii=False)
+        configure_selected_media(
+            row,
+            [
+                main,
+                "https://3dprinthub.ir/media/store/products/test-02.webp",
+                "https://3dprinthub.ir/media/store/products/test-03.webp",
+            ],
+        )
 
         payload = canonical_site_payload(row, site_url="https://3dprinthub.ir")
 

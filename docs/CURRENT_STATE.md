@@ -14,7 +14,13 @@ Real Catalog read-only audit: Products=852; History=3313; 543 Products have sele
 
 Two additional owner-reported Crawl issues are now bounded after O2E. O2G Search Crawl Pagination/Target Count must make MakerWorld lazy/infinite scrolling target-aware: requested count already reaches runtime at 1..500, but Preview currently starts at fixed `scroll_rounds=8`, which can expose only the first viewport-like ~15 cards. O2H Hard Delete Broken Crawl Identity must replace the current status-only reject behavior for explicit delete: current «رد / حذف» only sets `status='rejected'`; guarded hard delete must remove only unconsumed Crawl identity data and fail closed when a Product exists.
 
-Exact next: final O2E staged allowlist -> commit/push -> Local=Remote -> fresh Catalog rollback/integrity -> quiescent acquisition -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Product Wizard/Refresh and #625/#628 Social-parity read-only smoke -> no-mutation digest -> docs-only O2E ACCEPTED closure. Then O2G -> O2H -> O2F -> O3.
+O2E first source/docs checkpoint is GitHub-exact at `a975eaaa44d3050c5d882bbd02f72943f7157573`. Its first runtime acceptance attempt correctly stopped on a real #625 UI parity failure: exact selected Local media and Social URL both resolved, but the mature Gallery reader omitted the selected URL card. No O2E acceptance was granted.
+
+Corrective source is LOCAL_TESTED in the current worktree: `current_local_items()` now synthesizes a canonical selected card from exact finalized Product-local media when the legacy numbered-slot reader omitted that selected URL. Dedicated omitted-card regression PASS; O2E focused 15/15 PASS; direct Instagram publish 13/13 PASS; expanded Image/Product/Social regression 130/130 PASS; py_compile/compileall, Qt VerifyOnly, Django check, migration drift and diff-check PASS. ERR-49-246 records the runtime edge case. ERR-49-244 now also records the expanded stale Instagram fixture correction.
+
+Two fresh O2E rollback directories exist from prior acceptance attempts, including `phase50-a2z-o2e-runtime-acceptance-20260924-192618` and `...-192721`; neither is treated as final corrective acceptance evidence. A new fresh rollback must be created after the corrective commit before the final cutover.
+
+Exact next: stage allowlist for corrective source/tests/docs -> commit/push -> Local=Remote -> fresh Catalog rollback/integrity -> verify acquisition quiescent -> gracefully close the old visible O2E process -> exact-SHA Qt VerifyOnly -> launch one Catalog Center from corrective SHA -> real #625/#628 Product Wizard selected-card/Refresh/Social parity smoke with target-scoped no-mutation proof -> docs-only O2E ACCEPTED closure. Then O2G -> O2H -> O2F -> O3.
 
 ## 2026-09-24 - Phase50.A.2Z-O2D Product Identity / Dedup ACCEPTED / O2E NEXT
 

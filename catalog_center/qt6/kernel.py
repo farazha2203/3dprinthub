@@ -1496,17 +1496,91 @@ class ImageCore:
         except RuntimeError:
             exact_selected = {}
 
+        metadata_by_url = {
+            str(item.get("source_url") or item.get("url") or "").strip(): dict(item)
+            for item in self._json_list(
+                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
+            )
+            if isinstance(item, dict)
+            and str(item.get("source_url") or item.get("url") or "").strip()
+        }
+        primary_key = self._url_asset_key(
+            str(data.get("primary_image_url") or "")
+        )
+        slider_key = self._url_asset_key(
+            str(data.get("homepage_slider_image_url") or "")
+        )
+
         for url in canonical:
             key = self._url_asset_key(url)
             item = dict(by_key.get(key) or {})
-            if not item:
-                continue
             exact = exact_selected.get(key)
             if exact:
                 path = Path(str(exact.get("local_path") or "")).resolve()
                 if path.is_file():
-                    item["path"] = str(path)
-                    item["filename"] = path.name
+                    if not item:
+                        width = height = file_bytes = 0
+                        image_format = ""
+                        try:
+                            from PIL import Image
+
+                            with Image.open(path) as image:
+                                width = int(image.width)
+                                height = int(image.height)
+                                image_format = str(image.format or "")
+                        except Exception:
+                            pass
+                        try:
+                            file_bytes = int(path.stat().st_size)
+                        except Exception:
+                            pass
+                        meta = metadata_by_url.get(url) or {}
+                        item = {
+                            "slot": int(
+                                selected_keys.get(
+                                    key,
+                                    canonical_keys.get(key, 0),
+                                )
+                            ) + 1,
+                            "url": url,
+                            "path": str(path),
+                            "filename": path.name,
+                            "downloaded": True,
+                            "display_only": False,
+                            "primary": bool(primary_key and key == primary_key),
+                            "slider": bool(slider_key and key == slider_key),
+                            "selected": key in selected_keys,
+                            "width": width,
+                            "height": height,
+                            "format": image_format,
+                            "bytes": file_bytes,
+                            "alt_text": str(meta.get("alt_text") or ""),
+                            "seo_title": str(meta.get("title") or ""),
+                            "caption": str(meta.get("caption") or ""),
+                            "keywords": (
+                                list(meta.get("keywords") or [])
+                                if isinstance(meta.get("keywords"), list)
+                                else []
+                            ),
+                            "planned_filename": str(
+                                meta.get("seo_filename")
+                                or meta.get("planned_filename")
+                                or path.name
+                            ),
+                            "metadata": meta,
+                        }
+                    else:
+                        item["path"] = str(path)
+                        item["filename"] = path.name
+                        item["selected"] = key in selected_keys
+                        item["primary"] = bool(
+                            primary_key and key == primary_key
+                        )
+                        item["slider"] = bool(
+                            slider_key and key == slider_key
+                        )
+            if not item:
+                continue
             output.append(item)
 
         # Trusted files physically inside this Product's current local_dir are

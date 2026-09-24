@@ -1,3 +1,12 @@
+## ERR-49-246 - O2E runtime exposed a selected image with exact media but no Product Gallery card
+**Date:** 2026-09-24
+**Observed:** first exact-SHA O2E runtime smoke on Catalog Product #625 resolved one selected Local finalized file and one matching Social public URL, but Product Wizard Gallery reported zero selected cards for that same selected URL.
+**Impact:** no Product/Site/Social mutation from the failed smoke. O2E acceptance was stopped before closure.
+**Root cause:** mature `ImageCore.local_items()` can omit a selected URL card when numbered legacy source slots are mapped to other canonical URLs even though `image_metadata_json` still gives that selected URL an exact finalized Local file. The new current-Product filter inherited that omission.
+**Correct fix:** `current_local_items()` now synthesizes a canonical Gallery card from the exact selected-media resolver whenever a selected canonical URL has a verified Product-local final file but the legacy reader produced no card. The synthesized card preserves canonical URL, selected/primary/slider state, metadata, dimensions and finalized filename; historical/refetch fallback is still excluded.
+**Verification:** dedicated changed-condition regression for the omitted-card case PASS; O2E focused 15/15 PASS; Instagram publish 13/13 PASS; expanded Image/Product/Social broad regression 130/130 PASS; py_compile/compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
+**Prevention:** Product Editor acceptance must compare DB selected count, exact selected-local count and visible selected-card count on mature real Products; exact media resolution alone is insufficient proof of UI parity.
+
 ## ERR-49-245 - O2E Product Editor and Instagram used different media authorities
 **Date:** 2026-09-24
 **Observed:** the operator could see one set of files after Product image refresh while Instagram preparation could resolve a different set from Site ACK/public media and finalized metadata.
@@ -11,7 +20,7 @@
 **Observed:** the first O2E broad suite failed Buffer/Story tests whose fake Product rows had no selected/local media, one pre-O2D Crawl test that expected consumed Products to remain visible, and the already-documented legacy image-limit assertion expecting 10 instead of canonical 5.
 **Impact:** no Catalog/Site/Social mutation; failures were test-contract mismatches.
 **Correct fix:** keep the stricter runtime fail-closed media contract. Upgrade Buffer/Story fixtures to include real Product-local selected files and finalized metadata; sync the Crawl assertion to accepted O2D suppression; sync the image-limit assertion to canonical default 5 per ERR-49-201. Preserve trusted files inside the current Product folder for operator selection while excluding sibling refetch folders.
-**Verification:** targeted fixture/legacy-contract regression 20/20 PASS and broad Image/Product/Social rerun 99/99 PASS.
+**Verification:** targeted fixture/legacy-contract regression 20/20 PASS and the first broad Image/Product/Social rerun 99/99 PASS. The later expanded 130-test gate also exposed direct Instagram publish fixtures that still had public URLs but no selected Product-local media; those fixtures were upgraded to the accepted O2E authority without weakening runtime validation, and the expanded rerun passed 130/130.
 **Prevention:** Social tests must model the same selected/local/finalized media authority required in production; old public-URL-only fixtures are insufficient after O2E.
 
 ## ERR-49-243 - O2D first staging command collapsed the allowlist into one invalid pathspec

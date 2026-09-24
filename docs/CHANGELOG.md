@@ -1,13 +1,15 @@
-## 2026-09-24 - A2Z-O2E Product Media Truth LOCAL_TESTED
+## 2026-09-24 - A2Z-O2E Product Media Truth CORRECTIVE_LOCAL_TESTED
 - Unified Product Editor selected-media truth and Social media truth around `selected_images_json` plus exact files inside the current Product `local_dir`.
 - Added shared exact selected-local resolver with Product-local containment and optional finalized SHA verification; historical/refetch sibling folders are recovery-only and no longer normal Gallery truth.
 - Product Editor still shows trusted unregistered files physically inside the current Product folder so the operator can select/promote them; they do not become Social authority until persisted.
 - Product Wizard Refresh is now local-truth/compare-only (`recover_site_media=False`); it no longer downloads Site media into Product DB merely by pressing Refresh.
 - Social canonical payload aligns public Site media to selected Local media by canonical filename/SHA and fails closed on missing/stale/ambiguous media instead of sending a different image.
 - Truth Sync reports exact selected-local count and SHA/mapping errors.
-- Verification: direct Media baseline 10/10; O2E changed-condition/direct 14/14; fixture/legacy-contract regression 20/20; broad Image/Product/Social 99/99; compileall/Qt VerifyOnly/Django/no-drift/diff-check PASS.
+- Initial verification: direct Media baseline 10/10; O2E changed-condition/direct 14/14; fixture/legacy-contract regression 20/20; broad Image/Product/Social 99/99; compileall/Qt VerifyOnly/Django/no-drift/diff-check PASS.
+- First exact-SHA runtime attempt then exposed ERR-49-246 on real #625: selected Local/Social truth resolved but the Gallery card was omitted by a mature numbered-slot mapping edge case. Corrective synthesis now passes dedicated changed-condition coverage, O2E focused 15/15, direct Instagram publish 13/13 and expanded broad 130/130 plus all static/framework gates.
 - Real read-only audit: 543 Products have selected images; 93 resolve exact selected Local truth and 450 legacy rows need explicit recovery because exact files are absent. No bulk mutation was performed. #625 and #628 selected Local SHA/public Social media parity both PASS. Audit digest remained `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
 - Added planned O2G for target-aware MakerWorld lazy-scroll discovery and O2H for real guarded Crawl hard-delete; O2F follows them.
+- Initial O2E checkpoint is GitHub-exact at `a975eaaa44d3050c5d882bbd02f72943f7157573`; final acceptance is intentionally withheld until the corrective card-synthesis commit is pushed and re-run from a fresh rollback.
 
 ## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression ACCEPTED
 - Existing Product identity is rejected by new discovery and treated as terminal collected unless explicitly force-recovered.
