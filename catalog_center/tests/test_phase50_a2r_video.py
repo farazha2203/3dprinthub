@@ -75,11 +75,14 @@ class Phase50A2RVideoTests(unittest.TestCase):
         self.assertTrue(saved[0].replace("\\", "/").endswith("/videos/product-video-01.mp4"))
 
     def test_crawl_keeps_unlinked_rows_useful_with_identity_media_fallback(self):
-        source = (Path(__file__).resolve().parents[1] / "qt6" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn("def _queue_local_identity_items", source)
-        self.assertIn("return len(self._queue_local_identity_items(row))", source)
-        self.assertIn("کاندیدای کشف‌شده؛ هنوز دریافت نشده", source)
-        self.assertIn("def _queue_is_incomplete", source)
+        pages = (Path(__file__).resolve().parents[1] / "qt6" / "pages.py").read_text(encoding="utf-8")
+        kernel = (Path(__file__).resolve().parents[1] / "qt6" / "kernel.py").read_text(encoding="utf-8")
+        self.assertIn("def _queue_local_identity_items", pages)
+        self.assertIn("self.kernel.acquisition.queue_image_count", pages)
+        self.assertIn("identity_local_items", kernel)
+        self.assertIn("کاندیدای کشف‌شده؛ هنوز دریافت نشده", pages)
+        self.assertIn("def _queue_is_incomplete", pages)
+        self.assertIn("queue_completeness_reasons", kernel)
 
     def test_crawl_explicit_recovery_uses_mature_adaptive_path(self):
         source = (Path(__file__).resolve().parents[1] / "qt6" / "pages.py").read_text(encoding="utf-8")

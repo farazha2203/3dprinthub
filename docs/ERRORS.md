@@ -1,3 +1,13 @@
+## ERR-49-238 - O2 completeness scan was correct but too slow when it enumerated every local image
+**Date:** 2026-09-24
+**Observed:** the first factual O2 implementation partitioned the real 1099-row Crawl inventory correctly as 453 complete / 646 incomplete, but a cold Complete count took about 11.479 seconds.
+**Impact:** correctness was preserved, but the operator filter would have unnecessary latency on the real Catalog.
+**Root cause:** completeness only needs a boolean local-image existence result, while the first implementation invoked the mature full display-image enumeration for every row.
+**Correct fix:** preserve the same filesystem-aware ImageCore authority, add a read-only first-hit local-image existence path, and cache existence by Product/source identity within each bounded scan. Full enumeration remains unchanged for gallery review/counts.
+**Verification:** real counts remained exactly 453 complete / 646 incomplete / 1099 total; cold Complete count improved to about 2.402s and Incomplete to about 3.464s. Focused 39/39 and broader 128/128 PASS; Qt VerifyOnly, compile/diff, Django check and no-migration-drift PASS.
+**Test correction:** the first focused run also exposed three stale expectations: the old combo label, the old UI-local identity fallback assertion, and a test that incorrectly expected the external ID in card text. Tests were aligned to the new shared contract without weakening runtime behavior.
+**Prevention:** when a UI filter needs only existence, do not call a full media-enumeration API; use a bounded first-hit predicate and verify real count invariants.
+
 ## ERR-49-237 - O1 UI block shell replacement corrupted Persian text and escaped newlines
 **Date:** 2026-09-24
 **Observed:** first O1 py_compile stopped at `qt6/pages.py:843` with an unterminated string literal. Readback showed the large shell/Python replacement had converted source `\n` sequences into literal line breaks and Persian literals inside that replacement into `?`.

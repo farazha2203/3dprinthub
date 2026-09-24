@@ -1,3 +1,12 @@
+## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views LOCAL_TESTED
+- Centralized Crawl completeness in AcquisitionCore; UI no longer owns a second completeness rule.
+- Complete requires Product mapping + title + description + at least one physically displayable local image.
+- Added Complete/Incomplete persistent-inventory filters; incomplete cards show exact missing reasons and complete cards show a positive marker.
+- Shared ImageCore is injected into AcquisitionCore so Product/Crawl image truth stays one authority.
+- Added first-hit filesystem image existence + per-scan identity cache. Real Catalog stayed exactly 1099 = 453 complete + 646 incomplete while cold Complete count improved from ~11.479s to ~2.402s; Incomplete ~3.464s.
+- Verification: baseline Crawl 36/36, O2 focused 39/39, broader Crawl/Product/O1/O1B 128/128, compile/diff/Qt VerifyOnly/Django/no-drift PASS.
+- Windows Catalog UI/Core only; no migration or Production mutation/deploy.
+
 ## 2026-09-24 - A2Z-O1B Recent Product Activity LOCAL_TESTED
 - Added Product filters `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`.
 - Recent edit sorting is based on explicit operator-save `product_history` events only; generic Product `updated_at` is not used because system sync/refetch can change it.

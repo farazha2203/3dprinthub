@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 Date: 2026-09-24
-Branch: `wip/phase50-a2z-o1b-recent-activity-20260924`
+Branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -97,5 +97,16 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Canonical DB was not polluted by acceptance: recently_viewed remained 0 until the owner's first real Editor open.
 - Visible runtime launched from exact source SHA; prior app process was already absent so no forced close was needed. Window title `3DPrintHub Catalog Center v8.9.11 - Qt 6`; Catalog quick_check=ok / 771 Products.
 
+## O2 implementation — LOCAL_TESTED
+- One shared AcquisitionCore completeness contract now owns both filtering and card status.
+- Complete means: mapped Product identity + title + description + at least one physically displayable local image.
+- Exact incomplete reasons are: unmapped Product, missing title, missing description, and missing local/Preview image.
+- Persistent Crawl inventory exposes Complete and Incomplete filters; complete cards show a positive marker and incomplete cards show exact reasons.
+- Image truth remains filesystem-aware through shared ImageCore. A first-hit existence helper plus per-scan identity cache avoids full image enumeration during completeness scans.
+- Real canonical Catalog: quick_check=ok; total Crawl=1099; complete=453; incomplete=646; partition invariant PASS.
+- Performance: initial correct cold complete scan ~11.479s; optimized complete ~2.402s and incomplete ~3.464s with identical counts.
+- Tests: baseline 36/36 PASS; focused O2/Crawl/Video 39/39 PASS; broader Crawl/Product/O1/O1B 128/128 PASS; compile, diff-check, Qt VerifyOnly, Django check and no-migration-drift PASS.
+- No migration, Server delta, Product/Site mutation or Production deployment is required.
+
 ## Exact next
-O2 Crawl Completeness Views -> freeze one factual complete/incomplete contract -> filters -> exact per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows.
+Final staged allowlist/diff gate -> commit/push O2 -> Local=Remote -> fresh logical Catalog backup/integrity proof -> exact-SHA Qt VerifyOnly -> one Catalog Center restart from pushed source -> real Complete/Incomplete runtime smoke with no canonical mutation -> post-runtime quick_check/partition -> docs-only O2 ACCEPTED closure -> O3 guarded deep reset/refetch/remap.

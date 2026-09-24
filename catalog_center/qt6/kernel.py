@@ -787,6 +787,99 @@ class ImageCore:
                 return candidates
         return []
 
+    @staticmethod
+    def _folder_has_displayable_image(local_dir: Path) -> bool:
+        allowed = {
+            ".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif",
+            ".bmp", ".tif", ".tiff",
+        }
+        for candidate_root in (
+            local_dir / "seo_images",
+            local_dir / "images",
+        ):
+            if not candidate_root.is_dir():
+                continue
+            try:
+                for candidate in candidate_root.iterdir():
+                    if (
+                        candidate.is_file()
+                        and candidate.suffix.lower() in allowed
+                    ):
+                        return True
+            except OSError:
+                continue
+        return False
+
+    def has_local_image(
+        self,
+        row: dict[str, Any] | Any,
+        *,
+        source_code: str = "",
+        external_id: str = "",
+    ) -> bool:
+        """Fast first-hit equivalent of the mature display-image contract."""
+        data = dict(row) if not isinstance(row, dict) else dict(row)
+
+        rejected = str(data.get("rejected_thumbnail_path") or "").strip()
+        if rejected:
+            try:
+                if Path(rejected).is_file():
+                    return True
+            except OSError:
+                pass
+
+        raw_local = str(
+            data.get("local_dir")
+            or data.get("product_local_dir")
+            or ""
+        ).strip()
+        if raw_local:
+            try:
+                local_dir = Path(raw_local).resolve()
+            except Exception:
+                local_dir = Path()
+            if local_dir.is_dir() and self._folder_has_displayable_image(local_dir):
+                return True
+
+        for url in self.urls(data):
+            path_value = self.local_path_for_url(data, url)
+            if not path_value:
+                continue
+            try:
+                if Path(path_value).is_file():
+                    return True
+            except OSError:
+                continue
+
+        source = str(
+            source_code
+            or data.get("source_code")
+            or ""
+        ).strip()
+        external = str(
+            external_id
+            or data.get("external_id")
+            or ""
+        ).strip()
+        if not external:
+            return False
+
+        data_root = Path(self.db.path).resolve().parent
+        direct_roots: list[Path] = []
+        if source:
+            direct_roots.append(data_root / "collected" / source / external)
+        for candidate in direct_roots:
+            if candidate.is_dir() and self._folder_has_displayable_image(candidate):
+                return True
+
+        # Historical source-code casing and refetch folders are rare. Keep the
+        # mature identity resolver as the bounded fallback so accepted legacy
+        # layouts remain visible without paying its full cost for normal rows.
+        for local_dir in self.identity_local_dirs(source, external, data):
+            if self._folder_has_displayable_image(local_dir):
+                return True
+        return False
+
     def source_image_count(self, row: dict[str, Any] | Any) -> int:
         data = dict(row) if not isinstance(row, dict) else row
         return len(self.urls(data))
@@ -1876,8 +1969,11 @@ class ImageCore:
 class AcquisitionCore:
     """Qt adapter over mature discovery/collection modules."""
 
-    def __init__(self, db) -> None:
+    COMPLETENESS_FILTERS = {"complete", "incomplete"}
+
+    def __init__(self, db, images: ImageCore | None = None) -> None:
         self.db = db
+        self.images = images or ImageCore(db)
         self._stop_requested = False
 
     def sources(self) -> list[dict[str, Any]]:
@@ -1988,17 +2084,238 @@ class AcquisitionCore:
             )
         ]
 
+    def _queue_product_projection(self, row: dict[str, Any]) -> dict[str, Any]:
+        data = dict(row or {})
+        product_id = int(data.get("product_id") or 0)
+        canonical: dict[str, Any] = {}
+        if product_id > 0 and "product_title_fa" not in data:
+            stored = self.db.product(product_id)
+            if stored is not None:
+                canonical = dict(stored)
+
+        def projected(name: str, direct: str, default):
+            if name in data:
+                value = data.get(name)
+                return default if value is None else value
+            value = canonical.get(direct)
+            return default if value is None else value
+
+        return {
+            "id": product_id or None,
+            "source_code": data.get("source_code") or canonical.get("source_code") or "",
+            "external_id": data.get("external_id") or canonical.get("external_id") or "",
+            "title_fa": projected("product_title_fa", "title_fa", ""),
+            "source_title": projected("product_source_title", "source_title", ""),
+            "short_description_fa": projected(
+                "product_short_description_fa", "short_description_fa", ""
+            ),
+            "description_fa": projected(
+                "product_description_fa", "description_fa", ""
+            ),
+            "source_short_description": projected(
+                "product_source_short_description", "source_short_description", ""
+            ),
+            "source_description": projected(
+                "product_source_description", "source_description", ""
+            ),
+            "primary_image_url": projected(
+                "product_primary_image_url", "primary_image_url", ""
+            ),
+            "local_dir": projected("product_local_dir", "local_dir", ""),
+            "selected_images_json": projected(
+                "product_selected_images_json", "selected_images_json", "[]"
+            ),
+            "images_json": projected("product_images_json", "images_json", "[]"),
+            "image_metadata_json": projected(
+                "product_image_metadata_json", "image_metadata_json", "[]"
+            ),
+        }
+
+    def queue_image_count(self, row: dict[str, Any]) -> int:
+        data = dict(row or {})
+        product = self._queue_product_projection(data)
+        if int(data.get("product_id") or 0) > 0:
+            count = int(self.images.image_count(product) or 0)
+            if count > 0:
+                return count
+        return len(
+            self.images.identity_local_items(
+                str(data.get("source_code") or ""),
+                str(data.get("external_id") or ""),
+                product,
+            )
+        )
+
+    @staticmethod
+    def _queue_image_cache_key(row: dict[str, Any]) -> tuple[int, str, str]:
+        return (
+            int(row.get("product_id") or 0),
+            str(row.get("source_code") or "").casefold(),
+            str(row.get("external_id") or ""),
+        )
+
+    def queue_has_local_image(
+        self,
+        row: dict[str, Any],
+        *,
+        image_cache: dict[tuple[int, str, str], bool] | None = None,
+    ) -> bool:
+        data = dict(row or {})
+        key = self._queue_image_cache_key(data)
+        if image_cache is not None and key in image_cache:
+            return bool(image_cache[key])
+
+        product = self._queue_product_projection(data)
+        found = bool(
+            self.images.has_local_image(
+                product,
+                source_code=str(data.get("source_code") or ""),
+                external_id=str(data.get("external_id") or ""),
+            )
+        )
+        if image_cache is not None:
+            image_cache[key] = found
+        return found
+
+    def queue_completeness_reasons(
+        self,
+        row: dict[str, Any],
+        *,
+        image_cache: dict[tuple[int, str, str], bool] | None = None,
+    ) -> list[str]:
+        data = dict(row or {})
+        product_id = int(data.get("product_id") or 0)
+
+        if product_id <= 0:
+            reasons = ["Product mapping ندارد / هنوز دریافت نشده"]
+            if not self.queue_has_local_image(
+                data,
+                image_cache=image_cache,
+            ):
+                reasons.append("Preview/عکس محلی ندارد")
+            return reasons
+
+        product = self._queue_product_projection(data)
+        reasons: list[str] = []
+        if not (
+            str(product.get("title_fa") or "").strip()
+            or str(product.get("source_title") or "").strip()
+        ):
+            reasons.append("عنوان ندارد")
+        if not (
+            str(product.get("short_description_fa") or "").strip()
+            or str(product.get("description_fa") or "").strip()
+            or str(product.get("source_short_description") or "").strip()
+            or str(product.get("source_description") or "").strip()
+        ):
+            reasons.append("توضیح ندارد")
+        if not self.queue_has_local_image(
+            data,
+            image_cache=image_cache,
+        ):
+            reasons.append("فایل عکس محلی قابل نمایش ندارد")
+        return reasons
+
+    def queue_is_complete(
+        self,
+        row: dict[str, Any],
+        *,
+        image_cache: dict[tuple[int, str, str], bool] | None = None,
+    ) -> bool:
+        return not self.queue_completeness_reasons(
+            row,
+            image_cache=image_cache,
+        )
+
+    def _queue_completeness_page(
+        self,
+        source_code: str,
+        completeness: str,
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[dict[str, Any]]:
+        target_complete = str(completeness or "").strip().lower() == "complete"
+        page_limit = max(1, min(int(limit or 100), 500))
+        filtered_offset = max(0, int(offset or 0))
+        output: list[dict[str, Any]] = []
+        matched = 0
+        raw_offset = 0
+        chunk_size = 250
+        image_cache: dict[tuple[int, str, str], bool] = {}
+
+        while len(output) < page_limit:
+            chunk = [
+                dict(row)
+                for row in self.db.discovered_items_page(
+                    str(source_code or ""),
+                    "all",
+                    limit=chunk_size,
+                    offset=raw_offset,
+                )
+            ]
+            if not chunk:
+                break
+            raw_offset += len(chunk)
+            for row in chunk:
+                is_complete = self.queue_is_complete(
+                    row,
+                    image_cache=image_cache,
+                )
+                if is_complete != target_complete:
+                    continue
+                if matched < filtered_offset:
+                    matched += 1
+                    continue
+                output.append(row)
+                matched += 1
+                if len(output) >= page_limit:
+                    break
+            if len(chunk) < chunk_size:
+                break
+        return output
+
     def queue_count(
         self,
         source_code: str = "",
         status: str = "all",
     ) -> int:
-        return int(
-            self.db.discovered_count(
-                str(source_code or ""),
-                str(status or "all"),
+        normalized = str(status or "all").strip().lower()
+        if normalized not in self.COMPLETENESS_FILTERS:
+            return int(
+                self.db.discovered_count(
+                    str(source_code or ""),
+                    normalized,
+                )
             )
-        )
+
+        target_complete = normalized == "complete"
+        total = 0
+        raw_offset = 0
+        chunk_size = 250
+        image_cache: dict[tuple[int, str, str], bool] = {}
+        while True:
+            chunk = [
+                dict(row)
+                for row in self.db.discovered_items_page(
+                    str(source_code or ""),
+                    "all",
+                    limit=chunk_size,
+                    offset=raw_offset,
+                )
+            ]
+            if not chunk:
+                break
+            raw_offset += len(chunk)
+            for row in chunk:
+                if self.queue_is_complete(
+                    row,
+                    image_cache=image_cache,
+                ) == target_complete:
+                    total += 1
+            if len(chunk) < chunk_size:
+                break
+        return total
 
     def queue_page(
         self,
@@ -2008,11 +2325,19 @@ class AcquisitionCore:
         limit: int = 100,
         offset: int = 0,
     ) -> list[dict[str, Any]]:
+        normalized = str(status or "all").strip().lower()
+        if normalized in self.COMPLETENESS_FILTERS:
+            return self._queue_completeness_page(
+                str(source_code or ""),
+                normalized,
+                limit=int(limit),
+                offset=int(offset),
+            )
         return [
             dict(row)
             for row in self.db.discovered_items_page(
                 str(source_code or ""),
-                str(status or "all"),
+                normalized,
                 limit=int(limit),
                 offset=int(offset),
             )
@@ -4114,7 +4439,8 @@ def build_kernel(db) -> ApplicationKernel:
     ai.bind_executor(providers.execute_product_ai)
 
     registry.register("products", ProductCore(db))
-    registry.register("images", ImageCore(db))
+    images = ImageCore(db)
+    registry.register("images", images)
     registry.register("filaments", FilamentParityCore(db))
     registry.register("categories", CategoryCore(db))
     registry.register("stages", stages)
@@ -4122,7 +4448,7 @@ def build_kernel(db) -> ApplicationKernel:
     registry.register("providers", providers)
     connection = ConnectionCore(db)
     registry.register("connection", connection)
-    registry.register("acquisition", AcquisitionCore(db))
+    registry.register("acquisition", AcquisitionCore(db, images))
     publish_core = PublishCore(db, stages, connection)
     registry.register("publish", publish_core)
     registry.register("instagram", InstagramCore(db, connection, publish_core))

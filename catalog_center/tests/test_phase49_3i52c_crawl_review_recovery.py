@@ -632,7 +632,9 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             self.assertEqual(page.queue_select_incomplete_btn.text(), "انتخاب ناقص‌ها")
             self.assertEqual(page.queue_recover_btn.text(), "بازیابی دیتا + عکس")
             self.assertEqual(page.queue_restore_btn.text(), "بازگردانی به صف")
-            self.assertIn("ناقص‌ها هم نمایش داده می‌شوند", page.queue_filter.itemText(0))
+            self.assertEqual(page.queue_filter.currentData(), "all")
+            self.assertGreaterEqual(page.queue_filter.findData("complete"), 0)
+            self.assertGreaterEqual(page.queue_filter.findData("incomplete"), 0)
             self.assertEqual(page.queue_recover_image_limit.currentData(), 5)
             for button in (
                 page.start_btn,

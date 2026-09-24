@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `SIX-PHASE PLAN REGISTERED / O1 ACCEPTED / O2 NEXT`.
+Status: `SIX-PHASE PLAN REGISTERED / O1+O1B ACCEPTED / O2 LOCAL_TESTED`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 

@@ -2388,7 +2388,15 @@ class OperationsPage(QWidget):
         queue_header = QHBoxLayout()
         queue_header.addWidget(QLabel("موجودی دائمی Crawl / همه رکوردهای دیتابیس"))
         self.queue_filter = QComboBox()
-        self.queue_filter.addItem("همه — ناقص‌ها هم نمایش داده می‌شوند", "all")
+        self.queue_filter.addItem("همه — کامل و ناقص", "all")
+        self.queue_filter.addItem(
+            "محصولات کامل — عنوان + توضیح + عکس محلی",
+            "complete",
+        )
+        self.queue_filter.addItem(
+            "محصولات ناقص — نمایش علت نقص",
+            "incomplete",
+        )
         self.queue_filter.addItem("جدید", "new")
         self.queue_filter.addItem("Failed", "failed")
         self.queue_filter.addItem("دریافت‌شده", "collected")
@@ -3723,13 +3731,9 @@ class OperationsPage(QWidget):
         )
 
     def _queue_image_count(self, row: dict) -> int:
-        if row.get("product_id"):
-            count = self.kernel.images.image_count(
-                self._queue_product_row(row)
-            )
-            if count > 0:
-                return count
-        return len(self._queue_local_identity_items(row))
+        return int(
+            self.kernel.acquisition.queue_image_count(dict(row)) or 0
+        )
 
     def _queue_fallback_title_from_url(self, row: dict) -> str:
         url = str(
@@ -3764,48 +3768,12 @@ class OperationsPage(QWidget):
         return str(value)
 
     def _queue_is_incomplete(self, row: dict) -> bool:
-        if not int(row.get("product_id") or 0):
-            return True
-        product = self._queue_product_row(row)
-        has_title = bool(
-            str(product.get("title_fa") or "").strip()
-            or str(product.get("source_title") or "").strip()
-        )
-        has_description = bool(
-            str(product.get("short_description_fa") or "").strip()
-            or str(product.get("description_fa") or "").strip()
-            or str(product.get("source_short_description") or "").strip()
-            or str(product.get("source_description") or "").strip()
-        )
-        return (
-            not has_title
-            or not has_description
-            or self._queue_image_count(row) <= 0
-        )
+        return not self.kernel.acquisition.queue_is_complete(dict(row))
 
     def _queue_incomplete_reasons(self, row: dict) -> list[str]:
-        reasons: list[str] = []
-        if not int(row.get("product_id") or 0):
-            reasons.append("Product هنوز دریافت نشده")
-            if self._queue_image_count(row) <= 0:
-                reasons.append("Preview/عکس محلی ندارد")
-            return reasons
-        product = self._queue_product_row(row)
-        if not (
-            str(product.get("title_fa") or "").strip()
-            or str(product.get("source_title") or "").strip()
-        ):
-            reasons.append("عنوان ندارد")
-        if not (
-            str(product.get("short_description_fa") or "").strip()
-            or str(product.get("description_fa") or "").strip()
-            or str(product.get("source_short_description") or "").strip()
-            or str(product.get("source_description") or "").strip()
-        ):
-            reasons.append("توضیح ندارد")
-        if self._queue_image_count(row) <= 0:
-            reasons.append("فایل عکس محلی قابل نمایش ندارد")
-        return reasons
+        return list(
+            self.kernel.acquisition.queue_completeness_reasons(dict(row))
+        )
 
     def _queue_icon(self, row: dict) -> QIcon:
         if row.get("product_id"):
@@ -4225,7 +4193,13 @@ class OperationsPage(QWidget):
                 ]
                 incomplete_reasons = self._queue_incomplete_reasons(row)
                 if incomplete_reasons:
-                    gallery_lines.append("⚠ ناقص: " + " • ".join(incomplete_reasons))
+                    gallery_lines.append(
+                        "⚠ ناقص: " + " • ".join(incomplete_reasons)
+                    )
+                else:
+                    gallery_lines.append(
+                        "✅ کامل: Product + عنوان + توضیح + عکس محلی"
+                    )
                 if technical_summary:
                     gallery_lines.append(technical_summary)
                 if short_description:

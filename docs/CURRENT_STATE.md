@@ -1,3 +1,15 @@
+## 2026-09-24 - Phase50.A.2Z-O2 Crawl Completeness Views LOCAL_TESTED / GITHUB_PROMOTION NEXT
+
+Active branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`, based on accepted O1B closure `8bbb267dab81af73eb8d38cd50aa83e5fa9ad162`. Rollback branch `backup/pre-phase50-a2z-o2-crawl-completeness-20260924` points exactly to that baseline; Production `2b48a593...` is already in the accepted lineage.
+
+O2 now has one shared factual completeness contract in AcquisitionCore. Complete requires Product mapping, title, description, and at least one physically displayable local image. Exact missing reasons are shared by filtering and card UI: unmapped Product, missing title, missing description, missing local/Preview image. Crawl UI exposes Complete and Incomplete filters; complete cards show a positive marker and incomplete cards show exact reasons.
+
+Real canonical Catalog: quick_check=ok; Crawl total=1099; complete=453; incomplete=646; partition invariant PASS. The first correct filesystem-aware count was too slow (~11.479s complete); a first-hit ImageCore existence path plus per-scan identity cache preserved exact counts while reducing cold scans to ~2.402s complete / ~3.464s incomplete.
+
+Verification: pre-change Crawl baseline 36/36 PASS; focused O2/Crawl/Video 39/39 PASS; broader Crawl/Product/O1/O1B 128/128 PASS; py_compile/compileall, git diff --check, Qt VerifyOnly, Django check and makemigrations --check --dry-run PASS. No migration, Server delta, Product/Site mutation or Production deploy is required.
+
+Exact next: staged allowlist -> commit/push O2 -> Local=Remote -> fresh logical Catalog backup/integrity -> exact-SHA Qt VerifyOnly -> one Catalog Center restart from pushed source -> real Complete/Incomplete runtime smoke with no canonical mutation -> post-runtime quick_check/partition -> docs-only O2 ACCEPTED closure -> O3 guarded deep reset/refetch/remap.
+
 ## 2026-09-24 - Phase50.A.2Z-O1B Recent Product Activity ACCEPTED / O2 NEXT
 
 Active branch is `wip/phase50-a2z-o1b-recent-activity-20260924` from accepted O1/docs baseline `39fec94125b36adbe2044def343e2081c2df26b3`. GitHub rollback branch `backup/pre-phase50-a2z-o1b-recent-activity-20260924` points exactly to that baseline.

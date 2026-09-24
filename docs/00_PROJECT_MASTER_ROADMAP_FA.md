@@ -5,7 +5,7 @@ Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revisi
 The active bounded successor is `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md` with six slices:
 O1 Product status filters + split Instagram Post/Story -> O1B recent edited/viewed Product activity (ACCEPTED at source `a0d5ea46...`) -> O2 Crawl complete/incomplete + missing reasons -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
 
-O1 is ACCEPTED on branch `wip/phase50-a2z-o1-catalog-controls-20260924` at GitHub-exact source `22bb0fb1...`: focused 24/24, broader Product/Qt/Social 136/136 and final O1 37/37 PASS; exact-SHA Qt VerifyOnly, integrity backup, one Catalog Center restart and runtime smoke pass with Catalog quick_check=ok / 771 Products. Exact next is O2 Crawl complete/incomplete + missing reasons.
+O1 and O1B are ACCEPTED. O2 Crawl Completeness Views is LOCAL_TESTED on `wip/phase50-a2z-o2-crawl-completeness-20260924`: one filesystem-aware completeness authority, real Crawl partition 1099 = 453 complete + 646 incomplete, focused 39/39 and broader 128/128 PASS, Qt/static/Django/no-drift gates PASS. Exact next is O2 commit/push + exact-SHA runtime acceptance; O3 guarded deep reset/refetch/remap follows.
 
 ## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid ACCEPTED
 
