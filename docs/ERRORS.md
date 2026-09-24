@@ -1,3 +1,21 @@
+## ERR-49-249 - O2G related Preview regression exposed an over-escaped JavaScript newline sequence
+**Date:** 2026-09-25
+**Observed:** the O2G related Crawl regression failed only `test_javascript_keeps_backslash_n_instead_of_literal_newline_inside_quote`. The branch-baseline `PREVIEW_CARD_EVAL_JS` contained two backslash characters before `n` inside the raw Python string instead of the tested single JavaScript escape.
+**Impact:** related Preview text-join semantics/test only; no canonical Catalog/Product/Site/Social mutation. This defect pre-existed the O2G feature diff and was exposed by the required broader regression.
+**Root cause:** a previous Windows JavaScript escaping repair over-escaped the raw Python literal. The safety objective is one backslash+n in the generated JavaScript source, not two backslashes and not a literal newline inside a single-quoted JavaScript string.
+**Correct fix:** restore the raw JavaScript source to the tested single escaped newline contract while retaining the existing no-full-fetch Preview boundary.
+**Verification:** Preview recovery 3/3 PASS; final related Crawl/O2/O2D regression 98/98 PASS; py_compile/compileall and Qt VerifyOnly PASS.
+**Prevention:** retain the exact JavaScript source-escaping regression whenever Preview/Crawl discovery code is touched; do not weaken or delete the test to accommodate over-escaped source.
+
+## ERR-49-248 - O2G target was checked after deep candidate persistence and over-enqueued a real clone
+**Date:** 2026-09-25
+**Observed:** the first successful real MakerWorld `Lamp` probe on an isolated Catalog clone requested 200 new Products but the deep Chrome 9222 page exposed enough unconsumed identities that the candidate loop persisted 313 before the target check ran. The result still reported `target_reached=true`, proving target enforcement was too late.
+**Impact:** isolated clone only. The canonical Catalog remained untouched; no Product/Site/Social/Production state changed.
+**Root cause:** O2G correctly made scroll depth target-aware but initially enforced the requested target only after a whole discovered-candidate window had been persisted.
+**Correct fix:** calculate `needed = requested - current_pending` immediately before persistence and stop both attached-Chrome and classic persistence loops once `new_this_round >= needed`. Target enforcement now exists at the write boundary as well as at the post-scan decision boundary.
+**Verification:** focused O2G tests assert exact 200 persisted listing rows; fresh real clone started with 15 historical listing rows / 0 unconsumed pending, HTTP 403 handed off to Chrome 9222, scroll depth reached 48, 397 links were observed, exactly 200 new candidates were persisted, final pending=200, target_reached=true, exhausted=false and quick_check=ok. Final focused 49/49 + related 98/98 PASS.
+**Prevention:** any requested-count contract must be enforced before each persistence write, not merely by truncating returned UI results or checking count after a full discovery batch. Real target acceptance must compare requested count with persisted unconsumed count on an isolated clone.
+
 ## ERR-49-247 - O2E Refresh parity did not recognize ASCII-safe Server rename by finalized SHA
 **Date:** 2026-09-24
 **Observed:** real #628 Refresh compare-only returned `selected_local_count=2`, `site_media_count=2`, no Site/selected-media error and zero recovery, but still reported one `Site media candidate محلی ندارد` mismatch. Social parity for the same two images was already exact.

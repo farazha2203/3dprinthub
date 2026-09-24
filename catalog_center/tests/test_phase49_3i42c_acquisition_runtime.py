@@ -142,6 +142,103 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
         )
         self.assertEqual(second["new"], 2)
 
+    def test_o2g_target_continues_beyond_old_eight_pass_cap_and_skips_consumed(self):
+        listing = "https://makerworld.com/en/search/models?keyword=o2g-target"
+        for number in range(1, 101):
+            self.db.upsert_product({
+                "source_code": "makerworld",
+                "external_id": str(number),
+                "source_url": self._model(number)[1],
+                "source_title": f"Existing {number}",
+            })
+        calls: list[int] = []
+
+        async def fake_classic(_url, *, model_pattern, scroll_rounds, headed):
+            calls.append(int(scroll_rounds))
+            upper = 100 + min(200, len(calls) * 20)
+            return {"links": [self._model(number) for number in range(1, upper + 1)]}
+
+        with patch.object(
+            acquisition_runtime,
+            "_browser_robots_gate",
+            new=AsyncMock(return_value=0.0),
+        ), patch.object(
+            acquisition_runtime,
+            "discover_classic",
+            side_effect=fake_classic,
+        ):
+            result = asyncio.run(acquisition_runtime._discover_listing(
+                self.db,
+                self._source(),
+                listing,
+                200,
+                strategy="classic",
+            ))
+
+        pending = acquisition_runtime._pending_for_listing(
+            self.db, "makerworld", listing, 250, include_failed=False
+        )
+        self.assertGreater(len(calls), 8)
+        self.assertEqual(len(pending), 200)
+        listing_rows = self.db.conn.execute(
+            "SELECT COUNT(*) AS n FROM discovered_urls WHERE source_code=? AND discovered_from=?",
+            ("makerworld", listing),
+        ).fetchone()
+        self.assertEqual(int(listing_rows["n"]), 200)
+        self.assertTrue(result["target_reached"])
+        self.assertFalse(result["exhausted"])
+
+    def test_o2g_exhaustion_needs_stable_listing_size_not_only_zero_new(self):
+        listing = "https://makerworld.com/en/search/models?keyword=o2g-exhaustion"
+        for number in range(1, 131):
+            self.db.upsert_product({
+                "source_code": "makerworld",
+                "external_id": str(number),
+                "source_url": self._model(number)[1],
+                "source_title": f"Consumed {number}",
+            })
+        calls: list[int] = []
+        found_counts = [110, 120, 130, 130, 130]
+
+        async def fake_classic(_url, *, model_pattern, scroll_rounds, headed):
+            calls.append(int(scroll_rounds))
+            count = found_counts[min(len(calls) - 1, len(found_counts) - 1)]
+            return {"links": [self._model(number) for number in range(1, count + 1)]}
+
+        with patch.object(
+            acquisition_runtime,
+            "_browser_robots_gate",
+            new=AsyncMock(return_value=0.0),
+        ), patch.object(
+            acquisition_runtime,
+            "discover_classic",
+            side_effect=fake_classic,
+        ):
+            result = asyncio.run(acquisition_runtime._discover_listing(
+                self.db,
+                self._source(),
+                listing,
+                50,
+                strategy="classic",
+            ))
+
+        self.assertEqual(len(calls), 5)
+        self.assertFalse(result["target_reached"])
+        self.assertTrue(result["exhausted"])
+        self.assertEqual(
+            acquisition_runtime._pending_for_listing(
+                self.db, "makerworld", listing, 50, include_failed=False
+            ),
+            [],
+        )
+
+    def test_o2g_preview_depth_scales_with_requested_target(self):
+        policy_100 = acquisition_runtime._listing_target_policy(100)
+        policy_300 = acquisition_runtime._listing_target_policy(300)
+        self.assertGreater(policy_300["preview_rounds"], policy_100["preview_rounds"])
+        self.assertGreater(policy_300["preview_rounds"], 8)
+        self.assertGreaterEqual(policy_300["maximum"], policy_300["preview_rounds"])
+
     def test_hybrid_mode_prefers_modern_candidates_without_browser_when_enough(self):
         listing = "https://makerworld.com/en/search/models?keyword=lamp"
         candidates = [
@@ -316,6 +413,92 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
             "qt42c-rich-page-extractor",
         )
 
+    def test_o2g_hybrid_makerworld_prefers_attached_chrome_and_counts_unconsumed(self):
+        listing = "https://makerworld.com/en/search/models?keyword=o2g-attached"
+        for number in range(1, 101):
+            self.db.upsert_product({
+                "source_code": "makerworld",
+                "external_id": str(number),
+                "source_url": self._model(number)[1],
+                "source_title": f"Existing {number}",
+            })
+        attached = [
+            {
+                "source_code": "makerworld",
+                "external_id": str(number),
+                "source_url": self._model(number)[1],
+                "discovered_from": listing,
+            }
+            for number in range(1, 301)
+        ]
+        with (
+            patch.object(acquisition_runtime, "ModernHttpClient", _FakeModernClient),
+            patch.object(
+                acquisition_runtime,
+                "discover_conditional_http",
+                new=AsyncMock(
+                    side_effect=acquisition_runtime.AccessDeniedError("HTTP 403")
+                ),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(return_value=0.0),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "discover_attached_locator_safe",
+                new=AsyncMock(return_value=attached),
+            ) as attached_mock,
+            patch.object(
+                acquisition_runtime,
+                "discover_classic",
+                new=AsyncMock(side_effect=AssertionError("fresh browser must not run")),
+            ),
+        ):
+            result = asyncio.run(acquisition_runtime._discover_listing(
+                self.db, self._source(), listing, 200, strategy="hybrid"
+            ))
+
+        self.assertTrue(result["target_reached"])
+        self.assertEqual(result["discovery_route"], "attached_chrome_9222")
+        self.assertEqual(attached_mock.await_count, 1)
+        self.assertEqual(attached_mock.await_args.kwargs["requested"], 3000)
+        self.assertFalse(attached_mock.await_args.kwargs["include_preview"])
+        pending = acquisition_runtime._pending_for_listing(
+            self.db, "makerworld", listing, 250, include_failed=False
+        )
+        self.assertEqual(len(pending), 200)
+        listing_rows = self.db.conn.execute(
+            "SELECT COUNT(*) AS n FROM discovered_urls WHERE source_code=? AND discovered_from=?",
+            ("makerworld", listing),
+        ).fetchone()
+        self.assertEqual(int(listing_rows["n"]), 200)
+        self.assertEqual(str(pending[0]["external_id"]), "101")
+
+    def test_o2g_http_403_is_not_misreported_as_listing_exhaustion(self):
+        listing = "https://makerworld.com/en/search/models?keyword=o2g-403"
+        with (
+            patch.object(
+                acquisition_runtime,
+                "_browser_robots_gate",
+                new=AsyncMock(return_value=0.0),
+            ),
+            patch.object(
+                acquisition_runtime,
+                "discover_classic",
+                new=AsyncMock(return_value={
+                    "http_status": 403,
+                    "title": "Just a moment...",
+                    "links": [],
+                }),
+            ),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "HTTP 403"):
+                asyncio.run(acquisition_runtime._discover_listing(
+                    self.db, self._source(), listing, 20, strategy="classic"
+                ))
+
     def test_hybrid_access_denied_http_falls_back_once_to_guarded_browser(self):
         listing = "https://makerworld.com/en/search/models?keyword=blocked-http"
         browser_gate = AsyncMock(return_value=0.0)
@@ -340,6 +523,11 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
                 acquisition_runtime,
                 "_browser_robots_gate",
                 new=browser_gate,
+            ),
+            patch.object(
+                acquisition_runtime,
+                "discover_attached_locator_safe",
+                new=AsyncMock(side_effect=RuntimeError("cdp unavailable")),
             ),
             patch.object(
                 acquisition_runtime,

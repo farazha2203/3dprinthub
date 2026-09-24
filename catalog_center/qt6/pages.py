@@ -2550,10 +2550,13 @@ class OperationsPage(QWidget):
         controls = QFrame()
         controls.setObjectName("Card")
         grid = QGridLayout(controls)
-        grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(8)
-        grid.setColumnStretch(1, 1)
-        grid.setColumnStretch(3, 1)
+        grid.setContentsMargins(18, 16, 18, 16)
+        grid.setHorizontalSpacing(18)
+        grid.setVerticalSpacing(12)
+        grid.setColumnMinimumWidth(0, 135)
+        grid.setColumnMinimumWidth(2, 175)
+        grid.setColumnStretch(1, 3)
+        grid.setColumnStretch(3, 3)
 
         self.source = QComboBox()
         self.mode = QComboBox()
@@ -2588,6 +2591,10 @@ class OperationsPage(QWidget):
             ("Public HTTP — سازگاری نسخه قدیمی", "public_http"),
         ):
             self.collection_method.addItem(label, code)
+        self.source.setMinimumWidth(250)
+        self.mode.setMinimumWidth(250)
+        self.strategy.setMinimumWidth(330)
+        self.collection_method.setMinimumWidth(330)
 
         self.url = QLineEdit()
         self.url.setClearButtonEnabled(True)
@@ -2696,35 +2703,37 @@ class OperationsPage(QWidget):
         grid.addWidget(self.requested, 4, 1)
         grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 4, 2)
         grid.addWidget(self.image_limit, 4, 3)
-        grid.addWidget(self.retry_failed, 5, 0)
-        grid.addWidget(self.download_images, 5, 1)
-        grid.addWidget(self.download_files, 5, 2)
-        grid.addWidget(self.same_domain, 5, 3)
+
+        receive_options = QHBoxLayout()
+        receive_options.setSpacing(18)
+        receive_options.addWidget(QLabel("گزینه‌های دریافت:"))
+        receive_options.addWidget(self.retry_failed)
+        receive_options.addWidget(self.download_images)
+        receive_options.addWidget(self.download_files)
+        receive_options.addWidget(self.same_domain)
+        receive_options.addStretch(1)
+        grid.addLayout(receive_options, 5, 0, 1, 4)
+
         grid.addWidget(QLabel("Saved HTML"), 6, 0)
         grid.addWidget(self.saved_html_path, 6, 1, 1, 2)
         grid.addWidget(self.saved_html_browse, 6, 3)
         grid.addWidget(self.source_hint, 7, 0, 1, 4)
         grid.addWidget(self.domain_policy, 8, 0, 1, 4)
 
-        primary_actions = QHBoxLayout()
+        main_actions = QHBoxLayout()
+        main_actions.setSpacing(10)
         for button in (
             self.start_btn,
             self.stop_btn,
             self.direct_btn,
-        ):
-            primary_actions.addWidget(button)
-        primary_actions.addStretch(1)
-        grid.addLayout(primary_actions, 9, 0, 1, 4)
-
-        secondary_actions = QHBoxLayout()
-        for button in (
             self.default_url_btn,
             self.queue_btn,
             self.refresh_btn,
         ):
-            secondary_actions.addWidget(button)
-        secondary_actions.addStretch(1)
-        grid.addLayout(secondary_actions, 10, 0, 1, 4)
+            button.setMinimumWidth(118)
+            main_actions.addWidget(button)
+        main_actions.addStretch(1)
+        grid.addLayout(main_actions, 9, 0, 1, 4)
 
         receive_layout.addWidget(controls)
 

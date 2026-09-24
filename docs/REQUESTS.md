@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `O1+O1B+O2+O2D+O2E ACCEPTED -> O2G -> O2H -> O2F -> O3`.
+Status: `O1+O1B+O2+O2D+O2E ACCEPTED -> O2G LOCAL_TESTED/RUNTIME_ACCEPTANCE -> O2H -> O2F -> O3`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -20,7 +20,9 @@ New owner request is split into three independent slices before O3:
 
 O2D is ACCEPTED at GitHub-exact source `4e667f4f...`. Final exact-SHA runtime truth after safe-stop/quiescent backup is 1192 raw Crawl = 707 consumed identities hidden + 485 unconsumed Add identities (50 ready-to-add / 435 incomplete), visible mapped Products=0, and zero exact/normalized canonical Product duplicate groups. Product table/detail visibly exposes canonical `source_code:external_id`. No unsafe title-based deletion was performed because no same canonical identity duplicate exists. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract.
 
-O2E is ACCEPTED at GitHub-exact source `544e046b...`: Product Editor, Refresh and Instagram now share one exact selected Product-local media authority. Fresh rollback/integrity, graceful exact-SHA runtime cutover and real #625/#628 ProductWizard/Refresh/Social parity all PASS with unchanged target Product/History digest. O2G is next.
+O2E is ACCEPTED at GitHub-exact source `544e046b...`: Product Editor, Refresh and Instagram now share one exact selected Product-local media authority. Fresh rollback/integrity, graceful exact-SHA runtime cutover and real #625/#628 ProductWizard/Refresh/Social parity all PASS with unchanged target Product/History digest.
+
+O2G is LOCAL TESTED and awaiting only exact-SHA runtime acceptance. The real owner-reported MakerWorld `Lamp` search had only 15 persisted listing rows before the probe. On an isolated Catalog clone, HTTP returned 403 and correctly handed off to the documented Chrome 9222 route; progressive depth reached 48, saw 397 links and persisted exactly 200 requested unconsumed identities (not 313+). Section A layout is decompressed/aligned and its receive options are one row; section B is one six-button toolbar. Focused 49/49, Preview 3/3, related 98/98 and static/framework gates PASS; canonical Catalog stayed untouched by the source probe.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

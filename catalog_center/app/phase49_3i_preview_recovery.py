@@ -15,7 +15,7 @@ PREVIEW_CARD_EVAL_JS = r"""els => els.map(a => {
     const styled = host ? host.querySelector('[style*="background-image"]') : null;
     return {
         href: a.href || '',
-        text: ((a.innerText || '') + '\\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
+        text: ((a.innerText || '') + '\n' + ((host && host.innerText) || '')).trim().slice(0, 900),
         image: img ? (img.currentSrc || '') : '',
         src: img ? (img.getAttribute('src') || '') : '',
         data_src: img ? (img.getAttribute('data-src') || '') : '',

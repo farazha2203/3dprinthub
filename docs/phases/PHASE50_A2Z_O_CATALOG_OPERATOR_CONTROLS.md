@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_ACCEPTED / O2G_NEXT
-Date: 2026-09-24
-Branch: `wip/phase50-a2z-o2e-media-truth-20260924`
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_ACCEPTED / O2G_LOCAL_TESTED / RUNTIME_ACCEPTANCE_NEXT
+Date: 2026-09-25
+Branch: `wip/phase50-a2z-o2g-search-target-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -185,5 +185,21 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Real #628: selected DB=2 / ProductWizard selected cards=2 / Refresh selected-local=2 / Site=2 / mismatches=0 / Social exact SHA prefixes `959abcdd95d6`, `6138e2b6907d`.
 - Direct ProductWizard UI smoke matched `image_grid.selected_urls()` and primary image for both targets; target Product+History digest remained exact at `85d1e5686e1f2dbc8b8c5aea3b6b01188dda5824d726296cc96a2ec5a5bb7fb6`.
 
+## O2G implementation — LOCAL TESTED
+- Requested count is the authoritative search target at 1..500. Progressive Preview/Browser depth is derived from that target instead of a fixed eight-scroll window.
+- The existing 3I.38 `crawl_listing_state` remains the persisted continuation/depth authority; O2G does not introduce a second cursor.
+- O2D terminal/consumed Product identities never count toward new target progress.
+- MakerWorld Hybrid first respects HTTP/robots/rate behavior, then prefers the existing dedicated Chrome 9222 session. HTTP 403/429 is not listing exhaustion.
+- Attached discovery scans a bounded 3000-link window with locator-safe href reads and `include_preview=False`; no `evaluate_all` is introduced into the hardened boundary.
+- Persistence is capped to `requested - current_pending` in both attached and classic paths so a 200 request cannot over-enqueue the whole visible link window.
+- Verified exhaustion requires stable cumulative listing size at deeper probes; zero-new alone is insufficient because all exposed rows may simply be O2D-consumed Products.
+- Section A of Add/Crawl has clearer spacing/minimum widths/column stretch and one receive-options row. Section B has one horizontal six-button toolbar instead of the prior 3+3 stack.
+- Real Source proof used an isolated SQLite clone from the canonical Catalog. Before probe the real `https://makerworld.com/en/search/models?keyword=Lamp` listing had 15 ledger rows and zero unconsumed pending. HTTP returned 403; Chrome 9222 then reached scroll depth 48, observed 397 links and persisted exactly 200 new candidates. Final clone: 215 listing rows, pending=200, target_reached=true, exhausted=false, quick_check=ok.
+- The first clone-only probe found the target but persisted 313 candidates because the target gate was after the whole candidate loop. This was corrected before acceptance by capping persistence to the remaining target and locked by focused tests.
+- Related broad regression also exposed the pre-existing over-escaped Preview JS newline sequence; it was corrected from the wrong double-backslash runtime text to the tested single escaped newline source contract.
+- Verification: focused 49/49 PASS; Preview 3/3 PASS; related Crawl/O2/O2D 98/98 PASS; py_compile/compileall, diff-check, Qt VerifyOnly, pip check, Django check, migration drift PASS.
+- Fresh rollback before runtime: `D:\projects\3dprinthub-backups\phase50-a2z-o2g-runtime-acceptance-20260925-020653\catalog-before-o2g-runtime.sqlite3`; source/backup quick_check=ok, logical digest exact `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`, Products=852 / History=3482 / Crawl=1192, backup SHA256 `c8f3f50907e636678be5e5bcc1fedaff0d59e16c55959775b49dd9c27d11c619`.
+- Production changed = NO; migration changed = NO; canonical Product/Site/Social data mutated by real-source probe = NO.
+
 ## Exact next
-O2G target-aware Search Crawl pagination -> reproduce the MakerWorld search URL with requested 200/300 -> replace fixed Preview depth with target-aware progressive scroll/continuation -> count only O2D-unconsumed identities toward target -> stop only on requested target, explicit operator stop, robots/rate guard, or verified listing exhaustion -> focused + related Crawl regression -> fresh Catalog rollback/integrity -> commit/push -> Local=Remote -> exact-SHA Qt runtime acceptance. Then O2H guarded hard delete -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
+Review exact O2G diff -> stage only O2G source/tests/docs -> commit/push -> verify Local=GitHub exact -> gracefully close the previous Qt runtime once -> launch the pushed exact SHA -> foreground runtime smoke of Add/Crawl section A + one-row six-button section B + target controls -> verify canonical Catalog integrity/no unexpected mutation -> mark O2G ACCEPTED. Then O2H guarded hard delete -> O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.

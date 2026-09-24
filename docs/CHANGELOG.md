@@ -1,3 +1,16 @@
+## 2026-09-25 - A2Z-O2G Search Crawl Pagination — LOCAL TESTED
+- Replaced fixed MakerWorld Preview/search depth with requested-target-aware progressive discovery while retaining the 3I.38 persisted listing-depth ledger as the only continuation authority.
+- O2D-consumed Product identities do not count toward a requested 200/300 target.
+- MakerWorld Hybrid prefers the existing dedicated Chrome 9222 session after HTTP/listing access guard; 403/429 is an access/rate condition, never false listing exhaustion.
+- Attached discovery uses locator-safe link-only collection for the bounded 3000-anchor window; no `evaluate_all` leak-prone fallback was introduced.
+- Exact requested target is enforced at persistence time. A real clone-only first probe exposed 313 unconsumed candidates for a 200 request; implementation was tightened so only the remaining requested candidates are persisted.
+- Real MakerWorld `Lamp` clone acceptance: old listing rows=15, pending=0 -> Chrome 9222 scroll depth=48, links seen=397, new=200, pending=200, target_reached=true, exhausted=false, quick_check=ok.
+- Reorganized the owner-highlighted Add/Crawl controls: section A receives clearer spacing/column sizing and one receive-options row; section B uses one six-button toolbar instead of 3+3 stacked controls.
+- Related regression exposed a pre-existing over-escaped Preview JavaScript newline sequence; corrected it without changing discovery authority.
+- Verification: focused 49/49, Preview 3/3, related 98/98, py_compile/compileall, diff-check, Qt VerifyOnly, pip check, Django check and no-migration-drift PASS.
+- Fresh Catalog rollback/integrity: `phase50-a2z-o2g-runtime-acceptance-20260925-020653`, logical digest `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`, backup SHA256 `c8f3f50907e636678be5e5bcc1fedaff0d59e16c55959775b49dd9c27d11c619`.
+- Production changed: NO. Exact-SHA foreground runtime acceptance remains before O2G can be marked ACCEPTED.
+
 ## 2026-09-24 - A2Z-O2E Product Media Truth ACCEPTED
 - Unified Product Editor selected-media truth and Social media truth around `selected_images_json` plus exact files inside the current Product `local_dir`.
 - Added shared exact selected-local resolver with Product-local containment and optional finalized SHA verification; historical/refetch sibling folders are recovery-only and no longer normal Gallery truth.

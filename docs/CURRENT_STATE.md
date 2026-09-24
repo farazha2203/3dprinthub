@@ -1,3 +1,19 @@
+## 2026-09-25 - Phase50.A.2Z-O2G Search Crawl Pagination — LOCAL TESTED / EXACT-SHA RUNTIME ACCEPTANCE NEXT
+
+Active branch: `wip/phase50-a2z-o2g-search-target-20260924`, starting GitHub-exact from `47d676d94e8ddc2fa70726063d06016a49f48e2c`. Production remains unchanged at selective Server head `2b48a593...`; O2G is Windows/Catalog-only and has no Django migration or Server source delta.
+
+O2G now makes requested Crawl count the discovery authority instead of the old fixed Preview depth. Requested 1..500 drives progressive persisted scroll depth; MakerWorld Hybrid prefers the existing dedicated Chrome 9222 profile after HTTP/listing access guard, counts only O2D-unconsumed identities toward the target, and stops only at target, explicit stop, access/rate guard, or verified stable listing exhaustion. 403/429 is never treated as exhaustion. Attached-Chrome link discovery can inspect the bounded 3000-anchor window without expensive preview image/text work, while the number of newly persisted candidates is capped to the exact remaining target so a 200 request cannot silently enqueue 313+ rows.
+
+The owner-reported real MakerWorld `Lamp` listing reproduced the old symptom on an isolated Catalog clone: canonical truth before probe was 15 listing rows / 0 unconsumed pending. Fresh anonymous HTTP returned 403, then the documented dedicated Chrome 9222 route continued to scroll depth 48, saw 397 Product links, skipped consumed identities, and reached exactly 200 new unconsumed candidates. Final clone truth: 215 listing rows total (15 prior + 200 new), pending=200, target_reached=true, exhausted=false, quick_check=ok. Canonical Catalog was not mutated by the real-source probe.
+
+Verification after the exact-target correction: focused ReviewHardening/Acquisition/Crawl-Qt 49/49 PASS; Preview recovery 3/3 PASS; related Crawl/O2/O2D broad 98/98 PASS; py_compile/compileall, git diff --check, Qt `RUN_QT.ps1 -VerifyOnly`, pip check, Django check and `makemigrations --check --dry-run` PASS. Django retains the already-known CKEditor 4 support warning only.
+
+Fresh pre-runtime rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2g-runtime-acceptance-20260925-020653\catalog-before-o2g-runtime.sqlite3`. Source/backup quick_check=ok; full logical digest matches exactly at `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`; counts match Products=852 / History=3482 / Crawl=1192; backup SHA256 `c8f3f50907e636678be5e5bcc1fedaff0d59e16c55959775b49dd9c27d11c619`.
+
+Development gate exposed and corrected two bounded issues before acceptance: the first clone-only real probe could over-persist a whole visible link window after already reaching the requested target, and the related Preview regression exposed an older over-escaped JS newline sequence. Both are covered by regression; no canonical Product/Site/Social state was changed.
+
+Exact next: review/stage only O2G source/tests/docs -> commit/push -> verify Local=GitHub exact -> close the old Qt runtime gracefully once -> launch exact pushed SHA -> foreground Add Product/Crawl UI acceptance for the reorganized A controls and one-row six-button B toolbar -> canonical integrity/no-unexpected-mutation verification -> O2G ACCEPTED. Then O2H guarded hard delete -> O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep repair.
+
 ## 2026-09-24 - Phase50.A.2Z-O2E Product Media Truth ACCEPTED / O2G NEXT
 
 Active branch: `wip/phase50-a2z-o2e-media-truth-20260924`, based on accepted O2D closure `1982dbf8dc914d9a75f82685f1f3c0443ede5fa7`. Rollback branch `backup/pre-phase50-a2z-o2e-media-truth-20260924` points to that exact baseline. Production remains unchanged at selective Server head `2b48a593...`.

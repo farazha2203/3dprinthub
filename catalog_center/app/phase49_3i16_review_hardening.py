@@ -22,6 +22,7 @@ async def discover_attached_locator_safe(
 ) -> list[dict]:
     if not await recovery._cdp_available():
         raise RuntimeError("Chrome 9222 is not available")
+    include_preview = bool(_kwargs.get("include_preview", True))
 
     import re
     from playwright.async_api import async_playwright
@@ -45,7 +46,7 @@ async def discover_attached_locator_safe(
             await page.wait_for_timeout(1400)
             await recovery._scroll_without_embedded_js(
                 page,
-                min(max(3, int(scroll_rounds)), 16),
+                min(max(3, int(scroll_rounds)), 240),
             )
             regex = re.compile(model_pattern, re.I)
             anchors = page.locator("a[href]")
@@ -69,6 +70,9 @@ async def discover_attached_locator_safe(
                 if identity in seen:
                     continue
                 seen.add(identity)
+                if not include_preview:
+                    rows.append({"href": matched, "text": "", "image": ""})
+                    continue
                 try:
                     text = (await anchor.inner_text(timeout=800) or "").strip()
                 except Exception:

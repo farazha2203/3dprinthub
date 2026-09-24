@@ -30,6 +30,7 @@ from app.page_extractor import extract_direct_link
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3h_image_limits import normalize_image_limit
 from app.phase49_3i16_resilient_acquisition import collect_candidate_images_resilient
+from app.phase49_3i16_review_hardening import discover_attached_locator_safe
 from app.phase49_3i38_crawl_ledger_stage_ai import (
     next_scroll_rounds,
     record_listing_progress,
@@ -613,6 +614,22 @@ def _write_local_mapping(
     )
 
 
+def _listing_target_policy(requested: int) -> dict[str, int]:
+    """Bounded target-aware listing traversal policy for Search/Crawl."""
+    target = max(1, min(500, int(requested or 1)))
+    preview_rounds = min(64, max(8, ((target + 74) // 75) * 8))
+    step = 8 if target <= 100 else (16 if target <= 300 else 24)
+    maximum = min(240, max(96, preview_rounds + (step * 8)))
+    attempts = max(10, ((maximum - preview_rounds) // step) + 4)
+    return {
+        "target": target,
+        "preview_rounds": preview_rounds,
+        "step": step,
+        "maximum": maximum,
+        "attempts": attempts,
+    }
+
+
 async def _discover_listing(
     db,
     source_cfg: dict[str, Any],
@@ -640,6 +657,8 @@ async def _discover_listing(
 
     source_code = str(source_cfg.get("code") or "").strip()
     model_pattern = str(source_cfg.get("model_url_pattern") or "").strip()
+    policy = _listing_target_policy(requested)
+    requested = policy["target"]
     new_count = 0
     duplicate_count = 0
 
@@ -715,6 +734,9 @@ async def _discover_listing(
             return {
                 "new": new_count,
                 "duplicates": duplicate_count,
+                "target_reached": True,
+                "exhausted": False,
+                "scroll_rounds": 0,
             }
 
     # Classic fallback / explicit legacy mode.
@@ -726,10 +748,154 @@ async def _discover_listing(
         listing_url,
     )
 
-    # 3I.38 remembers the prior listing depth so each rerun keeps moving
-    # forward instead of restarting from the same first screen.
-    stagnant = 0
-    for round_no in range(1, 9):
+    # MakerWorld frequently challenges fresh anonymous browser sessions while
+    # the existing dedicated 9222 profile remains a legitimate public-session
+    # route. Prefer that already-supported profile when it is available; do
+    # not auto-login or bypass any access-control challenge.
+    if strategy == "hybrid" and source_code.casefold() == "makerworld":
+        attached_succeeded = False
+        attached_stable = 0
+        attached_last_found = -1
+        # Link-only extraction is bounded by the locator helper at 3000 anchors.
+        # Scan the full bounded window so already-consumed O2D identities cannot
+        # hide new rows beyond an arbitrary first N candidates.
+        attached_scan_limit = 3000
+        for round_no in range(1, policy["attempts"] + 1):
+            if _stopped(should_stop):
+                break
+            pending = len(
+                _pending_for_listing(
+                    db,
+                    source_code,
+                    listing_url,
+                    requested,
+                    include_failed=False,
+                )
+            )
+            if pending >= requested:
+                return {
+                    "new": new_count,
+                    "duplicates": duplicate_count,
+                    "target_reached": True,
+                    "exhausted": False,
+                    "scroll_rounds": 0,
+                    "discovery_route": "attached_chrome_9222",
+                }
+            scroll_rounds = next_scroll_rounds(
+                db,
+                source_code,
+                listing_url,
+                default_rounds=policy["preview_rounds"],
+                step=policy["step"],
+                maximum=policy["maximum"],
+            )
+            try:
+                candidates = await discover_attached_locator_safe(
+                    listing_url,
+                    source_code=source_code,
+                    model_pattern=model_pattern,
+                    requested=attached_scan_limit,
+                    scroll_rounds=scroll_rounds,
+                    headed=False,
+                    include_preview=False,
+                )
+            except Exception as exc:
+                if not attached_succeeded:
+                    _emit(
+                        progress,
+                        6,
+                        "Chrome 9222 در دسترس/آماده نبود؛ مسیر Browser عمومی امتحان می‌شود "
+                        f"({type(exc).__name__}).",
+                    )
+                break
+
+            attached_succeeded = True
+            found_count = len(candidates)
+            scan_truncated = found_count >= attached_scan_limit
+            needed = max(0, requested - pending)
+            new_this_round = 0
+            for candidate in candidates:
+                if new_this_round >= needed:
+                    break
+                external_id = str(candidate.get("external_id") or "").strip()
+                url = str(candidate.get("source_url") or candidate.get("href") or "").strip()
+                if not external_id or not url:
+                    continue
+                if terminal_identity_state(db, source_code, external_id, url):
+                    duplicate_count += 1
+                    continue
+                if db.add_discovered(source_code, external_id, url, listing_url):
+                    new_count += 1
+                    new_this_round += 1
+                else:
+                    duplicate_count += 1
+
+            record_listing_progress(
+                db,
+                source_code,
+                listing_url,
+                scroll_rounds=scroll_rounds,
+                found_count=found_count,
+                new_count=new_this_round,
+            )
+            pending = len(
+                _pending_for_listing(
+                    db,
+                    source_code,
+                    listing_url,
+                    requested,
+                    include_failed=False,
+                )
+            )
+            _emit(
+                progress,
+                min(22, 6 + round_no * 2),
+                f"MakerWorld Chrome 9222 — هدف {requested} / موجود {pending} / "
+                f"دیده‌شده {found_count} / عمق {scroll_rounds}",
+            )
+            if pending >= requested:
+                return {
+                    "new": new_count,
+                    "duplicates": duplicate_count,
+                    "target_reached": True,
+                    "exhausted": False,
+                    "scroll_rounds": scroll_rounds,
+                    "discovery_route": "attached_chrome_9222",
+                }
+            if (
+                not scan_truncated
+                and new_this_round <= 0
+                and found_count <= attached_last_found
+            ):
+                attached_stable += 1
+            else:
+                attached_stable = 0
+            attached_last_found = max(attached_last_found, found_count)
+            if attached_stable >= 2:
+                return {
+                    "new": new_count,
+                    "duplicates": duplicate_count,
+                    "target_reached": False,
+                    "exhausted": True,
+                    "scroll_rounds": scroll_rounds,
+                    "discovery_route": "attached_chrome_9222",
+                }
+
+        if attached_succeeded and not _stopped(should_stop):
+            raise RuntimeError(
+                "MakerWorld attached Chrome reached the bounded O2G depth before "
+                "target or verified exhaustion; no silent partial success is allowed."
+            )
+
+    # 3I.38 remains the persisted depth authority. O2G only makes the
+    # continuation target-aware and distinguishes consumed identities from
+    # verified listing exhaustion.
+    stable_depths = 0
+    last_found_count = -1
+    last_scroll_rounds = 0
+    target_reached = False
+    exhausted = False
+    for round_no in range(1, policy["attempts"] + 1):
         if _stopped(should_stop):
             break
         pending = len(
@@ -742,21 +908,23 @@ async def _discover_listing(
             )
         )
         if pending >= requested:
+            target_reached = True
             break
 
         scroll_rounds = next_scroll_rounds(
             db,
             source_code,
             listing_url,
-            default_rounds=8,
-            step=8,
-            maximum=96,
+            default_rounds=policy["preview_rounds"],
+            step=policy["step"],
+            maximum=policy["maximum"],
         )
+        last_scroll_rounds = scroll_rounds
         label = "کشف کلاسیک" if strategy == "classic" else "Fallback Browser"
         _emit(
             progress,
             min(22, 6 + round_no * 2),
-            f"{label} — عمق {scroll_rounds} / جدید {new_count}",
+            f"{label} — هدف {requested} / موجود {pending} / عمق {scroll_rounds}",
         )
 
         if browser_crawl_delay > 0:
@@ -767,8 +935,24 @@ async def _discover_listing(
             scroll_rounds=scroll_rounds,
             headed=False,
         )
+        http_status = int(result.get("http_status") or 0)
+        if http_status in {403, 429}:
+            hint = (
+                " MakerWorld را با دکمه Chrome 9222 باز کن و سپس همان Crawl را دوباره اجرا کن."
+                if source_code.casefold() == "makerworld"
+                else ""
+            )
+            raise RuntimeError(
+                f"Public listing browser returned HTTP {http_status}; access challenge/rate guard "
+                f"is not treated as listing exhaustion.{hint}"
+            )
+        links = list(result.get("links") or [])
+        found_count = len(links)
+        needed = max(0, requested - pending)
         new_this_round = 0
-        for external_id, url in result.get("links") or []:
+        for external_id, url in links:
+            if new_this_round >= needed:
+                break
             if terminal_identity_state(
                 db,
                 source_code,
@@ -793,16 +977,50 @@ async def _discover_listing(
             source_code,
             listing_url,
             scroll_rounds=scroll_rounds,
-            found_count=len(result.get("links") or []),
+            found_count=found_count,
             new_count=new_this_round,
         )
-        stagnant = stagnant + 1 if new_this_round <= 0 else 0
-        if stagnant >= 2:
+        pending = len(
+            _pending_for_listing(
+                db,
+                source_code,
+                listing_url,
+                requested,
+                include_failed=False,
+            )
+        )
+        if pending >= requested:
+            target_reached = True
             break
+
+        # No-new alone is not exhaustion: the newly exposed rows may all be
+        # already-consumed Products. Exhaustion needs the cumulative listing
+        # size itself to stop growing at two progressively deeper probes.
+        if new_this_round <= 0 and found_count <= last_found_count:
+            stable_depths += 1
+        else:
+            stable_depths = 0
+        last_found_count = max(last_found_count, found_count)
+        if stable_depths >= 2:
+            exhausted = True
+            break
+
+    if (
+        not target_reached
+        and not exhausted
+        and not _stopped(should_stop)
+    ):
+        raise RuntimeError(
+            "Search listing reached the bounded O2G depth before target or "
+            "verified exhaustion; no silent partial success is allowed."
+        )
 
     return {
         "new": new_count,
         "duplicates": duplicate_count,
+        "target_reached": target_reached,
+        "exhausted": exhausted,
+        "scroll_rounds": last_scroll_rounds,
     }
 
 
@@ -1512,13 +1730,14 @@ async def _preview_listing_candidates(
     if delay > 0:
         await asyncio.sleep(min(30.0, delay))
     _emit(progress, 2, "پیش‌نمایش لیست: عنوان و تصویر کارت‌های محصول در حال خواندن است…")
+    preview_policy = _listing_target_policy(requested)
     try:
         candidates = await discover_preview_candidates_safe(
             listing_url,
             source_code=source_code,
             model_pattern=model_pattern,
-            requested=max(1, min(500, int(requested or 1))),
-            scroll_rounds=8,
+            requested=preview_policy["target"],
+            scroll_rounds=preview_policy["preview_rounds"],
             headed=False,
         )
     except (RobotsDeniedError, RateLimitedError):

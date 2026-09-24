@@ -997,6 +997,40 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
                 },
             )
             self.assertEqual(page.requested.maximum(), 500)
+
+            controls_grid = page.source.parentWidget().layout()
+            actions = controls_grid.itemAtPosition(9, 0).layout()
+            action_widgets = [
+                actions.itemAt(index).widget()
+                for index in range(actions.count())
+                if actions.itemAt(index).widget() is not None
+            ]
+            self.assertEqual(
+                action_widgets,
+                [
+                    page.start_btn,
+                    page.stop_btn,
+                    page.direct_btn,
+                    page.default_url_btn,
+                    page.queue_btn,
+                    page.refresh_btn,
+                ],
+            )
+            self.assertIsNone(controls_grid.itemAtPosition(10, 0))
+            receive_options = controls_grid.itemAtPosition(5, 0).layout()
+            receive_widgets = [
+                receive_options.itemAt(index).widget()
+                for index in range(receive_options.count())
+                if receive_options.itemAt(index).widget() is not None
+            ]
+            for checkbox in (
+                page.retry_failed,
+                page.download_images,
+                page.download_files,
+                page.same_domain,
+            ):
+                self.assertIn(checkbox, receive_widgets)
+
             for attribute in (
                 "query",
                 "download_images",
