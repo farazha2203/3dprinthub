@@ -11,7 +11,7 @@ from app.db import Database
 from app.phase49_3i_discovery_review import upsert_candidate
 from app.phase49_3i38_crawl_ledger_stage_ai import terminal_identity_state
 from qt6 import acquisition_runtime
-from qt6.acquisition_runtime import run_single_async
+from qt6.acquisition_runtime import _pending_for_listing, run_single_async
 from qt6.kernel import build_kernel
 from qt6.models import ProductTableModel
 
@@ -177,6 +177,20 @@ class Phase50A2ZO2DIdentityTests(unittest.TestCase):
                 "all",
                 limit=50,
                 offset=0,
+            ),
+            [],
+        )
+        self.assertEqual(
+            self.kernel.acquisition.queue_items("", limit=50),
+            [],
+        )
+        self.assertEqual(
+            _pending_for_listing(
+                self.db,
+                "makerworld",
+                "before-product",
+                50,
+                include_failed=True,
             ),
             [],
         )

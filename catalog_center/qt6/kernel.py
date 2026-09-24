@@ -2081,6 +2081,7 @@ class AcquisitionCore:
             for row in self.db.discovered_items(
                 str(source_code or ""),
                 limit=int(limit),
+                exclude_existing_products=True,
             )
         ]
 

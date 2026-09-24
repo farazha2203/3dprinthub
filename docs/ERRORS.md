@@ -1,3 +1,20 @@
+## ERR-49-243 - O2D first staging command collapsed the allowlist into one invalid pathspec
+**Date:** 2026-09-24
+**Observed:** the first O2D staging command combined PowerShell backticks/string construction incorrectly, so Git received the whole allowlist plus trailing text as one pathspec and refused it.
+**Impact:** none. Git staged nothing, no commit was created and source/Catalog/Production were unchanged.
+**Correct fix:** do not retry the same shell form. Build a PowerShell string array of exact relative paths, run `git add -- $files`, then verify staged names, missing files, extra files and `git diff --cached --check` before commit.
+**Verification:** corrected staging contains exactly the ten reviewed O2D source/test/docs files and no extras.
+**Prevention:** multi-file Git staging in PowerShell must use an argument array, not concatenated backtick/pathspec text.
+
+## ERR-49-242 - O2D framework gate used stale non-existent server/manage.py path
+**Date:** 2026-09-24
+**Observed:** after compileall and Qt VerifyOnly passed, the first framework-gate command tried `D:\projects\3DPrintHub-a2z-a2r-converge\server\manage.py` and failed before Django started because that path does not exist.
+**Impact:** no source, Catalog, Git, Host or Production mutation. The failure was command-path selection only.
+**Root cause:** a stale historical Server subdirectory assumption was used instead of verifying the current Repository layout. The current Django entry point is `D:\projects\3DPrintHub-a2z-a2r-converge\manage.py`.
+**Correct fix:** do not retry the stale path. Verify `manage.py` from the current checkout, confirm the isolated worktree `.env` is absent and gitignored, temporarily copy the canonical ignored Local `.env` from `D:\projects\3DPrintHub\.env`, run root `manage.py check` and `makemigrations --check --dry-run`, then delete the temporary copy immediately.
+**Verification:** Django check PASS with only the known CKEditor warning; migration drift reports `No changes detected`; temporary `.env` absent afterward; no secret printed or committed.
+**Prevention:** framework commands must resolve `manage.py` from the verified current Repository before execution; never assume a historical `server\` layout.
+
 ## ERR-49-241 - Existing Product hidden from UI remained eligible in Batch pending SQL
 **Date:** 2026-09-24
 **Observed:** O2D first-pass UI/DB suppression hid an existing Product from Add Products, but a changed-condition test showed the independent `_pending_for_listing()` SQL could still return an old new/failed discovery row after that identity had become a Product.

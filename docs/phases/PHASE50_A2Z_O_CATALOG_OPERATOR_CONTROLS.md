@@ -143,10 +143,10 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Live Add candidate rows exclude Product identities by both external ID and normalized URL.
 - Products table/detail expose the canonical Source Identity `source_code:external_id`; no new identity column/schema is created.
 - O2 completeness is redefined correctly for unconsumed Add candidates: complete/ready-to-add means Candidate title + physically available local Preview. Existing Products are not part of this inventory.
-- Real Catalog read-only audit: Products=781, discovery ledger=1099, consumed hidden=625, unconsumed visible=474, complete=47, incomplete=427, queue summary=474, visible mapped Products=0.
+- Final real Catalog read-only audit: Products=790, discovery ledger=1115, consumed hidden=650, unconsumed visible=465, complete/ready-to-add=47, incomplete=418, queue summary=465, visible mapped Products=0.
 - Exact duplicate audit: external identity groups=0, normalized URL groups=0, semantic Source-pattern ID groups=0. No destructive dedup was warranted.
-- Scoped real Catalog digest before/after audit remained identical: `61c79a0d68d646b185cea188de41a5667b48f355af8c080e208809ccce7b2553`.
-- Verification: O2D changed-condition 1/1 PASS; focused 51/51 PASS; broad identity/Crawl/acquisition/Product regression 123/123 PASS; py_compile/compileall, Qt VerifyOnly, Django check and makemigrations --check --dry-run PASS.
+- Final scoped real Catalog digest before/after audit remained identical: `82a8a906cb4d0d0059dfdf2088cba5457b44116b9c2f6d36e5daa37de4b6c300`.
+- Verification: O2D identity/batch/preview changed-condition contracts PASS; focused 51/51 PASS; final broad identity/Crawl/acquisition/Product regression 131/131 PASS; py_compile/compileall, Qt VerifyOnly, Django check, makemigrations --check --dry-run and diff-check PASS.
 - Initial Django check without the isolated worktree `.env` failed with the already-known ERR-49-155 environment mismatch; rerun used the documented temporary canonical ignored `.env` copy and removed it immediately. No secret was logged or committed.
 - Windows/Catalog-only delta; no Server migration or Production deploy is required.
 

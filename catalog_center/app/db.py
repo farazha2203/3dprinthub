@@ -423,11 +423,31 @@ class Database:
         )
         return {row["status"]: int(row["total"]) for row in rows}
 
-    def discovered_items(self, source_code="", limit=5000):
+    def discovered_items(
+        self,
+        source_code="",
+        limit=5000,
+        *,
+        exclude_existing_products=False,
+    ):
         clauses, args = [], []
         if source_code:
             clauses.append("d.source_code=?")
             args.append(str(source_code))
+        if exclude_existing_products:
+            clauses.append(
+                """
+                NOT EXISTS(
+                  SELECT 1 FROM products px
+                  WHERE px.source_code=d.source_code COLLATE NOCASE
+                    AND (
+                      (d.external_id<>'' AND px.external_id=d.external_id)
+                      OR
+                      (d.normalized_url<>'' AND px.normalized_url=d.normalized_url)
+                    )
+                )
+                """
+            )
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         args.append(max(1, min(int(limit), 20000)))
         return list(self.conn.execute(

@@ -16,7 +16,7 @@ New owner request is split into three independent slices before O3:
 - O2E Product Media Truth: Product Refresh must reload the exact canonical Local DB/files images for that Product and Instagram must use that same current image authority.
 - O2F Instagram disclosure/links: verify current provider capabilities, apply supported AI label/disclosure to Feed and Story, include original-source and 3DPrintHub order Product links in supported Product details/metadata, and implement Story link only through a real supported provider/native workflow.
 
-O2D is LOCAL_TESTED. Real Catalog audit found 625 consumed identities hidden, 474 unconsumed Add identities, and zero exact/semantic canonical Product duplicate groups, so no unsafe title-based deletion was performed. O2E follows O2D acceptance.
+O2D is LOCAL_TESTED. Final real Catalog audit found 650 consumed identities hidden, 465 unconsumed Add identities (47 ready-to-add / 418 incomplete), visible mapped Products=0, and zero exact/normalized/semantic canonical Product duplicate groups, so no unsafe title-based deletion was performed. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract. O2E follows O2D acceptance.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

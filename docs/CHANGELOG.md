@@ -3,9 +3,9 @@
 - Add Products inventory/count/summary, live candidates, Preview thumbnail work and Batch pending Product fetch all suppress identities already present in Products.
 - Discovery ledger rows remain as anti-recrawl identity memory; O2D does not physically delete consumed ledger rows.
 - Product table/detail exposes canonical `source_code:external_id`.
-- Real Catalog: Products=781, ledger=1099, consumed hidden=625, unconsumed visible=474, ready-to-add=47, incomplete=427, visible mapped Products=0.
+- Final Local real Catalog: Products=790, ledger=1115, consumed hidden=650, unconsumed visible=465, ready-to-add=47, incomplete=418, visible mapped Products=0.
 - Canonical duplicate audit: external-ID groups=0, normalized-URL groups=0, Source-pattern semantic-ID groups=0; no destructive dedup was warranted.
-- Verification: changed-condition 1/1, focused 51/51, broad 123/123, py_compile/compileall, Qt VerifyOnly, Django check and migration-drift PASS.
+- Verification: changed-condition identity/batch/preview contracts PASS, focused 51/51, final broad 131/131, py_compile/compileall, Qt VerifyOnly, Django check, migration-drift and diff-check PASS.
 - No Server/Production delta.
 
 ## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views ACCEPTED
