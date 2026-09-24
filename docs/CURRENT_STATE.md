@@ -1,3 +1,15 @@
+## 2026-09-24 - Phase50.A.2Z UNICODE MEDIA FIX LOCAL_TESTED / SELECTIVE PRODUCTION RELEASE NEXT
+
+Current branch `wip/phase50-a2z-catalog-data-completion-20260923` is clean at GitHub-tracking exact source `b5980306400f3f0951804cab1ad049c1aab4a6d7`. This source adds the shared ASCII-safe Server/Public media basename contract after the first bounded #628 import failed rollback-safe on a Persian filename.
+
+Production truth before selective release: Host remains clean on `103f559c8a11c35495b4ac2a290d578c31c2a023`; official reverse tunnel/Bridge recovered and Host read-only gate passed. #625 was published alone from a verified fresh DB+media rollback: Site Product #39 advanced to revision 13, price range 458,500-1,655,000, exactly one active ProductImage, exactly 32 active Variants (= two Profiles x 16 PLA), old Variant rows inactive, and public page contains only the current /media/p/625 path with stale hashes absent.
+
+Fresh #628 prepublish rollback is `/home/sfkilvrs/3dprinthub-deploy-backups/20260923-230201-a2z-628-prepublish`; DB gzip + full media tar + SHA manifests passed. First #628 Batch `desktop_catalog_v85_20260923_230223` failed with UnicodeEncodeError and rolled back; Local remains Site Product #38 revision 1 / needs_update=1, so no partial publish was accepted.
+
+Unicode fix verification: dedicated regression 1/1 PASS; full unified import 5/5 PASS; related visibility/profile/video 21/21 PASS; Python compile, Django check and makemigrations --check --dry-run PASS; no source/migration/schema delta beyond the bounded media-name contract.
+
+Exact next: build a selective release branch from exact Production baseline `103f559c...` containing only the verified Server Unicode media delta -> fresh source/DB/media rollback -> GitHub-first reverse-tunnel deploy -> receiver/readiness verification -> retry only #628 once -> strict Product/Image/Profile/Variant/Slider + public HTTP/no-stale-media parity -> Desktop/Mobile browser acceptance -> Phase 1 CLOSED.
+
 ## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
 
 Source checkpoint fde86e23ba6b0a1d5f578279289328708184baf9 is committed, pushed and Local=GitHub exact on wip/phase50-a2z-catalog-data-completion-20260923. Qt is running from that exact SHA.

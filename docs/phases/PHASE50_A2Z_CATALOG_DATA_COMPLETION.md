@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Catalog Data Completion + Site Truth
 
-Status: EXACT_SHA_LOCAL_ACCEPTED / PRODUCTION_REPUBLISH_BLOCKED_TUNNEL
+Status: UNICODE_MEDIA_FIX_LOCAL_TESTED / SELECTIVE_PRODUCTION_RELEASE_NEXT
 Date: 2026-09-23
 Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
 Branch: `wip/phase50-a2z-catalog-data-completion-20260923`
@@ -54,3 +54,11 @@ Close Catalog/Site truth without duplicate Product identities or silent operator
 - #628 Ready PASS: 12x12x12 / 18x18x18, 16 PLA each, two selected Local-backed images; current pricing refreshed to 3063500-6479000.
 - Post-local rollback: phase50-a2z-post-local-gates-20260923-215515, quick_check=ok, SHA256 1c5b0439...848e8.
 - Production write remains blocked because official Windows loopback 22024 is down. No Production DB/media rollback can be verified until the documented PrintHub tunnel is restored.
+
+## 2026-09-24 final closure checkpoint
+- Dedicated reverse tunnel recovered and authenticated; Production read-only gate passed on clean `103f559c8a11c35495b4ac2a290d578c31c2a023`.
+- #625 was published alone after verified DB+full-media rollback. Site Product #39 is revision 13; strict parity/public media checks pass; one ProductImage and 32 active Variants remain current.
+- #628 has verified prepublish rollback `20260923-230201-a2z-628-prepublish`. First bounded import failed rollback-safe on a Unicode media basename and Site revision remained 1.
+- Shared Server/Public filename contract is implemented at `b5980306400f3f0951804cab1ad049c1aab4a6d7`: ASCII names remain unchanged; non-ASCII names become deterministic factual-source ASCII names only at Server/Public storage. Windows SEO metadata/ALT/caption/SHA are preserved; importer/Product/Portfolio/parity share the same contract.
+- Verification PASS: Unicode 1/1, unified import 5/5, related visibility/profile/video 21/21, py_compile, Django check, migration drift none, diff-check.
+- Remaining gates: selective release branch from exact Production baseline -> fresh source/DB/media backup -> GitHub-first reverse-tunnel deploy -> receiver verify -> retry only #628 -> strict Site/Public parity -> collateral readback -> Desktop/Mobile acceptance -> CLOSED.

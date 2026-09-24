@@ -1,3 +1,13 @@
+## 2026-09-24 - A2Z #625 Production parity + #628 Unicode media recovery
+- Restored and authenticated the dedicated 3DPrintHub reverse tunnel; Host gate passed on clean Production `103f559c...`, MySQL identity and applied Store migrations.
+- Created and verified fresh Production DB + full-media rollback before #625; published only #625. Site Product #39 advanced to revision 13 with strict ACK parity, one active ProductImage, 32 active Variants and no stale public media path.
+- Created a second verified Production DB + full-media rollback before #628.
+- First bounded #628 import failed rollback-safe with UnicodeEncodeError on a Persian media basename; no unchanged retry was made and Site revision stayed 1.
+- Added one shared deterministic ASCII-safe Server/Public media basename contract while preserving Windows metadata, ALT/caption, selected identity and image bytes/SHA.
+- Added Unicode Product+Portfolio regression and aligned republish parity to the same canonical server filename.
+- Verification: Unicode 1/1, unified import 5/5, related visibility/profile/video 21/21, compile/check/no-drift/diff PASS.
+- Runtime-bearing fix source: `b5980306400f3f0951804cab1ad049c1aab4a6d7`; selective Production release from exact `103f559c...` is next.
+
 ## 2026-09-23 - A2Z exact-SHA local acceptance and tunnel-safe stop
 - Pushed exact A2Z source/docs checkpoint fde86e23...; Local=GitHub exact and Qt launched from that SHA.
 - Reconciled #625 revision authority 11->12 from exact local publish_incomplete receipt only; operator digest unchanged.

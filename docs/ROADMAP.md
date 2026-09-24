@@ -1,3 +1,17 @@
+## 2026-09-24 - A2Z final Production closure gate
+- [x] Restore/authenticate dedicated 3DPrintHub reverse tunnel and pass Host read-only identity/DB/migration gate.
+- [x] Fresh Production DB + full-media rollback before #625.
+- [x] Publish only #625 and verify Product #39 rev13, active media/Variants/Profile pricing and stale-media removal.
+- [x] Fresh Production DB + full-media rollback before #628.
+- [x] Capture rollback-safe #628 Unicode filename failure without retry.
+- [x] Implement shared ASCII-safe Server/Public media filename contract and parity alignment at `b5980306...`.
+- [x] Unicode 1/1 + unified import 5/5 + related server 21/21 + compile/check/no-drift/diff gates.
+- [ ] Build selective release from exact Production `103f559c...`; deploy only verified Server delta from GitHub with fresh rollback.
+- [ ] Retry only #628 once after receiver verification.
+- [ ] Verify #628 Product/Image/Profile/Variant/Slider parity and public HTTP/no stale media.
+- [ ] Recheck #152/#178/#620/#625 for collateral changes without republishing them.
+- [ ] Complete real Desktop/Mobile browser acceptance and close Phase50.A.2Z.
+
 ## 2026-09-23 - A2Z exact-SHA local acceptance / Production gate
 - [x] Commit/push A2Z checkpoint fde86e23... and verify Local=GitHub exact.
 - [x] Launch Qt from exact pushed SHA.

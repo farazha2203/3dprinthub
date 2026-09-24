@@ -1,3 +1,10 @@
+## 2026-09-24 - Owner: finish Phase 1 through selective Production release and browser acceptance
+Status: `UNICODE FIX LOCAL_TESTED / SELECTIVE RELEASE NEXT`.
+
+Owner requires the exact ordered chain to continue without broad publication: verify diff -> shared ASCII-safe Server/Public media naming -> Unicode regression -> related tests/compile/no-drift -> docs -> GitHub exact -> release branch from Production `103f559c...` with only Server delta -> fresh rollback -> deploy via official reverse tunnel -> receiver verify -> retry only #628 -> strict Product/Image/Profile/Variant/Slider and public HTTP/no-stale-media parity -> Desktop/Mobile acceptance -> Phase 1 CLOSED.
+
+#625 is already Production-verified and must not be republished again. #628 had one transaction-rolled-back Unicode filename failure and must be retried only after the selective fix is deployed.
+
 ## 2026-09-23 - Owner: Phase 1 A2Z Catalog / Site Truth
 Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
 
