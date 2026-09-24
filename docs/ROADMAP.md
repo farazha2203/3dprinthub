@@ -5,7 +5,7 @@
 - [x] O1: focused 24/24 + broader Product/Qt/Social 136/136 + compile/diff/Qt VerifyOnly; real Catalog filter counts and quick_check pass.
 - [x] O1: source/docs commit `22bb0fb1...`, Local=Remote, exact-SHA VerifyOnly, integrity backup, one Catalog Center restart and runtime smoke PASS.
 - [x] O1B ACCEPTED: "آخرین ادیت‌شده‌ها" and "اخیراً دیده‌شده‌ها" are GitHub-exact at source `a0d5ea46...`; final 106/106 regression, cloned real MainWindow/ProductWizard no-dirty acceptance, fresh backup and visible exact-SHA runtime smoke all PASS.
-- [ ] O2 LOCAL_TESTED: complete/incomplete filters share one filesystem-aware completeness contract; real Catalog partition 1099 = 453 complete + 646 incomplete; focused 39/39 + broader 128/128 + static/Qt/Django/no-drift PASS. Commit/push + exact-SHA runtime acceptance still required.
+- [x] O2 ACCEPTED: shared filesystem-aware complete/incomplete contract, exact missing reasons, source `f04d5b05...` GitHub-exact, rollback/integrity PASS, one exact-SHA restart, real runtime partition 1099 = 463 complete + 636 incomplete, scoped no-mutation digest PASS, visible Qt runtime PASS.
 - [ ] O3: guarded deep repair — backup, bounded derived-data purge, full source refetch and same-identity remap.
 - [ ] O4: fix Delete semantics and prove visible removal/tombstone/restore behavior.
 - [ ] O5: independent Social receipt reconciliation and operator acceptance for Post vs Story.

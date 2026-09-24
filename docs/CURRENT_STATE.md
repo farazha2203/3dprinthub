@@ -1,14 +1,20 @@
-## 2026-09-24 - Phase50.A.2Z-O2 Crawl Completeness Views LOCAL_TESTED / GITHUB_PROMOTION NEXT
+## 2026-09-24 - Phase50.A.2Z-O2 Crawl Completeness Views ACCEPTED / O3 NEXT
 
 Active branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`, based on accepted O1B closure `8bbb267dab81af73eb8d38cd50aa83e5fa9ad162`. Rollback branch `backup/pre-phase50-a2z-o2-crawl-completeness-20260924` points exactly to that baseline; Production `2b48a593...` is already in the accepted lineage.
 
 O2 now has one shared factual completeness contract in AcquisitionCore. Complete requires Product mapping, title, description, and at least one physically displayable local image. Exact missing reasons are shared by filtering and card UI: unmapped Product, missing title, missing description, missing local/Preview image. Crawl UI exposes Complete and Incomplete filters; complete cards show a positive marker and incomplete cards show exact reasons.
 
-Real canonical Catalog: quick_check=ok; Crawl total=1099; complete=453; incomplete=646; partition invariant PASS. The first correct filesystem-aware count was too slow (~11.479s complete); a first-hit ImageCore existence path plus per-scan identity cache preserved exact counts while reducing cold scans to ~2.402s complete / ~3.464s incomplete.
+Pre-promotion canonical Catalog truth was quick_check=ok; Crawl total=1099; complete=453; incomplete=646; partition invariant PASS. The first correct filesystem-aware count was too slow (~11.479s complete); a first-hit ImageCore existence path plus per-scan identity cache preserved correctness while reducing cold scans to ~2.402s complete / ~3.464s incomplete.
 
 Verification: pre-change Crawl baseline 36/36 PASS; focused O2/Crawl/Video 39/39 PASS; broader Crawl/Product/O1/O1B 128/128 PASS; py_compile/compileall, git diff --check, Qt VerifyOnly, Django check and makemigrations --check --dry-run PASS. No migration, Server delta, Product/Site mutation or Production deploy is required.
 
-Exact next: staged allowlist -> commit/push O2 -> Local=Remote -> fresh logical Catalog backup/integrity -> exact-SHA Qt VerifyOnly -> one Catalog Center restart from pushed source -> real Complete/Incomplete runtime smoke with no canonical mutation -> post-runtime quick_check/partition -> docs-only O2 ACCEPTED closure -> O3 guarded deep reset/refetch/remap.
+O2 source is GitHub-exact at `f04d5b05a9e0ad1310459da5a152da6be48d2c34`. Fresh rollback `D:\projects\3dprinthub-backups\phase50-a2z-o2-runtime-acceptance-20260924-161214\catalog-before-o2-runtime.sqlite3` passed quick_check and matched the source logical digest exactly; backup SHA256 is `ca7b9ff29c70b741ac522146b8d79b23111b38bf569563283a05558c8a87356a`.
+
+The previous runtime had acquisition work still in flight before cutover and created Product IDs 779/780/781 at 16:12:14/27/40; O2 cutover occurred at 16:13:12. Backup-vs-live diff proved no pre-existing Product row changed. The one intended restart was not repeated when the five-second MainWindow-handle probe was early; the same process exposed `3DPrintHub Catalog Center v8.9.11 - Qt 6` on delayed readiness.
+
+Real O2 runtime smoke on the canonical Catalog now reports quick_check=ok, Products=781 and Crawl 1099 = 463 complete + 636 incomplete. Complete and Incomplete filters both loaded 100 real cards with the expected positive/missing-reason text. The scoped before/after filter-smoke logical digest was identical at `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`, proving the filters did not mutate Product/Crawl/History state.
+
+Exact next: O3 guarded deep reset/refetch/remap -> inventory current Repair behavior and prior errors -> freeze same-identity preservation contract -> fresh Catalog backup -> implement bounded derived/local-data purge for only selected Product -> full Source refetch from scratch -> remap to the same Product identity while preserving Site/receipt/order authority -> changed-condition tests -> related Crawl/Product regression -> integrity/no-dirty proof -> commit/push -> exact-SHA runtime acceptance. O4 Delete semantics follows only after O3 is accepted.
 
 ## 2026-09-24 - Phase50.A.2Z-O1B Recent Product Activity ACCEPTED / O2 NEXT
 

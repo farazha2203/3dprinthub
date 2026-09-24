@@ -1,4 +1,4 @@
-## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views LOCAL_TESTED
+## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views ACCEPTED
 - Centralized Crawl completeness in AcquisitionCore; UI no longer owns a second completeness rule.
 - Complete requires Product mapping + title + description + at least one physically displayable local image.
 - Added Complete/Incomplete persistent-inventory filters; incomplete cards show exact missing reasons and complete cards show a positive marker.
@@ -6,6 +6,10 @@
 - Added first-hit filesystem image existence + per-scan identity cache. Real Catalog stayed exactly 1099 = 453 complete + 646 incomplete while cold Complete count improved from ~11.479s to ~2.402s; Incomplete ~3.464s.
 - Verification: baseline Crawl 36/36, O2 focused 39/39, broader Crawl/Product/O1/O1B 128/128, compile/diff/Qt VerifyOnly/Django/no-drift PASS.
 - Windows Catalog UI/Core only; no migration or Production mutation/deploy.
+- GitHub-exact source `f04d5b05...`; fresh logical rollback quick_check/digest PASS, SHA256 `ca7b9ff29c70b741ac522146b8d79b23111b38bf569563283a05558c8a87356a`.
+- One exact-SHA Catalog Center cutover completed. A five-second window-handle probe was early, so the same process was retained; delayed readiness exposed the expected Qt window without a second restart.
+- Three Product rows (#779/#780/#781) were proven to have been created by acquisition still running in the previous instance before the O2 cutover; no pre-existing Product row changed.
+- Final real runtime truth: quick_check=ok, Products=781, Crawl 1099 = 463 complete + 636 incomplete. Complete/Incomplete UI smoke loaded real cards and before/after logical digest remained exactly `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`.
 
 ## 2026-09-24 - A2Z-O1B Recent Product Activity LOCAL_TESTED
 - Added Product filters `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`.

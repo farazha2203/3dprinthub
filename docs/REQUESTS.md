@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `SIX-PHASE PLAN REGISTERED / O1+O1B ACCEPTED / O2 LOCAL_TESTED`.
+Status: `SIX-PHASE PLAN REGISTERED / O1+O1B+O2 ACCEPTED / O3 NEXT`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -7,7 +7,9 @@ Owner also reported Crawl cards without images, Repair doing nothing, Delete not
 
 Work is split into the existing bounded phases plus one inserted operator-activity microphase: O1 Product filters + split Social; O1B Recent Product Activity; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is accepted at GitHub-exact source `22bb0fb1...`; exact-SHA Qt VerifyOnly, integrity backup, one app restart and runtime smoke all passed. O1B is next.
 
-O1B owner request is ACCEPTED: `آخرین ادیت‌شده‌ها` is newest-first from explicit operator-save history events, not generic Product `updated_at`; `اخیراً دیده‌شده‌ها` is newest-first from persisted `product_viewed` events recorded only after successful Product Editor load. Card display/selection/hover/search/source-link opening do not count as viewed, and View tracking never dirties Product/Site state. Source `a0d5ea46...` is GitHub-exact; cloned real MainWindow/ProductWizard acceptance and visible exact-SHA runtime smoke PASS. O2 Crawl completeness is next.
+O1B owner request is ACCEPTED: `آخرین ادیت‌شده‌ها` is newest-first from explicit operator-save history events, not generic Product `updated_at`; `اخیراً دیده‌شده‌ها` is newest-first from persisted `product_viewed` events recorded only after successful Product Editor load. Card display/selection/hover/search/source-link opening do not count as viewed, and View tracking never dirties Product/Site state. Source `a0d5ea46...` is GitHub-exact; cloned real MainWindow/ProductWizard acceptance and visible exact-SHA runtime smoke PASS.
+
+O2 is ACCEPTED at GitHub-exact source `f04d5b05...`: Crawl Complete/Incomplete filtering and per-card missing reasons share one filesystem-aware AcquisitionCore/ImageCore authority. Final real runtime truth is quick_check=ok and 1099 Crawl rows = 463 complete + 636 incomplete; scoped before/after smoke digest proved zero Product/Crawl/History mutation. O3 guarded deep reset/refetch/remap is next.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

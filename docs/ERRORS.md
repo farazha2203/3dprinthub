@@ -1,3 +1,17 @@
+## ERR-49-240 - O2 acceptance saw concurrent pre-cutover acquisition, not O2 mutation
+**Date:** 2026-09-24
+**Observed:** the fresh O2 runtime backup captured 778 Products, but the later runtime smoke saw 781 Products. Read-only backup-vs-live diff found only new Product IDs 779/780/781; no pre-existing Product row changed.
+**Root cause:** the prior Catalog Center instance still had acquisition work in flight before the O2 cutover. The three Products were created at 16:12:14, 16:12:27 and 16:12:40 local-equivalent timing, while the O2 process cutover occurred at 16:13:12.
+**Safety proof:** the actual Complete/Incomplete smoke took its own before/after logical digest; both were exactly `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`. Product/Crawl/History state therefore did not change during the O2 filter smoke.
+**Prevention:** when an operator/acquisition worker can still be active during a backup gate, distinguish pre-cutover writes from new-runtime behavior using Product timestamps, exact process cutover time, backup-vs-live row diff and a scoped before/after smoke digest.
+
+## ERR-49-239 - O2 window readiness probe ran before Qt exposed its MainWindow handle
+**Date:** 2026-09-24
+**Observed:** after the one intended O2 Catalog Center restart, both expected pythonw processes were alive but a check only five seconds after launch still saw no visible MainWindow handle.
+**Impact:** the launcher command returned a failure status for the visibility assertion even though the application had not crashed.
+**Correct fix:** do not restart again. Keep the same process instance and perform a delayed read-only readiness check. Eight seconds later the child process exposed window title `3DPrintHub Catalog Center v8.9.11 - Qt 6` and remained healthy through final runtime verification.
+**Prevention:** Qt runtime acceptance must poll/wait for a bounded visible-window readiness period when launcher/process health is already good; a zero handle during early startup is not sufficient evidence to restart the app.
+
 ## ERR-49-238 - O2 completeness scan was correct but too slow when it enumerated every local image
 **Date:** 2026-09-24
 **Observed:** the first factual O2 implementation partitioned the real 1099-row Crawl inventory correctly as 453 complete / 646 incomplete, but a cold Complete count took about 11.479 seconds.

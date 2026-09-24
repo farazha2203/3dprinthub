@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O3_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -97,7 +97,7 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Canonical DB was not polluted by acceptance: recently_viewed remained 0 until the owner's first real Editor open.
 - Visible runtime launched from exact source SHA; prior app process was already absent so no forced close was needed. Window title `3DPrintHub Catalog Center v8.9.11 - Qt 6`; Catalog quick_check=ok / 771 Products.
 
-## O2 implementation — LOCAL_TESTED
+## O2 implementation — ACCEPTED
 - One shared AcquisitionCore completeness contract now owns both filtering and card status.
 - Complete means: mapped Product identity + title + description + at least one physically displayable local image.
 - Exact incomplete reasons are: unmapped Product, missing title, missing description, and missing local/Preview image.
@@ -108,5 +108,14 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Tests: baseline 36/36 PASS; focused O2/Crawl/Video 39/39 PASS; broader Crawl/Product/O1/O1B 128/128 PASS; compile, diff-check, Qt VerifyOnly, Django check and no-migration-drift PASS.
 - No migration, Server delta, Product/Site mutation or Production deployment is required.
 
+## O2 runtime acceptance
+- Source commit `f04d5b05a9e0ad1310459da5a152da6be48d2c34` is GitHub-exact.
+- Fresh rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2-runtime-acceptance-20260924-161214\catalog-before-o2-runtime.sqlite3`; quick_check and logical digest match passed; backup SHA256 `ca7b9ff29c70b741ac522146b8d79b23111b38bf569563283a05558c8a87356a`.
+- The old runtime still had acquisition work in flight and created #779/#780/#781 before the O2 cutover. Their creation timestamps precede the 16:13:12 O2 restart; backup-vs-live diff found zero changes to pre-existing Product rows.
+- The one intended restart was not repeated after an early five-second no-handle probe. The same process later exposed `3DPrintHub Catalog Center v8.9.11 - Qt 6` and remained healthy.
+- Final runtime truth: quick_check=ok; Products=781; Crawl total=1099; complete=463; incomplete=636; partition invariant PASS.
+- Real Complete and Incomplete UI smoke loaded 100 rows for each filter with the expected complete/missing-reason card text.
+- Scoped Product/Crawl/History logical digest before and after the filter smoke stayed exactly `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`; O2 filtering is read-only against canonical state.
+
 ## Exact next
-Final staged allowlist/diff gate -> commit/push O2 -> Local=Remote -> fresh logical Catalog backup/integrity proof -> exact-SHA Qt VerifyOnly -> one Catalog Center restart from pushed source -> real Complete/Incomplete runtime smoke with no canonical mutation -> post-runtime quick_check/partition -> docs-only O2 ACCEPTED closure -> O3 guarded deep reset/refetch/remap.
+O3 guarded deep reset/refetch/remap -> read current Repair path + prior errors -> freeze same-identity preservation contract -> fresh Catalog backup -> implement bounded purge of only selected Product derived/local source data -> full Source refetch from scratch -> remap to the same Product identity while preserving Site/receipt/order authority -> changed-condition tests -> related Crawl/Product regression -> integrity/no-dirty proof -> commit/push -> exact-SHA runtime acceptance. O4 Delete semantics follows only after O3 is accepted.
