@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `O1+O1B+O2 ACCEPTED / O2D LOCAL_TESTED / O2E -> O2F -> O3 NEXT`.
+Status: `O1+O1B+O2+O2D ACCEPTED / O2E NEXT -> O2F -> O3`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -16,7 +16,7 @@ New owner request is split into three independent slices before O3:
 - O2E Product Media Truth: Product Refresh must reload the exact canonical Local DB/files images for that Product and Instagram must use that same current image authority.
 - O2F Instagram disclosure/links: verify current provider capabilities, apply supported AI label/disclosure to Feed and Story, include original-source and 3DPrintHub order Product links in supported Product details/metadata, and implement Story link only through a real supported provider/native workflow.
 
-O2D is LOCAL_TESTED. Final real Catalog audit found 650 consumed identities hidden, 465 unconsumed Add identities (47 ready-to-add / 418 incomplete), visible mapped Products=0, and zero exact/normalized/semantic canonical Product duplicate groups, so no unsafe title-based deletion was performed. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract. O2E follows O2D acceptance.
+O2D is ACCEPTED at GitHub-exact source `4e667f4f...`. Final exact-SHA runtime truth after safe-stop/quiescent backup is 1192 raw Crawl = 707 consumed identities hidden + 485 unconsumed Add identities (50 ready-to-add / 435 incomplete), visible mapped Products=0, and zero exact/normalized canonical Product duplicate groups. Product table/detail visibly exposes canonical `source_code:external_id`. No unsafe title-based deletion was performed because no same canonical identity duplicate exists. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract. O2E is next.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

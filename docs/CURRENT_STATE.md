@@ -1,4 +1,4 @@
-## 2026-09-24 - Phase50.A.2Z-O2D Product Identity / Dedup LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+## 2026-09-24 - Phase50.A.2Z-O2D Product Identity / Dedup ACCEPTED / O2E NEXT
 
 Active branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`, based on accepted O2 closure `325f15c671055bc4d74324d94a2c88acbfc1b89b`. Rollback branch `backup/pre-phase50-a2z-o2d-product-identity-dedup-20260924` points to that exact baseline. Production remains unchanged at selective Server head `2b48a593...`.
 
@@ -8,7 +8,13 @@ Real Catalog read-only truth at final Local gate: quick_check=ok; Products=790; 
 
 Verification: changed-condition identity/batch/preview contracts PASS; focused 51/51 PASS; final broad identity/Crawl/acquisition/Product regression 131/131 PASS; py_compile/compileall, Qt VerifyOnly, Django check, makemigrations --check --dry-run and git diff --check PASS. The first framework command in this continuation used the stale non-existent `server/manage.py` path and stopped before Django execution; the verified root `manage.py` plus documented temporary canonical ignored `.env` method passed, and the temporary copy was removed immediately.
 
-Exact next: final allowlist/diff -> commit/push O2D -> Local=Remote -> fresh logical Catalog rollback -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real runtime Add Products/Product identity smoke with no canonical mutation -> docs-only O2D ACCEPTED -> O2E Product Media Truth / Refresh / Instagram Image Parity.
+O2D source hardening is GitHub-exact at `4e667f4f49358076b288bb8c8f6982b8a2b20bca`. Before runtime cutover, the active Automatic acquisition was not force-killed: run #46 completed naturally, run #50 was stopped through the application’s official `توقف امن` control and finished `stopped` with collected=12 / failed=0 / duplicates=88. The exact-SHA runtime restart then started no new acquisition.
+
+Fresh quiescent rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2d-runtime-acceptance-20260924-182115\catalog-before-o2d-runtime.sqlite3`; source/backup quick_check=ok, logical digest exact at `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`, backup SHA256 `fb01aaab1253851e83e869d3ba012fbab9f9aee8718ffea30fd3a42dc293339e`.
+
+Final runtime truth on exact source SHA: Products=847; raw Crawl=1192; Add Products visible=485; consumed hidden=707; ready-to-add=50; incomplete=435; visible mapped Products=0; queue summary total=485; duplicate `(source,external_id)` groups=0; duplicate normalized-URL groups=0. Product table visibly exposes canonical identity (`makerworld:1298362` in the first runtime row). Operations UI loaded 100 rows with mapped=0. Before/after smoke digest stayed exactly `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`, so acceptance created no Product/Crawl/History mutation.
+
+Exact next: O2E Product Media Truth / Refresh / Instagram Image Parity -> inventory current Product refresh/image display/Instagram media resolvers -> freeze one canonical image-set authority -> fix Refresh to reload exact Local DB/files for the selected Product -> make Instagram resolve the same current selected image authority -> regression for stale/mismatched mapping and no unrelated-media fallback -> real Product runtime smoke -> commit/push -> exact-SHA acceptance. O2F Instagram disclosure/source+order links/Story link follows O2E, then O3 Deep Repair.
 
 ## 2026-09-24 - Phase50.A.2Z-O2 Crawl Completeness Views ACCEPTED / O3 NEXT
 

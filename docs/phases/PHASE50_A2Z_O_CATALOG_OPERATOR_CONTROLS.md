@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -133,7 +133,7 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Real Complete and Incomplete UI smoke loaded 100 rows for each filter with the expected complete/missing-reason card text.
 - Scoped Product/Crawl/History logical digest before and after the filter smoke stayed exactly `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`; O2 filtering is read-only against canonical state.
 
-## O2D implementation — LOCAL_TESTED
+## O2D implementation — ACCEPTED
 - Products table already enforces unique `(source_code, external_id)` and `(source_code, normalized_url)`; real Catalog audit found zero duplicate groups for both keys and zero semantic Source-pattern ID duplicate groups. Therefore no Product row was deleted merely because titles look alike.
 - `Database.add_discovered()` now rejects any already-existing Product identity, not only blocked identities.
 - Add Products persistent queue/count/page and queue summary exclude identities that already exist in Products while retaining the discovery ledger row as anti-recrawl memory.
@@ -150,5 +150,14 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Initial Django check without the isolated worktree `.env` failed with the already-known ERR-49-155 environment mismatch; rerun used the documented temporary canonical ignored `.env` copy and removed it immediately. No secret was logged or committed.
 - Windows/Catalog-only delta; no Server migration or Production deploy is required.
 
+## O2D runtime acceptance
+- Core source commit `4589500029cc7670ac2f060c798221fe3754feac` and final identity-suppression hardening `4e667f4f49358076b288bb8c8f6982b8a2b20bca` are GitHub-exact.
+- Before cutover, Automatic acquisition was allowed to quiesce safely: run #46 completed naturally and run #50 was stopped through the official application stop control; no process kill was used for acquisition.
+- Fresh rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2d-runtime-acceptance-20260924-182115\catalog-before-o2d-runtime.sqlite3`; quick_check=ok and source/backup logical digest match at `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`; backup SHA256 `fb01aaab1253851e83e869d3ba012fbab9f9aee8718ffea30fd3a42dc293339e`.
+- Exact-SHA Catalog Center runtime is visible as `3DPrintHub Catalog Center v8.9.11 - Qt 6`.
+- Final runtime truth: Products=847; raw Crawl=1192; consumed hidden=707; Add Products visible=485; ready-to-add=50; incomplete=435; visible mapped Products=0; queue summary total=485.
+- Canonical duplicate groups remain zero for `(source_code, external_id)` and normalized URL. Product table visibly exposes canonical identity such as `makerworld:1298362`.
+- Runtime Add Products smoke loaded 100 rows with mapped=0. Before/after Product/Crawl/History digest remained exactly `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`; acceptance caused no canonical mutation.
+
 ## Exact next
-O2D staged allowlist/diff review -> source/docs commit+push -> Local=Remote -> fresh Catalog rollback/integrity -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Add Products smoke proving consumed identities remain hidden and canonical Product count/digest are not mutated -> docs-only O2D ACCEPTED closure -> O2E Product Media Truth / Refresh / Instagram Image Parity. O2F follows O2E, then O3 guarded deep reset/refetch/remap -> read current Repair path + prior errors -> freeze same-identity preservation contract -> fresh Catalog backup -> implement bounded purge of only selected Product derived/local source data -> full Source refetch from scratch -> remap to the same Product identity while preserving Site/receipt/order authority -> changed-condition tests -> related Crawl/Product regression -> integrity/no-dirty proof -> commit/push -> exact-SHA runtime acceptance. O4 Delete semantics follows only after O3 is accepted.
+O2E Product Media Truth / Refresh / Instagram Image Parity -> inventory Product refresh/image display/Instagram media resolvers -> freeze one canonical Local DB/files image authority -> make Refresh reload the exact selected Product image set -> make Instagram consume the same current selected authority -> block unrelated/stale media fallback -> changed-condition and related Image/Product/Social regression -> fresh Catalog backup -> commit/push -> Local=Remote -> exact-SHA runtime smoke. O2F disclosure/product-links/Story-link follows O2E, then O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.

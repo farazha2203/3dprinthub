@@ -1,4 +1,4 @@
-## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression LOCAL_TESTED
+## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression ACCEPTED
 - Existing Product identity is rejected by new discovery and treated as terminal collected unless explicitly force-recovered.
 - Add Products inventory/count/summary, live candidates, Preview thumbnail work and Batch pending Product fetch all suppress identities already present in Products.
 - Discovery ledger rows remain as anti-recrawl identity memory; O2D does not physically delete consumed ledger rows.
@@ -7,6 +7,9 @@
 - Canonical duplicate audit: external-ID groups=0, normalized-URL groups=0, Source-pattern semantic-ID groups=0; no destructive dedup was warranted.
 - Verification: changed-condition identity/batch/preview contracts PASS, focused 51/51, final broad 131/131, py_compile/compileall, Qt VerifyOnly, Django check, migration-drift and diff-check PASS.
 - No Server/Production delta.
+- Final hardening is GitHub-exact at `4e667f4f49358076b288bb8c8f6982b8a2b20bca`; Automatic acquisition was safely quiesced before cutover, with no force-kill of acquisition work.
+- Fresh runtime rollback `phase50-a2z-o2d-runtime-acceptance-20260924-182115` passed source/backup quick_check and logical-digest parity; backup SHA256 `fb01aaab1253851e83e869d3ba012fbab9f9aee8718ffea30fd3a42dc293339e`.
+- Exact-SHA runtime acceptance: Products=847; raw Crawl=1192; consumed hidden=707; Add Products visible=485 (50 ready / 435 incomplete); visible mapped Products=0; queue summary=485; canonical duplicate groups=0; Product identity visible in table/detail; before/after smoke digest unchanged at `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`.
 
 ## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views ACCEPTED
 - Centralized Crawl completeness in AcquisitionCore; UI no longer owns a second completeness rule.

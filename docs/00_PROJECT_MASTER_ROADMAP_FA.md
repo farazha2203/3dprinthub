@@ -5,7 +5,7 @@ Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revisi
 The active bounded successor is `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md` with six slices:
 O1 Product status filters + split Instagram Post/Story -> O1B recent edited/viewed Product activity -> O2 Crawl complete/incomplete -> O2D Product identity/dedup/consumed-Crawl suppression -> O2E Product Media Truth/Refresh/Instagram image parity -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
 
-O1, O1B and O2 are ACCEPTED. O2D is LOCAL_TESTED on `wip/phase50-a2z-o2d-product-identity-dedup-20260924`: final real truth is 650 consumed identities suppressed from Add Products/Preview/Batch/legacy queue, 465 unconsumed identities remain (47 ready / 418 incomplete), canonical duplicate groups are zero, focused 51/51 + final broad 131/131 + static/framework gates PASS. Exact next is O2D GitHub/runtime acceptance, then O2E media truth and O2F Instagram disclosure/links before O3.
+O1, O1B, O2 and O2D are ACCEPTED. O2D final hardening is GitHub-exact at `4e667f4f...` on `wip/phase50-a2z-o2d-product-identity-dedup-20260924`; final exact-SHA runtime truth is 1192 raw Crawl = 707 consumed identities suppressed + 485 unconsumed Add identities (50 ready / 435 incomplete), visible mapped Products=0, canonical duplicate groups=0, queue summary parity PASS and no-mutation digest PASS. Exact next is O2E Product Media Truth/Refresh/Instagram image parity, then O2F Instagram disclosure/source+order links/Story link before O3.
 
 ## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid ACCEPTED
 
