@@ -1,3 +1,15 @@
+## 2026-09-24 - Phase50.A.2Z-O1B Recent Product Activity LOCAL_TESTED / GITHUB_PROMOTION NEXT
+
+Active branch is `wip/phase50-a2z-o1b-recent-activity-20260924` from accepted O1/docs baseline `39fec94125b36adbe2044def343e2081c2df26b3`. GitHub rollback branch `backup/pre-phase50-a2z-o1b-recent-activity-20260924` points exactly to that baseline.
+
+O1B adds two Product display filters: `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`. Recent edit is derived only from explicit operator-save history events (`studio_save`, `epic49_studio_save`, `qt_operator_edit`, `qt_stage_edit`, `qt_profile_ledger_edit`, `qt_image_reordered`, `content_edit`) and is always ordered newest activity first. System AI/refetch/Site sync/publish/finalization events are excluded.
+
+Recent view uses new persisted `product_viewed` history written only after Product Wizard load succeeds in `MainWindow.open_product()`. It does not update the Product row and therefore cannot change `updated_at`, `needs_update`, Site revision/identity or trigger republish. The Recent filter forces Gallery sort to Newest and disables the sort selector until the filter is exited.
+
+Verification: O1B focused 7/7 PASS; broad Product/Qt/O1 regression 106/106 PASS before final sort UX; final changed O1B + Product/Page related 7/7 + 77/77 PASS; py_compile/diff-check PASS. Canonical Catalog read-only truth is quick_check=ok, recently_edited=523 and recently_viewed=0 before the first real post-O1B Product Editor open; no historical views were invented. No migration/Production deploy is required.
+
+Exact next: final full regression + Qt VerifyOnly + no-drift/static gate -> docs/diff review -> commit/push O1B -> Local=Remote -> fresh Catalog backup -> exact-SHA Catalog Center restart -> cloned-DB real MainWindow open acceptance proving view ordering/no-dirty -> visible runtime smoke -> mark O1B ACCEPTED -> start O2 Crawl Completeness Views.
+
 ## 2026-09-24 - Phase50.A.2Z-O1 Product Filters + Split Instagram ACCEPTED / O2 NEXT
 
 Active branch is `wip/phase50-a2z-o1-catalog-controls-20260924`. The blocking Windows/Production lineage divergence was closed first with no tree delta at `82862b4569b537406618523f7350cd3514c4c03f`; both Windows `740bfe6e...` and selective Production `2b48a593...` are ancestors.

@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O2_NEXT
+Status: O1_ACCEPTED / O1B_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 Date: 2026-09-24
-Branch: `wip/phase50-a2z-o1-catalog-controls-20260924`
+Branch: `wip/phase50-a2z-o1b-recent-activity-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -71,14 +71,16 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Production source `2b48a593...` was not changed.
 - Destructive Crawl repair/delete are deferred to O3/O4.
 
-## O1B requested contract — PLANNED
-- Add two options to the Products display/filter area: `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`.
-- `آخرین ادیت‌شده‌ها` must sort descending by latest operator-save history, not generic Product `updated_at`.
-- Existing factual edit history includes `studio_save` and `qt_operator_edit`; implementation must inventory any other accepted editor-save event before freezing the query.
-- `اخیراً دیده‌شده‌ها` requires explicit Product Editor open tracking because no existing `last_viewed_at` / Product-view history contract exists.
-- Opening Source URL, selecting a card, rendering a card, scrolling, hover, or search must not count as viewed.
-- Recent-view tracking is operator-local activity metadata only: it must not set `needs_update`, alter Site revision, change Product content, or trigger republish.
-- O1B must have focused tests for ordering, repeated open updating the timestamp, edit-vs-view separation, and no Product/Site dirtying.
+## O1B implementation — LOCAL_TESTED
+- Added Products display filters `آخرین ادیت‌شده‌ها` (`recently_edited`) and `اخیراً دیده‌شده‌ها` (`recently_viewed`).
+- Recent edit authority is explicit Product history, not generic `products.updated_at`. Accepted operator-edit events are: `studio_save`, `epic49_studio_save`, `qt_operator_edit`, `qt_stage_edit`, `qt_profile_ledger_edit`, `qt_image_reordered`, and `content_edit`.
+- AI/refetch/Site-sync/publish/auto-finalize/finalize/unlock-only events do not make a Product "recently edited".
+- Added persisted `product_viewed` history only after `ProductWizardPage.load_product()` succeeds inside `MainWindow.open_product()`. Gallery render, selection, hover, search, scrolling and Source URL opening do not record a view.
+- View tracking writes only `product_history`; Product row bytes including `updated_at`, `needs_update`, Site identity/revision and content remain unchanged.
+- Both recent filters force newest-activity ordering and temporarily lock the Gallery sort control to "newest" so UI and query cannot disagree.
+- No schema migration is required; the existing auditable `product_history` table is the persistence authority.
+- Real Catalog read-only baseline: `quick_check=ok`; `recently_edited=523`; `recently_viewed=0` before first post-O1B real Editor open. No historical View rows are fabricated.
+- Verification: focused O1B 7/7 PASS; broad Product/Qt/O1 regression 106/106 PASS before final sort-control UX; changed final O1B + Product/Page related 7/7 + 77/77 PASS; py_compile and diff-check PASS.
 
 ## O1 runtime acceptance
 - Source commit `22bb0fb1ecca2f894e34bcbd7dda8b7d424b394e` is GitHub-exact.

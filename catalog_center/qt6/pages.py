@@ -205,6 +205,8 @@ class ProductsPage(QWidget):
         self.filter_combo.addItem("ارسال شده‌ها — سایت", "published")
         self.filter_combo.addItem("ارسال پست Instagram", "instagram_posted")
         self.filter_combo.addItem("ارسال استوری Instagram", "instagram_story")
+        self.filter_combo.addItem("آخرین ادیت‌شده‌ها", "recently_edited")
+        self.filter_combo.addItem("اخیراً دیده‌شده‌ها", "recently_viewed")
         self.filter_combo.addItem("جدید", "new")
         self.filter_combo.addItem("درحال انجام", "work_queue")
         self.filter_combo.addItem("خطادار", "error")
@@ -216,6 +218,8 @@ class ProductsPage(QWidget):
             "published": "محصولاتی که با هویت معتبر روی سایت ارسال و ثبت شده‌اند.",
             "instagram_posted": "محصولاتی که receipt نهایی Instagram Post با وضعیت published دارند.",
             "instagram_story": "محصولاتی که receipt نهایی Instagram Story با وضعیت published دارند.",
+            "recently_edited": "محصولاتی که آخرین Save واقعی اپراتور را داشته‌اند؛ جدیدترین Save بالاتر است.",
+            "recently_viewed": "محصولاتی که اخیراً Product Editor آن‌ها واقعاً باز شده است؛ جدیدترین View بالاتر است.",
         }
         for index in range(self.filter_combo.count()):
             code = str(self.filter_combo.itemData(index) or "")
@@ -472,6 +476,24 @@ class ProductsPage(QWidget):
             self.filter_combo.currentData() or "all"
         ) if hasattr(self, "filter_combo") else "all"
 
+    def _sync_recent_activity_sort_control(self) -> None:
+        if not hasattr(self, "sort_combo"):
+            return
+        filter_name = self._current_product_filter()
+        locked = filter_name in {"recently_edited", "recently_viewed"}
+        if locked:
+            newest_index = self.sort_combo.findData("newest")
+            if newest_index >= 0 and self.sort_combo.currentIndex() != newest_index:
+                self.sort_combo.blockSignals(True)
+                self.sort_combo.setCurrentIndex(newest_index)
+                self.sort_combo.blockSignals(False)
+            self.sort_combo.setToolTip(
+                "برای فیلترهای فعالیت اخیر، ترتیب همیشه جدیدترین فعالیت در بالا است."
+            )
+        else:
+            self.sort_combo.setToolTip("")
+        self.sort_combo.setEnabled(not locked)
+
     def _apply_search(self, value: str) -> None:
         value = str(value or "").strip()
         filter_name = self._current_product_filter()
@@ -576,6 +598,7 @@ class ProductsPage(QWidget):
         )
 
     def refresh(self) -> None:
+        self._sync_recent_activity_sort_control()
         filter_name = self._current_product_filter()
         search = self.search.text().strip() if hasattr(self, "search") else ""
         self.model.refresh(search=search, filter_name=filter_name)

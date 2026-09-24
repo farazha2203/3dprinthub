@@ -351,10 +351,12 @@ class MainWindow(QMainWindow):
         )
 
     def open_product(self, product_id: int) -> None:
-        self.wizard_page.load_product(int(product_id))
+        product_id = int(product_id)
+        self.wizard_page.load_product(product_id)
+        self.db.record_product_view(product_id)
         self.navigate("wizard")
         self.status_message.setText(
-            f"محصول #{int(product_id)} در ویزارد باز شد"
+            f"محصول #{product_id} در ویزارد باز شد"
         )
 
     def show_command_palette(self) -> None:

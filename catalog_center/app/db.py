@@ -6,6 +6,18 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 SCHEMA_VERSION = 7
 
+OPERATOR_EDIT_HISTORY_EVENTS = (
+    "studio_save",
+    "epic49_studio_save",
+    "qt_operator_edit",
+    "qt_stage_edit",
+    "qt_profile_ledger_edit",
+    "qt_image_reordered",
+    "content_edit",
+)
+PRODUCT_VIEW_HISTORY_EVENT = "product_viewed"
+
+
 def utc_now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -736,6 +748,10 @@ class Database:
                 "publish",
             )
         )
+        operator_edit_events_sql = ",".join(
+            "'" + event.replace("'", "''") + "'"
+            for event in OPERATOR_EDIT_HISTORY_EVENTS
+        )
         filters = {
             "untranslated": "(title_fa='' OR description_fa='')",
             "unapproved": "approved_for_sale=0",
@@ -760,6 +776,16 @@ class Database:
             "instagram_story": (
                 "EXISTS(SELECT 1 FROM sync_receipts sr "
                 "WHERE sr.product_id=products.id AND sr.status='instagram_story_published')"
+            ),
+            "recently_edited": (
+                "EXISTS(SELECT 1 FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type IN ({operator_edit_events_sql}))"
+            ),
+            "recently_viewed": (
+                "EXISTS(SELECT 1 FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type='{PRODUCT_VIEW_HISTORY_EVENT}')"
             ),
             "needs_update": "needs_update=1",
             "without_images": "(images_json='[]' OR images_json='' OR images_json IS NULL)",
@@ -837,6 +863,30 @@ class Database:
             order = f"{column} COLLATE NOCASE {direction}, id DESC" if column != "id" else f"id {direction}"
         else:
             order = orders.get(sort_key, orders["priority"])
+        if filter_name == "recently_edited":
+            operator_edit_events_sql = ",".join(
+                "'" + event.replace("'", "''") + "'"
+                for event in OPERATOR_EDIT_HISTORY_EVENTS
+            )
+            order = (
+                "(SELECT MAX(ph.created_at) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type IN ({operator_edit_events_sql})) DESC, "
+                "(SELECT MAX(ph.id) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type IN ({operator_edit_events_sql})) DESC, "
+                "id DESC"
+            )
+        elif filter_name == "recently_viewed":
+            order = (
+                "(SELECT MAX(ph.created_at) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type='{PRODUCT_VIEW_HISTORY_EVENT}') DESC, "
+                "(SELECT MAX(ph.id) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type='{PRODUCT_VIEW_HISTORY_EVENT}') DESC, "
+                "id DESC"
+            )
         columns = self._product_list_columns()
         column_sql = ", ".join(columns) if columns else "id"
         page_limit = max(1, min(int(limit or 50), 500))
@@ -851,6 +901,32 @@ class Database:
         # Tk/worker code. Qt list/gallery surfaces use product_page() instead.
         where, args = self._product_filter_parts(filter_name, source_code, search)
         order = "ORDER BY needs_update DESC, upload_ready DESC, CASE WHEN server_id='' THEN 0 ELSE 1 END, updated_at DESC, id DESC"
+        if filter_name == "recently_edited":
+            operator_edit_events_sql = ",".join(
+                "'" + event.replace("'", "''") + "'"
+                for event in OPERATOR_EDIT_HISTORY_EVENTS
+            )
+            order = (
+                "ORDER BY "
+                "(SELECT MAX(ph.created_at) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type IN ({operator_edit_events_sql})) DESC, "
+                "(SELECT MAX(ph.id) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type IN ({operator_edit_events_sql})) DESC, "
+                "id DESC"
+            )
+        elif filter_name == "recently_viewed":
+            order = (
+                "ORDER BY "
+                "(SELECT MAX(ph.created_at) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type='{PRODUCT_VIEW_HISTORY_EVENT}') DESC, "
+                "(SELECT MAX(ph.id) FROM product_history ph "
+                "WHERE ph.product_id=products.id "
+                f"AND ph.event_type='{PRODUCT_VIEW_HISTORY_EVENT}') DESC, "
+                "id DESC"
+            )
         return list(self.conn.execute(
             f"SELECT * FROM products{where} {order}",
             args,
@@ -1013,6 +1089,20 @@ class Database:
             "SELECT * FROM product_history WHERE product_id=? ORDER BY id DESC LIMIT ?",
             (int(product_id), int(limit)),
         ))
+
+    def record_product_view(self, product_id: int) -> bool:
+        """Persist a real Product Editor view without modifying Product state."""
+        product_id = int(product_id)
+        if self.product(product_id) is None:
+            return False
+        self.save_history(
+            product_id,
+            PRODUCT_VIEW_HISTORY_EVENT,
+            {},
+            {},
+            "Qt Product Editor opened",
+        )
+        return True
 
     def find_duplicate(self, source_code, external_id, normalized_url, fingerprint, exclude_id=None):
         clauses=[]; args=[]

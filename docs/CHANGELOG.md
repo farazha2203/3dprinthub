@@ -1,3 +1,12 @@
+## 2026-09-24 - A2Z-O1B Recent Product Activity LOCAL_TESTED
+- Added Product filters `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`.
+- Recent edit sorting is based on explicit operator-save `product_history` events only; generic Product `updated_at` is not used because system sync/refetch can change it.
+- Added persisted `product_viewed` history after successful Product Wizard load only. This writes no Product fields and cannot set `needs_update` or alter Site identity/revision.
+- Recent activity filters force newest-first ordering and lock the Gallery sort selector to prevent UI/query disagreement.
+- No schema migration: existing `product_history` is the auditable persistence authority.
+- Real read-only Catalog baseline: quick_check=ok, recently_edited=523, recently_viewed=0 before first real post-O1B Editor open.
+- Verification: focused 7/7 PASS; broad Product/Qt/O1 106/106 PASS; final Product/Page related 77/77 PASS; compile/diff gates PASS.
+
 ## 2026-09-24 - A2Z-O1B Recent Product Activity requested
 - Inserted O1B between accepted O1 and O2.
 - Planned Products display options: `آخرین ادیت‌شده‌ها` newest-first by latest real operator-save history, and `اخیراً دیده‌شده‌ها` newest-first by actual Product Editor open/view activity.

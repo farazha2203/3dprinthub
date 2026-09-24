@@ -7,7 +7,7 @@ Owner also reported Crawl cards without images, Repair doing nothing, Delete not
 
 Work is split into the existing bounded phases plus one inserted operator-activity microphase: O1 Product filters + split Social; O1B Recent Product Activity; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is accepted at GitHub-exact source `22bb0fb1...`; exact-SHA Qt VerifyOnly, integrity backup, one app restart and runtime smoke all passed. O1B is next.
 
-O1B owner request: add `آخرین ادیت‌شده‌ها` in Products display, ordered newest-first by the latest real operator save (for example Product Editor saves), and add `اخیراً دیده‌شده‌ها`, ordered newest-first by actual Product Editor opens. Generic Product `updated_at` must not be used as the edit authority because system sync/refetch can change it. Merely displaying/selecting/hovering a Product card must not count as viewed.
+O1B owner request is now LOCAL_TESTED: `آخرین ادیت‌شده‌ها` is newest-first from explicit operator-save history events, not generic Product `updated_at`; `اخیراً دیده‌شده‌ها` is newest-first from persisted `product_viewed` events recorded only after successful Product Editor load. Card display/selection/hover/search/source-link opening do not count as viewed, and View tracking never dirties Product/Site state. GitHub promotion and exact-SHA runtime acceptance remain.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.
