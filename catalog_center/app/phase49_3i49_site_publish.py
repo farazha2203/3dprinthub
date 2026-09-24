@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from PIL import Image
+from django.utils.text import slugify
 
 from . import phase49_3c_image_pipeline as image_pipeline
 from .batch_packaging import (
@@ -525,14 +526,69 @@ def publish_media_gate(row) -> dict[str, Any]:
     }
 
 
-def _copy_publish_media(items: list[dict[str, Any]], model_dir: Path) -> list[str]:
+def _server_batch_media_filename(
+    product_data: dict[str, Any],
+    index: int,
+    raw_name: str,
+) -> str:
+    """Mirror the Server/Public basename contract at the Batch source boundary.
+
+    Windows keeps the operator-approved SEO filename in metadata.  The uploaded
+    Batch itself must be ASCII-safe because the shared-host WSGI process can use
+    an ASCII filesystem encoding before the Server has a chance to canonicalize
+    the destination filename.
+    """
+
+    original = Path(str(raw_name or "").replace("\\", "/")).name
+    if (
+        original
+        and original.isascii()
+        and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", original)
+    ):
+        return original
+
+    suffix = Path(original).suffix.lower()
+    if not suffix or not suffix.isascii() or not re.fullmatch(r"\.[a-z0-9]{2,8}", suffix):
+        suffix = ".webp"
+
+    source_title = str(
+        product_data.get("source_title")
+        or product_data.get("title_en")
+        or product_data.get("source_name")
+        or ""
+    ).strip()
+    base = slugify(source_title, allow_unicode=False).strip("-")
+    if not base:
+        identity = str(
+            product_data.get("external_id")
+            or product_data.get("desktop_product_id")
+            or product_data.get("source_code")
+            or "catalog"
+        ).strip()
+        token = slugify(identity, allow_unicode=False).strip("-") or "catalog"
+        base = f"product-{token}"
+
+    base = re.sub(r"[^a-z0-9-]+", "-", base.lower()).strip("-")
+    base = re.sub(r"-{2,}", "-", base)[:58].rstrip("-") or "product"
+    slot = max(1, int(index) + 1)
+    return f"{base}-3d-print-{slot:02d}{suffix}"
+
+
+def _copy_publish_media(
+    items: list[dict[str, Any]],
+    model_dir: Path,
+    *,
+    product_data: dict[str, Any] | None = None,
+) -> list[str]:
     image_target = Path(model_dir) / "images"
     image_target.mkdir(parents=True, exist_ok=True)
     names: list[str] = []
     seen: set[str] = set()
-    for item in items:
+    data = dict(product_data or {})
+    for index, item in enumerate(items):
         source = Path(str(item.get("path") or "")).resolve()
-        name = Path(str(item.get("seo_filename") or source.name)).name
+        raw_name = Path(str(item.get("seo_filename") or source.name)).name
+        name = _server_batch_media_filename(data, index, raw_name)
         if not name.lower().endswith(".webp") or name.casefold() in seen:
             raise RuntimeError(f"Publish media filename is not a unique WebP: {name}")
         seen.add(name.casefold())
@@ -830,7 +886,11 @@ def build_publish_batch(
                     + "; ".join(media_state.get("missing") or [])
                 )
             selected_urls = [str(item["source_url"]) for item in media_state["items"]]
-            local_image_files = _copy_publish_media(media_state["items"], target)
+            local_image_files = _copy_publish_media(
+                media_state["items"],
+                target,
+                product_data=dict(row),
+            )
             local_video_files = _copy_publish_videos(dict(row), source_dir, target)
 
             editorial = {

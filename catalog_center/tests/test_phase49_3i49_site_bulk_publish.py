@@ -23,6 +23,7 @@ from app.phase49_3c_image_pipeline import (
 from app.epic49_desktop_schema import add_available_material_color
 from app.phase49_3i49_site_publish import (
     _next_batch_name,
+    _server_batch_media_filename,
     build_publish_batch,
     mark_ready_many,
     publish_many,
@@ -719,6 +720,68 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         self.assertEqual(result["published"], 1)
         self.assertEqual(seen["name"], expected_name)
         self.assertEqual(seen["sha"], expected_sha)
+
+    def test_publish_batch_uses_ascii_source_filename_for_unicode_seo_metadata(self):
+        product_id = self._product("3491014unicode")
+        row = dict(self.db.product(product_id))
+        metadata = json.loads(row["image_metadata_json"])
+        self.assertEqual(len(metadata), 1)
+
+        source = Path(metadata[0]["final_local_file"])
+        unicode_name = "مجسمه-هنری-هیدرا-شکوهمند-وورونوی-3dprinthub-01.webp"
+        unicode_path = source.with_name(unicode_name)
+        unicode_path.write_bytes(source.read_bytes())
+        expected_sha = hashlib.sha256(unicode_path.read_bytes()).hexdigest()
+
+        metadata[0]["seo_filename"] = unicode_name
+        metadata[0]["final_local_file"] = str(unicode_path)
+        metadata[0]["final_sha256"] = expected_sha
+        self.db.update_product(
+            product_id,
+            {
+                "image_metadata_json": json.dumps(metadata, ensure_ascii=False),
+            },
+        )
+
+        ready = mark_ready_many(self.db, FakeStages(), [product_id])
+        self.assertEqual(ready["marked"], 1)
+
+        current = dict(self.db.product(product_id))
+        expected_batch_name = _server_batch_media_filename(
+            current,
+            0,
+            unicode_name,
+        )
+        self.assertTrue(expected_batch_name.isascii())
+        self.assertEqual(
+            expected_batch_name,
+            "owner-product-3491014unicode-3d-print-01.webp",
+        )
+
+        batch = build_publish_batch(
+            self.db,
+            [product_id],
+            batch_root=self.root / "unicode-media-batches",
+        )
+        batch_root = Path(batch["batch"])
+        manifest = json.loads(
+            (batch_root / "batch_manifest.json").read_text(encoding="utf-8")
+        )
+        editorial_path = batch_root / manifest["models"][0]["editorial"]
+        editorial = json.loads(editorial_path.read_text(encoding="utf-8"))
+        packaged_names = json.loads(editorial["local_image_files_json"])
+        carried_metadata = json.loads(editorial["image_metadata_json"])
+
+        self.assertEqual(packaged_names, [expected_batch_name])
+        self.assertEqual(carried_metadata[0]["seo_filename"], unicode_name)
+        self.assertEqual(carried_metadata[0]["final_sha256"], expected_sha)
+        self.assertFalse(carried_metadata[0]["seo_filename"].isascii())
+        self.assertTrue(all(name.isascii() for name in packaged_names))
+        packaged = editorial_path.parent / "images" / expected_batch_name
+        relative_packaged = packaged.relative_to(batch_root)
+        self.assertTrue(all(part.isascii() for part in relative_packaged.parts))
+        self.assertTrue(packaged.is_file())
+        self.assertEqual(hashlib.sha256(packaged.read_bytes()).hexdigest(), expected_sha)
 
     def test_publish_batch_carries_every_selected_image_with_unique_seo_filename(self):
         product_id = self._product("3491014m", finalize_images=False)
