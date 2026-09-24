@@ -1,0 +1,16 @@
+{
+  "asset_revision": "e07fae1885d4e9d7",
+  "feed_sha256": [
+    "3916d315b8fbedc87f77b0d7cf5695ae3c7b95b99ac29323fbf38c908c28507e",
+    "e3dca5e0c35ce8193f1d880010bbe02e0ce35dc7841a4a379e1bb3d323783eeb"
+  ],
+  "product_id": 717,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 52,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://3dprinthub.ir/media/p/717/2f8707c5177c/the-timeless-peony-3d-print-01.webp",
+    "https://3dprinthub.ir/media/p/717/91647171b8e5/the-timeless-peony-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
