@@ -1,4 +1,4 @@
-## 2026-09-24 - Phase50.A.2Z UNICODE MEDIA FIX LOCAL_TESTED / SELECTIVE PRODUCTION RELEASE NEXT
+## 2026-09-24 - Phase50.A.2Z PRODUCTION FIX DEPLOYED / #628 ROOT-CAUSE TRACE ACTIVE
 
 Current branch `wip/phase50-a2z-catalog-data-completion-20260923` is clean at GitHub-tracking exact source `b5980306400f3f0951804cab1ad049c1aab4a6d7`. This source adds the shared ASCII-safe Server/Public media basename contract after the first bounded #628 import failed rollback-safe on a Persian filename.
 
@@ -10,7 +10,11 @@ Unicode fix verification: dedicated regression 1/1 PASS; full unified import 5/5
 
 Selective release is already GitHub-exact at `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`, parent exactly `103f559c...`, with the exact five-file Server/test delta. Repository-owned guarded deploy runner `scripts/host/phase50_a2z_unicode_media_deploy.sh` is Local syntax/diff tested and enforces the exact baseline/target/allowlist plus rollback verification.
 
-Exact next: commit/push the ops-only runner -> execute it through the official reverse tunnel against verified backup `20260924-104824-a2z-unicode-media-predeploy` -> receiver/readiness verification -> retry only #628 once -> strict Product/Image/Profile/Variant/Slider + public HTTP/no-stale-media parity -> Desktop/Mobile browser acceptance -> Phase 1 CLOSED.
+Production selective release is now deployed and verified at exact clean `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`: rollback recheck PASS, migration plan 0 before/after, receiver ready=true, Unicode basename probe PASS, Home/Store HTTP 200. Fresh post-deploy/pre-#628 rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20260924-105351-a2z-628-postdeploy-prepublish` passed source/MySQL/full-media/.env checks.
+
+Changed-condition retry of only #628 used Batch `desktop_catalog_v85_20260924_105415` / UUID `bc40a728-5b26-453d-ba27-e74608ed8a7a`. FTP completed 12/12, but Bridge still returned the same `UnicodeEncodeError: ascii`; import remained failed, Local/Site revision stayed 1 and no third unchanged retry is permitted. This proves the Server/Public basename hardening is valid but not the complete root cause.
+
+Exact next: GitHub-first rollback-only stage tracer -> run against the already-failed Batch without invoking import again -> capture the exact exception stage/traceback -> minimal regression-backed root-cause fix -> selective release from current Production `2b48a593...` -> fresh rollback -> retry only #628 -> strict parity/public/browser acceptance -> Phase 1 CLOSED.
 
 ## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
 

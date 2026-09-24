@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Catalog Data Completion + Site Truth
 
-Status: UNICODE_MEDIA_FIX_LOCAL_TESTED / SELECTIVE_PRODUCTION_RELEASE_NEXT
+Status: PRODUCTION_FIX_DEPLOYED / PRODUCT_628_ROOT_CAUSE_TRACE_ACTIVE
 Date: 2026-09-23
 Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
 Branch: `wip/phase50-a2z-catalog-data-completion-20260923`

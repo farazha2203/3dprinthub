@@ -6,8 +6,9 @@
 - [x] Capture rollback-safe #628 Unicode filename failure without retry.
 - [x] Implement shared ASCII-safe Server/Public media filename contract and parity alignment at `b5980306...`.
 - [x] Unicode 1/1 + unified import 5/5 + related server 21/21 + compile/check/no-drift/diff gates.
-- [ ] Build selective release from exact Production `103f559c...`; deploy only verified Server delta from GitHub with fresh rollback.
-- [ ] Retry only #628 once after receiver verification.
+- [x] Build selective release from exact Production `103f559c...`; deploy only verified Server delta `2b48a593...` from GitHub with fresh rollback/readiness/public smoke.
+- [x] Retry only #628 once after receiver verification; same UnicodeEncodeError persisted with transaction rollback, so no unchanged retry.
+- [ ] Run rollback-only stage tracer on failed Batch `desktop_catalog_v85_20260924_105415`, identify exact remaining root cause, add minimal regression/fix, selective redeploy from current `2b48a593...`.
 - [ ] Verify #628 Product/Image/Profile/Variant/Slider parity and public HTTP/no stale media.
 - [ ] Recheck #152/#178/#620/#625 for collateral changes without republishing them.
 - [ ] Complete real Desktop/Mobile browser acceptance and close Phase50.A.2Z.
