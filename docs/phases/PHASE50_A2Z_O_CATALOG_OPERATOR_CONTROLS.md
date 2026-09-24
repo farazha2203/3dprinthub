@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o1b-recent-activity-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -89,5 +89,13 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Live main window title: `3DPrintHub Catalog Center v8.9.11 - Qt 6`.
 - Post-restart Catalog quick_check=ok / Products=771.
 
+## O1B runtime acceptance
+- Source commit `a0d5ea4677410d3cac424aeb1779d7b1f827e1f7` is GitHub-exact.
+- Final broad regression 106/106 PASS; Qt VerifyOnly, compile, Django check and no-migration-drift gates PASS.
+- Fresh evidence root: `D:\projects\3dprinthub-backups\phase50-a2z-o1b-runtime-acceptance-20260924-125209`; backup/clone quick_check=ok with 771 Products, backup SHA256 `327f75d0368132036ca0cf80a221e6b714b6f454c635e394581a48c73c5a3c55`.
+- Real cloned MainWindow/ProductWizard acceptance: #717 open -> one new `product_viewed`; Recently Viewed top=#717; Product row unchanged; Recent sort lock PASS.
+- Canonical DB was not polluted by acceptance: recently_viewed remained 0 until the owner's first real Editor open.
+- Visible runtime launched from exact source SHA; prior app process was already absent so no forced close was needed. Window title `3DPrintHub Catalog Center v8.9.11 - Qt 6`; Catalog quick_check=ok / 771 Products.
+
 ## Exact next
-O1B Recent Product Activity Filters -> inventory accepted operator-save events -> add persisted Product Editor view tracking -> add "Recently edited" and "Recently viewed" filters/sort newest-first -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. Then O2 Crawl Completeness Views follows.
+O2 Crawl Completeness Views -> freeze one factual complete/incomplete contract -> filters -> exact per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows.

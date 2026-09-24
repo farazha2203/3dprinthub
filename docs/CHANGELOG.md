@@ -5,7 +5,8 @@
 - Recent activity filters force newest-first ordering and lock the Gallery sort selector to prevent UI/query disagreement.
 - No schema migration: existing `product_history` is the auditable persistence authority.
 - Real read-only Catalog baseline: quick_check=ok, recently_edited=523, recently_viewed=0 before first real post-O1B Editor open.
-- Verification: focused 7/7 PASS; broad Product/Qt/O1 106/106 PASS; final Product/Page related 77/77 PASS; compile/diff gates PASS.
+- Verification: focused 7/7 PASS; broad Product/Qt/O1 106/106 PASS; final Product/Page related 77/77 PASS; final broad 106/106 PASS; compile/diff/Qt VerifyOnly/Django no-drift gates PASS.
+- Runtime acceptance: GitHub-exact source `a0d5ea46...`; fresh backup/clone quick_check=ok / 771 Products; real cloned MainWindow/ProductWizard open of #717 produced one `product_viewed`, made #717 top Recent View, kept Product row unchanged, and canonical DB stayed unpolluted; visible Catalog Center runtime smoke PASS.
 
 ## 2026-09-24 - A2Z-O1B Recent Product Activity requested
 - Inserted O1B between accepted O1 and O2.

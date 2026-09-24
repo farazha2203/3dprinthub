@@ -1,4 +1,4 @@
-## 2026-09-24 - Phase50.A.2Z-O1B Recent Product Activity LOCAL_TESTED / GITHUB_PROMOTION NEXT
+## 2026-09-24 - Phase50.A.2Z-O1B Recent Product Activity ACCEPTED / O2 NEXT
 
 Active branch is `wip/phase50-a2z-o1b-recent-activity-20260924` from accepted O1/docs baseline `39fec94125b36adbe2044def343e2081c2df26b3`. GitHub rollback branch `backup/pre-phase50-a2z-o1b-recent-activity-20260924` points exactly to that baseline.
 
@@ -8,7 +8,9 @@ Recent view uses new persisted `product_viewed` history written only after Produ
 
 Verification: O1B focused 7/7 PASS; broad Product/Qt/O1 regression 106/106 PASS before final sort UX; final changed O1B + Product/Page related 7/7 + 77/77 PASS; py_compile/diff-check PASS. Canonical Catalog read-only truth is quick_check=ok, recently_edited=523 and recently_viewed=0 before the first real post-O1B Product Editor open; no historical views were invented. No migration/Production deploy is required.
 
-Exact next: final full regression + Qt VerifyOnly + no-drift/static gate -> docs/diff review -> commit/push O1B -> Local=Remote -> fresh Catalog backup -> exact-SHA Catalog Center restart -> cloned-DB real MainWindow open acceptance proving view ordering/no-dirty -> visible runtime smoke -> mark O1B ACCEPTED -> start O2 Crawl Completeness Views.
+O1B source is GitHub-exact at `a0d5ea4677410d3cac424aeb1779d7b1f827e1f7`. Final broad regression 106/106 PASS, Qt VerifyOnly PASS, Django check PASS with known warnings, and makemigrations --check --dry-run reports no changes. Fresh runtime evidence root is `D:\projects\3dprinthub-backups\phase50-a2z-o1b-runtime-acceptance-20260924-125209`; source backup and clone both quick_check=ok / 771 Products, backup SHA256 `327f75d0368132036ca0cf80a221e6b714b6f454c635e394581a48c73c5a3c55`. Real MainWindow + ProductWizard acceptance on the clone opened Product #717, recorded exactly one `product_viewed`, put #717 first in Recently Viewed, enforced Recent sort lock, and left the Product row unchanged. Canonical Catalog remained quick_check=ok with zero test-generated viewed Products. At visible cutover the prior Catalog Center process was already absent, so no process was killed; the app was launched directly from exact source SHA `a0d5ea46...`. Visible window title is `3DPrintHub Catalog Center v8.9.11 - Qt 6`; runtime Catalog remains quick_check=ok / 771 Products / recently_viewed=0.
+
+Exact next: O2 Crawl Completeness Views -> freeze factual complete/incomplete criteria -> add complete/incomplete filters -> show exact missing reasons under every Crawl card -> focused changed-condition tests -> related Crawl/Product regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows only after O2 is accepted.
 
 ## 2026-09-24 - Phase50.A.2Z-O1 Product Filters + Split Instagram ACCEPTED / O2 NEXT
 
