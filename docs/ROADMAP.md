@@ -8,7 +8,10 @@
 - [x] Unicode 1/1 + unified import 5/5 + related server 21/21 + compile/check/no-drift/diff gates.
 - [x] Build selective release from exact Production `103f559c...`; deploy only verified Server delta `2b48a593...` from GitHub with fresh rollback/readiness/public smoke.
 - [x] Retry only #628 once after receiver verification; same UnicodeEncodeError persisted with transaction rollback, so no unchanged retry.
-- [ ] Run rollback-only stage tracer on failed Batch `desktop_catalog_v85_20260924_105415`, identify exact remaining root cause, add minimal regression/fix, selective redeploy from current `2b48a593...`.
+- [x] Run rollback-only stage tracer and exact ASCII-filesystem reproduction: importer stages/parity all pass; raw Unicode Batch source path reproduces the exact Production positions 127-131 error.
+- [x] Harden Windows Batch packaging so physical FTP/local-image source names are ASCII-safe while Unicode SEO metadata and media SHA remain unchanged; real #628 clone dry-run PASS. No new Server deploy required because `2b48a593...` already owns destination canonicalization.
+- [x] Commit/push Windows packaging fix as GitHub-exact `7b1b447a...`; Local=Remote verified.
+- [ ] Exact-SHA runtime gate + fresh Local/Production rollback, then retry only #628 once.
 - [ ] Verify #628 Product/Image/Profile/Variant/Slider parity and public HTTP/no stale media.
 - [ ] Recheck #152/#178/#620/#625 for collateral changes without republishing them.
 - [ ] Complete real Desktop/Mobile browser acceptance and close Phase50.A.2Z.

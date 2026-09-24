@@ -1,6 +1,6 @@
-## 2026-09-24 - Phase50.A.2Z PRODUCTION FIX DEPLOYED / #628 ROOT-CAUSE TRACE ACTIVE
+## 2026-09-24 - Phase50.A.2Z #628 ASCII BATCH SOURCE FIX GITHUB_EXACT / BOUNDED RETRY NEXT
 
-Current branch `wip/phase50-a2z-catalog-data-completion-20260923` is clean at GitHub-tracking exact source `b5980306400f3f0951804cab1ad049c1aab4a6d7`. This source adds the shared ASCII-safe Server/Public media basename contract after the first bounded #628 import failed rollback-safe on a Persian filename.
+Current branch `wip/phase50-a2z-catalog-data-completion-20260923` contains the final Windows Batch-source fix at GitHub-exact code commit `7b1b447ab772e15f3ecdc1345e69e2e8771573f8`. Earlier Server destination canonicalization remains deployed on Production `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`.
 
 Production truth before selective release: Host remains clean on `103f559c8a11c35495b4ac2a290d578c31c2a023`; official reverse tunnel/Bridge recovered and Host read-only gate passed. #625 was published alone from a verified fresh DB+media rollback: Site Product #39 advanced to revision 13, price range 458,500-1,655,000, exactly one active ProductImage, exactly 32 active Variants (= two Profiles x 16 PLA), old Variant rows inactive, and public page contains only the current /media/p/625 path with stale hashes absent.
 
@@ -14,9 +14,13 @@ Production selective release is now deployed and verified at exact clean `2b48a5
 
 Changed-condition retry of only #628 used Batch `desktop_catalog_v85_20260924_105415` / UUID `bc40a728-5b26-453d-ba27-e74608ed8a7a`. FTP completed 12/12, but Bridge still returned the same `UnicodeEncodeError: ascii`; import remained failed, Local/Site revision stayed 1 and no third unchanged retry is permitted. This proves the Server/Public basename hardening is valid but not the complete root cause.
 
-First GitHub-exact trace harness launch stopped before Django setup with `ModuleNotFoundError: config`; no importer stage or DB/media mutation ran. The cause was `/tmp` standalone-script import-root behavior, not Product #628. Harness now validates explicit `A2Z_PROJECT_ROOT`, prepends the verified repository root, and passes py_compile/project-root/diff gates.
+GitHub-exact tracer `6d0dbbe3...` then ran the failed Batch rollback-only and every internal importer stage PASSed, including `republish_parity ok=true / media_count=2 / profile_count=32` and Portfolio. Site Product #38 remained revision 1 after forced rollback. The remaining difference was proven at the physical Batch source path: forcing the exact uploaded Batch to `FS=ascii` reproduced the Production UnicodeEncodeError exactly at positions 127-131 while opening its Persian `local_image_files_json[0]`.
 
-Exact next: commit/push corrected rollback-only tracer -> rerun it under changed condition against the already-failed Batch without invoking import again -> capture exact exception stage/traceback -> minimal regression-backed root-cause fix -> selective release from current Production `2b48a593...` -> fresh rollback -> retry only #628 -> strict parity/public/browser acceptance -> Phase 1 CLOSED.
+Windows packaging is now locally hardened: Unicode SEO filename stays in metadata, but the physical Batch/FTP filename and `local_image_files_json` use the same deterministic ASCII-safe name as Server canonicalization. Focused 1/1, bulk/batch 33/33, broader 50/50, compile/diff/Qt VerifyOnly and exact Windows-vs-Server basename parity PASS. Real #628 dry-run on a cloned Catalog generated two ASCII files, preserved metadata/SHA, and canonical Catalog logical digest/state remained unchanged. Evidence: `D:\projects\3dprinthub-backups\phase50-a2z-628-package-dryrun-20260924-111133`.
+
+Production remains clean at `2b48a593...`; this final root-cause fix is Windows packaging only, so no additional Server deploy is required before the bounded retry.
+
+Exact next: commit/push this documentation checkpoint -> Local=Remote -> exact-SHA Qt VerifyOnly/launch from the same source bytes -> fresh integrity Catalog backup -> Host/readiness gate + fresh Production DB/media backup -> preflight and publish only #628 once under the changed ASCII Batch-source condition -> strict Product/Image/Profile/Variant/Slider/public parity -> collateral readback -> Desktop/Mobile acceptance -> Phase 1 CLOSED.
 
 ## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
 

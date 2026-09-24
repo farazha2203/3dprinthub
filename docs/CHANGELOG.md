@@ -1,3 +1,11 @@
+## 2026-09-24 - A2Z #628 exact Unicode root cause: Batch source path
+- Rollback-only Production trace proved every importer stage, Product parity and Portfolio pass for failed Batch `desktop_catalog_v85_20260924_105415`; Site #38 stayed revision 1.
+- Forced ASCII filesystem reproduction on that exact Batch produced the same `UnicodeEncodeError` at positions 127-131 when opening the Persian `local_image_files_json[0]`.
+- Windows Batch packaging code is GitHub-exact at `7b1b447ab772e15f3ecdc1345e69e2e8771573f8`; it sends selected image files under deterministic ASCII-safe names while retaining the operator Unicode SEO filename in editorial metadata and preserving bytes/SHA.
+- Existing ASCII filename behavior is unchanged; Windows and Server canonical helpers match exactly for #628.
+- Gates PASS: focused 1/1, bulk/batch 33/33, broader 50/50, compile/diff/Qt VerifyOnly; real #628 clone dry-run generated two ASCII files with selected-order SHA parity and zero canonical Catalog logical change.
+- Production remains clean at `2b48a593...`; no additional Server source deploy is required for this Windows-only source-path fix.
+
 ## 2026-09-24 - A2Z #625 Production parity + #628 Unicode media recovery
 - Restored and authenticated the dedicated 3DPrintHub reverse tunnel; Host gate passed on clean Production `103f559c...`, MySQL identity and applied Store migrations.
 - Created and verified fresh Production DB + full-media rollback before #625; published only #625. Site Product #39 advanced to revision 13 with strict ACK parity, one active ProductImage, 32 active Variants and no stale public media path.

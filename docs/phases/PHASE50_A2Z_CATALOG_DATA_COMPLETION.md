@@ -1,6 +1,6 @@
 # Phase50.A.2Z — Catalog Data Completion + Site Truth
 
-Status: PRODUCTION_FIX_DEPLOYED / PRODUCT_628_ROOT_CAUSE_TRACE_ACTIVE
+Status: PRODUCT_628_ASCII_BATCH_SOURCE_FIX_GITHUB_EXACT / BOUNDED_RETRY_NEXT
 Date: 2026-09-23
 Baseline: `56c569145eead7cd0a35eb63c382f14dfe71c80e`
 Branch: `wip/phase50-a2z-catalog-data-completion-20260923`

@@ -1,3 +1,10 @@
+## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
+Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.
+
+The remaining Phase 1 chain is locked: exact-SHA Qt gate -> fresh Catalog integrity backup -> Production identity/readiness + fresh DB/full-media rollback -> publish only #628 once using the new ASCII physical Batch filenames -> ACK + Product/Image/Profile/Variant/Slider/public HTTP parity -> collateral readback of #152/#178/#620/#625 without republish -> real Desktop/Mobile browser acceptance -> Phase 1 CLOSED.
+
+Root cause is proven, not inferred: the exact failed Batch reproduces the same UnicodeEncodeError positions 127-131 when its Persian physical source filename is opened under an ASCII filesystem encoding. GitHub-exact Windows fix is `7b1b447ab772e15f3ecdc1345e69e2e8771573f8`; Production Server remains clean at `2b48a593...` and already contains destination canonicalization.
+
 ## 2026-09-24 - Owner: finish Phase 1 through selective Production release and browser acceptance
 Status: `UNICODE FIX LOCAL_TESTED / SELECTIVE RELEASE NEXT`.
 
