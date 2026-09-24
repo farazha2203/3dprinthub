@@ -1355,8 +1355,16 @@ class ProductsPage(QWidget):
                 f"\nعلت رد: {row.get('blocked_reason') or '—'}"
                 f"\nزمان رد: {row.get('blocked_at') or '—'}"
             )
+        source_code = str(row.get("source_code") or "").strip()
+        external_id = str(row.get("external_id") or "").strip()
+        source_identity = (
+            f"{source_code}:{external_id}"
+            if source_code and external_id
+            else "—"
+        )
         self.detail_meta.setText(
-            f"منبع: {row.get('source_name') or row.get('source_code') or '—'}\n"
+            f"منبع: {row.get('source_name') or source_code or '—'}\n"
+            f"کد هویت منبع: {source_identity}\n"
             f"وضعیت DB: {row.get('workflow_status') or '—'}\n"
             f"چرخه: {lifecycle_text}\n"
             f"تعداد تصاویر: {self.kernel.images.image_count(row)}\n"
@@ -2390,11 +2398,11 @@ class OperationsPage(QWidget):
         self.queue_filter = QComboBox()
         self.queue_filter.addItem("همه — کامل و ناقص", "all")
         self.queue_filter.addItem(
-            "محصولات کامل — عنوان + توضیح + عکس محلی",
+            "محصولات کامل — آماده افزودن: عنوان + Preview محلی",
             "complete",
         )
         self.queue_filter.addItem(
-            "محصولات ناقص — نمایش علت نقص",
+            "محصولات ناقص — Candidate ناقص / بدون Preview",
             "incomplete",
         )
         self.queue_filter.addItem("جدید", "new")
@@ -4198,7 +4206,7 @@ class OperationsPage(QWidget):
                     )
                 else:
                     gallery_lines.append(
-                        "✅ کامل: Product + عنوان + توضیح + عکس محلی"
+                        "✅ آماده افزودن: عنوان Candidate + Preview محلی"
                     )
                 if technical_summary:
                     gallery_lines.append(technical_summary)

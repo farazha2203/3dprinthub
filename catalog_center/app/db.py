@@ -318,16 +318,16 @@ class Database:
 
     def add_discovered(self, source_code, external_id, url, discovered_from=""):
         normalized = normalize_url(url)
-        blocked = self.conn.execute(
+        existing_product = self.conn.execute(
             """
             SELECT id FROM products
-            WHERE is_blocked=1 AND source_code=?
+            WHERE source_code=? COLLATE NOCASE
               AND ((external_id<>'' AND external_id=?) OR normalized_url=?)
             LIMIT 1
             """,
             (source_code, external_id or "", normalized),
         ).fetchone()
-        if blocked:
+        if existing_product:
             return False
         now = utc_now()
         try:
@@ -347,9 +347,18 @@ class Database:
         placeholders = ",".join("?" for _ in statuses)
         return list(self.conn.execute(
             f"""
-            SELECT * FROM discovered_urls
-            WHERE source_code=? AND status IN ({placeholders})
-            ORDER BY CASE status WHEN 'new' THEN 0 ELSE 1 END, id
+            SELECT d.* FROM discovered_urls d
+            WHERE d.source_code=? AND d.status IN ({placeholders})
+              AND NOT EXISTS(
+                SELECT 1 FROM products p
+                WHERE p.source_code=d.source_code COLLATE NOCASE
+                  AND (
+                    (d.external_id<>'' AND p.external_id=d.external_id)
+                    OR
+                    (d.normalized_url<>'' AND p.normalized_url=d.normalized_url)
+                  )
+              )
+            ORDER BY CASE d.status WHEN 'new' THEN 0 ELSE 1 END, d.id
             LIMIT ?
             """,
             (source_code, *statuses, limit),
@@ -377,27 +386,41 @@ class Database:
         self.conn.commit()
         return cursor.rowcount
 
-    def queue_counts(self, source_code=""):
+    def queue_counts(
+        self,
+        source_code="",
+        *,
+        exclude_existing_products=False,
+    ):
+        clauses, args = [], []
         if source_code:
-            rows = self.conn.execute(
+            clauses.append("d.source_code=?")
+            args.append(str(source_code))
+        if exclude_existing_products:
+            clauses.append(
                 """
-                SELECT status, COUNT(*) total
-                FROM discovered_urls
-                WHERE source_code=?
-                GROUP BY status
-                ORDER BY status
-                """,
-                (source_code,),
-            )
-        else:
-            rows = self.conn.execute(
-                """
-                SELECT status, COUNT(*) total
-                FROM discovered_urls
-                GROUP BY status
-                ORDER BY status
+                NOT EXISTS(
+                  SELECT 1 FROM products p
+                  WHERE p.source_code=d.source_code COLLATE NOCASE
+                    AND (
+                      (d.external_id<>'' AND p.external_id=d.external_id)
+                      OR
+                      (d.normalized_url<>'' AND p.normalized_url=d.normalized_url)
+                    )
+                )
                 """
             )
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        rows = self.conn.execute(
+            f"""
+            SELECT d.status, COUNT(*) total
+            FROM discovered_urls d
+            {where}
+            GROUP BY d.status
+            ORDER BY d.status
+            """,
+            args,
+        )
         return {row["status"]: int(row["total"]) for row in rows}
 
     def discovered_items(self, source_code="", limit=5000):
@@ -431,7 +454,13 @@ class Database:
             args,
         ))
 
-    def discovered_count(self, source_code="", status="all"):
+    def discovered_count(
+        self,
+        source_code="",
+        status="all",
+        *,
+        exclude_existing_products=False,
+    ):
         clauses, args = [], []
         if source_code:
             clauses.append("source_code=?")
@@ -440,6 +469,20 @@ class Database:
         if normalized_status and normalized_status != "all":
             clauses.append("status=?")
             args.append(normalized_status)
+        if exclude_existing_products:
+            clauses.append(
+                """
+                NOT EXISTS(
+                  SELECT 1 FROM products p
+                  WHERE p.source_code=discovered_urls.source_code COLLATE NOCASE
+                    AND (
+                      (discovered_urls.external_id<>'' AND p.external_id=discovered_urls.external_id)
+                      OR
+                      (discovered_urls.normalized_url<>'' AND p.normalized_url=discovered_urls.normalized_url)
+                    )
+                )
+                """
+            )
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         row = self.conn.execute(
             f"SELECT COUNT(*) AS total FROM discovered_urls{where}",
@@ -454,6 +497,7 @@ class Database:
         *,
         limit=100,
         offset=0,
+        exclude_existing_products=False,
     ):
         """Return one bounded Crawl-inventory page without the historical OR JOIN.
 
@@ -469,6 +513,20 @@ class Database:
         if normalized_status and normalized_status != "all":
             clauses.append("status=?")
             args.append(normalized_status)
+        if exclude_existing_products:
+            clauses.append(
+                """
+                NOT EXISTS(
+                  SELECT 1 FROM products p
+                  WHERE p.source_code=discovered_urls.source_code COLLATE NOCASE
+                    AND (
+                      (discovered_urls.external_id<>'' AND p.external_id=discovered_urls.external_id)
+                      OR
+                      (discovered_urls.normalized_url<>'' AND p.normalized_url=discovered_urls.normalized_url)
+                    )
+                )
+                """
+            )
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         page_limit = max(1, min(int(limit or 100), 500))
         page_offset = max(0, int(offset or 0))

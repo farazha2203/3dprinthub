@@ -470,12 +470,21 @@ def _pending_for_listing(
     exact = list(
         db.conn.execute(
             f"""
-            SELECT *
-            FROM discovered_urls
-            WHERE source_code=?
-              AND status IN ({placeholders})
-              AND discovered_from=?
-            ORDER BY CASE status WHEN 'new' THEN 0 ELSE 1 END, id
+            SELECT d.*
+            FROM discovered_urls d
+            WHERE d.source_code=?
+              AND d.status IN ({placeholders})
+              AND d.discovered_from=?
+              AND NOT EXISTS(
+                SELECT 1 FROM products p
+                WHERE p.source_code=d.source_code COLLATE NOCASE
+                  AND (
+                    (d.external_id<>'' AND p.external_id=d.external_id)
+                    OR
+                    (d.normalized_url<>'' AND p.normalized_url=d.normalized_url)
+                  )
+              )
+            ORDER BY CASE d.status WHEN 'new' THEN 0 ELSE 1 END, d.id
             LIMIT ?
             """,
             (str(source_code or ""), *statuses, str(listing_url or ""), bounded_limit),
@@ -489,12 +498,21 @@ def _pending_for_listing(
     fallback = list(
         db.conn.execute(
             f"""
-            SELECT *
-            FROM discovered_urls
-            WHERE source_code=?
-              AND status IN ({placeholders})
-              AND discovered_from<>?
-            ORDER BY id DESC
+            SELECT d.*
+            FROM discovered_urls d
+            WHERE d.source_code=?
+              AND d.status IN ({placeholders})
+              AND d.discovered_from<>?
+              AND NOT EXISTS(
+                SELECT 1 FROM products p
+                WHERE p.source_code=d.source_code COLLATE NOCASE
+                  AND (
+                    (d.external_id<>'' AND p.external_id=d.external_id)
+                    OR
+                    (d.normalized_url<>'' AND p.normalized_url=d.normalized_url)
+                  )
+              )
+            ORDER BY d.id DESC
             LIMIT ?
             """,
             (str(source_code or ""), *statuses, str(listing_url or ""), compatibility_limit),
@@ -1521,7 +1539,6 @@ async def _preview_listing_candidates(
             break
         item = dict(candidate)
         item["discovered_from"] = listing_url
-        upsert_candidate(db, item)
         if terminal_identity_state(
             db,
             source_code,
@@ -1529,7 +1546,9 @@ async def _preview_listing_candidates(
             str(item.get("source_url") or ""),
         ):
             duplicate_count += 1
-        elif db.add_discovered(
+            continue
+        upsert_candidate(db, item)
+        if db.add_discovered(
             source_code,
             str(item.get("external_id") or ""),
             str(item.get("source_url") or ""),

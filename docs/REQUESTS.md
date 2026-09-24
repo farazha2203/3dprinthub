@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `SIX-PHASE PLAN REGISTERED / O1+O1B+O2 ACCEPTED / O3 NEXT`.
+Status: `O1+O1B+O2 ACCEPTED / O2D LOCAL_TESTED / O2E -> O2F -> O3 NEXT`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -9,7 +9,14 @@ Work is split into the existing bounded phases plus one inserted operator-activi
 
 O1B owner request is ACCEPTED: `آخرین ادیت‌شده‌ها` is newest-first from explicit operator-save history events, not generic Product `updated_at`; `اخیراً دیده‌شده‌ها` is newest-first from persisted `product_viewed` events recorded only after successful Product Editor load. Card display/selection/hover/search/source-link opening do not count as viewed, and View tracking never dirties Product/Site state. Source `a0d5ea46...` is GitHub-exact; cloned real MainWindow/ProductWizard acceptance and visible exact-SHA runtime smoke PASS.
 
-O2 is ACCEPTED at GitHub-exact source `f04d5b05...`: Crawl Complete/Incomplete filtering and per-card missing reasons share one filesystem-aware AcquisitionCore/ImageCore authority. Final real runtime truth is quick_check=ok and 1099 Crawl rows = 463 complete + 636 incomplete; scoped before/after smoke digest proved zero Product/Crawl/History mutation. O3 guarded deep reset/refetch/remap is next.
+O2 is ACCEPTED at GitHub-exact source `f04d5b05...`: Crawl Complete/Incomplete filtering and per-card missing reasons share one filesystem-aware AcquisitionCore/ImageCore authority. Final real runtime truth is quick_check=ok and 1099 Crawl rows = 463 complete + 636 incomplete; scoped before/after smoke digest proved zero Product/Crawl/History mutation.
+
+New owner request is split into three independent slices before O3:
+- O2D Product Identity/Dedup/Consumed-Crawl Suppression: an identity already present in Products must disappear from Add Products and must never automatically Preview/fetch as a new Product. Link/source identity memory must remain so it cannot be crawled again. Only proven same canonical identity may ever be deduplicated destructively.
+- O2E Product Media Truth: Product Refresh must reload the exact canonical Local DB/files images for that Product and Instagram must use that same current image authority.
+- O2F Instagram disclosure/links: verify current provider capabilities, apply supported AI label/disclosure to Feed and Story, include original-source and 3DPrintHub order Product links in supported Product details/metadata, and implement Story link only through a real supported provider/native workflow.
+
+O2D is LOCAL_TESTED. Real Catalog audit found 625 consumed identities hidden, 474 unconsumed Add identities, and zero exact/semantic canonical Product duplicate groups, so no unsafe title-based deletion was performed. O2E follows O2D acceptance.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

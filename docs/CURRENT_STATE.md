@@ -1,3 +1,15 @@
+## 2026-09-24 - Phase50.A.2Z-O2D Product Identity / Dedup LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+
+Active branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`, based on accepted O2 closure `325f15c671055bc4d74324d94a2c88acbfc1b89b`. Rollback branch `backup/pre-phase50-a2z-o2d-product-identity-dedup-20260924` points to that exact baseline. Production remains unchanged at selective Server head `2b48a593...`.
+
+O2D enforces one canonical Product identity contract across Add Products, Preview and Batch fetch. Existing Products are terminal `collected` for normal acquisition, are hidden from Add Products, excluded from queue summary and pending Batch SQL, and skipped before Preview candidate/thumbnail work. Discovery ledger rows remain as anti-recrawl memory. Explicit force-recover is preserved as the same-identity update path.
+
+Real Catalog read-only truth: quick_check=ok; Products=781; discovery ledger=1099; 625 consumed identities hidden; 474 unconsumed identities visible; 47 ready-to-add and 427 incomplete; visible mapped Products=0. Duplicate audit found zero exact external-ID groups, zero normalized-URL groups and zero configured Source-pattern semantic-ID groups. No title-based Product deletion was performed. Audit digest before/after remained `61c79a0d68d646b185cea188de41a5667b48f355af8c080e208809ccce7b2553`.
+
+Verification: changed-condition 1/1 PASS; focused 51/51 PASS; broad identity/Crawl/acquisition/Product regression 123/123 PASS; py_compile/compileall, Qt VerifyOnly, Django check and makemigrations --check --dry-run PASS. The first isolated Django check reproduced known ERR-49-155 because this worktree has no .env; the documented temporary canonical ignored .env method passed and the temporary copy was removed immediately.
+
+Exact next: final allowlist/diff -> commit/push O2D -> Local=Remote -> fresh logical Catalog rollback -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real runtime Add Products/Product identity smoke with no canonical mutation -> docs-only O2D ACCEPTED -> O2E Product Media Truth / Refresh / Instagram Image Parity.
+
 ## 2026-09-24 - Phase50.A.2Z-O2 Crawl Completeness Views ACCEPTED / O3 NEXT
 
 Active branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`, based on accepted O1B closure `8bbb267dab81af73eb8d38cd50aa83e5fa9ad162`. Rollback branch `backup/pre-phase50-a2z-o2-crawl-completeness-20260924` points exactly to that baseline; Production `2b48a593...` is already in the accepted lineage.

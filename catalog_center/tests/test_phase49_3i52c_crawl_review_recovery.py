@@ -22,6 +22,7 @@ from app.phase49_3i_discovery_review import (
     upsert_candidate,
 )
 from app.phase49_3i_preview_recovery import PREVIEW_CARD_EVAL_JS
+from app.phase49_3i38_crawl_ledger_stage_ai import terminal_identity_state
 from qt6 import acquisition_runtime
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage
@@ -195,7 +196,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_queue_resolves_legacy_product_source_code_case_insensitively(self):
+    def test_existing_product_source_code_case_insensitive_identity_is_suppressed(self):
         listing = "https://makerworld.com/en/search/models?keyword=legacy-case"
         external_id = "520006"
         product_id = self._create_product(external_id)
@@ -205,16 +206,30 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         )
         self.db.conn.commit()
         url = f"https://makerworld.com/en/models/{external_id}-preview-test"
-        self.db.add_discovered(
-            "makerworld",
-            external_id,
-            url,
-            listing,
-        )
 
-        rows = self.db.discovered_items_page(limit=10, offset=0)
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]["product_id"], product_id)
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                external_id,
+                url,
+                listing,
+            )
+        )
+        rows = self.db.discovered_items_page(
+            limit=10,
+            offset=0,
+            exclude_existing_products=True,
+        )
+        self.assertEqual(rows, [])
+        self.assertEqual(
+            terminal_identity_state(
+                self.db,
+                "makerworld",
+                external_id,
+                url,
+            ),
+            "collected",
+        )
 
     def test_receive_numeric_spinboxes_are_ltr_and_not_cramped(self):
         page = OperationsPage(self.db, kernel=self.kernel)
@@ -340,16 +355,10 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_bulk_recovery_reuses_complete_local_product_without_network(self):
+    def test_complete_existing_product_is_hidden_from_add_queue_without_network(self):
         external_id = "520009"
         product_id = self._create_product(external_id)
         url = f"https://makerworld.com/en/models/{external_id}-complete-local"
-        self.db.add_discovered(
-            "makerworld",
-            external_id,
-            url,
-            "phase49-3i52f-local",
-        )
         images_dir = (
             Path(self.db.path).resolve().parent
             / "collected"
@@ -364,34 +373,28 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 format="JPEG",
             )
 
-        page = OperationsPage(self.db, kernel=self.kernel)
-        captured = []
-        try:
-            page._populate_queue(reset=True)
-            page.queue_select_all_btn.click()
-            page.pool.start = lambda worker: captured.append(worker)
-            with patch.object(
-                QMessageBox,
-                "question",
-                return_value=QMessageBox.StandardButton.Yes,
-            ), patch.object(
-                self.kernel.acquisition,
-                "run_single",
-                side_effect=AssertionError("network recovery should not run"),
-            ):
-                page._recover_selected_queue()
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                external_id,
+                url,
+                "phase49-3i52f-local",
+            )
+        )
+        self.assertEqual(self.kernel.acquisition.queue_count("", "all"), 0)
+        self.assertEqual(
+            self.kernel.acquisition.queue_page(
+                "",
+                "all",
+                limit=20,
+                offset=0,
+            ),
+            [],
+        )
+        self.assertEqual(len(list(images_dir.glob("*.jpg"))), 5)
+        self.assertIsNotNone(self.db.product(product_id))
 
-            self.assertEqual(len(captured), 1)
-            result = captured[0].fn(lambda _value, _message: None)
-            self.assertEqual(result["local_reused"], 1)
-            self.assertEqual(result["recovered"], 0)
-            self.assertEqual(result["created"], 0)
-            self.assertEqual(result["failed"], 0)
-            self.assertIn(product_id, result["product_ids"])
-        finally:
-            page.close()
-
-    def test_bulk_recovery_for_incomplete_existing_product_forces_safe_source_refetch(self):
+    def test_existing_product_is_excluded_from_add_queue_and_force_recover_remains_explicit(self):
         external_id = "520012"
         product_id = self._create_product(external_id)
         self.db.update_product(
@@ -405,56 +408,51 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             },
         )
         url = f"https://makerworld.com/en/models/{external_id}-broken-old-row"
-        self.db.add_discovered(
-            "makerworld",
-            external_id,
-            url,
-            "phase49-3i52f-recover",
+
+        # Existing Product identity is no longer re-added to the Add Products ledger.
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                external_id,
+                url,
+                "phase49-3i52f-recover",
+            )
+        )
+        self.assertEqual(
+            self.kernel.acquisition.queue_count("", "all"),
+            0,
         )
 
-        page = OperationsPage(self.db, kernel=self.kernel)
-        captured = []
         calls = []
-        try:
-            page._populate_queue(reset=True)
-            page.queue_select_all_btn.click()
-            page.queue_recover_image_limit.setCurrentIndex(
-                page.queue_recover_image_limit.findData(10)
+
+        def fake_run_single(**kwargs):
+            calls.append(dict(kwargs))
+            return {
+                "product_id": product_id,
+                "already_collected": True,
+                "recovered_existing": True,
+            }
+
+        with patch.object(
+            self.kernel.acquisition,
+            "run_single",
+            side_effect=fake_run_single,
+        ):
+            result = self.kernel.acquisition.run_single(
+                source_code="makerworld",
+                product_url=url,
+                image_limit=10,
+                download_images=True,
+                force_recover=True,
+                adaptive_fallback=True,
             )
-            page.pool.start = lambda worker: captured.append(worker)
 
-            def fake_run_single(**kwargs):
-                calls.append(dict(kwargs))
-                return {
-                    "product_id": product_id,
-                    "already_collected": True,
-                    "recovered_existing": True,
-                }
-
-            with patch.object(
-                QMessageBox,
-                "question",
-                return_value=QMessageBox.StandardButton.Yes,
-            ), patch.object(
-                self.kernel.acquisition,
-                "run_single",
-                side_effect=fake_run_single,
-            ):
-                page._recover_selected_queue()
-                self.assertEqual(len(captured), 1)
-                result = captured[0].fn(
-                    lambda _value, _message: None
-                )
-
-            self.assertEqual(result["recovered"], 1)
-            self.assertEqual(result["failed"], 0)
-            self.assertEqual(len(calls), 1)
-            self.assertTrue(calls[0]["force_recover"])
-            self.assertTrue(calls[0]["adaptive_fallback"])
-            self.assertEqual(calls[0]["image_limit"], 10)
-            self.assertTrue(calls[0]["download_images"])
-        finally:
-            page.close()
+        self.assertEqual(result["product_id"], product_id)
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0]["force_recover"])
+        self.assertTrue(calls[0]["adaptive_fallback"])
+        self.assertEqual(calls[0]["image_limit"], 10)
+        self.assertTrue(calls[0]["download_images"])
 
     def test_force_recover_bypasses_terminal_identity_when_product_row_is_missing(self):
         product_url = "https://makerworld.com/en/models/520013-orphan-ledger"
@@ -538,7 +536,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_selected_collected_live_product_shows_real_image_strip_and_count(self):
+    def test_existing_collected_product_is_hidden_from_live_add_results(self):
         listing = "https://makerworld.com/en/search/models?keyword=review-images"
         external_id = "520015"
         product_id = self._create_product(external_id)
@@ -562,17 +560,6 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         )
         candidate = self._candidate(external_id, listing)
         candidate_id = upsert_candidate(self.db, candidate)
-        self.db.add_discovered(
-            "makerworld",
-            external_id,
-            candidate["source_url"],
-            listing,
-        )
-        queue = self.db.conn.execute(
-            "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
-            ("makerworld", external_id),
-        ).fetchone()
-        self.db.mark_url(int(queue["id"]), "collected")
         set_candidate_status(
             self.db,
             candidate_id,
@@ -586,16 +573,8 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
             page._active_listing_url = listing
             page._active_run_started_at = ""
             page._refresh_live_discovery()
-            self.assertEqual(page.live_results.count(), 1)
-            page.live_results.item(0).setSelected(True)
-            self.app.processEvents()
-            self.assertEqual(page.live_detail_images.count(), 2)
-            self.assertIn("2 عکس دارد", page.live_detail_meta.text())
-            self.assertIn(
-                "2 فایل محلی قابل نمایش",
-                page.live_detail_meta.text(),
-            )
-            self.assertTrue(page.live_detail_open_btn.isEnabled())
+            self.assertEqual(page.live_results.count(), 0)
+            self.assertEqual(page.live_detail_images.count(), 0)
         finally:
             page.close()
 
@@ -728,81 +707,84 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_existing_collected_but_incomplete_product_is_force_recovered(self):
+    def test_existing_incomplete_product_is_hidden_but_explicit_force_recover_keeps_identity(self):
         external_id = "520030"
         product_id = self._create_product(external_id, status="uploaded")
         url = f"https://makerworld.com/en/models/{external_id}-preview-test"
-        self.db.add_discovered(
-            "makerworld",
-            external_id,
-            url,
-            "phase49-3i52c-test",
+
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                external_id,
+                url,
+                "phase49-3i52c-test",
+            )
         )
-        queue = self.db.conn.execute(
-            "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
-            ("makerworld", external_id),
-        ).fetchone()
-        queue_id = int(queue["id"])
-        self.db.mark_url(queue_id, "collected")
+        self.assertEqual(self.kernel.acquisition.queue_count("", "all"), 0)
 
-        page = OperationsPage(self.db, kernel=self.kernel)
-        captured = []
-        calls = []
-        try:
-            page.pool.start = lambda worker: captured.append(worker)
-            page._collect_queue_ids([queue_id])
-            self.assertEqual(len(captured), 1)
-            with patch.object(
-                self.kernel.acquisition,
-                "run_single",
-                side_effect=lambda **kwargs: (
-                    calls.append(kwargs)
-                    or {
-                        "product_id": product_id,
-                        "recovered_existing": True,
-                        "collected": 1,
-                    }
-                ),
-            ):
-                result = captured[0].fn(lambda _value, _message: None)
-            self.assertEqual(result["already_collected_count"], 0)
-            self.assertIn(product_id, result["product_ids"])
-            self.assertEqual(len(calls), 1)
-            self.assertTrue(calls[0]["force_recover"])
-            self.assertTrue(calls[0]["adaptive_fallback"])
-        finally:
-            page.close()
+        async_result = {
+            "product_id": product_id,
+            "changed": True,
+            "diff": {"source_title": {"before": "", "after": "fresh"}},
+            "images_found": 1,
+            "images_saved": 1,
+            "source_title": "fresh",
+            "selected_method": "rich",
+            "attempted_methods": ["rich"],
+            "fallback_used": False,
+            "image_fallback_method": "",
+            "mapped_image_urls": 1,
+            "quality": {},
+        }
+        with patch(
+            "qt6.acquisition_runtime.refetch_product_from_source_async",
+            new=AsyncMock(return_value=async_result),
+        ) as recover:
+            result = acquisition_runtime.run_single(
+                self.db,
+                source_code="makerworld",
+                product_url=url,
+                image_limit=10,
+                force_recover=True,
+                adaptive_fallback=True,
+            )
 
-    def test_existing_collected_complete_product_is_not_refetched(self):
+        self.assertEqual(result["product_id"], product_id)
+        self.assertTrue(result["already_collected"])
+        self.assertTrue(result["recovered_existing"])
+        recover.assert_awaited_once()
+        self.assertEqual(recover.await_args.args[1], product_id)
+
+    def test_existing_complete_product_is_hidden_and_normal_run_single_never_refetches(self):
         external_id = "520031"
         product_id = self._create_product(external_id, status="uploaded")
         image_dir = self.root / "collected" / "makerworld" / external_id / "images"
         image_dir.mkdir(parents=True, exist_ok=True)
         Image.new("RGB", (400, 300), "white").save(image_dir / "001.jpg")
         url = f"https://makerworld.com/en/models/{external_id}-preview-test"
-        self.db.add_discovered("makerworld", external_id, url, "phase49-3i52c-test")
-        queue = self.db.conn.execute(
-            "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
-            ("makerworld", external_id),
-        ).fetchone()
-        queue_id = int(queue["id"])
-        self.db.mark_url(queue_id, "collected")
 
-        page = OperationsPage(self.db, kernel=self.kernel)
-        captured = []
-        try:
-            page.pool.start = lambda worker: captured.append(worker)
-            page._collect_queue_ids([queue_id])
-            with patch.object(
-                self.kernel.acquisition,
-                "run_single",
-                side_effect=AssertionError("complete Product must not be refetched"),
-            ):
-                result = captured[0].fn(lambda _value, _message: None)
-            self.assertEqual(result["already_collected_count"], 1)
-            self.assertIn(product_id, result["product_ids"])
-        finally:
-            page.close()
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                external_id,
+                url,
+                "phase49-3i52c-test",
+            )
+        )
+        self.assertEqual(self.kernel.acquisition.queue_count("", "all"), 0)
+        with patch(
+            "qt6.acquisition_runtime.refetch_product_from_source_async",
+            new=AsyncMock(side_effect=AssertionError("normal path must not refetch")),
+        ):
+            result = acquisition_runtime.run_single(
+                self.db,
+                source_code="makerworld",
+                product_url=url,
+                image_limit=5,
+                force_recover=False,
+            )
+        self.assertEqual(result["product_id"], product_id)
+        self.assertTrue(result["already_collected"])
 
     def test_safe_source_recovery_updates_source_data_and_images_without_clobbering_operator_fields(self):
         product_id = self._create_product("520040")

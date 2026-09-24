@@ -472,21 +472,33 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
                 ),
             }
         )
-        self.db.add_discovered(
-            "makerworld",
-            "4901",
-            url,
-            "https://makerworld.com/en/search/models?keyword=technical",
+        self.assertFalse(
+            self.db.add_discovered(
+                "makerworld",
+                "4901",
+                url,
+                "https://makerworld.com/en/search/models?keyword=technical",
+            )
         )
-        self.db.set_discovered_status([1], "collected")
 
-        rows = self.db.discovered_items_page(status="collected", limit=10, offset=0)
-        row = next(item for item in rows if str(item["external_id"]) == "4901")
-        self.assertEqual(row["product_estimated_weight_grams"], 42.5)
-        self.assertEqual(row["product_estimated_print_minutes"], 135)
-        self.assertEqual(json.loads(row["product_tags_json"]), ["lamp", "decor"])
+        rows = self.db.discovered_items_page(
+            status="collected",
+            limit=10,
+            offset=0,
+            exclude_existing_products=True,
+        )
+        self.assertEqual(rows, [])
+        row = dict(
+            self.db.conn.execute(
+                "SELECT * FROM products "
+                "WHERE source_code='makerworld' AND external_id='4901'"
+            ).fetchone()
+        )
+        self.assertEqual(row["estimated_weight_grams"], 42.5)
+        self.assertEqual(row["estimated_print_minutes"], 135)
+        self.assertEqual(json.loads(row["tags_json"]), ["lamp", "decor"])
         self.assertEqual(
-            json.loads(row["product_source_specs_json"])["dimensions"]["x"],
+            json.loads(row["source_specs_json"])["dimensions"]["x"],
             120,
         )
 

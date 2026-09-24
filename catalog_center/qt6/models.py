@@ -165,7 +165,10 @@ class ProductTableModel(QAbstractTableModel):
             row.get("title_fa") or "",
             row.get("source_title") or "",
             _summary(row),
-            row.get("source_name") or row.get("source_code") or "—",
+            (
+                f"{row.get('source_name') or row.get('source_code') or '—'} • "
+                f"{row.get('source_code') or '—'}:{row.get('external_id') or '—'}"
+            ),
             row.get("workflow_status") or "—",
             (
                 "منتشرشده"

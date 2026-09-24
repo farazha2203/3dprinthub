@@ -3,9 +3,9 @@
 Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revision 2 with strict Product/Image/Profile/Variant/Slider parity and real Desktop/Mobile Playwright acceptance; #625/#620/#152/#178 collateral truth is stable. Selective Production Server remains clean at `2b48a593...`.
 
 The active bounded successor is `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md` with six slices:
-O1 Product status filters + split Instagram Post/Story -> O1B recent edited/viewed Product activity (ACCEPTED at source `a0d5ea46...`) -> O2 Crawl complete/incomplete + missing reasons -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
+O1 Product status filters + split Instagram Post/Story -> O1B recent edited/viewed Product activity -> O2 Crawl complete/incomplete -> O2D Product identity/dedup/consumed-Crawl suppression -> O2E Product Media Truth/Refresh/Instagram image parity -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
 
-O1, O1B and O2 are ACCEPTED. O2 source `f04d5b05...` is GitHub-exact on `wip/phase50-a2z-o2-crawl-completeness-20260924`; one filesystem-aware completeness authority, focused 39/39 + broader 128/128, Qt/static/Django/no-drift, fresh rollback, one exact-SHA runtime cutover and no-mutation smoke all PASS. Final live Crawl partition is 1099 = 463 complete + 636 incomplete. Exact next is O3 guarded deep reset/refetch/remap; O4 Delete semantics follows.
+O1, O1B and O2 are ACCEPTED. O2D is LOCAL_TESTED on `wip/phase50-a2z-o2d-product-identity-dedup-20260924`: 625 consumed identities suppressed from Add Products/Preview/Batch, 474 unconsumed identities remain, canonical duplicate groups are zero, focused 51/51 + broad 123/123 + static/framework gates PASS. Exact next is O2D GitHub/runtime acceptance, then O2E media truth and O2F Instagram disclosure/links before O3.
 
 ## 2026-09-23 - A2Z-S2 automatic Story + Shop Grid ACCEPTED
 

@@ -1,3 +1,11 @@
+## ERR-49-241 - Existing Product hidden from UI remained eligible in Batch pending SQL
+**Date:** 2026-09-24
+**Observed:** O2D first-pass UI/DB suppression hid an existing Product from Add Products, but a changed-condition test showed the independent `_pending_for_listing()` SQL could still return an old new/failed discovery row after that identity had become a Product.
+**Root cause:** Batch listing selection owns separate exact and compatibility SQL paths; filtering only the shared DB/UI boundary was insufficient.
+**Correct fix:** add the same indexed NOT EXISTS Product-identity guard to both Batch pending queries. Preview discovery now checks terminal Product identity before candidate upsert/thumbnail caching. Active Product identity is terminal collected; explicit force-recover remains the update path.
+**Verification:** dedicated changed-condition 1/1 PASS; O2D focused 51/51 PASS; broad identity/Crawl/acquisition/Product regression 123/123 PASS; real Add Products page authority has zero mapped Product rows.
+**Prevention:** every Crawl path must prove the same identity gate at discovery, Preview, pending selection and Product fetch boundaries; UI filtering alone is never sufficient anti-recrawl protection.
+
 ## ERR-49-240 - O2 acceptance saw concurrent pre-cutover acquisition, not O2 mutation
 **Date:** 2026-09-24
 **Observed:** the fresh O2 runtime backup captured 778 Products, but the later runtime smoke saw 781 Products. Read-only backup-vs-live diff found only new Product IDs 779/780/781; no pre-existing Product row changed.

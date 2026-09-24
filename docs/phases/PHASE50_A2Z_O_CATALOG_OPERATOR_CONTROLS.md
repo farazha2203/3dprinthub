@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O3_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 Date: 2026-09-24
-Branch: `wip/phase50-a2z-o2-crawl-completeness-20260924`
+Branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -24,6 +24,22 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
    - Complete / incomplete filters.
    - Completeness includes valid local image plus required content.
    - Missing reasons shown directly on each Crawl card.
+2D. **O2D - Product Identity / Dedup / Consumed-Crawl Suppression**
+   - Existing Product identity must never re-enter Add Products or automatic Product fetch.
+   - Identity authority remains the existing `source_code + external_id` and normalized source URL; no parallel ID is introduced.
+   - Existing discovery ledger rows remain as identity memory but are hidden from Add Products and excluded from pending/batch/preview work.
+   - Product table exposes `source_code:external_id` so the link-derived identity is visible to the operator.
+   - Any destructive dedup is allowed only for proven identical canonical identity after backup; same-title/different-link Products are never auto-deleted.
+2E. **O2E - Product Media Truth / Refresh / Instagram Image Parity**
+   - Product image refresh must reload the exact canonical Local DB/files image set for that Product.
+   - Product UI preview/selection and Instagram media preparation must resolve from the same canonical image authority.
+   - Repair stale/missing mapping without substituting unrelated Product media.
+2F. **O2F - Instagram Disclosure / Product Details / Story Link**
+   - Verify the current Buffer/Meta provider API capabilities before implementation.
+   - Apply the supported AI-generated-content disclosure/label contract to both Feed and Story where the provider exposes it.
+   - Product details/caption metadata must include the original source Product URL and the 3DPrintHub order Product URL where the provider contract permits.
+   - Implement clickable Story link only through a provider-supported API/native workflow; fail closed rather than fabricate unsupported stickers/links.
+
 3. **O3 - Deep Crawl Repair / Full Re-fetch**
    - Verify backup and Source identity before repair.
    - Purge only the selected Product's corrupted/derived Local data.
@@ -117,5 +133,22 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Real Complete and Incomplete UI smoke loaded 100 rows for each filter with the expected complete/missing-reason card text.
 - Scoped Product/Crawl/History logical digest before and after the filter smoke stayed exactly `f9cd3201bbc97f3d85d1085b63efca0a500a8c44b3158c82137d82f07df911b8`; O2 filtering is read-only against canonical state.
 
+## O2D implementation — LOCAL_TESTED
+- Products table already enforces unique `(source_code, external_id)` and `(source_code, normalized_url)`; real Catalog audit found zero duplicate groups for both keys and zero semantic Source-pattern ID duplicate groups. Therefore no Product row was deleted merely because titles look alike.
+- `Database.add_discovered()` now rejects any already-existing Product identity, not only blocked identities.
+- Add Products persistent queue/count/page and queue summary exclude identities that already exist in Products while retaining the discovery ledger row as anti-recrawl memory.
+- Batch listing pending queries exclude existing Product identities; legacy `new/failed` ledger rows cannot re-enter Product fetch.
+- Listing Preview discovery skips existing Product identities before candidate upsert/thumbnail caching, so existing Products are not re-previewed as new candidates.
+- `terminal_identity_state()` returns `collected` for an active existing Product; explicit `force_recover` remains the only recovery/update path for an existing Product.
+- Live Add candidate rows exclude Product identities by both external ID and normalized URL.
+- Products table/detail expose the canonical Source Identity `source_code:external_id`; no new identity column/schema is created.
+- O2 completeness is redefined correctly for unconsumed Add candidates: complete/ready-to-add means Candidate title + physically available local Preview. Existing Products are not part of this inventory.
+- Real Catalog read-only audit: Products=781, discovery ledger=1099, consumed hidden=625, unconsumed visible=474, complete=47, incomplete=427, queue summary=474, visible mapped Products=0.
+- Exact duplicate audit: external identity groups=0, normalized URL groups=0, semantic Source-pattern ID groups=0. No destructive dedup was warranted.
+- Scoped real Catalog digest before/after audit remained identical: `61c79a0d68d646b185cea188de41a5667b48f355af8c080e208809ccce7b2553`.
+- Verification: O2D changed-condition 1/1 PASS; focused 51/51 PASS; broad identity/Crawl/acquisition/Product regression 123/123 PASS; py_compile/compileall, Qt VerifyOnly, Django check and makemigrations --check --dry-run PASS.
+- Initial Django check without the isolated worktree `.env` failed with the already-known ERR-49-155 environment mismatch; rerun used the documented temporary canonical ignored `.env` copy and removed it immediately. No secret was logged or committed.
+- Windows/Catalog-only delta; no Server migration or Production deploy is required.
+
 ## Exact next
-O3 guarded deep reset/refetch/remap -> read current Repair path + prior errors -> freeze same-identity preservation contract -> fresh Catalog backup -> implement bounded purge of only selected Product derived/local source data -> full Source refetch from scratch -> remap to the same Product identity while preserving Site/receipt/order authority -> changed-condition tests -> related Crawl/Product regression -> integrity/no-dirty proof -> commit/push -> exact-SHA runtime acceptance. O4 Delete semantics follows only after O3 is accepted.
+O2D staged allowlist/diff review -> source/docs commit+push -> Local=Remote -> fresh Catalog rollback/integrity -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Add Products smoke proving consumed identities remain hidden and canonical Product count/digest are not mutated -> docs-only O2D ACCEPTED closure -> O2E Product Media Truth / Refresh / Instagram Image Parity. O2F follows O2E, then O3 guarded deep reset/refetch/remap -> read current Repair path + prior errors -> freeze same-identity preservation contract -> fresh Catalog backup -> implement bounded purge of only selected Product derived/local source data -> full Source refetch from scratch -> remap to the same Product identity while preserving Site/receipt/order authority -> changed-condition tests -> related Crawl/Product regression -> integrity/no-dirty proof -> commit/push -> exact-SHA runtime acceptance. O4 Delete semantics follows only after O3 is accepted.

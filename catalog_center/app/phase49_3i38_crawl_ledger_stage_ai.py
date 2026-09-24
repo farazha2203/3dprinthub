@@ -168,7 +168,7 @@ def terminal_identity_state(db, source_code: str, external_id: str, url: str) ->
     ledger = db.conn.execute(
         """
         SELECT status FROM discovered_urls
-        WHERE source_code=?
+        WHERE source_code=? COLLATE NOCASE
           AND ((?<>'' AND external_id=?) OR normalized_url=?)
         ORDER BY id
         LIMIT 1
@@ -181,16 +181,18 @@ def terminal_identity_state(db, source_code: str, external_id: str, url: str) ->
     product = db.conn.execute(
         """
         SELECT is_blocked,source_state FROM products
-        WHERE source_code=?
+        WHERE source_code=? COLLATE NOCASE
           AND ((?<>'' AND external_id=?) OR normalized_url=?)
         ORDER BY id
         LIMIT 1
         """,
         (source_code, external_id, external_id, normalized),
     ).fetchone()
-    if product is not None and int(product["is_blocked"] or 0):
-        state = str(product["source_state"] or "blocked")
-        return "rejected" if state == "rejected" else "blocked"
+    if product is not None:
+        if int(product["is_blocked"] or 0):
+            state = str(product["source_state"] or "blocked")
+            return "rejected" if state == "rejected" else "blocked"
+        return "collected"
     return ""
 
 

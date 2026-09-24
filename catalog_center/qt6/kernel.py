@@ -2187,7 +2187,9 @@ class AcquisitionCore:
         product_id = int(data.get("product_id") or 0)
 
         if product_id <= 0:
-            reasons = ["Product mapping ندارد / هنوز دریافت نشده"]
+            reasons: list[str] = []
+            if not str(data.get("candidate_title") or "").strip():
+                reasons.append("عنوان Candidate ندارد")
             if not self.queue_has_local_image(
                 data,
                 image_cache=image_cache,
@@ -2252,6 +2254,7 @@ class AcquisitionCore:
                     "all",
                     limit=chunk_size,
                     offset=raw_offset,
+                    exclude_existing_products=True,
                 )
             ]
             if not chunk:
@@ -2286,6 +2289,7 @@ class AcquisitionCore:
                 self.db.discovered_count(
                     str(source_code or ""),
                     normalized,
+                    exclude_existing_products=True,
                 )
             )
 
@@ -2302,6 +2306,7 @@ class AcquisitionCore:
                     "all",
                     limit=chunk_size,
                     offset=raw_offset,
+                    exclude_existing_products=True,
                 )
             ]
             if not chunk:
@@ -2340,6 +2345,7 @@ class AcquisitionCore:
                 normalized,
                 limit=int(limit),
                 offset=int(offset),
+                exclude_existing_products=True,
             )
         ]
 
@@ -2399,7 +2405,11 @@ class AcquisitionCore:
         )
 
         ensure_candidate_schema(self.db)
-        clauses = ["c.source_code=?", "c.discovered_from=?"]
+        clauses = [
+            "c.source_code=?",
+            "c.discovered_from=?",
+            "p.id IS NULL",
+        ]
         args: list[Any] = [str(source_code or ""), str(listing_url or "")]
         if str(since or "").strip():
             clauses.append("c.updated_at>=?")
@@ -2445,8 +2455,12 @@ class AcquisitionCore:
               ON d.source_code=c.source_code
              AND d.external_id=c.external_id
             LEFT JOIN products p
-              ON p.source_code=c.source_code
-             AND p.external_id=c.external_id
+              ON p.source_code=c.source_code COLLATE NOCASE
+             AND (
+               (c.external_id<>'' AND p.external_id=c.external_id)
+               OR
+               (c.normalized_url<>'' AND p.normalized_url=c.normalized_url)
+             )
             WHERE {" AND ".join(clauses)}
             ORDER BY c.id
             LIMIT ?
@@ -2498,7 +2512,12 @@ class AcquisitionCore:
         )
 
     def queue_counts(self, source_code: str = "") -> dict[str, int]:
-        return dict(self.db.queue_counts(str(source_code or "")))
+        return dict(
+            self.db.queue_counts(
+                str(source_code or ""),
+                exclude_existing_products=True,
+            )
+        )
 
     def recent_runs(self, limit: int = 20) -> list[dict[str, Any]]:
         return [

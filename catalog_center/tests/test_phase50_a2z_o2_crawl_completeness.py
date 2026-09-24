@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from app.db import Database
+from app.phase49_3i_discovery_review import upsert_candidate
 from qt6.kernel import build_kernel
 from qt6.pages import OperationsPage
 
@@ -107,25 +108,65 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
             )
         return product_id
 
+    def add_candidate(
+        self,
+        external_id: str,
+        *,
+        title: str,
+        with_local_image: bool,
+    ) -> None:
+        self.add_discovered(external_id)
+        url = f"https://makerworld.com/en/models/{external_id}-o2-test"
+        upsert_candidate(
+            self.db,
+            {
+                "source_code": "makerworld",
+                "external_id": external_id,
+                "source_url": url,
+                "source_title": title,
+                "thumbnail_url": (
+                    f"https://example.com/{external_id}.jpg"
+                    if title
+                    else ""
+                ),
+                "discovered_from": "phase50-o2-test",
+            },
+        )
+        if with_local_image:
+            image_dir = (
+                Path(self.db.path).resolve().parent
+                / "collected"
+                / "makerworld"
+                / external_id
+                / "images"
+            )
+            image_dir.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (320, 240), "white").save(
+                image_dir / "01.jpg",
+                format="JPEG",
+            )
+
     def seed_contract_rows(self):
-        self.add_discovered("610001")
-        complete_id = self.add_product(
+        self.add_candidate(
             "610001",
-            title="Complete source title",
-            description="Complete source description",
+            title="Ready Candidate",
             with_local_image=True,
         )
-
-        self.add_discovered("610002")
-        incomplete_id = self.add_product(
+        self.add_candidate(
             "610002",
             title="",
-            description="",
             with_local_image=False,
         )
 
+        # Already-consumed identity must disappear from Add Products entirely.
         self.add_discovered("610003")
-        return complete_id, incomplete_id
+        consumed_id = self.add_product(
+            "610003",
+            title="Consumed Product",
+            description="Already in Products",
+            with_local_image=True,
+        )
+        return consumed_id
 
     def test_shared_contract_marks_complete_and_reports_exact_missing_reasons(self):
         self.seed_contract_rows()
@@ -139,6 +180,8 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
             )
         }
 
+        self.assertEqual(set(rows), {"610001", "610002"})
+
         complete = rows["610001"]
         self.assertTrue(self.kernel.acquisition.queue_is_complete(complete))
         self.assertEqual(
@@ -149,14 +192,10 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
         incomplete = rows["610002"]
         reasons = self.kernel.acquisition.queue_completeness_reasons(incomplete)
         self.assertFalse(self.kernel.acquisition.queue_is_complete(incomplete))
-        self.assertIn("عنوان ندارد", reasons)
-        self.assertIn("توضیح ندارد", reasons)
-        self.assertIn("فایل عکس محلی قابل نمایش ندارد", reasons)
+        self.assertIn("عنوان Candidate ندارد", reasons)
+        self.assertIn("Preview/عکس محلی ندارد", reasons)
 
-        unmapped = rows["610003"]
-        reasons = self.kernel.acquisition.queue_completeness_reasons(unmapped)
-        self.assertFalse(self.kernel.acquisition.queue_is_complete(unmapped))
-        self.assertIn("Product mapping ندارد / هنوز دریافت نشده", reasons)
+        self.assertNotIn("610003", rows)
 
     def test_complete_and_incomplete_filters_cover_inventory_with_filtered_paging(self):
         self.seed_contract_rows()
@@ -164,9 +203,9 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
         complete_count = self.kernel.acquisition.queue_count("", "complete")
         incomplete_count = self.kernel.acquisition.queue_count("", "incomplete")
 
-        self.assertEqual(all_count, 3)
+        self.assertEqual(all_count, 2)
         self.assertEqual(complete_count, 1)
-        self.assertEqual(incomplete_count, 2)
+        self.assertEqual(incomplete_count, 1)
         self.assertEqual(complete_count + incomplete_count, all_count)
 
         complete = self.kernel.acquisition.queue_page(
@@ -189,8 +228,8 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
             limit=1,
             offset=1,
         )
-        self.assertEqual([row["external_id"] for row in first], ["610003"])
-        self.assertEqual([row["external_id"] for row in second], ["610002"])
+        self.assertEqual([row["external_id"] for row in first], ["610002"])
+        self.assertEqual(second, [])
 
     def test_operations_page_filters_and_card_status_share_core_truth(self):
         self.seed_contract_rows()
@@ -205,23 +244,16 @@ class Phase50A2ZO2CrawlCompletenessTests(unittest.TestCase):
             page._populate_queue(reset=True)
             self.assertEqual(page.queue_gallery.count(), 1)
             complete_text = page.queue_gallery.item(0).text()
-            self.assertIn("Complete source title", complete_text)
-            self.assertIn("✅ کامل:", complete_text)
+            self.assertIn("Ready Candidate", complete_text)
+            self.assertIn("✅ آماده افزودن:", complete_text)
 
             page.queue_filter.setCurrentIndex(incomplete_index)
             page._populate_queue(reset=True)
-            self.assertEqual(page.queue_gallery.count(), 2)
-            texts = [
-                page.queue_gallery.item(index).text()
-                for index in range(page.queue_gallery.count())
-            ]
-            self.assertTrue(all("⚠ ناقص:" in value for value in texts))
-            self.assertTrue(
-                any("Product mapping ندارد" in value for value in texts)
-            )
-            self.assertTrue(
-                any("عنوان ندارد" in value for value in texts)
-            )
+            self.assertEqual(page.queue_gallery.count(), 1)
+            incomplete_text = page.queue_gallery.item(0).text()
+            self.assertIn("⚠ ناقص:", incomplete_text)
+            self.assertIn("عنوان Candidate ندارد", incomplete_text)
+            self.assertIn("Preview/عکس محلی ندارد", incomplete_text)
         finally:
             page.close()
 

@@ -1,3 +1,13 @@
+## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression LOCAL_TESTED
+- Existing Product identity is rejected by new discovery and treated as terminal collected unless explicitly force-recovered.
+- Add Products inventory/count/summary, live candidates, Preview thumbnail work and Batch pending Product fetch all suppress identities already present in Products.
+- Discovery ledger rows remain as anti-recrawl identity memory; O2D does not physically delete consumed ledger rows.
+- Product table/detail exposes canonical `source_code:external_id`.
+- Real Catalog: Products=781, ledger=1099, consumed hidden=625, unconsumed visible=474, ready-to-add=47, incomplete=427, visible mapped Products=0.
+- Canonical duplicate audit: external-ID groups=0, normalized-URL groups=0, Source-pattern semantic-ID groups=0; no destructive dedup was warranted.
+- Verification: changed-condition 1/1, focused 51/51, broad 123/123, py_compile/compileall, Qt VerifyOnly, Django check and migration-drift PASS.
+- No Server/Production delta.
+
 ## 2026-09-24 - A2Z-O2 Crawl Complete/Incomplete Views ACCEPTED
 - Centralized Crawl completeness in AcquisitionCore; UI no longer owns a second completeness rule.
 - Complete requires Product mapping + title + description + at least one physically displayable local image.
