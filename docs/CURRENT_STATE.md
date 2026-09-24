@@ -8,7 +8,9 @@ Fresh #628 prepublish rollback is `/home/sfkilvrs/3dprinthub-deploy-backups/2026
 
 Unicode fix verification: dedicated regression 1/1 PASS; full unified import 5/5 PASS; related visibility/profile/video 21/21 PASS; Python compile, Django check and makemigrations --check --dry-run PASS; no source/migration/schema delta beyond the bounded media-name contract.
 
-Exact next: build a selective release branch from exact Production baseline `103f559c...` containing only the verified Server Unicode media delta -> fresh source/DB/media rollback -> GitHub-first reverse-tunnel deploy -> receiver/readiness verification -> retry only #628 once -> strict Product/Image/Profile/Variant/Slider + public HTTP/no-stale-media parity -> Desktop/Mobile browser acceptance -> Phase 1 CLOSED.
+Selective release is already GitHub-exact at `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`, parent exactly `103f559c...`, with the exact five-file Server/test delta. Repository-owned guarded deploy runner `scripts/host/phase50_a2z_unicode_media_deploy.sh` is Local syntax/diff tested and enforces the exact baseline/target/allowlist plus rollback verification.
+
+Exact next: commit/push the ops-only runner -> execute it through the official reverse tunnel against verified backup `20260924-104824-a2z-unicode-media-predeploy` -> receiver/readiness verification -> retry only #628 once -> strict Product/Image/Profile/Variant/Slider + public HTTP/no-stale-media parity -> Desktop/Mobile browser acceptance -> Phase 1 CLOSED.
 
 ## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
 
