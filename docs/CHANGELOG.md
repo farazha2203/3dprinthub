@@ -1,3 +1,10 @@
+## 2026-09-24 - A2Z-O1B Recent Product Activity requested
+- Inserted O1B between accepted O1 and O2.
+- Planned Products display options: `آخرین ادیت‌شده‌ها` newest-first by latest real operator-save history, and `اخیراً دیده‌شده‌ها` newest-first by actual Product Editor open/view activity.
+- Generic Product `updated_at` is explicitly not the edit authority because sync/refetch/system work can modify it.
+- Existing operator-save evidence includes `studio_save` and `qt_operator_edit`; implementation must inventory all accepted edit-save events before query freeze.
+- No existing Product-view timestamp/history contract was found, so O1B will add explicit persisted view tracking on Product Editor open only; gallery render/selection/hover/search must not count and view tracking must never dirty Site/republish state.
+
 ## 2026-09-24 - A2Z-O1 Product operational filters + independent Instagram Post/Story
 - Closed the mandatory Windows/Production lineage gate first: merge head `82862b4569b537406618523f7350cd3514c4c03f` contains both accepted lineages and preserves the Windows tree byte-for-byte.
 - Added Product filters backed by canonical stage locks/receipts: ready 7/7, AI-completed 6/7, Site sent, Instagram Post published and Instagram Story published.

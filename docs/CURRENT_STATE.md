@@ -12,7 +12,7 @@ Phase plan is now six bounded slices in `docs/phases/PHASE50_A2Z_O_CATALOG_OPERA
 
 Phase50.A.2Z is now factually CLOSED/ACCEPTED: Product #628 successfully published as Site #38 revision 2 with ACK parity ok=true, 2 media, 32 active variants, exact 12cm/18cm profiles, Slider disabled and public HTTP=true. Independent Production DB readback and real Playwright Desktop 1440x1000 + Mobile 390x844 acceptance passed with no stale Unicode media path, no overflow and no page/console errors. #625/#620/#152/#178 collateral readback remained stable.
 
-Exact next: O2 Crawl Completeness Views -> define one factual complete/incomplete contract -> add complete/incomplete filters to the Crawl inventory -> show per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows only after O2 is accepted.
+Exact next: O1B Recent Product Activity Filters -> inventory accepted operator-save history events -> add persisted Product Editor open/view tracking that never dirties Product/Site state -> add "آخرین ادیت‌شده‌ها" and "اخیراً دیده‌شده‌ها" newest-first in Products display -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. Then O2 Crawl Completeness Views follows; O3 guarded deep reset/refetch/remap remains after O2.
 
 ## 2026-09-24 - Phase50.A.2Z #628 ASCII BATCH SOURCE FIX GITHUB_EXACT / BOUNDED RETRY NEXT
 

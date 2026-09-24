@@ -4,6 +4,7 @@
 - [x] O1: split Instagram Post and Story into independent buttons/readiness/workers; Story-only does not create Feed and Feed-only does not create Story.
 - [x] O1: focused 24/24 + broader Product/Qt/Social 136/136 + compile/diff/Qt VerifyOnly; real Catalog filter counts and quick_check pass.
 - [x] O1: source/docs commit `22bb0fb1...`, Local=Remote, exact-SHA VerifyOnly, integrity backup, one Catalog Center restart and runtime smoke PASS.
+- [ ] O1B: add "آخرین ادیت‌شده‌ها" sorted by latest real operator-save event and "اخیراً دیده‌شده‌ها" sorted by latest real Product Editor view; view tracking must not dirty Product/Site state.
 - [ ] O2: Crawl complete/incomplete filters and per-card missing reasons.
 - [ ] O3: guarded deep repair — backup, bounded derived-data purge, full source refetch and same-identity remap.
 - [ ] O4: fix Delete semantics and prove visible removal/tombstone/restore behavior.

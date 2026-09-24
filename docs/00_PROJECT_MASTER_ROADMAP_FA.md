@@ -3,7 +3,7 @@
 Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revision 2 with strict Product/Image/Profile/Variant/Slider parity and real Desktop/Mobile Playwright acceptance; #625/#620/#152/#178 collateral truth is stable. Selective Production Server remains clean at `2b48a593...`.
 
 The active bounded successor is `docs/phases/PHASE50_A2Z_O_CATALOG_OPERATOR_CONTROLS.md` with six slices:
-O1 Product status filters + split Instagram Post/Story -> O2 Crawl complete/incomplete + missing reasons -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
+O1 Product status filters + split Instagram Post/Story -> O1B recent edited/viewed Product activity -> O2 Crawl complete/incomplete + missing reasons -> O3 guarded deep reset/refetch/remap -> O4 Delete semantics -> O5 Social receipt/operator acceptance -> O6 integrated regression/closure.
 
 O1 is ACCEPTED on branch `wip/phase50-a2z-o1-catalog-controls-20260924` at GitHub-exact source `22bb0fb1...`: focused 24/24, broader Product/Qt/Social 136/136 and final O1 37/37 PASS; exact-SHA Qt VerifyOnly, integrity backup, one Catalog Center restart and runtime smoke pass with Catalog quick_check=ok / 771 Products. Exact next is O2 Crawl complete/incomplete + missing reasons.
 

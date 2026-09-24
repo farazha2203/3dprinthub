@@ -14,6 +14,12 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
    - AI-completed exact 6/7 filter.
    - Site-sent, Instagram Post-sent, and Instagram Story-sent filters.
    - Separate Post and Story buttons and execution paths.
+1B. **O1B - Recent Product Activity Filters**
+   - "Recently edited": Products ordered by the latest real operator save event, newest first.
+   - Accepted edit events include factual Product editor saves such as `studio_save` and `qt_operator_edit`; generic `updated_at` is not the authority because sync/refetch can also change it.
+   - "Recently viewed": Products ordered by the latest real Product Editor open/view event, newest first.
+   - Only opening the Product Editor counts as a view; gallery visibility, hover, selection, filter refresh, or card rendering must never create a view.
+   - View tracking must be persisted locally/auditable and must not dirty the Product for Site republish.
 2. **O2 - Crawl Completeness Views**
    - Complete / incomplete filters.
    - Completeness includes valid local image plus required content.
@@ -65,6 +71,15 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Production source `2b48a593...` was not changed.
 - Destructive Crawl repair/delete are deferred to O3/O4.
 
+## O1B requested contract — PLANNED
+- Add two options to the Products display/filter area: `آخرین ادیت‌شده‌ها` and `اخیراً دیده‌شده‌ها`.
+- `آخرین ادیت‌شده‌ها` must sort descending by latest operator-save history, not generic Product `updated_at`.
+- Existing factual edit history includes `studio_save` and `qt_operator_edit`; implementation must inventory any other accepted editor-save event before freezing the query.
+- `اخیراً دیده‌شده‌ها` requires explicit Product Editor open tracking because no existing `last_viewed_at` / Product-view history contract exists.
+- Opening Source URL, selecting a card, rendering a card, scrolling, hover, or search must not count as viewed.
+- Recent-view tracking is operator-local activity metadata only: it must not set `needs_update`, alter Site revision, change Product content, or trigger republish.
+- O1B must have focused tests for ordering, repeated open updating the timestamp, edit-vs-view separation, and no Product/Site dirtying.
+
 ## O1 runtime acceptance
 - Source commit `22bb0fb1ecca2f894e34bcbd7dda8b7d424b394e` is GitHub-exact.
 - Pre-runtime Catalog backup quick_check=ok with 771 Products; SHA256 `6afd42e6d6fea4dc034f3b32361dc179b2ceedce3ec74703a6bf38c757ebb5a3`.
@@ -73,4 +88,4 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Post-restart Catalog quick_check=ok / Products=771.
 
 ## Exact next
-O2 Crawl Completeness Views -> one factual complete/incomplete contract -> filters -> per-card missing reasons -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. O3 guarded deep reset/refetch/remap follows.
+O1B Recent Product Activity Filters -> inventory accepted operator-save events -> add persisted Product Editor view tracking -> add "Recently edited" and "Recently viewed" filters/sort newest-first -> focused/related regression -> Catalog integrity -> commit/push -> exact-SHA runtime acceptance. Then O2 Crawl Completeness Views follows.

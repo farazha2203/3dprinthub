@@ -5,7 +5,9 @@ Owner requested the Product filter menu to expose: آماده انتشار for e
 
 Owner also reported Crawl cards without images, Repair doing nothing, Delete not removing items, and requested complete/incomplete Crawl filters with missing reasons. Repair intent is a full local reset/refetch/remap for the selected Source identity so corrupted/mis-mapped local data cannot survive a repair.
 
-Work is split into six bounded phases: O1 Product filters + split Social; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is accepted at GitHub-exact source `22bb0fb1...`; exact-SHA Qt VerifyOnly, integrity backup, one app restart and runtime smoke all passed. O2 is next.
+Work is split into the existing bounded phases plus one inserted operator-activity microphase: O1 Product filters + split Social; O1B Recent Product Activity; O2 Crawl completeness + missing reasons; O3 guarded deep reset/refetch/remap; O4 Delete semantics; O5 Social receipt/operator acceptance; O6 integrated closure. O1 is accepted at GitHub-exact source `22bb0fb1...`; exact-SHA Qt VerifyOnly, integrity backup, one app restart and runtime smoke all passed. O1B is next.
+
+O1B owner request: add `آخرین ادیت‌شده‌ها` in Products display, ordered newest-first by the latest real operator save (for example Product Editor saves), and add `اخیراً دیده‌شده‌ها`, ordered newest-first by actual Product Editor opens. Generic Product `updated_at` must not be used as the edit authority because system sync/refetch can change it. Merely displaying/selecting/hovering a Product card must not count as viewed.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.
