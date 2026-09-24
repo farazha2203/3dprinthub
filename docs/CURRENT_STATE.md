@@ -1,6 +1,6 @@
-## 2026-09-25 - Phase50.A.2Z-O2G Search Crawl Pagination — LOCAL TESTED / EXACT-SHA RUNTIME ACCEPTANCE NEXT
+## 2026-09-25 - Phase50.A.2Z-O2G Search Crawl Pagination — ACCEPTED / O2H NEXT
 
-Active branch: `wip/phase50-a2z-o2g-search-target-20260924`, starting GitHub-exact from `47d676d94e8ddc2fa70726063d06016a49f48e2c`. Production remains unchanged at selective Server head `2b48a593...`; O2G is Windows/Catalog-only and has no Django migration or Server source delta.
+Active branch: `wip/phase50-a2z-o2g-search-target-20260924`. O2G source/tests/docs are GitHub-exact at `436bca68a2ee30ed80cc262456a143099c9d5586` from baseline `47d676d94e8ddc2fa70726063d06016a49f48e2c`. Production remains unchanged at selective Server head `2b48a593...`; O2G is Windows/Catalog-only and has no Django migration or Server source delta.
 
 O2G now makes requested Crawl count the discovery authority instead of the old fixed Preview depth. Requested 1..500 drives progressive persisted scroll depth; MakerWorld Hybrid prefers the existing dedicated Chrome 9222 profile after HTTP/listing access guard, counts only O2D-unconsumed identities toward the target, and stops only at target, explicit stop, access/rate guard, or verified stable listing exhaustion. 403/429 is never treated as exhaustion. Attached-Chrome link discovery can inspect the bounded 3000-anchor window without expensive preview image/text work, while the number of newly persisted candidates is capped to the exact remaining target so a 200 request cannot silently enqueue 313+ rows.
 
@@ -12,7 +12,9 @@ Fresh pre-runtime rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2g-runt
 
 Development gate exposed and corrected two bounded issues before acceptance: the first clone-only real probe could over-persist a whole visible link window after already reaching the requested target, and the related Preview regression exposed an older over-escaped JS newline sequence. Both are covered by regression; no canonical Product/Site/Social state was changed.
 
-Exact next: review/stage only O2G source/tests/docs -> commit/push -> verify Local=GitHub exact -> close the old Qt runtime gracefully once -> launch exact pushed SHA -> foreground Add Product/Crawl UI acceptance for the reorganized A controls and one-row six-button B toolbar -> canonical integrity/no-unexpected-mutation verification -> O2G ACCEPTED. Then O2H guarded hard delete -> O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep repair.
+Exact-SHA runtime acceptance PASS on pushed source `436bca68...`. No prior Catalog Qt process was running, so no process was killed or restarted twice. Repository VerifyOnly passed immediately before launch; the one launch exposed visible MainWindow `3DPrintHub Catalog Center v8.9.11 - Qt 6` as PID 54404. Exact-source Qt render smoke on an isolated rollback clone verified requested range 1..500, all six B actions in one horizontal row, all four receive options in one row under A, and no legacy second action row. Post-launch canonical Catalog remains quick_check=ok with Products=852 / History=3482 / Crawl=1192 and the full logical digest is still exactly `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`; launch/UI acceptance introduced zero Catalog mutation.
+
+Exact next: O2H guarded hard delete for broken unconsumed Crawl identities -> fresh rollback -> delete only candidate/preview/cache/derived data for identities with no Product authority -> Product-backed identity fails closed -> changed-condition + related regression -> commit/push -> exact-SHA runtime acceptance. Then O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep repair.
 
 ## 2026-09-24 - Phase50.A.2Z-O2E Product Media Truth ACCEPTED / O2G NEXT
 

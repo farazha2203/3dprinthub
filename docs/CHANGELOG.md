@@ -1,4 +1,4 @@
-## 2026-09-25 - A2Z-O2G Search Crawl Pagination — LOCAL TESTED
+## 2026-09-25 - A2Z-O2G Search Crawl Pagination — ACCEPTED
 - Replaced fixed MakerWorld Preview/search depth with requested-target-aware progressive discovery while retaining the 3I.38 persisted listing-depth ledger as the only continuation authority.
 - O2D-consumed Product identities do not count toward a requested 200/300 target.
 - MakerWorld Hybrid prefers the existing dedicated Chrome 9222 session after HTTP/listing access guard; 403/429 is an access/rate condition, never false listing exhaustion.
@@ -9,7 +9,9 @@
 - Related regression exposed a pre-existing over-escaped Preview JavaScript newline sequence; corrected it without changing discovery authority.
 - Verification: focused 49/49, Preview 3/3, related 98/98, py_compile/compileall, diff-check, Qt VerifyOnly, pip check, Django check and no-migration-drift PASS.
 - Fresh Catalog rollback/integrity: `phase50-a2z-o2g-runtime-acceptance-20260925-020653`, logical digest `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`, backup SHA256 `c8f3f50907e636678be5e5bcc1fedaff0d59e16c55959775b49dd9c27d11c619`.
-- Production changed: NO. Exact-SHA foreground runtime acceptance remains before O2G can be marked ACCEPTED.
+- GitHub-exact source commit `436bca68a2ee30ed80cc262456a143099c9d5586`; Local=Remote before runtime.
+- Exact-SHA Qt runtime acceptance PASS: one launch, visible `3DPrintHub Catalog Center v8.9.11 - Qt 6` PID 54404, target control 1..500, section A receive-options one row and section B six-button toolbar one row verified from exact-source Qt render. Post-launch canonical quick_check=ok and full logical digest remained exactly `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`.
+- Production changed: NO. O2H guarded hard delete is next.
 
 ## 2026-09-24 - A2Z-O2E Product Media Truth ACCEPTED
 - Unified Product Editor selected-media truth and Social media truth around `selected_images_json` plus exact files inside the current Product `local_dir`.
