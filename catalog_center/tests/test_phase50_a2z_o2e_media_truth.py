@@ -212,6 +212,33 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
                 site_url="https://3dprinthub.ir",
             )
 
+    def test_truth_snapshot_recognizes_server_ascii_rename_by_final_sha_prefix(self):
+        product_id, _url1, _url2, final1, _final2 = self._product()
+        sha1 = hashlib.sha256(final1.read_bytes()).hexdigest()
+        public_url = (
+            f"https://3dprinthub.ir/media/p/9001/{sha1[:12]}/"
+            "server-canonical-ascii-name.webp"
+        )
+        result = media_truth_snapshot(
+            self.db,
+            self.kernel.images,
+            product_id,
+            server={
+                "main_image": public_url,
+                "images": [{
+                    "url": public_url,
+                    "alt": "first",
+                    "is_primary": True,
+                    "is_selected": True,
+                }],
+            },
+            site_url="https://3dprinthub.ir",
+        )
+        self.assertEqual(result["selected_count"], 1)
+        self.assertEqual(result["site_media_count"], 1)
+        self.assertEqual(result["site_unrepresented"], [])
+        self.assertEqual(result["mismatches"], [])
+
     def test_truth_snapshot_reports_selected_sha_drift(self):
         product_id, _url1, _url2, _final1, _final2 = self._product(
             stale_sha=True

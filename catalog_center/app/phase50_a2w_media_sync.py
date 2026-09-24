@@ -251,12 +251,33 @@ def _site_media_represented(row: dict[str, Any], site_item: dict[str, Any]) -> b
     }
     if _url_key(url) in canonical:
         return True
-    for item in _json_list(row.get("image_metadata_json")):
-        if not isinstance(item, dict):
-            continue
+    metadata = [
+        item
+        for item in _json_list(row.get("image_metadata_json"))
+        if isinstance(item, dict)
+    ]
+    for item in metadata:
         recovered_from = str(item.get("site_recovered_from") or "").strip()
         if recovered_from and _url_key(recovered_from) == _url_key(url):
             return True
+
+    path_parts = [
+        part
+        for part in urlsplit(url).path.split("/")
+        if part
+    ]
+    sha_prefix = ""
+    if len(path_parts) >= 2 and re.fullmatch(
+        r"[0-9a-fA-F]{8,64}",
+        path_parts[-2] or "",
+    ):
+        sha_prefix = path_parts[-2].lower()
+    if sha_prefix:
+        for item in metadata:
+            final_sha = str(item.get("final_sha256") or "").strip().lower()
+            if final_sha and final_sha.startswith(sha_prefix):
+                return True
+
     basename = Path(urlsplit(url).path).name.casefold()
     return bool(basename and basename in _metadata_names(row))
 

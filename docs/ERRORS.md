@@ -1,3 +1,12 @@
+## ERR-49-247 - O2E Refresh parity did not recognize ASCII-safe Server rename by finalized SHA
+**Date:** 2026-09-24
+**Observed:** real #628 Refresh compare-only returned `selected_local_count=2`, `site_media_count=2`, no Site/selected-media error and zero recovery, but still reported one `Site media candidate محلی ندارد` mismatch. Social parity for the same two images was already exact.
+**Impact:** no Product/Site/Social mutation; target-scoped Product/History state remained unchanged. O2E acceptance stayed open.
+**Root cause:** `_site_media_represented()` compared canonical URLs, prior Site recovery provenance and basenames, but did not recognize the Server/Public ASCII-safe rename contract where the public basename can differ from Local SEO metadata while the parent path contains the exact finalized SHA prefix.
+**Correct fix:** preserve existing URL/basename matching and add the same finalized-SHA parent recognition already used by Social alignment: a public media path `/.../<sha-prefix>/<server-name>` represents the Product-local image only when one metadata `final_sha256` starts with that verified hexadecimal prefix.
+**Verification:** dedicated Server-ASCII-rename/SHA regression PASS; O2E focused 16/16 PASS; expanded Image/Product/Social 131/131 PASS; py_compile/compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
+**Prevention:** Refresh parity and Social parity must share the same filename-or-finalized-SHA identity semantics; Server canonical renaming must never be treated as missing media when finalized SHA proves identity.
+
 ## ERR-49-246 - O2E runtime exposed a selected image with exact media but no Product Gallery card
 **Date:** 2026-09-24
 **Observed:** first exact-SHA O2E runtime smoke on Catalog Product #625 resolved one selected Local finalized file and one matching Social public URL, but Product Wizard Gallery reported zero selected cards for that same selected URL.
