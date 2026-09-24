@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `O1+O1B+O2+O2D ACCEPTED / O2E CORRECTIVE_LOCAL_TESTED -> O2G -> O2H -> O2F -> O3`.
+Status: `O1+O1B+O2+O2D+O2E ACCEPTED -> O2G -> O2H -> O2F -> O3`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -18,7 +18,9 @@ New owner request is split into three independent slices before O3:
 - O2H Hard Delete Broken Crawl Identity: explicit delete must actually remove unconsumed Crawl/Candidate/Preview/cache/verified candidate-derived data. The current Reject path only marks `rejected` and is not deletion. Product-backed identities must fail closed.
 - O2F Instagram disclosure/links: verify current provider capabilities, apply supported AI label/disclosure to Feed and Story, include original-source and 3DPrintHub order Product links in supported Product details/metadata, and implement Story link only through a real supported provider/native workflow.
 
-O2D is ACCEPTED at GitHub-exact source `4e667f4f...`. Final exact-SHA runtime truth after safe-stop/quiescent backup is 1192 raw Crawl = 707 consumed identities hidden + 485 unconsumed Add identities (50 ready-to-add / 435 incomplete), visible mapped Products=0, and zero exact/normalized canonical Product duplicate groups. Product table/detail visibly exposes canonical `source_code:external_id`. No unsafe title-based deletion was performed because no same canonical identity duplicate exists. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract. O2E is next.
+O2D is ACCEPTED at GitHub-exact source `4e667f4f...`. Final exact-SHA runtime truth after safe-stop/quiescent backup is 1192 raw Crawl = 707 consumed identities hidden + 485 unconsumed Add identities (50 ready-to-add / 435 incomplete), visible mapped Products=0, and zero exact/normalized canonical Product duplicate groups. Product table/detail visibly exposes canonical `source_code:external_id`. No unsafe title-based deletion was performed because no same canonical identity duplicate exists. Legacy queue/summary, Batch pending, Preview candidate/thumbnail and normal single-product acquisition all share the same suppression contract.
+
+O2E is ACCEPTED at GitHub-exact source `544e046b...`: Product Editor, Refresh and Instagram now share one exact selected Product-local media authority. Fresh rollback/integrity, graceful exact-SHA runtime cutover and real #625/#628 ProductWizard/Refresh/Social parity all PASS with unchanged target Product/History digest. O2G is next.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

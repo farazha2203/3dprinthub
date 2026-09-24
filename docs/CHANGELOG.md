@@ -1,4 +1,4 @@
-## 2026-09-24 - A2Z-O2E Product Media Truth CORRECTIVE_LOCAL_TESTED
+## 2026-09-24 - A2Z-O2E Product Media Truth ACCEPTED
 - Unified Product Editor selected-media truth and Social media truth around `selected_images_json` plus exact files inside the current Product `local_dir`.
 - Added shared exact selected-local resolver with Product-local containment and optional finalized SHA verification; historical/refetch sibling folders are recovery-only and no longer normal Gallery truth.
 - Product Editor still shows trusted unregistered files physically inside the current Product folder so the operator can select/promote them; they do not become Social authority until persisted.
@@ -9,7 +9,10 @@
 - First exact-SHA runtime attempt then exposed ERR-49-246 on real #625: selected Local/Social truth resolved but the Gallery card was omitted by a mature numbered-slot mapping edge case. Corrective synthesis now passes dedicated changed-condition coverage, O2E focused 15/15, direct Instagram publish 13/13 and expanded broad 130/130 plus all static/framework gates.
 - Real read-only audit: 543 Products have selected images; 93 resolve exact selected Local truth and 450 legacy rows need explicit recovery because exact files are absent. No bulk mutation was performed. #625 and #628 selected Local SHA/public Social media parity both PASS. Audit digest remained `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
 - Added planned O2G for target-aware MakerWorld lazy-scroll discovery and O2H for real guarded Crawl hard-delete; O2F follows them.
-- Initial O2E checkpoint is GitHub-exact at `a975eaaa44d3050c5d882bbd02f72943f7157573`; final acceptance is intentionally withheld until the corrective card-synthesis commit is pushed and re-run from a fresh rollback.
+- Initial O2E checkpoint was `a975eaaa...`; selected-card correction was pushed at `1a09f8b6...`; final Server-rename/SHA parity correction is GitHub-exact at `544e046b62f933e5461d57e9491a5ecee46c5225`.
+- Final rollback `phase50-a2z-o2e-final-runtime-acceptance-20260924-201040` passed source/backup quick_check and logical-digest parity; backup SHA256 `34fb39594839ef0bfe936f4c88da7ab48b7bd3571220a6991e929355e71da5d9`.
+- Acquisition was quiescent, old Qt closed gracefully, exact-SHA VerifyOnly passed and one new visible runtime launched as PID 52840.
+- Real #625/#628 ProductWizard selected-card + Refresh compare-only + Social parity PASS. #625 resolves one selected image/Site image and SHA prefix `30f41e1d56f5`; #628 resolves two selected/Site images with SHA prefixes `959abcdd95d6` and `6138e2b6907d`. Target Product+History digest stayed unchanged at `85d1e5686e1f2dbc8b8c5aea3b6b01188dda5824d726296cc96a2ec5a5bb7fb6`.
 
 ## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression ACCEPTED
 - Existing Product identity is rejected by new discovery and treated as terminal collected unless explicitly force-recovered.

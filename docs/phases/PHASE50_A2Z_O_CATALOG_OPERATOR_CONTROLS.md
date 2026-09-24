@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_CORRECTIVE_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_ACCEPTED / O2G_NEXT
 Date: 2026-09-24
 Branch: `wip/phase50-a2z-o2e-media-truth-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -168,16 +168,22 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Canonical duplicate groups remain zero for `(source_code, external_id)` and normalized URL. Product table visibly exposes canonical identity such as `makerworld:1298362`.
 - Runtime Add Products smoke loaded 100 rows with mapped=0. Before/after Product/Crawl/History digest remained exactly `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`; acceptance caused no canonical mutation.
 
-## O2E implementation — LOCAL_TESTED
+## O2E implementation — ACCEPTED
 - One selected-media authority now spans Product Editor and Social: `selected_images_json` plus exact files contained in the current Product `local_dir`.
 - Normal Product Gallery excludes historical/refetch sibling folders. Trusted unregistered files physically inside the current Product folder remain visible for operator selection, but do not become Social authority until persisted.
 - Selected Product cards use the same exact finalized Local file resolver used by Social.
 - Product Wizard Refresh is local-truth/compare-only and no longer injects Site media into Product DB; explicit Source recovery remains separate.
 - Social public media is aligned one-to-one to selected Local images by SEO/final basename or finalized SHA path and fails closed on stale/missing/ambiguous ACK media.
 - Truth Sync reports selected-local count and SHA/mapping errors.
-- Tests: initial direct baseline 10/10; initial O2E changed/direct 14/14; fixture/legacy-contract 20/20; first broad 99/99 PASS. After real #625 runtime exposed ERR-49-246, corrective omitted-card regression + focused 15/15 + direct Instagram publish 13/13 + expanded Image/Product/Social 130/130 PASS; compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
+- Tests: initial direct baseline 10/10; initial O2E changed/direct 14/14; fixture/legacy-contract 20/20; first broad 99/99 PASS. After real #625 runtime exposed ERR-49-246 and #628 Refresh exposed ERR-49-247, final dedicated regressions + focused 16/16 + direct Instagram publish 13/13 + expanded Image/Product/Social 131/131 PASS; continuation related rerun 74/74 PASS; compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
 - Real read-only audit: 543 Products have selected images; 93 exact selected-local mappings PASS; 450 legacy Products lack exact Local files and were not bulk-mutated. #625 and #628 exact selected Local/Social parity PASS. Audit digest unchanged at `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
 - Windows/Catalog-only delta; no Server migration or Production deploy is required.
+- Final corrective source is GitHub-exact at `544e046b62f933e5461d57e9491a5ecee46c5225`.
+- Final rollback `D:\projects\3dprinthub-backups\phase50-a2z-o2e-final-runtime-acceptance-20260924-201040\catalog-before-o2e-final-runtime.sqlite3`: source/backup quick_check=ok, logical digest exact `cf21d5ec4605dac1d744f636f438b7a98e625ba8e88982e52466e147d045e890`, Products=852 / History=3482 / Crawl=1192, backup SHA256 `34fb39594839ef0bfe936f4c88da7ab48b7bd3571220a6991e929355e71da5d9`.
+- Acquisition was quiescent before cutover. Old Qt closed via `CloseMainWindow()` without kill; exact-SHA VerifyOnly PASS; one visible runtime launched as PID 52840.
+- Real #625: selected DB=1 / ProductWizard selected card=1 / Refresh selected-local=1 / Site=1 / mismatches=0 / Social exact SHA prefix `30f41e1d56f5`.
+- Real #628: selected DB=2 / ProductWizard selected cards=2 / Refresh selected-local=2 / Site=2 / mismatches=0 / Social exact SHA prefixes `959abcdd95d6`, `6138e2b6907d`.
+- Direct ProductWizard UI smoke matched `image_grid.selected_urls()` and primary image for both targets; target Product+History digest remained exact at `85d1e5686e1f2dbc8b8c5aea3b6b01188dda5824d726296cc96a2ec5a5bb7fb6`.
 
 ## Exact next
-O2E final staged allowlist -> source/docs commit+push -> Local=Remote -> fresh Catalog rollback/integrity -> ensure acquisition is quiescent -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Product Wizard/Refresh + #625/#628 selected-local/Social parity smoke -> no-mutation digest -> docs-only O2E ACCEPTED closure. Then O2G target-aware search Crawl pagination -> O2H guarded hard delete -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
+O2G target-aware Search Crawl pagination -> reproduce the MakerWorld search URL with requested 200/300 -> replace fixed Preview depth with target-aware progressive scroll/continuation -> count only O2D-unconsumed identities toward target -> stop only on requested target, explicit operator stop, robots/rate guard, or verified listing exhaustion -> focused + related Crawl regression -> fresh Catalog rollback/integrity -> commit/push -> Local=Remote -> exact-SHA Qt runtime acceptance. Then O2H guarded hard delete -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
