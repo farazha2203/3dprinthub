@@ -8,6 +8,16 @@ import tempfile
 import traceback
 from pathlib import Path
 
+PROJECT_ROOT = Path(
+    os.environ.get("A2Z_PROJECT_ROOT") or Path.cwd()
+).resolve()
+if not (PROJECT_ROOT / "manage.py").is_file() or not (PROJECT_ROOT / "config" / "__init__.py").is_file():
+    raise SystemExit("TRACE_FAIL=project_root_invalid")
+root_text = str(PROJECT_ROOT)
+if root_text in sys.path:
+    sys.path.remove(root_text)
+sys.path.insert(0, root_text)
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 import django

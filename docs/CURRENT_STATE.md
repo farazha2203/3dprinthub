@@ -14,7 +14,9 @@ Production selective release is now deployed and verified at exact clean `2b48a5
 
 Changed-condition retry of only #628 used Batch `desktop_catalog_v85_20260924_105415` / UUID `bc40a728-5b26-453d-ba27-e74608ed8a7a`. FTP completed 12/12, but Bridge still returned the same `UnicodeEncodeError: ascii`; import remained failed, Local/Site revision stayed 1 and no third unchanged retry is permitted. This proves the Server/Public basename hardening is valid but not the complete root cause.
 
-Exact next: GitHub-first rollback-only stage tracer -> run against the already-failed Batch without invoking import again -> capture the exact exception stage/traceback -> minimal regression-backed root-cause fix -> selective release from current Production `2b48a593...` -> fresh rollback -> retry only #628 -> strict parity/public/browser acceptance -> Phase 1 CLOSED.
+First GitHub-exact trace harness launch stopped before Django setup with `ModuleNotFoundError: config`; no importer stage or DB/media mutation ran. The cause was `/tmp` standalone-script import-root behavior, not Product #628. Harness now validates explicit `A2Z_PROJECT_ROOT`, prepends the verified repository root, and passes py_compile/project-root/diff gates.
+
+Exact next: commit/push corrected rollback-only tracer -> rerun it under changed condition against the already-failed Batch without invoking import again -> capture exact exception stage/traceback -> minimal regression-backed root-cause fix -> selective release from current Production `2b48a593...` -> fresh rollback -> retry only #628 -> strict parity/public/browser acceptance -> Phase 1 CLOSED.
 
 ## 2026-09-23 - Phase50.A.2Z EXACT-SHA LOCAL ACCEPTED / PRODUCTION REPUBLISH BLOCKED BY TUNNEL
 
