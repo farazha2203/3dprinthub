@@ -1,3 +1,19 @@
+## ERR-49-245 - O2E Product Editor and Instagram used different media authorities
+**Date:** 2026-09-24
+**Observed:** the operator could see one set of files after Product image refresh while Instagram preparation could resolve a different set from Site ACK/public media and finalized metadata.
+**Root cause:** normal Product Editor Gallery used broad `ImageCore.local_items()/display_local_paths()`, including historical/refetch compatibility folders, while Social started from Site ACK public URLs and resolved finalized metadata independently. Refresh also used `recover_site_media=True`, so merely pressing Refresh could add Site media candidates to Product DB.
+**Correct fix:** define one selected-image authority: `selected_images_json` plus exact files contained inside the current Product `local_dir`. Product Editor uses current-Product media only; selected cards use exact finalized files; Refresh is compare/local-truth only; Social public media must align one-to-one to selected Local media by filename/SHA and fail closed on stale/missing/ambiguous ACK.
+**Verification:** O2E changed-condition/direct 14/14 PASS; fixture/legacy-contract 20/20 PASS; broad Image/Product/Social 99/99 PASS; #625 and #628 real read-only selected-Local/Social parity PASS; real audit before/after digest unchanged.
+**Prevention:** Product UI, Refresh and Social must consume the same selected-media resolver. Historical identity folders are recovery inputs only and Site ACK is verification/public-delivery evidence, never an independent image-selection authority.
+
+## ERR-49-244 - O2E first broad regression exposed stale test fixtures, not production regressions
+**Date:** 2026-09-24
+**Observed:** the first O2E broad suite failed Buffer/Story tests whose fake Product rows had no selected/local media, one pre-O2D Crawl test that expected consumed Products to remain visible, and the already-documented legacy image-limit assertion expecting 10 instead of canonical 5.
+**Impact:** no Catalog/Site/Social mutation; failures were test-contract mismatches.
+**Correct fix:** keep the stricter runtime fail-closed media contract. Upgrade Buffer/Story fixtures to include real Product-local selected files and finalized metadata; sync the Crawl assertion to accepted O2D suppression; sync the image-limit assertion to canonical default 5 per ERR-49-201. Preserve trusted files inside the current Product folder for operator selection while excluding sibling refetch folders.
+**Verification:** targeted fixture/legacy-contract regression 20/20 PASS and broad Image/Product/Social rerun 99/99 PASS.
+**Prevention:** Social tests must model the same selected/local/finalized media authority required in production; old public-URL-only fixtures are insufficient after O2E.
+
 ## ERR-49-243 - O2D first staging command collapsed the allowlist into one invalid pathspec
 **Date:** 2026-09-24
 **Observed:** the first O2D staging command combined PowerShell backticks/string construction incorrectly, so Git received the whole allowlist plus trailing text as one pathspec and refused it.

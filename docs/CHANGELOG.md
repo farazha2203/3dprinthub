@@ -1,3 +1,14 @@
+## 2026-09-24 - A2Z-O2E Product Media Truth LOCAL_TESTED
+- Unified Product Editor selected-media truth and Social media truth around `selected_images_json` plus exact files inside the current Product `local_dir`.
+- Added shared exact selected-local resolver with Product-local containment and optional finalized SHA verification; historical/refetch sibling folders are recovery-only and no longer normal Gallery truth.
+- Product Editor still shows trusted unregistered files physically inside the current Product folder so the operator can select/promote them; they do not become Social authority until persisted.
+- Product Wizard Refresh is now local-truth/compare-only (`recover_site_media=False`); it no longer downloads Site media into Product DB merely by pressing Refresh.
+- Social canonical payload aligns public Site media to selected Local media by canonical filename/SHA and fails closed on missing/stale/ambiguous media instead of sending a different image.
+- Truth Sync reports exact selected-local count and SHA/mapping errors.
+- Verification: direct Media baseline 10/10; O2E changed-condition/direct 14/14; fixture/legacy-contract regression 20/20; broad Image/Product/Social 99/99; compileall/Qt VerifyOnly/Django/no-drift/diff-check PASS.
+- Real read-only audit: 543 Products have selected images; 93 resolve exact selected Local truth and 450 legacy rows need explicit recovery because exact files are absent. No bulk mutation was performed. #625 and #628 selected Local SHA/public Social media parity both PASS. Audit digest remained `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
+- Added planned O2G for target-aware MakerWorld lazy-scroll discovery and O2H for real guarded Crawl hard-delete; O2F follows them.
+
 ## 2026-09-24 - A2Z-O2D Product identity / dedup / consumed-Crawl suppression ACCEPTED
 - Existing Product identity is rejected by new discovery and treated as terminal collected unless explicitly force-recovered.
 - Add Products inventory/count/summary, live candidates, Preview thumbnail work and Batch pending Product fetch all suppress identities already present in Products.

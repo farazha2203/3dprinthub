@@ -22,10 +22,10 @@ class Phase493HImageLimitTests(unittest.TestCase):
         }
 
     def test_canonical_default_and_hard_max(self):
-        self.assertEqual(DEFAULT_IMAGE_LIMIT, 10)
+        self.assertEqual(DEFAULT_IMAGE_LIMIT, 5)
         self.assertEqual(HARD_MAX_IMAGE_LIMIT, 20)
-        self.assertEqual(normalize_image_limit(None), 10)
-        self.assertEqual(normalize_image_limit("bad"), 10)
+        self.assertEqual(normalize_image_limit(None), 5)
+        self.assertEqual(normalize_image_limit("bad"), 5)
         self.assertEqual(normalize_image_limit(0), 1)
         self.assertEqual(normalize_image_limit(10), 10)
         self.assertEqual(normalize_image_limit(20), 20)

@@ -1,3 +1,21 @@
+## 2026-09-24 - Phase50.A.2Z-O2E Product Media Truth LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+
+Active branch: `wip/phase50-a2z-o2e-media-truth-20260924`, based on accepted O2D closure `1982dbf8dc914d9a75f82685f1f3c0443ede5fa7`. Rollback branch `backup/pre-phase50-a2z-o2e-media-truth-20260924` points to that exact baseline. Production remains unchanged at selective Server head `2b48a593...`.
+
+O2E now uses one selected-image authority across Product Editor and Social: `selected_images_json` plus exact files inside the current Product `local_dir`. Normal Product Gallery excludes historical/refetch sibling folders. Trusted files physically inside the current Product folder remain visible for operator selection, but they are not Social authority until persisted into canonical image selection. Selected cards use the same exact finalized Local file that Social resolves.
+
+Product Wizard «رفرش رسانه و وضعیت» is local-truth/compare-only: it reloads exact DB/files state and no longer injects missing Site media into `images_json`. Explicit Source recovery remains the separate «بازیابی امن داده و تصاویر از لینک محصول» action. Truth Sync reports selected-local count and exact SHA/mapping errors.
+
+Instagram canonical payload aligns verified public Site media to the selected Local Product image order by canonical filename/SHA and fails closed on stale, missing or ambiguous Site ACK media. This applies before Buffer/Direct Feed and Story media preparation.
+
+Verification: direct Media baseline 10/10 PASS; O2E changed-condition/direct Media-Social 14/14 PASS; fixture/legacy-contract regression 20/20 PASS; broad Image/Product/Social 99/99 PASS; py_compile/compileall, Qt VerifyOnly, Django check, migration drift and diff-check PASS. The obsolete `DEFAULT_IMAGE_LIMIT=10` assertion was synced to canonical runtime default 5 per ERR-49-201; the old pre-O2D Crawl-inventory assertion was also synced to the accepted consumed-identity suppression contract.
+
+Real Catalog read-only audit: Products=852; History=3313; 543 Products have selected images. Exact selected Local media resolves for 93 and fails for 450 legacy Products, predominantly because exact Local source/final files are absent. No mass repair was performed. #625 resolves selected SHA prefix `30f41e1d56f5` and the matching Social media URL. #628 resolves both selected SHA prefixes `959abcdd95d6` and `6138e2b6907d` and the exact two Social media URLs. Audit before/after digest remained exactly `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
+
+Two additional owner-reported Crawl issues are now bounded after O2E. O2G Search Crawl Pagination/Target Count must make MakerWorld lazy/infinite scrolling target-aware: requested count already reaches runtime at 1..500, but Preview currently starts at fixed `scroll_rounds=8`, which can expose only the first viewport-like ~15 cards. O2H Hard Delete Broken Crawl Identity must replace the current status-only reject behavior for explicit delete: current «رد / حذف» only sets `status='rejected'`; guarded hard delete must remove only unconsumed Crawl identity data and fail closed when a Product exists.
+
+Exact next: final O2E staged allowlist -> commit/push -> Local=Remote -> fresh Catalog rollback/integrity -> quiescent acquisition -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Product Wizard/Refresh and #625/#628 Social-parity read-only smoke -> no-mutation digest -> docs-only O2E ACCEPTED closure. Then O2G -> O2H -> O2F -> O3.
+
 ## 2026-09-24 - Phase50.A.2Z-O2D Product Identity / Dedup ACCEPTED / O2E NEXT
 
 Active branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`, based on accepted O2 closure `325f15c671055bc4d74324d94a2c88acbfc1b89b`. Rollback branch `backup/pre-phase50-a2z-o2d-product-identity-dedup-20260924` points to that exact baseline. Production remains unchanged at selective Server head `2b48a593...`.

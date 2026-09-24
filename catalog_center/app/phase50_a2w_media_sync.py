@@ -11,6 +11,7 @@ from urllib.parse import urljoin, urlsplit
 from PIL import Image
 
 from .crawler import download_public_file
+from . import phase49_3c_image_pipeline as image_pipeline
 
 
 IMAGE_SUFFIXES = {".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif"}
@@ -52,6 +53,154 @@ def _url_key(value: str) -> str:
     if parts.scheme and parts.netloc:
         return f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
     return raw.casefold()
+def selected_source_urls(row: dict[str, Any]) -> list[str]:
+    """Return the operator-selected image identity in exact stored order."""
+    canonical = [
+        str(value or "").strip()
+        for value in _json_list(row.get("images_json"))
+        if str(value or "").strip()
+    ]
+    canonical_set = set(canonical)
+    selected = [
+        str(value or "").strip()
+        for value in _json_list(row.get("selected_images_json"))
+        if str(value or "").strip()
+    ]
+    outside = [value for value in selected if value not in canonical_set]
+    if outside:
+        raise RuntimeError(
+            "Selected image authority drift: "
+            + ", ".join(outside[:5])
+        )
+    return list(dict.fromkeys(selected))
+
+
+def selected_local_media(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """Resolve selected Product images to exact files inside this Product local_dir.
+
+    This is the shared Product UI / Social local-media authority. Historical
+    refetch sibling folders and identity-wide compatibility fallbacks are not
+    allowed here.
+    """
+    selected = selected_source_urls(row)
+    if not selected:
+        return []
+
+    raw_root = str(row.get("local_dir") or "").strip()
+    if not raw_root:
+        raise RuntimeError("Selected Product media has no local_dir.")
+    local_dir = Path(raw_root).resolve()
+    if not local_dir.is_dir():
+        raise RuntimeError("Selected Product local_dir does not exist.")
+
+    metadata = {
+        str(item.get("source_url") or "").strip(): dict(item)
+        for item in _json_list(row.get("image_metadata_json"))
+        if isinstance(item, dict)
+        and str(item.get("source_url") or "").strip()
+    }
+
+    output: list[dict[str, Any]] = []
+    for index, source_url in enumerate(selected, 1):
+        local_value = str(
+            image_pipeline.strict_local_image(row, source_url) or ""
+        ).strip()
+        if not local_value:
+            raise RuntimeError(
+                f"Selected image {index} has no exact Local file."
+            )
+        path = Path(local_value).resolve()
+        try:
+            path.relative_to(local_dir)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Selected image {index} escaped Product local_dir."
+            ) from exc
+        if not path.is_file():
+            raise RuntimeError(
+                f"Selected image {index} Local file is missing."
+            )
+
+        meta = metadata.get(source_url) or {}
+        expected_sha = str(meta.get("final_sha256") or "").strip().lower()
+        actual_sha = _sha256(path)
+        final_value = str(meta.get("final_local_file") or "").strip()
+        if final_value:
+            try:
+                final_path = Path(final_value).resolve()
+                final_path.relative_to(local_dir)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Selected image {index} final_local_file is outside Product local_dir."
+                ) from exc
+            if final_path.is_file():
+                path = final_path
+                actual_sha = _sha256(path)
+        if expected_sha and actual_sha != expected_sha:
+            raise RuntimeError(
+                f"Selected image {index} SHA drift: "
+                f"expected={expected_sha} actual={actual_sha}"
+            )
+        seo_name = str(
+            meta.get("seo_filename")
+            or meta.get("product_local_filename")
+            or path.name
+        ).strip()
+        output.append({
+            "index": index,
+            "source_url": source_url,
+            "local_path": str(path),
+            "filename": path.name,
+            "seo_filename": seo_name,
+            "sha256": actual_sha,
+        })
+    return output
+
+
+def align_public_media_to_selected(
+    row: dict[str, Any],
+    public_urls: list[str],
+) -> list[str]:
+    """Map public Site media to the exact selected Local Product image order."""
+    selected = selected_local_media(row)
+    if not selected:
+        raise RuntimeError(
+            "No selected Product image is available for Social publishing."
+        )
+    candidates = [
+        str(value or "").strip()
+        for value in public_urls or []
+        if str(value or "").strip().startswith("https://")
+    ]
+    aligned: list[str] = []
+    used: set[str] = set()
+    for item in selected:
+        names = {
+            str(item.get("seo_filename") or "").casefold(),
+            str(item.get("filename") or "").casefold(),
+        }
+        sha_prefix = str(item.get("sha256") or "").lower()[:12]
+        matches: list[str] = []
+        for url in candidates:
+            if url in used:
+                continue
+            parsed = urlsplit(url)
+            parts = [part for part in parsed.path.split("/") if part]
+            basename = Path(parsed.path).name.casefold()
+            parent = parts[-2].lower() if len(parts) >= 2 else ""
+            if basename in names or (sha_prefix and parent == sha_prefix):
+                matches.append(url)
+        if len(matches) != 1:
+            raise RuntimeError(
+                "Public/Social media parity failed for selected image "
+                f"{item['index']}: matches={len(matches)}"
+            )
+        chosen = matches[0]
+        aligned.append(chosen)
+        used.add(chosen)
+    return aligned
+
+
 def normalized_site_media(server: dict[str, Any] | None, site_url: str) -> list[dict[str, Any]]:
     server = dict(server or {})
     rows: list[dict[str, Any]] = []
@@ -255,10 +404,16 @@ def media_truth_snapshot(
     canonical = [str(value or "").strip() for value in _json_list(row.get("images_json")) if str(value or "").strip()]
     selected = [str(value or "").strip() for value in _json_list(row.get("selected_images_json")) if str(value or "").strip()]
     primary = str(row.get("primary_image_url") or "").strip()
-    local_items = image_core.local_items(int(product_id))
+    local_items = image_core.current_local_items(int(product_id))
     site_media = normalized_site_media(server, site_url)
     outside = [value for value in selected if value not in set(canonical)]
     missing_local = [value for value in selected if not str(image_core.local_path_for_url(row, value) or "").strip()]
+    selected_media_error = ""
+    selected_local = []
+    try:
+        selected_local = selected_local_media(row)
+    except Exception as exc:
+        selected_media_error = f"{type(exc).__name__}: {exc}"
     source_host = urlsplit(str(row.get("source_url") or "")).netloc.casefold()
     source_links = [
         value for value in canonical
@@ -271,6 +426,8 @@ def media_truth_snapshot(
         mismatches.append(f"{len(outside)} انتخاب سایت خارج از authority دیتابیس است")
     if missing_local:
         mismatches.append(f"{len(missing_local)} انتخاب سایت فایل Local ندارد")
+    if selected_media_error:
+        mismatches.append("Selected media truth نامعتبر است: " + selected_media_error)
     if selected and primary not in selected:
         mismatches.append("تصویر اصلی داخل انتخاب ارسال سایت نیست")
     if server is not None and len(site_media) != len(selected):
@@ -289,6 +446,12 @@ def media_truth_snapshot(
         "canonical_count": len(canonical),
         "selected_count": len(selected),
         "local_file_count": len(local_items),
+        "selected_local_count": len(selected_local),
+        "selected_media_error": selected_media_error,
+        "selected_local_files": [
+            str(item.get("local_path") or "")
+            for item in selected_local
+        ],
         "source_link_count": len(source_links),
         "site_media_count": len(site_media),
         "site_main_image": _absolute(site_url, (server or {}).get("main_image")),

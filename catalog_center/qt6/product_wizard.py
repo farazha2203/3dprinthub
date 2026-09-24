@@ -948,7 +948,7 @@ class ProductWizardPage(QWidget):
         self._reload_profiles()
 
     def _load_stage3(self, row: dict[str, Any]) -> None:
-        items = self.kernel.images.local_items(int(row["id"]))
+        items = self.kernel.images.current_local_items(int(row["id"]))
         self.image_grid.set_items(items)
         self.image_slider_enabled.blockSignals(True)
         self.image_slider_enabled.setChecked(
@@ -1044,7 +1044,7 @@ class ProductWizardPage(QWidget):
 
         image_urls = [
             str(item.get("url") or "")
-            for item in self.kernel.images.local_items(int(row["id"]))
+            for item in self.kernel.images.current_local_items(int(row["id"]))
             if item.get("url")
         ]
         current_image = str(row.get("homepage_slider_image_url") or "")
@@ -2292,7 +2292,7 @@ class ProductWizardPage(QWidget):
             "رفرش DB / فایل Local / رسانه Site…",
             lambda progress: self.kernel.refresh_product_media_truth(
                 product_id,
-                recover_site_media=True,
+                recover_site_media=False,
                 progress=progress,
             ),
         )
@@ -2357,20 +2357,25 @@ class ProductWizardPage(QWidget):
             canonical = int(data.get("canonical_count") or 0)
             selected = int(data.get("selected_count") or 0)
             local_files = int(data.get("local_file_count") or 0)
+            selected_local = int(data.get("selected_local_count") or 0)
             site_media = int(data.get("site_media_count") or 0)
             recovered = len(data.get("recovered") or [])
+            selected_media_error = str(
+                data.get("selected_media_error") or ""
+            ).strip()
             mismatches = [str(value) for value in (data.get("mismatches") or []) if str(value).strip()]
             site_error = str(data.get("site_error") or "").strip()
             self.image_task_status.setText(
                 f"✅ Truth Sync • DB {canonical} • ارسال سایت {selected} • "
-                f"Local {local_files} • Site {site_media}"
+                f"Local {local_files} • Selected Local {selected_local} • Site {site_media}"
                 + (f" • {recovered} candidate بازیابی شد" if recovered else "")
                 + (f" • ⚠ {len(mismatches)} اختلاف" if mismatches else " • parity")
             )
             lines = [
                 f"رسانه DB: {canonical}",
                 f"انتخاب «ارسال سایت»: {selected}",
-                f"فایل Local قابل نمایش: {local_files}",
+                f"فایل Local canonical قابل نمایش: {local_files}",
+                f"فایل Local دقیق برای تصاویر انتخاب‌شده: {selected_local}",
                 f"رسانه فعلی Site Product: {site_media}",
                 f"لینک Source ثبت‌شده در DB: {int(data.get('source_link_count') or 0)}",
                 f"candidate بازیابی‌شده از Site: {recovered}",

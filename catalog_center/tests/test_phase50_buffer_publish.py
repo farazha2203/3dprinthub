@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import tempfile
 import unittest
+from pathlib import Path
+from urllib.parse import urlparse
 from unittest.mock import patch
+
+from PIL import Image
 
 from app.buffer_publish import (
     BufferConfig,
@@ -30,6 +36,43 @@ class _DB:
             "description_fa": "توضیح محصول",
             "image_alt_texts_json": json.dumps(["تصویر محصول"]),
         }
+        self._temp = tempfile.TemporaryDirectory()
+        self._media_root = Path(self._temp.name) / "product"
+        self.configure_media([
+            "https://3dprinthub.ir/media/demo.webp",
+        ])
+
+    def configure_media(self, public_urls):
+        image_dir = self._media_root / "images"
+        seo_dir = self._media_root / "seo_images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        seo_dir.mkdir(parents=True, exist_ok=True)
+        selected = []
+        metadata = []
+        for index, public_url in enumerate(public_urls, 1):
+            name = Path(urlparse(public_url).path).name or f"image-{index}.webp"
+            source_url = f"local://{name}"
+            source = image_dir / name
+            final = seo_dir / name
+            Image.new(
+                "RGB",
+                (320 + index, 240 + index),
+                (40 + index, 80, 120),
+            ).save(source, "WEBP")
+            Image.open(source).save(final, "WEBP")
+            digest = hashlib.sha256(final.read_bytes()).hexdigest()
+            selected.append(source_url)
+            metadata.append({
+                "source_url": source_url,
+                "seo_filename": name,
+                "final_local_file": str(final),
+                "final_sha256": digest,
+            })
+        self.row["local_dir"] = str(self._media_root)
+        self.row["images_json"] = json.dumps(selected)
+        self.row["selected_images_json"] = json.dumps(selected)
+        self.row["primary_image_url"] = selected[0] if selected else ""
+        self.row["image_metadata_json"] = json.dumps(metadata)
 
     def product(self, product_id):
         return self.row if int(product_id) == 7 else None
@@ -154,6 +197,13 @@ class BufferPublishTests(unittest.TestCase):
         ]
         ack["public_main_image_url"] = "https://3dprinthub.ir/media/demo-4.webp"
         db.row["server_ack_json"] = json.dumps(ack)
+        db.configure_media([
+            "https://3dprinthub.ir/media/demo-4.webp",
+            "https://3dprinthub.ir/media/demo-1.webp",
+            "https://3dprinthub.ir/media/demo-2.webp",
+            "https://3dprinthub.ir/media/demo-3.webp",
+            "https://3dprinthub.ir/media/demo-5.webp",
+        ])
         result = publish_product(
             db, 7, BufferConfig(channel_id="chan-1"),
             site_url="https://3dprinthub.ir",
@@ -180,6 +230,10 @@ class BufferPublishTests(unittest.TestCase):
             for index in range(1, 7)
         ]
         db.row["server_ack_json"] = json.dumps(ack)
+        db.configure_media([
+            f"https://3dprinthub.ir/media/seo-{index}.webp"
+            for index in range(1, 7)
+        ])
         payload = canonical_site_payload(db.row, site_url="https://3dprinthub.ir")
         self.assertEqual(len(payload["media_urls"]), 6)
         self.assertTrue(payload["tracking_url"].startswith("https://3dprinthub.ir/"))

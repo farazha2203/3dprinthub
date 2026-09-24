@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
+
+from PIL import Image
 
 from app.buffer_publish import BufferConfig, publish_product
 
@@ -25,6 +30,28 @@ class _DB:
             "image_alt_texts_json": json.dumps(["3D printed product"]),
             "local_category_slug": "toys-games",
         }
+        self._temp = tempfile.TemporaryDirectory()
+        local_dir = Path(self._temp.name) / "product"
+        image_dir = local_dir / "images"
+        seo_dir = local_dir / "seo_images"
+        image_dir.mkdir(parents=True)
+        seo_dir.mkdir(parents=True)
+        source = image_dir / "story-demo.webp"
+        final = seo_dir / "story-demo.webp"
+        Image.new("RGB", (320, 240), (80, 120, 160)).save(source, "WEBP")
+        Image.new("RGB", (320, 240), (80, 120, 160)).save(final, "WEBP")
+        digest = hashlib.sha256(final.read_bytes()).hexdigest()
+        source_url = "local://story-demo.webp"
+        self.row["local_dir"] = str(local_dir)
+        self.row["images_json"] = json.dumps([source_url])
+        self.row["selected_images_json"] = json.dumps([source_url])
+        self.row["primary_image_url"] = source_url
+        self.row["image_metadata_json"] = json.dumps([{
+            "source_url": source_url,
+            "seo_filename": "story-demo.webp",
+            "final_local_file": str(final),
+            "final_sha256": digest,
+        }])
 
     def product(self, product_id):
         return self.row if int(product_id) == 11 else None

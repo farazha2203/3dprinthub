@@ -516,17 +516,15 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(page.workspace_tabs.count(), 3)
             self.assertEqual(page.workspace_tabs.currentIndex(), 0)
             self.assertEqual(page.queue_views.count(), 2)
-            self.assertEqual(page.queue_gallery.count(), 1)
-            self.assertEqual(page.queue_table.rowCount(), 1)
-            text = page.queue_gallery.item(0).text()
-            self.assertIn("🖼 1", text)
-            self.assertIn("توضیح محصول دریافت‌شده", text)
+            # O2D accepted contract: once this identity is a Product it must
+            # disappear from Add/Crawl inventory and remain update-only.
+            self.assertEqual(page.queue_gallery.count(), 0)
+            self.assertEqual(page.queue_table.rowCount(), 0)
             self.assertEqual(
-                int(page._queue_rows_by_id[
-                    int(page.queue_gallery.item(0).data(Qt.ItemDataRole.UserRole))
-                ]["product_id"]),
-                product_id,
+                self.kernel.acquisition.queue_count("", "all"),
+                0,
             )
+            self.assertIsNotNone(self.db.product(product_id))
         finally:
             page.close()
 

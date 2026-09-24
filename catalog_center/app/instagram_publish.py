@@ -139,6 +139,9 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
     if not media:
         raise RuntimeError("هیچ تصویر عمومی HTTPS تأییدشده‌ای برای Instagram وجود ندارد.")
 
+    from .phase50_a2w_media_sync import align_public_media_to_selected
+    media = align_public_media_to_selected(row, media)
+
     public_videos = ack.get("public_videos")
     if not isinstance(public_videos, list):
         public_videos = ack.get("videos")

@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_NEXT
+Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 Date: 2026-09-24
-Branch: `wip/phase50-a2z-o2d-product-identity-dedup-20260924`
+Branch: `wip/phase50-a2z-o2e-media-truth-20260924`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -34,6 +34,15 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
    - Product image refresh must reload the exact canonical Local DB/files image set for that Product.
    - Product UI preview/selection and Instagram media preparation must resolve from the same canonical image authority.
    - Repair stale/missing mapping without substituting unrelated Product media.
+2G. **O2G - Search Crawl Pagination / Target Count**
+   - Requested Product count must drive lazy/infinite-scroll depth instead of using a fixed preview depth.
+   - MakerWorld search must continue toward the requested target (for example 200/300) until target reached or listing exhaustion is verified.
+   - Duplicate/consumed Product identities remain excluded by O2D and must not count as new target progress.
+2H. **O2H - Hard Delete Broken Crawl Identity**
+   - Explicit Delete must be distinct from Reject.
+   - Hard delete is allowed only for Crawl identities that do not map to a Product.
+   - Remove the selected discovery row, candidate row, preview/cache and verified candidate-derived local data for that identity after fresh rollback.
+   - Product-backed identity fails closed and must use the Product-specific update/delete flow.
 2F. **O2F - Instagram Disclosure / Product Details / Story Link**
    - Verify the current Buffer/Meta provider API capabilities before implementation.
    - Apply the supported AI-generated-content disclosure/label contract to both Feed and Story where the provider exposes it.
@@ -159,5 +168,16 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Canonical duplicate groups remain zero for `(source_code, external_id)` and normalized URL. Product table visibly exposes canonical identity such as `makerworld:1298362`.
 - Runtime Add Products smoke loaded 100 rows with mapped=0. Before/after Product/Crawl/History digest remained exactly `870c0286f998eec21fcfea3728b5a3c924cf4e1c4791d353ebcb9a570f2339c3`; acceptance caused no canonical mutation.
 
+## O2E implementation — LOCAL_TESTED
+- One selected-media authority now spans Product Editor and Social: `selected_images_json` plus exact files contained in the current Product `local_dir`.
+- Normal Product Gallery excludes historical/refetch sibling folders. Trusted unregistered files physically inside the current Product folder remain visible for operator selection, but do not become Social authority until persisted.
+- Selected Product cards use the same exact finalized Local file resolver used by Social.
+- Product Wizard Refresh is local-truth/compare-only and no longer injects Site media into Product DB; explicit Source recovery remains separate.
+- Social public media is aligned one-to-one to selected Local images by SEO/final basename or finalized SHA path and fails closed on stale/missing/ambiguous ACK media.
+- Truth Sync reports selected-local count and SHA/mapping errors.
+- Tests: direct baseline 10/10; O2E changed/direct 14/14; fixture/legacy-contract 20/20; broad Image/Product/Social 99/99 PASS; compileall, Qt VerifyOnly, Django check, no migration drift and diff-check PASS.
+- Real read-only audit: 543 Products have selected images; 93 exact selected-local mappings PASS; 450 legacy Products lack exact Local files and were not bulk-mutated. #625 and #628 exact selected Local/Social parity PASS. Audit digest unchanged at `1129de23233309efd5412f7d47ab286885bfa737586267459d97e68374c85a24`.
+- Windows/Catalog-only delta; no Server migration or Production deploy is required.
+
 ## Exact next
-O2E Product Media Truth / Refresh / Instagram Image Parity -> inventory Product refresh/image display/Instagram media resolvers -> freeze one canonical Local DB/files image authority -> make Refresh reload the exact selected Product image set -> make Instagram consume the same current selected authority -> block unrelated/stale media fallback -> changed-condition and related Image/Product/Social regression -> fresh Catalog backup -> commit/push -> Local=Remote -> exact-SHA runtime smoke. O2F disclosure/product-links/Story-link follows O2E, then O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
+O2E final staged allowlist -> source/docs commit+push -> Local=Remote -> fresh Catalog rollback/integrity -> ensure acquisition is quiescent -> exact-SHA Qt VerifyOnly -> one Catalog Center cutover -> real Product Wizard/Refresh + #625/#628 selected-local/Social parity smoke -> no-mutation digest -> docs-only O2E ACCEPTED closure. Then O2G target-aware search Crawl pagination -> O2H guarded hard delete -> O2F Instagram disclosure/source+order links/Story link -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.

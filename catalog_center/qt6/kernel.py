@@ -1427,6 +1427,110 @@ class ImageCore:
             )
         return output
 
+    def current_local_items(self, product_id: int) -> list[dict[str, Any]]:
+        """Return only canonical media physically owned by the current Product.
+
+        Historical/refetch sibling folders remain available to explicit recovery
+        flows, but never participate in normal Product Editor/Social truth.
+        Selected rows use the same exact Local file authority as Social.
+        """
+        row_obj = self.db.product(int(product_id))
+        if row_obj is None:
+            return []
+        data = dict(row_obj)
+        raw_root = str(data.get("local_dir") or "").strip()
+        if not raw_root:
+            return []
+        try:
+            local_dir = Path(raw_root).resolve()
+        except Exception:
+            return []
+        if not local_dir.is_dir():
+            return []
+
+        canonical = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("images_json"))
+            if str(value or "").strip()
+        ]
+        selected = [
+            str(value or "").strip()
+            for value in self._json_list(data.get("selected_images_json"))
+            if str(value or "").strip()
+        ]
+        canonical_keys = {
+            self._url_asset_key(value): index
+            for index, value in enumerate(canonical)
+            if self._url_asset_key(value)
+        }
+        selected_keys = {
+            self._url_asset_key(value): index
+            for index, value in enumerate(selected)
+            if self._url_asset_key(value)
+        }
+
+        output: list[dict[str, Any]] = []
+        by_key: dict[str, dict[str, Any]] = {}
+        for raw in self.local_items(int(product_id)):
+            item = dict(raw)
+            if bool(item.get("display_only")):
+                continue
+            key = self._url_asset_key(str(item.get("url") or ""))
+            if not key:
+                continue
+            try:
+                path = Path(str(item.get("path") or "")).resolve()
+                path.relative_to(local_dir)
+            except Exception:
+                continue
+            if not path.is_file():
+                continue
+            by_key.setdefault(key, item)
+
+        try:
+            from app.phase50_a2w_media_sync import selected_local_media
+            exact_selected = {
+                self._url_asset_key(str(item.get("source_url") or "")): dict(item)
+                for item in selected_local_media(data)
+            }
+        except RuntimeError:
+            exact_selected = {}
+
+        for url in canonical:
+            key = self._url_asset_key(url)
+            item = dict(by_key.get(key) or {})
+            if not item:
+                continue
+            exact = exact_selected.get(key)
+            if exact:
+                path = Path(str(exact.get("local_path") or "")).resolve()
+                if path.is_file():
+                    item["path"] = str(path)
+                    item["filename"] = path.name
+            output.append(item)
+
+        # Trusted files physically inside this Product's current local_dir are
+        # still shown so the operator can select/promote them. They are not
+        # Social authority until Stage 3 persists them into images_json and
+        # selected_images_json. Historical/refetch sibling folders were
+        # filtered above by the local_dir containment gate.
+        for key, raw in by_key.items():
+            if key in canonical_keys:
+                continue
+            output.append(dict(raw))
+
+        def order_key(item: dict[str, Any]) -> tuple[int, int, int]:
+            key = self._url_asset_key(str(item.get("url") or ""))
+            if key in selected_keys:
+                return (0, selected_keys[key], int(item.get("slot") or 0))
+            return (
+                1,
+                canonical_keys.get(key, 10_000),
+                int(item.get("slot") or 0),
+            )
+
+        return sorted(output, key=order_key)
+
     def _assert_images_editable(self, product_id: int):
         row = self.db.product(int(product_id))
         if row is None:
