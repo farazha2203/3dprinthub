@@ -1,0 +1,18 @@
+{
+  "asset_revision": "6f16366e2f347746",
+  "feed_sha256": [
+    "5d21d8ba5eb77942a0d50169b658e34519624df4f02ff41ff83d27c3c8d4705f",
+    "26313ca407d3c62b346ddbb439f1da9fb8a16f5c9d8fd45d8f3b17ceec5d7a64",
+    "3d5937bfbd95fad4375e6fb4ca708dd35f8ff609579bedc07e1f8299f5b4bd9a"
+  ],
+  "product_id": 301,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 36,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://3dprinthub.ir/media/p/301/101b628c4c22/christmas-tree-minimalistic-japandi-decor-3d-print-01.webp",
+    "https://3dprinthub.ir/media/p/301/498a915377fc/christmas-tree-minimalistic-japandi-decor-3d-print-02.webp",
+    "https://3dprinthub.ir/media/p/301/4dba17efd47c/christmas-tree-minimalistic-japandi-decor-3d-print-03.webp"
+  ],
+  "story_sha256": ""
+}
