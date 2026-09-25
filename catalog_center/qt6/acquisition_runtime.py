@@ -5,6 +5,8 @@ import hashlib
 import io
 import json
 import re
+import shutil
+import sqlite3
 from pathlib import Path
 from typing import Any, Callable
 from urllib import request as urlrequest
@@ -2413,6 +2415,202 @@ def run_single(db, **kwargs) -> dict[str, Any]:
     return asyncio.run(run_single_async(db, **kwargs))
 
 
+def _deep_repair_token() -> str:
+    value = re.sub(r"[^0-9]", "", str(utc_now() or ""))
+    return (value[:20] or hashlib.sha1(str(utc_now()).encode("utf-8")).hexdigest()[:20])
+
+
+def _repair_backup_root(product_id: int, external_id: str, token: str) -> Path:
+    safe_external = re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "_",
+        str(external_id or "product"),
+    ).strip("._-")[:80] or "product"
+    return (
+        data_root()
+        / "repair_backups"
+        / f"product_{int(product_id)}_{safe_external}_{token}"
+    )
+
+
+def _deep_repair_catalog_backup(
+    db,
+    *,
+    product_id: int,
+    external_id: str,
+    token: str,
+) -> dict[str, Any]:
+    """Create and verify the mandatory O3 Catalog rollback before mutation."""
+    source_path = Path(str(getattr(db, "path", "") or ""))
+    if not source_path.is_file():
+        raise RuntimeError("Deep repair blocked: canonical Catalog SQLite path is unavailable.")
+    root = _repair_backup_root(product_id, external_id, token)
+    root.mkdir(parents=True, exist_ok=False)
+    backup_path = root / "catalog-before-deep-repair.sqlite3"
+    dest = sqlite3.connect(str(backup_path))
+    try:
+        db.conn.backup(dest)
+        dest.commit()
+        check = str(dest.execute("PRAGMA quick_check").fetchone()[0])
+    finally:
+        dest.close()
+    if check.casefold() != "ok":
+        raise RuntimeError(
+            f"Deep repair blocked: rollback Catalog quick_check failed: {check}"
+        )
+    source_check = str(db.conn.execute("PRAGMA quick_check").fetchone()[0])
+    if source_check.casefold() != "ok":
+        raise RuntimeError(
+            f"Deep repair blocked: source Catalog quick_check failed: {source_check}"
+        )
+    sha = hashlib.sha256(backup_path.read_bytes()).hexdigest()
+    if not sha or backup_path.stat().st_size <= 0:
+        raise RuntimeError("Deep repair blocked: rollback Catalog backup is empty.")
+    return {
+        "root": str(root),
+        "catalog": str(backup_path),
+        "sha256": sha,
+        "quick_check": check,
+        "source_quick_check": source_check,
+    }
+
+
+def _protected_product_authority(row: dict[str, Any]) -> dict[str, Any]:
+    """Fields a Source repair is never allowed to rewrite."""
+    fixed = {
+        "server_id",
+        "server_status",
+        "server_ack_json",
+        "server_product_id",
+        "server_product_revision",
+        "server_slider_id",
+        "server_slider_revision",
+        "server_updated_at",
+        "last_synced_at",
+        "last_synced_source_hash",
+        "published_at",
+        "product_sync_error",
+    }
+    return {
+        key: row.get(key)
+        for key in row
+        if key in fixed or str(key).startswith("server_")
+    }
+
+
+def _product_receipt_snapshot(db, product_id: int) -> list[dict[str, Any]]:
+    try:
+        rows = db.conn.execute(
+            "SELECT * FROM sync_receipts WHERE product_id=? ORDER BY id",
+            (int(product_id),),
+        ).fetchall()
+    except Exception:
+        return []
+    return [dict(row) for row in rows]
+
+
+def _operator_owned_local_files(row: dict[str, Any]) -> list[str]:
+    """Return Product-local operator media that deep repair must not relocate blindly."""
+    try:
+        from app.phase49_3c_image_pipeline import strict_local_image
+    except Exception:
+        return []
+    selected = {
+        str(value or "").strip()
+        for value in _json_urls(row.get("selected_images_json"))
+        if str(value or "").strip()
+    }
+    screenshot_path = str(row.get("source_page_screenshot_path") or "").strip()
+    screenshot_name = Path(screenshot_path).name.casefold() if screenshot_path else ""
+    candidates = list(dict.fromkeys([
+        *_json_urls(row.get("images_json")),
+        *_json_urls(row.get("selected_images_json")),
+    ]))
+    output: list[str] = []
+    for url in candidates:
+        value = str(url or "").strip()
+        if not value.startswith("local://"):
+            continue
+        name = value.split("local://", 1)[1].replace("\\", "/").rsplit("/", 1)[-1]
+        folded = name.casefold()
+        operator_owned = (
+            value in selected
+            or folded.startswith(("manual-", "manual_"))
+            or folded.startswith("source-page-screenshot-")
+            or (screenshot_name and folded == screenshot_name)
+        )
+        if not operator_owned:
+            continue
+        resolved = str(strict_local_image(row, value) or "").strip()
+        if resolved and Path(resolved).is_file() and resolved not in output:
+            output.append(resolved)
+    if screenshot_path:
+        path = Path(screenshot_path)
+        if path.is_file():
+            try:
+                local_root = Path(str(row.get("local_dir") or "")).resolve()
+                resolved = path.resolve()
+                resolved.relative_to(local_root)
+            except Exception:
+                pass
+            else:
+                value = str(resolved)
+                if value not in output:
+                    output.append(value)
+    return output
+
+
+def _deep_repair_quarantine_old_local(
+    old_local_dir: str,
+    *,
+    source_code: str,
+    external_id: str,
+    product_id: int,
+    token: str,
+    new_output: Path,
+) -> dict[str, str]:
+    """Move the former active Product cache out of the live collected namespace.
+
+    This is intentionally narrower than a recursive Product-source cleanup: only
+    the exact former ``local_dir`` is eligible, and only when it belongs to the
+    current Catalog data root and matches this Product identity. Historical
+    sibling folders remain untouched unless they were the active local_dir.
+    """
+    raw = str(old_local_dir or "").strip()
+    if not raw:
+        return {"status": "absent", "from": "", "to": ""}
+    old = Path(raw)
+    if not old.exists():
+        return {"status": "missing", "from": str(old), "to": ""}
+    try:
+        old_resolved = old.resolve()
+        new_resolved = Path(new_output).resolve()
+        collected_root = (data_root() / "collected" / source_code).resolve()
+        old_resolved.relative_to(collected_root)
+    except Exception:
+        return {"status": "skipped_outside_current_data_root", "from": str(old), "to": ""}
+    if old_resolved == new_resolved:
+        return {"status": "same_as_new", "from": str(old_resolved), "to": ""}
+    name = old_resolved.name
+    allowed = (
+        name == external_id
+        or name.startswith(f"{external_id}_refresh_")
+        or name.startswith(f"{external_id}_refetch_")
+        or name.startswith(f"{external_id}_bulk_refetch_")
+        or name.startswith(f"{external_id}_deep_repair_")
+    )
+    if not allowed:
+        return {"status": "skipped_unrecognized_identity_folder", "from": str(old_resolved), "to": ""}
+    quarantine = _repair_backup_root(
+        int(product_id), external_id, token
+    ) / "old_local"
+    quarantine.parent.mkdir(parents=True, exist_ok=True)
+    if quarantine.exists():
+        raise RuntimeError("Deep repair quarantine target already exists.")
+    shutil.move(str(old_resolved), str(quarantine))
+    return {"status": "quarantined", "from": str(old_resolved), "to": str(quarantine)}
+
+
 async def refetch_product_from_source_async(
     db,
     product_id: int,
@@ -2422,8 +2620,15 @@ async def refetch_product_from_source_async(
     progress: Progress = None,
     preferred_method: str = "rich",
     adaptive_fallback: bool = False,
+    deep_repair: bool = False,
 ) -> dict[str, Any]:
-    """Re-fetch source facts/images without overwriting operator work."""
+    """Re-fetch Source facts/images without overwriting operator work.
+
+    ``deep_repair`` is the O3 fail-closed path for a broken legacy Product. It
+    starts from a unique empty acquisition folder, verifies the Source identity
+    again before DB mutation, preserves Site/receipt authority, and moves only
+    the former active Product cache into a rollback quarantine after success.
+    """
     row = db.product(int(product_id))
     if row is None:
         raise RuntimeError("محصول پیدا نشد.")
@@ -2438,11 +2643,45 @@ async def refetch_product_from_source_async(
 
     image_limit = normalize_image_limit(image_limit)
     external_id = str(old.get("external_id") or "").strip()
+    derived_external_id, _ = _product_identity(source_cfg, source_url)
     if not external_id:
-        external_id, _ = _product_identity(source_cfg, source_url)
+        external_id = derived_external_id
+    elif deep_repair and derived_external_id != external_id:
+        raise RuntimeError(
+            "Deep repair blocked: Product Source URL does not match the persisted external identity."
+        )
 
-    _emit(progress, 3, "بازیابی امن داده و تصاویر از صفحه اصلی محصول…")
-    output = data_root() / "collected" / source_code / f"{external_id}_refresh_latest"
+    repair_token = _deep_repair_token() if deep_repair else ""
+    if deep_repair:
+        operator_local_files = _operator_owned_local_files(old)
+        if operator_local_files:
+            raise RuntimeError(
+                "Deep repair blocked: operator-owned Product-local media exists. "
+                "Use normal Source recovery or explicitly export/clear that manual media first."
+            )
+        authority_before = _protected_product_authority(old)
+        receipts_before = _product_receipt_snapshot(db, int(product_id))
+        rollback = _deep_repair_catalog_backup(
+            db,
+            product_id=int(product_id),
+            external_id=external_id,
+            token=repair_token,
+        )
+        output = (
+            data_root()
+            / "collected"
+            / source_code
+            / f"{external_id}_deep_repair_{repair_token}"
+        )
+        if output.exists():
+            raise RuntimeError("Deep repair fresh output already exists; refusing stale reuse.")
+        _emit(progress, 3, "Deep repair: verified rollback, now acquiring Source into an empty Product folder…")
+    else:
+        authority_before = {}
+        receipts_before = []
+        rollback = {}
+        _emit(progress, 3, "بازیابی امن داده و تصاویر از صفحه اصلی محصول…")
+        output = data_root() / "collected" / source_code / f"{external_id}_refresh_latest"
 
     def image_progress(saved: int, target: int, _image_url: str) -> None:
         _emit(
@@ -2451,41 +2690,56 @@ async def refetch_product_from_source_async(
             f"بازیابی تصویر {saved}/{target}",
         )
 
-    if adaptive_fallback:
-        result = await _collect_one_adaptive(
-            db,
-            source_cfg,
-            external_id=external_id,
-            url=source_url,
-            image_limit=image_limit,
-            local_dir=output,
-            preferred_method=preferred_method,
-            download_images=bool(download_images),
-            download_files=False,
-            same_domain_only=True,
-            image_progress=image_progress,
-            progress=progress,
-            operation="source_refetch",
-            persist=False,
-        )
-    else:
-        result = await _collect_one(
-            db,
-            source_cfg,
-            external_id=external_id,
-            url=source_url,
-            image_limit=image_limit,
-            local_dir=output,
-            download_images=bool(download_images),
-            download_files=False,
-            same_domain_only=True,
-            image_progress=image_progress,
-            persist=False,
-        )
+    try:
+        if adaptive_fallback:
+            result = await _collect_one_adaptive(
+                db,
+                source_cfg,
+                external_id=external_id,
+                url=source_url,
+                image_limit=image_limit,
+                local_dir=output,
+                preferred_method=preferred_method,
+                download_images=bool(download_images),
+                download_files=False,
+                same_domain_only=True,
+                image_progress=image_progress,
+                progress=progress,
+                operation="source_deep_repair" if deep_repair else "source_refetch",
+                persist=False,
+            )
+        else:
+            result = await _collect_one(
+                db,
+                source_cfg,
+                external_id=external_id,
+                url=source_url,
+                image_limit=image_limit,
+                local_dir=output,
+                download_images=bool(download_images),
+                download_files=False,
+                same_domain_only=True,
+                image_progress=image_progress,
+                persist=False,
+            )
 
-    fresh = dict(result.get("source_payload") or {})
-    if not fresh:
-        raise RuntimeError("Source recovery returned no source payload.")
+        fresh = dict(result.get("source_payload") or {})
+        if not fresh:
+            raise RuntimeError("Source recovery returned no source payload.")
+        if deep_repair:
+            fresh_url = str(fresh.get("source_url") or source_url).strip()
+            fresh_external_id, _ = _product_identity(source_cfg, fresh_url)
+            explicit_fresh_id = str(fresh.get("external_id") or "").strip()
+            if fresh_external_id != external_id or (
+                explicit_fresh_id and explicit_fresh_id != external_id
+            ):
+                raise RuntimeError(
+                    "Deep repair blocked: refreshed Source identity does not match the existing Product."
+                )
+    except Exception:
+        if deep_repair and output.exists():
+            shutil.rmtree(output, ignore_errors=True)
+        raise
 
     mapped_urls = _page_extract_image_urls(
         output,
@@ -2527,6 +2781,71 @@ async def refetch_product_from_source_async(
         )
         result["mapped_image_urls"] = len(mapped_urls)
 
+    if deep_repair:
+        try:
+            fresh_local_dir = Path(str(fresh.get("local_dir") or "")).resolve()
+            expected_output = output.resolve()
+        except Exception:
+            fresh_local_dir = Path()
+            expected_output = output.resolve()
+        if fresh_local_dir != expected_output:
+            shutil.rmtree(output, ignore_errors=True)
+            raise RuntimeError(
+                "Deep repair blocked: refreshed payload local_dir escaped the fresh Product folder."
+            )
+
+        fresh_all = [
+            str(value or "").strip()
+            for value in _json_urls(fresh.get("images_json"))
+            if str(value or "").strip()
+        ]
+        fresh_by_asset: dict[str, str] = {}
+        for value in fresh_all:
+            if value.startswith(("http://", "https://")):
+                parts = urlsplit(value)
+                key = f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+            else:
+                key = value
+            fresh_by_asset.setdefault(key, value)
+
+        remapped_selected: list[str] = []
+        missing_selected: list[str] = []
+        for value in _json_urls(old.get("selected_images_json")):
+            selected = str(value or "").strip()
+            if not selected:
+                continue
+            if selected.startswith(("http://", "https://")):
+                parts = urlsplit(selected)
+                key = f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+            else:
+                key = selected
+            mapped = fresh_by_asset.get(key, "")
+            if not mapped:
+                missing_selected.append(selected)
+                continue
+            if mapped not in remapped_selected:
+                remapped_selected.append(mapped)
+        if missing_selected:
+            shutil.rmtree(output, ignore_errors=True)
+            raise RuntimeError(
+                "Deep repair blocked: refreshed Source no longer contains all operator-selected media."
+            )
+        if remapped_selected:
+            fresh["selected_images_json"] = json.dumps(
+                remapped_selected,
+                ensure_ascii=False,
+            )
+            old_primary = str(old.get("primary_image_url") or "").strip()
+            if old_primary.startswith(("http://", "https://")):
+                parts = urlsplit(old_primary)
+                primary_key = f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+            else:
+                primary_key = old_primary
+            fresh["primary_image_url"] = (
+                fresh_by_asset.get(primary_key)
+                or remapped_selected[0]
+            )
+
     fresh["last_refetched_at"] = utc_now()
     fresh["source_state"] = "active"
     fresh["fingerprint"] = product_fingerprint(
@@ -2548,28 +2867,95 @@ async def refetch_product_from_source_async(
 
     diff = product_diff(old, fresh)
     merged = merge_refetch(row, fresh)
+    if deep_repair:
+        # Source repair may mark the Product stale/needs-update, but it must not
+        # mint, clear, or rewrite any existing Site authority.
+        merged.update(authority_before)
     allowed = set(row.keys()) - {"id", "created_at", "updated_at"}
     db.update_product(
         int(product_id),
         {key: value for key, value in merged.items() if key in allowed},
     )
     after = dict(db.product(int(product_id)))
+
+    quarantine = {"status": "not_requested", "from": "", "to": ""}
+    authority_preserved = True
+    receipts_preserved = True
+    if deep_repair:
+        authority_preserved = _protected_product_authority(after) == authority_before
+        receipts_preserved = _product_receipt_snapshot(db, int(product_id)) == receipts_before
+        if not authority_preserved or not receipts_preserved:
+            # This should be unreachable because the repair path never writes
+            # receipts and explicitly restores Site fields. Restore the Product
+            # row immediately rather than accepting a partial authority drift.
+            restore_values = {
+                key: value
+                for key, value in old.items()
+                if key in allowed
+            }
+            db.update_product(int(product_id), restore_values)
+            shutil.rmtree(output, ignore_errors=True)
+            raise RuntimeError(
+                "Deep repair blocked: Site/receipt authority changed during repair."
+            )
+        try:
+            quarantine = _deep_repair_quarantine_old_local(
+                str(old.get("local_dir") or ""),
+                source_code=source_code,
+                external_id=external_id,
+                product_id=int(product_id),
+                token=repair_token,
+                new_output=output,
+            )
+        except Exception as exc:
+            # The Product already points at verified fresh data; failing to move
+            # stale inactive bytes must not roll it back to the broken state.
+            quarantine = {
+                "status": "quarantine_error",
+                "from": str(old.get("local_dir") or ""),
+                "to": "",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+
+    history_event = (
+        "source_product_deep_repair" if deep_repair else "source_product_recovery"
+    )
+    history_note = diff_summary(diff)
+    if deep_repair:
+        history_note = (
+            f"{history_note} | same_identity={source_code}:{external_id} | "
+            f"site_authority_preserved={authority_preserved} | "
+            f"receipts_preserved={receipts_preserved} | "
+            f"old_local={quarantine.get('status')}"
+        )
     db.save_history(
         int(product_id),
-        "source_product_recovery",
+        history_event,
         old,
         after,
-        diff_summary(diff),
+        history_note,
     )
     _emit(
         progress,
         100,
-        f"بازیابی کامل شد • روش {result.get('selected_method') or preferred_method} • "
-        f"{result.get('images_saved', 0)}/{image_limit} عکس محلی",
+        (
+            f"Deep repair complete • same Product {source_code}:{external_id} • "
+            f"{result.get('images_saved', 0)}/{image_limit} local images"
+            if deep_repair
+            else f"بازیابی کامل شد • روش {result.get('selected_method') or preferred_method} • "
+                 f"{result.get('images_saved', 0)}/{image_limit} عکس محلی"
+        ),
     )
     return {
         "product_id": int(product_id),
         "changed": bool(diff) or str(old.get("local_dir") or "") != str(output),
+        "deep_repair": bool(deep_repair),
+        "repair_token": repair_token,
+        "quarantine": quarantine,
+        "rollback": dict(rollback),
+        "site_authority_preserved": bool(authority_preserved),
+        "receipts_preserved": bool(receipts_preserved),
+        "source_identity": f"{source_code}:{external_id}",
         "diff": diff,
         "images_found": int(result.get("images_found") or 0),
         "images_saved": int(result.get("images_saved") or 0),
@@ -2670,6 +3056,22 @@ def refetch_product_from_source(db, product_id: int, **kwargs) -> dict[str, Any]
             **kwargs,
         )
     )
+
+
+def deep_repair_product_from_source(db, product_id: int, **kwargs) -> dict[str, Any]:
+    options = dict(kwargs)
+    options["deep_repair"] = True
+    options.setdefault("adaptive_fallback", True)
+    options.setdefault("download_images", True)
+    options.setdefault("preferred_method", "rich")
+    return asyncio.run(
+        refetch_product_from_source_async(
+            db,
+            int(product_id),
+            **options,
+        )
+    )
+
 
 async def recover_product_images_async(
     db,

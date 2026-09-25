@@ -234,3 +234,17 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 
 ## Exact next
 O2F source/tests/checkpoint docs are GitHub-exact at `81ceedad5969fd0dfb832ad26f1287ca0b3dc374`; Local=Remote. Exact-SHA Qt runtime acceptance PASS. Real read-only Product #140 proves selected=1 / all-current Feed=3 / derivative=3 / ALT=3 with canonical logical digest unchanged at `6c7b46107c9d77fba16c8460229b0697fa32f35ac0f00634d450e237c4fa18db`. No arbitrary external Feed was created. Real clickable Story acceptance remains externally blocked only by Buffer `hasActiveMemberDevice=false`. Exact development next: O3 guarded deep reset/refetch/remap of legacy broken Product/media state; O4 follows after O3.
+
+## O3 implementation checkpoint - LOCAL_TESTED
+- Added explicit confirmed `??????? ???? ?? ???` Product action; normal Source recovery remains separate.
+- Preflight requires Product Source URL to resolve to persisted external identity and blocks any operator-owned Product-local media.
+- Every deep repair creates and verifies a full Catalog SQLite rollback before fetch/mutation; backup and old-local quarantine share one per-repair root.
+- Fresh acquisition runs in a unique empty same-identity folder. Refreshed Source identity and `local_dir` are verified before merge. Existing selected Source media is remapped by stable URL asset identity and missing selection fails closed.
+- Product ID/operator decisions/Site `server_*` authority/sync receipts remain exact. Only the former active same-identity folder under current Catalog data root may be moved to rollback quarantine after success. Compatibility/external paths are never deletion targets.
+- Acquisition failure deletes only its unique partial fresh folder and leaves Product DB/old Local untouched; rollback remains available.
+- Verification: O3 focused 6/6 PASS; related Acquisition/Crawl/O2D/O2E/O2H/Social 87/87 PASS; Phase50 broad 122/122 PASS; top-level function-loss audit PASS; py_compile/compileall, pip check, diff-check, Qt VerifyOnly, Django check and migration drift PASS. Known warnings only.
+- Production/Host changed = NO; Django migration = NO. Selective Production `2b48a593...` is verified ancestor of current forward lineage.
+- First related gate exposed stale pre-O2H label expectation only; corrected test contract is documented as ERR-49-249.
+
+### O3 exact next
+Final diff/staging review -> commit/push O3 source/tests/checkpoint docs -> Local=Remote -> fresh canonical Catalog rollback/integrity -> exact-SHA Qt runtime -> isolated rollback-clone real Product deep-repair acceptance proving same identity, verified rollback, fresh media remap, bounded old-local handling and unchanged Site/receipt authority -> O3 closure docs. Do not use canonical Catalog as the first destructive acceptance target. Then O4 Delete Semantics Repair.

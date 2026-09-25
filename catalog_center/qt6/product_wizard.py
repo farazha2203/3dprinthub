@@ -450,6 +450,8 @@ class ProductWizardPage(QWidget):
         truth_refresh = QPushButton("رفرش رسانه و وضعیت")
         truth_refresh.setProperty("primary", True)
         recover = QPushButton("دریافت جدید از منبع")
+        deep_repair = QPushButton("بازیابی عمیق از صفر")
+        deep_repair.setProperty("danger", True)
         self.product_video_btn = QPushButton("🎬 دریافت ویدئو از محصول")
         self.product_video_btn.setProperty("success", True)
 
@@ -473,6 +475,11 @@ class ProductWizardPage(QWidget):
         recover.setToolTip(
             "دریافت داده و عکس جدید از لینک منبع محصول؛ تصمیم‌های اپراتور "
             "مثل قیمت/Profile/Filament/SEO/انتشار حفظ می‌شوند."
+        )
+        deep_repair.setToolTip(
+            "برای محصول خراب، Source را در پوشه خالی از صفر می‌گیرد؛ "
+            "هویت Product/Site/receipt و تصمیم‌های اپراتور حفظ می‌شود و داده Local قبلی "
+            "فقط پس از موفقیت به rollback quarantine منتقل می‌شود."
         )
         self.product_video_btn.setToolTip(
             "Source همین Product را تازه می‌خواند، ویدئوی عمومی مستقیم یا GIF متحرک "
@@ -498,6 +505,7 @@ class ProductWizardPage(QWidget):
         screenshot.clicked.connect(self._capture_product_screenshot)
         truth_refresh.clicked.connect(self._refresh_product_media_truth)
         recover.clicked.connect(self._recover_product_images)
+        deep_repair.clicked.connect(self._deep_repair_product)
         self.product_video_btn.clicked.connect(self._download_product_video)
 
         recover_count_label = QLabel("تعداد")
@@ -512,6 +520,7 @@ class ProductWizardPage(QWidget):
             truth_refresh,
             self.product_video_btn,
             recover,
+            deep_repair,
         )
         compact_widgets = (
             *self.image_stage3_toolbar_buttons,
@@ -525,11 +534,12 @@ class ProductWizardPage(QWidget):
             widget.setMinimumHeight(26)
             widget.setMaximumHeight(26)
 
-        for button in self.image_stage3_toolbar_buttons[:-1]:
+        for button in self.image_stage3_toolbar_buttons[:-2]:
             control_layout.addWidget(button)
         control_layout.addWidget(recover_count_label)
         control_layout.addWidget(self.image_recover_limit)
         control_layout.addWidget(recover)
+        control_layout.addWidget(deep_repair)
         control_layout.addStretch(1)
         layout.addWidget(control)
 
@@ -2304,6 +2314,30 @@ class ProductWizardPage(QWidget):
         self._start_image_task(
             "بازیابی امن داده و تصاویر از لینک محصول…",
             lambda progress: self.kernel.acquisition.recover_product_images(
+                self.product_id,
+                image_limit=limit,
+                progress=progress,
+            ),
+        )
+
+    def _deep_repair_product(self) -> None:
+        if self.product_id is None:
+            return
+        answer = QMessageBox.question(
+            self,
+            "بازیابی عمیق محصول",
+            "این عملیات Source همین Product را از صفر در پوشه خالی می‌خواند.\n"
+            "هویت Product و Site/receipt حفظ می‌شود؛ داده Local فعال قبلی فقط پس از موفقیت به rollback quarantine منتقل می‌شود.\n\n"
+            "ادامه می‌دهید؟",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        limit = self.image_recover_limit.value()
+        self._start_image_task(
+            "بازیابی عمیق و same-identity از Source…",
+            lambda progress: self.kernel.acquisition.deep_repair_product(
                 self.product_id,
                 image_limit=limit,
                 progress=progress,

@@ -1,3 +1,11 @@
+## 2026-09-25 - Phase50.A.2Z-O3 guarded same-identity deep Product repair
+- Added a distinct confirmed deep-repair Product action; normal non-destructive Source recovery remains unchanged.
+- Deep repair verifies Source identity, blocks operator-owned local media, creates/validates a full Catalog SQLite rollback, acquires into a unique empty folder, and revalidates refreshed identity/local path before mutation.
+- Existing selected Source media is remapped by stable asset identity and repair fails closed if operator selection would disappear.
+- Product ID, editorial/commercial fields, Site/server identity and sync receipts are preserved; only the former active same-identity Local folder inside the current Catalog data root is moved to rollback quarantine after success.
+- Failed fresh acquisition cleans only its unique partial fresh folder and leaves the old Product/Local state untouched.
+- O3 tests: focused 6/6, related Acquisition/Crawl/Social 87/87, Phase50 broad 122/122; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+
 ## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-current media, AI disclosure and link capability
 - Proved Buffer is not dropping carousel assets; live sent Posts preserve multiple provider assets.
 - Added exact all-current Product-local media resolution for Instagram Feed using `images_json`, bounded by current `local_dir` and finalized SHA evidence.

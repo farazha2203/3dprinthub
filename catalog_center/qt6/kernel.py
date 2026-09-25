@@ -3192,6 +3192,23 @@ class AcquisitionCore:
             progress=progress,
         )
 
+    def deep_repair_product(
+        self,
+        product_id: int,
+        *,
+        image_limit: int = 10,
+        progress=None,
+    ) -> dict[str, Any]:
+        from .acquisition_runtime import deep_repair_product_from_source
+
+        self.reset_stop()
+        return deep_repair_product_from_source(
+            self.db,
+            int(product_id),
+            image_limit=image_limit,
+            progress=progress,
+        )
+
     def download_product_video(
         self,
         product_id: int,

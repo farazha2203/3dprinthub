@@ -1,3 +1,17 @@
+## ERR-49-249 - O3 related gate exposed a stale pre-O2H Reject-label assertion (2026-09-25)
+
+**Symptom**
+- O3 related regression ran 87 tests and stopped on one UI assertion expecting live Crawl `??? ???????` while the actual accepted O2H UI shows reversible `?? ???????` plus a separate `??? ?????` action.
+
+**Root cause**
+- The older Phase49.3I.52C compact-label regression predated O2H guarded hard-delete acceptance and still encoded the former combined Delete/Reject wording. Runtime behavior was correct and already covered by the dedicated O2H contract test.
+
+**Correct fix**
+- Keep O2H runtime semantics unchanged. Synchronize only the stale regression expectation to `?? ???????` and additionally assert the distinct `??? ?????` control remains present.
+
+**Verification / prevention**
+- The same related 87-test gate then passed 87/87; full Phase50 broad passed 122/122. Future older UI-contract tests must be reconciled when a later accepted phase deliberately splits one control into distinct reversible/destructive actions; do not weaken the newer safety contract to satisfy stale wording.
+
 ## ERR-49-248 - Instagram Feed could contain one image while Product had multiple current images (2026-09-25)
 
 **Symptom**
