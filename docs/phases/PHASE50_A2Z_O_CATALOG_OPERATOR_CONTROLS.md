@@ -205,7 +205,7 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Post-launch canonical Catalog quick_check=ok; Products=852 / History=3482 / Crawl=1192; full logical digest remains exactly `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`. Runtime/UI acceptance caused zero Catalog mutation.
 - Production changed = NO; migration changed = NO; canonical Product/Site/Social data mutated by real-source probe or runtime acceptance = NO.
 
-## O2H implementation — LOCAL_TESTED
+## O2H implementation — ACCEPTED
 - Reject and Delete are now separate operator contracts in both persistent Crawl inventory and current-search results. Reject remains status-only and reversible through Restore.
 - Explicit hard-delete removes only an unconsumed `discovered_urls` identity plus matching `phase49_3i_discovery_candidates`, canonical Preview cache and bounded current-data-root identity folders (`<external>`, refresh/refetch/bulk-refetch variants).
 - Product authority is resolved before any deletion by both Source+external ID and Source+normalized URL. Any matching Product fails closed; Product rows/files are never passed to the Crawl deletion path.
@@ -213,7 +213,12 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Qt confirmation explains destructive/non-restorable semantics and reports Product-blocked/error counts instead of silently deleting.
 - Changed-condition O2H tests: 5/5 PASS. Related O2/O2D/Crawl/Acquisition/Preview regression: 68/68 PASS. py_compile/compileall, pip check, Qt VerifyOnly, git diff-check, Django check and migration drift PASS; known CKEditor warning only.
 - Fresh rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2h-runtime-acceptance-20260925-095729\catalog-before-o2h-runtime.sqlite3`; source/backup quick_check=ok; Products=852 / History=3482 / Crawl=1192 / Candidates=647; four-table digest `e2993bc95b5fcb89dd67f458156877d469ee4653956095ddcf755f94e641b952`; backup SHA256 `819441eb384a798aa07a897a3cc357c396e15381885972e9ce014be6308c1bbc`.
+- Source/tests/checkpoint docs are GitHub-exact at `bd3ab49f0fc205bafb0d86ff878efe4480b826cd`; Local=Remote before runtime acceptance.
+- Real isolated rollback-clone acceptance: failed unconsumed #1190 `makerworld:1385859` + Product-backed #1192/Product #852 `makerworld:1738908` submitted together -> deleted=1 / blocked=1 / failed=0. Only #1190 Ledger/Candidate/Preview/local identity data disappeared. Crawl 1192→1191, Candidates 647→646, Products=852, History=3482, clone quick_check=ok.
+- Canonical Catalog was never passed to destructive O2H acceptance and remained exact at four-table digest `e2993bc95b5fcb89dd67f458156877d469ee4653956095ddcf755f94e641b952`.
+- Exact-source Qt render verified distinct Reject/Hard Delete controls on persistent and live-search surfaces. The first raw-Persian shell assertion was diagnostic-codepage corruption only; unchanged source passed with ASCII-safe Unicode literals.
+- Exact-SHA VerifyOnly PASS. No prior Catalog window was running; one launch was issued. The first 8-second handle check was early, so no second launch was made; the same launch became visible after additional wait as `3DPrintHub Catalog Center v8.9.11 - Qt 6` PID 55596. Post-launch canonical quick_check/counts/digest remained exact.
 - Production changed = NO; Server/migration delta = NO.
 
 ## Exact next
-Commit/push O2H source/tests/checkpoint docs -> Local=Remote -> exact-SHA isolated-clone acceptance using a real failed unconsumed MakerWorld identity and a real Product-backed identity -> verify exact bounded deletion/no-collateral + canonical no-mutation digest -> exact-SHA Qt render/launch smoke -> closure docs. Then O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
+O2F Instagram all-media/disclosure/source+order links/Story-link capability -> re-read current Buffer/Meta publish implementation and Social errors -> trace O2E canonical selected media through Feed payload to prove the one-image collapse boundary -> verify real provider support for carousel/multi-media, AI disclosure, Product details and Story links -> implement only supported fields/workflows -> preserve independent Post/Story receipts and no-duplicate guards -> focused/related Social regression -> fresh rollback before real publish acceptance -> commit/push -> bounded real Feed+Story acceptance. Then O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.

@@ -1,5 +1,5 @@
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
-Status: `O1+O1B+O2+O2D+O2E+O2G ACCEPTED -> O2H LOCAL_TESTED / GITHUB CHECKPOINT NEXT -> O2F -> O3`.
+Status: `O1+O1B+O2+O2D+O2E+O2G+O2H ACCEPTED -> O2F NEXT -> O3`.
 
 Owner requested the Product filter menu to expose: آماده انتشار for exact 7/7 completion, تکمیل هوش مصنوعی for AI-completed exact 6/7, ارسال‌شده سایت, ارسال پست Instagram and ارسال استوری Instagram. Social publication must no longer be one combined cycle: Post and Story need separate buttons and independent execution.
 
@@ -24,7 +24,7 @@ O2E is ACCEPTED at GitHub-exact source `544e046b...`: Product Editor, Refresh an
 
 O2G is ACCEPTED at GitHub-exact source `436bca68...`. The real owner-reported MakerWorld `Lamp` search had only 15 persisted listing rows before the probe. On an isolated Catalog clone, HTTP returned 403 and correctly handed off to the documented Chrome 9222 route; progressive depth reached 48, saw 397 links and persisted exactly 200 requested unconsumed identities (not 313+). Section A layout is decompressed/aligned and its receive options are one row; section B is one six-button toolbar. Focused 49/49, Preview 3/3, related 98/98 and static/framework gates PASS. Exact-SHA Qt v8.9.11 launched once; exact-source render smoke verified target 1..500 and A/B row structure; canonical full logical digest stayed exact after launch/UI acceptance. Production was not changed.
 
-O2H is now LOCAL_TESTED. The misleading combined `رد / حذف` behavior is split: Reject is reversible/status-only, while explicit hard-delete removes only an unconsumed Crawl ledger row plus its matching Candidate, Preview/cache and bounded canonical candidate-derived local folders. Product authority is checked by external ID and normalized URL and fails closed. Focused 5/5 and related 68/68 PASS with static/framework gates; fresh rollback/integrity backup PASS. GitHub checkpoint and exact-SHA isolated-clone/runtime acceptance remain before O2H is ACCEPTED.
+O2H is ACCEPTED at GitHub-exact source `bd3ab49f...`. The misleading combined `رد / حذف` behavior is split: Reject is reversible/status-only, while explicit hard-delete removes only an unconsumed Crawl ledger row plus its matching Candidate, Preview/cache and bounded canonical candidate-derived local folders. Product authority is checked by external ID and normalized URL and fails closed. Focused 5/5, related 68/68 and static/framework gates PASS. Real rollback-clone acceptance deleted failed unconsumed #1190 only and blocked Product-backed #1192/Product #852; canonical Catalog digest stayed unchanged. Exact-SHA Qt render and visible v8.9.11 launch PASS. O2F is next.
 
 ## 2026-09-24 - Owner: close A2Z #628 with ASCII-safe Batch source and strict acceptance
 Status: `WINDOWS FIX GITHUB_EXACT / BOUNDED RETRY NEXT`.

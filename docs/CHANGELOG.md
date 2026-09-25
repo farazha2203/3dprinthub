@@ -1,4 +1,4 @@
-## 2026-09-25 - A2Z-O2H Guarded Hard Delete — LOCAL_TESTED
+## 2026-09-25 - A2Z-O2H Guarded Hard Delete — ACCEPTED
 - Split reversible Crawl Reject from explicit destructive Delete in persistent and live-search Qt surfaces.
 - Added fail-closed hard delete for unconsumed Crawl identities only: matching discovery ledger, Candidate, Preview/cache and bounded current-data-root collected/refetch variants are removed.
 - Product authority by Source+external ID or normalized Source URL blocks deletion before any destructive action.
@@ -6,7 +6,7 @@
 - Added destructive confirmation and blocked/error result reporting in Qt.
 - Verification: focused O2H 5/5 PASS; related O2/O2D/Crawl/Acquisition/Preview 68/68 PASS; py_compile/compileall, pip check, Qt VerifyOnly, diff-check, Django check and no-migration-drift PASS.
 - Fresh Catalog rollback/integrity: `phase50-a2z-o2h-runtime-acceptance-20260925-095729`, four-table logical digest `e2993bc95b5fcb89dd67f458156877d469ee4653956095ddcf755f94e641b952`, backup SHA256 `819441eb384a798aa07a897a3cc357c396e15381885972e9ce014be6308c1bbc`.
-- Production changed: NO. GitHub checkpoint + exact-SHA isolated-clone/runtime acceptance remain before O2H closure.
+- GitHub-exact source `bd3ab49f0fc205bafb0d86ff878efe4480b826cd`; real rollback-clone acceptance deleted only failed unconsumed #1190 and blocked Product-backed #1192/Product #852, with Products/History unchanged and clone quick_check=ok. Exact-SHA Qt render + one visible v8.9.11 launch PASS; canonical Catalog digest remained exact. Production changed: NO.
 
 ## 2026-09-25 - A2Z-O2G Search Crawl Pagination — ACCEPTED
 - Replaced fixed MakerWorld Preview/search depth with requested-target-aware progressive discovery while retaining the 3I.38 persisted listing-depth ledger as the only continuation authority.
