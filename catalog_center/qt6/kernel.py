@@ -13,6 +13,7 @@ from urllib.parse import quote_plus, urljoin, urlsplit
 from app import phase49_3c_image_pipeline as image_pipeline
 from app.db import normalize_url, utc_now
 from app.phase49_3i38_crawl_ledger_stage_ai import (
+    reconcile_product_delete_semantics,
     reject_and_purge_product,
     restore_rejected_identity,
 )
@@ -241,42 +242,85 @@ class ProductCore:
                 count += 1
         return count
 
-    def remove_many(self, product_ids: list[int]) -> int:
-        """Reject Products while retaining only URL/title/one small thumbnail."""
-        count = 0
+    def remove_many_detailed(self, product_ids: list[int]) -> dict[str, Any]:
+        """Reject Products and report the actual tombstone/cache cleanup result."""
+        result: dict[str, Any] = {
+            "requested": 0,
+            "rejected": 0,
+            "purged_dirs": 0,
+            "candidate_rows_deleted": 0,
+            "preview_files_deleted": 0,
+            "cleanup_errors": [],
+            "products": [],
+        }
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        result["requested"] = len(ids)
         app = SimpleNamespace(
             db=self.db,
             DATA=Path(self.db.path).resolve().parent,
         )
-        for product_id in sorted({int(value) for value in product_ids or []}):
+        for product_id in ids:
             before = self.db.product(product_id)
             if before is None:
                 continue
-            reject_and_purge_product(
+            detail = reject_and_purge_product(
                 app,
                 product_id,
                 "Qt owner reject — keep lightweight tombstone only",
             )
             after = self.db.product(product_id)
             if after is not None and int(after["is_blocked"] or 0):
-                count += 1
-        return count
+                result["rejected"] += 1
+            result["purged_dirs"] += len(detail.get("purged_dirs") or [])
+            result["candidate_rows_deleted"] += int(
+                detail.get("candidate_rows_deleted") or 0
+            )
+            result["preview_files_deleted"] += int(
+                bool(detail.get("preview_deleted"))
+            )
+            result["cleanup_errors"].extend(detail.get("cleanup_errors") or [])
+            result["products"].append(detail)
+        return result
 
-    def restore_many(self, product_ids: list[int]) -> int:
-        count = 0
-        for product_id in sorted({int(value) for value in product_ids or []}):
+    def remove_many(self, product_ids: list[int]) -> int:
+        return int(self.remove_many_detailed(product_ids).get("rejected") or 0)
+
+    def restore_many_detailed(self, product_ids: list[int]) -> dict[str, Any]:
+        result = {
+            "requested": 0,
+            "restored": 0,
+            "recovery_required": [],
+            "archive_restored": [],
+        }
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        result["requested"] = len(ids)
+        for product_id in ids:
             row = self.db.product(product_id)
             if row is None:
                 continue
             if int(row["is_blocked"] or 0):
-                if str(row["source_state"] or "") == "rejected":
+                was_rejected = str(row["source_state"] or "") == "rejected"
+                if was_rejected:
                     restore_rejected_identity(self.db, product_id)
                 self.db.restore_product(product_id)
-                count += 1
+                result["restored"] += 1
+                if was_rejected:
+                    result["recovery_required"].append(product_id)
             elif str(row["workflow_status"] or "") == "archived":
                 self.db.restore_archived_product(product_id)
-                count += 1
-        return count
+                result["restored"] += 1
+                result["archive_restored"].append(product_id)
+        return result
+
+    def restore_many(self, product_ids: list[int]) -> int:
+        return int(self.restore_many_detailed(product_ids).get("restored") or 0)
+
+    def reconcile_delete_semantics(self, *, apply: bool = False) -> dict[str, Any]:
+        return reconcile_product_delete_semantics(
+            self.db,
+            data_path=Path(self.db.path).resolve().parent,
+            apply=bool(apply),
+        )
 
 
 class ImageCore:

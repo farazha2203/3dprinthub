@@ -201,13 +201,24 @@ class Phase493I38CrawlLedgerStageAITests(unittest.TestCase):
                     )
                 )
 
-                # Explicit operator restore is the only way to permit acquisition again.
+                # Explicit operator restore reactivates the same Product identity.
+                # O4 keeps its ledger terminal as collected so it cannot re-enter
+                # Add Products; a Product-specific Source/deep repair is explicit.
                 db.restore_product(product_id)
                 restored = db.product(product_id)
                 self.assertEqual(int(restored["is_blocked"]), 0)
-                restored_ledger = ledger_rows(db, status="new")
+                restored_ledger = ledger_rows(db, status="collected")
                 self.assertEqual(len(restored_ledger), 1)
                 self.assertEqual(restored_ledger[0]["external_id"], "303")
+                self.assertEqual(
+                    terminal_identity_state(
+                        db,
+                        restored["source_code"],
+                        restored["external_id"],
+                        restored["source_url"],
+                    ),
+                    "collected",
+                )
             finally:
                 db.close()
 

@@ -1,3 +1,11 @@
+## 2026-09-25 - Phase50.A.2Z-O4 Product/Crawl delete semantics alignment
+- Existing Product row is now the terminal identity authority before Crawl ledger state, preventing stale rejected ledger rows from overriding active/restored Products.
+- Product Reject purges all bounded same-identity active/refetch/deep-repair folders in the current Catalog data root plus matching Candidate and Preview cache while retaining the lightweight Product tombstone/thumbnail and Site/receipt history.
+- Product Restore changes the retained identity ledger to `collected` rather than `new`, preventing an existing Product from re-entering Add Products; operator UI directs heavy-data recovery to O3 deep repair.
+- Added Product lifecycle reconciliation to audit/apply `rejected`/`blocked`/`collected` ledger truth and rejected-cache cleanup with outside-root fail-closed filesystem semantics.
+- Real read-only audit: 58 ledger mismatches, 22 rejected Candidate remnants, 16 Preview remnants, 4 same-identity Local remnants; canonical Catalog still unmodified by O4.
+- O4 tests: focused 7/7, related lifecycle 92/92, Phase50 broad 129/129; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+
 ## 2026-09-25 - Phase50.A.2Z-O3 guarded same-identity deep Product repair
 - Added a distinct confirmed deep-repair Product action; normal non-destructive Source recovery remains unchanged.
 - Deep repair verifies Source identity, blocks operator-owned local media, creates/validates a full Catalog SQLite rollback, acquires into a unique empty folder, and revalidates refreshed identity/local path before mutation.

@@ -1,3 +1,8 @@
+## 2026-09-25 - Owner continuation: O4 visible/testable Product and Crawl delete semantics
+Status: `O4 LOCAL_TESTED / GITHUB+BACKUP+DESTRUCTIVE ACCEPTANCE NEXT`.
+
+Delete/Reject now has a concrete visible result rather than only a status flip: the Product identity remains as a lightweight tombstone, while same-identity heavy Local acquisition folders plus stale Candidate/Preview cache are bounded and purged. Restore reactivates the same Product identity but does not restore already-deleted heavy data and does not place that Product back into Add Products; explicit Product deep repair is the reacquisition route. Legacy Product/Crawl mismatches are now auditable and repairable under backup with Product state as canonical authority.
+
 ## 2026-09-25 - Owner continuation: O3 protected deep repair for broken legacy Products
 Status: `O3 ACCEPTED / O4 NEXT`.
 

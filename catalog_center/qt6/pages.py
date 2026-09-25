@@ -664,26 +664,49 @@ class ProductsPage(QWidget):
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
-        count = self.kernel.products.remove_many(product_ids)
+        result = self.kernel.products.remove_many_detailed(product_ids)
         self.refresh()
-        QMessageBox.information(
-            self,
-            "رد/حذف",
-            f"{count} محصول به وضعیت رد/حذف قابل‌بازیابی رفت.",
+        rejected = int(result.get("rejected") or 0)
+        purged_dirs = int(result.get("purged_dirs") or 0)
+        candidate_rows = int(result.get("candidate_rows_deleted") or 0)
+        preview_files = int(result.get("preview_files_deleted") or 0)
+        cleanup_errors = list(result.get("cleanup_errors") or [])
+        detail = (
+            f"{rejected} محصول به Tombstone رد/حذف منتقل شد.\n"
+            f"{purged_dirs} پوشه Local همان هویت پاک شد.\n"
+            f"{candidate_rows} Candidate و {preview_files} Preview Cache پاک شد."
         )
+        if cleanup_errors:
+            detail += (
+                f"\n\n{len(cleanup_errors)} خطای پاکسازی ثبت شد؛ "
+                "هویت Product همچنان رد شده و باید خطاها بررسی شوند.\n"
+                + "\n".join(str(item) for item in cleanup_errors[:6])
+            )
+            QMessageBox.warning(self, "رد/حذف", detail)
+        else:
+            QMessageBox.information(self, "رد/حذف", detail)
 
     def _restore_selected(self) -> None:
         product_ids = self._selected_product_ids()
         if not product_ids:
             QMessageBox.warning(self, "محصولات", "حداقل یک محصول را انتخاب کن.")
             return
-        count = self.kernel.products.restore_many(product_ids)
+        result = self.kernel.products.restore_many_detailed(product_ids)
         self.refresh()
-        QMessageBox.information(
-            self,
-            "بازیابی",
-            f"{count} محصول بازیابی شد.",
-        )
+        count = int(result.get("restored") or 0)
+        recovery_required = list(result.get("recovery_required") or [])
+        archive_restored = list(result.get("archive_restored") or [])
+        detail = f"{count} محصول بازیابی شد."
+        if archive_restored:
+            detail += f"\n{len(archive_restored)} مورد از آرشیو بدون حذف دیتای قبلی برگشت."
+        if recovery_required:
+            detail += (
+                f"\n{len(recovery_required)} Tombstone ردشده فقط از حالت رد خارج شد؛ "
+                "دیتای سنگین قبلی عمداً برنمی‌گردد. برای دریافت دوباره همان Product، "
+                "در Product Editor از «بازیابی عمیق از صفر» استفاده کن. "
+                "این هویت دوباره وارد Add Products نمی‌شود."
+            )
+        QMessageBox.information(self, "بازیابی", detail)
 
     def _mark_ready_selected(self) -> None:
         product_ids = self._selected_product_ids()

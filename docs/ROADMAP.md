@@ -1,3 +1,18 @@
+## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair
+- [x] Read-only real Catalog audit: 58 Product/Crawl ledger mismatches; 191 rejected Products; 22 rejected Candidate remnants; 16 Preview remnants; 4 same-identity Local remnants.
+- [x] Make existing Product rows canonical before Crawl terminal status; stale rejected Crawl rows can no longer override active Products.
+- [x] Product Reject purges bounded same-identity current-data-root folders + Candidate/Preview cache while retaining lightweight Product tombstone/thumbnail and Site/receipt history.
+- [x] Product Restore keeps the existing identity ledger `collected`, never `new`; heavy data remains deleted and explicit O3 deep repair is the reacquisition path.
+- [x] Add read-only/apply Product lifecycle reconciliation with outside-root filesystem fail-closed guard.
+- [x] Operator Product Delete/Restore result dialogs report actual cleanup/restoration semantics.
+- [x] O4 focused 7/7, related lifecycle 92/92, Phase50 broad 129/129; compileall/pip/diff/Qt/Django/no-drift PASS.
+- [x] Baseline-prove unrelated Filament manufacturer assertion failure at clean `c821a00a`; exclude it from O4 causal gate.
+- [ ] Commit/push tested O4 source/tests/docs and verify Local=Remote.
+- [ ] Create fresh SQLite + filesystem rollback for all planned canonical reconciliation targets.
+- [ ] Exact-SHA runtime and isolated destructive reconciliation acceptance.
+- [ ] Guarded canonical reconciliation -> zero Product/Crawl mismatch audit -> O4 ACCEPTED.
+- [ ] O5 NEXT: Social Receipt Reconciliation + Operator Acceptance.
+
 ## 2026-09-25 - Phase50.A.2Z-O3 Guarded Deep Product Repair
 - [x] Verify forward lineage: selective Production `2b48a593...` is ancestor of current accepted Windows lineage.
 - [x] Add explicit confirmed Product Wizard deep-repair action; normal Source recovery remains separate.

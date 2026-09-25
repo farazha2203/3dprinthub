@@ -257,3 +257,16 @@ O2F source/tests/checkpoint docs are GitHub-exact at `81ceedad5969fd0dfb832ad26f
 
 ### Exact next
 O4 Delete Semantics Repair: re-read docs/errors -> audit Product/Crawl queue/cache/tombstone/Restore semantics read-only -> define Product-vs-Crawl deletion ownership without weakening O2H -> implement bounded corrections -> focused/related regression -> backup -> commit/push -> isolated destructive acceptance -> runtime verification -> docs closure. Then O5 Social Receipt Reconciliation + Operator Acceptance.
+
+## O4 implementation checkpoint - LOCAL_TESTED
+- Real Catalog read-only audit: Products=852; rejected Product tombstones=191; rejected Crawl rows=552; Product/Crawl ledger mismatches=58; rejected Product Candidate remnants=22; Preview remnants=16 (~172,668 bytes); same-identity Local remnants=4. Canonical O4 writes have not occurred yet.
+- Existing Product is now canonical before terminal Crawl ledger. Existing active/restored Product -> `collected`; rejected Product -> `rejected`; generic blocked Product -> `blocked`. Crawl terminal state only wins when no Product exists.
+- Product Reject retains source identity/title/small rejected thumbnail/Site+receipt evidence but purges every recognized same-identity folder inside current `collected/` plus matching discovery Candidate and Preview cache. Paths outside current Catalog data root fail closed.
+- Product Restore reactivates the same Product identity and sets Crawl ledger to `collected`, never `new`; deleted heavy data does not magically return. Operator UI points reacquisition to O3 `??????? ???? ?? ???`, and the identity remains suppressed from Add Products.
+- Added read-only/apply lifecycle reconciliation for legacy Product/Crawl state. Apply is not permitted on canonical Catalog until fresh SQLite+filesystem rollback and isolated destructive acceptance.
+- Verification: O4 focused 7/7 PASS; related lifecycle 92/92 PASS; Phase50 broad 129/129 PASS; py_compile/compileall, pip check, diff-check, Qt VerifyOnly, Django check and migration drift PASS. Known warnings only.
+- Related gate found one unrelated Filament manufacturer test failure; exact failure reproduced on clean baseline `c821a00a...`, documented ERR-49-251 and excluded from O4 causal gate.
+- Production/Host changed = NO; migration = NO.
+
+### O4 exact next
+Final diff/staging -> commit/push source/tests/docs -> Local=Remote -> fresh SQLite backup plus filesystem backup of every planned Preview/Local delete target -> exact-SHA Qt -> isolated destructive reconciliation -> verify Product count/identity/Site/receipts/tombstones/outside-root guard -> only then apply canonical reconciliation -> quick_check + zero mismatch read-only audit + O2H protection regression -> O4 ACCEPTED. Then O5 Social Receipt Reconciliation + Operator Acceptance.

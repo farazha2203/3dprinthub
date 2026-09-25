@@ -1,3 +1,32 @@
+## ERR-49-250 - O4 exposed Product/Crawl tombstone drift and stale Restore semantics (2026-09-25)
+
+**Observed**
+- Real Catalog read-only audit found 58 existing Product identities whose `discovered_urls.status` disagreed with canonical Product state. Ten rejected Products had a non-rejected ledger; 18 rejected ledger rows mapped to active/non-rejected Products. Rejected Product tombstones also retained 22 discovery Candidate rows, 16 Preview files and four same-identity Local folders.
+- Historical rejected Restore set the matching ledger to `new`, even though the Product row still existed, allowing identity semantics to contradict O2D's existing-Product suppression contract.
+
+**Root cause**
+- `terminal_identity_state()` historically consulted terminal Crawl ledger state before Product state, so an older Crawl rejection could override a later active Product. Product Reject purged only one active `local_dir`, leaving refetch/cache siblings; Restore used the old pre-O2D assumption that reactivation meant returning to the discovery queue.
+
+**Correct fix**
+- Product row is canonical for every existing Product identity: rejected -> `rejected`, generic blocked -> `blocked`, otherwise -> `collected`. Crawl ledger is consulted as terminal authority only when no Product exists.
+- Product Reject keeps its lightweight Product tombstone/thumbnail/Site+receipt evidence but purges bounded same-identity current-root folders and matching Candidate/Preview cache. Restore sets the retained Product identity ledger to `collected`; missing heavy data is reacquired through explicit Product Source/O3 deep repair, never Add Products.
+- Legacy reconciliation is read-only by default and filesystem deletion is bounded to the current Catalog data root.
+
+**Verification / prevention**
+- O4 focused 7/7, related lifecycle 92/92 and Phase50 broad 129/129 PASS. The prior Phase49.3I.38 `status=new` Restore expectation was deliberately updated to the new canonical contract.
+- Do not let a Crawl status override an existing Product row; do not use `new` as Restore state for a retained Product identity.
+
+## ERR-49-251 - O4 related gate hit unrelated pre-existing Filament manufacturer failure (2026-09-25)
+
+**Observed**
+- Broad related gate included `test_filament_brand_palette_finish_image_and_roll_price_are_authoritative` and failed because runtime saved `manufacturer_name='Legacy Company Must Not Win'` while the old test expected `Bambu Lab`.
+
+**Causal proof**
+- The exact single test was rerun unchanged in a temporary detached clean worktree at O4 baseline `c821a00a0a8327a505574e8f155c0382264fa1c1` and failed identically. The worktree was removed afterward.
+
+**Disposition**
+- This is pre-existing Filament baseline debt outside O4 Delete Semantics scope. O4 related regression retains the Phase49.3I.48 Product Reject lifecycle test but excludes this unrelated known failure; no Filament production behavior was changed to make O4 green.
+
 ## ERR-49-249 - O3 related gate exposed a stale pre-O2H Reject-label assertion (2026-09-25)
 
 **Symptom**

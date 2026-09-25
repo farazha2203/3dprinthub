@@ -165,19 +165,8 @@ def terminal_identity_state(db, source_code: str, external_id: str, url: str) ->
     source_code = str(source_code or "").strip()
     external_id = str(external_id or "").strip()
     normalized = normalize_url(url)
-    ledger = db.conn.execute(
-        """
-        SELECT status FROM discovered_urls
-        WHERE source_code=? COLLATE NOCASE
-          AND ((?<>'' AND external_id=?) OR normalized_url=?)
-        ORDER BY id
-        LIMIT 1
-        """,
-        (source_code, external_id, external_id, normalized),
-    ).fetchone()
-    if ledger is not None and str(ledger["status"] or "") in TERMINAL_LEDGER_STATUSES:
-        return str(ledger["status"])
-
+    # Product rows are the canonical identity authority. A stale historical
+    # Crawl row must never override an active/restored Product (O2D/O4).
     product = db.conn.execute(
         """
         SELECT is_blocked,source_state FROM products
@@ -193,6 +182,19 @@ def terminal_identity_state(db, source_code: str, external_id: str, url: str) ->
             state = str(product["source_state"] or "blocked")
             return "rejected" if state == "rejected" else "blocked"
         return "collected"
+
+    ledger = db.conn.execute(
+        """
+        SELECT status FROM discovered_urls
+        WHERE source_code=? COLLATE NOCASE
+          AND ((?<>'' AND external_id=?) OR normalized_url=?)
+        ORDER BY id
+        LIMIT 1
+        """,
+        (source_code, external_id, external_id, normalized),
+    ).fetchone()
+    if ledger is not None and str(ledger["status"] or "") in TERMINAL_LEDGER_STATUSES:
+        return str(ledger["status"])
     return ""
 
 
@@ -321,6 +323,218 @@ def _safe_product_local_dir(app, row) -> Path | None:
     return resolved
 
 
+def _identity_local_dirs(app, row) -> list[Path]:
+    """Return only current-data-root folders owned by this Product identity."""
+    collected_root = (Path(app.DATA) / "collected").resolve()
+    source_code = str(_row_value(row, "source_code", "") or "").strip()
+    external_id = str(_row_value(row, "external_id", "") or "").strip()
+    if not source_code or not external_id or not collected_root.is_dir():
+        return []
+
+    output: list[Path] = []
+    raw_local = str(_row_value(row, "local_dir", "") or "").strip()
+    if raw_local:
+        resolved = _safe_product_local_dir(app, row)
+        if resolved is not None:
+            output.append(resolved)
+
+    source_root = (collected_root / source_code).resolve()
+    try:
+        source_root.relative_to(collected_root)
+    except ValueError as exc:
+        raise RuntimeError("Unsafe Product source folder outside collected root.") from exc
+    if source_root.is_dir():
+        for child in source_root.iterdir():
+            if not child.is_dir():
+                continue
+            name = child.name
+            if not (
+                name == external_id
+                or name == f"{external_id}_refresh_latest"
+                or name.startswith(f"{external_id}_refetch_")
+                or name.startswith(f"{external_id}_bulk_refetch_")
+                or name.startswith(f"{external_id}_deep_repair_")
+            ):
+                continue
+            resolved = child.resolve()
+            if collected_root not in resolved.parents:
+                raise RuntimeError(
+                    f"Unsafe Product delete path outside collected: {resolved}"
+                )
+            if resolved not in output:
+                output.append(resolved)
+    return output
+
+
+def _purge_identity_candidate_cache(db, row) -> dict:
+    """Remove non-authoritative Candidate/Preview cache for one Product identity."""
+    from .phase49_3i_discovery_review import (
+        CANDIDATE_TABLE,
+        candidate_preview_cache_path,
+        ensure_schema as ensure_candidate_schema,
+    )
+
+    ensure_candidate_schema(db)
+    source_code = str(_row_value(row, "source_code", "") or "").strip()
+    external_id = str(_row_value(row, "external_id", "") or "").strip()
+    normalized_url = str(_row_value(row, "normalized_url", "") or "").strip()
+    deleted_candidates = 0
+    preview_deleted = False
+    if source_code and (external_id or normalized_url):
+        cursor = db.conn.execute(
+            f"""
+            DELETE FROM {CANDIDATE_TABLE}
+            WHERE source_code=? COLLATE NOCASE
+              AND (
+                (?<>'' AND external_id=?)
+                OR
+                (?<>'' AND normalized_url=?)
+              )
+            """,
+            (
+                source_code,
+                external_id,
+                external_id,
+                normalized_url,
+                normalized_url,
+            ),
+        )
+        deleted_candidates = max(0, int(cursor.rowcount or 0))
+        db.conn.commit()
+    if source_code and external_id:
+        preview = candidate_preview_cache_path(source_code, external_id)
+        if preview.is_file():
+            preview.unlink()
+            preview_deleted = True
+    return {
+        "candidate_rows_deleted": deleted_candidates,
+        "preview_deleted": preview_deleted,
+    }
+
+
+def _canonical_product_ledger_status(row) -> str:
+    if int(_row_value(row, "is_blocked", 0) or 0):
+        return (
+            "rejected"
+            if str(_row_value(row, "source_state", "") or "") == "rejected"
+            else "blocked"
+        )
+    return "collected"
+
+
+def reconcile_product_delete_semantics(db, *, data_path: str | Path | None = None, apply: bool = False) -> dict:
+    """Audit/fix Product/Crawl tombstone truth without deleting Product rows.
+
+    Product state is canonical. Existing Product identities must never be made
+    terminal by an older stale Crawl row. Applying the repair synchronizes only
+    matching ledger state; rejected Products additionally lose obsolete
+    Candidate/Preview/same-identity collected cache, while their lightweight
+    Product tombstone and rejected thumbnail remain.
+    """
+    ensure_schema(db)
+    app = type("_LifecycleApp", (), {})()
+    app.db = db
+    app.DATA = Path(data_path or Path(db.path).resolve().parent).resolve()
+    report = {
+        "products": 0,
+        "ledger_mismatches": [],
+        "ledger_missing_rejected": [],
+        "ledger_updated": 0,
+        "candidate_rows_deleted": 0,
+        "preview_files_deleted": 0,
+        "local_dirs_deleted": 0,
+        "cleanup_errors": [],
+    }
+    rows = list(db.conn.execute("SELECT * FROM products ORDER BY id"))
+    report["products"] = len(rows)
+    for row in rows:
+        product_id = int(_row_value(row, "id", 0) or 0)
+        source_code = str(_row_value(row, "source_code", "") or "").strip()
+        external_id = str(_row_value(row, "external_id", "") or "").strip()
+        normalized_url = str(_row_value(row, "normalized_url", "") or "").strip()
+        source_url = str(_row_value(row, "source_url", "") or "").strip()
+        desired = _canonical_product_ledger_status(row)
+        ledger = db.conn.execute(
+            """
+            SELECT * FROM discovered_urls
+            WHERE source_code=? COLLATE NOCASE
+              AND (
+                (?<>'' AND external_id=?)
+                OR
+                (?<>'' AND normalized_url=?)
+              )
+            ORDER BY id LIMIT 1
+            """,
+            (
+                source_code,
+                external_id,
+                external_id,
+                normalized_url,
+                normalized_url,
+            ),
+        ).fetchone()
+        current = str(_row_value(ledger, "status", "") or "") if ledger is not None else ""
+        if ledger is not None and current != desired:
+            report["ledger_mismatches"].append({
+                "product_id": product_id,
+                "ledger_id": int(ledger["id"]),
+                "before": current,
+                "after": desired,
+            })
+            if apply:
+                remember_ledger(
+                    db,
+                    source_code,
+                    external_id,
+                    source_url,
+                    status=desired,
+                    discovered_from="o4_product_lifecycle_reconcile",
+                    error="",
+                    force=True,
+                )
+                report["ledger_updated"] += 1
+        elif ledger is None and desired == "rejected":
+            report["ledger_missing_rejected"].append(product_id)
+            if apply:
+                remember_ledger(
+                    db,
+                    source_code,
+                    external_id,
+                    source_url,
+                    status="rejected",
+                    discovered_from="o4_product_lifecycle_reconcile",
+                    error=str(_row_value(row, "blocked_reason", "") or "")[:1000],
+                    force=True,
+                )
+                report["ledger_updated"] += 1
+
+        if desired != "rejected":
+            continue
+        try:
+            if apply:
+                cache = _purge_identity_candidate_cache(db, row)
+                report["candidate_rows_deleted"] += int(
+                    cache.get("candidate_rows_deleted") or 0
+                )
+                report["preview_files_deleted"] += int(
+                    bool(cache.get("preview_deleted"))
+                )
+                for path in _identity_local_dirs(app, row):
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                        report["local_dirs_deleted"] += 1
+            else:
+                # Read-only planning counts are intentionally not folded into
+                # the mutation counters; callers can inspect the mismatches and
+                # run their own filesystem backup inventory before apply.
+                _identity_local_dirs(app, row)
+        except Exception as exc:
+            report["cleanup_errors"].append(
+                f"Product #{product_id}: {type(exc).__name__}: {exc}"
+            )
+    return report
+
+
 def _rejected_history_snapshot(row, thumbnail_path: str = "") -> dict:
     """Keep only the lightweight rejection evidence requested by the owner."""
     return {
@@ -422,6 +636,7 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         raise RuntimeError("هویت منبع محصول ناقص است؛ حذف دائمی انجام نشد.")
 
     target = _safe_product_local_dir(app, before)
+    identity_dirs = _identity_local_dirs(app, before)
     rejected_thumbnail = _capture_rejected_thumbnail(
         app,
         before,
@@ -525,10 +740,28 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
     )
     db.conn.commit()
 
-    deleted = False
-    if target is not None and target.exists():
-        shutil.rmtree(target)
-        deleted = True
+    deleted_dirs: list[str] = []
+    cleanup_errors: list[str] = []
+    for path in identity_dirs:
+        if not path.exists():
+            continue
+        try:
+            shutil.rmtree(path)
+            deleted_dirs.append(str(path))
+        except Exception as exc:
+            cleanup_errors.append(f"{path}: {type(exc).__name__}: {exc}")
+
+    cache_cleanup = {
+        "candidate_rows_deleted": 0,
+        "preview_deleted": False,
+    }
+    try:
+        cache_cleanup = _purge_identity_candidate_cache(db, before)
+    except Exception as exc:
+        cleanup_errors.append(
+            f"candidate/preview: {type(exc).__name__}: {exc}"
+        )
+    deleted = bool(deleted_dirs)
 
     after = db.product(product_id)
     try:
@@ -538,7 +771,12 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
             _rejected_history_snapshot(before, rejected_thumbnail),
             _rejected_history_snapshot(after, rejected_thumbnail)
             if after is not None else {},
-            f"Heavy Catalog/local acquisition purged={deleted}; reason={reason}",
+            (
+                f"Heavy Catalog/local acquisition purged_dirs={len(deleted_dirs)}; "
+                f"candidate_rows_deleted={int(cache_cleanup.get('candidate_rows_deleted') or 0)}; "
+                f"preview_deleted={bool(cache_cleanup.get('preview_deleted'))}; "
+                f"cleanup_errors={len(cleanup_errors)}; reason={reason}"
+            ),
         )
     except Exception:
         pass
@@ -554,6 +792,12 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
             "external_id": external_id,
             "source_url": source_url,
             "local_dir_purged": bool(deleted),
+            "purged_dirs": len(deleted_dirs),
+            "candidate_rows_deleted": int(
+                cache_cleanup.get("candidate_rows_deleted") or 0
+            ),
+            "preview_deleted": bool(cache_cleanup.get("preview_deleted")),
+            "cleanup_errors": list(cleanup_errors),
         },
     )
     return {
@@ -562,6 +806,12 @@ def reject_and_purge_product(app, product_id: int, reason: str = "") -> dict:
         "external_id": external_id,
         "local_dir": str(target) if target is not None else "",
         "deleted": bool(deleted),
+        "purged_dirs": list(deleted_dirs),
+        "candidate_rows_deleted": int(
+            cache_cleanup.get("candidate_rows_deleted") or 0
+        ),
+        "preview_deleted": bool(cache_cleanup.get("preview_deleted")),
+        "cleanup_errors": list(cleanup_errors),
         "thumbnail_path": rejected_thumbnail,
         "ledger_status": "rejected",
     }
@@ -573,12 +823,14 @@ def restore_rejected_identity(db, product_id: int) -> None:
         return
     if str(_row_value(row, "source_state", "") or "") != "rejected":
         return
+    # The Product row survives rejection as the canonical tombstone. Restore
+    # reactivates that same Product identity; it must not re-enter Add Products.
     remember_ledger(
         db,
         str(_row_value(row, "source_code", "") or ""),
         str(_row_value(row, "external_id", "") or ""),
         str(_row_value(row, "source_url", "") or ""),
-        status="new",
+        status="collected",
         discovered_from="operator_restore_rejected",
         force=True,
     )
@@ -718,7 +970,7 @@ def install_database(database_class) -> None:
                 str(_row_value(restored, "source_code", "") or ""),
                 str(_row_value(restored, "external_id", "") or ""),
                 str(_row_value(restored, "source_url", "") or ""),
-                status="new",
+                status="collected",
                 discovered_from="operator_restore_rejected",
                 force=True,
             )
