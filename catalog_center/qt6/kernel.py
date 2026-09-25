@@ -2869,6 +2869,257 @@ class AcquisitionCore:
 
         return result
 
+    def prepare_queue_full_reacquire(self, row_ids: list[int]) -> dict[str, Any]:
+        """Remove active derived bytes for unconsumed Crawl identities, with rollback quarantine.
+
+        The discovery URL/identity is intentionally retained so the caller can immediately
+        re-fetch the same Source. Product-backed identities are never touched; their Crawl
+        row is reconciled to collected/imported so they disappear from Add Products.
+        """
+        from app.phase49_3i_discovery_review import (
+            CANDIDATE_TABLE,
+            candidate_preview_cache_path,
+            ensure_schema as ensure_candidate_schema,
+        )
+
+        ensure_candidate_schema(self.db)
+        result: dict[str, Any] = {
+            "requested": 0,
+            "prepared": 0,
+            "product_backed": 0,
+            "missing": 0,
+            "failed": 0,
+            "files_quarantined": 0,
+            "prepared_rows": [],
+            "product_rows": [],
+            "rollback_roots": [],
+            "errors": [],
+        }
+        ids = sorted({int(value) for value in row_ids or [] if int(value) > 0})
+        result["requested"] = len(ids)
+        data_root = Path(self.db.path).resolve().parent
+        collected_root = (data_root / "collected").resolve()
+        rollback_root = (data_root / "repair_backups").resolve()
+        stamp = "".join(ch for ch in str(utc_now() or "") if ch.isdigit())[:14] or "reacquire"
+
+        def identity_local_dirs(source_code: str, external_id: str) -> list[Path]:
+            source_cf = str(source_code or "").strip().casefold()
+            external = str(external_id or "").strip()
+            if not source_cf or not external or not collected_root.is_dir():
+                return []
+            output: list[Path] = []
+            try:
+                source_dirs = [
+                    item
+                    for item in collected_root.iterdir()
+                    if item.is_dir() and item.name.casefold() == source_cf
+                ]
+            except OSError:
+                source_dirs = []
+            for source_dir in source_dirs:
+                try:
+                    children = list(source_dir.iterdir())
+                except OSError:
+                    continue
+                for child in children:
+                    if not child.is_dir():
+                        continue
+                    name = child.name
+                    if not (
+                        name == external
+                        or name == f"{external}_refresh_latest"
+                        or name.startswith(f"{external}_refresh_")
+                        or name.startswith(f"{external}_refetch_")
+                        or name.startswith(f"{external}_bulk_refetch_")
+                        or name.startswith(f"{external}_deep_repair_")
+                    ):
+                        continue
+                    resolved = child.resolve()
+                    if collected_root not in resolved.parents:
+                        raise RuntimeError(
+                            f"Unsafe Crawl reacquire path outside collected: {resolved}"
+                        )
+                    output.append(resolved)
+            return output
+
+        for row_id in ids:
+            row = self.db.conn.execute(
+                "SELECT * FROM discovered_urls WHERE id=?",
+                (row_id,),
+            ).fetchone()
+            if row is None:
+                result["missing"] += 1
+                continue
+            data = dict(row)
+            source_code = str(data.get("source_code") or "").strip()
+            external_id = str(data.get("external_id") or "").strip()
+            normalized_url = str(data.get("normalized_url") or "").strip()
+            source_url = str(data.get("url") or normalized_url or "").strip()
+
+            product = self.db.conn.execute(
+                """
+                SELECT id
+                FROM products
+                WHERE source_code=? COLLATE NOCASE
+                  AND (
+                    (?<>'' AND external_id=?)
+                    OR
+                    (?<>'' AND normalized_url=?)
+                  )
+                ORDER BY id
+                LIMIT 1
+                """,
+                (
+                    source_code,
+                    external_id,
+                    external_id,
+                    normalized_url,
+                    normalized_url,
+                ),
+            ).fetchone()
+            if product is not None:
+                product_id = int(product["id"])
+                with self.db.conn:
+                    self.db.conn.execute(
+                        """
+                        UPDATE discovered_urls
+                        SET status='collected', last_error='', updated_at=?
+                        WHERE id=?
+                        """,
+                        (utc_now(), row_id),
+                    )
+                    self.db.conn.execute(
+                        f"""
+                        UPDATE {CANDIDATE_TABLE}
+                        SET status='imported', updated_at=?
+                        WHERE source_code=? COLLATE NOCASE
+                          AND (
+                            (?<>'' AND external_id=?)
+                            OR
+                            (?<>'' AND normalized_url=?)
+                          )
+                        """,
+                        (
+                            utc_now(),
+                            source_code,
+                            external_id,
+                            external_id,
+                            normalized_url,
+                            normalized_url,
+                        ),
+                    )
+                result["product_backed"] += 1
+                result["product_rows"].append(
+                    {
+                        "row_id": row_id,
+                        "product_id": product_id,
+                        "source_code": source_code,
+                        "external_id": external_id,
+                    }
+                )
+                continue
+
+            if (
+                not source_code
+                or not external_id
+                or not source_url.startswith(("http://", "https://"))
+            ):
+                result["failed"] += 1
+                result["errors"].append(
+                    f"#{row_id}: valid Source/external-id/Product URL is required"
+                )
+                continue
+
+            safe_source = "".join(
+                ch if ch.isalnum() or ch in "._-" else "_"
+                for ch in source_code
+            )[:64] or "source"
+            safe_external = "".join(
+                ch if ch.isalnum() or ch in "._-" else "_"
+                for ch in external_id
+            )[:96] or f"row_{row_id}"
+            target_root = (
+                rollback_root
+                / f"crawl_reacquire_{stamp}_{row_id}_{safe_source}_{safe_external}"
+            )
+            try:
+                target_root.mkdir(parents=True, exist_ok=False)
+                old_local_root = target_root / "old_local"
+                paths = identity_local_dirs(source_code, external_id)
+                for path in paths:
+                    old_local_root.mkdir(parents=True, exist_ok=True)
+                    target = old_local_root / path.name
+                    if target.exists():
+                        raise RuntimeError(
+                            f"Reacquire rollback target already exists: {target}"
+                        )
+                    shutil.move(str(path), str(target))
+                    result["files_quarantined"] += 1
+
+                preview = candidate_preview_cache_path(source_code, external_id)
+                if preview.is_file():
+                    preview_root = target_root / "preview"
+                    preview_root.mkdir(parents=True, exist_ok=True)
+                    target = preview_root / preview.name
+                    shutil.move(str(preview), str(target))
+                    result["files_quarantined"] += 1
+
+                with self.db.conn:
+                    self.db.conn.execute(
+                        """
+                        UPDATE discovered_urls
+                        SET status='new', attempts=0, last_error='', updated_at=?
+                        WHERE id=?
+                        """,
+                        (utc_now(), row_id),
+                    )
+                    self.db.conn.execute(
+                        f"""
+                        UPDATE {CANDIDATE_TABLE}
+                        SET status='review', updated_at=?
+                        WHERE source_code=? COLLATE NOCASE
+                          AND (
+                            (?<>'' AND external_id=?)
+                            OR
+                            (?<>'' AND normalized_url=?)
+                          )
+                        """,
+                        (
+                            utc_now(),
+                            source_code,
+                            external_id,
+                            external_id,
+                            normalized_url,
+                            normalized_url,
+                        ),
+                    )
+            except Exception as exc:
+                result["failed"] += 1
+                result["errors"].append(f"#{row_id}: {type(exc).__name__}: {exc}")
+                continue
+
+            result["prepared"] += 1
+            result["rollback_roots"].append(str(target_root))
+            result["prepared_rows"].append(
+                {
+                    "row_id": row_id,
+                    "source_code": source_code,
+                    "external_id": external_id,
+                    "product_url": source_url,
+                    "rollback_root": str(target_root),
+                }
+            )
+        return result
+
+    def capture_product_source_screenshot(self, product_id: int) -> str:
+        from app.phase49_3i33_ai_core import capture_source_screenshot
+
+        app = SimpleNamespace(
+            db=self.db,
+            DATA=Path(self.db.path).resolve().parent,
+        )
+        return str(capture_source_screenshot(app, int(product_id)))
+
     def restore_queue_items(self, row_ids: list[int]) -> int:
         return int(
             self.db.set_discovered_status(

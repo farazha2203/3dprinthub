@@ -2478,6 +2478,13 @@ class OperationsPage(QWidget):
             "برای همه انتخاب‌ها: اگر داده و تعداد عکس محلی کافی باشد همان را استفاده می‌کند؛ "
             "اگر ناقص باشد صفحه Product را دوباره می‌خواند و اطلاعات/عکس را امن بازیابی می‌کند."
         )
+        self.queue_full_reacquire_btn = QPushButton("♻ بازیابی کامل از صفر")
+        self.queue_full_reacquire_btn.setToolTip(
+            "برای Crawl ناقصِ انتخاب‌شده: داده/Preview/پوشه‌های فعال همان هویت را از مسیر فعال "
+            "به Rollback منتقل می‌کند و همان لینک Product را از صفر با روش‌های واقعی دوباره می‌خواند؛ "
+            "عکس‌ها، لینک فایل‌ها، داده Source، Print Profile/Filament و Screenshot دوباره ساخته می‌شوند. "
+            "اگر Product متناظر از قبل وجود داشته باشد چیزی پاک نمی‌شود و فقط از Add Products مخفی می‌شود."
+        )
         self.queue_selected_label = QLabel("0 انتخاب‌شده")
         self.queue_selected_label.setObjectName("Muted")
         self.queue_loaded_label = QLabel("")
@@ -2504,6 +2511,7 @@ class OperationsPage(QWidget):
         queue_data_actions.addWidget(QLabel("تعداد عکس بازیابی"))
         queue_data_actions.addWidget(self.queue_recover_image_limit)
         queue_data_actions.addWidget(self.queue_recover_btn)
+        queue_data_actions.addWidget(self.queue_full_reacquire_btn)
         queue_data_actions.addSpacing(12)
         queue_data_actions.addWidget(self.queue_collect_btn)
         queue_data_actions.addWidget(self.queue_collect_ai_btn)
@@ -2986,6 +2994,9 @@ class OperationsPage(QWidget):
             lambda: self._collect_selected_queue(run_ai=True)
         )
         self.queue_recover_btn.clicked.connect(self._recover_selected_queue)
+        self.queue_full_reacquire_btn.clicked.connect(
+            self._full_reacquire_selected_queue
+        )
         self.queue_gallery.itemDoubleClicked.connect(
             lambda _item: self._open_selected_queue_source()
         )
@@ -3559,6 +3570,29 @@ class OperationsPage(QWidget):
                 f"دست‌نخورده={data.get('unattempted', 0)} • "
                 f"روش={data.get('preferred_method') or '—'}"
             )
+        elif operation == "queue_full_reacquire":
+            warnings = list(data.get("warnings") or [])
+            errors = list(data.get("errors") or [])
+            self.status.setText(
+                "✅ بازیابی کامل از صفر پایان یافت — "
+                f"تازه‌سازی={data.get('recovered', 0)} • "
+                f"Product موجود/مخفی={data.get('product_backed', 0)} • "
+                f"Screenshot={data.get('screenshots', 0)} • "
+                f"Profile={data.get('profiles_imported', 0)} • "
+                f"Rollback files={data.get('files_quarantined', 0)} • "
+                f"خطا={data.get('failed', 0)} • "
+                f"دست‌نخورده={data.get('unattempted', 0)}"
+            )
+            if warnings or errors:
+                detail = "\n".join([*warnings[:6], *errors[:6]])
+                QMessageBox.warning(
+                    self,
+                    "بازیابی کامل از صفر",
+                    (
+                        "عملیات تمام شد ولی بعضی enrichment/دریافت‌ها هشدار یا خطا داشتند.\n\n"
+                        + detail
+                    ),
+                )
         elif operation in {"queue_collect", "queue_collect_ai"}:
             ai = dict(data.get("ai") or {})
             ai_completed = (
@@ -3571,12 +3605,18 @@ class OperationsPage(QWidget):
                 if operation == "queue_collect_ai"
                 else 0
             )
+            failed_total = int(data.get("failed") or 0) + int(ai_failed or 0)
             self.status.setText(
                 "✅ انتقال انتخاب‌شده‌ها به محصولات تمام شد — "
                 f"جدید={data.get('collected', 0)} • "
                 f"قبلاً موجود={data.get('already_collected_count', 0)} • "
                 f"AI={ai_completed} • "
-                f"خطا={data.get('failed', 0) + ai_failed}"
+                f"خطا={failed_total}"
+                + (
+                    " • فقط موارد خطادار اضافه نشده‌اند و در Add Products باقی مانده‌اند"
+                    if failed_total
+                    else " • همه موارد موفق از Add Products مخفی شدند"
+                )
             )
             if data.get("product_ids") and callable(self.navigate):
                 QTimer.singleShot(
@@ -3631,6 +3671,8 @@ class OperationsPage(QWidget):
             self.queue_collect_ai_btn.setEnabled(True)
         if hasattr(self, "queue_recover_btn"):
             self.queue_recover_btn.setEnabled(True)
+        if hasattr(self, "queue_full_reacquire_btn"):
+            self.queue_full_reacquire_btn.setEnabled(True)
         if hasattr(self, "queue_select_incomplete_btn"):
             self.queue_select_incomplete_btn.setEnabled(True)
         if hasattr(self, "queue_open_btn"):
@@ -4699,6 +4741,250 @@ class OperationsPage(QWidget):
         self.progress.setValue(0)
         self.status.setText(
             f"شروع بازیابی دیتا و عکس {len(rows)} رکورد…"
+        )
+        worker.signals.progress.connect(self._progress)
+        worker.signals.result.connect(self._done)
+        worker.signals.error.connect(self._error)
+        worker.signals.finished.connect(self._finished)
+        self.pool.start(worker)
+
+    def _full_reacquire_selected_queue(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(
+                self,
+                "بازیابی کامل از صفر",
+                "حداقل یک رکورد Crawl را انتخاب کن.",
+            )
+            return
+        if self._worker is not None:
+            QMessageBox.information(
+                self,
+                "بازیابی کامل از صفر",
+                "یک عملیات دریافت در حال اجرا است.",
+            )
+            return
+
+        rows = self.kernel.acquisition.queue_rows_by_ids(ids)
+        if not rows:
+            QMessageBox.warning(
+                self,
+                "بازیابی کامل از صفر",
+                "رکورد انتخاب‌شده در موجودی Crawl پیدا نشد.",
+            )
+            return
+
+        image_limit = int(self.queue_recover_image_limit.currentData() or 5)
+        answer = QMessageBox.question(
+            self,
+            "تأیید بازیابی کامل از صفر",
+            (
+                f"{len(rows)} رکورد انتخاب شده است.\n"
+                f"هدف عکس برای هر Product: {image_limit}\n\n"
+                "برای هر هویت مصرف‌نشده، Preview و تمام پوشه‌های فعال همان External ID "
+                "از مسیر فعال خارج و داخل Rollback نگه‌داری می‌شوند؛ سپس همان لینک Product "
+                "با fallback واقعی Source دوباره از صفر خوانده می‌شود.\n\n"
+                "عکس‌ها، لینک فایل‌ها، داده Source، Print Profile/Filament و Screenshot "
+                "دوباره دریافت/ساخته می‌شوند. Product موجود هرگز پاک نمی‌شود؛ اگر هویت "
+                "قبلاً Product شده باشد فقط Crawl آن به collected/imported همگام و از این "
+                "صف مخفی می‌شود.\n\n"
+                "شروع شود؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def job(progress):
+            prepared = 0
+            recovered = 0
+            product_backed = 0
+            screenshots = 0
+            profiles_imported = 0
+            files_quarantined = 0
+            failed = 0
+            warnings: list[str] = []
+            errors: list[str] = []
+            product_ids: list[int] = []
+            rollback_roots: list[str] = []
+            total = max(1, len(rows))
+            unattempted = 0
+            preferred_method = "rich"
+
+            for index, raw in enumerate(rows, 1):
+                if self.kernel.acquisition.should_stop():
+                    unattempted = max(0, total - index + 1)
+                    break
+                row = dict(raw)
+                queue_id = int(row.get("id") or 0)
+
+                prep = self.kernel.acquisition.prepare_queue_full_reacquire(
+                    [queue_id]
+                )
+                product_backed += int(prep.get("product_backed") or 0)
+                files_quarantined += int(prep.get("files_quarantined") or 0)
+                rollback_roots.extend(prep.get("rollback_roots") or [])
+                for item in prep.get("product_rows") or []:
+                    product_id = int(item.get("product_id") or 0)
+                    if product_id > 0 and product_id not in product_ids:
+                        product_ids.append(product_id)
+
+                if int(prep.get("product_backed") or 0):
+                    progress(
+                        int(index / total * 100),
+                        f"#{queue_id} • Product موجود بود؛ بدون حذف از Crawl مخفی شد.",
+                    )
+                    continue
+                prepared_rows = list(prep.get("prepared_rows") or [])
+                if len(prepared_rows) != 1:
+                    failed += 1
+                    message = "; ".join(str(x) for x in prep.get("errors") or [])
+                    errors.append(
+                        f"#{queue_id}: {message or 'full reacquire preflight failed'}"
+                    )
+                    unattempted = max(0, total - index)
+                    break
+
+                prepared += 1
+                item = dict(prepared_rows[0])
+                source_code = str(item.get("source_code") or "")
+                product_url = str(item.get("product_url") or "")
+
+                base = int((index - 1) / total * 100)
+                span = max(1, int(100 / total))
+
+                def child_progress(value, message):
+                    mapped = min(
+                        99,
+                        base
+                        + int(max(0, min(100, int(value))) / 100 * span),
+                    )
+                    progress(
+                        mapped,
+                        f"#{queue_id} • {index}/{total} • {message}",
+                    )
+
+                try:
+                    result = self.kernel.acquisition.run_single(
+                        source_code=source_code,
+                        product_url=product_url,
+                        image_limit=image_limit,
+                        collection_method=preferred_method,
+                        download_images=True,
+                        download_files=True,
+                        same_domain_only=True,
+                        progress=child_progress,
+                        force_recover=False,
+                        adaptive_fallback=True,
+                    )
+                    preferred_method = str(
+                        result.get("selected_method") or preferred_method
+                    )
+                    product_id = int(result.get("product_id") or 0)
+                    if product_id <= 0:
+                        raise RuntimeError(
+                            "Full reacquire finished without a Product id."
+                        )
+                    if product_id not in product_ids:
+                        product_ids.append(product_id)
+
+                    source_profiles = []
+                    product_row = self.db.product(product_id)
+                    if product_row is not None:
+                        try:
+                            parsed = json.loads(
+                                product_row["source_print_profiles_json"] or "[]"
+                            )
+                            if isinstance(parsed, list):
+                                source_profiles = [
+                                    entry
+                                    for entry in parsed
+                                    if isinstance(entry, dict)
+                                ]
+                        except Exception:
+                            source_profiles = []
+                    if source_profiles:
+                        try:
+                            profile_result = self.kernel.commerce.import_source_profiles(
+                                product_id
+                            )
+                            profiles_imported += int(
+                                profile_result.get("imported_profile_count") or 0
+                            )
+                        except Exception as exc:
+                            warnings.append(
+                                f"#{queue_id}: profile import: {type(exc).__name__}: {exc}"
+                            )
+
+                    try:
+                        screenshot = self.kernel.acquisition.capture_product_source_screenshot(
+                            product_id
+                        )
+                        if screenshot:
+                            screenshots += 1
+                    except Exception as exc:
+                        warnings.append(
+                            f"#{queue_id}: screenshot: {type(exc).__name__}: {exc}"
+                        )
+
+                    self.kernel.acquisition.mark_queue_collected([queue_id])
+                    recovered += 1
+                except Exception as exc:
+                    failed += 1
+                    message = f"{type(exc).__name__}: {exc}"
+                    errors.append(f"#{queue_id}: {message}")
+                    self.kernel.acquisition.mark_queue_failed(
+                        [queue_id],
+                        message,
+                    )
+                    unattempted = max(0, total - index)
+                    progress(
+                        min(99, int(index / total * 100)),
+                        (
+                            f"#{queue_id} • بازیابی کامل ناموفق؛ توقف حفاظتی. "
+                            f"{unattempted} رکورد بعدی دست‌نخورده ماند."
+                        ),
+                    )
+                    break
+
+                progress(
+                    int(index / total * 100),
+                    f"بازیابی کامل {index}/{total} • روش {preferred_method}",
+                )
+
+            return {
+                "operation": "queue_full_reacquire",
+                "prepared": prepared,
+                "recovered": recovered,
+                "product_backed": product_backed,
+                "screenshots": screenshots,
+                "profiles_imported": profiles_imported,
+                "files_quarantined": files_quarantined,
+                "failed": failed,
+                "warnings": warnings[-20:],
+                "errors": errors[-20:],
+                "product_ids": product_ids,
+                "rollback_roots": rollback_roots[-20:],
+                "unattempted": unattempted,
+                "stopped": self.kernel.acquisition.should_stop(),
+                "preferred_method": preferred_method,
+            }
+
+        worker = Worker(job)
+        self._worker = worker
+        self.start_btn.setEnabled(False)
+        self.queue_collect_btn.setEnabled(False)
+        self.queue_collect_ai_btn.setEnabled(False)
+        self.queue_recover_btn.setEnabled(False)
+        self.queue_full_reacquire_btn.setEnabled(False)
+        self.queue_select_incomplete_btn.setEnabled(False)
+        self.queue_open_btn.setEnabled(False)
+        self.live_add_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.progress.setValue(0)
+        self.status.setText(
+            f"شروع بازیابی کامل از صفر برای {len(rows)} رکورد…"
         )
         worker.signals.progress.connect(self._progress)
         worker.signals.result.connect(self._done)

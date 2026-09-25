@@ -1,3 +1,9 @@
+## 2026-09-25 - O4R1 Crawl full-clean reacquire and Product-backed hide truth
+- Read-only live Catalog audit proved screenshot-visible Lamp rows are failed/unconsumed HTTP 403 identities, not successfully-added Products. Successful Product-backed identities are already identity-filtered from Add Products; completion text now makes failed survivors explicit.
+- Added distinct multi-select `♻ بازیابی کامل از صفر`: exact active identity Preview/local folders are moved into rollback quarantine, Crawl attempt/error state resets, the same Source URL is re-acquired with adaptive fallback, images + downloadable files enabled, actual Source Print Profiles are imported into Filament/Profile ledger, and a fresh Source screenshot is captured.
+- Product-backed identity never enters destructive reacquire: no Product bytes are removed; Crawl/Candidate state is normalized to collected/imported so it disappears from Add Products.
+- Focused O4R worker coverage proves full-source flags/Profile/Screenshot and first-failure circuit-breaker; combined O4R/O2H/O2D/O2/O2G Acquisition/Crawl regression 68/68 PASS; touched py_compile, git diff-check and Qt VerifyOnly PASS. Canonical Catalog and Production unchanged by this development slice.
+
 ## 2026-09-25 - Remaining O5/O6 execution split into short-stop microphases
 - O5 is split into O5A..O5G: local receipt inventory, provider read-only correlation, reconciliation hardening, regression/GitHub gate, backup+isolated acceptance, canonical/runtime closure, and optional owner-selected real provider acceptance.
 - O6 is split into O6A..O6E: integrated Local regression, exact-SHA runtime/UI smoke, Server delta/lineage audit, conditional Production deploy gate, and final docs closure.

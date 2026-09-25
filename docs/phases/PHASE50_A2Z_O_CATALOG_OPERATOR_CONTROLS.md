@@ -277,6 +277,14 @@ O4 Delete Semantics Repair: re-read docs/errors -> audit Product/Crawl queue/cac
 - Production/Host changed = NO; Django migration = NO.
 - Acceptance-harness corrections were non-canonical: unavailable `pytest` was replaced by repo-standard `unittest`; a guessed non-existent Candidate table name failed before clone apply, the disposable clone was reset from rollback, then rerun using repository constant `CANDIDATE_TABLE`.
 
+### O4R interrupt — owner Crawl truth/full clean reacquire
+O5 is paused after O5A so this owner-visible Crawl defect/recovery request can close in short slices.
+
+- **O4R1 — Product-backed hide truth + full-clean reacquire implementation — LOCAL_TESTED:** read-only real Lamp audit proves visible examples are failed HTTP 403/no-Product identities; successful Product-backed identities are hidden by exact identity joins. Add distinct single/multi `♻ بازیابی کامل از صفر` path: exact active Preview/local folders -> rollback quarantine, retain Source URL, reset failed state, adaptive Source reacquire with images + downloadable files, import real Source Print Profiles into Filament/Profile ledger, capture fresh Source screenshot. Product-backed selections are never deleted and are normalized to collected/imported. Focused + O2H 8/8 PASS; py_compile/diff/Qt VerifyOnly PASS. Canonical Catalog mutation = NO.
+- **O4R2 — worker/enrichment regression — LOCAL_TESTED / GITHUB GATE NEXT:** mocked adaptive acquisition proves images + downloadable files + Profile import + Screenshot success; provider failure stops immediately and leaves later selected identities untouched. Related O4R/O2H/O2D/O2/O2G Acquisition/Crawl regression 68/68 PASS; py_compile/diff/Qt VerifyOnly PASS. Final staging/commit/push/Local=Remote remains. STOP after GitHub gate.
+- **O4R3 — isolated real acceptance/runtime:** fresh Catalog rollback -> clone a real failed MakerWorld Lamp identity -> execute exact-SHA full reacquire -> require Product creation, Crawl disappearance, local images/files, Source Profile/Filament evidence and screenshot, quick_check, unrelated identity preservation -> Qt visible smoke -> only then bounded canonical owner-visible acceptance. STOP.
+- After O4R3, resume **O5B**; do not repeat O5A.
+
 ### O5 microphases — short-stop contract
 O5 is deliberately split so no single execution block is long-running. Each microphase must finish with a concrete checkpoint and STOP before the next one.
 

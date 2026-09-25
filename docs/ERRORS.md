@@ -1,3 +1,14 @@
+## ERR-49-253 - O4R read-only Product audit hit Windows cp1252 on a Unicode title (2026-09-25)
+
+**Observed**
+- A read-only diagnostic listing newly-created Products printed raw Source titles to the Windows console and stopped on a title containing a Unicode heart character with `UnicodeEncodeError`.
+
+**Impact / correction**
+- The failure occurred only while printing read-only evidence; no DB/file/source mutation occurred. The failed raw-text diagnostic was not repeated unchanged. Subsequent evidence used bounded fields/ASCII-safe output as required by the existing Windows encoding prevention rule.
+
+**Prevention**
+- Remote Windows diagnostics that may include Source titles/descriptions must serialize non-ASCII text safely; never rely on the legacy console code page.
+
 ## ERR-49-252 - O4 acceptance harness used unavailable pytest and guessed Candidate table name (2026-09-25)
 
 **Observed**

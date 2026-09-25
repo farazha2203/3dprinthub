@@ -59,8 +59,12 @@
 - [x] O2F ACCEPTED DEVELOPMENT / RUNTIME VERIFIED: all-current Feed media, AI disclosure, source/order metadata and supported Story-link workflow; clickable Story remains externally blocked only while Buffer mobile readiness is false.
 - [x] O3 ACCEPTED: guarded deep repair with verified rollback, same-identity refetch/remap, authority preservation and isolated destructive acceptance.
 - [x] O4 ACCEPTED: Product/Crawl delete semantics reconciled under fresh rollback; canonical mismatches zero, stale Candidate/Preview/Local remnants removed, Product/receipt authority unchanged.
-- [ ] O5A NEXT: read-only local Feed/Story receipt inventory and current-revision classification; no Buffer call/write.
-- [ ] O5B: read-only Buffer/provider correlation using provider ID first; no createPost/write.
+- [x] O5A COMPLETE read-only: local Feed/Story receipt inventory classified without Buffer call/write; O5B is paused by owner Crawl recovery request.
+- [x] O4R1 LOCAL_TESTED: prove screenshot-visible Lamp rows are failed/unconsumed rather than successfully-added Products; add distinct multi-select full-clean reacquire contract, rollback quarantine, Product-backed hide reconciliation, Source Profile import and Screenshot enrichment.
+- [x] O4R2 LOCAL_TESTED: worker success/enrichment/failure circuit-breaker coverage + related O2H/O2D/O2/O2G Acquisition/Crawl regression 68/68 PASS; py_compile/diff/Qt VerifyOnly PASS.
+- [ ] O4R2 GITHUB GATE NEXT: final staging -> commit/push -> Local=Remote. STOP.
+- [ ] O4R3: fresh backup + isolated real MakerWorld failed-Crawl reacquire + exact-SHA Qt acceptance; only then bounded canonical acceptance. STOP.
+- [ ] O5B RESUME after O4R3: read-only Buffer/provider correlation using provider ID first; no createPost/write.
 - [ ] O5C: harden reconciliation contract + focused tests.
 - [ ] O5D: related regression + GitHub gate.
 - [ ] O5E: fresh backup + isolated receipt-reconciliation acceptance.
