@@ -59,8 +59,18 @@
 - [x] O2F ACCEPTED DEVELOPMENT / RUNTIME VERIFIED: all-current Feed media, AI disclosure, source/order metadata and supported Story-link workflow; clickable Story remains externally blocked only while Buffer mobile readiness is false.
 - [x] O3 ACCEPTED: guarded deep repair with verified rollback, same-identity refetch/remap, authority preservation and isolated destructive acceptance.
 - [x] O4 ACCEPTED: Product/Crawl delete semantics reconciled under fresh rollback; canonical mismatches zero, stale Candidate/Preview/Local remnants removed, Product/receipt authority unchanged.
-- [ ] O5 NEXT: independent Social receipt reconciliation and operator acceptance for Post vs Story.
-- [ ] O6: integrated regression, any required GitHub-first Production gates, final docs and closure.
+- [ ] O5A NEXT: read-only local Feed/Story receipt inventory and current-revision classification; no Buffer call/write.
+- [ ] O5B: read-only Buffer/provider correlation using provider ID first; no createPost/write.
+- [ ] O5C: harden reconciliation contract + focused tests.
+- [ ] O5D: related regression + GitHub gate.
+- [ ] O5E: fresh backup + isolated receipt-reconciliation acceptance.
+- [ ] O5F: canonical evidence-backed reconciliation + runtime acceptance + closure.
+- [ ] O5G: optional owner-selected real provider acceptance only if a remaining evidence gap requires it.
+- [ ] O6A: integrated Local regression.
+- [ ] O6B: exact-SHA runtime/UI smoke.
+- [ ] O6C: Server delta/lineage read-only audit.
+- [ ] O6D: conditional Production deploy gate only if O6C proves a Server delta.
+- [ ] O6E: final documentation closure.
 
 ## 2026-09-24 - A2Z final Production closure gate
 - [x] Restore/authenticate dedicated 3DPrintHub reverse tunnel and pass Host read-only identity/DB/migration gate.

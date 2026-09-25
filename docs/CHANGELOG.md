@@ -1,3 +1,8 @@
+## 2026-09-25 - Remaining O5/O6 execution split into short-stop microphases
+- O5 is split into O5A..O5G: local receipt inventory, provider read-only correlation, reconciliation hardening, regression/GitHub gate, backup+isolated acceptance, canonical/runtime closure, and optional owner-selected real provider acceptance.
+- O6 is split into O6A..O6E: integrated Local regression, exact-SHA runtime/UI smoke, Server delta/lineage audit, conditional Production deploy gate, and final docs closure.
+- Every microphase has a narrow scope and explicit STOP; read-only/provider audits are never bundled with canonical mutation or real social publishing.
+
 ## 2026-09-25 - Phase50.A.2Z-O4 Product/Crawl delete semantics alignment — ACCEPTED
 - Existing Product row is now the terminal identity authority before Crawl ledger state, preventing stale rejected ledger rows from overriding active/restored Products.
 - Product Reject purges all bounded same-identity active/refetch/deep-repair folders in the current Catalog data root plus matching Candidate and Preview cache while retaining the lightweight Product tombstone/thumbnail and Site/receipt history.

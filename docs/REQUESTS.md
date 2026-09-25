@@ -1,3 +1,8 @@
+## 2026-09-25 - Owner: split remaining phases into short-stop microphases
+Status: `PLANNING UPDATED / O5A NEXT`.
+
+Owner requires the remaining execution to be deliberately fragmented so no single tool run or phase runs long enough to risk timeout/stall. O5 is now O5A..O5G and O6 is O6A..O6E. Each microphase has one narrow objective, explicit no-write/no-publish boundaries where applicable, a concrete checkpoint, and an unconditional STOP before the following microphase. Real provider publication is never bundled into receipt auditing/reconciliation and remains optional/owner-selected only.
+
 ## 2026-09-25 - Owner continuation: O4 accepted; continue directly into O5
 Status: `O4 ACCEPTED / O5 SOCIAL RECEIPT RECONCILIATION NEXT`.
 

@@ -1,3 +1,9 @@
+## 2026-09-25 - Phase50.A.2Z-O5 short-stop execution plan - IN_PROGRESS / O5A NEXT
+
+Active branch: `wip/phase50-a2z-o5-social-receipts-20260925`, current GitHub-exact baseline `da8a07bf7248d98ef4a96c32a9e2d8e4312a7ad6`. Worktree was clean before this planning-only documentation change. O4 remains ACCEPTED; Production/Host remains unchanged.
+
+Owner explicitly requested smaller execution slices to avoid long-running phases/timeouts. O5 is now O5A..O5G and O6 is O6A..O6E. Every microphase has one bounded goal and must STOP with a checkpoint before the next. O5A is strictly read-only local receipt inventory: no Buffer call, no DB write, no Instagram publish.
+
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair - ACCEPTED / O5 NEXT
 
 Active branch: `wip/phase50-a2z-o4-delete-semantics-20260925`. Tested O4 source/tests/checkpoint docs are GitHub-exact at `f4153b053fe8c9ba38697ee84109e6bd7f11cb89` from accepted O3 baseline `c821a00a0a8327a505574e8f155c0382264fa1c1`. Production/Host remains unchanged at selective `2b48a593...`; O4 is Windows/Catalog-only with no Django migration or Server source delta.
@@ -12,7 +18,7 @@ Exact-SHA runtime acceptance PASS: no prior Catalog window existed, one launch w
 
 Two acceptance-harness mistakes were contained before canonical mutation: the first focused command used unavailable `pytest` in the canonical venv, then switched to the repository-standard `unittest` runner; the first isolated diagnostic guessed a non-existent `discovery_candidates` table, failed before apply, the disposable clone was reset from the verified rollback, and the rerun used repository constant `CANDIDATE_TABLE`. Neither changed canonical data.
 
-Exact next: O5 Social Receipt Reconciliation + Operator Acceptance -> re-read Social errors/contracts -> audit final Buffer/provider Feed and Story receipts independently against `sync_receipts` and current Product filters -> reconcile stale/missing receipt truth without creating duplicate Post/Story -> preserve O2F all-current Feed media, source/order metadata and AI disclosure -> keep clickable Story blocked when Buffer mobile readiness is false -> focused/related Social regression -> fresh rollback before any receipt mutation -> bounded owner-selected provider acceptance only if needed -> docs/commit/push. Then O6 integrated regression + final closure.
+Exact next is intentionally split into short-stop microphases to avoid long executions/timeouts: O5A read-only local receipt inventory -> O5B read-only Buffer/provider correlation -> O5C reconciliation hardening + focused tests -> O5D related regression + GitHub gate -> O5E fresh backup + isolated receipt-reconciliation acceptance -> O5F canonical evidence-backed reconciliation + runtime closure -> O5G optional owner-selected real provider acceptance only if still required. Then O6A integrated Local regression -> O6B exact-SHA runtime/UI smoke -> O6C Server delta/lineage audit -> O6D conditional Production gate only if a Server delta exists -> O6E final docs closure. Every microphase must STOP with a checkpoint before starting the next.
 
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair - LOCAL_TESTED / GITHUB+DESTRUCTIVE GATES NEXT
 

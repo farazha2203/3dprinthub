@@ -277,5 +277,20 @@ O4 Delete Semantics Repair: re-read docs/errors -> audit Product/Crawl queue/cac
 - Production/Host changed = NO; Django migration = NO.
 - Acceptance-harness corrections were non-canonical: unavailable `pytest` was replaced by repo-standard `unittest`; a guessed non-existent Candidate table name failed before clone apply, the disposable clone was reset from rollback, then rerun using repository constant `CANDIDATE_TABLE`.
 
-### O5 exact next
-Social Receipt Reconciliation + Operator Acceptance: re-read current Social errors/contracts -> audit `sync_receipts` versus final Buffer/provider Feed and Story state independently -> classify missing/stale/ambiguous receipts without provider writes -> reconcile only evidence-backed local receipt truth and preserve independent Post/Story duplicate guards -> keep O2F all-current Feed media, source/order metadata and AI disclosure unchanged -> keep clickable Story fail-closed while Buffer mobile readiness is false -> focused/related Social regression -> fresh rollback before any receipt mutation -> bounded owner-selected real provider acceptance only if evidence still requires it -> docs/commit/push. Then O6 integrated regression + closure.
+### O5 microphases — short-stop contract
+O5 is deliberately split so no single execution block is long-running. Each microphase must finish with a concrete checkpoint and STOP before the next one.
+
+- **O5A — Receipt Inventory / Read-Only Local Audit:** verify branch/HEAD/worktree, re-read Social errors/contracts, classify Feed vs Story receipt rows for current Product revisions, report submitted/published/stale/missing/ambiguous counts. No Buffer call, no DB write, no publish. STOP.
+- **O5B — Provider Read-Only Correlation Audit:** inspect current Buffer channel readiness and correlate only existing provider Posts/Stories using exact provider post ID first, asset evidence only as bounded fallback. No `createPost`, no Catalog write. STOP.
+- **O5C — Reconciliation Contract Hardening:** patch reconciliation code/tests so Feed and Story are independent, exact current `site_ack_fingerprint` is mandatory, ambiguous matches fail closed, and reconciliation never reposts. Run focused tests only. STOP.
+- **O5D — Related Regression / GitHub Gate:** run related Social/Image/duplicate-guard regression + compile/diff/Qt gates, update checkpoint docs, commit/push, verify Local=Remote. No Catalog mutation. STOP.
+- **O5E — Backup + Isolated Reconciliation Acceptance:** create fresh Catalog SQLite rollback, run evidence-backed receipt repair only on an isolated clone, verify receipt delta and zero Product/media/price/site-authority drift. STOP.
+- **O5F — Canonical Receipt Reconciliation / Runtime Acceptance:** apply only clone-proven receipt corrections to canonical Catalog, rerun read-only audit + focused regression + Qt runtime smoke, update docs, commit/push closure. No new Instagram Feed/Story is created merely for testing. Clickable Story remains BLOCKED while Buffer mobile readiness is false. STOP.
+- **O5G — Optional Owner-Selected Real Provider Acceptance:** only if an existing evidence gap cannot be closed without a real provider action, require an owner-selected Product and execute the minimum missing Feed or Story action once with duplicate guards. Otherwise mark NOT REQUIRED. STOP.
+
+### O6 microphases — final closure
+- **O6A — Integrated Local Regression:** Product/Crawl/Media/Social focused suites + integrity audit. STOP.
+- **O6B — Exact-SHA Runtime/UI Smoke:** launch one exact-SHA Catalog runtime and verify the owner-visible flows only. STOP.
+- **O6C — Server Delta / Lineage Audit:** read-only compare Windows head vs Production/Server lineage and determine whether any deploy is actually required. STOP.
+- **O6D — Production Gate (conditional):** only if O6C proves a Server delta: reverse-tunnel read-only Host gate -> fresh backup -> GitHub exact-SHA deploy -> Production verification. Otherwise record NO DEPLOY REQUIRED. STOP.
+- **O6E — Final Documentation Closure:** CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS/REQUESTS/active phase, final Local=Remote proof, remaining external blockers only. STOP.
