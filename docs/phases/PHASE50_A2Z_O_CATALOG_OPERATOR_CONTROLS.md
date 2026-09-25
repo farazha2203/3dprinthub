@@ -235,7 +235,7 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 ## Exact next
 O2F source/tests/checkpoint docs are GitHub-exact at `81ceedad5969fd0dfb832ad26f1287ca0b3dc374`; Local=Remote. Exact-SHA Qt runtime acceptance PASS. Real read-only Product #140 proves selected=1 / all-current Feed=3 / derivative=3 / ALT=3 with canonical logical digest unchanged at `6c7b46107c9d77fba16c8460229b0697fa32f35ac0f00634d450e237c4fa18db`. No arbitrary external Feed was created. Real clickable Story acceptance remains externally blocked only by Buffer `hasActiveMemberDevice=false`. Exact development next: O3 guarded deep reset/refetch/remap of legacy broken Product/media state; O4 follows after O3.
 
-## O3 implementation checkpoint - LOCAL_TESTED
+## O3 implementation checkpoint - ACCEPTED
 - Added explicit confirmed `??????? ???? ?? ???` Product action; normal Source recovery remains separate.
 - Preflight requires Product Source URL to resolve to persisted external identity and blocks any operator-owned Product-local media.
 - Every deep repair creates and verifies a full Catalog SQLite rollback before fetch/mutation; backup and old-local quarantine share one per-repair root.
@@ -246,5 +246,14 @@ O2F source/tests/checkpoint docs are GitHub-exact at `81ceedad5969fd0dfb832ad26f
 - Production/Host changed = NO; Django migration = NO. Selective Production `2b48a593...` is verified ancestor of current forward lineage.
 - First related gate exposed stale pre-O2H label expectation only; corrected test contract is documented as ERR-49-249.
 
-### O3 exact next
-Final diff/staging review -> commit/push O3 source/tests/checkpoint docs -> Local=Remote -> fresh canonical Catalog rollback/integrity -> exact-SHA Qt runtime -> isolated rollback-clone real Product deep-repair acceptance proving same identity, verified rollback, fresh media remap, bounded old-local handling and unchanged Site/receipt authority -> O3 closure docs. Do not use canonical Catalog as the first destructive acceptance target. Then O4 Delete Semantics Repair.
+### O3 runtime acceptance / closure
+- GitHub exact: `1c8db58a9caa147eae2e2c4a734db46a8bfe18da`; Local=Remote before runtime.
+- Fresh canonical rollback `D:\projects\3dprinthub-backups\phase50-a2z-o3-runtime-acceptance-20260925-131601\catalog-before-o3-runtime.sqlite3`: source/backup quick_check=ok, Products=852 / History=3482 / Crawl=1192 / Receipts=477, SHA256 `3ae960f10f42d461b17e1de9b9c42d81ab9df71b6465af7f9408d3aedb1c5ed9`.
+- Exact-SHA Qt VerifyOnly PASS; prior runtime closed gracefully; one v8.9.11 runtime became visible as PID 26236.
+- Isolated real acceptance root `D:\projects\3dprinthub-o3-acceptance-20260925-131753`: Product #1 `makerworld:3127131`, old images=60/selected=0/receipts=0. Adaptive deep repair attempted `rich` then succeeded by `network_capture`; 3 images saved, 3 mapped, 3 exact current Product-local media. Same ID/source/external identity, Site authority and receipts exact; rollback quick_check=ok / SHA256 `a7dfdcf28bb18cd3873005c374f2dcff4e1e20d466cb3bf322bccff3e0e811f3`; clone quick_check=ok; history event correct.
+- Clone protection worked as designed: old Local referenced canonical data root, so quarantine was `skipped_outside_current_data_root`; no canonical media could be moved. Same-root quarantine behavior is separately covered by focused test.
+- Canonical post-acceptance quick_check=ok and logical digest remained exact `6c7b46107c9d77fba16c8460229b0697fa32f35ac0f00634d450e237c4fa18db`; four table counts unchanged.
+- O3 status = ACCEPTED. Production/Host deploy required = NO (Windows/Catalog-only).
+
+### Exact next
+O4 Delete Semantics Repair: re-read docs/errors -> audit Product/Crawl queue/cache/tombstone/Restore semantics read-only -> define Product-vs-Crawl deletion ownership without weakening O2H -> implement bounded corrections -> focused/related regression -> backup -> commit/push -> isolated destructive acceptance -> runtime verification -> docs closure. Then O5 Social Receipt Reconciliation + Operator Acceptance.

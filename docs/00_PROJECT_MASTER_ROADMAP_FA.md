@@ -1,3 +1,7 @@
+## 2026-09-25 - A2Z-O O3 guarded deep Product repair ACCEPTED / O4 active next
+
+O3 is accepted at GitHub source `1c8db58a...`. Deep repair is explicit/same-identity/backup-backed/fail-closed, preserves Product/Site/receipt/operator authority, fetches into a fresh folder and quarantines only safe old active Local data after success. Focused 6/6, related 87/87 and Phase50 122/122 pass with all static/framework gates. Exact-SHA runtime is accepted; isolated real Product #1 repair succeeded with 3 mapped exact Local images and canonical Catalog digest remained unchanged. Production/Host was not changed because O3 is Windows/Catalog-only. Exact next is O4 Delete Semantics Repair, then O5 Social receipt/operator acceptance and O6 integrated closure.
+
 ## 2026-09-24 - A2Z CLOSED / A2Z-O Operator Controls active
 
 Phase50.A.2Z Catalog/Site Truth is now ACCEPTED. Product #628 is Site #38 revision 2 with strict Product/Image/Profile/Variant/Slider parity and real Desktop/Mobile Playwright acceptance; #625/#620/#152/#178 collateral truth is stable. Selective Production Server remains clean at `2b48a593...`.

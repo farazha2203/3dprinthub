@@ -1,5 +1,5 @@
 ## 2026-09-25 - Owner continuation: O3 protected deep repair for broken legacy Products
-Status: `O3 LOCAL_TESTED / COMMIT+RUNTIME GATE NEXT`.
+Status: `O3 ACCEPTED / O4 NEXT`.
 
 The requested deep repair is implemented as a separate explicit Product action, not as an automatic bulk rewrite. It re-fetches the same Product from Source into a fresh folder, preserves Product/Site/receipt/operator authority, creates a verified SQLite rollback before mutation, and quarantines only the old active same-identity Local folder after success. Operator-owned local media, Source identity drift, missing selected Source media, or unsafe path conditions fail closed. Canonical destructive acceptance is not allowed before an isolated clone proves the contract.
 

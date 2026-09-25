@@ -8,10 +8,11 @@
 - [x] Preserve Product ID, operator fields, Site/server authority and sync receipts exactly.
 - [x] After success, move only the former active same-identity Local folder inside current Catalog data root into rollback quarantine; never delete compatibility/external paths.
 - [x] O3 focused 6/6, related 87/87, Phase50 broad 122/122; static/framework/migration gates PASS.
-- [ ] Commit/push tested O3 source/tests/docs and verify Local=Remote.
-- [ ] Fresh canonical rollback + exact-SHA Qt runtime acceptance.
-- [ ] Isolated clone real Product deep-repair acceptance; canonical Catalog must not be first destructive target.
-- [ ] Close O3 ACCEPTED, then O4 Delete Semantics Repair.
+- [x] Commit/push tested O3 source/tests/docs at `1c8db58a...` and verify Local=Remote.
+- [x] Fresh canonical rollback + exact-SHA Qt runtime acceptance; v8.9.11 visible as PID 26236.
+- [x] Isolated clone real Product #1 deep-repair acceptance: same identity/authority, verified rollback, 3 exact local media, canonical digest unchanged.
+- [x] Close O3 ACCEPTED.
+- [ ] O4 NEXT: Delete Semantics Repair.
 
 ## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-media / disclosure / links
 - [x] Prove one-image root cause: selected-only Social authority can be 1 while current Product media is >1; live Buffer posts prove provider retains multiple assets.

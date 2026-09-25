@@ -5,6 +5,7 @@
 - Product ID, editorial/commercial fields, Site/server identity and sync receipts are preserved; only the former active same-identity Local folder inside the current Catalog data root is moved to rollback quarantine after success.
 - Failed fresh acquisition cleans only its unique partial fresh folder and leaves the old Product/Local state untouched.
 - O3 tests: focused 6/6, related Acquisition/Crawl/Social 87/87, Phase50 broad 122/122; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+- GitHub-exact O3 source is `1c8db58a9caa147eae2e2c4a734db46a8bfe18da`. Exact-SHA runtime PASS; isolated clone real Product #1 repair PASS through `network_capture` fallback with 3 mapped/exact Local images, per-repair rollback quick_check=ok, same identity/Site/receipts, and canonical Catalog digest unchanged. O3 ACCEPTED.
 
 ## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-current media, AI disclosure and link capability
 - Proved Buffer is not dropping carousel assets; live sent Posts preserve multiple provider assets.
