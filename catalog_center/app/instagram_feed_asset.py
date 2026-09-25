@@ -131,6 +131,112 @@ def _instagram_canvas(image: Image.Image) -> Image.Image:
     return source
 
 
+MAX_INSTAGRAM_FEED_IMAGES = 10
+
+
+def prepare_all_current_product_feed_assets(
+    db,
+    product_id: int,
+    settings: SiteConnection,
+    *,
+    publish_to_site: bool = True,
+) -> dict:
+    """Prepare every current canonical Product image for one Instagram Feed post.
+
+    This intentionally does not use ``selected_images_json``. The owner contract
+    for Instagram Feed is all current Product images, while file safety remains
+    the O2E rule: exact bytes must resolve inside the current Product local_dir.
+    """
+    row_obj = db.product(int(product_id))
+    if row_obj is None:
+        raise RuntimeError(f"Product {product_id} not found")
+    row = dict(row_obj)
+    from .phase50_a2w_media_sync import current_product_local_media
+    from .social_content_policy import build_alt_texts
+
+    current = current_product_local_media(row)
+    if not current:
+        raise RuntimeError("No current Product media is available for Instagram feed.")
+    if len(current) > MAX_INSTAGRAM_FEED_IMAGES:
+        raise RuntimeError(
+            "Instagram/Buffer accepts at most 10 images in one Feed carousel; "
+            f"this Product has {len(current)} current images. Nothing was published."
+        )
+
+    source_urls = [str(item["source_url"]) for item in current]
+    alt_texts = build_alt_texts(row, source_urls)
+    revision = _revision_key(row)
+    local_root = Path(
+        os.environ.get("LOCALAPPDATA")
+        or (Path.home() / "AppData" / "Local")
+    ) / "3DPrintHub" / "instagram" / "feed" / str(int(product_id)) / revision
+    local_root.mkdir(parents=True, exist_ok=True)
+
+    local_paths: list[str] = []
+    dimensions: list[dict[str, int]] = []
+    for index, item in enumerate(current, 1):
+        local_source = Path(str(item["local_path"])).resolve()
+        source_bytes = local_source.read_bytes()
+        if len(source_bytes) > 12 * 1024 * 1024:
+            raise RuntimeError(f"Instagram source image {index} is unexpectedly large.")
+        with Image.open(BytesIO(source_bytes)) as opened:
+            rendered = _instagram_canvas(opened)
+        local_file = local_root / f"{index:02d}.png"
+        rendered.save(local_file, format="PNG", optimize=True)
+        local_paths.append(str(local_file))
+        width, height = rendered.size
+        dimensions.append({"width": int(width), "height": int(height)})
+
+    public_urls: list[str] = []
+    if publish_to_site:
+        remote_root = str(
+            db.setting(
+                "instagram_feed_remote_root",
+                "/public_html/media/instagram/feed/products",
+            )
+            or "/public_html/media/instagram/feed/products"
+        ).strip()
+        remote_dir = str(PurePosixPath(remote_root) / str(int(product_id)) / revision)
+        ftp = connect_ftp(settings)
+        try:
+            _ensure_remote_dir(ftp, remote_dir)
+            for local_value in local_paths:
+                local_file = Path(local_value)
+                remote_file = str(PurePosixPath(remote_dir) / local_file.name)
+                with local_file.open("rb") as handle:
+                    ftp.storbinary(
+                        f"STOR {remote_file}",
+                        handle,
+                        blocksize=128 * 1024,
+                    )
+                public_url = (
+                    settings.site_url.rstrip("/")
+                    + f"/media/instagram/feed/products/{int(product_id)}/{revision}/{local_file.name}"
+                )
+                _verify_public_image(
+                    public_url,
+                    timeout=max(10, int(settings.timeout)),
+                )
+                public_urls.append(public_url)
+        finally:
+            try:
+                ftp.quit()
+            except Exception:
+                ftp.close()
+
+    return {
+        "urls": public_urls,
+        "local_paths": local_paths,
+        "source_urls": source_urls,
+        "alt_texts": alt_texts,
+        "dimensions": dimensions,
+        "format": "png",
+        "revision": revision,
+        "published_to_site": bool(publish_to_site),
+        "media_authority": "all_current_product_images",
+    }
+
+
 def prepare_product_feed_assets(
     db,
     product_id: int,

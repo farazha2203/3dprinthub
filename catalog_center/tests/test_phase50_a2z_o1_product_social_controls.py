@@ -210,7 +210,7 @@ class InstagramSplitContractTests(unittest.TestCase):
 
     @patch("app.buffer_publish.publish_product")
     @patch("app.buffer_media_host.rehost_buffer_assets")
-    @patch("app.instagram_feed_asset.prepare_product_feed_assets")
+    @patch("app.instagram_feed_asset.prepare_all_current_product_feed_assets")
     @patch("app.buffer_publish.test_connection")
     def test_feed_only_never_requests_companion_story(
         self,

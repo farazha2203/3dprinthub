@@ -1,3 +1,12 @@
+## 2026-09-25 - Owner: Instagram must send all Product images and real Product links/disclosure
+Status: `O2F LOCAL_TESTED / COMMIT+RUNTIME GATE NEXT / CLICKABLE STORY EXTERNAL PREREQUISITE`.
+
+Owner requires Instagram Feed to send all current Product images rather than only one selected image; Feed and Story must use supported AI disclosure; Social metadata must retain the original mother-site Product URL and the 3DPrintHub order Product URL; Story must use a real clickable site link rather than artwork/caption text pretending to be clickable.
+
+Implementation now follows those exact constraints. The one-image defect is traced to selected-only O2E Social input, not Buffer asset collapse. Instagram Feed uses every current exact Product-local `images_json` image, with per-image ALT/source audit and fail-closed >10 limit. Feed uses Buffer Shop Grid `link` for the tracked 3DPrintHub Product destination. Source/order URLs are retained in Product-details/receipt evidence. Feed and Story enable Buffer/Instagram AI disclosure fields. Clickable Story uses Buffer notification/native Link Sticker metadata only and never claims automatic sticker support.
+
+Current live provider limitation: Buffer channel `3dprinthub_ir` reports no active mobile member device, so real Link Sticker Story completion cannot pass until that external prerequisite is restored. This does not block Feed-only operation.
+
 ## 2026-09-24 - Owner: Product filters, split Instagram actions, Crawl repair/delete recovery
 Status: `O1+O1B+O2+O2D+O2E+O2G+O2H ACCEPTED -> O2F NEXT -> O3`.
 

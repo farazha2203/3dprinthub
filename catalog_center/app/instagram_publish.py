@@ -154,6 +154,11 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
 
     title = str(row.get("seo_title_fa") or row.get("title_fa") or row.get("source_title") or "").strip()
     tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
+    source_product_url = str(
+        row.get("source_url") or row.get("normalized_url") or ""
+    ).strip()
+    if not source_product_url.startswith(("https://", "http://")):
+        source_product_url = ""
     media_urls = media[:10]
     caption, hashtags = build_caption(row, tracking_url)
     alt_texts = build_alt_texts(row, media_urls)
@@ -164,6 +169,12 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
         "product_code": str(row.get("external_id") or row.get("sku") or row.get("id") or "").strip(),
         "product_url": product_url,
         "tracking_url": tracking_url,
+        "source_product_url": source_product_url,
+        "product_details": {
+            "source_url": source_product_url,
+            "order_url": tracking_url,
+            "site_product_url": product_url,
+        },
         "media_urls": media_urls,
         "video_urls": video_urls[:5],
         "media_manifest": media_manifest,

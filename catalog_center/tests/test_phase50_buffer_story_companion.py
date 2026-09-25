@@ -27,6 +27,7 @@ class _DB:
                 "instagram_story_url": "https://3dprinthub.ir/media/story-card.webp",
             }),
             "title_fa": "Story demo",
+            "source_url": "https://makerworld.com/en/models/11001-story-demo",
             "image_alt_texts_json": json.dumps(["3D printed product"]),
             "local_category_slug": "toys-games",
         }
@@ -159,6 +160,8 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertEqual(result["companion_story"]["provider_post_id"], "story-1")
         story_input = request.call_args_list[1].kwargs["variables"]["input"]
         self.assertEqual(story_input["metadata"]["instagram"]["type"], "story")
+        self.assertTrue(story_input["aiAssisted"])
+        self.assertTrue(story_input["metadata"]["instagram"]["isAiGenerated"])
         self.assertFalse(story_input["metadata"]["instagram"]["shouldShareToFeed"])
         self.assertEqual(story_input["schedulingType"], "automatic")
         self.assertNotIn("link", story_input["metadata"]["instagram"])
@@ -304,6 +307,14 @@ class BufferStoryCompanionTests(unittest.TestCase):
             result["companion_story"]["provider_post_id"],
             "story-after-device",
         )
+        story_input = request.call_args.kwargs["variables"]["input"]
+        instagram = story_input["metadata"]["instagram"]
+        self.assertEqual(story_input["schedulingType"], "notification")
+        self.assertTrue(story_input["aiAssisted"])
+        self.assertTrue(instagram["isAiGenerated"])
+        self.assertIn("utm_source=instagram", instagram["stickerFields"]["products"])
+        self.assertIn("makerworld.com/en/models/11001", instagram["stickerFields"]["products"])
+        self.assertIn("Link Sticker URL:", instagram["stickerFields"]["other"])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")

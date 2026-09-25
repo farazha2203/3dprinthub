@@ -3296,8 +3296,8 @@ class InstagramCore:
         ).strip().lower()
         companion_enabled = companion_raw not in {"0", "false", "no", "off"}
         link_mode = str(
-            self.db.setting("instagram_story_link_mode", "bio_shop_grid")
-            or "bio_shop_grid"
+            self.db.setting("instagram_story_link_mode", "native_sticker_notification")
+            or "native_sticker_notification"
         ).strip().lower()
         native_sticker_enabled = link_mode in {
             "native_sticker_notification",
@@ -3415,19 +3415,18 @@ class InstagramCore:
                 )
             try:
                 if provider == "buffer":
-                    from app.instagram_feed_asset import prepare_product_feed_assets
+                    from app.instagram_feed_asset import prepare_all_current_product_feed_assets
                     from app.buffer_media_host import rehost_buffer_assets
 
-                    canonical_payload = self.preview(product_id)
+                    self.preview(product_id)  # Fail closed on current public Site readiness.
                     media_host = str(
                         self.db.setting("buffer_media_host", "github_raw")
                         or "github_raw"
                     ).strip().lower()
-                    feed_meta = prepare_product_feed_assets(
+                    feed_meta = prepare_all_current_product_feed_assets(
                         self.db,
                         product_id,
                         settings,
-                        canonical_payload,
                         publish_to_site=media_host == "site",
                     )
                     provider_media = rehost_buffer_assets(
@@ -3444,6 +3443,8 @@ class InstagramCore:
                         site_url=settings.site_url,
                         companion_story=False,
                         feed_asset_urls=list(provider_media.get("feed_urls") or []),
+                        feed_alt_texts=list(feed_meta.get("alt_texts") or []),
+                        feed_source_urls=list(feed_meta.get("source_urls") or []),
                         media_host_meta=provider_media,
                     )
                 else:
@@ -3727,7 +3728,7 @@ class InstagramCore:
                             int((index - 1) / total * 100),
                             f"آماده‌سازی رسانه سازگار Buffer برای محصول #{product_id}",
                         )
-                    from app.instagram_feed_asset import prepare_product_feed_assets
+                    from app.instagram_feed_asset import prepare_all_current_product_feed_assets
 
                     canonical_payload = self.preview(product_id)
                     media_host = str(
@@ -3735,11 +3736,10 @@ class InstagramCore:
                         or "github_raw"
                     ).strip().lower()
                     publish_social_derivatives_to_site = media_host == "site"
-                    feed_meta = prepare_product_feed_assets(
+                    feed_meta = prepare_all_current_product_feed_assets(
                         self.db,
                         product_id,
                         settings,
-                        canonical_payload,
                         publish_to_site=publish_social_derivatives_to_site,
                     )
                     story_meta = None
@@ -3785,6 +3785,8 @@ class InstagramCore:
                         story_asset_url=str(provider_media.get("story_url") or ""),
                         story_meta=story_meta,
                         feed_asset_urls=list(provider_media.get("feed_urls") or []),
+                        feed_alt_texts=list(feed_meta.get("alt_texts") or []),
+                        feed_source_urls=list(feed_meta.get("source_urls") or []),
                         media_host_meta=provider_media,
                     )
                 else:

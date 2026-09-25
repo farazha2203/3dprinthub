@@ -9,7 +9,7 @@ from PIL import Image
 
 from app.db import Database
 from app.instagram_publish import canonical_site_payload
-from app.phase50_a2w_media_sync import media_truth_snapshot
+from app.phase50_a2w_media_sync import current_product_local_media, media_truth_snapshot
 from qt6.kernel import build_kernel
 
 
@@ -120,6 +120,21 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
         self.assertTrue(items[0]["selected"])
         self.assertFalse(
             any("refetch_20260924" in str(item["path"]) for item in items)
+        )
+
+    def test_instagram_all_media_authority_uses_every_current_product_image(self):
+        product_id, url1, url2, final1, final2 = self._product(
+            selected_only_first=True
+        )
+        row = dict(self.db.product(product_id))
+        media = current_product_local_media(row)
+        self.assertEqual([item["source_url"] for item in media], [url1, url2])
+        self.assertEqual(
+            [Path(item["local_path"]).resolve() for item in media],
+            [final1.resolve(), final2.resolve()],
+        )
+        self.assertFalse(
+            any("refetch_20260924" in item["local_path"] for item in media)
         )
 
     def test_current_gallery_synthesizes_selected_exact_card_when_legacy_reader_omits_it(self):

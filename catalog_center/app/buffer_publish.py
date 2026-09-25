@@ -222,6 +222,8 @@ def publish_product(
     *,
     site_url: str,
     media_urls_override: list[str] | None = None,
+    media_alt_texts_override: list[str] | None = None,
+    source_media_urls_override: list[str] | None = None,
     media_host_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     row = db.product(int(product_id))
@@ -251,7 +253,11 @@ def publish_product(
     if not provider_media_urls:
         raise RuntimeError("No public media URLs are available for Buffer.")
     assets: list[dict[str, Any]] = []
-    alt_texts = list(payload.get("alt_texts") or [])
+    alt_texts = list(
+        media_alt_texts_override
+        if media_alt_texts_override is not None
+        else (payload.get("alt_texts") or [])
+    )
     for index, url in enumerate(provider_media_urls):
         alt_text = alt_texts[index] if index < len(alt_texts) else ""
         if not str(alt_text or "").strip():
@@ -264,6 +270,7 @@ def publish_product(
 
     create_input = {
         "text": payload["caption"],
+        "aiAssisted": True,
         "channelId": cfg.channel_id,
         "schedulingType": "automatic",
         "mode": "shareNow",
@@ -275,7 +282,7 @@ def publish_product(
             "instagram": {
                 "type": "post",
                 "shouldShareToFeed": True,
-                "isAiGenerated": False,
+                "isAiGenerated": True,
                 "link": payload["tracking_url"],
             }
         },
@@ -318,9 +325,17 @@ def publish_product(
         "site_product_url": payload["product_url"],
         "tracking_url": payload["tracking_url"],
         "media_urls": list(provider_media_urls),
-        "source_media_urls": list(payload["media_urls"]),
+        "source_media_urls": list(
+            source_media_urls_override
+            if source_media_urls_override is not None
+            else payload["media_urls"]
+        ),
         "caption": payload["caption"],
-        "alt_texts": list(payload.get("alt_texts") or []),
+        "ai_disclosure": True,
+        "ai_assisted": True,
+        "product_details": dict(payload.get("product_details") or {}),
+        "source_product_url": str(payload.get("source_product_url") or ""),
+        "alt_texts": list(alt_texts),
         "hashtags": list(payload.get("hashtags") or []),
         "social_policy_version": str(payload.get("social_policy_version") or ""),
         "site_ack_fingerprint": fingerprint,
@@ -409,11 +424,10 @@ def publish_story_for_product(
     if alt_texts and alt_texts[0]:
         image["metadata"] = {"altText": str(alt_texts[0])[:1000]}
 
-    ai_generated = bool(
-        data.get("instagram_story_ai_generated")
-        or data.get("social_ai_generated")
-    )
+    ai_generated = True
     tracking_url = str(payload.get("tracking_url") or payload["product_url"])
+    product_details = dict(payload.get("product_details") or {})
+    source_product_url = str(product_details.get("source_url") or "").strip()
     instagram_metadata: dict[str, Any] = {
         "type": "story",
         "shouldShareToFeed": False,
@@ -422,12 +436,17 @@ def publish_story_for_product(
     scheduling_type = "automatic"
     if link_notification:
         scheduling_type = "notification"
+        detail_lines = [f"سفارش 3DPrintHub: {tracking_url}"]
+        if source_product_url:
+            detail_lines.append(f"منبع اصلی: {source_product_url}")
         instagram_metadata["stickerFields"] = {
             "text": "لینک محصول",
-            "other": f'Link Sticker: "لینک محصول" → {tracking_url}',
+            "products": "\n".join(detail_lines),
+            "other": f"Link Sticker URL: {tracking_url}",
         }
     create_input = {
         "text": "",
+        "aiAssisted": True,
         "channelId": cfg.channel_id,
         "schedulingType": scheduling_type,
         "mode": "shareNow",
@@ -486,6 +505,10 @@ def publish_story_for_product(
         "provider_post_id": story_id,
         "site_product_url": payload["product_url"],
         "tracking_url": tracking_url,
+        "ai_disclosure": True,
+        "ai_assisted": True,
+        "product_details": product_details,
+        "source_product_url": source_product_url,
         "story_publish_mode": "notification" if link_notification else "automatic",
         "story_link_strategy": (
             "native_sticker_notification" if link_notification else "bio_shop_grid"
@@ -629,6 +652,8 @@ def publish_product(
     story_asset_url: str = "",
     story_meta: dict[str, Any] | None = None,
     feed_asset_urls: list[str] | None = None,
+    feed_alt_texts: list[str] | None = None,
+    feed_source_urls: list[str] | None = None,
     media_host_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if companion_story is None:
@@ -640,8 +665,8 @@ def publish_product(
     if story_link_notification is None:
         if hasattr(db, "setting"):
             link_mode = str(
-                db.setting("instagram_story_link_mode", "bio_shop_grid")
-                or "bio_shop_grid"
+                db.setting("instagram_story_link_mode", "native_sticker_notification")
+                or "native_sticker_notification"
             ).strip().lower()
             if link_mode in {
                 "native_sticker_notification",
@@ -698,6 +723,8 @@ def publish_product(
         cfg,
         site_url=site_url,
         media_urls_override=feed_asset_urls,
+        media_alt_texts_override=feed_alt_texts,
+        source_media_urls_override=feed_source_urls,
         media_host_meta=media_host_meta,
     )
     if not companion_story:

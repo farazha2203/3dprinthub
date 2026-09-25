@@ -1,3 +1,19 @@
+## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-media / disclosure / links - LOCAL_TESTED / RUNTIME GATE NEXT
+
+Active branch: `wip/phase50-a2z-o2f-instagram-links-20260925`, baseline `8a03b321ff0204cb3c4bbb70e6ee6be024f3bd57`. Production is unchanged; this O2F delta is Windows/Catalog Social code and tests only, with no Django model/migration or Server source delta.
+
+Root cause for owner-reported one-image Feed is proven from canonical Catalog and live Buffer evidence: many Products have multiple current `images_json` entries but only one `selected_images_json` entry, and the O2E Social path intentionally followed selected-only authority. Buffer itself is not collapsing arrays: live sent posts for #301/#717/#625 retain 3/2/2 provider assets respectively. Real Catalog audit: 852 Products; 99 resolve exact current Product-local media, 96 of those have multiple current images, 11 have multiple current images while only one is selected, and one Product (#536) currently has 11 images which exceeds Buffer's one-post limit.
+
+O2F adds a fail-closed all-current Product media authority for Instagram Feed while preserving O2E file safety: every `images_json` identity must resolve to exact bytes inside the current Product `local_dir`, finalized SHA is checked when present, and historical/refetch sibling folders are excluded. Buffer Feed preparation now renders every current Product image and carries matching per-image ALT/source audit. It refuses >10 images rather than silently truncating.
+
+Live Buffer schema capability audit confirmed ordered asset lists, `CreatePostInput.aiAssisted`, Instagram `isAiGenerated`, Shop Grid `link`, and reminder `stickerFields`. Feed and Story now set AI-assisted/disclosure fields. Product metadata/receipts retain original Source URL plus tracked 3DPrintHub order URL. Feed keeps the supported Buffer Shop Grid Product destination instead of putting a fake clickable URL in an Instagram caption.
+
+Clickable Story uses only the real Buffer notification/native Link Sticker handoff. The default fallback is hardened to `native_sticker_notification`; automatic no-link Story is no longer silently substituted when no explicit mode exists. Current live Buffer channel `3dprinthub_ir` reports `hasActiveMemberDevice=false`, so a real clickable Story remains externally blocked until the Buffer mobile device is linked/active. Feed-only remains independently usable.
+
+Verification: focused changed-condition 27/27 PASS; related Social/Image 60/60 PASS; full `test_phase50*.py` 116/116 PASS; py_compile/compileall, pip check, git diff-check, Qt VerifyOnly, Django check and migration drift PASS. Django retains only the known CKEditor4 warning. Fresh rollback before runtime/external acceptance: `D:\projects\3dprinthub-backups\phase50-a2z-o2f-pre-runtime-20260925-115751\catalog-before-o2f-runtime.sqlite3`; source/backup quick_check=ok, counts match Products=852 / History=3482 / Crawl=1192 / Receipts=477, backup SHA256 `536acf596be54f39b6d62206d15a259cf8962efeb9e8694f4d29253d4d1bfdc0`.
+
+Exact next: final diff/staging review -> commit/push tested O2F source/docs -> Local=Remote -> exact-SHA Qt runtime acceptance and read-only real Product all-current media smoke. Do not create an arbitrary real Instagram Feed without an owner-selected Product. Clickable Story real acceptance remains blocked specifically by Buffer mobile device readiness. Then O3 guarded deep repair of legacy Products/media.
+
 ## 2026-09-25 - Phase50.A.2Z-O2H Guarded Hard Delete — ACCEPTED / O2F NEXT
 
 Active branch: `wip/phase50-a2z-o2h-hard-delete-20260925`. O2H source/tests/checkpoint docs are GitHub-exact at `bd3ab49f0fc205bafb0d86ff878efe4480b826cd` from accepted O2G closure `960a7ae2f9415b3ab1d65036702794fb5624d9ae`. Production remains unchanged; O2H is Windows/Catalog-only and introduces no Django migration or Server delta.

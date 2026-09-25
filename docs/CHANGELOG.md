@@ -1,3 +1,14 @@
+## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-current media, AI disclosure and link capability
+- Proved Buffer is not dropping carousel assets; live sent Posts preserve multiple provider assets.
+- Added exact all-current Product-local media resolution for Instagram Feed using `images_json`, bounded by current `local_dir` and finalized SHA evidence.
+- Feed no longer derives its image count from selected-only Social payload; matching per-image ALT/source audit follows the all-current set.
+- Added fail-closed >10-image guard instead of silent Feed truncation.
+- Enabled Buffer `aiAssisted` plus Instagram `isAiGenerated` for both Feed and Story.
+- Added original Source Product URL + tracked 3DPrintHub order URL to Social Product-details/receipt evidence; Feed keeps supported Buffer Shop Grid link metadata.
+- Story clickable-link path now defaults to real Buffer notification/native Link Sticker workflow; no automatic no-link downgrade is fabricated.
+- Current provider prerequisite is explicit: `3dprinthub_ir` has no active Buffer mobile member device, so clickable Story real acceptance is externally blocked.
+- Tests: 27/27 focused, 60/60 related Social/Image, 116/116 Phase50 broad; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+
 ## 2026-09-25 - A2Z-O2H Guarded Hard Delete — ACCEPTED
 - Split reversible Crawl Reject from explicit destructive Delete in persistent and live-search Qt surfaces.
 - Added fail-closed hard delete for unconsumed Crawl identities only: matching discovery ledger, Candidate, Preview/cache and bounded current-data-root collected/refetch variants are removed.

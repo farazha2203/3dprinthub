@@ -33,6 +33,7 @@ class _DB:
                 ],
             }),
             "title_fa": "محصول آزمایشی",
+            "source_url": "https://makerworld.com/en/models/7001-demo",
             "description_fa": "توضیح محصول",
             "image_alt_texts_json": json.dumps(["تصویر محصول"]),
         }
@@ -143,6 +144,8 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(create_input["mode"], "shareNow")
         self.assertEqual(create_input["schedulingType"], "automatic")
         self.assertEqual(create_input["channelId"], "chan-1")
+        self.assertTrue(create_input["aiAssisted"])
+        self.assertTrue(create_input["metadata"]["instagram"]["isAiGenerated"])
         self.assertEqual(
             create_input["metadata"]["instagram"]["link"],
             result["tracking_url"],
@@ -152,6 +155,15 @@ class BufferPublishTests(unittest.TestCase):
             create_input["assets"][0]["image"]["url"].startswith("https://3dprinthub.ir/")
         )
         self.assertEqual(result["provider_post_id"], "post-1")
+        self.assertTrue(result["ai_disclosure"])
+        self.assertEqual(
+            result["product_details"]["source_url"],
+            "https://makerworld.com/en/models/7001-demo",
+        )
+        self.assertEqual(
+            result["product_details"]["order_url"],
+            result["tracking_url"],
+        )
         self.assertIn("instagram_published", [item["status"] for item in db.receipts])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
@@ -181,6 +193,39 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(result["media_host"], "github_raw")
         self.assertEqual(result["media_host_branch"], "social-assets-buffer")
         self.assertEqual(result["media_host_commit_sha"], "abc123")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_feed_override_can_publish_all_current_media_not_only_selected_payload(
+        self, request, _secret
+    ):
+        request.return_value = {"createPost": {"post": {
+            "id": "post-all-current", "status": "sent",
+            "externalLink": "https://instagram.com/p/all-current",
+        }}}
+        db = _DB()
+        provider_urls = [
+            f"https://raw.githubusercontent.com/demo/feed-{index:02d}.png"
+            for index in range(1, 4)
+        ]
+        source_urls = [
+            f"https://makerworld.com/media/source-{index}.jpg"
+            for index in range(1, 4)
+        ]
+        alt_texts = [f"Product image {index}" for index in range(1, 4)]
+        result = publish_product(
+            db, 7, BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            companion_story=False,
+            feed_asset_urls=provider_urls,
+            feed_alt_texts=alt_texts,
+            feed_source_urls=source_urls,
+        )
+        create_input = self._feed_input(request)
+        self.assertEqual(len(create_input["assets"]), 3)
+        self.assertEqual(result["media_urls"], provider_urls)
+        self.assertEqual(result["source_media_urls"], source_urls)
+        self.assertEqual(result["alt_texts"], alt_texts)
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
@@ -238,6 +283,11 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(len(payload["media_urls"]), 6)
         self.assertTrue(payload["tracking_url"].startswith("https://3dprinthub.ir/"))
         self.assertIn("utm_source=instagram", payload["tracking_url"])
+        self.assertEqual(
+            payload["product_details"]["source_url"],
+            "https://makerworld.com/en/models/7001-demo",
+        )
+        self.assertEqual(payload["product_details"]["order_url"], payload["tracking_url"])
         self.assertNotIn(payload["tracking_url"], payload["caption"])
         self.assertIn("لینک بیو", payload["caption"])
 

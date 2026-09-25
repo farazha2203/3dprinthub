@@ -1,3 +1,18 @@
+## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-media / disclosure / links
+- [x] Prove one-image root cause: selected-only Social authority can be 1 while current Product media is >1; live Buffer posts prove provider retains multiple assets.
+- [x] Add fail-closed all-current Product-local media resolver for Instagram Feed; preserve O2E local-dir/SHA/refetch safety.
+- [x] Carry all current Feed media + matching ALT/source audit through Buffer rehost/publish paths; fail closed above Buffer 10-image one-post limit.
+- [x] Verify live Buffer schema supports `aiAssisted`, Instagram `isAiGenerated`, Shop Grid `link`, and reminder `stickerFields`.
+- [x] Enable supported AI disclosure for Feed and Story; retain original Source URL + tracked 3DPrintHub order URL in Product details/receipts.
+- [x] Make clickable Story default use real notification/native Link Sticker handoff; never fabricate an automatic clickable sticker.
+- [x] Focused 27/27 + related Social/Image 60/60 + Phase50 broad 116/116; compileall/pip/diff/Qt/Django/no-drift PASS.
+- [x] Fresh pre-runtime Catalog rollback quick_check/count parity PASS.
+- [ ] Commit/push O2F tested source/docs and verify Local=Remote exact SHA.
+- [ ] Exact-SHA Qt runtime acceptance + read-only real Product all-current media smoke.
+- [ ] External blocker: Buffer channel currently reports `hasActiveMemberDevice=false`; real clickable Story acceptance waits for Buffer mobile linkage/readiness.
+- [ ] Optional bounded real Feed acceptance only after owner selects the Product; never choose/publish an arbitrary Product as a test.
+- [ ] O3 NEXT: guarded deep repair for legacy broken Product/media state.
+
 ## 2026-09-24 - Phase50.A.2Z-O Catalog Operator Controls — six bounded phases
 - [x] O1: converge Windows/Production lineage with no tree regression.
 - [x] O1: Product filters for 7/7 ready, AI-completed 6/7, Site sent, Instagram Post sent and Instagram Story sent.

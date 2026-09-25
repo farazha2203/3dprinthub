@@ -1,3 +1,19 @@
+## ERR-49-248 - Instagram Feed could contain one image while Product had multiple current images (2026-09-25)
+
+**Symptom**
+- Owner observed Instagram Feed publishing one image even when the Product contained multiple current images.
+
+**Root cause**
+- O2E correctly made Social follow `selected_images_json` for selected-media parity, but the later owner contract for Instagram Feed is all current Product images. Several real Products have multiple canonical `images_json` entries while only one image is selected. Live Buffer audit proved the provider preserves multi-asset submissions, so the collapse happened before Buffer.
+
+**Correct fix**
+- Keep O2E filesystem/SHA safety, but add a separate Instagram Feed all-current resolver over canonical `images_json`; require exact Product-local files, exclude historical/refetch siblings, carry matching ALT/source audit, and fail closed when a single Buffer Feed would exceed 10 images.
+- Do not change Product Editor selection semantics just to make Social multi-image.
+
+**Verification / prevention**
+- Changed-condition test proves selected=1/current=2 still produces two all-current media items; Feed override test proves three assets reach Buffer input; live Buffer posts #301/#717/#625 show 3/2/2 provider assets.
+- Future Feed code must not slice silently or substitute `selected_images_json` for the owner-defined all-current Feed authority.
+
 ## ERR-49-249 - O2G related Preview regression exposed an over-escaped JavaScript newline sequence
 **Date:** 2026-09-25
 **Observed:** the O2G related Crawl regression failed only `test_javascript_keeps_backslash_n_instead_of_literal_newline_inside_quote`. The branch-baseline `PREVIEW_CARD_EVAL_JS` contained two backslash characters before `n` inside the raw Python string instead of the tested single JavaScript escape.

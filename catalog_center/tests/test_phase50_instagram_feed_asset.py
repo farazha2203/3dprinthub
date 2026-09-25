@@ -10,7 +10,10 @@ from unittest.mock import MagicMock, patch
 
 from PIL import Image
 
-from app.instagram_feed_asset import prepare_product_feed_assets
+from app.instagram_feed_asset import (
+    prepare_all_current_product_feed_assets,
+    prepare_product_feed_assets,
+)
 from app.site_connection import SiteConnection
 
 
@@ -18,6 +21,9 @@ class _DB:
     def __init__(self):
         self.row = {
             "id": 7,
+            "title_fa": "Demo product",
+            "source_title": "Demo product",
+            "image_alt_texts_json": json.dumps(["image one", "image two", "image three"]),
             "server_ack_json": json.dumps({"revision": 3}),
         }
 
@@ -162,6 +168,63 @@ class InstagramFeedAssetTests(unittest.TestCase):
         connect_ftp.assert_not_called()
         ensure_remote_dir.assert_not_called()
         verify_public.assert_not_called()
+
+    def test_all_current_media_prepares_every_product_image_even_when_selection_is_one(self):
+        settings = SiteConnection(
+            ftp_host="ftp.3dprinthub.ir",
+            ftp_port=21,
+            ftp_user="demo",
+            ftp_password="secret",
+            remote_root="/3dprinthub",
+            site_url="https://3dprinthub.ir",
+            bridge_token="",
+        )
+        with tempfile.TemporaryDirectory() as local_appdata:
+            root = Path(local_appdata)
+            media = []
+            for index in range(1, 4):
+                source = root / f"source-{index}.webp"
+                source.write_bytes(self._webp_bytes((700 + index, 900)))
+                media.append({
+                    "source_url": f"https://makerworld.com/media/{index}.webp",
+                    "local_path": str(source),
+                })
+            with patch(
+                "app.phase50_a2w_media_sync.current_product_local_media",
+                return_value=media,
+            ):
+                with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata}):
+                    result = prepare_all_current_product_feed_assets(
+                        _DB(), 7, settings, publish_to_site=False
+                    )
+        self.assertEqual(len(result["local_paths"]), 3)
+        self.assertEqual(len(result["source_urls"]), 3)
+        self.assertEqual(len(result["alt_texts"]), 3)
+        self.assertEqual(result["media_authority"], "all_current_product_images")
+        self.assertFalse(result["published_to_site"])
+
+    def test_all_current_media_fails_closed_above_buffer_ten_image_limit(self):
+        settings = SiteConnection(
+            ftp_host="ftp.3dprinthub.ir",
+            ftp_port=21,
+            ftp_user="demo",
+            ftp_password="secret",
+            remote_root="/3dprinthub",
+            site_url="https://3dprinthub.ir",
+            bridge_token="",
+        )
+        media = [
+            {"source_url": f"https://example.com/{index}.webp", "local_path": "unused"}
+            for index in range(11)
+        ]
+        with patch(
+            "app.phase50_a2w_media_sync.current_product_local_media",
+            return_value=media,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "at most 10 images"):
+                prepare_all_current_product_feed_assets(
+                    _DB(), 7, settings, publish_to_site=False
+                )
 
     @patch("app.instagram_feed_asset._verify_public_image")
     @patch("app.instagram_feed_asset._ensure_remote_dir")

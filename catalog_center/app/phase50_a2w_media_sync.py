@@ -157,6 +157,88 @@ def selected_local_media(row: dict[str, Any]) -> list[dict[str, Any]]:
     return output
 
 
+def current_product_local_media(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """Resolve every current canonical Product image to exact Product-local bytes.
+
+    Unlike ``selected_local_media`` this is the Instagram Feed all-media
+    authority requested by the owner. It is still fail-closed: only identities
+    present in ``images_json`` are considered, every file must resolve inside
+    the current Product ``local_dir``, and finalized SHA evidence is verified.
+    Historical/refetch sibling folders are never accepted.
+    """
+    current = [
+        str(value or "").strip()
+        for value in _json_list(row.get("images_json"))
+        if str(value or "").strip()
+    ]
+    current = list(dict.fromkeys(current))
+    if not current:
+        return []
+
+    raw_root = str(row.get("local_dir") or "").strip()
+    if not raw_root:
+        raise RuntimeError("Current Product media has no local_dir.")
+    local_dir = Path(raw_root).resolve()
+    if not local_dir.is_dir():
+        raise RuntimeError("Current Product local_dir does not exist.")
+
+    metadata = {
+        str(item.get("source_url") or "").strip(): dict(item)
+        for item in _json_list(row.get("image_metadata_json"))
+        if isinstance(item, dict)
+        and str(item.get("source_url") or "").strip()
+    }
+    output: list[dict[str, Any]] = []
+    for index, source_url in enumerate(current, 1):
+        local_value = str(
+            image_pipeline.strict_local_image(row, source_url) or ""
+        ).strip()
+        if not local_value:
+            raise RuntimeError(
+                f"Current Product image {index} has no exact Local file."
+            )
+        path = Path(local_value).resolve()
+        try:
+            path.relative_to(local_dir)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Current Product image {index} escaped Product local_dir."
+            ) from exc
+        if not path.is_file():
+            raise RuntimeError(
+                f"Current Product image {index} Local file is missing."
+            )
+
+        meta = metadata.get(source_url) or {}
+        expected_sha = str(meta.get("final_sha256") or "").strip().lower()
+        final_value = str(meta.get("final_local_file") or "").strip()
+        if final_value:
+            final_path = Path(final_value).resolve()
+            try:
+                final_path.relative_to(local_dir)
+            except ValueError as exc:
+                raise RuntimeError(
+                    f"Current Product image {index} final_local_file is outside Product local_dir."
+                ) from exc
+            if final_path.is_file():
+                path = final_path
+        actual_sha = _sha256(path)
+        if expected_sha and actual_sha != expected_sha:
+            raise RuntimeError(
+                f"Current Product image {index} SHA drift: "
+                f"expected={expected_sha} actual={actual_sha}"
+            )
+        output.append({
+            "index": index,
+            "source_url": source_url,
+            "local_path": str(path),
+            "filename": path.name,
+            "seo_filename": str(meta.get("seo_filename") or path.name).strip(),
+            "sha256": actual_sha,
+        })
+    return output
+
+
 def align_public_media_to_selected(
     row: dict[str, Any],
     public_urls: list[str],
