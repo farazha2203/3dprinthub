@@ -1,5 +1,5 @@
 ## 2026-09-25 - Owner: Instagram must send all Product images and real Product links/disclosure
-Status: `O2F LOCAL_TESTED / COMMIT+RUNTIME GATE NEXT / CLICKABLE STORY EXTERNAL PREREQUISITE`.
+Status: `O2F GITHUB_UPDATED / RUNTIME_VERIFIED / CLICKABLE STORY EXTERNAL PREREQUISITE / O3 DEVELOPMENT NEXT`.
 
 Owner requires Instagram Feed to send all current Product images rather than only one selected image; Feed and Story must use supported AI disclosure; Social metadata must retain the original mother-site Product URL and the 3DPrintHub order Product URL; Story must use a real clickable site link rather than artwork/caption text pretending to be clickable.
 

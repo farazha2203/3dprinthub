@@ -8,6 +8,7 @@
 - Story clickable-link path now defaults to real Buffer notification/native Link Sticker workflow; no automatic no-link downgrade is fabricated.
 - Current provider prerequisite is explicit: `3dprinthub_ir` has no active Buffer mobile member device, so clickable Story real acceptance is externally blocked.
 - Tests: 27/27 focused, 60/60 related Social/Image, 116/116 Phase50 broad; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+- GitHub-exact source checkpoint: `81ceedad5969fd0dfb832ad26f1287ca0b3dc374`; Local=Remote. Exact-SHA Qt runtime visible; Product #140 read-only smoke proves selected=1 -> all-current Feed=3 and canonical digest unchanged. Clickable Story external acceptance remains blocked by Buffer mobile readiness.
 
 ## 2026-09-25 - A2Z-O2H Guarded Hard Delete — ACCEPTED
 - Split reversible Crawl Reject from explicit destructive Delete in persistent and live-search Qt surfaces.

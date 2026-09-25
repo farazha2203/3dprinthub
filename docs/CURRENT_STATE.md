@@ -1,6 +1,6 @@
-## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-media / disclosure / links - LOCAL_TESTED / RUNTIME GATE NEXT
+## 2026-09-25 - Phase50.A.2Z-O2F Instagram all-media / disclosure / links - GITHUB_UPDATED / RUNTIME_VERIFIED / CLICKABLE STORY EXTERNAL_BLOCKED
 
-Active branch: `wip/phase50-a2z-o2f-instagram-links-20260925`, baseline `8a03b321ff0204cb3c4bbb70e6ee6be024f3bd57`. Production is unchanged; this O2F delta is Windows/Catalog Social code and tests only, with no Django model/migration or Server source delta.
+Active branch: `wip/phase50-a2z-o2f-instagram-links-20260925`. Tested O2F source/tests/checkpoint docs are GitHub-exact at `81ceedad5969fd0dfb832ad26f1287ca0b3dc374` from baseline `8a03b321ff0204cb3c4bbb70e6ee6be024f3bd57`. Production is unchanged; this O2F delta is Windows/Catalog Social code and tests only, with no Django model/migration or Server source delta.
 
 Root cause for owner-reported one-image Feed is proven from canonical Catalog and live Buffer evidence: many Products have multiple current `images_json` entries but only one `selected_images_json` entry, and the O2E Social path intentionally followed selected-only authority. Buffer itself is not collapsing arrays: live sent posts for #301/#717/#625 retain 3/2/2 provider assets respectively. Real Catalog audit: 852 Products; 99 resolve exact current Product-local media, 96 of those have multiple current images, 11 have multiple current images while only one is selected, and one Product (#536) currently has 11 images which exceeds Buffer's one-post limit.
 
@@ -12,7 +12,7 @@ Clickable Story uses only the real Buffer notification/native Link Sticker hando
 
 Verification: focused changed-condition 27/27 PASS; related Social/Image 60/60 PASS; full `test_phase50*.py` 116/116 PASS; py_compile/compileall, pip check, git diff-check, Qt VerifyOnly, Django check and migration drift PASS. Django retains only the known CKEditor4 warning. Fresh rollback before runtime/external acceptance: `D:\projects\3dprinthub-backups\phase50-a2z-o2f-pre-runtime-20260925-115751\catalog-before-o2f-runtime.sqlite3`; source/backup quick_check=ok, counts match Products=852 / History=3482 / Crawl=1192 / Receipts=477, backup SHA256 `536acf596be54f39b6d62206d15a259cf8962efeb9e8694f4d29253d4d1bfdc0`.
 
-Exact next: final diff/staging review -> commit/push tested O2F source/docs -> Local=Remote -> exact-SHA Qt runtime acceptance and read-only real Product all-current media smoke. Do not create an arbitrary real Instagram Feed without an owner-selected Product. Clickable Story real acceptance remains blocked specifically by Buffer mobile device readiness. Then O3 guarded deep repair of legacy Products/media.
+Exact-SHA runtime acceptance PASS on `81ceedad...`: Qt VerifyOnly passed, one Catalog Center launch became visible as v8.9.11, and real read-only Product #140 proves selected=1 while all-current Feed authority=3 with three local Feed derivatives and three ALT entries. Canonical logical digest before/after runtime stayed exactly `6c7b46107c9d77fba16c8460229b0697fa32f35ac0f00634d450e237c4fa18db`; quick_check=ok. No real Feed was created because the owner did not select a Product for an irreversible publication test. Current Buffer mobile readiness remains false, so clickable Story real acceptance is externally blocked. Exact development next: O3 guarded deep repair of legacy Products/media while O2F external Story acceptance remains pending only on Buffer mobile readiness.
 
 ## 2026-09-25 - Phase50.A.2Z-O2H Guarded Hard Delete — ACCEPTED / O2F NEXT
 

@@ -7,8 +7,8 @@
 - [x] Make clickable Story default use real notification/native Link Sticker handoff; never fabricate an automatic clickable sticker.
 - [x] Focused 27/27 + related Social/Image 60/60 + Phase50 broad 116/116; compileall/pip/diff/Qt/Django/no-drift PASS.
 - [x] Fresh pre-runtime Catalog rollback quick_check/count parity PASS.
-- [ ] Commit/push O2F tested source/docs and verify Local=Remote exact SHA.
-- [ ] Exact-SHA Qt runtime acceptance + read-only real Product all-current media smoke.
+- [x] Commit/push O2F tested source/docs at `81ceedad...` and verify Local=Remote exact SHA.
+- [x] Exact-SHA Qt runtime acceptance + read-only real Product #140 smoke: selected=1, all-current Feed=3, three derivatives/ALT entries, canonical digest unchanged.
 - [ ] External blocker: Buffer channel currently reports `hasActiveMemberDevice=false`; real clickable Story acceptance waits for Buffer mobile linkage/readiness.
 - [ ] Optional bounded real Feed acceptance only after owner selects the Product; never choose/publish an arbitrary Product as a test.
 - [ ] O3 NEXT: guarded deep repair for legacy broken Product/media state.
