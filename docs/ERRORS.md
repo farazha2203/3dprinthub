@@ -1,3 +1,19 @@
+## ERR-49-252 - O4 acceptance harness used unavailable pytest and guessed Candidate table name (2026-09-25)
+
+**Observed**
+- The first post-commit focused command invoked `python -m pytest`, but the canonical Windows venv does not install pytest; the command stopped before running the O4 tests while Qt VerifyOnly still passed.
+- The first disposable O4 acceptance probe guessed table `discovery_candidates`; the real repository authority is `CANDIDATE_TABLE = phase49_3i_discovery_candidates`. SQLite raised `no such table` before reconciliation apply.
+
+**Root cause**
+- Acceptance tooling was inferred instead of reading the repository test framework and schema constant. The O4 tests are `unittest` modules and Candidate table identity is owned by `app.phase49_3i_discovery_review.CANDIDATE_TABLE`.
+
+**Correct fix / verification**
+- Do not install new tooling to make a guessed runner work. Re-run with the repository-standard `python -m unittest`; O4 7/7 then O2H+O4 12/12 PASS.
+- Reset the disposable acceptance root from the fresh verified rollback, import the repository Candidate table constant, and rerun. Isolated reconciliation PASSed before canonical mutation; canonical reconciliation later PASSed with quick_check=ok and zero lifecycle mismatches.
+
+**Prevention**
+- Verify test runner availability and import repository schema constants before acceptance scripts. A disposable diagnostic failure must not be retried unchanged and must never be allowed to touch canonical Catalog state.
+
 ## ERR-49-250 - O4 exposed Product/Crawl tombstone drift and stale Restore semantics (2026-09-25)
 
 **Observed**

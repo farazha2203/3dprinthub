@@ -7,10 +7,10 @@
 - [x] Operator Product Delete/Restore result dialogs report actual cleanup/restoration semantics.
 - [x] O4 focused 7/7, related lifecycle 92/92, Phase50 broad 129/129; compileall/pip/diff/Qt/Django/no-drift PASS.
 - [x] Baseline-prove unrelated Filament manufacturer assertion failure at clean `c821a00a`; exclude it from O4 causal gate.
-- [ ] Commit/push tested O4 source/tests/docs and verify Local=Remote.
-- [ ] Create fresh SQLite + filesystem rollback for all planned canonical reconciliation targets.
-- [ ] Exact-SHA runtime and isolated destructive reconciliation acceptance.
-- [ ] Guarded canonical reconciliation -> zero Product/Crawl mismatch audit -> O4 ACCEPTED.
+- [x] Commit/push tested O4 source/tests/docs at `f4153b05...` and verify Local=Remote.
+- [x] Create fresh SQLite + exact filesystem rollback for all planned canonical reconciliation targets; backup quick_check=ok and SHA256 `fd2ba569...`.
+- [x] Exact-SHA runtime + isolated destructive reconciliation acceptance PASS: mismatches 58→0, Candidate 647→625, Preview 16→0, Local remnants 4→0, Product/receipt digests exact.
+- [x] Guarded canonical reconciliation PASS with Products/History/Crawl/Receipts unchanged at 852/3482/1192/477, quick_check=ok, cleanup errors=0; O2H+O4 post-apply regression 12/12 PASS; O4 ACCEPTED.
 - [ ] O5 NEXT: Social Receipt Reconciliation + Operator Acceptance.
 
 ## 2026-09-25 - Phase50.A.2Z-O3 Guarded Deep Product Repair
@@ -56,10 +56,10 @@
 - [x] O2E ACCEPTED: final GitHub-exact source `544e046b...`; Product Editor/Refresh/Social share exact selected Product-local media authority; #625/#628 real ProductWizard + Refresh + Social parity PASS; fresh rollback/integrity PASS; one graceful exact-SHA restart PASS; target Product/History no-mutation digest PASS. Production unchanged.
 - [x] O2G ACCEPTED: GitHub-exact source `436bca68...`; target-aware MakerWorld discovery is regression/runtime accepted. Real cloned `Lamp` probe progressed from the old 15-row window to scroll depth 48, saw 397 links and persisted exactly the requested 200 unconsumed candidates; HTTP 403 correctly fell through to documented Chrome 9222 rather than false exhaustion. Focused 49/49, Preview 3/3, related 98/98 and static/framework gates PASS. Exact-SHA Qt v8.9.11 runtime launched once; A/B layout smoke and target 1..500 PASS; canonical Catalog digest remained exact with zero mutation. Production unchanged.
 - [x] O2H ACCEPTED: GitHub-exact source `bd3ab49f...`; reversible Reject is separate from guarded hard-delete. Real rollback-clone acceptance deleted only failed unconsumed Crawl #1190 and blocked Product-backed #1192/Product #852; Products/History unchanged, clone quick_check=ok, canonical digest unchanged. Exact-SHA Qt render + visible v8.9.11 launch PASS. Production unchanged.
-- [ ] O2F NEXT: verify current Buffer/Meta capabilities; fix Feed to publish the full O2E canonical media set instead of one image; implement only supported AI disclosure, source/order Product details links and Story link workflow; preserve independent Post/Story receipts and no-duplicate guards.
-- [ ] O3: guarded deep repair — backup, bounded derived-data purge, full source refetch and same-identity remap.
-- [ ] O4: fix Delete semantics and prove visible removal/tombstone/restore behavior.
-- [ ] O5: independent Social receipt reconciliation and operator acceptance for Post vs Story.
+- [x] O2F ACCEPTED DEVELOPMENT / RUNTIME VERIFIED: all-current Feed media, AI disclosure, source/order metadata and supported Story-link workflow; clickable Story remains externally blocked only while Buffer mobile readiness is false.
+- [x] O3 ACCEPTED: guarded deep repair with verified rollback, same-identity refetch/remap, authority preservation and isolated destructive acceptance.
+- [x] O4 ACCEPTED: Product/Crawl delete semantics reconciled under fresh rollback; canonical mismatches zero, stale Candidate/Preview/Local remnants removed, Product/receipt authority unchanged.
+- [ ] O5 NEXT: independent Social receipt reconciliation and operator acceptance for Post vs Story.
 - [ ] O6: integrated regression, any required GitHub-first Production gates, final docs and closure.
 
 ## 2026-09-24 - A2Z final Production closure gate

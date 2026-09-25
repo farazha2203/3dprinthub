@@ -268,5 +268,14 @@ O4 Delete Semantics Repair: re-read docs/errors -> audit Product/Crawl queue/cac
 - Related gate found one unrelated Filament manufacturer test failure; exact failure reproduced on clean baseline `c821a00a...`, documented ERR-49-251 and excluded from O4 causal gate.
 - Production/Host changed = NO; migration = NO.
 
-### O4 exact next
-Final diff/staging -> commit/push source/tests/docs -> Local=Remote -> fresh SQLite backup plus filesystem backup of every planned Preview/Local delete target -> exact-SHA Qt -> isolated destructive reconciliation -> verify Product count/identity/Site/receipts/tombstones/outside-root guard -> only then apply canonical reconciliation -> quick_check + zero mismatch read-only audit + O2H protection regression -> O4 ACCEPTED. Then O5 Social Receipt Reconciliation + Operator Acceptance.
+### O4 runtime acceptance / closure — ACCEPTED
+- GitHub-exact O4 source/tests/checkpoint commit: `f4153b053fe8c9ba38697ee84109e6bd7f11cb89`; Local=Remote before destructive acceptance.
+- Fresh rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o4-runtime-acceptance-20260925-151529`; source/backup quick_check=ok; SQLite SHA256 `fd2ba569c3c9386e67a2e2c4ebde6d64d6fa93d68dcbe35b86400c56d4f7d069`; exact planned filesystem targets backed up with per-file hashes.
+- Isolated clone `D:\projects\3dprinthub-o4-acceptance-20260925-151529` reconciled 58 ledger mismatches to zero, removed 22 Candidate rows, 16 Preview files and four same-identity Local folders; Product and sync-receipt digests remained exact; quick_check=ok.
+- Canonical apply ran only after isolated PASS. Final truth: Products=852, History=3482, Crawl=1192, Candidates=625, Receipts=477; lifecycle mismatches=0; rejected Preview remnants=0; rejected same-identity Local remnants=0; cleanup errors=0; Product/receipt digests unchanged; quick_check=ok.
+- Post-apply O2H+O4 protection regression 12/12 PASS and Qt VerifyOnly PASS. Exact-SHA Catalog Center v8.9.11 became visible from one launch as PID 2592.
+- Production/Host changed = NO; Django migration = NO.
+- Acceptance-harness corrections were non-canonical: unavailable `pytest` was replaced by repo-standard `unittest`; a guessed non-existent Candidate table name failed before clone apply, the disposable clone was reset from rollback, then rerun using repository constant `CANDIDATE_TABLE`.
+
+### O5 exact next
+Social Receipt Reconciliation + Operator Acceptance: re-read current Social errors/contracts -> audit `sync_receipts` versus final Buffer/provider Feed and Story state independently -> classify missing/stale/ambiguous receipts without provider writes -> reconcile only evidence-backed local receipt truth and preserve independent Post/Story duplicate guards -> keep O2F all-current Feed media, source/order metadata and AI disclosure unchanged -> keep clickable Story fail-closed while Buffer mobile readiness is false -> focused/related Social regression -> fresh rollback before any receipt mutation -> bounded owner-selected real provider acceptance only if evidence still requires it -> docs/commit/push. Then O6 integrated regression + closure.

@@ -1,10 +1,13 @@
-## 2026-09-25 - Phase50.A.2Z-O4 Product/Crawl delete semantics alignment
+## 2026-09-25 - Phase50.A.2Z-O4 Product/Crawl delete semantics alignment — ACCEPTED
 - Existing Product row is now the terminal identity authority before Crawl ledger state, preventing stale rejected ledger rows from overriding active/restored Products.
 - Product Reject purges all bounded same-identity active/refetch/deep-repair folders in the current Catalog data root plus matching Candidate and Preview cache while retaining the lightweight Product tombstone/thumbnail and Site/receipt history.
 - Product Restore changes the retained identity ledger to `collected` rather than `new`, preventing an existing Product from re-entering Add Products; operator UI directs heavy-data recovery to O3 deep repair.
 - Added Product lifecycle reconciliation to audit/apply `rejected`/`blocked`/`collected` ledger truth and rejected-cache cleanup with outside-root fail-closed filesystem semantics.
-- Real read-only audit: 58 ledger mismatches, 22 rejected Candidate remnants, 16 Preview remnants, 4 same-identity Local remnants; canonical Catalog still unmodified by O4.
-- O4 tests: focused 7/7, related lifecycle 92/92, Phase50 broad 129/129; compileall/pip/diff/Qt/Django/no-drift PASS. Production unchanged.
+- Real read-only audit found 58 ledger mismatches, 22 rejected Candidate remnants, 16 Preview remnants and four same-identity Local remnants.
+- Fresh canonical rollback `phase50-a2z-o4-runtime-acceptance-20260925-151529` is quick_check=ok; SQLite SHA256 `fd2ba569c3c9386e67a2e2c4ebde6d64d6fa93d68dcbe35b86400c56d4f7d069`; all 16 Preview files and four Local folders are backed up with per-file hashes.
+- Isolated destructive acceptance then canonical apply both PASS: ledger mismatches 58→0, Candidate rows 647→625, Preview remnants 16→0, Local remnants 4→0; Products/History/Crawl/Receipts remain 852/3482/1192/477 and Product/receipt digests remain exact.
+- O4 tests: focused 7/7, related lifecycle 92/92, Phase50 broad 129/129 before apply; O2H+O4 post-apply 12/12 PASS; Qt VerifyOnly PASS. Exact-SHA v8.9.11 runtime visible as PID 2592.
+- GitHub-exact O4 source checkpoint is `f4153b053fe8c9ba38697ee84109e6bd7f11cb89`; Production/Host unchanged.
 
 ## 2026-09-25 - Phase50.A.2Z-O3 guarded same-identity deep Product repair
 - Added a distinct confirmed deep-repair Product action; normal non-destructive Source recovery remains unchanged.

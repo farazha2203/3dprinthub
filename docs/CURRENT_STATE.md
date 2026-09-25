@@ -1,3 +1,19 @@
+## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair - ACCEPTED / O5 NEXT
+
+Active branch: `wip/phase50-a2z-o4-delete-semantics-20260925`. Tested O4 source/tests/checkpoint docs are GitHub-exact at `f4153b053fe8c9ba38697ee84109e6bd7f11cb89` from accepted O3 baseline `c821a00a0a8327a505574e8f155c0382264fa1c1`. Production/Host remains unchanged at selective `2b48a593...`; O4 is Windows/Catalog-only with no Django migration or Server source delta.
+
+Fresh canonical rollback was created before any destructive reconciliation at `D:\projects\3dprinthub-backups\phase50-a2z-o4-runtime-acceptance-20260925-151529`. SQLite source/backup `quick_check=ok`; backup SHA256 is `fd2ba569c3c9386e67a2e2c4ebde6d64d6fa93d68dcbe35b86400c56d4f7d069`. The rollback also contains every planned destructive filesystem target: 16 Preview files (172,668 bytes) and four same-identity Local folders (7,152,925 bytes), with per-file SHA256 evidence.
+
+Isolated destructive acceptance PASS at `D:\projects\3dprinthub-o4-acceptance-20260925-151529`: 58 Product/Crawl ledger mismatches reconciled to zero, 22 stale Candidate rows removed, all 16 rejected Preview files removed and all four rejected same-identity Local folders removed. Products stayed 852, Product History 3482, Crawl 1192 and receipts 477; complete Product-table and sync-receipt digests remained exact; clone `quick_check=ok`.
+
+Only after the isolated clone passed was canonical reconciliation applied. Canonical result is exact: ledger mismatches 58→0, Candidate rows 647→625, Product/History/Crawl/receipt counts unchanged at 852/3482/1192/477, Product and receipt digests unchanged, rejected Preview remnants 16→0, rejected same-identity Local remnants 4→0, cleanup errors=0, `quick_check=ok`. O2H Product-authority protection plus O4 lifecycle regression reran together 12/12 PASS and Qt `RUN_QT.ps1 -VerifyOnly` PASS.
+
+Exact-SHA runtime acceptance PASS: no prior Catalog window existed, one launch was issued from `f4153b05...`, and the same launch became visible as `3DPrintHub Catalog Center v8.9.11 - Qt 6` PID 2592. Post-launch canonical audit remains `quick_check=ok`, Products=852, History=3482, Crawl=1192, Candidates=625, Receipts=477, lifecycle mismatches=0.
+
+Two acceptance-harness mistakes were contained before canonical mutation: the first focused command used unavailable `pytest` in the canonical venv, then switched to the repository-standard `unittest` runner; the first isolated diagnostic guessed a non-existent `discovery_candidates` table, failed before apply, the disposable clone was reset from the verified rollback, and the rerun used repository constant `CANDIDATE_TABLE`. Neither changed canonical data.
+
+Exact next: O5 Social Receipt Reconciliation + Operator Acceptance -> re-read Social errors/contracts -> audit final Buffer/provider Feed and Story receipts independently against `sync_receipts` and current Product filters -> reconcile stale/missing receipt truth without creating duplicate Post/Story -> preserve O2F all-current Feed media, source/order metadata and AI disclosure -> keep clickable Story blocked when Buffer mobile readiness is false -> focused/related Social regression -> fresh rollback before any receipt mutation -> bounded owner-selected provider acceptance only if needed -> docs/commit/push. Then O6 integrated regression + final closure.
+
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair - LOCAL_TESTED / GITHUB+DESTRUCTIVE GATES NEXT
 
 Active branch: `wip/phase50-a2z-o4-delete-semantics-20260925`, baseline `c821a00a0a8327a505574e8f155c0382264fa1c1` (O3 ACCEPTED). Production/Host remains unchanged at selective `2b48a593...`; O4 delta is Windows/Catalog-only with no Django migration or Server source change.

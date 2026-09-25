@@ -1,3 +1,10 @@
+## 2026-09-25 - Owner continuation: O4 accepted; continue directly into O5
+Status: `O4 ACCEPTED / O5 SOCIAL RECEIPT RECONCILIATION NEXT`.
+
+Owner asked development to continue without stalling once repository/docs/remote access were available. O4 is now closed through the destructive gates, not only code-complete: fresh SQLite+filesystem rollback, isolated destructive acceptance, guarded canonical reconciliation, zero remaining Product/Crawl mismatches, post-apply O2H/O4 regression and exact-SHA Qt runtime all PASS. Production remains unchanged.
+
+O5 must now reconcile Instagram Feed and Story independently from final Buffer/provider receipt truth, preserve independent duplicate guards, preserve O2F all-current Feed media plus source/order metadata and AI disclosure, and never create a duplicate real Post/Story merely to repair local receipt state. Clickable Story remains fail-closed while Buffer reports no active mobile member device.
+
 ## 2026-09-25 - Owner continuation: O4 visible/testable Product and Crawl delete semantics
 Status: `O4 LOCAL_TESTED / GITHUB+BACKUP+DESTRUCTIVE ACCEPTANCE NEXT`.
 
