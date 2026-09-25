@@ -205,5 +205,15 @@ Close the owner-facing Product/Crawl operational gaps without creating a paralle
 - Post-launch canonical Catalog quick_check=ok; Products=852 / History=3482 / Crawl=1192; full logical digest remains exactly `8ae24e2f6c08c8340ad21f00baff3656bf28f046378b0e295b37e4b522c5a807`. Runtime/UI acceptance caused zero Catalog mutation.
 - Production changed = NO; migration changed = NO; canonical Product/Site/Social data mutated by real-source probe or runtime acceptance = NO.
 
+## O2H implementation — LOCAL_TESTED
+- Reject and Delete are now separate operator contracts in both persistent Crawl inventory and current-search results. Reject remains status-only and reversible through Restore.
+- Explicit hard-delete removes only an unconsumed `discovered_urls` identity plus matching `phase49_3i_discovery_candidates`, canonical Preview cache and bounded current-data-root identity folders (`<external>`, refresh/refetch/bulk-refetch variants).
+- Product authority is resolved before any deletion by both Source+external ID and Source+normalized URL. Any matching Product fails closed; Product rows/files are never passed to the Crawl deletion path.
+- Destructive path is bounded to the current Catalog data root. The legacy compatibility read root is never traversed as a deletion target.
+- Qt confirmation explains destructive/non-restorable semantics and reports Product-blocked/error counts instead of silently deleting.
+- Changed-condition O2H tests: 5/5 PASS. Related O2/O2D/Crawl/Acquisition/Preview regression: 68/68 PASS. py_compile/compileall, pip check, Qt VerifyOnly, git diff-check, Django check and migration drift PASS; known CKEditor warning only.
+- Fresh rollback: `D:\projects\3dprinthub-backups\phase50-a2z-o2h-runtime-acceptance-20260925-095729\catalog-before-o2h-runtime.sqlite3`; source/backup quick_check=ok; Products=852 / History=3482 / Crawl=1192 / Candidates=647; four-table digest `e2993bc95b5fcb89dd67f458156877d469ee4653956095ddcf755f94e641b952`; backup SHA256 `819441eb384a798aa07a897a3cc357c396e15381885972e9ce014be6308c1bbc`.
+- Production changed = NO; Server/migration delta = NO.
+
 ## Exact next
-O2H guarded hard delete -> re-read current Reject/delete paths and prior errors -> verify unconsumed identity authority -> fresh Catalog rollback -> implement bounded deletion of discovery/candidate/preview/cache/verified derived data only when no Product exists -> Product-backed identity fail closed -> changed-condition + related regression -> integrity/no-collateral proof -> commit/push -> Local=Remote -> exact-SHA Qt runtime acceptance. Then O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.
+Commit/push O2H source/tests/checkpoint docs -> Local=Remote -> exact-SHA isolated-clone acceptance using a real failed unconsumed MakerWorld identity and a real Product-backed identity -> verify exact bounded deletion/no-collateral + canonical no-mutation digest -> exact-SHA Qt render/launch smoke -> closure docs. Then O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep reset/refetch/remap. O4 Delete semantics follows after O3.

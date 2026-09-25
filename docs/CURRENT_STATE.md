@@ -1,3 +1,15 @@
+## 2026-09-25 - Phase50.A.2Z-O2H Guarded Hard Delete — LOCAL_TESTED / GITHUB CHECKPOINT NEXT
+
+Active branch: `wip/phase50-a2z-o2h-hard-delete-20260925`, based on the accepted O2G closure `960a7ae2f9415b3ab1d65036702794fb5624d9ae`. Production remains unchanged; O2H is Windows/Catalog-only and introduces no Django migration or Server delta.
+
+O2H now separates reversible Reject from destructive Delete in both the persistent Crawl queue and current-search results. Reject remains status-only and restorable. The new explicit `حذف واقعی Crawl` path removes only an unconsumed discovery identity, its matching discovery-candidate row, canonical Preview cache and verified candidate-derived local identity folders. Before any deletion it resolves Product authority by both Source+external ID and normalized Source URL; any Product-backed identity fails closed and nothing for that identity is removed. Deletion is bounded to the canonical current Catalog data root; the historical read-only compatibility root is not a deletion target.
+
+Changed-condition tests cover full unconsumed cleanup, Product authority fail-closed by external ID, Product authority fail-closed by normalized URL, reversible non-destructive Reject, and distinct Qt controls/tooltips. Focused O2H is 5/5 PASS. Related O2/O2D/Crawl/Acquisition/Preview regression is 68/68 PASS after correcting only the test-module invocation name; the first broad command failed before that module could load because the filename prefix is `test_epic49_`, not `test_phase49_`. py_compile/compileall, pip check, Qt VerifyOnly, git diff-check, Django check and migration drift PASS; Django retains only the known CKEditor 4 support warning.
+
+Fresh rollback before any runtime destructive acceptance: `D:\projects\3dprinthub-backups\phase50-a2z-o2h-runtime-acceptance-20260925-095729\catalog-before-o2h-runtime.sqlite3`. Source/backup quick_check=ok; counts match Products=852 / History=3482 / Crawl=1192 / Candidates=647; O2H four-table logical digest matches at `e2993bc95b5fcb89dd67f458156877d469ee4653956095ddcf755f94e641b952`; backup SHA256 `819441eb384a798aa07a897a3cc357c396e15381885972e9ce014be6308c1bbc`.
+
+Exact next: commit/push the O2H source/tests/checkpoint docs -> Local=Remote -> exact-SHA runtime acceptance against an isolated clone of the fresh rollback using a real failed unconsumed MakerWorld identity plus a real Product-backed identity -> prove only the unconsumed identity disappears and canonical Catalog digest stays unchanged -> exact-SHA Qt render/launch smoke -> closure docs. Then O2F Instagram all-media/disclosure/source+order links/Story-link capability -> O3 guarded deep repair.
+
 ## 2026-09-25 - Phase50.A.2Z-O2G Search Crawl Pagination — ACCEPTED / O2H NEXT
 
 Active branch: `wip/phase50-a2z-o2g-search-target-20260924`. O2G source/tests/docs are GitHub-exact at `436bca68a2ee30ed80cc262456a143099c9d5586` from baseline `47d676d94e8ddc2fa70726063d06016a49f48e2c`. Production remains unchanged at selective Server head `2b48a593...`; O2G is Windows/Catalog-only and has no Django migration or Server source delta.

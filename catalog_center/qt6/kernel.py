@@ -2663,6 +2663,168 @@ class AcquisitionCore:
             )
         )
 
+    def hard_delete_queue_items(self, row_ids: list[int]) -> dict[str, Any]:
+        """Permanently remove only unconsumed Crawl identities.
+
+        Product-backed identities fail closed. Only canonical Crawl/Candidate/
+        Preview and candidate-derived local data for the exact identity are
+        removed; Product rows and legacy compatibility roots are never touched.
+        """
+        from app.phase49_3i_discovery_review import (
+            CANDIDATE_TABLE,
+            candidate_preview_cache_path,
+            ensure_schema as ensure_candidate_schema,
+        )
+
+        ensure_candidate_schema(self.db)
+        result: dict[str, Any] = {
+            "requested": 0,
+            "deleted": 0,
+            "blocked": 0,
+            "missing": 0,
+            "failed": 0,
+            "files_deleted": 0,
+            "deleted_row_ids": [],
+            "blocked_rows": [],
+            "errors": [],
+        }
+        ids = sorted({int(value) for value in row_ids or [] if int(value) > 0})
+        result["requested"] = len(ids)
+        data_root = Path(self.db.path).resolve().parent
+        collected_root = (data_root / "collected").resolve()
+
+        def identity_local_dirs(source_code: str, external_id: str) -> list[Path]:
+            source_cf = str(source_code or "").strip().casefold()
+            external = str(external_id or "").strip()
+            if not source_cf or not external or not collected_root.is_dir():
+                return []
+            output: list[Path] = []
+            try:
+                source_dirs = [
+                    item
+                    for item in collected_root.iterdir()
+                    if item.is_dir() and item.name.casefold() == source_cf
+                ]
+            except OSError:
+                source_dirs = []
+            for source_dir in source_dirs:
+                try:
+                    children = list(source_dir.iterdir())
+                except OSError:
+                    continue
+                for child in children:
+                    if not child.is_dir():
+                        continue
+                    name = child.name
+                    if not (
+                        name == external
+                        or name == f"{external}_refresh_latest"
+                        or name.startswith(f"{external}_refetch_")
+                        or name.startswith(f"{external}_bulk_refetch_")
+                    ):
+                        continue
+                    resolved = child.resolve()
+                    if collected_root not in resolved.parents:
+                        raise RuntimeError(
+                            f"Unsafe Crawl delete path outside collected: {resolved}"
+                        )
+                    output.append(resolved)
+            return output
+
+        for row_id in ids:
+            row = self.db.conn.execute(
+                "SELECT * FROM discovered_urls WHERE id=?",
+                (row_id,),
+            ).fetchone()
+            if row is None:
+                result["missing"] += 1
+                continue
+            data = dict(row)
+            source_code = str(data.get("source_code") or "").strip()
+            external_id = str(data.get("external_id") or "").strip()
+            normalized_url = str(data.get("normalized_url") or "").strip()
+
+            product = self.db.conn.execute(
+                """
+                SELECT id, source_code, external_id, normalized_url
+                FROM products
+                WHERE source_code=? COLLATE NOCASE
+                  AND (
+                    (?<>'' AND external_id=?)
+                    OR
+                    (?<>'' AND normalized_url=?)
+                  )
+                ORDER BY id
+                LIMIT 1
+                """,
+                (
+                    source_code,
+                    external_id,
+                    external_id,
+                    normalized_url,
+                    normalized_url,
+                ),
+            ).fetchone()
+            if product is not None:
+                result["blocked"] += 1
+                result["blocked_rows"].append(
+                    {
+                        "row_id": row_id,
+                        "product_id": int(product["id"]),
+                        "source_code": source_code,
+                        "external_id": external_id,
+                    }
+                )
+                continue
+
+            try:
+                paths = identity_local_dirs(source_code, external_id)
+                if external_id:
+                    preview = candidate_preview_cache_path(
+                        source_code,
+                        external_id,
+                    )
+                    if preview.is_file():
+                        preview.unlink()
+                        result["files_deleted"] += 1
+                for path in paths:
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                        result["files_deleted"] += 1
+
+                with self.db.conn:
+                    self.db.conn.execute(
+                        f"""
+                        DELETE FROM {CANDIDATE_TABLE}
+                        WHERE source_code=? COLLATE NOCASE
+                          AND (
+                            (?<>'' AND external_id=?)
+                            OR
+                            (?<>'' AND normalized_url=?)
+                          )
+                        """,
+                        (
+                            source_code,
+                            external_id,
+                            external_id,
+                            normalized_url,
+                            normalized_url,
+                        ),
+                    )
+                    self.db.conn.execute(
+                        "DELETE FROM discovered_urls WHERE id=?",
+                        (row_id,),
+                    )
+            except Exception as exc:
+                result["failed"] += 1
+                result["errors"].append(f"#{row_id}: {exc}")
+                continue
+
+            result["deleted"] += 1
+            result["deleted_row_ids"].append(row_id)
+
+        return result
+
     def restore_queue_items(self, row_ids: list[int]) -> int:
         return int(
             self.db.set_discovered_status(

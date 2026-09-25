@@ -2426,7 +2426,15 @@ class OperationsPage(QWidget):
             "انتخاب‌شده‌ها را دریافت می‌کند و سپس ترجمه/SEO را با هسته واحد AI اجرا می‌کند."
         )
         self.queue_collect_ai_btn.setProperty("success", True)
-        self.queue_reject_btn = QPushButton("رد / حذف")
+        self.queue_reject_btn = QPushButton("رد")
+        self.queue_reject_btn.setToolTip(
+            "فقط وضعیت رکورد را rejected می‌کند و قابل بازگردانی است؛ هیچ فایل یا رکوردی حذف نمی‌شود."
+        )
+        self.queue_delete_btn = QPushButton("🗑 حذف واقعی Crawl")
+        self.queue_delete_btn.setToolTip(
+            "فقط هویت Crawl مصرف‌نشده را واقعاً حذف می‌کند: Ledger، Candidate، Preview/Cache "
+            "و داده محلی مشتق‌شده همان هویت. اگر Product متناظر وجود داشته باشد عملیات Fail-Closed است."
+        )
         self.queue_restore_btn = QPushButton("بازگردانی به صف")
         self.queue_restore_btn.setToolTip(
             "فقط وضعیت rejected/failed را برای دریافت دوباره آزاد می‌کند؛ بازیابی داده/عکس دکمه جدا دارد."
@@ -2477,6 +2485,7 @@ class OperationsPage(QWidget):
         queue_data_actions.addWidget(self.queue_collect_btn)
         queue_data_actions.addWidget(self.queue_collect_ai_btn)
         queue_data_actions.addWidget(self.queue_reject_btn)
+        queue_data_actions.addWidget(self.queue_delete_btn)
         queue_data_actions.addWidget(self.queue_restore_btn)
         queue_data_actions.addStretch(1)
         queue_layout.addLayout(queue_data_actions)
@@ -2780,10 +2789,14 @@ class OperationsPage(QWidget):
             "همه Productهای انتخاب‌شده همین جستجو را دریافت/تطبیق می‌دهد "
             "و بعد صفحه محصولات را باز می‌کند."
         )
-        self.live_reject_btn = QPushButton("حذف انتخابی")
+        self.live_reject_btn = QPushButton("رد انتخابی")
         self.live_reject_btn.setToolTip(
-            "کاندیداهای انتخاب‌شده همین جستجو را rejected می‌کند "
-            "تا دوباره خودکار اضافه نشوند."
+            "کاندیداهای انتخاب‌شده همین جستجو را فقط rejected می‌کند؛ این مسیر حذف واقعی نیست."
+        )
+        self.live_delete_btn = QPushButton("🗑 حذف واقعی انتخابی")
+        self.live_delete_btn.setToolTip(
+            "فقط Crawlهای مصرف‌نشده را همراه Candidate/Preview/Cache و داده مشتق‌شده همان هویت حذف می‌کند. "
+            "اگر Product متناظر وجود داشته باشد حذف متوقف می‌شود."
         )
         self.live_selected_label = QLabel("0 انتخاب‌شده")
         self.live_selected_label.setObjectName("Muted")
@@ -2791,6 +2804,7 @@ class OperationsPage(QWidget):
         live_actions.addWidget(self.live_clear_selection_btn)
         live_actions.addWidget(self.live_add_btn)
         live_actions.addWidget(self.live_reject_btn)
+        live_actions.addWidget(self.live_delete_btn)
         live_actions.addStretch(1)
         live_actions.addWidget(self.live_selected_label)
         live_layout.addLayout(live_actions)
@@ -2956,6 +2970,7 @@ class OperationsPage(QWidget):
             lambda _item: self._open_selected_queue_source()
         )
         self.queue_reject_btn.clicked.connect(self._reject_selected_queue)
+        self.queue_delete_btn.clicked.connect(self._delete_selected_queue)
         self.queue_restore_btn.clicked.connect(self._restore_selected_queue)
         self.live_results.itemSelectionChanged.connect(
             self._update_live_selection_label
@@ -2967,6 +2982,7 @@ class OperationsPage(QWidget):
         self.live_clear_selection_btn.clicked.connect(self.live_results.clearSelection)
         self.live_add_btn.clicked.connect(self._collect_selected_live)
         self.live_reject_btn.clicked.connect(self._reject_selected_live)
+        self.live_delete_btn.clicked.connect(self._delete_selected_live)
 
         self._reload_sources()
         self._mode_changed()
@@ -4088,6 +4104,78 @@ class OperationsPage(QWidget):
         self._populate_queue(reset=True)
         self._refresh_live_discovery()
 
+    def _hard_delete_queue_ids(
+        self,
+        queue_ids: list[int],
+        *,
+        origin_label: str,
+    ) -> dict:
+        ids = sorted({int(value) for value in queue_ids or [] if int(value) > 0})
+        if not ids:
+            QMessageBox.warning(
+                self,
+                origin_label,
+                "حداقل یک رکورد Crawl معتبر را انتخاب کن.",
+            )
+            return {}
+        answer = QMessageBox.question(
+            self,
+            f"{origin_label} — حذف واقعی",
+            (
+                f"{len(ids)} هویت Crawl برای حذف واقعی انتخاب شده است.\n\n"
+                "این عملیات فقط برای رکوردی مجاز است که Product متناظر نداشته باشد و در صورت وجود Product متوقف می‌شود.\n"
+                "Ledger، Candidate، Preview/Cache و فایل‌های مشتق‌شده همان هویت در مسیر canonical حذف می‌شوند.\n"
+                "Reject جدا و قابل بازگردانی است؛ حذف واقعی قابل Restore از UI نیست.\n\n"
+                "ادامه بدهم؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return {}
+        result = self.kernel.acquisition.hard_delete_queue_items(ids)
+        deleted = int(result.get("deleted") or 0)
+        blocked = int(result.get("blocked") or 0)
+        failed = int(result.get("failed") or 0)
+        missing = int(result.get("missing") or 0)
+        self.status.setText(
+            f"حذف واقعی Crawl: {deleted} حذف • {blocked} دارای Product/مسدود • "
+            f"{failed} خطا • {missing} پیدا نشد."
+        )
+        if blocked or failed:
+            lines = []
+            for item in list(result.get("blocked_rows") or [])[:8]:
+                lines.append(
+                    f"Queue #{item.get('row_id')} → Product #{item.get('product_id')}: حذف نشد"
+                )
+            lines.extend(str(value) for value in list(result.get("errors") or [])[:8])
+            QMessageBox.warning(
+                self,
+                origin_label,
+                (
+                    f"{deleted} مورد حذف واقعی شد.\n"
+                    f"{blocked} مورد به دلیل Product authority حذف نشد.\n"
+                    f"{failed} مورد خطا داشت."
+                    + (("\n\n" + "\n".join(lines)) if lines else "")
+                ),
+            )
+        return result
+
+    def _delete_selected_live(self) -> None:
+        rows = self._selected_live_records()
+        queue_ids = [
+            int(row["queue_id"])
+            for row in rows
+            if int(row.get("queue_id") or 0) > 0
+        ]
+        result = self._hard_delete_queue_ids(
+            queue_ids,
+            origin_label="نتایج همین جستجو",
+        )
+        if result:
+            self._populate_queue(reset=True)
+            self._refresh_live_discovery()
+
     def _show_queue_inventory(self) -> None:
         self.workspace_tabs.setCurrentIndex(0)
         self.refresh()
@@ -4335,6 +4423,18 @@ class OperationsPage(QWidget):
         count = self.kernel.acquisition.reject_queue_items(ids)
         self.status.setText(f"{count} رکورد Crawl به وضعیت rejected رفت.")
         self.refresh()
+
+    def _delete_selected_queue(self) -> None:
+        ids = self._selected_queue_ids()
+        if not ids:
+            QMessageBox.warning(self, "صف Crawl", "حداقل یک رکورد را انتخاب کن.")
+            return
+        result = self._hard_delete_queue_ids(
+            ids,
+            origin_label="صف Crawl",
+        )
+        if result:
+            self.refresh()
 
     def _restore_selected_queue(self) -> None:
         ids = self._selected_queue_ids()
