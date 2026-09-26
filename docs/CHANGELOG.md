@@ -1,3 +1,9 @@
+## 2026-09-26 - O5E isolated receipt reconciliation acceptance
+- Fresh rollback `phase50-a2z-o5e-20260926-145851` verified source/backup quick_check=ok, Products=867, Receipts=477, Crawl=1177, Candidates=625, backup SHA256 `c6b853a79943de2b07a57d96cb074f6ee251ca36ed5a6fc1bcb805c1be7b7e57`.
+- Isolated clone appended exactly six final current-revision receipts: #219 Feed+Story and #301/#596/#670/#717 Feed. Every reconciliation used exact provider ID, no asset fallback, `reconciled_without_repost=true`; provider GraphQL audit observed six reads and zero mutations.
+- All 21 non-receipt tables stayed exact; controls #536/#625/#609/#588 stayed exact; #301/#588 gained no current Story final; #609 retained current Buffer error/non-final Story evidence. Clone and canonical quick_check=ok; canonical all-table digests including receipts remained exact.
+- First clone harness guessed the wrong #609 non-final status label; disposable clone was reset from verified rollback before corrected PASS. No canonical write or Instagram publish occurred.
+
 ## 2026-09-26 - O5D Social/Image/duplicate-guard regression gate
 - Related Social/Image/duplicate-guard gate now passes 77/77 after correcting one stale O1 fixture to include the current Site ACK/fingerprint; runtime O5C strictness was preserved.
 - py_compile/compileall, pip check, git diff-check, Qt VerifyOnly, Django check and migration drift all PASS; only the existing CKEditor 4 warning remains.

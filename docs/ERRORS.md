@@ -1,3 +1,19 @@
+## ERR-49-257 - O5E first isolated acceptance harness used the wrong #609 non-final Story status label (2026-09-26)
+
+**Observed**
+- The first O5E isolated clone run successfully appended the six intended receipt reconciliations, then the acceptance harness stopped on its control assertion for Product #609 because it looked for `instagram_story_notification_required` / `instagram_story_submitted`.
+- Canonical truth actually stores the current #609 non-final provider error as `instagram_story_notification_ready` with provider ID `6ab16b959d554f7b28a44302` and `buffer_status=error`.
+
+**Impact**
+- Disposable clone only. The first clone moved from 477 to 483 receipts before the harness assertion failed. Canonical Catalog remained unchanged.
+
+**Correct fix / verification**
+- Do not repeat the failed harness unchanged. Read #609's canonical receipt truth, reset the disposable clone exactly from the verified O5E SQLite rollback (quick_check=ok, receipts back to 477), and rerun with the persisted accepted status contract.
+- Corrected O5E acceptance PASS: exactly six final receipts appended on the clone, all using exact provider IDs and `reconciled_without_repost=true`; 21 non-receipt tables remained exact; controls #536/#625/#609/#588 remained exact; #301/#588 gained no current Story publication; #609 retained the same current `notification_ready/error` evidence; canonical all-table digests remained exact.
+
+**Prevention**
+- Acceptance harnesses for historical Social receipts must inspect the persisted repository/canonical status vocabulary before asserting labels; never infer a status name from prose.
+
 ## ERR-49-256 - O5D first Django gate ran without the isolated worktree .env (2026-09-26)
 
 **Observed**
