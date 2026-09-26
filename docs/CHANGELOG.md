@@ -1,3 +1,10 @@
+## 2026-09-26 - O6C Server delta / lineage audit
+- Local/upstream/live GitHub are exact at `d2838684c65c41e19266c7e10a9d82ee1ca717e9`; last verified selective Production `2b48a593...` is an ancestor of O baseline `82862b45...`, which is an ancestor of current HEAD.
+- Full last-Production-to-HEAD tree delta = 161 files: 88 Catalog, 51 docs, 12 Social assets, 1 git metadata, 2 Server runtime, 3 Server tests, 4 Host scripts, 0 migrations, 0 static/templates.
+- Exact O-phase delta `82862b45..d2838684` = 52 files only: 44 Catalog + 8 docs; Server runtime/static/migration/Host-script delta = 0. All Server-related differences are pre-O historical work and are not part of this closure.
+- Dedicated reverse-tunnel read-only health is currently unavailable because Windows loopback 22024 has no listener. No recovery/mutation was attempted in O6C; current Host HEAD is therefore not freshly asserted.
+- O6 decision = NO DEPLOY REQUIRED; O6D skipped to avoid promoting unrelated pre-O Server work.
+
 ## 2026-09-26 - O6B exact-SHA runtime/UI smoke
 - Clean GitHub-exact entry `8a54fc99...`; no Catalog source delta since accepted application commit `2f11c225...`; Qt VerifyOnly PASS and single runtime PID 51712 remains responsive.
 - Fresh isolated clone UI smoke proves Products/Crawl routes, `رفرش رسانه از DB/Local`, full clean reacquire, hard-delete Crawl, independent Instagram Post/Story actions and current-revision Social filters.

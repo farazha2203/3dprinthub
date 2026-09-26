@@ -1,3 +1,21 @@
+## ERR-49-262 - O6C read-only Host refresh blocked because dedicated reverse tunnel has no 22024 listener (2026-09-26)
+
+**Observed**
+- O6C requested a fresh read-only Host identity/head check through the authorized 3DPrintHub reverse tunnel.
+- The protected Windows operator token exists, but authenticated health could not connect because `127.0.0.1:22024` has no listener. A later listener-only recheck still returned `PORT_22024_LISTENER=NO`.
+
+**Existing root-cause boundary**
+- This matches ERR-49-154 / ERR-49-233: absence of the dedicated project reverse-forward session is not evidence that shared Windows sshd/firewall or another project's tunnel should be changed.
+- O6C is read-only, so the tunnel/watchdog was not recovered or mutated and the failed health command was not repeated unchanged.
+
+**Impact / decision**
+- Fresh Host checkout HEAD/status could not be asserted. GitHub's canonical Server branch head is not substituted as Host truth.
+- O6C is still conclusive for the current phase because exact O-phase range `82862b45..d2838684` contains zero Server runtime/static/migration/Host-script changes. All Server-related differences against last verified Production `2b48a593...` predate O baseline.
+- Therefore O6D is NOT REQUIRED for Phase50.A.2Z-O; Production stays untouched.
+
+**Prevention**
+- Future Production-affecting phases must first restore the documented 3DPrintHub watchdog/tunnel path and freshly verify Host identity/head/worktree. A Windows-only phase must not trigger unrelated Server deployment merely to close documentation.
+
 ## ERR-49-261 - O6B UI-label harness initially mis-compared Unicode/emoji literals over PowerShell stdin (2026-09-26)
 
 **Observed**
