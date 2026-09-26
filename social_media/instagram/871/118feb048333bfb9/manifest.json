@@ -1,0 +1,22 @@
+{
+  "asset_revision": "118feb048333bfb9",
+  "feed_sha256": [
+    "096e3e9ec36f7b73e9f3e32a3bdf1bc2f198636f5c07fe482e1d69eb826931d4",
+    "98f7a50df158562b415f17dfe35444706addefb18d38ce21af60d760610e405f",
+    "871069f5b09fd46d87c6e16286e013bf905e0709e2b3f71385e1dd1a11ba3b30",
+    "4ce1a4d8adfc00efd9d464b20a86df3423305e9fd6411dbc7e983dc4697da0fc",
+    "4e3fedf59eba88cfe7040b9d048198f1bc65aeac9d4b515ce848fa3452ac00be"
+  ],
+  "product_id": 871,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 58,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US1a4b414f2be77b/design/c47929c164113902.png",
+    "local://cute-origami-unicorn-minimalistic-japandi-decor-3d-print-02.webp",
+    "local://cute-origami-unicorn-minimalistic-japandi-decor-3d-print-03.webp",
+    "local://cute-origami-unicorn-minimalistic-japandi-decor-3d-print-04.webp",
+    "local://02.webp"
+  ],
+  "story_sha256": ""
+}
