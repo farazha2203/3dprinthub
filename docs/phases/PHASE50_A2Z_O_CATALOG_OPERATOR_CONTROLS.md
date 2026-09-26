@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O6C_ACCEPTED / O6D_NOT_REQUIRED / O6E_NEXT
+Status: O6C_ACCEPTED / O6D_NOT_REQUIRED / O7A_LOCAL_TESTED
 Date: 2026-09-26
-Branch: `wip/phase50-a2z-o6a1-media-story-hotfix-20260926`
+Branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective

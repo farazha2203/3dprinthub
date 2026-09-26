@@ -1089,7 +1089,8 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
                 page.workspace_tabs.tabText(index)
                 for index in range(page.workspace_tabs.count())
             ]
-            self.assertIn("دریافت محصولات از لینک جستجو", labels)
+            self.assertIn("تک محصول", labels)
+            self.assertIn("جستجو / لینک جستجو", labels)
             self.assertIn("مشاهده صفحه محصول", page.queue_open_btn.text())
             self.assertIn("AI", page.queue_collect_ai_btn.text())
         finally:

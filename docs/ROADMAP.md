@@ -1,3 +1,17 @@
+## 2026-09-26 - Phase50.A.2Z-O7A Acquisition UI
+- [x] Verify latest Windows lineage is v8.9.11 / A2U→A2X→A2Y→A2Z→O6, not the obsolete v8.9.10 worktree.
+- [x] Split Add Product/Crawl into top-level Inventory, Single Product, Search/Search-Link and History workspaces.
+- [x] Preserve exact direct Product URL and route it through adaptive mature single-Product acquisition.
+- [x] Accept exact MakerWorld Search URL or plain keyword and build `/en/search/models?keyword=...`.
+- [x] Redirect Product links pasted into Search to the Single Product workspace before any listing crawl.
+- [x] Move Source refresh into Inventory with independent Product/image limits.
+- [x] Keep proven browser/Saved HTML/acquisition methods under Advanced.
+- [x] Preserve Product categories and independent Instagram Post/Story behavior: 65 Social + 3 Category tests PASS.
+- [x] Operations/Crawl 155/155 + Phase50 broad 147/147 + static/Qt gates PASS.
+- [ ] Commit/push exact O7A candidate and prove Local=Remote.
+- [ ] Fresh Catalog rollback + exact-SHA foreground v8.9.11 launch.
+- [ ] Owner UAT: one disposable direct MakerWorld Product and one MakerWorld Search URL.
+
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair
 - [x] Read-only real Catalog audit: 58 Product/Crawl ledger mismatches; 191 rejected Products; 22 rejected Candidate remnants; 16 Preview remnants; 4 same-identity Local remnants.
 - [x] Make existing Product rows canonical before Crawl terminal status; stale rejected Crawl rows can no longer override active Products.

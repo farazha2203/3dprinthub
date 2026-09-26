@@ -1,3 +1,12 @@
+## 2026-09-26 - O7A MakerWorld Single/Search acquisition UX
+- Continued on the verified latest Windows lineage v8.9.11, preserving O1-O6 Product filters/categories and independent Instagram Post/Story behavior.
+- Operations is now four top-level workspaces: Inventory, Single Product, Search/Search-Link and History; the former nested receive UI is removed.
+- Direct Product URLs use the mature adaptive single-Product path; Search URLs/keywords keep Preview/select/import through the mature batch path.
+- MakerWorld plain keywords resolve to `/en/search/models?keyword=...`; Product URLs pasted into Search are redirected to Single Product before Crawl.
+- Source refresh now lives in Inventory with independent Product/image limits; low-frequency browser/Saved-HTML/method controls remain under Advanced.
+- Verification: O7A 5/5, Operations/Crawl 155/155, Phase50 broad 147/147, Social 65/65, Category Bridge 3/3, compileall/pip/diff/Qt VerifyOnly PASS.
+- No live crawl, Instagram publication, provider mutation, Host/Production change or migration.
+
 ## 2026-09-26 - O6C Server delta / lineage audit
 - Local/upstream/live GitHub are exact at `d2838684c65c41e19266c7e10a9d82ee1ca717e9`; last verified selective Production `2b48a593...` is an ancestor of O baseline `82862b45...`, which is an ancestor of current HEAD.
 - Full last-Production-to-HEAD tree delta = 161 files: 88 Catalog, 51 docs, 12 Social assets, 1 git metadata, 2 Server runtime, 3 Server tests, 4 Host scripts, 0 migrations, 0 static/templates.

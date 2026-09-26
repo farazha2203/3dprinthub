@@ -602,10 +602,14 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
     def test_receive_action_labels_are_compact_but_keep_full_tooltips(self):
         page = OperationsPage(self.db, kernel=self.kernel)
         try:
-            self.assertEqual(page.start_btn.text(), "شروع دریافت")
+            self.assertEqual(page.start_btn.text(), "شروع جستجو")
+            self.assertEqual(page.single_start_btn.text(), "دریافت همین محصول")
             self.assertEqual(page.queue_btn.text(), "موجودی Crawl")
-            self.assertEqual(page.default_url_btn.text(), "لینک پیش‌فرض")
-            self.assertEqual(page.direct_btn.text(), "دریافت Product")
+            self.assertEqual(
+                page.default_url_btn.text(),
+                "لینک جستجوی پیش‌فرض",
+            )
+            self.assertIs(page.direct_btn, page.single_start_btn)
             self.assertEqual(page.live_add_btn.text(), "افزودن انتخابی")
             self.assertEqual(page.live_reject_btn.text(), "رد انتخابی")
             self.assertIn("حذف واقعی", page.live_delete_btn.text())
@@ -627,6 +631,125 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 page.queue_recover_btn,
             ):
                 self.assertTrue(button.toolTip().strip())
+        finally:
+            page.close()
+
+    def test_receive_tabs_dispatch_single_and_search_urls_to_distinct_paths(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+
+        def capture(worker):
+            captured.append(worker)
+            return worker
+
+        try:
+            with patch.object(page.pool, "start", side_effect=capture):
+                product_url = (
+                    "https://makerworld.com/en/models/"
+                    "3173877-coralune-lite-organic-lamp-for-bambu-lab-mh001"
+                    "?from=recommend#profileId-3588661"
+                )
+                page.workspace_tabs.setCurrentIndex(1)
+                page.single_url.setText(product_url)
+                with patch.object(
+                    self.kernel.acquisition,
+                    "run_single",
+                    return_value={"collected": 1, "failed": 0},
+                ) as run_single:
+                    page._start()
+                    self.assertEqual(len(captured), 1)
+                    captured.pop().fn(lambda *_args: None)
+                    kwargs = run_single.call_args.kwargs
+                    self.assertEqual(kwargs["source_code"], "makerworld")
+                    self.assertEqual(kwargs["product_url"], product_url)
+                    self.assertEqual(kwargs["collection_method"], "rich")
+                    self.assertTrue(kwargs["adaptive_fallback"])
+                    page._finished()
+
+                search_url = (
+                    "https://makerworld.com/en/search/models?keyword=donky"
+                )
+                page.workspace_tabs.setCurrentIndex(2)
+                page.url.setText(search_url)
+                page.query.clear()
+                page.requested.setValue(37)
+                with patch.object(
+                    self.kernel.acquisition,
+                    "run_batch",
+                    return_value={"discovered": 37, "collected": 0, "failed": 0},
+                ) as run_batch:
+                    page._start()
+                    self.assertEqual(len(captured), 1)
+                    captured.pop().fn(lambda *_args: None)
+                    kwargs = run_batch.call_args.kwargs
+                    self.assertEqual(kwargs["source_code"], "makerworld")
+                    self.assertEqual(kwargs["listing_url"], search_url)
+                    self.assertEqual(kwargs["requested"], 37)
+                    self.assertEqual(kwargs["operator_mode"], "search")
+                    self.assertEqual(kwargs["strategy"], "hybrid")
+                    self.assertEqual(kwargs["collection_method"], "rich")
+                    page._finished()
+        finally:
+            page.close()
+
+    def test_product_url_pasted_into_search_moves_to_single_without_crawl(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        product_url = (
+            "https://makerworld.com/en/models/"
+            "3173877-coralune-lite-organic-lamp-for-bambu-lab-mh001"
+            "?from=recommend#profileId-3588661"
+        )
+        try:
+            page.workspace_tabs.setCurrentIndex(2)
+            page.url.setText(product_url)
+            page.query.clear()
+            with patch.object(
+                page.pool,
+                "start",
+                side_effect=lambda worker: captured.append(worker),
+            ), patch.object(QMessageBox, "information"):
+                page._start()
+            self.assertEqual(captured, [])
+            self.assertEqual(page.workspace_tabs.currentIndex(), 1)
+            self.assertEqual(page.single_url.text(), product_url)
+            self.assertTrue(
+                self.kernel.acquisition.is_product_url(
+                    "makerworld",
+                    product_url,
+                )
+            )
+        finally:
+            page.close()
+
+    def test_search_keyword_builds_makerworld_search_url_and_keeps_new_target_count(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        try:
+            page.workspace_tabs.setCurrentIndex(2)
+            page.url.clear()
+            page.query.setText("donky")
+            page.requested.setValue(200)
+            with patch.object(
+                page.pool,
+                "start",
+                side_effect=lambda worker: captured.append(worker),
+            ), patch.object(
+                self.kernel.acquisition,
+                "run_batch",
+                return_value={"discovered": 200, "collected": 0, "failed": 0},
+            ) as run_batch:
+                page._start()
+                self.assertEqual(len(captured), 1)
+                captured[0].fn(lambda *_args: None)
+                kwargs = run_batch.call_args.kwargs
+                self.assertEqual(
+                    kwargs["listing_url"],
+                    "https://makerworld.com/en/search/models?keyword=donky",
+                )
+                self.assertEqual(kwargs["requested"], 200)
+                self.assertEqual(kwargs["operator_mode"], "search")
+                page._finished()
         finally:
             page.close()
 
@@ -692,6 +815,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         captured = []
         try:
             page.live_results.addItem("stale item")
+            page.workspace_tabs.setCurrentIndex(2)
             page.url.setText(
                 "https://makerworld.com/en/search/models?keyword=new-search"
             )

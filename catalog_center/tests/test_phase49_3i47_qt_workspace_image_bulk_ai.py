@@ -513,7 +513,19 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         page = OperationsPage(self.db, kernel=self.kernel)
         try:
             page.refresh()
-            self.assertEqual(page.workspace_tabs.count(), 3)
+            self.assertEqual(page.workspace_tabs.count(), 4)
+            self.assertEqual(
+                [
+                    page.workspace_tabs.tabText(index)
+                    for index in range(page.workspace_tabs.count())
+                ],
+                [
+                    "موجودی محصولات",
+                    "تک محصول",
+                    "جستجو / لینک جستجو",
+                    "گزارش و History",
+                ],
+            )
             self.assertEqual(page.workspace_tabs.currentIndex(), 0)
             self.assertEqual(page.queue_views.count(), 2)
             # O2D accepted contract: once this identity is a Product it must
@@ -1350,7 +1362,7 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             page.approved_for_sale.setChecked(True)
             page.publish_product.setChecked(True)
             labels = [button.text() for button in page.image_stage3_toolbar_buttons]
-            self.assertIn("رفرش رسانه و وضعیت", labels)
+            self.assertIn("رفرش رسانه از DB/Local", labels)
             cards = {
                 str(card.item.get("url") or ""): card
                 for card in page.image_grid.cards

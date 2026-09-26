@@ -2582,11 +2582,8 @@ class OperationsPage(QWidget):
         inventory_layout.addWidget(queue_card, 1)
 
         # --------------------------------------------------------------
-        # Tab 2: receive / crawl controls.
+        # Shared acquisition controls for top-level Single/Search workspaces.
         # --------------------------------------------------------------
-        receive_page = QWidget()
-        receive_layout = QVBoxLayout(receive_page)
-
         controls = QFrame()
         controls.setObjectName("Card")
         grid = QGridLayout(controls)
@@ -2636,16 +2633,35 @@ class OperationsPage(QWidget):
         self.strategy.setMinimumWidth(330)
         self.collection_method.setMinimumWidth(330)
 
+        # Operator-facing receive paths are deliberately split: one exact Product URL
+        # versus a search/listing URL or keyword.  The legacy mode combo remains an
+        # internal compatibility authority but is no longer exposed as a mixed UX.
+        self.single_url = QLineEdit()
+        self.single_url.setClearButtonEnabled(True)
+        self.single_url.setPlaceholderText(
+            "لینک مستقیم Product — مثال: https://makerworld.com/en/models/3173877-..."
+        )
         self.url = QLineEdit()
         self.url.setClearButtonEnabled(True)
         self.url.setPlaceholderText(
-            "مثال: https://makerworld.com/en/search/models?keyword=cake+stand"
+            "لینک صفحه جستجو — مثال: https://makerworld.com/en/search/models?keyword=donky"
         )
         self.query = QLineEdit()
-        self.query.setPlaceholderText("مثال: cake stand — برای Automatic/Search")
+        self.query.setPlaceholderText(
+            "یا فقط عبارت جستجو را بنویس — مثال: donky"
+        )
         self.source_hint = QLabel("")
         self.source_hint.setObjectName("Muted")
         self.source_hint.setWordWrap(True)
+
+        source_context = QFrame()
+        source_context.setObjectName("Card")
+        source_context_layout = QHBoxLayout(source_context)
+        source_context_layout.setContentsMargins(12, 8, 12, 8)
+        source_context_layout.addWidget(QLabel("سایت مادر / Source"))
+        source_context_layout.addWidget(self.source, 1)
+        source_context_layout.addWidget(self.source_hint, 3)
+        root.insertWidget(1, source_context)
 
         self.download_images = QCheckBox("ذخیره تصاویر عمومی باکیفیت")
         self.download_images.setChecked(True)
@@ -2684,26 +2700,30 @@ class OperationsPage(QWidget):
             )
         self.retry_failed = QCheckBox("تلاش مجدد برای موارد Failed")
 
-        self.start_btn = QPushButton("شروع دریافت")
+        self.start_btn = QPushButton("شروع جستجو")
         self.start_btn.setProperty("primary", True)
         self.start_btn.setToolTip(
-            "Search/Listing فعلی را اجرا می‌کند؛ Preview محصولات ابتدا ظاهر می‌شود "
-            "و سپس دریافت صفحه و عکس هر Product با پیشرفت جداگانه ادامه پیدا می‌کند."
+            "لینک صفحه جستجو یا عبارت جستجو را اجرا می‌کند و دقیقاً تعداد محصول جدید درخواستی را هدف می‌گیرد؛ "
+            "محصولات قبلاً مصرف‌شده جزو این تعداد حساب نمی‌شوند."
         )
+        self.single_start_btn = QPushButton("دریافت همین محصول")
+        self.single_start_btn.setProperty("primary", True)
+        self.single_start_btn.setToolTip(
+            "فقط همین لینک Product را با مسیر Rich/Browser پایدار Source دریافت می‌کند."
+        )
+        # Backward-compatible attribute used by old tests/actions.
+        self.direct_btn = self.single_start_btn
+
         self.stop_btn = QPushButton("توقف امن")
         self.stop_btn.setEnabled(False)
         self.stop_btn.setToolTip("در مرز امن بعدی Crawl را متوقف می‌کند.")
         self.reset_failed_btn = QPushButton("بازگردانی Failed")
         self.reset_failed_btn.setToolTip("موارد Failed را برای تلاش مجدد به صف برمی‌گرداند.")
         self.queue_btn = QPushButton("موجودی Crawl")
-        self.queue_btn.setToolTip("موجودی دائمی همه رکوردهای Crawl را باز می‌کند.")
-        self.default_url_btn = QPushButton("لینک پیش‌فرض")
+        self.queue_btn.setToolTip("موجودی دائمی در تب اول همین صفحه است.")
+        self.default_url_btn = QPushButton("لینک جستجوی پیش‌فرض")
         self.default_url_btn.setToolTip(
-            "Search/Listing پیش‌فرض Source انتخاب‌شده را در فیلد لینک می‌گذارد."
-        )
-        self.direct_btn = QPushButton("دریافت Product")
-        self.direct_btn.setToolTip(
-            "لینک فعلی را به‌عنوان یک صفحه Product مستقیم دریافت می‌کند."
+            "Search/Listing پیش‌فرض Source انتخاب‌شده را در تب جستجو قرار می‌دهد."
         )
         self.login_profile_btn = QPushButton("Chrome پروفایل")
         self.login_profile_btn.setToolTip(
@@ -2711,98 +2731,154 @@ class OperationsPage(QWidget):
         )
         self.debug_chrome_btn = QPushButton("Chrome 9222")
         self.debug_chrome_btn.setToolTip(
-            "Chrome متصل روی پورت 9222 را برای روش موجود باز می‌کند."
+            "نشست Chrome متصل 9222 را برای MakerWorld/Sourceهای Browser-required باز می‌کند."
         )
         self.harvest_btn = QPushButton("🔎 کشف همه Sourceها")
-        self.harvest_btn.setProperty("success", True)
         self.harvest_btn.setToolTip(
-            "از Sourceهای فعال، محصولات جدید را به‌صورت محدود و robots-aware کشف می‌کند."
+            "ابزار قدیمی چندمنبعی؛ در UI ساده‌شده نمایش داده نمی‌شود."
         )
-        self.source_refresh_btn = QPushButton("♻ بروزرسانی Source")
+        self.source_refresh_limit = QSpinBox()
+        self.source_refresh_limit.setRange(1, 500)
+        self.source_refresh_limit.setValue(100)
+        self.source_refresh_image_limit = QSpinBox()
+        self.source_refresh_image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
+        self.source_refresh_image_limit.setValue(5)
+        for spin in (
+            self.source_refresh_limit,
+            self.source_refresh_image_limit,
+        ):
+            spin.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+            spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            spin.setMinimumWidth(92)
+            spin.setMaximumWidth(120)
+            spin.setStyleSheet(
+                "QSpinBox { padding-left: 8px; padding-right: 28px; }"
+            )
+        self.source_refresh_download_images = QCheckBox("بروزرسانی عکس‌ها")
+        self.source_refresh_download_images.setChecked(True)
+        self.source_refresh_btn = QPushButton("♻ بروزرسانی محصولات Source")
         self.source_refresh_btn.setToolTip(
-            "محصولات موجود Source انتخاب‌شده را بدون پاک کردن تصمیم‌های اپراتور دوباره می‌خواند."
+            "محصولات موجود Source انتخاب‌شده را دوباره از منبع می‌خواند؛ "
+            "تصمیم‌های اپراتور، قیمت، Profile، Filament و وضعیت انتشار حفظ می‌شوند."
         )
-        self.refresh_btn = QPushButton("بروزرسانی")
-        self.refresh_btn.setToolTip(
-            "وضعیت صف، Run و نمایش فعلی را دوباره می‌خواند."
-        )
+        self.refresh_btn = QPushButton("بروزرسانی نمایش")
+        self.refresh_btn.setToolTip("موجودی و وضعیت‌های همین صفحه را دوباره می‌خواند.")
 
-        grid.addWidget(QLabel("سایت مادر / Source"), 0, 0)
-        grid.addWidget(self.source, 0, 1)
-        grid.addWidget(QLabel("نوع دریافت"), 0, 2)
-        grid.addWidget(self.mode, 0, 3)
-        grid.addWidget(QLabel("روش کشف"), 1, 0)
-        grid.addWidget(self.strategy, 1, 1)
-        grid.addWidget(QLabel("روش دریافت Product"), 1, 2)
-        grid.addWidget(self.collection_method, 1, 3)
-        grid.addWidget(QLabel("لینک گروه/محصول"), 2, 0)
-        grid.addWidget(self.url, 2, 1, 1, 3)
-        grid.addWidget(QLabel("عبارت جستجو"), 3, 0)
-        grid.addWidget(self.query, 3, 1, 1, 3)
-        grid.addWidget(QLabel("تعداد Product"), 4, 0)
-        grid.addWidget(self.requested, 4, 1)
-        grid.addWidget(QLabel("عکس باکیفیت برای هر Product"), 4, 2)
-        grid.addWidget(self.image_limit, 4, 3)
+        queue_header.addWidget(self.refresh_btn)
+        queue_data_actions.addSpacing(12)
+        queue_data_actions.addWidget(QLabel("Refresh تعداد"))
+        queue_data_actions.addWidget(self.source_refresh_limit)
+        queue_data_actions.addWidget(QLabel("عکس"))
+        queue_data_actions.addWidget(self.source_refresh_image_limit)
+        queue_data_actions.addWidget(self.source_refresh_download_images)
+        queue_data_actions.addWidget(self.source_refresh_btn)
+
+        # --- Primary path 1: one exact Product URL.
+        single_page = QWidget()
+        single_layout = QVBoxLayout(single_page)
+        single_layout.setContentsMargins(12, 12, 12, 12)
+        single_note = QLabel(
+            "تک محصول — لینک دقیق صفحه Product را بده. این مسیر Search/Crawl گروهی اجرا نمی‌کند."
+        )
+        single_note.setObjectName("Muted")
+        single_note.setWordWrap(True)
+        single_layout.addWidget(single_note)
+        single_url_row = QHBoxLayout()
+        single_url_row.addWidget(QLabel("لینک مستقیم Product"))
+        single_url_row.addWidget(self.single_url, 1)
+        single_url_row.addWidget(self.single_start_btn)
+        single_layout.addLayout(single_url_row)
+        single_layout.addStretch(1)
+
+        # --- Primary path 2: search/listing URL or a keyword.
+        search_page = QWidget()
+        search_layout = QVBoxLayout(search_page)
+        search_layout.setContentsMargins(12, 12, 12, 12)
+        search_note = QLabel(
+            "جستجو — لینک کامل صفحه Search/Listing را Paste کن، یا لینک را خالی بگذار و فقط عبارت جستجو را بنویس. "
+            "تعداد یعنی تعداد محصول جدید؛ مواردی که قبلاً Product شده‌اند شمرده نمی‌شوند."
+        )
+        search_note.setObjectName("Muted")
+        search_note.setWordWrap(True)
+        search_layout.addWidget(search_note)
+        search_url_row = QHBoxLayout()
+        search_url_row.addWidget(QLabel("لینک صفحه جستجو"))
+        search_url_row.addWidget(self.url, 1)
+        search_url_row.addWidget(self.default_url_btn)
+        search_layout.addLayout(search_url_row)
+        search_query_row = QHBoxLayout()
+        search_query_row.addWidget(QLabel("یا عبارت جستجو"))
+        search_query_row.addWidget(self.query, 1)
+        search_query_row.addWidget(QLabel("تعداد محصول جدید"))
+        search_query_row.addWidget(self.requested)
+        search_query_row.addWidget(self.start_btn)
+        search_layout.addLayout(search_query_row)
+        search_layout.addStretch(1)
+
+        # Single Product and Search are top-level workspaces, not nested tabs.
+        common_row = QHBoxLayout()
+        common_row.setSpacing(12)
+        common_row.addWidget(QLabel("عکس باکیفیت برای هر Product"))
+        common_row.addWidget(self.image_limit)
+        common_row.addWidget(self.stop_btn)
+        self.advanced_toggle = QCheckBox("نمایش تنظیمات پیشرفته")
+        common_row.addWidget(self.advanced_toggle)
+        common_row.addStretch(1)
+        grid.addLayout(common_row, 2, 0, 1, 4)
+
+        self.advanced_frame = QFrame()
+        self.advanced_frame.setObjectName("SubCard")
+        advanced_layout = QGridLayout(self.advanced_frame)
+        advanced_layout.addWidget(QLabel("روش کشف"), 0, 0)
+        advanced_layout.addWidget(self.strategy, 0, 1)
+        advanced_layout.addWidget(QLabel("روش دریافت Product"), 0, 2)
+        advanced_layout.addWidget(self.collection_method, 0, 3)
 
         receive_options = QHBoxLayout()
-        receive_options.setSpacing(18)
-        receive_options.addWidget(QLabel("گزینه‌های دریافت:"))
+        receive_options.setSpacing(14)
         receive_options.addWidget(self.retry_failed)
         receive_options.addWidget(self.download_images)
         receive_options.addWidget(self.download_files)
         receive_options.addWidget(self.same_domain)
         receive_options.addStretch(1)
-        grid.addLayout(receive_options, 5, 0, 1, 4)
+        advanced_layout.addLayout(receive_options, 1, 0, 1, 4)
 
-        grid.addWidget(QLabel("Saved HTML"), 6, 0)
-        grid.addWidget(self.saved_html_path, 6, 1, 1, 2)
-        grid.addWidget(self.saved_html_browse, 6, 3)
-        grid.addWidget(self.source_hint, 7, 0, 1, 4)
-        grid.addWidget(self.domain_policy, 8, 0, 1, 4)
+        advanced_layout.addWidget(QLabel("Saved HTML"), 2, 0)
+        advanced_layout.addWidget(self.saved_html_path, 2, 1, 1, 2)
+        advanced_layout.addWidget(self.saved_html_browse, 2, 3)
 
-        main_actions = QHBoxLayout()
-        main_actions.setSpacing(10)
-        for button in (
-            self.start_btn,
-            self.stop_btn,
-            self.direct_btn,
-            self.default_url_btn,
-            self.queue_btn,
-            self.refresh_btn,
-        ):
-            button.setMinimumWidth(118)
-            main_actions.addWidget(button)
-        main_actions.addStretch(1)
-        grid.addLayout(main_actions, 9, 0, 1, 4)
+        browser_actions = QHBoxLayout()
+        browser_actions.addWidget(QLabel("ابزار مرورگر"))
+        browser_actions.addWidget(self.login_profile_btn)
+        browser_actions.addWidget(self.debug_chrome_btn)
+        browser_actions.addStretch(1)
+        advanced_layout.addLayout(browser_actions, 3, 0, 1, 4)
+        self.advanced_frame.setVisible(False)
+        self.advanced_toggle.toggled.connect(self.advanced_frame.setVisible)
+        grid.addWidget(self.advanced_frame, 3, 0, 1, 4)
 
-        receive_layout.addWidget(controls)
+        grid.addWidget(self.domain_policy, 4, 0, 1, 4)
 
-        tools_card = QFrame()
-        tools_card.setObjectName("Card")
-        tools_layout = QHBoxLayout(tools_card)
-        tools_layout.addWidget(QLabel("ابزارهای Source / مرورگر"))
-        for button in (
-            self.login_profile_btn,
-            self.debug_chrome_btn,
-            self.harvest_btn,
-            self.source_refresh_btn,
-            self.reset_failed_btn,
-        ):
-            tools_layout.addWidget(button)
-        tools_layout.addStretch(1)
-        receive_layout.addWidget(tools_card)
+        self.acquisition_controls = controls
+        self.acquisition_controls.setVisible(False)
+        root.insertWidget(2, self.acquisition_controls)
 
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.status = QLabel("آماده")
         self.status.setObjectName("Muted")
-        receive_layout.addWidget(self.progress)
-        receive_layout.addWidget(self.status)
+        self.acquisition_status = QFrame()
+        acquisition_status_layout = QVBoxLayout(self.acquisition_status)
+        acquisition_status_layout.setContentsMargins(0, 0, 0, 0)
+        acquisition_status_layout.addWidget(self.progress)
+        acquisition_status_layout.addWidget(self.status)
+        self.acquisition_status.setVisible(False)
+        root.insertWidget(3, self.acquisition_status)
 
-        live_card = QFrame()
-        live_card.setObjectName("Card")
-        live_layout = QVBoxLayout(live_card)
+        self.live_card = QFrame()
+        self.live_card.setObjectName("Card")
+        live_layout = QVBoxLayout(self.live_card)
         live_header = QHBoxLayout()
         live_header.addWidget(QLabel("محصولات همین جستجو — Preview → دریافت کامل"))
         self.live_discovery_label = QLabel("هنوز Run شروع نشده است.")
@@ -2914,8 +2990,11 @@ class OperationsPage(QWidget):
         live_splitter.setStretchFactor(0, 3)
         live_splitter.setStretchFactor(1, 2)
         live_layout.addWidget(live_splitter, 1)
-        receive_layout.addWidget(live_card, 1)
-        receive_layout.addStretch(1)
+        search_layout.insertWidget(
+            max(0, search_layout.count() - 1),
+            self.live_card,
+            1,
+        )
 
         # --------------------------------------------------------------
         # Tab 3: run history / diagnostics.
@@ -2938,7 +3017,8 @@ class OperationsPage(QWidget):
         report_layout.addWidget(self.summary, 1)
 
         self.workspace_tabs.addTab(inventory_page, "موجودی محصولات")
-        self.workspace_tabs.addTab(receive_page, "دریافت محصولات از لینک جستجو")
+        self.workspace_tabs.addTab(single_page, "تک محصول")
+        self.workspace_tabs.addTab(search_page, "جستجو / لینک جستجو")
         self.workspace_tabs.addTab(report_page, "گزارش و History")
         self.workspace_tabs.setCurrentIndex(0)
 
@@ -2971,10 +3051,12 @@ class OperationsPage(QWidget):
         self.queue_clear_selection_btn.clicked.connect(self._clear_queue_selection)
 
         self.mode.currentIndexChanged.connect(self._mode_changed)
+        self.workspace_tabs.currentChanged.connect(self._workspace_tab_changed)
+        self.single_url.editingFinished.connect(self._sync_source_from_url)
         self.url.editingFinished.connect(self._sync_source_from_url)
         self.collection_method.currentIndexChanged.connect(self._method_changed)
         self.source.currentIndexChanged.connect(self._source_changed)
-        self.start_btn.clicked.connect(self._start)
+        self.start_btn.clicked.connect(self._start_search_from_tab)
         self.stop_btn.clicked.connect(self._stop)
         self.reset_failed_btn.clicked.connect(self._reset_failed)
         self.queue_btn.clicked.connect(self._show_queue_inventory)
@@ -3019,8 +3101,8 @@ class OperationsPage(QWidget):
         self.live_delete_btn.clicked.connect(self._delete_selected_live)
 
         self._reload_sources()
-        self._mode_changed()
         self._method_changed()
+        self._workspace_tab_changed(self.workspace_tabs.currentIndex())
         self._queue_view_changed()
         self.refresh()
 
@@ -3035,6 +3117,33 @@ class OperationsPage(QWidget):
         index = self.source.findData(current)
         if index >= 0:
             self.source.setCurrentIndex(index)
+
+    def _active_url_edit(self) -> QLineEdit:
+        if self.workspace_tabs.currentIndex() == 1:
+            return self.single_url
+        return self.url
+
+    def _active_url_text(self) -> str:
+        return self._active_url_edit().text().strip()
+
+    def _workspace_tab_changed(self, index: int) -> None:
+        acquisition_tab = int(index) in {1, 2}
+        self.acquisition_controls.setVisible(acquisition_tab)
+        self.acquisition_status.setVisible(acquisition_tab)
+        if not acquisition_tab:
+            self._source_changed()
+            return
+        mode = "single" if int(index) == 1 else "search"
+        mode_index = self.mode.findData(mode)
+        if mode_index >= 0 and self.mode.currentIndex() != mode_index:
+            self.mode.setCurrentIndex(mode_index)
+        self._mode_changed()
+        self._sync_source_from_url()
+
+    def _start_search_from_tab(self) -> None:
+        if self.workspace_tabs.currentIndex() != 2:
+            self.workspace_tabs.setCurrentIndex(2)
+        self._start()
 
     def _source_changed(self) -> None:
         source_code = str(
@@ -3054,7 +3163,7 @@ class OperationsPage(QWidget):
 
     def _sync_source_from_url(self) -> None:
         detected = self.kernel.acquisition.detect_source_for_url(
-            self.url.text().strip()
+            self._active_url_text()
         )
         if not detected:
             return
@@ -3191,7 +3300,10 @@ class OperationsPage(QWidget):
                 "Listing پیش‌فرض برای این Source پیدا نشد.",
             )
             return
+        if self.workspace_tabs.currentIndex() != 2:
+            self.workspace_tabs.setCurrentIndex(2)
         self.url.setText(value)
+        self._sync_source_from_url()
 
     def _browse_saved_html(self) -> None:
         path, _selected = QFileDialog.getOpenFileName(
@@ -3204,6 +3316,8 @@ class OperationsPage(QWidget):
             self.saved_html_path.setText(path)
 
     def _direct_from_url(self) -> None:
+        if self.workspace_tabs.currentIndex() != 1:
+            self.workspace_tabs.setCurrentIndex(1)
         index = self.mode.findData("single")
         if index >= 0:
             self.mode.setCurrentIndex(index)
@@ -3218,6 +3332,8 @@ class OperationsPage(QWidget):
         self.saved_html_path.setEnabled(saved)
         self.saved_html_browse.setEnabled(saved)
         if saved:
+            if self.workspace_tabs.currentIndex() != 1:
+                self.workspace_tabs.setCurrentIndex(1)
             single_index = self.mode.findData("single")
             if single_index >= 0:
                 self.mode.setCurrentIndex(single_index)
@@ -3242,14 +3358,6 @@ class OperationsPage(QWidget):
             mode in {"automatic", "search"}
         )
         self.default_url_btn.setEnabled(batch)
-        self.url.setPlaceholderText(
-            (
-                "لینک اختیاری؛ اگر خالی باشد Automatic/Search "
-                "از Listing پیش‌فرض Source استفاده می‌کند"
-            )
-            if batch
-            else "لینک مستقیم صفحه Product"
-        )
         self._source_changed()
 
     def _start(self) -> None:
@@ -3261,15 +3369,18 @@ class OperationsPage(QWidget):
             )
             return
 
+        tab_index = self.workspace_tabs.currentIndex()
+        mode = "single" if tab_index == 1 else "search"
+        mode_index = self.mode.findData(mode)
+        if mode_index >= 0 and self.mode.currentIndex() != mode_index:
+            self.mode.setCurrentIndex(mode_index)
+
         self._sync_source_from_url()
         source_code = str(
             self.source.currentData() or ""
         ).strip()
-        url = self.url.text().strip()
-        mode = str(
-            self.mode.currentData() or "automatic"
-        )
-        query = self.query.text().strip()
+        url = self._active_url_text()
+        query = self.query.text().strip() if mode == "search" else ""
         if not source_code:
             QMessageBox.warning(
                 self,
@@ -3277,14 +3388,29 @@ class OperationsPage(QWidget):
                 "یک Source فعال انتخاب کن.",
             )
             return
+
         if mode == "single":
+            if not url:
+                QMessageBox.warning(
+                    self,
+                    "تک محصول",
+                    "لینک مستقیم صفحه Product را وارد کن.",
+                )
+                return
             resolved_url = url
         else:
+            if not url and not query:
+                QMessageBox.warning(
+                    self,
+                    "جستجو",
+                    "لینک صفحه جستجو یا عبارت جستجو را وارد کن.",
+                )
+                return
             try:
                 resolved_url = (
                     self.kernel.acquisition.resolve_listing_url(
                         source_code,
-                        operator_mode=mode,
+                        operator_mode="search",
                         explicit_url=url,
                         query=query,
                     )
@@ -3292,7 +3418,7 @@ class OperationsPage(QWidget):
             except Exception as exc:
                 QMessageBox.warning(
                     self,
-                    "دریافت اطلاعات",
+                    "جستجو",
                     str(exc),
                 )
                 return
@@ -3306,6 +3432,27 @@ class OperationsPage(QWidget):
                 self,
                 "دریافت اطلاعات",
                 "لینک معتبر http/https وارد کن.",
+            )
+            return
+
+        is_product_url = self.kernel.acquisition.is_product_url(
+            source_code,
+            resolved_url,
+        )
+        if mode == "single" and not is_product_url:
+            QMessageBox.warning(
+                self,
+                "تک محصول",
+                "این لینک صفحه Product نیست. برای Search/Listing از تب «جستجو / لینک جستجو» استفاده کن.",
+            )
+            return
+        if mode == "search" and is_product_url:
+            self.single_url.setText(resolved_url)
+            self.workspace_tabs.setCurrentIndex(1)
+            QMessageBox.information(
+                self,
+                "لینک تک محصول",
+                "این لینک Product است و به تب «تک محصول» منتقل شد.",
             )
             return
 
@@ -3326,7 +3473,7 @@ class OperationsPage(QWidget):
             self._live_product_progress = {}
             self.live_results.clear()
 
-        requested = self.requested.value()
+        requested = 1 if mode == "single" else self.requested.value()
         image_limit = self.image_limit.value()
         include_failed = self.retry_failed.isChecked()
         collection_method = str(
@@ -3358,6 +3505,7 @@ class OperationsPage(QWidget):
                     download_files=self.download_files.isChecked(),
                     same_domain_only=self.same_domain.isChecked(),
                     progress=progress,
+                    adaptive_fallback=True,
                 )
             return self.kernel.acquisition.run_batch(
                 source_code=source_code,
@@ -3377,9 +3525,13 @@ class OperationsPage(QWidget):
         worker = Worker(job)
         self._worker = worker
         self.start_btn.setEnabled(False)
+        self.single_start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
+        self.acquisition_status.setVisible(True)
         self.progress.setValue(0)
-        self.status.setText("شروع دریافت…")
+        self.status.setText(
+            "دریافت تک محصول…" if mode == "single" else "شروع جستجو…"
+        )
 
         worker.signals.progress.connect(self._progress)
         worker.signals.result.connect(self._done)
@@ -3398,7 +3550,9 @@ class OperationsPage(QWidget):
         worker = Worker(fn)
         self._worker = worker
         self.start_btn.setEnabled(False)
+        self.single_start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
+        self.acquisition_status.setVisible(True)
         self.progress.setValue(0)
         self.status.setText(f"{label}…")
         worker.signals.progress.connect(self._progress)
@@ -3409,7 +3563,7 @@ class OperationsPage(QWidget):
 
     def _setup_login_profile(self) -> None:
         source_code = str(self.source.currentData() or "").strip()
-        seed = self.url.text().strip()
+        seed = self._active_url_text()
         if not source_code:
             QMessageBox.warning(self, "Chrome پروفایل", "یک Source انتخاب کن.")
             return
@@ -3425,7 +3579,7 @@ class OperationsPage(QWidget):
     def _launch_debug_chrome(self) -> None:
         try:
             result = self.kernel.acquisition.launch_debug_chrome(
-                seed_url=self.url.text().strip(),
+                seed_url=self._active_url_text(),
             )
         except Exception as exc:
             show_diagnostic_error(
@@ -3465,8 +3619,8 @@ class OperationsPage(QWidget):
                 "یک Source فعال انتخاب کن.",
             )
             return
-        limit = self.requested.value()
-        image_limit = self.image_limit.value()
+        limit = self.source_refresh_limit.value()
+        image_limit = self.source_refresh_image_limit.value()
         answer = QMessageBox.question(
             self,
             "بروزرسانی محصولات Source",
@@ -3485,7 +3639,7 @@ class OperationsPage(QWidget):
                 source_code=source_code,
                 limit=limit,
                 image_limit=image_limit,
-                download_images=self.download_images.isChecked(),
+                download_images=self.source_refresh_download_images.isChecked(),
                 progress=progress,
             )
             return {"operation": "source_refresh", **dict(result or {})}
@@ -3658,7 +3812,7 @@ class OperationsPage(QWidget):
                 "collection_method": str(
                     self.collection_method.currentData() or ""
                 ),
-                "url": self.url.text().strip(),
+                "url": self._active_url_text(),
             },
         )
         self.refresh()
@@ -3666,6 +3820,7 @@ class OperationsPage(QWidget):
     def _finished(self) -> None:
         self._worker = None
         self.start_btn.setEnabled(True)
+        self.single_start_btn.setEnabled(True)
         if hasattr(self, "queue_collect_btn"):
             self.queue_collect_btn.setEnabled(True)
         if hasattr(self, "queue_collect_ai_btn"):

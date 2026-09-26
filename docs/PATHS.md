@@ -1,3 +1,13 @@
+## 2026-09-26 O7A current Windows operator path
+- Current forward Windows source worktree: `D:\projects\3DPrintHub-a2z-a2r-converge`.
+- Current O7A branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`.
+- Entry accepted lineage HEAD: `eba70a55bd6907564744f3805005cac1f7659531`.
+- Catalog version remains v8.9.11 / build 2026.09.20.1.
+- Shared Catalog authority remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+- Repository launcher for O7A QA: `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\RUN_QT.ps1`.
+- `D:\projects\3DprintHub` is an obsolete v8.9.10 worktree for current Windows UI development; do not select it by folder-name convention.
+- Before future Windows Catalog edits, verify worktree list + APP_VERSION/BUILD_ID + branch/HEAD ancestry against this forward lineage.
+
 ## 2026-09-21 A2Y accepted unified paths
 - Authoritative forward Local worktree: `D:\projects\3DPrintHub-a2y-converge`.
 - Forward branch: `wip/phase50-a2y-lineage-convergence-20260921`.

@@ -998,40 +998,64 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             )
             self.assertEqual(page.requested.maximum(), 500)
 
-            controls_grid = page.source.parentWidget().layout()
-            actions = controls_grid.itemAtPosition(9, 0).layout()
-            action_widgets = [
-                actions.itemAt(index).widget()
-                for index in range(actions.count())
-                if actions.itemAt(index).widget() is not None
+            labels = [
+                page.workspace_tabs.tabText(index)
+                for index in range(page.workspace_tabs.count())
             ]
             self.assertEqual(
-                action_widgets,
+                labels,
                 [
-                    page.start_btn,
-                    page.stop_btn,
-                    page.direct_btn,
-                    page.default_url_btn,
-                    page.queue_btn,
-                    page.refresh_btn,
+                    "موجودی محصولات",
+                    "تک محصول",
+                    "جستجو / لینک جستجو",
+                    "گزارش و History",
                 ],
             )
-            self.assertIsNone(controls_grid.itemAtPosition(10, 0))
-            receive_options = controls_grid.itemAtPosition(5, 0).layout()
-            receive_widgets = [
-                receive_options.itemAt(index).widget()
-                for index in range(receive_options.count())
-                if receive_options.itemAt(index).widget() is not None
-            ]
+            self.assertEqual(page.workspace_tabs.currentIndex(), 0)
+            self.assertTrue(page.acquisition_controls.isHidden())
+            self.assertTrue(page.acquisition_status.isHidden())
+            self.assertTrue(
+                page.workspace_tabs.widget(0).isAncestorOf(
+                    page.source_refresh_btn
+                )
+            )
+            self.assertFalse(
+                page.workspace_tabs.widget(2).isAncestorOf(
+                    page.source_refresh_btn
+                )
+            )
+            self.assertIs(page.direct_btn, page.single_start_btn)
+            self.assertTrue(page.advanced_frame.isHidden())
+            self.assertIn("/models/", page.single_url.placeholderText())
+            self.assertIn("/search/models", page.url.placeholderText())
+
+            page.workspace_tabs.setCurrentIndex(1)
+            QApplication.processEvents()
+            self.assertEqual(str(page.mode.currentData() or ""), "single")
+            self.assertFalse(page.acquisition_controls.isHidden())
+
+            page.workspace_tabs.setCurrentIndex(2)
+            QApplication.processEvents()
+            self.assertEqual(str(page.mode.currentData() or ""), "search")
+            self.assertFalse(page.acquisition_controls.isHidden())
+            self.assertEqual(
+                str(page.strategy.currentData() or ""),
+                "hybrid",
+            )
+
+            page.advanced_toggle.setChecked(True)
+            QApplication.processEvents()
+            self.assertFalse(page.advanced_frame.isHidden())
             for checkbox in (
                 page.retry_failed,
                 page.download_images,
                 page.download_files,
                 page.same_domain,
             ):
-                self.assertIn(checkbox, receive_widgets)
+                self.assertIs(checkbox.parentWidget(), page.advanced_frame)
 
             for attribute in (
+                "single_url",
                 "query",
                 "download_images",
                 "download_files",
@@ -1039,6 +1063,7 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
                 "saved_html_path",
                 "saved_html_browse",
                 "default_url_btn",
+                "single_start_btn",
                 "direct_btn",
                 "login_profile_btn",
                 "debug_chrome_btn",
@@ -1046,6 +1071,15 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
                 "source_refresh_btn",
             ):
                 self.assertTrue(hasattr(page, attribute), attribute)
+
+            # Source refresh belongs to Inventory; broad multi-source harvest remains
+            # a compatibility hook and is not part of the simplified receive UI.
+            self.assertTrue(
+                page.workspace_tabs.widget(0).isAncestorOf(
+                    page.source_refresh_btn
+                )
+            )
+            self.assertIsNone(page.harvest_btn.parentWidget())
 
             saved_index = page.collection_method.findData("saved_html")
             page.collection_method.setCurrentIndex(saved_index)

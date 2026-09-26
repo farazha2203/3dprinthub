@@ -1,3 +1,30 @@
+## ERR-49-264 - O7A category/professional-commerce combined probe exposed unrelated baseline profile-identity assertion (2026-09-26)
+
+**Observed**
+- O7A category-preservation probe ran Category Bridge + Professional Commerce together; Category tests passed but `test_profile_identity_rejects_duplicate_name_size_and_dimensions` failed because the current runtime did not raise the historical duplicate-name ValueError.
+
+**Baseline proof / handling**
+- The exact same test fails unchanged in a detached clean worktree at O7A entry HEAD `eba70a55bd6907564744f3805005cac1f7659531`.
+- O7A touches only acquisition UI/kernel routing and does not alter Profile identity logic.
+- Category Bridge was rerun independently and passed 3/3; no unrelated Profile source was changed to force the historical test green.
+
+**Prevention**
+- Mixed regression failures must be baseline-proved before attribution; never weaken unrelated mature runtime to satisfy a historical assertion outside the touched surface.
+
+## ERR-49-263 - O7A work initially targeted an obsolete v8.9.10 Windows worktree instead of latest v8.9.11 lineage (2026-09-26)
+
+**Observed**
+- Initial acquisition-UI work was mistakenly applied to `D:\projects\3DprintHub`, branch `wip/phase50-a2l-owner-qa-20260917`, Catalog v8.9.10.
+- That worktree predates the accepted A2U/A2X/A2Y/A2Z/O1-O6 Windows lineage containing current Product categories and independent Instagram Post/Story controls.
+
+**Root cause / correct recovery**
+- Repository path convention was trusted before verifying `git worktree list`, application version and ancestry across the project's parallel Windows worktrees.
+- Work stopped on the obsolete line. The actual latest lineage was proven at `D:\projects\3DPrintHub-a2z-a2r-converge`, v8.9.11 Build 2026.09.20.1, entry HEAD `eba70a55...`; all key A2U→A2Z/O commits are ancestors of that HEAD.
+- O7A was then implemented and tested only on the verified v8.9.11 lineage. Existing Post/Story/category contracts were regression-tested and preserved.
+
+**Prevention**
+- Before every Windows Catalog UI change, verify worktree path, branch, HEAD, `APP_VERSION`/`BUILD_ID`, remote ancestry and latest accepted phase docs. The conventional repository folder name alone is never sufficient lineage proof.
+
 ## ERR-49-262 - O6C read-only Host refresh blocked because dedicated reverse tunnel has no 22024 listener (2026-09-26)
 
 **Observed**
