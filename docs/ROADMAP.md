@@ -62,8 +62,9 @@
 - [x] O5A COMPLETE read-only: local Feed/Story receipt inventory classified without Buffer call/write; O5B is paused by owner Crawl recovery request.
 - [x] O4R1 LOCAL_TESTED: prove screenshot-visible Lamp rows are failed/unconsumed rather than successfully-added Products; add distinct multi-select full-clean reacquire contract, rollback quarantine, Product-backed hide reconciliation, Source Profile import and Screenshot enrichment.
 - [x] O4R2 LOCAL_TESTED: worker success/enrichment/failure circuit-breaker coverage + related O2H/O2D/O2/O2G Acquisition/Crawl regression 68/68 PASS; py_compile/diff/Qt VerifyOnly PASS.
-- [ ] O4R2 GITHUB GATE NEXT: final staging -> commit/push -> Local=Remote. STOP.
-- [ ] O4R3: fresh backup + isolated real MakerWorld failed-Crawl reacquire + exact-SHA Qt acceptance; only then bounded canonical acceptance. STOP.
+- [x] O4R2 GITHUB GATE: source/tests/docs commit `9965e0047db8a2dc9de540d66ce7197cc2f5ec8e`, Local=Remote and Server ancestry PASS.
+- [~] O4R3 IN_PROGRESS: first fresh isolated real Sphinx reacquire PASS for Product/images/files/screenshot/Crawl hide but exposed Source Profile=0; narrow existing `refresh_source_profiles(fresh_capture=True)` correction is 74/74 regression PASS.
+- [ ] O4R3B GITHUB+REAL RETEST NEXT: commit/push Profile correction/docs -> Local=Remote -> fresh rollback/clone -> exact-SHA Sphinx retest -> Qt visible smoke -> bounded canonical acceptance only on PASS.
 - [ ] O5B RESUME after O4R3: read-only Buffer/provider correlation using provider ID first; no createPost/write.
 - [ ] O5C: harden reconciliation contract + focused tests.
 - [ ] O5D: related regression + GitHub gate.

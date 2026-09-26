@@ -1,3 +1,19 @@
+## ERR-49-254 - O4R3 real clean reacquire produced Product/media/files/screenshot but zero Source Profiles (2026-09-26)
+
+**Observed**
+- The first isolated real O4R3 acceptance on failed MakerWorld Sphinx `makerworld:2737114` succeeded through `rich -> network_capture`: Product created, 5/5 local images, two file links, full Source description, fresh screenshot, Crawl collected/live-hidden and clone quick_check=ok.
+- The resulting Product still had `source_print_profiles_json=[]`, so the owner-requested full clean recovery could not claim Profile/Filament completion.
+
+**Root cause**
+- The generic Product acquisition path intentionally gathers Product/source/media/file facts but does not invoke the separate factual A2W MakerWorld Print Profile extractor. Importing profiles after generic acquisition is therefore a no-op when the factual Source Profile ledger has not first been refreshed.
+
+**Correct fix / verification**
+- Reuse the existing bounded `refresh_source_profiles(product_id, fresh_capture=True)` contract for MakerWorld immediately after successful Product reacquisition, then call the existing `import_source_profiles` ledger merge. Do not invent Profile facts when MakerWorld exposes none.
+- Focused O4R 5/5 and expanded O4R/O2H/O2D/O2/O2G/A2W regression 74/74 PASS; py_compile, diff-check and Qt VerifyOnly PASS. A fresh exact-SHA real clone retest is mandatory before canonical acceptance.
+
+**Prevention**
+- A workflow advertised as full Source recovery must explicitly compose all separate factual acquisition authorities it promises (Product/media/files, Source Print Profiles, Screenshot) and prove them on a real isolated Source before acceptance.
+
 ## ERR-49-253 - O4R read-only Product audit hit Windows cp1252 on a Unicode title (2026-09-25)
 
 **Observed**

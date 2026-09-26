@@ -3578,7 +3578,8 @@ class OperationsPage(QWidget):
                 f"تازه‌سازی={data.get('recovered', 0)} • "
                 f"Product موجود/مخفی={data.get('product_backed', 0)} • "
                 f"Screenshot={data.get('screenshots', 0)} • "
-                f"Profile={data.get('profiles_imported', 0)} • "
+                f"Source Profile={data.get('profiles_refreshed', 0)} • "
+                f"Profile/Filament={data.get('profiles_imported', 0)} • "
                 f"Rollback files={data.get('files_quarantined', 0)} • "
                 f"خطا={data.get('failed', 0)} • "
                 f"دست‌نخورده={data.get('unattempted', 0)}"
@@ -4801,6 +4802,7 @@ class OperationsPage(QWidget):
             recovered = 0
             product_backed = 0
             screenshots = 0
+            profiles_refreshed = 0
             profiles_imported = 0
             files_quarantined = 0
             failed = 0
@@ -4890,6 +4892,24 @@ class OperationsPage(QWidget):
                         product_ids.append(product_id)
 
                     source_profiles = []
+                    if source_code.casefold() == "makerworld":
+                        try:
+                            profile_refresh = (
+                                self.kernel.acquisition.refresh_source_profiles(
+                                    product_id,
+                                    fresh_capture=True,
+                                    progress=child_progress,
+                                )
+                            )
+                            profiles_refreshed += int(
+                                profile_refresh.get("profile_count") or 0
+                            )
+                        except Exception as exc:
+                            warnings.append(
+                                f"#{queue_id}: Source Profile refresh: "
+                                f"{type(exc).__name__}: {exc}"
+                            )
+
                     product_row = self.db.product(product_id)
                     if product_row is not None:
                         try:
@@ -4959,6 +4979,7 @@ class OperationsPage(QWidget):
                 "recovered": recovered,
                 "product_backed": product_backed,
                 "screenshots": screenshots,
+                "profiles_refreshed": profiles_refreshed,
                 "profiles_imported": profiles_imported,
                 "files_quarantined": files_quarantined,
                 "failed": failed,

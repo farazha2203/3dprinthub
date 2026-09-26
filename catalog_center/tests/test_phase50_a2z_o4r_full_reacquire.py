@@ -309,6 +309,14 @@ class Phase50A2ZO4RFullReacquireTests(unittest.TestCase):
                 side_effect=fake_run_single,
             ) as run_single, patch.object(
                 self.kernel.acquisition,
+                "refresh_source_profiles",
+                return_value={
+                    "product_id": 1,
+                    "profile_count": 1,
+                    "profiles": [{"name": "0.20mm PLA"}],
+                },
+            ) as refresh_profiles, patch.object(
+                self.kernel.acquisition,
                 "capture_product_source_screenshot",
                 return_value=str(self.root / "source-page.png"),
             ) as screenshot, patch.object(
@@ -326,9 +334,11 @@ class Phase50A2ZO4RFullReacquireTests(unittest.TestCase):
             self.assertEqual(result["recovered"], 1)
             self.assertEqual(result["failed"], 0)
             self.assertEqual(result["screenshots"], 1)
+            self.assertEqual(result["profiles_refreshed"], 1)
             self.assertEqual(result["profiles_imported"], 3)
             self.assertEqual(result["preferred_method"], "network_capture")
             run_single.assert_called_once()
+            refresh_profiles.assert_called_once()
             screenshot.assert_called_once()
             import_profiles.assert_called_once()
             row = self.db.conn.execute(
