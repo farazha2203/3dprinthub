@@ -107,26 +107,56 @@ class ProductFilterContractTests(unittest.TestCase):
             workflow="uploaded",
             server_id="asset-submitted",
         )
+        social_acks = {
+            posted: json.dumps(
+                {"product_url": "/store/product/post/", "revision": 1},
+                separators=(",", ":"),
+            ),
+            story: json.dumps(
+                {"product_url": "/store/product/story/", "revision": 1},
+                separators=(",", ":"),
+            ),
+            submitted: json.dumps(
+                {"product_url": "/store/product/submitted/", "revision": 1},
+                separators=(",", ":"),
+            ),
+        }
+        for product_id, fingerprint in social_acks.items():
+            self.db.conn.execute(
+                "UPDATE products SET server_ack_json=? WHERE id=?",
+                (fingerprint, product_id),
+            )
+        self.db.conn.commit()
+
         self.db.record_sync_receipt(
             posted,
             "instagram:buffer:post",
             "instagram_published",
             "post-1",
-            {"buffer_status": "sent"},
+            {
+                "buffer_status": "sent",
+                "site_ack_fingerprint": social_acks[posted],
+            },
         )
         self.db.record_sync_receipt(
             story,
             "instagram:buffer:story",
             "instagram_story_published",
             "story-1",
-            {"buffer_status": "sent"},
+            {
+                "buffer_status": "sent",
+                "site_ack_fingerprint": social_acks[story],
+            },
         )
         self.db.record_sync_receipt(
             submitted,
             "instagram:buffer:submitted",
             "instagram_submitted",
             "post-pending",
-            {"buffer_status": "sending"},
+            {
+                "buffer_status": "sending",
+                "site_ack_fingerprint": social_acks[submitted],
+            },
         )
 
         self.assertEqual(self.ids("ready_7"), {ready})

@@ -1,3 +1,10 @@
+## 2026-09-26 - Owner Product/Crawl truth re-audit + O5C focused hardening
+Status: `O5D LOCAL_TESTED / GITHUB GATE NEXT`.
+
+Owner asked for explicit confirmation that one identity cannot stay simultaneously active in Products and Add Products, that Products and Crawl do not contain duplicate identities, that Crawl preserves Product links, and that requested Crawl counts mean NEW unconsumed products rather than repeatedly inspecting the first already-consumed results. Live read-only audit confirms: Product exact duplicates=0, Crawl exact duplicates=0, active Product-backed Crawl rows=0, missing Crawl/Candidate Product links=0. O2G's accepted requested-count contract remains 1..500 NEW unconsumed identities and the real 200-Lamp acceptance persisted exactly 200 new candidates beyond the old window.
+
+O5C was then implemented/tested as the next short-stop phase: current-revision ACK-only receipt truth, Feed/Story independence, provider-ID-first correlation, unique-only asset fallback, fail-closed ambiguity/missing/non-sent states, no repost, and current-revision Instagram UI filters. Focused tests 17/17 PASS; no Catalog/provider mutation.
+
 ## 2026-09-26 - O5B execution checkpoint: provider truth before any reconciliation
 Status: `O5B ACCEPTED / O5C NEXT`.
 

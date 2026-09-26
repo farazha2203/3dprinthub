@@ -293,9 +293,10 @@ class BufferPublishTests(unittest.TestCase):
 
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
-    @patch("app.buffer_publish._reconcile_recent_asset")
-    def test_reconcile_submitted_feed_appends_published_receipt_without_repost(
-        self, reconcile, _secret
+    @patch("app.buffer_publish._recent_asset_matches")
+    @patch("app.buffer_publish._read_post_state")
+    def test_reconcile_submitted_feed_uses_exact_provider_id_without_repost(
+        self, post_state, asset_matches, _secret
     ):
         db = _DB()
         fingerprint = db.row["server_ack_json"]
@@ -312,7 +313,7 @@ class BufferPublishTests(unittest.TestCase):
                 "external_link": "",
             },
         )
-        reconcile.return_value = {
+        post_state.return_value = {
             "id": "post-submitted",
             "status": "sent",
             "externalLink": "https://instagram.com/p/final",
@@ -326,10 +327,180 @@ class BufferPublishTests(unittest.TestCase):
 
         self.assertEqual(len(result["reconciled"]), 1)
         self.assertEqual(result["reconciled"][0]["status"], "instagram_published")
+        self.assertEqual(
+            result["reconciled"][0]["match_mode"],
+            "exact_provider_id",
+        )
+        post_state.assert_called_once()
+        asset_matches.assert_not_called()
         final = json.loads(db.receipts[-1]["payload_json"])
         self.assertTrue(final["reconciled_without_repost"])
+        self.assertEqual(final["reconcile_match_mode"], "exact_provider_id")
         self.assertEqual(final["external_link"], "https://instagram.com/p/final")
         self.assertEqual(db.receipts[-1]["status"], "instagram_published")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._read_post_state")
+    def test_reconcile_stale_revision_is_skipped_before_provider_lookup(
+        self, post_state, _secret
+    ):
+        db = _DB()
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:stale",
+            "instagram_submitted",
+            server_id="old-post",
+            payload={
+                "provider_post_id": "old-post",
+                "site_ack_fingerprint": '{"old":true}',
+                "media_urls": ["https://raw.githubusercontent.com/demo/old.png"],
+            },
+        )
+
+        result = reconcile_product_receipts(
+            db,
+            7,
+            BufferConfig(channel_id="chan-1"),
+        )
+
+        self.assertEqual(result["reconciled"], [])
+        self.assertEqual(result["stale_skipped"], 1)
+        self.assertEqual(len(db.receipts), 1)
+        post_state.assert_not_called()
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._read_post_state")
+    def test_reconcile_feed_and_story_are_independent(
+        self, post_state, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:feed-final",
+            "instagram_published",
+            server_id="feed-final",
+            payload={
+                "provider_post_id": "feed-final",
+                "site_ack_fingerprint": fingerprint,
+            },
+        )
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:story-submitted",
+            "instagram_story_submitted",
+            server_id="story-submitted",
+            payload={
+                "provider_post_id": "story-submitted",
+                "site_ack_fingerprint": fingerprint,
+                "story_asset_url": "https://raw.githubusercontent.com/demo/story.png",
+            },
+        )
+        post_state.return_value = {
+            "id": "story-submitted",
+            "status": "sent",
+            "externalLink": "https://instagram.com/stories/demo/1",
+        }
+
+        result = reconcile_product_receipts(
+            db,
+            7,
+            BufferConfig(channel_id="chan-1"),
+        )
+
+        self.assertEqual(len(result["reconciled"]), 1)
+        self.assertEqual(
+            result["reconciled"][0]["status"],
+            "instagram_story_published",
+        )
+        self.assertEqual(db.receipts[-1]["status"], "instagram_story_published")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._recent_asset_matches")
+    def test_reconcile_asset_fallback_requires_unique_match(
+        self, asset_matches, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:no-provider-id",
+            "instagram_submitted",
+            server_id="",
+            payload={
+                "site_ack_fingerprint": fingerprint,
+                "media_urls": ["https://raw.githubusercontent.com/demo/feed.png"],
+            },
+        )
+        asset_matches.return_value = [
+            {"id": "post-a", "status": "sent", "externalLink": ""},
+            {"id": "post-b", "status": "sent", "externalLink": ""},
+        ]
+
+        result = reconcile_product_receipts(
+            db,
+            7,
+            BufferConfig(channel_id="chan-1"),
+        )
+
+        self.assertEqual(result["reconciled"], [])
+        self.assertEqual(
+            result["pending"][0]["reason"],
+            "provider_match_ambiguous",
+        )
+        self.assertEqual(len(db.receipts), 1)
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._recent_asset_matches")
+    def test_reconcile_unique_asset_fallback_can_finalize_without_repost(
+        self, asset_matches, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:no-provider-id",
+            "instagram_submitted",
+            server_id="",
+            payload={
+                "site_ack_fingerprint": fingerprint,
+                "media_urls": ["https://raw.githubusercontent.com/demo/feed.png"],
+            },
+        )
+        asset_matches.return_value = [
+            {
+                "id": "post-unique",
+                "status": "sent",
+                "externalLink": "https://instagram.com/p/unique",
+            }
+        ]
+
+        result = reconcile_product_receipts(
+            db,
+            7,
+            BufferConfig(channel_id="chan-1"),
+        )
+
+        self.assertEqual(len(result["reconciled"]), 1)
+        self.assertEqual(
+            result["reconciled"][0]["match_mode"],
+            "unique_asset_fallback",
+        )
+        self.assertEqual(db.receipts[-1]["status"], "instagram_published")
+
+    @patch("app.buffer_publish._read_post_state")
+    def test_reconcile_requires_current_site_ack_before_provider_lookup(
+        self, post_state
+    ):
+        db = _DB()
+        db.row["server_ack_json"] = "{}"
+        with self.assertRaisesRegex(RuntimeError, "Site ACK fingerprint"):
+            reconcile_product_receipts(
+                db,
+                7,
+                BufferConfig(channel_id="chan-1"),
+            )
+        post_state.assert_not_called()
 
     @patch("app.buffer_publish.get_secret", return_value="")
     def test_missing_key_fails_closed(self, _secret):

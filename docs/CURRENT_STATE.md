@@ -1,3 +1,32 @@
+## 2026-09-26 - Phase50.A.2Z-O5D related regression + GitHub gate - LOCAL_TESTED / COMMIT-PUSH NEXT
+
+Active branch: `wip/phase50-a2z-o5c-reconcile-contract-20260926` from accepted O5B commit `0d2d5f30ef8191ddd3a468f1aec175ecd30f1ae7`. Production/Host remains unchanged; selective Server `2b48a593...` remains an accepted ancestor. O5C source/tests/docs are fully regression-tested locally and are now at the O5D staging/commit-push gate.
+
+Owner-requested Product/Crawl truth was re-audited read-only against the live canonical Catalog before O5C code work:
+- Products=867, Crawl=1177, Candidates=625.
+- Duplicate Product exact Source+external_id groups=0; duplicate Product exact Source+normalized_url groups=0.
+- Duplicate Crawl exact Source+external_id groups=0; duplicate Crawl exact Source+normalized_url groups=0.
+- Active Crawl (`new`/`failed`) rows backed by an existing Product identity=0. A successfully-created Product therefore does not remain in the Add Products active queue.
+- Crawl rows missing both Source URL and normalized URL=0; discovery Candidate rows missing both Source URL and normalized URL=0.
+- Crawl status truth: collected=533, rejected=514, new=66, failed=61, blocked=3.
+- O2G remains the accepted requested-count contract: requested 1..500 means that many NEW unconsumed identities, not the first N visible/previously-consumed results. Real MakerWorld Lamp acceptance progressed beyond the prior 15-row window, saw 397 Product links and persisted exactly 200 new unconsumed candidates for a 200 request.
+
+O5C implementation hardens Social receipt truth without publishing anything:
+- current non-empty `site_ack_fingerprint` is mandatory before reconciliation;
+- submitted Feed and Story are finalized independently;
+- exact persisted `provider_post_id` is queried first and asset fallback is not used when an exact ID exists;
+- asset fallback is allowed only when provider ID is absent and exactly one recent Buffer post matches the asset; zero or multiple matches fail closed;
+- provider states other than `sent` remain pending and never become published;
+- stale prior-revision submitted receipts are skipped before provider lookup;
+- final evidence is appended with `reconciled_without_repost=true` and an explicit match mode; reconciliation never calls `createPost`;
+- Product-list filters `instagram_posted` and `instagram_story` now require a published receipt whose `site_ack_fingerprint` exactly equals the Product's current `server_ack_json`, so stale #536/#625 receipts no longer make the current revision look published.
+
+Focused verification PASS: touched files py_compile PASS; `tests.test_phase50_buffer_publish` + `tests.test_phase50_a2z_o5c_social_reconciliation` = 17/17 PASS. Read-only canonical evaluation of the new filters returns current Feed Products [210,309,588,609,620] and current Story Products [210,309,596,620,670,717]; stale #536/#625 are absent from both current-revision filters. No Catalog receipt write, Buffer mutation, Feed publish or Story publish occurred in O5C.
+
+O5D verification PASS after one stale-fixture correction: the first 77-test related Social/Image/duplicate-guard run failed only the older O1 social-filter fixture because it lacked the new current Site ACK/fingerprint contract. Runtime logic was not weakened; the fixture was updated and the exact related gate reran 77/77 PASS. Touched py_compile PASS; app/Qt compileall PASS; pip check PASS; git diff --check PASS; Qt `RUN_QT.ps1 -VerifyOnly` PASS. The first Django gate omitted the isolated worktree `.env`; per ERR-49-242/155 it was not repeated unchanged. A temporary canonical ignored `.env` was copied only for `manage.py check` and `makemigrations --check --dry-run`, both PASS (known CKEditor warning only / `No changes detected`), then removed with `TEMP_ENV_PRESENT_AFTER=False`. Canonical Catalog remained read-only at quick_check=ok, Products=867 / Receipts=477 / Crawl=1177 / Candidates=625. No Buffer/provider mutation or Instagram publish occurred.
+
+Exact next O5D action: final staging review -> commit/push the reviewed O5C/O5D source/tests/docs -> verify Local=Remote and clean worktree -> STOP. Immediately following phase O5E: fresh SQLite rollback + isolated evidence-backed receipt reconciliation acceptance; no canonical receipt mutation until clone proof passes.
+
 ## 2026-09-26 - Phase50.A.2Z-O5B Buffer provider correlation - ACCEPTED / O5C NEXT
 
 Active branch: `wip/phase50-a2z-o5b-provider-correlation-20260926` from O4R closure `d941b755bdf115ab45a021b63488b76a97f76f52`; Production/Server `2b48a593...` remains a verified ancestor. O5B was strictly read-only against Catalog and Buffer: no `createPost`, no receipt write, no Instagram publish.

@@ -130,12 +130,25 @@ def _read_post_state(token: str, cfg: BufferConfig, post_id: str) -> dict[str, A
     return dict(post) if isinstance(post, dict) else {}
 
 
-def _reconcile_recent_asset(token: str, cfg: BufferConfig, asset_url: str) -> dict[str, Any] | None:
+def _recent_asset_matches(
+    token: str,
+    cfg: BufferConfig,
+    asset_url: str,
+) -> list[dict[str, Any]]:
+    asset_url = str(asset_url or "").strip()
+    if not asset_url:
+        return []
     try:
-        account = _request_graphql(token, _ACCOUNT_ORGS_QUERY, timeout=cfg.timeout).get("account") or {}
+        account = _request_graphql(
+            token,
+            _ACCOUNT_ORGS_QUERY,
+            timeout=cfg.timeout,
+        ).get("account") or {}
         organizations = account.get("organizations") or []
     except Exception:
-        return None
+        return []
+
+    matches: dict[str, dict[str, Any]] = {}
     for organization in organizations:
         org_id = str((organization or {}).get("id") or "").strip()
         if not org_id:
@@ -152,18 +165,34 @@ def _reconcile_recent_asset(token: str, cfg: BufferConfig, asset_url: str) -> di
         for edge in (data.get("posts") or {}).get("edges") or []:
             node = (edge or {}).get("node") or {}
             urls = [
-                str((asset or {}).get("source") or (asset or {}).get("thumbnail") or "")
+                str(
+                    (asset or {}).get("source")
+                    or (asset or {}).get("thumbnail")
+                    or ""
+                )
                 for asset in node.get("assets") or []
             ]
             if asset_url not in urls:
                 continue
-            status = str(node.get("status") or "").strip().lower()
-            if status in {"sent", "sending"}:
-                return {
-                    "id": str(node.get("id") or ""),
-                    "status": status,
-                    "externalLink": str(node.get("externalLink") or ""),
-                }
+            post_id = str(node.get("id") or "").strip()
+            if not post_id:
+                continue
+            matches[post_id] = {
+                "id": post_id,
+                "status": str(node.get("status") or "").strip().lower(),
+                "externalLink": str(node.get("externalLink") or ""),
+            }
+    return list(matches.values())
+
+
+def _reconcile_recent_asset(
+    token: str,
+    cfg: BufferConfig,
+    asset_url: str,
+) -> dict[str, Any] | None:
+    for match in _recent_asset_matches(token, cfg, asset_url):
+        if str(match.get("status") or "").lower() in {"sent", "sending"}:
+            return match
     return None
 
 def _already_sent(db, product_id: int, fingerprint: str) -> bool:
@@ -545,13 +574,18 @@ def reconcile_product_receipts(
     product_id: int,
     cfg: BufferConfig,
 ) -> dict[str, Any]:
-    """Append final receipt evidence when Buffer has moved a submitted post to sent."""
+    """Append final provider evidence for the exact current Site revision only."""
 
     row_obj = db.product(int(product_id))
     if row_obj is None:
         raise RuntimeError(f"Product {product_id} not found")
     row = dict(row_obj)
     fingerprint = str(row.get("server_ack_json") or "").strip()
+    if not fingerprint or fingerprint == "{}":
+        raise RuntimeError(
+            "Current Site ACK fingerprint is required before Instagram reconciliation."
+        )
+
     token = get_secret("buffer_api_key")
     if not token:
         raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
@@ -563,6 +597,7 @@ def reconcile_product_receipts(
     }
     already_final: set[tuple[str, str]] = set()
     parsed: list[tuple[Any, dict[str, Any]]] = []
+    stale_skipped = 0
     for receipt in receipts:
         try:
             payload = json.loads(receipt["payload_json"] or "{}")
@@ -570,8 +605,9 @@ def reconcile_product_receipts(
             payload = {}
         parsed.append((receipt, payload))
         status = str(receipt["status"] or "")
+        receipt_fingerprint = str(payload.get("site_ack_fingerprint") or "")
         if status in final_statuses.values():
-            already_final.add((status, str(payload.get("site_ack_fingerprint") or "")))
+            already_final.add((status, receipt_fingerprint))
 
     reconciled: list[dict[str, Any]] = []
     pending: list[dict[str, Any]] = []
@@ -580,44 +616,104 @@ def reconcile_product_receipts(
         final_status = final_statuses.get(status)
         if not final_status:
             continue
-        if fingerprint and str(payload.get("site_ack_fingerprint") or "") != fingerprint:
+
+        receipt_fingerprint = str(payload.get("site_ack_fingerprint") or "")
+        if receipt_fingerprint != fingerprint:
+            stale_skipped += 1
             continue
         if (final_status, fingerprint) in already_final:
             continue
 
-        if status == "instagram_submitted":
-            urls = [
-                str(value or "").strip()
-                for value in payload.get("media_urls") or []
-                if str(value or "").strip()
-            ]
-            asset_url = urls[0] if urls else ""
+        provider_id = str(
+            payload.get("provider_post_id")
+            or receipt["server_id"]
+            or ""
+        ).strip()
+        post: dict[str, Any] = {}
+        match_mode = ""
+        if provider_id:
+            match_mode = "exact_provider_id"
+            post = _read_post_state(token, cfg, provider_id)
+            if not post:
+                pending.append(
+                    {
+                        "status": status,
+                        "provider_post_id": provider_id,
+                        "provider_status": "",
+                        "reason": "provider_state_unavailable",
+                    }
+                )
+                continue
         else:
-            asset_url = str(payload.get("story_asset_url") or "").strip()
-        if not asset_url:
-            pending.append({"status": status, "reason": "asset_url_missing"})
-            continue
+            if status == "instagram_submitted":
+                urls = [
+                    str(value or "").strip()
+                    for value in payload.get("media_urls") or []
+                    if str(value or "").strip()
+                ]
+                asset_url = urls[0] if urls else ""
+            else:
+                asset_url = str(payload.get("story_asset_url") or "").strip()
+            if not asset_url:
+                pending.append(
+                    {
+                        "status": status,
+                        "reason": "asset_url_missing",
+                    }
+                )
+                continue
 
-        post = _reconcile_recent_asset(token, cfg, asset_url)
-        if not post or str(post.get("status") or "").lower() != "sent":
+            matches = _recent_asset_matches(token, cfg, asset_url)
+            if not matches:
+                pending.append(
+                    {
+                        "status": status,
+                        "reason": "provider_match_missing",
+                    }
+                )
+                continue
+            if len(matches) != 1:
+                pending.append(
+                    {
+                        "status": status,
+                        "reason": "provider_match_ambiguous",
+                        "provider_post_ids": [
+                            str(item.get("id") or "")
+                            for item in matches
+                            if str(item.get("id") or "")
+                        ],
+                    }
+                )
+                continue
+            match_mode = "unique_asset_fallback"
+            post = matches[0]
+            provider_id = str(post.get("id") or "").strip()
+
+        provider_status = str(post.get("status") or "").strip().lower()
+        if provider_status != "sent":
             pending.append(
                 {
                     "status": status,
-                    "provider_post_id": str((post or {}).get("id") or ""),
-                    "provider_status": str((post or {}).get("status") or ""),
+                    "provider_post_id": provider_id,
+                    "provider_status": provider_status,
+                    "reason": "provider_not_sent",
                 }
             )
             continue
 
         final_payload = {
             **payload,
-            "provider_post_id": str(post.get("id") or payload.get("provider_post_id") or ""),
+            "provider_post_id": provider_id,
             "buffer_status": "sent",
-            "external_link": str(post.get("externalLink") or payload.get("external_link") or ""),
+            "external_link": str(
+                post.get("externalLink")
+                or payload.get("external_link")
+                or ""
+            ),
             "reconciled_from_receipt_id": int(receipt["id"] or 0),
             "reconciled_without_repost": True,
+            "reconcile_match_mode": match_mode,
         }
-        provider_id = str(final_payload.get("provider_post_id") or "")
         db.record_sync_receipt(
             int(product_id),
             f"instagram:buffer:reconcile:{provider_id}",
@@ -631,13 +727,16 @@ def reconcile_product_receipts(
                 "status": final_status,
                 "provider_post_id": provider_id,
                 "external_link": final_payload["external_link"],
+                "match_mode": match_mode,
             }
         )
 
     return {
         "product_id": int(product_id),
+        "site_ack_fingerprint": fingerprint,
         "reconciled": reconciled,
         "pending": pending,
+        "stale_skipped": stale_skipped,
     }
 
 

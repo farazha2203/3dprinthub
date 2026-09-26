@@ -848,12 +848,22 @@ class Database:
             "work_queue": "(server_id='' OR needs_update=1 OR upload_ready=1 OR workflow_status<>'uploaded')",
             "published": "(server_id<>'' AND workflow_status='uploaded')",
             "instagram_posted": (
+                "TRIM(COALESCE(products.server_ack_json,'')) NOT IN ('','{}') AND "
                 "EXISTS(SELECT 1 FROM sync_receipts sr "
-                "WHERE sr.product_id=products.id AND sr.status='instagram_published')"
+                "WHERE sr.product_id=products.id "
+                "AND sr.status='instagram_published' "
+                "AND json_valid(sr.payload_json)=1 "
+                "AND COALESCE(json_extract(sr.payload_json,'$.site_ack_fingerprint'),'')="
+                "products.server_ack_json)"
             ),
             "instagram_story": (
+                "TRIM(COALESCE(products.server_ack_json,'')) NOT IN ('','{}') AND "
                 "EXISTS(SELECT 1 FROM sync_receipts sr "
-                "WHERE sr.product_id=products.id AND sr.status='instagram_story_published')"
+                "WHERE sr.product_id=products.id "
+                "AND sr.status='instagram_story_published' "
+                "AND json_valid(sr.payload_json)=1 "
+                "AND COALESCE(json_extract(sr.payload_json,'$.site_ack_fingerprint'),'')="
+                "products.server_ack_json)"
             ),
             "recently_edited": (
                 "EXISTS(SELECT 1 FROM product_history ph "

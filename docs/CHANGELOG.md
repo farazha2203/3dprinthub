@@ -1,3 +1,15 @@
+## 2026-09-26 - O5D Social/Image/duplicate-guard regression gate
+- Related Social/Image/duplicate-guard gate now passes 77/77 after correcting one stale O1 fixture to include the current Site ACK/fingerprint; runtime O5C strictness was preserved.
+- py_compile/compileall, pip check, git diff-check, Qt VerifyOnly, Django check and migration drift all PASS; only the existing CKEditor 4 warning remains.
+- First isolated-worktree Django attempt lacked `DJANGO_SECRET_KEY`; per existing ERR-49-242/155 the command was corrected with a temporary ignored `.env` copy, removed immediately after PASS. No secret was printed/staged.
+- Canonical Catalog stayed read-only and healthy at quick_check=ok, Products=867, Receipts=477, Crawl=1177, Candidates=625; no Buffer/provider mutation or Instagram publish.
+
+## 2026-09-26 - O5C current-revision Social reconciliation hardening
+- Reconciliation now requires the exact current Site ACK, resolves persisted Buffer provider ID before any asset fallback, permits fallback only for one unique asset match, and leaves missing/ambiguous/non-sent states pending without repost.
+- Feed and Story finalization remain independent; stale prior-revision submitted/final receipts cannot satisfy the current revision.
+- Product-list Instagram Feed/Story filters now compare receipt `site_ack_fingerprint` to the Product's current `server_ack_json`; live read-only proof excludes stale #536/#625.
+- Focused Social/O5C regression 17/17 PASS; Catalog and Buffer unchanged.
+
 ## 2026-09-26 - O5B Buffer receipt/provider read-only correlation
 - Live Buffer channel `3dprinthub_ir` remains healthy for Instagram Feed but `hasActiveMemberDevice=false` for native clickable-Story notification publishing.
 - Exact provider-ID audit proves five current Feed submitted receipts (#219/#301/#596/#670/#717) plus current Story submitted #219 are already provider `sent`; they need local receipt reconciliation, not repost.

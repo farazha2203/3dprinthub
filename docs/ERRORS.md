@@ -1,3 +1,34 @@
+## ERR-49-256 - O5D first Django gate ran without the isolated worktree .env (2026-09-26)
+
+**Observed**
+- After Catalog regression/static gates passed, the first root `manage.py check` / `makemigrations --check --dry-run` attempt stopped before Django initialized because the isolated worktree intentionally had no `DJANGO_SECRET_KEY` environment.
+- No source, Catalog, Git, Host or Production state changed.
+
+**Root cause**
+- The command used the correct verified root `manage.py`, but skipped the already-documented isolated-worktree environment step from ERR-49-242 / ERR-49-155.
+
+**Correct fix / verification**
+- The failed command was not repeated unchanged. The canonical ignored Local `.env` from `D:\projects\3DPrintHub\.env` was copied temporarily into the isolated worktree, both framework checks were rerun, then the temporary file was removed in a `finally` block.
+- Django check PASS with only the known CKEditor 4 warning; migration drift reports `No changes detected`; `TEMP_ENV_PRESENT_AFTER=False`. No secret value was printed or staged.
+
+**Prevention**
+- Every isolated worktree Django gate must verify its local `.env` state first and follow the documented temporary-copy/remove pattern; environment-loader failures are not application regressions.
+
+## ERR-49-255 - O5D related Social regression exposed a stale pre-O5C final-receipt fixture (2026-09-26)
+
+**Observed**
+- The first O5D related Social/Image/duplicate-guard run executed 77 tests and failed only `test_operational_filters_use_stage_truth_and_final_social_receipts`: the old fixture recorded `instagram_published` / `instagram_story_published` rows without a current Product Site ACK or matching `site_ack_fingerprint`.
+
+**Root cause**
+- O5C deliberately tightened UI publication truth to the exact current Site revision. The older O1 regression encoded the former any-historical-final-receipt contract, so the fixture no longer represented a valid current published Product.
+
+**Correct fix / verification**
+- Runtime O5C logic was kept strict. Only the stale fixture was upgraded to persist a current `server_ack_json` and matching receipt fingerprints for Feed, Story and submitted cases.
+- The same 77-test related gate then passed 77/77.
+
+**Prevention**
+- Social filter tests must model the same current-revision ACK contract as runtime; never weaken revision-aware filters merely to satisfy a historical fixture.
+
 ## ERR-49-254 - O4R3 real clean reacquire produced Product/media/files/screenshot but zero Source Profiles (2026-09-26)
 
 **Observed**
