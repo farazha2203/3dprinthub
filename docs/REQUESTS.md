@@ -1,5 +1,5 @@
 ## 2026-09-25 - Owner: Crawl successes must disappear; incomplete selections need full clean reacquire
-Status: `O4R1 LOCAL_TESTED / O4R2 NEXT`.
+Status: `O4R ACCEPTED / O5B NEXT`.
 
 Owner reported from the live Add Products/Crawl gallery that selected items believed to be added still appeared, and incomplete items lacked the requested one-click single/multi full recovery route. Read-only Catalog evidence showed the visible Lamp examples were actually failed HTTP 403 identities with no Product row, while successful Product-backed identities are already excluded by identity joins. UI completion feedback is therefore tightened to say successful items disappear and only failed items remain.
 
