@@ -1,5 +1,5 @@
 ## 2026-09-26 - Owner Product/Crawl truth re-audit + O5C focused hardening
-Status: `O5E ACCEPTED / O5F NEXT`.
+Status: `O5F ACCEPTED / O5G OPTIONAL NEXT`.
 
 Owner asked for explicit confirmation that one identity cannot stay simultaneously active in Products and Add Products, that Products and Crawl do not contain duplicate identities, that Crawl preserves Product links, and that requested Crawl counts mean NEW unconsumed products rather than repeatedly inspecting the first already-consumed results. Live read-only audit confirms: Product exact duplicates=0, Crawl exact duplicates=0, active Product-backed Crawl rows=0, missing Crawl/Candidate Product links=0. O2G's accepted requested-count contract remains 1..500 NEW unconsumed identities and the real 200-Lamp acceptance persisted exactly 200 new candidates beyond the old window.
 

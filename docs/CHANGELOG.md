@@ -1,3 +1,9 @@
+## 2026-09-26 - O5F canonical receipt reconciliation/runtime acceptance
+- Fresh authoritative rollback `phase50-a2z-o5f-20260926-150923` verified source+backup quick_check=ok and exact all-table digests; backup SHA256 `c6b853a79943de2b07a57d96cb074f6ee251ca36ed5a6fc1bcb805c1be7b7e57`.
+- Live read-only Buffer exact-ID preflight reconfirmed six target posts/stories `sent` and #609 Story `error`, seven reads / zero mutations. Canonical reconciliation appended only the six clone-proven finals (477->483), every row exact-ID and `reconciled_without_repost=true`; no provider publish/repost occurred.
+- All 21 non-receipt tables remained exact; #536/#625 stale receipts, #609 error and #301/#588 Story gaps remained unchanged. Canonical quick_check=ok.
+- Related Social/Image/duplicate-guard regression 77/77 and Qt VerifyOnly PASS. One exact-SHA `b7594d7b...` launch became visible as Catalog Center v8.9.11 PID 57184; post-launch counts stay Products=867 / Receipts=483 / Crawl=1177 / Candidates=625. Production/Host unchanged.
+
 ## 2026-09-26 - O5E isolated receipt reconciliation acceptance
 - Fresh rollback `phase50-a2z-o5e-20260926-145851` verified source/backup quick_check=ok, Products=867, Receipts=477, Crawl=1177, Candidates=625, backup SHA256 `c6b853a79943de2b07a57d96cb074f6ee251ca36ed5a6fc1bcb805c1be7b7e57`.
 - Isolated clone appended exactly six final current-revision receipts: #219 Feed+Story and #301/#596/#670/#717 Feed. Every reconciliation used exact provider ID, no asset fallback, `reconciled_without_repost=true`; provider GraphQL audit observed six reads and zero mutations.

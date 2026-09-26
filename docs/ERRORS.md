@@ -1,3 +1,19 @@
+## ERR-49-258 - O5F first backup verifier used named row access on a tuple-row backup connection (2026-09-26)
+
+**Observed**
+- The first O5F fresh-backup command created the bounded backup directory `phase50-a2z-o5f-20260926-150829` and then stopped while comparing logical table digests because the helper attempted `row[column_name]` on the destination SQLite connection without setting `row_factory=sqlite3.Row`.
+- The failure happened during backup verification before any canonical receipt write.
+
+**Impact**
+- No Catalog row, provider object, Git source, Host or Production state changed. The incomplete backup attempt was not used as rollback authority.
+
+**Correct fix / verification**
+- The failed helper was not repeated unchanged. The table-digest helper was changed to positional column access, making it independent of connection row factory.
+- A new fresh rollback `phase50-a2z-o5f-20260926-150923\catalog-before-o5f.sqlite3` was then created and verified source/backup quick_check=ok with exact all-table logical digests and SHA256 `c6b853a79943de2b07a57d96cb074f6ee251ca36ed5a6fc1bcb805c1be7b7e57` before canonical reconciliation.
+
+**Prevention**
+- Safety/backup verification helpers must either configure identical row factories on every SQLite connection or use positional rows consistently; a partially verified backup must never become the rollback authority.
+
 ## ERR-49-257 - O5E first isolated acceptance harness used the wrong #609 non-final Story status label (2026-09-26)
 
 **Observed**
