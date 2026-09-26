@@ -8,8 +8,8 @@
 - [x] Keep proven browser/Saved HTML/acquisition methods under Advanced.
 - [x] Preserve Product categories and independent Instagram Post/Story behavior: 65 Social + 3 Category tests PASS.
 - [x] Operations/Crawl 155/155 + Phase50 broad 147/147 + static/Qt gates PASS.
-- [ ] Commit/push exact O7A candidate and prove Local=Remote.
-- [ ] Fresh Catalog rollback + exact-SHA foreground v8.9.11 launch.
+- [x] Commit/push exact O7A candidate at `4a7d2771...` and prove Local=Remote 0/0.
+- [x] Fresh Catalog rollback + exact-SHA Qt VerifyOnly + foreground v8.9.11 launch.
 - [ ] Owner UAT: one disposable direct MakerWorld Product and one MakerWorld Search URL.
 
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair

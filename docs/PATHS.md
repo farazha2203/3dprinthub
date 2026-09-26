@@ -2,6 +2,7 @@
 - Current forward Windows source worktree: `D:\projects\3DPrintHub-a2z-a2r-converge`.
 - Current O7A branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`.
 - Entry accepted lineage HEAD: `eba70a55bd6907564744f3805005cac1f7659531`.
+- O7A GitHub implementation commit: `4a7d2771f0b982db3deea5b5e48b058ea6c1882e`.
 - Catalog version remains v8.9.11 / build 2026.09.20.1.
 - Shared Catalog authority remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
 - Repository launcher for O7A QA: `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\RUN_QT.ps1`.

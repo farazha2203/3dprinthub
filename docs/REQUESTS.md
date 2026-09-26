@@ -1,9 +1,9 @@
 ## 2026-09-26 - Owner: Single Product and MakerWorld Search must be separate, on latest v8.9.11
-Status: `O7A LOCAL_TESTED / GITHUB GATE NEXT`.
+Status: `O7A GITHUB_UPDATED / EXACT-SHA RUNTIME LAUNCHED / OWNER UAT NEXT`.
 
 Owner requires acquisition changes to be made only on the latest Windows Catalog Center lineage that already contains Product categories plus independent Instagram Post and Story flows. The Add Product/Crawl page must expose direct Product URL and Search/Listing as separate top-level workspaces, support both the exact MakerWorld Product URL including `#profileId` and the exact `/en/search/models?keyword=...` route (or a plain keyword), move Source refresh to Inventory, and hide low-frequency controls without deleting proven acquisition methods.
 
-Implemented locally on v8.9.11 O7A with adaptive single-Product failover, Search Product-link redirection, Preview-first batch Search and Inventory-owned Source refresh. Product/category/social authority is unchanged. Operations/Crawl 155/155, Phase50 147/147, Social 65/65 and Category Bridge 3/3 PASS.
+Implemented on v8.9.11 O7A with adaptive single-Product failover, Search Product-link redirection, Preview-first batch Search and Inventory-owned Source refresh. Product/category/social authority is unchanged. Operations/Crawl 155/155, Phase50 147/147, Social 65/65 and Category Bridge 3/3 PASS. GitHub commit `4a7d2771...` is Local=Remote; fresh Catalog rollback and exact-SHA v8.9.11 foreground launch PASS. Remaining gate is owner live UAT of one direct Product URL and one Search URL.
 
 ## 2026-09-26 - Owner: Stage-3 media must show exact DB/Local truth; restore successful Story route
 Status: `O6C ACCEPTED / O6D SKIPPED-NOT-REQUIRED / O6E NEXT`.

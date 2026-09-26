@@ -5,6 +5,8 @@
 - MakerWorld plain keywords resolve to `/en/search/models?keyword=...`; Product URLs pasted into Search are redirected to Single Product before Crawl.
 - Source refresh now lives in Inventory with independent Product/image limits; low-frequency browser/Saved-HTML/method controls remain under Advanced.
 - Verification: O7A 5/5, Operations/Crawl 155/155, Phase50 broad 147/147, Social 65/65, Category Bridge 3/3, compileall/pip/diff/Qt VerifyOnly PASS.
+- GitHub implementation commit `4a7d2771...` is Local=Remote 0/0; fresh runtime rollback `phase50-o7a-runtime-20260926-231236` quick-check/count parity PASS.
+- Exact-SHA foreground v8.9.11 launched from the O7A worktree; Product/Crawl/Receipt counts remain unchanged from the pre-launch rollback.
 - No live crawl, Instagram publication, provider mutation, Host/Production change or migration.
 
 ## 2026-09-26 - O6C Server delta / lineage audit

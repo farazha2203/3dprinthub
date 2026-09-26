@@ -1,4 +1,4 @@
-## 2026-09-26 - Phase50.A.2Z-O7A MakerWorld acquisition UX - LOCAL_TESTED / GITHUB GATE NEXT
+## 2026-09-26 - Phase50.A.2Z-O7A MakerWorld acquisition UX - GITHUB_UPDATED / EXACT-SHA RUNTIME LAUNCHED / OWNER UAT NEXT
 
 Correct Windows lineage is v8.9.11 Build 2026.09.20.1 on `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-o7a-acquisition-ui-20260926`, entry HEAD `eba70a55bd6907564744f3805005cac1f7659531`. Ancestry verification confirms the accepted A2U/A2X/A2Y/A2Z/O1-O6 lineage is preserved, including independent Instagram Post/Story actions, Product categories and O6A1 automatic Story Product-link behavior.
 
@@ -8,7 +8,11 @@ Verification PASS: exact O7A flow 5/5; related Operations/Crawl 155/155; Phase50
 
 Rollback branch is `backup/pre-o7a-acquisition-ui-20260926`. Pre-continue dirty diff backup is `D:\projects\3dprinthub-backups\o7a-dirty-precontinue-20260926-224540\dirty-before-continue.diff`, SHA256 `F422FDA4C83A83D6C97EA249482D6C0942D3B270554338689D29C030EF8A5D74`. No live Product crawl, Instagram publish, provider mutation, Django migration, Host or Production change occurred.
 
-Exact next: final review -> commit/push O7A -> Local=Remote -> fresh Catalog rollback -> exact-SHA Qt VerifyOnly/foreground v8.9.11 launch -> owner UAT using one direct MakerWorld Product URL and one Search URL.
+GitHub source/test/docs commit is `4a7d2771f0b982db3deea5b5e48b058ea6c1882e`; Local=Remote is exact at 0/0. Fresh runtime rollback is `D:\projects\3dprinthub-backups\phase50-o7a-runtime-20260926-231236\catalog-before-o7a-runtime.sqlite3`, SHA256 `d3e18fc9154562b47b7cbd1286bb0e279f61b80f8876650946efcc150581467a`; source/backup quick_check=ok, page count 226078/226078 and Product count 962/962. Post-launch read-only source/backup truth remains Products=962 / Crawl=1178 / Receipts=539 with quick_check=ok.
+
+Exact-SHA Qt VerifyOnly PASS after push. The visible foreground runtime is now launched only from `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\qt_launch.py`; active window title is `3DPrintHub Catalog Center v8.9.11 - Qt 6`. No obsolete v8.9.10 runtime is active.
+
+Exact next: owner functional UAT using one disposable direct MakerWorld Product URL and one MakerWorld Search URL; if either live Source flow fails, patch only that acquisition boundary with a focused regression before any broader phase.
 
 ## 2026-09-26 - Phase50.A.2Z-O6C Server delta / lineage audit - ACCEPTED / O6E NEXT
 
