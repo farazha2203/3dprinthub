@@ -3,6 +3,7 @@
 - py_compile/compileall, pip check, git diff-check, Qt VerifyOnly, Django check and migration drift all PASS; only the existing CKEditor 4 warning remains.
 - First isolated-worktree Django attempt lacked `DJANGO_SECRET_KEY`; per existing ERR-49-242/155 the command was corrected with a temporary ignored `.env` copy, removed immediately after PASS. No secret was printed/staged.
 - Canonical Catalog stayed read-only and healthy at quick_check=ok, Products=867, Receipts=477, Crawl=1177, Candidates=625; no Buffer/provider mutation or Instagram publish.
+- Reviewed O5C/O5D source/tests/docs were committed and pushed as `df4e9a53fb33ca4a8c25282503f75d9fce7f9473`; Local=Remote/clean after push. Production/Host unchanged.
 
 ## 2026-09-26 - O5C current-revision Social reconciliation hardening
 - Reconciliation now requires the exact current Site ACK, resolves persisted Buffer provider ID before any asset fallback, permits fallback only for one unique asset match, and leaves missing/ambiguous/non-sent states pending without repost.

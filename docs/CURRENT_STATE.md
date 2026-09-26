@@ -1,6 +1,6 @@
-## 2026-09-26 - Phase50.A.2Z-O5D related regression + GitHub gate - LOCAL_TESTED / COMMIT-PUSH NEXT
+## 2026-09-26 - Phase50.A.2Z-O5D related regression + GitHub gate - ACCEPTED / O5E NEXT
 
-Active branch: `wip/phase50-a2z-o5c-reconcile-contract-20260926` from accepted O5B commit `0d2d5f30ef8191ddd3a468f1aec175ecd30f1ae7`. Production/Host remains unchanged; selective Server `2b48a593...` remains an accepted ancestor. O5C source/tests/docs are fully regression-tested locally and are now at the O5D staging/commit-push gate.
+Active branch: `wip/phase50-a2z-o5c-reconcile-contract-20260926`. O5C/O5D source/tests/checkpoint docs are GitHub-exact at `df4e9a53fb33ca4a8c25282503f75d9fce7f9473` from accepted O5B baseline `0d2d5f30ef8191ddd3a468f1aec175ecd30f1ae7`; `git status --short --branch` is clean and `git branch -vv` shows the local branch exactly tracking the same origin branch. Production/Host remains unchanged; selective Server `2b48a593...` remains an accepted ancestor.
 
 Owner-requested Product/Crawl truth was re-audited read-only against the live canonical Catalog before O5C code work:
 - Products=867, Crawl=1177, Candidates=625.
@@ -25,7 +25,9 @@ Focused verification PASS: touched files py_compile PASS; `tests.test_phase50_bu
 
 O5D verification PASS after one stale-fixture correction: the first 77-test related Social/Image/duplicate-guard run failed only the older O1 social-filter fixture because it lacked the new current Site ACK/fingerprint contract. Runtime logic was not weakened; the fixture was updated and the exact related gate reran 77/77 PASS. Touched py_compile PASS; app/Qt compileall PASS; pip check PASS; git diff --check PASS; Qt `RUN_QT.ps1 -VerifyOnly` PASS. The first Django gate omitted the isolated worktree `.env`; per ERR-49-242/155 it was not repeated unchanged. A temporary canonical ignored `.env` was copied only for `manage.py check` and `makemigrations --check --dry-run`, both PASS (known CKEditor warning only / `No changes detected`), then removed with `TEMP_ENV_PRESENT_AFTER=False`. Canonical Catalog remained read-only at quick_check=ok, Products=867 / Receipts=477 / Crawl=1177 / Candidates=625. No Buffer/provider mutation or Instagram publish occurred.
 
-Exact next O5D action: final staging review -> commit/push the reviewed O5C/O5D source/tests/docs -> verify Local=Remote and clean worktree -> STOP. Immediately following phase O5E: fresh SQLite rollback + isolated evidence-backed receipt reconciliation acceptance; no canonical receipt mutation until clone proof passes.
+O5D GitHub gate is complete: reviewed staging contained only the intended O5C/O5D source/tests/docs; staged diff-check PASS; commit `df4e9a53fb33ca4a8c25282503f75d9fce7f9473` pushed successfully to `wip/phase50-a2z-o5c-reconcile-contract-20260926`; Local=Remote and worktree clean immediately after push. O5D status = ACCEPTED. Production deploy required = NO because this phase has no Server/migration delta.
+
+Exact next microphase O5E: re-read docs/errors -> verify clean `df4e9a53...` lineage -> create fresh canonical Catalog SQLite rollback and verify source+backup quick_check/counts/hash -> create an isolated clone -> run only evidence-backed receipt reconciliation on the clone for the O5B-proven provider-sent current receipts (#219 Feed+Story; #301/#596/#670/#717 Feed) -> verify exact expected receipt additions, zero Product/media/price/Site-authority drift, stale #536/#625 unchanged, #609 Story error unchanged, #301/#588 missing Story unchanged, clone quick_check=ok -> document evidence -> STOP. No canonical receipt mutation and no Instagram publish in O5E. Immediately following phase O5F = canonical evidence-backed reconciliation + runtime acceptance.
 
 ## 2026-09-26 - Phase50.A.2Z-O5B Buffer provider correlation - ACCEPTED / O5C NEXT
 
