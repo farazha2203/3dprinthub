@@ -1,8 +1,8 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O1_ACCEPTED / O1B_ACCEPTED / O2_ACCEPTED / O2D_ACCEPTED / O2E_ACCEPTED / O2G_ACCEPTED / O2H_NEXT
-Date: 2026-09-25
-Branch: `wip/phase50-a2z-o2g-search-target-20260924`
+Status: O6B_ACCEPTED / O6C_NEXT
+Date: 2026-09-26
+Branch: `wip/phase50-a2z-o6a1-media-story-hotfix-20260926`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
 
 ## Objective
@@ -299,7 +299,7 @@ O5 is deliberately split so no single execution block is long-running. Each micr
 ### O6 microphases — final closure
 - **O6A — Integrated Local Regression — ACCEPTED:** 28 Product/Crawl/Media/Social modules = 224/224 PASS; compileall, pip check, diff-check and Qt VerifyOnly PASS. Read-only canonical integrity passes duplicate/link/lifecycle/rejected-remnant/current-Social-final checks; 577 selected-image Products have zero authority errors and zero strict SHA/path errors, with 102 exact-local ready and 475 known legacy missing-local fail-closed cases. Concurrent pre-existing Qt ingestion moved Product counts during audit but did not change Receipts/Crawl/Candidates and is not an O6A write. STOP.
 - **O6A1/O6A1B — Media Display Truth + Successful Automatic Story Product-link Recovery — ACCEPTED:** stale Stage-3 cards/current-file byte reload fixed; blue refresh is DB/Local-only/deterministic. Historical successful Buffer automatic Story transport restored with tracked Product URL in `metadata.instagram.link`; native sticker notification explicit opt-in only. Focused 55/55 + related 74/74 + static/Qt gates PASS; GitHub source `2f11c225...`; fresh rollback verified; real #862 exact refresh/reopen = 4 DB / 4 selected / 4 current-local / 4 visible, valid pixmaps and SHA-order parity, zero DB count drift; Story readiness ready=true without mobile handoff; exact-SHA PID 47280 visible. No provider publish/deploy. STOP.
-- **O6B — Exact-SHA Runtime/UI Smoke — after O6A1 acceptance:** verify owner-visible flows and read-only post-launch integrity. STOP.
-- **O6C — Server Delta / Lineage Audit:** read-only compare Windows head vs Production/Server lineage and determine whether any deploy is actually required. STOP.
+- **O6B — Exact-SHA Runtime/UI Smoke — ACCEPTED:** Qt VerifyOnly + responsive single runtime PID 51712; isolated owner-visible contract verifies Products/Crawl routes, DB/Local-only media refresh, full reacquire, hard-delete Crawl, separate Instagram Post/Story actions and current-revision Social filters. #862 remains 4/4/4/4 with valid pixmaps after refresh; live Story readiness ready=true/no mobile handoff; canonical read-only integrity quick_check=ok with zero duplicate/Product-backed-Crawl/current-Social-final violations. No canonical/provider/Production write. STOP.
+- **O6C — Server Delta / Lineage Audit — NEXT:** read-only compare Windows/GitHub head vs selective Production/Server lineage, classify exact file delta and determine NO DEPLOY REQUIRED vs O6D. STOP.
 - **O6D — Production Gate (conditional):** only if O6C proves a Server delta: reverse-tunnel read-only Host gate -> fresh backup -> GitHub exact-SHA deploy -> Production verification. Otherwise record NO DEPLOY REQUIRED. STOP.
 - **O6E — Final Documentation Closure:** CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS/REQUESTS/active phase, final Local=Remote proof, remaining external blockers only. STOP.

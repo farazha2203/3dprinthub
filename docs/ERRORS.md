@@ -1,3 +1,21 @@
+## ERR-49-261 - O6B UI-label harness initially mis-compared Unicode/emoji literals over PowerShell stdin (2026-09-26)
+
+**Observed**
+- The first isolated O6B UI-smoke harness correctly proved Product #862 media/refreshed-card/integrity behavior, but reported all Persian button-label assertions false.
+- A second corrected harness fixed Persian literals with `\u` escapes but still reported only emoji-prefixed Hard Delete / Instagram Post / Story buttons false.
+
+**Root cause**
+- The harness itself transported direct Unicode source text through a PowerShell stdin pipeline, so direct Persian literals were not a reliable comparison authority in that shell path.
+- The second attempt encoded emoji as UTF-16 surrogate pairs (`\ud83d...`) rather than Python 3 full Unicode code points.
+
+**Correct fix / verification**
+- The failed harness was not repeated unchanged. Final harness used ASCII-only Python source with `\uXXXX` escapes for Persian text and `\U000XXXXX` full code-point escapes for emoji.
+- Final isolated UI smoke PASS: DB/Local media refresh, full clean reacquire, guarded hard-delete, Instagram Post/Story actions, Products/Crawl routes, and current-revision Social filters all resolve in the exact UI contract; Product #862 remains 4/4/4/4 with valid pixmaps and stable filenames after refresh.
+- Clone quick_check=ok; canonical Catalog was not written by these harnesses.
+
+**Prevention**
+- Remote UI-label harnesses sent through PowerShell stdin must be ASCII-only source code and represent non-ASCII expected labels using Python Unicode escapes; emoji must use full `\U` code points, never surrogate halves.
+
 ## ERR-49-260 - O6A1 Story recovery initially restored automatic mode but omitted the historical tracked Product link (2026-09-26)
 
 **Observed**

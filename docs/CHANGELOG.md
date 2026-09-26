@@ -1,3 +1,10 @@
+## 2026-09-26 - O6B exact-SHA runtime/UI smoke
+- Clean GitHub-exact entry `8a54fc99...`; no Catalog source delta since accepted application commit `2f11c225...`; Qt VerifyOnly PASS and single runtime PID 51712 remains responsive.
+- Fresh isolated clone UI smoke proves Products/Crawl routes, `رفرش رسانه از DB/Local`, full clean reacquire, hard-delete Crawl, independent Instagram Post/Story actions and current-revision Social filters.
+- Product #862 remains exact 4 DB / 4 selected / 4 selected-local / 4 rendered cards after refresh with valid pixmaps and stable filenames; Story readiness stays Buffer ready=true with no mobile handoff.
+- Canonical post-smoke read-only integrity quick_check=ok; Products=961 / History=4168 / Receipts=533 / Crawl=1177 / Candidates=625; exact Product duplicates=0, active Product-backed Crawl=0, duplicate current Social finals=0. No Catalog/provider/Production write.
+- Two initial isolated label assertions were harness Unicode-transport issues only; ERR-49-261 records the final ASCII-only Unicode-escape rule.
+
 ## 2026-09-26 - O6A1B automatic Story Product-link restoration
 - Repository/history forensics restored the same successful Buffer Story transport used previously: `schedulingType=automatic` with the exact tracked public Product URL in Instagram metadata `link`; native mobile notification is not the default path.
 - Story receipts now identify `automatic_product_link`; artwork CTA says «مشاهده و سفارش محصول» / `3DPrintHub.ir` and does not render the raw tracking URL as visible text.
