@@ -164,7 +164,14 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertTrue(story_input["metadata"]["instagram"]["isAiGenerated"])
         self.assertFalse(story_input["metadata"]["instagram"]["shouldShareToFeed"])
         self.assertEqual(story_input["schedulingType"], "automatic")
-        self.assertNotIn("link", story_input["metadata"]["instagram"])
+        self.assertIn(
+            "utm_source=instagram",
+            story_input["metadata"]["instagram"]["link"],
+        )
+        self.assertIn(
+            "/store/product/story-demo/",
+            story_input["metadata"]["instagram"]["link"],
+        )
         self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
         feed_input = request.call_args_list[0].kwargs["variables"]["input"]
         self.assertIn("utm_source=instagram", feed_input["metadata"]["instagram"]["link"])
@@ -181,7 +188,10 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertEqual(story_receipt["highlight_target"], "اسباب بازی")
         self.assertEqual(story_receipt["highlight_status"], "operator_required")
         self.assertEqual(story_receipt["story_publish_mode"], "automatic")
-        self.assertEqual(story_receipt["story_link_strategy"], "bio_shop_grid")
+        self.assertEqual(
+            story_receipt["story_link_strategy"],
+            "automatic_product_link",
+        )
         self.assertFalse(story_receipt["link_sticker_required"])
         self.assertEqual(story_receipt["link_sticker_label"], "")
         self.assertTrue(story_receipt["instagram_live_confirmed"])
@@ -219,9 +229,13 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
         self.assertEqual(
             result["companion_story"]["story_link_strategy"],
-            "bio_shop_grid",
+            "automatic_product_link",
         )
         self.assertIn("utm_source=instagram", result["companion_story"]["tracking_url"])
+        self.assertEqual(
+            story_input["metadata"]["instagram"]["link"],
+            result["companion_story"]["tracking_url"],
+        )
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
@@ -259,6 +273,10 @@ class BufferStoryCompanionTests(unittest.TestCase):
         story_input = request.call_args_list[1].kwargs["variables"]["input"]
         self.assertEqual(story_input["schedulingType"], "automatic")
         self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
+        self.assertIn(
+            "utm_source=instagram",
+            story_input["metadata"]["instagram"]["link"],
+        )
         self.assertEqual(
             result["companion_story"]["story_publish_mode"],
             "automatic",
@@ -266,7 +284,7 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertFalse(result["companion_story"]["link_sticker_required"])
         self.assertEqual(
             result["companion_story"]["story_link_strategy"],
-            "bio_shop_grid",
+            "automatic_product_link",
         )
         self.assertTrue(result["companion_story"]["instagram_live_confirmed"])
 

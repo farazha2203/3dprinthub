@@ -66,7 +66,7 @@ class InstagramSocialPolicyTests(unittest.TestCase):
 
     def test_story_copy_is_generic_and_brand_consistent(self):
         copy = build_story_copy(row())
-        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v3_iransans_bio")
+        self.assertEqual(copy["style_id"], "3dprinthub_instagram_gold_navy_v4_iransans_product_link")
         self.assertEqual(copy["font_family"], "IRANSansWeb(FaNum)")
         self.assertEqual(len(copy["bullets"]), 4)
         self.assertIn("ارسال سفارش به سراسر ایران", copy["bullets"])

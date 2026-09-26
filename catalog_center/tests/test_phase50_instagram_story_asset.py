@@ -32,7 +32,7 @@ class _DB:
 class InstagramStoryAssetTests(unittest.TestCase):
     @patch("app.instagram_story_asset._font_uri", return_value="file:///font.ttf")
     @patch("app.instagram_story_asset._logo_uri", return_value="file:///logo.png")
-    def test_story_cta_uses_bio_shop_grid_not_raw_product_url(
+    def test_story_cta_uses_product_link_copy_not_raw_product_url(
         self, _logo, _font
     ):
         rendered = _render_html(
@@ -44,8 +44,9 @@ class InstagramStoryAssetTests(unittest.TestCase):
                 "bullets": ["ویژگی یک"],
             },
         )
-        self.assertIn("خرید از لینک بیو", rendered)
-        self.assertIn("@3dprinthub_ir", rendered)
+        self.assertIn("مشاهده و سفارش محصول", rendered)
+        self.assertIn("3DPrintHub.ir", rendered)
+        self.assertIn("لینک همین محصول", rendered)
         self.assertNotIn("store/product/demo-product", rendered)
 
     @patch("app.instagram_story_asset.subprocess.run")
@@ -122,7 +123,7 @@ class InstagramStoryAssetTests(unittest.TestCase):
 
             result = prepare_product_story_asset(_DB(), 7, settings, payload)
 
-            self.assertEqual(result["style_id"], "3dprinthub_instagram_gold_navy_v3_iransans_bio")
+            self.assertEqual(result["style_id"], "3dprinthub_instagram_gold_navy_v4_iransans_product_link")
             self.assertEqual(result["font_family"], "IRANSansWeb(FaNum)")
             self.assertEqual(result["width"], 1080)
             self.assertEqual(result["height"], 1920)
@@ -191,7 +192,7 @@ class InstagramStoryAssetTests(unittest.TestCase):
             self.assertFalse(result["published_to_site"])
             self.assertEqual(
                 result["style_id"],
-                "3dprinthub_instagram_gold_navy_v3_iransans_bio",
+                "3dprinthub_instagram_gold_navy_v4_iransans_product_link",
             )
             resolve_local.assert_called_once()
             rendered_payload = render_story.call_args.args[1]

@@ -1,3 +1,22 @@
+## 2026-09-26 - Phase50.A.2Z-O6A1B exact media display + historical automatic Story Product-link recovery - LOCAL_TESTED / GITHUB GATE NEXT
+
+Owner clarified the O6A1 Story requirement after the first hotfix: restoring automatic Story alone is insufficient; the previously successful Buffer route must also carry the exact current 3DPrintHub Product/Site link. Repository and canonical receipt forensics prove that route rather than relying on memory: historical source `c9035a16` used Buffer `schedulingType=automatic` plus `metadata.instagram.link=<tracked Product URL>`, and Product #625 Story provider ID `6aaed29a7fcdd8931977c3f1` was actually `sent` with live Instagram Story evidence.
+
+O6A1B restores that exact transport contract on top of the accepted O6A1 media fix:
+- automatic Story remains the absent-setting/default route and does not require Buffer mobile notification;
+- automatic Story now again carries the tracked public 3DPrintHub Product URL in Buffer Instagram `link` metadata;
+- optional `native_sticker_notification` remains explicit opt-in and unchanged;
+- Story receipt identifies the transport as `automatic_product_link`;
+- Story artwork is v4 cache-busted, says «مشاهده و سفارش محصول», identifies 3DPrintHub.ir and does not paint a raw UTM URL as visible text.
+
+Media display acceptance remains exact for the screenshot Product #862: canonical DB=4, selected=4, current Product-local items=4, exact selected Local=4, gallery cards=4; a refresh detaches all old cards before rebuild and a fresh/reopened grid again shows exactly the same four finalized files with valid pixmaps. The blue action is local-only `رفرش رسانه از DB/Local`, so it cannot import stale Site/Source candidates or change selection.
+
+Verification: first refined Social gate exposed only three stale Story style-ID test expectations after the intentional v4 cache bump; recorded as ERR-49-260 and not repeated unchanged. Corrected focused Media/Buffer/Story/Social gate 52/52 PASS; related Product/Image/Buffer/Story/Social gate 74/74 PASS; py_compile/compileall, pip check, git diff-check and Qt VerifyOnly PASS. Live Buffer readiness read-only: provider=buffer, channel=3dprinthub_ir, story default=`bio_shop_grid` automatic contract, ready=true, requires_mobile_handoff=false, hasActiveMemberDevice=false, blockers=[].
+
+Safety: rollback branch `backup/pre-o6a1-auto-story-product-link-20260926` preserves `78fd4b15...`; fresh pre-runtime Catalog rollback exists at `D:\projects\3dprinthub-backups\phase50-a2z-o6a1-runtime-20260926-180226` with source/backup quick_check=ok and SHA256 `49ab4b04dba68b560f2df56693a46779a0cf550d0d95e850cf15db032ff32f69`. No Catalog write, Buffer/provider mutation, real Instagram publish, Host or Production change was made by O6A1B.
+
+Exact next: review/stage source+tests+docs -> commit/push current branch -> verify Local=Remote -> close prior 78fd runtime gracefully -> exact-SHA VerifyOnly -> launch one exact-SHA Catalog runtime -> re-prove #862 4/4/4 DB/Local refresh+reopen and read-only Story readiness -> post-launch quick_check/count snapshot -> docs closure -> STOP. Then resume O6B full owner-visible runtime/UI smoke.
+
 ## 2026-09-26 - Phase50.A.2Z-O6A1 media display + Story default regression hotfix - LOCAL_TESTED / GITHUB GATE NEXT
 
 Owner runtime evidence on Product #862 exposed two regressions after O6A. The Stage-3 screenshot showed five visible cards while the canonical DB/history had already transitioned to four current/selected images; the same Product could therefore show stale cards even though publish/Social authority read the current finalized files. Repository forensics also proved the current code had regressed the absent-setting Story default from the Production-proven `bio_shop_grid` route back to `native_sticker_notification`.

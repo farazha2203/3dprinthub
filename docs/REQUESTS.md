@@ -1,5 +1,5 @@
 ## 2026-09-26 - Owner: Stage-3 media must show exact DB/Local truth; restore successful Story route
-Status: `O6A1 LOCAL_TESTED / GITHUB+RUNTIME ACCEPTANCE NEXT`.
+Status: `O6A1B LOCAL_TESTED / GITHUB+EXACT-SHA RUNTIME ACCEPTANCE NEXT`.
 
 Owner reported that the blue media refresh could leave the Product Wizard showing the wrong images/count and that what was later posted could differ from what the editor displayed. Real #862 evidence confirmed the UI screenshot still showed five cards after canonical DB/history had moved to four current images. Required behavior: blue refresh must rebuild from the exact current Product DB/Local files and reopening the Product must show the same media authority used by publish/Social.
 

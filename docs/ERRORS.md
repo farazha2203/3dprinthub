@@ -1,3 +1,24 @@
+## ERR-49-260 - O6A1 Story recovery initially restored automatic mode but omitted the historical tracked Product link (2026-09-26)
+
+**Observed**
+- O6A1 correctly restored the absent-setting Story default away from Buffer mobile notification, but the first automatic route followed the later `bio_shop_grid` implementation and did not include `metadata.instagram.link`.
+- Owner explicitly required the previously successful Story route plus the current 3DPrintHub Product/Site link.
+
+**Root cause / repository evidence**
+- Historical source at `c9035a16` and the real Product #625 Story receipt prove the successful pre-notification contract: Buffer `schedulingType=automatic` with `metadata.instagram.link=<tracked Product URL>`; provider Story `6aaed29a7fcdd8931977c3f1` reached `sent` and a live Instagram Story.
+- The later `d80d62c0` cleanup restored automatic Story but removed that Story metadata link in favor of a bio/shop-grid-only UX. O6A1 initially inherited that later omission.
+
+**Correct fix / verification**
+- Default automatic Story again sends the tracked public 3DPrintHub Product URL in Buffer Instagram `link` metadata while remaining `schedulingType=automatic`; no `stickerFields`, notification handoff or Buffer mobile device is required.
+- Explicit `native_sticker_notification` remains opt-in and unchanged.
+- Story artwork cache identity moved to `3dprinthub_instagram_gold_navy_v4_iransans_product_link`; artwork says «مشاهده و سفارش محصول» and does not print a raw tracking URL.
+- The first refined gate had exactly three stale test expectations for the intentional Story style-ID bump. Runtime logic was not weakened; those fixtures were updated and the same focused gate reran 52/52 PASS. Related Product/Image/Buffer/Story/Social regression 74/74 PASS; compileall, pip check, diff-check and Qt VerifyOnly PASS.
+- Live read-only Buffer readiness remains `ready=true`, `requires_mobile_handoff=false` with channel `3dprinthub_ir`, even though `hasActiveMemberDevice=false`. No provider mutation or Instagram publish occurred.
+
+**Prevention**
+- The automatic Story regression contract must assert all three properties together: `schedulingType=automatic`, tracked Product URL in Instagram `link`, and no notification/stickerFields/mobile dependency.
+- Do not replace a Production-proven Social transport contract with a later UI convention without preserving its provider payload evidence.
+
 ## ERR-49-259 - Stage-3 stale card display and Story default fallback regressed accepted runtime truth (2026-09-26)
 
 **Observed**

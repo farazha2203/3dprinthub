@@ -16,7 +16,7 @@ FORBIDDEN_FREE_CLAIMS = (
 )
 MAX_CAPTION = 2200
 MAX_ALT_TEXT = 1000
-STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v3_iransans_bio"
+STORY_STYLE_ID = "3dprinthub_instagram_gold_navy_v4_iransans_product_link"
 APPROVED_HIGHLIGHTS = (
     "آباژور",
     "پایه کیک",

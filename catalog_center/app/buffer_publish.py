@@ -473,6 +473,12 @@ def publish_story_for_product(
             "products": "\n".join(detail_lines),
             "other": f"Link Sticker URL: {tracking_url}",
         }
+    else:
+        # Production-proven historical Buffer route (Product #625):
+        # automatic Story + the tracked Product URL in Instagram metadata.
+        # This keeps Story independent from Buffer mobile notification while
+        # preserving a provider-level Product link to the public Site page.
+        instagram_metadata["link"] = tracking_url
     create_input = {
         "text": "",
         "aiAssisted": True,
@@ -540,7 +546,9 @@ def publish_story_for_product(
         "source_product_url": source_product_url,
         "story_publish_mode": "notification" if link_notification else "automatic",
         "story_link_strategy": (
-            "native_sticker_notification" if link_notification else "bio_shop_grid"
+            "native_sticker_notification"
+            if link_notification
+            else "automatic_product_link"
         ),
         "link_sticker_required": bool(link_notification),
         "link_sticker_label": "لینک محصول" if link_notification else "",

@@ -1,3 +1,8 @@
+## 2026-09-26 - O6A1B automatic Story Product-link restoration
+- Repository/history forensics restored the same successful Buffer Story transport used previously: `schedulingType=automatic` with the exact tracked public Product URL in Instagram metadata `link`; native mobile notification is not the default path.
+- Story receipts now identify `automatic_product_link`; artwork CTA says «مشاهده و سفارش محصول» / `3DPrintHub.ir` and does not render the raw tracking URL as visible text.
+- Current verification after this refinement: focused Media/Buffer/Story/Social 55/55 PASS, related Product/Image/Buffer/Story/Social 74/74 PASS, py_compile/compileall/pip/diff/Qt VerifyOnly PASS. No provider mutation or real Instagram publish.
+
 ## 2026-09-26 - O6A1 Stage-3 media display / automatic Story regression hotfix
 - Real Product #862 showed stale Stage-3 UI truth: screenshot retained five visible cards while current DB/history and publish authority were already four images. Gallery rebuild now detaches stale widgets immediately and previews decode current file bytes, so stable rewritten SEO filenames cannot display old bytes.
 - The blue media action is now a strict DB/Local-only refresh; no Site/Source recovery and no automatic selection mutation.

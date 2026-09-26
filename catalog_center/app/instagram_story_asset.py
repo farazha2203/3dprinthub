@@ -58,8 +58,8 @@ def _render_html(*, image_url: str, product_url: str, copy: dict) -> str:
     )
     title = html.escape(str(copy["title"]))
     subtitle = html.escape(str(copy["subtitle"]))
-    purchase_cta = "خرید از لینک بیو"
-    purchase_hint = "@3dprinthub_ir • همین محصول را در فروشگاه پروفایل باز کنید"
+    purchase_cta = "مشاهده و سفارش محصول"
+    purchase_hint = "3DPrintHub.ir • لینک همین محصول همراه Story ارسال می‌شود"
     logo = _logo_uri()
     font_regular = _font_uri("IRANSansWeb(FaNum).ttf")
     font_medium = _font_uri("IRANSansWeb(FaNum)_Medium.ttf")
