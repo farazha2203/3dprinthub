@@ -1,4 +1,4 @@
-## 2026-09-26 - Phase50.A.2Z-O6A1B exact media display + historical automatic Story Product-link recovery - LOCAL_TESTED / GITHUB GATE NEXT
+## 2026-09-26 - Phase50.A.2Z-O6A1B exact media display + historical automatic Story Product-link recovery - ACCEPTED / O6B NEXT
 
 Owner clarified the O6A1 Story requirement after the first hotfix: restoring automatic Story alone is insufficient; the previously successful Buffer route must also carry the exact current 3DPrintHub Product/Site link. Repository and canonical receipt forensics prove that route rather than relying on memory: historical source `c9035a16` used Buffer `schedulingType=automatic` plus `metadata.instagram.link=<tracked Product URL>`, and Product #625 Story provider ID `6aaed29a7fcdd8931977c3f1` was actually `sent` with live Instagram Story evidence.
 
@@ -15,7 +15,13 @@ Verification: first refined Social gate exposed only three stale Story style-ID 
 
 Safety: rollback branch `backup/pre-o6a1-auto-story-product-link-20260926` preserves `78fd4b15...`; fresh pre-runtime Catalog rollback exists at `D:\projects\3dprinthub-backups\phase50-a2z-o6a1-runtime-20260926-180226` with source/backup quick_check=ok and SHA256 `49ab4b04dba68b560f2df56693a46779a0cf550d0d95e850cf15db032ff32f69`. No Catalog write, Buffer/provider mutation, real Instagram publish, Host or Production change was made by O6A1B.
 
-Exact next: review/stage source+tests+docs -> commit/push current branch -> verify Local=Remote -> close prior 78fd runtime gracefully -> exact-SHA VerifyOnly -> launch one exact-SHA Catalog runtime -> re-prove #862 4/4/4 DB/Local refresh+reopen and read-only Story readiness -> post-launch quick_check/count snapshot -> docs closure -> STOP. Then resume O6B full owner-visible runtime/UI smoke.
+GitHub/runtime acceptance PASS. Source/tests/docs refinement commit `2f11c2255a829400aea321c4ee45e7a7485c1b3d` is Local=Remote. Fresh pre-runtime rollback `D:\projects\3dprinthub-backups\phase50-a2z-o6a1b-runtime-20260926-183524\catalog-before-o6a1b-runtime.sqlite3` has source/backup quick_check=ok, SHA256 `f1dbf7553ee863a5f7638f75ec5fe611825df4417dadde0f994a34b879a648aa`, and pre-runtime counts Products=961 / History=4167 / Receipts=533 / Crawl=1177 / Candidates=625. Exact-SHA Qt VerifyOnly PASS.
+
+Exact Product #862 runtime proof PASS with no DB count drift: DB images=4, selected=4, current Product-local items=4, exact selected Local=4; initial gallery=4, after blue DB/Local refresh=4, fresh/reopened Product Wizard=4; the exact filenames/order stayed `01.webp`..`04.webp`, all files existed, every rendered pixmap was valid, selected-file SHA order matched the reopened cards, `site_compare=false`, mismatches=[] and Product/History/Receipt counts were unchanged. Live Story readiness remained provider=buffer / channel=3dprinthub_ir / ready=true / mode=`bio_shop_grid` / requires_mobile_handoff=false / hasActiveMemberDevice=false / blockers=[]. Historical Git evidence `c9035a16` independently confirms the successful automatic Story used `metadata.instagram.link` with the tracked Product URL.
+
+One visible exact-SHA Catalog Center was then launched from `2f11c225...`; current window is `3DPrintHub Catalog Center v8.9.11 - Qt 6`, PID 47280. Post-launch canonical quick_check=ok with Products=961 / History=4167 / Receipts=533 / Crawl=1177 / Candidates=625. O6A1B made no Buffer/provider mutation, no real Instagram publish, no Host/Production source change and no migration. O6A1B status=ACCEPTED.
+
+Exact next phase O6B: keep the accepted PID 47280 as the single runtime; verify only the remaining owner-visible Product/Crawl/Media/Social flows on that exact source, including the blue DB/Local refresh button label/behavior and Story action readiness; capture read-only post-smoke integrity; STOP. Immediately following phase O6C = read-only Server delta / lineage audit.
 
 ## 2026-09-26 - Phase50.A.2Z-O6A1 media display + Story default regression hotfix - LOCAL_TESTED / GITHUB GATE NEXT
 
