@@ -1,3 +1,28 @@
+## 2026-09-26 - Phase50.A.2Z-O5B Buffer provider correlation - ACCEPTED / O5C NEXT
+
+Active branch: `wip/phase50-a2z-o5b-provider-correlation-20260926` from O4R closure `d941b755bdf115ab45a021b63488b76a97f76f52`; Production/Server `2b48a593...` remains a verified ancestor. O5B was strictly read-only against Catalog and Buffer: no `createPost`, no receipt write, no Instagram publish.
+
+Live Buffer channel audit PASS: channel `3dprinthub_ir` / ID `6aabb3a8ea19ca0bde6694d5` is connected/unlocked Instagram, but `hasActiveMemberDevice=false` still blocks the native clickable-Story notification path.
+
+Exact provider-ID correlation resolved every actionable current submitted receipt without needing asset fallback:
+- Product #219 Feed `6ab537743e8c1aa3fccdedb5` = sent / Instagram link present.
+- Product #219 Story `6ab538413e8c1aa3fcce029b` = sent / Instagram Story link present.
+- Product #301 Feed `6ab550f37cb0c4ddfc0905f8` = sent.
+- Product #596 Feed `6ab533240516e0ed46cec5e4` = sent.
+- Product #670 Feed `6ab54fa67cb0c4ddfc08c6e0` = sent.
+- Product #717 current Feed `6ab4ed52a4337780696a01d8` = sent.
+Therefore five current Feed `instagram_submitted` receipts and one current Story `instagram_story_submitted` receipt have provider-final `sent` evidence and are reconciliation candidates; no repost is required.
+
+Product #609 current Story notification receipt maps exactly to Buffer post `6ab16b959d554f7b28a44302` and provider status is `error`, with Buffer reporting no linked mobile device for notification publishing. It must remain non-final; it is not eligible to be promoted to `instagram_story_published`.
+
+O5A missing/stale findings are now provider-grounded:
+- #301 and #588 have no current-revision Story primary receipt/provider ID, so O5B has no exact provider evidence to mark a current Story published; no unsafe feed-asset substitution is allowed.
+- #536 and #625 old Feed/Story provider IDs all still resolve as `sent`, but their receipt fingerprints are stale relative to the current Site ACK. Historical provider success must not count as current-revision publication.
+
+At O5B read-only start the canonical snapshot showed Products=867 and sync_receipts=477; Products are four higher than the O4R closure snapshot, so that later Product activity is explicitly not attributed to O5B. Receipt count remained 477 and O5B issued no Catalog write. The Buffer exact-ID reads likewise do not mutate provider state.
+
+Exact next microphase: O5C — reconciliation contract hardening. Required delta: exact current `site_ack_fingerprint` mandatory; Feed and Story independently finalized; exact `provider_post_id` query first; asset fallback only when provider ID is absent and evidence is unique; ambiguous/missing evidence fails closed; stale prior-revision published receipts cannot satisfy current UI/filter truth; reconciliation appends final evidence without repost. Run focused Social tests only, update docs, STOP. Immediately following phase O5D = related Social/Image/duplicate-guard regression + GitHub gate.
+
 ## 2026-09-26 - Phase50.A.2Z-O4R Crawl truth + full clean reacquire - ACCEPTED / O5B NEXT
 
 Owner screenshot/request interrupted O5 after completed read-only O5A. Active branch is `wip/phase50-a2z-o4r-clean-reacquire-20260925` from exact O5 planning checkpoint `488cb6f0e48838cede67658b5f632fda6e41b3d1`; Production/Host remains unchanged and selective Server `2b48a593...` is a verified ancestor.

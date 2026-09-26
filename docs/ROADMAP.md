@@ -64,8 +64,8 @@
 - [x] O4R2 LOCAL_TESTED: worker success/enrichment/failure circuit-breaker coverage + related O2H/O2D/O2/O2G Acquisition/Crawl regression 68/68 PASS; py_compile/diff/Qt VerifyOnly PASS.
 - [x] O4R2 GITHUB GATE: source/tests/docs commit `9965e0047db8a2dc9de540d66ce7197cc2f5ec8e`, Local=Remote and Server ancestry PASS.
 - [x] O4R3 ACCEPTED: Profile correction GitHub-exact at `08e7966d...`; fresh SQLite+filesystem rollback; isolated real Sphinx reacquire PASS with Product/images/files/1 Source Profile/1 imported Sales Profile/screenshot/Crawl hide/unrelated identity protection; canonical bounded acceptance created exactly Product #863 with same evidence; post-apply 10/10 + Qt VerifyOnly + visible exact-SHA PID 54368 PASS. Production unchanged.
-- [ ] O5B NEXT: read-only Buffer/provider correlation using provider ID first; no createPost/Catalog write/real publish.
-- [ ] O5C: harden reconciliation contract + focused tests.
+- [x] O5B ACCEPTED: live Buffer read-only exact-ID correlation. Five current Feed submitted + one current Story submitted are provider `sent`; #609 Story notification is provider `error` because `hasActiveMemberDevice=false`; #536/#625 historical sent posts are stale-revision evidence only; #301/#588 current Story still have no exact provider evidence. No Catalog/provider write or real publish.
+- [ ] O5C NEXT: harden reconciliation contract + focused tests — current fingerprint mandatory, Feed/Story independent, provider-ID-first, unique asset fallback only, ambiguity/missing evidence fail closed, no repost.
 - [ ] O5D: related regression + GitHub gate.
 - [ ] O5E: fresh backup + isolated receipt-reconciliation acceptance.
 - [ ] O5F: canonical evidence-backed reconciliation + runtime acceptance + closure.

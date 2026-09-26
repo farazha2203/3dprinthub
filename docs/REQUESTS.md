@@ -1,3 +1,8 @@
+## 2026-09-26 - O5B execution checkpoint: provider truth before any reconciliation
+Status: `O5B ACCEPTED / O5C NEXT`.
+
+Per the owner's short-stop phase requirement, O5B was completed as a separate read-only slice. Existing Buffer provider Posts/Stories were correlated by exact provider ID before any future local receipt repair. No social post/story was created, no Catalog receipt was written, and ambiguous/missing current-revision Story evidence remains fail-closed for O5C.
+
 ## 2026-09-25 - Owner: Crawl successes must disappear; incomplete selections need full clean reacquire
 Status: `O4R ACCEPTED / O5B NEXT`.
 

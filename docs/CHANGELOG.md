@@ -1,3 +1,9 @@
+## 2026-09-26 - O5B Buffer receipt/provider read-only correlation
+- Live Buffer channel `3dprinthub_ir` remains healthy for Instagram Feed but `hasActiveMemberDevice=false` for native clickable-Story notification publishing.
+- Exact provider-ID audit proves five current Feed submitted receipts (#219/#301/#596/#670/#717) plus current Story submitted #219 are already provider `sent`; they need local receipt reconciliation, not repost.
+- #609 current Story notification remains provider `error` with explicit no-mobile-device evidence. #536/#625 historical Feed/Story posts are still sent but stale-revision only. #301/#588 current Story have no exact provider evidence.
+- O5B performed no Catalog write and no provider mutation/publish. Asset fallback was not needed for any receipt carrying an exact provider ID.
+
 ## 2026-09-25 - O4R1 Crawl full-clean reacquire and Product-backed hide truth
 - Read-only live Catalog audit proved screenshot-visible Lamp rows are failed/unconsumed HTTP 403 identities, not successfully-added Products. Successful Product-backed identities are already identity-filtered from Add Products; completion text now makes failed survivors explicit.
 - Added distinct multi-select `♻ بازیابی کامل از صفر`: exact active identity Preview/local folders are moved into rollback quarantine, Crawl attempt/error state resets, the same Source URL is re-acquired with adaptive fallback, images + downloadable files enabled, actual Source Print Profiles are imported into Filament/Profile ledger, and a fresh Source screenshot is captured.
