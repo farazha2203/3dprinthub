@@ -1,0 +1,16 @@
+{
+  "asset_revision": "e851875662f7de12",
+  "feed_sha256": [
+    "3bfbf1890102c8a813356d2bcdc0bf283f5e8cab36a467f10608f1d57350b6b9",
+    "e227805d85f1aad8cfe3288df14ccd2d8d4d117e1faf4ea4334a79ba6b996ea5"
+  ],
+  "product_id": 913,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 61,
+  "site_revision": 1,
+  "source_media_urls": [
+    "local://mushroom-lamp-3d-print-01.webp",
+    "local://mushroom-lamp-3d-print-03.webp"
+  ],
+  "story_sha256": ""
+}
