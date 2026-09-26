@@ -1022,3 +1022,18 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - [ ] Commit/push Slice 2 exact candidate and verify Local=Remote.
 - [ ] Verify release lineage + Host identity/worktree/quota/migration/rollback read-only through the dedicated 3DPrintHub router.
 - [ ] Production acceptance: same-identity Product #536 video handoff, public media verification, then duplicate-safe Feed/Story acceptance only if no current social receipt exists.
+
+## 2026-09-26 — Phase50.A2R MakerWorld acquisition UX checkpoint
+Status: `LOCAL_TESTED / COMMIT-PUSH NEXT / PRODUCTION UNCHANGED`.
+
+- [x] Separate direct Single Product receive from Search/Listing discovery.
+- [x] Preserve exact MakerWorld direct Product URL including profile fragment while using mature adaptive acquisition.
+- [x] Support exact MakerWorld Search URL and keyword-only `/en/search/models?keyword=` routing.
+- [x] Keep Preview/select/import in Search and move Source refresh to Inventory.
+- [x] Collapse low-frequency collection/browser controls into Advanced surfaces.
+- [x] Related Operations/Crawl regression 137/137 PASS.
+- [x] Python compile/compileall, diff-check, Qt VerifyOnly and foreground launcher smoke PASS.
+- [x] Fresh integrity-checked Catalog rollback created.
+- [ ] Commit/push exact candidate and prove Local=Remote.
+- [ ] Owner foreground UAT: one disposable Single Product URL + one MakerWorld Search URL.
+- [ ] Continue A2R Host/Production acceptance only through the separate GitHub-first release gate.

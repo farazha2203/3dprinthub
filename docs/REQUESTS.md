@@ -1104,3 +1104,18 @@ Date: 2026-09-23
 Status: `ACTIVE EXECUTION RULE`.
 
 Owner requests that project work use direct Windows filesystem/shell execution instead of GUI Remote Desktop whenever the authorized direct command path is available. Long implementation/deploy phases must be split into short independently testable/committable slices so a message/tool timeout does not lose the accepted checkpoint. This does not relax the GitHub-first, backup, reverse-tunnel, test or Production verification gates.
+
+## REQ-50-035 — MakerWorld Single Product + Search workspace separation
+Date: 2026-09-26
+Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`.
+
+Acceptance:
+- direct MakerWorld Product URLs have a dedicated workspace and preserve the exact URL, including `#profileId`, through the mature single-Product receiver;
+- MakerWorld Search/Listing URLs have a separate workspace with Preview, selection and import;
+- keyword-only MakerWorld search builds the real `/en/search/models?keyword=` route;
+- a Product URL pasted into Search is redirected to Single Product instead of being treated as a listing;
+- Source refresh lives with Inventory, not Search;
+- browser/method/debug controls are Advanced by default;
+- mature adaptive acquisition, Crawl ledger/tombstones, Source refresh history and operator-owned Product fields remain authoritative.
+
+Verification: 137/137 related Operations/Crawl tests PASS, compile/compileall/diff-check PASS, Qt VerifyOnly PASS and foreground launcher smoke PASS. Fresh Catalog rollback: `pre-a2r-crawl-tabs-20260926-215237`. Production touched = NO.

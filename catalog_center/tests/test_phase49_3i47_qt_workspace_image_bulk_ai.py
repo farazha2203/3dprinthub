@@ -350,7 +350,19 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         page = OperationsPage(self.db, kernel=self.kernel)
         try:
             page.refresh()
-            self.assertEqual(page.workspace_tabs.count(), 3)
+            self.assertEqual(page.workspace_tabs.count(), 4)
+            self.assertEqual(
+                [
+                    page.workspace_tabs.tabText(index)
+                    for index in range(page.workspace_tabs.count())
+                ],
+                [
+                    "موجودی محصولات",
+                    "تک محصول",
+                    "جستجو / لینک جستجو",
+                    "گزارش و History",
+                ],
+            )
             self.assertEqual(page.workspace_tabs.currentIndex(), 0)
             self.assertEqual(page.queue_views.count(), 2)
             self.assertEqual(page.queue_gallery.count(), 1)

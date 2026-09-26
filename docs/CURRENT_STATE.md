@@ -1712,3 +1712,29 @@ Slice 1 is committed/pushed at `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2`; Local
 Slice 2 Local acceptance is complete: receiver/site 6/6 PASS; mature Product Detail/import regression 5/5 PASS; Buffer/Instagram/Story 34/34 PASS; changed Python compile PASS; Django check PASS with the known CKEditor warning; `makemigrations --check --dry-run` reports no changes; diff-check PASS; Qt VerifyOnly PASS (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`, `QT_OPERATOR_LAUNCHER_VERIFY=PASS`). No external Instagram post, Host source mutation, Production DB mutation or deploy has occurred in this split checkpoint.
 
 Exact next task: commit/push the isolated Slice-2 Site/Social delta and documentation, verify Local=Remote, then perform read-only Host/release-lineage audit through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`. Only after an accepted exact GitHub release candidate and fresh Production rollback evidence may Product #536 be republished same-identity for public video acceptance.
+
+## 2026-09-26 — A2R MakerWorld Single/Search Crawl UX LOCAL_TESTED
+Status: `LOCAL_TESTED / COMMIT-PUSH NEXT / PRODUCTION UNCHANGED`.
+
+Verified Local repository: `D:\projects\3dprinthub`, branch `wip/phase50-a2l-owner-qa-20260917`. Baseline before this slice: `03808add798da6629c73d4c9bdba71b322a52a14`, already Local=Remote. Rollback branch: `backup/pre-a2r-crawl-tabs-20260926` → `03808add...`.
+
+Implemented:
+- Add Product/Crawl now separates `موجودی محصولات`, `تک محصول`, `جستجو / لینک جستجو`, and `گزارش و History`.
+- exact MakerWorld Product URLs use the mature adaptive single-Product receiver and preserve query/hash/profileId;
+- exact MakerWorld Search URLs retain Preview/select/import, while keyword-only search resolves to the real `/en/search/models?keyword=` route;
+- Product links pasted into Search are redirected to Single Product;
+- Source refresh moved to Inventory with dedicated limits;
+- Saved HTML remains Single-Product Advanced; browser/collection/debug controls are hidden behind Advanced.
+
+Verification:
+- related Operations/Crawl regression: 137/137 PASS;
+- Python compile + compileall PASS; diff-check PASS;
+- Qt VerifyOnly: foundation/full-parity/operator launcher PASS;
+- foreground canonical Qt launch: `QT_CATALOG_CENTER_LAUNCHED=YES`.
+- informational full historical discover remains 800 tests / 9 failures / 15 errors of unrelated legacy debt; recorded as ERR-49-152 and not used to weaken current contracts.
+
+Fresh Catalog rollback: `D:\projects\3dprinthub-backups\pre-a2r-crawl-tabs-20260926-215237\catalog.sqlite3`; source/backup quick-check=`ok`, page count 226078/226078, Product count 962/962, backup SHA256 `249201f4c55c0112d30f0fb4a26897da7eacc3220fb675feaa9df4ea05ba9795`.
+
+Database/Host/Production safety: no Django migration, no Host source change, no Production DB/media change, no social post, no automatic Product crawl during the acceptance run.
+
+Exact next task: final diff/staging review → selective commit/push this Crawl UX slice → Local=Remote proof → owner foreground UAT using one disposable direct MakerWorld Product URL and one MakerWorld Search URL; only then continue the separate A2R Host/Production acceptance path.

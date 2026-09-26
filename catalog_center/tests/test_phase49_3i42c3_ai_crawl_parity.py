@@ -965,6 +965,20 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
             kernel=self.kernel,
         )
         try:
+            labels = [
+                page.workspace_tabs.tabText(index)
+                for index in range(page.workspace_tabs.count())
+            ]
+            self.assertEqual(
+                labels,
+                [
+                    "موجودی محصولات",
+                    "تک محصول",
+                    "جستجو / لینک جستجو",
+                    "گزارش و History",
+                ],
+            )
+
             values = {
                 str(page.mode.itemData(index) or "")
                 for index in range(page.mode.count())
@@ -976,50 +990,48 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
                     "search",
                     "category",
                     "site_crawl",
-                    "single",
                 },
             )
-            methods = {
+
+            search_methods = {
                 str(page.collection_method.itemData(index) or "")
                 for index in range(page.collection_method.count())
             }
+            self.assertNotIn("saved_html", search_methods)
             self.assertEqual(
-                methods,
+                search_methods,
                 {
                     "rich",
                     "classic_isolated",
                     "classic_exact",
                     "network_capture",
                     "chrome_attached",
-                    "saved_html",
                     "browser_dom",
                     "public_http",
                 },
             )
+            single_methods = {
+                str(page.single_collection_method.itemData(index) or "")
+                for index in range(page.single_collection_method.count())
+            }
+            self.assertIn("saved_html", single_methods)
             self.assertEqual(page.requested.maximum(), 500)
-            for attribute in (
-                "query",
-                "download_images",
-                "download_files",
-                "same_domain",
-                "saved_html_path",
-                "saved_html_browse",
-                "default_url_btn",
-                "direct_btn",
-                "login_profile_btn",
-                "debug_chrome_btn",
-                "harvest_btn",
-                "source_refresh_btn",
-            ):
-                self.assertTrue(hasattr(page, attribute), attribute)
-
-            saved_index = page.collection_method.findData("saved_html")
-            page.collection_method.setCurrentIndex(saved_index)
-            QApplication.processEvents()
-            self.assertEqual(
-                str(page.mode.currentData() or ""),
-                "single",
+            self.assertFalse(page.search_advanced_frame.isVisible())
+            self.assertFalse(page.single_advanced_frame.isVisible())
+            self.assertTrue(
+                page.workspace_tabs.widget(0).isAncestorOf(
+                    page.source_refresh_btn
+                )
             )
+            self.assertFalse(
+                page.workspace_tabs.widget(2).isAncestorOf(
+                    page.source_refresh_btn
+                )
+            )
+
+            saved_index = page.single_collection_method.findData("saved_html")
+            page.single_collection_method.setCurrentIndex(saved_index)
+            QApplication.processEvents()
             self.assertTrue(page.saved_html_path.isEnabled())
 
             exact_index = page.collection_method.findData("classic_exact")
@@ -1029,6 +1041,71 @@ class Phase493I42C3AiCrawlParityTests(unittest.TestCase):
                 str(page.strategy.currentData() or ""),
                 "classic",
             )
+        finally:
+            page.close()
+
+    def test_operations_direct_product_preserves_profile_fragment_and_uses_adaptive_methods(self):
+        self.db.conn.execute(
+            """
+            INSERT INTO sources(
+                code, name, enabled, listing_urls_json, model_url_pattern
+            ) VALUES (?, ?, 1, ?, ?)
+            """,
+            (
+                "makerworld",
+                "MakerWorld",
+                '["https://makerworld.com/en/search/models?keyword={query}"]',
+                r"https?://(?:www\.)?makerworld\.com/(?:[a-z]{2}/)?models/"
+                r"(?P<external_id>\d+)[^\s\"'<>]*",
+            ),
+        )
+        self.db.conn.commit()
+        page = OperationsPage(self.db, kernel=self.kernel)
+        captured = []
+        calls = []
+        product_url = (
+            "https://makerworld.com/en/models/3173877-coralune-lite-organic-"
+            "lamp-for-bambu-lab-mh001?from=recommend#profileId-3588661"
+        )
+        try:
+            self.assertTrue(
+                self.kernel.acquisition.is_product_url(
+                    "makerworld",
+                    product_url,
+                )
+            )
+            self.assertFalse(
+                self.kernel.acquisition.is_product_url(
+                    "makerworld",
+                    "https://makerworld.com/en/search/models?keyword=donky",
+                )
+            )
+            self.assertEqual(
+                self.kernel.acquisition.default_listing_url(
+                    "makerworld",
+                    query="donky",
+                ),
+                "https://makerworld.com/en/search/models?keyword=donky",
+            )
+            page.pool.start = lambda worker: captured.append(worker)
+            page.kernel.acquisition.run_single = lambda **kwargs: (
+                calls.append(dict(kwargs))
+                or {
+                    "product_id": 3173877,
+                    "images_saved": 1,
+                    "files_saved": 0,
+                }
+            )
+            page.single_url.setText(product_url)
+            page._start_single()
+            self.assertEqual(len(captured), 1)
+            captured[0].fn(lambda _value, _message="": None)
+
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(calls[0]["source_code"], "makerworld")
+            self.assertEqual(calls[0]["product_url"], product_url)
+            self.assertTrue(calls[0]["adaptive_fallback"])
+            self.assertEqual(calls[0]["collection_method"], "rich")
         finally:
             page.close()
 

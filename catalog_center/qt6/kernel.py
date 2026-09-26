@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -1833,6 +1834,15 @@ class AcquisitionCore:
         if row is None:
             return ""
         data = dict(row)
+        query_text = str(query or "").strip()
+        if (
+            query_text
+            and str(source_code or "").strip().casefold() == "makerworld"
+        ):
+            return (
+                "https://makerworld.com/en/search/models?keyword="
+                + quote_plus(query_text)
+            )
         try:
             urls = json.loads(
                 data.get("listing_urls_json") or "[]"
@@ -1881,6 +1891,21 @@ class AcquisitionCore:
             if compact_code and compact_code in compact_host:
                 return code
         return ""
+
+    def is_product_url(self, source_code: str, url: str) -> bool:
+        target = str(url or "").strip()
+        if not target.startswith(("http://", "https://")):
+            return False
+        row = self.db.source(str(source_code or ""))
+        if row is None:
+            return False
+        pattern = str(dict(row).get("model_url_pattern") or "").strip()
+        if not pattern:
+            return False
+        try:
+            return re.search(pattern, target, re.I) is not None
+        except re.error:
+            return False
 
     def resolve_listing_url(
         self,

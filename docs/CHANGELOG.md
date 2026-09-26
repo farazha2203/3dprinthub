@@ -1294,3 +1294,13 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Slice 1 Product video acquisition is GitHub-updated at `d6799cc1df71f8d5eb3d53a3166d5a9d5b9430a2` with Local=Remote proof and a fresh integrity-checked Catalog rollback.
 - Slice 2 Site receiver/public verifier/Product Detail/social manifest changes are Local-tested: receiver 6/6, related Product/import 5/5, Buffer/Instagram/Story 34/34, compile/check/no-drift/diff-check/Qt VerifyOnly PASS.
 - No external social publication or Production mutation occurred at this checkpoint; Host/release-lineage audit remains the next gate.
+
+## 2026-09-26 — A2R MakerWorld Single/Search Crawl UX
+- Split the Qt acquisition workspace into Inventory, Single Product, Search/Search-Link and History.
+- Direct Product receive now keeps exact MakerWorld Product URLs and uses the existing adaptive single-Product acquisition chain rather than a parallel scraper.
+- Search supports exact MakerWorld `/en/search/models?keyword=...` URLs and keyword-only input; Product URLs entered there are redirected to the Single Product workspace.
+- Moved Source refresh to Inventory with dedicated limits and moved low-frequency browser/method controls behind Advanced.
+- Preserved current-run Preview/select/import, permanent Crawl ledger/tombstones, adaptive fallbacks and operator-owned Product state.
+- Related Operations/Crawl regression 137/137 PASS; Python compile/compileall, diff-check and Qt VerifyOnly PASS; foreground Qt launcher smoke PASS.
+- Fresh rollback: `D:\projects\3dprinthub-backups\pre-a2r-crawl-tabs-20260926-215237\catalog.sqlite3`; source/backup quick-check, page count and Product count match; backup SHA256 `249201f4c55c0112d30f0fb4a26897da7eacc3220fb675feaa9df4ea05ba9795`.
+- Full historical Catalog discover run still reports unrelated legacy baseline debt; no unrelated architecture was changed to satisfy stale tests. Production/Host/social publication untouched.

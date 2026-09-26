@@ -1,6 +1,6 @@
 # Phase50.A2R — Catalog completion, Product video and Instagram set/Story
 
-Status: `IN_PROGRESS / SLICE 1 GITHUB_UPDATED / SLICE 2 LOCAL_TESTED`
+Status: `IN_PROGRESS / SLICES 1-2 GITHUB_UPDATED / MAKERWORLD CRAWL UX LOCAL_TESTED`
 Date: 2026-09-23
 
 ## Requested Delta
@@ -80,3 +80,32 @@ Pending after Slice 1 GitHub checkpoint: Site receiver/video rendering regressio
 - Qt VerifyOnly: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`, `QT_OPERATOR_LAUNCHER_VERIFY=PASS`.
 
 Next gate: commit/push Slice 2 with exact Local=Remote proof, then use only the dedicated `3dprinthub` project router for Host read-only audit and release-lineage verification before any Production mutation.
+
+## 2026-09-26 — MakerWorld operator acquisition workspace
+
+Requested Delta:
+- separate direct Product receiving from Search/Listing discovery;
+- accept the owner's exact MakerWorld Product URL including query/hash/profileId;
+- accept an exact MakerWorld Search URL or a keyword such as `donky`;
+- move Source refresh out of Search and keep mature recovery/discovery methods intact;
+- hide diagnostic/browser/method controls behind Advanced instead of deleting proven capability.
+
+Touched Surfaces: `catalog_center/qt6/pages.py`, `catalog_center/qt6/kernel.py`, and the focused Operations regressions. Must-Not-Touch: `discovered_urls` identity authority, pricing/Profile/Filament state, Product operator edits, Site/social receipts, Django schema, Production.
+
+Implementation:
+- Operations now has four workspaces: Inventory, Single Product, Search/Search-Link, History.
+- Single Product routes through the existing `run_single(... adaptive_fallback=True)`; Search routes through the existing Preview-first `run_batch`.
+- Product links pasted into Search are redirected to the Single Product workspace instead of being misclassified as a listing.
+- MakerWorld keyword-only Search resolves to `/en/search/models?keyword=<query>`.
+- Source refresh is in Inventory with its own Product/image limits; Saved HTML remains a Single-Product advanced method.
+
+Verification:
+- related Operations/Crawl regression: 137/137 PASS;
+- changed Python compile + compileall PASS; `git diff --check` PASS;
+- Qt VerifyOnly: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`, `QT_OPERATOR_LAUNCHER_VERIFY=PASS`;
+- foreground launcher smoke: `QT_CATALOG_CENTER_LAUNCHED=YES`;
+- fresh Catalog rollback `D:\projects\3dprinthub-backups\pre-a2r-crawl-tabs-20260926-215237\catalog.sqlite3`, source/backup `quick_check=ok`, page count 226078/226078, Product count 962/962, backup SHA256 `249201f4c55c0112d30f0fb4a26897da7eacc3220fb675feaa9df4ea05ba9795`.
+
+Safety: no Product crawl was auto-started by the acceptance run, no Catalog Product row was intentionally changed by this UI slice, no Django migration/Host/Production/social publication occurred.
+
+Next gate: document + commit/push this exact Local-tested Crawl UX candidate, prove Local=Remote, then perform owner foreground functional QA of one disposable Single Product and one Search URL. Host/Production acceptance for A2R remains a separate GitHub-first gate.

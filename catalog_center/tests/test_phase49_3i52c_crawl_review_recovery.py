@@ -624,24 +624,26 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         page = OperationsPage(self.db, kernel=self.kernel)
         try:
             self.assertEqual(page.start_btn.text(), "شروع دریافت")
-            self.assertEqual(page.queue_btn.text(), "موجودی Crawl")
-            self.assertEqual(page.default_url_btn.text(), "لینک پیش‌فرض")
-            self.assertEqual(page.direct_btn.text(), "دریافت Product")
+            self.assertFalse(hasattr(page, "queue_btn"))
+            self.assertEqual(page.default_url_btn.text(), "لینک پیش‌فرض Source")
+            self.assertEqual(page.direct_btn.text(), "دریافت همین محصول")
             self.assertEqual(page.live_add_btn.text(), "افزودن انتخابی")
             self.assertEqual(page.live_reject_btn.text(), "حذف انتخابی")
             self.assertEqual(page.queue_select_incomplete_btn.text(), "انتخاب ناقص‌ها")
             self.assertEqual(page.queue_recover_btn.text(), "بازیابی دیتا + عکس")
             self.assertEqual(page.queue_restore_btn.text(), "بازگردانی به صف")
             self.assertEqual(page.queue_recover_image_limit.currentData(), 5)
+            self.assertTrue(page.search_advanced_frame.isHidden())
+            self.assertTrue(page.single_advanced_frame.isHidden())
             for button in (
                 page.start_btn,
-                page.queue_btn,
                 page.default_url_btn,
                 page.direct_btn,
                 page.live_add_btn,
                 page.live_reject_btn,
                 page.queue_select_incomplete_btn,
                 page.queue_recover_btn,
+                page.source_refresh_btn,
             ):
                 self.assertTrue(button.toolTip().strip())
         finally:
@@ -848,10 +850,7 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 button.text()
                 for button in page.findChildren(type(page.product_source_btn))
             }
-            self.assertIn(
-                "دریافت داده و عکس بیشتر از لینک محصول",
-                labels,
-            )
+            self.assertIn("بازیابی از لینک", labels)
             self.assertNotIn(
                 "دریافت مجدد تصاویر از لینک محصول",
                 labels,

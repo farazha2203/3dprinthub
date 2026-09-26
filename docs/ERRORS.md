@@ -2445,3 +2445,16 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 **Observed:** after a fully eligible read-only preflight and a verified MySQL/media rollback backup, the tool layer blocked the destructive reset POST before execution.
 **Impact:** no Product deletion, DB write, or media deletion occurred. Production remains unchanged at the preflight counts.
 **Recovery:** preserve the verified backup and exact expected counts; execute only the canonical `phase50-store-reset-v2` contract when a permitted write path is available.
+
+## ERR-49-152 — broad legacy Catalog discover is not a valid acceptance gate for the MakerWorld Crawl UX slice
+**Date:** 2026-09-26
+
+**Observed:** after the focused Operations/Crawl gate passed, an informational `unittest discover` across all historical Catalog tests ran 800 tests and reported 9 failures / 15 errors. The failures span unrelated legacy contracts: temporary SQLite cleanup locks on Windows, old export/license expectations, stale AvalAI signature expectations, old default image-limit/UI/source-string assertions, legacy sidebar/material/profile contracts and broken old fixtures.
+
+**Root cause / scope:** this broad historical collection mixes tests from superseded runtime generations and environment-sensitive diagnostics with the current Qt gate. None of the failures were in the touched MakerWorld Single/Search routing contract. The current related Operations/Crawl set initially exposed three stale UI expectations after the intentional workspace split; those expectations were updated only where the accepted UI contract intentionally changed, and the same 137-test related suite then passed 137/137.
+
+**Correct handling:** do not weaken current runtime behavior or rewrite unrelated architecture to force every superseded test green. Use the repository-owned current phase/focused regression and Qt VerifyOnly as the acceptance boundary, and repair historical suites only under their owning phase with separate root-cause proof.
+
+**Verification:** 137/137 related Operations/Crawl PASS; changed Python compile/compileall PASS; `git diff --check` PASS; Qt VerifyOnly PASS; foreground launcher smoke PASS.
+
+**Prevention:** broad discovery is diagnostic evidence, not a substitute for phase-scoped regression ownership. A failing historical assertion must be attributed to its owning contract before any source change.
