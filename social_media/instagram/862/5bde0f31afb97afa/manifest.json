@@ -1,0 +1,20 @@
+{
+  "asset_revision": "5bde0f31afb97afa",
+  "feed_sha256": [
+    "68b87ad70a9c9fca457311cc3ebf9778bdc8a41cd2075d591169f4c28d6bf822",
+    "94cc2fdc828b39b49957da1cc2c1bfe933afb6d94d767c04046a622a07b30ca3",
+    "d7c41fe46319e39149d8aa679b6b201697e81bd1abc987e27e19f2eb4748ddde",
+    "0521617b95b9e82d7742a256f5314775b2744cb1c06616a29670b16cfe023e2b"
+  ],
+  "product_id": 862,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 57,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USc0fbd0454ddb87/design/41f44170b344a3ee.png",
+    "local://cute-penguin-geometric-origami-decor-3d-print-02.webp",
+    "local://cute-penguin-geometric-origami-decor-3d-print-03.webp",
+    "local://cute-penguin-geometric-origami-decor-3d-print-04.webp"
+  ],
+  "story_sha256": ""
+}
