@@ -1,3 +1,21 @@
+## 2026-09-26 - Phase50.A.2Z-O6A integrated Local regression - ACCEPTED / O6B NEXT
+
+Owner explicitly chose O6A instead of a real-provider O5G action. O5G is therefore NOT_REQUIRED for this closure pass; its only unresolved external evidence remains #609 clickable Story blocked by Buffer `hasActiveMemberDevice=false` and #301/#588 missing current Story provider evidence. No automatic provider publish was performed.
+
+Entry Git state was clean and GitHub-exact on `wip/phase50-a2z-o5c-reconcile-contract-20260926` at O5F closure commit `80576c58042ee61ecbd523891db280d720aea79f`; selective Production/Server `2b48a593...` remains an accepted ancestor.
+
+O6A integrated Product/Crawl/Media/Social regression PASS: 28 focused modules / 224 tests completed in 82.081s with no failures. Covered resilient acquisition/review, target-aware Crawl, Crawl recovery, Product identity/dedup/lifecycle/delete/deep-repair/full-reacquire, Source dimensions/profiles/material/media sync, selected-image/media truth, video, Product social controls/recent activity, Buffer media/publish/story, Instagram feed/story/social policy, image dimensions and O5C current-revision reconciliation. Only known framework deprecation/resource warnings appeared.
+
+Static/local gates PASS: `compileall app qt6 tests`, `pip check`, `git diff --check`, and Qt `RUN_QT.ps1 -VerifyOnly`.
+
+Read-only canonical integrity audit PASS on a consistent SQLite transaction snapshot: quick_check=ok; Product exact Source+external-id duplicates=0; Product normalized-URL duplicates=0; Crawl external-ID duplicates=0; Crawl normalized-URL duplicates=0; Candidate external-ID duplicates=0; missing Crawl/Candidate source links=0; active Product-backed Crawl rows=0; Product/Crawl lifecycle mismatches=0; missing rejected ledgers=0; rejected Candidate/Preview/same-identity Local remnants=0; current-revision Social duplicate-final groups=0; stale #536/#625 absent from current Feed/Story filters; O5F six reconciled receipts exact; #301/#588 still have no current Story final and #609 remains current provider-error/non-final.
+
+Media integrity remains fail-closed with no strict authority corruption: 577 Products currently have selected images; selected authority validates for all 577; exact current Product-local media resolves for 102; 475 legacy Products still lack exact Local files and remain known repair debt; strict SHA/path-escape/authority errors=0. No mass repair was attempted in O6A.
+
+A pre-existing Catalog runtime from O5F remained active during O6A and independently continued MakerWorld review ingestion. Canonical Product count therefore moved during the audit window (867 after O5F -> 890 in the consistent integrity snapshot -> 892 at the final read), while Receipts stayed 483, Crawl 1177 and Candidates 625. The new rows carry Qt/source-profile workflow history and are not attributed to O6A regression commands. O6A itself performed no canonical write, Buffer/provider mutation, Instagram publish, Host change or Production deploy.
+
+Exact next phase O6B: re-read docs/errors -> verify clean O6A checkpoint/head and current Catalog activity state -> wait for/verify operator ingestion quiescence without killing unrelated work -> exact-SHA Qt VerifyOnly -> close any prior Catalog window gracefully only if safe -> launch exactly one Catalog Center from the accepted SHA -> verify owner-visible Product/Crawl/Media/Social controls and current-revision Social filters -> read-only post-launch integrity/count snapshot -> docs checkpoint -> STOP. No Catalog mutation or provider publish is required. Immediately following phase O6C = Server delta / lineage read-only audit.
+
 ## 2026-09-26 - Phase50.A.2Z-O5F canonical receipt reconciliation + runtime acceptance - ACCEPTED / O5G NEXT
 
 Active branch: `wip/phase50-a2z-o5c-reconcile-contract-20260926`. O5C/O5D source/tests/checkpoint docs are GitHub-exact at `df4e9a53fb33ca4a8c25282503f75d9fce7f9473` from accepted O5B baseline `0d2d5f30ef8191ddd3a468f1aec175ecd30f1ae7`; `git status --short --branch` is clean and `git branch -vv` shows the local branch exactly tracking the same origin branch. Production/Host remains unchanged; selective Server `2b48a593...` remains an accepted ancestor.

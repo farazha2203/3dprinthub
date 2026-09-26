@@ -1,3 +1,10 @@
+## 2026-09-26 - O6A integrated Product/Crawl/Media/Social regression
+- Owner skipped optional real-provider O5G; no Instagram action was auto-run.
+- Integrated 28-module Product/Crawl/Media/Social suite passes 224/224; compileall, pip check, git diff-check and Qt VerifyOnly PASS.
+- Read-only canonical integrity passes with zero Product/Crawl/Candidate exact-identity duplicates, zero missing source links, zero active Product-backed Crawl rows, zero lifecycle/rejected-remnant defects and zero duplicate current Social finals.
+- Media audit: 577 selected-image Products, 102 exact-current-local ready, 475 known legacy missing-local fail-closed; zero selected-authority/SHA/path-escape integrity errors.
+- Pre-existing Qt runtime continued MakerWorld review ingestion concurrently (Product count observed 867 -> 890 snapshot -> 892 final read); O6A made no canonical/provider/Production write and Receipts/Crawl/Candidates remained 483/1177/625.
+
 ## 2026-09-26 - O5F canonical receipt reconciliation/runtime acceptance
 - Fresh authoritative rollback `phase50-a2z-o5f-20260926-150923` verified source+backup quick_check=ok and exact all-table digests; backup SHA256 `c6b853a79943de2b07a57d96cb074f6ee251ca36ed5a6fc1bcb805c1be7b7e57`.
 - Live read-only Buffer exact-ID preflight reconfirmed six target posts/stories `sent` and #609 Story `error`, seven reads / zero mutations. Canonical reconciliation appended only the six clone-proven finals (477->483), every row exact-ID and `reconciled_without_repost=true`; no provider publish/repost occurred.
